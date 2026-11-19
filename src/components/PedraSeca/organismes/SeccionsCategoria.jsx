@@ -22,6 +22,9 @@ import { PillToggle } from '../molecules/PillToggle.jsx';
 import { Camp, Selector } from './formulari.jsx';
 import { TEXTOS_ARTICLES, agrupaPerCategoria, categoriesEnOrdre, categoriesVisibles } from './articles.js';
 import { pintaIcona } from './marca.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 const NIVELLS = Object.freeze([3, 4, 5, 6]);
 
@@ -37,7 +40,7 @@ export function SeccionsCategoria({
   const plegable = typeof onPlega === 'function';
   const tancades = new Set(Array.isArray(plegades) ? plegades : []);
   return (
-    <div className={['sdp-seccions', className].filter(Boolean).join(' ')}>
+    <div ref={adoptaEstilsDiferits} className={['sdp-seccions', className].filter(Boolean).join(' ')}>
       {grups.map(({ categoria, articles: delGrup }, i) => {
         const plegada = plegable && tancades.has(categoria.id);
         const idCap = `${id}-cap-${i}`;
@@ -45,20 +48,20 @@ export function SeccionsCategoria({
         const nom = (
           <>
             {pintaIcona(categoria.icona)}
-            <span className="sdp-seccio__nom">{categoria.nom}</span>
+            <span ref={adoptaEstilsDiferits} className="sdp-seccio__nom">{categoria.nom}</span>
             {' '}<span className="sdp-seccio__comptador">{textArticles(delGrup.length)}</span>
           </>
         );
         return (
-          <section key={categoria.id} className="sdp-seccio" aria-labelledby={idCap}>
+          <section ref={adoptaEstilsDiferits} key={categoria.id} className="sdp-seccio" aria-labelledby={idCap}>
             <Cap id={idCap} className="sdp-seccio__cap">
               {plegable ? (
-                <button type="button" className="sdp-seccio__plega" aria-expanded={!plegada} aria-controls={idCos}
+                <button ref={adoptaEstilsDiferits} type="button" className="sdp-seccio__plega" aria-expanded={!plegada} aria-controls={idCos}
                   onClick={() => onPlega(categoria.id, !plegada)}>
                   {nom}
                   <ChevronRight className="sdp-seccio__fletxa" size={20} aria-hidden="true" focusable="false" />
                 </button>
-              ) : <span className="sdp-seccio__titol">{nom}</span>}
+              ) : <span ref={adoptaEstilsDiferits} className="sdp-seccio__titol">{nom}</span>}
             </Cap>
             <div id={idCos} className="sdp-seccio__cos" hidden={plegada}>
               {plegada || typeof children !== 'function' ? null : children(delGrup, categoria)}
@@ -79,7 +82,7 @@ export function SelectorCategoria({
   const tria = (nou) => onCanvi?.(nou ? nou : null);
   if (forma === 'desplegable') {
     return (
-      <div className={classes}>
+      <div ref={adoptaEstilsDiferits} className={classes}>
         <Camp etiqueta={etiqueta}>
           <Selector value={valor ?? ''} onChange={(event) => tria(event.target.value)}
             opcions={[{ valor: '', etiqueta: textTotes }, ...visibles.map((c) => ({ valor: c.id, etiqueta: c.nom }))]} />
@@ -88,7 +91,7 @@ export function SelectorCategoria({
     );
   }
   return (
-    <div className={classes}>
+    <div ref={adoptaEstilsDiferits} className={classes}>
       <PillToggle etiqueta={etiqueta} valor={valor ?? ''} onCanvi={tria}
         opcions={[{ valor: '', text: textTotes }, ...visibles.map((c) => ({ valor: c.id, text: c.nom, icona: pintaIcona(c.icona) }))]} />
     </div>
@@ -136,26 +139,26 @@ export function OrdenaCategories({ categories = [], onMou, onVisibilitat, etique
   };
 
   return (
-    <div className={['sdp-ordena-categories', className].filter(Boolean).join(' ')}>
+    <div ref={adoptaEstilsDiferits} className={['sdp-ordena-categories', className].filter(Boolean).join(' ')}>
       <ol ref={llista} className="sdp-ordena-categories__llista" aria-label={etiqueta}>
         {ordenades.map((categoria, posicio) => {
           const visible = categoria.visible !== false;
           return (
-            <li key={categoria.id} className={visible ? 'sdp-ordena-categories__fila' : 'sdp-ordena-categories__fila sdp-ordena-categories__fila--amagada'}>
+            <li ref={adoptaEstilsDiferits} key={categoria.id} className={visible ? 'sdp-ordena-categories__fila' : 'sdp-ordena-categories__fila sdp-ordena-categories__fila--amagada'}>
               {pintaIcona(categoria.icona)}
               <span className="sdp-ordena-categories__nom">
                 {categoria.nom}
-                {visible ? null : <span className="sdp-nomes-lector">{` (${t.amagada})`}</span>}
+                {visible ? null : <span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{` (${t.amagada})`}</span>}
               </span>
               {onVisibilitat ? (
-                <button type="button" className="sdp-accio-icona" data-categoria={categoria.id} data-accio="mostra"
+                <button ref={adoptaEstilsDiferits} type="button" className="sdp-accio-icona" data-categoria={categoria.id} data-accio="mostra"
                   aria-pressed={visible} aria-label={t.mostra(categoria.nom)} onClick={() => onVisibilitat(categoria.id, !visible)}>
                   {visible ? <Eye size={22} aria-hidden="true" focusable="false" /> : <EyeOff size={22} aria-hidden="true" focusable="false" />}
                 </button>
               ) : null}
               {onMou ? (
                 <>
-                  <button type="button" className="sdp-accio-icona" data-categoria={categoria.id} data-accio="puja"
+                  <button ref={adoptaEstilsDiferits} type="button" className="sdp-accio-icona" data-categoria={categoria.id} data-accio="puja"
                     aria-label={t.puja(categoria.nom)} disabled={posicio === 0} onClick={() => mou(categoria, 'puja', posicio)}>
                     <ArrowUp size={22} aria-hidden="true" focusable="false" />
                   </button>

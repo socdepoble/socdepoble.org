@@ -60,7 +60,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from '@babel/parser';
 import { R, rel, EXCLOSOS, ErrorArrel } from '../lib/arrel.mjs';
-import { fontUTF8, cssAnalitzable } from '../lib/lexic-css.mjs';
+import { fontUTF8, cssAnalitzable, blocsCssFulla } from '../lib/lexic-css.mjs';
 
 /* ═══════════════════════ Contracte de la llei ═══════════════════════ */
 
@@ -505,13 +505,13 @@ const normalitzaSelector = (s) => s.trim().replace(/\s+/g, ' ').replace(/["']/g,
 function reglesCSS(font) {
   const net = cssAnalitzable(font, { atributs: true });
   const regles = [];
-  for (const m of net.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const prelud = m[1].split(';').pop();
+  for (const m of blocsCssFulla(net)) {
+    const prelud = m.selector.split(';').pop();
     const sel = prelud.trim();
     if (!sel || sel.startsWith('@')) continue;
-    const posicio = m.index + m[1].length - prelud.length + prelud.search(/\S/);
+    const posicio = m.index + m.selector.length - prelud.length + prelud.search(/\S/);
     const decls = new Map();
-    for (const d of m[2].split(';')) {
+    for (const d of m.body.split(';')) {
       const i = d.indexOf(':');
       if (i < 0) continue;
       const prop = d.slice(0, i).trim().toLowerCase();

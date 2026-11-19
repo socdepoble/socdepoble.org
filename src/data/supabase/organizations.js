@@ -1,3 +1,4 @@
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
@@ -254,7 +255,7 @@ const limitDelDirectori = (valor) => {
    unitats UTF-16 (un parell suplent partit fa caure encodeURIComponent), i
    cada paraula hi va com un patró tolerant als accents (patroTolerant). */
 function filtreDeCercaDirectori(consulta) {
-  const netes = String(consulta ?? '').normalize('NFC').toLowerCase()
+  const netes = normalitzaUnicodeAmbLimit(String(consulta ?? ''), 'NFC').toLowerCase()
     .replace(/[^\p{L}\p{N}'\u2019-]+/gu, ' ').split(' ').filter(Boolean)
     .map((paraula) => patroTolerant(Array.from(paraula).slice(0, MAXIM_PARAULA_DIRECTORI).join('')));
   const paraules = [...new Set(netes)].filter(Boolean).slice(0, MAXIM_PARAULES_DIRECTORI);

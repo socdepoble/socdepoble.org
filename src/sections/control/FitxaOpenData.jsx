@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
+import { Accions, Alerta, Boto, Carregant, Pila } from '../../components/PedraSeca/index.js';
 import { useUIState } from '../../app/contexts/UIContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
@@ -9,6 +10,7 @@ import { normalitzaSlugMunicipi } from '../../data/activitypub.js';
 import { adminLlistaPobles, teCapacitat } from '../../data/backendPort.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import RestauradorOpenData, { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
+import { textosOpenDataEstats } from '../pobles/i18nOpenDataEstats.js';
 
 const BUIDA = Object.freeze({});
 /* Un municipi vàlid { slug, nom } o null: les guardes de sempre. */
@@ -35,9 +37,16 @@ const esDelTenant = tenantId => valor => typeof valor === 'string' && valor.toLo
  *     Una resposta d'un abast anterior es descarta i la crida s'avorta.
  * Sense resoldre, municipi null: es tanca en fals, com abans. Mai el poble que
  * declara l'amfitrió (configAmfitrio.js: presentació, no abast de dades).
+ *
+ * Onada R32.11 · Lot 05: cobertura explícita dels 6 estats UI (Loading, Error
+ * accionable amb reintent net, Permission, Partial, Success i Empty delegat al
+ * Restaurador) mantenint RestauradorOpenData sempre muntat al primer render.
  */
 export default function FitxaOpenData({ onBack, vistaRef }) {
-  const { externalConfig } = useUIState();
+  const uiState = useUIState();
+  const externalConfig = uiState?.externalConfig;
+  const idioma = uiState?.language || 'ca';
+  const tx = textosOpenDataEstats(idioma);
   const { towns } = useCoreContent();
   const sessio = useSessioOpcional();
   const identitat = useIdentitatOpcional();
@@ -61,7 +70,8 @@ export default function FitxaOpenData({ onBack, vistaRef }) {
   let multipoble = false;
   try { multipoble = teCapacitat('administracioMultipoble') === true; } catch { /* port no inicialitzat */ }
   const demanaLlista = Boolean(context.valid && tenantId && !delCataleg && reforcada && multipoble);
-  const clauLlista = JSON.stringify([scope, sessio?.generacio ?? null]);
+  const [intent, setIntent] = useState(0);
+  const clauLlista = JSON.stringify([scope, sessio?.generacio ?? null, intent]);
   const [llista, setLlista] = useState(null);
   useEffect(() => {
     if (!demanaLlista) return undefined;
@@ -69,20 +79,77 @@ export default function FitxaOpenData({ onBack, vistaRef }) {
     const control = new AbortController();
     Promise.resolve()
       .then(() => adminLlistaPobles({ signal: control.signal }))
-      .then(files => { if (viu) setLlista({ clau: clauLlista, files: Array.isArray(files) ? files : [] }); })
-      .catch(() => { /* Sense llista no hi ha municipi: es tanca en fals. */ });
+      .then(files => {
+        if (viu && !control.signal.aborted) {
+          setLlista({ clau: clauLlista, files: Array.isArray(files) ? files : [], error: false });
+        }
+      })
+      .catch(() => {
+        /* Sense llista no hi ha municipi: es tanca en fals i s'ofereix reintent explícit. */
+        if (viu && !control.signal.aborted) {
+          setLlista({ clau: clauLlista, files: [], error: true });
+        }
+      });
     return () => { viu = false; control.abort(); };
   }, [demanaLlista, clauLlista]);
+  const respostaActual = demanaLlista && llista?.clau === clauLlista ? llista : null;
+  const resolentMunicipi = Boolean(demanaLlista && !respostaActual);
+  const errorMunicipis = Boolean(respostaActual?.error);
   const delServidor = useMemo(() => {
-    if (!demanaLlista || llista?.clau !== clauLlista) return null;
-    const fila = llista.files.find(f => f && esDelTenant(tenantId)(f.id));
+    if (!respostaActual || respostaActual.error) return null;
+    const fila = respostaActual.files.find(f => f && esDelTenant(tenantId)(f.id));
     return fila ? municipiDe(fila.nom, fila.slug) : null;
-  }, [demanaLlista, llista, clauLlista, tenantId]);
+  }, [respostaActual, tenantId]);
   const municipi = delCataleg ?? delServidor;
   const autoritzat = Boolean(context.valid && municipi && reforcada);
-  return <UniversalPage title={tr('titol')} lead={tr('explica')} onBack={onBack} chrome="system" traduccio={false}>
-    <div ref={vistaRef} className="content-wrapper">
-      <RestauradorOpenData key={scope} municipi={municipi} scopeKey={scope} config={context.config} autoritzat={autoritzat} introduccio={false} />
-    </div>
-  </UniversalPage>;
+
+  let blocEstatContext = null;
+  if (!context.valid) {
+    blocEstatContext = (
+      <Alerta to="error" titol={tx.configInvalidaTitol}>{tx.configInvalidaText}</Alerta>
+    );
+  } else if (resolentMunicipi) {
+    blocEstatContext = <Carregant etiqueta={tx.resolentMunicipi} />;
+  } else if (errorMunicipis) {
+    blocEstatContext = (
+      <Alerta to="error" titol={tx.errorMunicipisTitol}>
+        <p>{tx.errorMunicipisText}</p>
+        <Accions>
+          <Boto varietat="secundari" type="button" onClick={() => setIntent(n => n + 1)}>
+            {tx.reintentaMunicipis}
+          </Boto>
+        </Accions>
+      </Alerta>
+    );
+  } else if (!reforcada) {
+    blocEstatContext = (
+      <Alerta to="info" viva={false} titol={tx.permisLecturaTitol}>{tx.permisLecturaText}</Alerta>
+    );
+  } else if (autoritzat && municipi) {
+    blocEstatContext = (
+      <Alerta to="exit" viva={false} titol={tx.municipiActiuTitol(municipi.nom)}>{tx.municipiActiuText}</Alerta>
+    );
+  } else {
+    blocEstatContext = (
+      <Alerta to="avis" viva={false} titol={tx.senseMunicipiActiuTitol}>{tx.senseMunicipiActiuText}</Alerta>
+    );
+  }
+
+  return (
+    <UniversalPage title={tr('titol')} lead={tr('explica')} onBack={onBack} chrome="system" traduccio={false}>
+      <div ref={vistaRef} className="content-wrapper">
+        <Pila gap={4}>
+          {blocEstatContext}
+          <RestauradorOpenData
+            key={scope}
+            municipi={municipi}
+            scopeKey={scope}
+            config={context.config}
+            autoritzat={autoritzat}
+            introduccio={false}
+          />
+        </Pila>
+      </div>
+    </UniversalPage>
+  );
 }

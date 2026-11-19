@@ -11,6 +11,7 @@ import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
 import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement, visorDelCosDElement } from './detailSectionMeta.jsx';
+import { QuadreAssistenciaEsdeveniment } from './QuadreAssistenciaEsdeveniment.jsx';
 /* T4 (pla 261024_1315, P1-06) · Les fotos del cos, al visor: el mateix mòdul
    del disparador de la portada, que detailSectionMeta.jsx ja porta. */
 import { CosAmbVisor } from './VisorDePublicacio.jsx';
@@ -354,12 +355,22 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
     ).map((publicacio) => publicacio.item)
   )) && ofereixTraduir(plaTraduccio);
 
+  const esDetallEsdeveniment = sectionId === 'events' || sectionId === 'calendari';
+  const quadreInsignia = esDetallEsdeveniment ? (
+    <QuadreAssistenciaEsdeveniment
+      item={item}
+      badge={pagina.calendarBadge ?? null}
+      objecteXat={senseXat ? null : objecteXat}
+    />
+  ) : null;
+
   return (
     <UniversalPage
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       objecte={objecteXat}
       {...pagina}
       {...portadaAmbCarrusel}
+      quadreInsignia={quadreInsignia}
       /* T4 (pla 261024_1315; Gemini G-02) · La portada és la candidata a LCP
          de la fitxa: prioritat alta (PageFrame, heroFetchPriority). La del
          visor ja la porta al seu <img> (VisorDePublicacio). */

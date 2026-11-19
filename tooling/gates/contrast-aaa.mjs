@@ -7,6 +7,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { blocsCssFulla } from '../lib/lexic-css.mjs';
 
 const senseComentaris = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '');
 const declaracions = (s) => Object.fromEntries([...s.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
@@ -110,7 +111,7 @@ export const llindar = (gran = false) => gran ? 4.5 : 7;
 /** Regles fulla. No interpreta selectors ni fa veure que resol herència DOM. */
 function regles(css) {
   const net = senseComentaris(css);
-  return [...net.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim(), body: m[2] }));
+  return [...blocsCssFulla(net)].map((m) => ({ selector: m.selector.trim(), body: m.body }));
 }
 export function llegeixTemes(arrel = process.cwd()) {
   const llig = (f) => readFileSync(resolve(arrel, f), 'utf8');

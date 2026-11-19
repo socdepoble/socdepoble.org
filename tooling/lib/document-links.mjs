@@ -1,6 +1,7 @@
 /** Shared path-based resolver. A Markdown URL is always relative to its source. */
 import { CAMINS } from './arrel.mjs';
 import { markdownProse } from './markdown-prose.mjs';
+import { scanFlatWikiBodies, scanFlatMarkdownDestinations } from './document-link-scanners.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -93,9 +94,9 @@ export async function prepareDocumentWebLinks(root, links) {
 export function extractDocumentLinks(content) {
   const clean = markdownProse(content);
   const links = [];
-  for (const m of clean.matchAll(/\[\[([^\]]+)\]\]/g)) links.push({kind: 'wiki', target: m[1].replace(/\\(?=[|#])/g, '').split('|')[0].split('#')[0].trim()});
-  for (const m of clean.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
-    const target = m[1].trim().replace(/^<|>$/g, '').split('#')[0];
+  for (const inner of scanFlatWikiBodies(clean)) links.push({kind: 'wiki', target: inner.replace(/\\(?=[|#])/g, '').split('|')[0].split('#')[0].trim()});
+  for (const destination of scanFlatMarkdownDestinations(clean)) {
+    const target = destination.trim().replace(/^<|>$/g, '').split('#')[0];
     links.push({kind: 'markdown', target: target.startsWith('/') ? target : target.split('?')[0]});
   }
   return links.filter(l => l.target && !/^[a-z][a-z0-9+.-]*:/i.test(l.target));

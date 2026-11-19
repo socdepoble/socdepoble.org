@@ -69,20 +69,21 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Boto, EstatBuit, MarcColumna } from '../../../components/PedraSeca/index.js';
 import { UniversalWorkspace } from '../../../components/universal/workspace/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosLector } from '../i18nLector.js';
 import {
   DESPRES, HUI, articlesDeCarpeta, comptadorsCarpetes, dataDeBoina, esDeHui, ordenaPerData, senseFinal, seguix
 } from '../nucli/index.js';
 import { AvisFonts, AvisLector, MarcaTotLlegit } from './comunes.jsx';
 import { useVistaLector } from './context.js';
 import { FilaNoticia } from './FilaNoticia.jsx';
-import { TEXT_PENDENT, estatDeFont, fontsDelLector } from './fontsDelLector.js';
+import { estatDeFont, fontsDelLector } from './fontsDelLector.js';
 import { FontsSenseResposta, textDelMotiu } from './FontsSenseResposta.jsx';
 import { GestioDeFonts } from './GestioFonts.jsx';
 import { iconaDeCategoria } from './icones.js';
 import { DreceresDeNoticies } from './dreceres.js';
 import { CLOSCA, Lector, focusLliure } from './Lector.jsx';
 import {
-  NOM_CARPETA_FIXA, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, opcioDeLaSeleccio, rutaDeSeleccio, seleccioDeRuta
+  carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, opcioDeLaSeleccio, rutaDeSeleccio, seleccioDeRuta
 } from './navegacio.js';
 const tradueix = (t, [clau, reserva]) => (typeof t === 'function' ? t(clau, { defaultValue: reserva }) : reserva);
 
@@ -97,17 +98,6 @@ export const TEXTOS_ESPAI_LECTOR = Object.freeze({
   error: pLector('error', 'No s’han pogut carregar les notícies.'),
   select: pLector('tria', 'Tria una notícia.'),
   manage: pLector('gestiona', 'Gestiona les fonts'),
-});
-const ETIQUETES = Object.freeze({
-  categories: TEXTOS_ESPAI_LECTOR.categories[1],
-  items: TEXTOS_ESPAI_LECTOR.items[1],
-  all: TEXTOS_ESPAI_LECTOR.all[1],
-  search: TEXTOS_ESPAI_LECTOR.search[1],
-  loading: TEXTOS_ESPAI_LECTOR.loading[1],
-  error: TEXTOS_ESPAI_LECTOR.error[1],
-  select: TEXTOS_ESPAI_LECTOR.select[1],
-  /* 261024 (Lector) · L'acció de la capçalera de l'arbre que obri la gestió de fonts. */
-  manage: TEXTOS_ESPAI_LECTOR.manage[1]
 });
 const ICONES = Object.freeze({ categories: Folder, items: Newspaper });
 const ESTAT_DE_L_ESPAI = Object.freeze({ carregant: 'loading', llest: 'ready', error: 'error' });
@@ -136,12 +126,6 @@ function aDaltDeColp(node) {
 /* Una columna que la closca té tancada (AppGridShell la marca inert): el navegador no hi enfoca res. */
 const COLUMNA_TANCADA = '[inert]';
 
-const textNoticies = (n) => `${n} ${n === 1 ? 'notícia' : 'notícies'}`;
-/* T5 (261024) · El buit de la llista quan no ha respost cap font de les que se seguixen. */
-const BUIT_CALLADES = 'Les fonts no responen ara mateix.';
-/* 261024 (Lector) · El buit de la llista d'una font apagada o pendent, i el que se'n diu a l'arbre. */
-const BUIT_DE_FONT = Object.freeze({ apagada: 'No seguixes esta font.', pendent: 'Esta font encara no es llig.' });
-const MARCA_A_LARBRE = Object.freeze({ apagada: 'apagada', pendent: 'pendent' });
 const ICONA_A_LARBRE = Object.freeze({ seguida: Rss, apagada: EyeOff, pendent: Hourglass });
 /* La fila de la llista: la del Bloc de notes (FilaNoticia.jsx). */
 const filaDeNoticia = ({ item, active, onSelect }) => <FilaNoticia item={item} active={active} onSelect={onSelect} />;
@@ -171,13 +155,8 @@ function totesCallades(noticies, estat) {
   return seguides.length > 0 && seguides.every((font) => ids.has(font.id));
 }
 
-const BUITS = Object.freeze({
-  [HUI]: Object.freeze(['Hui encara no hi ha res nou', 'Les notícies de les últimes 24 hores de les fonts que seguixes apareixeran ací.']),
-  [DESPRES]: Object.freeze(['No has desat res per a després', 'Obri una notícia i toca «Desa per a després» per a guardar-la ací.']),
-  altres: Object.freeze(['No hi ha cap notícia ací', 'Quan esta font o esta carpeta publiquen, ho voràs ací.'])
-});
 /* El buit d'una carpeta ('hui', 'despres', una categoria o null). */
-const buitDe = (carpeta) => BUITS[carpeta && Object.hasOwn(BUITS, carpeta) ? carpeta : 'altres'];
+const buitDe = (carpeta, tx) => tx.buits[carpeta && Object.hasOwn(tx.buits, carpeta) ? carpeta : 'altres'];
 
 /* L'arbre: les carpetes fixes, les categories i totes les fonts (fontsDelLector.js), cada una
    dins de la seua categoria (una font sense categoria, a l'arrel). Els recomptes són de no
@@ -185,7 +164,7 @@ const buitDe = (carpeta) => BUITS[carpeta && Object.hasOwn(BUITS, carpeta) ? car
    en diu el text accessible d'un sol patró («{n} sense llegir»).
    Ordre del Mestre (261024, 15:05) · També les fonts apagades (EyeOff i «· apagada») i les
    teues pendents (Hourglass i «· pendent»), sense recompte: no se'n demana res. */
-function opcionsDeLArbre({ noticies, estat, ara, fonts }) {
+function opcionsDeLArbre({ noticies, estat, ara, fonts, tx }) {
   const llegits = new Set(estat.llegits);
   const comptes = comptadorsCarpetes({ ...noticies, estat, ara });
   const categories = new Set(noticies.categories.map((categoria) => categoria.id));
@@ -195,9 +174,9 @@ function opcionsDeLArbre({ noticies, estat, ara, fonts }) {
   }
   const primeraFont = 2 + noticies.categories.length;
   return [
-    { id: opcioDeCarpeta(HUI), label: NOM_CARPETA_FIXA[HUI], icon: Sun, order: 0, count: comptes.get(HUI) || 0 },
+    { id: opcioDeCarpeta(HUI), label: tx.carpetesFixes[HUI], icon: Sun, order: 0, count: comptes.get(HUI) || 0 },
     {
-      id: opcioDeCarpeta(DESPRES), label: NOM_CARPETA_FIXA[DESPRES], icon: Bookmark, order: 1,
+      id: opcioDeCarpeta(DESPRES), label: tx.carpetesFixes[DESPRES], icon: Bookmark, order: 1,
       count: estat.despres.filter((desat) => !llegits.has(desat.id)).length
     },
     ...noticies.categories.map((categoria, i) => ({
@@ -207,7 +186,7 @@ function opcionsDeLArbre({ noticies, estat, ara, fonts }) {
     ...fonts.map((font, i) => {
       const quin = estatDeFont(font, estat);
       return {
-        id: opcioDeFont(font.id), label: MARCA_A_LARBRE[quin] ? `${font.nom} · ${MARCA_A_LARBRE[quin]}` : font.nom,
+        id: opcioDeFont(font.id), label: tx.marcaArbre[quin] ? `${font.nom} · ${tx.marcaArbre[quin]}` : font.nom,
         icon: ICONA_A_LARBRE[quin], order: primeraFont + i,
         parentId: categories.has(font.categoriaId) ? opcioDeCarpeta(font.categoriaId) : null,
         count: quin === 'seguida' ? perFont.get(font.id) || 0 : 0
@@ -221,7 +200,7 @@ function opcionsDeLArbre({ noticies, estat, ara, fonts }) {
    vella; a «Per a després», en l'ordre en què es van desar (el del nucli).
    Ordre del Mestre (261024, 15:05) · Cada fila porta, a més, l'entradeta (el resum) i la
    miniatura que dona el servei (`imatge`: mitjans.js; sense servei, cap). */
-function filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge }) {
+function filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge, tx }) {
   const llegits = new Set(estat.llegits);
   const desats = new Set(estat.despres.map((desat) => desat.id));
   const fonts = new Map(noticies.fonts.map((font) => [font.id, font]));
@@ -239,7 +218,7 @@ function filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge }) {
     const boina = dataDeBoina(article.data, desfas);
     /* «font · data · Nou», sempre en text. Sense font coneguda, l'autor de l'article: mai
        «Sóc de Poble», que no l'ha escrita. */
-    const subtitol = [font?.nom || article.autor, boina ? `${boina.time} ${boina.date}` : null, llegits.has(article.id) ? null : 'Nou']
+    const subtitol = [font?.nom || article.autor, boina ? `${boina.time} ${boina.date}` : null, llegits.has(article.id) ? null : tx.nou]
       .filter(Boolean).join(' · ');
     return {
       id: article.id,
@@ -262,15 +241,15 @@ function filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge }) {
 /* El nom de la selecció: la carpeta, la font o «Totes». Claus pròpies: una categoria del poble
    que es diguera 'constructor' no ha de llegir res d'Object.prototype. `fonts`: les de l'arbre
    (fontsDelLector.js), també les apagades i les pendents. */
-function nomDeLaSeleccio(categoryId, noticies, fonts) {
-  if (categoryId == null) return ETIQUETES.all;
+function nomDeLaSeleccio(categoryId, noticies, fonts, tx) {
+  if (categoryId == null) return tx.espai.all;
   const carpeta = carpetaDeOpcio(categoryId);
   if (carpeta) {
-    if (Object.hasOwn(NOM_CARPETA_FIXA, carpeta)) return NOM_CARPETA_FIXA[carpeta];
-    return noticies.categories.find((categoria) => categoria.id === carpeta)?.nom || 'Notícies';
+    if (Object.hasOwn(tx.carpetesFixes, carpeta)) return tx.carpetesFixes[carpeta];
+    return noticies.categories.find((categoria) => categoria.id === carpeta)?.nom || tx.noticies;
   }
   const fontId = fontDeOpcio(categoryId);
-  return fonts.find((font) => font.id === fontId)?.nom || 'Notícies';
+  return fonts.find((font) => font.id === fontId)?.nom || tx.noticies;
 }
 
 /* El detall sense cap notícia oberta: la carpeta, quantes en porta i «Marca-ho tot com a
@@ -294,7 +273,8 @@ function nomDeLaSeleccio(categoryId, noticies, fonts) {
    quan l'espai ja ha triat una altra llista. Només si el focus encara és lliure (el botó premut,
    desmuntat, l'ha deixat al body, o és dins del marc): mai es furta d'un altre lloc. */
 function SenseNoticia({ titol, ids, resultats = null, buit, ancora, callades = null, font = null, onLlevada = null }) {
-  const { lector, noticies, personals } = useVistaLector();
+  const { lector, noticies, personals, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const llegits = new Set(lector.estat.llegits);
   const noLlegides = ids.filter((id) => !llegits.has(id)).length;
   const marca = <MarcaTotLlegit ids={resultats ?? ids} filtrat={resultats != null} />;
@@ -323,19 +303,19 @@ function SenseNoticia({ titol, ids, resultats = null, buit, ancora, callades = n
   };
   let cos;
   if (quin === 'pendent') {
-    cos = <EstatBuit icona={Hourglass} titol="Esta font encara no es llig"><span ref={ancora}>{TEXT_PENDENT}</span></EstatBuit>;
+    cos = <EstatBuit icona={Hourglass} titol={tx.fontPendentTitol}><span ref={ancora}>{tx.textPendent}</span></EstatBuit>;
   } else if (quin === 'apagada') {
     cos = (
-      <EstatBuit icona={EyeOff} titol="No seguixes esta font"
-        accio={<Boto varietat="primari" data-accio-font="torna" onClick={commuta}>Torna a seguir-la</Boto>}>
-        <span ref={ancora}>{font.descripcio || 'Encén-la i les seues notícies tornaran a la llista.'}</span>
+      <EstatBuit icona={EyeOff} titol={tx.fontApagadaTitol}
+        accio={<Boto varietat="primari" data-accio-font="torna" onClick={commuta}>{tx.tornaASeguirla}</Boto>}>
+        <span ref={ancora}>{font.descripcio || tx.encenLaText}</span>
       </EstatBuit>
     );
   } else if (ids.length) {
     cos = (
-      <EstatBuit titol="Tria una notícia">
+      <EstatBuit titol={tx.triaUnaNoticia}>
         <span ref={ancora}>
-          {`${textNoticies(ids.length)}, ${noLlegides ? `${noLlegides} sense llegir` : 'totes llegides'}. Obri’n una de la llista per a llegir-la.`}
+          {`${tx.textNoticies(ids.length)}, ${tx.senseLlegir(noLlegides)}. ${tx.obriUnaDeLaLlista}`}
         </span>
       </EstatBuit>
     );
@@ -343,15 +323,15 @@ function SenseNoticia({ titol, ids, resultats = null, buit, ancora, callades = n
     cos = <FontsSenseResposta motiu={callades.motiu} onTornaAProvar={callades.rellegix} ancora={ancora} />;
   } else if (caiguda) {
     cos = (
-      <EstatBuit icona={CloudOff} titol={caiguda.motiu === 'adreca' ? 'Esta adreça no es pot llegir' : 'Esta font no ha respost'}
-        accio={<Boto varietat="secundari" onClick={noticies.rellegix}>Torna-ho a provar</Boto>}>
-        <span ref={ancora}>{textDelMotiu(caiguda.motiu, { una: true })}</span>
+      <EstatBuit icona={CloudOff} titol={caiguda.motiu === 'adreca' ? tx.adrecaNoLlegible : tx.fontNoHaRespost}
+        accio={<Boto varietat="secundari" onClick={noticies.rellegix}>{tx.tornaHoAProvar}</Boto>}>
+        <span ref={ancora}>{textDelMotiu(caiguda.motiu, { una: true, idioma })}</span>
       </EstatBuit>
     );
   } else cos = <EstatBuit titol={buit[0]}><span ref={ancora}>{buit[1]}</span></EstatBuit>;
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} />}
-      eines={<>{marca}{font ? <AccionsDeFont font={font} quin={quin} onCommuta={commuta} onLleva={lleva} /> : null}</>}
+      eines={<>{marca}{font ? <AccionsDeFont font={font} quin={quin} onCommuta={commuta} onLleva={lleva} tx={tx} /> : null}</>}
       avis={<><AvisLector /><AvisFonts /></>} etiqueta={titol}>
       {cos}
     </MarcColumna>
@@ -363,17 +343,17 @@ function SenseNoticia({ titol, ids, resultats = null, buit, ancora, callades = n
    seguix, s'apaga (es desa i ja no es demana; continua a l'arbre, marcada). Una apagada porta
    «Torna a seguir-la» al cos. En una pestanya lectora no es lleva res: el disc és d'una altra.
    Correcció L-04 · Les accions les fa SenseNoticia (`onCommuta`, `onLleva`), que en porta el focus. */
-function AccionsDeFont({ font, quin, onCommuta, onLleva }) {
+function AccionsDeFont({ font, quin, onCommuta, onLleva, tx }) {
   const { lector } = useVistaLector();
   if (font.personal) {
     return (
       <Boto varietat="secundari" icona={Trash2} disabled={lector.mode === 'lectora'} onClick={onLleva}>
-        Lleva la font
+        {tx.llevaLaFont}
       </Boto>
     );
   }
   if (quin !== 'seguida') return null;
-  return <Boto varietat="secundari" icona={EyeOff} data-accio-font="deixa" onClick={onCommuta}>Deixa de seguir-la</Boto>;
+  return <Boto varietat="secundari" icona={EyeOff} data-accio-font="deixa" onClick={onCommuta}>{tx.deixaDeSeguirla}</Boto>;
 }
 
 /* La notícia oberta. En estret (el mestre-detall de l'espai), tancar-la torna a la llista,
@@ -411,7 +391,8 @@ function TornaALaLlista({ obert }) {
  * `totes`: si la ruta és la de «Totes».
  */
 export function EspaiNoticies({ params = null, totes = false }) {
-  const { lector, noticies, ara, desfas, ruta, enLinia, personals, llegixPersonals, mitjans, t = null } = useVistaLector();
+  const { lector, noticies, ara, desfas, ruta, enLinia, personals, llegixPersonals, mitjans, idioma = 'ca', t = null } = useVistaLector();
+  const tx = textosLector(idioma);
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const carpetaDelCami = params?.carpeta ?? null;
@@ -429,9 +410,9 @@ export function EspaiNoticies({ params = null, totes = false }) {
   /* 261024 (Lector) · Totes les fonts de l'arbre: les del port i les teues pendents. */
   const fonts = useMemo(() => fontsDelLector({ noticies, personals: personals.fonts, llegixPersonals }),
     [noticies, personals.fonts, llegixPersonals]);
-  const opcions = useMemo(() => opcionsDeLArbre({ noticies, estat, ara, fonts }), [noticies, estat, ara, fonts]);
-  const base = useMemo(() => filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge: mitjans.imatge }),
-    [noticies, estat, ara, desfas, carpeta, mitjans]);
+  const opcions = useMemo(() => opcionsDeLArbre({ noticies, estat, ara, fonts, tx }), [noticies, estat, ara, fonts, tx]);
+  const base = useMemo(() => filesDeLaLlista({ noticies, estat, ara, desfas, carpeta, imatge: mitjans.imatge, tx }),
+    [noticies, estat, ara, desfas, carpeta, mitjans, tx]);
   /* Encàrrec F del Gauntlet (261016, P2) · La notícia oberta es queda a la llista on la persona
      l'ha vista. Una fila és de «Per a després» només mentre està desada (filesDeLaLlista):
      llevar-ne «Desa per a després» amb la notícia oberta li llevava la carpeta, i l'espai,
@@ -550,7 +531,7 @@ export function EspaiNoticies({ params = null, totes = false }) {
   }, [llevada, fonts, llista]);
 
   /* El buit de la columna de la llista (labels.empty): el de la carpeta de la URL. */
-  const buit = buitDe(carpeta);
+  const buit = buitDe(carpeta, tx);
   /* T5 (261024) · Si no ha respost cap font: per què (sense xarxa al dispositiu, sempre
      'sense-connexio') i com tornar-ho a provar, per al detall (SenseNoticia).
      261024 (Lector final) · El motiu és el del port (fontNoticies.js · motiuDominant), que ja compta
@@ -583,25 +564,26 @@ export function EspaiNoticies({ params = null, totes = false }) {
       <>
         {tornada}
         {dreceres}
-        <SenseNoticia titol={nomDeLaSeleccio(vista, noticies, fonts)} ids={ids} resultats={resultats} buit={buitDe(carpetaDeOpcio(vista))}
+        <SenseNoticia titol={nomDeLaSeleccio(vista, noticies, fonts, tx)} ids={ids} resultats={resultats} buit={buitDe(carpetaDeOpcio(vista), tx)}
           ancora={ancora} callades={callades} font={font} onLlevada={setLlevada} />
       </>
     );
-  }, [tanca, files, noticies, callades, fonts]);
+  }, [tanca, files, noticies, callades, fonts, tx]);
   /* El buit de la llista d'una font apagada o pendent ho diu (261024, Lector). */
   const fontDeLaUrl = fontDelCami ? fonts.find((font) => font.id === fontDelCami) || null : null;
-  const buitDeFont = fontDeLaUrl ? BUIT_DE_FONT[estatDeFont(fontDeLaUrl, estat)] || null : null;
+  const estatFontUrl = fontDeLaUrl ? estatDeFont(fontDeLaUrl, estat) : null;
+  const buitDeFont = estatFontUrl === 'apagada' ? tx.buitFontApagada : (estatFontUrl === 'pendent' ? tx.buitFontPendent : null);
   const etiquetes = useMemo(() => ({
-    categories: tradueix(t, TEXTOS_ESPAI_LECTOR.categories),
-    items: tradueix(t, TEXTOS_ESPAI_LECTOR.items),
-    all: tradueix(t, TEXTOS_ESPAI_LECTOR.all),
-    search: tradueix(t, TEXTOS_ESPAI_LECTOR.search),
-    loading: tradueix(t, TEXTOS_ESPAI_LECTOR.loading),
-    error: tradueix(t, TEXTOS_ESPAI_LECTOR.error),
-    select: tradueix(t, TEXTOS_ESPAI_LECTOR.select),
-    manage: tradueix(t, TEXTOS_ESPAI_LECTOR.manage),
-    empty: callades ? BUIT_CALLADES : buitDeFont || `${buit[0]}.`,
-  }), [t, buit, callades, buitDeFont]);
+    categories: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.categories) : tx.espai.categories,
+    items: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.items) : tx.espai.items,
+    all: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.all) : tx.espai.all,
+    search: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.search) : tx.espai.search,
+    loading: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.loading) : tx.espai.loading,
+    error: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.error) : tx.espai.error,
+    select: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.select) : tx.espai.select,
+    manage: t ? tradueix(t, TEXTOS_ESPAI_LECTOR.manage) : tx.espai.manage,
+    empty: callades ? tx.buitCallades : buitDeFont || `${buit[0]}.`,
+  }), [t, tx, buit, callades, buitDeFont]);
 
   /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?article= a l'entrada, la
      notícia (nivellMestreDetall.js). */

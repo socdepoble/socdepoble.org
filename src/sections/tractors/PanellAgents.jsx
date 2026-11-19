@@ -2,6 +2,9 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { parseMarkdown, extreuEditorial } from '../wiki-de-poble/parseMarkdown.js';
 
 import agentsMdRaw from '../../../AGENTS.md?raw';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
 export default function PanellAgents() {
   // 1. Extraure el frontmatter
@@ -33,7 +36,7 @@ ${cosRebaixat}
      sdp-m-m (llei dura tailwind-visual): no té cap regla a cap full, i
      llevar-la no canvia cap píxel. */
   return (
-    <div className="sdp-tractors-panell">
+    <div ref={adoptaEstilsDiferits} className="sdp-tractors-panell">
       <div 
         className="sdp-prose sdp-prose--encoixinada"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(markdownFinal)) }} 

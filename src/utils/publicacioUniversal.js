@@ -32,10 +32,11 @@
  * persona, també sense compte), perquè la fitxa és per a contactar, i el
  * formulari (BlocAmbit) ho avisa.
  *
- * JS PUR: cap React, cap xarxa, cap rellotge. L'única importació és
- * netejaText (utils/sanitize.js). Cap funció llança: tornen valors.
+ * JS PUR: cap React, cap xarxa, cap rellotge. Només netejaText i el
+ * pressupost Unicode pur compartit. Cap funció llança: tornen valors.
  */
 import { netejaText } from './sanitize.js';
+import { normalitzaUnicodeSegura } from './normalitzaUnicodeSegura.js';
 
 /* ── Vocabulari tancat ─────────────────────────────────────────────── */
 
@@ -374,9 +375,7 @@ const MARQUES_COMBINANTS = new RegExp(`[${String.fromCodePoint(0x300)}-${String.
 
 /* Un slug de categoria del Mercat (category_slug), lineal i sense retrocés. */
 function slugDe(text) {
-  return String(text)
-    .toLowerCase()
-    .normalize('NFD')
+  return normalitzaUnicodeSegura(String(text).toLowerCase(), 'NFD')
     .replace(MARQUES_COMBINANTS, '')
     .replace(/[^a-z0-9]+/g, '-')
     .split('-')

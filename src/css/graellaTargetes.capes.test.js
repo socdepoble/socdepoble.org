@@ -50,7 +50,7 @@ describe('graelles de targetes: auto-fill, mai auto-fit', () => {
      l'amplària mínima canònica de les targetes (.sdp-card-grid, 360px).
      Derogat EN PART: «20rem» per a la Consola; la Gestoria no canvia. */
   test('la Consola (amb l’amplària canònica de 360px) i el Tauler de la Gestoria usen auto-fill', () => {
-    const modules = senseComentaris(FULLS.find((f) => f.ruta === 'css/modules.css').text);
+    const modules = `${senseComentaris(FULLS.find((f) => f.ruta === 'css/modules.css').text)}\n${senseComentaris(FULLS.find((f) => f.ruta === 'css/diferit-gestoria.css').text)}`;
     for (const [selector, columnes] of [
       ['.sdp-card-grid.sdp-consola__graella', 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))'],
       ['.sdp-card-grid.sdp-gestoria-tauler__graella', 'repeat(auto-fill, minmax(min(100%, 20rem), 1fr))']
@@ -70,7 +70,7 @@ describe('graelles de targetes: auto-fill, mai auto-fit', () => {
    regla escrita (jsdom no fa graelles ni @container); la mesura de veres és
    a l'informe del torn (Chrome a 1920, 1440, 1100, 800 i 375). */
 describe('/consola · files de la mateixa alçada i títols sencers', () => {
-  const MODULES = () => senseComentaris(FULLS.find((f) => f.ruta === 'css/modules.css').text);
+  const MODULES = () => `${senseComentaris(FULLS.find((f) => f.ruta === 'css/diferit-connectar.css').text)}\n${senseComentaris(FULLS.find((f) => f.ruta === 'css/modules.css').text)}`;
   const cosDe = (css, selector) => {
     const inici = css.indexOf(`${selector} {`);
     return inici < 0 ? null : css.slice(inici + selector.length + 2, css.indexOf('}', inici)).trim();

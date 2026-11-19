@@ -75,6 +75,9 @@ import { TRACTOR_TAULER } from '../tractors.js';
 import { BLOCS_TAULER, etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
 import { ACCEPTA_TAULER } from './nucli/tractorTauler.js';
 import { TargetaTauler, barraPrivada } from './TargetaTauler.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* Com diu la porta l'estat del tractor, quan no està aprovat. */
 const ESTATS_TRACTOR = Object.freeze({
@@ -88,16 +91,16 @@ const ESTATS_TRACTOR = Object.freeze({
 
 /** La xifra d'una pàgina: el text, o «Import amagat» mentre l'ull està tancat. */
 export function Xifra({ xifra, visible = false }) {
-  if (!xifra) return <span>Sense dades</span>;
+  if (!xifra) return <span ref={adoptaEstilsDiferits}>Sense dades</span>;
   if (!visible) {
     return (
-      <span className="sdp-gestoria-tauler__amagat">
+      <span ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
         <span>{textAmagat(xifra)}</span>
       </span>
     );
   }
-  return <span>{textXifra(xifra)}</span>;
+  return <span ref={adoptaEstilsDiferits}>{textXifra(xifra)}</span>;
 }
 
 /**
@@ -150,9 +153,9 @@ const TIPUS_INSIGNIA = Object.freeze({ 'sdp-badge-system': 'sistema', 'sdp-badge
  * vegades), o amagada. Sense xifra, el perquè.
  */
 export function XifraDeFila({ targeta, visible }) {
-  if (!targeta.xifra) return <span className="sdp-gestoria-comprimida__sense">{targeta.senseXifra}</span>;
+  if (!targeta.xifra) return <span ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__sense">{targeta.senseXifra}</span>;
   if (!visible) return <Xifra xifra={targeta.xifra} visible={false} />;
-  return <span>{etiquetaXifra(targeta.xifra)}</span>;
+  return <span ref={adoptaEstilsDiferits}>{etiquetaXifra(targeta.xifra)}</span>;
 }
 
 /**
@@ -165,12 +168,12 @@ export function XifraDeFila({ targeta, visible }) {
 export function TaulaComprimida({ titol, targetes, visible = false, onObri }) {
   return (
     <Taula titol={`Taula · ${titol}`} densa className="sdp-gestoria-comprimida">
-      <thead>
+      <thead ref={adoptaEstilsDiferits}>
         <tr><th scope="col">Concepte</th><th scope="col">Xifra</th></tr>
       </thead>
       <tbody>
         {targetes.map((t) => (
-          <tr key={t.id}>
+          <tr ref={adoptaEstilsDiferits} key={t.id}>
             <th scope="row">
               <button type="button" className="sdp-gestoria-comprimida__obri" onClick={() => onObri?.(t.id)}>{t.titol}</button>
               <span className="sdp-gestoria-comprimida__subtitol">{t.subtitol}</span>
@@ -200,12 +203,12 @@ export function BlocTargetes({
   const id = useId();
   if (!targetes.length) return null;
   return (
-    <section className="sdp-gestoria-tauler__bloc" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__bloc" aria-labelledby={id}>
       <h2 id={id} className="sdp-gestoria-tauler__titol">{titol}</h2>
       {vista === 'comprimida' ? (
         <TaulaComprimida titol={titol} targetes={targetes} visible={visible} onObri={onObri} />
       ) : (
-        <div className="sdp-card-grid sdp-gestoria-tauler__graella">
+        <div ref={adoptaEstilsDiferits} className="sdp-card-grid sdp-gestoria-tauler__graella">
           {targetes.map((t) => (
             <TargetaTauler key={`${t.id}-${visible ? 'mostrades' : 'amagades'}-${generacio}`} targeta={t} titular={titular} pastilla={pastilla}
               visibleInicial={visible} onObri={onObri} onAvis={onAvis} ambAccionsPrivades={ambAccionsPrivades} />
@@ -220,16 +223,16 @@ const ETIQUETES_TRIMESTRE = Object.freeze({ anterior: 'Trimestre anterior', hui:
 
 /* La part de la caixa que caldria per a Hisenda: amb l'ull tancat, només si no hi ha res a mesurar. */
 function HisendaSobreCaixa({ liquidacio, visible }) {
-  if (liquidacio.estat === 'sense') return <p className="sdp-gestoria-context__nota">{liquidacio.motiu}</p>;
+  if (liquidacio.estat === 'sense') return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">{liquidacio.motiu}</p>;
   if (!visible) {
     return (
-      <p className="sdp-gestoria-tauler__amagat">
+      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
         <span>Xifra amagada</span>
       </p>
     );
   }
-  const llegenda = <p className="sdp-gestoria-context__nota">{liquidacio.completa ? LLEGENDA_ESTIMACIO : `Estimació incompleta. ${LLEGENDA_ESTIMACIO}`}</p>;
+  const llegenda = <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">{liquidacio.completa ? LLEGENDA_ESTIMACIO : `Estimació incompleta. ${LLEGENDA_ESTIMACIO}`}</p>;
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, fronts I i E; GES-A5): el total ja no és el net del 303 i
      del 130 de l'acord del 261012, sinó la part a pagar de cada model; «res» vol dir que cap dels dos en surt. */
   if (liquidacio.estat === 'res') {
@@ -239,7 +242,7 @@ function HisendaSobreCaixa({ liquidacio, visible }) {
     const conegut = desconegut === '303' ? '130' : desconegut === '130' ? '303' : null;
     return (
       <>
-        <p className="sdp-gestoria-context__nota">
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">
           {conegut
             ? `El ${conegut} d’este trimestre no surt a pagar, i del ${desconegut} encara no hi ha estimació: el detall de cada model és a la targeta Hisenda.`
             : 'Ni el 303 ni el 130 d’este trimestre surten a pagar: el detall de cada model és a la targeta Hisenda.'}
@@ -251,7 +254,7 @@ function HisendaSobreCaixa({ liquidacio, visible }) {
   if (liquidacio.estat === 'descobert') {
     return (
       <>
-        <p className="sdp-gestoria-context__nota">La caixa real és zero o en descobert: no en queda cap part per a l’estimació de Hisenda.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">La caixa real és zero o en descobert: no en queda cap part per a l’estimació de Hisenda.</p>
         {llegenda}
       </>
     );
@@ -259,7 +262,7 @@ function HisendaSobreCaixa({ liquidacio, visible }) {
   return (
     <>
       <Progres etiqueta="La part de la caixa real que caldria per a Hisenda" valor={liquidacio.percentatge} max={100} />
-      {liquidacio.supera ? <p className="sdp-gestoria-context__nota">L’estimació supera la caixa real.</p> : null}
+      {liquidacio.supera ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">L’estimació supera la caixa real.</p> : null}
       {llegenda}
     </>
   );
@@ -283,7 +286,7 @@ export function ContextTrimestre({ dades, visible = false, vista, onCanviaVista,
   const premuda = vistaDelModul(vista, vistes);
   if (!periode) {
     return (
-      <section className="sdp-gestoria-context" aria-label="Context del panell">
+      <section ref={adoptaEstilsDiferits} className="sdp-gestoria-context" aria-label="Context del panell">
         {/* La mateixa píndola que porta NavegacioPeriode al Tauler i a Impostos (.sdp-cal-vistes): el commutador no canvia d'aspecte entre mòduls. */}
         <PillToggle className="sdp-cal-vistes" opcions={vistes} valor={premuda} onCanvi={onCanviaVista} etiqueta="Vista del panell" />
       </section>
@@ -292,7 +295,7 @@ export function ContextTrimestre({ dades, visible = false, vista, onCanviaVista,
   const { iva, rellotge, liquidacio } = dades;
   const titol = Number.isInteger(iva.t) ? `${iva.t}T ${iva.any}` : 'Sense trimestre';
   return (
-    <section className="sdp-gestoria-context" aria-label="Context del panell">
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-context" aria-label="Context del panell">
       <NavegacioPeriode etiquetes={ETIQUETES_TRIMESTRE} titol={titol} onAnterior={periode.onAnterior} onHui={periode.onHui}
         onSeguent={periode.onSeguent} vista={premuda} onCanviaVista={onCanviaVista} vistes={vistes} etiquetaVistes="Vista del panell" />
       <div className="sdp-gestoria-context__barres">
@@ -300,9 +303,9 @@ export function ContextTrimestre({ dades, visible = false, vista, onCanviaVista,
           <p className="sdp-gestoria-context__titol">El termini</p>
           {rellotge.valor == null ? null : <Progres etiqueta={rellotge.etiqueta} valor={rellotge.valor} max={rellotge.max} />}
           <p className="sdp-gestoria-context__nota">{rellotge.text}</p>
-          {rellotge.obert ? <p className="sdp-gestoria-context__obert">{rellotge.obert}</p> : null}
+          {rellotge.obert ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__obert">{rellotge.obert}</p> : null}
           {/* Els terminis són [NO VERIFICAT] a impostos.js: la capçalera no els dona per segurs. */}
-          {rellotge.fase === 'sense' ? null : <p className="sdp-gestoria-context__nota">Terminis orientatius: a verificar amb la gestoria.</p>}
+          {rellotge.fase === 'sense' ? null : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-context__nota">Terminis orientatius: a verificar amb la gestoria.</p>}
         </div>
         <div className="sdp-gestoria-context__barra">
           <p className="sdp-gestoria-context__titol">Hisenda sobre la caixa real</p>
@@ -367,7 +370,7 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
   }
   return (
     <div className="sdp-gestoria-tauler__porta" ref={refPorta} onFocusCapture={recordaFocus}>
-      <p role="status" aria-label="Estat de la lectura" aria-atomic="true" className="sdp-nomes-lector">{anunci}</p>
+      <p ref={adoptaEstilsDiferits} role="status" aria-label="Estat de la lectura" aria-atomic="true" className="sdp-nomes-lector">{anunci}</p>
       <Camp key={tauler.generacio} etiqueta="Tria els extractes del banc"
         ajuda="Norma 43 o el CSV de moviments i, si vols, la configuració de l’empresa (.json) per a la teua boina. Res es puja enlloc.">
         <CampText tipus="file" multiple accept={ACCEPTA_TAULER} disabled={llegint}
@@ -377,8 +380,8 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
       {error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{error}</Alerta> : null}
       {lectura?.avisos?.length ? (
         <Alerta to="avis" titol="Hi ha fitxers que no s’han llegit">
-          <ul className="sdp-gestoria-tauler__avisos">
-            {lectura.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__avisos">
+            {lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
           </ul>
         </Alerta>
       ) : null}
@@ -396,8 +399,8 @@ export function AvisosComptes({ avisos }) {
   if (!delsComptes.length) return null;
   return (
     <Alerta to="info" titol="Notes de la lectura">
-      <ul className="sdp-gestoria-tauler__avisos">
-        {delsComptes.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+      <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__avisos">
+        {delsComptes.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
       </ul>
     </Alerta>
   );
@@ -466,19 +469,19 @@ export function PaginaTargeta({
       author={titular} barActions={barActions} rellotgeViu={rellotgeViu === true} rellotge={rellotge} labels={targeta.etiquetes}
       onBack={onTorna} refTitol={refTitol} {...barraPrivada(onAvis)}>
       {avis}
-      <section className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-xifra`}>
+      <section ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-xifra`}>
         <h2 id={`${id}-xifra`}>La xifra</h2>
         <p className="sdp-gestoria-tauler__xifra"><Xifra xifra={targeta.xifra} visible={visible} /></p>
-        {targeta.xifra ? null : <p>{targeta.senseXifra}</p>}
+        {targeta.xifra ? null : <p ref={adoptaEstilsDiferits}>{targeta.senseXifra}</p>}
       </section>
       {targeta.detall.length ? (
         <Taula titol={`El detall de ${targeta.titol}`} densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr><th scope="col">Concepte</th><th scope="col">Xifra</th></tr>
           </thead>
           <tbody>
             {targeta.detall.map((fila) => (
-              <tr key={fila.etiqueta}>
+              <tr ref={adoptaEstilsDiferits} key={fila.etiqueta}>
                 <th scope="row">{fila.etiqueta}</th>
                 <td><Xifra xifra={fila.xifra} visible={visible} /></td>
               </tr>
@@ -487,8 +490,8 @@ export function PaginaTargeta({
         </Taula>
       ) : null}
       {targeta.notes.length ? (
-        <ul className="sdp-gestoria-tauler__notes">
-          {targeta.notes.map((nota) => <li key={nota}>{nota}</li>)}
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__notes">
+          {targeta.notes.map((nota) => <li ref={adoptaEstilsDiferits} key={nota}>{nota}</li>)}
         </ul>
       ) : null}
       <section className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-font`}>

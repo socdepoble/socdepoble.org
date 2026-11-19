@@ -34,6 +34,9 @@
  */
 import { useState } from 'react';
 import { File as IconaFitxer } from 'lucide-react';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 export function TargetaMultimedia({
   nom, meta, miniatura = null, icona: Icona = IconaFitxer, extensio = '', arxiu = false, premuda, onTria, refBoto, children
@@ -50,7 +53,7 @@ export function TargetaMultimedia({
       onClick={onTria}
     >
       {ambMiniatura ? (
-        <img
+        <img ref={adoptaEstilsDiferits}
           className="sdp-arxiu-local__miniatura"
           src={miniatura}
           alt=""
@@ -59,12 +62,12 @@ export function TargetaMultimedia({
           onError={() => setMiniaturaFallida(miniatura)}
         />
       ) : (
-        <span className="sdp-arxiu-local__icona" aria-hidden="true">
+        <span ref={adoptaEstilsDiferits} className="sdp-arxiu-local__icona" aria-hidden="true">
           <Icona size={36} focusable="false" />
-          {extensio ? <span className="sdp-arxiu-local__ext">{`.${extensio}`}</span> : null}
+          {extensio ? <span ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ext">{`.${extensio}`}</span> : null}
         </span>
       )}
-      <span className="sdp-arxiu-local__nom">{nom}</span>
+      <span ref={adoptaEstilsDiferits} className="sdp-arxiu-local__nom">{nom}</span>
       <span className="sdp-arxiu-local__meta">{meta}</span>
       {children}
     </button>

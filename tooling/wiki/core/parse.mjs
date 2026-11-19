@@ -22,6 +22,7 @@ import fs from 'node:fs/promises';
 
 const _metaUrl = import.meta.url.startsWith('file:') ? import.meta.url : 'file://' + import.meta.url;
 import path from 'node:path';
+import { scanInlineMarkdownLinks, scanMarkdownDestination } from '../../lib/markdown-balanced-scanner.mjs';
 import {
   parseFrontmatter,
 } from '../lib/frontmatter.mjs';
@@ -81,62 +82,11 @@ export function liveMarkdown(body) {
 }
 
 export function parseMarkdownDestination(raw) {
-  let value = raw.trim();
-  const angle = /^<([^>]+)>/.exec(value);
-  if (angle) return angle[1];
-  const quotedTitle = /\s+(?:"[^"]*"|'[^']*'|\([^)]*\))\s*$/.exec(value);
-  if (quotedTitle) value = value.slice(0, quotedTitle.index).trim();
-  return value;
+  return scanMarkdownDestination(raw);
 }
 
 export function extractInlineMarkdownLinks(text) {
-  const links = [];
-  for (let i = 0; i < text.length; i++) {
-    const embed = text[i] === '!' && text[i + 1] === '[';
-    const bracket = embed ? i + 1 : i;
-    if (text[bracket] !== '[' || text[bracket + 1] === '[') continue;
-    let depth = 1;
-    let escaped = false;
-    let labelEnd = -1;
-    for (let j = bracket + 1; j < text.length; j++) {
-      const char = text[j];
-      if (escaped) { escaped = false; continue; }
-      if (char === '\\') { escaped = true; continue; }
-      if (char === '[') depth++;
-      else if (char === ']' && --depth === 0) { labelEnd = j; break; }
-    }
-    if (labelEnd < 0 || text[labelEnd + 1] !== '(') continue;
-
-    let parens = 1;
-    let quote = '';
-    let angle = false;
-    escaped = false;
-    let end = -1;
-    for (let j = labelEnd + 2; j < text.length; j++) {
-      const char = text[j];
-      if (escaped) { escaped = false; continue; }
-      if (char === '\\') { escaped = true; continue; }
-      if (!quote && char === '<') { angle = true; continue; }
-      if (angle && char === '>') { angle = false; continue; }
-      if (!angle && (char === '"' || char === "'")) {
-        if (quote === char) quote = '';
-        else if (!quote && /\s/.test(text[j - 1] || '')) quote = char;
-        continue;
-      }
-      if (angle || quote) continue;
-      if (char === '(') parens++;
-      else if (char === ')' && --parens === 0) { end = j; break; }
-    }
-    if (end < 0) continue;
-    links.push({
-      kind: 'markdown',
-      raw: text.slice(i, end + 1),
-      target: parseMarkdownDestination(text.slice(labelEnd + 2, end)),
-      embed,
-    });
-    i = end;
-  }
-  return links;
+  return scanInlineMarkdownLinks(text);
 }
 
 export function extractLinks(body) {

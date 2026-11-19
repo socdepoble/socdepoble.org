@@ -1,6 +1,7 @@
 /** Shared document primitives. No I/O on import; every operation has an explicit root. */
 import { CAMINS } from '../lib/arrel.mjs';
 import { markdownProse } from '../lib/markdown-prose.mjs';
+import { documentSectionRanges, stripTrailingSectionMarker } from '../lib/document-section-scanner.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -172,22 +173,14 @@ export function anchored(index, file) {
 }
 export function sections(body) {
   const clean = withoutCode(body);
-  const chunks = [...clean.matchAll(/^##\s+(.+)\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/gm)];
-  return new Map(chunks.map(m => [m[1].trim(), m[2].trim()]));
+  return new Map(documentSectionRanges(clean).map(({name, start, end}) => [name, clean.slice(start, end).trim()]));
 }
-// Detecta capçaleres en prosa (mai dins de codi), però copia els bytes de la
-// font. Emmascarar la prosa també en el resultat mutilava rutes i ordres.
+// Detect headings in prose, while retaining source bytes and offsets in values.
 export function sourceSections(body) {
   const clean = withoutCode(body);
-  const chunks = [...clean.matchAll(/^##\s+(.+)\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/gm)];
-  return new Map(chunks.map(m => {
-    const start = m.index + m[0].length - m[2].length;
-    const value = body.slice(start, start + m[2].length)
-      // La marca de la secció següent és estructura del generador, no text.
-      .replace(/\s*<!-- SDP:SECTION [a-zA-Z0-9._-]+ -->\s*$/, '').trim();
-    return [m[1].trim(), value];
-  }));
+  return new Map(documentSectionRanges(clean).map(({name, start, end}) => [name, stripTrailingSectionMarker(body.slice(start, end)).trim()]));
 }
+
 export function validateSections(body, route) {
   const found = sections(body), errors = [];
   for (const name of route.seccions) {

@@ -5,11 +5,9 @@
  * dins de `npm run build`) i `dist/` és a .gitignore. Des de WP-06 la taula tampoc
  * viatja als paquets. Per això:
  *   · present                       → res a dir (la vigilen el build i la Porta Build);
- *   · absent dins del pre-commit    → s'executa el productor en sec, que no escriu res
- *     (SDP_PRE_COMMIT=1, l'arbre      i ja falla tancat: menys de 10 rutes, cap indexable,
- *      preparat de git-staged.mjs)    una llavor il·legible. Verd i JSON amb rutes = avís;
- *                                      qualsevol altra cosa = infracció;
- *   · absent fora del pre-commit    → infracció (CI construïx abans de les portes).
+ *   · absent en qualsevol entorn   → el mateix productor calcula la taula en memòria,
+ *     sense --escriu ni cap fitxer   amb les mateixes validacions del build. Una font
+ *     generat a l'arbre verificat.   trencada continua sent infracció (fail-closed).
  *
  * Pura respecte de l'entorn i del procés: `env` i `executa` s'injecten (proves).
  */
@@ -29,9 +27,6 @@ const darreraLinia = (text) => String(text || '').split('\n').map((l) => l.trim(
 export function comprovaTaulaRutes({ arrel, env = process.env, executa = spawnSync, tempsMs = 60_000 } = {}) {
   if (!arrel) throw new TypeError('comprovaTaulaRutes: cal l’arrel');
   if (fs.existsSync(path.join(arrel, TAULA_RUTES))) return { estat: 'present', missatge: '' };
-  if (env.SDP_PRE_COMMIT !== '1') {
-    return { estat: 'falla', missatge: 'Taula de rutes absent: executa npm run build:seo (o npm run build).' };
-  }
   // El productor llig el mateix arbre que el Consell (SDP_ARREL), en sec: sense --escriu.
   const sec = executa(process.execPath, [path.join(arrel, PRODUCTOR_RUTES)], {
     cwd: arrel,
@@ -57,6 +52,6 @@ export function comprovaTaulaRutes({ arrel, env = process.env, executa = spawnSy
   }
   return {
     estat: 'avis',
-    missatge: `Absent a l'arbre preparat (artefacte de build). El productor la genera en sec: ${rutes} rutes (${indexables} indexables).`,
+    missatge: `Absent a l'arbre verificat (artefacte de build). El productor la calcula en memòria: ${rutes} rutes (${indexables} indexables).`,
   };
 }

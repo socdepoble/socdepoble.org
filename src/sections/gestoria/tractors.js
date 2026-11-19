@@ -69,11 +69,13 @@ export const TRACTOR_FACTURES = Object.freeze({
     'src/sections/gestoria/enviament/revisioAdjunts.js',
     'src/sections/gestoria/nucli/classifica.js',
     'src/sections/gestoria/nucli/entregables.js',
+    'src/sections/gestoria/nucli/exportacioIntegritat.js',
     'src/sections/gestoria/nucli/fullModel.js',
     'src/sections/gestoria/nucli/inflate.js',
     'src/sections/gestoria/nucli/pdfText.js',
     'src/sections/gestoria/nucli/plantilla.js',
     'src/sections/gestoria/nucli/receptes.js',
+    'src/sections/gestoria/nucli/registreIntegritat.js',
     'src/sections/gestoria/nucli/xlsx.js',
     'src/sections/gestoria/nucli/zip.js'
   ].sort()),

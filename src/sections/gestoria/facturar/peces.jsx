@@ -10,6 +10,9 @@
 import { useId } from 'react';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const INSIGNIES = Object.freeze({
   fet: Object.freeze({ to: 'exit', text: 'Fet' }),
@@ -25,7 +28,7 @@ export function Pas({ numero, titol, estat, insignia = null, children }) {
   const idTitol = useId();
   const marca = insignia ?? INSIGNIES[estat] ?? INSIGNIES.bloquejat;
   return (
-    <li className="sdp-gestoria-panell__pas" data-estat={estat}>
+    <li ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__pas" data-estat={estat}>
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
           <h2 id={idTitol} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h2>
@@ -42,10 +45,10 @@ export function AvisDeZona({ avis, zona, onTanca }) {
   if (!avis || avis.zona !== zona) return null;
   return (
     <Alerta to={avis.to} titol={avis.titol} onTanca={onTanca}>
-      <p>{avis.text}</p>
+      <p ref={adoptaEstilsDiferits}>{avis.text}</p>
       {avis.detalls.length ? (
-        <ul className="sdp-gestoria-panell__avisos">
-          {avis.detalls.map((detall, i) => <li key={`${i}-${detall}`}>{detall}</li>)}
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
+          {avis.detalls.map((detall, i) => <li ref={adoptaEstilsDiferits} key={`${i}-${detall}`}>{detall}</li>)}
         </ul>
       ) : null}
     </Alerta>
@@ -57,8 +60,8 @@ export function ErrorsDelFormulari({ titol, errors }) {
   if (!errors.length) return null;
   return (
     <Alerta to="error" titol={titol}>
-      <ul className="sdp-gestoria-panell__avisos">
-        {errors.map((error, i) => <li key={`${i}-${error}`}>{error}</li>)}
+      <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
+        {errors.map((error, i) => <li ref={adoptaEstilsDiferits} key={`${i}-${error}`}>{error}</li>)}
       </ul>
     </Alerta>
   );

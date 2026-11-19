@@ -33,7 +33,8 @@ import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
 import {
-  NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+  NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
+  NOMS_DEL_NUCLI_1_7
 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
@@ -569,5 +570,29 @@ test('R21.6: cada nom de l’1.6 el fan servir la Nevera, l’esquelet comú i l
   const esperats = Object.entries(NOMS_DEL_NUCLI_1_6).flatMap(([porta, noms]) => noms.map((nom) => `${porta}.${nom}`));
   for (const carril of ['src/apps/nevera', 'src/apps/comu', 'src/sections/gestoria']) {
     expect([...(usPerCarril.get(carril) || [])].sort(), carril).toEqual(esperats.sort());
+  }
+});
+
+/* R32.11 (v1.2.9) · El nom que l'1.7.0 afig a la porta 'pedraSeca' (Accions, el bloc d'accions centrat)
+   té ús en codi de veres que es compila com a mòdul: el pont de la Gestoria (lot 05 de Gemini) i el
+   Rebost de la Nevera (lot 06). Tots dos el prenen per la façana de Pedra Seca, que el nucli exposa. */
+test('R32.11: cada nom de l’1.7 el fan servir la Gestoria i la Nevera, per la porta del nucli', () => {
+  const noms17 = Object.values(NOMS_DEL_NUCLI_1_7).flat();
+  const esperats = Object.entries(NOMS_DEL_NUCLI_1_7).flatMap(([porta, noms]) => noms.map((nom) => `${porta}.${nom}`)).sort();
+  for (const carril of ['src/apps/gestoria', 'src/apps/nevera']) {
+    const usats = new Set();
+    const deFora = [];
+    for (const ruta of fitxersDe(carril)) {
+      for (const { especificador, noms } of importacions(llig(ruta))) {
+        const desti = resol(ruta, especificador) || '';
+        const porta = portaDeLaFont(desti);
+        for (const nom of noms.filter((candidat) => noms17.includes(candidat))) {
+          if (!porta || !exposaElNom(porta, nom)) deFora.push(`${ruta}: ${nom} de ${desti}`);
+          else usats.add(`${porta.clau}.${nom}`);
+        }
+      }
+    }
+    expect(deFora, carril).toEqual([]);
+    expect([...usats].sort(), carril).toEqual(esperats);
   }
 });

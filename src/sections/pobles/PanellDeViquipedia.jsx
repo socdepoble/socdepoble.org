@@ -41,6 +41,7 @@ import {
   consentimentActiu, consentimentRecordat, donaConsentiment, retiraConsentiment, subscriuConsentiment
 } from './consentimentViquipedia.js';
 import { CreditsDeViquipedia, LOCALE_PER_DEFECTE, traductorDeViquipedia } from './CreditsDeViquipedia.jsx';
+import { textosFontsTerritorials } from './i18nFontsTerritorials.js';
 
 /** El temps màxim de tota una consulta (el client fa 8 s per intent i fins a 3 reintents). */
 export const TERMINI_MS = 20000;
@@ -265,9 +266,18 @@ function Font({ url, children }) {
   return href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : children;
 }
 
+function useIdiomaFontsTerritorials() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 /** AH-27 · dades i atribució accessibles també quan la foto real ja venia
  * amb la llavor. Obrir els crèdits no fa cap petició Wikimedia. */
 export function FontsTerritorials({ poble }) {
+  const tx = textosFontsTerritorials(useIdiomaFontsTerritorials());
   const dto = poble.wikipedia_provenance ? poble : poble.fontsDeViquipedia?.dto || poble;
   const imatges = dto.imatges || poble.imatgesViquipedia || {};
   const vistes = new Set();
@@ -277,26 +287,26 @@ export function FontsTerritorials({ poble }) {
   const qid = dto.wikidata_id || poble.wikidata_id;
   const any = poble.population_year ?? (poble.population == null || poble.population === dto.population ? dto.population_year : null);
   const dades = [
-    ['Comarca', poble.comarca ?? dto.comarca], ['Província', poble.provincia ?? dto.provincia],
-    ['Població', (poble.population ?? dto.population) ? `${poble.population ?? dto.population}${any ? ` (${any})` : ''}` : null],
-    ['Altitud', Number.isFinite(poble.elevation ?? dto.elevation) ? `${poble.elevation ?? dto.elevation} m` : null],
-    ['Superfície', Number.isFinite(poble.area ?? dto.area) ? `${poble.area ?? dto.area} km²` : null],
-    ['Gentilici', poble.gentilici ?? dto.gentilici],
-    ['Coordenades', Number.isFinite(poble.lat ?? dto.lat) && Number.isFinite(poble.lng ?? dto.lng) ? `${poble.lat ?? dto.lat}, ${poble.lng ?? dto.lng}` : null]
+    [tx.comarca, poble.comarca ?? dto.comarca], [tx.provincia, poble.provincia ?? dto.provincia],
+    [tx.poblacio, (poble.population ?? dto.population) ? `${poble.population ?? dto.population}${any ? ` (${any})` : ''}` : null],
+    [tx.altitud, Number.isFinite(poble.elevation ?? dto.elevation) ? `${poble.elevation ?? dto.elevation} m` : null],
+    [tx.superficie, Number.isFinite(poble.area ?? dto.area) ? `${poble.area ?? dto.area} km²` : null],
+    [tx.gentilici, poble.gentilici ?? dto.gentilici],
+    [tx.coordenades, Number.isFinite(poble.lat ?? dto.lat) && Number.isFinite(poble.lng ?? dto.lng) ? `${poble.lat ?? dto.lat}, ${poble.lng ?? dto.lng}` : null]
   ].filter(([, valor]) => valor != null);
   const absents = poble.wikipedia_hydration?.missing || [];
   return <details className="sdp-prose">
-    <summary>D’on ve esta fitxa</summary>
+    <summary>{tx.sumari}</summary>
     <dl>{dades.map(([nom, valor]) => <div key={nom}><dt>{nom}</dt><dd>{valor}</dd></div>)}</dl>
-    {poble.parent_poble_nom ? <p>Nucli de {poble.parent_poble_nom}. Les dades de població corresponen a este nucli.</p> : null}
-    <p>{article ? <><Font url={article}>Article de referència</Font> · text CC BY-SA 4.0. </> : null}
-      {qid ? <><Font url={`https://www.wikidata.org/wiki/${qid}`}>Wikidata {qid}</Font> · dades CC0.</> : null}</p>
+    {poble.parent_poble_nom ? <p>{tx.nucliDe(poble.parent_poble_nom)}</p> : null}
+    <p>{article ? <><Font url={article}>{tx.articleReferencia}</Font>{tx.textCcBySa}</> : null}
+      {qid ? <><Font url={`https://www.wikidata.org/wiki/${qid}`}>Wikidata {qid}</Font>{tx.dadesCc0}</> : null}</p>
     <ul>{fotos.map(foto => <li key={foto.fitxer}>
-      <Font url={foto.fontUrl}>{foto.fitxer}</Font> · {foto.autor || 'Autoria a la pàgina del fitxer'}
+      <Font url={foto.fontUrl}>{foto.fitxer}</Font> · {foto.autor || tx.autoriaFitxer}
       {foto.llicencia ? <> · <Font url={foto.llicenciaUrl}>{foto.llicencia}</Font></> : null}
     </li>)}</ul>
-    {absents.length ? <p>La font consultada no aporta totes les dades de la fitxa. Les dades absents es mantenen pendents.</p> : null}
-    {(poble.wikipedia_provenance?.exceptions || []).map((cas, i) => <p key={`${cas.field}-${i}`}>{cas.reason} {cas.source ? <Font url={cas.source}>Font</Font> : null}</p>)}
+    {absents.length ? <p>{tx.absents}</p> : null}
+    {(poble.wikipedia_provenance?.exceptions || []).map((cas, i) => <p key={`${cas.field}-${i}`}>{cas.reason} {cas.source ? <Font url={cas.source}>{tx.font}</Font> : null}</p>)}
   </details>;
 }
 

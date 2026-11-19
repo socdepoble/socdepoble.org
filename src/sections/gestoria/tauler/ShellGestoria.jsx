@@ -138,6 +138,9 @@ import {
 } from './Tauler.jsx';
 import { UllPrivacitat, barraPrivada } from './TargetaTauler.jsx';
 import { useTauler } from './useTauler.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /**
  * Les factures que podrien faltar al trimestre del Full (ordre del Mestre,
@@ -504,10 +507,10 @@ export default function ShellGestoria({
 
   /* La boina: l'ull i el xip de la darrera lectura. El rellotge viu l'afig PaginaApp darrere, a l'extrem dret. */
   const accionsBoina = (
-    <span className="sdp-gestoria-boina">
+    <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
       <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" />
       {lectura ? (
-        <span className="sdp-gestoria-boina__lectura">
+        <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina__lectura">
           <DateTimeControl time={lectura.time} date={lectura.date} dateTime={lectura.dateTime} label={lectura.etiqueta} />
         </span>
       ) : null}
@@ -564,7 +567,7 @@ export default function ShellGestoria({
   const salutacio = 'Ací tens la realitat de la teua empresa, calculada en este ordinador amb els extractes que tries.';
 
   return (
-    <div className="sdp-gestoria-closca">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-closca">
       <div className="sdp-gestoria-closca__pagina">
         {targeta ? (
           <PaginaTargeta targeta={targeta} titular={titular} visible={visible}
@@ -590,7 +593,7 @@ export default function ShellGestoria({
               <Boto varietat="primari" tipus="submit" form={idFormTitular}>Desa</Boto>
             </>
           )}>
-          <form id={idFormTitular} className="sdp-gestoria-titular" onSubmit={desaTitular}>
+          <form ref={adoptaEstilsDiferits} id={idFormTitular} className="sdp-gestoria-titular" onSubmit={desaTitular}>
             <Camp etiqueta="Nom" obligatori>
               <CampText name="nom" autoComplete="name" defaultValue={titularLocal?.nom ?? ''} />
             </Camp>

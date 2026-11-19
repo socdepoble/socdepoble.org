@@ -1,0 +1,246 @@
+/* Onada R32.11 · Full diferit «arxiu» (extret de src/css/modules.css). */
+@layer components {
+  .sdp-arxiu-local { display: flex; flex-direction: column; gap: var(--sdp-space-4); min-width: 0; text-align: start; }
+
+  /* Dins del Gestor, els títols de panell no competixen amb el seu h2. */
+  .sdp-arxiu-local h3 { font-size: var(--sdp-text-h5); }
+
+  .sdp-arxiu-local h4 { font-size: var(--sdp-text-h6); }
+
+  .sdp-arxiu-local__capcalera { display: flex; flex-direction: column; gap: var(--sdp-space-2); }
+
+  .sdp-arxiu-local__capcalera > p { margin: 0; color: var(--sdp-text-suau); }
+
+  .sdp-arxiu-local__panell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    min-width: 0;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-arxiu-local__panell > p,
+  .sdp-arxiu-local__bloc > p,
+  .sdp-arxiu-local__proposta > p,
+  .sdp-arxiu-local__fitxers > p { margin: 0; }
+
+  .sdp-arxiu-local__fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sdp-space-2); }
+
+  .sdp-arxiu-local__ajuda { margin: 0; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+
+  .sdp-arxiu-local__controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3);
+    align-items: start;
+  }
+
+  .sdp-arxiu-local__filtres { gap: var(--sdp-space-4); }
+
+  .sdp-arxiu-local__pindola { justify-content: center; margin: 0; }
+
+  .sdp-arxiu-local__explorador { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sdp-space-4); align-items: start; }
+
+  @media (min-width: 64rem) {
+    .sdp-arxiu-local__explorador { grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); }
+  }
+
+  .sdp-arxiu-local__principal { display: flex; flex-direction: column; gap: var(--sdp-space-4); min-width: 0; }
+
+  .sdp-arxiu-local__cos { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sdp-space-4); align-items: start; }
+
+  @media (min-width: 90rem) {
+    .sdp-arxiu-local__cos--amb-detall { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  }
+
+  .sdp-arxiu-local__fitxers { display: flex; flex-direction: column; gap: var(--sdp-space-3); min-width: 0; }
+
+  /* L'arbre de carpetes: botons natius en llistes niades. */
+  .sdp-arxiu-local__arbre { max-height: 70vh; overflow-y: auto; }
+
+  .sdp-arxiu-local__nivell { display: flex; flex-direction: column; gap: var(--sdp-space-1); margin: 0; padding: 0; list-style: none; }
+
+  .sdp-arxiu-local__nivell .sdp-arxiu-local__nivell { padding-inline-start: var(--sdp-space-4); }
+
+  .sdp-arxiu-local__node { display: flex; align-items: center; gap: var(--sdp-space-1); min-width: 0; }
+
+  .sdp-arxiu-local__plega {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-touch-min);
+    min-height: var(--sdp-touch-min);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+  }
+
+  .sdp-arxiu-local__plega-buit { flex: none; inline-size: var(--sdp-touch-min); }
+
+  .sdp-arxiu-local__carpeta {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+    min-height: var(--sdp-touch-min);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-m);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+
+  .sdp-arxiu-local__carpeta[aria-pressed="true"] { border-color: var(--sdp-accio); background: var(--sdp-fons-subtil); font-weight: 700; }
+
+  .sdp-arxiu-local__compte { flex: none; margin-inline-start: auto; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+
+  .sdp-arxiu-local__carpeta > .sdp-arxiu-local__nom { white-space: normal; overflow-wrap: anywhere; }
+
+  /* La graella d'àlbum: tessel·les quadrades; els arxius que no són imatge, amb fons subtil. */
+  .sdp-arxiu-local__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-arxiu-local__tessela {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+
+  .sdp-arxiu-local__tessela--arxiu { background: var(--sdp-fons-subtil); }
+
+  .sdp-arxiu-local__tessela[aria-pressed="true"] { border-color: var(--sdp-accio); background: var(--sdp-fons-subtil); }
+
+  .sdp-arxiu-local__miniatura,
+  .sdp-arxiu-local__icona {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arxiu-local__ext { font-size: var(--sdp-text-meta); font-weight: 700; text-transform: uppercase; }
+
+  .sdp-arxiu-local__nom { overflow: hidden; min-width: 0; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+
+  .sdp-arxiu-local__meta { overflow-wrap: anywhere; color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+
+  .sdp-arxiu-local__insignies { display: flex; flex-wrap: wrap; gap: var(--sdp-space-1); }
+
+  .sdp-arxiu-local__paginacio { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sdp-space-2); }
+
+  .sdp-arxiu-local__paginacio > p { margin: 0; }
+
+  .sdp-arxiu-local__tessela:focus-visible,
+  .sdp-arxiu-local__carpeta:focus-visible,
+  .sdp-arxiu-local__plega:focus-visible,
+  .sdp-arxiu-local [tabindex="-1"]:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-arxiu-local__tessela:hover,
+      .sdp-arxiu-local__carpeta:hover { border-color: var(--sdp-accio); }
+    .sdp-arxiu-local__plega:hover { background: var(--sdp-fons-subtil); }
+  }
+
+  /* El detall polimòrfic. */
+  .sdp-arxiu-local__detall { gap: var(--sdp-space-4); }
+
+  .sdp-arxiu-local__capdetall { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sdp-space-2); }
+
+  .sdp-arxiu-local__capdetall > h3 { min-width: 0; overflow-wrap: anywhere; }
+
+  .sdp-arxiu-local__dades { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sdp-space-2); margin: 0; }
+
+  .sdp-arxiu-local__dada { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; min-width: 0; }
+
+  @media (min-width: 40rem) {
+    .sdp-arxiu-local__dada { grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: var(--sdp-space-2); }
+  }
+
+  .sdp-arxiu-local__dada > dt { color: var(--sdp-text-suau); font-weight: 700; }
+
+  .sdp-arxiu-local__dada > dd { margin: 0; overflow-wrap: anywhere; }
+
+  .sdp-arxiu-local__bloc,
+  .sdp-arxiu-local__proposta,
+  .sdp-arxiu-local__laboratori,
+  .sdp-arxiu-local__operacions,
+  .sdp-arxiu-local__editor-caixa { display: flex; flex-direction: column; gap: var(--sdp-space-3); min-width: 0; }
+
+  .sdp-arxiu-local__llista { margin: 0; padding-inline-start: var(--sdp-space-5); }
+
+  .sdp-arxiu-local__figura { display: flex; flex-direction: column; gap: var(--sdp-space-2); margin: 0; }
+
+  .sdp-arxiu-local__imatge {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-arxiu-local__comparacio { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--sdp-space-3); }
+
+  .sdp-arxiu-local__editor { min-height: 20rem; font-family: var(--sdp-font-mono); }
+
+  .sdp-arxiu-local__font {
+    max-height: 60vh;
+    margin: 0;
+    overflow: auto;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    font-family: var(--sdp-font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-arxiu-local__mitja { display: block; width: 100%; max-height: 60vh; border-radius: var(--sdp-radi-s); background: var(--sdp-fons-subtil); }
+
+  .sdp-arxiu-local__formulari { display: flex; flex-direction: column; gap: var(--sdp-space-2); }
+
+  .sdp-arxiu-local__resultat { display: flex; flex-direction: column; gap: var(--sdp-space-1); }
+
+  .sdp-arxiu-local__resultat > p { margin: 0; }
+
+  .sdp-arxiu-local__progres { flex: 1 1 16rem; }
+}

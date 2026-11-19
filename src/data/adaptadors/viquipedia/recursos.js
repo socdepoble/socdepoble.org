@@ -9,6 +9,8 @@
    Les formes són les de les captures reals de
    tests/frontissa/fixtures/viquipedia/ (261009), amb formatversion=2. */
 
+import { llevaEtiquetes } from '../../../config/contentHelpers.js';
+
 /** «Municipi d'Espanya»: el P31 de la Torre i de Sella a Wikidata (captura del 261009). */
 export const MUNICIPI_D_ESPANYA = 'Q2074737';
 
@@ -42,8 +44,8 @@ const ENTITATS_HTML = Object.freeze({ amp: '&', lt: '<', gt: '>', quot: '"', apo
  */
 export function textDeHtml(html) {
   if (typeof html !== 'string') return '';
-  return html
-    .replace(/<[^>]*>/g, ' ')
+  // R32.11: mateix contracte textual, amb l'escàner lineal compartit.
+  return llevaEtiquetes(html)
     .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entitat, nom) => {
       if (nom[0] === '#') {
         const codi = nom[1] === 'x' || nom[1] === 'X' ? parseInt(nom.slice(2), 16) : parseInt(nom.slice(1), 10);

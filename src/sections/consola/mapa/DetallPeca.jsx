@@ -11,6 +11,9 @@ import {
   notaEixides, opcionsPeces, queEs, relacionsPerVerb, rutaEditable
 } from './grafMapa.js';
 import { codisReparats, ordreReparacio } from './inventariMapa.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitExplorador from '../../../css/diferit-explorador.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'explorador', cssDiferitExplorador); };
 
 /* T4 (ordre del Mestre, 260930) · el detall d'una peça de l'Explorador.
    Substituïx l'inspector superposat de BrainGraph, que la Wiki conserva
@@ -42,7 +45,7 @@ function useWikiDiferida() {
 function FilaRelacio({ fila, onVore }) {
   const nom = etiquetaNode({ id: fila.id });
   return (
-    <li className="sdp-explorador__relacio">
+    <li ref={adoptaEstilsDiferits} className="sdp-explorador__relacio">
       <p className="sdp-explorador__relacio-text">
         <span className="sdp-explorador__suau">{fila.verb}</span>{' '}
         <strong>{nom}</strong>{' '}
@@ -60,13 +63,13 @@ function FilaRelacio({ fila, onVore }) {
 }
 
 function Relacions({ files, buit, onVore }) {
-  if (!files.length) return buit ? <p className="sdp-explorador__suau">{buit}</p> : null;
+  if (!files.length) return buit ? <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">{buit}</p> : null;
   const fila = (f) => <FilaRelacio key={`${f.tipus}|${f.id}|${f.confianca}`} fila={f} onVore={onVore} />;
   return (
     <>
-      <ul className="sdp-explorador__relacions">{files.slice(0, MAX_FILES).map(fila)}</ul>
+      <ul ref={adoptaEstilsDiferits} className="sdp-explorador__relacions">{files.slice(0, MAX_FILES).map(fila)}</ul>
       {files.length > MAX_FILES && (
-        <details className="sdp-explorador__mes">
+        <details ref={adoptaEstilsDiferits} className="sdp-explorador__mes">
           <summary>Mostra’n {files.length - MAX_FILES} més</summary>
           <ul className="sdp-explorador__relacions">{files.slice(MAX_FILES).map(fila)}</ul>
         </details>
@@ -77,11 +80,11 @@ function Relacions({ files, buit, onVore }) {
 
 function Dades({ node }) {
   const dades = dadesDelNode(node);
-  if (!dades.length) return <p className="sdp-explorador__suau">El Mapa no en guarda cap dada més.</p>;
+  if (!dades.length) return <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">El Mapa no en guarda cap dada més.</p>;
   return (
-    <dl className="sdp-explorador__dades">
+    <dl ref={adoptaEstilsDiferits} className="sdp-explorador__dades">
       {dades.map((d) => (
-        <div key={d.clau}>
+        <div ref={adoptaEstilsDiferits} key={d.clau}>
           <dt>{d.etiqueta}</dt>
           <dd>{d.boolea ? <Insignia to={d.to}>{d.text}</Insignia> : d.mono ? <Mono>{d.text}</Mono> : d.text}</dd>
         </div>
@@ -91,18 +94,18 @@ function Dades({ node }) {
 }
 
 function Avisos({ avisos }) {
-  if (!avisos.length) return <p className="sdp-explorador__suau">Cap avís.</p>;
+  if (!avisos.length) return <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">Cap avís.</p>;
   return (
-    <ul className="sdp-explorador__avisos">
+    <ul ref={adoptaEstilsDiferits} className="sdp-explorador__avisos">
       {avisos.map((a) => {
         const text = TEXTOS_AVIS[a.codi];
         return (
-          <li key={a.codi} className="sdp-explorador__avis">
+          <li ref={adoptaEstilsDiferits} key={a.codi} className="sdp-explorador__avis">
             <Insignia to={TO_SEVERITAT[a.severitat] ?? 'neutre'}>{a.severitat}</Insignia>
             <p>{text ?? a.codi}</p>
             {(text || a.evidencia) && (
-              <p className="sdp-explorador__relacio-meta">
-                {text && <span className="sdp-explorador__suau">{a.codi}</span>}
+              <p ref={adoptaEstilsDiferits} className="sdp-explorador__relacio-meta">
+                {text && <span ref={adoptaEstilsDiferits} className="sdp-explorador__suau">{a.codi}</span>}
                 {a.evidencia && <Mono>{a.evidencia}</Mono>}
               </p>
             )}
@@ -136,12 +139,12 @@ export function AccionsFitxer({ ruta, avisos = [], doc = null, graf = null, ordr
   const { showToast } = useToast();
   const privat = useContext(PrivacitatConsola);
   const editable = rutaEditable(ruta, import.meta.env.DEV, avisos);
-  const deQui = nom ? <span className="sdp-nomes-lector">{` de ${nom}`}</span> : null;
+  const deQui = nom ? <span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{` de ${nom}`}</span> : null;
   /* Correcció de l'Onada 6 (revisió adversarial: «pot enganyar») · quins
      avisos tracta l'ordre. L'espai va fora del text amagat: el nom accessible
      no l'enganxa a la paraula d'abans. */
   const perA = repara.length ? ` per a ${repara.join(', ')}` : '';
-  const perALector = perA ? <>{' '}<span className="sdp-nomes-lector">{perA.trim()}</span></> : null;
+  const perALector = perA ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{perA.trim()}</span></> : null;
 
   const obriEditor = async () => {
     // El mode privacitat també val per al toast: la ruta no ix a la pantalla.
@@ -164,7 +167,7 @@ export function AccionsFitxer({ ruta, avisos = [], doc = null, graf = null, ordr
   };
 
   return (
-    <div className="sdp-explorador__accions">
+    <div ref={adoptaEstilsDiferits} className="sdp-explorador__accions">
       {graf && (
         <Boto varietat={discret ? 'fantasma' : 'secundari'} icona={Network} onClick={() => navigate(graf)}>Veure al graf{deQui}</Boto>
       )}
@@ -233,7 +236,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
     return (
       <aside className="sdp-explorador__detall" aria-label="Detall de la peça" ref={panell}>
         {tria}
-        <p>
+        <p ref={adoptaEstilsDiferits}>
           Fes clic en un punt del graf o tria una peça de la llista. Ací veuràs
           què és, on viu, amb qui es relaciona i com obrir-la.
         </p>
@@ -259,7 +262,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
     <aside className="sdp-explorador__detall" aria-label="Detall de la peça" ref={panell}>
       {tria}
 
-      <div className="sdp-explorador__detall-cap">
+      <div ref={adoptaEstilsDiferits} className="sdp-explorador__detall-cap">
         <p className="sdp-explorador__suau">
           <span className="sdp-explorador__punt" data-tipus={node.tipus} aria-hidden="true" />
           {NOMS_TIPUS[node.tipus] ?? node.tipus}
@@ -282,17 +285,17 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
         <h4>{rol === 'declarat' ? 'On es declara' : 'On viu'}</h4>
         {ruta ? (
           <>
-            <p className="sdp-explorador__ruta"><Mono>{ruta}</Mono></p>
+            <p ref={adoptaEstilsDiferits} className="sdp-explorador__ruta"><Mono>{ruta}</Mono></p>
             {rol === 'declarat' && (
-              <p className="sdp-explorador__suau">Esta peça no és un fitxer propi: viu dins d’este fitxer.</p>
+              <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">Esta peça no és un fitxer propi: viu dins d’este fitxer.</p>
             )}
             <AccionsFitxer ruta={ruta} avisos={avisosDelFitxer} doc={doc} ordre={ordre} repara={repara} />
             {dev && absent && rutaEditable(ruta, dev) && (
-              <p className="sdp-explorador__suau">El fitxer no és al disc: no es pot obrir a l’editor.</p>
+              <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">El fitxer no és al disc: no es pot obrir a l’editor.</p>
             )}
           </>
         ) : (
-          <p className="sdp-explorador__suau">El Mapa no sap de quin fitxer ix esta peça.</p>
+          <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">El Mapa no sap de quin fitxer ix esta peça.</p>
         )}
       </section>
 
@@ -303,7 +306,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
 
       <section className="sdp-explorador__bloc">
         <h4>Què fa</h4>
-        {nota && <p className="sdp-explorador__suau">{nota}</p>}
+        {nota && <p ref={adoptaEstilsDiferits} className="sdp-explorador__suau">{nota}</p>}
         <Relacions files={ixen} onVore={vore} />
       </section>
 

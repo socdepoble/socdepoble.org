@@ -1,21 +1,34 @@
-import { Info, Languages, MousePointerClick } from 'lucide-react';
+import { Fragment, useRef } from 'react';
+import { Languages } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { UniversalCard } from '../../components/PedraSeca';
+import {
+  ActionControl,
+  CommentIcon,
+  IconButton,
+  ShareIcon,
+  TranslateIcon,
+  UniversalCard
+} from '../../components/PedraSeca';
+import { BarraBlava } from '../../components/universal/barres/BarraBlava.jsx';
+import { MenuTraduir } from '../../components/universal/traduccio/MenuTraduir.jsx';
 import { SUPPORTED_LANGUAGES } from '../../config/i18n';
+import { useFullDiferit } from '../../config/fullDiferit.js';
 import { useUIState, useUIActions } from '../../app/contexts/UIContext';
 import { traduccioDePaginesDisponible } from '../../components/PedraSeca/hooks/useTraduccioPagina.js';
-import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
-import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { LLENGUES_TRADUCCIO } from '../../data/traductor.js';
+import cssEspecimens from '../../css/diferit-especimens.css?inline';
+import { obteContingutDidacticTraduccions } from './contingutDidacticTraduccions.jsx';
 
-/* /traduccions amb les mateixes targetes que el Panell i la Consola (pla
-   260924_1850 §4). Abans hi havia dos fantasmes fets a mà:
-     · un botó amb una classe de targeta que cap full definia: el navegador
-       hi posava el gris natiu del botó (les «targetes grises antigues»).
-     · <TranslateIcon /> sense classe ni mida dins d'un <li>: un SVG amb
-       viewBox i sense width s'estira fins a l'ample de la línia (l'«SVG gegant»).
-   Les llengües són ActionCards: tota la targeta tria, com al Panell. La
-   traducció de targetes és informativa i va en targetes de tauler, com la
-   Consola, perquè una targeta que no fa res no ha de semblar un botó. */
+/* /traduccions amb jerarquia i comunicació didàctica Pedra Seca (ordre del
+   Mestre, 261118):
+     · H1 al bloc blanc → un sol H2 (subtítol) → entradilla (lead) just davall
+       del primer H2 → H3 per a les 3 seccions principals.
+     · Només els cinc idiomes són ActionCards clicables (amb headingLevel="h4").
+     · El Traductor per a Pàgines i la Traducció Dinàmica de Targetes combinen
+       prosa escanejable (negretes a salts de vista + enllaços vius a les fonts
+       oficials Apertium, MyMemory, Translated, WordPress i rutes internes) amb
+       mostres visuals reals de la Barra Blava i del peu blau de la Targeta
+       Universal (inertes per al teclat i lector de pantalla). */
 
 /* La llengua pròpia és un fet cultural, no una preferència: no depén de
    DEFAULT_LANGUAGE, que un desplegament podria canviar. */
@@ -27,16 +40,37 @@ const LLENGUES = [
   ...SUPPORTED_LANGUAGES.filter((llengua) => llengua.code !== LLENGUA_PROPIA)
 ];
 
+const res = () => {};
+
+const MOSTRA_BARRA_BLAVA = {
+  onBack: res,
+  onForward: res,
+  onIndex: res,
+  traduirVisible: true,
+  comentarVisible: true,
+  compartirVisible: true,
+  connectarVisible: true,
+  onTranslate: res,
+  onComment: res,
+  onShare: res,
+  onConnect: res,
+  comentarXat: 'comu'
+};
+
 export default function TranslationsSection() {
+  const arrelMostresRef = useRef(null);
+  useFullDiferit(arrelMostresRef, 'especimens', cssEspecimens);
+
   const { language, locale, externalConfig } = useUIState();
   const { setLanguage, t } = useUIActions();
-  /* Gauntlet 261030 (cicle 2, traduccions-actiu-a-app-nativa) · «Actiu» només
-     on Traduir traduïx de veritat. A l'app nativa (cap servei ni transport
-     lliure) la targeta diu «En obres» i, primer, el que diu la pàgina legal. */
+  /* Gauntlet 261030 (cicle 2, traduccions-actiu-a-app-nativa) · A l'app nativa
+     (cap servei ni transport lliure) s'indica explícitament que la traducció de
+     pàgines continua en obres i encara no traduïx. */
   const traductorDisponible = traduccioDePaginesDisponible(externalConfig?.traductorUrl);
 
   const etiqueta = (text, className) => ({ text: text.toLocaleUpperCase(locale), className });
   const activa = SUPPORTED_LANGUAGES.find((llengua) => llengua.code === language);
+  const didactic = obteContingutDidacticTraduccions(language);
 
   const subtitols = {
     ca: t('section.translations.option.ca', 'Idioma per defecte de l’aplicació'),
@@ -46,37 +80,23 @@ export default function TranslationsSection() {
     gl: t('section.translations.option.gl', 'Interfície en gallec')
   };
 
-  /* La traducció de cada targeta solta encara no existix: on una pàgina no té
-     el Traductor de Poble, el botó Traduir només navega ací (useAccions.js). Es
-     diu, no s'amaga. El de pàgines sí que funciona (la secció de dalt). */
-  const informacio = [
+  const etiquetaConnectar = t('section.connectar.kicker', 'Connectar');
+
+  const informacioTargetes = [
     {
       id: 'motor',
-      Icona: Languages,
       titol: t('section.translations.engine.title', 'Motor de Traducció Integrat'),
-      cos: t(
-        'section.translations.engine.body',
-        'A part de l’idioma base de la interfície, les Targetes (Mur, Xats, Mercat i Esdeveniments) comptaran amb un motor de traducció automàtica. Et permetrà llegir a l’instant el que escriuen usuaris d’altres pobles de l’estat (per exemple, si algú publica en euskara o en gallec) traduint-ho a la teua llengua de preferència.'
-      ),
-      pendent: true
+      cos: didactic.motorCos
     },
     {
       id: 'us',
-      Icona: MousePointerClick,
       titol: t('section.translations.howto.title', 'Com utilitzar-ho'),
-      cos: t(
-        'section.translations.howto.body',
-        'Busca la icona de traducció dins de les publicacions de les targetes: servirà per a traduir només aquell missatge o publicació específica. Mentre la traducció de targetes no estiga connectada, el botó porta a aquesta pàgina.'
-      )
+      cos: didactic.usCos
     },
     {
       id: 'nota',
-      Icona: Info,
       titol: t('section.translations.note.title', 'Nota'),
-      cos: t(
-        'section.translations.note.body',
-        'Les traduccions automàtiques poden contindre xicotets errors d’interpretació quan es tracta d’expressions molt locals o frases fetes de cada territori.'
-      )
+      cos: didactic.notaCos
     }
   ];
 
@@ -84,113 +104,117 @@ export default function TranslationsSection() {
     <UniversalPage
       title={t('section.translations.title', 'Traduccions i llengua')}
       subtitle={t('section.translations.subtitle', 'Gestió d’idiomes del sistema i contingut')}
+      lead={t(
+        'section.translations.system.lead',
+        'Aquest ajust canvia l’idioma de tots els menús, botons i interfícies de l’aplicació. La preferència es guarda en aquest navegador.'
+      )}
       chrome="system"
     >
-      <div className="content-wrapper">
-        <section aria-labelledby="sdp-idiomes-sistema">
-          <h2 id="sdp-idiomes-sistema">
-            {t('section.translations.system.title', 'Idioma del Sistema')}
-          </h2>
+      <h3 id="sdp-idiomes-sistema">
+        {t('section.translations.system.title', 'Idioma del Sistema')}
+      </h3>
 
-          <p className="lead">
-            {t(
-              'section.translations.system.lead',
-              'Aquest ajust canvia l’idioma de tots els menús, botons i interfícies de l’aplicació. La preferència es guarda en aquest navegador.'
-            )}
-          </p>
+      {/* La targeta no admet aria-pressed a la seua capa clicable: l'estat es
+          diu ací i s'anuncia quan canvia. L'etiqueta ACTIU el mostra. */}
+      <p className="sdp-nomes-lector" role="status">
+        {`${t('section.translations.current', 'Idioma actual')}: ${activa?.name ?? language}`}
+      </p>
 
-          {/* La targeta no admet aria-pressed a la seua capa clicable: l'estat
-              es diu ací i s'anuncia quan canvia. L'etiqueta ACTIU el mostra. */}
-          <p className="sdp-nomes-lector" role="status">
-            {`${t('section.translations.current', 'Idioma actual')}: ${activa?.name ?? language}`}
-          </p>
-
-          <div className="sdp-card-grid">
-            {LLENGUES.map((llengua) => (
-              <UniversalCard
-                key={llengua.code}
-                variant="action"
-                icon={<Languages size={40} strokeWidth={1.5} aria-hidden="true" />}
-                title={llengua.name}
-                subtitle={subtitols[llengua.code]}
-                onMainClick={() => setLanguage(llengua.code)}
-                labels={[
-                  llengua.code === LLENGUA_PROPIA
-                    && etiqueta(t('section.translations.badge.own', 'Llengua pròpia'), 'sdp-badge-accent'),
-                  llengua.code === language
-                    && etiqueta(t('section.translations.status.active', 'Actiu'), 'sdp-badge-system')
-                ]}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* IDEA-31 (C0545-S2) · El Traductor de Poble per a pàgines ja funciona: el botó
-            Traduir de la Barra Blava (useTraduccioPagina.js) amb un proveïdor lliure,
-            al servidor o, a socdepoble.org estàtic, des del navegador
-            (data/traductorLliure.js): Apertium per al castellà, el gallec, l'anglés i
-            el francés, i MyMemory per al basc i l'alemany (decisions 261030 §6: el
-            text públic diu la veritat, sense prometre res de Google que no es puga
-            demostrar). Es diu on va el text.
-            La traducció de targetes soltes continua en obres, a la secció següent. */}
-        <section aria-labelledby="sdp-traductor-pagines">
-          <h2 id="sdp-traductor-pagines">
-            {t('section.translations.pages.title', 'Traductor de Poble per a Pàgines')}
-          </h2>
-
-          <p className="lead">
-            {t('section.translations.pages.lead', 'Traduïx la pàgina que llegixes sense eixir-ne: amb Apertium, programari lliure, i, per al basc i l’alemany, amb MyMemory.')}
-          </p>
-
-          <div className="sdp-card-grid">
-            <UniversalCard
-              {...encapcalamentDeTargeta(null, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}
-              icon={<Languages aria-hidden="true" />}
-              title={t('section.translations.pages.card.title', 'Botó Traduir de la Barra Blava')}
-              body={[
-                traductorDisponible ? null : t('section.translations.pages.card.natiu', 'A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu.'),
-                t(
-                  'section.translations.pages.card.body',
-                  'El botó Traduir de la Barra Blava traduïx la pàgina al castellà, al gallec, al basc, a l’anglés, al francés i a l’alemany. Per al castellà, el gallec, l’anglés i el francés ho fa amb Apertium, un traductor de programari lliure. Per al basc i l’alemany, que Apertium no oferix des del valencià, ho fa amb MyMemory, el servei de l’empresa italiana Translated, que no diu quin motor automàtic fa servir. Només quan tries una llengua, el text de la pàgina ix cap al traductor: a socdepoble.org, des del teu navegador directament al servei, que veu la teua adreça IP; en un lloc amb servidor propi, com WordPress, a través d’eixe servidor, que pot tindre configurat un altre proveïdor. MyMemory pot guardar els textos que rep i registrar l’adreça IP, i el basc i l’alemany tenen un límit diari de traduccions. Per això només es traduïx el text de les pàgines públiques, mai els teus missatges ni les teues notes. On no hi ha traducció, el botó ho diu.'
-                )
-              ].filter(Boolean).join(' ')}
-              hasFooter={false}
-              labels={[traductorDisponible
-                ? etiqueta(t('section.translations.status.active', 'Actiu'), 'sdp-badge-system')
-                : etiqueta(t('section.translations.status.pending', 'En obres'), 'sdp-badge-tag')]}
-            />
-          </div>
-        </section>
-
-        <section aria-labelledby="sdp-idiomes-targetes">
-          <h2 id="sdp-idiomes-targetes">
-            {t('section.translations.dynamic.title', 'Traducció Dinàmica de Targetes')}
-          </h2>
-
-          <p className="lead">
-            {t(
-              'section.translations.dynamic.lead',
-              'Com funciona la traducció del contingut creat pels usuaris en altres pobles.'
-            )}
-          </p>
-
-          <div className="sdp-card-grid">
-            {informacio.map(({ id, Icona, titol, cos, pendent }) => (
-              <UniversalCard
-                key={id}
-                {...encapcalamentDeTargeta(null, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}
-                icon={<Icona aria-hidden="true" />}
-                title={titol}
-                body={cos}
-                hasFooter={false}
-                labels={pendent
-                  ? [etiqueta(t('section.translations.status.pending', 'En obres'), 'sdp-badge-tag')]
-                  : []}
-              />
-            ))}
-          </div>
-        </section>
+      <div className="sdp-card-grid">
+        {LLENGUES.map((llengua) => (
+          <UniversalCard
+            key={llengua.code}
+            variant="action"
+            headingLevel="h4"
+            icon={<Languages size={40} strokeWidth={1.5} aria-hidden="true" />}
+            title={llengua.name}
+            subtitle={subtitols[llengua.code]}
+            onMainClick={() => setLanguage(llengua.code)}
+            labels={[
+              llengua.code === LLENGUA_PROPIA
+                && etiqueta(t('section.translations.badge.own', 'Llengua pròpia'), 'sdp-badge-accent'),
+              llengua.code === language
+                && etiqueta(t('section.translations.status.active', 'Actiu'), 'sdp-badge-system')
+            ]}
+          />
+        ))}
       </div>
+
+      <h3 id="sdp-traductor-pagines">
+        {t('section.translations.pages.title', 'Traductor per a Pàgines')}
+      </h3>
+
+      <p>{didactic.paginesIntro}</p>
+
+      <h4>
+        {t('section.translations.pages.card.title', 'Botó Traduir de la Barra Blava')}
+      </h4>
+
+      <figure ref={arrelMostresRef} className="sdp-especimen__figura">
+        <figcaption>{didactic.peuFiguraBarraBlava}</figcaption>
+        <div className="sdp-especimen__viu" inert="" aria-hidden="true" data-testid="mostra-barra-blava">
+          <div className="sdp-especimen__barres sdp-especimen__barres--contenidor">
+            <BarraBlava {...MOSTRA_BARRA_BLAVA} connectLabel={etiquetaConnectar} />
+          </div>
+          <div className="sdp-especimen__fila">
+            <MenuTraduir opcions={LLENGUES_TRADUCCIO} actual="ES" onTria={res} onTanca={res} mostra />
+          </div>
+        </div>
+      </figure>
+
+      {!traductorDisponible && (
+        <p>
+          <strong>{`${t('section.translations.status.pending', 'En obres')}: `}</strong>
+          {t(
+            'section.translations.pages.card.natiu',
+            'A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu.'
+          )}
+        </p>
+      )}
+
+      <p>{didactic.paginesBarraComportament}</p>
+      <p>{didactic.paginesMotors}</p>
+      <p>{didactic.paginesPrivacitat}</p>
+
+      <h3 id="sdp-idiomes-targetes">
+        {t('section.translations.dynamic.title', 'Traducció Dinàmica de Targetes')}
+      </h3>
+
+      <p>{didactic.targetesIntro}</p>
+
+      <figure className="sdp-especimen__figura">
+        <figcaption>{didactic.peuFiguraTargeta}</figcaption>
+        <div className="sdp-especimen__viu" inert="" aria-hidden="true" data-testid="mostra-peu-targeta">
+          <div className="sdp-especimen__fila">
+            <div className="sdp-especimen__mostra sdp-especimen__mostra--estreta sdp-especimen__barres">
+              <footer className="sp-card-footer">
+                <div className="sp-card-actions">
+                  <IconButton label={t('section.traduir.menu', 'Traduir la pàgina')} onClick={res}>
+                    <TranslateIcon className="icon" />
+                  </IconButton>
+                  <IconButton label="Comentar" onClick={res}>
+                    <CommentIcon className="icon" />
+                  </IconButton>
+                  <IconButton label="Compartir" onClick={res}>
+                    <ShareIcon className="icon" />
+                  </IconButton>
+                </div>
+                <ActionControl className="btn-connectar sp-card-connect" label={etiquetaConnectar} onClick={res}>
+                  <span className="sp-card-connect-text">{etiquetaConnectar}</span>
+                  <span className="sp-card-connect-plus" aria-hidden="true">+</span>
+                </ActionControl>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      {informacioTargetes.map(({ id, titol, cos }) => (
+        <Fragment key={id}>
+          <h4>{titol}</h4>
+          <p>{cos}</p>
+        </Fragment>
+      ))}
     </UniversalPage>
   );
 }

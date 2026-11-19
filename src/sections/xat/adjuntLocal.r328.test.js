@@ -22,7 +22,7 @@ describe('R32.8 · el lloc viatja abans de comprimir i només false explícit l�
     const ordre = [];
     const resultat = await preparaAdjunt(foto(), { ...opcions(), conservaUbicacio,
       inspecciona: async () => { ordre.push('GPS'); return { coordenades: lloc, completa: true }; },
-      comprimeix: async (_f, o) => { ordre.push('canvas'); expect(o.conservaExif).toBe(true); return 'data:image/webp;base64,YWJj'; }
+      comprimeix: async (_f, o) => { ordre.push('canvas'); expect(o.conservaExif).toBe(false); return 'data:image/webp;base64,YWJj'; }
     });
     expect(ordre).toEqual(['GPS', 'canvas']);
     expect(resultat.ubicacio).toEqual({ lat: 38.64, lng: -0.49 });
@@ -49,11 +49,11 @@ describe('R32.8 · el lloc viatja abans de comprimir i només false explícit l�
     expect(compressor).toHaveBeenCalledOnce();
     await expect(preparaAdjunt(new Blob([gran, 'x'], { type: 'video/mp4' }), opcions())).rejects.toMatchObject({ code: 'video-mida-entrada' });
   });
-  test('fallback original no perd ni neteja GPS per defecte, opt-out exigix prova de neteja', async () => {
+  test('fallback MP4 intenta sanejar sense perdre l’original; opt-out exigix prova de neteja', async () => {
     const original = video();const fallback = async fitxer => ({ fitxer, comprimit: false });
     const netejaVideo = vi.fn(async fitxer => ({ fitxer, net: false }));
     const r = await preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo });
-    expect(r.fitxer).toBe(original); expect(r.ubicacio).toEqual({ lat: 38.64, lng: -0.49 });expect(netejaVideo).not.toHaveBeenCalled();
+    expect(r.fitxer).toBe(original); expect(r.ubicacio).toEqual({ lat: 38.64, lng: -0.49 });expect(netejaVideo).toHaveBeenCalledOnce();
     await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo, conservaUbicacio: false })).rejects.toMatchObject({ code: 'ubicacio-no-eliminable' });
   });
   test('cancel·lar durant inspecció no recodifica ni publica coords tardanes', async () => {

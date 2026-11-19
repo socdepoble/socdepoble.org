@@ -41,6 +41,9 @@ import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { RETOL_QR, modelDeFactura } from './nucli/impressio.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** La classe de l'<html> mentre hi ha una factura per imprimir. */
 export const CLASSE_IMPRIMINT = 'sdp-gestoria-imprimint';
@@ -52,12 +55,12 @@ function imprimixPerDefecte() {
 /* Nom, NIF i domicili d'una part de la factura. */
 function Part({ titol, persona }) {
   return (
-    <div className="sdp-gestoria-factura__part">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__part">
       <p className="sdp-gestoria-factura__etiqueta">{titol}</p>
       <p className="sdp-gestoria-factura__nom">{persona.nom}</p>
-      {persona.nomComercial ? <p>{persona.nomComercial}</p> : null}
+      {persona.nomComercial ? <p ref={adoptaEstilsDiferits}>{persona.nomComercial}</p> : null}
       <p>{`NIF ${persona.nif}`}</p>
-      {persona.domicili.map((linia) => <p key={linia}>{linia}</p>)}
+      {persona.domicili.map((linia) => <p ref={adoptaEstilsDiferits} key={linia}>{linia}</p>)}
     </div>
   );
 }
@@ -67,9 +70,9 @@ function FullFactura({ model, refFull }) {
   const { qr } = model;
   return (
     <article ref={refFull} className="sdp-gestoria-factura__full" aria-label={`${model.titol} ${model.numero}`}>
-      <header className="sdp-gestoria-factura__cap">
+      <header ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__cap">
         {qr ? (
-          <figure className="sdp-gestoria-factura__qr">
+          <figure ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__qr">
             <figcaption className="sdp-gestoria-factura__etiqueta">{RETOL_QR}</figcaption>
             <svg className="sdp-gestoria-factura__qr-dibuix" viewBox={`0 0 ${qr.costat} ${qr.costat}`} shapeRendering="crispEdges"
               role="img" aria-label="Codi QR de cotejo de la factura a l’AEAT">
@@ -83,10 +86,10 @@ function FullFactura({ model, refFull }) {
           <dl className="sdp-gestoria-factura__claus">
             <div><dt>Número</dt><dd>{model.numero}</dd></div>
             <div><dt>Data d’expedició</dt><dd>{model.dataExpedicio}</dd></div>
-            {model.dataOperacio ? <div><dt>Data de l’operació</dt><dd>{model.dataOperacio}</dd></div> : null}
-            {model.venciment ? <div><dt>Venciment</dt><dd>{model.venciment}</dd></div> : null}
+            {model.dataOperacio ? <div ref={adoptaEstilsDiferits}><dt>Data de l’operació</dt><dd>{model.dataOperacio}</dd></div> : null}
+            {model.venciment ? <div ref={adoptaEstilsDiferits}><dt>Venciment</dt><dd>{model.venciment}</dd></div> : null}
           </dl>
-          {model.anulada ? <p className="sdp-gestoria-factura__anulada">Anul·lada: el llibre en guarda el registre d’anul·lació.</p> : null}
+          {model.anulada ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__anulada">Anul·lada: el llibre en guarda el registre d’anul·lació.</p> : null}
         </div>
       </header>
 
@@ -95,8 +98,8 @@ function FullFactura({ model, refFull }) {
         {model.destinatari ? <Part titol="Client" persona={model.destinatari} /> : null}
       </div>
       {model.referencies.length ? (
-        <ul className="sdp-gestoria-factura__mencions">
-          {model.referencies.map((text) => <li key={text}>{text}</li>)}
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__mencions">
+          {model.referencies.map((text) => <li ref={adoptaEstilsDiferits} key={text}>{text}</li>)}
         </ul>
       ) : null}
       <p>{`Descripció de l’operació: ${model.descripcio}`}</p>
@@ -113,10 +116,10 @@ function FullFactura({ model, refFull }) {
         </thead>
         <tbody>
           {model.linies.map((linia, i) => (
-            <tr key={`${i}-${linia.concepte}`}>
+            <tr ref={adoptaEstilsDiferits} key={`${i}-${linia.concepte}`}>
               <td>
                 {linia.concepte}
-                {linia.detall ? <span className="sdp-gestoria-factura__detall">{linia.detall}</span> : null}
+                {linia.detall ? <span ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__detall">{linia.detall}</span> : null}
               </td>
               <td data-tipus="xifra">{linia.quantitat}</td>
               <td data-tipus="xifra">{linia.preu}</td>
@@ -137,7 +140,7 @@ function FullFactura({ model, refFull }) {
         </thead>
         <tbody>
           {model.desglossament.map((grup) => (
-            <tr key={grup.tipus}>
+            <tr ref={adoptaEstilsDiferits} key={grup.tipus}>
               <td>{grup.tipus}</td>
               <td data-tipus="xifra">{grup.base}</td>
               <td data-tipus="xifra">{grup.quota}</td>
@@ -148,19 +151,19 @@ function FullFactura({ model, refFull }) {
 
       <dl className="sdp-gestoria-factura__totals">
         {model.totals.map((total) => (
-          <div key={total.etiqueta} data-principal={total.principal ? 'true' : 'false'}>
+          <div ref={adoptaEstilsDiferits} key={total.etiqueta} data-principal={total.principal ? 'true' : 'false'}>
             <dt>{total.etiqueta}</dt>
             <dd>{total.valor}</dd>
           </div>
         ))}
       </dl>
       {model.mencions.length ? (
-        <ul className="sdp-gestoria-factura__mencions">
-          {model.mencions.map((text) => <li key={text}>{text}</li>)}
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__mencions">
+          {model.mencions.map((text) => <li ref={adoptaEstilsDiferits} key={text}>{text}</li>)}
         </ul>
       ) : null}
-      {qr ? <p className="sdp-gestoria-factura__url">{qr.url}</p> : null}
-      {qr?.avis ? <p className="sdp-gestoria-factura__avis-qr">{qr.avis}</p> : null}
+      {qr ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__url">{qr.url}</p> : null}
+      {qr?.avis ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__avis-qr">{qr.avis}</p> : null}
     </article>
   );
 }
@@ -210,7 +213,7 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
   }, [lectura]);
 
   return (
-    <section className="sdp-gestoria-factura" aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-factura" aria-labelledby={idTitol}>
       <div className="sdp-gestoria-factura__barra">
         <h3 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{`La factura ${registre.numSerie}`}</h3>
         <div className="sdp-gestoria-panell__accions">
@@ -231,7 +234,7 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
       </div>
       {lectura.model ? <FullFactura model={lectura.model} refFull={full} /> : (
         <Alerta to="error" viva={false} titol="Esta factura no es pot mostrar">
-          <p>{lectura.error?.message ?? 'El registre no porta una factura que es puga imprimir.'}</p>
+          <p ref={adoptaEstilsDiferits}>{lectura.error?.message ?? 'El registre no porta una factura que es puga imprimir.'}</p>
         </Alerta>
       )}
     </section>

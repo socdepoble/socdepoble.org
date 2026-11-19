@@ -229,6 +229,9 @@ import { TEXTOS_UBICACIO, UbicacioImatge } from './UbicacioImatge.jsx';
 import {
   ambEnquadrament, enquadramentNet, llevaEnquadrament, mateixEnquadrament, separaEnquadrament,
 } from '../../../utils/enquadramentUrl.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitEnquadrament from '../../../css/diferit-enquadrament.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'enquadrament', cssDiferitEnquadrament); };
 
 /* P0-80 / IDEA-211 · L'eixida de la foto sencera: la de `sortida` sense la
    mida exacta (que és la d'un retall: l'avatar i el logotip no hi passen).
@@ -326,14 +329,14 @@ export function CasellaExif({
       <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t, exifTriat === true)}
         checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
       {ambPrecisio ? (
-        <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
+        <fieldset ref={adoptaEstilsDiferits} className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
           aria-describedby={idLinia} disabled={desactivat}>
           <legend id={`${id}-llegenda`} className="sdp-nomes-lector">{tradueix(t, TEXTOS_ENQUADRAMENT.precisioLlegenda)}</legend>
           <div className="sdp-enquadrament__formats-pindoles">
             {precisions.map((p) => {
               const idOpcio = `${id}-precisio-${p.valor}`;
               return (
-                <div key={p.valor} className="sdp-enquadrament__format">
+                <div ref={adoptaEstilsDiferits} key={p.valor} className="sdp-enquadrament__format">
                   <input type="radio" id={idOpcio} name={`${id}-precisio`} value={p.valor}
                     className="sdp-enquadrament__format-control sdp-nomes-lector"
                     checked={triada.valor === p.valor} onChange={() => onPrecisio(p.valor)} />
@@ -345,7 +348,7 @@ export function CasellaExif({
         </fieldset>
       ) : null}
       {ambPrecisio ? (
-        <p id={idLinia} className="sdp-camp__ajuda" aria-live="polite">
+        <p ref={adoptaEstilsDiferits} id={idLinia} className="sdp-camp__ajuda" aria-live="polite">
           {punt
             ? `${omple(tradueix(t, TEXTOS_UBICACIO.desara), { ubicacio: textUbicacio(punt, triada.valor, t) })} ${triada.ajuda}`
             : triada.ajuda}
@@ -894,7 +897,7 @@ export function DialegEnquadrament({
      deia en la seua llengua. El nom és el del botó que l'obri, traduït,
      com a ControlsAdjunt. */
   const accionsFoto = ambCanviaFoto || ambLleva ? (
-    <div className="sdp-enquadrament__foto">
+    <div ref={adoptaEstilsDiferits} className="sdp-enquadrament__foto">
       {ambCanviaFoto ? (
         <input ref={refEntradaFoto} type="file" accept={acceptFoto} onChange={triaFoto} className="sdp-nomes-lector"
           tabIndex={-1} aria-label={rotolCanviaFoto} data-enquadrament-foto="" />
@@ -910,7 +913,7 @@ export function DialegEnquadrament({
           </Boto>
         ) : null}
       </div>
-      {ajudaFoto ? <p id={idAjudaFoto} className="sdp-camp__ajuda">{ajudaFoto}</p> : null}
+      {ajudaFoto ? <p ref={adoptaEstilsDiferits} id={idAjudaFoto} className="sdp-camp__ajuda">{ajudaFoto}</p> : null}
     </div>
   ) : null;
 
@@ -1000,7 +1003,7 @@ export function DialegEnquadrament({
           onChange={(ev) => setEsborranyVideo(ev.target.value)}
         />
       </Camp>
-      <div className="sdp-enquadrament__video-accions">
+      <div ref={adoptaEstilsDiferits} className="sdp-enquadrament__video-accions">
         <Boto
           varietat="secundari"
           icona={Film}
@@ -1283,7 +1286,7 @@ export function DialegEnquadrament({
           {!errorCarrega && !imatge ? <Carregant etiqueta={text(TEXTOS_ENQUADRAMENT.obrint)} /> : null}
           {imatge ? (
             <>
-              <div className={caixa}>
+              <div ref={adoptaEstilsDiferits} className={caixa}>
                 <canvas
                   ref={canvasRef}
                   className="sdp-enquadrament__visor"
@@ -1319,14 +1322,14 @@ export function DialegEnquadrament({
               {/* Directiva del Mestre (261024, àudio 22:47; 261025, T3) · La forma, només si n'hi ha
                   més d'una (la capçalera): píndoles d'un sol toc i una línia de didàctica. */}
               {ambFormes ? (
-                <fieldset className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-forma-llegenda`}
+                <fieldset ref={adoptaEstilsDiferits} className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-forma-llegenda`}
                   aria-describedby={idDidactica} disabled={desant}>
                   <legend id={`${id}-forma-llegenda`} className="sdp-nomes-lector">{text(TEXTOS_ENQUADRAMENT.forma)}</legend>
                   <div className="sdp-enquadrament__formats-pindoles">
                     {formatsVistos.map((f) => {
                       const idForma = `${id}-forma-${f.valor}`;
                       return (
-                        <div key={f.valor} className="sdp-enquadrament__format">
+                        <div ref={adoptaEstilsDiferits} key={f.valor} className="sdp-enquadrament__format">
                           <input type="radio" id={idForma} name={`${id}-forma`} value={f.valor}
                             className="sdp-enquadrament__format-control sdp-nomes-lector" aria-label={f.etiqueta}
                             checked={estat.format === f.valor} onChange={() => canviaForma(f.valor)} />
@@ -1338,7 +1341,7 @@ export function DialegEnquadrament({
                 </fieldset>
               ) : null}
               {ambFormes ? (
-                <p id={idDidactica} className="sdp-enquadrament__didactica" aria-live="polite">{didacticaDeForma(triada, t)}</p>
+                <p ref={adoptaEstilsDiferits} id={idDidactica} className="sdp-enquadrament__didactica" aria-live="polite">{didacticaDeForma(triada, t)}</p>
               ) : null}
               {casellaExif}
             </>
@@ -1380,7 +1383,7 @@ export function DialegEnquadrament({
             modules.css); en mòbil, en columna. Els lliscadors van abans que la
             forma (també en el DOM: l'ordre del focus és el que es veu). */}
         {imatge ? (
-          <div className="sdp-enquadrament__obra">
+          <div ref={adoptaEstilsDiferits} className="sdp-enquadrament__obra">
             <div className="sdp-enquadrament__vista">
               <div className="sdp-enquadrament__visor-marc">
                 <canvas

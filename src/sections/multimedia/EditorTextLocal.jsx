@@ -28,6 +28,9 @@ import { FormulariNomLocal } from './FormulariNomLocal.jsx';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, missatgeDErrorLocal, tradueix } from './textosGestorLocal.js';
 import { useLocaleOpcional } from './useLocaleOpcional.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CANCELA = ['common.cancela', 'Cancel·lar'];
 const EXTENSIONS_JSON = new Set(['json', 'canvas']);
@@ -225,7 +228,7 @@ export function EditorTextLocal({
           onKeyDown={enTecla}
         />
       </Camp>
-      <p id={`${id}-estat`} role="status" className="sdp-arxiu-local__ajuda">
+      <p ref={adoptaEstilsDiferits} id={`${id}-estat`} role="status" className="sdp-arxiu-local__ajuda">
         {editable ? tr(pendents ? T['text.pendents'] : T['text.senseCanvis']) : ''}
       </p>
       {jsonInvalid ? (
@@ -250,7 +253,7 @@ export function EditorTextLocal({
         ) : null}
       </div>
       <p className="sdp-arxiu-local__ajuda">{tr(T['text.enviaAjuda'])}</p>
-      {!blocDeNotes?.potCrear ? <p className="sdp-arxiu-local__ajuda">{tr(T['text.calEntrar'])}</p> : null}
+      {!blocDeNotes?.potCrear ? <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">{tr(T['text.calEntrar'])}</p> : null}
       {nouObert && potEscriure ? (
         <FormulariNomLocal
           enfocaEnObrir

@@ -26,6 +26,9 @@ import { Alerta, Boto, UniversalCard } from '../../components/PedraSeca/index.js
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
 import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 const CAP = Object.freeze([]);
 const p = (nom, reserva) => Object.freeze([`section.notes.extern.${nom}`, reserva]);
@@ -79,7 +82,7 @@ export function PrevisualitzacioExtern({
     : omple(tradueix(t, TEXTOS_EXTERN.noFetTitolDesar), { participi });
 
   return (
-    <div className="sdp-connectar">
+    <div ref={adoptaEstilsDiferits} className="sdp-connectar">
       {!teSessio ? (
         <Alerta to="avis" titol={tradueix(t, TEXTOS_EXTERN.forasterTitol)}>
           {calEntrar
@@ -92,7 +95,7 @@ export function PrevisualitzacioExtern({
         <p className="sdp-connectar__tipus">{tradueix(t, TEXTOS_EXTERN.tipus)}</p>
         {valor ? (
           <>
-            <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
+            <div ref={adoptaEstilsDiferits} id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
               <UniversalCard
                 {...encapcalamentDeTargeta(null, { t })}
                 title={valor.titol}
@@ -107,7 +110,7 @@ export function PrevisualitzacioExtern({
             <p className="sdp-connectar__identitat">{valor.url}</p>
           </>
         ) : (
-          <p id={`${id}-objecte`} className="sdp-connectar__autor">
+          <p ref={adoptaEstilsDiferits} id={`${id}-objecte`} className="sdp-connectar__autor">
             {contingut ? textNoEsPot : textCapEnllac}
           </p>
         )}
@@ -120,7 +123,7 @@ export function PrevisualitzacioExtern({
       {valor ? children : null}
 
       {ambPeu ? (
-        <div className="sdp-connectar__peu">
+        <div ref={adoptaEstilsDiferits} className="sdp-connectar__peu">
           {avisPeu}
           {error ? <Alerta to="error" titol={textNoFetTitol}>{error}</Alerta> : null}
           {valor ? (
@@ -135,7 +138,7 @@ export function PrevisualitzacioExtern({
               >
                 {boto.etiqueta}
               </Boto>
-              <p className="sdp-connectar__nota">{nota}</p>
+              <p ref={adoptaEstilsDiferits} className="sdp-connectar__nota">{nota}</p>
             </>
           ) : null}
         </div>

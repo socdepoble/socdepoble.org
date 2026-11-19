@@ -395,7 +395,7 @@ export function DetallIdioma({ persona }) {
             onCanvi={(codi) => setLanguage?.(codi)}
           />
           <p className="perfil-compte__text">
-            <Link to="/traduccions">{tradueix(t, ['section.translations.pages.title', 'Traductor de Poble per a Pàgines'])}</Link>
+            <Link to="/traduccions">{tradueix(t, ['section.translations.pages.title', 'Traductor per a Pàgines'])}</Link>
           </p>
         </Bloc>
       </div>

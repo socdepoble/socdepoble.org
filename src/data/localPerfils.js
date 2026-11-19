@@ -75,6 +75,7 @@
 /* Gauntlet 261016 (Bloc 3) · `tipusDAgent`: la font única del tipus de perfil
    d'un agent del catàleg (un personatge ANIMAL és una IA). Abans n'hi havia
    una còpia ací, que el feia persona. */
+import { normalitzaUnicodeAmbLimit } from '../utils/normalitzaUnicodeSegura.js';
 import { AGENTS_MAP, tipusDAgent } from './agentsSeed.js';
 import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
@@ -105,7 +106,7 @@ const COLUMNES_DIRECTORI_LOCAL = ['id', 'slug', 'name', 'kind', 'parent_organiza
 /* Gauntlet (crític de dades) · El filtre local pot plegar de veres (el
    servidor fa un superconjunt tolerant): minúscules, sense diacrítics ni
    punt volat, i les lligadures descompostes (NFKD). */
-const plegaDelDirectori = (valor) => String(valor ?? '').normalize('NFKD').replace(/\p{M}/gu, '')
+const plegaDelDirectori = (valor) => normalitzaUnicodeAmbLimit(String(valor ?? ''), 'NFKD').replace(/\p{M}/gu, '')
   .replace(/[\u00b7\u2027\u2219]/g, '').toLowerCase();
 const COLUMNES_DIRECTORI_BUIDES = Object.freeze(Object.fromEntries(['id', 'tenant_id', ...COLUMNES_DIRECTORI_LOCAL.slice(1)]
   .map((columna) => [columna, null])));

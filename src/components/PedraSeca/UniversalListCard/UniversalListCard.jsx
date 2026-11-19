@@ -49,6 +49,9 @@ import { SIGNATURES, comptesDe } from './modes/loteriaDiposit.js';
 import { LLETRES, MESOS_CURS, seguimentDe } from './modes/escolaEducand.js';
 import { camelDe, omple, parellComu, parellDError } from './textosComu.js';
 import { useLlistaComu } from './useLlistaComu.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitComu from '../../../css/diferit-comu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'comu', cssDiferitComu); };
 
 const ICONES = Object.freeze({
   rebost: ShoppingBasket, bar_tpv: Utensils, colla_cens: Shield,
@@ -84,16 +87,16 @@ function ofereixFitxer(nom, contingut, tipus) {
 function RajolaComu({ nom, nomIcona, especificacio, emoji, marca, estatText, estat, premuda, onClick, interactiva, etiqueta }) {
   const contingut = (
     <>
-      <span className="sdp-comu__rajola-marca" aria-hidden="true">{marca}</span>
+      <span ref={adoptaEstilsDiferits} className="sdp-comu__rajola-marca" aria-hidden="true">{marca}</span>
       <span className="sdp-comu__rajola-icona" aria-hidden="true">{emoji || inicialsDe(nomIcona ?? nom)}</span>
       <span className="sdp-comu__rajola-nom">{nom}</span>
       <span className="sdp-comu__rajola-espec">{especificacio}</span>
       <span className="sdp-nomes-lector">{estatText}</span>
     </>
   );
-  if (!interactiva || !onClick) return <span className="sdp-comu__rajola" data-estat={estat}>{contingut}</span>;
+  if (!interactiva || !onClick) return <span ref={adoptaEstilsDiferits} className="sdp-comu__rajola" data-estat={estat}>{contingut}</span>;
   return (
-    <button type="button" className="sdp-comu__rajola" data-estat={estat} aria-pressed={premuda} aria-label={etiqueta} onClick={onClick}>
+    <button ref={adoptaEstilsDiferits} type="button" className="sdp-comu__rajola" data-estat={estat} aria-pressed={premuda} aria-label={etiqueta} onClick={onClick}>
       {contingut}
     </button>
   );
@@ -101,8 +104,8 @@ function RajolaComu({ nom, nomIcona, especificacio, emoji, marca, estatText, est
 
 function GraellaRajoles({ titol, children }) {
   return (
-    <div className="sdp-comu__seccio">
-      {titol ? <p className="sdp-comu__seccio-titol">{titol}</p> : null}
+    <div ref={adoptaEstilsDiferits} className="sdp-comu__seccio">
+      {titol ? <p ref={adoptaEstilsDiferits} className="sdp-comu__seccio-titol">{titol}</p> : null}
       <ul className="sdp-comu__rajoles">{children}</ul>
     </div>
   );
@@ -117,7 +120,7 @@ function VistaRebost({ llista, elements, tr, fes, interactiva, anuncia }) {
     const peticions = e.capaMode.demanatPer?.length ?? 0;
     const estatText = tr(`estat.${e.capaMode.estat}`);
     return (
-      <li key={e.id}>
+      <li ref={adoptaEstilsDiferits} key={e.id}>
         <RajolaComu
           nom={e.nom} emoji={e.emoji} especificacio={e.capaMode.especificacio}
           marca={<>{peticions > 1 ? `×${peticions}` : null}{falta ? null : <Check size={14} aria-hidden="true" focusable="false" />}</>}
@@ -136,7 +139,7 @@ function VistaRebost({ llista, elements, tr, fes, interactiva, anuncia }) {
     <>
       <GraellaRajoles>{elements.map(rajola)}</GraellaRajoles>
       {comprats.length && interactiva ? (
-        <div className="sdp-comu__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-comu__accions">
           <Boto varietat="secundari" icona={Trash2} onClick={() => {
             const n = llista.elementsComu.filter((e) => e.capaMode.estat === 'comprat').length;
             if (fes({ tipus: 'buidaCistell' }).ok) anuncia(tr('rebost.fet.buidat', { n }));
@@ -168,7 +171,7 @@ function VistaBar({ llista, elements, tr, fes, actor, interactiva }) {
         const IconaEstat = ICONES_BAR[estat];
         /* Sense aria-pressed: el toc no commuta res, avança el circuit o en demana una més. */
         return (
-          <li key={e.id}>
+          <li ref={adoptaEstilsDiferits} key={e.id}>
             <RajolaComu
               nom={tr('bar.linia', { quantitat, nom: e.nom })} nomIcona={e.nom} emoji={e.emoji}
               especificacio={total || tr(`bar.${desti}`)}
@@ -218,7 +221,7 @@ function VistaCens({ elements, tr, fes, actor, interactiva, demanaConfirmacio, a
           fer = () => { if (fes({ tipus: 'reclama', elementId: e.id }).ok) anuncia(tr('cens.fet.reclamat', { nom: e.nom })); };
         }
         return (
-          <li key={e.id}>
+          <li ref={adoptaEstilsDiferits} key={e.id}>
             <RajolaComu
               nom={e.nom} emoji={e.emoji} especificacio={especificacio}
               marca={e.capaMode.esMenut ? tr('cens.menut') : (quota > 1 ? `${quota - lliures}/${quota}` : '')}
@@ -236,12 +239,12 @@ function VistaCens({ elements, tr, fes, actor, interactiva, demanaConfirmacio, a
 
 function Fila({ nom, estat, tr, meua, meta, children }) {
   return (
-    <li className={meua ? 'sdp-comu__fila sdp-comu__fila--meua' : 'sdp-comu__fila'}>
+    <li ref={adoptaEstilsDiferits} className={meua ? 'sdp-comu__fila sdp-comu__fila--meua' : 'sdp-comu__fila'}>
       <div className="sdp-comu__fila-cap">
         <span className="sdp-comu__fila-nom">{nom}</span>
         {estat ? <Insignia to={TO_D_ESTAT[estat] ?? 'neutre'}>{tr(`estat.${camelDe(estat)}`)}</Insignia> : null}
       </div>
-      {meta.length ? <p className="sdp-comu__fila-meta">{meta.filter(Boolean).join(' · ')}</p> : null}
+      {meta.length ? <p ref={adoptaEstilsDiferits} className="sdp-comu__fila-meta">{meta.filter(Boolean).join(' · ')}</p> : null}
       {children}
     </li>
   );
@@ -253,7 +256,7 @@ function VistaBanda({ llista, elements, tr, fes, actor, interactiva }) {
   const propis = elements.filter((e) => e.capaMode.usuariId && e.capaMode.usuariId === actor?.id);
   const ordenats = [...propis, ...elements.filter((e) => !propis.includes(e))];
   return (
-    <ul className="sdp-comu__files">
+    <ul ref={adoptaEstilsDiferits} className="sdp-comu__files">
       {ordenats.map((e) => {
         const c = e.capaMode;
         const sou = gestor ? souDe(e, llista.configMode) : null;
@@ -269,7 +272,7 @@ function VistaBanda({ llista, elements, tr, fes, actor, interactiva }) {
               gestor && c.assistencia === 'confirmat' ? tr(c.pagament === 'pagat' ? 'banda.pagat' : 'banda.pendentPagar') : ''
             ]}>
             {pot ? (
-              <div className="sdp-comu__accions" role="group" aria-label={e.nom}>
+              <div ref={adoptaEstilsDiferits} className="sdp-comu__accions" role="group" aria-label={e.nom}>
                 <Boto varietat={c.assistencia === 'confirmat' ? 'secundari' : 'primari'} aria-pressed={c.assistencia === 'confirmat'}
                   onClick={() => fes({ tipus: 'confirma', elementId: e.id })}>{tr('banda.vaig')}</Boto>
                 <Boto varietat="secundari" aria-pressed={c.assistencia === 'baixa'}
@@ -293,7 +296,7 @@ function FormulariRetorn({ element, tr, fes }) {
   const id = useId();
   const [valor, setValor] = useState(String(element.capaMode.retornats));
   return (
-    <form className="sdp-comu__retorn" onSubmit={(event) => {
+    <form ref={adoptaEstilsDiferits} className="sdp-comu__retorn" onSubmit={(event) => {
       event.preventDefault();
       /* La cadena tal qual: el nucli la valida, i un camp buit és «valor-invalid», no un zero. */
       fes({ tipus: 'retorna', elementId: element.id, retornats: valor });
@@ -310,7 +313,7 @@ function VistaLoteria({ llista, elements, tr, fes, actor, interactiva }) {
   const mode = modeDe(llista);
   const gestor = esGestor(llista, actor);
   return (
-    <ul className="sdp-comu__files">
+    <ul ref={adoptaEstilsDiferits} className="sdp-comu__files">
       {elements.map((e) => {
         const c = e.capaMode;
         const comptes = comptesDe(e, llista.configMode);
@@ -327,18 +330,18 @@ function VistaLoteria({ llista, elements, tr, fes, actor, interactiva }) {
               tr('loteria.liquidar', { import: formatEuros(comptes.totalLiquidarCents) }),
               tr('loteria.benefici', { import: formatEuros(comptes.beneficiCents) })
             ]}>
-            <div className="sdp-comu__signatures" role="group" aria-label={tr('loteria.signatures', { nom: e.nom })}>
+            <div ref={adoptaEstilsDiferits} className="sdp-comu__signatures" role="group" aria-label={tr('loteria.signatures', { nom: e.nom })}>
               {SIGNATURES.map((s) => {
                 const potSignar = interactiva && mode.potSignar(llista, e, actor, s);
                 const etiqueta = tr(`loteria.signatura.${s}`);
                 return potSignar ? (
-                  <button key={s} type="button" className="sdp-comu__signatura" aria-pressed={signatures[s]}
+                  <button ref={adoptaEstilsDiferits} key={s} type="button" className="sdp-comu__signatura" aria-pressed={signatures[s]}
                     onClick={() => fes({ tipus: 'signa', elementId: e.id, signatura: s })}>
                     {signatures[s] ? <Check size={16} aria-hidden="true" focusable="false" /> : null}
                     <span>{etiqueta}</span>
                   </button>
                 ) : (
-                  <span key={s} className="sdp-comu__signatura" data-signada={signatures[s] ? 'si' : 'no'}>
+                  <span ref={adoptaEstilsDiferits} key={s} className="sdp-comu__signatura" data-signada={signatures[s] ? 'si' : 'no'}>
                     {signatures[s] ? <Check size={16} aria-hidden="true" focusable="false" /> : null}
                     <span>{etiqueta}</span>
                     <span className="sdp-nomes-lector">{`: ${tr(signatures[s] ? 'si' : 'no')}`}</span>
@@ -359,9 +362,9 @@ function Evolucio({ notes, etiqueta }) {
   const punts = notes.map((n, i) => (n === null ? null : { x: 4 + i * 10, y: 36 - n * 3.2 })).filter(Boolean);
   if (punts.length === 0) return null;
   return (
-    <svg className="sdp-comu__evolucio" viewBox="0 0 118 40" role="img" aria-label={etiqueta} focusable="false">
+    <svg ref={adoptaEstilsDiferits} className="sdp-comu__evolucio" viewBox="0 0 118 40" role="img" aria-label={etiqueta} focusable="false">
       <polyline className="sdp-comu__evolucio-linia" points={punts.map((p) => `${p.x},${p.y}`).join(' ')} />
-      {punts.map((p) => <circle key={p.x} className="sdp-comu__evolucio-punt" cx={p.x} cy={p.y} r="2.5" />)}
+      {punts.map((p) => <circle ref={adoptaEstilsDiferits} key={p.x} className="sdp-comu__evolucio-punt" cx={p.x} cy={p.y} r="2.5" />)}
     </svg>
   );
 }
@@ -373,20 +376,20 @@ function AnotaMes({ element, tr, fes }) {
   const [nota, setNota] = useState('');
   const nomMes = tr(`escola.mes.${mes}`);
   return (
-    <details className="sdp-comu__anota">
+    <details ref={adoptaEstilsDiferits} className="sdp-comu__anota">
       <summary className="sdp-comu__anota-resum">{tr('escola.anotaResum', { nom: element.nom })}</summary>
       <div className="sdp-comu__anota-graella">
         <label className="sdp-comu__etiqueta" htmlFor={`${id}-mes`}>{tr('escola.mesEtiqueta')}</label>
         <select id={`${id}-mes`} className="sdp-control sdp-control--selector sdp-comu__camp" value={mes} onChange={(event) => { setMes(event.target.value); setNota(''); }}>
-          {MESOS_CURS.map((m) => <option key={m} value={m}>{tr(`escola.mes.${m}`)}</option>)}
+          {MESOS_CURS.map((m) => <option ref={adoptaEstilsDiferits} key={m} value={m}>{tr(`escola.mes.${m}`)}</option>)}
         </select>
         {dades.setmanes.map((valor, i) => (
-          <label key={i} className="sdp-comu__etiqueta">
+          <label ref={adoptaEstilsDiferits} key={i} className="sdp-comu__etiqueta">
             {tr('escola.anota', { n: i + 1, mes: nomMes })}
             <select className="sdp-control sdp-control--selector sdp-comu__camp" value={valor ?? ''}
               onChange={(event) => fes({ tipus: 'anota', elementId: element.id, mes, setmana: i, valor: event.target.value || null })}>
               <option value="">{tr('escola.senseLletra')}</option>
-              {LLETRES.map((l) => <option key={l} value={l}>{`${l} · ${tr(`escola.lletra.${l}`)}`}</option>)}
+              {LLETRES.map((l) => <option ref={adoptaEstilsDiferits} key={l} value={l}>{`${l} · ${tr(`escola.lletra.${l}`)}`}</option>)}
             </select>
           </label>
         ))}
@@ -408,7 +411,7 @@ function Comenta({ element, tr, fes }) {
   const id = useId();
   const [text, setText] = useState('');
   return (
-    <form className="sdp-comu__retorn" onSubmit={(event) => {
+    <form ref={adoptaEstilsDiferits} className="sdp-comu__retorn" onSubmit={(event) => {
       event.preventDefault();
       if (fes({ tipus: 'comenta', elementId: element.id, text }).ok) setText('');
     }}>
@@ -422,7 +425,7 @@ function Comenta({ element, tr, fes }) {
 function VistaEscola({ llista, elements, tr, fes, actor, interactiva }) {
   const mode = modeDe(llista);
   return (
-    <ul className="sdp-comu__files">
+    <ul ref={adoptaEstilsDiferits} className="sdp-comu__files">
       {elements.map((e) => {
         const s = seguimentDe(e);
         const dialeg = e.capaMode.dialeg ?? [];
@@ -434,14 +437,14 @@ function VistaEscola({ llista, elements, tr, fes, actor, interactiva }) {
               e.capaMode.professor ? tr('escola.professor', { nom: e.capaMode.professor }) : '',
               s.mitjana === null ? tr('escola.senseNotes') : tr('escola.mitjana', { n: String(s.mitjana).replace('.', ',') })
             ]}>
-            <ul className="sdp-comu__lletres">
+            <ul ref={adoptaEstilsDiferits} className="sdp-comu__lletres">
               {LLETRES.map((l) => (
-                <li key={l} className="sdp-comu__lletra">{`${tr(`escola.lletra.${l}`)}: ${s.recompte[l]}`}</li>
+                <li ref={adoptaEstilsDiferits} key={l} className="sdp-comu__lletra">{`${tr(`escola.lletra.${l}`)}: ${s.recompte[l]}`}</li>
               ))}
             </ul>
             <Evolucio notes={s.notes} etiqueta={`${tr('escola.evolucio', { nom: e.nom })}: ${notesText}`} />
             {darrer ? (
-              <p className="sdp-comu__dialeg">{`${tr(`escola.rol.${darrer.rol}`)} · ${darrer.text}`}</p>
+              <p ref={adoptaEstilsDiferits} className="sdp-comu__dialeg">{`${tr(`escola.rol.${darrer.rol}`)} · ${darrer.text}`}</p>
             ) : null}
             {interactiva && mode.potAnotar(llista, e, actor) ? <AnotaMes element={e} tr={tr} fes={fes} /> : null}
             {interactiva && mode.potComentar(llista, e, actor) ? <Comenta element={e} tr={tr} fes={fes} /> : null}
@@ -462,7 +465,7 @@ const VISTES = Object.freeze({
 function Xifres({ linies }) {
   const netes = linies.filter(Boolean);
   if (netes.length === 0) return null;
-  return <ul className="sdp-comu__resum">{netes.map((l) => <li key={l} className="sdp-comu__xifra">{l}</li>)}</ul>;
+  return <ul ref={adoptaEstilsDiferits} className="sdp-comu__resum">{netes.map((l) => <li ref={adoptaEstilsDiferits} key={l} className="sdp-comu__xifra">{l}</li>)}</ul>;
 }
 
 function ResumDelMode({ llista, resum, tr, actor }) {
@@ -472,7 +475,7 @@ function ResumDelMode({ llista, resum, tr, actor }) {
       const c = resum.comparador;
       if (!c) return null;
       return (
-        <div className="sdp-comu__seccio">
+        <div ref={adoptaEstilsDiferits} className="sdp-comu__seccio">
           <p className="sdp-comu__seccio-titol">{tr('rebost.comparador.titol')}</p>
           <Xifres linies={[
             tr('rebost.comparador.poble', { import: e(c.pobleCents) }),
@@ -494,7 +497,7 @@ function ResumDelMode({ llista, resum, tr, actor }) {
       const ec = resum.economia;
       if (!esGestor(llista, actor)) return null;
       return (
-        <div className="sdp-comu__seccio">
+        <div ref={adoptaEstilsDiferits} className="sdp-comu__seccio">
           <p className="sdp-comu__seccio-titol">{tr('banda.economia.titol')}</p>
           <Xifres linies={[
             tr('banda.economia.musics', { import: e(ec.subtotalMusicsCents) }),
@@ -539,7 +542,7 @@ function FormulariQuantitat({ element, tr, fes }) {
   const id = useId();
   const [valor, setValor] = useState(element.capaMode.especificacio ?? '');
   return (
-    <form className="sdp-comu__retorn" onSubmit={(event) => {
+    <form ref={adoptaEstilsDiferits} className="sdp-comu__retorn" onSubmit={(event) => {
       event.preventDefault();
       fes({ tipus: 'especifica', elementId: element.id, especificacio: valor });
     }}>
@@ -558,7 +561,7 @@ function ConfiguraDesplacament({ llista, tr, fes }) {
   const [preuLitre, setPreuLitre] = useState(actual.preuLitreCents === undefined ? '' : String(actual.preuLitreCents));
   const aNumero = (text) => (String(text).trim() === '' ? Number.NaN : Number(String(text).trim().replace(',', '.')));
   return (
-    <details className="sdp-comu__anota">
+    <details ref={adoptaEstilsDiferits} className="sdp-comu__anota">
       <summary className="sdp-comu__anota-resum">{tr('rebost.desplacament.titol')}</summary>
       <form className="sdp-comu__anota-graella" onSubmit={(event) => {
         event.preventDefault();
@@ -620,7 +623,7 @@ function AccionsDeFila({ llista, element, tr, fes, actor, demanaConfirmacio }) {
         onClick={() => demanaConfirmacio({ tipus: 'elimina', elementId: element.id, nom: element.nom })}>{''}</Boto>
     );
   }
-  return accions.length ? <div className="sdp-comu__accions">{accions}</div> : null;
+  return accions.length ? <div ref={adoptaEstilsDiferits} className="sdp-comu__accions">{accions}</div> : null;
 }
 
 /* ── LA PEÇA ─────────────────────────────────────────────────────────── */
@@ -658,13 +661,13 @@ export function UniversalListCard({
   const classes = ['sdp-comu', className].filter(Boolean).join(' ');
 
   if (!llista || !validaLlista(llista).ok) {
-    return <div className={classes} data-variant={variant} role="alert"><p className="sdp-comu__buit">{tr('error.llistaInvalida')}</p></div>;
+    return <div ref={adoptaEstilsDiferits} className={classes} data-variant={variant} role="alert"><p className="sdp-comu__buit">{tr('error.llistaInvalida')}</p></div>;
   }
   const mode = modeDe(llista);
   const camel = camelDe(llista.mode);
   if (!potVeure(llista, actor)) {
     return (
-      <section className={classes} data-mode={llista.mode} data-variant={variant} aria-label={tr(`mode.${camel}`)}>
+      <section ref={adoptaEstilsDiferits} className={classes} data-mode={llista.mode} data-variant={variant} aria-label={tr(`mode.${camel}`)}>
         <p className="sdp-comu__privada"><Lock size={20} aria-hidden="true" focusable="false" /><span>{tr('escola.privada')}</span></p>
       </section>
     );
@@ -714,13 +717,13 @@ export function UniversalListCard({
   };
 
   return (
-    <section className={classes} data-mode={llista.mode} data-variant={variant} aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className={classes} data-mode={llista.mode} data-variant={variant} aria-labelledby={idTitol}>
       <header className="sdp-comu__cap">
         <span className="sdp-comu__icona" aria-hidden="true"><Icona size={20} focusable="false" /></span>
         <div className="sdp-comu__titols">
           <p className="sdp-comu__mode">{tr(`mode.${camel}`)}</p>
           <p id={idTitol} ref={refTitol} className="sdp-comu__titol" tabIndex={-1}>{llista.titol}</p>
-          {llista.subtitol ? <p className="sdp-comu__subtitol">{llista.subtitol}</p> : null}
+          {llista.subtitol ? <p ref={adoptaEstilsDiferits} className="sdp-comu__subtitol">{llista.subtitol}</p> : null}
         </div>
       </header>
 
@@ -747,8 +750,8 @@ export function UniversalListCard({
           }} />
       ) : null}
 
-      {llista.elementsComu.length === 0 ? <p className="sdp-comu__buit">{tr('buit')}</p> : null}
-      {llista.elementsComu.length > 0 && elements.length === 0 ? <p className="sdp-comu__buit">{tr('buitFiltre')}</p> : null}
+      {llista.elementsComu.length === 0 ? <p ref={adoptaEstilsDiferits} className="sdp-comu__buit">{tr('buit')}</p> : null}
+      {llista.elementsComu.length > 0 && elements.length === 0 ? <p ref={adoptaEstilsDiferits} className="sdp-comu__buit">{tr('buitFiltre')}</p> : null}
       {elements.length > 0 ? (
         <Vista llista={llista} elements={elements} tr={tr} fes={fes} actor={actor} interactiva={potTocar}
           anuncia={setAnunci} demanaConfirmacio={setConfirma} />
@@ -757,7 +760,7 @@ export function UniversalListCard({
       <ResumDelMode llista={llista} resum={resum} tr={tr} actor={actor} />
 
       {error ? (
-        <div className="sdp-comu__error" role={interactiva ? 'alert' : undefined}>
+        <div ref={adoptaEstilsDiferits} className="sdp-comu__error" role={interactiva ? 'alert' : undefined}>
           <p>{tradueix(t, parellDError(error))}</p>
           {interactiva ? <Boto varietat="fantasma" onClick={netejaError}>{tr('dacord')}</Boto> : null}
         </div>
@@ -765,7 +768,7 @@ export function UniversalListCard({
       <p className="sdp-nomes-lector" role="status">{anunci}</p>
 
       {interactiva && llista.elementsComu.length > 0 ? (
-        <div className="sdp-comu__peu">
+        <div ref={adoptaEstilsDiferits} className="sdp-comu__peu">
           <Boto varietat="secundari" icona={Maximize2} onClick={() => { setAvisTaula(''); setAmbTaula(true); }}>{tr('amplia')}</Boto>
         </div>
       ) : null}
@@ -780,20 +783,20 @@ export function UniversalListCard({
         )}>
         {taula ? (
           <Taula titol={tr('taula.titol', { titol: llista.titol })} densa>
-            <thead>
+            <thead ref={adoptaEstilsDiferits}>
               <tr>
-                {taula.capcalera.map((c) => <th key={c} scope="col">{c}</th>)}
-                {ambAccionsDeFila ? <th scope="col"><span className="sdp-nomes-lector">{tr('columna.accions')}</span></th> : null}
+                {taula.capcalera.map((c) => <th ref={adoptaEstilsDiferits} key={c} scope="col">{c}</th>)}
+                {ambAccionsDeFila ? <th ref={adoptaEstilsDiferits} scope="col"><span className="sdp-nomes-lector">{tr('columna.accions')}</span></th> : null}
               </tr>
             </thead>
             <tbody>
               {taula.files.map((fila) => {
                 const element = llista.elementsComu.find((e) => e.id === fila.id);
                 return (
-                  <tr key={fila.id}>
-                    {fila.celes.map((cela, i) => (i === columnaNom ? <th key={i} scope="row">{cela}</th> : <td key={i}>{cela}</td>))}
+                  <tr ref={adoptaEstilsDiferits} key={fila.id}>
+                    {fila.celes.map((cela, i) => (i === columnaNom ? <th ref={adoptaEstilsDiferits} key={i} scope="row">{cela}</th> : <td ref={adoptaEstilsDiferits} key={i}>{cela}</td>))}
                     {ambAccionsDeFila ? (
-                      <td>
+                      <td ref={adoptaEstilsDiferits}>
                         <AccionsDeFila llista={llista} element={element} tr={tr} fes={fes} actor={actor} demanaConfirmacio={setConfirma} />
                       </td>
                     ) : null}

@@ -53,6 +53,9 @@ import {
   tiquetsSubstituibles, totalsDeFactura
 } from './nucli/formulari.js';
 import { AvisDeZona, ErrorsDelFormulari } from './peces.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 function Linia({ linia, numero, ivaInclos, diferencies, onCanvia, onLleva }) {
   const canvia = (camp) => (event) => onCanvia(camp, event.target.value);
@@ -172,7 +175,7 @@ export function FormulariFactura({ f }) {
   if (f.bloquejatPerCadena) {
     return (
       <Alerta to="error" viva={false} titol="Ara no es pot emetre cap factura">
-        <p>
+        <p ref={adoptaEstilsDiferits}>
           La cadena del llibre té incidències (pas 4). Si tens una còpia bona del llibre, restaura-la al pas 5:
           quan la cadena torne a ser correcta, podràs tornar a emetre.
         </p>
@@ -182,11 +185,11 @@ export function FormulariFactura({ f }) {
   if (!f.potEmetre) {
     return f.errorEmissio
       ? <ErrorsDelFormulari titol="Amb estes dades no es pot emetre" errors={[f.errorEmissio.message]} />
-      : <p>Per a emetre factures, primer cal desar les dades de l’empresa (pas 1) i les factures d’abans (pas 2).</p>;
+      : <p ref={adoptaEstilsDiferits}>Per a emetre factures, primer cal desar les dades de l’empresa (pas 1) i les factures d’abans (pas 2).</p>;
   }
 
   return (
-    <form className="sdp-gestoria-panell__bloc" noValidate onSubmit={revisa}>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" noValidate onSubmit={revisa}>
       <h3 className="sdp-gestoria-panell__subtitol">Qui factura?</h3>
       <dl className="sdp-gestoria-panell__dades">
         <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
@@ -226,7 +229,7 @@ export function FormulariFactura({ f }) {
               ))}
             </GrupCamps>
             {tipus === 'R5' ? (
-              <p className="sdp-gestoria-panell__nota">Corregix tiquets: serà una rectificativa de factura simplificada (R5).</p>
+              <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">Corregix tiquets: serà una rectificativa de factura simplificada (R5).</p>
             ) : (
               <Camp etiqueta="Per què la corregixes">
                 <Selector value={formulari.causa} opcions={OPCIONS_CAUSA} onChange={(event) => posa('causa', event.target.value)} />
@@ -235,7 +238,7 @@ export function FormulariFactura({ f }) {
             <GrupOpcions llegenda="Com la corregixes?" valor={formulari.modalitat} opcions={OPCIONS_MODALITAT}
               onCanvi={(valor) => posa('modalitat', valor)} />
           </>
-        ) : <p>No hi ha cap factura al llibre que es puga rectificar.</p>
+        ) : <p ref={adoptaEstilsDiferits}>No hi ha cap factura al llibre que es puga rectificar.</p>
       ) : null}
 
       {ambClient ? (
@@ -269,7 +272,7 @@ export function FormulariFactura({ f }) {
       {ambClient && avisClient ? (
         <Alerta to="avis" titol="Este client no és el de la factura que corregixes"
           accions={<Boto varietat="secundari" onClick={() => copiaClient(avisClient.client)}>Copia el client de la factura</Boto>}>
-          <p>{avisClient.text}</p>
+          <p ref={adoptaEstilsDiferits}>{avisClient.text}</p>
         </Alerta>
       ) : null}
 
@@ -280,7 +283,7 @@ export function FormulariFactura({ f }) {
               <Casella key={t.clau} etiqueta={t.etiqueta} checked={formulari.substituides.includes(t.clau)} onChange={() => commutaTiquet(t.clau)} />
             ))}
           </GrupCamps>
-        ) : <p>No hi ha cap tiquet al llibre que es puga substituir.</p>
+        ) : <p ref={adoptaEstilsDiferits}>No hi ha cap tiquet al llibre que es puga substituir.</p>
       ) : null}
 
       {formulari.linies.map((linia, i) => (
@@ -311,14 +314,14 @@ export function FormulariFactura({ f }) {
       {numero.error ? <ErrorsDelFormulari titol="Amb esta data no es pot emetre" errors={[numero.error.message]} /> : null}
 
       {totals ? (
-        <dl className="sdp-gestoria-panell__dades">
+        <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__dades">
           <div><dt>Base imposable</dt><dd>{euros(totals.baseTotal)}</dd></div>
           <div><dt>IVA</dt><dd>{euros(totals.quotaTotal)}</dd></div>
           <div><dt>Total</dt><dd>{euros(totals.importTotal)}</dd></div>
-          {totals.retencio ? <div><dt>{`Retenció d’IRPF (${totals.retencio.percentatge} %)`}</dt><dd>{euros(-totals.retencio.import)}</dd></div> : null}
-          {totals.retencio ? <div><dt>Total a pagar</dt><dd>{euros(totals.liquid)}</dd></div> : null}
+          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>{`Retenció d’IRPF (${totals.retencio.percentatge} %)`}</dt><dd>{euros(-totals.retencio.import)}</dd></div> : null}
+          {totals.retencio ? <div ref={adoptaEstilsDiferits}><dt>Total a pagar</dt><dd>{euros(totals.liquid)}</dd></div> : null}
         </dl>
-      ) : <p className="sdp-gestoria-panell__nota">El total apareix quan la factura està completa.</p>}
+      ) : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">El total apareix quan la factura està completa.</p>}
 
       <ErrorsDelFormulari titol="Falta alguna cosa a la factura" errors={errors} />
       <AvisDeZona avis={f.avis} zona="factura" onTanca={f.tancaAvis} />
@@ -330,8 +333,8 @@ export function FormulariFactura({ f }) {
         titol={confirmant ? `Emets la factura ${confirmant.numero}?` : 'Emets la factura?'}
         descripcio="Una factura emesa entra al llibre i ja no s’esborra: si cal, es rectifica o s’anul·la."
         etiquetaConfirma="Sí, emet-la" etiquetaCancela="Encara no" carregant={f.ocupat === 'emetent'}>
-        {confirmant?.total !== null && confirmant?.total !== undefined ? <p>{`Total: ${euros(confirmant.total)}.`}</p> : null}
-        {confirmant?.liquid !== null && confirmant?.liquid !== undefined ? <p>{`A pagar, amb la retenció: ${euros(confirmant.liquid)}.`}</p> : null}
+        {confirmant?.total !== null && confirmant?.total !== undefined ? <p ref={adoptaEstilsDiferits}>{`Total: ${euros(confirmant.total)}.`}</p> : null}
+        {confirmant?.liquid !== null && confirmant?.liquid !== undefined ? <p ref={adoptaEstilsDiferits}>{`A pagar, amb la retenció: ${euros(confirmant.liquid)}.`}</p> : null}
       </DialegConfirmacio>
     </form>
   );

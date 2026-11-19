@@ -118,6 +118,7 @@
  *   confirmació i quota reals de 2610220240), autoritzar o revocar la Tauleta
  *   Espill, ni obrir WebRTC: només en dona les peces verificades.
  */
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
 import { MAXIM_ADJUNT_XAT, MAXIM_BLOB_ADJUNT, MIME_XAT, MIME_XIFRAT } from '../xatMultimedia.js';
 import {
   BYTES_ETIQUETA,
@@ -254,7 +255,7 @@ const CLAUS_PROHIBIDES = new Set([
   'testimoniacces', 'codiautoritzacio', 'authorizationcode', 'serverauthcode', 'authcode',
   'servicerole', 'servicerolekey', 'apikey', 'clientsecret',
 ]);
-const nomNormalitzat = (clau) => clau.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const nomNormalitzat = (clau) => normalitzaUnicodeAmbLimit(clau, 'NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 /* Una clau privada amb qualsevol sufix (privateKeyPem, clauPrivadaB64, secretKeyHex). */
 const PREFIXOS_CLAU_PRIVADA = ['privatekey', 'clauprivada', 'secretkey', 'clausecreta', 'privkey'];
 const esNomProhibit = (nom) => CLAUS_PROHIBIDES.has(nom) || PREFIXOS_CLAU_PRIVADA.some((p) => nom.startsWith(p));
@@ -633,7 +634,7 @@ function normalitzaRegistre(registre, ambit, cami) {
 }
 
 function exigixNomAdjunt(nom) {
-  if (typeof nom !== 'string' || !nom || codifica(nom).length > 255 || nom !== nom.normalize('NFC')
+  if (typeof nom !== 'string' || !nom || codifica(nom).length > 255 || nom !== normalitzaUnicodeAmbLimit(nom, 'NFC')
     || CONTROLS_I_BIDI.test(nom) || /[/\\:]/.test(nom) || nom.startsWith('.') || nom.trim() !== nom) {
     throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'nom-adjunt', 'Nom d’adjunt insegur a la còpia (ruta, control o forma no NFC).');
   }
@@ -643,7 +644,7 @@ function exigixNomAdjunt(nom) {
 /* En exportar, el nom d'origen (p. ex. «foto 12:30.jpg» de macOS) es saneja
    en lloc de fer fallar la còpia; en importar, la mateixa regla és estricta. */
 function sanejaNomAdjunt(nom, id) {
-  let net = String(nom ?? '').normalize('NFC')
+  let net = normalitzaUnicodeAmbLimit(String(nom ?? ''), 'NFC')
     .replace(new RegExp(CONTROLS_I_BIDI.source, 'g'), '')
     .replace(/[/\\:]/g, '_')
     .trim()
@@ -911,7 +912,7 @@ function exigixIteracions(iteracions) {
   return iteracions;
 }
 
-const bytesContrasenya = (contrasenya) => codifica(contrasenya.normalize('NFC'));
+const bytesContrasenya = (contrasenya) => codifica(normalitzaUnicodeAmbLimit(contrasenya, 'NFC'));
 
 /* AAD: tota la capçalera menys l'IV (GCM ja l'autentica). */
 function aadDe(esquema, versio, capcalera) {
@@ -1017,7 +1018,7 @@ export async function exportaCopiaSeguretatXatAmbRebut({
 
   const xifratActiu = permetSenseXifrar !== true || Boolean(contrasenya);
   if (xifratActiu) {
-    if (typeof contrasenya !== 'string' || contrasenya.normalize('NFC').trim().length < MIN_CARACTERS_CONTRASENYA) {
+    if (typeof contrasenya !== 'string' || normalitzaUnicodeAmbLimit(contrasenya, 'NFC').trim().length < MIN_CARACTERS_CONTRASENYA) {
       throw creaErrorTipificat(CODI_CLAU_FEBLE, 'contrasenya-curta', `La clau de còpia ha de tindre com a mínim ${MIN_CARACTERS_CONTRASENYA} caràcters.`);
     }
     exigixIteracions(iteracions);
@@ -1680,7 +1681,7 @@ export function nomArxiuCopiaSeguretatXat({ data = new Date(), mode = null, etiq
   if (!esIsoCanonica(iso)) throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'data', 'Data del nom d’arxiu invàlida.');
   if (mode !== null && !MODES_COPIA.has(mode)) throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'mode', 'Mode de còpia desconegut.');
   const etiquetaNeta = etiqueta === null || etiqueta === undefined ? ''
-    : String(etiqueta).normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    : normalitzaUnicodeAmbLimit(String(etiqueta), 'NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+/, '').slice(0, 32).replace(/-+$/, '');
   const marca = `${iso.slice(0, 4)}${iso.slice(5, 7)}${iso.slice(8, 10)}-${iso.slice(11, 13)}${iso.slice(14, 16)}`;
   return `${['socdepoble', 'xat', etiquetaNeta, mode, marca].filter(Boolean).join('-')}${EXTENSIO_SDP_BACKUP}`;

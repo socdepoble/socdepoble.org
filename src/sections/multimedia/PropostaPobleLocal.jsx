@@ -13,6 +13,9 @@ import {
   TEXTOS_AMBIT_LOCAL, TEXTOS_AVIS_POBLE, TEXTOS_CONFIANCA_POBLE, TEXTOS_MOTIU_ORIGEN_LOCAL, TEXTOS_MOTIU_POBLE, TEXTOS_ORIGEN_LOCAL
 } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const TO_CONFIANCA = Object.freeze({ alta: 'exit', mitjana: 'info', baixa: 'avis' });
 
@@ -24,7 +27,7 @@ export function PropostaPobleLocal({ t, proposta }) {
   const files = [];
   if (p.poble?.nom) {
     files.push(
-      <li key="poble">
+      <li ref={adoptaEstilsDiferits} key="poble">
         <strong>{tr(T['proposta.poble'], { poble: p.poble.nom })}</strong>
         {p.confianca && TEXTOS_CONFIANCA_POBLE[p.confianca]
           ? <> <Insignia to={TO_CONFIANCA[p.confianca]}>{tr(TEXTOS_CONFIANCA_POBLE[p.confianca])}</Insignia></>
@@ -32,16 +35,16 @@ export function PropostaPobleLocal({ t, proposta }) {
       </li>
     );
   }
-  if (comarca) files.push(<li key="comarca">{tr(T['proposta.comarca'], { comarca })}</li>);
+  if (comarca) files.push(<li ref={adoptaEstilsDiferits} key="comarca">{tr(T['proposta.comarca'], { comarca })}</li>);
   if (p.motiu && TEXTOS_MOTIU_POBLE[p.motiu]) {
-    files.push(<li key="motiu">{tr(TEXTOS_MOTIU_POBLE[p.motiu], { km: p.km ?? '?' })}</li>);
+    files.push(<li ref={adoptaEstilsDiferits} key="motiu">{tr(TEXTOS_MOTIU_POBLE[p.motiu], { km: p.km ?? '?' })}</li>);
   }
   if (p.categoria && TEXTOS_AMBIT_LOCAL[p.categoria]) {
-    files.push(<li key="categoria">{tr(T['proposta.categoria'], { categoria: tr(TEXTOS_AMBIT_LOCAL[p.categoria]) })}</li>);
+    files.push(<li ref={adoptaEstilsDiferits} key="categoria">{tr(T['proposta.categoria'], { categoria: tr(TEXTOS_AMBIT_LOCAL[p.categoria]) })}</li>);
   }
   if (p.origen && TEXTOS_ORIGEN_LOCAL[p.origen]) {
     files.push(
-      <li key="origen">
+      <li ref={adoptaEstilsDiferits} key="origen">
         {tr(T['proposta.origen'], {
           origen: tr(TEXTOS_ORIGEN_LOCAL[p.origen]),
           motiu: TEXTOS_MOTIU_ORIGEN_LOCAL[p.motiuOrigen] ? tr(TEXTOS_MOTIU_ORIGEN_LOCAL[p.motiuOrigen]) : '—'
@@ -52,13 +55,13 @@ export function PropostaPobleLocal({ t, proposta }) {
   const avisos = (Array.isArray(p.avisos) ? p.avisos : []).filter((a) => TEXTOS_AVIS_POBLE[a]);
 
   return (
-    <section className="sdp-arxiu-local__proposta" aria-labelledby={`${id}-titol`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__proposta" aria-labelledby={`${id}-titol`}>
       <h4 id={`${id}-titol`}>{tr(T['proposta.titol'])}</h4>
-      {files.length > 0 ? <ul className="sdp-arxiu-local__llista">{files}</ul> : <p>{tr(T['proposta.cap'])}</p>}
+      {files.length > 0 ? <ul ref={adoptaEstilsDiferits} className="sdp-arxiu-local__llista">{files}</ul> : <p ref={adoptaEstilsDiferits}>{tr(T['proposta.cap'])}</p>}
       {avisos.length > 0 ? (
         <Alerta to="avis" viva={false}>
-          <ul className="sdp-arxiu-local__llista">
-            {avisos.map((a) => <li key={a}>{tr(TEXTOS_AVIS_POBLE[a])}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-arxiu-local__llista">
+            {avisos.map((a) => <li ref={adoptaEstilsDiferits} key={a}>{tr(TEXTOS_AVIS_POBLE[a])}</li>)}
           </ul>
         </Alerta>
       ) : null}

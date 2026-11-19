@@ -7,6 +7,8 @@
  * veuIaiaService.js.
  */
 
+import { llegeixAudioNode0 } from '../data/audioNode0Segur.js';
+
 export const CODI_VEU_NO_DISPONIBLE = 'VEU_NO_DISPONIBLE';
 export const CODI_VEU_AVORTADA = 'VEU_AVORTADA';
 
@@ -86,11 +88,11 @@ async function demanaBlocAudioNode0(punt, blocText, idioma, veu, signal) {
       signal: s,
       credentials: 'omit',
     });
-    const tipus = resposta?.headers?.get?.('content-type') || '';
-    if (!resposta?.ok || !/^audio\//i.test(tipus)) throw nouError(CODI_VEU_NO_DISPONIBLE, 'Resposta del Node 0 no vàlida.');
-    const dades = await resposta.blob();
-    if (!dades || !dades.size) throw nouError(CODI_VEU_NO_DISPONIBLE, 'Àudio buit.');
-    return dades;
+    try { return await llegeixAudioNode0(resposta, { signal: s }); }
+    catch (causa) {
+      throw nouError(signal?.aborted ? CODI_VEU_AVORTADA : CODI_VEU_NO_DISPONIBLE,
+        signal?.aborted ? 'Locució aturada.' : 'Resposta del Node 0 no vàlida.', causa);
+    }
   }, TEMPS_LIMIT_NODE0_MS, signal);
 }
 

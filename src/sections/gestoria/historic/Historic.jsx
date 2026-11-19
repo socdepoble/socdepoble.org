@@ -88,6 +88,9 @@ import { TEXT_COBERTURA, nomDelTram, targetesHistoric } from './nucli/targetesHi
 import { ACCEPTA_HISTORIC } from './nucli/tractorHistoric.js';
 import { PanellSimulacio, Percentatge, importDe, recompteDe } from './PanellSimulacio.jsx';
 import { useHistoric } from './useHistoric.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* La consulta que obri la porta dels Tractors (la mateixa que CONSULTA_TRACTORS de ContenidorGestoria.jsx; una prova ho comprova). */
 export const CONSULTA_TRACTORS_HISTORIC = '?categoria=tractors_cat&item=tractors_aprovacio';
@@ -195,7 +198,7 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
   }
   const periode = h.rang ? `del ${dia(h.rang.inici)} al ${dia(h.rang.fi)}` : '';
   return (
-    <div className="sdp-gestoria-historic__porta">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__porta">
       <Camp key={h.generacio} etiqueta="Tria els extractes del banc de tot el període"
         ajuda={`Norma 43 o el CSV de moviments, fins a 60 fitxers: l’històric va ${periode}. Res es puja enlloc.`}>
         <CampText tipus="file" multiple accept={ACCEPTA_HISTORIC} disabled={h.llegint}
@@ -205,13 +208,13 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
       {h.error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{h.error}</Alerta> : null}
       {h.lectura?.avisos?.length ? (
         <Alerta to="avis" titol="Hi ha fitxers que no s’han llegit">
-          <ul className="sdp-gestoria-historic__avisos">
-            {h.lectura.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos">
+            {h.lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
           </ul>
         </Alerta>
       ) : null}
       {h.lectura || h.llegint ? (
-        <div className="sdp-gestoria-historic__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__accions">
           {h.potTornarALlegir ? <Boto icona={RotateCcw} onClick={() => h.tornaALlegir()}>Torna a llegir amb les regles</Boto> : null}
           <Boto varietat="secundari" onClick={onOblida}>Oblida les dades</Boto>
         </div>
@@ -225,9 +228,9 @@ function PortaHistoric({ h, onObreTractors, onOblida }) {
 function Seccio({ titol, children, ajuda }) {
   const id = useId();
   return (
-    <section className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
       <h2 id={id} className="sdp-gestoria-historic__titol">{titol}</h2>
-      {ajuda ? <p className="sdp-gestoria-historic__nota">{ajuda}</p> : null}
+      {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">{ajuda}</p> : null}
       {children}
     </section>
   );
@@ -237,7 +240,7 @@ function Seccio({ titol, children, ajuda }) {
 function TaulaTrams({ titol, trams, visible }) {
   return (
     <Taula titol={titol} densa>
-      <thead>
+      <thead ref={adoptaEstilsDiferits}>
         <tr>
           <th scope="col">Període</th><th scope="col">Cobertura</th><th scope="col">Entrades</th><th scope="col">Eixides</th>
           <th scope="col">Net</th><th scope="col">Despesa en IA</th><th scope="col">IA sobre les eixides</th>
@@ -245,7 +248,7 @@ function TaulaTrams({ titol, trams, visible }) {
       </thead>
       <tbody>
         {trams.map((t) => (
-          <tr key={t.clau}>
+          <tr ref={adoptaEstilsDiferits} key={t.clau}>
             <th scope="row">{nomDelTram(t)}</th>
             <td>{TEXT_COBERTURA[t.cobertura]}</td>
             <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(t.entrades)} visible={visible} /></td>
@@ -295,12 +298,12 @@ function TaulaCategories({ totals, visible }) {
   if (!files.length) return null;
   return (
     <Taula titol="El període per categoria" densa>
-      <thead>
+      <thead ref={adoptaEstilsDiferits}>
         <tr><th scope="col">Categoria</th><th scope="col">Entrades</th><th scope="col">Eixides</th><th scope="col">Moviments</th></tr>
       </thead>
       <tbody>
         {files.map(({ c, xifres }) => (
-          <tr key={c.id}>
+          <tr ref={adoptaEstilsDiferits} key={c.id}>
             <th scope="row">{c.nom}</th>
             <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(xifres.entrades)} visible={visible} /></td>
             <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(xifres.eixides)} visible={visible} /></td>
@@ -320,7 +323,7 @@ function SeccioIa({ serie, visible }) {
       <GraficMensual titol="Despesa neta en IA per mes" mesos={serie.mesos} valorDe={(m) => m.ia?.net} visible={visible} />
       {proveidors.length ? (
         <Taula titol="La despesa en IA per proveïdor" densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr>
               <th scope="col">Proveïdor</th><th scope="col">País</th><th scope="col">IVA</th><th scope="col">Despesa neta</th>
               <th scope="col">En dòlars</th><th scope="col">Part de la IA</th><th scope="col">Moviments</th>
@@ -328,7 +331,7 @@ function SeccioIa({ serie, visible }) {
           </thead>
           <tbody>
             {proveidors.map((p) => (
-              <tr key={p.clau}>
+              <tr ref={adoptaEstilsDiferits} key={p.clau}>
                 <th scope="row">{p.nom}</th>
                 <td>{p.pais ?? '—'}</td>
                 <td>{TRACTAMENT_CURT[p.tractament]}</td>
@@ -342,7 +345,7 @@ function SeccioIa({ serie, visible }) {
             ))}
           </tbody>
         </Taula>
-      ) : <p className="sdp-gestoria-historic__nota">Cap moviment del període és d’IA.</p>}
+      ) : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">Cap moviment del període és d’IA.</p>}
     </Seccio>
   );
 }
@@ -360,12 +363,12 @@ function TaulaRevisio({ titol, moviments, total, visible, h }) {
   return (
     <>
       <Taula titol={titol} densa>
-        <thead>
+        <thead ref={adoptaEstilsDiferits}>
           <tr><th scope="col">Data</th><th scope="col">Import</th><th scope="col">Per què</th><th scope="col">Categoria i proveïdor</th></tr>
         </thead>
         <tbody>
           {moviments.map((m) => (
-            <tr key={m.id ?? `${dia(m.data)}-${m.compte}-${m.centims}`}>
+            <tr ref={adoptaEstilsDiferits} key={m.id ?? `${dia(m.data)}-${m.compte}-${m.centims}`}>
               <th scope="row">{dia(m.data)}</th>
               <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(m.centims)} visible={visible} /></td>
               <td>{TEXT_MOTIUS[m.motiu] ?? '—'}</td>
@@ -389,7 +392,7 @@ function TaulaRevisio({ titol, moviments, total, visible, h }) {
         </tbody>
       </Taula>
       {total > moviments.length ? (
-        <p className="sdp-gestoria-historic__nota">
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">
           {`Se’n mostren els ${moviments.length} primers de `}
           <Xifra xifra={recompteDe(total)} visible={visible} />
           {': amb una regla en pots classificar molts de colp.'}
@@ -421,18 +424,18 @@ function SeccioRevisio({ h, visible }) {
   };
   return (
     <Seccio titol="Per revisar" ajuda="Els proveïdors ambigus (Google o Microsoft sense producte), els moviments sense cap patró conegut, les entrades sense origen (compten com a cobraments de clients) i els traspassos probables entre els teus comptes. La teua tria es guarda per a la lectura següent.">
-      {eixides.length || entrades.length ? null : <p className="sdp-gestoria-historic__nota">No hi ha cap moviment per revisar.</p>}
+      {eixides.length || entrades.length ? null : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">No hi ha cap moviment per revisar.</p>}
       <TaulaRevisio titol="Eixides per revisar" moviments={eixides.slice(0, MAX_REVISIO)} total={eixides.length} visible={visible} h={h} />
       <TaulaRevisio titol="Entrades per revisar" moviments={entrades.slice(0, MAX_REVISIO)} total={entrades.length} visible={visible} h={h} />
       {senseOrigen.length ? (
-        <div className="sdp-gestoria-historic__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__accions">
           <Boto varietat="secundari" icona={CheckCheck}
             onClick={() => h.reclassificaMoviments(senseOrigen.map((m) => ({ id: m.id, canvi: { categoria: 'clients', proveidor: null } })))}>
             Confirma la resta d’entrades com a cobraments de clients
           </Boto>
         </div>
       ) : null}
-      <form className="sdp-gestoria-historic__regla" onSubmit={afig}>
+      <form ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__regla" onSubmit={afig}>
         <Camp etiqueta="Text que apareix al moviment" ajuda="Per exemple, el nom del comerç. Majúscules i accents no importen." error={error || undefined}>
           <CampText value={patro} spellCheck={false} onChange={(event) => setPatro(event.target.value)} maxLength={60} />
         </Camp>
@@ -445,9 +448,9 @@ function SeccioRevisio({ h, visible }) {
         <Boto tipus="submit" varietat="secundari">Afig la regla</Boto>
       </form>
       {h.configuracio.regles.length ? (
-        <ul className="sdp-gestoria-historic__regles" aria-label="Les teues regles">
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__regles" aria-label="Les teues regles">
           {h.configuracio.regles.map((r, i) => (
-            <li key={`${r.patro}-${i}`}>
+            <li ref={adoptaEstilsDiferits} key={`${r.patro}-${i}`}>
               <span>{`«${r.patro}» → ${categoriaDe(r.categoria)?.nom ?? r.categoria}${r.proveidor ? ` (${proveidorDe(r.proveidor)?.nom ?? r.proveidor})` : ''}`}</span>
               <Boto varietat="fantasma" onClick={() => h.llevaRegla(i)} aria-label={`Lleva la regla «${r.patro}»`}>Lleva</Boto>
             </li>
@@ -489,14 +492,14 @@ function SeccioLlibre({ h, subtle, descarrega, onAnuncia }) {
   };
   return (
     <Seccio titol="El llibre per a la gestora" ajuda="Un XLSX amb set fulles: el resum anual i trimestral, els moviments categoritzats (sense el text dels conceptes), la despesa en IA per mes i proveïdor, les estimacions i els paràmetres amb la seua font.">
-      <div className="sdp-gestoria-historic__accions">
+      <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__accions">
         <Boto varietat="primari" icona={FileDown} carregant={preparant} onClick={prepara}>Prepara el llibre (XLSX)</Boto>
       </div>
       {error ? <Alerta to="error" titol="No s’ha pogut preparar el llibre">{error}</Alerta> : null}
       <DialegConfirmacio obert={Boolean(llibre)} onTanca={() => setLlibre(null)} onConfirma={confirma}
         titol="Descarregar el llibre sense xifrar?" descripcio={AVIS_SENSE_XIFRAR} etiquetaConfirma="Descarrega’l" etiquetaCancela="Encara no">
         {llibre ? (
-          <dl className="sdp-gestoria-historic__dades">
+          <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__dades">
             <dt>Fitxer</dt><dd>{llibre.nom}</dd>
             <dt>Mida</dt><dd>{`${Math.max(1, Math.round(llibre.mida / 1024))} kB`}</dd>
             <dt>Empremta SHA-256</dt><dd><code className="sdp-gestoria-historic__empremta">{llibre.empremta}</code></dd>
@@ -552,10 +555,10 @@ export function VistaHistoric({
   /* Amb el cofre bloquejat no hi ha cap xifra que mostrar: la boina va sense
      l'ull (i sense xip). El rellotge viu el posa PaginaApp igualment. */
   const boina = h.persistenciaBloquejada ? null : (
-    <span className="sdp-gestoria-boina">
+    <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
       <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" />
       {lectura ? (
-        <span className="sdp-gestoria-boina__lectura">
+        <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina__lectura">
           <DateTimeControl time={lectura.time} date={lectura.date} dateTime={lectura.dateTime} label={lectura.etiqueta} />
         </span>
       ) : null}
@@ -588,8 +591,8 @@ export function VistaHistoric({
         <>
           {h.serie.avisos.length ? (
             <Alerta to="info" titol="Notes de la lectura">
-              <ul className="sdp-gestoria-historic__avisos">
-                {h.serie.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+              <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos">
+                {h.serie.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
               </ul>
             </Alerta>
           ) : null}
@@ -621,7 +624,7 @@ export function VistaHistoric({
       lead="El panell del director financer: tots els extractes de l’1 de gener de l’any passat al final del trimestre passat, classificats en este ordinador."
       author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={ETIQUETES} refTitol={refTitol}
       showComment={false} showShare={false} showConnect={false}>
-      <p role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
+      <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}
     </PaginaApp>
   );

@@ -39,9 +39,20 @@ import { parseFrontmatter, splitFrontmatter } from '../wiki/lib/frontmatter.mjs'
 
 export const ESQUEMA = 'sdp.fronteres-skills.v2';
 
+/** Pressupost estàtic per línia: l'anàlisi incompleta és F2, mai conformitat.
+ * El lèxic heretat reinicia les cometes després de cada `node`, i pot produir
+ * sufixos superposats. Es conserven els resultats admesos; no es materialitza
+ * una expansió quadràtica. Els fragments es concatenen una sola vegada per
+ * token; les unitats són UTF-16, no temps de rellotge.
+ */
+export const LIMITS_MOTORS = Object.freeze({ factorTreball: 4, margeTreball: 1024, sortides: 128, longitudRuta: 4096 });
+const LIMIT_TREBALL = 'MOTORS_WORK_LIMIT: anàlisi no completada dins del pressupost lineal';
+const LIMIT_SORTIDES = 'MOTORS_OUTPUT_LIMIT: anàlisi no completada dins del pressupost de resultats';
+const LIMIT_RUTA = 'MOTORS_PATH_LIMIT: anàlisi no completada dins del pressupost de longitud';
+
 export const REGLES = Object.freeze({
   F1: 'contracte.llig i contracte.escriu: llistes no buides de camins canònics existents; només quatre directoris efímers exactes poden faltar si Git acredita que no són versionats',
-  F2: 'cada motor declarat a `motors` o invocat amb `node <camí>` és un fitxer regular canònic dins de l’arrel, sense symlinks, i tot `node <camí>` del cos figura en `motors`; cada `npm run <script>` és a package.json (també dins de blocs de codi)',
+  F2: 'cada motor declarat a `motors` o invocat amb `node <camí>` és un fitxer regular canònic dins de l’arrel, sense symlinks, i tot `node <camí>` del cos figura en `motors`; cada `npm run <script>` és a package.json (també dins de blocs de codi); excedir el pressupost lèxic o de resultats és anàlisi F2 incompleta, mai un verd',
   F3: 'cap ordre d’escriptura recursiva (sed -i, perl -i, find … -exec/-delete, xargs rm|sed|perl) sense excloure 01_produccio',
   F4: 'cada var(--sdp-*) està declarat a src/**/*.css; cap color, ombra ni radi literal fora d’una prohibició o del valor del token que la línia nomena',
   F5: 'el que una ordre de la skill llig (require(\'./…\'), readFileSync(\'…\'), cat <camí>) cap dins de contracte.llig o contracte.escriu'
@@ -121,25 +132,48 @@ function senseComentarisShell(text) {
 }
 
 /** Shell argv for static node invocations. Never runs a command or interpolates a value. */
-function paraulesShell(text) {
+function paraulesShell(text, inici, pressupost) {
   const out = [];
-  let word = '', quote = null;
-  for (let i = 0; i < text.length; i++) {
+  let fragments = [], quote = null, tram = inici, i = inici;
+  const afigTram = fi => { if (tram < fi) fragments.push(text.slice(tram, fi)); };
+  const acabaParaula = fi => {
+    afigTram(fi);
+    if (fragments.length) out.push(fragments.length === 1 ? fragments[0] : fragments.join(''));
+    fragments = [];
+  };
+  for (; i < text.length; i++) {
+    if (--pressupost.restants < 0) return { out: [], limit: true };
     const c = text[i];
-    if (c === '\\' && quote !== "'") { if (!text[i + 1]) return { out, opac: true }; word += text[++i]; continue; }
-    if (quote) { if (c === quote) quote = null; else word += c; continue; }
-    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === '\\' && quote !== "'") {
+      if (!text[i + 1]) return { out, opac: true };
+      if (--pressupost.restants < 0) return { out: [], limit: true };
+      afigTram(i); fragments.push(text[++i]); tram = i + 1; continue;
+    }
+    if (quote) {
+      if (c === quote) { afigTram(i); quote = null; tram = i + 1; }
+      continue;
+    }
+    if (c === '"' || c === "'") { afigTram(i); quote = c; tram = i + 1; continue; }
     if (';|&<>`'.includes(c)) break;
-    if (/\s/.test(c)) { if (word) { out.push(word); word = ''; } }
-    else word += c;
+    if (/\s/.test(c)) { acabaParaula(i); tram = i + 1; }
   }
-  if (word) out.push(word);
+  acabaParaula(i);
   return { out, opac: Boolean(quote) };
 }
-function* motorsNode(text) {
+function motorsNode(text) {
+  const pressupost = { restants: LIMITS_MOTORS.factorTreball * text.length + LIMITS_MOTORS.margeTreball };
+  const sortides = [], vistos = new Set();
+  const afig = resultat => {
+    const clau = resultat.ruta === undefined ? `o:${resultat.opac}` : `r:${resultat.ruta}`;
+    if (vistos.has(clau)) return true;
+    if (vistos.size >= LIMITS_MOTORS.sortides) { sortides.push({ opac: LIMIT_SORTIDES }); return false; }
+    vistos.add(clau); sortides.push(resultat); return true;
+  };
   for (const match of text.matchAll(/\bnode\s+/g)) {
-    const words = paraulesShell(text.slice(match.index + match[0].length));
-    if (words.opac) { yield { opac: 'cometes de node sense tancar' }; continue; }
+    // Índex sobre la font original: cap còpia de cada sufix abans de comptar-lo.
+    const words = paraulesShell(text, match.index + match[0].length, pressupost);
+    if (words.limit) { afig({ opac: LIMIT_TREBALL }); return sortides; }
+    if (words.opac) { if (!afig({ opac: 'cometes de node sense tancar' })) return sortides; continue; }
     const testMode = words.out.includes('--test');
     let i = 0;
     for (; i < words.out.length; i++) {
@@ -150,14 +184,21 @@ function* motorsNode(text) {
       if (['-r', '--require', '--import', '--loader', '--experimental-loader', '--conditions', '--input-type', '--inspect-port', '--test-name-pattern', '--test-skip-pattern', '--test-reporter', '--test-reporter-destination'].includes(arg)) i++;
     }
     const targets = testMode ? words.out.slice(i) : words.out.slice(i, i + 1);
-    if (testMode && !targets.length) { yield { opac: 'node --test sense fitxers literals: descoberta no resolta' }; continue; }
+    if (testMode && !targets.length) {
+      if (!afig({ opac: 'node --test sense fitxers literals: descoberta no resolta' })) return sortides;
+      continue;
+    }
     for (const raw of targets) {
       if (!raw) continue;
-      if (/[$`*?{}[\]]/.test(raw)) { yield { opac: `motor dinàmic o glob no verificable ${raw}` }; continue; }
-      if (!testMode && !raw.includes('/') && !/\.[cm]?js$/.test(raw)) continue; // Ordinary prose after node is not an invocation.
-      yield { ruta: raw.replace(/^\.\//, '') };
+      const dinamic = /[$`*?{}[\]]/.test(raw);
+      if (!testMode && !dinamic && !raw.includes('/') && !/\.[cm]?js$/.test(raw)) continue; // Ordinary prose after node is not an invocation.
+      if (raw.length > LIMITS_MOTORS.longitudRuta) { afig({ opac: LIMIT_RUTA }); return sortides; }
+      if (dinamic) { if (!afig({ opac: `motor dinàmic o glob no verificable ${raw}` })) return sortides; continue; }
+      // Repeticions en la mateixa línia produïen les mateixes empremtes/línia.
+      if (!afig({ ruta: raw.replace(/^\.\//, '') })) return sortides;
     }
   }
+  return sortides;
 }
 
 /** Keep exclusions in the same shell command/pipeline, never borrow one after &&, || or ;. */

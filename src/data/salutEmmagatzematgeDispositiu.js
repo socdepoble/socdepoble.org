@@ -1,6 +1,6 @@
 /** IDEA-278: lectura local, sense backend ni dependència d'interfície.
- * Només recursos públics amb manifest SHA-256 d’un productor cooperatiu en memòries v0 retirades.
- * Sense productor connectat, el diagnòstic funciona i no s’esborra cap entrada.
+ * JARVIS és només diagnòstic, també amb un manifest SHA-256 confirmat.
+ * No conté cap primitiva de supressió ni escriu rebuts de neteja.
  * Mai obri bases de notes, esborranys, E2EE ni còpies de seguretat.
  * Els bytes del cos eliminat són mesurables; l'espai físic recuperat no ho és.
  */
@@ -94,12 +94,10 @@ function historialPerDefecte(navegador) {
 }
 export function creaServeiSalutEmmagatzematgeDispositiu({
   navegador = globalThis.navigator, memories = globalThis.caches,
-  origen = globalThis.location?.origin, magatzemHistorial, manifestRegenerable = null,
-  ara = () => new Date().toISOString(), id = () => globalThis.crypto.randomUUID()
+  origen = globalThis.location?.origin, magatzemHistorial, manifestRegenerable = null
 } = {}) {
-  // Trust boundary: this manifest must come from the cache producer, which must acquire LOCK
-  // for every write. Cache API has no atomic compare-and-delete against a non-cooperative writer.
-  // No such producer is wired in production yet: default manifest is empty and deletion is disabled.
+  // El manifest només acredita el diagnòstic; mai concedix capacitat de supressió.
+
   const confirmats = recursosConfirmats(manifestRegenerable, origen);
   let historial;
   const magatzem = () => (historial ??= magatzemHistorial ?? historialPerDefecte(navegador));
@@ -130,9 +128,9 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
       { id: 'miniatures-sincronitzades', tipus: 'regenerable', bytes: null, purgable: false,
         motiu: 'CAP_PRODUCTOR_AMB_CONFIRMACIO_DE_SINCRONITZACIO' }
     ];
-    const candidats = []; const avisos = [];
+    const avisos = ['JARVIS_NOMES_DIAGNOSTIC'];
     if (confirmats.size === 0) avisos.push('CAP_PRODUCTOR_REGENERABLE_CONFIRMAT');
-    if (typeof memories?.keys !== 'function' || !origen) return { categories, candidats, avisos: ['CACHE_NO_DISPONIBLE'] };
+    if (typeof memories?.keys !== 'function' || !origen) return { categories, avisos: [...avisos, 'CACHE_NO_DISPONIBLE'] };
     avortat(signal);
     const noms = await memories.keys();
     for (const nom of RETIRADES.filter((n) => noms.includes(n))) {
@@ -153,13 +151,12 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
         if (!confirmat || confirmat.bytes !== mida.bytes || confirmat.sha256 !== mida.sha256) { completa = false; continue; }
         recursos.push({ clau, bytes: mida.bytes, sha256: mida.sha256 });
       }
-      categories.push({ id: nom, tipus: 'regenerable', bytes, purgable: completa,
+      categories.push({ id: nom, tipus: 'regenerable', bytes, purgable: false,
+        verificat: completa, motiu: 'JARVIS_NOMES_DIAGNOSTIC',
         mesura: 'bytes-del-cos', entrades: recursos.length });
-      // Una sola entrada desconeguda bloqueja tota la memòria. Mai delete(cache).
-      if (completa) candidats.push({ nom, recursos });
-      else avisos.push('CACHE_AMB_DADES_NO_VERIFICADES');
+      if (!completa) avisos.push('CACHE_AMB_DADES_NO_VERIFICADES');
     }
-    return { categories, candidats, avisos };
+    return { categories, avisos };
   }
   async function historialNetegesLocals() {
     const m = magatzem();
@@ -176,49 +173,16 @@ export function creaServeiSalutEmmagatzematgeDispositiu({
       return { ...e, categories: [], avisos: [...e.avisos, 'INVENTARI_FALLIT'], error: { codi: error.codi ?? 'LECTURA_CACHE' } };
     }
   }
+  /** Compatibilitat amb consumidors anteriors: únicament retorna el diagnòstic.
+   * Una futura neteja humana haurà de viure en una eina separada i explícita;
+   * cap manifest ni bandera pot activar una supressió en este satèl·lit.
+   */
   async function purgaMemoriaCauRegenerable({ signal } = {}) {
     avortat(signal);
-    if (typeof navegador?.locks?.request !== 'function') throw errorCodi('BLOQUEIG_NO_DISPONIBLE');
-    return navegador.locks.request(LOCK, { mode: 'exclusive', ...(signal ? { signal } : {}) }, async () => {
-      avortat(signal);
-      const identitatRebut = { id: id(), data: ara() };
-      const { candidats, avisos } = await inventari({ signal });
-      let bytesEliminats = 0; let entradesEliminades = 0; let causa;
-      try {
-        for (const { nom, recursos } of candidats) {
-          avortat(signal);
-          if (!await memories.has(nom)) continue;
-          const cache = await memories.open(nom);
-          for (const { clau, bytes, sha256 } of recursos) {
-            avortat(signal);
-            // Revalidació immediata; delete de la clau pública, mai de la cache sencera.
-            const actual = await mesuraCos(await cache.match(clau), signal, clau);
-            if (!actual || actual.bytes !== bytes || actual.sha256 !== sha256) { avisos.push('RECURS_CANVIAT'); continue; }
-            avortat(signal);
-            if (await cache.delete(clau)) { bytesEliminats += bytes; entradesEliminades += 1; }
-          }
-        }
-      } catch (error) {
-        // R32.3 · Abort abans de mutar rebutja (contracte del README); després d'una supressió, rebut parcial.
-        if (signal?.aborted && entradesEliminades === 0) throw error;
-        causa = error;
-      }
-      const rebut = { ...identitatRebut, bytesEliminats, bytesAlliberats: null, entradesEliminades };
-      let historialDesat = null; let historialPersistent = null;
-      if (entradesEliminades > 0) {
-        try {
-          const m = magatzem();
-          if (await m.obtinBloqueig() !== 'escriptora') throw errorCodi('HISTORIAL_NOMES_LECTURA');
-          try {
-            await m.desa('historial', rebut);
-            historialPersistent = (await m.estatPersistencia()).persistent;
-            historialDesat = true;
-          } finally { m.tanca(); }
-        } catch { historialDesat = false; avisos.push('HISTORIAL_NO_DESAT'); }
-      }
-      return { ...rebut, estat: causa ? 'parcial' : confirmats.size === 0 ? 'bloquejat' : 'complet', historialDesat, historialPersistent,
-        avisos, ...(causa ? { error: { codi: causa.codi ?? causa.name ?? 'PURGA_FALLIDA' } } : {}) };
-    });
+    const { avisos } = await inventari({ signal });
+    avortat(signal);
+    return { estat: 'bloquejat', bytesEliminats: 0, bytesAlliberats: null,
+      entradesEliminades: 0, historialDesat: null, historialPersistent: null, avisos };
   }
   return { lligSalutEmmagatzematgeDispositiu, purgaMemoriaCauRegenerable, historialNetegesLocals,
     tanca: () => historial?.tanca() };

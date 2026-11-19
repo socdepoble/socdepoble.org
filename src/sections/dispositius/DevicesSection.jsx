@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Check, Link2, MessageSquare, RefreshCcw, ShieldCheck, Wifi, X, Eye, EyeOff } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ArrowRight, Check, Eye, EyeOff, Link2, MessageSquare, RefreshCcw, ShieldCheck, Wifi, X } from 'lucide-react';
+import { Insignia, QuadreDeComandament } from '../../components/PedraSeca';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { FORASTER, autorDeSessio } from '../../components/universal/UniversalUtils.js';
+import { Link, useRouter } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useSEO } from '../../hooks/useSEO';
 import { esAppNativa } from '../../config/origenPublic.js';
-import { compatibilitatDispositius, FONT_COMPATIBILITAT_TLS } from '../text/pageContent.dispositius.js';
+import { sanitizeHtml } from '../../utils/sanitize.js';
+import { compatibilitatDispositius } from '../text/pageContent.dispositius.js';
 import {
   PRESENCE_STALE_MS,
   ambNomSuggerit,
@@ -18,17 +21,45 @@ import {
   loadDeviceConnections,
   loadDeviceProfile,
   loadSelectedPeer,
-  saveDeviceConnections,
   saveDeviceChats,
+  saveDeviceConnections,
   saveDeviceProfile,
   saveSelectedPeer
 } from './devicesRuntime';
+
+/* Redisseny Pedra Seca 261118 (ordre del Mestre):
+   · UniversalPage amb title, subtitle i lead canònics (H1 → H2 → entradeta → veu IAIA).
+   · QuadreDeComandament amb targetes KPI blanques estandarditzades en lloc dels
+     blocs grisos heretats (sdp-stat-grid, sdp-stat-card, sdp-stat-value,
+     sdp-stat-label) i de l'embolcall devices-shell, que es podaran de modules.css
+     en l'onada d'estils.
+   · Seccions internes en H3, prosa alineada amb negretes d'escaneig i enllaços
+     certificats a les fonts (MDN BroadcastChannel, /xat i avís TLS de Supabase). */
+
+const URL_MDN_BROADCAST_CHANNEL = 'https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API';
 
 const MOCK_DEVICES = [
   { id: 'E9B234F1-mock-a', name: 'Mòbil de prova', kind: 'mock', lastSeen: Date.now() },
   { id: '4A1D8F2C-mock-b', name: 'Tauleta de prova', kind: 'mock', lastSeen: Date.now() },
   { id: 'B8C1D9F4-mock-c', name: 'Ordinador de prova', kind: 'mock', lastSeen: Date.now() }
 ];
+
+/* v1.2.9 (integració) · El router opcional amb el patró de PageFrame.jsx: objectesDeContext.js només
+   l'importen els .jsx del seu context (src/app/contexts/objectesDeContext.test.jsx). Fora del Router
+   (proves, encastats) l'enllaç torna a l'<a> de sempre. */
+function useRouterOpcional() {
+  try {
+    return useRouter() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function EnllacRuta({ to, children }) {
+  const router = useRouterOpcional();
+  if (router) return <Link to={to}>{children}</Link>;
+  return <a href={to}>{children}</a>;
+}
 
 /* P5 (Mestre, 261003) · De qui és este aparell, per al nom suggerit. Sense
    sessió (el Foraster) no hi ha ningú: el nom és sempre genèric. Amb sessió,
@@ -42,7 +73,16 @@ function nomDePersona(currentUser, agents) {
   return name && name !== FORASTER.name ? name : null;
 }
 
+function toDeConnexio(state) {
+  if (state === 'connected') return 'exit';
+  if (state === 'pending' || state === 'incoming') return 'info';
+  if (state === 'declined') return 'avis';
+  return 'neutre';
+}
+
 export default function DevicesSection() {
+  const idCampNom = useId();
+  const idCampMissatge = useId();
   const { externalConfig, language = 'ca' } = useUIState();
   const compatibilitat = compatibilitatDispositius(language);
   const { agents } = useCoreContent();
@@ -54,7 +94,7 @@ export default function DevicesSection() {
      ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
     title: 'Dispositius',
-    description: 'Gestió de dispositius i connexions'
+    description: 'Gestió de dispositius i connexions locals entre pestanyes'
   });
 
   const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, nomPersona));
@@ -98,7 +138,7 @@ export default function DevicesSection() {
   const activeChatPeer = connectedPeers.find((device) => device.id === selectedPeerId) || null;
   const activeChatConnection = activeChatPeer ? connections[activeChatPeer.id] : null;
   const activeChatMessages = useMemo(
-    () => activeChatPeer ? messagesByPeer[activeChatPeer.id] || [] : [],
+    () => (activeChatPeer ? messagesByPeer[activeChatPeer.id] || [] : []),
     [activeChatPeer, messagesByPeer]
   );
 
@@ -279,248 +319,285 @@ export default function DevicesSection() {
     return 'Disponible';
   };
 
-  const summary = [
-    { label: 'Dispositiu actual', value: profile.name },
-    { label: 'Dispositius visibles', value: String(mergedDevices.length) },
-    { label: 'Connexions actives', value: String(Object.values(connections).filter((entry) => entry.state === 'connected').length) }
+  const connexionsActives = Object.values(connections).filter((entry) => entry.state === 'connected').length;
+
+  const xifresResum = [
+    { clau: 'actual', nom: 'Dispositiu actual', valor: profile.name },
+    { clau: 'visibles', nom: 'Dispositius visibles', valor: String(mergedDevices.length) },
+    { clau: 'actives', nom: 'Connexions actives', valor: String(connexionsActives) }
   ];
 
   /* Decisions 261030 §7 · Dispositius i missatges directes: Traduir no envia res fora. */
   return (
-    <UniversalPage traduccio={false} chrome="system" showLogos={true}>
-      <div className="devices-shell">
-        <div>
-          <h2>Descobrix instàncies del portal</h2>
-          <p className="lead">Llança una connexió i envia missatges directes des d’esta mateixa pantalla.</p>
-        </div>
-
-        {!esAppNativa() && (
-          <section className="note-card" lang={compatibilitat.language}>
-            <h2>{compatibilitat.title}</h2>
-            <p>{compatibilitat.lead}</p>
-            <p><a href={FONT_COMPATIBILITAT_TLS} target="_blank" rel="noopener noreferrer">{compatibilitat.font}</a></p>
-          </section>
+    <UniversalPage
+      title="Dispositius"
+      subtitle="Descobrix instàncies obertes i parla en local"
+      lead="Connecta pestanyes i finestres obertes en este mateix navegador i envia missatges directes sense passar per cap servidor."
+      traduccio={false}
+      chrome="system"
+    >
+      <QuadreDeComandament
+        estat={{
+          viu: Boolean(profile.isVisible),
+          text: profile.isVisible
+            ? 'Visible · Anunciant presència a les altres pestanyes d’este navegador'
+            : 'Mode privat · Invisible per a altres pestanyes'
+        }}
+        xifres={xifresResum}
+        explicacio={(
+          <p>
+            Esta eina enllaça <strong>pestanyes i finestres obertes en este mateix navegador</strong>{' '}
+            mitjançant l’estàndard web{' '}
+            <a href={URL_MDN_BROADCAST_CHANNEL} target="_blank" rel="noopener noreferrer">
+              <strong>BroadcastChannel</strong>
+            </a>
+            , <strong>sense enviar cap dada fora de l’aparell</strong>. Per escriure a{' '}
+            <strong>altres mòbils, ordinadors o pobles</strong> per la xarxa, obri el{' '}
+            <EnllacRuta to="/xat"><strong>Xat de Sóc de Poble</strong></EnllacRuta>.
+          </p>
         )}
+      />
 
-        <div className="sdp-stat-grid">
-          {summary.map((item) => (
-            <article key={item.label} className="sdp-stat-card">
-              <div className="stat-info">
-                <div className="sdp-stat-value">{item.value}</div>
-                <div className="sdp-stat-label">{item.label}</div>
+      <div className="devices-layout">
+        <section>
+          <h3>Este dispositiu</h3>
+          <p>
+            Tria el <strong>nom visible</strong> d’esta instància i commuta entre el{' '}
+            <strong>mode privat</strong> (per defecte, <strong>invisible</strong>) i el{' '}
+            <strong>mode públic</strong> per anunciar la teua presència a la resta de pestanyes obertes.
+          </p>
+          <div className="devices-panel__body">
+            <article className="card--soft">
+              <div className="card__body">
+                <div className="badge-row">
+                  <Insignia to="info">
+                    <Wifi size={14} aria-hidden="true" />{' '}
+                    <span>{`ID ${profile.id.slice(0, 8)}`}</span>
+                  </Insignia>
+                  <Insignia to={profile.isVisible ? 'exit' : 'neutre'}>
+                    <ShieldCheck size={14} aria-hidden="true" />{' '}
+                    <span>Sessió local</span>
+                  </Insignia>
+                </div>
+
+                <div className="devices-panel__accions">
+                  <button
+                    type="button"
+                    title={profile.isVisible ? 'Mode públic' : 'Mode privat'}
+                    className={profile.isVisible ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
+                    onClick={() => {
+                      const next = { ...profile, isVisible: !profile.isVisible };
+                      setProfile(next);
+                      if (next.isVisible) bridgeRef.current?.requestPresence?.();
+                    }}
+                  >
+                    {profile.isVisible ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
+                    <span>{profile.isVisible ? 'Visible (Públic)' : 'Invisible (Privat)'}</span>
+                  </button>
+                  <button type="button" className="sdp-boto sdp-boto--accent" onClick={refreshDiscovery}>
+                    <RefreshCcw size={16} aria-hidden="true" /> <span>Refrescar</span>
+                  </button>
+                </div>
+
+                <div className="devices-name-row">
+                  <label htmlFor={idCampNom} className="sdp-nomes-lector">Nom del dispositiu</label>
+                  <input
+                    id={idCampNom}
+                    type="text"
+                    value={draftName}
+                    onChange={(event) => setDraftName(event.target.value)}
+                    className="sdp-control"
+                    placeholder="Nom del dispositiu"
+                  />
+                  <button type="button" className="sdp-boto sdp-boto--primari" onClick={saveName}>
+                    <Check size={16} aria-hidden="true" /> <span>Guardar</span>
+                  </button>
+                  <p className="sdp-camp__ajuda">Este és el nom que veuran les altres instàncies quan et faces visible.</p>
+                </div>
+                {!supportsBridge ? (
+                  <div className="note-card">Este navegador no suporta la descoberta en viu per BroadcastChannel.</div>
+                ) : null}
               </div>
             </article>
-          ))}
-        </div>
+          </div>
+        </section>
 
-        <div className="devices-layout">
-          <section className="devices-panel__head">
-            <div className="devices-panel__head">
-              <div>
-                <h2>Este dispositiu</h2>
-                <p className="lead">Canvia el nom visible i publica la teua presència per a la resta d’instàncies obertes.</p>
-              </div>
-              <div className="devices-panel__accions">
-                <button 
-                  type="button"
-                  title={profile.isVisible ? "Mode públic" : "Mode privat"}
-                  className={profile.isVisible ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
-                  onClick={() => {
-                    const next = { ...profile, isVisible: !profile.isVisible };
-                    setProfile(next);
-                    if (next.isVisible) bridgeRef.current?.requestPresence?.();
-                  }}
-                >
-                  {profile.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
-                  <span>{profile.isVisible ? 'Visible (Públic)' : 'Invisible (Privat)'}</span>
-                </button>
-                <button type="button" className="sdp-boto sdp-boto--accent" onClick={refreshDiscovery}>
-                  <RefreshCcw size={16} /> <span>Refrescar</span>
-                </button>
-              </div>
+        <section>
+          <h3>Dispositius trobats</h3>
+          <p>
+            Ací apareixen les <strong>altres pestanyes obertes</strong> que s’estan anunciant ara mateix
+            (una pestanya silenciosa desapareix sola entre els <strong>16 i 20 segons</strong>). També pots
+            activar <strong>connexions simulades de prova</strong> per assajar tot el recorregut.
+          </p>
+          <div className="devices-panel__head">
+            <div className="devices-panel__accions">
+              <button
+                type="button"
+                aria-pressed={isSimulationEnabled}
+                className={isSimulationEnabled ? 'sdp-boto sdp-boto--secundari' : 'sdp-boto sdp-boto--primari'}
+                onClick={() => setIsSimulationEnabled(!isSimulationEnabled)}
+              >
+                Simular connexions de prova
+              </button>
             </div>
-            <div className="devices-panel__body">
-              <article className="card--soft">
-                <div className="card__body">
-                  <div className="badge-row">
-                    <span className="badge"><Wifi size={14} /> ID {profile.id.slice(0, 8)}</span>
-                    <span className="badge"><ShieldCheck size={14} /> Sessió local</span>
-                  </div>
-                  <div className="devices-name-row">
-                    <input
-                      type="text"
-                      value={draftName}
-                      onChange={(event) => setDraftName(event.target.value)}
-                      className="sdp-control"
-                      placeholder="Nom del dispositiu"
-                    />
-                    <button type="button" className="sdp-boto sdp-boto--primari" onClick={saveName}>
-                      <Check size={16} /> <span>Guardar</span>
-                    </button>
-                    <p className="sdp-camp__ajuda">Este és el nom que es mostrarà a la resta de dispositius connectats.</p>
-                  </div>
-                  {!supportsBridge ? <div className="note-card">Este navegador no suporta la descoberta en viu per BroadcastChannel.</div> : null}
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <section className="devices-panel__head">
-            <div className="devices-panel__head">
-              <div>
-                <h2>Dispositius trobats</h2>
-                <p className="lead">Llistat de tots els ordinadors, tauletes o mòbils que s'estan anunciant. Selecciona'n un per demanar de connectar-vos.</p>
-              </div>
-              <div className="devices-panel__accions">
-                <button type="button" className="sdp-boto sdp-boto--primari" onClick={() => setIsSimulationEnabled(!isSimulationEnabled)}>
-                  Simular connexions de prova
-                </button>
-              </div>
-            </div>
-            <div className="devices-panel__body">
-              {/* Fora de la graella: dins, ocupava la primera de les tres columnes. */}
-              {mergedDevices.length === 0 ? <div className="note-card">Encara no hi ha altres instàncies visibles.</div> : null}
-              <div className="sdp-card-grid">
-                {mergedDevices.map((device) => {
-                  const state = connections[device.id]?.state || 'idle';
-                  return (
-                    <article key={device.id} className="card--soft">
-                      <div className="card__body">
-                        <div className="devices-row">
-                          <div>
-                            <strong className="card__title">{device.name}</strong>
-                            <p className="card__text">ID curt: {device.id.slice(0, 8)}</p>
-                          </div>
-                          <span className="sdp-insignia">{connectionLabel(device.id)}</span>
-                        </div>
-                        <div className="devices-panel__accions">
-                          {(state === 'idle' || state === 'declined') ? (
-                            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => requestConnection(device.id)}>
-                              <Link2 size={16} /> <span>Connectar</span>
-                            </button>
-                          ) : null}
-                          {state === 'connected' ? (
-                            <button type="button" className="sdp-boto sdp-boto--accent" onClick={() => disconnectPeer(device.id)}>
-                              <X size={16} /> <span>Desconnectar</span>
-                            </button>
-                          ) : null}
-                          {state === 'pending' ? <span className="sdp-insignia sdp-insignia--info">Esperant resposta</span> : null}
-                          {state === 'incoming' ? (
-                            <>
-                              <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => acceptConnection(device.id)}>
-                                <Check size={16} /> Acceptar
-                              </button>
-                              <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => declineConnection(device.id)}>
-                                <X size={16} /> Rebutjar
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          <section className="devices-panel__head">
-            <div className="devices-panel__head">
-              <div>
-                <h2>Canal directe</h2>
-                <p className="lead">
-                  {activeChatPeer
-                    ? `Canal actiu i privat establert amb ${activeChatPeer.name}.`
-                    : 'És un xat 100% privat que viatja directament entre els vostres dos aparells (sense xafar cap servidor ni núvol).'}
-                </p>
-              </div>
-            </div>
-            <div className="devices-panel__body">
-              {!activeChatPeer ? <div className="note-card">No hi ha cap dispositiu connectat en el canal inferior.</div> : null}
-              {activeChatPeer ? (
-                <div className="devices-chat-shell">
-                  <article className="card--soft">
+          </div>
+          <div className="devices-panel__body">
+            {/* Fora de la graella: dins, ocupava la primera de les tres columnes. */}
+            {mergedDevices.length === 0 ? <div className="note-card">Encara no hi ha altres instàncies visibles.</div> : null}
+            <div className="sdp-card-grid">
+              {mergedDevices.map((device) => {
+                const state = connections[device.id]?.state || 'idle';
+                return (
+                  <article key={device.id} className="card--soft">
                     <div className="card__body">
                       <div className="devices-row">
                         <div>
-                          <strong className="card__title">{activeChatPeer.name}</strong>
-                          <p className="card__text">ID curt: {activeChatPeer.id.slice(0, 8)}</p>
+                          <strong className="card__title">{device.name}</strong>
+                          <p className="card__text">{`ID curt: ${device.id.slice(0, 8)}`}</p>
                         </div>
-                        <span className="sdp-insignia">{connectionLabel(activeChatPeer.id)}</span>
+                        <Insignia to={toDeConnexio(state)}>{connectionLabel(device.id)}</Insignia>
                       </div>
                       <div className="devices-panel__accions">
-                        {activeChatConnection?.state === 'connected' ? (
-                          <button type="button" className="sdp-boto sdp-boto--perill" onClick={() => disconnectPeer(activeChatPeer.id)}>
-                            <X size={16} /> <span>Desconnectar</span>
+                        {(state === 'idle' || state === 'declined') ? (
+                          <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => requestConnection(device.id)}>
+                            <Link2 size={16} aria-hidden="true" /> <span>Connectar</span>
                           </button>
                         ) : null}
+                        {state === 'connected' ? (
+                          <button type="button" className="sdp-boto sdp-boto--accent" onClick={() => disconnectPeer(device.id)}>
+                            <X size={16} aria-hidden="true" /> <span>Desconnectar</span>
+                          </button>
+                        ) : null}
+                        {state === 'pending' ? <Insignia to="info">Esperant resposta</Insignia> : null}
+                        {state === 'incoming' ? (
+                          <>
+                            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => acceptConnection(device.id)}>
+                              <Check size={16} aria-hidden="true" /> Acceptar
+                            </button>
+                            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => declineConnection(device.id)}>
+                              <X size={16} aria-hidden="true" /> Rebutjar
+                            </button>
+                          </>
+                        ) : null}
                       </div>
-
-                      {activeChatConnection?.state !== 'connected' ? (
-                        <div className="note-card">
-                          {activeChatConnection?.state === 'pending'
-                            ? 'Has enviat una petició. Esperant acceptació.'
-                            : activeChatConnection?.state === 'incoming'
-                            ? 'Este dispositiu vol connectar amb tu. Pots acceptar-lo des del llistat dalt.'
-                            : 'Encara no hi ha connexió acceptada. Primer cal establir el vincle.'}
-                        </div>
-                      ) : null}
                     </div>
                   </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-                  {connectedPeers.length > 0 ? (
-                    <div className="devices-panel__accions">
-                      {connectedPeers.map((peer) => (
-                        <button
-                          key={peer.id}
-                          type="button"
-                          className={selectedPeerId === peer.id ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
-                          onClick={() => setSelectedPeerId(peer.id)}
-                        >
-                          <MessageSquare size={16} /> <span>{peer.name}</span>
-                        </button>
-                      ))}
+        <section>
+          <h3>Canal directe</h3>
+          <p>
+            {activeChatPeer ? (
+              <>
+                <strong>Canal directe actiu</strong> establert amb <strong>{activeChatPeer.name}</strong>: els
+                missatges viatgen de pestanya a pestanya dins d’este navegador.
+              </>
+            ) : (
+              <>
+                Quan dues instàncies <strong>accepten connectar-se</strong>, s’obri ací un{' '}
+                <strong>canal local directe</strong> entre elles,{' '}
+                <strong>sense passar pel servidor de Sóc de Poble</strong>.
+              </>
+            )}
+          </p>
+          <div className="devices-panel__body">
+            {!activeChatPeer ? <div className="note-card">No hi ha cap dispositiu connectat en el canal inferior.</div> : null}
+            {activeChatPeer ? (
+              <div className="devices-chat-shell">
+                <article className="card--soft">
+                  <div className="card__body">
+                    <div className="devices-row">
+                      <div>
+                        <strong className="card__title">{activeChatPeer.name}</strong>
+                        <p className="card__text">{`ID curt: ${activeChatPeer.id.slice(0, 8)}`}</p>
+                      </div>
+                      <Insignia to={toDeConnexio(activeChatConnection?.state)}>{connectionLabel(activeChatPeer.id)}</Insignia>
                     </div>
-                  ) : null}
+                    <div className="devices-panel__accions">
+                      {activeChatConnection?.state === 'connected' ? (
+                        <button type="button" className="sdp-boto sdp-boto--perill" onClick={() => disconnectPeer(activeChatPeer.id)}>
+                          <X size={16} aria-hidden="true" /> <span>Desconnectar</span>
+                        </button>
+                      ) : null}
+                    </div>
 
-                  <div ref={chatLogRef} className="devices-chat-log">
-                    {activeChatMessages.length === 0 ? <div className="note-card">Encara no hi ha missatges en este canal.</div> : null}
-                    {activeChatMessages.map((message) => (
-                      <article
-                        key={message.id}
-                        className={message.sender === 'me' ? 'sdp-chat-bubble sdp-chat-bubble--user' : 'sdp-chat-bubble sdp-chat-bubble--ai'}
+                    {activeChatConnection?.state !== 'connected' ? (
+                      <div className="note-card">
+                        {activeChatConnection?.state === 'pending'
+                          ? 'Has enviat una petició. Esperant acceptació.'
+                          : activeChatConnection?.state === 'incoming'
+                          ? 'Este dispositiu vol connectar amb tu. Pots acceptar-lo des del llistat dalt.'
+                          : 'Encara no hi ha connexió acceptada. Primer cal establir el vincle.'}
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+
+                {connectedPeers.length > 0 ? (
+                  <div className="devices-panel__accions">
+                    {connectedPeers.map((peer) => (
+                      <button
+                        key={peer.id}
+                        type="button"
+                        className={selectedPeerId === peer.id ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
+                        onClick={() => setSelectedPeerId(peer.id)}
                       >
-                        <strong>{message.sender === 'me' ? profile.name : message.author || activeChatPeer.name}</strong>
-                        <p>{message.text}</p>
-                      </article>
+                        <MessageSquare size={16} aria-hidden="true" /> <span>{peer.name}</span>
+                      </button>
                     ))}
                   </div>
+                ) : null}
 
-                  <div className="search-bar-basic">
-                    <input
-                      type="text"
-                      value={draftMessage}
-                      onChange={(event) => setDraftMessage(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' && activeChatConnection?.state === 'connected') {
-                          sendMessage(draftMessage);
-                        }
-                      }}
-                      placeholder="Escriu un missatge directe..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => sendMessage(draftMessage)}
-                      disabled={activeChatConnection?.state !== 'connected'}
+                <div ref={chatLogRef} className="devices-chat-log">
+                  {activeChatMessages.length === 0 ? <div className="note-card">Encara no hi ha missatges en este canal.</div> : null}
+                  {activeChatMessages.map((message) => (
+                    <article
+                      key={message.id}
+                      className={message.sender === 'me' ? 'sdp-chat-bubble sdp-chat-bubble--user' : 'sdp-chat-bubble sdp-chat-bubble--ai'}
                     >
-                      <ArrowRight size={16} /> Enviar
-                    </button>
-                  </div>
+                      <strong>{message.sender === 'me' ? profile.name : message.author || activeChatPeer.name}</strong>
+                      <p>{message.text}</p>
+                    </article>
+                  ))}
                 </div>
-              ) : null}
-            </div>
+
+                <div className="search-bar-basic">
+                  <label htmlFor={idCampMissatge} className="sdp-nomes-lector">Missatge directe</label>
+                  <input
+                    id={idCampMissatge}
+                    type="text"
+                    value={draftMessage}
+                    onChange={(event) => setDraftMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && activeChatConnection?.state === 'connected') {
+                        sendMessage(draftMessage);
+                      }
+                    }}
+                    placeholder="Escriu un missatge directe..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => sendMessage(draftMessage)}
+                    disabled={activeChatConnection?.state !== 'connected'}
+                  >
+                    <ArrowRight size={16} aria-hidden="true" /> Enviar
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        {!esAppNativa() && (
+          <section lang={compatibilitat.language}>
+            <h3>{compatibilitat.title}</h3>
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(compatibilitat.html) }} />
           </section>
-        </div>
+        )}
       </div>
     </UniversalPage>
   );

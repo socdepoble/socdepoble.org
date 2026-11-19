@@ -66,7 +66,7 @@ const regioMes = (any, mes) => screen.getByRole('region', { name: `Calendari ${a
 const dia = (data) => within(calendari()).getByRole('button', { name: (nom) => nom.startsWith(`${dataLlarga(data)} · `) });
 const peces = () => [...calendari().querySelectorAll('.sdp-cal-barra')].map((peca) => peca.textContent);
 const titolsDeTargetes = () => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((t) => t.textContent);
-const agenda = () => act(() => screen.getByRole('button', { name: 'Calendari' }).click());
+const agenda = () => act(() => screen.getByRole('button', { name: 'Esdeveniments' }).click());
 const filtre = (nom) => act(() => within(screen.getByRole('group', { name: 'Filtres del mur' })).getByRole('button', { name: nom }).click());
 /* El que escriu el calendari a la URL (useEstatCalendari: paramsDeLEstat, amb replace). */
 const URL_DEL_CALENDARI = (canvis) => [{ vista: 'mes', setmana: null, mes: null, any: null, date: null, ...canvis }, { replace: true }];

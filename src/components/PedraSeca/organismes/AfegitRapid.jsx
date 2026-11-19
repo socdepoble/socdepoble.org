@@ -22,6 +22,9 @@ import { Plus } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { Camp, CampText } from './formulari.jsx';
 import { filtraSuggeriments, normalitzaText } from './articles.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 const TEXTOS_AFEGIT = Object.freeze({
   crea: (text) => `Afig «${text}» com a article nou`,
@@ -101,7 +104,7 @@ export function AfegitRapid({
   };
 
   return (
-    <form className={['sdp-afegit-rapid', className].filter(Boolean).join(' ')} onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className={['sdp-afegit-rapid', className].filter(Boolean).join(' ')} onSubmit={envia} noValidate>
       <Camp etiqueta={etiqueta} ajuda={ajuda}>
         <div className="sdp-afegit-rapid__fila">
           <CampText
@@ -129,18 +132,18 @@ export function AfegitRapid({
       <ul id={idLlista} role="listbox" aria-label={etiqueta} className="sdp-afegit-rapid__opcions" hidden={!visible}
         onMouseDown={(event) => event.preventDefault()}>
         {visible ? opcions.map((opcio, i) => (
-          <li key={opcio.tipus === 'crea' ? '__crea' : opcio.article.id} id={idOpcio(i)} role="option" aria-selected={i === actiu}
+          <li ref={adoptaEstilsDiferits} key={opcio.tipus === 'crea' ? '__crea' : opcio.article.id} id={idOpcio(i)} role="option" aria-selected={i === actiu}
             className={opcio.tipus === 'crea' ? 'sdp-afegit-rapid__opcio sdp-afegit-rapid__opcio--crea' : 'sdp-afegit-rapid__opcio'}
             onClick={() => tria(opcio)}>
             {opcio.tipus === 'crea' ? (
               <>
                 <Plus size={20} aria-hidden="true" focusable="false" />
-                <span>{t.crea(opcio.text)}</span>
+                <span ref={adoptaEstilsDiferits}>{t.crea(opcio.text)}</span>
               </>
             ) : (
               <>
-                <span className="sdp-afegit-rapid__nom">{opcio.article.nom}</span>
-                {opcio.article.secundari ? <>{' '}<span className="sdp-afegit-rapid__secundari">{opcio.article.secundari}</span></> : null}
+                <span ref={adoptaEstilsDiferits} className="sdp-afegit-rapid__nom">{opcio.article.nom}</span>
+                {opcio.article.secundari ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-afegit-rapid__secundari">{opcio.article.secundari}</span></> : null}
               </>
             )}
           </li>

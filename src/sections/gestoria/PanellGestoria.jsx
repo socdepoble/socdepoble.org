@@ -51,6 +51,9 @@ import { PLANTILLA_GESTORIA } from './nucli/plantilla.js';
 import { TRACTOR_CORREUS, TRACTOR_FACTURES } from './tractors.js';
 import { FORMATS_ENTREGABLE, dataDeAvui, trimestreAnterior, useGestoria } from './useGestoria.js';
 import VistaPreviaFull from './VistaPreviaFull.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* L'estat d'un tractor mai no es diu només amb el color: la insígnia porta el text. */
 const INSIGNIA_TRACTOR = Object.freeze({
@@ -293,7 +296,7 @@ function CelEditable({ etiqueta, valor, tipus, mida, dubte, onCanvi }) {
   else if (dubte) descrit = `${id}-dubte`;
   return (
     <>
-      <input
+      <input ref={adoptaEstilsDiferits}
         type="text"
         className="sdp-gestoria-panell__control"
         aria-label={etiqueta}
@@ -313,11 +316,11 @@ function CelEditable({ etiqueta, valor, tipus, mida, dubte, onCanvi }) {
         }}
       />
       {illegible ? (
-        <span id={`${id}-error`} className="sdp-gestoria-panell__cel-error">
+        <span ref={adoptaEstilsDiferits} id={`${id}-error`} className="sdp-gestoria-panell__cel-error">
           {tipus === 'data' ? 'No s’entén la data: escriu-la com 31/07/2026.' : 'No s’entén l’import: escriu-lo com 1.234,56.'}
         </span>
       ) : null}
-      {dubte && !illegible ? <span id={`${id}-dubte`} className="sdp-nomes-lector">Llegit amb confiança baixa: revisa-ho.</span> : null}
+      {dubte && !illegible ? <span ref={adoptaEstilsDiferits} id={`${id}-dubte`} className="sdp-nomes-lector">Llegit amb confiança baixa: revisa-ho.</span> : null}
     </>
   );
 }
@@ -338,7 +341,7 @@ function PasAEuros({ nomFila, onAplica, onCancella }) {
   const aplica = () => setIllegible(!onAplica(text));
   return (
     <>
-      <p id={`${id}-ajuda`} className="sdp-gestoria-panell__nota">
+      <p ref={adoptaEstilsDiferits} id={`${id}-ajuda`} className="sdp-gestoria-panell__nota">
         Escriu el total en euros que diu el banc (l’import del càrrec). Si ja eren euros, torna a escriure el total.
       </p>
       <input
@@ -364,7 +367,7 @@ function PasAEuros({ nomFila, onAplica, onCancella }) {
         }}
       />
       {illegible ? (
-        <span id={`${id}-error`} className="sdp-gestoria-panell__cel-error">No s’entén l’import: escriu-lo com 1.234,56.</span>
+        <span ref={adoptaEstilsDiferits} id={`${id}-error`} className="sdp-gestoria-panell__cel-error">No s’entén l’import: escriu-lo com 1.234,56.</span>
       ) : null}
       <Boto varietat="primari" onClick={aplica} aria-label={`Aplica el total en euros, ${nomFila}`}>Aplica</Boto>
       <Boto varietat="fantasma" onClick={onCancella} aria-label={`Cancel·la el pas a euros, ${nomFila}`}>Cancel·la</Boto>
@@ -392,18 +395,18 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
   const estrangeres = estrangeresPerFactura(incidencies);
   return (
     <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
-      <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
+      <h3 ref={adoptaEstilsDiferits} id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
       <Taula titol={`${titol} de la proposta`} densa className="sdp-gestoria-panell__taula">
         <thead>
           <tr>
-            {COLUMNES.map((c) => <th key={c.camp ?? c.clau} scope="col">{c.titol}</th>)}
+            {COLUMNES.map((c) => <th ref={adoptaEstilsDiferits} key={c.camp ?? c.clau} scope="col">{c.titol}</th>)}
             <th scope="col">Estat</th>
             <th scope="col">Accions</th>
           </tr>
         </thead>
         <tbody>
           {factures.length === 0 ? (
-            <tr><td colSpan={COLUMNES.length + 2}>{ingres ? 'Cap ingrés.' : 'Cap despesa.'}</td></tr>
+            <tr ref={adoptaEstilsDiferits}><td colSpan={COLUMNES.length + 2}>{ingres ? 'Cap ingrés.' : 'Cap despesa.'}</td></tr>
           ) : factures.map((f, i) => {
             const nomFila = `${ingres ? 'l’ingrés' : 'la despesa'} ${i + 1}${f.num ? ` («${f.num}»)` : ''}`;
             const baixes = Object.entries(f.confianca ?? {}).filter(([, nivell]) => nivell === 'baixa').map(([camp]) => ETIQUETES_CAMP[camp] ?? camp);
@@ -411,16 +414,16 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
             const propies = incidencies.filter((inc) => inc.facturaId === f.id && inc.codi !== 'IVA_ESTRANGER');
             const estrangera = estrangeres.get(f.id) ?? null;
             return (
-              <tr key={f.id} data-factura={f.id}>
+              <tr ref={adoptaEstilsDiferits} key={f.id} data-factura={f.id}>
                 {COLUMNES.map((c) => {
                   if (c.derivada === 'regim') {
-                    return <td key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="regim">{regimDe(f, estrangera)}</td>;
+                    return <td ref={adoptaEstilsDiferits} key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="regim">{regimDe(f, estrangera)}</td>;
                   }
                   if (c.derivada === 'percentatge') {
-                    return <td key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="percentatge">{percentatgeDe(f, c.quota)}</td>;
+                    return <td ref={adoptaEstilsDiferits} key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="percentatge">{percentatgeDe(f, c.quota)}</td>;
                   }
                   return (
-                    <td key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
+                    <td ref={adoptaEstilsDiferits} key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
                       <CelEditable
                         etiqueta={`${c.titol}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
                         valor={valorDe(f, c)}
@@ -434,11 +437,11 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                 })}
                 <td className="sdp-gestoria-panell__cel">
                   <Insignia to={f.estat === 'completa' ? 'exit' : 'avis'}>{f.estat === 'completa' ? 'Completa' : 'Pendent'}</Insignia>
-                  {enAltraMoneda(f) ? <p className="sdp-gestoria-panell__nota">{`Imports en ${nomMoneda(f.moneda)}.`}</p> : null}
-                  {estrangera ? <p className="sdp-gestoria-panell__nota">{condicioEstrangera(f, estrangera)}</p> : null}
-                  {baixes.length > 0 ? <p className="sdp-gestoria-panell__nota">{`Confiança baixa: ${baixes.join(', ')}.`}</p> : null}
+                  {enAltraMoneda(f) ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Imports en ${nomMoneda(f.moneda)}.`}</p> : null}
+                  {estrangera ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{condicioEstrangera(f, estrangera)}</p> : null}
+                  {baixes.length > 0 ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Confiança baixa: ${baixes.join(', ')}.`}</p> : null}
                   {propies.length > 0 ? (
-                    <p className="sdp-gestoria-panell__nota">
+                    <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
                       {`Revisa: ${[...new Set(propies.map((inc) => ETIQUETES_CODI[inc.codi] ?? inc.codi))].join(', ')}.`}
                     </p>
                   ) : null}
@@ -483,8 +486,8 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
           <tr>
             <th scope="row" colSpan={COLUMNES_DAVANT_BASE}>Totals</th>
             {COLUMNES.slice(COLUMNES_DAVANT_BASE).map((c) => (CAMPS_SUMATS.includes(c.camp)
-              ? <td key={c.camp} className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes[c.camp])}</td>
-              : <td key={c.camp ?? c.clau} />))}
+              ? <td ref={adoptaEstilsDiferits} key={c.camp} className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes[c.camp])}</td>
+              : <td ref={adoptaEstilsDiferits} key={c.camp ?? c.clau} />))}
             <td colSpan={2}>{sumes.incomplet ? 'Falten imports: la suma no és completa.' : ''}</td>
           </tr>
         </tfoot>
@@ -509,30 +512,30 @@ function Incidencies({ incidencies }) {
   ];
   const ambAltes = incidencies.some((inc) => inc.severitat === 'alta');
   return (
-    <section className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`Incidències (${incidencies.length})`}</h3>
       <p className="sdp-gestoria-panell__nota">Són indicis per a revisar, no veredictes fiscals: la paraula final és teua i de la teua gestoria.</p>
       {/* Un fet, no un veredicte: mai no es declara el trimestre «complet» (auditoria.js:6-7). */}
       {incidencies.length > 0 && !ambAltes ? (
-        <p>
+        <p ref={adoptaEstilsDiferits}>
           {`Cap incidència d’alta severitat.${deLEstranger.length > 0
             ? ' Les operacions amb l’estranger són informatives: les confirma la gestoria.' : ''}`}
         </p>
       ) : null}
-      {incidencies.length === 0 ? <p>Cap incidència detectada a la carpeta.</p> : grups.map((grup) => {
+      {incidencies.length === 0 ? <p ref={adoptaEstilsDiferits}>Cap incidència detectada a la carpeta.</p> : grups.map((grup) => {
         if (grup.del.length === 0) return null;
         return (
-          <div key={grup.clau} className="sdp-gestoria-panell__grup">
+          <div ref={adoptaEstilsDiferits} key={grup.clau} className="sdp-gestoria-panell__grup">
             <h4 className="sdp-gestoria-panell__grup-titol">{`${grup.titol} (${grup.del.length})`}</h4>
             <ul className="sdp-gestoria-panell__incidencies">
               {grup.del.map((inc, i) => (
-                <li key={`${inc.codi}-${inc.facturaId ?? ''}-${inc.fitxer ?? ''}-${inc.mes ?? ''}-${inc.camp ?? ''}-${i}`}
+                <li ref={adoptaEstilsDiferits} key={`${inc.codi}-${inc.facturaId ?? ''}-${inc.fitxer ?? ''}-${inc.mes ?? ''}-${inc.camp ?? ''}-${i}`}
                   className="sdp-gestoria-panell__incidencia" data-destacada={DESTACADES.has(inc.codi) ? 'true' : undefined}>
                   <Insignia to={grup.to}>{ETIQUETES_CODI[inc.codi] ?? inc.codi}</Insignia>
                   <span>{inc.missatge}</span>
                   {grup.clau === GRUP_ESTRANGER.clau && esDelNif(inc)
-                    ? <span className="sdp-gestoria-panell__nota">{EXPLICACIO_NIF_ESTRANGER}</span> : null}
-                  {inc.fitxer ? <code className="sdp-gestoria-panell__fitxer">{nomDeRuta(inc.fitxer)}</code> : null}
+                    ? <span ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{EXPLICACIO_NIF_ESTRANGER}</span> : null}
+                  {inc.fitxer ? <code ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__fitxer">{nomDeRuta(inc.fitxer)}</code> : null}
                 </li>
               ))}
             </ul>
@@ -551,12 +554,12 @@ function Cobertura({ cobertura }) {
     correu = `${cobertura.correu === 'parcial' ? 'Revisat en part' : 'Revisat'}: ${plural(cobertura.correusRevisats ?? 0, 'un missatge', 'missatges')}${periode}`;
   }
   return (
-    <dl className="sdp-gestoria-panell__dades">
+    <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__dades">
       <div>
         <dt>Carpeta</dt>
         <dd>
           {cobertura.carpeta === 'parcial' ? 'Revisada en part' : 'Revisada'}
-          {cobertura.carpetaTrimestre ? <> · <code>{cobertura.carpetaTrimestre}</code></> : null}
+          {cobertura.carpetaTrimestre ? <> · <code ref={adoptaEstilsDiferits}>{cobertura.carpetaTrimestre}</code></> : null}
         </dd>
       </div>
       <div>
@@ -573,7 +576,7 @@ function Cobertura({ cobertura }) {
 
 function TaulaDocuments({ documents }) {
   return (
-    <details className="sdp-gestoria-panell__documents">
+    <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
       <summary>{`Documents de la carpeta (${documents.length})`}</summary>
       <Taula titol="Documents de la carpeta" densa className="sdp-gestoria-panell__taula">
         <thead>
@@ -588,7 +591,7 @@ function TaulaDocuments({ documents }) {
           {documents.map((d) => {
             const estat = ESTAT_DOCUMENT[d.estat] ?? ESTAT_DOCUMENT.ignorada;
             return (
-              <tr key={`${d.ambit}-${d.ruta}`}>
+              <tr ref={adoptaEstilsDiferits} key={`${d.ambit}-${d.ruta}`}>
                 <th scope="row" className="sdp-gestoria-panell__ruta"><code>{d.ruta}</code></th>
                 <td>{`${TIPUS_DOCUMENT[d.tipus] ?? d.tipus}${d.ambit === 'historial' ? ' (historial)' : ''}`}</td>
                 <td><Insignia to={estat.to}>{estat.text}</Insignia></td>
@@ -607,7 +610,7 @@ function Pas({ numero, titol, estat, refTitol, children }) {
   const idTitol = useId();
   const insignia = { fet: { to: 'exit', text: 'Fet' }, actiu: { to: 'info', text: 'Ara' }, bloquejat: { to: 'neutre', text: 'Encara no' } }[estat];
   return (
-    <li className="sdp-gestoria-panell__pas" data-estat={estat}>
+    <li ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__pas" data-estat={estat}>
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
           <h2 id={idTitol} ref={refTitol} tabIndex={-1} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h2>
@@ -760,7 +763,7 @@ export default function PanellGestoria({
 
   return (
     <div ref={arrel} className="sdp-gestoria-panell">
-      <div className="sdp-gestoria-panell__barra">
+      <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__barra">
         <p>
           Prepara el full trimestral per a la gestoria a partir de la teua carpeta de factures. L’anàlisi es fa
           en este ordinador: les factures no es pugen enlloc ni es guarden al navegador. Només el correu del pas 5,
@@ -777,28 +780,28 @@ export default function PanellGestoria({
             {[[TRACTOR_FACTURES, factures], [TRACTOR_CORREUS, correus]].map(([manifest, estat]) => {
               const insignia = INSIGNIA_TRACTOR[estat?.estat] ?? INSIGNIA_TRACTOR.desconegut;
               return (
-                <li key={manifest.id} className="sdp-gestoria-panell__tractor">
+                <li ref={adoptaEstilsDiferits} key={manifest.id} className="sdp-gestoria-panell__tractor">
                   <span className="sdp-gestoria-panell__tractor-nom">{manifest.nom}</span>
                   <Insignia to={insignia.to}>{insignia.text}</Insignia>
-                  {estat?.curta ? <code>{estat.curta}</code> : null}
+                  {estat?.curta ? <code ref={adoptaEstilsDiferits}>{estat.curta}</code> : null}
                   <RevocaAprovacio porta={porta} id={manifest.id} />
                 </li>
               );
             })}
           </ul>
           {facturesAprovat ? (
-            <p>El tractor de factures està aprovat: pots triar la carpeta.</p>
+            <p ref={adoptaEstilsDiferits}>El tractor de factures està aprovat: pots triar la carpeta.</p>
           ) : (
             <Alerta to="avis" viva={false} titol="Cal aprovar el tractor de factures"
               accions={<AccioAprovacio porta={porta} id={TRACTOR_FACTURES.id} onObreTractors={onObreTractors} />}>
-              <p>
+              <p ref={adoptaEstilsDiferits}>
                 Abans de llegir cap factura, llig la fitxa de «{TRACTOR_FACTURES.nom}» i aprova’n la versió exacta
                 {` ${onSAprova()}`}. Sense eixa aprovació no es pot continuar.
               </p>
             </Alerta>
           )}
           {facturesAprovat && !correusAprovat ? (
-            <p className="sdp-gestoria-panell__nota">
+            <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
               El creuament amb el correu és opcional. Per a fer-lo, aprova també «{TRACTOR_CORREUS.nom}».
             </p>
           ) : null}
@@ -825,7 +828,7 @@ export default function PanellGestoria({
                 ordinador és el correu per a la gestoria, que inicies tu al pas 5.
               </Alerta>
               {g.potTriarCarpeta ? (
-                <div className="sdp-gestoria-panell__accions">
+                <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
                   <Boto varietat={g.teCarpeta ? 'secundari' : 'primari'} onClick={g.triaCarpeta} disabled={ocupat}
                     carregant={g.ocupat === 'carpeta'}>
                     {g.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta de factures'}
@@ -839,28 +842,28 @@ export default function PanellGestoria({
                 </Camp>
               )}
               {g.teCarpeta ? (
-                <p>
+                <p ref={adoptaEstilsDiferits}>
                   Carpeta triada: <strong>{g.nomCarpeta ? `«${g.nomCarpeta}»` : 'sense nom'}</strong>.
                   {g.potEscriure
                     ? ' Després d’aprovar la proposta, s’hi podrà desar el full del trimestre.'
                     : ' Des d’este navegador no s’hi pot escriure: el full es descarregarà.'}
                 </p>
               ) : null}
-              <div className="sdp-gestoria-panell__accions">
+              <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
                 <Boto varietat="primari" onClick={analitzaTrimestre} disabled={!g.teCarpeta || ocupat}
                   carregant={g.ocupat === 'analisi'}>
                   {`Analitza el ${periode.t}T de ${periode.any}`}
                 </Boto>
               </div>
               {g.ocupat === 'analisi' ? (
-                <div role="status" className="sdp-gestoria-panell__progres">
+                <div ref={adoptaEstilsDiferits} role="status" className="sdp-gestoria-panell__progres">
                   <Progres etiqueta={ETIQUETES_FASE[progres?.fase] ?? 'Preparant l’anàlisi'}
                     valor={progres ? progres.fet : null} max={progres?.total > 0 ? progres.total : 1} />
                 </div>
               ) : null}
               <ErrorDe {...errors} accions={['carpeta']} />
             </>
-          ) : <p>Primer cal aprovar el tractor de factures (pas 1).</p>}
+          ) : <p ref={adoptaEstilsDiferits}>Primer cal aprovar el tractor de factures (pas 1).</p>}
         </Pas>
 
         <Pas numero={3} titol="Revisió" estat={estatPas(false, Boolean(proposta))} refTitol={refRevisio}>
@@ -874,8 +877,8 @@ export default function PanellGestoria({
                 </Alerta>
               ) : null}
               {g.analisi.avisos.length > 0 ? (
-                <ul className="sdp-gestoria-panell__avisos">
-                  {g.analisi.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+                <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
+                  {g.analisi.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
                 </ul>
               ) : null}
               <Camp etiqueta="Titular del full" ajuda="El nom que encapçala el full i els fitxers." obligatori>
@@ -888,11 +891,11 @@ export default function PanellGestoria({
               <TaulaFactures tipus="despesa" factures={proposta.despeses} incidencies={incidencies} totalsEditats={g.totalsEditats}
                 onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} />
               {g.excloses.length > 0 ? (
-                <section className="sdp-gestoria-panell__bloc" aria-label="Factures excloses">
+                <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-label="Factures excloses">
                   <p className="sdp-gestoria-panell__nota">{`Excloses de la proposta (${g.excloses.length}): no aniran al full.`}</p>
                   <ul className="sdp-gestoria-panell__excloses">
                     {g.excloses.map((f) => (
-                      <li key={f.id}>
+                      <li ref={adoptaEstilsDiferits} key={f.id}>
                         <span>{`${f.num || 'Sense número'} · ${f.contrapart || 'sense contrapart'} · ${formatImport(f.total) || 'sense total'}`}</span>
                         <Boto varietat="fantasma" onClick={() => g.restauraFactura(f.id)}
                           aria-label={`Torna a la proposta la factura ${f.num || 'sense número'}`}>
@@ -903,7 +906,7 @@ export default function PanellGestoria({
                   </ul>
                 </section>
               ) : null}
-              <section className="sdp-gestoria-panell__bloc" aria-labelledby={idCorreu}>
+              <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idCorreu}>
                 <h3 id={idCorreu} className="sdp-gestoria-panell__subtitol">Creua amb el correu</h3>
                 <p>
                   Opcional. Amb una exportació del correu del trimestre (.mbox o .eml) es busquen les factures que
@@ -923,20 +926,20 @@ export default function PanellGestoria({
                 )}
                 {g.ocupat === 'correu' ? <Carregant etiqueta="Creuant el correu…" /> : null}
                 {g.correu?.avisos.length ? (
-                  <ul className="sdp-gestoria-panell__avisos">
-                    {g.correu.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+                  <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
+                    {g.correu.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
                   </ul>
                 ) : null}
                 <ErrorDe {...errors} accions={['correu']} />
               </section>
             </>
-          ) : <p>Quan analitzes la carpeta, ací veuràs la proposta per a revisar-la i corregir-la.</p>}
+          ) : <p ref={adoptaEstilsDiferits}>Quan analitzes la carpeta, ací veuràs la proposta per a revisar-la i corregir-la.</p>}
         </Pas>
 
         <Pas numero={4} titol="Proposta del full" estat={estatPas(Boolean(entregables), Boolean(proposta))}>
           {proposta ? (
             <>
-              <h3 className="sdp-gestoria-panell__subtitol">Vista prèvia del full</h3>
+              <h3 ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__subtitol">Vista prèvia del full</h3>
               {vista.full ? (
                 <VistaPreviaFull full={vista.full} titol={`Vista prèvia del full del ${proposta.t}T de ${proposta.any}`} />
               ) : <Alerta to="error">{`No es pot maquetar el full: ${vista.error}`}</Alerta>}
@@ -964,11 +967,11 @@ export default function PanellGestoria({
               </div>
               <ErrorDe {...errors} accions={['proposta', 'fitxers']} />
               {entregables ? (
-                <section className="sdp-gestoria-panell__bloc" aria-labelledby={idFitxers}>
+                <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idFitxers}>
                   <h3 id={idFitxers} ref={refFitxers} tabIndex={-1} className="sdp-gestoria-panell__subtitol">Fitxers generats</h3>
                   <ul className="sdp-gestoria-panell__fitxers">
                     {FORMATS_ENTREGABLE.map((format) => (
-                      <li key={format} className="sdp-gestoria-panell__fitxer-generat">
+                      <li ref={adoptaEstilsDiferits} key={format} className="sdp-gestoria-panell__fitxer-generat">
                         <code>{entregables[format].nom}</code>
                         <span className="sdp-gestoria-panell__nota">{`SHA-256 ${entregables.empremtes[format].slice(0, 12)}…`}</span>
                         <div className="sdp-gestoria-panell__accions">
@@ -983,30 +986,30 @@ export default function PanellGestoria({
                           ) : null}
                         </div>
                         {g.desats[format] ? (
-                          <span className="sdp-gestoria-panell__nota">{`Desat a «${g.desats[format].ruta}».`}</span>
+                          <span ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Desat a «${g.desats[format].ruta}».`}</span>
                         ) : null}
                       </li>
                     ))}
                   </ul>
                   {g.aprovacioProposta?.acceptades.length ? (
                     <>
-                      <p className="sdp-gestoria-panell__nota">Generat amb estes incidències acceptades:</p>
+                      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">Generat amb estes incidències acceptades:</p>
                       <ul className="sdp-gestoria-panell__avisos">
-                        {g.aprovacioProposta.acceptades.map((missatge, i) => <li key={`${i}-${missatge}`}>{missatge}</li>)}
+                        {g.aprovacioProposta.acceptades.map((missatge, i) => <li ref={adoptaEstilsDiferits} key={`${i}-${missatge}`}>{missatge}</li>)}
                       </ul>
                     </>
                   ) : null}
                 </section>
               ) : null}
             </>
-          ) : <p>Quan hi haja una proposta, ací la veuràs tal com la rebrà la gestoria.</p>}
+          ) : <p ref={adoptaEstilsDiferits}>Quan hi haja una proposta, ací la veuràs tal com la rebrà la gestoria.</p>}
         </Pas>
 
         <Pas numero={5} titol="Envia a la gestoria" estat={estatPas(false, Boolean(entregables))}>
           {entregables && proposta ? (
             <EnviamentGestoria key={entregables.empremtes.xlsx} any={proposta.any} t={proposta.t} adjunts={adjunts}
               inicials={{ nom: proposta.titular }} nivellTitol={3} />
-          ) : <p>Quan hages generat el full, ací podràs preparar el correu. L’enviament el fas sempre tu.</p>}
+          ) : <p ref={adoptaEstilsDiferits}>Quan hages generat el full, ací podràs preparar el correu. L’enviament el fas sempre tu.</p>}
         </Pas>
       </ol>
 

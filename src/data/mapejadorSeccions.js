@@ -1,4 +1,4 @@
-import { sanitizeHtml, netejaText, esFontImatgePropia } from '../utils/sanitize.js';
+import { sanitizeHtml as sanitizeHtmlBase, netejaText as netejaTextBase, esFontImatgePropia } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
 import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
 import { capturaVisibilitatMur, visibilitatMurLlegida } from './visibilitatMur.js';
@@ -6,6 +6,12 @@ import { capturaVisibilitatMur, visibilitatMurLlegida } from './visibilitatMur.j
    Publicació: JS pur, sense React ni xarxa (la seua única importació és
    sanitize.js, com la d'ací). */
 import { coaccionaAmbit, esFitxaDAmbit } from '../utils/publicacioUniversal.js';
+import { normalitzaUnicodeSegura } from '../utils/normalitzaUnicodeSegura.js';
+
+/* JSONB/DTO: String(objecte), join i el sanejador no són coaccionadors
+   primitius. Els textos passen primer per la mateixa regla del lector. */
+const netejaText = (valor, maxim) => netejaTextBase(textDelPayload(valor) ?? '', maxim);
+const sanitizeHtml = valor => sanitizeHtmlBase(textDelPayload(valor) ?? '');
 
 function generateUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -110,14 +116,14 @@ export function atributsDEtiqueta(etiqueta) {
 }
 
 const normalizeText = (value) =>
-  String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  normalitzaUnicodeSegura((textDelPayload(value) ?? '').toLowerCase(), 'NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 
 const firstAsset = (value) => (Array.isArray(value) ? value[0] || null : value || null);
-const buildSearchText = (parts) => normalizeText(parts.filter(Boolean).join(' '));
+const buildSearchText = (parts) => normalizeText(parts.map(textDelPayload).filter(Boolean).join(' '));
 
 function validaUrl(url) {
-  if (!url) return null;
-  const s = String(url).trim();
+  if (typeof url !== 'string') return null;
+  const s = url.trim();
   if (s.startsWith('data:image/')) return s;
   if (s.startsWith('//')) return null; // Bloquejar protocol-relative (Z audit)
   if (s.startsWith('/') || s.startsWith('./')) return s;
@@ -177,7 +183,8 @@ const CAMPS_DE_TEXT_DE_VARIACIO = Object.freeze(['name', 'price', 'description',
 const REFERENCIA_DE_MITJANS = /^sdp-media:\/\/(?:mitjans_privats|mitjans)\//i;
 
 function imatgeDeVariacio(image) {
-  const s = String(image).trim();
+  if (typeof image !== 'string') return null;
+  const s = image.trim();
   return REFERENCIA_DE_MITJANS.test(s) ? s : validaUrl(s);
 }
 
@@ -195,8 +202,8 @@ function imatgeDeVariacio(image) {
 /* Contrast final · La regla és una sola, a utils/mitjaOpac.js
    (fotoDelBucketPublic): un camí amb '..' o caràcters estranys ja no passa. */
 function avatarDeLaPublicacio(avatar) {
-  if (!avatar) return null;
-  const s = String(avatar).trim();
+  if (typeof avatar !== 'string') return null;
+  const s = avatar.trim();
   return fotoDelBucketPublic(s) || validaUrl(s);
 }
 
@@ -252,7 +259,10 @@ function netejaVariacions(variacions) {
 }
 
 export function mapSectionSubmissionToItem(submission) {
-  const payload = submission?.payload && typeof submission.payload === 'object' ? submission.payload : {};
+  const payload = submission?.payload && typeof submission.payload === 'object' && !Array.isArray(submission.payload) ? { ...submission.payload } : {};
+  // Abans del primer spread i de qualsevol HTML/URL/text de cada secció.
+  // La visibilitat d'escriptura continua sent l'explícita del formulari.
+  netejaTipusDelPayload(payload, { ambVisibilitat: false });
   const sectionId = netejaText(submission?.sectionId || payload.sectionId || '');
   const createdAt = netejaText(submission?.createdAt || payload.created_at || new Date().toISOString());
 
@@ -529,7 +539,7 @@ const CLAUS_DE_TEXT_DEL_PAYLOAD = Object.freeze([
   'location', 'population', 'town_name', 'provincia', 'comarca', 'tag', 'category_slug', 'category',
   'copyright', 'source', 'autor', 'nomPoble', 'poble', 'poble_id', 'icon', 'imageAlt', 'type', 'kind',
   'date', 'time', 'publish_date', 'dataCaptura', 'searchText', 'comments', 'likes', 'file', 'sectionId',
-  'translation_mode', 'source_language', 'video_url'
+  'translation_mode', 'source_language', 'video_url', 'folderId', 'updatedAt', 'created_at', 'updated_at'
 ]);
 /* seguretat-01 (261104) · Les claus de text que la vista llig amb un || (les
    píndoles del detall d'un acte, detailSectionMeta): la regla de
@@ -793,9 +803,11 @@ function netejaAmbit(payload, sectionId) {
    canvia. */
 const MODE_DE_TRADUCCIO_ILLEGIBLE = 'R51_TRANSLATION_MODE_INVALID';
 
-function netejaTipusDelPayload(dades) {
-  const visibilitat = visibilitatMurLlegida(dades);
-  Object.assign(dades, visibilitat ?? { mostrarAlMur: false, ocultarDelMur: true });
+function netejaTipusDelPayload(dades, { ambVisibilitat = true } = {}) {
+  if (ambVisibilitat) {
+    const visibilitat = visibilitatMurLlegida(dades);
+    Object.assign(dades, visibilitat ?? { mostrarAlMur: false, ocultarDelMur: true });
+  }
   for (const clau of CLAUS_DE_TEXT_DEL_PAYLOAD) {
     const valor = dades[clau];
     if (valor == null || typeof valor === 'string') continue;

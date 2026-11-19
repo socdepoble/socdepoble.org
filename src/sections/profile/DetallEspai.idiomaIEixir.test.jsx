@@ -62,7 +62,7 @@ describe('Onada R32.4 · Idioma del Sistema i Eixir de Sóc de Poble als apartat
     }
     fireEvent.click(screen.getByRole('radio', { name: /English/ }));
     expect(m.setLanguage).toHaveBeenCalledWith('en');
-    expect(screen.getByRole('link', { name: 'Traductor de Poble per a Pàgines' }).getAttribute('href')).toBe('/traduccions');
+    expect(screen.getByRole('link', { name: 'Traductor per a Pàgines' }).getAttribute('href')).toBe('/traduccions');
   });
 
   test('DetallEixir comprova esborranys pendents abans d’eixir i redirigeix a /registre en tancar sessió', async () => {

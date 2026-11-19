@@ -50,6 +50,9 @@ import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { formatData } from '../nucli/dates.js';
 import { TRACTOR_ESCANER, TRACTOR_TAULER } from '../tractors.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* Com diu la porta l'estat del tractor, quan no està aprovat (les paraules de PortaTauler). */
 const ESTATS_TRACTOR = Object.freeze({
@@ -105,16 +108,16 @@ function Severitat({ severitat }) {
 
 /* Una xifra del banc: el text, o «Xifra amagada» mentre l'ull de la boina està tancat. */
 function XifraDelBanc({ valor, visible }) {
-  if (!Number.isFinite(valor)) return <span>Sense dades</span>;
+  if (!Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>Sense dades</span>;
   if (!visible) {
     return (
-      <span className="sdp-gestoria-tauler__amagat">
+      <span ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
         <span>Xifra amagada</span>
       </span>
     );
   }
-  return <span>{String(valor)}</span>;
+  return <span ref={adoptaEstilsDiferits}>{String(valor)}</span>;
 }
 
 /* Les files que es pinten, i quantes en queden fora. */
@@ -123,11 +126,11 @@ function talla(files) {
 }
 
 function NotaFora({ fora }) {
-  return fora > 0 ? <p className="sdp-gestoria-escaner__nota">{`I ${plural(fora, 'fila', 'files')} més, que no es pinten.`}</p> : null;
+  return fora > 0 ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{`I ${plural(fora, 'fila', 'files')} més, que no es pinten.`}</p> : null;
 }
 
 function SenseRes() {
-  return <p className="sdp-gestoria-escaner__nota">Res en este apartat.</p>;
+  return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">Res en este apartat.</p>;
 }
 
 /* Revisió adversarial 13-10-2026, troballes PRIV-2, ORD-1 i FP-1: de la identitat legal (la seua carpeta, també la que
@@ -167,7 +170,7 @@ function Detall({ vista, resultat }) {
     if (!perTrimestre.length && !perAny.length) return <SenseRes />;
     return (
       <Taula titol={titol} densa>
-        <thead>
+        <thead ref={adoptaEstilsDiferits}>
           <tr>
             <th scope="col">Carpeta</th><th scope="col">Factures</th><th scope="col">Rebuts</th><th scope="col">Fulls</th>
             <th scope="col">CSV de proveïdor</th><th scope="col">Imatges</th><th scope="col">Extractes</th><th scope="col">Altres</th>
@@ -175,7 +178,7 @@ function Detall({ vista, resultat }) {
         </thead>
         <tbody>
           {perTrimestre.map((q) => (
-            <tr key={q.carpeta}>
+            <tr ref={adoptaEstilsDiferits} key={q.carpeta}>
               <th scope="row">{`${q.t}T de ${q.any}`}</th>
               <td className="sdp-num">{q.factures}</td><td className="sdp-num">{q.rebuts}</td><td className="sdp-num">{q.fulls}</td>
               <td className="sdp-num">{q.csvProveidor}</td><td className="sdp-num">{q.imatges}</td><td className="sdp-num">{q.extractes}</td>
@@ -183,7 +186,7 @@ function Detall({ vista, resultat }) {
             </tr>
           ))}
           {perAny.map((a) => (
-            <tr key={`any-${a.any}`}>
+            <tr ref={adoptaEstilsDiferits} key={`any-${a.any}`}>
               <th scope="row">{`L’any ${a.any}`}</th>
               <td colSpan={7}>{`${plural(a.n, 'fitxer', 'fitxers')} de factures en la carpeta de l’any`}</td>
             </tr>
@@ -202,12 +205,12 @@ function Detall({ vista, resultat }) {
     if (!perCarpeta.size) return <SenseRes />;
     return (
       <>
-        <p className="sdp-gestoria-escaner__nota">Només es compten: no se n’ha llegit cap byte i ací no es diu el nom de cap fitxer.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">Només es compten: no se n’ha llegit cap byte i ací no es diu el nom de cap fitxer.</p>
         <Taula titol={titol} densa>
           <thead><tr><th scope="col">Carpeta</th><th scope="col">Fitxers</th></tr></thead>
           <tbody>
             {[...perCarpeta].sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0)).map(([carpeta, n]) => (
-              <tr key={carpeta}><th scope="row">{carpeta}</th><td className="sdp-num">{n}</td></tr>
+              <tr ref={adoptaEstilsDiferits} key={carpeta}><th scope="row">{carpeta}</th><td className="sdp-num">{n}</td></tr>
             ))}
           </tbody>
         </Taula>
@@ -221,10 +224,10 @@ function Detall({ vista, resultat }) {
     return (
       <>
         <Taula titol={titol} densa>
-          <thead><tr><th scope="col">Extracte</th><th scope="col">Format</th><th scope="col">Estat</th><th scope="col">Per què</th></tr></thead>
+          <thead ref={adoptaEstilsDiferits}><tr><th scope="col">Extracte</th><th scope="col">Format</th><th scope="col">Estat</th><th scope="col">Per què</th></tr></thead>
           <tbody>
             {visibles.map((f) => (
-              <tr key={f.ruta}>
+              <tr ref={adoptaEstilsDiferits} key={f.ruta}>
                 <th scope="row">{f.ruta}</th>
                 <td>{TEXT_FORMAT[f.format] ?? f.format}</td>
                 <td>
@@ -248,10 +251,10 @@ function Detall({ vista, resultat }) {
     return (
       <>
         <Taula titol={titol} densa>
-          <thead><tr><th scope="col">Original</th><th scope="col">Còpies</th><th scope="col">Gravetat</th><th scope="col">Què passa</th></tr></thead>
+          <thead ref={adoptaEstilsDiferits}><tr><th scope="col">Original</th><th scope="col">Còpies</th><th scope="col">Gravetat</th><th scope="col">Què passa</th></tr></thead>
           <tbody>
             {visibles.map((g) => (
-              <tr key={g.original}>
+              <tr ref={adoptaEstilsDiferits} key={g.original}>
                 <th scope="row">{g.original}</th>
                 <td>{g.copies.join(', ')}</td>
                 <td><Severitat severitat={g.severitat} /></td>
@@ -271,10 +274,10 @@ function Detall({ vista, resultat }) {
     return (
       <>
         <Taula titol={titol} densa>
-          <thead><tr><th scope="col">Fitxer</th><th scope="col">La carpeta diu</th><th scope="col">El nom diu</th><th scope="col">Gravetat</th></tr></thead>
+          <thead ref={adoptaEstilsDiferits}><tr><th scope="col">Fitxer</th><th scope="col">La carpeta diu</th><th scope="col">El nom diu</th><th scope="col">Gravetat</th></tr></thead>
           <tbody>
             {visibles.map((x) => (
-              <tr key={x.ruta}>
+              <tr ref={adoptaEstilsDiferits} key={x.ruta}>
                 <th scope="row">{x.ruta}</th><td>{x.diuCarpeta}</td><td>{x.diuNom}</td><td><Severitat severitat={x.severitat} /></td>
               </tr>
             ))}
@@ -291,10 +294,10 @@ function Detall({ vista, resultat }) {
     return (
       <>
         <Taula titol={titol} densa>
-          <thead><tr><th scope="col">Què falta</th><th scope="col">Detall</th><th scope="col">Gravetat</th></tr></thead>
+          <thead ref={adoptaEstilsDiferits}><tr><th scope="col">Què falta</th><th scope="col">Detall</th><th scope="col">Gravetat</th></tr></thead>
           <tbody>
             {visibles.map((b, i) => (
-              <tr key={`${b.codi}-${i}`}>
+              <tr ref={adoptaEstilsDiferits} key={`${b.codi}-${i}`}>
                 <th scope="row">{TEXT_CODI[b.codi] ?? b.codi}</th><td>{b.missatge}</td><td><Severitat severitat={b.severitat} /></td>
               </tr>
             ))}
@@ -314,12 +317,12 @@ function Detall({ vista, resultat }) {
     return (
       <>
         <Taula titol={titol} densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr><th scope="col">{ambCarpeta ? 'Fitxer o carpeta' : 'Fitxer'}</th><th scope="col">Gravetat</th><th scope="col">Què fer</th></tr>
           </thead>
           <tbody>
             {visibles.map((a) => (
-              <tr key={a.identitat ? `identitat:${a.carpeta}` : a.ruta}>
+              <tr ref={adoptaEstilsDiferits} key={a.identitat ? `identitat:${a.carpeta}` : a.ruta}>
                 <th scope="row">{a.identitat ? (a.carpeta || 'L’arrel de la carpeta') : a.ruta}</th>
                 <td><Severitat severitat={a.severitat} /></td><td>{a.missatge}</td>
               </tr>
@@ -343,23 +346,23 @@ function Detall({ vista, resultat }) {
   return (
     <>
       <Taula titol={titol} densa>
-        <thead>
+        <thead ref={adoptaEstilsDiferits}>
           <tr>
             <th scope="col">{ambCarpeta ? 'Fitxer o carpeta' : 'Fitxer'}</th>
-            {vista === 'burocracia' ? <th scope="col">Quan es pot esborrar</th> : <th scope="col">Apartat</th>}
+            {vista === 'burocracia' ? <th ref={adoptaEstilsDiferits} scope="col">Quan es pot esborrar</th> : <th ref={adoptaEstilsDiferits} scope="col">Apartat</th>}
             <th scope="col">Què és</th>
           </tr>
         </thead>
         <tbody>
           {visibles.map(({ clau, cap, doc, categoria, n }) => (
             doc ? (
-              <tr key={clau}>
+              <tr ref={adoptaEstilsDiferits} key={clau}>
                 <th scope="row">{cap}</th>
                 <td>{vista === 'burocracia' ? (doc.quanEsborrar || 'Sense fitxa') : (TEXT_CATEGORIA[doc.categoria] ?? doc.categoria)}</td>
                 <td>{doc.queEs || 'Sense fitxa'}</td>
               </tr>
             ) : (
-              <tr key={clau}>
+              <tr ref={adoptaEstilsDiferits} key={clau}>
                 <th scope="row">{cap}</th>
                 <td>{vista === 'burocracia' ? 'Sense fitxa' : (TEXT_CATEGORIA[categoria] ?? categoria)}</td>
                 <td>{`${plural(n, 'fitxer', 'fitxers')} de la identitat legal. Només es compten: ací no es diu el nom de cap fitxer.`}</td>
@@ -368,7 +371,7 @@ function Detall({ vista, resultat }) {
           ))}
         </tbody>
       </Taula>
-      {vista === 'burocracia' ? <p className="sdp-gestoria-escaner__nota">Els terminis són orientatius: a verificar amb la gestoria. L’Escàner no mou ni esborra res.</p> : null}
+      {vista === 'burocracia' ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">Els terminis són orientatius: a verificar amb la gestoria. L’Escàner no mou ni esborra res.</p> : null}
       <NotaFora fora={fora} />
     </>
   );
@@ -388,14 +391,14 @@ function ResumDelTauler({ dades, visible }) {
   const comptes = Array.isArray(dades?.comptes) ? dades.comptes : [];
   const conciliacio = dades?.resum?.conciliacio ?? null;
   let parelles;
-  if (!conciliacio?.ambFactures) parelles = <span>sense factures del Full trimestral</span>;
+  if (!conciliacio?.ambFactures) parelles = <span ref={adoptaEstilsDiferits}>sense factures del Full trimestral</span>;
   else if (Number.isFinite(conciliacio.parelles)) parelles = <XifraDelBanc valor={conciliacio.parelles} visible={visible} />;
-  else parelles = <span>sense moviments per aparellar</span>;
+  else parelles = <span ref={adoptaEstilsDiferits}>sense moviments per aparellar</span>;
   return (
-    <div className="sdp-gestoria-escaner__resum">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__resum">
       <p className="sdp-gestoria-escaner__nota">El Tauler, els Bancs i els Impostos ja tenen les xifres d’estos extractes.</p>
       <ul className="sdp-gestoria-escaner__llista">
-        {comptes.map((c, i) => <li key={c.id}>{`${nomDelCompte(c, i)}: ${cobertura(c)}.`}</li>)}
+        {comptes.map((c, i) => <li ref={adoptaEstilsDiferits} key={c.id}>{`${nomDelCompte(c, i)}: ${cobertura(c)}.`}</li>)}
         <li>Moviments llegits: <XifraDelBanc valor={conciliacio?.moviments} visible={visible} /></li>
         <li>Moviments aparellats amb factures: {parelles}</li>
       </ul>
@@ -445,7 +448,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
   };
 
   return (
-    <div className="sdp-gestoria-escaner">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner">
       {tauler.aprovat ? null : (
         <Alerta to="info" viva={false} titol="Per a abocar els extractes cal també el Tauler"
           accions={<AccioAprovacio porta={porta} id={TRACTOR_TAULER.id} onObreTractors={onObreTractors} varietat="secundari" />}>
@@ -462,7 +465,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
           l’arxiu, no mou ni esborra res i no guarda res.
         </Alerta>
         {escaner.potTriarCarpeta ? (
-          <div className="sdp-gestoria-escaner__accions">
+          <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__accions">
             <Boto varietat={escaner.teCarpeta ? 'secundari' : 'primari'} onClick={escaner.triaCarpeta}
               carregant={escaner.ocupat === 'carpeta'}>
               {escaner.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel'}
@@ -477,7 +480,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
               onChange={(event) => escaner.usaFitxers(event.target.files)} />
           </Camp>
         )}
-        {escaner.nomCarpeta ? <p className="sdp-gestoria-escaner__nota">{`Carpeta triada: «${escaner.nomCarpeta}».`}</p> : null}
+        {escaner.nomCarpeta ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">{`Carpeta triada: «${escaner.nomCarpeta}».`}</p> : null}
         {escaner.ocupat === 'escaneig' ? (
           <Progres etiqueta={TEXT_FASE[progres?.fase] ?? 'Analitzant la carpeta…'}
             valor={progres && Number.isFinite(progres.total) && progres.total > 0 ? progres.fet : null}
@@ -488,7 +491,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
       </section>
 
       {r ? (
-        <section className="sdp-gestoria-escaner__seccio" aria-labelledby={idRadiografia}>
+        <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idRadiografia}>
           <h2 id={idRadiografia} className="sdp-gestoria-escaner__titol">Radiografia de la carpeta</h2>
           <p className="sdp-gestoria-escaner__nota">
             {`${plural(r.fitxers, 'fitxer classificat', 'fitxers classificats')} pel nom, la mida i la carpeta. Les dates dels noms són indicis: revisa-les. Les carpetes buides no es veuen.`}
@@ -500,8 +503,8 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
           ) : null}
           {r.avisos.length ? (
             <Alerta to="avis" viva={false} titol="Notes de l’anàlisi">
-              <ul className="sdp-gestoria-escaner__llista">
-                {r.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+              <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__llista">
+                {r.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
               </ul>
             </Alerta>
           ) : null}
@@ -512,7 +515,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
             {TESSELES.map((t) => (
               <Boto key={t.id} varietat="secundari" icona={t.icona} className="sdp-gestoria-escaner__tessela"
                 aria-pressed={vista === t.id ? 'true' : 'false'} onClick={() => setVista(t.id)}>
-                <span className="sdp-gestoria-escaner__tessela-titol">{t.titol}</span>{' '}
+                <span ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__tessela-titol">{t.titol}</span>{' '}
                 <span className="sdp-gestoria-escaner__tessela-compte">{t.compte(r)}</span>
               </Boto>
             ))}
@@ -540,7 +543,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
       ) : null}
 
       {r ? (
-        <section className="sdp-gestoria-escaner__seccio" aria-labelledby={idExtractes}>
+        <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idExtractes}>
           <h2 id={idExtractes} className="sdp-gestoria-escaner__titol">Extractes per al Tauler</h2>
           {resultat.extractes.length ? (
             <GrupCamps llegenda="Els extractes que s’abocaran al Tauler" className="sdp-gestoria-escaner__extractes">
@@ -551,7 +554,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
               ))}
             </GrupCamps>
           ) : (
-            <p className="sdp-gestoria-escaner__nota">No s’ha trobat cap extracte del banc en la carpeta.</p>
+            <p ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__nota">No s’ha trobat cap extracte del banc en la carpeta.</p>
           )}
           <div className="sdp-gestoria-escaner__accions">
             <Boto varietat="primari" onClick={aboca} disabled={!potAbocar} carregant={Boolean(tauler.llegint)}>
@@ -561,8 +564,8 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
           {tauler.error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{tauler.error}</Alerta> : null}
           {tauler.lectura?.avisos?.length ? (
             <Alerta to="avis" titol="Hi ha fitxers que no s’han llegit">
-              <ul className="sdp-gestoria-escaner__llista">
-                {tauler.lectura.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}
+              <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__llista">
+                {tauler.lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}
               </ul>
             </Alerta>
           ) : null}
@@ -571,7 +574,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
       ) : null}
 
       {escaner.teCarpeta || escaner.nomCarpeta || escaner.error ? (
-        <div className="sdp-gestoria-escaner__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__accions">
           <Boto varietat="secundari" onClick={oblida}>Oblida la carpeta</Boto>
         </div>
       ) : null}

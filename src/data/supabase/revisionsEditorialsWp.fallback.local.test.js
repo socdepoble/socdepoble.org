@@ -1,0 +1,27 @@
+import { beforeEach, expect, test, vi } from 'vitest';
+const m = vi.hoisted(() => ({ list: vi.fn(), save: vi.fn(), rpc: vi.fn() }));
+vi.mock('../backendPort.js', () => ({ teCapacitat: () => true, llistaRevisionsEditorialsWp: (...a) => m.list(...a), desaRevisioEditorialWp: (...a) => m.save(...a) }));
+vi.mock('./runtime.js', () => ({ getResolvedConfig: () => ({ hasSupabaseConfig: true }), rpc: (...a) => m.rpc(...a) }));
+import { desaRevisioEditorialWp } from './revisionsEditorialsWp.js';
+import { desaRevisioArticleImportatAmbServidor, sincronitzaRevisionsEditorialsWpAmbServidor, llegeixEstatRevisioEditorial } from '../../utils/revisioEditorialWp.js';
+const mem = () => { const map = new Map(); return { getItem: k => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) }; };
+const fila = (actualitzatA = '2026-11-15T22:00:00.000001Z') => ({ wpId: 1, estat: 'aprovat', nota: 'del servidor', autoria: 'Autora', desti: 'mur', actualitzatA });
+beforeEach(() => { m.list.mockReset().mockResolvedValue([fila()]); m.save.mockReset(); m.rpc.mockReset(); });
+test.each([true, false])('RPC CAS absent: conserva esborrany, pendent i versió coneguda (%s) sense provar cap upsert', async ambVersio => {
+ const storage = mem();
+ if (ambVersio) await sincronitzaRevisionsEditorialsWpAmbServidor({ storage });
+ m.save.mockImplementation(entrada => desaRevisioEditorialWp(entrada));
+ m.rpc.mockRejectedValue(Object.assign(new Error('detall privat del proveïdor'), { status: 404, postgrestCode: 'PGRST202' }));
+ const r = await desaRevisioArticleImportatAmbServidor(1, { estat: 'amb_observacions', nota: 'esborrany conservat' }, { storage });
+ expect(r).toMatchObject({ remot: false, conflicte: false, motiu: 'no-disponible' });
+ expect(r).not.toHaveProperty('fila');
+ expect(JSON.stringify(r)).not.toContain('detall privat');
+ expect(m.rpc.mock.calls.map(c => c[0])).toEqual(['desa_revisio_editorial_wp_cas']);
+ expect(m.rpc.mock.calls[0][1].p_actualitzat_esperat).toBe(ambVersio ? fila().actualitzatA : null);
+ await sincronitzaRevisionsEditorialsWpAmbServidor({ storage });
+ const local = llegeixEstatRevisioEditorial(storage);
+ expect(local.anotacions['1']).toBe('esborrany conservat');
+ expect(local.estats['1']).toBe('amb_observacions');
+ expect(local.pendents['1']).toBe(true);
+ expect(local.versions['1']).toBe(ambVersio ? fila().actualitzatA : undefined);
+});

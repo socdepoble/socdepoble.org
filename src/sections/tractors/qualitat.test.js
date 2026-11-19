@@ -22,7 +22,7 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
 const MARCA = '/* ── TRACTORS (261002) ── */';
 function blocTractors() {
-  const css = llig('src/css/modules.css');
+  const css = llig('src/css/diferit-tractors.css');
   const inici = css.indexOf(MARCA);
   expect(inici, 'falta el bloc dels tractors a modules.css').toBeGreaterThan(-1);
   expect(css.indexOf(MARCA, inici + 1)).toBe(-1);

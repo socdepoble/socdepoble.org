@@ -10,6 +10,8 @@ import { fullACsv, llegeixModelCsv, maquetaFull } from './fullModel.js';
 import { crearFactura } from './model.js';
 import { PLANTILLA_GESTORIA, PLANTILLA_VERDA_ANTIGA } from './plantilla.js';
 import { fullAXlsx } from './xlsx.js';
+import { validaExportacioIntegritat } from './exportacioIntegritat.js';
+import { verificaRegistreIntegritat } from './registreIntegritat.js';
 
 const subtle = webcrypto.subtle;
 
@@ -85,12 +87,29 @@ describe('generaEntregables', () => {
     expect(a.empremtes).toEqual(b.empremtes);
   });
 
-  test('subtle és injectable i resumix exactament els dos fitxers', async () => {
+  test('subtle és injectable i resumix els dos fitxers i el paquet d’integritat actiu', async () => {
     const digest = vi.fn((algorisme, dades) => subtle.digest(algorisme, dades));
     const r = await generaEntregables({ proposta: proposta(), subtle: { digest } });
-    expect(digest).toHaveBeenCalledTimes(2);
-    expect(digest.mock.calls.map(([algorisme]) => algorisme)).toEqual(['SHA-256', 'SHA-256']);
-    expect(digest.mock.calls.map(([, dades]) => sha(dades)).sort()).toEqual([r.empremtes.csv, r.empremtes.xlsx].sort());
+    expect(digest.mock.calls.every(([algorisme]) => algorisme === 'SHA-256')).toBe(true);
+    const sumes = digest.mock.calls.map(([, dades]) => sha(dades));
+    for (const esperada of [r.empremtes.csv, r.empremtes.xlsx, r.integritat.empremtaManifest]) expect(sumes).toContain(esperada);
+    expect(await validaExportacioIntegritat(r.integritat, { subtle })).toEqual({ valida: true, codi: null });
+  });
+
+  test('consumidor real: exportació activa, cadena anterior, CAS i canvi de text detectat', async () => {
+    const primer = await generaEntregables({ proposta: proposta(), subtle });
+    expect(primer.integritat.registres).toHaveLength(1);
+    expect(primer.integritat.registres[0]).toMatchObject({ tipus: 'esborrany', instant: null, data: '2026-09-30' });
+    const integritat = { registres: primer.integritat.registres, hashEsperat: primer.integritat.registres[0].hash_actual };
+    const segon = await generaEntregables({ proposta: proposta({ titular: 'Cooperativa Exemple revisada' }), integritat, subtle });
+    expect(segon.integritat.registres).toHaveLength(2);
+    expect((await verificaRegistreIntegritat(segon.integritat.registres, { subtle })).valida).toBe(true);
+    expect((await validaExportacioIntegritat(segon.integritat, { subtle })).valida).toBe(true);
+    const alterat = JSON.parse(JSON.stringify(segon.integritat.registres));
+    alterat[0].dades.proposta.titular = 'Un altre titular';
+    expect((await verificaRegistreIntegritat(alterat, { subtle })).valida).toBe(false);
+    await expect(generaEntregables({ proposta: proposta(), integritat: { ...integritat, hashEsperat: null }, subtle })).rejects.toMatchObject({ codi: 'CADENA_CANVIADA' });
+    await expect(generaEntregables({ proposta: proposta(), integritat: { ...integritat, ancora: { ordre: 2, hash_actual: segon.integritat.registres[1].hash_actual } }, subtle })).rejects.toMatchObject({ codi: 'CADENA_INVALIDA' });
   });
 
   test('una altra plantilla canvia el full, no el motor', async () => {

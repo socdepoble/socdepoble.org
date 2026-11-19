@@ -10,6 +10,7 @@ import { useXatSocDePoble } from './xatSocDePoble.js';
 import { useModeracio } from './moderacioDePoble.js';
 import { origenDeLaPagina, origenPublic, urlDeLaPagina } from '../../../config/origenPublic.js';
 import { useUbicacioApp } from './useUbicacioApp.js';
+import { recordaReferenciaPaginaXat } from '../../../sections/xat/referenciaPaginaXat.js';
 
 /* T63.2 · La via pública de Comentar cridada on no hi ha cap xat públic (una
    pàgina sense xat comú, un element que no s'ha trobat): ho diu, no navega
@@ -384,9 +385,20 @@ export function useAccions({
     if (ruta) navigate(ruta);
     else showToast(AVIS_SENSE_XAT);
   };
+  const descriptorReferencia = () => {
+    if (objecte && typeof objecte === 'object') return objecte;
+    if (objecte === null) return null;
+    const ruta = esRutaInterna(mainHref) ? mainHref : (pagina ? rutaActual(router) : '');
+    return ruta ? objecteDePagina({ titol: typeof title === 'string' ? title : '', ruta }) : null;
+  };
   const handleComment = onComment || ((via) => {
-    if (via === 'privat') comentaEnPrivat();
-    else if (via === 'public') comentaEnPublic();
+    if (via === 'privat') {
+      recordaReferenciaPaginaXat(descriptorReferencia());
+      comentaEnPrivat();
+    } else if (via === 'public') {
+      recordaReferenciaPaginaXat(descriptorReferencia());
+      comentaEnPublic();
+    }
   });
   const handleShare = onShare || (() => compartix(title, urlPerCompartir(mainHref, router), showToast));
 

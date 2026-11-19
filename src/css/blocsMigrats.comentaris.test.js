@@ -41,7 +41,7 @@ function fontsDe(carpeta, fonts = []) {
 
 /* «ruta:línia nom» per a cada línia que nomena un full migrat (amb camí o sense). */
 function referenciesAFullsMigrats(fonts, blocs) {
-  const patrons = blocs.map(({ nom }) => [nom, new RegExp(`(?<![A-Za-z0-9_])${escapa(nom)}(?![A-Za-z0-9_])`)]);
+  const patrons = blocs.map(({ nom }) => [nom, new RegExp(`(?<![A-Za-z0-9_-])${escapa(nom)}(?![A-Za-z0-9_])`)]);
   const trobades = [];
   for (const [ruta, text] of fonts) {
     if (HISTORIA.has(ruta)) continue;

@@ -24,6 +24,7 @@ import { useSEO } from '../../hooks/useSEO';
    config/, no de TextSection.jsx: /disseny no carrega cap component de Text. */
 import { opcionsDeLaImatgeSocial } from '../../config/opcionsImatgeSocial.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import PeuEditorialIdioma, { etiquetaPeuEditorialIdioma } from '../../components/universal/PeuEditorialIdioma.jsx';
 
 const pDisseny = (nom, reserva) => Object.freeze([`section.disseny.${nom}`, reserva]);
 export const TEXTOS_ESPAI_DISSENY = Object.freeze({
@@ -94,6 +95,7 @@ function seoDelDetall(item, pageCopy, language = 'ca') {
 function CatalogDetail({ item }) {
   const { pageCopy } = useCoreContent();
   const language = useLlenguaOpcional();
+  const tPortada = useTraductorOpcional();
   const seo = useMemo(() => seoDelDetall(item, pageCopy, language), [item, pageCopy, language]);
   useSEO(seo);
   if (!item || item.id === '__intro') {
@@ -117,6 +119,8 @@ function CatalogDetail({ item }) {
         labels={page.labels}
         copyright={COPYRIGHT_SDP}
         llenguaDelContingut={page.contentLanguage || 'ca'}
+        peuDePagina={<PeuEditorialIdioma />}
+        etiquetaPeuDePagina={etiquetaPeuEditorialIdioma(tPortada)}
         {...data}
       >
         {/* SPEC G · les imatges del copy, amb la base de l'amfitrió en pintar-lo. */}

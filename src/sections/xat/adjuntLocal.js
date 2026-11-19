@@ -160,11 +160,16 @@ function ambMimeLocal(fitxer) {
   return mime && mime !== fitxer.type ? fitxer.slice(0, fitxer.size, mime) : fitxer;
 }
 
-/* Amb EXIF publicable per defecte; l’opt-out el lleva. Sempre per davall del sostre client. Preservem els tres
+/* El GPS només viatja al DTO consentit, mai dins del raster. La data i la
+   càmera es reconstruïxen amb llista blanca; l'opt-out lleva tot l'EXIF.
+   Sempre per davall del sostre client. Preservem els tres
    primers intents de captures; després abaixem qualitat i costat amb una
    cerca finita (màxim 15 recodificacions, inclòs el canvi WebP → JPEG).
    Si no hi cap o no es pot codificar, no es retorna mai l'original. */
 async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio = true }) {
+  const { exifPublicable, preparaTiffSenseUbicacio, incrustaEnDataUrl } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+  const tiff = conservaUbicacio !== false ? preparaTiffSenseUbicacio((await exifPublicable(fitxer))?.tiff) : null;
+  if (signal?.aborted) throw abortat();
   const primers = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
   const intents = [
     ...primers.map((maxSize) => ({ maxSize, quality: 0.8 })),
@@ -182,7 +187,7 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio
   };
   for (const intent of intents) {
     if (signal?.aborted) throw abortat();
-    const opcions = { ...intent, conservaExif: conservaUbicacio !== false };
+    const opcions = { ...intent, conservaExif: false };
     let data;
     try { data = await codifica(opcions); }
     catch (error) {
@@ -200,7 +205,7 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio
       data = await codifica(opcions);
     }
     if (signal?.aborted) throw abortat();
-    const imatge = blobDeDataUrl(String(data));
+    const imatge = blobDeDataUrl((tiff && incrustaEnDataUrl(String(data), tiff)) || String(data));
     if (imatge.size < MAXIM_ADJUNT_XAT.imatge) return imatge;
   }
   throw errorAdjuntXat('foto-mida');
@@ -236,10 +241,12 @@ export async function preparaAdjunt(fitxer, {
     if (!(reduit?.fitxer instanceof Blob) || !reduit.fitxer.size) throw errorAdjuntXat('video-compressio');
     let preparat = reduit.fitxer;
     let net = reduit.comprimit === true;
-    if (!conserva && !net) {
+    // MP4/MOV tenen un sanejador acreditable sense tocar mostres. WebM
+    // manté l'admissió de sempre; no se li atribuïx una neteja no observada.
+    if (!net && (!conserva || /^video\/(mp4|quicktime)$/.test(preparat.type))) {
       const netejat = await netejaVideo(preparat, { signal });
-      if (!netejat.net) throw errorAdjuntXat('ubicacio-no-eliminable');
-      preparat = netejat.fitxer; net = true;
+      if (!netejat.net && !conserva) throw errorAdjuntXat('ubicacio-no-eliminable');
+      if (netejat.net) { preparat = netejat.fitxer; net = true; }
     }
     resultat = { fitxer: preparat, tipus: 'video', duradaMs, senseUbicacio: net, videoComprimit: reduit.comprimit === true };
   }

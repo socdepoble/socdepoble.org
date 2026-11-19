@@ -464,7 +464,8 @@ export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural')
    actualitzatEsperat}) és CAS. null/absent només crea; una fila existent
    requerix l’instant opac llegit del mateix backend. conflicte-versio conserva
    l’esborrany local i requerix revisió explícita abans del reintent. Un
-   servidor sense 20261115230000 desa com fins ara, sense la guarda. */
+   servidor sense RPC CAS rebutja amb no-disponible: l’esborrany queda al
+   navegador i mai no es prova una signatura antiga sense guarda. */
 export const llistaRevisionsEditorialsWp = asseguraMetode('llistaRevisionsEditorialsWp');
 export const desaRevisioEditorialWp = asseguraMetode('desaRevisioEditorialWp');
 

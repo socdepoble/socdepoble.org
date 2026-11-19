@@ -75,7 +75,7 @@ const valorDe = (llista, selector, propietat) => cosDe(llista, selector)
 
 const LAYOUT = regles(llig('src/css/layout.css'));
 const COMPONENTS = regles(llig('src/css/components.css'));
-const MODULES = regles(llig('src/css/modules.css'));
+const MODULES = [...regles(llig('src/css/modules.css')), ...regles(llig('src/css/diferit-gestoria.css'))];
 const UTILITATS = regles(llig('src/css/utilities.css'));
 /* El compacte, la tauleta tàctil o la caixa baixa: la mateixa especificitat
    que .sdp-root.is-compact (un :is() val el seu argument més específic). */

@@ -17,10 +17,9 @@ import { CAMPS_COMUNS, campActiu, llegixDecimes, tipusDe, validaApunt, valorsPer
 import { dataDe, horaDe, momentDe } from '../nucli/hores.js';
 import { textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
-import { ControlCamp } from './comunes.jsx';
+import { ControlCamp, useTextosSalut } from './comunes.jsx';
 
 export const PASSOS_CONDUCTA = Object.freeze(['a', 'b', 'c']);
-const TITOL_PAS = Object.freeze({ a: 'Què ha fet', b: 'Què passava abans', c: 'Què hem fet i com ha acabat' });
 const CAMP_NOTA = CAMPS_COMUNS.find((c) => c.clau === 'nota');
 
 function valorsInicials(tipus, inicial, ara) {
@@ -57,6 +56,7 @@ function aApunt(tipus, valors, inicial, ofsetDe) {
  */
 export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDesa, onCancela, accions = null }) {
   const salut = useSalut();
+  const tx = useTextosSalut();
   const definicio = tipusDe(tipus);
   const [valors, setValors] = useState(() => valorsInicials(tipus, inicial, salut.ara()));
   const [errors, setErrors] = useState({});
@@ -127,14 +127,14 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
   return (
     <form onSubmit={desa} noValidate aria-label={definicio.nom}>
       <Pila gap={4}>
-        {ambPassos ? <p>{`Pas ${PASSOS_CONDUCTA.indexOf(pas) + 1} de ${PASSOS_CONDUCTA.length} · ${TITOL_PAS[pas]}`}</p> : null}
-        {salut.nomesLectura ? <Alerta to="avis" titol="Només per a mirar">Una altra pestanya està apuntant: ací no es pot desar.</Alerta> : null}
+        {ambPassos ? <p>{tx.pasDe(PASSOS_CONDUCTA.indexOf(pas) + 1, PASSOS_CONDUCTA.length, tx.titolPas[pas])}</p> : null}
+        {salut.nomesLectura ? <Alerta to="avis" titol={tx.nomesMirarTitol}>{tx.nomesMirarFormulari}</Alerta> : null}
         {primerPas ? (
           <Fila gap={4} align="flex-start">
-            <Camp etiqueta="Dia" error={errorMoment}>
+            <Camp etiqueta={tx.dia} error={errorMoment}>
               <CampText tipus="date" value={valors.data} onChange={(event) => posa('data', event.target.value)} />
             </Camp>
-            <Camp etiqueta="Hora">
+            <Camp etiqueta={tx.hora}>
               <CampText tipus="time" value={valors.hora} onChange={(event) => posa('hora', event.target.value)} />
             </Camp>
           </Fila>
@@ -144,19 +144,19 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
         ))}
         {darrerPas ? <ControlCamp definicio={CAMP_NOTA} valor={valors.nota} error={errors.nota} onCanvi={(valor) => posa('nota', valor)} /> : null}
         {Object.keys(avisos).length ? (
-          <Alerta to="avis" titol="Revisa-ho abans de desar">
-            {Object.values(avisos).join(' ')} Si és correcte, torna a prémer «Desa».
+          <Alerta to="avis" titol={tx.revisaAbansDesarTitol}>
+            {Object.values(avisos).join(' ')}{tx.revisaAbansDesarSufix}
           </Alerta>
         ) : null}
         {errorDesat ? <Alerta to="error">{errorDesat}</Alerta> : null}
         <Fila gap={2}>
           {ambPassos && !primerPas ? (
-            <Boto varietat="secundari" onClick={() => onPas?.(PASSOS_CONDUCTA[PASSOS_CONDUCTA.indexOf(pas) - 1])}>Arrere</Boto>
+            <Boto varietat="secundari" onClick={() => onPas?.(PASSOS_CONDUCTA[PASSOS_CONDUCTA.indexOf(pas) - 1])}>{tx.arrere}</Boto>
           ) : null}
           <Boto varietat="primari" mida="gran" tipus="submit" carregant={desant} disabled={salut.nomesLectura}>
-            {darrerPas ? 'Desa' : 'Següent'}
+            {darrerPas ? tx.desa : tx.seguent}
           </Boto>
-          {onCancela ? <Boto varietat="fantasma" onClick={onCancela}>Cancel·la</Boto> : null}
+          {onCancela ? <Boto varietat="fantasma" onClick={onCancela}>{tx.cancella}</Boto> : null}
           {accions}
         </Fila>
       </Pila>

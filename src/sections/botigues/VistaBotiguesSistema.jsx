@@ -1,57 +1,69 @@
 import { Alerta, Boto, Insignia, QuadreDeComandament } from '../../components/PedraSeca/index.js';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { Link } from '../../app/contexts/RouterContext.jsx';
+import { textosBotiguesSistema } from './i18nBotiguesSistema.js';
+
+function useIdiomaBotigues() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 /** Cos compartit de lectura. Rep un model sanejat; no consulta botigues, comptes o membres. */
-export function VistaBotiguesSistema({ model, onCopia, copiant = false, avis = null, estatLocalAvisos = null }) {
+export function VistaBotiguesSistema({ model, onCopia, copiant = false, avis = null, estatLocalAvisos = null, idioma }) {
+  const idiomaContext = useIdiomaBotigues();
+  const tx = textosBotiguesSistema(idioma ?? idiomaContext);
   return (
-    <article className="sdp-botigues-sistema" lang="ca" aria-label="Botigues, verificadors i flota d’IAs">
-      <h3>Verificadors de Google Play</h3>
+    <article className="sdp-botigues-sistema" lang={tx.lang} aria-label={tx.ariaLabel}>
+      <h3>{tx.verificadorsPlay}</h3>
       <QuadreDeComandament
-        estat={{ text: 'Dada comunicada; comptador en viu no connectat', viu: false }}
+        estat={{ text: tx.estatComunicat, viu: false }}
         periode={model.play.font}
         xifres={[
-          { clau: 'play', nom: 'Google Play · dada comunicada', valor: model.play.comptador, lector: model.play.lector },
-          { clau: 'web', nom: 'Web mòbil · dada separada', valor: model.play.web, lector: 'Ús web mòbil comunicat; no acredita verificadors de Google Play' },
+          { clau: 'play', nom: tx.playNom, valor: model.play.comptador, lector: model.play.lector },
+          { clau: 'web', nom: tx.webNom, valor: model.play.web, lector: tx.webLector },
         ]}
         explicacio={<p>{model.play.explicacio}</p>}
       />
-      <p>Una visita web, un WebView o una descàrrega de l’APK no acrediten l’alta en les proves de Google Play ni el període de participació.</p>
+      <p>{tx.notaAcreditacio}</p>
       {model.play.optInUrl ? (
         <>
-          <p>L’enllaç de proves correspon a l’identificador de l’app. L’accés al programa i l’estat del grup no es poden comprovar des d’esta pàgina.</p>
+          <p>{tx.notaEnllac}</p>
           <div className="sdp-alerta__accions">
             {/* Arbitratge R18 (AH-R17-09) · Sense l'enllaç al grup de verificadors: esta vista es pinta a
                 /consola/*, de lectura pública. El grup només és al perfil d'administració i al portal /app. */}
-            <a className="sdp-boto sdp-boto--secundari" href={model.play.optInUrl} target="_blank" rel="noopener noreferrer">Obri les proves de Google Play</a>
-            <Link className="sdp-boto sdp-boto--secundari" to="/app">Portal d’apps (/app)</Link>
-            <Boto varietat="secundari" onClick={onCopia} disabled={typeof onCopia !== 'function' || copiant}>{copiant ? 'Copiant…' : 'Copia l’enllaç de proves'}</Boto>
+            <a className="sdp-boto sdp-boto--secundari" href={model.play.optInUrl} target="_blank" rel="noopener noreferrer">{tx.obriProvesPlay}</a>
+            <Link className="sdp-boto sdp-boto--secundari" to="/app">{tx.portalApps}</Link>
+            <Boto varietat="secundari" onClick={onCopia} disabled={typeof onCopia !== 'function' || copiant}>{copiant ? tx.copiant : tx.copiaEnllac}</Boto>
           </div>
         </>
-      ) : <p>Sense enllaç de proves configurat.</p>}
+      ) : <p>{tx.senseEnllacProves}</p>}
       {avis ? <p role="status">{avis}</p> : null}
-      <h3>Canals de descàrrega i versions</h3>
+      <h3>{tx.canalsTitol}</h3>
       <p>{model.versions}</p>
-      <p>La configuració d’un projecte o un paquet compilat no proven que la botiga l’haja acceptat o publicat.</p>
+      <p>{tx.notaPaquet}</p>
       {model.canals.map((canal) => (
         <section key={canal.id} aria-labelledby={`botiga-${canal.id}`}>
           <h4 id={`botiga-${canal.id}`}>{canal.nom}</h4>
           <p>{canal.descripcio}</p>
-          {canal.url ? <p><a href={canal.url} target="_blank" rel="noopener noreferrer">{canal.nom}: obri el canal configurat</a></p> : <p>Sense enllaç públic configurat en esta versió.</p>}
+          {canal.url ? <p><a href={canal.url} target="_blank" rel="noopener noreferrer">{tx.obriCanal(canal.nom)}</a></p> : <p>{tx.senseEnllacCanal}</p>}
         </section>
       ))}
-      <h3>Notificacions del xat</h3>
-      <p>El client web i el connector natiu estan construïts. La recepció real depén del permís, la configuració del servidor i del proveïdor, la signatura de l’app i el dispositiu.</p>
-      {estatLocalAvisos ? <p role="status">Estat d’esta instància: {estatLocalAvisos}</p> : <p>Sense lectura de l’adaptador en esta mostra.</p>}
-      <p>Este estat local no acredita l’entrega d’un avís. <Link to="/page/descarregues">Consulta la guia d’instal·lació</Link> i els ajustos d’avisos del <Link to="/xat">xat</Link>.</p>
-      <h3>Flota d’IAs del Consell</h3>
+      <h3>{tx.notificacionsTitol}</h3>
+      <p>{tx.notificacionsText}</p>
+      {estatLocalAvisos ? <p role="status">{tx.estatInstancia(estatLocalAvisos)}</p> : <p>{tx.senseLecturaAdaptador}</p>}
+      <p>{tx.notaEntregaPre}<Link to="/page/descarregues">{tx.guiaInstalacio}</Link>{tx.notaEntregaMid}<Link to="/xat">{tx.xat}</Link>.</p>
+      <h3>{tx.flotaTitol}</h3>
       <p>{model.flota.font}</p>
-      <Alerta to="info">El cens identifica les membres; no és una prova de disponibilitat, connexió o resposta en viu.</Alerta>
+      <Alerta to="info">{tx.censInfo}</Alerta>
       <ul>
         {model.flota.membres.map((membre) => (
-          <li key={membre.id}><a href={membre.url} target="_blank" rel="noopener noreferrer">{membre.nom}</a>{' · '}<Insignia to="neutre">Estat operatiu no verificat</Insignia></li>
+          <li key={membre.id}><a href={membre.url} target="_blank" rel="noopener noreferrer">{membre.nom}</a>{' · '}<Insignia to="neutre">{tx.estatNoVerificat}</Insignia></li>
         ))}
       </ul>
-      <p>Node 0, la IAIA i els serveis de Sóc de Poble necessiten els seus propis rebuts operatius. Una entrada del cens no els substituïx. <Link to="/page/node-zero">Node 0</Link>{' · '}<Link to="/page/fediversity">Fediversity</Link>{' · '}<Link to="/consola">Consola</Link>.</p>
+      <p>{tx.peuRebuts}<Link to="/page/node-zero">Node 0</Link>{' · '}<Link to="/page/fediversity">Fediversity</Link>{' · '}<Link to="/consola">{tx.consola}</Link>.</p>
     </article>
   );
 }

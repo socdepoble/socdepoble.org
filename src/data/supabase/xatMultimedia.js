@@ -57,6 +57,118 @@ async function crida(nom, params, config) {
 }
 const primera = (valor) => Array.isArray(valor) ? valor[0] : valor;
 
+/* EXIF_T03 · La reserva i el seu objecte són immutables. Un adjunt antic
+   amb GPS s'ha de preparar de nou (ID nou), abans de reservar: no podem
+   substituir a cegues un objecte que Storage pot haver confirmat ja.
+   Ni senseUbicacio:true ni l'absència de p_ubicacio acrediten els bytes. */
+async function comprovaImatgeSenseUbicacio(fitxer, comprova, signal) {
+  const { imatgeSenseUbicacio } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+  comprova();
+  let buffer;
+  try {
+    const lectura = typeof fitxer.arrayBuffer === 'function' ? fitxer.arrayBuffer() : new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(fitxer);
+    });
+    buffer = await new Promise((resolve, reject) => {
+      const cancella = () => { signal?.removeEventListener('abort', cancella); reject(new DOMException('Operació cancel·lada.', 'AbortError')); };
+      signal?.addEventListener('abort', cancella, { once: true });
+      Promise.resolve(lectura).then(resolve, reject).finally(() => signal?.removeEventListener('abort', cancella));
+      if (signal?.aborted) cancella();
+    });
+  } catch (cause) {
+    if (cause?.name === 'AbortError') throw cause;
+    throw errorAdjuntXat('foto-codificacio', { cause });
+  }
+  comprova();
+  const bytes = new Uint8Array(buffer);
+  const net = imatgeSenseUbicacio(bytes);
+  if (!net || net.format !== fitxer.type) throw errorAdjuntXat('foto-codificacio');
+  if (net.bytes.length !== bytes.length || net.bytes.some((b, i) => b !== bytes[i])) throw errorAdjuntXat('SDP-XAT-008');
+}
+
+/* El fallback antic no pot dir «sense la ubicació» d'un vídeo que només
+   s'ha inspectat o que declara una bandera local. MP4/MOV: es comparen els
+   bytes amb el sanejament existent. Format opac: error visible, sense RPC3. */
+async function comprovaVideoSenseUbicacio(fitxer, comprova, signal) {
+  const { senseUbicacioVideo } = await import('../../utils/ubicacioMitjans.js');
+  const net = await senseUbicacioVideo(fitxer, { signal });
+  comprova();
+  if (!net.net) throw errorAdjuntXat('ubicacio-no-eliminable');
+  const [a, b] = await Promise.all([fitxer.arrayBuffer(), net.fitxer.arrayBuffer()]);
+  comprova();
+  const bytes = new Uint8Array(a), nets = new Uint8Array(b);
+  if (bytes.length !== nets.length || bytes.some((v, i) => v !== nets[i])) throw errorAdjuntXat('ubicacio-no-eliminable');
+}
+
+function esperaAmbSenyal(promesa, signal) {
+  return new Promise((resolve, reject) => {
+    const cancella = () => { signal.removeEventListener('abort', cancella); reject(signal.reason); };
+    signal.addEventListener('abort', cancella, { once: true });
+    Promise.resolve(promesa).then(resolve, reject).finally(() => signal.removeEventListener('abort', cancella));
+    if (signal.aborted) cancella();
+  });
+}
+
+/* Una reserva ja pujada o un 409 només acrediten que hi ha un objecte.
+   Abans de publicar-lo, GET privat amb JWT i comparació SHA-256 exacta del
+   cos amb el Blob local. La lectura té sostre, termini i sessió vigent;
+   cap confiança en el nom, la mida declarada o una bandera del client. */
+async function comprovaObjectePujat(ruta, fitxer, config, comprova) {
+  const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
+  const jwt = jwtPerBackend(config), controller = new AbortController();
+  const avorta = () => controller.abort(config.signal?.reason);
+  const sessioCanvia = () => { try { comprova(); } catch (error) { controller.abort(error); } };
+  const timer = setTimeout(() => controller.abort(errorAdjuntXat('temps-esgotat', { name: 'TimeoutError' })), tempsLimitPujada(fitxer.size));
+  config.signal?.addEventListener('abort', avorta, { once: true });
+  globalThis.window?.addEventListener('sdp:auth-change', sessioCanvia);
+  let reader;
+  try {
+    comprova();
+    const resposta = await esperaAmbSenyal(fetch(`${supabaseUrl}/storage/v1/object/authenticated/${BUCKET}/${ruta}`, {
+      method: 'GET', signal: controller.signal, redirect: 'error', credentials: 'omit', cache: 'no-store',
+      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${jwt}` }
+    }), controller.signal);
+    comprova();
+    const mime = resposta.headers?.get('content-type')?.split(';')[0].trim().toLowerCase();
+    const llargaria = resposta.headers?.get('content-length');
+    if (!resposta.ok || mime !== fitxer.type || (llargaria != null && llargaria !== String(fitxer.size))
+      || !resposta.body?.getReader || !globalThis.crypto?.subtle) throw errorAdjuntXat('SDP-XAT-008');
+    reader = resposta.body.getReader();
+    const remot = new Uint8Array(fitxer.size); let total = 0, trossos = 0;
+    for (;;) {
+      const { done, value } = await esperaAmbSenyal(reader.read(), controller.signal);
+      comprova();
+      if (done) break;
+      if (!ArrayBuffer.isView(value) || value.BYTES_PER_ELEMENT !== 1 || !value.byteLength
+        || value.byteLength > remot.length - total || ++trossos > 65_536) throw errorAdjuntXat('SDP-XAT-008');
+      const tros = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+      remot.set(tros, total); total += tros.length;
+    }
+    if (total !== fitxer.size) throw errorAdjuntXat('SDP-XAT-008');
+    const local = typeof fitxer.arrayBuffer === 'function' ? fitxer.arrayBuffer() : new Promise((resolve, reject) => {
+      const f = new FileReader(); f.onload = () => resolve(f.result); f.onerror = () => reject(f.error); f.readAsArrayBuffer(fitxer);
+    });
+    const [a, b] = await esperaAmbSenyal(Promise.all([
+      Promise.resolve(local).then(bytes => crypto.subtle.digest('SHA-256', bytes)), crypto.subtle.digest('SHA-256', remot)
+    ]), controller.signal);
+    comprova();
+    const hashLocal = new Uint8Array(a), hashRemot = new Uint8Array(b);
+    if (hashLocal.some((v, i) => v !== hashRemot[i])) throw errorAdjuntXat('SDP-XAT-008');
+  } catch (cause) {
+    if (controller.signal.aborted) throw controller.signal.reason;
+    if (cause?.name === 'AbortError') throw cause;
+    throw errorAdjuntXat('SDP-XAT-008', { cause });
+  } finally {
+    if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Cos ja tancat o avortat. */ } }
+    clearTimeout(timer);
+    config.signal?.removeEventListener('abort', avorta);
+    globalThis.window?.removeEventListener('sdp:auth-change', sessioCanvia);
+  }
+}
+
 /* XAT-03 · Amb `onProgres`, la pujada va per XMLHttpRequest: fetch no diu
    quants bytes han eixit. El temps límit, la cancel·lació i els codis són els
    de sempre (puja), i la resposta es llig com la de fetch.
@@ -130,11 +242,12 @@ async function puja(ruta, fitxer, usuari, config, onProgres, comprova = () => vi
       ? await enviaAmbProgres(url, peticio, onProgres)
       : await fetch(url, { ...peticio, redirect: 'error' });
     if (controller.signal.aborted) throw controller.signal.reason;
-    // Reintent amb el mateix ID: la RPC de publicació valida l'objecte existent.
+    // Un 409 exigix GET + SHA-256 abans de publicar: MIME/mida de la RPC no acrediten el cos.
     if (!resposta.ok && resposta.status !== 409) {
       const cos = await resposta.text();
       throw tradueix(Object.assign(new Error(`No hem pogut pujar el fitxer: ${cos || resposta.status}`), { status: resposta.status }));
     }
+    return resposta.status === 409;
   } catch (error) {
     if (esgotat) throw errorAdjuntXat('temps-esgotat', { name: 'TimeoutError' });
     if (controller.signal.reason?.code === 'sessio-caducada') throw controller.signal.reason;
@@ -178,13 +291,15 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
   const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
+  if (tipus === 'imatge') await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null
   }, config));
   comprova();
   if (reserva?.ruta !== id) throw errorAdjuntXat('sense-confirmacio');
+  let duplicat = false;
   if (!reserva.pujat) {
-    try { await puja(reserva.ruta, fitxer, usuari, config, onProgres, comprova); }
+    try { duplicat = await puja(reserva.ruta, fitxer, usuari, config, onProgres, comprova); }
     catch (error) {
       // Una reserva sense objecte pot alliberar-se. Si Storage ha acabat encara
       // que es perdera la resposta, la RPC la conserva per al reintent.
@@ -199,20 +314,21 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
     }
   }
   comprova();
+  if (reserva.pujat || duplicat) await comprovaObjectePujat(reserva.ruta, fitxer, config, comprova);
   /* Gauntlet 261022_0225 (crítica Claude, MEDIA-5) · Sense peu, text null:
      cap «Foto» en valencià desat al servidor (la migració 2610220240 ho
      admet); l'etiqueta traduïda la pinta qui llig. */
   const params = { p_id: id, p_text: text, p_resposta_a: respostaA, ...(ubicacio ? { p_ubicacio: ubicacio } : {}) };
-  /* v1.2.8 · Llei 0 SQL: fins que el Mestre aplique 20261117193000 (R32.8), Producció només té la
-     RPC de tres arguments. Si la de quatre (amb p_ubicacio) no hi és, la mateixa publicació
-     (idempotent per p_id; la reserva i el fitxer ja hi són) es repetix sense la ubicació al
-     servidor, com en la v1.2.7, i el resultat ho diu (ubicacioNoAdmesa). */
+  /* Compatibilitat amb nodes que només tenen la RPC de tres arguments.
+     La foto ja ha acreditat bytes sense GPS abans de la reserva; llevar
+     p_ubicacio només lleva el DTO. Mai és una operació de sanejament binari. */
   let ubicacioNoAdmesa = false;
   let m;
   try { m = primera(await crida('xat_publica_adjunt', params, config)); }
   catch (error) {
     if (!ubicacio || error?.code !== noDisponible().code) throw error;
     comprova();
+    if (tipus === 'video') await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
     const sense = { ...params };
     delete sense.p_ubicacio;
     m = primera(await crida('xat_publica_adjunt', sense, config));
@@ -224,7 +340,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
     || (m.fil_id != null && m.fil_id !== filId)) throw errorAdjuntXat('sense-confirmacio');
   const llocConfirmat = normalitzaUbicacioXat(m.metadades?.ubicacio);
   if ((ubicacio && !ubicacioNoAdmesa && (!llocConfirmat || llocConfirmat.lat !== ubicacio.lat || llocConfirmat.lng !== ubicacio.lng))
-    || (entrada.conservaUbicacio === false && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
+    || ((!ubicacio || ubicacioNoAdmesa || entrada.conservaUbicacio === false) && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
   return { id: m.id, filId, seq, usuariId: m.usuari_id, autorNom: m.autor_nom,
     text: m.cos, tipus: m.tipus, respostaA: m.resposta_a, metadades: m.metadades,
     comOrgId: m.com_org_id, creatAl: m.creat_al, esIA: false, ...(ubicacioNoAdmesa ? { ubicacioNoAdmesa: true } : {}) };

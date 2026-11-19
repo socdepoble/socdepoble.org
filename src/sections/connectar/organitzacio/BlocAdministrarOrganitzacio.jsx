@@ -10,6 +10,9 @@
 import { useId, useRef } from 'react';
 import { TargetaAdministrar } from './TargetaAdministrar.jsx';
 import { useAdministrarOrganitzacio } from './useAdministrarOrganitzacio.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 const MODES_SENSE_REVISIO = new Set(['seed', 'local']);
 
@@ -36,7 +39,7 @@ export function BlocAdministrarOrganitzacio({ orgId, config = {} }) {
   };
 
   return (
-    <section className="sdp-connectar__seccio" aria-labelledby={`${id}-administrar`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-administrar`}>
       <h3 ref={titolRef} tabIndex={-1} id={`${id}-administrar`} className="sdp-connectar__titol-seccio">Administrar l’organització</h3>
       <TargetaAdministrar
         estat={admin.estat}

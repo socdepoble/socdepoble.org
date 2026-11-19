@@ -11,6 +11,9 @@ import {
   barra12MesosDe,
   binomiDe
 } from './fitxaDidactica.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 const GRUPS_CULTIU = Object.freeze([
   { id: 'tots', etiqueta: '🌾 Tots els cultius amb calendari' },
@@ -102,7 +105,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
   }), [varietatsAmbCalendari, grupActiu, faseActiva, mesActiu]);
 
   return (
-    <section
+    <section ref={adoptaEstilsDiferits}
       className="sdp-calendari-agricola"
       aria-label="Calendari agrícola anual de varietats tradicionals i tomaques"
     >
@@ -206,9 +209,9 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         data-testid="calendari-agricola-resultats"
       >
         {filtrades.length === 0 ? (
-          <p>Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.</p>
+          <p ref={adoptaEstilsDiferits}>Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.</p>
         ) : (
-          <div className="sdp-calendari-agricola__llista">
+          <div ref={adoptaEstilsDiferits} className="sdp-calendari-agricola__llista">
           {filtrades.map(({ entrada, calendari, barra }) => {
             const mesosResum = FASES_CALENDARI.map((fase) => {
               const mesosFase = barra
@@ -222,7 +225,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
             }).filter(Boolean);
 
             return (
-              <article key={entrada.id} className="sdp-calendari-agricola__item" aria-label={entrada.nom}>
+              <article ref={adoptaEstilsDiferits} key={entrada.id} className="sdp-calendari-agricola__item" aria-label={entrada.nom}>
                 <div className="sdp-calendari-agricola__cap">
                   <div>
                     <h4 lang="ca">{entrada.nom}</h4>
@@ -239,7 +242,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
                 </div>
                 <ul>
                   {mesosResum.map((linia) => (
-                    <li key={linia.id}>
+                    <li ref={adoptaEstilsDiferits} key={linia.id}>
                       <strong>{`${linia.nomFase}:`}</strong> {linia.text}
                     </li>
                   ))}

@@ -24,63 +24,51 @@
 import { CloudOff } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { Boto, EstatBuit } from '../../../components/PedraSeca/index.js';
+import { textosLector } from '../i18nLector.js';
 import { DESPRES } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
 import { NOTICIES } from './navegacio.js';
 
-const PERSONALS_APAGADES = 'Les fonts teues queden guardades en este dispositiu. El servei de notícies encara no les llig: '
-  + 'les llegirà quan el servei les active.';
-
 /* Quan no n'ha respost cap. */
-export const TEXT_MOTIU = Object.freeze({
-  'sense-connexio': 'Sembla que este dispositiu no té connexió. Quan torne, les notícies arribaran soles.',
-  temps: 'Les fonts han tardat massa a contestar. Pot ser la cobertura o que la seua web va carregada.',
-  servidor: 'El servei de notícies no respon. Pot ser cosa d’un moment.',
-  /* R22 (A-frontissa-federacio-r1-1) · La funció del backend no està desplegada: no és cosa d'un moment. */
-  'sense-servei': 'El servei de notícies encara no està en marxa. Quan s’active, les notícies arribaran ací.',
-  font: 'Les fonts han enviat una cosa que no sabem llegir com a notícies.',
-  limit: 'Hem demanat les notícies massa vegades seguides. Espera un moment i torna-ho a provar.',
-  adreca: 'El servei de notícies no llig estes adreces (no són públiques o no són segures), i no ha demanat res a cap web.',
-  'personals-off': PERSONALS_APAGADES
-});
+export const TEXT_MOTIU = textosLector('ca').motius;
 
 /* 261024 (Lector) · Quan és una sola font, la triada a l'arbre. */
 export const TEXT_MOTIU_D_UNA = Object.freeze({
   ...TEXT_MOTIU,
-  temps: 'La font ha tardat massa a contestar. Pot ser la cobertura o que la seua web va carregada.',
-  font: 'La font ha enviat una cosa que no sabem llegir com a notícies.',
-  adreca: 'El servei de notícies no llig esta adreça (no és pública o no és segura), i no ha demanat res a la web.'
+  ...textosLector('ca').motiusUna
 });
 
 /** El text d'un motiu (`una`: d'una sola font); un de desconegut, el del servei. */
-export function textDelMotiu(motiu, { una = false } = {}) {
-  const textos = una ? TEXT_MOTIU_D_UNA : TEXT_MOTIU;
+export function textDelMotiu(motiu, { una = false, idioma = 'ca' } = {}) {
+  const tx = textosLector(idioma);
+  const textos = una ? { ...tx.motius, ...tx.motiusUna } : tx.motius;
   return Object.hasOwn(textos, motiu ?? '') ? textos[motiu] : textos.servidor;
 }
 
 /* `ancora`: el ref d'on EspaiNoticies troba la closca (el mateix <span> sense classe del buit). */
 export function FontsSenseResposta({ motiu, onTornaAProvar, ancora = null }) {
-  const { lector, ruta } = useVistaLector();
+  const { lector, ruta, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const desades = lector.estat.despres.length > 0;
   return (
-    <EstatBuit icona={CloudOff} titol="Ara mateix no arriben les notícies"
-      accio={<Boto varietat="secundari" onClick={onTornaAProvar}>Torna-ho a provar</Boto>}>
-      <p><span ref={ancora}>{textDelMotiu(motiu)}</span></p>
-      <p>Mentrestant, el poble no s’atura:</p>
+    <EstatBuit icona={CloudOff} titol={tx.noArribenNoticiesTitol}
+      accio={<Boto varietat="secundari" onClick={onTornaAProvar}>{tx.tornaHoAProvar}</Boto>}>
+      <p><span ref={ancora}>{textDelMotiu(motiu, { idioma })}</span></p>
+      <p>{tx.mentrestantPoble}</p>
       <p>
-        <Link className="sdp-boto sdp-boto--secundari" to="/mur">Passa pel Mur</Link>
+        <Link className="sdp-boto sdp-boto--secundari" to="/mur">{tx.passaPelMur}</Link>
         {' '}
-        <Link className="sdp-boto sdp-boto--secundari" to="/calendari">Mira l’Agenda</Link>
+        <Link className="sdp-boto sdp-boto--secundari" to="/calendari">{tx.miraLAgenda}</Link>
         {' '}
-        <Link className="sdp-boto sdp-boto--secundari" to="/mercat">Fes una volta pel Mercat</Link>
+        <Link className="sdp-boto sdp-boto--secundari" to="/mercat">{tx.voltaPelMercat}</Link>
         {' '}
-        <Link className="sdp-boto sdp-boto--secundari" to="/pobles">Coneix els pobles</Link>
+        <Link className="sdp-boto sdp-boto--secundari" to="/pobles">{tx.coneixElsPobles}</Link>
       </p>
       {desades ? (
         <p>
-          Les notícies que has desat per a després continuen ací.
+          {tx.desadesContinuen}
           {' '}
-          <Link to={ruta(NOTICIES, DESPRES)}>Obri-les</Link>
+          <Link to={ruta(NOTICIES, DESPRES)}>{tx.obriles}</Link>
         </p>
       ) : null}
     </EstatBuit>

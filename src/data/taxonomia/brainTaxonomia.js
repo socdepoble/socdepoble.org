@@ -1,3 +1,4 @@
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
 import { CATEGORIES_CANONIQUES_BASE, NOMS_ETIQUETES_CANONIQUES_49, normalitzaValorTaxonomia } from './vocabulariCanonic.js';
 import { CATEGORIES_CANONIQUES, IDIOMES_TAXONOMIA, nomEtiquetaCanonica } from './taxonomiaCanonica.js';
 
@@ -55,11 +56,21 @@ export function construeixBrainTaxonomia({ historics = [], publicacions = [], sk
     ...NOMS_ETIQUETES_CANONIQUES_49.map((label) => ({ id: idEtiquetaBrain(label), clau: label, label, type: faceta(label), faceta: faceta(label), subtipus: GENRES_EDITORIALS.has(label) ? 'Gènere editorial' : TIPUS.has(label) ? 'Tipus o sistema' : null, font: 'vocabulariCanonic.js' })),
   ].map((node) => ({ ...node, longitud: longitudNomBrain(node.label), documents: [] }));
   const perId = new Map(nodes.map((node) => [node.id, node]));
-  const clauNom = (nom) => nom.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca').trim();
+  const incidencies = [], noAdmesos = new Set();
+  const clauNom = (nom) => {
+    try { return normalitzaUnicodeAmbLimit(nom, 'NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca').trim(); }
+    catch (e) {
+      if (e?.code !== 'UNICODE_MARK_LIMIT') throw e;
+      if (!noAdmesos.has(nom)) incidencies.push({ code: e.code, motiu: e.message });
+      noAdmesos.add(nom);
+      return null;
+    }
+  };
   const indexTags = new Map(), indexCategories = new Map();
   const afigAlias = (index, nom, id) => {
     if (!text(nom)) return;
     const clau = clauNom(nom);
+    if (clau === null) return;
     if (!index.has(clau)) index.set(clau, new Set());
     index.get(clau).add(id);
   };
@@ -82,8 +93,10 @@ export function construeixBrainTaxonomia({ historics = [], publicacions = [], sk
   const resol = (nom, tipus) => {
     if (!text(nom)) return null;
     const index = tipus === 'category' ? indexCategories : indexTags;
+    const clau = clauNom(nom);
+    if (clau === null) return null;
     const normalitzat = normalitzaValorTaxonomia(nom, tipus === 'category' ? 'categories' : 'etiquetes');
-    const candidats = index.get(clauNom(nom)) || (normalitzat && index.get(clauNom(normalitzat)));
+    const candidats = index.get(clau) || (normalitzat && index.get(clauNom(normalitzat)));
     if (candidats?.size === 1) return [...candidats][0];
     if (candidats?.size > 1) ambigues.add(nom);
     return null;
@@ -108,7 +121,7 @@ export function construeixBrainTaxonomia({ historics = [], publicacions = [], sk
     const assigna = (nom, tipus) => {
       const id = resol(nom, tipus);
       if (id) { ids.add(id); assignacions.push({ original: nom, canonic: perId.get(id).label, node: id, metode: nom === perId.get(id).label ? 'directe' : 'alias-declarat' }); }
-      else if (nom) desconegudes.add(nom);
+      else if (nom && !noAdmesos.has(nom)) desconegudes.add(nom);
       return id;
     };
     for (const valor of etiquetes) {
@@ -118,7 +131,7 @@ export function construeixBrainTaxonomia({ historics = [], publicacions = [], sk
         const id = resol(nom, 'tag');
         if (id) assigna(nom, 'tag');
         else if (origen !== 'wordpress' && indexCategories.has(clauNom(nom))) assigna(nom, 'category');
-        else if (nom) desconegudes.add(nom);
+        else if (nom && !noAdmesos.has(nom)) desconegudes.add(nom);
       }
     }
     if (origen !== 'wordpress') {
@@ -200,12 +213,14 @@ export function construeixBrainTaxonomia({ historics = [], publicacions = [], sk
     const observada = arestes.get(parella(candidate.source, candidate.target));
     links.push({ ...candidate, id: `candidatura:${i}`, tipus: 'candidatura', proposta: true, discontinu: true, documents: observada?.documents || [] });
   });
+  if (incidencies.length) desconegudes.add('Hi ha noms no processats perquè tenen massa marques Unicode consecutives.');
   return {
     nodes, links, documents: [...documents.values()], candidatures,
     cobertura: { historicsRebuts: array(historics).length, vivesRebudes: array(publicacions).length, documentsUnics: documents.size,
       documentsAmbNoms: [...documents.values()].filter((article) => article.nodes.length).length,
       documentsSenseNoms: [...documents.values()].filter((article) => !article.nodes.length).length,
       senseIdentitat, abastIncomplet, conflictes, nomsAmbigus: [...ambigues], nomsNoCanonics: [...desconegudes].sort(),
+      ...(incidencies.length ? { incidencies } : {}),
       politicaVersions: 'Publicació viva abans de WordPress; després data, versió i ordre de la font. Les etiquetes de versions diferents no s’unixen.',
       vivaParcial: coberturaViva?.parcial !== false, estatViu: coberturaViva?.estat || 'desconegut',
     },
@@ -232,16 +247,24 @@ export function simulaBrainTaxonomia(model, { noms = {}, fusio = null } = {}) {
 
 /** Una projecció efectiva comuna per al recompte, la Card i les col·lisions. */
 export function projectaBrainTaxonomia(model, opcions = {}) {
-  const documents = simulaBrainTaxonomia(model, opcions);
-  const perId = new Map(model.nodes.map((node) => [node.id, node]));
-  const afectats = documents.filter((article, i) => JSON.stringify(article.nodes.map((id, n) => [id, article.labels[n].text])) !== JSON.stringify(model.documents[i].nodes.map((id) => [id, perId.get(id).label]))).map((article) => article.id);
-  const conceptes = simulaBrainTaxonomia({ ...model, documents: [{ nodes: model.nodes.map((node) => node.id) }] }, opcions)[0];
-  const noms = new Map();
-  conceptes.nodes.forEach((id, i) => {
-    const nom = conceptes.labels[i].text.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca');
-    if (!noms.has(nom)) noms.set(nom, []);
-    noms.get(nom).push(id);
-  });
-  const collisions = [...noms.entries()].filter(([, ids]) => ids.length > 1).map(([nom, ids]) => ({ nom, ids }));
-  return { documents, afectats, collisions };
+  try {
+    const documents = simulaBrainTaxonomia(model, opcions);
+    const perId = new Map(model.nodes.map((node) => [node.id, node]));
+    const afectats = documents.filter((article, i) => JSON.stringify(article.nodes.map((id, n) => [id, article.labels[n].text])) !== JSON.stringify(model.documents[i].nodes.map((id) => [id, perId.get(id).label]))).map((article) => article.id);
+    const conceptes = simulaBrainTaxonomia({ ...model, documents: [{ nodes: model.nodes.map((node) => node.id) }] }, opcions)[0];
+    const noms = new Map();
+    conceptes.nodes.forEach((id, i) => {
+      const nom = normalitzaUnicodeAmbLimit(conceptes.labels[i].text, 'NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca');
+      if (!noms.has(nom)) noms.set(nom, []);
+      noms.get(nom).push(id);
+    });
+    const collisions = [...noms.entries()].filter(([, ids]) => ids.length > 1).map(([nom, ids]) => ({ nom, ids }));
+    return { documents, afectats, collisions };
+  } catch (e) {
+    if (e?.code !== 'UNICODE_MARK_LIMIT') throw e;
+    // Este projector s'usa durant render: el rebuig és un resultat explícit
+    // i atòmic, sense noms nous, fusió ni clau buida compartida.
+    return { documents: simulaBrainTaxonomia(model), afectats: [], collisions: [], valid: false,
+      incidencies: [{ code: e.code, motiu: e.message }] };
+  }
 }

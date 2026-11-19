@@ -218,7 +218,10 @@ describe('el codi', () => {
     const especificadors = [...font.matchAll(/\bfrom\s*'([^']+)'/g)].map((m) => m[1]);
     expect(especificadors).toEqual([
       'react', 'lucide-react', '../../components/PedraSeca/atoms/Boto.jsx', '../../components/PedraSeca/atoms/estats.jsx',
-      './enviament/EnviamentGestoria.jsx', './PanellGestoria.jsx', './VistaPreviaFull.jsx'
+      './enviament/EnviamentGestoria.jsx', './PanellGestoria.jsx', './VistaPreviaFull.jsx',
+      // Gemini R32.11 lot_01 (dieta CSS): el full diferit de la Gestoria s'adopta on es munta la peça.
+      // Només porta estils: no genera ni aprova res.
+      '../../config/fullDiferit.js', '../../css/diferit-gestoria.css?inline'
     ]);
     const senseComentaris = font.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(senseComentaris).not.toMatch(/maquetaFull|fullAXlsx|fullACsv|nomsFitxers|generaEntregables|aprovaProposta|PLANTILLA_GESTORIA/);

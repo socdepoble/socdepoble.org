@@ -17,17 +17,27 @@ test('un token absent significa crear i un error de conflicte no es degrada a up
  expect(m.rpc).toHaveBeenCalledTimes(2);
 });
 
-/* Onada R30 · P1-79 (àrbitre) · Producció no té 20261115230000 fins que el Mestre l'aplique:
-   el client ha de continuar desant com hui (signatura de sempre) i només en eixe cas. */
+/* R32.10 · D-R32-PUB-1 / P1-79 · Sense la migració CAS no hi ha cap escriptura
+   equivalent segura: la signatura antiga podria fer un upsert sense guarda. */
 const absent = () => Object.assign(new Error('L’esquema requerit no està aplicat.'), { status: 404, postgrestCode: 'PGRST202' });
-test('sense la RPC CAS (PGRST202) desa amb la signatura de sempre, sense el token, i torna la fila', async () => {
+test.each(['2026-11-15T22:00:00.000001Z', null])('sense RPC CAS (PGRST202 exacte) rebutja %s sense l’upsert antic', async actualitzatEsperat => {
  m.rpc.mockRejectedValueOnce(absent());
- await expect(desaRevisioEditorialWp({ wpId: 1, estat: 'aprovat', nota: 'n', actualitzatEsperat: '2026-11-15T22:00:00.000001Z' })).resolves.toMatchObject({ wpId: 1, actualitzatA: row.actualitzat_a });
- expect(m.rpc.mock.calls.map(c => c[0])).toEqual(['desa_revisio_editorial_wp_cas', 'desa_revisio_editorial_wp']);
- expect(m.rpc.mock.calls[1][1]).toEqual({ p_wp_id: 1, p_estat: 'aprovat', p_nota: 'n', p_autoria: 'Sóc de Poble', p_desti: 'mur' });
+ const entrada = Object.freeze({ wpId: 1, estat: 'aprovat', nota: 'n', actualitzatEsperat });
+ await expect(desaRevisioEditorialWp(entrada)).rejects.toMatchObject({ code: 'no-disponible', codi: 'no-disponible', status: 404 });
+ expect(m.rpc.mock.calls.map(c => c[0])).toEqual(['desa_revisio_editorial_wp_cas']);
+ expect(m.rpc.mock.calls[0][1].p_actualitzat_esperat).toBe(actualitzatEsperat);
+ expect(entrada.nota).toBe('n');
 });
-test('cap altre error (permís, 404 genèric, xarxa, conflicte) no recorre a la signatura de sempre', async () => {
- for (const error of [Object.assign(new Error('SDP-WP-REV-403'), { status: 403 }), Object.assign(new Error('404'), { status: 404 }), new TypeError('Failed to fetch')]) {
+test('cap altre error (permís, taula absent, 404 genèric, text, estat incorrecte o xarxa) no es classifica com RPC absent', async () => {
+ for (const error of [
+  Object.assign(new Error('SDP-WP-REV-403'), { status: 403 }),
+  Object.assign(new Error('404'), { status: 404 }),
+  Object.assign(new Error('taula absent'), { status: 404, postgrestCode: 'PGRST205' }),
+  Object.assign(new Error('PGRST202'), { status: 404 }),
+  Object.assign(new Error('PGRST202'), { status: 500, postgrestCode: 'PGRST202' }),
+  Object.assign(new Error('PGRST202'), { postgrestCode: 'PGRST202' }),
+  new TypeError('Failed to fetch')
+ ]) {
   m.rpc.mockReset().mockRejectedValueOnce(error);
   await expect(desaRevisioEditorialWp({ wpId: 1, estat: 'aprovat' })).rejects.toBe(error);
   expect(m.rpc).toHaveBeenCalledTimes(1);
@@ -36,8 +46,12 @@ test('cap altre error (permís, 404 genèric, xarxa, conflicte) no recorre a la 
  await expect(desaRevisioEditorialWp({ wpId: 1, estat: 'aprovat' })).rejects.toMatchObject({ code: 'conflicte-versio' });
  expect(m.rpc).toHaveBeenCalledTimes(1);
 });
-test('si la signatura de sempre ja és només de creació, el seu 409 també és un conflicte de versió', async () => {
- m.rpc.mockRejectedValueOnce(absent()).mockRejectedValueOnce(Object.assign(new Error('Supabase 409: SDP-WP-REV-409: la revisió ha canviat.'), { status: 409, sqlstate: '40001' }));
- await expect(desaRevisioEditorialWp({ wpId: 1, estat: 'aprovat' })).rejects.toMatchObject({ code: 'conflicte-versio' });
- expect(m.rpc).toHaveBeenCalledTimes(2);
+test('la degradació no divulga el text del proveïdor ni confirma una fila no desada', async () => {
+ m.rpc.mockRejectedValueOnce(Object.assign(absent(), { message: 'detall privat del proveïdor' }));
+ const error = await desaRevisioEditorialWp({ wpId: 1, estat: 'aprovat' }).catch(e => e);
+ expect(error).toBeInstanceOf(Error);
+ expect(error.message).toBe('El servidor encara no té l’edició segura de revisions: no s’ha desat cap canvi al servidor.');
+ expect(error).not.toHaveProperty('cause');
+ expect(error).not.toHaveProperty('actualitzatA');
+ expect(m.rpc).toHaveBeenCalledTimes(1);
 });

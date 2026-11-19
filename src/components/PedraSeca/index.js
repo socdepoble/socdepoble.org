@@ -21,7 +21,14 @@ export { EstatBuit, Carregant, Esquelet, Progres } from './atoms/estats.jsx';
 
 // ── MOLÈCULES (Combinacions simples) ───────────────────────────────────────
 export { Alerta } from './molecules/Alerta.jsx';
-export { BandaBetaMicroApp, TEXTOS_BANDA_BETA, textosBandaBeta } from './molecules/BandaBetaMicroApp.jsx';
+export {
+  BandaBetaMicroApp,
+  TIPUS_AVIS_BETA,
+  TEXTOS_BANDA_BETA,
+  TEXTOS_BANDA_BETA_FISCAL,
+  TEXTOS_BANDA_BETA_GENERAL,
+  textosBandaBeta,
+} from './molecules/BandaBetaMicroApp.jsx';
 export { Botonera } from './molecules/Botonera.jsx';
 export { Pista } from './molecules/Pista.jsx';
 export { BotoVeuIaia } from './molecules/BotoVeuIaia.jsx';

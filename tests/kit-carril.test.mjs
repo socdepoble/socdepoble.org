@@ -11,6 +11,17 @@ import { generateKit, applyKit, validatePath, requiresFrontissa, SCHEMA } from '
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const CLI = path.join(ROOT, 'tooling/gates/kit-carril.mjs');
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
+
+test('CAS library imports from Node stdin without treating the caller as its CLI', () => {
+  const url = new URL('../tooling/gates/kit-carril.mjs', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-'], {
+    cwd: ROOT, input: `const api = await import(${JSON.stringify(url)}); process.stdout.write(typeof api.generateKit + ':' + typeof api.applyKit);`,
+    encoding: 'utf8'
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, 'function:function');
+  assert.equal(result.stderr, '');
+});
 const put = (root, relative, value) => {
   fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
   fs.writeFileSync(path.join(root, relative), value);

@@ -103,7 +103,7 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     vigent();
     try { await store.read(DISPOSITIU, config); }
     catch (e) {
-      if (e.code === 'SDP-RURAL-GENERACIO') { close(); onInvalidada(); }
+      if (e.code === 'SDP-RURAL-GENERACIO' && obert) { close(); onInvalidada(); }
       throw e;
     }
     vigent();
@@ -375,6 +375,30 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
       privateKeyJwk: parell.privateKeyJwk, verificationMethod: parell.idClau });
     await comprovaGeneracio(); return { delta, publicKeyJwk: parell.publicKeyJwk };
   }
+  // El transport és injectable: pot ignorar AbortSignal o no resoldre mai.
+  // El termini limita l'espera local; un rebut tardà no arriba al commit d'ACK.
+  async function enviaCrdtAmbTermini(envia, peticio) {
+    vigent();
+    const control = new AbortController();
+    const avorta = () => control.abort(new Error('La sessió rural s’ha tancat.'));
+    let rebutja;
+    const interrompuda = new Promise((_resolve, reject) => { rebutja = reject; });
+    const talla = () => rebutja(control.signal.reason);
+    controller.signal.addEventListener('abort', avorta, { once: true });
+    control.signal.addEventListener('abort', talla, { once: true });
+    const rellotge = setTimeout(() => control.abort(errorRural('RURAL_CRDT_REMOTE_TIMEOUT', 'La sincronització remota no ha respost en 15 segons.')), 15000);
+    try {
+      const feina = Promise.resolve().then(() => {
+        if (control.signal.aborted) throw control.signal.reason;
+        return envia(copiaJsonRural(peticio, MAX_FITXER), { signal: control.signal });
+      });
+      return await Promise.race([feina, interrompuda]);
+    } finally {
+      clearTimeout(rellotge);
+      controller.signal.removeEventListener('abort', avorta);
+      control.signal.removeEventListener('abort', talla);
+    }
+  }
   async function sincronitzaRemot(transport = transportCrdtRemot) {
     exigeixCrdt();
     if (!transport || transport.tipus !== 'remot' || typeof transport.envia !== 'function' || typeof transport.autoritat !== 'string') {
@@ -382,7 +406,7 @@ export async function creaSessioRural({ abast: abastEntrada, municipi, crypto = 
     }
     const autoritat = transport.autoritat, envia = transport.envia.bind(transport);
     const inicial = await captura(), peticio = preparaSincronitzacioCrdtRural(inicial.crdt, crypto.randomUUID());
-    const rebut = await envia(copiaJsonRural(peticio, MAX_FITXER), { signal: controller.signal });
+    const rebut = await enviaCrdtAmbTermini(envia, peticio);
     vigent();
     for (let intent = 0; intent < 8; intent++) {
       const snap = await captura(), data = registraAckCrdtRural(snap.crdt, peticio, rebut, autoritat), cols = colsAmbCrdt(snap.cols, data);

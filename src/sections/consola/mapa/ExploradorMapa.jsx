@@ -19,6 +19,9 @@ import {
   ESTIL_MAPA, FORCES, NOMS_CONFIANCA, NOMS_TIPUS, TEXTOS_EXPLORADOR,
   filtresInicials, grafDelMapa
 } from './grafMapa.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitExplorador from '../../../css/diferit-explorador.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'explorador', cssDiferitExplorador); };
 
 /* L'Explorador del cervell: el graf d'Obsidian aplicat als agents de Sóc de Poble.
    T3 (ordre del Mestre, 260930) · el graf va al final de la pàgina: damunt
@@ -78,7 +81,7 @@ function comptaCanvis(filtres, densitat) {
 /** Capçalera d'un plegable: el nom del grup i, a la dreta, el seu estat sense obrir-lo. */
 function Resum({ titol, estat }) {
   return (
-    <summary>
+    <summary ref={adoptaEstilsDiferits}>
       <span>{titol}</span>
       <span className="sdp-explorador__resum">{estat}</span>
     </summary>
@@ -128,7 +131,7 @@ export function ExploradorMapa({ mapa }) {
   const xifres = useMemo(() => xifresDeVista('explorador', mapa), [mapa]);
 
   return (
-    <section className="sdp-explorador">
+    <section ref={adoptaEstilsDiferits} className="sdp-explorador">
       <GraellaXifres xifres={xifres} generat={mapa.generat ?? null} />
       <p className="sdp-explorador__llegenda">
         Cada punt és una peça de Sóc de Poble i cada línia, una relació del contracte
@@ -160,7 +163,7 @@ export function ExploradorMapa({ mapa }) {
             </p>
             {TIPUS_NODE.map((t) => (
               <Interruptor key={t}
-                etiqueta={<><span className="sdp-explorador__punt" data-tipus={t} aria-hidden="true" />{`${NOMS_TIPUS[t]} (${perTipus.get(t) || 0})`}</>}
+                etiqueta={<><span ref={adoptaEstilsDiferits} className="sdp-explorador__punt" data-tipus={t} aria-hidden="true" />{`${NOMS_TIPUS[t]} (${perTipus.get(t) || 0})`}</>}
                 actiu={filtres.tipus[t]} onCanvi={() => commuta('tipus', t)} />
             ))}
             <Interruptor etiqueta="Òrfens: peces sense cap relació" actiu={filtres.orfes}
@@ -196,7 +199,7 @@ export function ExploradorMapa({ mapa }) {
               textos={TEXTOS_EXPLORADOR} inspector={false} seleccio={seleccio} onSeleccio={setSeleccio} />
           </Suspense>
           {graf.nodes.length === 0 && (
-            <div className="sdp-explorador__buit" role="status">
+            <div ref={adoptaEstilsDiferits} className="sdp-explorador__buit" role="status">
               <p>{filtres.cerca.trim()
                 ? `Cap peça casa amb «${filtres.cerca.trim()}» amb estos filtres.`
                 : 'Cap peça passa estos filtres.'}</p>

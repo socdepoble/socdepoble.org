@@ -206,7 +206,7 @@ const GENEALOGIA = [
    seccions didàctiques <h3> + <p> a presentacioPlugins.js per a … avisador»)
    · Veritat nua, amb les paraules de la seua pàgina (pages/textosAvisador.js,
    `intro`, `limitacions`, `descansMaxim` i `activa`) i del seu servei
-   (services/avisador.js: HORES_AVISADOR, de quatre a vint-i-quatre hores;
+   (services/avisador.js: HORES_AVISADOR, de dues a vint-i-quatre hores des de l'Onada R32.12;
    d'una a tres persones amb conversa privada; el descans de com a molt dotze
    hores; components/salut/AvisadorEnSessio.jsx: uns minuts de gràcia en
    tornar). Cap promesa de servidor ni de sincronització: els ajustos viuen en
@@ -218,7 +218,7 @@ const AVISADOR = [
   '<h3>Què és l’Avisador</h3>',
   '<p><strong>L’Avisador</strong> és un <strong>avís veïnal</strong> per a qui viu a soles o vol que algú <strong>estiga pendent</strong>. Si passen les hores que has triat <strong>sense activitat</strong> a Sóc de Poble, envia pel <strong>Xat</strong> un missatge a les teues <strong>persones de confiança</strong> perquè es posen en contacte amb tu.</p>',
   '<h3>Com es posa en marxa</h3>',
-  '<p>A la pàgina de l’Avisador tries <strong>quantes hores</strong> poden passar <strong>sense activitat</strong>: quatre, huit, dotze o vint-i-quatre. Després tries <strong>d’una a tres persones</strong> amb qui ja tens una <strong>conversa privada</strong> al <strong>Xat</strong>, lliges <strong>les condicions</strong> i prems <strong>«Activa l’Avisador»</strong>.</p>',
+  '<p>A la pàgina de l’Avisador tries <strong>quantes hores</strong> poden passar <strong>sense activitat</strong>, de dues a vint-i-quatre: dues, tres, quatre, cinc, sis, set, huit, dotze o vint-i-quatre. Després tries <strong>d’una a tres persones</strong> amb qui ja tens una <strong>conversa privada</strong> al <strong>Xat</strong>, lliges <strong>les condicions</strong> i prems <strong>«Activa l’Avisador»</strong>.</p>',
   '<h3>El descans de la nit</h3>',
   '<p>Per a no avisar <strong>mentre dorms</strong>, marques <strong>l’inici i la fi</strong> del <strong>descans nocturn</strong>. Durant eixe temps el comptador <strong>es pausa</strong>, i el descans pot durar com a molt <strong>dotze hores</strong>.</p>',
   '<h3>Quan funciona i quan no</h3>',

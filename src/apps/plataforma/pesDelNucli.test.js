@@ -209,9 +209,9 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
      amb tota la cascada (index.css?inline) i es baixa a l'arrencada (des de
      R17, al tros «estils»). Quan la fase 2 de l'ADR-2026-12 el traga al full
      del mòdul, esta prova s'ha de girar: cap `sdp-gestoria` a l'arrencada. */
-  test('[DEFECTE] el CSS de la Gestoria encara viatja a l’arrencada', () => {
+  test('el CSS de la Gestoria ja no viatja a l’arrencada (diferit-gestoria.css)', () => {
     const arrencada = deLArrencada.map((cami) => readFileSync(path.join(DIST, cami), 'utf8')).join('\n');
-    expect(arrencada.split('sdp-gestoria').length - 1).toBeGreaterThan(0);
+    expect(arrencada.split('sdp-gestoria').length - 1).toBe(0);
   });
 
   test('els mitjans de la Gestoria respecten el perfil: locals o externs resolts, mai absents sense origen', () => {

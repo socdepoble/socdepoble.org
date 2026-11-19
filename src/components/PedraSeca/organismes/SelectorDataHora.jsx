@@ -56,6 +56,9 @@ import { publicationDateNow } from '../../../utils/publicationDateControl.js';
 import {
   desfasamentA, esZonaValida, horaDeParet, partsALaZona, resolHoraDeParet, textDesfasament, zonaDelDispositiu
 } from '../../../utils/zonaHoraria.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 const DESCRIPCIO = ["editor.data.descripcio", "Tria el dia i l’hora de la publicació. Es desa sola, com la resta del document. Si no en tries cap, s’hi posarà l’hora en què publiques."];
 /* Amb `avisDesament` la descripció no promet el desat de sempre: ho diu l'avís. */
@@ -279,9 +282,9 @@ export function SelectorDataHora({
     <>
       <button ref={disparadorRef} type="button" className="btn-date-time" aria-haspopup="dialog" aria-expanded={obert}
         aria-label={nom} title={nom} onClick={() => setObert(true)}>
-        {mostra.time ? <span>{mostra.time}</span> : null}
+        {mostra.time ? <span ref={adoptaEstilsDiferits}>{mostra.time}</span> : null}
         {mostra.time && mostra.date ? ' ' : null}
-        {mostra.date ? <span>{mostra.date}</span> : null}
+        {mostra.date ? <span ref={adoptaEstilsDiferits}>{mostra.date}</span> : null}
       </button>
       <Dialeg obert={obert} onTanca={() => setObert(false)} titol={etiqueta} descripcio={descripcioVigent}
         mida="s" lloc="barra" className="sdp-selector-data"
@@ -304,7 +307,7 @@ export function SelectorDataHora({
             {/* VU-02 i VU-03 · La pregunta del desfasament i l'hora inexistent,
                 anunciades sense interrompre (aria-live="polite"): la regió viu
                 des que s'obri el cos, buida, perquè el lector senta el canvi. */}
-            <p className="sdp-sr-only" aria-live="polite">
+            <p ref={adoptaEstilsDiferits} className="sdp-sr-only" aria-live="polite">
               {dubte ? tradueix(t, HORA_AMBIGUA) : horaInexistent ? tradueix(t, HORA_INEXISTENT) : ''}
             </p>
             {dubte ? (
@@ -315,7 +318,7 @@ export function SelectorDataHora({
             <NavegacioMes className="sdp-calendari__navegacio" cursor={cursor} onCanvia={setCursor} avui={avui} />
             <GraellaMes compacta any={cursor.any} mes={cursor.mes} locale={locale} avui={avui}
               renderDia={(dia, { esAvui }) => (
-                <button type="button" className="sdp-calendari__dia"
+                <button ref={adoptaEstilsDiferits} type="button" className="sdp-calendari__dia"
                   aria-pressed={Boolean(triada) && esMateixDia(triada, cursor.any, cursor.mes, dia)}
                   aria-current={esAvui ? 'date' : undefined}
                   aria-label={dataLlarga(new Date(cursor.any, cursor.mes, dia), locale)}

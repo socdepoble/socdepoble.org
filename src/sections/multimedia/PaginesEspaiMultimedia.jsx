@@ -62,6 +62,9 @@ import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_ESPAI as E, segonsNombre } from './textosEspaiMultimedia.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
 import { useMetadadesFoto } from './useMetadadesFoto.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CAP = Object.freeze([]);
 /* Les files del panell del visor que la fitxa ja porta a la barra blava. */
@@ -91,13 +94,13 @@ export function Cella({ item, onObri, t }) {
   const nom = textNet(item.title) || textNet(item.tag);
   const ambImatge = Boolean(item.src) && item.src !== srcFallit;
   return (
-    <button type="button" className="photo-grid__boto" onClick={() => onObri(item)}>
+    <button ref={adoptaEstilsDiferits} type="button" className="photo-grid__boto" onClick={() => onObri(item)}>
       <span className="photo-grid__item">
         {/* T5 · El src es resol en pintar-lo: incrustat, un '/assets/…' penja del paquet. Sense base, el de sempre. */}
         {ambImatge ? (
-          <img src={resolRecursPropi(item.src)} alt={nom || tradueix(t, E.senseTitol)} loading="lazy" onError={() => setSrcFallit(item.src)} />
+          <img ref={adoptaEstilsDiferits} src={resolRecursPropi(item.src)} alt={nom || tradueix(t, E.senseTitol)} loading="lazy" onError={() => setSrcFallit(item.src)} />
         ) : (
-          <div className="media-frame__buit">
+          <div ref={adoptaEstilsDiferits} className="media-frame__buit">
             <span className="sdp-sr-only">{nom || tradueix(t, E.senseImatge)}</span>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </div>
@@ -112,7 +115,7 @@ function TaulaCataleg({ t, membres, onObri }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   return (
     <Taula titol={tr(T['vista.taula'])} densa>
-      <thead>
+      <thead ref={adoptaEstilsDiferits}>
         <tr>
           <th scope="col">{tr(T['col.nom'])}</th>
           <th scope="col">{tr(E.colFont)}</th>
@@ -121,7 +124,7 @@ function TaulaCataleg({ t, membres, onObri }) {
       </thead>
       <tbody>
         {membres.map((m) => (
-          <tr key={String(m.id)}>
+          <tr ref={adoptaEstilsDiferits} key={String(m.id)}>
             <td>
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={() => onObri(m)}>
                 {textNet(m.title) || textNet(m.tag) || tr(E.senseTitol)}
@@ -142,13 +145,13 @@ function GaleriaWeb({ espai, categoria, membres }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const obri = (item) => navega(categoria, String(item.id));
   let graella;
-  if (membres.length === 0) graella = <p>{tr(E.senseImatges)}</p>;
+  if (membres.length === 0) graella = <p ref={adoptaEstilsDiferits}>{tr(E.senseImatges)}</p>;
   else if (vistaWeb === 'taula') graella = <TaulaCataleg t={t} membres={membres} onObri={obri} />;
   else if (categoria === GALERIA_CRONOLOGIA) {
     graella = (
-      <div className="stack-grid">
+      <div ref={adoptaEstilsDiferits} className="stack-grid">
         {cataleg.grupsMes.map((grup) => (
-          <section key={grup.key} className="card--soft">
+          <section ref={adoptaEstilsDiferits} key={grup.key} className="card--soft">
             <div className="card__body">
               <div className="notes-list-header">
                 <h3>{grup.key === SENSE_DATA ? t('section.multimedia.senseData', 'Sense data') : (etiquetaDelMes(grup.key, locale, textosModel?.calendari) || grup.label)}</h3>
@@ -165,7 +168,7 @@ function GaleriaWeb({ espai, categoria, membres }) {
     );
   } else {
     graella = (
-      <div className="photo-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
+      <div ref={adoptaEstilsDiferits} className="photo-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
         {/* Ordre del Mestre (18-10-2026) · La clau és l'id de la foto (únic), mai la posició.
             IDEA-58 · Fletxes 2D: → ← ±1, ↓ ↑ la fila (columnes per geometria), Inici, Fi. */}
         {membres.map((item) => <Cella key={item.id} item={item} onObri={obri} t={t} />)}
@@ -223,7 +226,7 @@ export function PortadaMultimedia({ espai }) {
       /* Amb una font oberta, el panell porta «Diagnòstic de «nom»»: cap slug local a ?seccio=. */
       seccioALaUrl={!gestor.font}
     >
-      <div className="sdp-espai-multimedia__cos">
+      <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
         <section className="sdp-arxiu-local__panell" aria-labelledby={`${id}-acces`}>
           <h3 id={`${id}-acces`}>{tr(E.accesRapid)}</h3>
           <div className="sdp-arxiu-local__fila">
@@ -263,7 +266,7 @@ export function VistaGaleria({ espai, categoria }) {
          que es veuen són públiques (la Cronologia, totes les publicades). */
       traduccio={totsPublics(categoria === GALERIA_CRONOLOGIA ? cataleg.totes : membres)}
     >
-      <div className="sdp-espai-multimedia__cos">
+      <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
         <GaleriaWeb espai={espai} categoria={categoria} membres={membres} />
       </div>
     </UniversalPage>
@@ -316,10 +319,10 @@ export function FitxaWeb({ espai, item }) {
         authorHref: null
       }}
     >
-      <div className="sdp-espai-multimedia__cos">
+      <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
         {/* H1 → H2 → h3 (Gauntlet 261029, cicle 1): sense etiqueta ni font no hi ha
             subtítol; un h2 només per al lector (fora de l'Índex: sr-only) en fa les voltes. */}
-        {subtitol ? null : <h2 className="sr-only">{tr(E.publicada)}</h2>}
+        {subtitol ? null : <h2 ref={adoptaEstilsDiferits} className="sr-only">{tr(E.publicada)}</h2>}
         <div className="sdp-arxiu-local__fila">
           <Boto icona={Maximize2} onClick={() => obriVisor(item)}>
             {t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa')}
@@ -329,9 +332,9 @@ export function FitxaWeb({ espai, item }) {
           <h3 id={`${id}-dades`}>{tr(E.dadesFoto)}</h3>
           <dl className="sdp-arxiu-local__dades">
             {files.map((fila) => (
-              <div key={fila.clau} className="sdp-arxiu-local__dada">
+              <div ref={adoptaEstilsDiferits} key={fila.clau} className="sdp-arxiu-local__dada">
                 <dt>{fila.etiqueta}</dt>
-                <dd>{fila.href ? <a href={fila.href} target="_blank" rel="noopener noreferrer">{fila.valor}</a>
+                <dd>{fila.href ? <a ref={adoptaEstilsDiferits} href={fila.href} target="_blank" rel="noopener noreferrer">{fila.valor}</a>
                   : fila.ruta ? <Link to={fila.ruta}>{fila.valor}</Link> : fila.valor}</dd>
               </div>
             ))}
@@ -368,13 +371,13 @@ export function VistaCarpetaLocal({ espai, categoria }) {
       {...SENSE_ACCIONS_DE_XARXA}
       {...dataHoraDeBarra({ modificat: isoDeMs(ms) })}
     >
-      <div className="sdp-espai-multimedia__cos">
+      <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
         {/* Gauntlet 261101 (G-D3) · Sense volum obert (ni cap lectura en curs), la pàgina
             diu on és la Barra de volums: al peu de la Columna 1 (P1-71). Sense volum, el
             panell no porta cap encapçalament: l'h2 només per al lector que feia de pont fins
             a l'h3 de la Barra (Gauntlet 261029, cicle 1) ja no tenia res davall. */}
         {gestor.volumObert || gestor.ocupat ? null : (
-          <p className="sdp-arxiu-local__ajuda">
+          <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">
             {tr(T.senseVolum, { volums: tr(T.volums), columna: tr(E.categories) })}
           </p>
         )}
@@ -409,7 +412,7 @@ export function FitxaLocal({ espai, el }) {
       {...SENSE_ACCIONS_DE_XARXA}
       {...dataHoraDeBarra({ modificat: isoDeMs(el.modificat) })}
     >
-      <div className="sdp-espai-multimedia__cos">
+      <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
         <MissatgeLocal gestor={gestor} t={t} />
         <DetallArxiuLocal
           key={`${ruta}\u0000${versioDetall}`}

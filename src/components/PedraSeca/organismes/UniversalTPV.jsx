@@ -117,6 +117,10 @@ import {
 import { fontSegura, pintaMarca } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
 import { esEstret, useAmpladaContenidor } from '../../../hooks/useAmpladaContenidor.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+import cssDiferitTpv from '../../../css/diferit-tpv.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); adoptaFullDiferit(el, 'tpv', cssDiferitTpv); };
 
 /* Per davall d'esta amplada pròpia, en em de la peça (≈ 736 px amb 16 px),
    el tiquet i la graella no caben de costat: una sola columna. */
@@ -168,7 +172,7 @@ const llistaAvisos = (avis) => (Array.isArray(avis) ? avis : [avis])
 /* El número d'una píndola (el «[3]» de Loyverse): al títol, a la pestanya i a la secundària. */
 function Comptador({ valor }) {
   if (valor === null) return null;
-  return <>{' '}<span className="sdp-tpv__comptador">{valor}</span></>;
+  return <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__comptador">{valor}</span></>;
 }
 
 /* ── LA BARRA D'ACCIONS · secundària | principal, 50/50 ─────────────── */
@@ -177,19 +181,19 @@ function BarraAccions({ accions }) {
   const principal = accions?.principal || null;
   if (!secundaria && !principal) return null;
   return (
-    <div className="sdp-tpv__accions">
+    <div ref={adoptaEstilsDiferits} className="sdp-tpv__accions">
       {secundaria ? (
-        <button type="button" className="sdp-tpv__accio sdp-tpv__accio--secundaria"
+        <button ref={adoptaEstilsDiferits} type="button" className="sdp-tpv__accio sdp-tpv__accio--secundaria"
           disabled={Boolean(secundaria.desactivada)} onClick={() => secundaria.onClick?.()}>
           <span className="sdp-tpv__accio-text">{secundaria.text}</span>
           <Comptador valor={comptadorDe(secundaria.comptador)} />
         </button>
       ) : null}
       {principal ? (
-        <button type="button" className="sdp-tpv__accio sdp-tpv__accio--principal"
+        <button ref={adoptaEstilsDiferits} type="button" className="sdp-tpv__accio sdp-tpv__accio--principal"
           disabled={Boolean(principal.desactivada)} onClick={() => principal.onClick?.()}>
           <span className="sdp-tpv__accio-text">{principal.text}</span>
-          {principal.valor ? <>{' '}<span className="sdp-tpv__accio-valor">{principal.valor}</span></> : null}
+          {principal.valor ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__accio-valor">{principal.valor}</span></> : null}
         </button>
       ) : null}
     </div>
@@ -209,19 +213,19 @@ function CapcaleraTiquet({ marca, titol, nom, comptador, idTitol }) {
   /* El logotip que no carrega torna a les inicials, com la marca sense logotip. */
   const [logotip, onFalla] = useFontQueCarrega(marca ? fontSegura(marca.logotip) : null);
   return (
-    <header className="sdp-tpv__cap">
+    <header ref={adoptaEstilsDiferits} className="sdp-tpv__cap">
       {marca ? (
-        <span className="sdp-tpv__marca" aria-hidden="true">
+        <span ref={adoptaEstilsDiferits} className="sdp-tpv__marca" aria-hidden="true">
           {logotip
-            ? <img className="sdp-tpv__logotip" src={logotip} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={onFalla} />
+            ? <img ref={adoptaEstilsDiferits} className="sdp-tpv__logotip" src={logotip} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={onFalla} />
             : inicialsDe(marca.nom)}
         </span>
       ) : null}
       <span className="sdp-tpv__identitat">
-        {marca?.nom ? <span className="sdp-tpv__nom-marca">{marca.nom}</span> : null}
+        {marca?.nom ? <span ref={adoptaEstilsDiferits} className="sdp-tpv__nom-marca">{marca.nom}</span> : null}
         <span className="sdp-tpv__titol" id={idTitol}>
           {titol}
-          {nom ? <>{' '}<span className="sdp-tpv__nom-tiquet">{nom}</span></> : null}
+          {nom ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__nom-tiquet">{nom}</span></> : null}
           <Comptador valor={comptador} />
         </span>
       </span>
@@ -232,31 +236,31 @@ function CapcaleraTiquet({ marca, titol, nom, comptador, idTitol }) {
 /* Sense onEdita cap línia és un control: la llista mateixa rep el focus per a fer-hi scroll. */
 function LiniesTiquet({ linies, onEdita, textos }) {
   return (
-    <ol className="sdp-tpv__linies" aria-label={TEXTOS.linies} tabIndex={onEdita ? undefined : 0}>
+    <ol ref={adoptaEstilsDiferits} className="sdp-tpv__linies" aria-label={TEXTOS.linies} tabIndex={onEdita ? undefined : 0}>
       {linies.map((linia) => {
         const estat = estatLinia(linia);
         const contingut = (
           <>
-            <span className="sdp-tpv__linia-nom">{linia.nom}</span>
+            <span ref={adoptaEstilsDiferits} className="sdp-tpv__linia-nom">{linia.nom}</span>
             {Number.isFinite(linia.quantitat) ? (
               <>
                 {' '}
-                <span className="sdp-tpv__linia-quantitat">
+                <span ref={adoptaEstilsDiferits} className="sdp-tpv__linia-quantitat">
                   <span aria-hidden="true">{`× ${linia.quantitat}`}</span>
                   <span className="sdp-nomes-lector">{TEXTOS.unitats(linia.quantitat)}</span>
                 </span>
               </>
             ) : null}
-            {linia.valor ? <>{' '}<span className="sdp-tpv__linia-valor">{linia.valor}</span></> : null}
-            {linia.detall ? <>{' '}<span className="sdp-tpv__linia-detall">{linia.detall}</span></> : null}
-            {estat === 'normal' ? null : <>{' '}<span className="sdp-tpv__linia-estat">{textos[estat]}</span></>}
+            {linia.valor ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__linia-valor">{linia.valor}</span></> : null}
+            {linia.detall ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__linia-detall">{linia.detall}</span></> : null}
+            {estat === 'normal' ? null : <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__linia-estat">{textos[estat]}</span></>}
           </>
         );
         return (
-          <li key={linia.id} className={CLASSE_LINIA[estat]} data-linia={linia.id}>
+          <li ref={adoptaEstilsDiferits} key={linia.id} className={CLASSE_LINIA[estat]} data-linia={linia.id}>
             {onEdita
-              ? <button type="button" className="sdp-tpv__linia" onClick={() => onEdita(linia)}>{contingut}</button>
-              : <div className="sdp-tpv__linia">{contingut}</div>}
+              ? <button ref={adoptaEstilsDiferits} type="button" className="sdp-tpv__linia" onClick={() => onEdita(linia)}>{contingut}</button>
+              : <div ref={adoptaEstilsDiferits} className="sdp-tpv__linia">{contingut}</div>}
           </li>
         );
       })}
@@ -271,10 +275,10 @@ function Tiquet({ tiquet, marca, avisos, accions, ambAccions, idTitol }) {
   const textos = { ...TEXTOS_ESTAT_LINIA, ...tiquet?.textosEstat };
   const buit = tiquet?.buit || {};
   return (
-    <section className="sdp-tpv__tiquet" aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-tpv__tiquet" aria-labelledby={idTitol}>
       <CapcaleraTiquet marca={marca} titol={tiquet?.titol || TEXTOS.tiquet} nom={textNet(tiquet?.nom)}
         comptador={comptadorDe(tiquet?.comptador)} idTitol={idTitol} />
-      {avisos.length ? <div className="sdp-tpv__avis">{avisos}</div> : null}
+      {avisos.length ? <div ref={adoptaEstilsDiferits} className="sdp-tpv__avis">{avisos}</div> : null}
       {linies.length ? (
         <LiniesTiquet linies={linies} onEdita={typeof tiquet?.onEdita === 'function' ? tiquet.onEdita : null} textos={textos} />
       ) : (
@@ -283,15 +287,15 @@ function Tiquet({ tiquet, marca, avisos, accions, ambAccions, idTitol }) {
         </EstatBuit>
       )}
       {resum.length || total ? (
-        <dl className="sdp-tpv__resum">
+        <dl ref={adoptaEstilsDiferits} className="sdp-tpv__resum">
           {resum.map((fila) => (
-            <div key={fila.etiqueta} className="sdp-tpv__fila-resum">
+            <div ref={adoptaEstilsDiferits} key={fila.etiqueta} className="sdp-tpv__fila-resum">
               <dt className="sdp-tpv__resum-etiqueta">{fila.etiqueta}</dt>
               <dd className="sdp-tpv__resum-valor">{fila.valor}</dd>
             </div>
           ))}
           {total ? (
-            <div className="sdp-tpv__fila-resum sdp-tpv__fila-resum--total">
+            <div ref={adoptaEstilsDiferits} className="sdp-tpv__fila-resum sdp-tpv__fila-resum--total">
               <dt className="sdp-tpv__resum-etiqueta">{total.etiqueta}</dt>
               <dd className="sdp-tpv__resum-valor">{total.valor}</dd>
             </div>
@@ -322,7 +326,7 @@ function ElementGraella({ article, categoria, idInsignia, idPista, pulsacio, onT
   const descrit = [article.insignia ? idInsignia : null, ambDetall ? idPista : null].filter(Boolean).join(' ');
   const { handlers, consumeix } = pulsacio;
   return (
-    <li className={CLASSE_ELEMENT[estat]}>
+    <li ref={adoptaEstilsDiferits} className={CLASSE_ELEMENT[estat]}>
       <button
         type="button"
         className={foto ? 'sdp-tpv__rajola sdp-tpv__rajola--imatge' : 'sdp-tpv__rajola'}
@@ -340,31 +344,31 @@ function ElementGraella({ article, categoria, idInsignia, idPista, pulsacio, onT
         {/* La rajola ja té nom: la foto és decorativa (alt buit) i no envia el referent. */}
         <span className="sdp-tpv__media" aria-hidden="true">
           {foto
-            ? <img className="sdp-marca-article__imatge" src={foto} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={onFalla} />
+            ? <img ref={adoptaEstilsDiferits} className="sdp-marca-article__imatge" src={foto} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={onFalla} />
             : pintaMarca(article, categoria)}
         </span>
         <span className="sdp-tpv__banda" aria-hidden="true">
           <span className="sdp-tpv__nom">{article.nom}</span>
-          {segona ? <span className="sdp-tpv__valor">{segona}</span> : null}
+          {segona ? <span ref={adoptaEstilsDiferits} className="sdp-tpv__valor">{segona}</span> : null}
         </span>
       </button>
       {estat === 'en-colleccio' ? (
-        <span className="sdp-tpv__marca-colleccio" aria-hidden="true">
+        <span ref={adoptaEstilsDiferits} className="sdp-tpv__marca-colleccio" aria-hidden="true">
           <Check size={16} focusable="false" />
         </span>
       ) : null}
       {article.insignia ? (
-        <span id={idInsignia} className="sdp-tpv__insignia">
+        <span ref={adoptaEstilsDiferits} id={idInsignia} className="sdp-tpv__insignia">
           {textNet(article.insigniaLector) ? (
             <>
-              <span aria-hidden="true">{article.insignia}</span>
+              <span ref={adoptaEstilsDiferits} aria-hidden="true">{article.insignia}</span>
               <span className="sdp-nomes-lector">{article.insigniaLector}</span>
             </>
           ) : article.insignia}
         </span>
       ) : null}
       {alergens.length ? (
-        <span className="sdp-tpv__alergens" aria-hidden="true">
+        <span ref={adoptaEstilsDiferits} className="sdp-tpv__alergens" aria-hidden="true">
           <IconesAlergens alergens={alergens} maxim={MAXIM_ALERGENS} />
         </span>
       ) : null}
@@ -378,7 +382,7 @@ function Graella({ articles, etiqueta, perId, onTria, onDetall, desactivat, text
   /* Cap rajola enfocable (sense sessió, tot esgotat): la graella rep el focus per a fer-hi scroll. */
   const capEnfocable = Boolean(desactivat) || articles.every((article) => estatArticle(article) === 'desactivat');
   return (
-    <ul className="sdp-tpv__graella" aria-label={etiqueta} tabIndex={capEnfocable ? 0 : undefined}>
+    <ul ref={adoptaEstilsDiferits} className="sdp-tpv__graella" aria-label={etiqueta} tabIndex={capEnfocable ? 0 : undefined}>
       {articles.map((article, i) => (
         <ElementGraella key={article.id} article={article} categoria={perId.get(article.categoriaId)}
           idInsignia={`${id}-insignia-${i}`} idPista={idPista} pulsacio={premuda(article)} onTria={onTria}
@@ -421,7 +425,7 @@ function Cataleg({ cataleg, categoria, onCategoria, cerca, onCerca }) {
     .filter((article) => !net || normalitzaText(article.nom).includes(net));
   const buit = articles.length ? null : buitDelCataleg({ cataleg, cerca, net, activa, ambArticles: visibles.length > 0 });
   return (
-    <section className="sdp-tpv__cataleg" aria-label={titol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-tpv__cataleg" aria-label={titol}>
       <div className="sdp-tpv__eines">
         <SelectorCategoria categories={totes} valor={activa ? activa.id : null} onCanvi={onCategoria}
           etiqueta={TEXTOS.categoria} textTotes={cataleg?.textTotes || TEXTOS.totes} />
@@ -431,7 +435,7 @@ function Cataleg({ cataleg, categoria, onCategoria, cerca, onCerca }) {
             aria-label={etiquetaCerca} placeholder={etiquetaCerca} onChange={(event) => onCerca(event.target.value)} />
         </div>
       </div>
-      {onDetall ? <span id={idPista} className="sdp-nomes-lector">{textos.pista}</span> : null}
+      {onDetall ? <span ref={adoptaEstilsDiferits} id={idPista} className="sdp-nomes-lector">{textos.pista}</span> : null}
       {buit ? (
         <EstatBuit className="sdp-tpv__buit" icona={buit.icona} titol={buit.titol}>{buit.text}</EstatBuit>
       ) : (
@@ -445,17 +449,17 @@ function Cataleg({ cataleg, categoria, onCategoria, cerca, onCerca }) {
 /* ── ELS DIÀLEGS · una llista de botons grans; un toc tria i tanca ──── */
 function LlistaOpcions({ etiqueta, opcions, onTria, onTanca }) {
   return (
-    <ul className="sdp-tpv__opcions" aria-label={etiqueta}>
+    <ul ref={adoptaEstilsDiferits} className="sdp-tpv__opcions" aria-label={etiqueta}>
       {opcions.map((opcio) => (
-        <li key={opcio.id} className="sdp-tpv__element-opcio">
+        <li ref={adoptaEstilsDiferits} key={opcio.id} className="sdp-tpv__element-opcio">
           <button type="button" className="sdp-tpv__opcio" aria-current={opcio.actiu ? 'true' : undefined}
             onClick={() => {
               onTria?.(opcio);
               onTanca?.('tria');
             }}>
             <span className="sdp-tpv__opcio-nom">{opcio.nom}</span>
-            {opcio.valor ? <>{' '}<span className="sdp-tpv__opcio-valor">{opcio.valor}</span></> : null}
-            {opcio.detall ? <>{' '}<span className="sdp-tpv__opcio-detall">{opcio.detall}</span></> : null}
+            {opcio.valor ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__opcio-valor">{opcio.valor}</span></> : null}
+            {opcio.detall ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-tpv__opcio-detall">{opcio.detall}</span></> : null}
           </button>
         </li>
       ))}
@@ -507,7 +511,7 @@ export function UniversalTPV({ etiqueta, marca = null, avis = null, tiquet, acci
       {estreta ? (
         <>
           <BarraAccions accions={accions} />
-          {avisos.length ? <div className="sdp-tpv__avis">{avisos[0]}</div> : null}
+          {avisos.length ? <div ref={adoptaEstilsDiferits} className="sdp-tpv__avis">{avisos[0]}</div> : null}
           <Pestanyes className="sdp-tpv__pestanyes" etiqueta={TEXTOS.vista} activa={vista} onCanvi={setVista} pestanyes={[
             { id: 'productes', etiqueta: cataleg?.titol || TEXTOS.cataleg, contingut: cat },
             {
@@ -525,7 +529,7 @@ export function UniversalTPV({ etiqueta, marca = null, avis = null, tiquet, acci
       )}
       {oberts ? <DialegOberts oberts={oberts} /> : null}
       {tria ? <DialegTria tria={tria} /> : null}
-      <p className="sdp-nomes-lector" role="status">{anunci}</p>
+      <p ref={adoptaEstilsDiferits} className="sdp-nomes-lector" role="status">{anunci}</p>
     </section>
   );
 }

@@ -21,6 +21,9 @@ import { pintaArticles } from './agrupacio.jsx';
 import { estatArticle } from './articles.js';
 import { pintaQuadrat } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 /* Desactivat no necessita classe: la fila ja és disabled i es pinta com a tal. */
 const CLASSE_ELEMENT = Object.freeze({
@@ -33,7 +36,7 @@ function Files({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
   const id = useId();
   const premuda = usePulsacioLlarga(onAccioSecundaria);
   return (
-    <ul className={['sdp-llista-articles', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
+    <ul ref={adoptaEstilsDiferits} className={['sdp-llista-articles', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
       {articles.map((article, i) => {
         const estat = estatArticle(article);
         const idEstat = `${id}-estat-${i}`;
@@ -42,7 +45,7 @@ function Files({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
           .filter(Boolean).join(' ');
         const { handlers, consumeix } = premuda(article);
         return (
-          <li key={article.id} className={CLASSE_ELEMENT[estat]}>
+          <li ref={adoptaEstilsDiferits} key={article.id} className={CLASSE_ELEMENT[estat]}>
             <button
               type="button"
               className="sdp-llista-articles__fila"
@@ -62,17 +65,17 @@ function Files({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
               </span>
               <span className="sdp-llista-articles__text">
                 <span className="sdp-llista-articles__nom">{article.nom}</span>
-                {article.secundari ? <>{' '}<span className="sdp-llista-articles__secundari">{article.secundari}</span></> : null}
+                {article.secundari ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-llista-articles__secundari">{article.secundari}</span></> : null}
               </span>
-              {article.valor ? <>{' '}<span className="sdp-llista-articles__valor">{article.valor}</span></> : null}
+              {article.valor ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-llista-articles__valor">{article.valor}</span></> : null}
             </button>
             {estat === 'en-colleccio' ? (
-              <span className="sdp-llista-articles__marca-colleccio" aria-hidden="true">
+              <span ref={adoptaEstilsDiferits} className="sdp-llista-articles__marca-colleccio" aria-hidden="true">
                 <Check size={16} focusable="false" />
               </span>
             ) : null}
-            {article.insignia ? <span id={idInsignia} className="sdp-llista-articles__insignia">{article.insignia}</span> : null}
-            {estat !== 'normal' ? <span id={idEstat} className="sdp-nomes-lector">{textos[estat]}</span> : null}
+            {article.insignia ? <span ref={adoptaEstilsDiferits} id={idInsignia} className="sdp-llista-articles__insignia">{article.insignia}</span> : null}
+            {estat !== 'normal' ? <span ref={adoptaEstilsDiferits} id={idEstat} className="sdp-nomes-lector">{textos[estat]}</span> : null}
           </li>
         );
       })}

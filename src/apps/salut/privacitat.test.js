@@ -129,6 +129,7 @@ describe('res ix d’este dispositiu', () => {
       (r) => r === 'src/components/layout/AppGridColumn.jsx',
       (r) => r === 'src/app/contexts/RouterContext' || r === 'src/app/contexts/RouterContext.jsx',
       (r) => r === 'src/utils/magatzemLocal.js',
+      (r, origen) => origen === `${SALUT}/nucli/importacio.js` && r === 'src/utils/normalitzaUnicodeSegura.js',
       (r) => r === 'src/utils/fulls/index.js',
       (r) => r === 'react' || r === 'lucide-react'
     ];
@@ -137,7 +138,7 @@ describe('res ix d’este dispositiu', () => {
     for (const [ruta, codi] of DE_SALUT) {
       for (const especificador of especificadors(codi)) {
         if (vetats.test(especificador)) ambVetats.push(`${ruta}: ${especificador}`);
-        if (!permesos.some((permes) => permes(resol(ruta, especificador)))) fora.push(`${ruta}: ${especificador}`);
+        if (!permesos.some((permes) => permes(resol(ruta, especificador), ruta))) fora.push(`${ruta}: ${especificador}`);
       }
     }
     expect(ambVetats).toEqual([]);

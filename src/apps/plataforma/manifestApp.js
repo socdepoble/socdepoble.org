@@ -60,6 +60,7 @@ export const PERMISOS_TITULAR = Object.freeze(['sessio']);
 export const NIVELLS = Object.freeze(['gratuit']);
 export const ENTORNS = Object.freeze(['produccio', 'desenvolupament']);
 export const DADES_PERSONALS = Object.freeze([false, 'salut', 'financeres']);
+export const AVISOS_BETA = Object.freeze(['fiscal', 'general']);
 
 /* L'id és un slug: el primer tram de /app/<id>. */
 export const PATRO_ID_APP = /^[a-z][a-z0-9-]{1,30}$/;
@@ -75,7 +76,7 @@ const MAX_ENTRADES = 20;
 const MAX_INTERRUPTORS = 20;
 
 const CLAUS_COMUNES = ['schema', 'id', 'titol', 'icona', 'entrades', 'grups', 'entradaPerDefecte', 'permisos',
-  'capacitats', 'nivell', 'actiuPerDefecte', 'entorn', 'dadesPersonals', 'interruptors'];
+  'capacitats', 'nivell', 'actiuPerDefecte', 'entorn', 'dadesPersonals', 'avisBeta', 'interruptors'];
 const CLAUS_INTERNA = new Set([...CLAUS_COMUNES, 'carrega']);
 const CLAUS_EXTERNA = new Set([...CLAUS_COMUNES, 'element']);
 const CLAUS_MODUL = new Set([...CLAUS_COMUNES, 'cos', 'estils', 'nucli']);
@@ -283,6 +284,8 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
   if (typeof m.actiuPerDefecte !== 'boolean') errors.push('actiuPerDefecte: ha de ser booleà');
   if (!ENTORNS.includes(m.entorn)) errors.push('entorn: produccio | desenvolupament');
   if (!DADES_PERSONALS.includes(m.dadesPersonals)) errors.push("dadesPersonals: false | 'salut' | 'financeres'");
+  const avisBeta = m.avisBeta === undefined ? 'general' : m.avisBeta;
+  if (!AVISOS_BETA.includes(avisBeta)) errors.push("avisBeta: 'fiscal' | 'general'");
   const interruptors = validaInterruptors(m.interruptors, errors);
 
   let delModul = null;
@@ -316,6 +319,7 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
       actiuPerDefecte: m.actiuPerDefecte,
       entorn: m.entorn,
       dadesPersonals: m.dadesPersonals,
+      avisBeta,
       interruptors,
       ...(externa ? { element: m.element } : modul ? delModul : { carrega: m.carrega })
     })

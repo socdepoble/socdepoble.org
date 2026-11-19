@@ -3,6 +3,8 @@
  * Toxicitat desconeguda = null; absència d'advertiment no acredita innocuïtat.
  * SHA-256 PDF: 5243f9d07d937548778246d4893821c507ae74c4bd8b34f07b16dacd4c3e6673
  */
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
+
 export const VERSIO_HERBARI_LA_TORRE = '1.2.0';
 export const USOS_HERBARI_CANONICS = Object.freeze(["Tots","Aliment","Aromàtica","Medicinal","Ornamental","Artesanal","Tòxic"]);
 /** R25: retols i pertinences múltiples contrastats amb el text primari; no es corregeix la taxonomia. */
@@ -4683,8 +4685,7 @@ export const ESPECIES_HERBARI_LA_TORRE_117 = Object.freeze([
   }
 ].map(f=>Object.freeze({...f,zonesHerbari:Object.freeze(f.zonesHerbari),localitzacionsHerbari:Object.freeze(f.localitzacionsHerbari.map(x=>Object.freeze(x))),fontZones:FONT_ZONES_HERBARI,usos:Object.freeze(f.usos),usosTranscrits:Object.freeze(f.usosTranscrits),usosNoContrastats:Object.freeze(f.usosNoContrastats),font:Object.freeze(f.font)})));
 
-const normalitzaCercaHerbari = value => String(value || '')
-  .normalize('NFKD')
+const normalitzaCercaHerbari = value => normalitzaUnicodeAmbLimit(String(value || ''), 'NFKD')
   .replace(/[\u0300-\u036f]/g, '')
   .replace(/[·.]/g, '')
   .toLowerCase()
@@ -4695,7 +4696,12 @@ export function filtraEspeciesHerbari({
   usActiu = 'Tots',
   nomesToxiques = false
 } = {}) {
-  const q = normalitzaCercaHerbari(cerca);
+  let q;
+  try { q = normalitzaCercaHerbari(cerca); }
+  catch (error) {
+    if (error?.code === 'UNICODE_MARK_LIMIT') return [];
+    throw error;
+  }
   return ESPECIES_HERBARI_LA_TORRE_117.filter((esp) => {
     if (nomesToxiques && !esp.esToxica) return false;
     if (usActiu && usActiu !== 'Tots' && !esp.usos.includes(usActiu)) return false;

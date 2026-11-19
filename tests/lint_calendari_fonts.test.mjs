@@ -87,7 +87,7 @@ test('Enxufabilitat: les fonts no importen cap backend; la pàgina només coneix
 
 /* Només les classes del carril (prefix sdp-calendari-fonts-): les d'abans de
    CalendariSection.jsx les vigila tests/lint_calendari.test.mjs. */
-test('tota classe del JSX del carril té regla als fulls canònics, i al bloc propi de modules.css', () => {
+test('tota classe del JSX del carril té regla als fulls canònics, i al full diferit del calendari', () => {
   const declarades = new Set();
   for (const f of CSS_CANONIC) for (const m of llig(f).matchAll(/\.(-?[_a-zA-Z][_a-zA-Z0-9-]*)/g)) declarades.add(m[1]);
   const usades = [];
@@ -100,10 +100,15 @@ test('tota classe del JSX del carril té regla als fulls canònics, i al bloc pr
   assert.ok(delCarril.length >= 10, `només ${delCarril.length} classes del carril: la cerca no les troba`);
   assert.deepEqual(delCarril.filter((c) => !declarades.has(c)), []);
   assert.deepEqual(llig(`${FONTS}/PanellFontsCalendari.jsx`).match(/className="(?!sdp-calendari-fonts-)[^"]*"/g), null);
-  const modules = llig('src/css/modules.css');
-  const bloc = modules.slice(modules.indexOf('/* ── CALENDARI · FONTS (261002) ── */'));
-  assert.match(bloc, /^\/\* ── CALENDARI · FONTS \(261002\) ── \*\/\n@layer components \{/);
-  assert.doesNotMatch(bloc.split('\n}\n')[0], /box-shadow|var\([^)]*,|56px|58px/);
+  /* R32.11 (Gemini, dieta CSS del connector WordPress, D06) · El bloc «CALENDARI · FONTS» ja no és a modules.css:
+     viu al full diferit src/css/diferit-calendari.css, dins de @layer components. Les seues regles continuen
+     sense ombres, sense valors de recurs a var() i sense les altures fixes de 56/58px. */
+  assert.doesNotMatch(llig('src/css/modules.css'), /\.sdp-calendari-fonts-/);
+  const full = llig('src/css/diferit-calendari.css');
+  assert.match(full, /@layer components \{/);
+  const regles = [...full.matchAll(/\.sdp-calendari-fonts-[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+  assert.ok(regles.length >= 5, `només ${regles.length} regles del carril al full diferit`);
+  assert.deepEqual(regles.filter((r) => /box-shadow|var\([^)]*,|56px|58px/.test(r)), []);
 });
 
 test('la pàgina de tornada: cap script en línia, CSP estricta, el mateix canal i el mateix missatge que l’adaptador', () => {

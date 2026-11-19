@@ -26,6 +26,9 @@ import { comparaPesWebp } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
 import { creaUrlsArxiuLocal } from './urlsArxiuLocal.js';
 import { useLocaleOpcional } from './useLocaleOpcional.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CANCELA = ['common.cancela', 'Cancel·lar'];
 const QUALITATS = Object.freeze([[0.72, 'lab.q72'], [0.78, 'lab.q78'], [0.84, 'lab.q84'], [0.92, 'lab.q92']]);
@@ -201,7 +204,7 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
   else if (pes?.tipus === 'igual') estalvi = tr(T['lab.mateixPes']);
 
   return (
-    <section className="sdp-arxiu-local__laboratori" aria-labelledby={`${id}-titol`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__laboratori" aria-labelledby={`${id}-titol`}>
       <h4 id={`${id}-titol`} ref={titolRef} tabIndex={-1}>{tr(T['lab.titol'])}</h4>
       <div className="sdp-arxiu-local__controls">
         <Camp etiqueta={tr(T['lab.qualitat'])}>
@@ -221,22 +224,22 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
       </div>
       <div className="sdp-arxiu-local__comparacio">
         <figure className="sdp-arxiu-local__figura">
-          {src ? <img className="sdp-arxiu-local__imatge" src={src} alt={el.nom} onLoad={enCarregar} /> : null}
+          {src ? <img ref={adoptaEstilsDiferits} className="sdp-arxiu-local__imatge" src={src} alt={el.nom} onLoad={enCarregar} /> : null}
           <figcaption>{tr(T['lab.abans'], { ext: el.ext.toUpperCase(), pes: formatKb(el.mida, locale) })}</figcaption>
         </figure>
         {resultat?.url ? (
-          <figure className="sdp-arxiu-local__figura">
+          <figure ref={adoptaEstilsDiferits} className="sdp-arxiu-local__figura">
             <img className="sdp-arxiu-local__imatge" src={resultat.url} alt={tr(T['lab.previsualitzacio'], { nom: el.nom })} />
             <figcaption>{tr(T['lab.despres'], { ample: resultat.ample, alt: resultat.alt, pes: formatKb(resultat.mida, locale), estalvi })}</figcaption>
           </figure>
         ) : null}
       </div>
-      {generant ? <p role="status" className="sdp-arxiu-local__ajuda">{tr(T['lab.generant'])}</p> : null}
+      {generant ? <p ref={adoptaEstilsDiferits} role="status" className="sdp-arxiu-local__ajuda">{tr(T['lab.generant'])}</p> : null}
       {senseWebp ? <Alerta to="avis">{tr(T['lab.senseWebp'])}</Alerta> : null}
       {resultat ? (
-        <div className="sdp-arxiu-local__fila">
+        <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
           {resultat.descarrega ? (
-            <a className="sdp-boto sdp-boto--secundari" href={resultat.descarrega} download={`${troncSenseExtensio(el.nom)}.webp`}>
+            <a ref={adoptaEstilsDiferits} className="sdp-boto sdp-boto--secundari" href={resultat.descarrega} download={`${troncSenseExtensio(el.nom)}.webp`}>
               <Download size={20} aria-hidden="true" focusable="false" />
               <span>{tr(T['lab.descarrega'], { pes: formatKb(resultat.mida, locale) })}</span>
             </a>

@@ -9,27 +9,29 @@ import { LlistaArticles, Pila, Taula } from '../../../components/PedraSeca/index
 import { ENTITATS } from '../nucli/diccionari.js';
 import { textValorsAdmesos } from '../nucli/full.js';
 import { APARTATS_GUIA, FINALITAT } from '../textos.js';
-import { MarcSalut, useNavegaSalut } from './comunes.jsx';
+import { MarcSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 
 export function Entitats({ params }) {
   const navega = useNavegaSalut();
+  const tx = useTextosSalut();
   const articles = ENTITATS.map((entitat) => ({
     id: entitat.id, nom: entitat.nom, secundari: entitat.definicio, categoriaId: 'diccionari', estat: params?.entitat === entitat.id ? 'en-colleccio' : 'normal'
   }));
   return (
-    <MarcSalut titol="Diccionari" columna="mig">
-      <LlistaArticles articles={articles} etiqueta="Què s’apunta" textos={{ 'en-colleccio': 'Obert' }} onTria={(article) => navega(['diccionari', article.id])} />
+    <MarcSalut titol={tx.diccionari} columna="mig">
+      <LlistaArticles articles={articles} etiqueta={tx.queSApunta} textos={{ 'en-colleccio': tx.obert }} onTria={(article) => navega(['diccionari', article.id])} />
     </MarcSalut>
   );
 }
 
 export function CampsEntitat({ params }) {
+  const tx = useTextosSalut();
   const entitat = ENTITATS.find((candidata) => candidata.id === params?.entitat);
   if (!entitat) {
     return (
-      <MarcSalut titol="Diccionari">
+      <MarcSalut titol={tx.diccionari}>
         <Pila gap={4}>
-          <p>Cada cosa que s’apunta té una definició planera i el perquè. És el mateix que trobarà el metge a la fulla «Diccionari» del full.</p>
+          <p>{tx.diccionariIntro}</p>
           <p>{FINALITAT}</p>
         </Pila>
       </MarcSalut>
@@ -39,9 +41,9 @@ export function CampsEntitat({ params }) {
     <MarcSalut titol={entitat.nom}>
       <Pila gap={4}>
         <p>{entitat.definicio}</p>
-        <Taula titol={`Camps de ${entitat.nom}`}>
+        <Taula titol={tx.campsDe(entitat.nom)}>
           <thead>
-            <tr><th scope="col">Camp</th><th scope="col">Valors</th><th scope="col">Què és</th><th scope="col">Per què importa</th></tr>
+            <tr><th scope="col">{tx.camp}</th><th scope="col">{tx.valors}</th><th scope="col">{tx.queEs}</th><th scope="col">{tx.perQueImporta}</th></tr>
           </thead>
           <tbody>
             {entitat.camps.map((camp) => (
@@ -61,12 +63,13 @@ export function CampsEntitat({ params }) {
 
 export function ApartatsGuia({ params }) {
   const navega = useNavegaSalut();
+  const tx = useTextosSalut();
   const articles = APARTATS_GUIA.map((apartat) => ({
     id: apartat.id, nom: apartat.titol, categoriaId: 'guia', estat: params?.apartat === apartat.id ? 'en-colleccio' : 'normal'
   }));
   return (
-    <MarcSalut titol="Guia" columna="mig">
-      <LlistaArticles articles={articles} etiqueta="Apartats de la guia" textos={{ 'en-colleccio': 'Obert' }} onTria={(article) => navega(['guia', article.id])} />
+    <MarcSalut titol={tx.guia} columna="mig">
+      <LlistaArticles articles={articles} etiqueta={tx.apartatsGuia} textos={{ 'en-colleccio': tx.obert }} onTria={(article) => navega(['guia', article.id])} />
     </MarcSalut>
   );
 }

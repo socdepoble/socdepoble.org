@@ -1,3 +1,5 @@
+import { normalitzaUnicodeSegura } from '../utils/normalitzaUnicodeSegura.js';
+
 // Text pla compartit per l'editor, les notes i el perfil.
 export const MAXIM_AUTORIA = 256;
 export const CODIS_CC = Object.freeze({
@@ -22,10 +24,9 @@ export const llargariaDe = (text) => Array.from(text).length;
 export function sanejaAutoria(valor) {
   if (typeof valor !== 'string') return '';
   // Conserva l'escriptura i la puntuació, inclosos ZWJ/ZWNJ i els accents.
-  return valor
+  return normalitzaUnicodeSegura(valor
     .replace(/[\t\n\r\u{2028}\u{2029}]+/gu, ' ')
-    .replace(/[\u{0}-\u{1f}\u{7f}-\u{9f}\u{61c}\u{200e}\u{200f}\u{202a}-\u{202e}\u{2066}-\u{2069}\u{d800}-\u{dfff}]/gu, '')
-    .normalize('NFC')
+    .replace(/[\u{0}-\u{1f}\u{7f}-\u{9f}\u{61c}\u{200e}\u{200f}\u{202a}-\u{202e}\u{2066}-\u{2069}\u{d800}-\u{dfff}]/gu, ''))
     .trim();
 }
 

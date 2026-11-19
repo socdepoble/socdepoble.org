@@ -44,6 +44,9 @@ import { dataCurtaLocal, nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, missatgeDErrorLocal, tradueix } from './textosGestorLocal.js';
 import { creaUrlsArxiuLocal } from './urlsArxiuLocal.js';
 import { useLocaleOpcional } from './useLocaleOpcional.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 /* El que cal per a pintar cada vista (sense el text editable, que el llig l'editor). */
 async function carregaVista(font, ruta, vista, blob, urls) {
@@ -76,18 +79,18 @@ function Exif({ t, exif }) {
     ['gps', T['detall.gps'], formataGps(exif?.gps)]
   ].filter(([, , valor]) => valor);
   return (
-    <section className="sdp-arxiu-local__bloc">
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__bloc">
       <h4>{tr(T['detall.exif'])}</h4>
       {files.length > 0 ? (
-        <dl className="sdp-arxiu-local__dades">
+        <dl ref={adoptaEstilsDiferits} className="sdp-arxiu-local__dades">
           {files.map(([clau, parell, valor]) => (
-            <div key={clau} className="sdp-arxiu-local__dada">
+            <div ref={adoptaEstilsDiferits} key={clau} className="sdp-arxiu-local__dada">
               <dt>{tr(parell)}</dt>
               <dd>{valor}</dd>
             </div>
           ))}
         </dl>
-      ) : <p>{tr(T['detall.senseExif'])}</p>}
+      ) : <p ref={adoptaEstilsDiferits}>{tr(T['detall.senseExif'])}</p>}
     </section>
   );
 }
@@ -97,7 +100,7 @@ function EstatWeb({ t, el, exactes }) {
   const locale = useLocaleOpcional();
   const exacte = exactes?.get?.(el.ruta) || null;
   return (
-    <section className="sdp-arxiu-local__bloc">
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__bloc">
       <h4>{tr(T['detall.estatWeb'])}</h4>
       <ul className="sdp-arxiu-local__llista">
         <li>
@@ -106,14 +109,14 @@ function EstatWeb({ t, el, exactes }) {
             : el.inedita ? tr(T['detall.inedita']) : tr(T['detall.suport'])}
         </li>
         {el.bessonaWebpRuta ? (
-          <li>{tr(T['detall.teBessona'], { ruta: el.bessonaWebpRuta, pes: formatKb(el.bessonaWebpMida, locale), estalvi: formatKb(el.estalviBytes, locale) })}</li>
+          <li ref={adoptaEstilsDiferits}>{tr(T['detall.teBessona'], { ruta: el.bessonaWebpRuta, pes: formatKb(el.bessonaWebpMida, locale), estalvi: formatKb(el.estalviBytes, locale) })}</li>
         ) : null}
         {el.originalRasterRuta ? (
-          <li>{tr(T['detall.esBessona'], { ruta: el.originalRasterRuta, pes: formatKb(el.originalRasterMida, locale) })}</li>
+          <li ref={adoptaEstilsDiferits}>{tr(T['detall.esBessona'], { ruta: el.originalRasterRuta, pes: formatKb(el.originalRasterMida, locale) })}</li>
         ) : null}
-        {el.coincidenciesMida?.length ? <li>{tr(T['detall.mateixaMida'], { rutes: el.coincidenciesMida.join(', ') })}</li> : null}
-        {el.coincidenciesNom?.length ? <li>{tr(T['detall.mateixNom'], { rutes: el.coincidenciesNom.join(', ') })}</li> : null}
-        {exacte ? <li>{tr(T['detall.exactes'], { rutes: exacte.altres.join(', ') })}</li> : null}
+        {el.coincidenciesMida?.length ? <li ref={adoptaEstilsDiferits}>{tr(T['detall.mateixaMida'], { rutes: el.coincidenciesMida.join(', ') })}</li> : null}
+        {el.coincidenciesNom?.length ? <li ref={adoptaEstilsDiferits}>{tr(T['detall.mateixNom'], { rutes: el.coincidenciesNom.join(', ') })}</li> : null}
+        {exacte ? <li ref={adoptaEstilsDiferits}>{tr(T['detall.exactes'], { rutes: exacte.altres.join(', ') })}</li> : null}
       </ul>
     </section>
   );
@@ -252,21 +255,21 @@ export function DetallArxiuLocal({
     );
   } else if (vista === 'imatge') {
     cos = dades.src ? (
-      <figure className="sdp-arxiu-local__figura">
+      <figure ref={adoptaEstilsDiferits} className="sdp-arxiu-local__figura">
         <img className="sdp-arxiu-local__imatge" src={dades.src} alt={el.nom} onLoad={enCarregar} />
       </figure>
-    ) : <p>{tr(T['detall.senseVista'])}</p>;
+    ) : <p ref={adoptaEstilsDiferits}>{tr(T['detall.senseVista'])}</p>;
   } else if (vista === 'svg') {
     cos = (
       <>
         {dades.src ? (
-          <figure className="sdp-arxiu-local__figura">
+          <figure ref={adoptaEstilsDiferits} className="sdp-arxiu-local__figura">
             <img className="sdp-arxiu-local__imatge" src={dades.src} alt={el.nom} onLoad={enCarregar} />
           </figure>
-        ) : <p>{tr(T['detall.massaGran'], { pes: formatKb(el.mida, locale) })}</p>}
-        <p className="sdp-arxiu-local__ajuda">{tr(T['detall.codiSegur'])}</p>
+        ) : <p ref={adoptaEstilsDiferits}>{tr(T['detall.massaGran'], { pes: formatKb(el.mida, locale) })}</p>}
+        <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">{tr(T['detall.codiSegur'])}</p>
         {dades.fontSvg !== null && dades.fontSvg !== undefined ? (
-          <section className="sdp-arxiu-local__bloc">
+          <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__bloc">
             <h4>{tr(T['detall.fontSvg'])}</h4>
             <pre className="sdp-arxiu-local__font">{dades.fontSvg}</pre>
           </section>
@@ -275,7 +278,7 @@ export function DetallArxiuLocal({
     );
   } else if (vista === 'codi') {
     cos = (
-      <section className="sdp-arxiu-local__bloc">
+      <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__bloc">
         <h4>{tr(T['detall.text'])}</h4>
         <p className="sdp-arxiu-local__ajuda">{tr(T['detall.codiSegur'])}</p>
         <pre className="sdp-arxiu-local__font">{dades.text}</pre>
@@ -295,7 +298,7 @@ export function DetallArxiuLocal({
     ) : <Alerta to="avis">{tr(T['detall.noReprodueix'])}</Alerta>;
   } else if (vista === 'pdf') {
     cos = dades.src ? (
-      <div className="sdp-arxiu-local__fila">
+      <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
         <a className="sdp-boto sdp-boto--primari" href={dades.src} target="_blank" rel="noopener noreferrer">
           <ExternalLink size={20} aria-hidden="true" focusable="false" />
           <span>{tr(T['detall.pdf'])}</span>
@@ -303,7 +306,7 @@ export function DetallArxiuLocal({
       </div>
     ) : <Alerta to="avis">{tr(T['detall.noPdf'])}</Alerta>;
   } else {
-    cos = <p>{tr(T['detall.senseVista'])}</p>;
+    cos = <p ref={adoptaEstilsDiferits}>{tr(T['detall.senseVista'])}</p>;
   }
 
   const ambImatge = vista === 'imatge' || vista === 'svg';
@@ -312,11 +315,11 @@ export function DetallArxiuLocal({
     : null;
 
   return (
-    <section className="sdp-arxiu-local__panell sdp-arxiu-local__detall" aria-labelledby={`${id}-titol`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__panell sdp-arxiu-local__detall" aria-labelledby={`${id}-titol`}>
       {incrustat ? (
-        <h3 id={`${id}-titol`}>{titolIncrustat || nomVisibleLocal(el.nom)}</h3>
+        <h3 ref={adoptaEstilsDiferits} id={`${id}-titol`}>{titolIncrustat || nomVisibleLocal(el.nom)}</h3>
       ) : (
-        <div className="sdp-arxiu-local__capdetall">
+        <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__capdetall">
           <h3 id={`${id}-titol`} ref={titolRef} tabIndex={-1}>{nomVisibleLocal(el.nom)}</h3>
           <Boto icona={X} onClick={onTanca}>{tr(T['detall.tanca'])}</Boto>
         </div>
@@ -335,14 +338,14 @@ export function DetallArxiuLocal({
           <dd>{dataCurtaLocal(el.modificat)}</dd>
         </div>
         {mides ? (
-          <div className="sdp-arxiu-local__dada">
+          <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__dada">
             <dt>{tr(T['detall.mides'])}</dt>
             <dd>{`${mides.ample} × ${mides.alt} px`}</dd>
           </div>
         ) : null}
       </dl>
       {ambDescarrega ? (
-        <div className="sdp-arxiu-local__fila">
+        <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
           <a className="sdp-boto sdp-boto--secundari" href={descarrega} download={el.nom}>
             <Download size={20} aria-hidden="true" focusable="false" />
             <span>{tr(T['detall.descarrega'])}</span>
@@ -351,7 +354,7 @@ export function DetallArxiuLocal({
       ) : null}
       {cos}
       {incrustat && comparador?.srcWeb && vista === 'imatge' && dades.estat === 'llest' && dades.src ? (
-        <section className="sdp-arxiu-local__bloc">
+        <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__bloc">
           <h4>{comparador.titol}</h4>
           <div className="sdp-arxiu-local__comparacio">
             <figure className="sdp-arxiu-local__figura">

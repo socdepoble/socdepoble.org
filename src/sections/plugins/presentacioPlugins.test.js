@@ -34,6 +34,9 @@ import { describe, expect, test } from 'vitest';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { PRESENTACIO_PLUGINS, presentacioDelPlugin } from './presentacioPlugins.js';
 import { IDS_PLUGINS, pluginPerId } from './registrePlugins.js';
+import { textosLector } from '../../apps/lector/i18nLector.js';
+import { textosVistaNevera } from '../../apps/nevera/i18nNevera.js';
+import { textosSalut } from '../../apps/salut/i18nSalut.js';
 
 /* P0-114 (ordre del Mestre, 261111, punt 3: «presentar també les sis seccions didàctiques <h3> +
    <p> a presentacioPlugins.js per a genealogia i avisador») · L'Avisador també en porta sis. */
@@ -164,7 +167,31 @@ describe('presentació dels plugins', () => {
 
 /* Els literals que el text cita entre cometes són els que pinta l'app. Es
    lligen de la font (text), sense muntar cap app: [literal, fitxer, com hi
-   apareix escrit]. */
+   apareix escrit] i, si la vista el pren d'un diccionari, [diccionari, clau].
+   Gemini R32.11 · lot_04 (paritat de cinc llengües) · Les vistes ja no porten el
+   literal escrit: el pinten amb `tx.<clau>`, i el text català és la reserva `ca`
+   del diccionari de l'app (i18nNevera.js, i18nSalut.js, i18nLector.js). La
+   prova seguix el camí sencer: la vista usa la clau en el mateix lloc, pren `tx`
+   d'eixe diccionari, i la reserva `ca` de la clau és el literal citat. */
+const RESERVA_CA = Object.freeze({
+  nevera: textosVistaNevera('ca'),
+  salut: textosSalut('ca'),
+  lector: textosLector('ca')
+});
+/* D'on trau cada vista el seu `tx`: si una vista el prenguera d'un altre lloc, la clau no provaria res. */
+const ORIGEN_TX = Object.freeze({
+  nevera: 'const tx = textosVistaNevera(idioma);',
+  salut: 'const tx = useTextosSalut();',
+  lector: 'const tx = textosLector(idioma);'
+});
+/* La vista usa la clau com diu `comHiEs`, pren `tx` del diccionari, i la reserva `ca` és el literal. */
+const esperaClau = (literal, fitxer, comHiEs, diccionari, clau) => {
+  expect([fitxer, comHiEs.includes(`tx.${clau}`)]).toEqual([fitxer, true]);
+  expect(font(fitxer)).toContain(comHiEs);
+  expect(font(fitxer)).toContain(ORIGEN_TX[diccionari]);
+  expect([diccionari, clau, RESERVA_CA[diccionari][clau]]).toEqual([diccionari, clau, literal]);
+};
+
 describe('els literals citats són els de l’app', () => {
   const NEVERA = 'src/apps/nevera';
   const SALUT = 'src/apps/salut';
@@ -173,18 +200,20 @@ describe('els literals citats són els de l’app', () => {
       ['N’hi ha', `${NEVERA}/vistes/vestits.js`, "'hi-ha': 'N’hi ha'"],
       ['Se n’acaba', `${NEVERA}/vistes/vestits.js`, "'se-n-acaba': 'Se n’acaba'"],
       ['S’ha acabat', `${NEVERA}/vistes/vestits.js`, "acabat: 'S’ha acabat'"],
-      ['El que tens a casa', `${NEVERA}/vistes/Casa.jsx`, "nom: 'El que tens a casa'"],
-      ['No el seguisques', `${NEVERA}/vistes/Casa.jsx`, "etiqueta: 'No el seguisques'"],
-      ['Cal comprar', `${NEVERA}/vistes/Casa.jsx`, 'titol="Cal comprar"'],
-      ['Afig-ho tot', `${NEVERA}/vistes/Casa.jsx`, "text: 'Afig-ho tot'"],
+      /* Gemini R32.11 · lot_04 · De Casa.jsx a i18nNevera.js (TEXTOS_VISTA_NEVERA). */
+      ['El que tens a casa', `${NEVERA}/vistes/Casa.jsx`, 'nom: tx.elQueTensACasa', 'nevera', 'elQueTensACasa'],
+      ['No el seguisques', `${NEVERA}/vistes/Casa.jsx`, 'etiqueta: tx.noElSeguisques', 'nevera', 'noElSeguisques'],
+      ['Cal comprar', `${NEVERA}/vistes/Casa.jsx`, 'titol={tx.calComprar}', 'nevera', 'calComprar'],
+      ['Afig-ho tot', `${NEVERA}/vistes/Casa.jsx`, 'text: tx.afigHoTot', 'nevera', 'afigHoTot'],
       ['La compra', `${NEVERA}/manifest.js`, "ca: 'La compra'"]
     ],
     salut: [
       ['Avui', `${SALUT}/manifest.js`, "ca: 'Avui'"],
       ['Full per al metge', `${SALUT}/manifest.js`, "ca: 'Full per al metge'"],
       ['Resum i avisos', `${SALUT}/manifest.js`, "ca: 'Resum i avisos'"],
-      ['He apuntat tot el dia', `${SALUT}/vistes/Diari.jsx`, 'etiqueta="He apuntat tot el dia"'],
-      ['Ho he entés', `${SALUT}/vistes/Ajustos.jsx`, '>Ho he entés</Boto>'],
+      /* Gemini R32.11 · lot_04 · De Diari.jsx i Ajustos.jsx a i18nSalut.js (TEXTOS_SALUT). */
+      ['He apuntat tot el dia', `${SALUT}/vistes/Diari.jsx`, 'etiqueta={tx.heApuntatTotElDia}', 'salut', 'heApuntatTotElDia'],
+      ['Ho he entés', `${SALUT}/vistes/Ajustos.jsx`, '>{tx.hoHeEntes}</Boto>', 'salut', 'hoHeEntes'],
       ['parla-ho amb el metge', `${SALUT}/textos.js`, '«parla-ho amb el metge»'],
       ['truca al 112', `${SALUT}/textos.js`, '«truca al 112»']
     ],
@@ -197,7 +226,8 @@ describe('els literals citats són els de l’app', () => {
     /* Actualitzada a posta (261024 Lector): per ordre del Mestre (15:05) la pàgina
        «Fonts» ja no existix; la gestió és el diàleg «Gestiona les fonts» de l'arbre. */
     rss: [
-      ['Gestiona les fonts', 'src/apps/lector/vistes/GestioFonts.jsx', 'titol="Gestiona les fonts"'],
+      /* Gemini R32.11 · lot_04 · De GestioFonts.jsx a i18nLector.js (TEXTOS_LECTOR). */
+      ['Gestiona les fonts', 'src/apps/lector/vistes/GestioFonts.jsx', 'titol={tx.gestionaLesFontsTitol}', 'lector', 'gestionaLesFontsTitol'],
       ['Notícies', 'src/apps/lector/manifest.js', "ca: 'Notícies'"]
     ],
     /* P0-114 (ordre del Mestre, 261111) · El botó del formulari de la pàgina de L'Avisador. */
@@ -265,9 +295,10 @@ describe('els literals citats són els de l’app', () => {
   test('avisador: les hores, les persones, el descans i les condicions són els del servei i de la pàgina', () => {
     const text = senseMarques(presentacioDelPlugin('avisador'));
     const servei = font('src/services/avisador.js');
-    const pagina = font('src/pages/textosAvisador.js');
-    expect(servei).toContain('export const HORES_AVISADOR = Object.freeze([4, 8, 12, 24]);');
-    expect(text).toContain('quatre, huit, dotze o vint-i-quatre');
+    /* Onada R32.12 · T1 · Els textos de la pàgina porten negretes de text ric (`**`): es comparen sense. */
+    const pagina = font('src/pages/textosAvisador.js').replaceAll('**', '');
+    expect(servei).toContain('export const HORES_AVISADOR = Object.freeze([2, 3, 4, 5, 6, 7, 8, 12, 24]);');
+    expect(text).toContain('de dues a vint-i-quatre: dues, tres, quatre, cinc, sis, set, huit, dotze o vint-i-quatre');
     expect(servei).toContain('persones.length < 1 || persones.length > 3');
     expect(text).toContain('d’una a tres persones');
     expect(servei).toContain('export const MAXIM_DESCANS_MINUTS = 720;');
@@ -275,9 +306,10 @@ describe('els literals citats són els de l’app', () => {
     expect(text).toContain('el descans pot durar com a molt dotze hores');
     expect(pagina).toContain('Funciona amb la sessió personal oberta, mentre l’app pot executar-se i té connexió al Xat.');
     expect(text).toContain('Només funciona amb la sessió personal oberta, mentre Sóc de Poble pot executar-se i té connexió al Xat.');
-    expect(pagina).toContain('Per a una emergència, telefona al 112.');
+    expect(pagina).toContain('Per a una emergència, telefona al {telefon112}.');
+    expect(font('src/pages/AvisadorPage.jsx')).toContain('<a href="tel:112">112</a>');
     expect(text).toContain('Per a una emergència, telefona al 112.');
-    expect(pagina).toContain('Els ajustos es guarden en este dispositiu.');
+    expect(pagina).toContain('Els ajustos es guarden en este dispositiu i en este navegador');
     expect(text).toContain('Els ajustos es guarden en este dispositiu');
     expect(text).not.toMatch(/sincron|n[úu]vol|servidor|còpia|garanti|sempre arriba/i);
   });
@@ -292,7 +324,12 @@ describe('els literals citats són els de l’app', () => {
     expect(text).toContain('el lector et diu que encara no hi ha cap font connectada');
     expect(text).toContain('Si esta web no té el servei de notícies');
     expect(text).not.toMatch(/no arriba cap notícia|ixen buides|Quan funcione/);
-    expect(font('src/apps/lector/AppLector.jsx')).toContain('Encara no hi ha cap font connectada');
+    /* Gemini R32.11 · lot_04 · El títol de l'estat buit és ara la clau `senseFontConnectadaTitol` de
+       i18nLector.js; la vista el pinta dins de la branca sense font ni servei. */
+    const lector = font('src/apps/lector/AppLector.jsx');
+    expect(lector).toMatch(/if \(!font && !delServei\) \{\s*return \(\s*<EstatBuit titol=\{tx\.senseFontConnectadaTitol\}>/);
+    esperaClau('Encara no hi ha cap font connectada', 'src/apps/lector/AppLector.jsx', '<EstatBuit titol={tx.senseFontConnectadaTitol}>',
+      'lector', 'senseFontConnectadaTitol');
     expect(text).toContain('el servei de notícies de Sóc de Poble en rep l’adreça');
     expect(font('src/apps/lector/fontRemota.js')).toContain('feedPersonal(url');
   });
@@ -310,18 +347,19 @@ describe('els literals citats són els de l’app', () => {
   });
 
   test.each(Object.entries(CITES).flatMap(([id, cites]) => cites.map((cita) => [id, ...cita])))(
-    '%s cita «%s», que és a %s', (id, literal, fitxer, comHiEs) => {
+    '%s cita «%s», que és a %s', (id, literal, fitxer, comHiEs, diccionari, clau) => {
       expect(senseMarques(presentacioDelPlugin(id))).toContain(`«${literal}»`);
-      expect(font(fitxer)).toContain(comHiEs);
+      if (diccionari) esperaClau(literal, fitxer, comHiEs, diccionari, clau);
+      else expect(font(fitxer)).toContain(comHiEs);
     }
   );
 
   test('rebost: «Ajustos» és una entrada de la Nevera, i la còpia es descarrega i es recupera allí', () => {
     expect(presentacioDelPlugin('rebost')).toContain('a <strong>Ajustos</strong> pots <strong>descarregar una còpia</strong> i recuperar-la');
     expect(font('src/apps/nevera/manifest.js')).toContain("ca: 'Ajustos'");
-    const ajustos = font('src/apps/nevera/vistes/Ajustos.jsx');
-    expect(ajustos).toContain('>Descarrega una còpia</Boto>');
-    expect(ajustos).toContain('etiqueta="Recupera una còpia"');
+    /* Gemini R32.11 · lot_04 · Els dos botons de la còpia són claus de i18nNevera.js. */
+    esperaClau('Descarrega una còpia', 'src/apps/nevera/vistes/Ajustos.jsx', '>{tx.descarregaUnaCopia}</Boto>', 'nevera', 'descarregaUnaCopia');
+    esperaClau('Recupera una còpia', 'src/apps/nevera/vistes/Ajustos.jsx', 'etiqueta={tx.recuperaUnaCopia}', 'nevera', 'recuperaUnaCopia');
   });
 
   /* P0-113 (ordre del Mestre, 261111) · La Nevera s'obri en producció (encesa per defecte i
@@ -351,7 +389,9 @@ describe('els literals citats són els de l’app', () => {
 
   test('salut: el mode nit existix a la pantalla d’apuntar', () => {
     expect(senseMarques(presentacioDelPlugin('salut'))).toContain('Hi ha un mode nit');
-    expect(font('src/apps/salut/vistes/Diari.jsx')).toMatch(/^\s*Mode nit$/m);
+    /* Gemini R32.11 · lot_04 · El botó del mode nit pinta la clau `modeNit` de i18nSalut.js. */
+    expect(font('src/apps/salut/vistes/Diari.jsx')).toMatch(/^\s*\{tx\.modeNit\}$/m);
+    esperaClau('Mode nit', 'src/apps/salut/vistes/Diari.jsx', '{tx.modeNit}', 'salut', 'modeNit');
   });
 });
 

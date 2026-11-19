@@ -144,7 +144,7 @@ const capaDe = (pares) => {
 /* Els fulls que escriuen en components o més amunt, en l'ordre d'index.css.
    base, sdp, wiki i layout (capes de davall) no poden guanyar a cap regla
    de components: no hi entren. */
-const FULLS = ['src/css/components.css', 'src/css/modules.css', 'src/css/taulers.css', 'src/css/tipografia-estreta.css', 'src/css/utilities.css'];
+const FULLS = ['src/css/components.css', 'src/css/modules.css', 'src/css/diferit-gestoria.css', 'src/css/diferit-connectar.css', 'src/css/taulers.css', 'src/css/tipografia-estreta.css', 'src/css/utilities.css'];
 const REGLES = FULLS.flatMap((ruta) => regles(llig(ruta)).map((r) => ({ ...r, ruta })))
   .filter((r) => !r.prelud.startsWith('@'))
   .map((r, ordre) => ({ ...r, ordre, capa: capaDe(r.pares), selectors: parteix(r.prelud, ','), decl: llargues(r.cos) }));

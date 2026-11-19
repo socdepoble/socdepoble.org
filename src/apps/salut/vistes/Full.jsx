@@ -15,7 +15,7 @@ import { fullDiari } from '../nucli/full.js';
 import { etiquetaDataLlarga } from '../nucli/hores.js';
 import { textCobertura } from '../nucli/metriques.js';
 import { useSalut } from '../useSalut.jsx';
-import { MarcSalut, diesPossiblesAmb, useNavegaSalut, usePeriodeTriat } from './comunes.jsx';
+import { MarcSalut, diesPossiblesAmb, useNavegaSalut, usePeriodeTriat, useTextosSalut } from './comunes.jsx';
 import { DialegExportacio } from './DialegExportacio.jsx';
 
 /**
@@ -41,23 +41,25 @@ const cela = (valor) => {
 export function ResumDies() {
   const { full, des, dies } = useFullDelPeriode();
   const navega = useNavegaSalut();
+  const tx = useTextosSalut();
   if (!full) return null;
   const articles = full.periode.jornades.map((m) => ({
     id: m.data,
     nom: etiquetaDataLlarga(m.data),
-    secundari: `${m.frequenciaDiurna} de dia · ${m.nicturia} de nit · mesurat ${textCobertura(m)}`,
-    valor: m.completa ? 'Completa' : 'Oberta',
+    secundari: tx.secundariJornadaFull(m.frequenciaDiurna, m.nicturia, textCobertura(m)),
+    valor: m.completa ? tx.completa : tx.oberta,
     categoriaId: 'periode'
   }));
   return (
-    <MarcSalut titol={`${dies} ${dies === 1 ? 'dia' : 'dies'} des de ${etiquetaDataLlarga(des)}`} columna="mig">
-      <LlistaArticles articles={articles} etiqueta="Jornades del període" onTria={(article) => navega(['dies', article.id])} />
+    <MarcSalut titol={tx.diesDesDe(dies, etiquetaDataLlarga(des))} columna="mig">
+      <LlistaArticles articles={articles} etiqueta={tx.jornadesDelPeriode} onTria={(article) => navega(['dies', article.id])} />
     </MarcSalut>
   );
 }
 
 export function FullMetge() {
   const { full, des, dies, posa } = useFullDelPeriode();
+  const tx = useTextosSalut();
   const [obert, setObert] = useState(false);
   if (!full) return null;
   const [resum] = full.model.fulles;
@@ -65,23 +67,23 @@ export function FullMetge() {
   const files = resum.files.slice(3);
   const eines = (
     <Fila gap={4} align="flex-end">
-      <Camp etiqueta="Des de">
+      <Camp etiqueta={tx.desDe}>
         <CampText tipus="date" value={des} onChange={(event) => { if (esData(event.target.value)) posa({ des: event.target.value }); }} />
       </Camp>
-      <Camp etiqueta="Dies">
+      <Camp etiqueta={tx.dies}>
         <Selector value={String(dies)} opcions={diesPossiblesAmb(dies).map((n) => ({ valor: String(n), etiqueta: String(n) }))}
           onChange={(event) => posa({ dies: event.target.value })} />
       </Camp>
-      <Boto varietat="primari" icona={FileSpreadsheet} onClick={() => setObert(true)}>Exporta</Boto>
+      <Boto varietat="primari" icona={FileSpreadsheet} onClick={() => setObert(true)}>{tx.exporta}</Boto>
     </Fila>
   );
   return (
-    <MarcSalut titol="Full per al metge" eines={eines}>
+    <MarcSalut titol={tx.fullPerAlMetge} eines={eines}>
       <Pila gap={4}>
         <Pila gap={1}>
           {capcalera.map((linia) => <p key={linia}>{linia}</p>)}
         </Pila>
-        <Taula titol="Resum per dies" densa>
+        <Taula titol={tx.resumPerDies} densa>
           <thead>
             <tr>{resum.columnes.map((columna) => <th key={columna.titol} scope="col">{columna.titol}</th>)}</tr>
           </thead>
@@ -94,7 +96,7 @@ export function FullMetge() {
             ))}
           </tbody>
         </Taula>
-        <p>Les mitjanes només compten les jornades marcades com a completes. Els volums i els índexs només es calculen amb totes les miccions mesurades.</p>
+        <p>{tx.notaMitjanesFull}</p>
       </Pila>
       <DialegExportacio obert={obert} onTanca={() => setObert(false)} des={des} dies={dies} />
     </MarcSalut>

@@ -14,6 +14,7 @@
  * updateOrganization i updateAgent només desen si qui crida administra
  * l'organització o l'agent (en remot, la RLS). Totes les eixides són còpies.
  */
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
 import {
   CODI_MODERACIO, LIMIT_DIRECTORI_ENTITATS, TIPUS_BLOQUEIG_PUBLICACIO, VERSIO_NORMES_CONVIVENCIA, autorDelContracte, comDelContracte,
   denunciaDelContracte, destinatariaDeTransferencia, errorDeMembre, errorDeModeracio, errorDeTitular, membreDOrganitzacio,
@@ -48,7 +49,7 @@ const clauDeBloqueig = ({ tipus, id }) => `${tipus}:${id}`;
 const COLUMNES_DIRECTORI = Object.freeze(['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
   'created_at', 'updated_at', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name']);
 const filaDeDirectori = (entitat) => Object.fromEntries(COLUMNES_DIRECTORI.map((columna) => [columna, entitat[columna] ?? null]));
-const plega = (valor) => String(valor ?? '').normalize('NFKD').replace(/\p{M}/gu, '').replace(/[\u00b7\u2027\u2219]/g, '').toLowerCase();
+const plega = (valor) => normalitzaUnicodeAmbLimit(String(valor ?? ''), 'NFKD').replace(/\p{M}/gu, '').replace(/[\u00b7\u2027\u2219]/g, '').toLowerCase();
 const casaAmbLaConsulta = (consulta) => {
   const paraules = plega(consulta).split(/[^\p{L}\p{N}'\u2019-]+/u).filter(Boolean);
   return (fila) => paraules.every((paraula) => [fila.name, fila.slug, fila.lema, fila.description].some((camp) => plega(camp).includes(paraula)));
@@ -144,7 +145,8 @@ export function creaComunitatLocal(e) {
       const poble = pobleDelFiltre(filtre?.poble);
       if (poble && esPobleImpossible(poble)) return [];
       const limit = limitDelDirectori(filtre?.limit);
-      const restaurades = entitatsDeLEstat(e.dadesObertes.estat, { nom: poble }).filter(casaAmbLaConsulta(consulta)).map(filaDeDirectori);
+      const casa = casaAmbLaConsulta(consulta);
+      const restaurades = entitatsDeLEstat(e.dadesObertes.estat, { nom: poble }).filter(casa).map(filaDeDirectori);
       if (!restaurades.length) return e.copia(perfils.listPublicOrganizations({ consulta, limit, ...(poble ? { poble } : {}) }));
       const ids = new Set(restaurades.map((fila) => String(fila.id)));
       const delPadro = perfils.listPublicOrganizations({ consulta, ...(poble ? { poble } : {}) }).filter((fila) => !ids.has(String(fila.id)));

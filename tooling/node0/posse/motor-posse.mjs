@@ -4,6 +4,7 @@
  */
 import {createHash} from 'node:crypto';
 import {formataPosse,clauPosse,identitatPosse} from './formatador-posse.mjs';
+import {creaSafataConformitatPosse} from './safata-conformitat.mjs';
 
 const HASH=/^[a-f0-9]{64}$/,UUID=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const remoteId=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(value);
@@ -39,7 +40,7 @@ function coverSnapshot(cover){
   if(typeof cover.thumbnailUrl!=='string'||!cover.thumbnailUrl.startsWith('https://socdepoble.org/')||new URL(cover.thumbnailUrl).origin!=='https://socdepoble.org')fail('POSSE_PUBLIC_MEDIA_REQUIRED',400);
   return {blobRef:cover.blobRef,sha256:cover.sha256,mimeType:cover.mimeType,bytes:cover.bytes,alt:cover.alt,thumbnailUrl:cover.thumbnailUrl};
 }
-export function creaMotorPosse({repository,certificaArticle,transportForBridge,authorizeBridge,publishingEnabled=false,now=Date.now}={}){
+export function creaMotorPosse({repository,certificaArticle,transportForBridge,authorizeBridge,publishingEnabled=false,now=Date.now,safataConformitat}={}){
   if(!repository||typeof repository.loadRecord!=='function'||typeof repository.loadBridge!=='function'||typeof repository.resolveEditorialProvenance!=='function'||typeof repository.savePrepared!=='function'||typeof authorizeBridge!=='function'||typeof certificaArticle!=='function')throw TypeError('POSSE_SERVER_DEPENDENCIES_REQUIRED');
   async function accessBridge(bridgeId,context,operation){
     if(typeof bridgeId!=='string'||!UUID.test(bridgeId))fail('POSSE_BRIDGE_REQUIRED',400);
@@ -80,7 +81,11 @@ export function creaMotorPosse({repository,certificaArticle,transportForBridge,a
       }}
     return result;
   }
-  async function publish(input,context){
+  async function publish(input,context,{beforeMutation}={}){
+    if(beforeMutation!==undefined&&typeof beforeMutation!=='function')fail('POSSE_MUTATION_GUARD_INVALID',400);
+    // The signed decorator injects this closure; it is never an HTTP field.
+    // The returned synchronous fence runs with no await before the effect.
+    async function fenceFor(stage){const fence=await beforeMutation({stage});if(typeof fence!=='function')fail('POSSE_MUTATION_GUARD_INVALID',403);return fence;}
     exact(input,['bridgeId','bridgeRevision','preparedId','recordRevision','draftHash','confirm']);
     if(publishingEnabled!==true||typeof transportForBridge!=='function')fail('POSSE_PUBLISH_DISABLED',503);
     if(typeof input.preparedId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(input.preparedId)||input.confirm!==true||!HASH.test(input.draftHash??''))fail('POSSE_EXPLICIT_CONFIRMATION_REQUIRED',409);revision(input.recordRevision);
@@ -95,6 +100,7 @@ export function creaMotorPosse({repository,certificaArticle,transportForBridge,a
     const scopes=transport.requiredScopes({media:Boolean(fresh.snapshot.draft.cover)});if(!Array.isArray(scopes)||!scopes.length||scopes.some(scope=>typeof scope!=='string'))fail('POSSE_CREDENTIAL_UNAVAILABLE',503);
     let credential;try{credential=await transport.preflight({requiredScopes:scopes});}catch{fail('POSSE_CREDENTIAL_UNAVAILABLE',503);}
     if(credential?.accountIdentity!==fresh.snapshot.bridge.remoteAccountIdentity||!HASH.test(credential.certificationId??'')||!scopes.every(scope=>credential.scopes?.includes(scope)))fail('POSSE_CREDENTIAL_UNAVAILABLE',503);
+    if(beforeMutation)(await fenceFor('claim'))();
     // This repository operation MUST atomically recheck source revision and
     // editorial proof against the stored snapshot, reserve quota, and claim a
     // unique record/account. No adapter may authorize it from HTTP body claims.
@@ -110,13 +116,17 @@ export function creaMotorPosse({repository,certificaArticle,transportForBridge,a
       if(approved.draft.cover){
         if(!observedMediaId){const media=await repository.readPublicMedia(approved.draft.cover.blobRef);const bytes=media?.bytes;
           if(!(bytes instanceof Uint8Array)||bytes.byteLength!==approved.draft.cover.bytes||sha(bytes)!==approved.draft.cover.sha256||media.mimeType!==approved.draft.cover.mimeType)fail('POSSE_MEDIA_CHANGED',409);
+          if(beforeMutation)(await fenceFor('before-media-marker'))();
           stage='media-post';if((await repository.startDispatch({leaseId:claim.leaseId,stage})).authorized!==true)fail('POSSE_DISPATCH_REFUSED',409);
+          if(beforeMutation)(await fenceFor(stage))();
           const uploaded=await transport.uploadMedia({leaseId:claim.leaseId,bytes:new Uint8Array(bytes),mimeType:media.mimeType,description:approved.draft.cover.alt});observedMediaId=uploaded.id;
           if(!remoteId(observedMediaId))fail('POSSE_MEDIA_UNVERIFIED',503);await repository.saveMedia({leaseId:claim.leaseId,mediaId:observedMediaId,ready:uploaded.ready===true});
           if(uploaded.ready!==true){await repository.releaseMediaPending({leaseId:claim.leaseId});return{state:'media-pending',preparedId:input.preparedId};}
-        }else{const media=await transport.getMedia({id:observedMediaId});if(media.ready!==true){await repository.releaseMediaPending({leaseId:claim.leaseId});return{state:'media-pending',preparedId:input.preparedId};}}
+        }else{if(beforeMutation)(await fenceFor('media-get'))();const media=await transport.getMedia({id:observedMediaId});if(media.ready!==true){await repository.releaseMediaPending({leaseId:claim.leaseId});return{state:'media-pending',preparedId:input.preparedId};}}
       }
+      if(beforeMutation)(await fenceFor('before-status-marker'))();
       stage=operation==='create'?'status-post':'status-put';if((await repository.startDispatch({leaseId:claim.leaseId,stage})).authorized!==true)fail('POSSE_DISPATCH_REFUSED',409);
+      if(beforeMutation)(await fenceFor(stage))();
       observedStatus=await transport.publishStatus({leaseId:claim.leaseId,operation,externalStatusId:claim.externalStatusId??null,idempotencyKey:key,status:approved.draft.status,visibility:'public',language:approved.draft.language,mediaIds:observedMediaId?[observedMediaId]:[],accountIdentity:credential.accountIdentity});
       if(!remoteId(observedStatus?.id)||transport.validateResult(observedStatus,{accountIdentity:credential.accountIdentity,operation,externalStatusId:claim.externalStatusId})!==true)fail('POSSE_REMOTE_RESULT_UNVERIFIED',503);
       await repository.complete({leaseId:claim.leaseId,externalStatusId:observedStatus.id,externalUrl:observedStatus.url,canonicalUrl:approved.draft.canonicalUrl,draftHash:input.draftHash});
@@ -137,5 +147,10 @@ export function creaMotorPosse({repository,certificaArticle,transportForBridge,a
     exact(input,['bridgeId','recordIds']);if(!Array.isArray(input.recordIds)||input.recordIds.length>20)fail('POSSE_BATCH_LIMIT',400);const rows=[];
     for(const recordId of input.recordIds)rows.push(await prepare({bridgeId:input.bridgeId,recordId},context));return{state:'prepared-only',confirmationRequired:true,publications:rows};
   }
-  return Object.freeze({prepare,listPrepared,publish,queueHistorical});
+  const motor=Object.freeze({prepare,listPrepared,publish,queueHistorical});
+  if(safataConformitat===undefined)return motor;
+  return creaSafataConformitatPosse({...safataConformitat,motor,publishingEnabled,now,resolveAccount:async(bridgeId,context)=>{
+    const {bridge,bridgeRevision}=await accessBridge(bridgeId,context,'conformity');
+    return{remoteAccountIdentity:bridge.remoteAccountIdentity,bridgeRevision};
+  }});
 }

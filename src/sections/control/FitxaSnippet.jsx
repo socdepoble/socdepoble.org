@@ -41,6 +41,7 @@
  */
 import { useId } from 'react';
 import { Download, Puzzle } from 'lucide-react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
@@ -53,6 +54,7 @@ import {
   destiDelSnippet,
   urlDelSnippet
 } from './destiSnippet.js';
+import { textosFitxaSnippet } from './i18nFitxaSnippet.js';
 
 export const IMATGE_HERO_SNIPPET = '/assets/nano_cards/snippet_nano_card.webp';
 export const ALT_HERO_SNIPPET = 'Vinyeta d’Ibáñez per al Snippet Curador de Sóc de Poble desant qualsevol web d’un clic al Bloc de notes';
@@ -62,37 +64,26 @@ const TEXTOS_PORTADA = Object.freeze({
   mostra: Object.freeze(['pagina.portada.mostra', 'Mostra la portada']),
 });
 
-const INSTALLA = 'Instal·la a Chrome';
-const DESCARREGA = 'Descarrega l’extensió';
-
-const PASSOS_D_US = Object.freeze([
-  'Quan una web t’interesse, prem el Snippet. Si abans selecciones un tros de text, també l’envia.',
-  'S’obri una finestra de Sóc de Poble amb l’enllaç: tria la carpeta i prem «Desar».'
-]);
-/* Des de la botiga de Chrome (o mentre no hi ha destí). */
-const PASSOS_DE_LA_BOTIGA = Object.freeze([
-  'Instal·la el Snippet a Chrome amb el botó d’esta pàgina.',
-  ...PASSOS_D_US
-]);
-/* Des d'un .zip: Chrome només el carrega desempaquetat, en mode de desenvolupador. */
-const PASSOS_DEL_PAQUET = Object.freeze([
-  'Descarrega el Snippet amb el botó d’esta pàgina i descomprimix el fitxer en una carpeta que no hages d’esborrar.',
-  'A Chrome, obri l’adreça chrome://extensions, activa el mode de desenvolupador i carrega eixa carpeta com a extensió desempaquetada.',
-  ...PASSOS_D_US
-]);
-
 const origenDeLApp = () => (typeof window === 'undefined' ? '' : window.location.origin);
 
-function BotoPrincipal({ desti, idAvis }) {
+function useIdiomaSnippet() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
+function BotoPrincipal({ desti, idAvis, tx }) {
   if (!desti) {
     return (
       <>
         <Boto varietat="primari" mida="gran" icona={Puzzle} disabled className="sdp-btn-ample" aria-describedby={idAvis}>
-          {INSTALLA}
+          {tx.installa}
         </Boto>
-        <Alerta to="info" viva={false} titol="Encara no està publicada">
+        <Alerta to="info" viva={false} titol={tx.noPublicadaTitol}>
           <span id={idAvis}>
-            L’extensió del Snippet no té encara cap versió per a instal·lar. Quan en tinga, este botó s’activarà ací mateix.
+            {tx.noPublicadaText}
           </span>
         </Alerta>
       </>
@@ -108,11 +99,11 @@ function BotoPrincipal({ desti, idAvis }) {
       download={desti.descarrega || undefined}
     >
       <Icona size={20} aria-hidden="true" focusable="false" />
-      <span>{desti.descarrega ? DESCARREGA : INSTALLA}</span>
+      <span>{desti.descarrega ? tx.descarrega : tx.installa}</span>
       {desti.extern ? (
         <>
           {' '}
-          <span className="sdp-nomes-lector">(s’obri en una pestanya nova)</span>
+          <span className="sdp-nomes-lector">{tx.pestanyaNova}</span>
         </>
       ) : null}
     </a>
@@ -122,17 +113,18 @@ function BotoPrincipal({ desti, idAvis }) {
 export function FitxaSnippet({ vistaRef }) {
   const id = useId();
   const t = useTraductorOpcional();
+  const tx = textosFitxaSnippet(useIdiomaSnippet());
   const desti = destiDelSnippet(urlDelSnippet(), origenDeLApp());
-  const passos = desti?.descarrega ? PASSOS_DEL_PAQUET : PASSOS_DE_LA_BOTIGA;
+  const passos = desti?.descarrega ? tx.passosPaquet : tx.passosBotiga;
   return (
     <UniversalPage
       chrome="system"
       showLogos={true}
       title="Snippet"
-      subtitle="Desa qualsevol web d’un clic"
-      lead="Una extensió de Chrome que porta a Sóc de Poble la web que estàs llegint."
+      subtitle={tx.subtitol}
+      lead={tx.lead}
       heroImage={IMATGE_HERO_SNIPPET}
-      heroAlt={ALT_HERO_SNIPPET}
+      heroAlt={tx.heroAlt}
       portadaPlegable={{
         clau: clauPortadaDelPlugin(FITXA_SNIPPET),
         etiquetes: {
@@ -147,44 +139,41 @@ export function FitxaSnippet({ vistaRef }) {
     >
       <div ref={vistaRef} className="content-wrapper">
         <section>
-          <h2>Què és</h2>
+          <h2>{tx.queEsTitol}</h2>
           <p>
-            El Snippet és un <strong>botó al teu navegador</strong>. Quan trobes una notícia, una recepta o qualsevol pàgina que vols
-            guardar, <strong>el prems i l’enllaç arriba</strong> al teu Bloc de notes de Sóc de Poble, amb el títol i, si n’has
-            seleccionat, un tros del text. Allí <strong>tries la carpeta i es desa</strong> com una nota
-            teua que podràs editar.
+            {tx.queEsA}<strong>{tx.queEsFort1}</strong>{tx.queEsB}
+            <strong>{tx.queEsFort2}</strong>{tx.queEsC}
+            <strong>{tx.queEsFort3}</strong>{tx.queEsD}
           </p>
         </section>
 
         <div className="sdp-control-actions">
-          <BotoPrincipal desti={desti} idAvis={`${id}-avis`} />
+          <BotoPrincipal desti={desti} idAvis={`${id}-avis`} tx={tx} />
         </div>
 
         <section>
-          <h2>Com funciona</h2>
+          <h2>{tx.comFuncionaTitol}</h2>
           <ol>
             {passos.map((pas) => <li key={pas}>{pas}</li>)}
           </ol>
         </section>
 
         <section>
-          <h2>Què necessites</h2>
+          <h2>{tx.queNecessitesTitol}</h2>
           <ul>
-            <li><strong>Google Chrome</strong> a l’ordinador.</li>
-            <li>El teu <strong>compte de Sóc de Poble</strong>. Si no has entrat, el Snippet t’ho demana abans de desar.</li>
+            <li><strong>{tx.reqChromeFort}</strong>{tx.reqChromeResta}</li>
+            <li>{tx.reqComptePre}<strong>{tx.reqCompteFort}</strong>{tx.reqComptePost}</li>
           </ul>
         </section>
 
         <section>
-          <h2>Privacitat</h2>
+          <h2>{tx.privacitatTitol}</h2>
           <p>
-            El Snippet <strong>només actua quan el prems</strong>. Llavors obri Sóc de Poble en una <strong>finestra nova</strong> amb l’adreça de la
-            pàgina, el títol i el text que hages seleccionat.
+            {tx.priv1A}<strong>{tx.priv1Fort1}</strong>{tx.priv1B}<strong>{tx.priv1Fort2}</strong>{tx.priv1C}
           </p>
           <p>
-            Eixes dades <strong>viatgen en l’adreça d’eixa finestra</strong>: arriben al servidor que servix l’app on desaràs la nota,
-            que pot ser el del teu poble, i poden quedar als seus registres. La nota <strong>no es crea fins que prems «Desar»</strong>,
-            i la imatge de l’altra web no es copia.
+            {tx.priv2A}<strong>{tx.priv2Fort1}</strong>{tx.priv2B}
+            <strong>{tx.priv2Fort2}</strong>{tx.priv2C}
           </p>
         </section>
       </div>

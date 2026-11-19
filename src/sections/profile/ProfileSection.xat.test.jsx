@@ -35,7 +35,10 @@ const targeta = (arrel, nom) => [...arrel.querySelectorAll('article.sp-card')].f
 test('l’entitat porta «Anar al xat» en varietat secundària (PS-07) cap al seu xat comú, i les etiquetes es queden', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
   const forn = targeta(container, 'Forn de la Plaça');
-  const boto = within(forn).getByRole('link', { name: 'Anar al xat' });
+  /* Gemini R32.11 lot_00 (rebase R32.10) · El nom accessible és únic per targeta, «Anar al xat {nom}»
+     (WCAG 2.4.4), i comença pel verb visible (WCAG 2.5.3): el mateix contracte que FitxesPubliquesEntitats.r32_10. */
+  const boto = within(forn).getByRole('link', { name: 'Anar al xat Forn de la Plaça' });
+  expect(boto.textContent.startsWith('Anar al xat')).toBe(true);
   expect(boto.getAttribute('href')).toBe(rutaXatDePagina(objecteDePerfil({ tipus: 'entitat', id: 'forn', nom: 'Forn de la Plaça' })));
   expect(boto.getAttribute('href')).toMatch(/^\/xat\?sobre=entitat:forn&/);
   expect(boto.closest('.sp-card-accio')).not.toBeNull();
@@ -47,7 +50,8 @@ test('l’entitat porta «Anar al xat» en varietat secundària (PS-07) cap al s
 test('una persona no porta botó ni categories (Dignitat Humana), i una IA no ix al directori de Gent i Entitats', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
   const pepa = targeta(container, 'Pepa');
-  expect(within(pepa).queryByRole('link', { name: 'Anar al xat' })).toBeNull();
+  // Lot_00 R32.10 · El nom porta el de l'entitat al darrere: la guarda mira el començament, no el nom exacte.
+  expect(within(pepa).queryByRole('link', { name: /^Anar al xat/ })).toBeNull();
   expect(pepa.querySelector('.sp-card-accio')).toBeNull();
   expect(pepa.querySelector('.sp-card-labels')).toBeNull();
   expect(targeta(container, 'IAIA MarIA')).toBeUndefined();

@@ -1049,6 +1049,27 @@ describe('en estret (375 px): el mestre-detall de l’espai', () => {
      i el focus va a la fila quan el panell ja és obert. Com el navegador, el doble de focus() no
      enfoca res dins d'una columna tancada (inert), que jsdom no aplica. */
   test('l’Arrere del sistema després de llegir una notícia torna a la llista, amb el focus a la seua fila', async () => {
+    /* El retorn del focus espera el fotograma que pinta la llista oberta. El rellotge real de
+       jsdom pot deixar-lo pendent mentre altres suites ocupen el procés: lliurem els fotogrames
+       com el navegador, fins que el destí observable rep el focus, sense fixar-ne el nombre. */
+    const fotogrames = new Map();
+    let seguentFotograma = 0;
+    const demanaFotograma = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
+      seguentFotograma += 1;
+      fotogrames.set(seguentFotograma, cb);
+      return seguentFotograma;
+    });
+    const cancelaFotograma = vi.spyOn(globalThis, 'cancelAnimationFrame').mockImplementation((id) => { fotogrames.delete(id); });
+    const esperaFocus = (desti) => waitFor(() => {
+      act(() => {
+        for (const id of [...fotogrames.keys()]) {
+          const cb = fotogrames.get(id);
+          fotogrames.delete(id);
+          cb?.(performance.now());
+        }
+      });
+      expect(document.activeElement).toBe(desti());
+    });
     const focusDeVeres = HTMLElement.prototype.focus;
     const dinsDInert = [];
     vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function focus(...args) {
@@ -1058,29 +1079,35 @@ describe('en estret (375 px): el mestre-detall de l’espai', () => {
       }
       return focusDeVeres.apply(this, args);
     });
-    munta('/app/lector/noticies');
-    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
-    await waitFor(() => expect(closca().dataset.panell).toBe('left'));
-    fireEvent.click(filaDeLArbre('Cultura i festes'));
-    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
-    fireEvent.click(fitxa(CORREFOC));
-    await titolDelLector(CORREFOC);
-    await waitFor(() => expect(closca().dataset.panell).toBe(''));
-    dinsDInert.length = 0;
-    await act(async () => { window.history.back(); });
-    await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies/festes'));
-    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
-    expect(document.getElementById('app-grid-list').hasAttribute('inert')).toBe(false);
-    await waitFor(() => expect(document.activeElement).toBe(fitxa(CORREFOC)));
-    expect(dinsDInert).not.toContain(fitxa(CORREFOC));
-    /* L'aspa, com sempre: la llista i el focus a la fila, en el mateix pas. */
-    fireEvent.click(fitxa(CORREFOC));
-    await titolDelLector(CORREFOC);
-    await waitFor(() => expect(closca().dataset.panell).toBe(''));
-    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
-    await waitFor(() => expect(document.activeElement).toBe(fitxa(CORREFOC)));
+    try {
+      munta('/app/lector/noticies');
+      await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
+      await waitFor(() => expect(closca().dataset.panell).toBe('left'));
+      fireEvent.click(filaDeLArbre('Cultura i festes'));
+      await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+      fireEvent.click(fitxa(CORREFOC));
+      await titolDelLector(CORREFOC);
+      await waitFor(() => expect(closca().dataset.panell).toBe(''));
+      dinsDInert.length = 0;
+      await act(async () => { window.history.back(); });
+      await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies/festes'));
+      await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+      expect(document.getElementById('app-grid-list').hasAttribute('inert')).toBe(false);
+      await esperaFocus(() => fitxa(CORREFOC));
+      expect(dinsDInert).not.toContain(fitxa(CORREFOC));
+      /* L'aspa, com sempre: la llista i el focus a la fila, en el mateix pas. */
+      fireEvent.click(fitxa(CORREFOC));
+      await titolDelLector(CORREFOC);
+      await waitFor(() => expect(closca().dataset.panell).toBe(''));
+      fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
+      expect(ubicacio()).toBe('/app/lector/noticies/festes');
+      await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+      await esperaFocus(() => fitxa(CORREFOC));
+    } finally {
+      cleanup();
+      demanaFotograma.mockRestore();
+      cancelaFotograma.mockRestore();
+    }
   });
 
   test('un enllaç profund a una notícia obri primer la lectura', async () => {

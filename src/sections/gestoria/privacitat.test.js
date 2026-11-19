@@ -66,7 +66,10 @@ const FONTS = Object.fromEntries(Object.entries({
   ...import.meta.glob(['./**/*.{js,jsx,md}', '!**/*.test.*', '!**/__fixtures__/**'], { query: '?raw', import: 'default', eager: true }),
   ...import.meta.glob(['../tractors/**/*.{js,jsx,md}', '!**/*.test.*', '!**/__fixtures__/**'], { query: '?raw', import: 'default', eager: true })
 }).map(([clau, text]) => [desDeArrel(clau), text]));
-const CODI = Object.entries(FONTS).filter(([ruta]) => /\.jsx?$/.test(ruta));
+/* La nova dependència pura també travessa les mateixes guardes de xarxa,
+   magatzem i imports; el permís d'importar-la no l'exclou de l'auditoria. */
+const CODI = [...Object.entries(FONTS).filter(([ruta]) => /\.jsx?$/.test(ruta)),
+  ['src/utils/normalitzaUnicodeSegura.js', readFileSync(path.join(ARREL, 'src/utils/normalitzaUnicodeSegura.js'), 'utf8')]];
 
 /* Els especificadors d'importació (estàtica, dinàmica, reexportació i require) d'un codi. */
 function especificadors(codi) {
@@ -177,8 +180,12 @@ describe('res ix d’este ordinador', () => {
       (r) => r.startsWith('src/components/PedraSeca/'),
       (r) => r === 'src/app/contexts/RouterContext',
       (r) => r === 'src/utils/sanitize.js',
+      (r, origen) => [`${GESTORIA}/nucli/model.js`, `${GESTORIA}/cofre/nucli/cripto.js`].includes(origen)
+        && r === 'src/utils/normalitzaUnicodeSegura.js',
       (r) => r === 'src/sections/wiki-de-poble/parseMarkdown.js',
       (r) => r === 'react' || r === 'lucide-react',
+      (r) => r === 'src/config/fullDiferit.js',
+      (r) => r === 'src/css/diferit-gestoria.css?inline' || r === 'src/css/diferit-tractors.css?inline',
       /* 261006 (MarIA, PanellAgents.jsx de les 01:52; prompt 261006_0224, T6):
          Agents (BIOS) llig AGENTS.md, el BIOS que ja és públic al repositori,
          com a text i només en desenvolupament (EINES_LOCALS de la Wiki). El

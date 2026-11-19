@@ -29,9 +29,11 @@ describe('manifest', () => {
     expect(manifest.interruptors.map((i) => [i.id, i.actiuPerDefecte])).toEqual([['taules', true], ['escandalls', true], ['cuina', false]]);
   });
 
+  /* Onada R32.11 · Gemini lot_00 · Els títols del manifest ara van en cinc llengües (ca, es, en, eu,
+     gl): el TPV conserva «TPV» en valencià i en castellà, i la resta de llengües hi ha d'estar. */
   test('el TPV conserva la seua entrada de servei just després de la Caixa', () => {
     expect(manifest.entrades.slice(0, 2).map((e) => [e.slug, e.icona, e.grup])).toEqual([['caixa', 'Receipt', 'servei'], ['tpv', 'Store', 'servei']]);
-    expect(manifest.entrades.find((e) => e.slug === 'tpv').titol).toEqual({ ca: 'TPV', es: 'TPV' });
+    expect(manifest.entrades.find((e) => e.slug === 'tpv').titol).toEqual({ ca: 'TPV', es: 'TPV', en: 'POS', eu: 'STG', gl: 'TPV' });
     expect(manifest.permisos).toEqual({ veure: 'public', escriure: 'sessio' });
   });
 });

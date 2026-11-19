@@ -26,6 +26,9 @@ import { Dialeg } from '../../components/PedraSeca/organismes/Dialeg.jsx';
 import { Camp, CampText, Casella } from '../../components/PedraSeca/organismes/formulari.jsx';
 import { blocsDeFitxa, trossosEnLinia } from './fitxaTractor.js';
 import { empremtaCurta } from './nucli/empremta.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
 /* ErrorAprovacio.codi (i els de la UI) → què ha passat i què pot fer el Mestre. */
 const TEXTOS_ERROR = Object.freeze({
@@ -50,8 +53,8 @@ export function textError(error) {
 /* El text d'una línia de la fitxa: negreta i codi com a elements, la resta com a text. */
 function EnLinia({ text }) {
   return trossosEnLinia(text).map((tros, i) => {
-    if (tros.tipus === 'fort') return <strong key={i}>{tros.text}</strong>;
-    if (tros.tipus === 'codi') return <code key={i}>{tros.text}</code>;
+    if (tros.tipus === 'fort') return <strong ref={adoptaEstilsDiferits} key={i}>{tros.text}</strong>;
+    if (tros.tipus === 'codi') return <code ref={adoptaEstilsDiferits} key={i}>{tros.text}</code>;
     return tros.text;
   });
 }
@@ -59,7 +62,7 @@ function EnLinia({ text }) {
 /* La fitxa sencera. Penja del diàleg com del tractor al panell: «#» és un h5 i la resta, h6. */
 function FitxaDelTractor({ fitxa }) {
   return (
-    <section className="sdp-tractors-panell__fitxa" aria-label="Fitxa explicativa">
+    <section ref={adoptaEstilsDiferits} className="sdp-tractors-panell__fitxa" aria-label="Fitxa explicativa">
       {blocsDeFitxa(fitxa).map((bloc, i) => {
         if (bloc.tipus === 'titol') {
           const Titol = bloc.nivell <= 1 ? 'h5' : 'h6';
@@ -70,17 +73,17 @@ function FitxaDelTractor({ fitxa }) {
           return (
             <Llista key={i}>
               {bloc.elements.map((element, j) => (
-                <li key={j}>
+                <li ref={adoptaEstilsDiferits} key={j}>
                   <EnLinia text={element.text} />
                   {element.fills.length ? (
-                    <ul>{element.fills.map((fill, k) => <li key={k}><EnLinia text={fill.text} /></li>)}</ul>
+                    <ul ref={adoptaEstilsDiferits}>{element.fills.map((fill, k) => <li ref={adoptaEstilsDiferits} key={k}><EnLinia text={fill.text} /></li>)}</ul>
                   ) : null}
                 </li>
               ))}
             </Llista>
           );
         }
-        return <p key={i}><EnLinia text={bloc.text} /></p>;
+        return <p ref={adoptaEstilsDiferits} key={i}><EnLinia text={bloc.text} /></p>;
       })}
     </section>
   );
@@ -159,7 +162,7 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
       mida={ambFitxa ? 'g' : undefined}
       accions={<Boto varietat="secundari" onClick={() => tanca('boto')} disabled={Boolean(ocupat)}>Cancel·la</Boto>}
     >
-      <div className="sdp-tractors-dialeg">
+      <div ref={adoptaEstilsDiferits} className="sdp-tractors-dialeg">
         <p className="sdp-tractors-dialeg__empremta">
           Empremta curta: <strong className="sdp-tractors-dialeg__curta">{curta ?? 'cap'}</strong>
         </p>
@@ -175,7 +178,7 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
         />
 
         {webauthn ? (
-          <section className="sdp-tractors-dialeg__via" aria-labelledby={idSignatura}>
+          <section ref={adoptaEstilsDiferits} className="sdp-tractors-dialeg__via" aria-labelledby={idSignatura}>
             <h3 id={idSignatura} className="sdp-tractors-dialeg__titol">Signatura</h3>
             <p>
               Touch ID, Windows Hello o una clau de pas. El gest de verificació el fas tu; ara bé, un programa que
@@ -196,7 +199,7 @@ export default function DialegAprovacio({ obert, onTanca, onAprova, manifest, em
         <section className="sdp-tractors-dialeg__via" aria-labelledby={idConfirmacio}>
           <h3 id={idConfirmacio} className="sdp-tractors-dialeg__titol">Confirmació escrita</h3>
           {exigeixSignatura ? (
-            <p>Este tractor exigix signatura: la confirmació escrita no hi val.</p>
+            <p ref={adoptaEstilsDiferits}>Este tractor exigix signatura: la confirmació escrita no hi val.</p>
           ) : null}
           <Camp etiqueta="Escriu l’empremta curta"
             ajuda={curta ? `És ${curta}. Majúscules, espais i guions no importen.` : undefined}>

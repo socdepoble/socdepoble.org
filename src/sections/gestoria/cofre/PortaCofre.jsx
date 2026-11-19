@@ -33,6 +33,9 @@ import { Camp, CampText, Casella } from '../../../components/PedraSeca/organisme
 import { CONFIRMACIO_EN_CLAR } from './cofre.js';
 import { avaluaFrase } from './nucli/cripto.js';
 import { useCofre } from './useCofre.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const INSIGNIES = Object.freeze({
   carregant: { to: 'neutre', text: 'Comprovant' },
@@ -63,12 +66,12 @@ function CampFrase({ etiqueta, valor, onCanvi, autoComplete, ajuda = null, error
   const idError = `${id}-error`;
   const descrit = [ajuda ? idAjuda : null, error ? idError : null].filter(Boolean).join(' ') || undefined;
   return (
-    <div className="sdp-camp">
+    <div ref={adoptaEstilsDiferits} className="sdp-camp">
       <label className="sdp-camp__etiqueta" htmlFor={id}>{etiqueta}</label>
-      {ajuda ? <p id={idAjuda} className="sdp-camp__ajuda">{ajuda}</p> : null}
+      {ajuda ? <p ref={adoptaEstilsDiferits} id={idAjuda} className="sdp-camp__ajuda">{ajuda}</p> : null}
       <ControlContrasenya id={id} value={valor} onChange={(event) => onCanvi(event.target.value)} autoComplete={autoComplete}
         etiquetaUll={etiquetaUll} aria-describedby={descrit} aria-invalid={error ? 'true' : undefined} disabled={desactivat} />
-      {error ? <p id={idError} className="sdp-camp__error">{error}</p> : null}
+      {error ? <p ref={adoptaEstilsDiferits} id={idError} className="sdp-camp__error">{error}</p> : null}
     </div>
   );
 }
@@ -78,10 +81,10 @@ function Robustesa({ frase }) {
   const avaluacio = avaluaFrase(frase);
   const marca = ROBUSTESA[avaluacio.nivell];
   return (
-    <p className="sdp-gestoria-cofre__robustesa" aria-live="polite">
+    <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__robustesa" aria-live="polite">
       <span>Robustesa:</span>
       <Insignia to={marca.to}>{marca.text}</Insignia>
-      {avaluacio.valida ? <span>{avaluacio.motiu}</span> : null}
+      {avaluacio.valida ? <span ref={adoptaEstilsDiferits}>{avaluacio.motiu}</span> : null}
     </p>
   );
 }
@@ -91,7 +94,7 @@ function AvisCofre({ avis, zona, onTanca }) {
   if (!avis || avis.zona !== zona) return null;
   return (
     <Alerta to={avis.to} onTanca={onTanca}>
-      <p>{avis.text}</p>
+      <p ref={adoptaEstilsDiferits}>{avis.text}</p>
     </Alerta>
   );
 }
@@ -100,7 +103,7 @@ function AvisCofre({ avis, zona, onTanca }) {
 function Seccio({ titol, children }) {
   const id = useId();
   return (
-    <section className="sdp-gestoria-cofre__seccio" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__seccio" aria-labelledby={id}>
       <h3 id={id} className="sdp-gestoria-cofre__subtitol">{titol}</h3>
       {children}
     </section>
@@ -143,7 +146,7 @@ function FormulariCrea({ c }) {
     }
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <p>
         El que guardes en este cofre es desa xifrat en este navegador. Només la teua frase de pas o el codi de recuperació
         l’obrin: ningú més, tampoc Sóc de Poble, ho pot recuperar si perds totes dues coses.
@@ -163,7 +166,7 @@ function FormulariObre({ c, onOblidada }) {
     if (await c.obre(frase)) setFrase('');
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <CampFrase etiqueta="Frase de pas" valor={frase} onCanvi={setFrase} autoComplete="current-password" desactivat={Boolean(c.ocupat)} />
       <div className="sdp-gestoria-cofre__accions">
         <Boto tipus="submit" varietat="primari" icona={LockOpen} carregant={c.ocupat === 'obrint'} disabled={Boolean(c.ocupat) || !frase}>Obri el cofre</Boto>
@@ -190,7 +193,7 @@ function FormulariRecupera({ c, onTorna }) {
     }
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <p>
         Amb el codi de recuperació obris el cofre i hi poses una frase de pas nova. Es renova la clau de les dades i se’n crea
         un codi nou: el codi usat i la frase d’abans ja no obrin res del que hi ha ara. Les còpies xifrades fetes abans
@@ -214,7 +217,7 @@ function FormulariRecupera({ c, onTorna }) {
 function PanellCodi({ codi, onApuntat }) {
   const [apuntat, setApuntat] = useState(false);
   return (
-    <div className="sdp-gestoria-cofre__formulari">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari">
       <Alerta to="avis" viva={false} titol="Apunta ara el codi de recuperació">
         <p>
           Només es mostra esta vegada. Escriu-lo en paper i guarda’l lluny de l’ordinador. No el copies, no li faces
@@ -259,7 +262,7 @@ function ImportaCopia({ c, zona }) {
     }
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <Camp etiqueta={zona === 'porta' ? 'Restaura una còpia xifrada' : 'Importa una còpia xifrada'} error={errorFitxer}
         ajuda="Un fitxer .json fet amb «Descarrega la còpia xifrada». Abans de tocar res es comprova sencer; en un cofre obert només s’hi afig el que falta.">
         <CampText tipus="file" accept=".json,application/json" textBoto="Tria la còpia" disabled={Boolean(c.ocupat)} onChange={tria} />
@@ -294,7 +297,7 @@ function FormulariCanvia({ c }) {
     }
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <p className="sdp-gestoria-cofre__nota">
         Canviar la frase no toca les dades: el codi de recuperació continua valent i les còpies xifrades fetes abans
         s’obrin amb la frase vella. Si creus que algú coneix la frase o el codi, marca la casella.
@@ -318,7 +321,7 @@ function FormulariRenova({ c }) {
     if (await c.renovaCodi(frase)) setFrase('');
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <p>
         Si has perdut el codi o creus que algú l’ha vist, fes-ne un de nou. També es renova la clau de les dades: el codi
         anterior ja no obri res del que hi ha ara ni del que hi guardes després, encara que algú tinga una còpia vella.
@@ -344,7 +347,7 @@ function FormulariClar({ c }) {
     }
   }
   return (
-    <form className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__formulari" onSubmit={envia} noValidate>
       <Alerta to="avis" viva={false} titol="El fitxer eixirà sense xifrar">
         <p>
           Qualsevol persona o programa que el tinga podrà llegir-ho tot. Fes-ho només per a passar les dades a un altre
@@ -368,11 +371,11 @@ function EstatObert({ c }) {
   return (
     <>
       <Alerta to="exit" viva={false} titol="El cofre és obert">
-        <p>Es bloqueja sol després de 10 minuts sense activitat, si la pestanya està amagada més de 5 minuts o si ixes de la pàgina.</p>
+        <p ref={adoptaEstilsDiferits}>Es bloqueja sol després de 10 minuts sense activitat, si la pestanya està amagada més de 5 minuts o si ixes de la pàgina.</p>
       </Alerta>
       {c.codiSenseConfirmar ? (
         <Alerta to="avis" viva={false} titol="Falta un codi de recuperació apuntat">
-          <p>
+          <p ref={adoptaEstilsDiferits}>
             L’últim codi que es va mostrar no es va confirmar abans que el cofre es bloquejara. Fes-ne un de nou a «Codi de
             recuperació nou»: sense la frase i sense codi, el cofre no es pot obrir.
           </p>
@@ -389,7 +392,7 @@ function EstatObert({ c }) {
 function GestioCofre({ c }) {
   const id = useId();
   return (
-    <section className="sdp-gestoria-cofre" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={id}>
       <div className="sdp-gestoria-cofre__cap">
         <h2 id={id} className="sdp-gestoria-cofre__titol">Còpies i claus del cofre</h2>
       </div>
@@ -442,7 +445,7 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
   else if (c.estat === 'insegur') {
     cos = (
       <Alerta to="error" viva={false} titol="El cofre no s’obri en esta adreça">
-        <p>
+        <p ref={adoptaEstilsDiferits}>
           El xifratge del navegador només funciona en un context segur: https o localhost. Si has obert l’app des d’una
           altra màquina de la xarxa local per http, obri-la en este ordinador amb localhost. Així cap dada no viatja per la xarxa.
         </p>
@@ -451,7 +454,7 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
   } else if (c.estat === 'sense-magatzem') {
     cos = (
       <Alerta to="error" viva={false} titol="Este navegador no deixa desar el cofre">
-        <p>Cal IndexedDB, que la navegació privada d’alguns navegadors desactiva. Obri l’app en una finestra normal.</p>
+        <p ref={adoptaEstilsDiferits}>Cal IndexedDB, que la navegació privada d’alguns navegadors desactiva. Obri l’app en una finestra normal.</p>
       </Alerta>
     );
   } else if (c.estat === 'absent') {
@@ -473,7 +476,7 @@ export default function PortaCofre({ cofre, descarrega, rellotge, children }) {
   /* Tres blocs germans: la targeta del cofre, el contingut (només obert) i la gestió (només obert). */
   return (
     <>
-      <section className="sdp-gestoria-cofre" aria-labelledby={idTitol}>
+      <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={idTitol}>
         <div className="sdp-gestoria-cofre__cap">
           <h2 id={idTitol} className="sdp-gestoria-cofre__titol">Cofre xifrat</h2>
           <Insignia to={marca.to}>{marca.text}</Insignia>

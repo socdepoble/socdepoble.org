@@ -19,6 +19,8 @@ import { Clock, Trash2 } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto, Botonera } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg } from '../../comu/esquelet/index.js';
+import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { ARTICLES_PRODUCTES, LIMITS, articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
 import { ambPreusMercadona, esLlistaMercadona, nomLlistaVisible } from '../mercadona.js';
 import { AvisNevera } from './AvisNevera.jsx';
@@ -34,39 +36,47 @@ import {
   articlesVestits, entradetaDe, liniesVestides, nomArticleVisible, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
 } from './vestits.js';
 
-const TEXTOS_LLISTA = Object.freeze({
-  enColleccio: 'Per comprar',
-  buit: 'La llista és buida',
-  buitText: 'Afig el que falta des del catàleg o amb «Necessite…».',
-  obriCataleg: 'Afig des del catàleg'
-});
+function textosLlistaDe(idioma) {
+  const tx = textosBuitNevera(idioma);
+  return {
+    enColleccio: tx.llistaEnColleccio,
+    buit: tx.llistaBuida,
+    buitText: tx.llistaBuidaText,
+    obriCataleg: tx.llistaObriCataleg
+  };
+}
 
-const TEXTOS_LLISTA_DESCONEGUDA = Object.freeze({
-  ...TEXTOS_LLISTA,
-  buit: 'Esta llista no existix',
-  buitText: 'Potser s’ha esborrat. Tria’n una altra a «Les meues llistes».'
-});
+function textosLlistaDesconegudaDe(idioma) {
+  const tx = textosBuitNevera(idioma);
+  return {
+    ...textosLlistaDe(idioma),
+    buit: tx.llistaDesconeguda,
+    buitText: tx.llistaDesconegudaText
+  };
+}
 
 /** «Les meues llistes»: cada targeta és un enllaç a /app/nevera/llista/<id>. */
 export function ColumnaLlistes({ params }) {
   const { estat, accions, ruta, obriNovaLlista, llistaVigent, mode, llegit } = useVistaNevera();
+  const { idioma = 'ca' } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
   const navigate = useNavigate();
   const mercadona = estat.llistes.find(esLlistaMercadona);
   return (
     <ColumnaColleccions
-      titol="Les meues llistes"
+      titol={tx.lesMeuesLlistes}
       colleccions={estat.llistes.map((llista) => ({ id: llista.id, nom: nomLlistaVisible(llista.nom), comptador: llista.linies.length }))}
       actiu={llistaDelCami(params) ?? llistaVigent(null).id}
       hrefDe={(colleccio) => ruta(COMPRA.entrada, colleccio.id)}
       onCrea={obriNovaLlista}
-      textCrea="Crea una llista"
-      textComptador={textArticles}
+      textCrea={tx.creaUnaLlista}
+      textComptador={idioma === 'ca' ? textArticles : tx.textArticlesCount}
       avis={(
-        <Botonera etiqueta="Catàlegs de compra">
+        <Botonera etiqueta={tx.catalegsDeCompra}>
           <Boto disabled={!mercadona && (!llegit || mode === 'lectora' || estat.llistes.length >= LIMITS.llistes)} onClick={() => {
-            const id = mercadona?.id || accions.creaLlista('Botiga de poble');
+            const id = mercadona?.id || accions.creaLlista(tx.botigaDePoble);
             if (id) navigate(ruta(COMPRA.entrada, id));
-          }}>Catàleg de botiga</Boto>
+          }}>{tx.catalegDeBotiga}</Boto>
         </Botonera>
       )}
     />
@@ -77,10 +87,12 @@ export function ColumnaLlistes({ params }) {
    defecte mentre AppNevera canonitza el camí; a La compra, ho diu. */
 function LaCompra({ params, ambEdicio, vigent = false }) {
   const { estat, accions, llistaDe, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
   const obriDetall = useObriDetall(COMPRA);
   const llista = vigent ? llistaVigent(params) : llistaDe(params);
   if (!llista) {
-    return <ColumnaColleccio titol="Llista desconeguda" linies={[]} textos={TEXTOS_LLISTA_DESCONEGUDA} primer={COMPRA.primer} tram={COMPRA.tram} />;
+    return <ColumnaColleccio titol={tx.llistaDesconegudaTitol} linies={[]} textos={textosLlistaDesconegudaDe(idioma)} primer={COMPRA.primer} tram={COMPRA.tram} />;
   }
   /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
   const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle });
@@ -90,10 +102,10 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
       ometDataNoIndicada
       titol={nomLlistaVisible(llista.nom)}
       linies={linies}
-      resum={{ etiqueta: 'Per comprar', comptador: linies.length, textComptador: textArticles }}
+      resum={{ etiqueta: tx.perComprar, comptador: linies.length, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount }}
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
       onEdita={ambEdicio ? (linia) => obriDetall(linia.articleId) : undefined}
-      textos={TEXTOS_LLISTA}
+      textos={textosLlistaDe(idioma)}
       avis={(
         <>
           <RecepcioRecepta llista={llista} />
@@ -123,6 +135,9 @@ export function ColumnaLlistaActiva({ params }) {
 /** El catàleg de La compra: tocar posa o lleva de la llista; el botó dret dona l'especificació. */
 export function ColumnaCatalegCompra({ params }) {
   const { estat, accions, llistaDe } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaDe(params);
@@ -137,7 +152,7 @@ export function ColumnaCatalegCompra({ params }) {
   const recents = llista ? recentsDisponibles(estat, llista.id) : [];
   const destacats = recents.length ? [{
     id: 'recents',
-    nom: 'Recents',
+    nom: tx.recents,
     icona: Clock,
     articles: recents.map((recent) => {
       const article = articlePerId(estat, recent.articleId);
@@ -157,16 +172,16 @@ export function ColumnaCatalegCompra({ params }) {
     <ColumnaCataleg
       forma="targetes"
       ometDataNoIndicada
-      titol="Catàleg"
+      titol={tx.cataleg}
       avis={deMercadona ? <AvisCatalegMercadona dades={catalegMercadona} error={errorMercadona} /> : null}
       categories={seccionsDe(estat, llista?.id)}
       articles={articles}
       destacats={destacats}
       commutable
-      textosEstat={{ 'en-colleccio': 'A la llista' }}
+      textosEstat={{ 'en-colleccio': tx.aLaLlista }}
       onTria={llista ? (article) => accions.commuta(llista.id, article.id) : undefined}
       afegit={llista ? {
-        etiqueta: 'Necessite…',
+        etiqueta: tx.necessite,
         suggeriments: suggerimentsVestits(estat, vestit),
         onTria: (article) => accions.afig(llista.id, article.id),
         onCrea: (text) => accions.afigPerNom(llista.id, text)
@@ -177,18 +192,19 @@ export function ColumnaCatalegCompra({ params }) {
           return producte ? <ComparadorMercadona key={producte.id} producte={producte} /> : null;
         },
         ambQuantitat: false,
-        etiquetaNota: 'Especificació',
-        textAccepta: 'Posa-ho a la llista',
+        etiquetaNota: tx.especificacio,
+        textAccepta: tx.posaHoALaLlista,
         inicialDe: (article) => ({ nota: linies.get(article.id)?.especificacio ?? especificacioRecent(article.id) }),
         onAccepta: ({ nota }, article) => accions.afig(llista.id, article.id, { especificacio: nota }),
         accionsDe: (article, tanca) => (linies.has(article.id) ? (
           <Boto icona={Trash2} onClick={() => {
             accions.lleva(llista.id, article.id);
             tanca();
-          }}>Lleva de la llista</Boto>
+          }}>{tx.llevaDeLaLlista}</Boto>
         ) : null)
       } : null}
-      resum={llista ? { etiqueta: nomLlistaVisible(llista.nom), comptador: linies.size, textComptador: textArticles } : null}
+      resum={llista ? { etiqueta: nomLlistaVisible(llista.nom), comptador: linies.size, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount } : null}
+      textos={{ buit: txBuit.catalegBuit, buitText: txBuit.catalegBuitText }}
       primer={COMPRA.primer}
       tram={COMPRA.tram}
     />

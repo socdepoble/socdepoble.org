@@ -21,13 +21,7 @@ const net = (text) => text.replace(/\s+/g, ' ').trim();
    catalegColleccio de modules.css, entre les seues marques: es llig el bloc,
    no el full sencer, i les guardes miren les mateixes regles que abans. */
 const BLOC_CATALEG = 'src/css/modules.css · bloc catalegColleccio';
-const lligBloc = (nom) => {
-  const tot = llig('src/css/modules.css');
-  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
-  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
-  if (inici < 0 || fi < inici) throw new Error(`modules.css no té el bloc ${nom}`);
-  return tot.slice(inici, fi);
-};
+const lligBloc = () => llig('src/css/diferit-cataleg-colleccio.css');
 const RUTES = [
   'src/css/layout.css',
   'src/components/layout/AppGridShell.css',

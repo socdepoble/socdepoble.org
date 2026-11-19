@@ -136,6 +136,7 @@ import usePobleAmfitrio from './usePobleAmfitrio.js';
 import useObriXatPerDefecte, { ID_FIL_DE_MOSTRA_DE_LA_IAIA, ID_FIL_LOCAL_IAIA } from './useObriXatPerDefecte.js';
 /* Ordre del Mestre (261021, pla 261021_0015 §8.5) · La fletxa de la conversa torna a la pàgina d'origen. */
 import { useOrigenDelXat } from './origenDelXat.js';
+import { prenEsborranyReferenciaXat, resolReferenciaDeLaConversa, useReferenciaPaginaDelXat } from './referenciaPaginaXat.js';
 import { ID_FIL_DE_MOSTRA_DE_JAVI, PREFIX_PER_DEFECTE, clauPerDefecteDe, esIdPerDefecte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 /* Gauntlet 261016_1530 (Bloc 3.6) · Els quatre actors al capdamunt, en
    l'ordre del Mestre, i la fila que porta a la comunitat de Sóc de Poble.
@@ -339,24 +340,18 @@ export default function XatSection() {
      d'on s'ha entrat a la conversa (origenDelXat.js). Viu ací, per damunt de
      XatWorkspace: un àmbit nou torna a muntar l'espai, no tornar a entrar. */
   const origen = useOrigenDeLaConversa();
-  // Padró, cerca i selecció pertanyen al mateix àmbit, i un altre àmbit
-  // (persona, actor o backend) torna a muntar l'espai sencer.
-  // Decisió 1 del Mestre (261007) · La clau és `ambitEstable` i no `scopeKey`:
-  // una renovació del JWT (generació nova) no és un altre àmbit. Abans tornava
-  // a muntar XatWorkspace cada hora i s'enduia la cita a mitges, la posició de
-  // lectura, la cerca i el diàleg obert; ara XatContext conserva la conversa i
-  // el que la persona té a la pantalla es queda.
+  const referenciaEntrada = useReferenciaDeLaConversa();
   if (xat.senseSessio) {
     return (
       <FakeChatOnboarding originalContext={xat}>
-        <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} origen={origen} />
+        <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} origen={origen} referenciaEntrada={referenciaEntrada} />
       </FakeChatOnboarding>
     );
   }
   if (xat.modeDades === 'remote') {
-    return <IAIAProvider language={language} key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} /></IAIAProvider>;
+    return <IAIAProvider language={language} key={xat.ambitEstable ?? 'xat'} t={t}><XatWorkspace origen={origen} referenciaEntrada={referenciaEntrada} /></IAIAProvider>;
   }
-  return <IAIALocalProvider key={xat.ambitEstable ?? 'xat'} t={t} filPerDefecte={false}><XatWorkspace origen={origen} /></IAIALocalProvider>;
+  return <IAIALocalProvider key={xat.ambitEstable ?? 'xat'} t={t} filPerDefecte={false}><XatWorkspace origen={origen} referenciaEntrada={referenciaEntrada} /></IAIALocalProvider>;
 }
 
 /* §8.5 · Hi ha una conversa demanada si la URL en porta una (/xat/<fil>) o la
@@ -370,7 +365,15 @@ function useOrigenDeLaConversa() {
   return useOrigenDelXat({ intencio, fil });
 }
 
-function XatWorkspace({ origen = null }) {
+function useReferenciaDeLaConversa() {
+  const { threadId } = useParams();
+  const [params] = useSearchParams();
+  const intencio = Boolean(threadId || params.get('amb') || params.get('sobre'));
+  const fil = threadId && !esIdPerDefecte(threadId) ? String(threadId) : null;
+  return useReferenciaPaginaDelXat({ intencio, fil });
+}
+
+function XatWorkspace({ origen = null, referenciaEntrada = null }) {
   const mounted = useRef(false);
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { showToast } = useToast();
@@ -472,7 +475,14 @@ function XatWorkspace({ origen = null }) {
        d'abans no la porta: null, i la fila fa el de sempre. */
     filServeiTecnic = null,
     potArxivarFil = mai,
-    arxivaFil = null
+    arxivaFil = null,
+    /* R32.11 · D-v128-2 · Accions de missatge exposades per XatContext (motor diferit R32.7). */
+    alternaReaccio = null,
+    alternaDestacat = null,
+    alternaFixat = null,
+    eliminaPerAMi = null,
+    responEnPrivat = null,
+    reenviaAConverses = null
   } = useXat();
   /* Fase D (261020, tasca 2; pla 261020_1300) · Denunciar i bloquejar des de
      la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
@@ -561,9 +571,7 @@ function XatWorkspace({ origen = null }) {
      Conversa, més avall): en remot i mai el xat de la IAIA. Tampoc el directe
      amb qui has bloquejat: Conversa no hi deixa escriure. */
   const compartit = useCompartitPendent();
-  const filsPerCompartir = useMemo(() => {
-    if (!compartit) return CAP;
-    const ambFitxers = compartit.fitxers.length > 0;
+  const filsEscrivibles = useMemo(() => {
     const obert = String(threadId ?? '');
     const bloquejat = (fil) => {
       const contrapart = moderacioDelXat?.objectiuDeContrapart?.(fil) ?? null;
@@ -571,10 +579,14 @@ function XatWorkspace({ origen = null }) {
     };
     return threads
       .filter((fil) => fil && !fil.arxivat && !fil.perDefecte && !esComunitat(fil) && fil.participant !== false
-        && !esNomesLectura(fil) && !esFilAmagat(fil.id) && !bloquejat(fil)
-        && !(ambFitxers && (modeDades !== 'remote' || esXatDeLaIAIA(fil))))
+        && !esNomesLectura(fil) && !esFilAmagat(fil.id) && !bloquejat(fil))
       .sort((a, b) => (Number(String(b.id) === obert) - Number(String(a.id) === obert)) || (instantDe(b.ultimAl) - instantDe(a.ultimAl)));
-  }, [compartit, threads, threadId, esFilAmagat, modeDades, moderacioDelXat]);
+  }, [threads, threadId, esFilAmagat, moderacioDelXat]);
+  const filsPerCompartir = useMemo(() => {
+    if (!compartit) return CAP;
+    if (compartit.fitxers.length === 0) return filsEscrivibles;
+    return filsEscrivibles.filter((fil) => modeDades === 'remote' && !esXatDeLaIAIA(fil));
+  }, [compartit, filsEscrivibles, modeDades]);
   /* Auditoria 261008 (B04 i B05) · `trobatViu` és el fil de la URL tal com
      és ara a la llista (o entre els visitants). obriFil només es crida amb
      este: un id que no hi és (ni entre els visitants) no es demana mai a
@@ -640,6 +652,28 @@ function XatWorkspace({ origen = null }) {
   );
   const activeThread = trobatEsComunitat || idPerDefecte || dinsDeLaIAIA ? null : trobat;
   const filActiuId = activeThread?.id ?? null;
+  const referenciaPaginaActiva = useMemo(
+    () => resolReferenciaDeLaConversa(activeThread, referenciaEntrada),
+    [activeThread, referenciaEntrada]
+  );
+  const [esborranyInicialPagina, setEsborranyInicialPagina] = useState(null);
+  useEffect(() => {
+    if (!activeThread) return;
+    const pendent = prenEsborranyReferenciaXat();
+    if (!pendent) return;
+    const prefixPrivat = !activeThread.subjecte && referenciaPaginaActiva?.titol
+      ? `[${referenciaPaginaActiva.titol}]\n`
+      : '';
+    const textComplet = `${prefixPrivat}${pendent}`;
+    if (ambitEstable && !activeThread.sessioLocalIAIA) {
+      const clau = `${ambitEstable}::${activeThread.id}`;
+      const previ = llegixEsborrany(clau);
+      desaEsborrany(clau, previ ? `${previ}\n\n${textComplet}` : textComplet);
+      setRevisioEsborrany((n) => n + 1);
+    } else {
+      setEsborranyInicialPagina({ filId: String(activeThread.id), text: textComplet });
+    }
+  }, [activeThread, ambitEstable, referenciaPaginaActiva]);
   const comunitatOberta = comunitatId
     ? comunitats.find((c) => String(c.fil.id) === comunitatId) || null
     : null;
@@ -1140,6 +1174,113 @@ function XatWorkspace({ origen = null }) {
       showToast(t('section.xat.missatge.noCopiat', "No s'ha pogut copiar el text"), 'error');
     }
   }, [showToast, t]);
+
+  /* R32.11 · D-v128-2 · Cablejat d'accions de missatge cap al motor de XatContext (sense tocar
+     XatContext.jsx ni Conversa.jsx), amb guardes click-path-audit contra closures obsolets i races:
+     l'àmbit i el fil es capturen en l'instant del clic, i un AbortError de canvi de sessió o de
+     conversa s'ignora sense avís espuri. */
+  const ambitActualRef = useRef(ambitEstable);
+  useLayoutEffect(() => { ambitActualRef.current = ambitEstable; }, [ambitEstable]);
+  const potAccionsMissatge = !senseSessio && Boolean(joId)
+    && Boolean(activeThread) && !activeThread.sessioLocalIAIA && activeThread.id !== ID_FIL_LOCAL_IAIA;
+
+  const ambFilDelMissatge = useCallback((msg, filOrigenId) => {
+    if (!msg || filOrigenId == null) return msg;
+    const filResolt = msg.filId ?? msg.threadId ?? filOrigenId;
+    return { ...msg, filId: filResolt, threadId: msg.threadId ?? filResolt };
+  }, []);
+
+  const notificaErrorAccio = useCallback((error) => {
+    if (!mounted.current || error?.name === 'AbortError') return;
+    showToast(textDErrorDelXat(error, t, error?.message || t('section.xat.accioError', "No s'ha pogut completar l'acció.")), 'error');
+  }, [showToast, t]);
+
+  const handleAlternaReaccio = useCallback((msg, emoji) => {
+    if (typeof alternaReaccio !== 'function' || !filActiuId) return;
+    Promise.resolve(alternaReaccio(ambFilDelMissatge(msg, filActiuId), emoji)).catch(notificaErrorAccio);
+  }, [alternaReaccio, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  const handleAlternaDestacat = useCallback((msg, actiu) => {
+    if (typeof alternaDestacat !== 'function' || !filActiuId) return;
+    Promise.resolve(alternaDestacat(ambFilDelMissatge(msg, filActiuId), Boolean(actiu))).catch(notificaErrorAccio);
+  }, [alternaDestacat, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  const handleAlternaFixat = useCallback((msg, actiu) => {
+    if (typeof alternaFixat !== 'function' || !filActiuId) return;
+    Promise.resolve(alternaFixat(ambFilDelMissatge(msg, filActiuId), Boolean(actiu))).catch(notificaErrorAccio);
+  }, [alternaFixat, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  const handleEliminaMissatge = useCallback((msg, opcions = {}) => {
+    if (opcions?.abast !== 'mi' || typeof eliminaPerAMi !== 'function' || !filActiuId) return;
+    Promise.resolve(eliminaPerAMi(ambFilDelMissatge(msg, filActiuId))).catch(notificaErrorAccio);
+  }, [eliminaPerAMi, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  const handleObriDirecteAmb = useCallback(async (msg, opcions = {}) => {
+    if (!msg || !filActiuId) return;
+    const ambitClic = ambitEstable;
+    const vigent = () => mounted.current && ambitActualRef.current === ambitClic;
+    if (opcions?.cita === true && typeof responEnPrivat === 'function') {
+      try {
+        const esborrany = await responEnPrivat(ambFilDelMissatge(msg, filActiuId));
+        if (!vigent() || !esborrany?.filId) return;
+        const textCita = String(esborrany.textCita ?? '').trim();
+        if (textCita && ambitClic) {
+          const clau = `${ambitClic}::${esborrany.filId}`;
+          const previ = llegixEsborrany(clau);
+          const liniaCita = `> ${textCita}\n`;
+          desaEsborrany(clau, previ ? `${previ}\n\n${liniaCita}` : liniaCita);
+          if (String(esborrany.filId) === String(threadId ?? '')) setRevisioEsborrany((n) => n + 1);
+        }
+        navigate(`/xat/${enc(esborrany.filId)}${consulta()}`);
+      } catch (error) {
+        if (vigent()) notificaErrorAccio(error);
+      }
+      return;
+    }
+    const destinatari = msg.comOrgId || msg.comEntitat?.id || (msg.usuariId != null ? String(msg.usuariId) : '');
+    if (!destinatari || typeof creaFil !== 'function') return;
+    try {
+      const nouFilId = await creaFil(destinatari, null);
+      if (!vigent() || !nouFilId) return;
+      navigate(`/xat/${enc(nouFilId)}${consulta()}`);
+    } catch (error) {
+      if (vigent()) showToast(textDeFalladaDirecte(error, t), 'error');
+    }
+  }, [filActiuId, ambitEstable, responEnPrivat, ambFilDelMissatge, threadId, navigate, consulta, notificaErrorAccio, creaFil, showToast, t]);
+
+  const handleReenviaMissatge = useCallback(async (missatgesLot, destinacionsLot) => {
+    if (typeof reenviaAConverses !== 'function' || !filActiuId) return;
+    const filOrigenId = String(filActiuId);
+    const llista = (Array.isArray(missatgesLot) ? missatgesLot : [missatgesLot])
+      .filter(Boolean)
+      .map((m) => ambFilDelMissatge(m, filOrigenId));
+    const destins = (Array.isArray(destinacionsLot) ? destinacionsLot : [destinacionsLot]).filter(Boolean);
+    if (!llista.length || !destins.length) return;
+    const ambitClic = ambitEstable;
+    const vigent = () => mounted.current && ambitActualRef.current === ambitClic;
+    try {
+      const resposta = await reenviaAConverses(llista, destins);
+      if (!vigent()) return;
+      const resultats = Array.isArray(resposta?.resultats) ? resposta.resultats : [];
+      const fallits = resultats.filter((r) => r?.estat === 'error');
+      const confirmats = resultats.filter((r) => r?.estat === 'confirmat');
+      if (fallits.length > 0 && confirmats.length === 0) {
+        notificaErrorAccio(fallits[0]?.error || new Error(t('section.xat.missatge.reenviaError', "No s'ha pogut reenviar el missatge.")));
+        return;
+      }
+      if (fallits.length > 0) {
+        showToast(t('section.xat.missatge.reenviaParcial', "Alguns missatges no s'han pogut reenviar."), 'info');
+      } else {
+        showToast(t('section.xat.missatge.reenviat', 'Missatge reenviat'), 'success');
+      }
+      const unicDestiId = destins.length === 1 ? String(destins[0]?.id ?? destins[0] ?? '') : '';
+      if (unicDestiId && unicDestiId !== filOrigenId) {
+        navigate(`/xat/${enc(unicDestiId)}${consulta()}`);
+      }
+    } catch (error) {
+      if (vigent()) notificaErrorAccio(error);
+    }
+  }, [reenviaAConverses, filActiuId, ambFilDelMissatge, ambitEstable, notificaErrorAccio, t, showToast, navigate, consulta]);
 
   /* Escape també ix de la selecció de xats (T68). S'escolta a `window`, que
      rep l'esdeveniment DARRERE de tots els menús (que l'escolten al document
@@ -2026,7 +2167,8 @@ function XatWorkspace({ origen = null }) {
         <Conversa
           key={`${activeThread.id}\n${revisioEsborrany}`}
           clauEsborrany={ambitEstable && !activeThread.sessioLocalIAIA ? `${ambitEstable}::${activeThread.id}` : null}
-          initialText={connectionContext}
+          initialText={connectionContext || (esborranyInicialPagina?.filId === String(activeThread.id) ? esborranyInicialPagina.text : '')}
+          referenciaPagina={referenciaPaginaActiva}
           peu={activeThread.filLocalIAIA ? <AvisPrivadesaIAIA t={t} /> : null}
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
           consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
@@ -2052,6 +2194,13 @@ function XatWorkspace({ origen = null }) {
           ambContingutCompartit={true}
           ambArxivar={true}
           onCopia={copiaText}
+          filsPerReenviar={potAccionsMissatge && filsEscrivibles.length > 0 ? filsEscrivibles : null}
+          onReenviaMissatge={potAccionsMissatge && typeof reenviaAConverses === 'function' ? handleReenviaMissatge : null}
+          onAlternaReaccio={potAccionsMissatge && typeof alternaReaccio === 'function' ? handleAlternaReaccio : null}
+          onAlternaDestacat={potAccionsMissatge && typeof alternaDestacat === 'function' ? handleAlternaDestacat : null}
+          onAlternaFixat={potAccionsMissatge && typeof alternaFixat === 'function' ? handleAlternaFixat : null}
+          onEliminaMissatge={potAccionsMissatge && typeof eliminaPerAMi === 'function' ? handleEliminaMissatge : null}
+          onObriDirecteAmb={potAccionsMissatge && typeof responEnPrivat === 'function' ? handleObriDirecteAmb : null}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}
           onCarregaMes={carregaMes}

@@ -80,11 +80,11 @@ describe('amb la RPC: el port rep la revisió amb els camps blancs i la versió'
     expect(JSON.parse(window.localStorage.getItem(CLAU))['mur:manifest-de-poble'].servidor).toEqual({ versio: 8 });
   });
 
-  test('la desada següent usa la versió confirmada i envia la revisió sencera', async () => {
+  test('la desada següent usa la versió confirmada i envia només els camps pendents', async () => {
     port.edita.mockResolvedValueOnce({ versio: 8 }).mockResolvedValueOnce({ versio: 9 });
     await desaRevisioEditorialAmbServidor('mur', MANIFEST, { content: '<p>Primera</p>' }, opcions());
     await desaRevisioEditorialAmbServidor('mur', MANIFEST, { title: 'Segona' }, opcions());
-    expect(port.edita.mock.calls[1][0]).toMatchObject({ versio: 8, canvis: { content: '<p>Primera</p>', title: 'Segona' } });
+    expect(port.edita.mock.calls[1][0]).toMatchObject({ versio: 8, canvis: { title: 'Segona' } });
   });
 
   test('si el servidor la rebutja, la revisió es queda al navegador i el resultat ho diu', async () => {

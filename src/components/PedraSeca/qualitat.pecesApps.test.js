@@ -60,7 +60,8 @@ function classesDe(codi) {
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_CANONIC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
-const FULL = blocDeModuls('pecesApps');
+void blocDeModuls;
+const FULL = llig('src/css/diferit-peces-apps.css');
 const FULL_NET = senseComentaris(FULL);
 
 /* Les declaracions d'una regla: { selector → cos }. */

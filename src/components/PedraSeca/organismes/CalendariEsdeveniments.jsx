@@ -35,8 +35,11 @@ import { Fragment, useMemo, useState } from 'react';
 import { GraellaMes, NavegacioMes } from './CalendariMes.jsx';
 import { cursorDe } from '../../../utils/calendari.js';
 import { clauDia, indexaMes } from '../../../utils/esdeveniment.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
-const pindolaPerDefecte = (esd) => <span className="sdp-calendari__pindola">{esd.titol}</span>;
+const pindolaPerDefecte = (esd) => <span ref={adoptaEstilsDiferits} className="sdp-calendari__pindola">{esd.titol}</span>;
 const recompteEsdeveniments = (n) => (n === 1 ? '1 esdeveniment' : `${n} esdeveniments`);
 const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -61,7 +64,7 @@ export function CalendariEsdeveniments({
     const clau = clauDia(vigent.any, vigent.mes, dia);
     const titols = delDia.length ? `: ${delDia.map((esd) => esd.titol).join(', ')}` : '';
     return (
-      <button type="button" className="sdp-calendari__cella" aria-pressed={diaTriat === clau}
+      <button ref={adoptaEstilsDiferits} type="button" className="sdp-calendari__cella" aria-pressed={diaTriat === clau}
         aria-current={esAvui ? 'date' : undefined}
         aria-label={`${dataLlarga(new Date(vigent.any, vigent.mes, dia), locale)} · ${recompte(delDia.length)}${titols}`}
         onClick={() => onTriaDia(clau)}>

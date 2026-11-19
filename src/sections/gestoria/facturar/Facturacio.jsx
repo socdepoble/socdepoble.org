@@ -47,6 +47,9 @@ import { PasLlegat } from './PasLlegat.jsx';
 import { PasPerfil } from './PasPerfil.jsx';
 import { Pas } from './peces.jsx';
 import { useFacturacio } from './useFacturacio.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* El que es diu de la persistència: només quan el navegador no la garantix. */
 function AvisPersistencia({ f, tx }) {
@@ -75,7 +78,7 @@ export default function Facturacio({ idioma = 'ca', ...props }) {
   if (f.fase === 'error') {
     return (
       <Alerta to="error" titol={tx.errorTitol}>
-        <p>{f.error?.message ?? tx.errorDefecte}</p>
+        <p ref={adoptaEstilsDiferits}>{f.error?.message ?? tx.errorDefecte}</p>
         <p>{tx.errorPrivada}</p>
       </Alerta>
     );
@@ -83,7 +86,7 @@ export default function Facturacio({ idioma = 'ca', ...props }) {
 
   const cadena = estatDeLaCadena(f.informe);
   return (
-    <div className="sdp-gestoria-panell">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell">
       <div className="sdp-gestoria-panell__barra">
         <p>{tx.barraIntro}</p>
         {f.persistencia === 'concedida' ? <Insignia to="exit">{tx.noEsborrara}</Insignia> : null}
@@ -108,7 +111,7 @@ export default function Facturacio({ idioma = 'ca', ...props }) {
           <FormulariFactura f={f} />
         </Pas>
         <Pas numero={4} titol={tx.pas4} estat={f.informe?.valida ? 'fet' : 'actiu'} insignia={{ to: cadena.to, text: cadena.insignia }}>
-          <LlibreFactures f={f} />
+          <LlibreFactures f={f} tx={tx} />
         </Pas>
         <Pas numero={5} titol={tx.pas5} estat="actiu" insignia={insigniaDeLaCopia(f)}>
           <CopiaLlibre f={f} />

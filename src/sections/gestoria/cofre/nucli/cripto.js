@@ -27,6 +27,8 @@
  * clau. Els bytes secrets (frase i codi) es posen a zero en acabar.
  */
 
+import { normalitzaUnicodeAmbLimit } from '../../../../utils/normalitzaUnicodeSegura.js';
+
 export const VERSIO_COFRE = 1;
 export const KDF = 'PBKDF2-HMAC-SHA-256';
 export const ITERACIONS_KDF = 600000;
@@ -192,7 +194,13 @@ function llargariaEfectiva(caracters) {
  *   caracters: number, paraules: number, motiu: string }}
  */
 export function avaluaFrase(frase) {
-  const text = typeof frase === 'string' ? frase.normalize('NFC') : '';
+  let text;
+  try { text = typeof frase === 'string' ? normalitzaUnicodeAmbLimit(frase, 'NFC') : ''; }
+  catch (e) {
+    if (e.code !== 'UNICODE_MARK_LIMIT') throw e;
+    return Object.freeze({ valida: false, nivell: 'llarga', caracters: [...frase].length, paraules: 0,
+      motiu: e.message, codi: e.code });
+  }
   const caracters = [...text].length;
   const paraules = (text.match(/[\p{L}\p{N}]{3,}/gu) ?? []).filter((paraula) => llargariaEfectiva([...paraula.toLowerCase()]) >= 3).length;
   const efectius = llargariaEfectiva([...text.toLowerCase()]);
@@ -269,7 +277,10 @@ async function derivaKek(cripto, secret, { iter, sal }) {
 /** La KEK d'una frase de pas (normalitzada en NFC). */
 export function kekDeFrase(cripto, frase, parametres) {
   if (typeof frase !== 'string') return Promise.reject(new TypeError('La frase de pas és un text.'));
-  return derivaKek(cripto, codifica(frase.normalize('NFC')), parametres);
+  let text;
+  try { text = normalitzaUnicodeAmbLimit(frase, 'NFC'); }
+  catch (e) { return Promise.reject(e); }
+  return derivaKek(cripto, codifica(text), parametres);
 }
 
 /** La KEK dels 16 bytes d'un codi de recuperació (no toca els bytes de qui crida). */

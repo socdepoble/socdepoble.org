@@ -28,11 +28,14 @@
  * { codi, fila?, handle?, text }. Al final, validaCataleg: si la carta no
  * és vàlida, llança (és un error de l'importador, no de les dades).
  * Sense React ni DOM; determinista (el mateix text dona la mateixa carta).
+ * R32.11: una tirada Unicode fora de pressupost rebutja la importació amb
+ * UNICODE_MARK_LIMIT; mai es confirma una categoria amb una clau buida.
  */
 import { llegixCsv } from '../../../utils/fulls/index.js';
 import { parseEuros } from '../../../utils/diners.js';
 import { validaCataleg } from './cataleg.js';
 import { errorBar } from './comu.js';
+import { normalitzaUnicodeAmbLimit } from '../../../utils/normalitzaUnicodeSegura.js';
 
 const MAX_SLUG = 64;
 const MAX_NOM_PRODUCTE = 60;
@@ -73,7 +76,7 @@ const AMB_BOTIGA = /^(.*?)\s*\[(.+)\]$/;
 const DIACRITICS = /[\u0300-\u036f]/g;
 const PUNT_VOLAT = /·/g;
 
-const normalitza = (titol) => String(titol).normalize('NFD').replace(DIACRITICS, '').replace(/\s+/g, ' ').trim().toLowerCase();
+const normalitza = (titol) => normalitzaUnicodeAmbLimit(String(titol), 'NFD').replace(DIACRITICS, '').replace(/\s+/g, ' ').trim().toLowerCase();
 const esSi = (valor) => /^(?:y|s|si|yes|true|1)$/i.test(valor);
 const esNo = (valor) => /^(?:n|no|false|0)$/i.test(valor);
 
@@ -82,7 +85,7 @@ const esNo = (valor) => /^(?:n|no|false|0)$/i.test(valor);
  * de caràcters en guions solts; com a molt 64. Pot tornar '' (només emojis).
  */
 export function slugDe(text) {
-  const net = String(text ?? '').normalize('NFD').replace(DIACRITICS, '').replace(PUNT_VOLAT, '').toLowerCase()
+  const net = normalitzaUnicodeAmbLimit(String(text ?? ''), 'NFD').replace(DIACRITICS, '').replace(PUNT_VOLAT, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   return net.length <= MAX_SLUG ? net : net.slice(0, MAX_SLUG).replace(/-+$/, '');
 }

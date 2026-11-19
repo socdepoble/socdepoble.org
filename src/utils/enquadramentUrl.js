@@ -33,6 +33,9 @@ const arrodonix = (valor) => Math.round(valor * 10 ** DECIMALS) / 10 ** DECIMALS
 const entre = (valor, minim, maxim) => Math.min(maxim, Math.max(minim, valor));
 /* Un número de veres: ni buit, ni null, ni text que no ho siga. */
 const numero = (valor) => (typeof valor === 'number' || (typeof valor === 'string' && valor.trim() !== '') ? Number(valor) : Number.NaN);
+/* La pintura conserva Number per a totes les primitives llegades (també null,
+   booleans i bigint), sense executar conversions d'objectes JSONB ni funcions. */
+const numeroPintura = (valor) => ((valor !== null && typeof valor === 'object') || typeof valor === 'function' || typeof valor === 'symbol' ? Number.NaN : Number(valor));
 
 /**
  * L'estat { format, zoom, cx, cy } net (zoom dins de [1, ZOOM_MAXIM] i el
@@ -132,7 +135,8 @@ const marcDins = (W, H, r) => (W / H > r ? { w: H * r, h: H } : { w: W, h: W / r
  */
 export function ratioDelMarc(format, ratioImatge) {
   if (format === 'original') return Number.isFinite(ratioImatge) && ratioImatge > 0 ? ratioImatge : null;
-  const parts = /^([1-9]\d?):([1-9]\d?)$/.exec(String(format ?? ''));
+  if (typeof format !== 'string' || format.length > 8) return null;
+  const parts = /^([1-9]\d?):([1-9]\d?)$/.exec(format);
   return parts ? Number(parts[1]) / Number(parts[2]) : null;
 }
 
@@ -171,7 +175,7 @@ export function posicioEnCaixa(estat, ratioImatge, ratioCaixa = null, { alineaci
   const daltMarc = entre(cy, altMarc / 2, 1 - altMarc / 2) - altMarc / 2;
   // El que la caixa ensenyava del fitxer retallat: cover dins del marc, a l'alineació de la caixa.
   const vist = marcDins(ampleMarc, altMarc, B);
-  const fraccio = (valor) => entre(Number.isFinite(Number(valor)) ? Number(valor) : 0.5, 0, 1);
+  const fraccio = (valor) => { const n = numeroPintura(valor); return entre(Number.isFinite(n) ? n : 0.5, 0, 1); };
   const esquerra = esquerraMarc + (ampleMarc - vist.w) * fraccio(alineacio?.x);
   const dalt = daltMarc + (altMarc - vist.h) * fraccio(alineacio?.y);
   // La foto sencera en la mateixa caixa, amb cover, ensenya `coberta`: l'ampliació la porta a `vist`.
@@ -191,9 +195,9 @@ export function posicioEnCaixa(estat, ratioImatge, ratioCaixa = null, { alineaci
  * res no sobreïx, i el focus no es retalla.
  */
 export function retallCssDelZoom(punt) {
-  const z = Number(punt?.zoom);
-  const x = Number(punt?.x);
-  const y = Number(punt?.y);
+  const z = numeroPintura(punt?.zoom);
+  const x = numeroPintura(punt?.x);
+  const y = numeroPintura(punt?.y);
   if (![z, x, y].every((v) => Number.isFinite(v)) || z <= 1) return null;
   const k = 1 - 1 / z;
   const pc = (valor) => `${ambDecimals(valor * k, 3)}%`;

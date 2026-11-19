@@ -381,6 +381,48 @@ test('arbre preparat: Fronteres real passa amb la paperera canònica buida abans
   assert.equal(fs.readFileSync(path.join(font, 'credencial-sintetica.secret'), 'utf8'), 'synthetic-private-credential');
 });
 
+test('arbre preparat: el marcador versionat de paperera conserva Fronteres verda i el hook no falla amb EEXIST', t => {
+  const base = temporal(t); const origen = origenSintetic(base);
+  const dir = path.join(base, 'preparat'); fs.mkdirSync(dir); skillsDePaperera(dir);
+  const paperera = path.join(dir, '.sdp-paperera'); fs.mkdirSync(paperera, {mode: 0o755});
+  fs.chmodSync(paperera, 0o755);
+  fs.writeFileSync(path.join(paperera, '.gitkeep'), '');
+  assert.equal(auditaSkills(dir).valid, true, 'el checkout ja té la ruta canònica declarada');
+  const crides = [];
+  executaValidadors(dir, {}, {origen, run: (_cmd, args) => {
+    crides.push(args.join(' '));
+    assert.equal(auditaSkills(dir).valid, true);
+    const stat = fs.lstatSync(paperera);
+    assert.ok(stat.isDirectory() && !stat.isSymbolicLink());
+    assert.equal(stat.mode & 0o777, 0o700);
+    assert.deepEqual(fs.readdirSync(paperera), ['.gitkeep']);
+    assert.equal(fs.statSync(path.join(paperera, '.gitkeep')).size, 0);
+    return '';
+  }});
+  assert.deepEqual(crides, PASSOS_HOOK.map(p => p.args.join(' ')));
+});
+
+test('arbre preparat: una paperera simbòlica o un fitxer ordinari frena el hook abans de tocar dependències o executar validadors', t => {
+  const base = temporal(t); const origen = origenSintetic(base);
+  const exterior = path.join(base, 'exterior'); fs.mkdirSync(exterior); fs.chmodSync(exterior, 0o755);
+  fs.writeFileSync(path.join(exterior, 'privat.txt'), 'synthetic-private-trash');
+  const abans = fs.lstatSync(exterior).mode & 0o777;
+  for (const tipus of ['enllac', 'enllac-absent', 'fitxer']) {
+    const dir = path.join(base, tipus); fs.mkdirSync(dir);
+    const paperera = path.join(dir, '.sdp-paperera');
+    if (tipus === 'fitxer') fs.writeFileSync(paperera, 'no és un directori');
+    else fs.symlinkSync(tipus === 'enllac' ? exterior : path.join(base, 'absent'), paperera, 'dir');
+    let crides = 0;
+    assert.throws(() => executaValidadors(dir, {}, {origen, run: () => { crides++; }}), /Paperera preparada no és un directori real/);
+    assert.equal(crides, 0);
+    assert.equal(fs.existsSync(path.join(dir, 'node_modules')), false);
+    if (tipus === 'fitxer') assert.equal(fs.readFileSync(paperera, 'utf8'), 'no és un directori');
+    else assert.ok(fs.lstatSync(paperera).isSymbolicLink());
+  }
+  assert.equal(fs.lstatSync(exterior).mode & 0o777, abans, 'no canvia els permisos del destí de l’enllaç');
+  assert.equal(fs.readFileSync(path.join(exterior, 'privat.txt'), 'utf8'), 'synthetic-private-trash');
+});
+
 test('arbre preparat: una ruta arbitrària absent del contracte continua roja i no es materialitza', t => {
   const base = temporal(t); const origen = origenSintetic(base); const dir = path.join(base, 'preparat'); fs.mkdirSync(dir); skillsDePaperera(dir);
   const skill = path.join(dir, '.agents/skills/core-neteja-brossa/SKILL.md');

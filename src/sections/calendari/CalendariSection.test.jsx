@@ -41,6 +41,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   loadActesAgenda: (...args) => mocks.loadActesAgenda(...args)
 }));
 import CalendariSection from './CalendariSection.jsx';
+import { _reiniciaRsvpEsdeveniments } from './rsvpEsdeveniments.js';
 
 const FIRA = { id: 'fira', type: 'event', title: 'Fira de tardor', date: '2026-10-17', entradilla: 'Entradilla de la Fira', author_name: 'Sóc de Poble' };
 /* Un acte sense dia real: va el dia de la seua pastilla, com al Mur. */
@@ -90,6 +91,11 @@ const arbre = (consulta) => (
   <MemoryRouter rutaInicial={`/calendari${consulta ? `?${consulta}` : ''}`}><CalendariSection /><Sonda /></MemoryRouter>
 );
 const pinta = (consulta = '') => render(arbre(consulta));
+const pintaTot = (consulta = '') => {
+  const vista = pinta(consulta);
+  clica('Totes les publicacions');
+  return vista;
+};
 
 let avis;
 afterEach(() => {
@@ -98,6 +104,8 @@ afterEach(() => {
   avis.mockRestore();
 });
 beforeEach(() => {
+  localStorage.clear();
+  _reiniciaRsvpEsdeveniments();
   vi.clearAllMocks();
   avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -110,10 +118,48 @@ beforeEach(() => {
   };
 });
 
+test('per defecte, /calendari obri «Esdeveniments», mostra el botó «Publicar un esdeveniment» i desplega tots els actes (també d’altres anys)', () => {
+  const aplec2023 = { id: 'aplec-2023', type: 'event', title: '2n Aplec pel Territori', date: '2023-01-29', location: 'Benillup', author_name: 'Sóc de Poble' };
+  const cursos2026 = { id: 'cursos-2026', type: 'event', title: 'Cursos de pedra en sec a Fageca i Alcosser', inici: '2026-10-23', fi: '2026-11-15', author_name: 'El Rentonar' };
+  mocks.mur = { ...mocks.mur, sortedEvents: [cursos2026, aplec2023] };
+
+  pinta();
+  expect(screen.getByRole('link', { name: 'Publicar un esdeveniment' }).getAttribute('href')).toBe('/notes?ambit=calendari');
+  expect(screen.getByRole('button', { name: 'Esdeveniments (2)', pressed: true })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Totes les publicacions', pressed: false })).toBeTruthy();
+
+  // El desplegable llista els dos esdeveniments de colp encara que un siga del 2023 i l'altre del 2026.
+  const desplegable = screen.getByTestId('desplegable-esdeveniments-calendari');
+  expect(within(desplegable).getByText('Cursos de pedra en sec a Fageca i Alcosser')).toBeTruthy();
+  expect(within(desplegable).getByText('2n Aplec pel Territori')).toBeTruthy();
+  expect(within(desplegable).getByText(/29 de gener del? 2023 · Benillup/)).toBeTruthy();
+
+  // «Compta amb mi» funciona amb un sol clic des del llistat ràpid.
+  const filaAplec = within(desplegable).getByText('2n Aplec pel Territori').closest('li');
+  act(() => within(filaAplec).getByRole('button', { name: 'Compta amb mi: 0' }).click());
+  expect(within(filaAplec).getByRole('button', { name: 'Compta amb mi: 1', pressed: true })).toBeTruthy();
+
+  // El botó «Veure al calendari» de l'Aplec salta a gener del 2023 conservant el mode Esdeveniments.
+  act(() => within(filaAplec).getByRole('button', { name: 'Veure al calendari' }).click());
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2023-01');
+  expect(titolsDeTargetes()).toEqual(['2n Aplec pel Territori']);
+
+  // Plegar amb «Amaga el llistat ràpid» amaga realment totes les files i passa a «Mostra tots els esdeveniments».
+  act(() => within(desplegable).getByRole('button', { name: 'Amaga el llistat ràpid' }).click());
+  expect(within(desplegable).queryByText('Cursos de pedra en sec a Fageca i Alcosser')).toBeNull();
+  expect(within(desplegable).getByRole('button', { name: 'Mostra tots els esdeveniments', expanded: false })).toBeTruthy();
+  act(() => within(desplegable).getByRole('button', { name: 'Mostra tots els esdeveniments' }).click());
+  expect(within(desplegable).getByText('Cursos de pedra en sec a Fageca i Alcosser')).toBeTruthy();
+
+  // Passar a «Totes les publicacions» amaga el desplegable i mostra també productes i publicacions.
+  clica('Totes les publicacions');
+  expect(screen.queryByTestId('desplegable-esdeveniments-calendari')).toBeNull();
+});
+
 /* Regressió de P6: abans, sense ?vista=, el calendari del Mur (cap dia veí,
    una píndola de títol per dia, «‹ Hui ›» i cap selector de vista). */
 test('P6 · sense ?vista=, la vista Mes de Google Calendar (no el calendari del Mur): «Hui ‹ ›», el selector amb «Mes» premut i totes les targetes', () => {
-  pinta();
+  pintaTot();
   expect(screen.queryByText('El calendari no està disponible')).toBeNull();
   expect(mocks.loadActesAgenda).not.toHaveBeenCalled();
   expect(document.querySelector('.sdp-calendari--gran, .sdp-calendari__barra')).toBeNull();
@@ -141,7 +187,7 @@ test('P6 · sense ?vista=, la vista Mes de Google Calendar (no el calendari del 
 
 test('P6 · la graella de Google Calendar: setmanes justes, hui en cercle, els dies veïns atenuats i «+N més» dins del dia', () => {
   mocks.mur = { ...mocks.mur, sortedFeedPosts: [CRONICA, VELLA, SENSE_DATA, ...DIA_PLE] };
-  pinta();
+  pintaTot();
   // Octubre de 2026 comença en dijous i té 31 dies: cinc setmanes, del 28-09 a l'1-11.
   expect(graella().querySelectorAll('.sdp-cal-mes__fila')).toHaveLength(5);
   expect([...graella().querySelectorAll('.sdp-cal-dia--fora')].map((d) => d.textContent)).toEqual(['28', '29', '30', '1 de nov.']);
@@ -180,7 +226,7 @@ test('P6 · la graella és un sol punt de tabulació (hui) i les fletxes es moue
    porta data (sí que en porta). */
 test('una targeta amb data però sense identificador no ix ni a la graella ni a la llista, i l’avís diu la veritat', () => {
   mocks.mur = { ...mocks.mur, sortedFeedPosts: [CRONICA, VELLA, SENSE_DATA, { type: 'feed', title: 'Nota sense id', created_at: '2026-10-01T09:00:00.000Z' }] };
-  pinta();
+  pintaTot();
   expect(tePeca('Nota sense id')).toBe(false);
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
   expect(screen.getByText('2 publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.')).toBeTruthy();
@@ -189,13 +235,13 @@ test('una targeta amb data però sense identificador no ix ni a la graella ni a 
 
 test('si el mes de hui no té cap targeta, s’obri al de la targeta més recent, no en un mes buit', () => {
   mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedMarketItems: [] };
-  pinta();
+  pinta('mostrar=tot');
   expect(regioMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
 });
 
 test('les targetes són les del Mur: l’acte amb la seua insígnia i el producte amb la seua etiqueta i el seu enllaç', () => {
-  pinta();
+  pintaTot();
   const fira = targeta('Fira de tardor');
   expect([...fira.querySelectorAll('.sp-card-calendar-badge span')].map((s) => s.textContent)).toEqual(['17', 'OCTUBRE', '2026']);
   const oli = targeta('Oli de la Torre');
@@ -204,7 +250,7 @@ test('les targetes són les del Mur: l’acte amb la seua insígnia i el product
 });
 
 test('el recompte de cada dia diu targetes; passar de mes escriu ?vista=mes&mes= i canvia les targetes de davall', () => {
-  pinta();
+  pintaTot();
   expect(dia(new Date(2026, 9, 1)).getAttribute('aria-label')).toMatch(/ · 1 publicació: Oli de la Torre$/);
 
   clica('Mes anterior');
@@ -309,15 +355,15 @@ test('un ?mes= que no és cap mes cau al mes d’obertura (mesDObertura)', () =>
 test('les pàgines del sistema que arriben després recalculen el mes d’obertura', () => {
   mocks.core = { status: 'loading', error: null, pageCopy: {} };
   mocks.mur = { ...mocks.mur, sortedEvents: [], sortedFeedPosts: [VELLA], sortedMarketItems: [] };
-  const { rerender } = pinta();
+  const { rerender } = pinta('mostrar=tot');
   expect(regioMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica vella']);
 
   mocks.core = { status: 'ready', error: null, pageCopy: { projecte: { ...PROJECTE, date: '2026-10-01T00:00:00.000Z' } } };
-  rerender(arbre(''));
+  rerender(arbre('mostrar=tot'));
   expect(regioMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['El projecte']);
-  expect(onSoc()).toBe('/calendari');
+  expect(onSoc()).toBe('/calendari?mostrar=tot');
 });
 
 /* P6 · La vista Mes demana a l'agenda de Sollutia les setmanes que pinta (de
@@ -325,7 +371,7 @@ test('les pàgines del sistema que arriben després recalculen el mes d’obertu
 test('amb la capacitat agenda, els actes de Sollutia de la graella que es veu s’afigen al calendari i a les targetes', async () => {
   ambAgenda();
   mocks.loadActesAgenda.mockResolvedValue([CONCERT]);
-  pinta();
+  pintaTot();
   await waitFor(() => expect(tePeca('Concert a la plaça')).toBe(true));
   const [rang, opcions] = mocks.loadActesAgenda.mock.calls[0];
   expect(rang).toEqual({ desde: new Date(2026, 8, 28).toISOString(), fins: new Date(2026, 10, 2).toISOString() });
@@ -369,7 +415,7 @@ test('amb l’agenda, un ?date= i «Mes següent» no deixen cap llista incohere
 test('si l’agenda falla, ho diu en una línia, el calendari continua amb les targetes del poble i es pot tornar a provar', async () => {
   ambAgenda();
   mocks.loadActesAgenda.mockRejectedValueOnce(new Error('xarxa')).mockResolvedValueOnce([CONCERT]);
-  pinta();
+  pintaTot();
   const linia = await screen.findByText(/^Ara mateix no podem consultar els actes de l’agenda/);
   expect(screen.queryByText('El calendari no està disponible')).toBeNull();
   expect(graella()).not.toBeNull();

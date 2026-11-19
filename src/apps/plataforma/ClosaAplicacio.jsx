@@ -60,6 +60,7 @@ const esColumna = (columna) => typeof columna === 'string' && Object.hasOwn(PANE
    d'un sol valor, que canvia només quan canvia la llengua: les apps no se subscriuen a tot
    UIContext. Fora de ClosaAplicacio (una columna muntada a soles), 'ca'. */
 const IdiomaClosa = createContext('ca');
+const AvisBetaClosa = createContext('general');
 
 /**
  * La taula d'una ClosaAplicacio: validaRutes amb columnes, i a més el primer
@@ -149,27 +150,31 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
     const { Unica } = ruta;
     return (
       <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
-        {capcalera}
-        <div className="sdp-app-unica" role="region" aria-label={titol}>
-          <Unica params={params} />
-        </div>
+        <AvisBetaClosa.Provider value={manifest.avisBeta || 'general'}>
+          {capcalera}
+          <div className="sdp-app-unica" role="region" aria-label={titol}>
+            <Unica params={params} />
+          </div>
+        </AvisBetaClosa.Provider>
       </IdiomaClosa.Provider>
     );
   }
   const { Esquerra, Mig, Detall } = ruta;
   return (
     <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
-      {capcalera}
-      <AppGridShell
-        aria-label={titol}
-        leftTitle={titols.esquerra || 'Navegació'}
-        middleTitle={titols.mig || 'Llista'}
-        leftColumn={Esquerra ? <Esquerra params={params} /> : null}
-        middleColumn={<Mig params={params} />}
-        rightColumn={<Detall params={params} />}
-      >
-        <PanellEstret columna={ruta.estret || 'mig'} />
-      </AppGridShell>
+      <AvisBetaClosa.Provider value={manifest.avisBeta || 'general'}>
+        {capcalera}
+        <AppGridShell
+          aria-label={titol}
+          leftTitle={titols.esquerra || 'Navegació'}
+          middleTitle={titols.mig || 'Llista'}
+          leftColumn={Esquerra ? <Esquerra params={params} /> : null}
+          middleColumn={<Mig params={params} />}
+          rightColumn={<Detall params={params} />}
+        >
+          <PanellEstret columna={ruta.estret || 'mig'} />
+        </AppGridShell>
+      </AvisBetaClosa.Provider>
     </IdiomaClosa.Provider>
   );
 }
@@ -187,10 +192,12 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
  *            amfitrió anterior no el dona (undefined): la vista ha de caure
  *            a 'ca'. És una clau nova del retorn, no un nom del nucli
  *            (VERSIO_NUCLI no canvia).
+ *   avisBeta · R32.10 · el tipus declaratiu d'avís beta del manifest ('fiscal' | 'general').
  */
 export function useClosaAplicacio() {
   const { mida, panellObert, setPanellObert, tancaPanells } = useAppGrid();
   const idioma = useContext(IdiomaClosa);
+  const avisBeta = useContext(AvisBetaClosa);
   const obriPanell = useCallback((columna) => {
     if (!esColumna(columna)) return;
     if (PANELL_DE[columna]) setPanellObert(PANELL_DE[columna]);
@@ -201,6 +208,7 @@ export function useClosaAplicacio() {
     panellObert: Object.hasOwn(COLUMNA_DE, panellObert ?? '') ? COLUMNA_DE[panellObert] : null,
     obriPanell,
     tancaPanells,
-    idioma
-  }), [mida, panellObert, obriPanell, tancaPanells, idioma]);
+    idioma,
+    avisBeta
+  }), [mida, panellObert, obriPanell, tancaPanells, idioma, avisBeta]);
 }

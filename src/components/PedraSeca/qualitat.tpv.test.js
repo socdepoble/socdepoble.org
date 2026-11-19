@@ -52,7 +52,8 @@ const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
 /* Els fulls canònics: src/css i els dos fulls germans de les peces de les apps. */
-const FULL = blocDeModuls('tpv');
+void blocDeModuls;
+const FULL = llig('src/css/diferit-tpv.css');
 const FULL_NET = senseComentaris(FULL);
 /* Els fulls canònics sense el bloc mateix: src/css, amb els blocs germans
    (pecesApps, catalegColleccio…) de modules.css. Sense el bloc, «cap CSS mort»

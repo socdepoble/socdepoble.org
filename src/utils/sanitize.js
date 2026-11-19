@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify';
+import { normalitzaUnicodeSegura } from './normalitzaUnicodeSegura.js';
 
 /**
  * Sanejador d'HTML. ÚNIC punt d'entrada d'HTML a l'arbre.
@@ -252,10 +253,9 @@ function purifica(html) {
  * i el dany és permanent, perquè es guarda escapat a l'Outbox i a Supabase.
  */
 export function netejaText(valor, maxim = 4000) {
-  return String(valor ?? '')
+  return normalitzaUnicodeSegura(String(valor ?? '')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-    .replace(/\r\n?/g, '\n')
-    .normalize('NFC')
+    .replace(/\r\n?/g, '\n'))
     .trim()
     .slice(0, maxim);
 }

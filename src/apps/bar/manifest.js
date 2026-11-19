@@ -30,40 +30,52 @@
  * política auth.persistencia 'pestanya' o amb el recurs efímer per quota, no
  * hi ha cap sessió desada al registre persistent, i vendre sense xarxa només
  * dura fins que caduca el JWT.
+ *
+ * Onada R32.10 · Camp declaratiu `avisBeta: 'fiscal'` i internacionalització
+ * completa del manifest (títol, grups, entrades i interruptors) en les 5
+ * llengües oficials (ca, es, en, eu, gl).
+ * v1.2.9 (integració) · Es restituïx el contracte de dalt, que el lot 00 de
+ * Gemini R32.11 havia llevat: el codi no ha canviat i el contracte continua viu.
  */
 export default {
   schema: 'sdp.app.v1',
   id: 'bar',
-  titol: { ca: 'El Bar', es: 'El Bar' },
+  titol: {
+    ca: 'El Bar',
+    es: 'El Bar',
+    en: 'The Bar',
+    eu: 'Taberna',
+    gl: 'O Bar'
+  },
   icona: 'Coffee',
   grups: [
-    { id: 'servei', titol: { ca: 'Servei', es: 'Servicio' } },
-    { id: 'carta', titol: { ca: 'Carta', es: 'Carta' } },
-    { id: 'torn', titol: { ca: 'Torn', es: 'Turno' } },
-    { id: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' } }
+    { id: 'servei', titol: { ca: 'Servei', es: 'Servicio', en: 'Service', eu: 'Zerbitzua', gl: 'Servizo' } },
+    { id: 'carta', titol: { ca: 'Carta', es: 'Carta', en: 'Menu', eu: 'Karta', gl: 'Carta' } },
+    { id: 'torn', titol: { ca: 'Torn', es: 'Turno', en: 'Shift', eu: 'Txanda', gl: 'Quenda' } },
+    { id: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes', en: 'Settings', eu: 'Ezarpenak', gl: 'Axustes' } }
   ],
   entrades: [
-    { slug: 'caixa', titol: { ca: 'Caixa', es: 'Caja' }, icona: 'Receipt', grup: 'servei' },
-    { slug: 'tpv', titol: { ca: 'TPV', es: 'TPV' }, icona: 'Store', grup: 'servei' },
-    { slug: 'taules', titol: { ca: 'Taules', es: 'Mesas' }, icona: 'LayoutGrid', grup: 'servei' },
-    { slug: 'emportar', titol: { ca: 'Per emportar', es: 'Para llevar' }, icona: 'Package', grup: 'servei' },
-    { slug: 'tiquets', titol: { ca: 'Tiquets del torn', es: 'Tiques del turno' }, icona: 'FileText', grup: 'servei' },
-    { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo' }, icona: 'LayoutGrid', grup: 'carta' },
-    { slug: 'productes', titol: { ca: 'Productes', es: 'Productos' }, icona: 'Coffee', grup: 'carta' },
-    { slug: 'categories', titol: { ca: 'Categories', es: 'Categorías' }, icona: 'LayoutDashboard', grup: 'carta' },
-    { slug: 'modificadors', titol: { ca: 'Modificadors', es: 'Modificadores' }, icona: 'ClipboardList', grup: 'carta' },
-    { slug: 'escandalls', titol: { ca: 'Escandalls', es: 'Escandallos' }, icona: 'Calculator', grup: 'carta' },
-    { slug: 'ingredients', titol: { ca: 'Ingredients', es: 'Ingredientes' }, icona: 'Boxes', grup: 'carta' },
-    { slug: 'torn', titol: { ca: 'Torn actual', es: 'Turno actual' }, icona: 'Users', grup: 'torn' },
-    { slug: 'tancament', titol: { ca: 'Tancament', es: 'Cierre' }, icona: 'ChartColumn', grup: 'torn' },
-    { slug: 'torns', titol: { ca: 'Historial de torns', es: 'Historial de turnos' }, icona: 'CalendarDays', grup: 'torn' },
-    { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' }, icona: 'Settings', grup: 'ajustos' }
+    { slug: 'caixa', titol: { ca: 'Caixa', es: 'Caja', en: 'Register', eu: 'Kutxa', gl: 'Caixa' }, icona: 'Receipt', grup: 'servei' },
+    { slug: 'tpv', titol: { ca: 'TPV', es: 'TPV', en: 'POS', eu: 'STG', gl: 'TPV' }, icona: 'Store', grup: 'servei' },
+    { slug: 'taules', titol: { ca: 'Taules', es: 'Mesas', en: 'Tables', eu: 'Mahaiak', gl: 'Mesas' }, icona: 'LayoutGrid', grup: 'servei' },
+    { slug: 'emportar', titol: { ca: 'Per emportar', es: 'Para llevar', en: 'Takeaway', eu: 'Eramateko', gl: 'Para levar' }, icona: 'Package', grup: 'servei' },
+    { slug: 'tiquets', titol: { ca: 'Tiquets del torn', es: 'Tiques del turno', en: 'Shift receipts', eu: 'Txandako tiketak', gl: 'Tíckets da quenda' }, icona: 'FileText', grup: 'servei' },
+    { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo', en: 'Catalogue', eu: 'Katalogoa', gl: 'Catálogo' }, icona: 'LayoutGrid', grup: 'carta' },
+    { slug: 'productes', titol: { ca: 'Productes', es: 'Productos', en: 'Products', eu: 'Produktuak', gl: 'Produtos' }, icona: 'Coffee', grup: 'carta' },
+    { slug: 'categories', titol: { ca: 'Categories', es: 'Categorías', en: 'Categories', eu: 'Kategoriak', gl: 'Categorías' }, icona: 'LayoutDashboard', grup: 'carta' },
+    { slug: 'modificadors', titol: { ca: 'Modificadors', es: 'Modificadores', en: 'Modifiers', eu: 'Aldatzaileak', gl: 'Modificadores' }, icona: 'ClipboardList', grup: 'carta' },
+    { slug: 'escandalls', titol: { ca: 'Escandalls', es: 'Escandallos', en: 'Recipe costing', eu: 'Eskandalloak', gl: 'Escandallos' }, icona: 'Calculator', grup: 'carta' },
+    { slug: 'ingredients', titol: { ca: 'Ingredients', es: 'Ingredientes', en: 'Ingredients', eu: 'Osagaiak', gl: 'Ingredientes' }, icona: 'Boxes', grup: 'carta' },
+    { slug: 'torn', titol: { ca: 'Torn actual', es: 'Turno actual', en: 'Current shift', eu: 'Uneko txanda', gl: 'Quenda actual' }, icona: 'Users', grup: 'torn' },
+    { slug: 'tancament', titol: { ca: 'Tancament', es: 'Cierre', en: 'Closing', eu: 'Itxiera', gl: 'Peche' }, icona: 'ChartColumn', grup: 'torn' },
+    { slug: 'torns', titol: { ca: 'Historial de torns', es: 'Historial de turnos', en: 'Shift history', eu: 'Txanden historia', gl: 'Historial de quendas' }, icona: 'CalendarDays', grup: 'torn' },
+    { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes', en: 'Settings', eu: 'Ezarpenak', gl: 'Axustes' }, icona: 'Settings', grup: 'ajustos' }
   ],
   entradaPerDefecte: 'cataleg',
   interruptors: [
-    { id: 'taules', titol: { ca: 'Taules', es: 'Mesas' }, actiuPerDefecte: true },
-    { id: 'escandalls', titol: { ca: 'Escandalls i ingredients', es: 'Escandallos e ingredientes' }, actiuPerDefecte: true },
-    { id: 'cuina', titol: { ca: 'Cuina (fase 2)', es: 'Cocina (fase 2)' }, actiuPerDefecte: false }
+    { id: 'taules', titol: { ca: 'Taules', es: 'Mesas', en: 'Tables', eu: 'Mahaiak', gl: 'Mesas' }, actiuPerDefecte: true },
+    { id: 'escandalls', titol: { ca: 'Escandalls i ingredients', es: 'Escandallos e ingredientes', en: 'Recipe costing and ingredients', eu: 'Eskandalloak eta osagaiak', gl: 'Escandallos e ingredientes' }, actiuPerDefecte: true },
+    { id: 'cuina', titol: { ca: 'Cuina (fase 2)', es: 'Cocina (fase 2)', en: 'Kitchen (phase 2)', eu: 'Sukaldea (2. fasea)', gl: 'Cociña (fase 2)' }, actiuPerDefecte: false }
   ],
   permisos: { veure: 'public', escriure: 'sessio' },
   capacitats: [],
@@ -71,5 +83,6 @@ export default {
   actiuPerDefecte: true,
   entorn: 'produccio',
   dadesPersonals: false,
+  avisBeta: 'fiscal',
   carrega: import.meta.env.VITE_SDP_APP_BAR !== '0' ? () => import('./AppBar.jsx') : null
 };

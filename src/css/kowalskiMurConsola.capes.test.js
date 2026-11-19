@@ -48,7 +48,7 @@ const declaracions = (r) => r.cos.split(';').map((d) => d.trim()).filter((d) => 
 const de = (r, propietat) => declaracions(r).filter(([p]) => p === propietat).map(([, v]) => v).at(-1);
 
 const FULLS = {
-  'modules.css': regles(llig('src/css/modules.css')),
+  'modules.css': [...regles(llig('src/css/modules.css')), ...regles(llig('src/css/diferit-connectar.css'))],
   'components.css': regles(llig('src/css/components.css'))
 };
 const TOTES = Object.entries(FULLS).flatMap(([full, rs]) => rs.map((r) => ({ ...r, full })));

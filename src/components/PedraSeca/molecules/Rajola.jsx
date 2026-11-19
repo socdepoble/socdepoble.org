@@ -21,6 +21,10 @@
  */
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+import cssDiferitPecesApps from '../../../css/diferit-peces-apps.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); adoptaFullDiferit(el, 'peces-apps', cssDiferitPecesApps); };
 
 /** Inicials de les dues primeres paraules (com l'Avatar): «Cafè amb llet» → «CA». */
 export function inicialsDe(text) {
@@ -36,9 +40,9 @@ export function Rajola({
   const font = typeof imatge === 'string' && imatge !== '' ? resolRecursPropi(imatge) : null;
   const src = font && esFontImatgeSegura(font) ? font : null;
   let quadrat;
-  if (src) quadrat = <img className="sdp-rajola__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" />;
+  if (src) quadrat = <img ref={adoptaEstilsDiferits} className="sdp-rajola__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" />;
   else if (media) quadrat = media;
-  else quadrat = <span className="sdp-rajola__marcador">{marcador || inicialsDe(titol)}</span>;
+  else quadrat = <span ref={adoptaEstilsDiferits} className="sdp-rajola__marcador">{marcador || inicialsDe(titol)}</span>;
   return (
     <button
       type="button"
@@ -47,10 +51,10 @@ export function Rajola({
       aria-pressed={typeof seleccionada === 'boolean' ? seleccionada : undefined}
       {...rest}
     >
-      <span className="sdp-rajola__media" aria-hidden="true">{quadrat}</span>
+      <span ref={adoptaEstilsDiferits} className="sdp-rajola__media" aria-hidden="true">{quadrat}</span>
       <span className="sdp-rajola__titol">{titol}</span>
       {/* L'espai separa títol i línia secundària al nom accessible; dins de la graella no es pinta. */}
-      {secundari ? <>{' '}<span className="sdp-rajola__secundari">{secundari}</span></> : null}
+      {secundari ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-rajola__secundari">{secundari}</span></> : null}
     </button>
   );
 }

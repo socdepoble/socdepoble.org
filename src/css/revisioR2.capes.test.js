@@ -118,7 +118,8 @@ function blocDeModuls(nom) {
 }
 
 describe('Fase B · bloc pecesApps (modules.css)', () => {
-  const PECES = blocDeModuls('pecesApps');
+  void blocDeModuls;
+  const PECES = llig('src/css/diferit-peces-apps.css');
 
   test('tot :hover va dins de @media (hover: hover) and (pointer: fine)', () => {
     expect(hoversSenseGuarda(PECES)).toEqual([]);

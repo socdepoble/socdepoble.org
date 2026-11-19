@@ -358,6 +358,10 @@ export function main(argv = process.argv.slice(2)) {
   return result;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href) {
+let entradaDirecta = false;
+try {
+  entradaDirecta = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href;
+} catch { /* Node stdin usa «-»: importar la biblioteca no executa la CLI. */ }
+if (entradaDirecta) {
   try { main(); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; }
 }

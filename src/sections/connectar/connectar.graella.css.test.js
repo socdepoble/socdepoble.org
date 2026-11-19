@@ -9,7 +9,8 @@ import { describe, expect, test } from 'vitest';
    canvia, i tot el que és nou són classes i modificadors nous, dins de
    @layer components, amb tokens, sense :has(), sense colors hex i amb el
    :hover només per a punter fi. Es llig el text de src/css/modules.css. */
-const CSS = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
+const CSS_CONNECTAR = readFileSync(resolve(process.cwd(), 'src/css/diferit-connectar.css'), 'utf8');
+const CSS = `${readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8')}\n${CSS_CONNECTAR}`;
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** Regles fulla en ordre de font: { prelud, cos, pares }. */
@@ -42,10 +43,11 @@ const una = (prelud) => {
 const declaracions = (cos) => Object.fromEntries(cos.split(';').map((d) => d.trim()).filter(Boolean)
   .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]));
 
-/* El bloc nou, del seu comentari fins al del resum. */
-const INICI = CSS.indexOf('/* FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · /connectar a');
-const FI = CSS.indexOf('/* Resum per destinatari (ResumConnexio)');
-const BLOC = CSS.slice(INICI, FI);
+/* El bloc nou, del seu comentari fins al final del full diferit. */
+const INICI = CSS_CONNECTAR.indexOf('/* FEDI-22 (ordre del Mestre, 261103; captura 261103_2055) · /connectar a');
+const FI_MARCA = CSS_CONNECTAR.indexOf('/* Resum per destinatari (ResumConnexio)');
+const FI = FI_MARCA >= 0 ? FI_MARCA : CSS_CONNECTAR.length;
+const BLOC = CSS_CONNECTAR.slice(INICI, FI);
 const NOVES = regles(BLOC);
 
 describe('Llei del Píxel · les regles de sempre no canvien', () => {
@@ -65,7 +67,7 @@ describe('Llei del Píxel · les regles de sempre no canvien', () => {
   });
 
   test('cap regla nova redefinix una classe de sempre', () => {
-    const vells = new Set(regles(CSS.slice(0, INICI) + CSS.slice(FI)).map((r) => r.prelud));
+    const vells = new Set(regles(CSS_CONNECTAR.slice(0, INICI) + CSS_CONNECTAR.slice(FI)).map((r) => r.prelud));
     for (const { prelud } of NOVES) expect(vells.has(prelud), prelud).toBe(false);
   });
 });

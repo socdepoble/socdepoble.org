@@ -6,7 +6,7 @@ import {
 } from './__fixtures__/manifests.js';
 import { ICONES_APP, iconaDe } from './iconesApp.js';
 import {
-  NIVELLS, NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PERMISOS_TITULAR, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
+  AVISOS_BETA, NIVELLS, NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PERMISOS_TITULAR, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
   validaManifestApp
 } from './manifestApp.js';
 
@@ -18,6 +18,7 @@ describe('validaManifestApp · el manifest bo', () => {
     expect(errors).toEqual([]);
     expect(ok).toBe(true);
     expect(manifest.origen).toBe('interna');
+    expect(manifest.avisBeta).toBe('general');
     expect(manifest.grups).toEqual([]);
     expect(manifest.interruptors).toEqual([]);
     expect(Object.isFrozen(manifest)).toBe(true);
@@ -82,6 +83,7 @@ describe('validaManifestApp · el que no passa', () => {
     ['actiuPerDefecte no booleà', { actiuPerDefecte: 'si' }, 'actiuPerDefecte'],
     ['entorn desconegut', { entorn: 'staging' }, 'entorn'],
     ['dades personals desconegudes', { dadesPersonals: 'bancaries' }, 'dadesPersonals'],
+    ['avisBeta desconegut', { avisBeta: 'inventat' }, "avisBeta: 'fiscal' | 'general'"],
     ['carrega que no és funció', { carrega: '../bar/AppBar.jsx' }, 'carrega'],
     ['clau desconeguda', { html: '<p>hola</p>' }, 'clau desconeguda «html»'],
     ['ruta declarada', { ruta: '/bar' }, 'clau desconeguda «ruta»'],
@@ -107,6 +109,13 @@ describe('validaManifestApp · el que no passa', () => {
   test('ni null ni una llista són un manifest', () => {
     expect(validaManifestApp(null).ok).toBe(false);
     expect(validaManifestApp([]).ok).toBe(false);
+  });
+  test('avisBeta accepta «fiscal» i «general» i cau a «general» per defecte', () => {
+    expect(AVISOS_BETA).toEqual(['fiscal', 'general']);
+    expect(Object.isFrozen(AVISOS_BETA)).toBe(true);
+    expect(validaManifestApp(manifestDeProva({ avisBeta: 'fiscal' })).manifest.avisBeta).toBe('fiscal');
+    expect(validaManifestApp(manifestDeProva({ avisBeta: 'general' })).manifest.avisBeta).toBe('general');
+    expect(validaManifestApp(manifestDeProva()).manifest.avisBeta).toBe('general');
   });
 });
 

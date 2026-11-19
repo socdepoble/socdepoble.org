@@ -74,6 +74,9 @@ import {
   APP_LECTOR, DESTINS, entradaDeDesa, entradaDeFont, escriuDesa, escriuDesti, llegixDesa, llegixDesti, nomProposat,
   paramsDeLaNota
 } from './modeDesa.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 const CAP = Object.freeze([]);
 const RUTA_BLOC = '/notes';
@@ -375,7 +378,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
         {...peu}
       >
         {ofertaLector || alLector ? (
-          <section className="sdp-connectar__seccio" aria-labelledby={`${id}-desti`}>
+          <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-desti`}>
             <h3 id={`${id}-desti`} className="sdp-connectar__titol-seccio">{tradueix(t, TEXTOS_DESA.destiTitol)}</h3>
             <GrupOpcions
               llegenda={tradueix(t, TEXTOS_DESA.destiLlegenda)}
@@ -389,7 +392,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
             />
             {alLector ? (
               <div ref={panellLector} className="sdp-connectar__panell">
-                <p className="sdp-connectar__ajuda">{tradueix(t, TEXTOS_DESA.lectorAjuda)}</p>
+                <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{tradueix(t, TEXTOS_DESA.lectorAjuda)}</p>
                 {lector.estat === 'carregant' ? <Carregant etiqueta={tradueix(t, TEXTOS_DESA.lectorObrint)} /> : null}
                 {lector.estat === 'llest' ? (
                   <>
@@ -428,7 +431,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
           </section>
         ) : null}
         {alLector ? null : (
-          <section className="sdp-connectar__seccio" aria-labelledby={`${id}-classificacio`}>
+          <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-classificacio`}>
             <h3 id={`${id}-classificacio`} className="sdp-connectar__titol-seccio">{tradueix(t, TEXTOS_DESA.classificacio)}</h3>
             <BotoneraClassificacio
               carpeta={nomCarpeta}

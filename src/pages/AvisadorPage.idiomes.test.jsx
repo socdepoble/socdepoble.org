@@ -25,8 +25,8 @@ const { port, useXat } = vi.hoisted(() => ({ port: vi.fn(), useXat: vi.fn() }));
 vi.mock('../data/backendPort.js', () => ({ enviaMissatge: port }));
 vi.mock('../sections/xat/XatContext.jsx', () => ({ useXat }));
 vi.mock('../components/universal/PageFrame.jsx', () => ({
-  PageFrame: ({ title, subtitle, children }) => (
-    <main><header className="page-title"><h1>{title}</h1><p>{subtitle}</p></header>{children}</main>
+  PageFrame: ({ title, subtitle, lead, children }) => (
+    <main><header className="page-title"><h1>{title}</h1><p>{subtitle}</p><p className="lead">{lead}</p></header>{children}</main>
   )
 }));
 /* m.llengua null: fora de l'App (useUIActionsOpcional torna null), la reserva valenciana. */
@@ -68,9 +68,16 @@ describe('la pàgina, traduïda', () => {
        l'enllaç d'AparadorFediversity.jsx. */
     expect(screen.getByRole('heading', { name: 'L’Avisador' })).toBeTruthy();
     expect(screen.getByText('Batec de Vida')).toBeTruthy();
-    expect(screen.getByText(/Si la app está cerrada o suspendida.*llama al 112\. L’Avisador no sustituye a la teleasistencia médica homologada\./))
-      .toBeTruthy();
-    expect(screen.getByText(/El contador se pausa durante el descanso nocturno\./)).toBeTruthy();
+    /* Onada R32.12 · T1 · El paràgraf del 112, ara amb negretes i el 112 clicable. */
+    expect(screen.getByRole('heading', { level: 3, name: 'Cómo funciona y límites de seguridad' })).toBeTruthy();
+    const es112 = screen.getByRole('link', { name: '112' });
+    expect(es112.getAttribute('href')).toBe('tel:112');
+    expect(es112.closest('p').textContent)
+      .toBe('En caso de emergencia, llama al 112. L’Avisador no sustituye a la teleasistencia médica homologada.');
+    expect(document.querySelector('.lead').textContent).toMatch(/El contador se pausa durante el descanso nocturno\./);
+    /* Revisió adversarial (A11Y-01) · El missatge que s'envia és en valencià i ho diu al lector de pantalla. */
+    expect(document.querySelector('blockquote').getAttribute('lang')).toBe('ca');
+    expect(screen.getByText('0 de 3 seleccionadas')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Activa L’Avisador' })).toBeTruthy();
     expect(screen.getByRole('checkbox', { name: 'He leído que L’Avisador no sustituye al 112 ni a la teleasistencia' })).toBeTruthy();
     expect(screen.getByText('Recibirán este mensaje:')).toBeTruthy();
@@ -84,8 +91,9 @@ describe('la pàgina, traduïda', () => {
     munta();
     expect(screen.getByRole('heading', { name: 'L’Avisador' })).toBeTruthy();
     expect(screen.getByText('Batec de Vida')).toBeTruthy();
-    expect(screen.getByText(/Larrialdi batean, deitu 112ra\. L’Avisador-ek ez du ordezkatzen teleasistentzia mediko homologatua\./))
-      .toBeTruthy();
+    expect(screen.getByRole('link', { name: '112' }).closest('p').textContent)
+      .toBe('Larrialdi batean, deitu 112 zenbakira. L’Avisador-ek ez du ordezkatzen teleasistentzia mediko homologatua.');
+    expect(screen.getByRole('link', { name: 'Txata' }).getAttribute('href')).toBe('/xat');
     expect(screen.getByRole('button', { name: 'Aktibatu L’Avisador' })).toBeTruthy();
     expect(document.querySelector('blockquote').textContent).toBe(MISSATGE_AVISADOR);
   });
@@ -111,8 +119,14 @@ describe('Llei del Píxel en valencià', () => {
     expect(screen.getByRole('heading', { name: 'L’Avisador' })).toBeTruthy();
     expect(screen.getByText('L’Avisador envia un missatge veïnal al Xat quan passen les hores que has triat sense activitat en esta app. El comptador es pausa durant el descans nocturn.'))
       .toBeTruthy();
-    expect(screen.getByText('Funciona amb la sessió personal oberta, mentre l’app pot executar-se i té connexió al Xat. Els ajustos es guarden en este dispositiu. Si l’app està tancada o suspesa, el dispositiu està apagat o el Xat no està disponible, l’avís pot no arribar. En tornar a obrir l’app, l’Avisador espera uns minuts abans d’avisar. Per a una emergència, telefona al 112. L’Avisador no substituïx la teleassistència mèdica homologada.'))
-      .toBeTruthy();
+    /* Onada R32.12 · T1 · L'antic paràgraf de limitacions, ara en quatre paràgrafs amb negretes. */
+    const guia = [...document.querySelectorAll('.sdp-avisador > p')].map((p) => p.textContent);
+    expect(guia).toEqual([
+      'Funciona amb la sessió personal oberta, mentre l’app pot executar-se i té connexió al Xat. Els ajustos es guarden en este dispositiu i en este navegador; a Dispositius veus el nom d’este dispositiu i les pestanyes de Sóc de Poble d’este navegador que s’hi anuncien.',
+      'Mentre l’app està tancada o el dispositiu apagat, l’avís no s’envia. Si l’app està suspesa o el Xat no està disponible, l’avís pot arribar tard o no arribar. En tornar a obrir l’app, l’Avisador espera uns minuts abans d’avisar.',
+      'Només pots triar persones amb qui ja tens una conversa privada al Xat. L’avís els arriba des del teu compte, com un missatge teu.',
+      'Per a una emergència, telefona al 112. L’Avisador no substituïx la teleassistència mèdica homologada.'
+    ]);
     expect(screen.getByRole('button', { name: 'Activa l’Avisador' })).toBeTruthy();
     expect(screen.getByRole('option', { name: '8 h' })).toBeTruthy();
   });
@@ -168,6 +182,24 @@ describe('els cinc diccionaris', () => {
         expect([codi, clau, dic[clau].includes('Avisador')]).toEqual([codi, clau, true]);
       }
     }
+  });
+
+  /* Onada R32.12 · T1 · Els textos rics (textRic) porten les mateixes negretes en les cinc llengües:
+     el lector que salta de negreta en negreta troba el mateix missatge en qualsevol llengua. */
+  it.each(Object.keys(DICCIONARIS))('%s: els textos rics tanquen totes les negretes i porten els mateixos enllaços', (codi) => {
+    const rics = ['guiaSessio', 'guiaArribada', 'guiaConfianca', 'guiaEmergencia', 'copiaExplicacio'];
+    for (const clau of rics) {
+      const valor = DICCIONARIS[codi][`page.avisador.${clau}`];
+      expect([codi, clau, (valor.match(/\*\*/g) ?? []).length % 2]).toEqual([codi, clau, 0]);
+      expect([codi, clau, /\*\*[^*]+\*\*/.test(valor)]).toEqual([codi, clau, true]);
+      /* Revisió adversarial (TR-02) · Llei 35: negretes d'escaneig, no paràgrafs sencers en negreta (8 paraules com a molt). */
+      const negretes = [...valor.matchAll(/\*\*([^*]+)\*\*/g)].map((m) => m[1].replace(/\{\w+\}/g, 'x'));
+      expect([codi, clau, negretes.join(' ').split(/\s+/).length <= 8]).toEqual([codi, clau, true]);
+    }
+    expect(DICCIONARIS[codi]['page.avisador.guiaEmergencia']).toContain('{telefon112}');
+    expect(DICCIONARIS[codi]['page.avisador.guiaConfianca']).toContain('{enllacXat}');
+    expect(DICCIONARIS[codi]['page.avisador.guiaSessio']).toContain('{enllacDispositius}');
+    expect(DICCIONARIS[codi]['page.avisador.limitacions']).toBeUndefined();
   });
 
   it('omple posa les xifres després de traduir, sense interpretar «$&»', () => {

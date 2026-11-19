@@ -73,8 +73,10 @@ export default function ProfileSection({ agents = [] }) {
   const portaDelXat = (agent, tipus) => {
     if (tipus !== 'entitat' && tipus !== 'grup') return null;
     const desti = rutaXatDePagina(objecteDePerfil({ tipus, id: agent?.id, nom: agent?.name }));
+    const verbXat = t('section.xat.anarAlXat', 'Anar al xat');
+    const nomPorta = agent?.name ? `${verbXat} ${agent.name}` : verbXat;
     return desti
-      ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'secundari' }} varietat="secundari" />
+      ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: verbXat, nom: nomPorta, desti, varietat: 'secundari' }} varietat="secundari" />
       : null;
   };
 
@@ -110,6 +112,8 @@ export default function ProfileSection({ agents = [] }) {
           const objecte = objecteDePerfil({ tipus, id: agent?.id, nom: agent?.name }) || undefined;
           const poble = pobleNormalitzat(agent);
           const capcalera = encapcalamentDeTargeta(agent, { author: agent.name, location: poble, t });
+          const rolNet = typeof agent?.role === 'string' ? agent.role.trim() : '';
+          const subtitolTargeta = rolNet && rolNet !== String(capcalera.location || '').trim() ? agent.role : undefined;
           const fontData = dataDeTargetaDirectori(agent);
           const data = fontData.date ? fontData : capcalera;
           const excerpt = agent.short_bio || agent.lema || agent.type || '';
@@ -135,7 +139,7 @@ export default function ProfileSection({ agents = [] }) {
               videoUrl={videoHero || undefined}
               imageAlt={agent.name}
               title={agent.name}
-              subtitle={agent.role}
+              subtitle={subtitolTargeta}
               body={excerpt}
               labels={labels}
               accio={portaDelXat(agent, tipus)}

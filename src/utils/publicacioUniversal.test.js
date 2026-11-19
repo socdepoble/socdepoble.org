@@ -783,9 +783,12 @@ describe('qualitat de publicacioUniversal.js i la seua prova', () => {
     expect(sonda.messages.map((m) => m.ruleId)).toEqual(['no-unused-vars', 'eol-last']);
   }, 120000);
 
-  test('JS pur: una sola importació (netejaText de sanitize.js), cap rellotge, atzar, DOM, React, xarxa ni emmagatzematge', () => {
+  test('JS pur: només text i pressupost Unicode, cap rellotge, atzar, DOM, React, xarxa ni emmagatzematge', () => {
     const codi = senseComentaris(llig(MODUL));
-    expect(codi.match(/^import .*$/gm)).toEqual(["import { netejaText } from './sanitize.js';"]);
+    expect(codi.match(/^import .*$/gm)).toEqual([
+      "import { netejaText } from './sanitize.js';",
+      "import { normalitzaUnicodeSegura } from './normalitzaUnicodeSegura.js';"
+    ]);
     expect(/\brequire\s*\(/.test(codi)).toBe(false);
     const impurs = new RegExp(t('\\b(?:Da', 'te|React|use[A-Z]\\w*|win', 'dow|docu', 'ment|navi', 'gator|global', 'This|set', 'Timeout|set',
       'Interval|fet', 'ch|XMLHttp', 'Request|local', 'Storage|session', 'Storage|indexed', 'DB)\\b|Math\\.ran', 'dom|cryp', 'to\\.'));

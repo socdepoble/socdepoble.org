@@ -70,7 +70,10 @@ function origenSegur(valor) {
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   if (!(url.protocol === 'https:' || (local && url.protocol === 'http:'))) return '';
   if (url.username || url.password) return '';
-  return url.href.replace(/\/+$/, '');
+  const href = url.href;
+  let end = href.length;
+  while (end > 0 && href[end - 1] === '/') end--;
+  return href.slice(0, end);
 }
 
 /* Gauntlet c3 (vapid-detector-cec-al-build-real) · Només les tres claus que

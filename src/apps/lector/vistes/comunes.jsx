@@ -20,15 +20,9 @@
  */
 import { CheckCheck } from 'lucide-react';
 import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
+import { textosLector } from '../i18nLector.js';
 import { seguix } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
-
-/* F2 del Gauntlet (261016, defecte L1-2) · Amb una cerca, el botó diu l'abast, com a Feedly: els
-   resultats que es veuen a la llista, no la carpeta sencera. */
-const textDelsResultats = (n) => {
-  if (n === 0) return 'Cap resultat per a marcar';
-  return n === 1 ? 'Marca com a llegit el resultat' : `Marca com a llegits els ${n} resultats`;
-};
 
 /**
  * `ids`: les notícies que es veuen. Es marquen les que encara no s'han llegit.
@@ -36,33 +30,32 @@ const textDelsResultats = (n) => {
  * llegits els 3 resultats»). Sense, «Marca-ho tot com a llegit», el de sempre.
  */
 export function MarcaTotLlegit({ ids, filtrat = false }) {
-  const { lector } = useVistaLector();
+  const { lector, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const llegits = new Set(lector.estat.llegits);
   const llista = Array.isArray(ids) ? ids : [];
   const pendents = llista.filter((id) => !llegits.has(id));
   return (
     <Boto varietat="secundari" icona={CheckCheck} disabled={pendents.length === 0} onClick={() => lector.accions.marcaLlegits(pendents)}>
-      {filtrat ? textDelsResultats(llista.length) : 'Marca-ho tot com a llegit'}
+      {filtrat ? tx.textDelsResultats(llista.length) : tx.marcaTotLlegit}
     </Boto>
   );
 }
 
 export function AvisLector() {
-  const { lector } = useVistaLector();
+  const { lector, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   if (lector.mode === 'lectora') {
-    return <Alerta to="avis" titol="Només per a mirar">El lector està obert en una altra pestanya: el que llegixes ací no es guarda.</Alerta>;
+    return <Alerta to="avis" titol={tx.nomesMirarTitol}>{tx.nomesMirarLector}</Alerta>;
   }
   if (lector.error) {
-    return <Alerta to="error" titol="No s’ha pogut guardar">El navegador no ha deixat guardar el que has llegit. Torna a obrir el lector.</Alerta>;
+    return <Alerta to="error" titol={tx.noShaPogutGuardarTitol}>{tx.noShaPogutGuardarText}</Alerta>;
   }
   if (!lector.persistent) {
-    return <Alerta to="avis" titol="Només en la memòria">Este navegador no deixa guardar: el que llegixes es perdrà en tancar la pestanya.</Alerta>;
+    return <Alerta to="avis" titol={tx.nomesMemoriaTitol}>{tx.nomesMemoriaText}</Alerta>;
   }
   return null;
 }
-
-/* «A», «A i B», «A, B i C». */
-const enumeracio = (noms) => (noms.length < 2 ? noms.join('') : `${noms.slice(0, -1).join(', ')} i ${noms[noms.length - 1]}`);
 
 /* Interfície amb el servei (261024) · Ni una adreça que el servei no llig (no s'hi ha demanat res:
    correcció R5-08) ni una font teua mentre el servei no les llig no «han deixat de respondre». */
@@ -76,7 +69,8 @@ const NO_SON_SILENCIS = new Set(['adreca', 'personals-off']);
  * teues pendents, ni ací: l'arbre les marca «pendent».
  */
 export function AvisFonts() {
-  const { lector, noticies } = useVistaLector();
+  const { lector, noticies, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   if (noticies.estat !== 'llest' || !noticies.caigudes?.length) return null;
   const motius = new Map(noticies.caigudes.map((caiguda) => [caiguda.fontId, caiguda.motiu]));
   const seguides = noticies.fonts.filter((font) => seguix(lector.estat, font.id));
@@ -85,16 +79,13 @@ export function AvisFonts() {
   const callades = caigudes.filter((font) => !NO_SON_SILENCIS.has(motius.get(font.id)));
   const vetades = caigudes.filter((font) => motius.get(font.id) === 'adreca');
   if (callades.length === 0 && vetades.length === 0) return null;
-  const verb = callades.length === 1 ? 'no ha respost' : 'no han respost';
   const frases = [
-    callades.length ? `${enumeracio(callades.map((font) => font.nom))} ${verb} ara mateix. La resta de notícies estan al dia.` : null,
-    vetades.length
-      ? `El servei de notícies no llig l’adreça de ${enumeracio(vetades.map((font) => font.nom))}: no és pública o no és segura, i no s’hi ha demanat res.`
-      : null
+    callades.length ? tx.avisFontsCalladesText(callades.map((font) => font.nom)) : null,
+    vetades.length ? tx.avisFontsVetadesText(vetades.map((font) => font.nom)) : null
   ].filter(Boolean);
   return (
-    <Alerta to="avis" titol={callades.length ? 'Alguna font no ha contestat' : 'Alguna adreça no es pot llegir'}
-      accions={callades.length ? <Boto varietat="secundari" onClick={noticies.rellegix}>Torna-ho a provar</Boto> : null}>
+    <Alerta to="avis" titol={callades.length ? tx.avisFontsCalladesTitol : tx.avisAdrecesVetadesTitol}
+      accions={callades.length ? <Boto varietat="secundari" onClick={noticies.rellegix}>{tx.tornaHoAProvar}</Boto> : null}>
       {frases.join(' ')}
     </Alerta>
   );

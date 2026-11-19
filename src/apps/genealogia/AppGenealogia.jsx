@@ -20,27 +20,30 @@ import { ProveidorGenealogia, useGenealogia } from './nucli/index.js';
 import { RUTES_GENEALOGIA } from './rutesGenealogia.js';
 import { VERSIO_AVIS, t, textError } from './textos.js';
 
-/* ClosaAplicacio rep textos fixos; la llengua de cada columna la donen les vistes. */
-const TITOLS = Object.freeze({ esquerra: t('ca', 'col.esquerra'), mig: t('ca', 'app.titol') });
+/* Onada R32.11 · Els separadors de la closca i la porta d'avís seguixen l'idioma actiu (ca, es, en, eu, gl). */
+function titolsGenealogia(idioma = 'ca') {
+  return Object.freeze({ esquerra: t(idioma, 'col.esquerra'), mig: t(idioma, 'app.titol') });
+}
 
 function PortaAvis({ children }) {
   const genealogia = useGenealogia();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const { pathname } = useLocation();
   if (!genealogia.carregat) {
     return genealogia.error
-      ? <EstatBuit titol={t('ca', 'error.lectura')}>{textError(genealogia.error, 'ca')}</EstatBuit>
-      : <Carregant etiqueta={t('ca', 'carregant')} />;
+      ? <EstatBuit titol={t(idioma, 'error.lectura')}>{textError(genealogia.error, idioma)}</EstatBuit>
+      : <Carregant etiqueta={t(idioma, 'carregant')} />;
   }
   if (!genealogia.avisAcceptat && pathname !== ruta('avis')) return <Navigate to={ruta('avis')} replace />;
   return children;
 }
 
 export default function AppGenealogia({ magatzem, rellotge, nouId }) {
+  const { idioma = 'ca' } = useApp();
   return (
     <ProveidorGenealogia magatzem={magatzem} rellotge={rellotge} nouId={nouId} versioAvis={VERSIO_AVIS}>
       <PortaAvis>
-        <ClosaAplicacio rutes={RUTES_GENEALOGIA} titols={TITOLS} />
+        <ClosaAplicacio rutes={RUTES_GENEALOGIA} titols={titolsGenealogia(idioma)} />
       </PortaAvis>
     </ProveidorGenealogia>
   );

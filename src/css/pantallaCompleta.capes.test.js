@@ -52,6 +52,7 @@ const declaracions = (cos) => cos.split(';')
 const FULLS = {
   components: llig('src/css/components.css'),
   layout: llig('src/css/layout.css'),
+  calendari: llig('src/css/diferit-calendari.css'),
   modules: llig('src/css/modules.css')
 };
 const CLASSES_NOVES = ['sdp-pantalla-completa', 'sdp-dialeg--completa', 'sdp-capa-modal--completa'];
@@ -81,7 +82,7 @@ const ESPERADES = [
   ['layout', ':host .sdp-capa-modal--completa > .sdp-dialeg.sdp-dialeg--completa'],
   ['layout', ':host .sdp-root[data-sdp-estret] > .sdp-capa-modal.sdp-capa-modal--completa'],
   ['layout', ':host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-dialeg--completa'],
-  ['modules', '.sdp-calendari__barra > .sdp-pantalla-completa__entra'],
+  ['calendari', '.sdp-calendari__barra > .sdp-pantalla-completa__entra'],
   ['modules', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana']
 ];
 
@@ -148,7 +149,7 @@ test('el botó d’entrar fa 44×44 (var(--sdp-touch)) i «Eixir» torna a ser s
   expect(entra).toEqual(expect.arrayContaining([['inline-size', 'var(--sdp-touch)'], ['min-inline-size', 'var(--sdp-touch)'], ['padding', '0']]));
   const eixir = declaracions(regla('components', '.sdp-pantalla-completa__barra .sdp-boto--secundari').cos);
   expect(eixir).toEqual(expect.arrayContaining([['background', 'var(--sdp-fons-targeta)'], ['color', 'var(--sdp-text-titol)'], ['border', '2px solid var(--sdp-vora-control)']]));
-  expect(declaracions(regla('modules', '.sdp-calendari__barra > .sdp-pantalla-completa__entra').cos)).toEqual([['margin-inline-start', 'auto']]);
+  expect(declaracions(regla('calendari', '.sdp-calendari__barra > .sdp-pantalla-completa__entra').cos)).toEqual([['margin-inline-start', 'auto']]);
 });
 
 test('dins de la pantalla completa, la capçalera de la Setmana s’enganxa a dalt del visor', () => {

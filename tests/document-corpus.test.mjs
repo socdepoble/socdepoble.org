@@ -54,6 +54,14 @@ test('la història d’ESTAT no reactiva ordres, i els enllaços trencats del bl
   assert.equal(operationalDocumentText('# LEDGER\n[[antic]]\n## Vincles\n- [[index]]\n## Història\n[[antic]]', '.agents/LEDGER.md'), '## Vincles\n- [[index]]\n');
 });
 
+test('P2-15: a Markdown example or HTML comment cannot truncate the active startup context', () => {
+  const current = '# ESTAT\n## ESTAT_ACTUAL · hui\n```md\n## ESTAT_ACTUAL · exemple\n```\n'
+    + '<!--\n## ESTAT_ACTUAL · comentari\n-->\n' + 'Instrucció vigent.\n'.repeat(5000);
+  const history = '## ESTAT_ACTUAL · ahir\nHistòria\n';
+  assert.equal(operationalDocumentText(current + history, '.agents/ESTAT.md'), current);
+  assert.equal(operationalDocumentText(current, '.agents/ESTAT.md'), current);
+});
+
 test('un symlink al corpus falla abans de llegir contingut alié', t => {
   const root = fixture(t, { '_wiki_de_poble/nota.md': '' });
   fs.symlinkSync(os.tmpdir(), path.join(root, '_wiki_de_poble/extern'));

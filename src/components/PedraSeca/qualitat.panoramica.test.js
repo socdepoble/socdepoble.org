@@ -25,14 +25,8 @@ const PS = 'src/components/PedraSeca';
 /* tractor-vocabulari (ordre del Mestre, 261030) · Els dos fulls de Pedra Seca
    (pecesApps i catalegColleccio) són ara blocs de src/css/modules.css, entre les
    seues marques: FULL és el fitxer que porta el bloc de la variant. */
-const FULL = 'src/css/modules.css';
-const blocDeModuls = (nom) => {
-  const tot = llig(FULL);
-  const inici = tot.indexOf(`/* ═══ BLOC ${nom} · `);
-  const fi = tot.indexOf(`/* ═══ FI DEL BLOC ${nom} ═══ */`);
-  if (inici < 0 || fi < inici) throw new Error(`${FULL} no té el bloc ${nom}`);
-  return tot.slice(inici, fi);
-};
+const FULL = 'src/css/diferit-cataleg-colleccio.css';
+const blocDeModuls = (nom) => llig(nom === 'pecesApps' ? 'src/css/diferit-peces-apps.css' : 'src/css/diferit-cataleg-colleccio.css');
 const PECA = `${PS}/organismes/agrupacio.jsx`;
 const LECTOR = 'src/apps/lector/';
 const ESPECIMEN = 'src/sections/disseny/cataleg/detalls/EspecimenImatgeApaisada.jsx';
@@ -71,7 +65,7 @@ describe('ús exclusiu: el Lector i el seu espècimen', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(100);
     expect(quiUsa(usaClasse)).toEqual([FULL, PECA, ESPECIMEN].sort());
     /* Dins de modules.css, només el bloc catalegColleccio la definix. */
-    expect(usaClasse(senseComentaris(llig(FULL).replace(blocDeModuls('catalegColleccio'), '')))).toBe(false);
+    expect(usaClasse(senseComentaris(llig('src/css/modules.css')))).toBe(false);
     expect(usaClasse(senseComentaris(blocDeModuls('catalegColleccio')))).toBe(true);
     /* L'espècimen la documenta en text; el className el posa la variant, mai a mà. */
     expect(/className=["'{][^>]*sdp-panoramica/.test(llig(ESPECIMEN))).toBe(false);

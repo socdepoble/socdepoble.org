@@ -1,3 +1,4 @@
+import { esTokenPublicacio, ordreTokenPublicacio } from './publicacionsCas.js';
 import { creaMagatzemIdb } from '../utils/magatzemLocal.js';
 import { elementDeFilaPublicada, mapSectionSubmissionToItem } from './mapejadorSeccions.js';
 import { elementDeMurMembre } from './murPublic.js';
@@ -5,17 +6,29 @@ import { capturaAbastProjeccions, capturaDestinsDeFontCataleg, capturaFontCatale
   errorProjeccioCataleg, idPublicacioProjeccio, payloadProjeccioCataleg, projeccioCatalegDe } from './projeccionsCataleg.js';
 
 const AUDIENCIES = ['privada', 'publica'];
+const UUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+const copia = value => JSON.parse(JSON.stringify(value));
 const enter = value => Number.isSafeInteger(value) && value >= 0;
-const instant = value => typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?(?:Z|[+-]\d\d:\d\d)$/.test(value) && Number.isFinite(Date.parse(value));
+const instant = esTokenPublicacio;
 function registreNet(input) {
   const font = capturaFontCataleg(input.font), destins = capturaDestinsDeFontCataleg(font, input.destins);
   if (input.clau !== clauFontCataleg(font) || !enter(input.seq) || input.seq < 1 || input.seq >= Number.MAX_SAFE_INTEGER
     || !AUDIENCIES.every(a => enter(input.confirmacions?.[a]) && input.confirmacions[a] <= input.seq)
     || !AUDIENCIES.every(a => /^[0-9a-f-]{36}$/.test(input.ids?.[a])) || typeof input.publicaIntentada !== 'boolean'
     || input.versions !== undefined && !AUDIENCIES.every(a => input.versions?.[a] === null || instant(input.versions?.[a]))) throw errorProjeccioCataleg('registre-invalid');
+  const operacions = {};
+  for (const audiencia of AUDIENCIES) {
+    const op = input.operacions?.[audiencia] ?? null;
+    if (op === null) { operacions[audiencia] = null; continue; }
+    const opFont = capturaFontCataleg(op.font), opDestins = capturaDestinsDeFontCataleg(opFont, op.destins);
+    if (!UUID.test(op.id ?? '') || !enter(op.seq) || op.seq > input.seq || op.seq <= input.confirmacions[audiencia]
+      || clauFontCataleg(opFont) !== input.clau || op.expectedUpdatedAt !== null && !instant(op.expectedUpdatedAt)) throw errorProjeccioCataleg('registre-invalid');
+    operacions[audiencia] = { id: op.id, seq: op.seq, font: opFont, destins: opDestins, expectedUpdatedAt: op.expectedUpdatedAt };
+  }
   return { clau: input.clau, font, destins, seq: input.seq, ids: { ...input.ids },
     confirmacions: { ...input.confirmacions }, publicaIntentada: input.publicaIntentada,
-    versions: input.versions ? { ...input.versions } : { privada: null, publica: null } };
+    versions: input.versions ? { ...input.versions } : { privada: null, publica: null },
+    cas: input.cas === true || AUDIENCIES.some(a => operacions[a] !== null), operacions };
 }
 export function creaMagatzemProjeccionsCataleg({ abast, ...opcions }) {
   const scope = capturaAbastProjeccions(abast);
@@ -37,13 +50,10 @@ export function filesDeRegistreProjeccio(row, abast) {
  * Mercat) no agafa el bloqueig d'escriptura del magatzem, que és un per compte
  * i abast entre totes les pestanyes, i no hi escriu mai (ni desa ni
  * sincronitza): així no deixa en mode lector el catàleg d'una altra pestanya.
- * Onada R32 · D-R32-PUB-1 (pendent del Mestre) · `versionada`: el registre
- * guarda la versió del servidor de cada audiència (la de l'últim ACK i, només
- * si és versionada, l'adopció exacta d'abaix), però només l'envia com a
- * `expectedUpdatedAt` si qui crea el servei
- * declara un backend amb CAS de publicacions. Cap backend viu en té (la
- * migració 20261115231000 es va rebutjar a R30): per defecte no viatja i la
- * publicació continua sent l'upsert per id que el servidor viu accepta.
+ * R32.11 · `versionada` opt-in: crea i actualitza amb el nou CAS general.
+ * Cada operació es desa abans del primer dispatch i sobreviu a ACK perdut,
+ * recàrrega i nova edició local. Producció continua opt-out fins rebut manual.
+ * Una versió desconeguda després d'un ACK legacy exigeix adoptar-la de lectura.
  */
 export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprovaSessio = () => {}, subtil, lectora = false, versionada = false, ...opcions }) {
   const scope = capturaAbastProjeccions(abast);
@@ -61,7 +71,7 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
       comprova();
       const seq = (old?.seq ?? 0) + 1;
       return registreNet({ clau, font, destins, seq, ids, confirmacions: old?.confirmacions ?? { publica: 0, privada: 0 }, publicaIntentada: old?.publicaIntentada ?? false,
-        versions: old?.versions });
+        versions: old?.versions, cas: old?.cas, operacions: old?.operacions });
     });
     comprova(); return saved;
   }
@@ -72,7 +82,9 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
      queda null («desconeguda»), mai la de la revisió d'abans. */
   const confirma = (row, audiencia, saved) => base.actualitza('projeccions', row.clau, current => {
     comprova(); if (!current) throw errorProjeccioCataleg('registre-invalid');
-    return registreNet({ ...current, versions: { ...registreNet(current).versions, [audiencia]: instant(saved?.updatedAt) ? saved.updatedAt : null },
+    const net = registreNet(current);
+    if (versionada === true && (row.operacions?.[audiencia]?.id ?? null) !== (net.operacions[audiencia]?.id ?? null)) throw errorProjeccioCataleg('confirmacio-invalida');
+    return registreNet({ ...net, operacions: { ...net.operacions, [audiencia]: null }, versions: { ...net.versions, [audiencia]: instant(saved?.updatedAt) ? saved.updatedAt : null },
       confirmacions: { ...current.confirmacions, [audiencia]: Math.max(current.confirmacions[audiencia], row.seq) } });
   });
   /* Les versions que un registre confirmat i sense versió pot adoptar d'una
@@ -81,7 +93,7 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
   function versionsAdoptables(net, items) {
     let versions = null;
     for (const audiencia of AUDIENCIES) {
-      if (net.versions[audiencia] !== null || net.confirmacions[audiencia] !== net.seq) continue;
+      if (net.operacions[audiencia] || net.versions[audiencia] !== null || net.confirmacions[audiencia] !== net.seq) continue;
       const matches = items.filter(candidate => candidate?.id === net.ids[audiencia]);
       const item = matches.length === 1 ? matches[0] : null;
       const remote = projeccioCatalegDe(item), destins = destinsPerAudiencia(net.destins, audiencia);
@@ -133,24 +145,44 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
     for (;;) {
       const pending = (await llista()).find(registreProjeccioPendent);
       if (!pending) return;
+      if (pending.cas && versionada !== true) throw errorProjeccioCataleg('cas-no-disponible');
       for (const audiencia of AUDIENCIES) {
-        comprova(); if (pending.confirmacions[audiencia] === pending.seq) continue;
-        const destins = destinsPerAudiencia(pending.destins, audiencia);
-        // A private-only reference must not leak even its source id into Mur.
-        if (audiencia === 'publica' && !destins.length && !pending.publicaIntentada) { await confirma(pending, audiencia); continue; }
-        if (audiencia === 'publica') {
+        comprova();
+        let row = versionada === true ? (await llista()).find(candidate => candidate.clau === pending.clau) : pending;
+        if (!row) throw errorProjeccioCataleg('registre-invalid');
+        if (row.confirmacions[audiencia] === row.seq) continue;
+        const destinsActuals = destinsPerAudiencia(row.destins, audiencia);
+        // Una referència només privada no filtra ni l'id al Mur.
+        if (audiencia === 'publica' && !destinsActuals.length && !row.publicaIntentada && !row.operacions[audiencia]) { await confirma(row, audiencia); continue; }
+        if (versionada === true) {
+          row = await base.actualitza('projeccions', pending.clau, current => {
+            comprova(); const net = registreNet(current);
+            if (net.operacions[audiencia] || net.confirmacions[audiencia] === net.seq
+              || audiencia === 'publica' && !destinsPerAudiencia(net.destins, audiencia).length && !net.publicaIntentada) return net;
+            if (net.confirmacions[audiencia] > 0 && net.versions[audiencia] === null) throw errorProjeccioCataleg('versio-desconeguda');
+            const id = globalThis.crypto?.randomUUID?.();
+            if (!UUID.test(id ?? '')) throw errorProjeccioCataleg('aleatorietat-no-disponible');
+            return registreNet({ ...net, cas: true, publicaIntentada: net.publicaIntentada || audiencia === 'publica',
+              operacions: { ...net.operacions, [audiencia]: { id, seq: net.seq, font: net.font, destins: net.destins, expectedUpdatedAt: net.versions[audiencia] } } });
+          });
+          comprova();
+          if (!row.operacions[audiencia]) { if (row.confirmacions[audiencia] !== row.seq) await confirma(row, audiencia); continue; }
+        } else if (audiencia === 'publica') {
           await base.actualitza('projeccions', pending.clau, current => { comprova(); return registreNet({ ...current, publicaIntentada: true }); });
         }
         comprova();
-        const font = destins.length ? pending.font : { ...pending.font, title: 'Publicació retirada', subtitle: '', lead: '' };
+        const op = versionada === true ? row.operacions[audiencia] : null;
+        const source = op ?? row, destins = destinsPerAudiencia(source.destins, audiencia);
+        const font = destins.length ? source.font : { ...source.font, title: 'Publicació retirada', subtitle: '', lead: '' };
         const payload = payloadProjeccioCataleg({ font, destins, audiencia });
-        const submission = { id: pending.ids[audiencia], sectionId: audiencia === 'publica' ? 'mur' : 'notes', payload };
-        if (versionada === true && pending.versions[audiencia] !== null) submission.expectedUpdatedAt = pending.versions[audiencia];
+        const submission = { id: row.ids[audiencia], sectionId: audiencia === 'publica' ? 'mur' : 'notes', payload: copia(payload) };
+        if (op) { submission.expectedUpdatedAt = op.expectedUpdatedAt; submission.operationId = op.id; }
         const saved = await publica(submission);
         comprova();
-        if (saved?.id !== submission.id || saved?.sectionId !== submission.sectionId
-          || JSON.stringify(saved?.payload?.projeccioCataleg) !== JSON.stringify(payload.projeccioCataleg)) throw errorProjeccioCataleg('confirmacio-invalida');
-        await confirma(pending, audiencia, saved);
+        if (saved?.id !== row.ids[audiencia] || saved?.sectionId !== (audiencia === 'publica' ? 'mur' : 'notes')
+          || JSON.stringify(saved?.payload?.projeccioCataleg) !== JSON.stringify(payload.projeccioCataleg)
+          || op && (saved.operationId !== op.id || !instant(saved.updatedAt) || op.expectedUpdatedAt !== null && ordreTokenPublicacio(saved.updatedAt) <= ordreTokenPublicacio(op.expectedUpdatedAt))) throw errorProjeccioCataleg('confirmacio-invalida');
+        await confirma(op ? { ...row, seq: op.seq } : row, audiencia, saved);
       }
     }
   }

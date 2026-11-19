@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
-import { Boto, Fila } from '../../../components/PedraSeca/index.js';
+import { Accions, Boto } from '../../../components/PedraSeca/index.js';
 import { CatalegWorkspace, DetallCataleg } from '../../../components/universal/workspace/index.js';
+import { useApp } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { autoriaDArticle } from './autoria.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { useVistaNevera } from './context.js';
@@ -9,6 +11,9 @@ import { TEXTOS_CASA } from './vestits.js';
 import { modelRebostWorkspace } from './modelRebostWorkspace.js';
 
 export function RebostWorkspace({ params = {} }) {
+  const { idioma = 'ca' } = useApp();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const { estat, accions, llistaVigent, ruta, llegit, mode } = useVistaNevera();
   const model = useMemo(() => modelRebostWorkspace(estat), [estat]);
   const llista = llistaVigent(params);
@@ -17,29 +22,31 @@ export function RebostWorkspace({ params = {} }) {
     const article = item?.dades;
     const aCasa = article ? estat.casa.find(entrada => entrada.articleId === article.id) : null;
     const aLaLlista = article ? llista.linies.some(linia => linia.articleId === article.id) : false;
-    return <DetallCataleg title={item?.title || 'Rebost'} subtitle={item?.subtitle || 'La Nevera de Casa'}
-      lead={item?.lead || 'El catàleg, el que tens a casa i la compra comparteixen el mateix espai.'}
+    return <DetallCataleg title={item?.title || tx.rebost} subtitle={item?.subtitle || tx.laNeveraDeCasa}
+      lead={item?.lead || tx.rebostLead}
       author={article ? autoriaDArticle(article) : null} rellotgeViu showShare={false} showConnect={false} showComment={false}>
-      <p><Link to={ruta('llista', llista.id)}>{`Obri la compra · ${llista.nom}`}</Link>{' · '}
-        <Link to={ruta('casa', llista.id)}>Què tinc a casa?</Link></p>
+      <Accions>
+        <Link to={ruta('llista', llista.id)}>{tx.obriLaCompra(llista.nom)}</Link>
+        <Link to={ruta('casa', llista.id)}>{tx.queTincACasa}</Link>
+      </Accions>
       <AvisNevera sempre />
       {article ? <>
-        <h3>El teu rebost</h3>
-        <p>{aCasa ? TEXTOS_CASA[aCasa.estat] : 'Este article encara no està marcat a casa.'}</p>
-        <Fila justify="center">
+        <h3>{tx.elTeuRebost}</h3>
+        <p>{aCasa ? TEXTOS_CASA[aCasa.estat] : tx.noMarcatACasa}</p>
+        <Accions>
           {Object.entries(TEXTOS_CASA).map(([valor, etiqueta]) => <Boto key={valor} disabled={!potEscriure}
             aria-pressed={aCasa?.estat === valor} onClick={() => accions.marcaACasa(article.id, valor)}>{etiqueta}</Boto>)}
-          {aCasa && <Boto disabled={!potEscriure} onClick={() => accions.marcaACasa(article.id, null)}>Deixa de seguir-lo</Boto>}
+          {aCasa && <Boto disabled={!potEscriure} onClick={() => accions.marcaACasa(article.id, null)}>{tx.deixaDeSeguirlo}</Boto>}
           <Boto disabled={!potEscriure || aLaLlista} onClick={() => accions.afig(llista.id, article.id)}>
-            {aLaLlista ? `Ja és a «${llista.nom}»` : `Afig a «${llista.nom}»`}
+            {aLaLlista ? tx.jaEsALlistaNom(llista.nom) : tx.afigALlistaNom(llista.nom)}
           </Boto>
-        </Fila>
-        <h3>Informació del producte</h3>
-        <p>Els al·lèrgens i les traces són desconeguts sense l’etiqueta actual del producte. El nom comercial no acredita la composició.</p>
-      </> : <><h3>Catàleg i carpetes</h3><p>Tria una categoria o un article per a consultar-lo ací, marcar què en tens i afegir-lo a la compra.</p></>}
+        </Accions>
+        <h3>{tx.infoProducteTitol}</h3>
+        <p>{tx.infoProducteText}</p>
+      </> : <><h3>{tx.catalegICarpetes}</h3><p>{tx.catalegICarpetesText}</p></>}
     </DetallCataleg>;
   };
   return <CatalegWorkspace font="nevera" destiPublicacio="rebost" id="nevera-rebost-p069" model={model} ruta={ruta('rebost')} privateItems
-    labels={{ categories: 'Categories del rebost', items: 'Rebost', all: 'Tot el catàleg', search: 'Busca al rebost…', empty: 'Encara no hi ha articles', noResults: 'No hi ha coincidències' }}
+    labels={{ categories: tx.categoriesDelRebost, items: tx.rebost, all: tx.totElCataleg, search: tx.buscaAlRebost, empty: txBuit.rebostEmpty, noResults: txBuit.rebostNoResults }}
     renderDetail={renderDetail} />;
 }

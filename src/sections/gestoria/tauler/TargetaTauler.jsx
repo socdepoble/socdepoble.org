@@ -41,6 +41,9 @@ import {
 } from 'lucide-react';
 import { UniversalCard } from '../../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** La icona de cada targeta (la del quadrat quan no hi ha xifra). */
 export const ICONES_TAULER = Object.freeze({
@@ -102,7 +105,7 @@ export function peuPrivat(onAvis) {
 export function UllPrivacitat({ visible = false, onCommuta, etiqueta = 'Mostra les xifres' }) {
   const Icona = visible ? Eye : EyeOff;
   return (
-    <button type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
+    <button ref={adoptaEstilsDiferits} type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
       aria-label={etiqueta} title={etiqueta} onClick={onCommuta}>
       <Icona size={20} aria-hidden="true" focusable="false" />
     </button>
@@ -122,7 +125,7 @@ function quadratDe(targeta, mostra) {
       content: (
         <>
           <EyeOff size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
-          <span className="sdp-nomes-lector">{amagat}</span>
+          <span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{amagat}</span>
         </>
       )
     };
@@ -163,8 +166,8 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
       subtitle={targeta.subtitol}
       body={(
         <>
-          <p>{targeta.entradeta}</p>
-          {ambXifra ? null : <p>{targeta.senseXifra}</p>}
+          <p ref={adoptaEstilsDiferits}>{targeta.entradeta}</p>
+          {ambXifra ? null : <p ref={adoptaEstilsDiferits}>{targeta.senseXifra}</p>}
         </>
       )}
       labels={targeta.etiquetes}

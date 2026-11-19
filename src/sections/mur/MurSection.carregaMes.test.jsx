@@ -123,8 +123,8 @@ test('amb «Mostrar tot», carrega les tres seccions pendents; amb «Mercat», n
   await act(async () => { filtre('Mercat').click(); });
   await act(async () => { botoMes().click(); });
   expect(mocks.pagina.mock.calls.map(([opcions]) => opcions.seccio)).toEqual(['mercat']);
-  // El Calendari no té més pàgines: amb el seu filtre, cap botó.
-  await act(async () => { filtre('Calendari').click(); });
+  // Esdeveniments no té més pàgines: amb el seu filtre, cap botó.
+  await act(async () => { filtre('Esdeveniments').click(); });
   expect(botoMes()).toBeNull();
 });
 

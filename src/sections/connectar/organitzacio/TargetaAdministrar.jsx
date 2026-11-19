@@ -21,6 +21,9 @@ import { useState } from 'react';
 import { Alerta, AreaText, Boto, Camp, Carregant } from '../../../components/PedraSeca/index.js';
 import { etiquetaDeRol } from '../../../components/universal/identitat/rols.js';
 import { dataCurta, textDeLaLectura, textDeLError } from './estatAdministracio.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 export const LIMIT_JUSTIFICACIO = 1000;
 
@@ -37,7 +40,7 @@ export function TargetaAdministrar({
   const textLectura = textDeLaLectura(errorLectura);
 
   const formulari = (etiquetaBoto) => (
-    <form aria-label={`Administrar ${org}`} onSubmit={(e) => { e.preventDefault(); onConnecta?.(justificacio.trim()); }}>
+    <form ref={adoptaEstilsDiferits} aria-label={`Administrar ${org}`} onSubmit={(e) => { e.preventDefault(); onConnecta?.(justificacio.trim()); }}>
       {ambRevisio ? (
         <Camp
           etiqueta="Explica breument qui eres (opcional)"
@@ -54,12 +57,12 @@ export function TargetaAdministrar({
 
   const explicacio = (
     <>
-      <p>{`Si l’administres, podràs editar la seua fitxa i publicar en el seu nom. El que publiques com a ${org} anirà signat per ${org}, no per tu.`}</p>
+      <p ref={adoptaEstilsDiferits}>{`Si l’administres, podràs editar la seua fitxa i publicar en el seu nom. El que publiques com a ${org} anirà signat per ${org}, no per tu.`}</p>
       <p>{`Com a administradora veuràs també les converses ${deOrg} amb la gent del poble.`}</p>
       <p>Actuar com a l’organització no és automàtic: ho tries tu, i pots tornar a ser tu quan vullgues des de l’avatar de la barra de dalt.</p>
       {ambRevisio
-        ? <p>La petició la revisarà l’equip de Sóc de Poble abans de donar-te l’alta.</p>
-        : <p>En este poble de proves l’alta és immediata.</p>}
+        ? <p ref={adoptaEstilsDiferits}>La petició la revisarà l’equip de Sóc de Poble abans de donar-te l’alta.</p>
+        : <p ref={adoptaEstilsDiferits}>En este poble de proves l’alta és immediata.</p>}
     </>
   );
 
@@ -69,14 +72,14 @@ export function TargetaAdministrar({
       cos = (
         <Alerta to="info" titol={`Vols administrar ${org}?`}
           accions={<Boto varietat="secundari" onClick={onEntra}>Entrar</Boto>}>
-          <p>Per a administrar una organització has d’entrar amb el teu compte.</p>
+          <p ref={adoptaEstilsDiferits}>Per a administrar una organització has d’entrar amb el teu compte.</p>
         </Alerta>
       );
       break;
     case 'no-disponible':
       cos = (
         <Alerta to="info" titol={`Administrar ${org}`}>
-          <p>Este poble encara no permet demanar l’administració d’una organització des de l’app.</p>
+          <p ref={adoptaEstilsDiferits}>Este poble encara no permet demanar l’administració d’una organització des de l’app.</p>
         </Alerta>
       );
       break;
@@ -89,7 +92,7 @@ export function TargetaAdministrar({
               <Boto varietat="secundari" onClick={onEditaFitxa}>{`Edita la fitxa ${deOrg}`}</Boto>
             </>
           )}>
-          <p>{rol && etiquetaDeRol(rol) ? `Ja administres ${org} · ${etiquetaDeRol(rol)}.` : `Ja administres ${org}.`}</p>
+          <p ref={adoptaEstilsDiferits}>{rol && etiquetaDeRol(rol) ? `Ja administres ${org} · ${etiquetaDeRol(rol)}.` : `Ja administres ${org}.`}</p>
           <p>{actiu
             ? `Ara actues com a ${org}: el que publiques anirà signat per ${org}.`
             : 'Editar la fitxa no canvia amb qui actues. Per a publicar en el seu nom, tria «Actua com a».'}</p>
@@ -99,7 +102,7 @@ export function TargetaAdministrar({
     case 'activant':
       cos = (
         <Alerta to="exit" titol="Ja l’administres">
-          <p aria-busy="true">{`Estem afegint ${org} a les teues identitats…`}</p>
+          <p ref={adoptaEstilsDiferits} aria-busy="true">{`Estem afegint ${org} a les teues identitats…`}</p>
         </Alerta>
       );
       break;
@@ -110,7 +113,7 @@ export function TargetaAdministrar({
     case 'pendent':
       cos = (
         <Alerta to="info" titol="Petició enviada">
-          <p>{dataCurta(data)
+          <p ref={adoptaEstilsDiferits}>{dataCurta(data)
             ? `Petició enviada el ${dataCurta(data)}. Quan l’aprove l’equip de Sóc de Poble, ${org} apareixerà a l’avatar de la barra de dalt.`
             : `Ja tens una petició pendent per a ${org}. Quan l’aprove l’equip de Sóc de Poble, apareixerà a l’avatar de la barra de dalt.`}</p>
         </Alerta>
@@ -120,7 +123,7 @@ export function TargetaAdministrar({
       /* Correcció C17 (260928) · Porta un formulari: fora de la regió viva (viva={false}). */
       cos = (
         <Alerta to="avis" titol="La teua última petició no s’ha aprovat" viva={false}>
-          <p>Pots tornar-ho a demanar explicant qui eres.</p>
+          <p ref={adoptaEstilsDiferits}>Pots tornar-ho a demanar explicant qui eres.</p>
           {formulari('Tornar a demanar-ho')}
         </Alerta>
       );
@@ -128,21 +131,21 @@ export function TargetaAdministrar({
     case 'te-propietaria':
       cos = (
         <Alerta to="avis" titol={`${Org} ja té qui l’administra`}>
-          <p>Encara no es pot demanar entrar com a administradora des de l’app: parla amb qui la porta.</p>
+          <p ref={adoptaEstilsDiferits}>Encara no es pot demanar entrar com a administradora des de l’app: parla amb qui la porta.</p>
         </Alerta>
       );
       break;
     case 'no-del-poble':
       cos = (
         <Alerta to="avis" titol="Només la gent d’este poble">
-          <p>{`Per a administrar ${org} has de ser del poble on està registrada.`}</p>
+          <p ref={adoptaEstilsDiferits}>{`Per a administrar ${org} has de ser del poble on està registrada.`}</p>
         </Alerta>
       );
       break;
     case 'membre':
       cos = (
         <Alerta to="info" titol={`Eres membre ${deOrg}`}>
-          <p>{`Eres membre ${deOrg}, però no l’administres. Si has d’editar la fitxa, parla amb qui l’administra.`}</p>
+          <p ref={adoptaEstilsDiferits}>{`Eres membre ${deOrg}, però no l’administres. Si has d’editar la fitxa, parla amb qui l’administra.`}</p>
         </Alerta>
       );
       break;
@@ -158,7 +161,7 @@ export function TargetaAdministrar({
   }
 
   return (
-    <div className="sdp-connectar__seccio">
+    <div ref={adoptaEstilsDiferits} className="sdp-connectar__seccio">
       {cos}
       {textLectura ? <Alerta to="avis" titol="No s’ha pogut comprovar">{textLectura}</Alerta> : null}
       {textError ? <Alerta to="error" titol="No s’ha pogut enviar">{textError}</Alerta> : null}

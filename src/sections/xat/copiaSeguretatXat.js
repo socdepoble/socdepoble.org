@@ -75,6 +75,7 @@ import {
   teCriptoPerALaCopia,
 } from '../../data/xat/copiaSeguretatPortatil.js';
 import { AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
 
 const CAP = Object.freeze([]);
 const RESERVA = (_clau, reserva) => reserva;
@@ -377,7 +378,13 @@ export function contingutDeLaCopia({ chatThreads = CAP, getThreadMessages = null
 
 /** La mateixa regla que el motor: NFC, sense els espais dels extrems. */
 export function contrasenyaProuLlarga(contrasenya) {
-  return typeof contrasenya === 'string' && contrasenya.normalize('NFC').trim().length >= MIN_CARACTERS_CONTRASENYA;
+  if (typeof contrasenya !== 'string') return false;
+  try {
+    return normalitzaUnicodeAmbLimit(contrasenya, 'NFC').trim().length >= MIN_CARACTERS_CONTRASENYA;
+  } catch (error) {
+    if (error?.code === 'UNICODE_MARK_LIMIT') return false;
+    throw error;
+  }
 }
 
 export { MIN_CARACTERS_CONTRASENYA };

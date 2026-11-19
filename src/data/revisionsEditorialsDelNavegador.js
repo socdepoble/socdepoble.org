@@ -64,7 +64,7 @@ export function normalitzaClau(seccio, id) {
 }
 
 /* Només els camps coneguts, del tipus esperat i amb topall: el storage és de la persona, no de confiança. */
-function campsValids(camps) {
+export function campsValids(camps) {
   if (!camps || typeof camps !== 'object' || Array.isArray(camps)) return null;
   const nets = {};
   for (const camp of CAMPS_DE_LA_REVISIO) {

@@ -250,7 +250,18 @@
     "tests/tractor-consola-neta.test.mjs",
     "tests/wiki-publicacio-r329.test.mjs",
     "tooling/gates/build-seo-manifest.test.mjs",
-    "tests/frontmatter-schema-r329.test.mjs"
+    "tests/frontmatter-schema-r329.test.mjs",
+    "tests/r3211-federacio-conformitat.test.mjs",
+    "tests/r3211-economia-arrencada.test.mjs",
+    "tests/node0-posse-safata.r3211.test.mjs",
+    "tests/r32_11_publicacions_cas.test.mjs",
+    "tests/r3211-imatges-enquadrament.test.mjs",
+    "tests/r3211-css-lineal.test.mjs",
+    "tests/r3211-publicacions-cas-native.test.mjs",
+    "tooling/tests/document-parsers.r32_11.test.mjs",
+    "tooling/tests/document-link-scanners.r32_11.test.mjs",
+    "tooling/tests/data-text-scanner.r32_11.test.mjs",
+    "tests/r3211-fronteres-skills-lineal.test.mjs"
   ],
   "files": [
     {
@@ -2247,6 +2258,66 @@
       "path": "tests/frontmatter-schema-r329.test.mjs",
       "suite": "primary",
       "reason": "R32.9: compatibilitat estricta dels camps editorials amb el tractor de frontmatter; rangs i default inert."
+    },
+    {
+      "path": "tests/r3210-motors-cli.test.mjs",
+      "suite": "primary",
+      "reason": "R32.10: consumidors CLI reals del resum anual i mapa 301, exactitud de cèntims i zero escriptures implícites."
+    },
+    {
+      "path": "tests/r3211-federacio-conformitat.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: conformitat pública WebFinger/ActivityPub amb generador real i integritat dels recursos OpenData; cap crida remota."
+    },
+    {
+      "path": "tests/r3211-economia-arrencada.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P2-15: pressupost explícit de fonts i projecció documental, sense rotar ni llegir recursos humans."
+    },
+    {
+      "path": "tests/node0-posse-safata.r3211.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: safata POSSE amb aprovació WebAuthn vinculada, journal CAS i revocació auditada; efectes simulats, cap publicació remota."
+    },
+    {
+      "path": "tests/r32_11_publicacions_cas.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: snippet CAS manual en PGlite descartable, ACK/replay/conflictes/ACL i portabilitat; cap execució SQL remota."
+    },
+    {
+      "path": "tests/r3211-imatges-enquadrament.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P1-29 i lot06: consumidors reals crop, originals intactes, inventari/procedència i límits sense purgar assets."
+    },
+    {
+      "path": "tests/r3211-css-lineal.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàner CSS fulla lineal compartit per tres tractors; offsets/corpus reals i pressupost64KiB sense delimitador."
+    },
+    {
+      "path": "tests/r3211-publicacions-cas-native.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: CAS publicacions sobre PostgreSQL natiu descartable amb dues connexions READ COMMITTED, sis interleavings amb barreres observades, ACL/export i compatibilitat PG18 NOT NULL; cap producció."
+    },
+    {
+      "path": "tooling/tests/document-parsers.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tooling/tests/document-link-scanners.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tooling/tests/data-text-scanner.r32_11.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11: escàners documentals lineals, equivalència de gramàtica heretada i vectors adversarials64KiB; cap servei remot."
+    },
+    {
+      "path": "tests/r3211-fronteres-skills-lineal.test.mjs",
+      "suite": "primary",
+      "reason": "R32.11 P1-30: pressupost lèxic lineal i diagnòstic incomplet failclosed; 64KiB i regressió F1-F5 sense excepcions."
     }
   ]
 }

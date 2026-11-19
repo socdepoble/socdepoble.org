@@ -1,95 +1,130 @@
 /** Frontissa interna de SdP: catàleg immutable, DTO i transport de lectura acotat. */
 export class ErrorDades extends Error {
   constructor(code, status = null) {
-    super(code);
-    this.name = 'ErrorDades';
-    this.code = code;
-    this.status = status;
+    super(code); this.name = 'ErrorDades'; this.code = code; this.status = status;
   }
 }
+const pla = value => value !== null && typeof value === 'object' && !Array.isArray(value)
+  && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+const control = /[\u0000-\u0020\u007f-\u009f\p{Cf}]/u;
+/* Sostre del catàleg compartit: Notícies ja limita el sobre JSON a 3 MiB i
+   l'XML a 2 MiB; l'escapat també compta dins del sobre. Cada recurs conserva el seu límit
+   inferior immutable; el comptador del stream, no Content-Length, l'aplica. */
+const MAXIM_BYTES_CATALEG = 3_145_728;
+function rutaValida(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') || path.includes('\\') || control.test(path)) return false;
+  try { return path.split('/').every(part => { const s = decodeURIComponent(part); return !['.', '..'].includes(s) && !['/', '\\', '?', '#'].some(c => s.includes(c)) && !control.test(s); }); }
+  catch { return false; }
+}
+function espera(promesa, signal) {
+  return new Promise((resolve, reject) => {
+    const cancel = () => { signal.removeEventListener('abort', cancel); reject(signal.reason); };
+    signal.addEventListener('abort', cancel, { once: true });
+    Promise.resolve(promesa).then(resolve, reject).finally(() => signal.removeEventListener('abort', cancel));
+    if (signal.aborted) cancel();
+  });
+}
+/* El traductor és síncron. Cap Promise, accessor, prototip ni referència
+   mutable de fora del consumidor travessa esta instantània de dades. */
+function capturaDto(entrada) {
+  let nodes = 0; const vistos = new WeakSet();
+  const copia = (v, profunditat) => {
+    if (++nodes > 10_000 || profunditat > 32) throw new ErrorDades('INVALID_PAYLOAD');
+    if (v === null || typeof v === 'string' || typeof v === 'boolean' || typeof v === 'number' && Number.isFinite(v)) return v;
+    if ((!pla(v) && !Array.isArray(v)) || vistos.has(v)) throw new ErrorDades('INVALID_PAYLOAD');
+    vistos.add(v);
+    let resultat;
+    if (Array.isArray(v)) {
+      if (v.length > 10_000 || Reflect.ownKeys(v).length !== v.length + 1) throw new ErrorDades('INVALID_PAYLOAD');
+      resultat = Array.from({ length: v.length }, (_, i) => {
+        const d = Object.getOwnPropertyDescriptor(v, String(i));
+        if (!d || !Object.hasOwn(d, 'value')) throw new ErrorDades('INVALID_PAYLOAD');
+        return copia(d.value, profunditat + 1);
+      });
+    } else {
+      resultat = {};
+      for (const k of Reflect.ownKeys(v)) {
+        const d = Object.getOwnPropertyDescriptor(v, k);
+        if (typeof k !== 'string' || ['__proto__', 'prototype', 'constructor'].includes(k) || !d.enumerable || !Object.hasOwn(d, 'value')) throw new ErrorDades('INVALID_PAYLOAD');
+        resultat[k] = copia(d.value, profunditat + 1);
+      }
+    }
+    vistos.delete(v); return Object.freeze(resultat);
+  };
+  return copia(entrada, 0);
+}
 
-export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl = fetch }) {
-  const base = new URL(apiOrigin);
-  if (base.protocol !== 'https:' || base.username || base.password ||
-      base.pathname !== '/' || base.search || base.hash ||
-      !allowedOrigins.includes(base.origin)) throw new ErrorDades('INVALID_ORIGIN');
-
+export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl = fetch, capturaContext = () => () => {} }) {
+  let base;
+  try { base = new URL(apiOrigin); } catch { throw new ErrorDades('INVALID_ORIGIN'); }
+  if (base.protocol !== 'https:' || base.username || base.password || base.pathname !== '/' || base.search || base.hash
+    || !Array.isArray(allowedOrigins) || !allowedOrigins.includes(base.origin)) throw new ErrorDades('INVALID_ORIGIN');
+  if (!pla(resources) || typeof capturaContext !== 'function') throw new ErrorDades('INVALID_RESOURCE');
   const catalog = Object.create(null);
   for (const [name, source] of Object.entries(resources)) {
     if (source.enabled !== true) continue;
-    if (!source.captureId || typeof source.decode !== 'function' ||
-        typeof source.path !== 'string' || !source.path.startsWith('/') ||
-        source.path.startsWith('//') || source.path.includes('\\') ||
-        !Array.isArray(source.params) ||
-        !Number.isSafeInteger(source.maxBytes) || source.maxBytes <= 0 ||
-        !Number.isSafeInteger(source.timeoutMs) || source.timeoutMs <= 0) {
-      throw new ErrorDades('INVALID_RESOURCE');
-    }
+    if (typeof source.captureId !== 'string' || !/^[A-Za-z0-9._:-]{1,200}$/.test(source.captureId) || typeof source.decode !== 'function'
+      || !rutaValida(source.path) || !Array.isArray(source.params) || source.params.some(p => typeof p !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,79}$/.test(p))
+      || new Set(source.params).size !== source.params.length || !Number.isSafeInteger(source.maxBytes) || source.maxBytes <= 0 || source.maxBytes > MAXIM_BYTES_CATALEG
+      || !Number.isSafeInteger(source.timeoutMs) || source.timeoutMs <= 0 || source.timeoutMs > 60_000) throw new ErrorDades('INVALID_RESOURCE');
     const target = new URL(source.path, base);
-    if (target.origin !== base.origin || target.username || target.password ||
-        target.search || target.hash) throw new ErrorDades('INVALID_RESOURCE');
-    catalog[name] = Object.freeze({
-      url: target.href, decode: source.decode,
-      params: Object.freeze([...source.params]),
-      maxBytes: source.maxBytes, timeoutMs: source.timeoutMs
-    });
+    if (target.origin !== base.origin || target.username || target.password || target.search || target.hash) throw new ErrorDades('INVALID_RESOURCE');
+    catalog[name] = Object.freeze({ url: target.href, decode: source.decode, params: Object.freeze([...source.params]), maxBytes: source.maxBytes, timeoutMs: source.timeoutMs });
   }
   Object.freeze(catalog);
 
   return async function llig(name, params = {}, { signal } = {}) {
     if (!Object.hasOwn(catalog, name)) throw new ErrorDades('UNKNOWN_RESOURCE');
-    const resource = catalog[name];
-    const url = new URL(resource.url);
-    for (const [key, value] of Object.entries(params)) {
-      if (!resource.params.includes(key) ||
-          !['string', 'number', 'boolean'].includes(typeof value) ||
-          (typeof value === 'number' && !Number.isFinite(value)) ||
-          String(value).length > 512) throw new ErrorDades('INVALID_QUERY');
+    const resource = catalog[name], url = new URL(resource.url);
+    if (!pla(params)) throw new ErrorDades('INVALID_QUERY');
+    for (const key of Reflect.ownKeys(params)) {
+      const d = Object.getOwnPropertyDescriptor(params, key);
+      if (typeof key !== 'string' || !d.enumerable || !Object.hasOwn(d, 'value')) throw new ErrorDades('INVALID_QUERY');
+      const value = d.value;
+      if (!resource.params.includes(key) || !['string', 'number', 'boolean'].includes(typeof value)
+        || typeof value === 'number' && !Number.isFinite(value) || String(value).length > 512) throw new ErrorDades('INVALID_QUERY');
       url.searchParams.set(key, String(value));
     }
     if (url.href.length > 4096) throw new ErrorDades('INVALID_QUERY');
     if (signal?.aborted) throw new ErrorDades('CANCELLED');
+    let context;
+    try { context = capturaContext(); if (typeof context !== 'function') throw new Error(); context(); }
+    catch { throw new ErrorDades('CONTEXT_CHANGED'); }
+    const comprovaContext = () => { try { context(); } catch { throw new ErrorDades('CONTEXT_CHANGED'); } };
     const controller = new AbortController();
-    let expired = false;
-    let reader;
-    let completed = false;
-    const cancel = () => controller.abort();
+    let expired = false, reader, completed = false;
+    const cancel = () => controller.abort(new ErrorDades('CANCELLED'));
     signal?.addEventListener('abort', cancel, { once: true });
-    const timer = setTimeout(() => { expired = true; controller.abort(); }, resource.timeoutMs);
+    const timer = setTimeout(() => { expired = true; controller.abort(new ErrorDades('TIMEOUT')); }, resource.timeoutMs);
     try {
-      const response = await fetchImpl(url.href, {
-        method: 'GET', credentials: 'omit', redirect: 'error',
-        headers: { Accept: 'application/json' }, signal: controller.signal
-      });
-      if (!response.ok) {
-        throw new ErrorDades(response.status === 401 ? 'UNAUTHENTICATED'
-          : response.status === 403 ? 'FORBIDDEN' : 'UNAVAILABLE', response.status);
-      }
+      const response = await espera(fetchImpl(url.href, { method: 'GET', credentials: 'omit', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal }), controller.signal);
+      comprovaContext();
+      if (!response.ok) throw new ErrorDades(response.status === 401 ? 'UNAUTHENTICATED' : response.status === 403 ? 'FORBIDDEN' : 'UNAVAILABLE', response.status);
       const type = response.headers.get('content-type') || '';
-      if (!/^application\/(?:[a-z0-9.+-]+\+)?json(?:;|$)/i.test(type)) {
-        throw new ErrorDades('INVALID_PAYLOAD');
-      }
+      if (!/^application\/(?:[a-z0-9.+-]+\+)?json(?:;|$)/i.test(type)) throw new ErrorDades('INVALID_PAYLOAD');
       const declared = response.headers.get('content-length');
-      if (declared && Number(declared) > resource.maxBytes) throw new ErrorDades('PAYLOAD_TOO_LARGE');
+      if (declared && (!/^\d{1,10}$/.test(declared) || Number(declared) > resource.maxBytes)) throw new ErrorDades('PAYLOAD_TOO_LARGE');
       if (!response.body?.getReader) throw new ErrorDades('INVALID_PAYLOAD');
       reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8', { fatal: true });
-      let bytes = 0;
-      let text = '';
-      while (true) {
-        const part = await reader.read();
+      const decoder = new TextDecoder('utf-8', { fatal: true }), parts = [];
+      let bytes = 0, chunks = 0;
+      for (;;) {
+        const part = await espera(reader.read(), controller.signal); comprovaContext();
         if (part.done) break;
+        if (!ArrayBuffer.isView(part.value) || part.value.BYTES_PER_ELEMENT !== 1 || !part.value.byteLength || ++chunks > 65_536) throw new ErrorDades('INVALID_PAYLOAD');
         bytes += part.value.byteLength;
         if (bytes > resource.maxBytes) throw new ErrorDades('PAYLOAD_TOO_LARGE');
-        text += decoder.decode(part.value, { stream: true });
+        parts.push(decoder.decode(part.value, { stream: true }));
       }
-      text += decoder.decode();
-      if (controller.signal.aborted) throw new ErrorDades(expired ? 'TIMEOUT' : 'CANCELLED');
+      parts.push(decoder.decode());
+      if (controller.signal.aborted) throw controller.signal.reason;
       let dto;
-      try { dto = resource.decode(JSON.parse(text)); }
-      catch { throw new ErrorDades('INVALID_PAYLOAD'); }
-      completed = true;
-      return dto;
+      try {
+        const decoded = resource.decode(JSON.parse(parts.join('')));
+        if (decoded instanceof Promise) { decoded.catch(() => {}); throw new ErrorDades('INVALID_PAYLOAD'); }
+        dto = capturaDto(decoded);
+      } catch { throw new ErrorDades('INVALID_PAYLOAD'); }
+      comprovaContext(); completed = true; return dto;
     } catch (error) {
       if (expired) throw new ErrorDades('TIMEOUT');
       if (signal?.aborted) throw new ErrorDades('CANCELLED');
@@ -98,11 +133,10 @@ export function creaFrontissa({ apiOrigin, allowedOrigins, resources, fetchImpl 
     } finally {
       if (!completed) {
         controller.abort();
-        if (reader) await reader.cancel().catch(() => {});
+        if (reader) { try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Ja avortat. */ } }
       }
-      reader?.releaseLock();
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', cancel);
+      try { reader?.releaseLock(); } catch { /* Una lectura avortada encara pot estar pendent. */ }
+      clearTimeout(timer); signal?.removeEventListener('abort', cancel);
     }
   };
 }

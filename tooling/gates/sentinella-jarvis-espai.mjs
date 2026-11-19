@@ -23,29 +23,13 @@
  *
  * - Lectura: retorna `usage`, `quota`, `persistent`, `categories` i `avisos`. Valors no mesurables són `null`.
  * - Categories sagrades (E2EE, esborranys, backups i notes locals) sempre són intocables; el servei no obri els seus magatzems.
- * - Purga: només considera dues caches retirades exactes (`sdp-pwa-recursos-v0`, `sdp-pwa-closca-v0`) i entrades públiques d'assets amb nom hash. Mai elimina una cache sencera.
- * - **No hi ha cap productor confirmat connectat en esta entrega. Per defecte, `purgaMemoriaCauRegenerable()` torna `estat: 'bloquejat'`, `CAP_PRODUCTOR_REGENERABLE_CONFIRMAT` i zero supressions.** La UI ha d'explicar eixe estat i no prometre neteja activa.
- * - Només un productor de recursos públics regenerables pot subministrar un `manifestRegenerable` a la factoria. No es pot fabricar el manifest a partir del contingut actual de CacheStorage: això convertiria una dada desconeguda en «confirmada» sense prova.
- *
- * Esquema de manifest (contracte de productor futur, ara només provat amb fixtures):
- *
- * ```js
- * {
- *   esquema: 'sdp.cache-regenerable.v1',
- *   bloqueig: BLOQUEIG_PURGA_MEMORIA_CAU,
- *   recursos: [
- *     { url: 'https://socdepoble.org/assets/entrada-abcdefgh.js',
- *       bytes: 1234,
- *       sha256: '64 dígits hexadecimals minúsculs del cos públic verificat' }
- *   ]
- * }
- * ```
- *
- * Cada productor de les caches retirades ha d'adquirir el mateix Web Lock exclusiu per a **totes** les escriptures i retirades. Cache API no oferix un CAS atòmic entre `match()` i `delete()` davant d'un escriptor que ignore eixe bloqueig. La confiança en el productor i el protocol de bloqueig és una precondició d'esta API, i no s'acredita cap productor real per passar un objecte de prova.
- *
- * La factoria valida origen/ruta/mida/hash/duplicats i copia les entrades per evitar canvis del manifest en curs. Cada resposta requerix MIME JS/CSS/WOFF2 coherent, `200`, absència d'auth/cookies/`private`/`no-store`, bytes i SHA-256 exactes. Es revalida el cos immediatament abans d'eliminar. Un canvi de la mateixa mida queda rebutjat pel hash. Una sola entrada desconeguda bloqueja tota la cache.
- *
- * Els rebuts desen `bytesEliminats` dels cossos realment suprimits i `bytesAlliberats: null`: no s'inventa espai físic, temps guanyat ni categories privades. `historialDesat` i `historialPersistent` expliquen si el rebut ha pogut persistir. Quota o errors posteriors a una supressió conserven el recompte parcial. Abort abans de mutar rebutja; abort després de començar preserva el rebut parcial. La cancel·lació d'un flux no espera indefinidament un productor que no resol `cancel()`.
+ * - JARVIS R32.10 és estrictament diagnòstic, també si rep un manifest SHA-256.
+ *   La funció antiga `purgaMemoriaCauRegenerable()` retorna sempre `estat: 'bloquejat'`,
+ *   `JARVIS_NOMES_DIAGNOSTIC` i zero supressions. No conté cap crida a Cache.delete.
+ * - Només llig cossos públics coherents (origen, ruta, MIME, bytes i hash); cap dada
+ *   personal, instantània del sistema o cache sencera és candidata a supressió.
+ * - L'historial anterior es pot consultar; el diagnòstic no escriu rebuts nous.
+ * - Una futura neteja requerirà una eina humana separada, fora del satèl·lit.
  *
  * Proves: `tests/sentinella-jarvis-r32.test.mjs` i `src/data/salutEmmagatzematgeDispositiu.test.js`. L'evidència d'abans/després de les dues contraproves és al kit R32, `evidencies/261116_t4_*`.
  *

@@ -1,4 +1,7 @@
-/**
+
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };/**
  * MarcColumna.jsx — el marc d'una columna d'AppGridShell (esquelet comú
  * T4/T8): la capçalera fixa (AppGridColumn), una fila d'eines fixa (selector
  * de categoria, vista, afegit ràpid, el resum de la col·lecció), el cos que
@@ -20,15 +23,15 @@
  */
 export function MarcColumna({ capcalera = null, eines = null, peu = null, avis = null, etiqueta, children, className }) {
   return (
-    <div className={['sdp-marc-columna', className].filter(Boolean).join(' ')}>
-      {capcalera ? <div className="sdp-marc-columna__cap">{capcalera}</div> : null}
-      {eines ? <div className="sdp-marc-columna__eines">{eines}</div> : null}
+    <div ref={adoptaEstilsDiferits} className={['sdp-marc-columna', className].filter(Boolean).join(' ')}>
+      {capcalera ? <div ref={adoptaEstilsDiferits} className="sdp-marc-columna__cap">{capcalera}</div> : null}
+      {eines ? <div ref={adoptaEstilsDiferits} className="sdp-marc-columna__eines">{eines}</div> : null}
       <div className="sdp-marc-columna__cos" role={etiqueta ? 'region' : undefined} aria-label={etiqueta || undefined}
         tabIndex={etiqueta ? 0 : undefined}>
         {avis}
         {children}
       </div>
-      {peu ? <div className="sdp-marc-columna__peu">{peu}</div> : null}
+      {peu ? <div ref={adoptaEstilsDiferits} className="sdp-marc-columna__peu">{peu}</div> : null}
     </div>
   );
 }

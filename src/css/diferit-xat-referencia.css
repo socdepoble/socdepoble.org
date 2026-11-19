@@ -1,0 +1,80 @@
+/* Full diferit (261118 · ordre del Mestre): bàner superior universal de referència
+   de pàgina / notícia / esdeveniment / producte a la conversa del Xat.
+   Una sola fila compacta (< 12 % d'alçada, content-first-noise-reduction),
+   amb zona tàctil de --sdp-touch i tokens 100 % semàntics de Pedra Seca. */
+@layer components {
+  .sdp-xat-ref-baner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-block-end: 1px solid var(--sdp-vora);
+    border-inline-start: 3px solid var(--sdp-accio);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    z-index: 2;
+  }
+
+  .sdp-xat-ref-baner__info {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+    line-height: var(--sdp-leading-cos);
+  }
+
+  .sdp-xat-ref-baner__icona {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--sdp-accio);
+  }
+
+  .sdp-xat-ref-baner__text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sdp-xat-ref-baner__etiqueta {
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+  }
+
+  .sdp-xat-ref-baner__titol {
+    color: var(--sdp-text-titol);
+    font-weight: 800;
+  }
+
+  .sdp-xat-ref-baner__accio {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    /* v1.2.9 · Text AAA (7:1) sobre la targeta: --sdp-accio dona 3,87:1 en clar (tests/contrast-aaa.test.mjs). */
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .sdp-xat-ref-baner__accio:hover {
+    background: var(--sdp-fons-elevat);
+    border-color: var(--sdp-accio);
+  }
+
+  .sdp-xat-ref-baner__accio:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+}

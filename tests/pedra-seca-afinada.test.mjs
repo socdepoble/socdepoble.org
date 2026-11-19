@@ -374,3 +374,26 @@ test('L01 · la classe dins d’un srcDoc o d’un dangerouslySetInnerHTML és u
   assert.ok(!te(run.noves, /^\.zz-paper\b/), run.stdout);
   assert.ok(!te(run.noves, /^\.zz-prosa\b/), run.stdout);
 });
+
+
+test('L08 · només un CLI Node declarat a npm incorpora el seu graf, sense donar tokens a la UI', (t) => {
+  const run = arbre(t, {
+    'package.json': JSON.stringify({ scripts: {
+      exporta: 'node tooling/exporta.mjs', prova: 'echo "x; node tooling/fals.mjs"',
+      'test:ocult': 'node tooling/test.mjs', encadenat: 'node tooling/primer.mjs && node tooling/segon.mjs'
+    } }),
+    'src/main.jsx': "import css from './css/index.css?inline'; export default css;",
+    'src/css/index.css': '.a { width: var(--cli); }',
+    'tooling/exporta.mjs': "import { n } from '../src/motor.js'; console.log(n);",
+    'src/motor.js': "import { x } from './compartit.js'; export const n = x; export const fixa = el => el.style.setProperty('--cli', '1px');",
+    'src/compartit.js': 'export const x = 1;',
+    'tooling/fals.mjs': "import '../src/fals.js';", 'src/fals.js': 'export const x = 1;',
+    'tooling/test.mjs': "import '../src/nomesProva.js';", 'src/nomesProva.js': 'export const x = 1;',
+    'tooling/abandonat.mjs': "import '../src/mort.js';", 'src/mort.js': 'export const x = 1;',
+    'tooling/primer.mjs': '', 'tooling/segon.mjs': "import '../src/segon.js';", 'src/segon.js': 'export const x = 1;'
+  });
+  assert.equal(run.status, 1, run.stdout);
+  for (const f of ['motor.js', 'compartit.js']) assert.ok(!te(run.noves, new RegExp(`^src/${f.replace('.', '\\.')}$`)), run.stdout);
+  for (const f of ['fals.js', 'nomesProva.js', 'mort.js', 'segon.js']) assert.ok(te(run.noves, new RegExp(`^src/${f.replace('.', '\\.')}$`)), run.stdout);
+  assert.ok(te(run.noves, /^--cli\s+→/), run.stdout);
+});

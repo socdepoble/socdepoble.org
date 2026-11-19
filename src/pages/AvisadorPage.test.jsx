@@ -1,16 +1,22 @@
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from '../app/contexts/RouterContext.jsx';
 import { exportaHorariAvisador, MISSATGE_AVISADOR } from '../services/avisador.js';
 import { desaAvisador, llegixAvisador } from '../services/avisadorPreferencies.js';
-import AvisadorPage from './AvisadorPage.jsx';
+import AvisadorPage, { textRic } from './AvisadorPage.jsx';
+import { HORES_AVISADOR } from '../services/avisador.js';
+import { TEXTOS_AVISADOR } from './textosAvisador.js';
 import AvisadorEnSessio from '../components/salut/AvisadorEnSessio.jsx';
 
 const { port, useXat } = vi.hoisted(() => ({ port: vi.fn(), useXat: vi.fn() }));
 vi.mock('../data/backendPort.js', () => ({ enviaMissatge: port }));
 vi.mock('../sections/xat/XatContext.jsx', () => ({ useXat }));
+const { propsPageFrame } = vi.hoisted(() => ({ propsPageFrame: { actual: null } }));
 vi.mock('../components/universal/PageFrame.jsx', () => ({
-  PageFrame: ({ title, children }) => <main><header className="page-title"><h1>{title}</h1></header>{children}</main>
+  PageFrame: (props) => {
+    propsPageFrame.actual = props;
+    return <main><header className="page-title"><h1>{props.title}</h1><p className="lead">{props.lead}</p></header>{props.children}</main>;
+  }
 }));
 
 const CLAU = 'avisador:prova';
@@ -93,7 +99,8 @@ it('no desa un descans nocturn de més de 12 hores', () => {
   fireEvent.click(screen.getByRole('checkbox', { name: 'Anna' }));
   fireEvent.click(screen.getByRole('checkbox', { name: LIMITACIONS }));
   fireEvent.click(screen.getByRole('button', { name: 'Activa l’Avisador' }));
-  expect(screen.getByRole('alert').textContent).toContain('El descans nocturn pot durar com a màxim 12 hores.');
+  /* La còpia de l'horari té la seua pròpia regió d'alerta, sempre muntada i buida: l'error del formulari és l'altra. */
+  expect(screen.getAllByRole('alert').map((a) => a.textContent).join(' ')).toContain('El descans nocturn pot durar com a màxim 12 hores.');
   expect(llegixAvisador(CLAU)).toBeNull();
 });
 
@@ -188,4 +195,87 @@ it('carrega un horari a la vista sense activar-lo ni enviar cap missatge', async
   expect(screen.getByLabelText(/Inici del descans/).value).toBe('21:30');
   expect(llegixAvisador(CLAU)).toBeNull();
   expect(port).not.toHaveBeenCalled();
+});
+
+/* Onada R32.12 · T1 (ordre del Mestre, 261118 19:33) · Redisseny Pedra Seca de /page/avisador. */
+describe('redisseny Pedra Seca de /page/avisador', () => {
+  it('sense banda beta ni Veri*Factu, amb l’entradilla com a lead de PageFrame', () => {
+    munta(<AvisadorPage />);
+    expect(document.body.textContent).not.toMatch(/verifactu|veri\*factu|fase beta|facturaci/i);
+    expect(propsPageFrame.actual.lead).toBe(TEXTOS_AVISADOR.intro[1]);
+    expect(propsPageFrame.actual.subtitle).toBe('Batec de Vida');
+    /* L'entradilla no es repetix com un paràgraf solt dins del cos. */
+    const paragrafs = [...document.querySelectorAll('main > section p, main > form p')].map((p) => p.textContent);
+    expect(paragrafs).not.toContain(TEXTOS_AVISADOR.intro[1]);
+  });
+
+  it('jerarquia <h3>, negretes d’escaneig, 112 clicable i vincles al Xat i a Dispositius', () => {
+    munta(<AvisadorPage />);
+    const h3 = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    expect(h3).toEqual(['Com funciona i límits de seguretat', 'Horari de l’avís', 'Persones de confiança']);
+    expect(document.querySelectorAll('.sdp-avisador strong').length).toBeGreaterThanOrEqual(8);
+    expect(screen.getByRole('link', { name: '112' }).getAttribute('href')).toBe('tel:112');
+    expect(screen.getByRole('link', { name: 'Xat' }).getAttribute('href')).toBe('/xat');
+    expect(screen.getByRole('link', { name: 'Dispositius' }).getAttribute('href')).toBe('/dispositius');
+    /* Cap fieldset desangelat: les seccions són <section> amb el seu <h3>. */
+    expect(document.querySelector('fieldset')).toBeNull();
+  });
+
+  it('escala d’hores de 2 a 24 sense l’hora soleta, i els tres camps en la mateixa fila', () => {
+    expect(HORES_AVISADOR).toEqual([2, 3, 4, 5, 6, 7, 8, 12, 24]);
+    expect(Object.isFrozen(HORES_AVISADOR)).toBe(true);
+    munta(<AvisadorPage />);
+    expect(screen.getAllByRole('option').map((o) => o.textContent))
+      .toEqual(['2 h', '3 h', '4 h', '5 h', '6 h', '7 h', '8 h', '12 h', '24 h']);
+    const fila = document.querySelector('.sdp-avisador__horari');
+    expect(fila.querySelectorAll(':scope > .sdp-camp')).toHaveLength(3);
+    /* La nota dels 12 hores va davall de la fila, no dins del tercer camp. */
+    expect(fila.textContent).not.toContain('12 hores');
+    expect(fila.nextElementSibling.textContent).toBe('El descans nocturn pot durar com a màxim 12 hores.');
+  });
+
+  it('les persones de confiança: comptador, bafarada i targetes amb el nom com a nom accessible', () => {
+    munta(<AvisadorPage />);
+    expect(screen.getByText('0 de 3 seleccionades')).toBeTruthy();
+    const bafarada = screen.getByText(MISSATGE_AVISADOR);
+    expect(bafarada.className).toContain('sdp-avisador__bafarada');
+    const grup = screen.getByRole('group', { name: 'Persones de confiança' });
+    expect(grup.querySelectorAll('.sdp-avisador__persona')).toHaveLength(4);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Anna' }));
+    expect(screen.getByText('1 de 3 seleccionades')).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Anna' }).closest('.sdp-avisador__persona').className)
+      .toContain('sdp-avisador__persona--triada');
+    /* Tota la targeta és l'etiqueta: el label conté el nom i l'avatar (decoratiu). */
+    const etiqueta = document.querySelector('label[for="' + screen.getByRole('checkbox', { name: 'Anna' }).id + '"]');
+    expect(etiqueta.className).toBe('sdp-avisador__persona-cos');
+  });
+
+  it('la còpia de l’horari va al final de tot, plegada, amb botons normals', () => {
+    munta(<AvisadorPage />);
+    const form = document.querySelector('form');
+    const copia = form.lastElementChild;
+    expect(copia.tagName).toBe('DETAILS');
+    expect(copia.querySelector('summary').textContent).toBe('Còpia de l’horari');
+    expect(copia.textContent).toContain('no viatgen');
+    const boto = screen.getByRole('button', { name: 'Descarrega l’horari' });
+    expect(copia.contains(boto)).toBe(true);
+    expect(boto.className).not.toMatch(/sdp-boto--ple|sdp-boto--gran/);
+    /* Abans de la còpia: la casella del 112, els botons i l'estat del batec. */
+    const casella112 = screen.getByRole('checkbox', { name: LIMITACIONS });
+    const activa = screen.getByRole('button', { name: 'Activa l’Avisador' });
+    const ordre = (a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
+    expect(ordre(casella112, activa)).toBeTruthy();
+    expect(ordre(activa, copia)).toBeTruthy();
+    expect(ordre(screen.getByText('Desactivat.'), copia)).toBeTruthy();
+  });
+
+  it('textRic només pinta negretes i enllaços coneguts: cap HTML no s’interpreta', () => {
+    const tx = (parell) => parell[1];
+    const { container } = render(<p>{textRic('<img src=x onerror=alert(1)> **fort** {desconegut} {telefon112} **obert', tx)}</p>,
+      { wrapper: MemoryRouter });
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('strong').textContent).toBe('fort');
+    expect(container.textContent).toBe('<img src=x onerror=alert(1)> fort {desconegut} 112 **obert');
+    expect(container.querySelector('a[href="tel:112"]')).toBeTruthy();
+  });
 });

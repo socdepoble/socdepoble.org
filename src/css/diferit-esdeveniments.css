@@ -1,0 +1,181 @@
+/* Full diferit (261118 · ordre del Mestre): regles del Quadre d'Esdeveniment i
+   Assistència (RSVP + nota al Xat) a les fitxes /events/:id i /calendari/:id, i
+   del desplegable ràpid d'esdeveniments a /calendari. S'adopta amb useFullDiferit
+   (0 B al full d'arrencada). Només tokens semàntics; cap ombra. */
+@layer components {
+  .sdp-quadre-esdeveniment {
+    flex: 1 1 100%;
+    inline-size: 100%;
+    display: grid;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-quadre-esdeveniment__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-quadre-esdeveniment__resum {
+    flex: 1 1 14rem;
+    min-inline-size: 0;
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-quadre-esdeveniment__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h4);
+    font-weight: 800;
+    line-height: var(--sdp-leading-titol);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-quadre-esdeveniment__meta {
+    margin: 0;
+    font-size: var(--sdp-fluid-cos);
+    line-height: var(--sdp-leading-cos);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-quadre-esdeveniment__insignies {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-quadre-esdeveniment__pregunta {
+    display: grid;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-3);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-quadre-esdeveniment__llegenda {
+    margin: 0;
+    font-size: var(--sdp-fluid-cos);
+    font-weight: 700;
+    text-align: center;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-quadre-esdeveniment__opcions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-quadre-esdeveniment__nota {
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-quadre-esdeveniment__etiqueta {
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-quadre-esdeveniment__accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-quadre-esdeveniment__estat {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    text-align: center;
+    color: var(--sdp-exit-text);
+  }
+
+  .sdp-cal-filtre-barra {
+    display: flex;
+    justify-content: center;
+    margin-block-end: var(--sdp-space-4);
+  }
+
+  .sdp-cal-desplegable {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-5);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-cal-desplegable__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-cal-desplegable__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h4);
+    font-weight: 800;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-cal-desplegable__llista {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-cal-desplegable__llista[hidden] {
+    display: none;
+  }
+
+  .sdp-cal-desplegable__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-cal-desplegable__info {
+    flex: 1 1 14rem;
+    min-inline-size: 0;
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+
+  .sdp-cal-desplegable__nom {
+    font-size: var(--sdp-fluid-cos);
+    font-weight: 800;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-cal-desplegable__detall {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-cal-desplegable__accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+}

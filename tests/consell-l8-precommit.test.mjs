@@ -2,8 +2,8 @@
  * Consell L8 · taula de rutes SEO a l'arbre preparat del hook (B1 · 261101, D5).
  *
  * `wordpress-plugin/dist/seo-routes.json` és artefacte de build (dist/ a .gitignore): l'arbre
- * preparat del pre-commit no el porta mai. Dins del pre-commit (SDP_PRE_COMMIT=1) es prova el
- * productor en sec; fora, l'absència continua sent infracció.
+ * preparat del pre-commit no el porta mai. En tots els entorns, el productor calcula la
+ * taula en memòria; les fonts trencades continuen fent caure L8.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,15 +41,16 @@ test('present: no executa res ni diu res', (t) => {
   assert.equal(e.crides.length, 0);
 });
 
-test('absent fora del pre-commit: infracció amb l’ordre que la genera, sense executar el productor', (t) => {
+test('absent fora del pre-commit: calcula en memòria i no escriu cap artefacte', (t) => {
   const root = arrel(t);
   for (const env of [{}, { SDP_PRE_COMMIT: 'true' }, { SDP_PRE_COMMIT: '0' }]) {
     const e = espia({ status: 0, stdout: TAULA_BONA });
     const r = comprovaTaulaRutes({ arrel: root, env, executa: e.executa });
-    assert.equal(r.estat, 'falla', JSON.stringify(env));
-    assert.match(r.missatge, /npm run build:seo/);
+    assert.equal(r.estat, 'avis', JSON.stringify(env));
+    assert.match(r.missatge, /calcula en memòria: 3 rutes/);
     assert.doesNotMatch(r.missatge, /sdp_resolve_request/);
-    assert.equal(e.crides.length, 0);
+    assert.equal(e.crides.length, 1);
+    assert.ok(!fs.existsSync(path.join(root, TAULA_RUTES)));
   }
 });
 
@@ -58,7 +59,7 @@ test('absent al pre-commit amb productor verd: avís amb el recompte; el product
   const e = espia({ status: 0, stdout: `${TAULA_BONA}\n` });
   const r = comprovaTaulaRutes({ arrel: root, env: { SDP_PRE_COMMIT: '1', SDP_ARREL: '/una/altra/arrel' }, executa: e.executa });
   assert.equal(r.estat, 'avis');
-  assert.match(r.missatge, /Absent a l'arbre preparat/);
+  assert.match(r.missatge, /Absent a l'arbre verificat/);
   assert.match(r.missatge, /3 rutes \(2 indexables\)/);
   assert.equal(e.crides.length, 1);
   const [{ cmd, args, opcions }] = e.crides;
@@ -110,7 +111,7 @@ test('procés real: productor verd → avís; roig → última línia; penjat �
   assert.match(p.missatge, /ETIMEDOUT/);
 });
 
-test('Consell sencer (CLI): L8 verd amb avís al pre-commit, infracció fora i amb el productor roig', (t) => {
+test('Consell sencer (CLI): L8 verd dins i fora del pre-commit, infracció amb el productor roig', (t) => {
   const php = { 'wordpress-plugin/socdepoble.php': "<?php\ndefined('ABSPATH') || exit;\n" };
   const consell = (root, env) => {
     const r = spawnSync(process.execPath, [CONSELL, '--root', root], { encoding: 'utf8', env: { PATH: process.env.PATH, ...env }, timeout: 60_000 });
@@ -120,12 +121,14 @@ test('Consell sencer (CLI): L8 verd amb avís al pre-commit, infracció fora i a
   const dins = consell(bo, { SDP_PRE_COMMIT: '1' });
   assert.equal(dins.status, 0, dins.eixida);
   assert.match(dins.eixida, /✅ L8 · Contracte PHP/);
-  assert.match(dins.eixida, /\[L8 · Contracte PHP\] wordpress-plugin\/dist\/seo-routes\.json — Absent a l'arbre preparat/);
+  assert.match(dins.eixida, /\[L8 · Contracte PHP\] wordpress-plugin\/dist\/seo-routes\.json — Absent a l'arbre verificat/);
 
   const fora = consell(bo, {});
-  assert.equal(fora.status, 1, fora.eixida);
-  assert.match(fora.eixida, /L8 · Contracte PHP {2}\(1\)\n\s+wordpress-plugin\/dist\/seo-routes\.json\n\s+↳ Taula de rutes absent: executa npm run build:seo/);
-  assert.doesNotMatch(fora.eixida, /✅ L8/, 'una infracció de L8 no pot anar acompanyada del verd de L8');
+  assert.equal(fora.status, 0, fora.eixida);
+  assert.match(fora.eixida, /✅ L8 · Contracte PHP/);
+  assert.match(fora.eixida, /calcula en memòria/);
+  assert.ok(!fs.existsSync(path.join(bo, TAULA_RUTES)));
+  assert.equal(fs.readdirSync(path.join(bo, 'wordpress-plugin')).sort().join(','), 'socdepoble.php');
 
   const roig = ambProductor(t, `console.error('   · seed trencada'); process.exit(1);`, php);
   const caigut = consell(roig, { SDP_PRE_COMMIT: '1' });

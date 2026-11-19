@@ -6,6 +6,7 @@ import { PAGINA_DISPOSITIUS } from './pageContent.dispositius.js';
 import { PAGINES_PATRIMONI_R9, TRADUCCIONS_ANATOMIA } from './pageContent.patrimoniR9.js';
 import { PAGINES_PATRIMONI_R14 } from './pageContent.patrimoniR14.js';
 import { TRADUCCIONS_DESCARREGUES } from './pageContent.descarreguesR27.js';
+import { BLOC_DISSENY_R32_10, BLOC_PROJECTE_R32_10 } from './pageContent.coherenciaR32_10.js';
 
 /*
  * `date` · l'instant de publicació de cada pàgina (T4 del prompt 1140, ordre
@@ -151,12 +152,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.8 · Connector WordPress v1.1.12 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.9 · Connector WordPress v1.1.12 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.8 · WP v1.1.12", "className": "sdp-badge-system" },
+      { "text": "v1.2.9 · WP v1.1.12", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],
@@ -963,6 +964,11 @@ Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R9);
 Object.assign(PAGE_COPY, PAGINES_PATRIMONI_R14);
 Object.assign(PAGE_COPY, PAGINA_NODRIR_IAIA);
 PAGE_COPY.dispositius = PAGINA_DISPOSITIUS;
+PAGE_COPY.projecte.html = PAGE_COPY.projecte.html.replace(
+  '\n      <h3>Les quatre infografies històriques</h3>',
+  `${BLOC_PROJECTE_R32_10.ca}\n      <h3>Les quatre infografies històriques</h3>`,
+);
+PAGE_COPY.disseny.html += BLOC_DISSENY_R32_10.ca;
 
 // AH-22 · suplement editorial localitzat, sense declarar-lo desplegat.
 aplicaDossierR10(PAGE_COPY);

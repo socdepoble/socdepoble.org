@@ -11,6 +11,7 @@ import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Carregant, Boto, Alerta } from '../../components/PedraSeca/index.js';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { dataDElement } from '../../components/universal/editorial.js';
 /* Ordre del Mestre, 261001 · la targeta, les pàgines del sistema i l'ordre
    viuen fora (TargetaDelMur, targetesMur.js) perquè la pàgina /calendari pinte
@@ -114,6 +115,7 @@ const PARAMS_DEL_CALENDARI = Object.freeze(['vista', 'setmana', 'mes', 'any']);
    (modules.css, darrere de .sdp-pindola). També mentre carrega o falla: la
    capçalera no salta en arribar les dades. Es desfà llevant-la. */
 const CLASSE_PAGINA_MUR = 'sdp-pagina-mur';
+const RUTA_PUBLICAR_MUR = '/notes?ambit=mur';
 
 /* El filtre ?category= (les etiquetes de cada element), el mateix per a la
    graella i per al calendari de la pestanya. */
@@ -309,6 +311,8 @@ export default function MurSection() {
   /* T63.2 (doctrina del Mestre, 260928) · el xat comú del Mur és el de la seua
      ruta canònica: els filtres (?date=, ?category=) no en fan un altre. */
   const paginaMur = objecteDePagina({ titol: config.title, ruta: getSectionListPath('mur') });
+  const textPublicar = t('section.mur.publicar', 'Publicar al Mur');
+  const portaPublicar = { id: 'publicar', verb: textPublicar, nom: textPublicar, desti: RUTA_PUBLICAR_MUR, varietat: 'primari' };
 
   /* Decisió 4 · hiHaMes ja inclou teCapacitat('paginacioSeccions'): un
      backend sense la capacitat no en té cap i el botó no ix. Si la càrrega
@@ -328,7 +332,7 @@ export default function MurSection() {
   if (estatMur === 'loading' || estatMur === 'error') {
     return (
       <ContentProvider initialConfig={config}>
-        <UniversalPage className={CLASSE_PAGINA_MUR} objecte={paginaMur}>
+        <UniversalPage className={CLASSE_PAGINA_MUR} objecte={paginaMur} accioPrincipal={<PortaDePagina porta={portaPublicar} />}>
           <div className="content-wrapper">
             {estatMur === 'loading'
               ? <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />
@@ -344,7 +348,13 @@ export default function MurSection() {
       {/* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si TOTES les
           publicacions del mur són públiques: una del veïnat (només per als
           membres) l'apaga (traduccio/visibilitatTraduible.js). */}
-      <UniversalPage className={CLASSE_PAGINA_MUR} layout="contained" objecte={paginaMur} traduccio={totsPublics(allItems)}>
+      <UniversalPage
+        className={CLASSE_PAGINA_MUR}
+        layout="contained"
+        objecte={paginaMur}
+        traduccio={totsPublics(allItems)}
+        accioPrincipal={<PortaDePagina porta={portaPublicar} />}
+      >
         <div className="content-wrapper">
           {/* T3.3 · L'única regió viva de les alertes municipals vigents,
               damunt dels filtres: s'hi munta buida quan hi ha candidates i
@@ -363,14 +373,13 @@ export default function MurSection() {
               setFilterType(v);
               setIsMapOpen(false);
             }}
-            /* Ordre del Mestre, 261001 · la pestanya es diu «Calendari», com la
-               pàgina /calendari. El valor intern continua sent 'events': no
-               viatja a cap URL i els actes són el que filtra. */
+            /* Ordre del Mestre, 261118 · La pestanya es diu «Esdeveniments» per
+               diferenciar-la del Calendari complet (/calendari): ací filtra només els actes. */
             opcions={[
               { valor: 'all', text: 'Mostrar tot' },
               { valor: 'sdp', text: 'Sóc de Poble' },
               { valor: 'mercat', text: 'Mercat' },
-              { valor: 'events', text: 'Calendari' },
+              { valor: 'events', text: t('section.mur.filter.events', 'Esdeveniments') },
               { valor: 'mapa', text: 'Mapa' },
             ]}
           />

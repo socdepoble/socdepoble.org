@@ -14,6 +14,9 @@ import { Llinatge } from '../Llinatge.jsx';
 import { VisorDePublicacio } from '../../../detail/VisorDePublicacio.jsx';
 import { ambClassesDelMarc, useEnquadramentDeImatge } from '../../../../hooks/useEnquadramentDeImatge.js';
 import { ambEnquadrament } from '../../../../utils/enquadramentUrl.js';
+import { adoptaFullDiferit } from '../../../../config/fullDiferit.js';
+import cssDiferitEnquadrament from '../../../../css/diferit-enquadrament.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'enquadrament', cssDiferitEnquadrament); };
 
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
@@ -234,7 +237,7 @@ export default function EspecimenEnquadrament() {
       {/* IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · Cap botó enganxat a l'h4:
           primer el paràgraf, després els botons dins d'Accions (també als casos
           de baix, que ja anaven darrere del seu text). */}
-      <h4>Capçalera</h4>
+      <h4 ref={adoptaEstilsDiferits}>Capçalera</h4>
       <p className="sdp-camp__ajuda">La foto teua no ix del navegador: l’espècimen no puja ni desa res.</p>
       <Accions>
         <Boto icona={Crop} aria-haspopup="dialog" onClick={() => setFont(MOSTRA)}>Enquadrar una foto apaisada</Boto>
@@ -244,8 +247,8 @@ export default function EspecimenEnquadrament() {
           aria-label="Provar amb una foto teua" />
       </Accions>
       {resultat ? (
-        <figure className="sdp-enquadrament__resultat">
-          {resultat.url ? <img src={resultat.url} alt="El resultat de l’enquadrament" /> : null}
+        <figure ref={adoptaEstilsDiferits} className="sdp-enquadrament__resultat">
+          {resultat.url ? <img ref={adoptaEstilsDiferits} src={resultat.url} alt="El resultat de l’enquadrament" /> : null}
           {/* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La mostra és el diàleg sense
               props. Directiva del Mestre (261024) · La closca de les Notes hi passa
               totes les formes, amb la seua ajuda, i l'eixida de 1.200 pel costat llarg. */}
@@ -271,9 +274,9 @@ export default function EspecimenEnquadrament() {
       </Accions>
       {avisAvatar ? <Alerta to="error">{avisAvatar}</Alerta> : null}
       {resultatAvatar ? (
-        <figure className="sdp-enquadrament__resultat">
+        <figure ref={adoptaEstilsDiferits} className="sdp-enquadrament__resultat">
           {resultatAvatar.url ? (
-            <div className="sdp-avatar sdp-avatar--xl">
+            <div ref={adoptaEstilsDiferits} className="sdp-avatar sdp-avatar--xl">
               <img src={resultatAvatar.url} alt="L’avatar enquadrat" className="sdp-avatar__imatge" />
             </div>
           ) : null}
@@ -296,8 +299,8 @@ export default function EspecimenEnquadrament() {
           aria-label="Provar amb una foto teua, amb l’opció de geolocalitzar" />
       </Accions>
       {resultatGeo ? (
-        <figure className="sdp-enquadrament__resultat">
-          {resultatGeo.url ? <img src={resultatGeo.url} alt="El resultat de l’enquadrament amb l’opció de geolocalitzar" /> : null}
+        <figure ref={adoptaEstilsDiferits} className="sdp-enquadrament__resultat">
+          {resultatGeo.url ? <img ref={adoptaEstilsDiferits} src={resultatGeo.url} alt="El resultat de l’enquadrament amb l’opció de geolocalitzar" /> : null}
           <figcaption className="sdp-camp__ajuda">
             Ha eixit un fitxer de {resultatGeo.text}. {resultatGeo.meta}
           </figcaption>
@@ -317,10 +320,10 @@ export default function EspecimenEnquadrament() {
         <Boto icona={Proportions} aria-haspopup="dialog" onClick={() => capcaleraSenzill.obri(resolRecursPropi(MOSTRA))}>Capçalera de forma lliure (1.200 pel costat llarg)</Boto>
       </Accions>
       {resultatSenzill ? (
-        <figure className="sdp-enquadrament__resultat">
+        <figure ref={adoptaEstilsDiferits} className="sdp-enquadrament__resultat">
           {resultatSenzill.vista ? (
             resultatSenzill.redo ? (
-              <div className="sdp-avatar sdp-avatar--xl">
+              <div ref={adoptaEstilsDiferits} className="sdp-avatar sdp-avatar--xl">
                 <img src={resultatSenzill.vista} alt="El resultat de la finestra senzilla" className="sdp-avatar__imatge" />
               </div>
             ) : <ResultatEnquadrat src={resultatSenzill.vista} alt="El resultat de la finestra senzilla" />

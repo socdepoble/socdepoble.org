@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import * as servei from './veuIaiaService.js';
 
+const WAV_FIXTURE = Uint8Array.from(atob('UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA=='), char => char.charCodeAt(0));
 const PUNT = 'https://veu.test/tts';
 let audios, synth, enunciats, fetchFals, sessions;
 const diferit = () => { let resolve, reject; const promise = new Promise((r, j) => { resolve = r; reject = j; }); return { promise, resolve, reject }; };
@@ -26,7 +27,7 @@ beforeEach(() => {
   URL.revokeObjectURL = vi.fn();
   fetchFals = vi.fn(async (_url, opcions) => opcions.method === 'GET'
     ? { ok: true }
-    : { ok: true, headers: new Headers({ 'content-type': 'audio/wav' }), blob: async () => new Blob([JSON.parse(opcions.body).text], { type: 'audio/wav' }) });
+    : new Response(WAV_FIXTURE, { headers: { 'content-type': 'audio/wav' } }));
   vi.stubGlobal('fetch', fetchFals);
 });
 afterEach(() => {
@@ -127,7 +128,7 @@ test('tancar amb resposta tardana d’un fetch que ignora abort no crea Audio ni
   const s = sessio(); const parlant = s.parla('Antic.'); parlant.catch(() => {});
   await vi.waitFor(() => expect(posts()).toHaveLength(1)); s.tanca();
   await expect(parlant).rejects.toMatchObject({ codi: servei.CODI_VEU_AVORTADA });
-  pendent.resolve({ ok: true, headers: new Headers({ 'content-type': 'audio/wav' }), blob: async () => new Blob(['tardà']) });
+  pendent.resolve(new Response(WAV_FIXTURE, { headers: { 'content-type': 'audio/wav' } }));
   await microtasques(); expect(audios).toHaveLength(0); expect(URL.createObjectURL).not.toHaveBeenCalled();
 });
 

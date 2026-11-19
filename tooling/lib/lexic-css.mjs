@@ -4,6 +4,26 @@ import { lstatSync, readFileSync } from 'node:fs';
  * This is a lexer, not a cascade/layout validator. No CSS is executed.
  */
 const blank = s => s.replace(/[^\n]/g, ' ');
+
+/** Legacy leaf-block surface, one forward scan. Input is already lexicalized
+ * by consumers that need strings/comments masked. This does not validate CSS
+ * or interpret nesting, selectors or the cascade. Ranges are disjoint, so
+ * copying all returned selectors/bodies is also bounded by input length. */
+export function* blocsCssFulla(text) {
+  let start = 0, opening = -1, selector = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{') {
+      opening = i;
+      selector = start;
+      start = i + 1;
+    } else if (text[i] === '}') {
+      if (opening > selector) yield { selector: text.slice(selector, opening), body: text.slice(opening + 1, i), index: selector };
+      opening = -1;
+      start = i + 1;
+    }
+  }
+}
+
 export function cssAnalitzable(font, { atributs = false } = {}) {
   let out = '';
   const stack = [];

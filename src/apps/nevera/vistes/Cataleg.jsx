@@ -13,6 +13,8 @@
 import { Trash2 } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
+import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { CATALEG } from './constants.js';
@@ -20,24 +22,27 @@ import { useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
 import { articlesVestits, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits } from './vestits.js';
 
-const textPropis = (n) => (n === 0 ? 'Cap encara' : `${n} ${n === 1 ? 'article' : 'articles'}`);
+const textPropisDe = (tx) => (n) => (n === 0 ? tx.capEncara : tx.textArticlesCount(n));
 
 /* La confirmació d'esborrar un article propi: desapareix de tot arreu. */
-function useEsborraPropi() {
+function useEsborraPropi(tx) {
   const { accions, demanaConfirmacio } = useVistaNevera();
   return (article) => demanaConfirmacio({
-    titol: `Vols esborrar «${article.nom}»?`,
-    descripcio: 'Desapareixerà del catàleg, de totes les llistes i d’«A casa».',
-    etiquetaConfirma: 'Esborra',
+    titol: tx.volsEsborrarArticle(article.nom),
+    descripcio: tx.esborrarArticleDesc,
+    etiquetaConfirma: tx.esborra,
     accio: () => accions.esborraArticlePropi(article.id)
   });
 }
 
 export function ColumnaCatalegSencer({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
-  const esborra = useEsborraPropi();
+  const esborra = useEsborraPropi(tx);
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const propis = new Set(estat.propis.map((propi) => propi.id));
@@ -48,26 +53,27 @@ export function ColumnaCatalegSencer({ params }) {
     <ColumnaCataleg
       forma="targetes"
       ometDataNoIndicada
-      titol="Catàleg"
+      titol={tx.cataleg}
       categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
       articles={articles}
-      textosEstat={{ 'en-colleccio': `A «${llista.nom}»` }}
+      textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
       onTria={(article, { obriDetall }) => obriDetall()}
-      afegit={{ etiqueta: 'Busca o crea un article', suggeriments: suggerimentsVestits(estat, vestit), onCrea: (text) => accions.creaArticlePropi(text) }}
+      afegit={{ etiqueta: tx.buscaOCreaArticle, suggeriments: suggerimentsVestits(estat, vestit), onCrea: (text) => accions.creaArticlePropi(text) }}
       detall={{
         ambQuantitat: false,
-        etiquetaNota: 'Especificació',
-        textAccepta: `Posa-ho a «${llista.nom}»`,
+        etiquetaNota: tx.especificacio,
+        textAccepta: tx.posaHoALlistaNom(llista.nom),
         inicialDe: (article) => ({ nota: linies.get(article.id)?.especificacio ?? '' }),
         onAccepta: ({ nota }, article) => accions.afig(llista.id, article.id, { especificacio: nota }),
         accionsDe: (article, tanca) => (propis.has(article.id) ? (
           <Boto varietat="perill" icona={Trash2} onClick={() => {
             tanca();
             esborra(article);
-          }}>Esborra l’article</Boto>
+          }}>{tx.esborraLArticle}</Boto>
         ) : null)
       }}
-      resum={{ etiqueta: 'Articles propis', comptador: propis.size, textComptador: textPropis }}
+      resum={{ etiqueta: tx.articlesPropis, comptador: propis.size, textComptador: textPropisDe(tx) }}
+      textos={{ buit: txBuit.catalegBuit, buitText: txBuit.catalegBuitText }}
       primer={CATALEG.primer}
       tram={CATALEG.tram}
     />
@@ -76,7 +82,10 @@ export function ColumnaCatalegSencer({ params }) {
 
 export function ColumnaArticlesPropis({ params }) {
   const { estat, llistaVigent } = useVistaNevera();
-  const esborra = useEsborraPropi();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
+  const esborra = useEsborraPropi(tx);
   const obriDetall = useObriDetall(CATALEG);
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
@@ -84,20 +93,20 @@ export function ColumnaArticlesPropis({ params }) {
     id: propi.id,
     articleId: propi.id,
     nom: propi.nom,
-    detall: linies.has(propi.id) ? `A «${llista.nom}»` : undefined
+    detall: linies.has(propi.id) ? tx.aLlistaNom(llista.nom) : undefined
   }));
   return (
     <ColumnaColleccio
-      titol="Articles propis"
+      titol={tx.articlesPropis}
       linies={files}
-      resum={{ etiqueta: 'Articles propis', comptador: files.length, textComptador: textPropis }}
+      resum={{ etiqueta: tx.articlesPropis, comptador: files.length, textComptador: textPropisDe(tx) }}
       onTria={(linia) => obriDetall(linia.articleId)}
       onLleva={(linia) => esborra({ id: linia.articleId, nom: linia.nom })}
-      textosLinies={{ lleva: (nom) => `Esborra ${nom}` }}
+      textosLinies={{ lleva: tx.esborraNom }}
       textos={{
-        buit: 'Encara no n’has creat cap',
-        buitText: 'Escriu el nom a «Busca o crea un article» i tria «Afig… com a article nou».',
-        tornaCataleg: 'Torna al catàleg'
+        buit: txBuit.propisBuit,
+        buitText: txBuit.propisBuitText,
+        tornaCataleg: txBuit.propisTornaCataleg
       }}
       peu={<AvisNevera />}
       primer={CATALEG.primer}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alerta, Camp, CampText, GrupCamps, Selector } from '../../../components/PedraSeca/index.js';
-import { carregaMercadona, comparaOfertaRural } from '../../plataforma/index.js';
+import { carregaMercadona, comparaOfertaRural, useClosaAplicacio } from '../../plataforma/index.js';
+import { textosVistaNevera } from '../i18nNevera.js';
 
 /** El catàleg ampliat es llig només quan es demana la botiga o un producte seu. */
 export function useMercadona(necessari) {
@@ -17,10 +18,12 @@ export function useMercadona(necessari) {
 }
 
 export function AvisCatalegMercadona({ dades, error }) {
-  if (error) return <Alerta to="error" titol="No s’ha pogut obrir el catàleg">Recarrega la pàgina per a tornar-ho a provar. La teua llista continua desada.</Alerta>;
+  const { idioma = 'ca' } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
+  if (error) return <Alerta to="error" titol={tx.errorObrirCataleg}>{tx.errorObrirCatalegText}</Alerta>;
   return (
-    <Alerta to="info" viva={false} titol="Catàleg orientatiu de botiga">
-      {dades ? `${dades.metadades.productes} productes habituals de rebost amb preus orientatius de referència (${dades.metadades.tall}) per a preparar la cistella a la botiga del teu poble.` : 'Obrint els preus orientatius del catàleg…'}
+    <Alerta to="info" viva={false} titol={tx.catalegOrientatiuTitol}>
+      {dades ? tx.catalegOrientatiuText(dades.metadades.productes, dades.metadades.tall) : tx.obrintPreusOrientatius}
     </Alerta>
   );
 }
@@ -30,6 +33,8 @@ const nombre = (text) => /^\d+(?:[.,]\d{1,6})?$/.test(text) ? Number(text.replac
 
 /** Mateixa quantitat i dimensió; la data i el preu rural els aporta la persona. */
 export function ComparadorMercadona({ producte }) {
+  const { idioma = 'ca' } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
   const [preu, setPreu] = useState('');
   const [quantitat, setQuantitat] = useState('1');
   const [unitat, setUnitat] = useState(producte.unitatPreuUnitari);
@@ -41,24 +46,24 @@ export function ComparadorMercadona({ producte }) {
   let error = null;
   if (preu || data) {
     if (p === null || !/^\d+(?:[.,]\d{1,2})?$/.test(preu) || !(q > 0) || !data || !proveidor.trim()) {
-      error = 'Completa el preu (màxim dos decimals), la quantitat, el proveïdor i la data de l’oferta local.';
+      error = tx.errorComparador;
     } else {
       try { resultat = comparaOfertaRural(producte, { preuCentims: Math.round(p * 100), quantitat: q, unitat, proveidor, data }); }
       catch (motiu) { error = motiu.message; }
     }
   }
   return (
-    <GrupCamps llegenda="Comparador de comerç local">
-      <p>Preu orientatiu de referència: {euros(producte.preuUnitariCentims)}/{producte.unitatPreuUnitari}. Introduïx el preu de la botiga o cooperativa del teu poble per a comparar la mateixa quantitat.</p>
-      <Camp etiqueta="Proveïdor local"><CampText value={proveidor} maxLength={80} onChange={(event) => setProveidor(event.target.value)} /></Camp>
-      <Camp etiqueta="Preu de l’oferta local (€)"><CampText value={preu} inputMode="decimal" onChange={(event) => setPreu(event.target.value)} /></Camp>
-      <Camp etiqueta="Quantitat de l’oferta"><CampText value={quantitat} inputMode="decimal" onChange={(event) => setQuantitat(event.target.value)} /></Camp>
-      <Camp etiqueta="Unitat de l’oferta"><Selector value={unitat} onChange={(event) => setUnitat(event.target.value)} opcions={['g', 'kg', 'ml', 'cl', 'l', 'u'].map((u) => ({ valor: u, etiqueta: u }))} /></Camp>
-      <Camp etiqueta="Data de l’oferta local"><CampText tipus="date" value={data} onChange={(event) => setData(event.target.value)} /></Camp>
+    <GrupCamps llegenda={tx.comparadorLlegenda}>
+      <p>{tx.comparadorIntro(euros(producte.preuUnitariCentims), producte.unitatPreuUnitari)}</p>
+      <Camp etiqueta={tx.proveidorLocal}><CampText value={proveidor} maxLength={80} onChange={(event) => setProveidor(event.target.value)} /></Camp>
+      <Camp etiqueta={tx.preuOfertaLocal}><CampText value={preu} inputMode="decimal" onChange={(event) => setPreu(event.target.value)} /></Camp>
+      <Camp etiqueta={tx.quantitatOferta}><CampText value={quantitat} inputMode="decimal" onChange={(event) => setQuantitat(event.target.value)} /></Camp>
+      <Camp etiqueta={tx.unitatOferta}><Selector value={unitat} onChange={(event) => setUnitat(event.target.value)} opcions={['g', 'kg', 'ml', 'cl', 'l', 'u'].map((u) => ({ valor: u, etiqueta: u }))} /></Camp>
+      <Camp etiqueta={tx.dataOfertaLocal}><CampText tipus="date" value={data} onChange={(event) => setData(event.target.value)} /></Camp>
       {error ? <p role="status">{error}</p> : null}
       {resultat ? <p role="status">{resultat.estat === 'unitats-incompatibles'
-        ? 'Les unitats no són comparables. No convertim pes, volum i unitats sense una equivalència acreditada.'
-        : `Per a la mateixa quantitat: referència orientativa ${euros(resultat.costMercadonaCentims)}, ${resultat.proveidor} ${euros(resultat.preuLocalCentims)}. Diferència local respecte a la referència: ${euros(resultat.diferenciaCentims)}. Oferta local del ${resultat.data}.`}</p> : null}
+        ? tx.unitatsIncompatibles
+        : tx.resultatComparador(euros(resultat.costMercadonaCentims), resultat.proveidor, euros(resultat.preuLocalCentims), euros(resultat.diferenciaCentims), resultat.data)}</p> : null}
     </GrupCamps>
   );
 }

@@ -1,0 +1,137 @@
+/**
+ * OpenData municipal i Restaurador · i18n modular dels 6 estats UI (Onada R32.11 · Lot 05).
+ *
+ * Manté TEXTOS_RESTAURADOR intacte per preservar el contracte amb src/config/idiomes/*.js
+ * i completa en les 5 llengües oficials (ca, es, en, eu, gl) els estats Loading, Empty,
+ * Error accionable, Partial, Success i Permission amb transparència Llei 0 i Llei 32.
+ */
+export const CODIS_IDIOMA_OPENDATA = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
+
+export const TEXTOS_OPENDATA_ESTATS = Object.freeze({
+  ca: Object.freeze({
+    /* FitxaOpenData */
+    resolentMunicipi: 'Comprovant el municipi actiu al servidor de Sóc de Poble…',
+    configInvalidaTitol: 'Configuració del servidor incompleta',
+    configInvalidaText: 'No s’ha pogut validar l’abast del servidor de Sóc de Poble. Pots comprovar paquets ZIP en este dispositiu, però la restauració remota queda desactivada.',
+    errorMunicipisTitol: 'No s’ha pogut confirmar el municipi administrable',
+    errorMunicipisText: 'La consulta de municipis administrables als serveis de Sóc de Poble ha fallat. Pots tornar-ho a provar o continuar només amb la previsualització local.',
+    reintentaMunicipis: 'Torna-ho a provar',
+    permisLecturaTitol: 'Comprovació local oberta · Restauració amb segon factor',
+    permisLecturaText: 'Qualsevol persona pot comprovar en este dispositiu l’empremta SHA-256 i l’esquema DataPackage v2 d’un paquet municipal. Per restaurar-lo al servidor de Sóc de Poble cal sessió de superadministració amb segon factor (AAL2).',
+    senseMunicipiActiuTitol: 'Municipi actiu pendent de confirmar',
+    senseMunicipiActiuText: 'Tens sessió reforçada, però l’identificador del municipi actiu encara no figura entre els pobles administrables confirmats. Només està activa la comprovació local.',
+    municipiActiuTitol: (nom) => `Municipi actiu confirmat: ${nom}`,
+    municipiActiuText: 'Si l’empremta SHA-256 i el municipi del paquet coincidixen amb este àmbit, podràs restaurar-hi el contingut públic verificat.',
+    /* RestauradorOpenData */
+    buitPaquetTitol: 'Cap paquet Open Data seleccionat',
+    buitPaquetText: 'Selecciona un fitxer ZIP d’exportació municipal (DataPackage v2 / Fediversity) i indica’n l’empremta SHA-256 obtinguda d’una font de confiança. Tota la verificació prèvia es fa localment en este dispositiu.',
+    restaurantPaquet: 'Restaurant el paquet verificat al servidor de Sóc de Poble…',
+    modeVerificacioLocalTitol: 'Mode de verificació local sense escriptura remota',
+    paquetVerificatTitol: 'Paquet verificat criptogràficament',
+    coberturaParcialTitol: (ambDades, total) => `Contingut parcial (${ambDades} de ${total} col·leccions amb registres)`,
+    coberturaParcialText: 'Algunes col·leccions del paquet tenen 0 registres. Revisa el resum abans de restaurar; les imatges binàries, la configuració del node i les claus ActivityPub mai es sobreescriuen amb esta operació.',
+    coberturaCompletaTitol: (total) => `Les ${total} col·leccions públiques contenen registres verificats`,
+    restauracioConfirmadaTitol: 'Restauració pública completada',
+  }),
+  es: Object.freeze({
+    resolentMunicipi: 'Comprobando el municipio activo en el servidor de Sóc de Poble…',
+    configInvalidaTitol: 'Configuración del servidor incompleta',
+    configInvalidaText: 'No se ha podido validar el ámbito del servidor de Sóc de Poble. Puedes comprobar paquetes ZIP en este dispositivo, pero la restauración remota permanece desactivada.',
+    errorMunicipisTitol: 'No se ha podido confirmar el municipio administrable',
+    errorMunicipisText: 'La consulta de municipios administrables a los servicios de Sóc de Poble ha fallado. Puedes volver a intentarlo o seguir solo con la previsualización local.',
+    reintentaMunicipis: 'Volver a probar',
+    permisLecturaTitol: 'Comprobación local abierta · Restauración con segundo factor',
+    permisLecturaText: 'Cualquier persona puede comprobar en este dispositivo la huella SHA-256 y el esquema DataPackage v2 de un paquete municipal. Para restaurarlo en el servidor de Sóc de Poble se requiere sesión de superadministración con segundo factor (AAL2).',
+    senseMunicipiActiuTitol: 'Municipio activo pendiente de confirmar',
+    senseMunicipiActiuText: 'Tienes sesión reforzada, pero el identificador del municipio activo aún no consta entre los pueblos administrables confirmados. Solo está activa la comprobación local.',
+    municipiActiuTitol: (nom) => `Municipio activo confirmado: ${nom}`,
+    municipiActiuText: 'Si la huella SHA-256 y el municipio del paquete coinciden con este ámbito, podrás restaurar el contenido público verificado.',
+    buitPaquetTitol: 'Ningún paquete Open Data seleccionado',
+    buitPaquetText: 'Selecciona un archivo ZIP de exportación municipal (DataPackage v2 / Fediversity) e indica su huella SHA-256 obtenida de una fuente de confianza. Toda la verificación previa ocurre localmente en este dispositivo.',
+    restaurantPaquet: 'Restaurando el paquete verificado en el servidor de Sóc de Poble…',
+    modeVerificacioLocalTitol: 'Modo de verificación local sin escritura remota',
+    paquetVerificatTitol: 'Paquete verificado criptográficamente',
+    coberturaParcialTitol: (ambDades, total) => `Contenido parcial (${ambDades} de ${total} colecciones con registros)`,
+    coberturaParcialText: 'Algunas colecciones del paquete tienen 0 registros. Revisa el resumen antes de restaurar; las imágenes binarias, la configuración del nodo y las claves ActivityPub nunca se sobrescriben con esta operación.',
+    coberturaCompletaTitol: (total) => `Las ${total} colecciones públicas contienen registros verificados`,
+    restauracioConfirmadaTitol: 'Restauración pública completada',
+  }),
+  en: Object.freeze({
+    resolentMunicipi: 'Checking active municipality on the Sóc de Poble server…',
+    configInvalidaTitol: 'Incomplete server configuration',
+    configInvalidaText: 'Could not validate the Sóc de Poble server scope. You can still inspect and verify ZIP packages locally on this device, while remote restore stays disabled.',
+    errorMunicipisTitol: 'Could not confirm manageable municipality',
+    errorMunicipisText: 'Querying manageable municipalities from Sóc de Poble services failed. Retry or continue with local verification only.',
+    reintentaMunicipis: 'Try again',
+    permisLecturaTitol: 'Open local verification · Two-factor restore',
+    permisLecturaText: 'Anyone can verify a municipal package’s SHA-256 digest and DataPackage v2 schema locally on this device. Restoring into the Sóc de Poble server requires a superadmin session with second factor (AAL2).',
+    senseMunicipiActiuTitol: 'Active municipality not yet confirmed',
+    senseMunicipiActiuText: 'Your session has second-factor authentication, but the active tenant is not listed among confirmed manageable municipalities. Local verification remains available.',
+    municipiActiuTitol: (nom) => `Confirmed active municipality: ${nom}`,
+    municipiActiuText: 'Once the SHA-256 digest and municipality slug match this scope, you can restore the verified public dataset.',
+    buitPaquetTitol: 'No Open Data package selected yet',
+    buitPaquetText: 'Choose a municipal export ZIP archive (DataPackage v2 / Fediversity) and paste its trusted SHA-256 digest. All pre-restore checks run locally on this device.',
+    restaurantPaquet: 'Restoring verified package to the Sóc de Poble server…',
+    modeVerificacioLocalTitol: 'Local verification mode (remote write disabled)',
+    paquetVerificatTitol: 'Cryptographically verified package',
+    coberturaParcialTitol: (ambDades, total) => `Partial dataset (${ambDades} of ${total} collections populated)`,
+    coberturaParcialText: 'Some collections in this archive contain 0 records. Review the summary before restoring; binary media, node settings and ActivityPub keys are never overwritten by this operation.',
+    coberturaCompletaTitol: (total) => `All ${total} public collections contain verified records`,
+    restauracioConfirmadaTitol: 'Public dataset restore completed',
+  }),
+  eu: Object.freeze({
+    resolentMunicipi: 'Udalerri aktiboa egiaztatzen Sóc de Pobleren zerbitzarian…',
+    configInvalidaTitol: 'Zerbitzariaren konfigurazio osatu gabea',
+    configInvalidaText: 'Ezin izan da Sóc de Pobleren zerbitzariaren esparrua baliozkotu. ZIP paketeak gailu honetan egiazta ditzakezu, baina urruneko leheneratzea desgaituta dago.',
+    errorMunicipisTitol: 'Ezin izan da udalerri kudeagarria baieztatu',
+    errorMunicipisText: 'Sóc de Pobleren zerbitzuetan udalerri kudeagarriak kontsultatzeak huts egin du. Saiatu berriro edo jarraitu tokiko aurrebistarekin bakarrik.',
+    reintentaMunicipis: 'Saiatu berriro',
+    permisLecturaTitol: 'Tokiko egiaztapen irekia · Bigarren faktoreko leheneratzea',
+    permisLecturaText: 'Edonork egiazta ditzake gailu honetan udal-pakete baten SHA-256 hatz-marka eta DataPackage v2 eskema. Sóc de Pobleren zerbitzarian leheneratzeko bigarren faktoreko (AAL2) superadministrazio-saioa behar da.',
+    senseMunicipiActiuTitol: 'Udalerri aktiboa baieztatzeke',
+    senseMunicipiActiuText: 'Saio sendotua duzu, baina udalerri aktiboaren identifikatzailea ez dago baieztatutako herri kudeagarrien artean. Tokiko egiaztapena soilik dago erabilgarri.',
+    municipiActiuTitol: (nom) => `Udalerri aktibo baieztatua: ${nom}`,
+    municipiActiuText: 'Paketearen SHA-256 hatz-marka eta udalerria esparru honekin bat badatoz, egiaztatutako eduki publikoa leheneratu ahal izango duzu.',
+    buitPaquetTitol: 'Ez da Open Data paketerik hautatu',
+    buitPaquetText: 'Hautatu udal-esportazioko ZIP fitxategi bat (DataPackage v2 / Fediversity) eta adierazi konfiantzazko iturri batetik lortutako SHA-256 hatz-marka. Aurretiko egiaztapen guztia gailu honetan bertan egiten da.',
+    restaurantPaquet: 'Egiaztatutako paketea Sóc de Pobleren zerbitzarian leheneratzen…',
+    modeVerificacioLocalTitol: 'Tokiko egiaztapen-modua urruneko idazketarik gabe',
+    paquetVerificatTitol: 'Kriptografikoki egiaztatutako paketea',
+    coberturaParcialTitol: (ambDades, total) => `Eduki partziala (${total} bildumatik ${ambDades} erregistroekin)`,
+    coberturaParcialText: 'Paketearen bilduma batzuek 0 erregistro dituzte. Berrikusi laburpena leheneratu aurretik; irudi bitarrak, nodoaren konfigurazioa eta ActivityPub gakoak ez dira inoiz gainidazten eragiketa honekin.',
+    coberturaCompletaTitol: (total) => `${total} bilduma publikoek erregistro egiaztatuak dituzte`,
+    restauracioConfirmadaTitol: 'Leheneratze publikoa osatuta',
+  }),
+  gl: Object.freeze({
+    resolentMunicipi: 'Comprobando o municipio activo no servidor de Sóc de Poble…',
+    configInvalidaTitol: 'Configuración do servidor incompleta',
+    configInvalidaText: 'Non se puido validar o ámbito do servidor de Sóc de Poble. Podes comprobar paquetes ZIP neste dispositivo, pero a restauración remota queda desactivada.',
+    errorMunicipisTitol: 'Non se puido confirmar o municipio administrable',
+    errorMunicipisText: 'Fallou a consulta de municipios administrables aos servizos de Sóc de Poble. Podes tentalo de novo ou seguir só coa previsualización local.',
+    reintentaMunicipis: 'Tentar de novo',
+    permisLecturaTitol: 'Comprobación local aberta · Restauración con segundo factor',
+    permisLecturaText: 'Calquera persoa pode comprobar neste dispositivo a pegada SHA-256 e o esquema DataPackage v2 dun paquete municipal. Para restauralo no servidor de Sóc de Poble cómpre sesión de superadministración con segundo factor (AAL2).',
+    senseMunicipiActiuTitol: 'Municipio activo pendente de confirmar',
+    senseMunicipiActiuText: 'Tes sesión reforzada, pero o identificador do municipio activo aínda non figura entre as vilas administrables confirmadas. Só está activa a comprobación local.',
+    municipiActiuTitol: (nom) => `Municipio activo confirmado: ${nom}`,
+    municipiActiuText: 'Se a pegada SHA-256 e o municipio do paquete coinciden con este ámbito, poderás restaurar o contido público verificado.',
+    buitPaquetTitol: 'Ningún paquete Open Data seleccionado',
+    buitPaquetText: 'Selecciona un ficheiro ZIP de exportación municipal (DataPackage v2 / Fediversity) e indica a súa pegada SHA-256 obtida dunha fonte de confianza. Toda a verificación previa faise localmente neste dispositivo.',
+    restaurantPaquet: 'Restaurando o paquete verificado no servidor de Sóc de Poble…',
+    modeVerificacioLocalTitol: 'Modo de verificación local sen escritura remota',
+    paquetVerificatTitol: 'Paquete verificado criptograficamente',
+    coberturaParcialTitol: (ambDades, total) => `Contido parcial (${ambDades} de ${total} coleccións con rexistros)`,
+    coberturaParcialText: 'Algunhas coleccións do paquete teñen 0 rexistros. Revisa o resumo antes de restaurar; as imaxes binarias, a configuración do nodo e as chaves ActivityPub nunca se sobrescriben con esta operación.',
+    coberturaCompletaTitol: (total) => `As ${total} coleccións públicas conteñen rexistros verificados`,
+    restauracioConfirmadaTitol: 'Restauración pública completada',
+  }),
+});
+
+export function codiIdiomaOpenData(idioma) {
+  const codi = String(idioma || 'ca').toLowerCase().split('-')[0];
+  return Object.hasOwn(TEXTOS_OPENDATA_ESTATS, codi) ? codi : 'ca';
+}
+
+export function textosOpenDataEstats(idioma) {
+  return TEXTOS_OPENDATA_ESTATS[codiIdiomaOpenData(idioma)];
+}

@@ -27,6 +27,7 @@ import { LogotipGoogle } from './LogotipsDeMarca.jsx';
 import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
 import { detectaWebViewInApp } from './detectaWebViewInApp.js';
 import { textosEscutWebview } from './textosEscutWebview.js';
+import { textosOnboardingExtra } from './i18nOnboardingExtra.js';
 
 /* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
    continuen pintant: el traductor de reserva és el valencià. */
@@ -206,6 +207,7 @@ export default function OnboardingSection() {
   const esNatiu = plataforma !== 'web';
   const webviewSocial = detectaWebViewInApp(undefined, { esNatiu });
   const txWebview = textosEscutWebview(llenguaDelText);
+  const txExtra = textosOnboardingExtra(llenguaDelText);
   const adrecaWebview = (!esNatiu && webviewSocial.esWebViewSocial) ? urlPerAObrirFora() : null;
   const [estatCopiaWebview, setEstatCopiaWebview] = useState(null);
   const potEntrarNatiu = esNatiu && teLaCapacitat(teCapacitat, 'entradaAmbToken') && typeof entraAmbTokenDeProveidor === 'function';
@@ -459,7 +461,7 @@ export default function OnboardingSection() {
       mostraError(err);
       return;
     }
-    showToast(`Has entrat com a ${PERSONA_PILOT.nom}, la persona pilot. Esta sessió de prova només viu en aquest ordinador.`, 'success');
+    showToast(txExtra.toastPilot(PERSONA_PILOT.nom), 'success');
     navigate(aterratgeDespresDEntrar(tornar), { replace: true });
   };
 
@@ -660,14 +662,14 @@ export default function OnboardingSection() {
     <Alerta
       to="info"
       viva={false}
-      titol="Accés pilot de desenvolupament · només en aquest ordinador"
+      titol={txExtra.pilotDevTitol}
       accions={(
         <Boto varietat="secundari" disabled={busyStep !== null} onClick={passaAProvesIEntra}>
-          Entra com a {PERSONA_PILOT.nom}
+          {txExtra.entraComANom(PERSONA_PILOT.nom)}
         </Boto>
       )}
     >
-      Per a provar l’app per dins sense contrasenya, entra com a {PERSONA_PILOT.nom}, la persona pilot, amb les seues organitzacions. La pàgina es recarrega en mode de proves (dades de mostra): no passa pel servidor de Sóc de Poble ni dona cap permís real. Per a tornar al compte de veres, ix de la sessió i entra ací amb Google o amb el correu. Només apareix en desenvolupament.
+      {txExtra.pilotDevText(PERSONA_PILOT.nom)}
     </Alerta>
   ) : null;
 
@@ -715,14 +717,14 @@ export default function OnboardingSection() {
               <Alerta
                 to="info"
                 viva={false}
-                titol="Entra com a persona pilot · només en aquest ordinador"
+                titol={txExtra.pilotLocalTitol}
                 accions={(
                   <Boto varietat="secundari" disabled={sondant || busyStep !== null} onClick={entraPilot}>
-                    Entra com a persona pilot
+                    {txExtra.pilotLocalBoto}
                   </Boto>
                 )}
               >
-                Per a provar l’app per dins sense el servidor de Sóc de Poble, pots entrar com a {PERSONA_PILOT.nom}, la persona pilot de les dades de mostra. És una sessió de prova: només viu en esta pestanya d’aquest ordinador, no passa pel servidor i no dona cap permís real. Només apareix en desenvolupament.
+                {txExtra.pilotLocalText(PERSONA_PILOT.nom)}
               </Alerta>
             ) : null}
 

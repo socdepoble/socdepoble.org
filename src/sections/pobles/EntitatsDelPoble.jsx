@@ -74,6 +74,10 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   const desti = rutaXatDePagina(objecteDePerfil(perfil));
   const poble = typeof fila.town_name === 'string' ? fila.town_name.trim() : '';
   const capcalera = encapcalamentDeTargeta(fila, { author: fila.name, location: poble, t });
+  const lemaNet = typeof fila.lema === 'string' ? fila.lema.trim() : '';
+  const subtitolTargeta = lemaNet && lemaNet !== String(capcalera.location || '').trim() ? fila.lema : undefined;
+  const verbXat = t('section.xat.anarAlXat', 'Anar al xat');
+  const nomPortaXat = fila.name ? `${verbXat} ${fila.name}` : verbXat;
   /* R22.1 · El vídeo principal és el de la fila del directori
      (COLUMNES_DIRECTORI; la vista el porta des de 20261113060000), mai un de
      llavor hidratat al client: sense columna o sense vídeo, la targeta de sempre.
@@ -101,7 +105,7 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
       imageUrl={imatgeTargeta}
       videoUrl={videoHero || undefined}
       title={fila.name}
-      subtitle={fila.lema || undefined}
+      subtitle={subtitolTargeta}
       body={fila.description || undefined}
       labels={[textos.tipus[fila.kind] || textos.tipus.entity]}
       {...capcalera}
@@ -109,7 +113,7 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
       avatarUrl={fila.logo_url || undefined}
       onMainClick={(event) => { event.preventDefault(); navigate(rutaDePerfil(tipus, fila.id), {}); }}
       onConnect={connectar ? () => navigate(connectar) : undefined}
-      accio={desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'secundari' }} varietat="secundari" /> : null}
+      accio={desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: verbXat, nom: nomPortaXat, desti, varietat: 'secundari' }} varietat="secundari" /> : null}
       etiquetesAmbAccio
       objecte={objecteDePerfil(perfil) || undefined}
       hasFooter

@@ -337,7 +337,7 @@ function arbre(rel, filtre) {
         `\`${nom}()\` invocada sense guarda i sense definició dins del plugin → fatal si l'ordre de càrrega canvia.`);
     }
     /* B1 · 261101: la taula de rutes és artefacte de build (dist/ a .gitignore) i des de WP-06 no
-       viatja als paquets. Dins del pre-commit es prova el productor en sec (tooling/lib/taula-rutes-seo.mjs). */
+       viatja als paquets. Quan falta, es comprova el productor pur en memòria en tots els entorns (tooling/lib/taula-rutes-seo.mjs). */
     const taula = comprovaTaulaRutes({ arrel: ROOT });
     if (taula.estat === 'avis') avisa(LLEI, TAULA_RUTES, taula.missatge);
     else if (taula.estat === 'falla') {

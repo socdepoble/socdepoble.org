@@ -27,7 +27,7 @@ vi.mock('./runtime.js', () => ({
   generateUUID: () => '33333333-3333-4333-8333-333333333333', buildSeedAppData: vi.fn(), mapContentRowsToData: vi.fn(), rpc: vi.fn(),
   request: vi.fn(async (url, _config, options = {}) => {
     m.calls.push({ url, options: structuredClone(options) });
-    if (url.includes('/rpc/')) throw new Error(`RPC inexistent a l'esquema viu: ${url}`);
+    if (url.includes('/rpc/')) throw Object.assign(new Error(`RPC inexistent a l'esquema viu: ${url}`), {status:404,postgrestCode:'PGRST202'});
     if (url !== '/rest/v1/section_submissions?on_conflict=id' || options.method !== 'POST') throw new Error(`Transport inesperat: ${url}`);
     expect(options.headers.Prefer).toBe('return=representation,resolution=merge-duplicates');
     const [fila] = options.body;
@@ -85,21 +85,20 @@ test('servei real → client viu: publica, republica i retira les dues audiènci
   } finally { service.tanca(); }
 });
 
-test('D-R32-PUB-1 · una escriptura amb versió es rebutja abans de cap petició, també amb el servei versionat', async () => {
-  for (const expectedUpdatedAt of ['2026-11-16T05:00:00.000001Z', 'invalid', null]) {
+test('D-R32-PUB-1 · CAS opt-in absent fa només una RPC i conserva operació pendent sense upsert', async () => {
+  const operationId = '44444444-4444-4444-8444-444444444444';
+  for (const expectedUpdatedAt of ['2026-11-16T05:00:00.000001Z', null]) {
     await expect(appendSectionSubmissionNetworkOnly({ id: '33333333-3333-4333-8333-333333333333', sectionId: 'mur',
-      payload: { content: 'Cos' }, expectedUpdatedAt })).rejects.toMatchObject({ codi: 'esquema-absent' });
+      payload: { content: 'Cos' }, expectedUpdatedAt, operationId })).rejects.toMatchObject({ codi: 'esquema-absent' });
   }
-  expect(m.calls).toHaveLength(0);
+  expect(m.calls).toHaveLength(2); expect(m.calls.every(call => call.url.endsWith('/rpc/publica_section_submission_cas'))).toBe(true);
   const service = crea({ versionada: true });
   try {
-    await service.prepara(); await service.desa(FONT, ['mur', 'bar']); await service.sincronitza();
-    const abans = structuredClone([...m.rows.values()]), peticions = m.calls.length;
-    await service.desa({ ...FONT, title: 'Intent local' }, ['herbari', 'bar']);
+    await service.prepara(); await service.desa(FONT, ['mur', 'bar']);
     await expect(service.sincronitza()).rejects.toMatchObject({ codi: 'esquema-absent' });
-    // Cap petició, cap mutació: el servidor conserva la fila i l'intent queda pendent a la cua.
-    expect(m.calls).toHaveLength(peticions); expect([...m.rows.values()]).toEqual(abans);
-    expect(registreProjeccioPendent((await service.llista())[0])).toBe(true);
+    expect(m.rows.size).toBe(0);
+    const row = (await service.llista())[0]; expect(registreProjeccioPendent(row)).toBe(true);
+    expect(row.operacions.privada.id).toMatch(/^[a-f0-9-]{36}$/); expect(row.versions.privada).toBeNull();
   } finally { service.tanca(); }
 });
 

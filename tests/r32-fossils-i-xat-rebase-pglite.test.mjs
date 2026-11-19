@@ -187,3 +187,122 @@ await test('R32 full canonical catalogue replay and non-destructive own-thread r
     assert.ok((await db.query(probe)).rows.every(r=>r.present===false));
   });
 });
+
+await test('R32.10 manual fossil ACL hardening is pinned, minimal and repeatable', { timeout: 120000 }, async t => {
+  const db=await fossilBase();t.after(()=>db.close());
+  const hardening=read('supabase/snippets/r32_10_fossils_acl_enduriment.sql');
+  await db.exec(`grant execute on all functions in schema public to service_role;
+    create table public.r3210_omega_probe(id uuid,parent_id uuid);
+    create trigger r3210_omega before insert on public.r3210_omega_probe for each row execute function public.omega_set_default_parent_id();
+    grant insert,select on public.r3210_omega_probe to authenticated;`);
+  await db.exec(migration);
+  const before=await snapshot(db);
+  await db.exec(hardening);await db.exec(hardening);
+  const senseAcl = row => Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'acl'));
+  assert.deepEqual((await snapshot(db)).map(senseAcl),before.map(senseAcl));
+  const rows=(await db.query(probe)).rows;
+  for(const row of rows) {
+    for(const role of ['anon','authenticated']) {
+      assert.equal((await db.query('select has_function_privilege($1,$2,\'EXECUTE\') yes',[role,row.signature])).rows[0].yes,false);
+    }
+    const trigger=/check_market|omega_|refresh_entity/.test(row.signature);
+    assert.equal((await db.query('select has_function_privilege(\'service_role\',$1,\'EXECUTE\') yes',[row.signature])).rows[0].yes,!trigger);
+  }
+  assert.equal((await db.query('select count(*)::int n from private.r3210_fossils_acl_backup')).rows[0].n,7);
+  await db.exec('set role authenticated');
+  await assert.rejects(db.exec('select public.clean_expired_push_subscriptions()'),/permission denied/);
+  await db.exec(`insert into public.r3210_omega_probe(id) values('${id(509)}')`);
+  assert.equal((await db.query('select parent_id from public.r3210_omega_probe')).rows[0].parent_id,id(509));
+  await db.exec('reset role');
+  assert.deepEqual((await db.query('select signature,acl_text from private.r32_fossils_backup order by signature')).rows,
+    before.map(r=>({signature:`public.${r.signature.replace(/^public\./,'')}`,acl_text:r.acl})).sort((a,b)=>a.signature.localeCompare(b.signature)));
+  for(const role of ['anon','authenticated','service_role']) {
+    await db.exec(`set role ${role}`);
+    await assert.rejects(db.exec('select * from private.r3210_fossils_acl_backup'),/permission denied/);
+    await db.exec('reset role');
+  }
+  await db.exec('grant execute on function public.mark_messages_as_read(uuid,uuid) to authenticated');
+  const drift=await snapshot(db);
+  await fails(db,hardening,/SDP-R3210-ACL-003/);
+  assert.deepEqual(await snapshot(db),drift);
+});
+
+await test('R32.10 private xat repair closes table and column ACLs and keeps internal owner writes', { timeout: 90000 }, async t => {
+  const db=new PGlite();t.after(()=>db.close());
+  const repair=read('supabase/snippets/r32_10_xat_privades_rls_repara.sql');
+  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema private;
+    grant usage on schema private to anon,authenticated,service_role;
+    create table private.xat_fils_fusionats(antic_id uuid primary key,supervivent_id uuid,tenant_id uuid,missatges_moguts integer);
+    create table private.xat_fusions_pendents(fils uuid[] primary key,tenant_id uuid,motiu text);
+    insert into private.xat_fils_fusionats values('${id(501)}','${id(502)}','${id(503)}',2);
+    insert into private.xat_fusions_pendents values(array['${id(504)}'::uuid,'${id(505)}'::uuid],'${id(503)}','e2ee');
+    grant all on private.xat_fils_fusionats,private.xat_fusions_pendents to public,anon,authenticated,service_role;
+    grant select(antic_id),update(missatges_moguts) on private.xat_fils_fusionats to authenticated;
+    create function private.r3210_insert_internal() returns void language sql security definer set search_path='' as
+    $$insert into private.xat_fils_fusionats values('${id(506)}','${id(502)}','${id(503)}',0)$$;
+    revoke all on function private.r3210_insert_internal() from public,anon,authenticated,service_role;`);
+  const data=async()=>(await db.query('select * from private.xat_fils_fusionats order by antic_id')).rows;
+  const before=await data();
+  await db.exec(repair);await db.exec(repair);
+  assert.deepEqual(await data(),before);
+  assert.deepEqual((await db.query("select relrowsecurity,relforcerowsecurity from pg_class where oid in ('private.xat_fils_fusionats'::regclass,'private.xat_fusions_pendents'::regclass)")).rows,
+    [{relrowsecurity:true,relforcerowsecurity:false},{relrowsecurity:true,relforcerowsecurity:false}]);
+  for(const role of ['anon','authenticated','service_role']) {
+    for(const table of ['private.xat_fils_fusionats','private.xat_fusions_pendents']) {
+      assert.equal((await db.query("select has_table_privilege($1,$2,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') yes,has_any_column_privilege($1,$2,'SELECT,INSERT,UPDATE,REFERENCES') col",[role,table])).rows[0].yes,false);
+      assert.equal((await db.query("select has_any_column_privilege($1,$2,'SELECT,INSERT,UPDATE,REFERENCES') yes",[role,table])).rows[0].yes,false);
+      await db.exec(`set role ${role}`);
+      await assert.rejects(db.exec(`select * from ${table}`),/permission denied/);
+      await assert.rejects(db.exec(`insert into ${table} default values`),/permission denied/);
+      await db.exec('reset role');
+    }
+  }
+  await db.exec('select private.r3210_insert_internal()');assert.equal((await data()).length,2);
+  await db.exec('grant select,insert on private.xat_fils_fusionats to authenticated;set role authenticated');
+  assert.deepEqual((await db.query('select * from private.xat_fils_fusionats')).rows,[]);
+  await assert.rejects(db.exec(`insert into private.xat_fils_fusionats(antic_id) values('${id(507)}')`),/row-level security/);
+  await db.exec('reset role');await db.exec(repair);
+  await db.exec('alter table private.xat_fils_fusionats disable row level security;create policy unreviewed on private.xat_fils_fusionats using(true)');
+  await fails(db,repair,/SDP-R3210-RLS-002/);
+  assert.equal((await db.query("select relrowsecurity yes from pg_class where oid='private.xat_fils_fusionats'::regclass")).rows[0].yes,false);
+});
+
+await test('R32.10 inherited EXECUTE aborts the standalone ACL script and rolls back all ACLs', { timeout: 90000 }, async t => {
+  const db=await fossilBase();t.after(()=>db.close());
+  const hardening=read('supabase/snippets/r32_10_fossils_acl_enduriment.sql');
+  await db.exec('grant execute on all functions in schema public to service_role');
+  await db.exec(migration);
+  await db.exec('grant service_role to authenticated');
+  const before=await snapshot(db);
+  await fails(db,hardening,/SDP-R3210-ACL-005/);
+  assert.deepEqual(await snapshot(db),before);
+  assert.equal((await db.query("select to_regclass('private.r3210_fossils_acl_backup') r")).rows[0].r,null);
+});
+
+await test('R32.10 null backup pins fail closed before ACL mutation and on repeated application', { timeout: 90000 }, async t => {
+  const db=await fossilBase();t.after(()=>db.close());
+  const hardening=read('supabase/snippets/r32_10_fossils_acl_enduriment.sql');
+  const signature='public.clean_expired_push_subscriptions()';
+  await db.exec('grant execute on all functions in schema public to service_role');
+  await db.exec(migration);
+  const before=await snapshot(db);
+  for(const column of ['after_hash','after_definition_hash']) {
+    const original=(await db.query(`select ${column} value from private.r32_fossils_backup where signature=$1`,[signature])).rows[0].value;
+    await db.exec(`alter table private.r32_fossils_backup alter column ${column} drop not null`);
+    await db.query(`update private.r32_fossils_backup set ${column}=null where signature=$1`,[signature]);
+    await fails(db,hardening,/SDP-R3210-ACL-002/);
+    assert.deepEqual(await snapshot(db),before);
+    assert.equal((await db.query("select to_regclass('private.r3210_fossils_acl_backup') r")).rows[0].r,null);
+    await db.query(`update private.r32_fossils_backup set ${column}=$2 where signature=$1`,[signature,original]);
+  }
+  await db.exec(hardening);
+  const hardened=await snapshot(db);
+  for(const column of ['owner_oid','definition_hash']) {
+    const original=(await db.query(`select ${column} value from private.r3210_fossils_acl_backup where signature=$1`,[signature])).rows[0].value;
+    await db.exec(`alter table private.r3210_fossils_acl_backup alter column ${column} drop not null`);
+    await db.query(`update private.r3210_fossils_acl_backup set ${column}=null where signature=$1`,[signature]);
+    await fails(db,hardening,/SDP-R3210-ACL-003/);
+    assert.deepEqual(await snapshot(db),hardened);
+    await db.query(`update private.r3210_fossils_acl_backup set ${column}=$2 where signature=$1`,[signature,original]);
+  }
+});

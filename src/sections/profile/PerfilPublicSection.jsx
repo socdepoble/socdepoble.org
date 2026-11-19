@@ -96,6 +96,11 @@ import { ConnexionsPubliques, VisibilitatConnexions } from './ConnexionsPublique
 /* P1-11 (pla 261024_2230, T5B-02) · L'aparador de la fitxa (Mur, Mercat i Agenda). */
 import { PublicacionsDeLaFitxa, textosDeLAparador, useHiHaMur } from './PublicacionsDeLaFitxa.jsx';
 import { teAparador } from './usePublicacionsDeLaFitxa.js';
+import {
+  altAvatarPerfilPublic,
+  altLogotipPerfilPublic,
+  etiquetaTipusPerfilPublic
+} from './textosPerfilPublic.js';
 
 /* Onada R17 (AH-R17-10) · El dossier històric, estatutari i el model d'acta
    d'El Rentonar, en un tros diferit: les seues dades (data/patrimoni/actaRentonar.js)
@@ -109,7 +114,6 @@ export const ATRIBUCIO_PERFIL_RENTONAR = 'CC BY-NC-SA 4.0 Pedro Ferrer Rodriguez
 /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
    · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
    persona no es categoritza: no n'hi ha cap per a ella (abans, «Persona»). */
-const ETIQUETA = Object.freeze({ entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
 
 const atributHtml = (valor) => String(valor ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -548,7 +552,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
   const [revisioConnexions, setRevisioConnexions] = useState(0);
   const { t } = useUIActions();
   /* T6b · `locale`: la data de «Veïnat connectat amb tu», en la llengua de la fitxa. */
-  const { externalConfig, locale } = useUIState();
+  const { externalConfig, locale, language = 'ca', llenguaDelText = language } = useUIState();
   const navigate = useNavigate();
   const { memberships = [], actor, setActor } = useIdentitat();
   /* Onada 11 (261010; refutació del front C, D12) · En remot, el directe
@@ -614,7 +618,10 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      desconegut; sense descriptor, el del DTO. Es queden el poble i «La teua
      fitxa». L'entitat, el grup i la IA no canvien. */
   const objecte = objecteDePerfil(perfil);
-  const etiquetaDelTipus = ETIQUETA[objecte?.tipus || perfil.tipus] || null;
+  const etiquetaDelTipus = etiquetaTipusPerfilPublic(objecte?.tipus || perfil.tipus, {
+    t,
+    language: llenguaDelText
+  });
   const esPersona = !etiquetaDelTipus;
   /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar
      entitats sense poble») · El poble que porta la fitxa; si no en porta cap
@@ -705,10 +712,10 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      (sdp-pedra-seca §11), i el d'una IA no és cap botó («clics honestos»). */
   const logoDeLaFitxa = (esElProjecte || esLaIAIA)
     ? DEFAULT_AUTHOR.logo
-    : (logoPropi ? { clar: logoPropi, alt: `Logotip de ${perfil.nom}` } : null);
+    : (logoPropi ? { clar: logoPropi, alt: altLogotipPerfilPublic(perfil.nom, llenguaDelText) } : null);
   const avatarDeLaFitxa = esAgentIA && !esLaIAIA && perfil.avatar ? {
     src: perfil.avatar,
-    alt: `Avatar de ${perfil.nom}`
+    alt: altAvatarPerfilPublic(perfil.nom, llenguaDelText)
   } : null;
   /* El directe de sempre per a tothom; per a la IAIA, la conversa de la seua
      fila en cada mode de dades (en llavor i en local, el mateix directe).

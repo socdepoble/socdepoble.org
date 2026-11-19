@@ -24,7 +24,7 @@ import { dataLocalDe, etiquetaData, etiquetaDataLlarga, horaDe, jornadesAmbApunt
 import { MOTIUS_SENSE_VOLUMS, metriquesJornada, textCobertura } from '../nucli/metriques.js';
 import { textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
-import { EnllacBoto, EnllacDetall, MarcSalut, iconaDeTipus, useEstret, useInterruptorsSalut, useNavegaSalut } from './comunes.jsx';
+import { EnllacBoto, EnllacDetall, MarcSalut, iconaDeTipus, useEstret, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 import { FormulariApunt, PASSOS_CONDUCTA } from './FormulariApunt.jsx';
 
 /* La consulta de /diari: el tipus del formulari obert, el pas de la conducta i el mode nit. */
@@ -35,7 +35,6 @@ const CONSULTA_DIARI = Object.freeze({
 });
 /* De nit, només el que es fa a les fosques. */
 const TIPUS_NIT = Object.freeze(['miccio', 'absorbent', 'son']);
-const ETIQUETA_NIT = Object.freeze({ son: 'Es desperta' });
 
 /* Clàusula dels Slugs: arrere recorre seccions. El formulari d'apuntar
    ocupa entrades de l'historial: obrir-lo i cada pas fan push (arrere torna
@@ -103,19 +102,20 @@ function apuntsDeLinia(apunts, ruta) {
 function LiniaDeJornada({ data, seleccionat = null, titol }) {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   if (!salut.carregat) return null;
   const delDia = salut.apunts.filter((apunt) => apunt.jornada === data);
   const eines = (
     <Fila gap={2}>
-      <EnllacBoto a={ruta('dies', sumaDies(data, -1))}>Dia anterior</EnllacBoto>
-      {data < salut.avui ? <EnllacBoto a={ruta('dies', sumaDies(data, 1))}>Dia següent</EnllacBoto> : null}
-      <EnllacDetall a={ruta('dies', data, 'resum')}>Resum del dia</EnllacDetall>
+      <EnllacBoto a={ruta('dies', sumaDies(data, -1))}>{tx.diaAnterior}</EnllacBoto>
+      {data < salut.avui ? <EnllacBoto a={ruta('dies', sumaDies(data, 1))}>{tx.diaSeguent}</EnllacBoto> : null}
+      <EnllacDetall a={ruta('dies', data, 'resum')}>{tx.resumDelDia}</EnllacDetall>
     </Fila>
   );
   return (
     <MarcSalut titol={titol || etiquetaDataLlarga(data)} eines={eines} columna="mig">
-      <LiniaDelTemps apunts={apuntsDeLinia(delDia, ruta)} etiqueta={`Apunts de ${etiquetaDataLlarga(data)}`} seleccionat={seleccionat}
-        buit="Encara no hi ha cap apunt en esta jornada." />
+      <LiniaDelTemps apunts={apuntsDeLinia(delDia, ruta)} etiqueta={tx.apuntsDe(etiquetaDataLlarga(data))} seleccionat={seleccionat}
+        buit={tx.buitJornada} />
     </MarcSalut>
   );
 }
@@ -124,12 +124,14 @@ function LiniaDeJornada({ data, seleccionat = null, titol }) {
 
 export function LiniaAvui() {
   const salut = useSalut();
-  return <LiniaDeJornada data={salut.avui} titol="Avui" />;
+  const tx = useTextosSalut();
+  return <LiniaDeJornada data={salut.avui} titol={tx.avui} />;
 }
 
 export function Apuntar() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const [consulta, posa] = useParametresConsulta(CONSULTA_DIARI);
   const historial = useHistorialFormulari(CONSULTA_DIARI);
   const tipusActius = useTipusActius();
@@ -157,26 +159,26 @@ export function Apuntar() {
 
   const nit = consulta.mode === 'nit';
   const tipus = nit ? tipusActius.filter((t) => TIPUS_NIT.includes(t.id)) : tipusActius;
-  const articles = tipus.map((t) => ({ id: t.id, nom: (nit && ETIQUETA_NIT[t.id]) || t.boto, categoriaId: 'apuntar' }));
+  const articles = tipus.map((t) => ({ id: t.id, nom: (nit && t.id === 'son' ? tx.etiquetaNitSon : t.boto), categoriaId: 'apuntar' }));
   const media = (article) => {
     const Icona = iconaDeTipus(article.id);
     return <Icona size={40} aria-hidden="true" focusable="false" />;
   };
   return (
-    <MarcSalut titol={nit ? 'Apuntar de nit' : 'Apuntar'}
+    <MarcSalut titol={nit ? tx.apuntarDeNit : tx.apuntar}
       eines={(
         <Fila gap={2}>
           <Boto varietat={nit ? 'primari' : 'secundari'} icona={Moon} aria-pressed={nit} onClick={() => posa({ mode: nit ? null : 'nit' })}>
-            Mode nit
+            {tx.modeNit}
           </Boto>
-          <EnllacBoto a={ruta('dies', salut.avui)}>Veure el dia</EnllacBoto>
+          <EnllacBoto a={ruta('dies', salut.avui)}>{tx.veureElDia}</EnllacBoto>
         </Fila>
       )}>
       <Pila gap={4}>
         {darrer ? (
-          <Alerta to="exit" titol="Apuntat">{`${resumApunt(darrer)}, a les ${horaDe(darrer.moment)}.`}</Alerta>
+          <Alerta to="exit" titol={tx.apuntatTitol}>{tx.resumALes(resumApunt(darrer), horaDe(darrer.moment))}</Alerta>
         ) : null}
-        <GraellaArticles articles={articles} etiqueta="Què vols apuntar" renderMedia={media}
+        <GraellaArticles articles={articles} etiqueta={tx.queVolsApuntar} renderMedia={media}
           onTria={(article) => { setDarrer(null); historial.obri({ nou: article.id, pas: null }); }} />
       </Pila>
     </MarcSalut>
@@ -188,6 +190,7 @@ export function Apuntar() {
 export function LlistaDies() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const estret = useEstret();
   if (!salut.carregat) return null;
@@ -197,17 +200,17 @@ export function LlistaDies() {
     return {
       id: data,
       nom: etiquetaDataLlarga(data),
-      secundari: `${n} ${n === 1 ? 'apunt' : 'apunts'}`,
-      valor: salut.jornades.get(data)?.completa ? 'Completa' : '',
+      secundari: tx.apuntsCount(n),
+      valor: salut.jornades.get(data)?.completa ? tx.completa : '',
       categoriaId: 'dies'
     };
   });
   return (
-    <MarcSalut titol="Dies" columna="mig" eines={estret ? <EnllacBoto a={ruta('dies', 'periodes')}>Diari de 3 dies</EnllacBoto> : null}>
+    <MarcSalut titol={tx.dies} columna="mig" eines={estret ? <EnllacBoto a={ruta('dies', 'periodes')}>{tx.diari3Dies}</EnllacBoto> : null}>
       {articles.length ? (
-        <LlistaArticles articles={articles} etiqueta="Dies apuntats" onTria={(article) => navega(['dies', article.id])} />
+        <LlistaArticles articles={articles} etiqueta={tx.diesApuntats} onTria={(article) => navega(['dies', article.id])} />
       ) : (
-        <EstatBuit titol="Encara no hi ha cap dia apuntat" accio={<EnllacBoto a={ruta('diari')}>Apunta el primer</EnllacBoto>} />
+        <EstatBuit titol={tx.encaraCapDia} accio={<EnllacBoto a={ruta('diari')}>{tx.apuntaElPrimer}</EnllacBoto>} />
       )}
     </MarcSalut>
   );
@@ -216,6 +219,7 @@ export function LlistaDies() {
 export function Periodes() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
   const enCurs = salut.periodes.find((periode) => periode.estat === 'en-curs') || null;
@@ -226,42 +230,42 @@ export function Periodes() {
   const darrerAcabat = acabats[0] || null;
   const copiaPendent = Boolean(darrerAcabat) && (!salut.ultimaCopia || dataLocalDe(salut.ultimaCopia) < sumaDies(darrerAcabat.inici, darrerAcabat.dies - 1));
   return (
-    <MarcSalut titol="Diari de 3 dies">
+    <MarcSalut titol={tx.diari3Dies}>
       <Pila gap={4}>
         {enCurs ? (
-          <Alerta to="info" viva={false} titol="Hi ha un diari en marxa"
+          <Alerta to="info" viva={false} titol={tx.diariEnMarxaTitol}
             accions={(
               <Fila gap={2}>
-                <EnllacBoto a={enllacFull(enCurs)}>Veure’l al full</EnllacBoto>
-                <Boto varietat="secundari" disabled={salut.nomesLectura} onClick={() => executa(() => salut.acabaPeriode(enCurs.id))}>Acaba’l</Boto>
+                <EnllacBoto a={enllacFull(enCurs)}>{tx.veurelAlFull}</EnllacBoto>
+                <Boto varietat="secundari" disabled={salut.nomesLectura} onClick={() => executa(() => salut.acabaPeriode(enCurs.id))}>{tx.acabal}</Boto>
               </Fila>
             )}>
-            {`Comença ${etiquetaDataLlarga(enCurs.inici)} i dura ${enCurs.dies} dies.`}
+            {tx.comencaIDura(etiquetaDataLlarga(enCurs.inici), enCurs.dies)}
           </Alerta>
         ) : (
           <Pila gap={2}>
-            <p>Durant tres dies seguits, apunta-ho tot: el que beu, cada vegada que orina (i quant, si pots), els escapaments i la son. Al final, el full per al metge ho ordena.</p>
+            <p>{tx.introDiari3Dies}</p>
             <Boto varietat="primari" mida="gran" disabled={salut.nomesLectura} onClick={() => executa(() => salut.creaPeriode({ inici: salut.avui, dies: 3 }))}>
-              Comença un diari de 3 dies
+              {tx.comencaDiari3Dies}
             </Boto>
-            <EnllacBoto a={ruta('guia', 'diari-3-dies')}>Com es fa</EnllacBoto>
+            <EnllacBoto a={ruta('guia', 'diari-3-dies')}>{tx.comEsFa}</EnllacBoto>
           </Pila>
         )}
         {error ? <Alerta to="error">{error}</Alerta> : null}
         {copiaPendent ? (
-          <Alerta to="info" viva={false} titol="Còpia de seguretat" accions={<EnllacBoto a={ruta('copia')}>Fes una còpia</EnllacBoto>}>
-            Has acabat un diari: guarda’n una còpia, que les dades només són en este dispositiu.
+          <Alerta to="info" viva={false} titol={tx.copiaSeguretat} accions={<EnllacBoto a={ruta('copia')}>{tx.fesUnaCopia}</EnllacBoto>}>
+            {tx.recordatoriCopiaDiari}
           </Alerta>
         ) : null}
         {acabats.length ? (
-          <Taula titol="Diaris acabats">
-            <thead><tr><th scope="col">Inici</th><th scope="col">Dies</th><th scope="col">Full</th></tr></thead>
+          <Taula titol={tx.diarisAcabats}>
+            <thead><tr><th scope="col">{tx.inici}</th><th scope="col">{tx.dies}</th><th scope="col">{tx.full}</th></tr></thead>
             <tbody>
               {acabats.map((periode) => (
                 <tr key={periode.id}>
                   <td>{etiquetaData(periode.inici)}</td>
                   <td>{periode.dies}</td>
-                  <td><EnllacBoto a={enllacFull(periode)}>Obri el full</EnllacBoto></td>
+                  <td><EnllacBoto a={enllacFull(periode)}>{tx.obriElFull}</EnllacBoto></td>
                 </tr>
               ))}
             </tbody>
@@ -283,40 +287,41 @@ const xifra = (valor, unitat = '') => (valor === null || valor === undefined ? '
 export function ResumJornada({ params }) {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
   const m = metriquesJornada(params.data, salut.apunts, { persona: salut.persona, jornades: salut.jornades, ofsetDe: salut.ofsetDe });
-  const hora = (punt) => `${horaDe(punt.moment)}${punt.estimat ? ' (l’habitual: no s’ha apuntat)' : ''}`;
+  const hora = (punt) => `${horaDe(punt.moment)}${punt.estimat ? tx.habitualNoApuntat : ''}`;
   const files = [
-    ['S’alça', hora(m.limits.alcar)],
-    ['S’adorm', hora(m.limits.adormir)],
-    ['Vegades que orina de dia', xifra(m.frequenciaDiurna)],
-    ['Vegades que orina de nit', xifra(m.nicturia)],
-    ['Miccions mesurades', textCobertura(m)],
-    ['Orina en 24 h', xifra(m.volum24h, ' ml')],
-    ['Orina de nit', xifra(m.volumNocturn, ' ml')],
-    ['Part de l’orina feta de nit', xifra(m.indexPoliuriaNocturna, ' %')],
-    ['Begut', xifra(m.ingestaTotal, ' ml')],
-    ['Escapaments', xifra(m.escapaments)],
-    ['Canvis d’absorbent', xifra(m.canvisAbsorbent)],
-    ['Deposicions', xifra(m.deposicions)],
-    ['Episodis de conducta', xifra(m.episodis)]
+    [tx.filesResum.alcar, hora(m.limits.alcar)],
+    [tx.filesResum.adormir, hora(m.limits.adormir)],
+    [tx.filesResum.orinaDia, xifra(m.frequenciaDiurna)],
+    [tx.filesResum.orinaNit, xifra(m.nicturia)],
+    [tx.filesResum.mesurades, textCobertura(m)],
+    [tx.filesResum.orina24h, xifra(m.volum24h, ' ml')],
+    [tx.filesResum.orinaNitMl, xifra(m.volumNocturn, ' ml')],
+    [tx.filesResum.partNit, xifra(m.indexPoliuriaNocturna, ' %')],
+    [tx.filesResum.begut, xifra(m.ingestaTotal, ' ml')],
+    [tx.filesResum.escapaments, xifra(m.escapaments)],
+    [tx.filesResum.canvis, xifra(m.canvisAbsorbent)],
+    [tx.filesResum.deposicions, xifra(m.deposicions)],
+    [tx.filesResum.episodis, xifra(m.episodis)]
   ];
   const marca = (completa) => salut.marcaJornada(params.data, { completa }).then(() => setError(null), (e) => setError(textError(e)));
   return (
-    <MarcSalut titol="Resum de la jornada">
+    <MarcSalut titol={tx.resumJornadaTitol}>
       <Pila gap={4}>
-        <Interruptor etiqueta="He apuntat tot el dia" actiu={m.completa} desactivat={salut.nomesLectura} onCanvi={marca} />
-        {m.motiuSenseVolums ? <Alerta to="info" viva={false}>{`Sense volums ni índexs: ${MOTIUS_SENSE_VOLUMS[m.motiuSenseVolums]}`}</Alerta> : null}
+        <Interruptor etiqueta={tx.heApuntatTotElDia} actiu={m.completa} desactivat={salut.nomesLectura} onCanvi={marca} />
+        {m.motiuSenseVolums ? <Alerta to="info" viva={false}>{`${tx.senseVolumsPrefix}${MOTIUS_SENSE_VOLUMS[m.motiuSenseVolums]}`}</Alerta> : null}
         {error ? <Alerta to="error">{error}</Alerta> : null}
-        <Taula titol={`Resum de ${etiquetaDataLlarga(params.data)}`}>
+        <Taula titol={tx.resumDeData(etiquetaDataLlarga(params.data))}>
           <tbody>
             {files.map(([nom, valor]) => <tr key={nom}><th scope="row">{nom}</th><td>{valor}</td></tr>)}
           </tbody>
         </Taula>
         <Fila gap={2}>
-          <EnllacBoto a={`${ruta('full')}?des=${params.data}&dies=1`}>Veure-ho al full per al metge</EnllacBoto>
-          {params.data === salut.avui ? <EnllacBoto a={ruta('diari')}>Apunta</EnllacBoto> : null}
+          <EnllacBoto a={`${ruta('full')}?des=${params.data}&dies=1`}>{tx.veureAlFullMetge}</EnllacBoto>
+          {params.data === salut.avui ? <EnllacBoto a={ruta('diari')}>{tx.apunta}</EnllacBoto> : null}
         </Fila>
       </Pila>
     </MarcSalut>
@@ -327,6 +332,7 @@ export function ResumJornada({ params }) {
 
 export function EditorApunt({ params }) {
   const salut = useSalut();
+  const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const [esborrant, setEsborrant] = useState(false);
   const [error, setError] = useState(null);
@@ -334,8 +340,8 @@ export function EditorApunt({ params }) {
   const apunt = salut.apunts.find((candidat) => candidat.id === params.apunt);
   if (!apunt) {
     return (
-      <MarcSalut titol="Apunt">
-        <EstatBuit titol="No trobat">Este apunt no existix o ja s’ha esborrat.</EstatBuit>
+      <MarcSalut titol={tx.apunt}>
+        <EstatBuit titol={tx.noTrobat}>{tx.apuntNoExistix}</EstatBuit>
       </MarcSalut>
     );
   }
@@ -357,14 +363,14 @@ export function EditorApunt({ params }) {
     }
   };
   return (
-    <MarcSalut titol={`Corregir: ${tipusDe(apunt.tipus).nom}`}>
+    <MarcSalut titol={tx.corregirTipus(tipusDe(apunt.tipus).nom)}>
       <Pila gap={4}>
         <FormulariApunt key={apunt.id} tipus={apunt.tipus} inicial={apunt} onDesa={desa} onCancela={torna}
-          accions={<Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>Esborra</Boto>} />
+          accions={<Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>{tx.esborra}</Boto>} />
         {error ? <Alerta to="error">{error}</Alerta> : null}
       </Pila>
-      <DialegConfirmacio obert={esborrant} destructiu titol="Esborrar l’apunt" etiquetaConfirma="Esborra" etiquetaCancela="No l’esborres"
-        descripcio={`${resumApunt(apunt)}, a les ${horaDe(apunt.moment)}. No es podrà recuperar si no tens una còpia.`}
+      <DialegConfirmacio obert={esborrant} destructiu titol={tx.esborrarApuntTitol} etiquetaConfirma={tx.esborra} etiquetaCancela={tx.noLEsborres}
+        descripcio={tx.esborrarApuntDesc(resumApunt(apunt), horaDe(apunt.moment))}
         onTanca={() => setEsborrant(false)} onConfirma={esborra} />
     </MarcSalut>
   );

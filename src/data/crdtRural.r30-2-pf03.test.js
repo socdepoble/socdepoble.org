@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import { webcrypto } from 'node:crypto';
+import { creaSessioRural } from './sessioRural.js';
 import { estatCrdtRuralBuit, canviaCrdtRural, fusionaCrdtRural, preparaSincronitzacioCrdtRural,
   registraAckCrdtRural, compactaCrdtRural, projectaCrdtRural, RETENCIO_TOMBSTONES_RURAL_MS } from './crdtRural.js';
 const remote = 'https://replica.example';
@@ -31,4 +33,31 @@ describe('PF-03 · fronteres remotes i compactació causal', () => {
     expect(merged.ops[0].insert.text).toBe('Edició desconnectada');
     expect(join(compactat, join(d, join(a, offline)))).toEqual(merged);
   });
+});
+
+
+test('R32.10 · stalled remote transport has a 15 second deadline, aborts and ignores a late acknowledgement', async () => {
+  const s = await creaSessioRural({ abast: { persona: 'actor', tenant: 'torre', endpoint: 'seed', mode: 'seed' }, municipi: 'La Torre', motor: 'memoria', memoria: new Map(), crdt: true, crypto: webcrypto, BroadcastChannel: null });
+  await s.desaNota({ title: 'Private draft', content: 'Kept locally' });
+  let enter, release, transportSignal, outcome;
+  const entered = new Promise(resolve => { enter = resolve; });
+  const stalled = new Promise(resolve => { release = resolve; });
+  vi.useFakeTimers();
+  try {
+    const pending = s.sincronitzaRemot({ tipus: 'remot', autoritat: remote, envia: (request, options) => {
+      transportSignal = options.signal; enter(request); return stalled;
+    } });
+    pending.then(value => { outcome = { value }; }, error => { outcome = { error }; });
+    const request = await entered;
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(outcome?.error).toMatchObject({ code: 'RURAL_CRDT_REMOTE_TIMEOUT' });
+    expect(transportSignal.aborted).toBe(true);
+    expect((await s.exportaVault()).crdt.sincronitzacio).toBeUndefined();
+    release({ schema: 'sdp.rural.remote-ack.v1', requestId: request.requestId, sha256: request.sha256, frontera: request.frontera, autoritat: remote, confirmatEl: '2026-01-01T00:00:00.000Z', ack_remot_confirmat: true });
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await s.exportaVault()).crdt.sincronitzacio).toBeUndefined();
+    await s.sincronitzaRemot({ tipus: 'remot', autoritat: remote, envia: async request => ({ schema: 'sdp.rural.remote-ack.v1', requestId: request.requestId, sha256: request.sha256, frontera: request.frontera, autoritat: remote, confirmatEl: '2026-01-01T00:00:00.000Z', ack_remot_confirmat: true }) });
+    expect((await s.exportaVault()).crdt.sincronitzacio.acks).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(0);
+  } finally { s.close(); vi.useRealTimers(); }
 });

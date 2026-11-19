@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen, waitFor } from '@t
 import { webcrypto } from 'node:crypto';
 import { creaCanalFals, creaIdbFals } from '../utils/__fixtures__/navegadorFals.js';
 const m = vi.hoisted(() => ({ user: null, identity: null, adapter: null, config: null, failPublic: false, publicCalls: [], defer: null, capacitat: true,
-  version: 0, readCalls: 0, readView: null, readGate: null, ambVersio: false, tick: 0, forcaVersionada: false }));
+  version: 0, readCalls: 0, readView: null, readGate: null, ambVersio: false, tick: 0, forcaVersionada: false, casVersions: null, casRebuts: null }));
 vi.mock('../app/contexts/UIContext.jsx', () => ({ useUIStateOpcional: () => ({ externalConfig: m.config }) }));
 vi.mock('../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => ({ currentUser: m.user, estat: m.user ? 'dins' : 'fora' }) }));
 vi.mock('../app/contexts/useIdentitatOReserva.js', () => ({ useIdentitatOReserva: () => m.identity }));
@@ -24,11 +24,29 @@ vi.mock('../data/backendPort.js', () => ({
   },
   appendSectionSubmissionNetworkOnly: async (sub, config) => {
     m.publicCalls.push(structuredClone(sub));
-    /* Onada R32 · D-R32-PUB-1 · Cap backend viu té CAS de publicacions, i
-       l'adaptador local descartaria el camp sense dir res: ací no pot passar. */
-    if (Object.hasOwn(sub, 'expectedUpdatedAt')) throw new Error('expectedUpdatedAt no pot viatjar: cap backend viu té CAS de publicacions (D-R32-PUB-1).');
+    /* Producció continua dorment. Només el cas opt-in força un servidor CAS
+       simulat: consumix la precondició i torna el rebut que exigix el servei,
+       sense donar eixa capacitat a l'adaptador local ni al backend viu. */
+    if (!m.forcaVersionada && Object.hasOwn(sub, 'expectedUpdatedAt')) throw new Error('expectedUpdatedAt no pot viatjar sense activar CAS (D-R32-PUB-1).');
+    if (m.forcaVersionada) {
+      if (!Object.hasOwn(sub, 'expectedUpdatedAt') || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(sub.operationId ?? '')) throw new Error('Petició CAS incompleta.');
+      const rebut = m.casRebuts.get(sub.operationId);
+      if (rebut) {
+        if (rebut.peticio !== JSON.stringify(sub)) throw new Error('Operació CAS reutilitzada amb altres dades.');
+        if (m.casVersions.get(sub.id) !== rebut.saved.updatedAt) throw Object.assign(new Error('Rebut CAS superat per una altra revisió.'), { codi: 'conflicte' });
+        return structuredClone(rebut.saved);
+      }
+      if (sub.expectedUpdatedAt !== (m.casVersions.get(sub.id) ?? null)) throw Object.assign(new Error('Conflicte CAS simulat.'), { codi: 'conflicte' });
+    }
     if (m.failPublic && sub.sectionId === 'mur') throw new Error('Xarxa tallada després del primer ACK');
-    const saved = await m.adapter.appendSectionSubmissionNetworkOnly(sub, config);
+    const payload = { ...sub }; delete payload.expectedUpdatedAt; delete payload.operationId;
+    const saved = await m.adapter.appendSectionSubmissionNetworkOnly(payload, config);
+    if (m.forcaVersionada) {
+      const ack = { ...saved, operationId: sub.operationId, updatedAt: `2026-11-16T05:00:00.${String(++m.tick).padStart(6, '0')}Z` };
+      m.casVersions.set(sub.id, ack.updatedAt);
+      m.casRebuts.set(sub.operationId, { peticio: JSON.stringify(sub), saved: structuredClone(ack) });
+      return ack;
+    }
     // Com content.js amb `return=representation`: la versió exacta del servidor, amb microsegons.
     return m.ambVersio ? { ...saved, updatedAt: `2026-11-16T05:00:00.${String(++m.tick).padStart(6, '0')}Z` } : saved;
   }
@@ -76,7 +94,8 @@ beforeEach(() => {
   vi.stubGlobal('crypto', webcrypto); vi.stubGlobal('indexedDB', creaIdbFals().idb); vi.stubGlobal('BroadcastChannel', undefined);
   m.adapter = creaAdaptadorLocal({ mode: 'local', tenantId: '7a1b2c3d-4e5f-4a60-8b71-c2d3e4f5a6b7' });
   m.config = m.adapter.configuracio; m.failPublic = false; m.publicCalls = []; m.defer = null; m.capacitat = true;
-  m.version = 0; m.readCalls = 0; m.readView = null; m.readGate = null; m.ambVersio = false; m.tick = 0; m.forcaVersionada = false; entra();
+  m.version = 0; m.readCalls = 0; m.readView = null; m.readGate = null; m.ambVersio = false; m.tick = 0; m.forcaVersionada = false;
+  m.casVersions = new Map(); m.casRebuts = new Map(); entra();
 });
 
 describe('R31 Passada2 · relleu ACK local → lectura remota', () => {
@@ -152,6 +171,23 @@ describe('R32 · publicacions sense CAS i lectura remota de xarxa', () => {
     await act(async () => { await hook.result.current.desa(FONT, []); });
     expect(m.publicCalls).toHaveLength(6);
     expect(m.publicCalls.filter(sub => Object.hasOwn(sub, 'expectedUpdatedAt'))).toEqual([]);
+    expect(hook.result.current.estat).toBe('sincronitzat'); expect(hook.result.current.error).toBeNull();
+  });
+  test('el servidor CAS simulat exigix opt-in, crea amb null i revisa amb el token opac de cada audiència', async () => {
+    m.forcaVersionada = true;
+    const hook = renderHook(() => useProjeccionsCataleg());
+    await waitFor(() => expect(hook.result.current.estat).toBe('sincronitzat'));
+    await act(async () => { await hook.result.current.desa(FONT, ['mur', 'bar']); });
+    expect(m.publicCalls.map(sub => sub.expectedUpdatedAt)).toEqual([null, null]);
+    const versions = new Map(m.casVersions);
+    await act(async () => { await hook.result.current.desa({ ...FONT, title: 'Revisió CAS' }, ['mur', 'bar']); });
+    expect(m.publicCalls).toHaveLength(4);
+    for (const sub of m.publicCalls.slice(2)) {
+      expect(sub.expectedUpdatedAt).toBe(versions.get(sub.id));
+      expect(m.casRebuts.get(sub.operationId).saved.operationId).toBe(sub.operationId);
+      expect(m.casVersions.get(sub.id) > sub.expectedUpdatedAt).toBe(true);
+    }
+    expect(new Set(m.publicCalls.map(sub => sub.operationId)).size).toBe(4);
     expect(hook.result.current.estat).toBe('sincronitzat'); expect(hook.result.current.error).toBeNull();
   });
   test.each([['dorment (producció)', false], ['versionada (D-R32-PUB-1 a)', true]])('IndexedDB deixa de respondre: un refresc remot encara mostra les files noves del servidor · %s', async (_nom, versionada) => {

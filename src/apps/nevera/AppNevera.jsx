@@ -27,6 +27,7 @@ import { useLocation, useNavigate } from '../../app/contexts/RouterContext';
 import { Carregant, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { ClosaAplicacio, useApp, useRutaApp } from '../plataforma/index.js';
 import { creaMagatzemNevera } from './magatzem.js';
+import { textosVistaNevera } from './i18nNevera.js';
 import { LIMITS, llistaPerId } from './nucli/index.js';
 import { RUTES, titolsDe } from './rutes.js';
 import { useNevera } from './useNevera.js';
@@ -54,11 +55,19 @@ function tramsAmbLlista(patro, id) {
 }
 
 /* Per què «Crea la llista» no ha creat res: el diàleg ho diu i no es tanca. */
-function motiuSenseLlistaNova({ estat, llegit, mode }) {
-  if (!llegit) return 'Ara no es pot crear cap llista: les dades d’este dispositiu no s’han pogut llegir.';
-  if (mode === 'lectora') return 'La nevera està oberta en una altra pestanya: crea la llista des d’allà.';
-  if (estat.llistes.length >= LIMITS.llistes) return `Ja tens ${LIMITS.llistes} llistes: esborra’n una abans de crear-ne una altra.`;
-  return 'No s’ha pogut crear la llista. Torna-ho a provar.';
+function motiuSenseLlistaNova({ estat, llegit, mode }, tx) {
+  if (!llegit) return tx.motiuNoLlegit;
+  if (mode === 'lectora') return tx.motiuLectora;
+  if (estat.llistes.length >= LIMITS.llistes) return tx.motiuLimitLlistes(LIMITS.llistes);
+  return tx.motiuErrorCrear;
+}
+
+function useIdiomaNeveraSegur() {
+  try {
+    return useApp()?.idioma || 'ca';
+  } catch {
+    return 'ca';
+  }
 }
 
 export default function AppNevera({ magatzem: magatzemPropi = null, descarrega = descarregaFitxer }) {
@@ -66,6 +75,8 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
   const nevera = useNevera(magatzem);
   const { estat, accions } = nevera;
   const { ruta } = useApp();
+  const idioma = useIdiomaNeveraSegur();
+  const tx = textosVistaNevera(idioma);
   const navigate = useNavigate();
   const { search, hash } = useLocation();
   const coincidencia = useRutaApp(RUTES);
@@ -105,24 +116,25 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
   const valor = useMemo(() => (estat ? {
     ...nevera,
     ruta,
+    idioma,
     llistaDe: (params) => llistaDeLaRuta(estat, params, perDefecte),
     llistaVigent: (params) => llistaDeLaRuta(estat, params, perDefecte) || llistaPerId(estat, perDefecte),
     obriNovaLlista,
     demanaConfirmacio: setConfirmacio,
     descarrega
-  } : null), [nevera, estat, ruta, perDefecte, obriNovaLlista, descarrega]);
+  } : null), [nevera, estat, ruta, idioma, perDefecte, obriNovaLlista, descarrega]);
 
-  if (!valor) return <Carregant etiqueta="Obrint la nevera…" />;
+  if (!valor) return <Carregant etiqueta={tx.obrintNevera} />;
 
   return (
     <ContextNevera.Provider value={valor}>
-      <ClosaAplicacio rutes={RUTES} titols={titolsDe(entrada)} />
+      <ClosaAplicacio rutes={RUTES} titols={titolsDe(entrada, idioma)} />
       <DialegNovaLlista
         obert={novaLlista}
         onTanca={() => setNovaLlista(false)}
         onCrea={(nom) => {
           const id = accions.creaLlista(nom);
-          if (!id) return motiuSenseLlistaNova(nevera);
+          if (!id) return motiuSenseLlistaNova(nevera, tx);
           setNovaLlista(false);
           navigate(ruta(COMPRA.entrada, id));
           return null;
@@ -133,8 +145,8 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
         destructiu
         titol={confirmacio?.titol || ''}
         descripcio={confirmacio?.descripcio}
-        etiquetaConfirma={confirmacio?.etiquetaConfirma || 'Confirma'}
-        etiquetaCancela="Cancel·la"
+        etiquetaConfirma={confirmacio?.etiquetaConfirma || tx.confirma}
+        etiquetaCancela={tx.cancella}
         onTanca={() => setConfirmacio(null)}
         onConfirma={() => {
           confirmacio?.accio?.();

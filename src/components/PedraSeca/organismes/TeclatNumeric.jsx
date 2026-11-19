@@ -21,6 +21,9 @@
 import { Delete } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { formatEuros } from '../../../utils/diners.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitPecesApps from '../../../css/diferit-peces-apps.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'peces-apps', cssDiferitPecesApps); };
 
 const MAXIMS = Object.freeze({ import: 9999999, quantitat: 9999 });
 const XIFRES = Object.freeze(['7', '8', '9', '4', '5', '6', '1', '2', '3']);
@@ -73,14 +76,14 @@ export function TeclatNumeric({
   };
 
   return (
-    <div id={id} className={['sdp-teclat', className].filter(Boolean).join(' ')} role="group" aria-label={nom} onKeyDown={teclaFisica}>
+    <div ref={adoptaEstilsDiferits} id={id} className={['sdp-teclat', className].filter(Boolean).join(' ')} role="group" aria-label={nom} onKeyDown={teclaFisica}>
       <output className="sdp-teclat__visor" aria-live="polite" aria-atomic="true">
         <span className="sdp-teclat__etiqueta">{nom}</span>
         <span className="sdp-teclat__xifra">{visor}</span>
       </output>
       <div className="sdp-teclat__tecles">
         {XIFRES.map((xifra) => (
-          <button key={xifra} type="button" className="sdp-teclat__tecla" disabled={desactivat} onClick={() => prem(xifra)}>{xifra}</button>
+          <button ref={adoptaEstilsDiferits} key={xifra} type="button" className="sdp-teclat__tecla" disabled={desactivat} onClick={() => prem(xifra)}>{xifra}</button>
         ))}
         <button type="button" className="sdp-teclat__tecla sdp-teclat__tecla--control" disabled={desactivat} aria-label="C, posa a zero" onClick={() => prem('neteja')}>C</button>
         <button type="button" className="sdp-teclat__tecla" disabled={desactivat} onClick={() => prem('0')}>0</button>

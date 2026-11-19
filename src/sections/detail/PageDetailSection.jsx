@@ -20,6 +20,7 @@ import { PAGINA_DE_LA_PASTILLA, pastillaDeVersio } from './pastillaDeVersio.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { CopublicacioDePaginaContext } from './CopublicacioDePaginaContext.js';
+import PeuEditorialIdioma, { etiquetaPeuEditorialIdioma } from '../../components/universal/PeuEditorialIdioma.jsx';
 
 const PAGINA_PUBLICAR_MAPA = 'publicar_mapa';
 const PublicarMapaMapaShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaMapaShowcase })));
@@ -216,6 +217,7 @@ export default function PageDetailSection() {
   const { slug = '', itemSlug = '' } = useParams();
   const { pages = [], pageCopy = {}, status } = useCoreContent();
   const instalacio = useInstalacioDeLaPagina(slug);
+  const tOpcional = useUIActionsOpcional()?.t;
 
   const canonica = resolvePageSlugPath(slug);
   if (canonica) return itemSlug ? <NotFoundPage /> : <Navigate to={canonica} replace />;
@@ -272,13 +274,18 @@ export default function PageDetailSection() {
     const peuDescarregues = slug === 'descarregues'
       ? <BarreraDelTrosAccessori><Suspense fallback={null}><GuiaCanalsActualitzacio /></Suspense></BarreraDelTrosAccessori>
       : null;
+    const peuIdioma = <BarreraDelTrosAccessori><PeuEditorialIdioma /></BarreraDelTrosAccessori>;
+    const peuEditorial = peuDescarregues
+      ? <>{peuDescarregues}{peuIdioma}</>
+      : peuIdioma;
     return (
       <TextSection
         page={page}
         pageKey={slug}
         accioPrincipal={accioPrincipal}
         {...(abansIntro ? { abansIntro } : null)}
-        {...(peuDescarregues ? { peuDePagina: peuDescarregues } : null)}
+        peuDePagina={peuEditorial}
+        etiquetaPeuDePagina={etiquetaPeuEditorialIdioma(tOpcional)}
         {...(pastilla ? { etiquetaFinal: pastilla } : null)}
       >
         {alFinal}

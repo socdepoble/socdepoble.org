@@ -17,6 +17,9 @@
  */
 import { ArrowRight } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 const NIVELLS = Object.freeze([3, 4, 5, 6]);
 
@@ -35,22 +38,22 @@ export function BarraResum({
     const classeObri = accio ? 'sdp-barra-resum__obri' : 'sdp-barra-resum__obri sdp-barra-resum__obri--primari';
     const contingut = (
       <>
-        <span className="sdp-barra-resum__etiqueta">{etiqueta}</span>
+        <span ref={adoptaEstilsDiferits} className="sdp-barra-resum__etiqueta">{etiqueta}</span>
         {' '}<span className="sdp-barra-resum__comptador">{textComptador(n)}</span>
-        {total ? <>{' '}<span className="sdp-barra-resum__total">{total}</span></> : null}
+        {total ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-barra-resum__total">{total}</span></> : null}
         <ArrowRight className="sdp-barra-resum__fletxa" size={22} aria-hidden="true" focusable="false" />
       </>
     );
     return (
-      <div className={['sdp-barra-resum', 'sdp-barra-resum--peu', className].filter(Boolean).join(' ')}>
+      <div ref={adoptaEstilsDiferits} className={['sdp-barra-resum', 'sdp-barra-resum--peu', className].filter(Boolean).join(' ')}>
         {href ? (
-          <a className={classeObri} href={href} onClick={(event) => {
+          <a ref={adoptaEstilsDiferits} className={classeObri} href={href} onClick={(event) => {
             if (!onObri || event.defaultPrevented || !esClicNormal(event)) return;
             event.preventDefault();
             onObri();
           }}>{contingut}</a>
         ) : (
-          <button type="button" className={classeObri} onClick={() => onObri?.()}>{contingut}</button>
+          <button ref={adoptaEstilsDiferits} type="button" className={classeObri} onClick={() => onObri?.()}>{contingut}</button>
         )}
         {boto}
       </div>
@@ -59,13 +62,13 @@ export function BarraResum({
 
   const Cap = `h${NIVELLS.includes(nivell) ? nivell : 3}`;
   return (
-    <div className={['sdp-barra-resum', 'sdp-barra-resum--capcalera', className].filter(Boolean).join(' ')}>
+    <div ref={adoptaEstilsDiferits} className={['sdp-barra-resum', 'sdp-barra-resum--capcalera', className].filter(Boolean).join(' ')}>
       <Cap className="sdp-barra-resum__titol">
         <span className="sdp-barra-resum__etiqueta">{etiqueta}</span>
         {' '}<span className="sdp-barra-resum__comptador">{textComptador(n)}</span>
       </Cap>
       {total ? (
-        <p className="sdp-barra-resum__total">
+        <p ref={adoptaEstilsDiferits} className="sdp-barra-resum__total">
           <span className="sdp-nomes-lector">{`${textTotal}: `}</span>{total}
         </p>
       ) : null}

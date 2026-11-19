@@ -18,12 +18,18 @@ import DevicesSection from './DevicesSection';
 const mocks = vi.hoisted(() => ({
   ui: { externalConfig: { tenantId: 't-prova' }, language: 'ca' },
   core: { agents: [], ownerUserId: null },
-  sessio: null
+  sessio: null,
+  pagina: null
 }));
 
 vi.mock('../../components/universal/UniversalPage', async () => {
   const { createElement } = await import('react');
-  return { UniversalPage: ({ children }) => createElement('main', null, children) };
+  return {
+    UniversalPage: (props) => {
+      mocks.pagina = props;
+      return createElement('main', null, props.children);
+    }
+  };
 });
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => mocks.ui }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
@@ -53,6 +59,34 @@ beforeEach(() => {
   mocks.core = { agents: [AGENT], ownerUserId: 'a1b2c3d4-0000-4000-8000-000000000001' };
   mocks.sessio = null;
   mocks.ui.language = 'ca';
+  mocks.pagina = null;
+});
+
+test('jerarquia Pedra Seca: UniversalPage amb title/subtitle/lead, QuadreDeComandament blanc, tots els apartats en H3, negretes i cap fantasma', () => {
+  const { container, getAllByRole } = render(<DevicesSection />);
+  expect(mocks.pagina).toMatchObject({
+    title: 'Dispositius',
+    subtitle: 'Descobrix instàncies obertes i parla en local',
+    traduccio: false,
+    chrome: 'system'
+  });
+  expect(mocks.pagina.lead).toMatch(/Connecta pestanyes i finestres obertes/);
+  expect(container.querySelectorAll('h2')).toHaveLength(0);
+  expect(container.querySelector('.lead, .sdp-stat-grid, .sdp-stat-card, .devices-shell')).toBeNull();
+  expect(container.querySelectorAll('.sdp-quadre__xifra')).toHaveLength(3);
+  expect(getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+    'Este dispositiu',
+    'Dispositius trobats',
+    'Canal directe',
+    'Compatibilitat de connexió'
+  ]);
+  expect(container.querySelectorAll('strong').length).toBeGreaterThanOrEqual(14);
+  const hrefs = [...container.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
+  expect(hrefs).toEqual(expect.arrayContaining([
+    'https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API',
+    '/xat',
+    'https://supabase.com/docs/guides/security/tls#removal-of-cbc-mode-ciphers'
+  ]));
 });
 
 afterEach(() => {
@@ -70,8 +104,9 @@ test.each([
 ])('%s: la ruta mostra l’avís de connexió amb font oficial i la seua llengua', (idioma, titol, condicio) => {
   mocks.ui.language = idioma;
   const { getByRole } = render(<DevicesSection />);
-  const avis = getByRole('heading', { name: titol }).closest('section');
+  const avis = getByRole('heading', { level: 3, name: titol }).closest('section');
   expect(avis.lang).toBe(idioma);
+  expect(avis.querySelectorAll('strong').length).toBeGreaterThanOrEqual(4);
   for (const terme of [condicio, 'TLS 1.2 CBC', 'TLS 1.3', 'HTTPS', 'Android 4.4', 'iOS 9', '2026']) {
     expect(avis.textContent).toContain(terme);
   }
@@ -87,7 +122,7 @@ test('la nota per a navegadors antics es reserva a la web', () => {
 test('foraster: el nom suggerit és genèric, sense cap nom de persona', () => {
   const { container } = render(<DevicesSection />);
   expect(nomDelCamp(container)).toBe(GENERIC);
-  expect(within(container).getByText('Dispositiu actual').previousSibling.textContent).toBe(GENERIC);
+  expect(within(container).getByText('Dispositiu actual').nextElementSibling.textContent).toBe(GENERIC);
 });
 
 test('foraster: genèric encara que l’id de convidat case amb un agent del padró', () => {

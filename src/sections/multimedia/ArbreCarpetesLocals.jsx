@@ -19,6 +19,9 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 /* L'arbre de nodes { ruta, nom, fills } a partir de les rutes de carpeta. */
 function construeixArbre(carpetes) {
@@ -73,10 +76,10 @@ export function ArbreCarpetesLocals({ t, carpetes = [], comptes = new Map(), tot
     const oberta = obertes.has(node.ruta);
     const ambFills = node.fills.length > 0;
     return (
-      <li key={node.ruta}>
+      <li ref={adoptaEstilsDiferits} key={node.ruta}>
         <div className="sdp-arxiu-local__node">
           {ambFills ? (
-            <button
+            <button ref={adoptaEstilsDiferits}
               type="button"
               className="sdp-arxiu-local__plega"
               aria-expanded={oberta ? 'true' : 'false'}
@@ -87,7 +90,7 @@ export function ArbreCarpetesLocals({ t, carpetes = [], comptes = new Map(), tot
                 ? <ChevronDown size={18} aria-hidden="true" focusable="false" />
                 : <ChevronRight size={18} aria-hidden="true" focusable="false" />}
             </button>
-          ) : <span className="sdp-arxiu-local__plega-buit" aria-hidden="true" />}
+          ) : <span ref={adoptaEstilsDiferits} className="sdp-arxiu-local__plega-buit" aria-hidden="true" />}
           <button
             type="button"
             className="sdp-arxiu-local__carpeta"
@@ -99,13 +102,13 @@ export function ArbreCarpetesLocals({ t, carpetes = [], comptes = new Map(), tot
             <span className="sdp-arxiu-local__compte">{comptes.get(node.ruta) || 0}</span>
           </button>
         </div>
-        {oberta && ambFills ? <ul className="sdp-arxiu-local__nivell">{node.fills.map(pinta)}</ul> : null}
+        {oberta && ambFills ? <ul ref={adoptaEstilsDiferits} className="sdp-arxiu-local__nivell">{node.fills.map(pinta)}</ul> : null}
       </li>
     );
   };
 
   return (
-    <nav className="sdp-arxiu-local__panell sdp-arxiu-local__arbre" aria-labelledby={`${id}-titol`}>
+    <nav ref={adoptaEstilsDiferits} className="sdp-arxiu-local__panell sdp-arxiu-local__arbre" aria-labelledby={`${id}-titol`}>
       <h3 id={`${id}-titol`}>{tr(T.carpetes)}</h3>
       <ul className="sdp-arxiu-local__nivell">
         <li>

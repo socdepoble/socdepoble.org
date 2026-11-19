@@ -29,7 +29,9 @@ export const TEXTOS_FACTURACIO = Object.freeze({
     pas3: 'Factura nova',
     aturada: 'Aturada',
     pas4: 'El llibre de factures',
-    pas5: 'Còpia del llibre'
+    pas5: 'Còpia del llibre',
+    llibreBuitFiltres: 'Cap factura del període amb estos filtres.',
+    llibreBuitInicial: 'Encara no has emés cap factura amb este programa.'
   }),
   es: Object.freeze({
     memoriaTitol: 'Este libro es de pruebas',
@@ -53,7 +55,9 @@ export const TEXTOS_FACTURACIO = Object.freeze({
     pas3: 'Factura nueva',
     aturada: 'Detenida',
     pas4: 'El libro de facturas',
-    pas5: 'Copia del libro'
+    pas5: 'Copia del libro',
+    llibreBuitFiltres: 'Ninguna factura del periodo con estos filtros.',
+    llibreBuitInicial: 'Todavía no has emitido ninguna factura con este programa.'
   }),
   en: Object.freeze({
     memoriaTitol: 'This ledger is for testing only',
@@ -77,7 +81,9 @@ export const TEXTOS_FACTURACIO = Object.freeze({
     pas3: 'New invoice',
     aturada: 'Halted',
     pas4: 'Invoice ledger',
-    pas5: 'Ledger backup'
+    pas5: 'Ledger backup',
+    llibreBuitFiltres: 'No invoices in this period match these filters.',
+    llibreBuitInicial: 'You have not issued any invoices with this tool yet.'
   }),
   eu: Object.freeze({
     memoriaTitol: 'Liburu hau probetarako da',
@@ -101,7 +107,9 @@ export const TEXTOS_FACTURACIO = Object.freeze({
     pas3: 'Faktura berria',
     aturada: 'Geldituta',
     pas4: 'Faktura-liburua',
-    pas5: 'Liburuaren kopia'
+    pas5: 'Liburuaren kopia',
+    llibreBuitFiltres: 'Ez dago aldi honetako fakturarik iragazki hauekin.',
+    llibreBuitInicial: 'Oraindik ez duzu fakturarik jaulki programa honekin.'
   }),
   gl: Object.freeze({
     memoriaTitol: 'Este libro é de probas',
@@ -125,7 +133,9 @@ export const TEXTOS_FACTURACIO = Object.freeze({
     pas3: 'Factura nova',
     aturada: 'Detida',
     pas4: 'O libro de facturas',
-    pas5: 'Copia do libro'
+    pas5: 'Copia do libro',
+    llibreBuitFiltres: 'Ningunha factura do período con estes filtros.',
+    llibreBuitInicial: 'Aínda non emitiches ningunha factura con este programa.'
   })
 });
 

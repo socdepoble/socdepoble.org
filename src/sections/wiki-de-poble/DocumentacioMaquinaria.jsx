@@ -23,6 +23,9 @@ import { AVIS_NOMES_EN_LOCAL, ID_BIOS, documentacioDe, markdownDelBios } from '.
 import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 
 import agentsMdRaw from '../../../AGENTS.md?raw';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
 export default function DocumentacioMaquinaria({ id }) {
   /* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · L'avís i la
@@ -36,7 +39,7 @@ export default function DocumentacioMaquinaria({ id }) {
      entradilla és la d'AGENTS.md); la documentació no en té cap. */
   const html = bios ? parseMarkdown(markdown) : parseMarkdown(markdown, { entradilla: false });
   return (
-    <div className="sdp-tractors-panell" lang={lang}>
+    <div ref={adoptaEstilsDiferits} className="sdp-tractors-panell" lang={lang}>
       {bios ? null : (
         <Alerta to="info" viva={false} titol={AVIS_NOMES_EN_LOCAL.titol}>{AVIS_NOMES_EN_LOCAL.text}</Alerta>
       )}

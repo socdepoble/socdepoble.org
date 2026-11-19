@@ -57,6 +57,9 @@ import { omple } from '../../../config/moderacio.js';
 import { useMissatgeAlXat } from '../missatgeAlXat.js';
 import { LIMIT_AFEGIT, estatDeFormarPart, pertinencaDe, textDeLaSollicitud } from './estatFormarPart.js';
 import { ROL_PER_DEFECTE, etiquetaDeRol, opcionsDeRolDemanat } from './rolsDInclusio.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 /* R4-05 · On és la persona, només per a comparar-ho amb on era en el clic: el
    mateix criteri que useComentaEnPrivat (Correcció C6), l'entrada del router
@@ -169,7 +172,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
       cos = (
         <Alerta to="info" viva={false}
           accions={<Boto varietat="secundari" onClick={() => onEntra?.()}>{t('section.connectar.formarPart.entra', 'Entra per a demanar-ho')}</Boto>}>
-          <p>{t('section.connectar.formarPart.senseSessio', 'Per a demanar formar part d’una entitat has d’entrar amb el teu compte.')}</p>
+          <p ref={adoptaEstilsDiferits}>{t('section.connectar.formarPart.senseSessio', 'Per a demanar formar part d’una entitat has d’entrar amb el teu compte.')}</p>
         </Alerta>
       );
       break;
@@ -177,7 +180,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
       /* IDEA-22 (T5) · Administrar-la (membres i rols) és del Perfil, «Membres i connexions». */
       cos = (
         <>
-          <p>{ambNom('section.connectar.formarPart.administres', 'Ja formes part de {nom} i l’administres.')}</p>
+          <p ref={adoptaEstilsDiferits}>{ambNom('section.connectar.formarPart.administres', 'Ja formes part de {nom} i l’administres.')}</p>
           <p className="sdp-connectar__ajuda">{t('section.connectar.formarPart.onSAdministra', 'Els membres i els rols es gestionen al teu Perfil, a «Membres i connexions».')}</p>
           <Boto varietat="secundari" icona={Settings} onClick={() => navigate(rutaFitxaOrganitzacio(membership.id))}>
             {ambNom('section.connectar.formarPart.gestiona', 'Gestionar {nom}')}
@@ -188,7 +191,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
     case 'membre':
       cos = (
         <Alerta to="exit" viva={false} titol={ambNom('section.connectar.formarPart.jaEnFormes', 'Ja formes part de {nom}')}>
-          <p>{t('section.connectar.formarPart.jaEnFormesText', 'Hi eres com a membre. Per a deixar-ho o canviar el teu paper, parla amb qui l’administra.')}</p>
+          <p ref={adoptaEstilsDiferits}>{t('section.connectar.formarPart.jaEnFormesText', 'Hi eres com a membre. Per a deixar-ho o canviar el teu paper, parla amb qui l’administra.')}</p>
         </Alerta>
       );
       break;
@@ -200,7 +203,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
       const desti = rutaXatDePagina(objecteDePerfil({ tipus: tipusOrg === 'grup' ? 'grup' : 'entitat', id: orgId, nom: nomDeConfianca }));
       cos = (
         <>
-          <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
+          <p ref={adoptaEstilsDiferits}>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
           {/* Sense directori no hi ha nom de confiança (mai el de l'URL): els textos sense {nom}. */}
           <p className="sdp-connectar__ajuda">{nomDeConfianca
             ? ambNom('section.connectar.formarPart.senseXat', 'Demana-ho al xat de la pàgina de {nom}: és el seu canal per a preguntar i parlar amb qui l’administra.')
@@ -220,7 +223,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
       cos = (
         <>
           {/* P1-11 (pla 261024_2230; G1945-04 de Gemini, ordre del Mestre) · formar part no és connectar-s'hi. */}
-          <p>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
+          <p ref={adoptaEstilsDiferits}>{t('section.connectar.formarPart.que', 'Ser-ne membre, soci o treballador és una pertinença formal: t’hi dona d’alta qui l’administra, després de parlar-ho amb tu. No és el mateix que connectar-t’hi.')}</p>
           <p className="sdp-connectar__ajuda">{ambNom('section.connectar.formarPart.onArriba', 'La sol·licitud arribarà al xat privat de {nom}, i en parlareu abans de cap alta.')}</p>
           {/* FEDI-22 · El rol que es demana, abans del botó (C12: l'ajuda d'«Administrador» diu els poders i qui el dona). */}
           <GrupOpcions llegenda={t('section.connectar.formarPart.rolLlegenda', 'Amb quin rol ho demanes?')} nom={`${id}-rol`}
@@ -233,7 +236,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
   }
 
   return (
-    <section className="sdp-connectar__seccio" aria-labelledby={`${id}-formar-part`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-formar-part`}>
       <h3 id={`${id}-formar-part`} className="sdp-connectar__titol-seccio">
         {t('section.connectar.formarPart.titol', 'Formar part de l’entitat')}
       </h3>
@@ -260,7 +263,7 @@ function FormulariFormarPart({ orgId, contacte = null, nom = null, tipusOrg = 'e
           carregant={enviant}
         >
           {/* FEDI-22 · La capçalera i la línia del rol, tal com arribaran al xat. */}
-          <p className="sdp-connectar__sollicitud"><span>{capcalera}</span><br /><span>{liniaRol}</span></p>
+          <p ref={adoptaEstilsDiferits} className="sdp-connectar__sollicitud"><span>{capcalera}</span><br /><span>{liniaRol}</span></p>
           <Camp
             etiqueta={t('section.connectar.formarPart.afegit', 'Vols afegir-hi res?')}
             ajuda={ambNom('section.connectar.formarPart.afegitAjuda', 'Opcional. Ho llegirà qui administra {nom}.')}

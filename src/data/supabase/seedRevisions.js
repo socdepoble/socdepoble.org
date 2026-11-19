@@ -7,6 +7,17 @@ const configured = config => {
   if (resolved.runtimeDataMode !== 'remote' || !resolved.hasSupabaseConfig || !resolved.tenantId) throw errorRevisioSeed('no-disponible');
   return resolved;
 };
+function capturaContext(config) {
+  const resolved = configured(config), tenant = resolved.tenantId, backend = resolved.supabaseUrl;
+  const checkSession = capturaSessio();
+  const comprova = () => {
+    checkSession();
+    const actual = getResolvedConfig(config);
+    if (config.signal?.aborted || actual.runtimeDataMode !== 'remote' || !actual.hasSupabaseConfig
+      || actual.tenantId !== tenant || actual.supabaseUrl !== backend) throw new DOMException('El context de la revisió ha canviat.', 'AbortError');
+  };
+  comprova(); return { resolved, comprova };
+}
 function failure(cause) {
   if (cause?.name === 'AbortError') throw cause;
   const message = String(cause?.message || '');
@@ -17,13 +28,13 @@ function failure(cause) {
   throw errorRevisioSeed(code, cause);
 }
 export async function loadSeedRevisions(input, config = {}) {
-  const query = capturaConsultaRevisionsSeed(input), resolved = configured(config), checkSession = capturaSessio();
+  const query = capturaConsultaRevisionsSeed(input), { resolved, comprova } = capturaContext(config);
   if (!query.ids.length) return [];
   let rows;
   try {
     rows = await request(`/rest/v1/seed_revisions?select=section,seed_id,payload,version,source_version&tenant_id=eq.${encodeURIComponent(resolved.tenantId)}&section=eq.${query.seccio}&seed_id=in.(${query.ids.join(',')})`, config, { signal: config.signal, anonim: true });
   } catch (cause) { failure(cause); }
-  checkSession();
+  comprova();
   if (!Array.isArray(rows) || rows.length > query.ids.length) throw errorRevisioSeed('resposta-invalida');
   const seen = new Set(), result = [];
   for (const row of rows) {
@@ -40,14 +51,13 @@ export async function loadSeedRevisions(input, config = {}) {
   return result;
 }
 export async function desaRevisioSeed(input, config = {}) {
-  const revision = capturaRevisioSeed(input), resolved = configured(config), checkSession = capturaSessio();
+  const revision = capturaRevisioSeed(input), { resolved, comprova } = capturaContext(config);
   if (!getCurrentUser()?.id) throw errorRevisioSeed('sense-sessio');
   let result;
   try {
     result = await rpc('desa_revisio_seed', { p_tenant_id: resolved.tenantId, p_section: revision.seccio, p_seed_id: revision.id, p_payload: revision.camps, p_version: revision.versio, p_source_version: revision.fontVersio }, config, { signal: config.signal });
   } catch (cause) { failure(cause); }
-  checkSession();
-  if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+  comprova();
   const row = capturaRespostaRevisioSeed(result);
   if (row.seccio !== revision.seccio || row.id !== revision.id || row.fontVersio !== revision.fontVersio || row.versio !== revision.versio + 1
     || Object.entries(revision.camps).some(([key, value]) => JSON.stringify(row.camps[key]) !== JSON.stringify(value))) throw errorRevisioSeed('resposta-invalida');

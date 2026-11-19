@@ -31,6 +31,9 @@ import { TargetaMultimedia } from './TargetaMultimedia.jsx';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
 import { useLocaleOpcional } from './useLocaleOpcional.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 /* Les insígnies d'estat: 'duplicada' és el duplicat exacte (SHA-256); 'possibleDuplicat', l'heurística. */
 const INSIGNIES = Object.freeze({
@@ -46,7 +49,7 @@ export function InsigniesArxiuLocal({ t, el, exactes = null }) {
   const etiquetes = etiquetesEstatLocal(el, exactes);
   if (etiquetes.length === 0) return null;
   return (
-    <span className="sdp-arxiu-local__insignies">
+    <span ref={adoptaEstilsDiferits} className="sdp-arxiu-local__insignies">
       {etiquetes.map((etiqueta) => {
         const [to, parell] = INSIGNIES[etiqueta] || ['neutre', null];
         return parell ? <Insignia key={etiqueta} to={to}>{tradueix(t, parell)}</Insignia> : null;
@@ -63,9 +66,9 @@ export function GraellaAlbumLocal({ t, font, elements = [], seleccionat = null, 
      primera columna torna a la fitxa activa de la llista. Cap selecció:
      Enter i Espai fan el clic de sempre. */
   return (
-    <ul className="sdp-arxiu-local__graella" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
+    <ul ref={adoptaEstilsDiferits} className="sdp-arxiu-local__graella" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
       {elements.map((el) => (
-        <li key={el.ruta}>
+        <li ref={adoptaEstilsDiferits} key={el.ruta}>
           <TargetaMultimedia
             nom={nomVisibleLocal(el.nom)}
             meta={`${nomVisibleLocal(el.carpeta || '/')} · ${formatKb(el.mida, locale)}`}

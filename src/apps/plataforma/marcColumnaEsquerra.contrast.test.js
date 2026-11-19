@@ -20,7 +20,12 @@ const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const TOKENS = llig('src/css/tokens.css');
 const CANON = llig('src/css/design-tokens.css');
 const GRAELLA = senseComentaris(llig('src/components/layout/AppGridShell.css'));
-const MODULES = senseComentaris(llig('src/css/modules.css'));
+/* Onada R32.11 · Gemini lot_01 (dieta del CSS) · El bloc catalegColleccio, MarcColumna inclosa, va
+   eixir de modules.css cap al full diferit diferit-cataleg-colleccio.css, que MarcColumna.jsx adopta a
+   la seua arrel (el document o el shadow root de <soc-de-poble>). Les regles es busquen allí. */
+const FULL_DIFERIT = 'src/css/diferit-cataleg-colleccio.css';
+const MODULES = senseComentaris(llig(FULL_DIFERIT));
+const MARC = llig('src/components/PedraSeca/organismes/MarcColumna.jsx');
 const COS = '.app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos';
 
 const declaracions = (text) => Object.fromEntries(
@@ -113,6 +118,13 @@ describe('R30 · CONTRAST-MARC-01 · text nu del cos de MarcColumna en la column
     }
     expect(DEL_COS[0].selector).toContain(':is(p:not([class]), .sdp-camp__etiqueta)');
     expect(DEL_COS[1].selector).toContain(':is(.sdp-camp-fitxer__estat, .sdp-carregant)');
+  });
+
+  test('les regles arriben on es pinta MarcColumna: el marc adopta el full diferit a la seua arrel', () => {
+    expect(MARC).toMatch(/import\s+(\w+)\s+from\s+'\.\.\/\.\.\/\.\.\/css\/diferit-cataleg-colleccio\.css\?inline'/);
+    const [, nomCss] = MARC.match(/import\s+(\w+)\s+from\s+'\.\.\/\.\.\/\.\.\/css\/diferit-cataleg-colleccio\.css\?inline'/);
+    expect(MARC).toMatch(new RegExp(`adoptaFullDiferit\\(el, 'cataleg-colleccio', ${nomCss}\\)`));
+    expect(MARC).toMatch(/<div ref=\{adoptaEstilsDiferits\} className=\{\['sdp-marc-columna', className\]/);
   });
 
   test('el text recolorejat fa ≥ 7:1 sobre el Grafit en clar i en Bancal', () => {

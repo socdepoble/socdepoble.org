@@ -6,6 +6,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { CAMINS } from './arrel.mjs';
 import { isExecutionEvidence } from './corpus-scope.mjs';
+import { segmentsEstat } from '../documental/capitol-estat.mjs';
 
 export function isDocumentArchive(relative) {
   const rel = relative.replaceAll('\\', '/').replace(/^\.\//, '');
@@ -135,8 +136,8 @@ export function documentLinkTargets(root, nodes) {
  */
 export function operationalDocumentText(text, relative) {
   if (relative === '.agents/ESTAT.md') {
-    const sections = [...text.matchAll(/^## ESTAT_ACTUAL\b.*$/gm)];
-    if (sections.length > 1) return text.slice(0, sections[1].index);
+    const sections = segmentsEstat(text).filter((section) => section.tipus === 'entrada');
+    if (sections.length > 1) return text.slice(0, sections[1].inici);
   }
   if (relative === '.agents/LEDGER.md') {
     return text.match(/^## Vincles\s*\n[\s\S]*?(?=^## |$(?![\s\S]))/m)?.[0] || '';

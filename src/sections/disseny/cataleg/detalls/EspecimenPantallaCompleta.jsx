@@ -4,6 +4,9 @@ import {
   BotoPantallaCompleta, NavegacioMes, NavegacioPeriode, PantallaCompleta, usePantallaCompleta
 } from '../../../../components/PedraSeca/index.js';
 import { cursorDe } from '../../../../utils/calendari.js';
+import { adoptaFullDiferit } from '../../../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 /* Ordre del Mestre, 261001 · «Botó de Pantalla Completa al Calendari». Pedra
    Seca §9: l'organisme existix ací abans que /calendari el munte. El botó
@@ -16,7 +19,7 @@ const TITOL = 'Mostra a pantalla completa';
 function ContingutDeMostra() {
   return (
     <>
-      <h4>Contingut de mostra</h4>
+      <h4 ref={adoptaEstilsDiferits}>Contingut de mostra</h4>
       <p>A pantalla completa, la barra lateral i les barres de dalt de Sóc de Poble queden tapades i inerts. Només fa scroll esta zona; la franja amb «Eixir» es queda a dalt.</p>
       <ul>
         <li>Escape també ix.</li>
@@ -78,7 +81,7 @@ export default function EspecimenPantallaCompleta() {
       ]}
       fes={['Posar el botó d’entrar a la barra de navegació del bloc, amb la pell dels seus veïns.', 'Deixar l’estat a qui munta la pàgina, per damunt del que es refresca.']}
       noFacis={['Amagar la closca amb CSS que conega la seua estructura: el Dialeg ja la tapa.', 'Guardar el mode a la URL: recarregar o compartir l’enllaç obri en mode normal.', 'La Fullscreen API: a l’iPhone no existix per a elements.']}>
-      <h4>Pell fantasma (navegació de les vistes)</h4>
+      <h4 ref={adoptaEstilsDiferits}>Pell fantasma (navegació de les vistes)</h4>
       <MostraFantasma />
       <h4>Pell secundària (barra «‹ Hui ›»)</h4>
       <MostraSecundaria />

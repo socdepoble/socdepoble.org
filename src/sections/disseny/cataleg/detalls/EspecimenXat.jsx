@@ -504,7 +504,7 @@ function ConversaEspill11OpcionsDeMostra() {
   };
 
   return (
-    <div className="sdp-especimen__mostra" data-especimen="r32-7-xat-espill-11-opcions">
+    <section className="sdp-especimen__mostra" data-especimen="r32-7-xat-espill-11-opcions" aria-label="Conversa d’espill de mostra">
       <CapcaleraConversa
         fil={FILS[0]}
         nivellTitol={NIVELL_TITOL_MOSTRA}
@@ -551,7 +551,7 @@ function ConversaEspill11OpcionsDeMostra() {
         ))}
       </ol>
       {avis ? <p role="status">{avis}</p> : null}
-    </div>
+    </section>
   );
 }
 
@@ -574,7 +574,7 @@ function UbicacioIAvisTancableDeMostra() {
   const [conserva, setConserva] = useState(true);
   const [mostraError, setMostraError] = useState(true);
   return (
-    <div data-especimen="r32-8-xat-ubicacio-i-avis">
+    <section data-especimen="r32-8-xat-ubicacio-i-avis" aria-label="Ubicació i avís tancable de mostra">
       <ol className="sdp-xat-missatges" aria-label="Missatge amb ubicació al mapa">
         <Bombolla missatge={MISSATGE_UBICACIO_SAFAREIG} esGrup locale={LOCALE} t={t} />
       </ol>
@@ -610,7 +610,7 @@ function UbicacioIAvisTancableDeMostra() {
           </ControlsAdjunt>
         </div>
       </AppGridContext.Provider>
-    </div>
+    </section>
   );
 }
 

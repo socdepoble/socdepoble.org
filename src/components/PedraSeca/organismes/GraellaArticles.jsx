@@ -30,6 +30,9 @@ import { pintaArticles } from './agrupacio.jsx';
 import { estatArticle, liniaSecundaria } from './articles.js';
 import { pintaMarca } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 /* Desactivat no necessita classe: la Rajola ja és disabled i es pinta com a tal. */
 const CLASSE_ELEMENT = Object.freeze({
@@ -42,7 +45,7 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
   const id = useId();
   const premuda = usePulsacioLlarga(onAccioSecundaria);
   return (
-    <ul className={['sdp-graella-articles', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
+    <ul ref={adoptaEstilsDiferits} className={['sdp-graella-articles', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
       {articles.map((article, i) => {
         const estat = estatArticle(article);
         const idEstat = `${id}-estat-${i}`;
@@ -51,7 +54,7 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
           .filter(Boolean).join(' ');
         const { handlers, consumeix } = premuda(article);
         return (
-          <li key={article.id} className={CLASSE_ELEMENT[estat]}>
+          <li ref={adoptaEstilsDiferits} key={article.id} className={CLASSE_ELEMENT[estat]}>
             <Rajola
               titol={article.nom}
               secundari={liniaSecundaria(article) || null}
@@ -69,12 +72,12 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
               }}
             />
             {estat === 'en-colleccio' ? (
-              <span className="sdp-graella-articles__marca-colleccio" aria-hidden="true">
+              <span ref={adoptaEstilsDiferits} className="sdp-graella-articles__marca-colleccio" aria-hidden="true">
                 <Check size={16} focusable="false" />
               </span>
             ) : null}
-            {article.insignia ? <span id={idInsignia} className="sdp-graella-articles__insignia">{article.insignia}</span> : null}
-            {estat !== 'normal' ? <span id={idEstat} className="sdp-nomes-lector">{textos[estat]}</span> : null}
+            {article.insignia ? <span ref={adoptaEstilsDiferits} id={idInsignia} className="sdp-graella-articles__insignia">{article.insignia}</span> : null}
+            {estat !== 'normal' ? <span ref={adoptaEstilsDiferits} id={idEstat} className="sdp-nomes-lector">{textos[estat]}</span> : null}
           </li>
         );
       })}

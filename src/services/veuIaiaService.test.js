@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   CODI_VEU_AVORTADA,
+  creaSessioVeu,
   CODI_VEU_NO_DISPONIBLE,
   TEMPS_LIMIT_NODE0_MS,
   atura,
@@ -55,11 +56,8 @@ function instalaAudio({ error = false } = {}) {
   URL.revokeObjectURL = vi.fn();
 }
 
-const respostaAudio = (tipus = 'audio/wav') => ({
-  ok: true,
-  headers: { get: () => tipus },
-  blob: async () => ({ size: 10 }),
-});
+const WAV_FIXTURE = Uint8Array.from(atob('UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA=='), char => char.charCodeAt(0));
+const respostaAudio = (tipus = 'audio/wav') => new Response(WAV_FIXTURE, { headers: { 'content-type': tipus } });
 
 beforeEach(() => {
   reiniciaVeuPerProves();
@@ -392,4 +390,52 @@ describe('veuIaiaService · Node 0', () => {
     expect(veuDisponible()).toBe(true);
     expect(veuDisponible({ privat: true })).toBe(false);
   });
+});
+
+/* R32.11 Lot11: actual admission path, not a direct mocked parser. */
+describe('Node0 bounded audio admission', () => {
+  test.each(['audio/wav', 'audio/mpeg'])('refuses HTML disguised as %s during prefetch', async (mime) => {
+    fixaPuntNode0(PUNT);
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => options.method === 'GET' ? { ok: true }
+      : new Response('<html>upstream proxy error</html>', { headers: { 'content-type': mime } })));
+    const session = creaSessioVeu();
+    try { await expect(session.precarregaVeu('Hola poble.')).rejects.toMatchObject({ codi: CODI_VEU_NO_DISPONIBLE }); }
+    finally { session.tanca(); }
+  });
+  test('refuses a real response above the explicit8MiB policy before caching', async () => {
+    fixaPuntNode0(PUNT);
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => options.method === 'GET' ? { ok: true }
+      : new Response(new Uint8Array(8 * 1024 * 1024 + 1), { headers: { 'content-type': 'audio/wav' } })));
+    const session = creaSessioVeu();
+    try { await expect(session.precarregaVeu('Hola poble.')).rejects.toMatchObject({ codi: CODI_VEU_NO_DISPONIBLE }); }
+    finally { session.tanca(); }
+  });
+});
+
+test('voice Markdown link scan stays below25ms on64KiB missing closing delimiters with identical text', () => {
+  const input = '['.repeat(65536), start = performance.now();
+  const actual = normalitzaPerVeu(input);
+  expect(actual).toBe(input + '.');
+  expect(performance.now() - start).toBeLessThan(25);
+});
+
+test('a hanging body reader times out through the actual Node0 deadline and releases its resources', async () => {
+  vi.useFakeTimers(); fixaPuntNode0(PUNT);
+  const reader = { read: vi.fn(() => new Promise(() => {})), cancel: vi.fn(() => new Promise(() => {})), releaseLock: vi.fn() };
+  vi.stubGlobal('fetch', vi.fn(async (_url, options) => options.method === 'GET' ? { ok: true }
+    : { ok: true, headers: new Headers({ 'content-type': 'audio/wav' }), body: { getReader: () => reader } }));
+  const session = creaSessioVeu();
+  try {
+    const pending = expect(session.precarregaVeu('Termini del lector.')).rejects.toMatchObject({ codi: CODI_VEU_NO_DISPONIBLE });
+    await vi.advanceTimersByTimeAsync(TEMPS_LIMIT_NODE0_MS + 1); await pending;
+    expect(reader.read).toHaveBeenCalledOnce(); expect(reader.cancel).toHaveBeenCalledOnce(); expect(reader.releaseLock).toHaveBeenCalledOnce();
+  } finally { session.tanca(); }
+});
+
+test('HTML under audio MIME reaches the honest browser fallback without creating a Node0 objectURL', async () => {
+  fixaPuntNode0(PUNT); instalaAudio(); const { synth } = instalaSintesi();
+  vi.stubGlobal('fetch', vi.fn(async (_url, options) => options.method === 'GET' ? { ok: true }
+    : new Response('<html>upstream error</html>', { headers: { 'content-type': 'audio/wav' } })));
+  await parla('La mateixa locució continua al navegador.');
+  expect(audios).toHaveLength(0); expect(URL.createObjectURL).not.toHaveBeenCalled(); expect(synth.speak).toHaveBeenCalledOnce();
 });

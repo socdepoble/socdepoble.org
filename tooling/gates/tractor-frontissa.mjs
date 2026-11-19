@@ -26,6 +26,23 @@ function nodes(ast, predicate) {
   return out;
 }
 
+function initialitzadorPur(node) {
+  if (!node || ['StringLiteral', 'NumericLiteral', 'BooleanLiteral', 'NullLiteral', 'RegExpLiteral', 'ArrowFunctionExpression', 'FunctionExpression'].includes(node.type)) return true;
+  if (node.type === 'ArrayExpression') return node.elements.every(initialitzadorPur);
+  if (node.type === 'ObjectExpression') return node.properties.every(p => p.type === 'ObjectProperty' && !p.computed && initialitzadorPur(p.value));
+  return node.type === 'CallExpression' && node.callee.type === 'MemberExpression' && !node.callee.computed
+    && named(node.callee.object, 'Object') && named(node.callee.property, 'freeze') && node.arguments.length === 1
+    && ['ArrayExpression', 'ObjectExpression'].includes(node.arguments[0].type) && initialitzadorPur(node.arguments[0]);
+}
+function declaracioPura(node) {
+  if (node.type === 'ImportDeclaration' || node.type === 'FunctionDeclaration') return true;
+  if (node.type === 'ExportNamedDeclaration') return node.declaration ? declaracioPura(node.declaration) : true;
+  if (node.type === 'VariableDeclaration') return node.declarations.every(d => d.id.type === 'Identifier' && initialitzadorPur(d.init));
+  if (node.type === 'ClassDeclaration') return (!node.superClass || named(node.superClass, 'Error'))
+    && node.body.body.every(p => !p.computed && !p.static && (p.type === 'ClassMethod' || p.type === 'ClassProperty' && initialitzadorPur(p.value)));
+  return false;
+}
+
 /** Checks executable AST, not reassuring words in comments or dead string data. */
 export function validateFrontissaStructure(client, transport) {
   const entry = parse(client, { sourceType: 'module' });
@@ -35,9 +52,8 @@ export function validateFrontissaStructure(client, transport) {
     && imports[0].specifiers.some(s => s.type === 'ImportSpecifier' && named(s.imported, 'creaFrontissa') && named(s.local, 'creaFrontissa')),
   'client.js ha de consumir la frontissa local comprovada');
   requireContract(!factory.program.body.some(node => node.type === 'ImportDeclaration'), 'Transport amb dependència externa no auditada');
-  const allowedStatements = new Set(['ImportDeclaration', 'VariableDeclaration', 'ExportNamedDeclaration']);
   for (const ast of [entry, factory]) {
-    requireContract(ast.program.body.every(node => allowedStatements.has(node.type)), 'Efecte executable al nivell de mòdul');
+    requireContract(ast.program.body.every(declaracioPura), 'Efecte executable al nivell de mòdul');
     requireContract(nodes(ast, node => node.type === 'ImportExpression' || node.type === 'Import'
       || (node.type === 'CallExpression' && (named(node.callee, 'fetch') || named(node.callee, 'eval')
       || (node.callee.type === 'MemberExpression' && ['fetch', 'eval'].includes(node.callee.property?.name))))).length === 0,

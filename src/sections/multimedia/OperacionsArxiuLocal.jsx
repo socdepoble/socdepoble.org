@@ -21,6 +21,9 @@ import { esRutaEscrivibleLocal, nomFitxerDe, rutaDestiDeMoviment } from './motor
 import { FormulariNomLocal } from './FormulariNomLocal.jsx';
 import { TEXTOS_VERIFICACIO_LOCAL, canviaElDisc, nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, missatgeDErrorLocal, tradueix } from './textosGestorLocal.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CANCELA = ['common.cancela', 'Cancel·lar'];
 
@@ -115,8 +118,8 @@ function OperacionsDelFitxer({ t, font, el, carpetes = [], nomVolum = '', bloque
 
   return (
     <section ref={caixa} className="sdp-arxiu-local__operacions" aria-labelledby={`${id}-titol`}>
-      <h4 id={`${id}-titol`}>{tr(T['ops.titol'])}</h4>
-      {bloquejat ? <p className="sdp-arxiu-local__ajuda">{tr(T['ops.bloquejat'])}</p> : null}
+      <h4 ref={adoptaEstilsDiferits} id={`${id}-titol`}>{tr(T['ops.titol'])}</h4>
+      {bloquejat ? <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">{tr(T['ops.bloquejat'])}</p> : null}
 
       <form className="sdp-arxiu-local__formulari" onSubmit={mou}>
         <Camp etiqueta={tr(T['ops.desti'])} ajuda={destins.length === 0 ? tr(T['ops.senseDesti']) : null}>

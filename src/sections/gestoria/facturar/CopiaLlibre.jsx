@@ -23,6 +23,9 @@ import { MAX_BYTES_COPIA_LLIBRE } from '../facturacio/registre/port.js';
 import { ACCEPTA_COPIA, registresSenseCopia } from './nucli/copia.js';
 import { dataCurta } from './nucli/formulari.js';
 import { AvisDeZona, llegixText } from './peces.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** L'estat de la còpia per a la insígnia del pas: { to, text }. */
 export function insigniaDeLaCopia(f) {
@@ -54,12 +57,12 @@ export function CopiaLlibre({ f }) {
 
   return (
     <>
-      <p>
+      <p ref={adoptaEstilsDiferits}>
         El llibre viu en este navegador, que el pot esborrar si es netegen les dades del lloc. Fes-ne còpia cada
         dia que factures i guarda-la també fora d’este ordinador: un llapis USB o la carpeta de la gestoria.
       </p>
       {copia ? (
-        <p>{`L’última còpia és «${copia.dades.nomFitxer ?? 'sense nom'}», del ${dataCurta(quan.slice(0, 10))} a les ${quan.slice(11, 16)}.`}</p>
+        <p ref={adoptaEstilsDiferits}>{`L’última còpia és «${copia.dades.nomFitxer ?? 'sense nom'}», del ${dataCurta(quan.slice(0, 10))} a les ${quan.slice(11, 16)}.`}</p>
       ) : (
         <Alerta to="avis" viva={false} titol="Encara no hi ha cap còpia del llibre">
           Fes-ne una ara: sense còpia, si el navegador esborra les dades, el llibre es perd.

@@ -16,6 +16,8 @@
 import { Plus, Refrigerator } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
+import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { propostesDeCasa } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
@@ -31,10 +33,13 @@ const VARIANTS_CASA = Object.freeze([
   { valor: 'se-n-acaba', etiqueta: TEXTOS_CASA['se-n-acaba'] },
   { valor: 'acabat', etiqueta: TEXTOS_CASA.acabat }
 ]);
-const DEIXA = Object.freeze({ valor: 'deixa', etiqueta: 'No el seguisques' });
 
 export function ColumnaACasa({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
+  const deixa = { valor: 'deixa', etiqueta: tx.noElSeguisques };
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaVigent(params);
@@ -49,26 +54,27 @@ export function ColumnaACasa({ params }) {
     <ColumnaCataleg
       forma="targetes"
       ometDataNoIndicada
-      titol="A casa"
+      titol={tx.aCasa}
       categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
       articles={articles}
-      destacats={seguits.length ? [{ id: 'seguits', nom: 'El que tens a casa', icona: Refrigerator, articles: seguits }] : []}
-      textosEstat={{ 'en-colleccio': `A «${llista.nom}»` }}
+      destacats={seguits.length ? [{ id: 'seguits', nom: tx.elQueTensACasa, icona: Refrigerator, articles: seguits }] : []}
+      textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
       onTria={(article, { obriDetall }) => obriDetall()}
-      afegit={{ etiqueta: 'Busca a casa…', suggeriments: suggerimentsVestits(estat, vestit) }}
+      afegit={{ etiqueta: tx.buscaACasa, suggeriments: suggerimentsVestits(estat, vestit) }}
       detall={{
         triaDirecta: true,
-        etiquetaVariants: 'Què en tens?',
-        variantsDe: (article) => (aCasa.has(article.id) ? [...VARIANTS_CASA, DEIXA] : VARIANTS_CASA),
-        onAccepta: ({ variant }, article) => accions.marcaACasa(article.id, variant === DEIXA.valor ? null : variant),
+        etiquetaVariants: tx.queEnTens,
+        variantsDe: (article) => (aCasa.has(article.id) ? [...VARIANTS_CASA, deixa] : VARIANTS_CASA),
+        onAccepta: ({ variant }, article) => accions.marcaACasa(article.id, variant === deixa.valor ? null : variant),
         accionsDe: (article, tanca) => (linies.has(article.id) ? null : (
           <Boto icona={Plus} onClick={() => {
             accions.afig(llista.id, article.id);
             tanca();
-          }}>{`Afig a «${llista.nom}»`}</Boto>
+          }}>{tx.afigALlistaNom(llista.nom)}</Boto>
         ))
       }}
-      resum={{ etiqueta: 'Cal comprar', comptador: propostes.length, textComptador: textArticles }}
+      resum={{ etiqueta: tx.calComprar, comptador: propostes.length, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount }}
+      textos={{ buit: txBuit.catalegBuit, buitText: txBuit.catalegBuitText }}
       primer={CASA.primer}
       tram={CASA.tram}
     />
@@ -77,27 +83,30 @@ export function ColumnaACasa({ params }) {
 
 export function ColumnaCalComprar({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const obriDetall = useObriDetall(CASA);
   const llista = llistaVigent(params);
   const propostes = propostesDeCasa(estat, llista.id);
   const linies = liniesVestides(estat, propostes, { detall: (proposta) => TEXTOS_CASA[proposta.estat] });
   return (
     <ColumnaColleccio
-      titol="Cal comprar"
+      titol={tx.calComprar}
       linies={linies}
       resum={{
-        etiqueta: `Per a «${llista.nom}»`,
+        etiqueta: tx.perALlistaNom(llista.nom),
         comptador: linies.length,
-        textComptador: textArticles,
-        accio: { text: 'Afig-ho tot', onClick: () => accions.afigPropostes(llista.id), desactivada: linies.length === 0 }
+        textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount,
+        accio: { text: tx.afigHoTot, onClick: () => accions.afigPropostes(llista.id), desactivada: linies.length === 0 }
       }}
       onTria={(linia) => obriDetall(linia.articleId)}
       onSuma={(linia) => accions.afig(llista.id, linia.articleId)}
-      textosLinies={{ suma: (nom) => `Afig ${nom} a «${llista.nom}»` }}
+      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, llista.nom) }}
       textos={{
-        buit: 'No cal comprar res',
-        buitText: 'Quan marques que alguna cosa se n’acaba o s’ha acabat, apareixerà ací.',
-        tornaCataleg: 'Torna a «A casa»'
+        buit: txBuit.casaCalComprarBuit,
+        buitText: txBuit.casaCalComprarBuitText,
+        tornaCataleg: txBuit.casaTornaCataleg
       }}
       peu={<AvisNevera />}
       primer={CASA.primer}

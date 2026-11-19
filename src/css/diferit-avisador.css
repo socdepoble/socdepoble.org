@@ -1,0 +1,268 @@
+/* Full diferit (Onada R32.12 · T1, ordre del Mestre 261118 19:33): redisseny Pedra Seca de /page/avisador
+   (L'Avisador · Batec de Vida). S'adopta amb useFullDiferit des d'AvisadorPage.jsx (0 B al full
+   d'arrencada del connector de WordPress). Només tokens semàntics, múltiples de la reixeta de 4px, cap
+   ombra, cap :has() (baseline 2022: Chrome 100) i cap consulta de contenidor (Chrome 105): la fila de
+   l'horari passa de tres columnes a una amb la tècnica del flex-basis negatiu, que depén de l'amplària
+   real de la columna i no de la finestra. */
+@layer components {
+  /* Les seccions de la pàgina: el mateix ritme que els blocs editorials. */
+  .sdp-avisador,
+  .sdp-avisador__seccio {
+    margin-block: 0 var(--sdp-space-8);
+  }
+
+  .sdp-avisador > h3,
+  .sdp-avisador__seccio h3 {
+    margin-block: 0 var(--sdp-space-4);
+  }
+
+  .sdp-avisador > p:last-child {
+    margin-block-end: 0;
+  }
+
+  /* El paràgraf del 112 es llig d'un colp d'ull: vora d'accent a l'inici, mai un bàner. */
+  .sdp-avisador__emergencia {
+    padding-inline-start: var(--sdp-space-4);
+    border-inline-start: 4px solid var(--sdp-accent);
+  }
+
+  .sdp-avisador__formulari {
+    display: block;
+  }
+
+  /* Horari de l'avís: tres camps a la mateixa altura. Per damunt de 40rem de columna, tres columnes
+     iguals; per davall, cada camp ocupa la fila sencera. L'etiqueta creix i empeny el control al
+     fons de la cel·la, de manera que els tres controls queden alineats encara que una etiqueta
+     ocupe dos línies en una altra llengua. */
+  .sdp-avisador__horari {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-avisador__horari > .sdp-camp {
+    flex-grow: 1;
+    flex-basis: calc((40rem - 100%) * 999);
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .sdp-avisador__horari > .sdp-camp > .sdp-camp__etiqueta {
+    flex: 1 0 auto;
+  }
+
+  /* Arnés CDP (T1-04) · El selector i els dos camps d'hora fan exactament la mateixa altura. */
+  .sdp-avisador__horari .sdp-control {
+    block-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+  }
+
+  .sdp-avisador__nota {
+    margin-block: var(--sdp-space-3) 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* Persones de confiança: títol i comptador a la mateixa fila quan hi caben. */
+  .sdp-avisador__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin-block-end: var(--sdp-space-4);
+  }
+
+  /* Arnés CDP (T1-03) · L'h3 ocupa la fila fins al comptador: el seu filet fa tota l'amplària, com els altres. */
+  .sdp-avisador__cap > h3 {
+    flex: 1 1 auto;
+    margin: 0;
+  }
+
+  .sdp-avisador__comptador {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  .sdp-avisador__rebran {
+    margin-block-end: var(--sdp-space-2);
+  }
+
+  /* La bafarada d'exemple: el missatge que s'envia, com al Xat (meu), a tota l'amplària. */
+  .sdp-avisador__bafarada {
+    margin: 0 0 var(--sdp-space-6);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    border-start-end-radius: 0;
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-text-cos);
+    font-style: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Targetes de contacte: una columna en mòbil, tantes de 14rem com càpien en escriptori. */
+  .sdp-avisador__persones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-avisador__persona {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--sdp-space-3);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    transition: border-color 200ms ease-out, background-color 200ms ease-out;
+  }
+
+  .sdp-avisador__persona:hover {
+    border-color: var(--sdp-vora-forta);
+  }
+
+  /* Revisió adversarial (A11Y-04) · Amb tres persones ja triades, les altres targetes es veuen apagades
+     (la mateixa opacitat que .sdp-targeta-opcio desactivada) i el ratolí no les ressalta. */
+  .sdp-avisador__persona--desactivada,
+  .sdp-avisador__persona--desactivada:hover {
+    border-color: var(--sdp-vora);
+    opacity: 0.6;
+  }
+
+  .sdp-avisador__persona--triada,
+  .sdp-avisador__persona--triada:hover {
+    border-color: var(--sdp-accio);
+    background: var(--sdp-accio-subtil);
+  }
+
+  .sdp-avisador__casella {
+    inline-size: var(--sdp-space-6);
+    block-size: var(--sdp-space-6);
+    margin: 0;
+    accent-color: var(--sdp-accio);
+    cursor: pointer;
+  }
+
+  .sdp-avisador__casella:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+
+  .sdp-avisador__casella:disabled {
+    cursor: not-allowed;
+  }
+
+  /* L'etiqueta s'estén per damunt de tota la targeta: es pot tocar on siga. */
+  .sdp-avisador__persona-cos {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+    min-block-size: var(--sdp-space-10);
+    cursor: pointer;
+  }
+
+  .sdp-avisador__persona-cos::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .sdp-avisador__casella:disabled + .sdp-avisador__persona-cos {
+    color: var(--sdp-text-desactivat);
+    cursor: not-allowed;
+  }
+
+  .sdp-avisador__nom {
+    min-inline-size: 0;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-avisador__estat {
+    grid-column: 1 / -1;
+    margin: var(--sdp-space-1) 0 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-avisador__batec {
+    margin-block-end: 0;
+  }
+
+  /* Còpia de l'horari: plegada al final, discreta, amb botons de mida normal centrats. */
+  .sdp-avisador__copia {
+    margin-block: var(--sdp-space-8) 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  /* Revisió adversarial (A11Y-03) · El <summary> es queda en list-item: així conserva el triangle natiu
+     que diu si la còpia està plegada o oberta. La diana de 48px ix del farcit, no d'un flex. */
+  .sdp-avisador__copia-titol {
+    display: list-item;
+    padding-block: var(--sdp-space-3);
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+  }
+
+  .sdp-avisador__copia-titol:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+    border-radius: var(--sdp-radi-s);
+  }
+
+  /* Arnés CDP (T1-01) · Els dos botons, a dalt de tot de la mateixa fila i centrats; si no hi caben, el
+     segon baixa centrat. La línia d'estat del fitxer va centrada davall del seu botó. */
+  .sdp-avisador__copia-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-avisador__importa {
+    position: relative;
+    flex: 0 1 auto;
+    margin: 0;
+  }
+
+  .sdp-avisador__importa > .sdp-camp__etiqueta {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sdp-avisador__importa .sdp-camp-fitxer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .sdp-avisador__importa .sdp-camp-fitxer__estat {
+    flex: 0 0 auto;
+  }
+
+  /* Buides no ocupen lloc, però continuen a l'arbre d'accessibilitat (cap display: none): així el lector
+     anuncia el text quan arriba. */
+  .sdp-avisador__copia-estat:empty {
+    margin: 0;
+  }
+}

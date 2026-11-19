@@ -163,6 +163,26 @@ function aplicaLexic(text, idioma) {
 
 const llenguaTriada = (idioma) => (IDIOMES.includes(idioma) ? idioma : 'ca');
 
+/* Les dues passades històriques no travessen LF. Cada cerca avança més
+   enllà del primer delimitador invàlid o de tot el match; no rescaneja '['.
+   Imatges abans d'enllaços: una etiqueta derivada pot contindre un enllaç. */
+function llevaDestinsDeVeu(text, imatges) {
+  const token = imatges ? '![' : '[';
+  return text.split('\n').map(line => {
+    const parts = []; let copied = 0, open = line.indexOf(token);
+    while (open !== -1) {
+      const start = open + token.length, close = line.indexOf(']', start);
+      if (close === -1) break;
+      if (line[close + 1] !== '(') { open = line.indexOf(token, close + 1); continue; }
+      const end = line.indexOf(')', close + 2);
+      if (end === -1) break;
+      parts.push(line.slice(copied, open), line.slice(start, close)); copied = end + 1;
+      open = line.indexOf(token, copied);
+    }
+    parts.push(line.slice(copied)); return parts.join('');
+  }).join('\n');
+}
+
 /**
  * Neteja un text perquè se'n puga dir en veu alta: lleva el Markdown, les
  * etiquetes HTML, les adreces web i els emojis; desplega les abreviatures i
@@ -175,9 +195,8 @@ export function normalitzaPerVeu(text, idioma = 'ca') {
 
   t = t
     .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<[^>\n]{1,200}>/g, ' ')
-    .replace(/!\[([^\]\n]*)\]\([^)\n]*\)/g, '$1')
-    .replace(/\[([^\]\n]*)\]\([^)\n]*\)/g, '$1')
+    .replace(/<[^>\n]{1,200}>/g, ' ');
+  t = llevaDestinsDeVeu(llevaDestinsDeVeu(t, true), false)
     .replace(/\bhttps?:\/\/\S+/gi, ' ')
     .replace(/`([^`\n]*)`/g, '$1');
 

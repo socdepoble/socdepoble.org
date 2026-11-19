@@ -1,5 +1,5 @@
 /**
- * Temporada · les paraules d'un nom de producte (JS pur, sense dependències).
+ * Temporada · les paraules d'un nom de producte (JS pur, pressupost Unicode compartit).
  *
  * normalitza(text) deixa un nom en minúscules, sense diacrítics ni signes:
  *   «Meló d'Alger» → 'melon d alger' · «Brussel·les» → 'brusselles'.
@@ -14,6 +14,8 @@
  * calendari («pimienta» fa l'arrel de «pimiento») les para ALIENES (dades.js).
  */
 
+import { normalitzaUnicodeAmbLimit } from '../normalitzaUnicodeSegura.js';
+
 /* La ela geminada, amb punt volat o amb el punt de partició: «l·l» val «ll». */
 const ELA_GEMINADA = /l[·‧]l/g;
 /* La -ó i la -à tòniques finals fan el plural en -ons i -ans (meló, melons;
@@ -25,19 +27,25 @@ const DIACRITICS = /\p{M}/gu;
 const NO_ALFANUMERICS = /[^a-z0-9]+/g;
 const VOCAL_DE_GENERE = /[aeo]$/;
 
-/** Minúscules sense diacrítics, i cada tros que no és lletra ni xifra, un espai. '' si no és text. */
+/** Minúscules sense diacrítics. '' si no és text o supera el pressupost Unicode:
+ * és no-coincidència de temporada, sense modificar el nom del producte. */
 export function normalitza(text) {
   if (typeof text !== 'string') return '';
-  return text
-    .normalize('NFC')
-    .toLocaleLowerCase('ca')
-    .replace(ELA_GEMINADA, 'll')
-    .replace(O_TONICA_FINAL, 'on')
-    .replace(A_TONICA_FINAL, 'an')
-    .normalize('NFD')
-    .replace(DIACRITICS, '')
-    .replace(NO_ALFANUMERICS, ' ')
-    .trim();
+  try {
+    const net = normalitzaUnicodeAmbLimit(text, 'NFC')
+      .toLocaleLowerCase('ca')
+      .replace(ELA_GEMINADA, 'll')
+      .replace(O_TONICA_FINAL, 'on')
+      .replace(A_TONICA_FINAL, 'an');
+    return normalitzaUnicodeAmbLimit(net, 'NFD')
+      .replace(DIACRITICS, '')
+      .replace(NO_ALFANUMERICS, ' ')
+      .trim();
+  } catch (error) {
+    // No hi ha coincidència de producte; el nom original no es modifica.
+    if (error?.code === 'UNICODE_MARK_LIMIT') return '';
+    throw error;
+  }
 }
 
 /** Les paraules normalitzades d'un text, en ordre: «Tomaques de penjar» → ['tomaques', 'de', 'penjar']. */

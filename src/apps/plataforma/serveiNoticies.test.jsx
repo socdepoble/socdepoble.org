@@ -55,8 +55,9 @@ describe('useServeiNoticies (l’API pública)', () => {
     }
   });
 
-  test('el nucli 1.6 conserva la porta de notícies publicada en 1.3', () => {
-    expect(VERSIO_NUCLI).toBe('1.6.0');
+  /* R32.11 (v1.2.9) · Actualitzada a posta: el nucli és l'1.7.0 (Accions, lots 05 i 06 de Gemini). */
+  test('el nucli 1.7 conserva la porta de notícies publicada en 1.3', () => {
+    expect(VERSIO_NUCLI).toBe('1.7.0');
     expect(PORTES_DEL_NUCLI.find((porta) => porta.clau === 'plataforma').noms).toContain('useServeiNoticies');
   });
 });

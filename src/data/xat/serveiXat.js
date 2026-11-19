@@ -4,7 +4,10 @@ import { getEfimer } from '../../config/storage.js';
 import {
   enviaMissatge as enviaMissatgePort,
   refrescaSessio as refrescaSessioPort,
+  loadFils,
 } from '../backendPort.js';
+import { iniciaEntregaHonesta, confirmaAckEntrega, descriptorEntregaHonesta, aplicaConsultaEntrega,
+  entregaConfirmadaAlServidor } from './entregaHonesta.js';
 import {
   CLAU_BACKEND,
   CLAU_USUARI,
@@ -105,6 +108,7 @@ const RE_UUID_CANONIC = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 const RE_MISSATGE_JWT_CADUCAT = /\b(?:jwt\s+expired|jwt\s+is\s+expired|token\s+is\s+expired|invalid\s+jwt|expired\s+token)\b/i;
 const CODIS_POSTGREST_JWT = new Set(['PGRST301', 'PGRST302']);
 const LIMIT_EMPREMTES_MEMORIA = 512;
+const TERMINI_CONSULTA_ENTREGA_MS = 15000;
 /* Rotacions de l'operació de la UI que un enviament segueix amb el transport en
    vol (les renovacions d'un reintent i una d'aliena), sumades entre els dos
    intents: com el bucle de relleu del pegat p1_xat_04. */
@@ -496,6 +500,7 @@ export function creaServeiXat({
   obteActorOrgId = null,
   escoltaCanvisSessio = escoltaCanvisSessioPerDefecte,
   generaUuid = generaUuidPerDefecte,
+  carregaFils = (...args) => loadFils(...args),
 } = {}) {
   if (typeof enviaMissatge !== 'function') {
     throw new TypeError('[serveiXat] Cal proporcionar una funció enviaMissatge.');
@@ -509,13 +514,21 @@ export function creaServeiXat({
   if (obteActorOrgId !== null && typeof obteActorOrgId !== 'function') {
     throw new TypeError('[serveiXat] obteActorOrgId ha de ser una funció o null.');
   }
+  if (typeof carregaFils !== 'function') throw new TypeError('[serveiXat] carregaFils ha de ser una funció.');
 
   const refrescosEnVol = Object.create(null);
   const empremtesEnviades = Object.create(null);
   const ordreEmpremtes = [];
   const operacionsEnVol = new Set();
+  const entregues = new Map();
   let motiuTancament = null;
   let desubscriu = null;
+
+  const clauEntrega = (ctx, fil, id, config) => JSON.stringify([ctx.backend, ctx.tenantId, ctx.usuariId,
+    ctx.actorOrgId, ctx.generacioLogin, backendScope(config), fil, id]);
+  function purgaEntregues(ctx) {
+    for (const [key, item] of entregues) if (!mateixLlinatgeActiu(item.context, ctx)) entregues.delete(key);
+  }
 
   function registraOVerificaEmpremta(clauIdempotencia, empremta) {
     if (Object.hasOwn(empremtesEnviades, clauIdempotencia)) {
@@ -975,15 +988,26 @@ export function creaServeiXat({
     op.contextOrigen = contextOrigen;
     op.clauAmbit = clauLlinatge(contextOrigen);
     op.payload = payloadCongelat;
+    purgaEntregues(contextOrigen);
+    const keyEntrega = clauEntrega(contextOrigen, filNet, payloadCongelat.id, config);
+    let entrega = entregues.get(keyEntrega);
+    if (!entrega) {
+      entrega = { context: contextOrigen, registre: iniciaEntregaHonesta(op.clauAmbit, filNet, payloadCongelat.id) };
+      entregues.set(keyEntrega, entrega);
+      if (entregues.size > LIMIT_EMPREMTES_MEMORIA) entregues.delete(entregues.keys().next().value);
+    }
+    const remot = normalizeBackendConfig(config).dataMode === 'remote';
     op.normalitzaResposta = (resposta) => {
       if (!resposta || typeof resposta !== 'object' || Array.isArray(resposta)) {
         return resposta;
       }
+      entrega.registre = confirmaAckEntrega(entrega.registre, resposta, remot);
       return {
         ...resposta,
         // client_msg_id identifica la petició. L'id del servidor només pot
         // vindre del seu ACK: sintetitzar-lo amagaria un contracte incomplet.
         client_msg_id: payloadCongelat.client_msg_id,
+        estatEntrega: descriptorEntregaHonesta(entrega.registre),
       };
     };
 
@@ -998,6 +1022,51 @@ export function creaServeiXat({
     }
     registraOperacio(op);
     return op;
+  }
+
+  /** Lectura opt-in dels cursors aliens del port autenticat. Cap sondeig ni
+   * lectura extra acompanya enviaMissatge. El registre és efímer per llinatge. */
+  async function consultaEstatEntrega(filId, clientMsgId, opcions = {}) {
+    if (motiuTancament) throw creaErrorXat('El servei del xat s\'ha tancat.', { codi: 'SERVEI_TANCAT', definitiu: true });
+    if (typeof filId !== 'string' || !filId || filId.length > 256
+      || typeof clientMsgId !== 'string' || !RE_UUID_CANONIC.test(clientMsgId)) {
+      throw creaErrorXat('Referència d\'entrega invàlida.', { codi: 'ENTRADA_INVALIDA', retriable: false });
+    }
+    for (const key of CLAUS_DE_LLINATGE_PROHIBIDES) if (Object.hasOwn(opcions, key)) {
+      throw creaErrorXat('El llinatge es llig en viu.', { codi: 'ENTRADA_INVALIDA', retriable: false });
+    }
+    const config = Object.fromEntries(Object.entries(opcions).filter(([key]) => !CLAUS_DEL_SERVEI.includes(key)));
+    const signal = opcions.signal;
+    if (signal != null && !esSenyal(signal)) throw creaErrorXat('Cal un AbortSignal.', { codi: 'ENTRADA_INVALIDA', retriable: false });
+    if (signal?.aborted) throw signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError');
+    if (opcions.obteActorOrgId !== undefined && typeof opcions.obteActorOrgId !== 'function') throw creaErrorXat('Cal una font viva d\'actor.', { codi: 'ENTRADA_INVALIDA' });
+    const op = { config, control: new AbortController(), obteActorOrgId: opcions.obteActorOrgId ?? null };
+    op.contextOrigen = llegixContextViu(op);
+    if (!op.contextOrigen.autenticat || !op.contextOrigen.backend) throw errorSessioCanviada();
+    const actorDeclarat = opcions.actorOrgId ?? opcions.comOrgId;
+    if (actorDeclarat != null && actorDeclarat !== op.contextOrigen.actorOrgId) throw errorSessioCanviada();
+    purgaEntregues(op.contextOrigen);
+    const entrega = entregues.get(clauEntrega(op.contextOrigen, filId, clientMsgId.toLowerCase(), config));
+    if (!entrega) return null;
+    if (!entregaConfirmadaAlServidor(entrega.registre) || normalizeBackendConfig(config).dataMode !== 'remote') return descriptorEntregaHonesta(entrega.registre);
+    const avorta = () => op.control.abort(signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError'));
+    signal?.addEventListener('abort', avorta, { once: true });
+    op.desenganxaSenyal = () => signal?.removeEventListener('abort', avorta);
+    registraOperacio(op);
+    const termini = setTimeout(() => op.control.abort(creaErrorXat('La lectura d\'entrega ha esgotat el termini.', {
+      codi: 'ENTREGA_CONSULTA_TIMEOUT', retriable: true,
+    })), TERMINI_CONSULTA_ENTREGA_MS);
+    try {
+      asseguraOperacioViva(op); asseguraLlinatgeVigent(op);
+      const files = await tallaAmbSenyal(carregaFils({ ...config, signal: op.control.signal }), op.control.signal);
+      asseguraOperacioViva(op); asseguraLlinatgeVigent(op);
+      const resultat = aplicaConsultaEntrega(entrega.registre, files);
+      entrega.registre = resultat.registre;
+      return descriptorEntregaHonesta(entrega.registre, resultat.coneguts);
+    } catch (error) {
+      asseguraOperacioViva(op); asseguraLlinatgeVigent(op, error);
+      return descriptorEntregaHonesta(entrega.registre);
+    } finally { clearTimeout(termini); retiraOperacio(op); }
   }
 
   function enviaMissatgeAmbReintentJwt(filId, entrada, opcions = {}) {
@@ -1042,6 +1111,7 @@ export function creaServeiXat({
     for (const op of [...operacionsEnVol]) {
       cancelaDefinitivament(op, 'SERVEI_TANCAT', motiuTancament);
     }
+    entregues.clear();
   }
 
   function netejaEmpremtes() {
@@ -1049,11 +1119,13 @@ export function creaServeiXat({
       delete empremtesEnviades[clau];
     }
     ordreEmpremtes.length = 0;
+    entregues.clear();
   }
 
   return Object.freeze({
     enviaMissatge: enviaMissatgeAmbReintentJwt,
     enviaMissatgeAmbReintentJwt,
+    consultaEstatEntrega,
     netejaEmpremtes,
     revalidaEnVol,
     cancelaTot,

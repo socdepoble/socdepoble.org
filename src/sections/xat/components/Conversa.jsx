@@ -55,6 +55,7 @@ import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
+import BanerReferenciaPagina from './BanerReferenciaPagina.jsx';
 import Bombolla, { normalitzaReaccions } from './Bombolla.jsx';
 import DialegCompartir from './DialegCompartir.jsx';
 import SeparadorDia from './SeparadorDia.jsx';
@@ -342,7 +343,8 @@ export default function Conversa({
   onEliminaMissatge = null, onObriDirecteAmb = null,
   /* v1.2.8 · «Elimina per a tothom» només apareix amb un motor que ho faça al servidor; sense, seria
      un esborrat només de la pantalla pròpia presentat com si fóra per a tothom (Llei 0). */
-  onEliminaPerATothom = null
+  onEliminaPerATothom = null,
+  referenciaPagina = null
 }) {
   const navigate = useNavigate();
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
@@ -769,6 +771,8 @@ export default function Conversa({
   const anticsManual = Boolean(esperaAntics?.manual);
   const anticsFins = Number(esperaAntics?.fins) || 0;
   const [despertaAntics, setDespertaAntics] = useState(0);
+  const estatAnticsRef = useRef(null);
+  estatAnticsRef.current = { filId: fil?.id, hiHaMes, carregantMes, anticsManual, anticsFins, onCarregaMes };
   useEffect(() => {
     const node = sentinellaRef.current;
     if (!node || !hiHaMes || carregantMes || anticsManual || typeof IntersectionObserver === 'undefined') return undefined;
@@ -777,12 +781,19 @@ export default function Conversa({
       const temporitzador = setTimeout(() => setDespertaAntics((n) => n + 1), resta);
       return () => clearTimeout(temporitzador);
     }
+    let vigent = true;
+    const filId = fil?.id;
     const observador = new IntersectionObserver((entrades) => {
-      if (entrades.some((e) => e.isIntersecting)) onCarregaMes();
+      /* Una notificació encolada abans de disconnect() no pot saltar
+         l'espera ni demanar historial d'una altra conversa. */
+      const actual = estatAnticsRef.current;
+      if (!vigent || actual.filId !== filId || !actual.hiHaMes || actual.carregantMes
+        || actual.anticsManual || actual.anticsFins > Date.now()) return;
+      if (entrades.some((e) => e.isIntersecting)) actual.onCarregaMes?.();
     }, { root: llistaRef.current });
     observador.observe(node);
-    return () => observador.disconnect();
-  }, [hiHaMes, carregantMes, onCarregaMes, anticsManual, anticsFins, despertaAntics]);
+    return () => { vigent = false; observador.disconnect(); };
+  }, [fil?.id, hiHaMes, carregantMes, onCarregaMes, anticsManual, anticsFins, despertaAntics]);
 
   /* Marcar com a llegit només el que ha entrat en pantalla amb la pestanya
      visible (XAT-C08). El context agrupa i mai fa retrocedir la marca. Res
@@ -1614,6 +1625,9 @@ export default function Conversa({
           }
         } : null}
       />
+      {referenciaPagina && !modeSeleccio ? (
+        <BanerReferenciaPagina referencia={referenciaPagina} t={t} />
+      ) : null}
       {missatgeFixat && !modeSeleccio ? (
         <div className="sdp-xat-fixat-baner" role="region" aria-label={t('section.xat.missatge.fixatEtiqueta', 'Missatge fixat')}>
           <button

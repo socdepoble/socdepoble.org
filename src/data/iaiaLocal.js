@@ -69,6 +69,8 @@
  * la pregunta que l'Atles no sap, i el rànquing de l'Atles no canvia.
  */
 
+import { normalitzaUnicodeAmbLimit } from '../utils/normalitzaUnicodeSegura.js';
+import { textPlaIaia, senseDestinsIaia, substituixCodiIaia, senseComentarisTancatsIaia, senseTanquesIaia, senseFrontmatterIaia, substituixNomsCodiIaia, senseContactesIaia, sensePuntuacioFinalIaia } from './iaiaTextSegur.js';
 import { iniciDelContingut } from '../utils/iniciEditorial.js';
 import { CAPSULES_RURALS } from './iaiaRebostRural.js';
 import { ajudaDePublicacioIAIA } from './iaiaPublicacions.js';
@@ -85,6 +87,20 @@ export const ENCAPCALAMENT_DE_SOC_DE_POBLE = 'Això és el que en sé de Sóc de
 export const RUTA_DE_LA_WIKI = '/wikidepoble';
 export const DOCUMENTS_PER_RESPOSTA = 3;
 export const MAXIM_PREGUNTA_IAIA = 2000;
+const MAXIM_TEXT_CORPUS = 1024 * 1024;
+const MAXIM_CORPUS = 8 * 1024 * 1024;
+const MAXIM_DOCUMENTS = 2048;
+export const AVIS_FONTS_IAIA = 'No he pogut preparar les fonts locals dins dels límits de lectura. No puc donar una resposta documentada ara; el text original es conserva.';
+const errorCorpus = message => Object.assign(new RangeError(message), { code: 'IAIA_CORPUS_LIMIT' });
+const araDePreparacio = () => globalThis.performance?.now?.() ?? Date.now();
+const esRebuigCorpus = error => ['IAIA_CORPUS_LIMIT', 'IAIA_PREPARACIO_TIMEOUT', 'UNICODE_MARK_LIMIT'].includes(error?.code);
+function textCorpus(value) {
+  if (value === undefined || value === null) return '';
+  if (!['string', 'number', 'boolean', 'bigint'].includes(typeof value)) throw errorCorpus('El corpus conté un camp de text no primitiu.');
+  const text = String(value);
+  if (text.length > MAXIM_TEXT_CORPUS) throw errorCorpus('Un camp del corpus supera el límit de lectura.');
+  return text;
+}
 const MAXIM_FRAGMENT = 360;
 /* IDEA-56 (Bloc F.2) · Una entrada de l'Atles es diu sencera: cap passa
    d'este màxim (iaiaLocal.atles.test.js ho vigila). */
@@ -234,10 +250,10 @@ const CARPETES_DE_L_EQUIP = new Set(['folder:02_saber/obsidian_plugins', 'folder
 const ESTATS_NO_PUBLICS = new Set(['arxivat', 'quarantena']);
 
 /** Minúscules, sense diacrítics i «l·l» com a «ll». */
-const plega = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '').replace(/·/g, '').toLowerCase();
+const plega = (text) => normalitzaUnicodeAmbLimit(textCorpus(text), 'NFD').replace(/\p{M}/gu, '').replace(/·/g, '').toLowerCase();
 
 /** El Markdown sense els destins dels enllaços ni les adreces soltes. */
-const senseEnllacos = (text) => String(text ?? '').replace(/\]\([^)]*\)/g, ']').replace(/https?:\/\/\S+/g, ' ');
+const senseEnllacos = (text) => senseDestinsIaia(textCorpus(text)).replace(/https?:\/\/\S+/g, ' ');
 
 /**
  * Les paraules que compten d'un text: plegades, de 3 lletres o més, amb
@@ -289,18 +305,7 @@ const arrels = (text) => tokenitza(text).map(arrel);
    la IAIA nomena el document com el nomena la seua pàgina. iaiaLocal.test.js
    ho compara amb extreuEditorial per a tota la Wiki. */
 function textPla(md, llevaPunt = true) {
-  const net = md
-    .replace(/[ \t]+#+[ \t]*$/, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/`([^`\n]+)`/g, '$1')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/(\*\*|__)(\S(?:[^\n]*?\S)?)\1/g, '$2')
-    .replace(/\*(\S(?:[^*\n]*?\S)?)\*/g, '$1')
-    .replace(/(^|[\s(])_(\S(?:[^_\n]*?\S)?)_(?=$|[\s).,;:!?])/g, '$1$2')
-    .trim();
-  if (!llevaPunt) return net;
-  const ambPunt = /^([\s\S]*[^.])\.$/.exec(net);
-  return ambPunt ? ambPunt[1].replace(/\s+$/, '') : net;
+  return textPlaIaia(textCorpus(md), llevaPunt);
 }
 
 /**
@@ -308,13 +313,13 @@ function textPla(md, llevaPunt = true) {
  * que pinta la pàgina) o, si no en té, el del manifest. Funció pura.
  */
 export function titolDeDocument(item) {
-  const cos = String(item?.content ?? '');
+  const cos = textCorpus(item?.content);
   const text = (cos.charCodeAt(0) === 0xFEFF ? cos.slice(1) : cos).replace(/\r\n?/g, '\n');
   const inici = iniciDelContingut(text);
   const primera = inici < text.length ? text.slice(text.lastIndexOf('\n', inici - 1) + 1).split('\n')[0] : '';
   const capcalera = primera !== undefined ? /^# (.*)$/.exec(primera) : null;
   const titol = capcalera ? textPla(capcalera[1]) : '';
-  return titol || String(item?.title || item?.id || '');
+  return titol || textCorpus(item?.title || item?.id || '');
 }
 
 /* encodeURIComponent deixa sense codificar «!'()*». Es codifiquen també
@@ -340,9 +345,7 @@ function acumula(freq, paraules, pes) {
    identificadors (amb «_», «/» o una extensió) no són prosa que responga a
    una persona del poble: es mostren, però no compten per a triar el
    fragment ni per al llindar de rellevància. */
-const CODI_EN_LINIA = /`[^`\n]+`/g;
-const NOMS_DE_CODI = /\S*[_/\\]\S*|\S+\.(?:md|mjs|js|jsx|json|css|html|sql)\b/giu;
-const prosa = (text) => String(text ?? '').replace(NOMS_DE_CODI, ' ');
+const prosa = (text) => substituixNomsCodiIaia(textCorpus(text));
 
 /* Ordre del Mestre (30-10-2026; f4 D.2, P1-49 «cercador guiat de la Wiki») ·
    El nom d'una eina tal com l'escriu la Wiki: amb majúscula a mitja frase
@@ -371,12 +374,11 @@ const LLIGAMS_DEL_TITOL = new Set(['de', 'd', 'del', 'dels', 'i']);
 const ambMajuscula = (paraula) => /^\p{Lu}/u.test(paraula);
 const esCridada = (paraula) => !/\p{Ll}/u.test(paraula) && (paraula.match(/\p{Lu}/gu) || []).length >= 5;
 /* Com prosa(), però el nom de codi deixa el punt que el tancava, i una barra solta, la barra. */
-const senseCodi = (text) => String(text ?? '')
-  .replace(NOMS_DE_CODI, (codi) => (codi === '/' ? ' / ' : ` ${/[.!?…:;]+$/u.exec(codi)?.[0] ?? ''} `));
+const senseCodi = (text) => substituixNomsCodiIaia(textCorpus(text), (codi) => (codi === '/' ? ' / ' : ` ${/[.!?…:;]+$/u.exec(codi)?.[0] ?? ''} `));
 
 /** Les paraules (plegades) que un text escriu com a nom, a mitja frase, tantes vegades com hi són. Funció pura. */
 function nomsEscritsA(text) {
-  const net = senseCodi(String(text ?? '').normalize('NFC').replace(SOC_DE_POBLE_ESCRIT, ' socdepoble '));
+  const net = senseCodi(normalitzaUnicodeAmbLimit(textCorpus(text), 'NFC').replace(SOC_DE_POBLE_ESCRIT, ' socdepoble '));
   const noms = [];
   let fi = 0;
   let titol = false;
@@ -396,24 +398,20 @@ const nomsDe = (text) => new Set(nomsEscritsA(text));
 /** La primera paraula de l'etiqueta en negreta que obri un bloc del Markdown, si s'hi escriu com a nom. */
 function etiquetaDe(bloc) {
   const etiqueta = ETIQUETA_DEL_BLOC.exec(bloc);
-  const [primera] = etiqueta ? senseCodi(textPla(etiqueta[1].replace(CODI_EN_LINIA, ' '), false)).match(PARAULA) || [] : [];
+  const [primera] = etiqueta ? senseCodi(textPla(substituixCodiIaia(etiqueta[1], () => ' '), false)).match(PARAULA) || [] : [];
   return new Set(primera && ambMajuscula(primera) && !esCridada(primera) ? tokenitza(primera).slice(0, 1) : []);
 }
 
 /* Els blocs citables del Markdown, amb el seu text pla, i la seua prosa: sense
    el codi en línia ni els noms de codi. */
 function blocsDe(content) {
-  return String(content ?? '')
-    .replace(/^---\s*\n[\s\S]*?\n---\s*(?:\n|$)/, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/```[^\n]*\n[\s\S]*?```/g, '')
-    .replace(/~~~[^\n]*\n[\s\S]*?~~~/g, '')
+  return senseTanquesIaia(senseTanquesIaia(senseComentarisTancatsIaia(senseFrontmatterIaia(textCorpus(content))), '```'), '~~~')
     .split(/\n\s*\n|\n(?=\s*[-*]\s)/)
     .map((bloc) => bloc.split('\n').filter((linia) => !/^\s*(?:#{1,6}\s|\||[-*_]{3,}\s*$)/.test(linia)).join(' '))
     .map((bloc) => ({ bloc, text: textPla(bloc, false).replace(/^\s*[-*>]\s*/, '').replace(/\s+/g, ' ').trim() }))
     .filter(({ text }) => text.length >= 24);
 }
-const prosaDelBloc = (bloc) => prosa(textPla(bloc.replace(CODI_EN_LINIA, ' '), false));
+const prosaDelBloc = (bloc) => prosa(textPla(substituixCodiIaia(bloc, () => ' '), false));
 
 /* Fragments citables, mai instruccions executables. El corpus continua sent
    exclusivament el manifest públic; ni el RAG intern ni l'Escriptori.
@@ -543,27 +541,52 @@ const maximDe = (maxim) => (Number.isInteger(maxim) && maxim >= 1 && maxim <= MA
  * 'pagina'; per defecte, la Wiki), `ruta` (interna) i `maximFragment`.
  * `curat` marca la capa local: cap document hi entra sense ancoratge.
  */
-export function construeixIndex(items = [], { curat = false } = {}) {
+export function construeixIndex(items = [], { curat = false, comprovaTemps = null, maximCaracters = MAXIM_CORPUS } = {}) {
+  if (!Number.isSafeInteger(maximCaracters) || maximCaracters < 0 || maximCaracters > MAXIM_CORPUS
+    || comprovaTemps !== null && typeof comprovaTemps !== 'function') throw errorCorpus('Pressupost de corpus invàlid.');
+  const start = araDePreparacio();
+  const check = () => {
+    if (araDePreparacio() - start > TEMPS_MAXIM_DE_LA_WIKI) throw Object.assign(new RangeError('S’ha esgotat el pressupost de preparació del corpus.'), { code: 'IAIA_PREPARACIO_TIMEOUT' });
+    comprovaTemps?.();
+  };
+  check();
+  if (Array.isArray(items) && items.length > MAXIM_DOCUMENTS) throw errorCorpus('Massa documents en el corpus.');
+  let caracters = 0;
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!item || !item.id || !esPublic(item)) continue;
+    if ((Array.isArray(item.tags) && item.tags.length > 256) || (Array.isArray(item.attributes?.tags) && item.attributes.tags.length > 256)) throw errorCorpus('Massa etiquetes en un document.');
+    for (const field of [item.id, item.title, item.subtitle, item.content, item.attributes?.description,
+      ...(Array.isArray(item.tags) ? item.tags : []), ...(Array.isArray(item.attributes?.tags) ? item.attributes.tags : [])]) {
+      caracters += textCorpus(field).length;
+      if (caracters > Math.min(MAXIM_CORPUS, maximCaracters)) throw errorCorpus('El corpus supera el pressupost de treball de la petició.');
+    }
+    check();
+  }
   const documents = [];
   const docsAmb = new Map();
   for (const item of Array.isArray(items) ? items : []) {
     if (!item || !item.id || !esPublic(item)) continue;
     if (TIPUS_NO_D_AJUDA.has(item.attributes?.type) || INSTRUCCIONS_PER_A_LA_IA.has(String(item.id))
       || CARPETES_DE_L_EQUIP.has(item.categoryId)) continue;
+    check();
     const titol = titolDeDocument(item);
+    check();
     const freq = new Map();
     const etiquetes = [...(Array.isArray(item.tags) ? item.tags : []), ...(Array.isArray(item.attributes?.tags) ? item.attributes.tags : [])];
     let llargaria = acumula(freq, arrels(`${titol} ${item.title || ''}`), PES_TITOL);
     llargaria += acumula(freq, arrels(`${item.subtitle || ''} ${item.attributes?.description || ''} ${etiquetes.join(' ')}`), PES_FITXA);
+    check();
     llargaria += acumula(freq, arrels(item.content), PES_COS);
+    check();
     if (!freq.size) continue;
     const font = fontDe(item.font);
+    const fragments = fragmentsDe(item.content); check();
     documents.push({
       id: String(item.id), titol, ruta: font === 'wiki' ? null : rutaDe(item.ruta), font, maximFragment: maximDe(item.maximFragment),
       arrelsDelTitol: new Set(arrels(titol)), arrelsDeLesEtiquetes: new Set(arrels(etiquetes.join(' '))), freq, llargaria,
       formesDAncoratge: new Set(formesDelText(`${titol} ${etiquetes.join(' ')}`)),
       /* El text del document (el mateix del manifest, sense copiar-lo): comptaParaulaComuna hi compta les paraules comunes. */
-      fragments: fragmentsDe(item.content), contingut: item.content
+      fragments, contingut: item.content
     });
     for (const paraula of freq.keys()) docsAmb.set(paraula, (docsAmb.get(paraula) || 0) + 1);
   }
@@ -1004,9 +1027,9 @@ let indexLocal = null;
  * IDEA-56 (Bloc F.2) · L'índex curat de la capa local: l'Atles i els pobles
  * de la llavor. Síncron, sense xarxa, memoritzat al mòdul.
  */
-export function indexDeLaCapaLocal() {
+export function indexDeLaCapaLocal(pressupost = {}) {
   if (!indexLocal) {
-    indexLocal = construeixIndex([...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble).filter(Boolean)], { curat: true });
+    indexLocal = construeixIndex([...ATLES_OPERATIU.map(documentDeLAtles), ...MOCK_TOWNS.map(documentDelPoble).filter(Boolean)], { ...pressupost, curat: true });
   }
   return indexLocal;
 }
@@ -1017,10 +1040,10 @@ export function indexDeLaCapaLocal() {
    l'Atles no sap, una sola vegada per pestanya, amb les claus plegades de
    cada càpsula. */
 let rebostRural = null;
-function rebostConstruit() {
+function rebostConstruit(pressupost = {}) {
   if (!rebostRural) {
     rebostRural = {
-      index: construeixIndex(CAPSULES_RURALS.map(documentDeLAtles), { curat: true }),
+      index: construeixIndex(CAPSULES_RURALS.map(documentDeLAtles), { ...pressupost, curat: true }),
       perId: new Map(CAPSULES_RURALS.map((capsula) => [capsula.id, {
         minim: capsula.minimTermes ?? 1, claus: new Set(tokenitza(capsula.claus.join(' '))), exclou: new Set(arrels((capsula.exclou || []).join(' ')))
       }]))
@@ -1048,8 +1071,8 @@ export function indexDelRebostRural() {
  *     cau en una càpsula per dues paraules.
  * Funció pura sobre l'índex memoritzat.
  */
-export function cercaAlRebostRural(pregunta, limit = DOCUMENTS_PER_RESPOSTA) {
-  const { index, perId } = rebostConstruit();
+export function cercaAlRebostRural(pregunta, limit = DOCUMENTS_PER_RESPOSTA, pressupost = {}) {
+  const { index, perId } = rebostConstruit(pressupost);
   const formes = termesDeLaPregunta(pregunta);
   const termes = arrelsDeLaPregunta(pregunta);
   return puntua(index, termes, formes).filter((resultat) => {
@@ -1111,7 +1134,7 @@ function senseComentarisHtml(html) {
  * Funció pura.
  */
 export function textDeHtml(html) {
-  return senseComentarisHtml(String(html ?? ''))
+  return senseComentarisHtml(textCorpus(html))
     .replace(/<h[1-6][^<>]*>/gi, '\n\n### ')
     .replace(/<\/h[1-6]\s*>|<\/(?:p|div|li|ul|ol|blockquote|section|article|table|tr)\s*>|<br\s*\/?>|<li\b[^<>]*>/gi, '\n\n')
     .replace(/<[^<>]*>/g, '')
@@ -1136,8 +1159,9 @@ export function documentsDePageCopy(pageCopy) {
     /* El corpus d'ajuda no replica identificadors amb forma de correu, ni
        tan sols el compte federat públic del dossier. La pàgina publicada
        conserva els seus enllaços; l'exclusió de Legal i de l'equip no canvia. */
-    const senseContactes = (text) => text.replace(/@?[\w.+-]+@[\w-]+(?:\.[\w-]+)+/gu, '[contacte omés]');
+    const senseContactes = text => senseContactesIaia(textCorpus(text));
     const titol = senseContactes(pagina.title);
+    if (Array.isArray(pagina.labels) && pagina.labels.length > 256) throw errorCorpus('Massa etiquetes en una pàgina.');
     const etiquetes = (Array.isArray(pagina.labels) ? pagina.labels : [])
       .map((etiqueta) => (typeof etiqueta === 'string' ? etiqueta : etiqueta?.text))
       .filter((text) => typeof text === 'string').map(senseContactes);
@@ -1170,8 +1194,8 @@ const carregaPaquetDeLaIAIA = () => Promise.all([import('./wikiManifest.js'), im
    la consulta del diàleg i s'ha retirat amb ella. */
 const indexosDelPaquet = new Map();
 
-function indexDe(carrega) {
-  const construeix = () => Promise.resolve().then(carrega).then((manifest) => construeixIndex(manifest?.items));
+function indexDe(carrega, pressupost) {
+  const construeix = () => Promise.resolve().then(carrega).then((manifest) => construeixIndex(manifest?.items, pressupost));
   if (carrega !== carregaPaquetDeLaIAIA) return construeix();
   if (!indexosDelPaquet.has(carrega)) {
     const promesa = construeix();
@@ -1206,25 +1230,36 @@ function ambTempsMaxim(promesa, ms, reserva) {
  */
 export async function respostaDeLaIAIA(pregunta, { carrega = carregaPaquetDeLaIAIA, tempsMaxim = TEMPS_MAXIM_DE_LA_WIKI, capaLocal = true } = {}) {
   if (typeof pregunta !== 'string' || pregunta.length > MAXIM_PREGUNTA_IAIA) return null;
-  if (!termesDeLaPregunta(pregunta).length) return pregunta.trim() ? SALUTACIO_TECNICA_IAIA : null;
+  try { if (!termesDeLaPregunta(pregunta).length) return pregunta.trim() ? SALUTACIO_TECNICA_IAIA : null; }
+  catch (error) { if (esRebuigCorpus(error)) return AVIS_FONTS_IAIA; return null; }
+  if (!Number.isFinite(tempsMaxim) || tempsMaxim <= 0) return AVIS_FONTS_IAIA;
+  const deadline = araDePreparacio() + tempsMaxim;
+  const comprovaTemps = () => { if (araDePreparacio() >= deadline) throw Object.assign(new RangeError('Temps de preparació esgotat.'), { code: 'IAIA_PREPARACIO_TIMEOUT' }); };
+  // Pressupost de caràcters, no promesa de ms de CPU: evita començar una peça
+  // gran amb un termini menut. Els checkpoints no preempten codi natiu.
+  const maximCaracters = Math.min(MAXIM_CORPUS, Math.floor(tempsMaxim * 2048));
   if (capaLocal) {
-    const ajuda = ajudaDePublicacioIAIA(pregunta);
-    if (ajuda) return ajuda;
     try {
-      const locals = cercaRellevant(indexDeLaCapaLocal(), pregunta);
+      comprovaTemps(); const ajuda = ajudaDePublicacioIAIA(pregunta); comprovaTemps();
+      if (ajuda) return ajuda;
+      const locals = cercaRellevant(indexDeLaCapaLocal({ comprovaTemps, maximCaracters }), pregunta);
+      comprovaTemps();
       if (locals.length) return componResposta(locals);
       /* P1-24 · El que l'Atles no sap, el rebost rural, abans de baixar la Wiki. */
-      const rurals = cercaAlRebostRural(pregunta);
+      const rurals = cercaAlRebostRural(pregunta, DOCUMENTS_PER_RESPOSTA, { comprovaTemps, maximCaracters });
+      comprovaTemps();
       if (rurals.length) return componResposta(rurals);
-    } catch {
+    } catch (error) {
+      if (esRebuigCorpus(error)) return AVIS_FONTS_IAIA;
       /* La capa local no pot fer callar la IAIA: es prova la segona. */
     }
   }
   try {
-    const index = await ambTempsMaxim(indexDe(carrega), tempsMaxim, null);
-    return index ? componResposta(cercaRellevant(index, pregunta)) : null;
-  } catch {
-    return null;
+    const index = await ambTempsMaxim(indexDe(carrega, { comprovaTemps, maximCaracters }), Math.max(0, deadline - araDePreparacio()), null);
+    if (!index) return null;
+    comprovaTemps(); const resposta = componResposta(cercaRellevant(index, pregunta)); comprovaTemps(); return resposta;
+  } catch (error) {
+    return esRebuigCorpus(error) ? AVIS_FONTS_IAIA : null;
   }
 }
 
@@ -1310,8 +1345,8 @@ export function extreuAccionsDeRespostaIAIA(resposta) {
  * cos net sense marques d'encapçalament tècnic. Funció pura.
  */
 export function esborranyDeRespostaIAIA(pregunta, resposta) {
-  const consulta = String(pregunta ?? '').replace(/\s+/g, ' ').trim();
-  const linies = String(resposta ?? '')
+  const consulta = textCorpus(pregunta).replace(/\s+/g, ' ').trim();
+  const linies = textCorpus(resposta)
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean);
@@ -1319,12 +1354,12 @@ export function esborranyDeRespostaIAIA(pregunta, resposta) {
   const cosLinies = linies.filter(
     (l) => l !== ENCAPCALAMENT_DE_SOC_DE_POBLE && l !== ENCAPCALAMENT_DE_LA_WIKI && !LINIA_ACCIO_IAIA.test(l)
   );
-  const titolFont = accions[0]?.titol || (consulta ? consulta.replace(/[?¿!¡.]+$/g, '').trim() : 'Esborrany de la IAIA MarIA');
+  const titolFont = accions[0]?.titol || (consulta ? sensePuntuacioFinalIaia(consulta, '?¿!¡.').trim() : 'Esborrany de la IAIA MarIA');
   const titol = titolFont.slice(0, 120);
   const subtitol = (consulta && consulta !== titol
-    ? consulta.replace(/\.+$/g, '').trim()
+    ? sensePuntuacioFinalIaia(consulta, '.').trim()
     : `Esborrany preparat amb la IAIA MarIA${accions[0]?.ruta ? ` (${accions[0].ruta})` : ''}`).slice(0, 160);
-  const entradilla = (cosLinies[0] || String(resposta ?? '').trim()).slice(0, 500);
+  const entradilla = (cosLinies[0] || textCorpus(resposta).trim()).slice(0, 500);
   const resta = cosLinies.slice(1);
   const referencies = accions.map((a) => `${a.titol} (${a.ruta})`);
   const text = [titol, subtitol, entradilla, ...resta, ...(referencies.length ? [`Referències: ${referencies.join(' · ')}`] : [])]

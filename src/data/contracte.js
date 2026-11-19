@@ -869,8 +869,11 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.7 (ordre del Mestre 17-11-2026, tarda) · Versió unificada 1.2.7 amb el build 12: integra R32.5 i R32.6 i
    P0-123 (avís d'un toc per a TestFlight, APK directe i PWA); els mòbils amb el build 11 o anterior l'instal·len a mà.
    Onada v1.2.8 (ordre del Mestre 18-11-2026) · Versió unificada 1.2.8 amb el build 13: integra R32.7, R32.8 i R32.9
-   de Codex i Gemini (accions del xat, vídeo i ubicació, consola, Wiki al Mur i columnes plegades). */
-export const VERSIO_CLIENT_NATIU = 13;
+   de Codex i Gemini (accions del xat, vídeo i ubicació, consola, Wiki al Mur i columnes plegades).
+   Onada v1.2.9 (ordre del Mestre 18-11-2026, nit) · Versió unificada 1.2.9 amb el build 14: integra R32.10 i R32.11
+   de Codex i Gemini, l'arbre viu de MarIA i l'Avisador de l'Onada R32.12 (accions del xat al motor de la sessió,
+   assistència als esdeveniments, bàner de referència al Xat i fulls d'estil diferits). */
+export const VERSIO_CLIENT_NATIU = 14;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

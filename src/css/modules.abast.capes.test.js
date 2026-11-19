@@ -45,7 +45,7 @@ const declaracions = (cos) => cos.split(';')
   .filter((d) => d.includes(':'))
   .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]);
 
-const MODULS = regles(llig('src/css/modules.css'));
+const MODULS = [...regles(llig('src/css/modules.css')), ...regles(llig('src/css/diferit-connectar.css'))];
 const DECLS = MODULS.flatMap((r) => declaracions(r.cos).map(([propietat, valor]) => ({ ...r, propietat, valor })));
 const on = (d) => `${d.prelud} { ${d.propietat}: ${d.valor} }`;
 

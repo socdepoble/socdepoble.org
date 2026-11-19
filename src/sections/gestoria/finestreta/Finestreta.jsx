@@ -77,6 +77,9 @@ import { FORMULARIS, VERIFICAR, omplixFormulari } from './nucli/formularisFinest
 import { LIMITS_IDENTITAT } from './nucli/tractorIdentitat.js';
 import { CAMPS_IDENTITAT } from './nucli/validadorsIdentitat.js';
 import { SENSE_CARPETA_PAPER, clauConfianca, clauPaper, useFinestreta } from './useFinestreta.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* La consulta que obri la porta dels Tractors (la mateixa que CONSULTA_TRACTORS de ContenidorGestoria.jsx). */
 export const CONSULTA_TRACTORS_IDENTITAT = '?categoria=tractors_cat&item=tractors_aprovacio';
@@ -239,7 +242,7 @@ function obriPaperPerDefecte(url) {
 function UllDades({ visible, onCommuta }) {
   const Icona = visible ? Eye : EyeOff;
   return (
-    <button type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
+    <button ref={adoptaEstilsDiferits} type="button" className="sdp-gestoria-ull" aria-pressed={visible ? 'true' : 'false'}
       aria-label="Mostra les dades" title="Mostra les dades" onClick={onCommuta}>
       <Icona size={20} aria-hidden="true" focusable="false" />
     </button>
@@ -248,9 +251,9 @@ function UllDades({ visible, onCommuta }) {
 
 /* Un valor: amagat fins que la persona prem l'ull (no és al DOM). */
 function Valor({ text, visible }) {
-  if (visible) return <span className="sdp-gestoria-finestreta__valor">{text}</span>;
+  if (visible) return <span ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__valor">{text}</span>;
   return (
-    <span className="sdp-gestoria-finestreta__amagat">
+    <span ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__amagat">
       <EyeOff size={16} aria-hidden="true" focusable="false" />
       Valor amagat
     </span>
@@ -308,14 +311,14 @@ function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
     }
   };
   return (
-    <details className="sdp-gestoria-finestreta__paper">
+    <details ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__paper">
       <summary>{font.ruta}</summary>
       <dl className="sdp-gestoria-finestreta__dades-paper">
         <dt>Paper</dt>
         <dd>{ETIQUETES_TIPUS_PAPER[font.tipusDocument] ?? ETIQUETES_TIPUS_PAPER.desconegut}</dd>
         {data ? (
           <>
-            <dt>Data del paper</dt>
+            <dt ref={adoptaEstilsDiferits}>Data del paper</dt>
             <dd>{data}</dd>
           </>
         ) : null}
@@ -335,12 +338,12 @@ function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
             onClick={obri}>
             Obri’l en una pestanya
           </Boto>
-          {comprovant ? <p className="sdp-gestoria-finestreta__nota">Comprovant el paper…</p> : null}
-          {motiu ? <p id={idMotiu} className="sdp-gestoria-finestreta__nota">{motiu}</p> : null}
-          {visible ? null : <p className="sdp-gestoria-finestreta__nota">Obri l’ull de la barra per a comprovar-lo i obrir-lo.</p>}
+          {comprovant ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">Comprovant el paper…</p> : null}
+          {motiu ? <p ref={adoptaEstilsDiferits} id={idMotiu} className="sdp-gestoria-finestreta__nota">{motiu}</p> : null}
+          {visible ? null : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">Obri l’ull de la barra per a comprovar-lo i obrir-lo.</p>}
         </div>
       ) : (
-        <p className="sdp-gestoria-finestreta__nota">{SENSE_CARPETA_PAPER}</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{SENSE_CARPETA_PAPER}</p>
       )}
     </details>
   );
@@ -350,9 +353,9 @@ function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
    cal per a obrir-los: el hook, l'ull, obriPaper i l'anunci. */
 function Origens({ fonts, paper }) {
   return (
-    <ul className="sdp-gestoria-finestreta__fonts">
+    <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__fonts">
       {(fonts ?? []).map((font, i) => (
-        <li key={`${font.ruta ?? 'a-ma'}-${i}`}>{font.tipus === 'manual' ? 'Entrat a mà' : <PaperDOrigen font={font} {...paper} />}</li>
+        <li ref={adoptaEstilsDiferits} key={`${font.ruta ?? 'a-ma'}-${i}`}>{font.tipus === 'manual' ? 'Entrat a mà' : <PaperDOrigen font={font} {...paper} />}</li>
       ))}
     </ul>
   );
@@ -362,9 +365,9 @@ function Origens({ fonts, paper }) {
 function Seccio({ titol, ajuda, children }) {
   const id = useId();
   return (
-    <section className="sdp-gestoria-finestreta__seccio" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__seccio" aria-labelledby={id}>
       <h2 id={id} className="sdp-gestoria-finestreta__titol">{titol}</h2>
-      {ajuda ? <p className="sdp-gestoria-finestreta__nota">{ajuda}</p> : null}
+      {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{ajuda}</p> : null}
       {children}
     </section>
   );
@@ -408,7 +411,7 @@ function SeccioCarpeta({ h, onOblida }) {
         ni les imatges.
       </Alerta>
       {h.potTriarCarpeta ? (
-        <div className="sdp-gestoria-finestreta__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__accions">
           <Boto varietat={h.teCarpeta ? 'secundari' : 'primari'} icona={FolderOpen} onClick={() => h.triaCarpeta()} disabled={ocupat}
             carregant={h.ocupat === 'carpeta'}>
             {h.teCarpeta ? 'Tria una altra carpeta' : 'Tria la carpeta arrel de la Gestoria'}
@@ -424,7 +427,7 @@ function SeccioCarpeta({ h, onOblida }) {
         </Camp>
       )}
       {h.teCarpeta ? (
-        <div className="sdp-gestoria-finestreta__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__accions">
           <p className="sdp-gestoria-finestreta__nota">{h.nomCarpeta ? `Carpeta triada: «${h.nomCarpeta}».` : 'Carpeta triada.'}</p>
           <Boto varietat="secundari" onClick={onOblida}>Oblida la carpeta</Boto>
         </div>
@@ -477,12 +480,12 @@ function SeccioPla({ h, onAnuncia }) {
   };
   return (
     <Seccio titol="Què llegiré i què no" ajuda="Decidit només pel nom de cada paper i per la seua carpeta, sense obrir-ne cap.">
-      <p className="sdp-gestoria-finestreta__nota">
+      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">
         {`${compte('llegir')} es llegiran · ${compte('demanar')} només si els marques · ${compte('ometre')} no s’obriran · ${fora.length} fora de 01_Identitat_Legal i de 03_Burocracia/SUMA.`}
       </p>
       {h.pla.avisos.length ? (
         <Alerta to="avis" titol="La carpeta no s’ha pogut mirar sencera">
-          <ul className="sdp-gestoria-finestreta__avisos">{h.pla.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}</ul>
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__avisos">{h.pla.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.missatge}</li>)}</ul>
         </Alerta>
       ) : null}
       {/* Fora de la regió desplaçable de la taula: en mòbil es veu encara que la taula llisque. El nom de cada botó és
@@ -499,14 +502,14 @@ function SeccioPla({ h, onAnuncia }) {
       ) : null}
       {dins.length ? (
         <Taula titol="Els papers de la carpeta i la decisió" densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr><th scope="col">Paper</th><th scope="col">Decisió</th><th scope="col">Per què</th><th scope="col">El llig?</th></tr>
           </thead>
           <tbody>
             {dins.map((d) => {
               const decisio = DECISIONS[d.decisio] ?? DECISIONS.ometre;
               return (
-                <tr key={d.ruta}>
+                <tr ref={adoptaEstilsDiferits} key={d.ruta}>
                   <th scope="row" className="sdp-gestoria-finestreta__ruta">{d.ruta}</th>
                   <td><Insignia to={decisio.to}>{decisio.text}</Insignia></td>
                   <td>{MOTIUS[d.motiu] ?? '—'}</td>
@@ -532,7 +535,7 @@ function SeccioPla({ h, onAnuncia }) {
           carregant={h.ocupat === 'llegint'} aria-describedby={aLlegir > LIMITS_IDENTITAT.fitxers ? idLimit : undefined}>
           {`Llig ${aLlegir === 1 ? 'el paper' : `els ${aLlegir} papers`}`}
         </Boto>
-        {aLlegir > LIMITS_IDENTITAT.fitxers ? <p id={idLimit} className="sdp-gestoria-finestreta__nota">{avisLimit(aLlegir)}</p> : null}
+        {aLlegir > LIMITS_IDENTITAT.fitxers ? <p ref={adoptaEstilsDiferits} id={idLimit} className="sdp-gestoria-finestreta__nota">{avisLimit(aLlegir)}</p> : null}
       </div>
       {h.ocupat === 'llegint' && h.progres?.total > 0 ? (
         <Progres etiqueta="Llegint els papers" valor={h.progres.fet} max={h.progres.total} />
@@ -545,13 +548,13 @@ function SeccioPla({ h, onAnuncia }) {
 function ResumLectura({ lectura }) {
   return (
     <>
-      <p className="sdp-gestoria-finestreta__nota">
+      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">
         {`${lectura.llegits.length === 1 ? 'S’ha llegit 1 paper' : `S’han llegit ${lectura.llegits.length} papers`}: ${lectura.propostes === 1 ? '1 proposta' : `${lectura.propostes} propostes`}. Els bytes i el text ja s’han descartat.`}
       </p>
       {lectura.avisos.length ? (
         <Alerta to="avis" titol="Hi ha papers que no han donat res">
-          <ul className="sdp-gestoria-finestreta__avisos">
-            {lectura.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.ruta ? `${a.ruta}: ${a.missatge}` : a.missatge}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__avisos">
+            {lectura.avisos.map((a, i) => <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>{a.ruta ? `${a.ruta}: ${a.missatge}` : a.missatge}</li>)}
           </ul>
         </Alerta>
       ) : null}
@@ -569,7 +572,7 @@ function FormulariCorreccio({ etiqueta, onDesa, onCancela }) {
     if (motiu) setError(motiu);
   };
   return (
-    <form className="sdp-gestoria-finestreta__correccio" onSubmit={desa}>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__correccio" onSubmit={desa}>
       <Camp etiqueta={`Valor correcte: ${etiqueta}`} ajuda="Queda confirmat, amb la font «Entrat a mà»." error={error || undefined}>
         <CampText value={text} spellCheck={false} autoComplete="off" onChange={(event) => setText(event.target.value)} maxLength={200} />
       </Camp>
@@ -598,7 +601,7 @@ function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
     <Seccio titol="Propostes per revisar" ajuda="Cap proposta entra a la fitxa sola: la confirmes, la rebutges o l’entres a mà. Quan dos papers diuen coses diferents, tries tu.">
       {grups.map((g) => (
         <Taula key={g.id} titol={`Propostes · ${g.nom}`} densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr><th scope="col">Camp</th><th scope="col">Valor</th><th scope="col">D’on ix</th><th scope="col">Confiança</th><th scope="col">Què fas</th></tr>
           </thead>
           <tbody>
@@ -611,7 +614,7 @@ function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
                 const confianca = CONFIANCES[h.confiances.get(clauConfianca(camp, c.valor))] ?? null;
                 const nom = conflicte ? `${etiqueta}, opció ${i + 1}` : etiqueta;
                 return (
-                  <tr key={`${clau}-${i}`}>
+                  <tr ref={adoptaEstilsDiferits} key={`${clau}-${i}`}>
                     <th scope="row">
                       {etiqueta}
                       {conflicte ? <Insignia to="avis">{`En conflicte · opció ${i + 1}`}</Insignia> : null}
@@ -635,7 +638,7 @@ function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
               });
               if (corregint === clau) {
                 files.push(
-                  <tr key={`${clau}-correccio`}>
+                  <tr ref={adoptaEstilsDiferits} key={`${clau}-correccio`}>
                     <td colSpan={5}>
                       <FormulariCorreccio etiqueta={etiqueta} onCancela={() => setCorregint(null)}
                         onDesa={(text) => {
@@ -676,7 +679,7 @@ function FormulariAMa({ h, onAnuncia }) {
     }
   };
   return (
-    <form className="sdp-gestoria-finestreta__a-ma" onSubmit={afig}>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__a-ma" onSubmit={afig}>
       <Camp etiqueta="Camp que vols entrar a mà">
         <Selector opcions={OPCIONS_A_MA} value={camp} onChange={(event) => { setCamp(event.target.value); setError(''); }} />
       </Camp>
@@ -707,7 +710,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
       {!h.desaBlocat && h.errorPersistencia ? <Alerta to="avis" titol="El cofre">{h.errorPersistencia}</Alerta> : null}
       {grups.length ? grups.map((g) => (
         <Taula key={g.id} titol={`La teua fitxa · ${g.nom}`} densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr><th scope="col">Camp</th><th scope="col">Valor</th><th scope="col">D’on ix</th><th scope="col">Confirmat</th><th scope="col">Què fas</th></tr>
           </thead>
           <tbody>
@@ -715,7 +718,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
               const etiqueta = ETIQUETES_CAMPS[camp] ?? camp;
               const clau = `${g.id}|${camp}`;
               const files = [(
-                <tr key={clau}>
+                <tr ref={adoptaEstilsDiferits} key={clau}>
                   <th scope="row">{etiqueta}</th>
                   <td><Valor text={valorEnText(camp, valor.valor)} visible={visible} /></td>
                   <td><Origens fonts={valor.fonts} paper={paper} /></td>
@@ -731,7 +734,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
               )];
               valor.alternatives.forEach((alternativa, i) => {
                 files.push(
-                  <tr key={`${clau}-alt-${i}`}>
+                  <tr ref={adoptaEstilsDiferits} key={`${clau}-alt-${i}`}>
                     <th scope="row"><Insignia to="avis">{`Un paper diu una altra cosa · ${etiqueta}`}</Insignia></th>
                     <td><Valor text={valorEnText(camp, alternativa.valor)} visible={visible} /></td>
                     <td><Origens fonts={alternativa.fonts} paper={paper} /></td>
@@ -750,7 +753,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
               });
               if (corregint === clau) {
                 files.push(
-                  <tr key={`${clau}-correccio`}>
+                  <tr ref={adoptaEstilsDiferits} key={`${clau}-correccio`}>
                     <td colSpan={5}>
                       <FormulariCorreccio etiqueta={etiqueta} onCancela={() => setCorregint(null)}
                         onDesa={(text) => {
@@ -767,7 +770,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
           </tbody>
         </Taula>
       )) : (
-        <p className="sdp-gestoria-finestreta__nota">Encara no hi ha cap valor confirmat.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">Encara no hi ha cap valor confirmat.</p>
       )}
       <FormulariAMa h={h} onAnuncia={onAnuncia} />
     </Seccio>
@@ -778,7 +781,7 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
 function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix }) {
   const omplert = useMemo(() => omplixFormulari(form, fitxa, opcions), [form, fitxa, opcions]);
   return (
-    <div className="sdp-gestoria-finestreta__formulari">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__formulari">
       <p className="sdp-gestoria-finestreta__nota">{`${form.font.norma}. ${form.font.consulta}.`}</p>
       <p className="sdp-gestoria-finestreta__nota"><Insignia to="avis">{VERIFICAR}</Insignia></p>
       <p className="sdp-gestoria-finestreta__nota">
@@ -794,7 +797,7 @@ function PanellFormulari({ form, fitxa, opcions, visible, onCopia, onImprimix })
           {omplert.camps.map((c) => {
             const estat = c.perLaPersona ? { to: 'info', text: 'L’escrius tu' } : (ESTATS_FORMULARI[c.estat] ?? ESTATS_FORMULARI.falta);
             return (
-              <tr key={c.id}>
+              <tr ref={adoptaEstilsDiferits} key={c.id}>
                 <th scope="row">{c.obligatori ? c.etiqueta : `${c.etiqueta} (opcional)`}</th>
                 <td>{c.estat === 'llest' && !c.perLaPersona ? <Valor text={String(c.valor)} visible={visible} /> : '—'}</td>
                 <td><Insignia to={estat.to}>{estat.text}</Insignia></td>
@@ -912,7 +915,7 @@ export function VistaFinestreta({
   };
   /* Amb el cofre bloquejat no hi ha res a mostrar: la boina va sense l'ull. */
   const boina = h.persistenciaBloquejada ? null : (
-    <span className="sdp-gestoria-boina">
+    <span ref={adoptaEstilsDiferits} className="sdp-gestoria-boina">
       <UllDades visible={visible} onCommuta={() => setVisible((abans) => !abans)} />
     </span>
   );
@@ -944,7 +947,7 @@ export function VistaFinestreta({
       lead="Els teus papers d’identitat, llegits en este ordinador: confirmes cada dada, es desa xifrada al cofre i la Finestreta te-la prepara per a copiar-la als tràmits. No signa ni presenta res."
       author={autor} barActions={boina} labels={ETIQUETES} rellotgeViu rellotge={rellotge}
       showComment={false} showShare={false} showConnect={false}>
-      <p role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
+      <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}
     </PaginaApp>
   );

@@ -20,7 +20,9 @@
  * JS pur: sense DOM ni React. Res no es desa enlloc.
  */
 import { jsonCanonic, sha256Hex } from '../../tractors/nucli/canonic.js';
-import { formatData } from './dates.js';
+import { formatData, rangTrimestre } from './dates.js';
+import { generaExportacioIntegritat } from './exportacioIntegritat.js';
+import { afegixRegistreIntegritat, copiaJsonIntegritat } from './registreIntegritat.js';
 import { fullACsv, maquetaFull, nomsFitxers } from './fullModel.js';
 import { PLANTILLA_GESTORIA } from './plantilla.js';
 import { fullAXlsx } from './xlsx.js';
@@ -71,22 +73,37 @@ function fitxer(nom, tipus, bytes) {
  * @param {object} p
  * @param {{ titular: string, any: number, t: number, ingressos: object[], despeses: object[] }} p.proposta
  * @param {object} [p.plantilla] per defecte, PLANTILLA_GESTORIA
+ * @param {{ registres?: object[], hashEsperat?: string|null, instant?: string|null, ancora?: object|null }} [p.integritat]
+ *   Llibre anterior i àncora externa; sense llibre, snapshot nou sense persistència.
  * @param {SubtleCrypto} [p.subtle] per defecte, crypto.subtle
  * @returns {Promise<{ full: object, csv: { nom: string, tipus: string, dades: Uint8Array },
- *   xlsx: { nom: string, tipus: string, dades: Uint8Array }, empremtes: { csv: string, xlsx: string } }>}
+ *   xlsx: { nom: string, tipus: string, dades: Uint8Array }, empremtes: { csv: string, xlsx: string }, integritat: object }>}
  */
-export async function generaEntregables({ proposta, plantilla = PLANTILLA_GESTORIA, subtle } = {}) {
+export async function generaEntregables({ proposta, plantilla = PLANTILLA_GESTORIA, integritat = {}, subtle } = {}) {
   const { titular, any, t, ingressos, despeses } = comprovaProposta(proposta);
   const full = congela(maquetaFull(plantilla, { titular, any, t, ingressos: llistaDe(ingressos), despeses: llistaDe(despeses) }));
+  const dadesProposta = copiaJsonIntegritat(propostaCanonica(proposta));
+  const { registres = [], hashEsperat = null, instant = null, ancora = null } = copiaJsonIntegritat(integritat);
   const noms = nomsFitxers({ any, t, titular }, plantilla);
   const bytesCsv = new TextEncoder().encode(fullACsv(full));
   const bytesXlsx = fullAXlsx(full);
   const [csv, xlsx] = await Promise.all([sha256Hex(bytesCsv, subtle), sha256Hex(bytesXlsx, subtle)]);
+  const fitxerCsv = fitxer(noms.csv, TIPUS_CSV, bytesCsv);
+  const fitxerXlsx = fitxer(noms.xlsx, TIPUS_XLSX, bytesXlsx);
+  /* Snapshot del full aprovat, amb el dia de tancament com a referència
+     comptable. No inventa una hora d'emissió ni desa historial: sense llibre
+     rebut comença una cadena nova, i ho retorna tot al consumidor. */
+  const llibre = await afegixRegistreIntegritat(registres, {
+    id: `proposta-${any}-${t}t`, tipus: 'esborrany', data: formatData(rangTrimestre(any, t).fi, 'aaaa-mm-dd'), instant,
+    dades: { proposta: dadesProposta, full, empremtes: { csv, xlsx } }
+  }, { hashEsperat, ancora, subtle });
+  const paquet = await generaExportacioIntegritat({ registres: llibre, periode: { any, trimestre: t }, adjunts: [fitxerCsv, fitxerXlsx], ancora, subtle });
   return Object.freeze({
     full,
-    csv: fitxer(noms.csv, TIPUS_CSV, bytesCsv),
-    xlsx: fitxer(noms.xlsx, TIPUS_XLSX, bytesXlsx),
-    empremtes: Object.freeze({ csv, xlsx })
+    csv: fitxerCsv,
+    xlsx: fitxerXlsx,
+    empremtes: Object.freeze({ csv, xlsx }),
+    integritat: Object.freeze({ ...paquet, registres: llibre })
   });
 }
 
@@ -116,14 +133,18 @@ function filesOrdenades(llista) {
  * @param {SubtleCrypto} [subtle] per defecte, crypto.subtle
  * @returns {Promise<string>}
  */
-export async function empremtaProposta(proposta, subtle) {
+function propostaCanonica(proposta) {
   const p = comprovaProposta(proposta);
-  return sha256Hex(jsonCanonic({
+  return {
     schema: SCHEMA_PROPOSTA,
     titular: textDe(p.titular),
     any: Number.isSafeInteger(p.any) ? p.any : null,
     t: Number.isSafeInteger(p.t) ? p.t : null,
     ingressos: filesOrdenades(p.ingressos),
     despeses: filesOrdenades(p.despeses)
-  }), subtle);
+  };
+}
+
+export async function empremtaProposta(proposta, subtle) {
+  return sha256Hex(jsonCanonic(propostaCanonica(proposta)), subtle);
 }

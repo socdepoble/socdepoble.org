@@ -29,6 +29,9 @@ import PanellTractors from './PanellTractors.jsx';
 import { SENTINELLES, TRACTORS_SENTINELLES } from './registreSentinelles.js';
 import { executaSentinella } from './sentinelles/executa.js';
 import { contextAprovacio, magatzemTractors, useTractors } from './useTractors.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
 const APROVACIO = Object.freeze({
   aprovat: { to: 'exit', text: 'Aprovat' },
@@ -123,7 +126,7 @@ function Eixida({ eixida }) {
   const id = useId();
   const bandera = BANDERA[eixida.bandera] ?? BANDERA.cap;
   return (
-    <section aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} aria-labelledby={id}>
       <div className="sdp-tractors-panell__cap">
         <h5 id={id} className="sdp-tractors-panell__subtitol">Eixida</h5>
         <Insignia to={bandera.to}>{bandera.text}</Insignia>
@@ -132,17 +135,17 @@ function Eixida({ eixida }) {
         {`${eixida.resum.roja} roges, ${eixida.resum.groga} grogues i ${eixida.resum.info} informatives.`}
       </p>
       {eixida.avisos.length ? (
-        <ul className="sdp-tractors-panell__historial" aria-label="Avisos">
+        <ul ref={adoptaEstilsDiferits} className="sdp-tractors-panell__historial" aria-label="Avisos">
           {eixida.avisos.map((a, i) => (
-            <li key={`${a.codi}-${i}`}>
+            <li ref={adoptaEstilsDiferits} key={`${a.codi}-${i}`}>
               <Insignia to={SEVERITAT[a.severitat].to}>{SEVERITAT[a.severitat].text}</Insignia>
               {` ${a.missatge} `}
               <code>{a.font}</code>
             </li>
           ))}
         </ul>
-      ) : <p>Cap avís.</p>}
-      {eixida.informe ? <pre className="sdp-tractors-panell__codi">{eixida.informe}</pre> : null}
+      ) : <p ref={adoptaEstilsDiferits}>Cap avís.</p>}
+      {eixida.informe ? <pre ref={adoptaEstilsDiferits} className="sdp-tractors-panell__codi">{eixida.informe}</pre> : null}
     </section>
   );
 }
@@ -214,7 +217,7 @@ export default function PanellSentinelles({
   return (
     <>
       <PanellTractors magatzem={desti} subtle={subtle} tractors={tractors} entorn={entorn} rellotge={rellotge} />
-      <section className="sdp-tractors-panell" aria-labelledby={idTitol}>
+      <section ref={adoptaEstilsDiferits} className="sdp-tractors-panell" aria-labelledby={idTitol}>
         {/* IDEA-27 (ordre del Mestre, 261025) · Una secció de la pàgina és un h3,
             com la porta de dalt, i cada sentinella un h4. Què és un sentinella
             ho diu l'entradilla de la pàgina (WikiDePobleSection.jsx); ací, com
@@ -226,13 +229,13 @@ export default function PanellSentinelles({
         </p>
         {porta.error ? <Alerta to="error">{porta.error}</Alerta> : null}
         {porta.carregant ? <Carregant etiqueta="Comprovant les aprovacions…" /> : null}
-        {!porta.carregant && !triat ? <p>No hi ha cap sentinella registrat.</p> : null}
+        {!porta.carregant && !triat ? <p ref={adoptaEstilsDiferits}>No hi ha cap sentinella registrat.</p> : null}
 
         {!porta.carregant && triat ? (
-          <div className="sdp-tractors-panell__cos">
+          <div ref={adoptaEstilsDiferits} className="sdp-tractors-panell__cos">
             <ul className="sdp-tractors-panell__llista" aria-label="Sentinelles">
               {sentinelles.map((s) => (
-                <li key={s.id}>
+                <li ref={adoptaEstilsDiferits} key={s.id}>
                   <button type="button" className="sdp-tractors-panell__tria"
                     aria-current={s.id === triat.id ? 'true' : undefined} onClick={() => tria(s.id)}>
                     <span className="sdp-tractors-panell__tria-nom">{s.nom}</span>
@@ -253,7 +256,7 @@ export default function PanellSentinelles({
                   <dt>Disparador</dt>
                   <dd>
                     <ul>
-                      {triat.disparador.map((d, i) => <li key={`${d.tipus}-${i}`}>{`${DISPARADORS[d.tipus] ?? d.tipus}: ${d.detall}`}</li>)}
+                      {triat.disparador.map((d, i) => <li ref={adoptaEstilsDiferits} key={`${d.tipus}-${i}`}>{`${DISPARADORS[d.tipus] ?? d.tipus}: ${d.detall}`}</li>)}
                     </ul>
                   </dd>
                 </div>

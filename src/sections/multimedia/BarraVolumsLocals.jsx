@@ -19,6 +19,9 @@ import { FolderOpen, FolderPlus, RefreshCw, Unplug, X } from 'lucide-react';
 import { Alerta, Boto, Insignia } from '../../components/PedraSeca/index.js';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 export function BarraVolumsLocals({
   t,
@@ -49,9 +52,9 @@ export function BarraVolumsLocals({
     <section ref={contenidorRef} className="sdp-arxiu-local__panell" aria-labelledby={idTitol}>
       <Titol id={idTitol}>{tr(T.volums)}</Titol>
       {volums.length > 0 ? (
-        <div role="group" aria-labelledby={idTitol} className="sdp-arxiu-local__fila">
+        <div ref={adoptaEstilsDiferits} role="group" aria-labelledby={idTitol} className="sdp-arxiu-local__fila">
           {volums.map((v) => (
-            <button
+            <button ref={adoptaEstilsDiferits}
               key={v.id}
               type="button"
               className={v.id === volumActiu ? 'pill pill--primary' : 'pill'}
@@ -61,13 +64,13 @@ export function BarraVolumsLocals({
             >
               <FolderOpen size={18} aria-hidden="true" focusable="false" />
               <span>{nomVisibleLocal(v.nom)}</span>
-              {v.efimer ? <span className="sdp-nomes-lector">{` · ${tr(T.sessio)}`}</span> : null}
+              {v.efimer ? <span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{` · ${tr(T.sessio)}`}</span> : null}
             </button>
           ))}
         </div>
       ) : null}
 
-      <div className="sdp-arxiu-local__fila">
+      <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
         <Boto varietat="primari" icona={FolderPlus} aria-label={tr(T.vincula)} onClick={onVincula} disabled={ocupat} data-accio="vincula">
           {tr(T.vincula).split(' ')[0]}
         </Boto>
@@ -81,7 +84,7 @@ export function BarraVolumsLocals({
       </div>
 
       {obert && (actiu.efimer || !potEscriure) ? (
-        <div className="sdp-arxiu-local__fila">
+        <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
           {actiu.efimer ? <Insignia to="avis">{tr(T.sessio)}</Insignia> : null}
           {!potEscriure ? <Insignia to="info">{tr(T.nomesLectura)}</Insignia> : null}
         </div>
@@ -99,8 +102,8 @@ export function BarraVolumsLocals({
             </>
           )}
         >
-          <p>{tr(T.reconnectaAjuda)}</p>
-          {gestCaducat ? <p>{tr(T.gestCaducat)}</p> : null}
+          <p ref={adoptaEstilsDiferits}>{tr(T.reconnectaAjuda)}</p>
+          {gestCaducat ? <p ref={adoptaEstilsDiferits}>{tr(T.gestCaducat)}</p> : null}
         </Alerta>
       ) : null}
 
@@ -113,7 +116,7 @@ export function BarraVolumsLocals({
         </Alerta>
       ) : null}
 
-      {!potTriar ? <p className="sdp-arxiu-local__ajuda">{tr(T.senseSelector)}</p> : null}
+      {!potTriar ? <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">{tr(T.senseSelector)}</p> : null}
       <p className="sdp-arxiu-local__ajuda">{tr(T.privadesa)}</p>
     </section>
   );

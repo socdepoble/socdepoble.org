@@ -56,10 +56,10 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "bb2ac8cb21a8150ed107804d8bb2cbe9c4f5c3c99559620aaa40a67d210e2053",
-      "html": 4846,
-      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
-      "data": "2026-11-15"
+      "sha256": "5e64912232d93a68c278e9622cab11fc484895aa7f9c8da7ab53ec589f1a2b01",
+      "html": 6301,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
+      "data": "2026-11-18"
     },
     "drets-autor": {
       "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
@@ -68,15 +68,15 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "cfadd9f3dbca819acd844d34745500870dacefc0b3a1a187d5db9307ff4e1c26",
-      "html": 21954,
-      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "sha256": "21de3909c234d9054fd377c0d43f0ac629f3108d39c5f9ff49a5e1a1bb6e1cfb",
+      "html": 21957,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
       "data": "2026-11-18"
     },
     "fediversity": {
-      "sha256": "b23553385c2ac4238bf72d0c8def447c9e8bdcc81ad40d1e9f9de3e4b963fcd7",
-      "html": 63835,
-      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "sha256": "56c9f7d45091abf8bce646b879d29d02d0db5ccb4179441d2938d3ea6cb3c85d",
+      "html": 65296,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
       "data": "2026-11-18"
     },
     "habitatge": {
@@ -104,9 +104,9 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "12ddcaca3645761ef7c9744935fa51d40d1296a1db5904e949c0c28741df12c0",
-      "html": 27354,
-      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "sha256": "5563adc37c0969b4947c4a2463ddd067238d1a4ab623d8b4f0931b2eab57331d",
+      "html": 28676,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
       "data": "2026-11-18"
     },
     "notes": {
@@ -116,10 +116,10 @@
       "data": "2026-11-14"
     },
     "projecte": {
-      "sha256": "580f77f52b067d37dadff6c25ef7000346661c6ab7bf5a3bf36c8615b6a9e78b",
-      "html": 10845,
-      "aprovat_per": "gemini-r31",
-      "data": "2026-11-16"
+      "sha256": "bb4887fb39a6c66605472da1bc953ad0ac9fcf3e3d765c191928d784104aac36",
+      "html": 12744,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
+      "data": "2026-11-18"
     },
     "publicar_mapa": {
       "sha256": "14420b6cf28a3cf1f93dc0a25e634bba12ac63b92f2377e9fb9ebbb2ed2b8046",
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "2fdc27ce9a1cfcd95e0126536573dad380f793c43b5bf984e04b56da6b734480",
-      "html": 115039,
-      "aprovat_per": "Mestre Javi (ordre al xat 18-11-2026, aprovació delegada a Claude v1.2.8)",
+      "sha256": "391b379d96fb25d253791465ab45bda70eebece7a7c29290e1ff5c4764ce8f90",
+      "html": 122081,
+      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «les 6 claus de la Frontissa de contingut aprovades», aprovació delegada a Claude v1.2.9)",
       "data": "2026-11-18"
     },
     "wikidepoble": {

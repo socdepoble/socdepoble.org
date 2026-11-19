@@ -61,8 +61,20 @@ export function enllacaDependencies(origen, desti) {
     (P0-22). Reutilitza les dependències instal·lades: el hook mai instal·la ni executa scripts de cicle
     de vida. El hook usa els valors per defecte; les proves injecten `run` i `origen`. */
 export function executaValidadors(dir, env, {run = runChecked, origen = path.join(PROJECT_DIR,'node_modules')} = {}) {
-  // Runtime canònic buit per a Fronteres; mai es copia la paperera privada de l’arbre viu.
-  fs.mkdirSync(path.join(dir,'.sdp-paperera'), {mode:0o700});
+  // El checkout pot portar el marcador buit; mai es copia la paperera privada de l’arbre viu.
+  const paperera = path.join(dir,'.sdp-paperera');
+  try { fs.mkdirSync(paperera, {mode:0o700}); }
+  catch (error) { if (error.code !== 'EEXIST') throw error; }
+  const abans = fs.lstatSync(paperera);
+  if (!abans.isDirectory() || abans.isSymbolicLink()) throw new Error('Paperera preparada no és un directori real: .sdp-paperera');
+  const {O_RDONLY, O_DIRECTORY, O_NOFOLLOW} = fs.constants;
+  if (!Number.isInteger(O_DIRECTORY) || !Number.isInteger(O_NOFOLLOW)) throw new Error('Paperera preparada: falta obertura de directori sense seguir enllaços');
+  const fd = fs.openSync(paperera, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  try {
+    const actual = fs.fstatSync(fd);
+    if (!actual.isDirectory() || actual.dev !== abans.dev || actual.ino !== abans.ino) throw new Error('Paperera preparada canviada durant la comprovació');
+    fs.fchmodSync(fd, 0o700);
+  } finally { fs.closeSync(fd); }
   enllacaDependencies(origen, path.join(dir,'node_modules'));
   for (const {cmd,args,pas} of PASSOS_HOOK) run(cmd,args,dir,env,tempsDelPas(pas,env));
 }
@@ -108,6 +120,11 @@ export async function verifyPreparedTree(receiptPath) {
     fs.writeFileSync(path.join(dir,'.git/objects/info/alternates'),path.resolve(PROJECT_DIR,objects)+'\n');
     runChecked('git',['update-ref','HEAD',(await pendingTreeForReceipt(receiptPath)).headBeforeCommit],dir,env);
     runChecked('git',['read-tree',prepared.tree],dir,env);
+    /* v1.2.9 · Sense refrescar l'índex, el primer git status o diff dels validadors ha de tornar a fer el
+       hash de tots els fitxers materialitzats i, en un arbre gran, esgota el termini curt d'alguns (tancament
+       --check, consum-acreditat: 10 s → «spawnSync git ETIMEDOUT»). Només actualitza les dades d'estat de
+       l'índex: l'arbre no canvia, i un fitxer que no casara amb l'arbre faria fallar el pas. */
+    runChecked('git',['update-index','-q','--refresh'],dir,env);
     copiaTornsLocals(PROJECT_DIR, dir);
     // L'instantani només mira l'índex (git ls-files): node_modules no hi és mai (.gitignore).
     const before = snapshotPreparedFiles(dir,env);

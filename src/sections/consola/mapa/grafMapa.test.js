@@ -379,7 +379,7 @@ describe('Explorador: la llegenda i els filtres primer, el graf al final (T3)', 
 
   test('la llegenda dels tipus usa els mateixos tokens que pinta el canvas', () => {
     // vitest corre des de l'arrel del repositori; import.meta.url no hi és un file://.
-    const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
+    const css = readFileSync(resolve(process.cwd(), 'src/css/diferit-explorador.css'), 'utf8');
     for (const [tipus, color] of Object.entries(ESTIL_MAPA.colors)) {
       expect(css).toContain(`.sdp-explorador__punt[data-tipus="${tipus}"] { background: ${color}; }`);
     }

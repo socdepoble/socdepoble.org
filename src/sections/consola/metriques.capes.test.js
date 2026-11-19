@@ -7,7 +7,7 @@ import { expect, test } from 'vitest';
    mateix patró que PageFrame.capes.test.js. */
 const net = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
-const moduls = net('src/css/modules.css');
+const moduls = `${net('src/css/modules.css')} ${net('src/css/diferit-explorador.css')}`;
 
 /* El bloc que obri `obertura` (comptant claus) i conté `regla`. */
 const blocDe = (text, obertura, regla) => {

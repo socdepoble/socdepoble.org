@@ -1,10 +1,10 @@
+import { normalitzaUnicodeSegura } from '../utils/normalitzaUnicodeSegura.js';
+
 /* Auditoria 261007 (B) \u00b7 S'han retirat stripAccents (malgrat el nom, feia un
    slug: \u00abS\u00f3c de Poble\u00bb \u2192 \u00absoc-de-poble\u00bb) i formatMonthLabel: cap consumidor,
    ni a les proves. Per a la cerca, normalizeSearchText. */
 export const normalizeSearchText = (value) =>
-  String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
+  normalitzaUnicodeSegura(String(value || '').toLowerCase(), 'NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();

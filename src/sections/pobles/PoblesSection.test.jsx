@@ -275,8 +275,12 @@ test('PS-07 · a la graella d’entitats d’un poble, «Anar al xat» de cada e
   const fila = (id, name, kind) => ({ id, name, kind, lema: '', description: '.', logo_url: '', hero_url: '', town_name: 'Vilanova de Prova SdP' });
   mocks.entitats = { estat: 'ready', entitats: [fila('org-forn', 'Forn de la Plaça', 'company'), fila('org-colla', 'Colla de la Serra', 'group')], error: null, refresh: vi.fn() };
   const { container } = render(<EntitatsDelPoble poble={{ id: 'vilanova-de-prova-sdp', title: 'Vilanova de Prova SdP' }} />);
-  const botons = screen.getAllByRole('link', { name: 'Anar al xat' });
+  /* Gemini R32.11 lot_00 (rebase R32.10) · Nom accessible únic per entitat, «Anar al xat {nom}» (WCAG 2.4.4),
+     que comença pel verb visible (WCAG 2.5.3): el mateix contracte que FitxesPubliquesEntitats.r32_10. */
+  const botons = screen.getAllByRole('link', { name: /^Anar al xat/ });
   expect(botons).toHaveLength(2);
+  expect(screen.getByRole('link', { name: 'Anar al xat Forn de la Plaça' })).toBe(botons[0]);
+  expect(screen.getByRole('link', { name: 'Anar al xat Colla de la Serra' })).toBe(botons[1]);
   expect(botons.map((b) => b.className)).toEqual(Array(2).fill('sdp-boto sdp-boto--secundari sdp-boto--gran sdp-boto--ple'));
   expect(botons.every((b) => b.closest('.sp-card-accio') && b.getAttribute('href').startsWith('/xat?'))).toBe(true);
   expect(container.querySelectorAll('.sdp-boto--primari')).toHaveLength(0);

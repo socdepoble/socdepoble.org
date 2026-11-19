@@ -402,7 +402,7 @@ describe('mode senzill · la forma de la capçalera', () => {
   });
 
   test('el CSS de la caixa del visor no força cap quadrat: cap aspect-ratio ni cap mida fixa (bloc T46 de modules.css)', () => {
-    const css = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const css = readFileSync(path.join(process.cwd(), 'src/css/diferit-enquadrament.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
     const regles = [...css.matchAll(/([^{}]*\.sdp-enquadrament__visor-caixa[^{}]*)\{([^{}]*)\}/g)];
     expect(regles.length).toBeGreaterThan(0);
     for (const [, selector, cos] of regles) {

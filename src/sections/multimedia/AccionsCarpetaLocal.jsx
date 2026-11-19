@@ -12,6 +12,9 @@ import { creaFitxerMarkdownLocal, esRutaEscrivibleLocal, nomFitxerDe, nomSegurDe
 import { FormulariNomLocal } from './FormulariNomLocal.jsx';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, missatgeDErrorLocal, tradueix } from './textosGestorLocal.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CANCELA = ['common.cancela', 'Cancel·lar'];
 
@@ -90,7 +93,7 @@ function AccionsDeLaCarpeta({ t, font, carpeta = '', nomVolum = '', buida = fals
 
   return (
     <section ref={caixa} className="sdp-arxiu-local__panell" aria-labelledby={`${id}-titol`}>
-      <h3 id={`${id}-titol`}>{tr(T['ops.accionsCarpeta'])}</h3>
+      <h3 ref={adoptaEstilsDiferits} id={`${id}-titol`}>{tr(T['ops.accionsCarpeta'])}</h3>
       <p className="sdp-arxiu-local__ajuda">{tr(T['permis.escriptura'], { nom: nomVisibleLocal(nomVolum) })}</p>
       <div className="sdp-arxiu-local__fila">
         <Boto

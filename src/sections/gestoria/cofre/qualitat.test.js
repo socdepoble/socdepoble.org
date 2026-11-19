@@ -31,7 +31,7 @@ const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(
 
 const MARCA = '/* ── GESTORIA COFRE (261009) ── */';
 function blocCofre() {
-  const css = llig('src/css/modules.css');
+  const css = llig('src/css/diferit-gestoria.css');
   const inici = css.indexOf(MARCA);
   expect(inici, 'falta el bloc del cofre a modules.css').toBeGreaterThan(-1);
   expect(css.indexOf(MARCA, inici + 1), 'el marcador ha de ser únic').toBe(-1);
@@ -111,7 +111,7 @@ describe('higiene criptogràfica', () => {
   test('cap clau exportada; generar i desembolcallar claus, només al nucli', () => {
     const exporta = new RegExp(['export', 'Key\\s*\\('].join(''));
     const genera = new RegExp(['generate', 'Key\\s*\\(|unwrap', 'Key\\s*\\(|wrap', 'Key\\s*\\(|derive', '(?:Key|Bits)\\s*\\('].join(''));
-    for (const fitxer of PRODUCCIO) {
+    for (const fitxer of [...PRODUCCIO, 'src/utils/normalitzaUnicodeSegura.js']) {
       const codi = senseComentaris(llig(fitxer));
       expect(exporta.test(codi), `${fitxer}: exporta una clau`).toBe(false);
       if (fitxer !== `${CARRIL}/nucli/cripto.js`) expect(genera.test(codi), `${fitxer}: maneja claus fora del nucli`).toBe(false);
@@ -132,7 +132,7 @@ describe('higiene criptogràfica', () => {
       [/\bhttps?:\/\//, 'URL'],
       [/\bdebugger\b/, 'debugger']
     ];
-    for (const fitxer of PRODUCCIO) {
+    for (const fitxer of [...PRODUCCIO, 'src/utils/normalitzaUnicodeSegura.js']) {
       const codi = llig(fitxer);
       for (const [patro, que] of vetats) expect(patro.test(codi), `${fitxer}: ${que}`).toBe(false);
     }
@@ -140,8 +140,12 @@ describe('higiene criptogràfica', () => {
     expect(PRODUCCIO.filter((fitxer) => idb.test(llig(fitxer)))).toEqual([`${CARRIL}/magatzemCofre.js`]);
   });
 
-  test('el nucli és pur: sense globals, DOM, React ni imports', () => {
+  test('el nucli és pur: només importa l’ajudant Unicode també pur', () => {
     const nucli = senseComentaris(llig(`${CARRIL}/nucli/cripto.js`));
-    expect(nucli).not.toMatch(/\b(?:globalThis|window|document|navigator|self)\b|import\.meta|\bimport\b|\brequire\s*\(/);
+    const ajudant = /^import \{ normalitzaUnicodeAmbLimit \} from '\.\.\/\.\.\/\.\.\/\.\.\/utils\/normalitzaUnicodeSegura\.js';$/gm;
+    expect(nucli.match(ajudant)).toHaveLength(1);
+    for (const codi of [nucli.replace(ajudant, ''), senseComentaris(llig('src/utils/normalitzaUnicodeSegura.js'))]) {
+      expect(codi).not.toMatch(/\b(?:globalThis|window|document|navigator|self)\b|import\.meta|\bimport\b|\brequire\s*\(/);
+    }
   });
 });

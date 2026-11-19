@@ -41,43 +41,68 @@ import { fixaTraductorLliure } from '../../data/traductorDelLloc.js';
 afterEach(() => { cleanup(); fixaTraductorLliure(null); });
 beforeEach(() => { vi.clearAllMocks(); m.language = 'ca'; m.pagina = null; fixaTraductorLliure('apertium'); });
 
-const seccio = (nom) => screen.getByRole('region', { name: nom });
-const targetaDe = (llengua) => screen.getByRole('heading', { level: 3, name: llengua }).closest('article');
+const targetaDe = (llengua) => screen.getByRole('heading', { level: 4, name: llengua }).closest('article');
 
 /* Derogat «sense logos» (ordre del Mestre, 261004, norma dels logotips): la
    pàgina signa Sóc de Poble (sense autor propi) i PageFrame hi pinta el seu
-   logotip dalt de l'H1 (PageFrame.logo.test.jsx). Ací es mira que la secció
-   no el lleva: ni senseLogo ni cap autoria pròpia. */
-test('la pàgina existix i no és buida: crom de sistema, signada per Sóc de Poble (amb el seu logotip), tres seccions de targetes', () => {
+   logotip dalt de l'H1 (PageFrame.logo.test.jsx).
+   Ordre del Mestre (261118) · Jerarquia Pedra Seca pura: l'entradilla (lead)
+   va davall del primer H2 (subtitle de UniversalPage), les 3 seccions van en
+   H3 i només els 5 idiomes són targetes d'acció; la resta és prosa H4 + <p>. */
+test('jerarquia Pedra Seca pura: lead sota el subtítol de UniversalPage, cap H2 intern, tres H3 i només les 5 ActionCards d’idioma', () => {
   const { container } = render(<TranslationsSection />);
   expect(m.pagina.chrome).toBe('system');
   expect(m.pagina.senseLogo).toBeUndefined();
   expect(m.pagina.authorName).toBeUndefined();
   expect(m.pagina.authorHref).toBeUndefined();
   expect(m.pagina.title).toBe('Traduccions i llengua');
-  expect(seccio('Idioma del Sistema')).toBeTruthy();
-  expect(seccio('Traductor de Poble per a Pàgines')).toBeTruthy();
-  expect(seccio('Traducció Dinàmica de Targetes')).toBeTruthy();
-  expect(container.querySelectorAll('article.sp-card')).toHaveLength(SUPPORTED_LANGUAGES.length + 4);
+  expect(m.pagina.subtitle).toBe('Gestió d’idiomes del sistema i contingut');
+  expect(m.pagina.lead).toMatch(/Aquest ajust canvia l’idioma de tots els menús, botons i interfícies/);
+  expect(screen.queryAllByRole('heading', { level: 2 })).toHaveLength(0);
+  const titolsH3 = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+  expect(titolsH3).toEqual(['Idioma del Sistema', 'Traductor per a Pàgines', 'Traducció Dinàmica de Targetes']);
+  expect(container.querySelectorAll('article.sp-card')).toHaveLength(SUPPORTED_LANGUAGES.length);
+  expect(container.querySelector('.content-wrapper')).toBeNull();
 });
 
-/* IDEA-31 (C0545-S2) · El Traductor de Poble per a pàgines ja funciona: es diu,
-   amb veritat, abans de la traducció de targetes, que continua en obres. */
-test('el Traductor de Poble per a Pàgines es declara ACTIU, amb Apertium i MyMemory dits amb veritat, abans de les targetes', () => {
-  render(<TranslationsSection />);
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  expect(titols).toEqual(['Idioma del Sistema', 'Traductor de Poble per a Pàgines', 'Traducció Dinàmica de Targetes']);
-  const pagines = seccio('Traductor de Poble per a Pàgines');
-  const targeta = within(pagines).getByRole('heading', { level: 3, name: 'Botó Traduir de la Barra Blava' }).closest('article');
-  expect(within(targeta).getByText('ACTIU').classList.contains('sdp-badge-system')).toBe(true);
-  expect(within(targeta).queryByText('EN OBRES')).toBeNull();
-  const text = targeta.textContent;
-  /* Cicle 2 (261030): el gallec i el basc al menú; MyMemory per al basc i
-     l'alemany (decisions §1 i §6): els textos públics diuen la veritat. */
+/* IDEA-31 (C0545-S2) + Ordre del Mestre (261118) · El Traductor per a Pàgines
+   s'explica en prosa escanejable (negretes + enllaços oficials) acompanyada de
+   la mostra visual inerta de la Barra Blava + MenuTraduir, i la Traducció
+   Dinàmica de Targetes mostra el peu blau de la Targeta Universal. */
+test('el Traductor per a Pàgines s’explica amb mostra de Barra Blava, negretes, enllaços vius i veritat legal', () => {
+  const { container } = render(<TranslationsSection />);
+  const h4Pagines = screen.getByRole('heading', { level: 4, name: 'Botó Traduir de la Barra Blava' });
+  expect(h4Pagines.closest('article.sp-card')).toBeNull();
+
+  const mostraBarra = screen.getByTestId('mostra-barra-blava');
+  expect(mostraBarra.getAttribute('aria-hidden')).toBe('true');
+  expect(mostraBarra.hasAttribute('inert')).toBe(true);
+  expect(mostraBarra.querySelector('header.bar-blue')).toBeTruthy();
+
+  const mostraPeu = screen.getByTestId('mostra-peu-targeta');
+  expect(mostraPeu.getAttribute('aria-hidden')).toBe('true');
+  expect(mostraPeu.hasAttribute('inert')).toBe(true);
+  expect(mostraPeu.querySelector('footer.sp-card-footer')).toBeTruthy();
+
+  const hrefs = [...container.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
+  expect(hrefs).toEqual(expect.arrayContaining([
+    'https://www.apertium.org/',
+    'https://mymemory.translated.net/',
+    'https://translated.com/',
+    'https://wordpress.org/',
+    '/disseny?categoria=fonaments&item=fonaments-controls-barra',
+    '/legal',
+    '/mur',
+    '/xat',
+    '/mercat',
+    '/calendari'
+  ]));
+  expect(container.querySelectorAll('strong').length).toBeGreaterThanOrEqual(20);
+
+  const text = container.textContent;
   expect(text).toMatch(/al castellà, al gallec, al basc, a l’anglés, al francés i a l’alemany/);
   expect(text).toMatch(/Per al castellà, el gallec, l’anglés i el francés ho fa amb Apertium, un traductor de programari lliure/);
   expect(text).toMatch(/Per al basc i l’alemany, que Apertium no oferix des del valencià, ho fa amb MyMemory, el servei de l’empresa italiana Translated, que no diu quin motor automàtic fa servir/);
-  // Privacitat (ampliació del Mestre 261030): on va el text i qui veu la IP.
   expect(text).toMatch(/Només quan tries una llengua, el text de la pàgina ix cap al traductor/);
   expect(text).toMatch(/a socdepoble\.org, des del teu navegador directament al servei, que veu la teua adreça IP/);
   expect(text).toMatch(/en un lloc amb servidor propi, com WordPress, a través d’eixe servidor/);
@@ -89,19 +114,17 @@ test('el Traductor de Poble per a Pàgines es declara ACTIU, amb Apertium i MyMe
 
 /* Gauntlet 261030 (cicle 2, traduccions-actiu-a-app-nativa) · A l'app nativa
    (natiu/entrada.jsx no fixa cap transport ni hi ha cap servei), Traduir encara
-   no traduïx: la targeta no diu «Actiu» i ho diu primer, com la pàgina legal. */
-test('a l’app nativa (cap servei ni transport lliure): la targeta diu «En obres» i que el botó encara no traduïx', () => {
+   no traduïx: la prosa mostra l'avís «En obres» abans de l'explicació general. */
+test('a l’app nativa (cap servei ni transport lliure): la prosa avisa «En obres» i que el botó encara no traduïx', () => {
   fixaTraductorLliure(null);
-  render(<TranslationsSection />);
-  const targeta = within(seccio('Traductor de Poble per a Pàgines')).getByRole('heading', { level: 3, name: 'Botó Traduir de la Barra Blava' }).closest('article');
-  expect(within(targeta).queryByText('ACTIU')).toBeNull();
-  expect(within(targeta).getByText('EN OBRES').classList.contains('sdp-badge-tag')).toBe(true);
-  expect(targeta.textContent).toMatch(/A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu\. El botó Traduir de la Barra Blava traduïx/);
+  const { container } = render(<TranslationsSection />);
+  expect(container.textContent).toMatch(/En obres:\s*A l’aplicació nativa, de moment, el botó encara no fa cap traducció: si el prems, t’ho diu\./);
 });
 
 test('Valencià va primer i destacat com a llengua pròpia; la resta conserva l’ordre', () => {
-  render(<TranslationsSection />);
-  const titols = within(seccio('Idioma del Sistema')).getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+  const { container } = render(<TranslationsSection />);
+  const graella = container.querySelector('.sdp-card-grid');
+  const titols = [...graella.querySelectorAll('h4.sp-card-title')].map((h) => h.textContent);
   expect(titols).toEqual(['Valencià', 'Castellà', 'English', 'Euskara', 'Galego']);
   const valencia = targetaDe('Valencià');
   expect(valencia.classList.contains('sp-card--action')).toBe(true);
@@ -111,9 +134,9 @@ test('Valencià va primer i destacat com a llengua pròpia; la resta conserva l�
 
 test('la llengua activa porta ACTIU i l’estat s’anuncia per al lector de pantalla', () => {
   m.language = 'es';
-  render(<TranslationsSection />);
+  const { container } = render(<TranslationsSection />);
   expect(screen.getByRole('status').textContent).toBe('Idioma actual: Castellà');
-  const graella = seccio('Idioma del sistema');
+  const graella = container.querySelector('.sdp-card-grid');
   expect(within(graella).getAllByText('ACTIVO')).toHaveLength(1);
   expect(within(targetaDe('Castellà')).getByText('ACTIVO').classList.contains('sdp-badge-system')).toBe(true);
   expect(within(targetaDe('Valencià')).queryByText('ACTIVO')).toBeNull();
@@ -131,32 +154,40 @@ test('clicar una llengua crida setLanguage amb el seu codi', () => {
 test('cap fantasma: ni classes .card/.pill antigues ni SVG sense mida', () => {
   const { container } = render(<TranslationsSection />);
   expect(container.querySelector('.card, .card__body, .card__title, .card__text, .pill, .sdp-llista')).toBeNull();
-  // Un SVG amb viewBox i sense width s'estira a tot l'ample: era l'«SVG gegant».
+  // Un SVG amb viewBox i sense width ni .icon s'estira a tot l'ample: era l'«SVG gegant».
   expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
-  expect(container.querySelectorAll('svg:not([width])')).toHaveLength(0);
+  expect(container.querySelectorAll('svg:not([width]):not(.icon)')).toHaveLength(0);
   expect(container.querySelector('hr')).toBeNull();
 });
 
-/* IDEA-31 · Decisions 261030 §6: cap promesa sobre Google que no es puga
-   demostrar (MyMemory no diu quin motor fa servir): Google no hi apareix. La
-   traducció de targetes continua pendent i no s'atribuïx a cap proveïdor. */
-test('el motor de targetes es declara pendent i no s’atribuïx a cap proveïdor', () => {
+/* IDEA-31 · Decisions 261030 §6 + Ordre del Mestre (261118): els tres apartats
+   de Traducció Dinàmica de Targetes van en H4 de prosa pura (sense targetes),
+   no mencionen Google i expliquen què fa el botó mentre estiga pendent. */
+test('el bloc de traducció dinàmica de targetes va en prosa H4 (Motor, Com utilitzar-ho, Nota) i no s’atribuïx a cap proveïdor', () => {
   const { container } = render(<TranslationsSection />);
-  expect(container.textContent).not.toMatch(/Google/);
-  const targetes = seccio('Traducció Dinàmica de Targetes');
-  expect(targetes.textContent).not.toMatch(/Google|Apertium|DeepL/);
-  const motor = targetaDe('Motor de Traducció Integrat');
-  expect(within(motor).getByText('EN OBRES').classList.contains('sdp-badge-tag')).toBe(true);
-  expect(within(targetaDe('Com utilitzar-ho')).getByText(/Mentre la traducció de targetes no estiga connectada, el botó porta a aquesta pàgina/)).toBeTruthy();
+  expect(container.textContent).not.toMatch(/Google|DeepL/);
+  for (const subtitol of ['Motor de Traducció Integrat', 'Com utilitzar-ho', 'Nota']) {
+    const h4 = screen.getByRole('heading', { level: 4, name: subtitol });
+    expect(h4.closest('article.sp-card')).toBeNull();
+  }
+  expect(screen.getByText((_c, node) => node?.tagName === 'P' && /Mentre la traducció de targetes no estiga connectada, el botó porta a aquesta pàgina/.test(node.textContent))).toBeTruthy();
 });
 
-test('en una altra llengua la pàgina es tradueix sencera', () => {
+test('en una altra llengua la pàgina es tradueix sencera amb tots els H3 i H4', () => {
   m.language = 'en';
   const { container } = render(<TranslationsSection />);
-  expect(seccio('System language')).toBeTruthy();
-  expect(seccio('Village Translator for pages')).toBeTruthy();
-  expect(seccio('Dynamic card translation')).toBeTruthy();
+  expect(m.pagina.lead).toMatch(/This setting changes the language of every menu, button and screen/);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+    'System language',
+    'Page translator',
+    'Dynamic card translation'
+  ]);
+  expect(screen.getByRole('heading', { level: 4, name: 'The «Traduir» (Translate) button on the blue bar' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 4, name: 'Built-in translation engine' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 4, name: 'How to use it' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 4, name: 'Note' })).toBeTruthy();
   expect(within(targetaDe('English')).getByText('ACTIVE')).toBeTruthy();
+  expect(container.textContent).toMatch(/Live sample of the page’s blue bar/);
   expect(container.textContent).not.toMatch(/section\.translations\./);
 });
 

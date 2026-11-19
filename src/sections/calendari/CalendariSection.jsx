@@ -95,6 +95,8 @@ import { ContentProvider } from '../../components/universal/ContentProvider';
 import {
   Alerta, Boto, BotoPantallaCompleta, Carregant, PantallaCompleta, usePantallaCompleta
 } from '../../components/PedraSeca/index.js';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { useSearchParams } from '../../app/contexts/RouterContext';
 import { DinsDelCalendari } from '../../components/universal/barres/pastillaCalendari.js';
 import { RUTA_CALENDARI, diaIso } from '../../components/universal/editorial.js';
 import { getSectionListPath, objecteDePagina } from '../../config/navigation';
@@ -102,8 +104,11 @@ import { loadActesAgenda, teCapacitat } from '../../data/backendPort.js';
 import { useSEO } from '../../hooks/useSEO';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { useMur } from '../mur/MurContext';
+import { esActeDelCalendari, mesDeLActeMesProper } from '../mur/agendaMur.js';
 import { perMomentDescendent, targetesDeSistema } from '../mur/targetesMur.js';
+import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
 import { CalendariDelPoble } from './CalendariDelPoble.jsx';
+import { SelectorModeCalendari } from './DesplegableEsdevenimentsCalendari.jsx';
 import {
   cursorDeMes, diaDeLaClau, entradaDeLAgenda, entradesDelCalendari, mesDObertura
 } from './calendariGlobal.js';
@@ -113,10 +118,21 @@ import { useFontsCalendari } from './fonts/useFontsCalendari.js';
 import { configFontsDeLEntorn } from './fonts/configFonts.js';
 import { totsPublics } from '../../components/universal/traduccio/visibilitatTraduible.js';
 import { useEstatCalendari } from './useEstatCalendari.js';
+import { textosCalendariExtra } from './i18nCalendariExtra.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 const SENSE_AGENDA = Object.freeze({ fase: 'inactiu', entrades: Object.freeze([]) });
-/* El nom accessible del diàleg de la pantalla completa. */
-const TITOL_PANTALLA = 'Calendari a pantalla completa';
+const RUTA_PUBLICAR_CALENDARI = '/notes?ambit=calendari';
+const PARAMS_HEMEROTECA = Object.freeze(['vista', 'setmana', 'date', 'data', 'mes', 'any']);
+
+function modeInicialDeLaUrl(searchParams) {
+  const mostrar = searchParams.get('mostrar');
+  if (mostrar === 'tot') return 'all';
+  if (mostrar === 'events') return 'events';
+  return PARAMS_HEMEROTECA.some((clau) => searchParams.get(clau) !== null) ? 'all' : 'events';
+}
 
 /**
  * Els actes de l'agenda de Sollutia del període que es veu ({ desde, fins },
@@ -169,12 +185,13 @@ function useActesDeLAgenda({ desde: dataDesde, fins: dataFins }) {
    (261001) · El DOM és el mateix que abans d'extraure'l. Onada 6 · L'avís de
    les targetes que no es poden situar, que anava al costat, el pinta
    CalendariDelPoble: és el mateix al Mur. */
-function AvisDeLAgenda({ agenda }) {
+function AvisDeLAgenda({ agenda, idioma = 'ca' }) {
   if (agenda.fase !== 'error') return null;
+  const tx = textosCalendariExtra(idioma);
   return (
-    <p role="status">
-      Ara mateix no podem consultar els actes de l’agenda: el calendari mostra només les targetes del poble.{' '}
-      <Boto varietat="fantasma" onClick={agenda.reintenta}>Torna a provar</Boto>
+    <p ref={adoptaEstilsDiferits} role="status">
+      {tx.avisAgenda}{' '}
+      <Boto varietat="fantasma" onClick={agenda.reintenta}>{tx.tornaAProvar}</Boto>
     </p>
   );
 }
@@ -206,7 +223,7 @@ function AmbLesFonts({ calendaris, children }) {
     );
   }
   return (
-    <div className="sdp-calendari-fonts-costat">
+    <div ref={adoptaEstilsDiferits} className="sdp-calendari-fonts-costat">
       <PanellFontsCalendari comptes={calendaris.comptes} onCommuta={calendaris.commuta} onConnecta={calendaris.connecta}
         onCancella={calendaris.cancella} onDesconnecta={calendaris.desconnecta} onReintenta={calendaris.reintenta} />
       <div className="sdp-calendari-fonts-costat__principal">{children}</div>
@@ -232,27 +249,64 @@ const rutaDeLaPastilla = (mes) => (cursorDeMes(mes) ? `${RUTA_CALENDARI}?vista=m
    URL, l'agenda de Sollutia, les fonts de Google i la pantalla completa. El
    calendari (navegació, vistes, avisos i targetes de davall) és
    CalendariDelPoble, el mateix que munta la pestanya Calendari del Mur. */
-function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
+function CalendariDeLesVistes({ targetes, pantalla, avisError, idioma = 'ca' }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [mode, setMode] = useState(() => modeInicialDeLaUrl(searchParams));
+  const tx = textosCalendariExtra(idioma);
   const hui = diaIso(new Date());
   const avui = useMemo(() => diaDeLaClau(hui), [hui]);
-  const obertura = useMemo(() => mesDObertura(targetes, avui), [targetes, avui]);
+  const targetesActes = useMemo(
+    () => targetes.filter((entrada) => esActeDelCalendari(entrada.item)),
+    [targetes]
+  );
+  const targetesActives = mode === 'events' ? targetesActes : targetes;
+
+  const obertura = useMemo(() => {
+    if (mode === 'events') {
+      const pintables = targetesActes.map((entrada) => entrada.acte).filter((esd) => esd && recurrenciaSuportada(esd));
+      return mesDeLActeMesProper(pintables, avui) ?? mesDObertura(targetesActes, avui);
+    }
+    return mesDObertura(targetes, avui);
+  }, [mode, targetesActes, targetes, avui]);
+
   const { estat, navega, canviaVista, triaDia, obriDia } = useEstatCalendari({ obertura, avui });
   const rang = useMemo(() => rangDeLaVista(estat, avui), [estat, avui]);
   const agenda = useActesDeLAgenda(rang);
   const calendaris = useFontsCalendari(rang);
-  const entrades = useEntradesBarrejades(targetes, agenda, calendaris);
-  const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
+  const entrades = useEntradesBarrejades(targetesActives, agenda, calendaris);
+  const senseData = targetesActives.filter((entrada) => !entrada.esdeveniment).length;
   /* Pantalla completa · entre el títol i el selector, amb la pell de les
      fletxes (fantasma). L'estat de la URL i l'agenda queden per damunt:
      entrar o eixir no torna a demanar res. */
   const boto = pantalla.oberta ? null : <BotoPantallaCompleta id={pantalla.idObridor} onClick={pantalla.obri} />;
+  const saltaAMes = (mes) => {
+    setSearchParams({ vista: 'mes', mes, date: null, data: null, setmana: null, any: null }, { replace: true });
+  };
 
   return (
-    <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
+    <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={tx.titolPantallaCompleta}>
       <AmbLesFonts calendaris={calendaris}>
-        <CalendariDelPoble estat={estat} navega={navega} canviaVista={canviaVista} triaDia={triaDia} obriDia={obriDia}
-          entrades={entrades} avui={avui} senseData={senseData} avisos={avisError}
-          avisAgenda={<AvisDeLAgenda agenda={agenda} />} accions={boto} />
+        <CalendariDelPoble
+          estat={estat}
+          navega={navega}
+          canviaVista={canviaVista}
+          triaDia={triaDia}
+          obriDia={obriDia}
+          entrades={entrades}
+          avui={avui}
+          senseData={senseData}
+          avisos={avisError}
+          abansNavegacio={(
+            <SelectorModeCalendari
+              mode={mode}
+              onCanviMode={setMode}
+              entradesEsdeveniments={targetesActes}
+              onSaltaAMes={saltaAMes}
+            />
+          )}
+          avisAgenda={<AvisDeLAgenda agenda={agenda} idioma={idioma} />}
+          accions={boto}
+        />
       </AmbLesFonts>
     </PantallaCompleta>
   );
@@ -287,6 +341,8 @@ export default function CalendariSection() {
   /* El xat comú i el Connectar de la pàgina, els de la seua ruta canònica: ni
      el ?date= ni el ?mes= en fan cap altra. */
   const paginaCalendari = objecteDePagina({ titol: config.title, ruta: getSectionListPath('calendari') });
+  const textPublicar = t('section.calendari.publicar', 'Publicar un esdeveniment');
+  const portaPublicar = { id: 'publicar', verb: textPublicar, nom: textPublicar, desti: RUTA_PUBLICAR_CALENDARI, varietat: 'primari' };
   /* Gauntlet 261030 (Fase 3, TC3.2) · Traduir només si tot el que pinta el
      calendari és públic: les targetes del Mur i del Mercat (una del veïnat,
      només per als membres, l'apaga) i cap font de fora que la pàgina no pot
@@ -295,13 +351,15 @@ export default function CalendariSection() {
   const traduible = totsPublics(sortedEvents, sortedFeedPosts, sortedMarketItems)
     && !teCapacitat('agenda') && !configFontsDeLEntorn().configurades;
 
+  const txCalendari = textosCalendariExtra(language);
+
   if (status === 'loading') {
     return (
       <ContentProvider initialConfig={config}>
-        <UniversalPage objecte={paginaCalendari}>
-          <div className="content-wrapper">
+        <UniversalPage objecte={paginaCalendari} accioPrincipal={<PortaDePagina porta={portaPublicar} />}>
+          <div ref={adoptaEstilsDiferits} className="content-wrapper">
             {/* Tancada, no afig cap node; oberta, «Eixir» continua a mà mentre torna el calendari. */}
-            <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
+            <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={txCalendari.titolPantallaCompleta}>
               <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />
             </PantallaCompleta>
           </div>
@@ -312,8 +370,13 @@ export default function CalendariSection() {
 
   return (
     <ContentProvider initialConfig={config}>
-      <UniversalPage layout="contained" objecte={paginaCalendari} traduccio={traduible}>
-        <div className="content-wrapper">
+      <UniversalPage
+        layout="contained"
+        objecte={paginaCalendari}
+        traduccio={traduible}
+        accioPrincipal={<PortaDePagina porta={portaPublicar} />}
+      >
+        <div ref={adoptaEstilsDiferits} className="content-wrapper">
           {/* L'error del Mur es queda dins de la pàgina: el calendari continua
               amb el que tinga (l'agenda de Sollutia, si respon). Va dins del
               bloc de la pantalla completa (primer fill de la PantallaCompleta):
@@ -324,7 +387,7 @@ export default function CalendariSection() {
               pastilles del mes que ja es veu no han de demanar quatre
               «Enrere». El proveïdor no pinta res. */}
           <DinsDelCalendari.Provider value={rutaDeLaPastilla}>
-            <CalendariDeLesVistes targetes={targetes} pantalla={pantalla} avisError={status === 'error' ? (
+            <CalendariDeLesVistes targetes={targetes} pantalla={pantalla} idioma={language} avisError={status === 'error' ? (
               <EstatErrorDades titol={t('section.calendari.error', 'No s’han pogut carregar les targetes del calendari')}
                 error={error} onReintenta={refresh} />
             ) : null} />

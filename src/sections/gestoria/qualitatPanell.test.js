@@ -21,7 +21,7 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
 const MARCA = '/* ── GESTORIA PANELL (261002) ── */';
 function blocPanell() {
-  const css = llig('src/css/modules.css');
+  const css = llig('src/css/diferit-gestoria.css');
   const inici = css.indexOf(MARCA);
   expect(inici, 'falta el bloc del panell de la Gestoria a modules.css').toBeGreaterThan(-1);
   expect(css.indexOf(MARCA, inici + 1), 'el marcador ha de ser únic').toBe(-1);

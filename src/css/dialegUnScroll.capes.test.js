@@ -25,7 +25,7 @@ function declaracions(css, selector) {
 }
 
 const COMPONENTS = llig('src/css/components.css');
-const MODULS = llig('src/css/modules.css');
+const MODULS = `${llig('src/css/modules.css')}\n${llig('src/css/diferit-enquadrament.css')}`;
 
 test('T1 · obert i amb marc, el <dialog> és una columna flex; el seu scroll és només la reserva', () => {
   /* Revisió adversarial 261025 · overflow-y: auto, la reserva de pantalla curta: el diàleg ja no desborda. */

@@ -337,7 +337,8 @@ describe('PS-03 · la regla genèrica i qui guanya', () => {
   });
 
   test.each(Object.entries(EXCEPCIONS))('excepció · %s conserva «%s», a una capa que guanya sdp', (selector, valor) => {
-    const regla = unaRegla('modules.css', selector, 'background');
+    const fullExcepcio = selector.startsWith('.sdp-calendari') ? 'diferit-calendari.css' : selector.startsWith('.sdp-gestoria') ? 'diferit-gestoria.css' : 'modules.css';
+    const regla = unaRegla(fullExcepcio, selector, 'background');
     expect(valorDe(regla, 'background')).toBe(valor);
     expect(posicio(capaDe(regla))).toBeGreaterThan(posicio('sdp'));
     // Cap altra regla del mateix component torna a pintar la capçalera amb un altre fons.

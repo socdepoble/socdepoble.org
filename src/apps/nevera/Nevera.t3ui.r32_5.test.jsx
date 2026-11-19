@@ -1,12 +1,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { muntaPlataforma, ENTORN_OBERT } from '../plataforma/__fixtures__/munta.jsx';
+import { LLENGUES_APP } from '../plataforma/manifestApp.js';
 import { creaRegistre } from '../plataforma/registreApps.js';
 import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import { TargetesArticles } from '../comu/esquelet/ColumnaCataleg.jsx';
 import { creaMagatzemNevera } from './magatzem.js';
 import manifest from './manifest.js';
 import AppNevera from './AppNevera.jsx';
+import { TEXTOS_BUIT_NEVERA, textosBuitNevera } from './i18nNevera.js';
 import { estatInicial, marcaACasa } from './nucli/index.js';
 
 const magatzems = [];
@@ -23,7 +25,7 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-describe('R32.5 · Lot 03 · T3-UI-01 (/app/nevera/rebost capçalera neta a 320px) i T3-UI-02 (sense «Data no indicada» en inventari permanent)', () => {
+describe('R32.5 / R32.10 · Lot 01 · T3-UI-01/02/03 (Nevera sense «Data no indicada» en vistes no cronològiques i estats buits en 5 llengües)', () => {
   test.each([320, 1440])('T3-UI-01: a %ipx, la fila superior de la llista deixa el títol «Rebost» lliure dels 3 commutadors de vista, que viuen a la subcapçalera d’eines', async (amplada) => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(amplada);
     const magatzem = creaMagatzemNevera({ idb: null, navegador: {}, Canal: null });
@@ -54,19 +56,29 @@ describe('R32.5 · Lot 03 · T3-UI-01 (/app/nevera/rebost capçalera neta a 320p
     expect(subcapcaleraEines.querySelector('[aria-label="Canònica"]')?.getAttribute('aria-pressed')).toBe('true');
   });
 
-  test('T3-UI-02: a /app/nevera/casa les targetes d’inventari permanent no mostren la pastilla «Data no indicada» (iaia-maria-core §11)', async () => {
+  test('T3-UI-02: a /app/nevera/casa, /app/nevera/receptes i /app/nevera/temporada les targetes no cronològiques ometen «Data no indicada»', async () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
     const magatzem = creaMagatzemNevera({ idb: null, navegador: {}, Canal: null });
     magatzems.push(magatzem);
     await magatzem.desa(marcaACasa(estatInicial(), 'oli-d-oliva', 'hi-ha'));
     const App = () => <AppNevera magatzem={magatzem} />;
     const registre = creaRegistre({ internes: [{ ...manifest, carrega: () => Promise.resolve({ default: App }) }] });
-    muntaPlataforma('/app/nevera/casa', { registre, entorn: { ...ENTORN_OBERT, produccio: false } });
 
+    muntaPlataforma('/app/nevera/casa', { registre, entorn: { ...ENTORN_OBERT, produccio: false } });
     await screen.findByRole('region', { name: 'A casa' });
     const regioACasa = document.getElementById('app-grid-main');
     expect(regioACasa.querySelectorAll('article.sp-card').length).toBeGreaterThan(0);
     expect(regioACasa.textContent).not.toContain('Data no indicada');
+    cleanup();
+
+    muntaPlataforma('/app/nevera/receptes', { registre, entorn: { ...ENTORN_OBERT, produccio: false } });
+    await screen.findByRole('region', { name: 'Receptes amb el que tens' });
+    expect(document.getElementById('app-grid-main').textContent).not.toContain('Data no indicada');
+    cleanup();
+
+    muntaPlataforma('/app/nevera/temporada?mes=8', { registre, entorn: { ...ENTORN_OBERT, produccio: false } });
+    await screen.findByRole('region', { name: 'De temporada a l’agost' });
+    expect(document.getElementById('app-grid-main').textContent).not.toContain('Data no indicada');
   });
 
   test('T3-UI-02: ometDataNoIndicada conserva la data real quan un article porta caducitat o data explícita', () => {
@@ -88,5 +100,24 @@ describe('R32.5 · Lot 03 · T3-UI-01 (/app/nevera/rebost capçalera neta a 320p
     expect(targetes[0].textContent).not.toContain('Data no indicada');
     expect(targetes[1].textContent).not.toContain('Data no indicada');
     expect(targetes[1].textContent).toMatch(/2026|des|dic|dec/i);
+  });
+
+  test.each(LLENGUES_APP)('T3-UI-03: els estats buits de La Nevera responen a l’idioma %s amb el diccionari modular i18nNevera', async (lang) => {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1400);
+    const magatzem = creaMagatzemNevera({ idb: null, navegador: {}, Canal: null });
+    magatzems.push(magatzem);
+    const App = () => <AppNevera magatzem={magatzem} />;
+    const registre = creaRegistre({ internes: [{ ...manifest, carrega: () => Promise.resolve({ default: App }) }] });
+
+    muntaPlataforma('/app/nevera/llista/casa', {
+      registre,
+      entorn: { ...ENTORN_OBERT, produccio: false },
+      externalConfig: { language: lang }
+    });
+
+    const tx = TEXTOS_BUIT_NEVERA[lang];
+    expect(textosBuitNevera(`${lang}-XX`)).toBe(tx);
+    expect(await screen.findByText(tx.llistaBuida)).toBeTruthy();
+    expect(screen.getByText(tx.llistaBuidaText)).toBeTruthy();
   });
 });

@@ -52,11 +52,12 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { encapcalamentDeTargeta, EstatBuit, GraellaTargetes, MarcColumna, NavegacioPeriode, UniversalCard } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, useVistesEsquelet } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio, useParametresConsulta } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { articlePerId } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { TEMPORADA } from './constants.js';
-import { textArticles, useVistaNevera } from './context.js';
+import { useVistaNevera } from './context.js';
 import { entradetaDe, subtitolDe } from './vestits.js';
 import {
   esParametreMes, grupsDeTemporada, liniesPerTemporada, mesVei, nomDelMes, seccionsDeTemporada,
@@ -65,18 +66,6 @@ import {
 
 const FILTRE_TEMPORADA = 'temporada';
 const PARAMETRES = Object.freeze({ mes: esParametreMes, filtre: (valor) => valor === FILTRE_TEMPORADA });
-/* Textos curts: a les eines les píndoles no es partixen (src/css/modules.css,
-   bloc catalegColleccio) i el filtre ha de cabre en la columna del mig de
-   280 px sense CSS nou. */
-const FILTRES = Object.freeze([
-  Object.freeze({ valor: 'tot', text: 'Tot' }),
-  Object.freeze({ valor: FILTRE_TEMPORADA, text: 'De temporada' })
-]);
-const ETIQUETES_MES = Object.freeze({ anterior: 'Mes anterior', hui: 'Este mes', seguent: 'Mes següent' });
-/* Com a La compra: al mig, el que falta comprar; al detall, el que és a la llista. */
-const TEXTOS_MIG = Object.freeze({ 'en-colleccio': 'Per comprar' });
-const TEXTOS_DETALL = Object.freeze({ 'en-colleccio': 'A la llista' });
-const BUIT_DETALL = Object.freeze({ buit: 'Res de temporada este mes', buitText: null });
 
 /* Cap color per secció: la icona i el nom la distingixen (l'estat es diu sempre amb text). */
 const ICONES = Object.freeze({ plena: Sun, inici: Sunrise, final: Sunset, fora: CalendarX, 'sense-dada': CircleDashed });
@@ -125,10 +114,17 @@ function useAccioEstreta(accio) {
 export function ColumnaLlistaPerTemporada({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
   const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const vista = useVistaTemporada();
   const vistes = useVistesEsquelet(TEMPORADA);
   const llista = llistaVigent(params);
-  const titol = `«${llista.nom}» per temporada`;
+  const titol = tx.perTemporadaTitol(llista.nom);
+  const filtres = [
+    { valor: 'tot', text: tx.filtreTot },
+    { valor: FILTRE_TEMPORADA, text: tx.filtreDeTemporada }
+  ];
+  const textosMig = { 'en-colleccio': tx.perComprar };
   const startActions = useAccioEstreta({
     id: 'de-temporada', icona: CalendarDays, etiqueta: titolDeTemporada(vista.mes), onAcciona: vistes.cataleg.vesA
   });
@@ -136,15 +132,15 @@ export function ColumnaLlistaPerTemporada({ params }) {
   const grups = grupsDeTemporada(vista.nomesDeTemporada).map(ambIcona);
   const nomDelGrup = new Map(grups.map((grup) => [grup.id, grup.nom]));
   const buit = articles.length === 0
-    ? <EstatBuit titol="La llista és buida">Toca el que és de temporada per a posar-ho a la llista, o afig-ho des de La compra.</EstatBuit>
-    : <EstatBuit titol="Res de temporada a la llista">Tria «Tot» per a vore tota la llista.</EstatBuit>;
+    ? <EstatBuit titol={txBuit.temporadaLlistaBuida}>{txBuit.temporadaLlistaBuidaText}</EstatBuit>
+    : <EstatBuit titol={txBuit.temporadaResALaLlista}>{txBuit.temporadaResALaLlistaText}</EstatBuit>;
   return (
     <MarcColumna
       capcalera={<AppGridColumn titol={titol} startActions={startActions} />}
       eines={(
-        <NavegacioPeriode titol={nomDelMes(vista.mes)} etiquetes={ETIQUETES_MES}
+        <NavegacioPeriode titol={nomDelMes(vista.mes)} etiquetes={tx.etiquetesMes}
           onAnterior={vista.anterior} onHui={vista.esteMes} onSeguent={vista.seguent}
-          vista={vista.filtre} onCanviaVista={vista.triaFiltre} vistes={FILTRES} etiquetaVistes="Filtre" />
+          vista={vista.filtre} onCanviaVista={vista.triaFiltre} vistes={filtres} etiquetaVistes={tx.filtreLabel} />
       )}
       peu={<AvisNevera />}
       etiqueta={titol}
@@ -156,11 +152,17 @@ export function ColumnaLlistaPerTemporada({ params }) {
              targeta es queda sense boina, com a l'esquelet, i la columna no peta. */
           const delCataleg = articlePerId(estat, article.id);
           const boina = autoriaDArticle(delCataleg) || {};
+          const dataReal = delCataleg?.date ?? delCataleg?.data ?? delCataleg?.dataCaducitat ?? delCataleg?.caducitat;
+          const creatReal = delCataleg?.created_at ?? delCataleg?.createdAt;
           return (
             <UniversalCard
               key={article.id}
               headingLevel="h4"
-              {...encapcalamentDeTargeta(delCataleg, { author: boina.nom, location: boina.poble, idioma })}
+              {...encapcalamentDeTargeta(
+                { ...delCataleg, date: dataReal, created_at: creatReal },
+                { author: boina.nom, location: boina.poble, idioma }
+              )}
+              showDateTime={Boolean(dataReal || creatReal)}
               authorHref={boina.href || undefined}
               avatarUrl={boina.avatar || undefined}
               title={article.nom}
@@ -169,7 +171,7 @@ export function ColumnaLlistaPerTemporada({ params }) {
               subtitle={subtitolDe(delCataleg)}
               body={article.secundari || entradetaDe(delCataleg)}
               squareBadge={{ type: 'custom', label: nomDelGrup.get(article.categoriaId) || article.nom, content: <QuadratDeTemporada grup={article.categoriaId} /> }}
-              labels={[TEXTOS_MIG[article.estat]]}
+              labels={[textosMig[article.estat]]}
               onMainClick={() => accions.marcaComprat(llista.id, article.id)}
               premuda={article.estat === 'en-colleccio'}
               idElement={article.id}
@@ -187,6 +189,9 @@ export function ColumnaLlistaPerTemporada({ params }) {
 /** «De temporada a l'octubre»: el detall de l'entrada Temporada. En estret, el resum del peu torna a la llista. */
 export function ColumnaDeTemporada({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const { mes } = useVistaTemporada();
   const llista = llistaVigent(params);
   /* REGLA D'OR 1 (261004) · La boina de cada suggeriment: l'article de la Nevera que hi
@@ -199,26 +204,27 @@ export function ColumnaDeTemporada({ params }) {
       /* Integració final (261004, F04) · Subtítol i entradeta reals: la secció i d'on ix l'article
          o, si encara no n'és cap, que és un suggeriment del calendari de temporada. */
       subtitol: subtitolDe(delCataleg),
-      entradeta: delCataleg ? entradetaDe(delCataleg) : 'Suggeriment del calendari de temporada'
+      entradeta: delCataleg ? entradetaDe(delCataleg) : tx.suggerimentTemporada
     };
   });
   return (
     <ColumnaCataleg
       forma="targetes"
+      ometDataNoIndicada
       titol={titolDeTemporada(mes)}
       categories={seccionsDeTemporada().map(ambIcona)}
       articles={suggeriments}
       selector={false}
       ambVistes={false}
       commutable
-      textosEstat={TEXTOS_DETALL}
+      textosEstat={{ 'en-colleccio': tx.aLaLlista }}
       onTria={(suggeriment) => (suggeriment.articleId
         ? accions.commuta(llista.id, suggeriment.articleId)
         : accions.afigPerNom(llista.id, suggeriment.nom))}
-      resum={{ etiqueta: llista.nom, comptador: llista.linies.length, textComptador: textArticles }}
+      resum={{ etiqueta: llista.nom, comptador: llista.linies.length, textComptador: (n) => tx.textArticlesCount(n) }}
       primer={TEMPORADA.primer}
       tram={TEMPORADA.tram}
-      textos={BUIT_DETALL}
+      textos={{ buit: txBuit.temporadaDetallBuit, buitText: null }}
     />
   );
 }

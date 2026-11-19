@@ -91,17 +91,13 @@ export async function desaRevisioEditorialWp(entrada, config = {}) {
     resposta = await consulta('desa_revisio_editorial_wp_cas', { ...params, p_actualitzat_esperat: entrada.actualitzatEsperat ?? null }, config);
   } catch (cause) {
     if (esConflicteDeVersio(cause)) throw conflicte(cause);
-    /* Onada R30 · P1-79 (àrbitre) · Un servidor sense 20261115230000 (producció fins que el
-       Mestre l'aplique) no té la RPC CAS: es desa amb la signatura de sempre, com fins ara
-       (sense guarda de versió). Amb la migració, eixa mateixa signatura només pot crear, de
-       manera que este camí mai no és un bypass del CAS. Cap altre error no hi recorre. */
+    /* R32.10 · D-R32-PUB-1 / Llei 0 SQL · Sense la RPC CAS no es pot garantir
+       tampoc la primera inserció: la signatura antiga podria sobreescriure una
+       fila existent. Es rebutja sense provar-la; el caller conserva l'esborrany
+       al navegador. Només el PGRST202 exacte acredita esta indisponibilitat. */
     if (!esRpcAbsent(cause)) throw cause;
-    try {
-      resposta = await consulta('desa_revisio_editorial_wp', params, config);
-    } catch (anterior) {
-      if (esConflicteDeVersio(anterior)) throw conflicte(anterior);
-      throw anterior;
-    }
+    throw Object.assign(new Error('El servidor encara no té l’edició segura de revisions: no s’ha desat cap canvi al servidor.'),
+      { code: 'no-disponible', codi: 'no-disponible', status: 404 });
   }
   return validaFilaRevisioEditorialWp(resposta);
 }

@@ -304,15 +304,23 @@ describe('el corredor en marxa (SeccioJarvis amb interval curt)', () => {
   });
 
   test('en desmuntar, cap petició de progrés més', async () => {
-    corredor([resposta({ cos: INICIAT })]);
-    const { unmount } = panell({ interval: 15 });
-    escriu(NOTES);
-    await publica();
-    await waitFor(() => expect(seccio().querySelector('ol')).not.toBeNull());
-    unmount();
-    await espera(50);
-    expect(urls(peticio)).toEqual([RUTA_PUBLICA_TOT]);
-    expect(errors).not.toHaveBeenCalled();
+    /* El desmuntatge ha de precedir el primer sondeig: amb el rellotge real, la càrrega
+       podia consumir els 15 ms mentre esperàvem la resposta del POST i els passos. */
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    try {
+      corredor([resposta({ cos: INICIAT })]);
+      const { unmount } = panell({ interval: 15 });
+      escriu(NOTES);
+      await publica();
+      expect(seccio().querySelector('ol')).not.toBeNull();
+      unmount();
+      await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+      expect(urls(peticio)).toEqual([RUTA_PUBLICA_TOT]);
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+      vi.useRealTimers();
+    }
   });
 
   test('dev={false} explícit: el botó desactivat i l’avís honest, encara que l’entorn siga DEV', () => {

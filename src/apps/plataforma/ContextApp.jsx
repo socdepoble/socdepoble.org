@@ -103,6 +103,11 @@ export function useApp() {
   return valor;
 }
 
+/** Lectura opcional del context d'app (null fora de ProveidorApp, com AvisadorPage o espècimens). */
+export function useAppOpcional() {
+  return useContext(AppContext);
+}
+
 /**
  * La instantània de la sessió de l'arrel, de la font que RutaApps ha passat a
  * ProveidorApp, o null sense font. Només per al pont (sessioApp.js): no és de

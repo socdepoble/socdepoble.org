@@ -16,30 +16,39 @@
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Carregant, EstatBuit } from '../../components/PedraSeca/index.js';
 import { ClosaAplicacio, useApp } from '../plataforma/index.js';
+import { textosSalut } from './i18nSalut.js';
 import { RUTES_SALUT } from './rutesSalut.js';
 import { textError } from './textos.js';
 import { ProveidorSalut, useSalut } from './useSalut.jsx';
 
-const TITOLS = Object.freeze({ esquerra: 'Este dispositiu', mig: 'Salut' });
+function useIdiomaSalutSegur() {
+  try {
+    return useApp()?.idioma || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 function PortaAvis({ children }) {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
+  const tx = textosSalut(idioma);
   const { pathname } = useLocation();
   if (!salut.carregat) {
     return salut.error
-      ? <EstatBuit titol="No s’han pogut llegir les dades">{textError(salut.error)}</EstatBuit>
-      : <Carregant etiqueta="Obrint el quadern…" />;
+      ? <EstatBuit titol={tx.errorLlegirDades}>{textError(salut.error)}</EstatBuit>
+      : <Carregant etiqueta={tx.obrintQuadern} />;
   }
   if (!salut.avisAcceptat && pathname !== ruta('avis')) return <Navigate to={ruta('avis')} replace />;
   return children;
 }
 
 export default function AppSalut({ magatzem, rellotge, nouId, ofsetDe }) {
+  const tx = textosSalut(useIdiomaSalutSegur());
   return (
     <ProveidorSalut magatzem={magatzem} rellotge={rellotge} nouId={nouId} ofsetDe={ofsetDe}>
       <PortaAvis>
-        <ClosaAplicacio rutes={RUTES_SALUT} titols={TITOLS} />
+        <ClosaAplicacio rutes={RUTES_SALUT} titols={tx.titolsClosca} />
       </PortaAvis>
     </ProveidorSalut>
   );

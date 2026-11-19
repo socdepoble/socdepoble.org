@@ -1,0 +1,349 @@
+/* Onada R32.11 · Full diferit «calendari» (extret de src/css/modules.css). */
+@layer components {
+  /* T40 · El mes en xicotet (GraellaMes compacta): la mateixa taula que la
+     Consola, sense ratlles ni fons de fila; cada dia és un botó de --sdp-touch
+     (7 × 44px cabien al full inferior de 360px; amb el sòl de 48px de la Q2,
+     261004, en fan 336, i en un mòbil de 360px cal comprovar-ho). */
+  .sdp-calendari { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
+
+  .sdp-calendari .sdp-camp { margin-bottom: 0; }
+
+  .sdp-calendari__navegacio { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-2); }
+
+  .sdp-calendari--compacte { border-block-start: 0; }
+
+  .sdp-calendari--compacte table { width: 100%; }
+
+  .sdp-calendari--compacte caption { padding-block-end: var(--sdp-space-2); font-weight: 700; color: var(--sdp-text-titol); }
+
+  .sdp-calendari--compacte th,
+  .sdp-calendari--compacte td { padding: 0; text-align: center; vertical-align: middle; border-block-end: 0; }
+
+  .sdp-calendari--compacte thead th { background: transparent; font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+
+  .sdp-calendari--compacte tbody tr { background: transparent; }
+
+  .sdp-calendari__dia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-calendari__dia:hover { background: var(--sdp-fons-subtil); }
+  }
+
+  /* Hui es llig sense color: negreta i subratllat. El triat, amb el color d'acció. */
+  .sdp-calendari__dia[aria-current="date"] { font-weight: 800; text-decoration: underline; text-underline-offset: var(--sdp-space-1); }
+
+  .sdp-calendari__dia[aria-pressed="true"] { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
+
+  .sdp-calendari__dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* SDP:T6-T7 · T6-T7 (ordre del Mestre, 260930) · El mes gran amb
+     esdeveniments (CalendariEsdeveniments): l'Agenda del Mur i el Calendari
+     de la Consola. Tot va confinat a .sdp-calendari--gran i a la taula de la
+     pàgina (.sdp-calendari__taula): cap regla global a taules, insígnies ni
+     botons (el mes compacte i la resta de taules no canvien, i els botons
+     conserven el contrast de control). Set columnes iguals, línies fines
+     (--sdp-vora), sense zebra ni hover taronja, i píndoles d'amplària
+     uniforme amb el text sencer. */
+  .sdp-calendari--gran table { table-layout: fixed; min-inline-size: 42rem; }
+
+  /* PS-03 (B7) · La capçalera de taula genèrica de sdp.css ja no és el fons
+     de l'app: el calendari gran i la taula de Tasques conserven el seu píxel. */
+  .sdp-calendari--gran thead th,
+  .sdp-calendari__taula thead th { border-block-end-color: var(--sdp-vora); background: var(--sdp-fons-app); }
+
+  /* La taula de la pàgina del Calendari (Tasques per cadència): només les vores. */
+  .sdp-calendari__taula .sdp-insignia { border-color: var(--sdp-vora); }
+
+  .sdp-calendari--gran th + th,
+  .sdp-calendari--gran td + td { border-inline-start: 1px solid var(--sdp-vora); }
+
+  .sdp-calendari--gran tbody tr { background: transparent; }
+
+  .sdp-calendari--gran td { overflow-wrap: anywhere; }
+
+  .sdp-calendari--gran .sdp-calendari__pindola {
+    display: flex;
+    align-items: center;
+    inline-size: 100%;
+    margin-block-start: var(--sdp-space-1);
+    padding: 0;
+    border: none;
+    font-size: var(--sdp-text-meta);
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: start;
+  }
+
+  /* La píndola per defecte, sense Insignia: el to neutre. */
+  .sdp-calendari__pindola:not(.sdp-insignia) { background: transparent; color: var(--sdp-text-cos); }
+
+  .sdp-calendari__pindola:not(.sdp-insignia)::before {
+    content: "•";
+    color: var(--sdp-accio-control);
+    margin-inline-end: var(--sdp-space-1);
+    font-weight: 800;
+  }
+
+  /* L'Agenda: la barra «‹ Hui ›» i cada dia, un botó que ocupa la cel·la. */
+  .sdp-calendari__barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-4) var(--sdp-space-2); }
+
+  /* Pantalla completa (ordre del Mestre, 261001) · A /calendari, el botó
+     d'entrar tanca la fila «‹ Hui ›», a la dreta. El Mur no el porta. */
+  .sdp-calendari__barra > .sdp-pantalla-completa__entra { margin-inline-start: auto; }
+
+  .sdp-calendari--triable td { padding: 0; }
+
+  .sdp-calendari__cella {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0 var(--sdp-space-1);
+    inline-size: 100%;
+    min-block-size: 5rem;
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .sdp-calendari__numero { flex-basis: 100%; }
+
+  @media (hover: hover) {
+    .sdp-calendari__cella:hover { background: var(--sdp-fons-subtil); }
+  }
+
+  /* El dia triat (el ?date= del Mur): vora i fons d'acció, sense ombra. */
+  .sdp-calendari__cella[aria-pressed="true"] { border-color: var(--sdp-accio-control); background: var(--sdp-accio-subtil); }
+
+  .sdp-calendari__cella:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
+
+  /* Pantalla estreta: la graella cap sense scroll horitzontal. Les píndoles
+     es fan punts del color del seu estat; el text s'amaga a la vista però no
+     al lector de pantalla (res de display: none), i el detall queda a les
+     targetes del Mur o a la taula de la Consola. */
+  @media (max-width: 40rem) {
+    .sdp-calendari--gran table { min-inline-size: 0; }
+    .sdp-calendari--gran th,
+      .sdp-calendari--gran td { padding: var(--sdp-space-1); }
+    .sdp-calendari--triable td { padding: 0; }
+    .sdp-calendari--gran td > div { display: inline-block; }
+    .sdp-calendari--gran .sdp-calendari__pindola {
+        display: inline-block;
+        inline-size: var(--sdp-space-2);
+        block-size: var(--sdp-space-2);
+        margin: var(--sdp-space-1) var(--sdp-space-1) 0 0;
+        padding: 0;
+        border: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-indent: 200%;
+        background: currentColor;
+      }
+    .sdp-calendari__cella { min-block-size: var(--sdp-touch); padding: var(--sdp-space-1); }
+  }
+
+  /* T1 (prompt 261002_0125) · Amb fonts de calendari configurades
+     (src/sections/calendari/fonts/), el calendari de /calendari va al costat
+     del panell «Els meus calendaris», com a Google Calendar. Sense media
+     queries (funciona igual dins de l'encastament): quan el calendari no hi
+     cap amb 30rem, el panell queda damunt a tota l'amplada. Sense
+     configuració no es pinta cap d'estes classes (Llei del Píxel). */
+  .sdp-calendari-fonts-costat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-calendari-fonts-costat__principal {
+    flex: 999 1 0;
+    min-width: min(100%, 30rem);
+  }
+
+  .sdp-calendari-fonts-panell {
+    display: flex;
+    flex: 1 1 15rem;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-calendari-fonts-panell__titol,
+  .sdp-calendari-fonts-panell__compte-nom {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--sdp-text-titol);
+    text-align: left;
+  }
+
+  .sdp-calendari-fonts-panell__titol { font-size: var(--sdp-text-h5); }
+
+  .sdp-calendari-fonts-panell__compte-nom {
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-calendari-fonts-panell__compte {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-calendari-fonts-panell__llista {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-calendari-fonts-panell__font { margin: 0; padding: 0; }
+
+  /* La casella porta el color de la font: la vora de l'esquerra i, marcada,
+     el farciment (accent-color s'hereta fins a l'input). El nom ho diu tot:
+     el color mai és l'únic senyal. */
+  .sdp-calendari-fonts-panell__casella {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding-inline-start: var(--sdp-space-2);
+    border-inline-start: 0.25rem solid var(--sdp-vora-control);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+
+  .sdp-calendari-fonts-panell__casella input {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .sdp-calendari-fonts-panell__casella input:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+
+  .sdp-calendari-fonts-panell__casella--accio { border-inline-start-color: var(--sdp-accio); accent-color: var(--sdp-accio); }
+
+  .sdp-calendari-fonts-panell__casella--accent { border-inline-start-color: var(--sdp-accent); accent-color: var(--sdp-accent); }
+
+  .sdp-calendari-fonts-panell__casella--exit { border-inline-start-color: var(--sdp-exit); accent-color: var(--sdp-exit); }
+
+  .sdp-calendari-fonts-panell__casella--avis { border-inline-start-color: var(--sdp-avis); accent-color: var(--sdp-avis); }
+
+  .sdp-calendari-fonts-panell__casella--error { border-inline-start-color: var(--sdp-error); accent-color: var(--sdp-error); }
+
+  .sdp-calendari-fonts-panell__estat,
+  .sdp-calendari-fonts-panell__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-calendari-fonts-panell__avis {
+    display: block;
+    padding-inline-start: var(--sdp-space-3);
+  }
+
+  .sdp-calendari-fonts-panell__estat--error,
+  .sdp-calendari-fonts-panell__avis--error { color: var(--sdp-error-text); }
+
+  .sdp-calendari-agricola__resum-viu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: 4px solid var(--sdp-accio);
+    border-radius: 0;
+    background: var(--sdp-fons-subtil);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__resum-viu-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__resum-viu-text > p {
+    margin: 0;
+  }
+
+  .sdp-calendari-agricola__filtres-actius {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-calendari-agricola__resum-viu-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-boto-separacio);
+  }
+
+  .sdp-calendari-agricola__resultats:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .sdp-calendari-agricola__llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-calendari-agricola__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+}

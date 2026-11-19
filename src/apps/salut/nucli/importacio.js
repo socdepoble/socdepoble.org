@@ -39,6 +39,7 @@ import { llegixCsv, llegixLlibre } from '../../../utils/fulls/index.js';
 import { campDe, opcionsDe, tipusDe, validaApunt, valorsPerDefecte } from './diccionari.js';
 import { COLUMNES_DIARI } from './full.js';
 import { assignaJornades, dataCurta, dataDe, esData, esHora, momentDe, ofsetLocal, sumaDies } from './hores.js';
+import { normalitzaUnicodeAmbLimit } from '../../../utils/normalitzaUnicodeSegura.js';
 
 export const FORMATS_FULL = Object.freeze(['graella-horaria', 'diari-salut', 'desconegut']);
 export const NOTA_FRANJA = 'Hora aproximada (franja)';
@@ -51,7 +52,7 @@ const UNITATS = /^(?:ml|cc|l)$/;
 
 /** Una etiqueta per a comparar: sense accents ni majúscules, espais simples i sense «:» ni «?». */
 export function normalitzaEtiqueta(text) {
-  return String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  return normalitzaUnicodeAmbLimit(String(text ?? ''), 'NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[¿?:]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
@@ -342,12 +343,19 @@ const esDiariSalut = (f) => TITOLS_DIARI.every((titol, i) => etiquetaDe(f.cella(
 /**
  * La forma d'un llibre (llegixLlibre o llibreDeCsv).
  * @returns {'graella-horaria'|'diari-salut'|'desconegut'}
+ * Una etiqueta fora del pressupost Unicode és format desconegut, sense apunts.
  */
 export function detectaFormat(llibre, perfil = PERFIL_GRAELLA_HORARIA) {
   if (!llibre || !Array.isArray(llibre.fulles)) return 'desconegut';
   const fulles = llibre.fulles.map(indexa);
-  if (fulles.some(esDiariSalut)) return 'diari-salut';
-  return fulles.some((f) => trobaGraella(f, perfil)) ? 'graella-horaria' : 'desconegut';
+  try {
+    if (fulles.some(esDiariSalut)) return 'diari-salut';
+    return fulles.some((f) => trobaGraella(f, perfil)) ? 'graella-horaria' : 'desconegut';
+  } catch (error) {
+    // Una etiqueta fora de pressupost no acredita cap plantilla ni cap apunt.
+    if (error?.code === 'UNICODE_MARK_LIMIT') return 'desconegut';
+    throw error;
+  }
 }
 
 /**

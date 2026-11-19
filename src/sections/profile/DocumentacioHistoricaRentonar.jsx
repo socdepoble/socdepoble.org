@@ -16,6 +16,8 @@
  */
 import { Fragment, useState } from 'react';
 import { Link } from '../../app/contexts/RouterContext.jsx';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
+import { normalizeLanguage } from '../../config/i18n.js';
 import { Alerta, Boto, Insignia } from '../../components/PedraSeca/index.js';
 import {
   ATRIBUCIO_RENTONAR,
@@ -24,15 +26,19 @@ import {
   FITXA_REGISTRAL_RENTONAR,
   PLANTILLA_ACTA_ASSEMBLEA_RENTONAR
 } from '../../data/patrimoni/actaRentonar.js';
-
-const PESTANYES_RENTONAR = Object.freeze([
-  Object.freeze({ id: 'historia', titol: 'Història i Registre (1994–2026)', emoji: '🏛️' }),
-  Object.freeze({ id: 'estatuts', titol: 'Estatuts Vigents (LO 1/2002)', emoji: '📜' }),
-  Object.freeze({ id: 'acta', titol: 'Model d’Acta Assembleària', emoji: '🖨️' })
-]);
+import { textosPerfilPublicPerIdioma } from './textosPerfilPublic.js';
 
 export default function DocumentacioHistoricaRentonar() {
   const [pestanya, setPestanya] = useState('historia');
+  const ui = useUIStateOpcional();
+  const codiIdioma = normalizeLanguage(ui?.llenguaDelText || ui?.language);
+  const textos = textosPerfilPublicPerIdioma(codiIdioma);
+  const langDoc = codiIdioma === 'ca' ? undefined : 'ca';
+  const pestanyesRentonar = [
+    { id: 'historia', titol: textos.rentonarTabHistoria, emoji: '🏛️' },
+    { id: 'estatuts', titol: textos.rentonarTabEstatuts, emoji: '📜' },
+    { id: 'acta', titol: textos.rentonarTabActa, emoji: '🖨️' }
+  ];
 
   const imprimeixModelActa = () => {
     if (typeof window !== 'undefined' && typeof window.print === 'function') {
@@ -43,10 +49,10 @@ export default function DocumentacioHistoricaRentonar() {
   return (
     <section
       className="sdp-rentonar-doc"
-      aria-label="Arxiu històric, estatutari i constitutiu d’El Rentonar"
+      aria-label={textos.rentonarRegio}
       data-testid="documentacio-historica-rentonar"
     >
-      <header>
+      <header lang={langDoc}>
         <ul className="sp-card-labels" aria-label="Dades registrals d’El Rentonar">
           <li><Insignia to="info">{`Registre GVA ${FITXA_REGISTRAL_RENTONAR.numeroRegistre}`}</Insignia></li>
           <li><Insignia to="exit">{`Fundada el ${FITXA_REGISTRAL_RENTONAR.dataConstitucio}`}</Insignia></li>
@@ -62,9 +68,9 @@ export default function DocumentacioHistoricaRentonar() {
       <div
         className="sdp-rentonar-doc__pestanyes"
         role="tablist"
-        aria-label="Seccions documentals d’El Rentonar"
+        aria-label={textos.rentonarPestanyesAria}
       >
-        {PESTANYES_RENTONAR.map((item) => {
+        {pestanyesRentonar.map((item) => {
           const activa = pestanya === item.id;
           return (
             <button
@@ -87,46 +93,48 @@ export default function DocumentacioHistoricaRentonar() {
 
       {pestanya === 'historia' ? (
         <div id="panel-rentonar-historia" role="tabpanel" aria-labelledby="tab-rentonar-historia">
-          <div className="sdp-subtargeta">
-            <h3>Fitxa registral i institucional pública</h3>
-            {/* Onada R29 · Encaix local de la fitxa a mòbil (modules.css). */}
-            <dl className="sdp-rentonar-doc__fitxa">
-              <dt>Denominació estatutària</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.denominacioOficial}</dd>
-              <dt>Denominació fundacional (1994)</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.denominacioFundacional1994}</dd>
-              <dt>Inscripció autonòmica</dt>
-              <dd>{`${FITXA_REGISTRAL_RENTONAR.registreAutonomic} · núm. ${FITXA_REGISTRAL_RENTONAR.numeroRegistre}`}</dd>
-              <dt>Resolució i diligència</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.resolucioInscripcio}</dd>
-              <dt>CIF</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.cifEntitat}</dd>
-              <dt>Seu social estatutària</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.domiciliEstatutariPublic}</dd>
-              <dt>Règim de governança</dt>
-              <dd>{FITXA_REGISTRAL_RENTONAR.regimCarrecs}</dd>
-            </dl>
-          </div>
+          <div lang={langDoc}>
+            <div className="sdp-subtargeta">
+              <h3>Fitxa registral i institucional pública</h3>
+              {/* Onada R29 · Encaix local de la fitxa a mòbil (modules.css). */}
+              <dl className="sdp-rentonar-doc__fitxa">
+                <dt>Denominació estatutària</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.denominacioOficial}</dd>
+                <dt>Denominació fundacional (1994)</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.denominacioFundacional1994}</dd>
+                <dt>Inscripció autonòmica</dt>
+                <dd>{`${FITXA_REGISTRAL_RENTONAR.registreAutonomic} · núm. ${FITXA_REGISTRAL_RENTONAR.numeroRegistre}`}</dd>
+                <dt>Resolució i diligència</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.resolucioInscripcio}</dd>
+                <dt>CIF</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.cifEntitat}</dd>
+                <dt>Seu social estatutària</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.domiciliEstatutariPublic}</dd>
+                <dt>Règim de governança</dt>
+                <dd>{FITXA_REGISTRAL_RENTONAR.regimCarrecs}</dd>
+              </dl>
+            </div>
 
-          <h3>Cronologia documental (1994–2026)</h3>
-          {CRONOLOGIA_HISTORICA_RENTONAR.map((fita) => (
-            <article key={fita.id} className="sdp-subtargeta">
-              <h4>{fita.titol}</h4>
-              <p>{fita.periode}</p>
-              <p>{fita.resum}</p>
-            </article>
-          ))}
+            <h3>Cronologia documental (1994–2026)</h3>
+            {CRONOLOGIA_HISTORICA_RENTONAR.map((fita) => (
+              <article key={fita.id} className="sdp-subtargeta">
+                <h4>{fita.titol}</h4>
+                <p>{fita.periode}</p>
+                <p>{fita.resum}</p>
+              </article>
+            ))}
+          </div>
 
           <div className="sdp-alerta__accions">
             <Link className="sdp-boto sdp-boto--primari" to="/page/arbres-monumentals">
-              Obrir el Workspace de Natura i els 19 Arbres Singulars (2007–2020)
+              {textos.rentonarAccioArbres}
             </Link>
           </div>
         </div>
       ) : null}
 
       {pestanya === 'estatuts' ? (
-        <div id="panel-rentonar-estatuts" role="tabpanel" aria-labelledby="tab-rentonar-estatuts">
+        <div id="panel-rentonar-estatuts" role="tabpanel" aria-labelledby="tab-rentonar-estatuts" lang={langDoc}>
           <p className="sdp-muted">{ESTATUTS_VIGENTS_RENTONAR.marcLegal}</p>
 
           <div className="sdp-subtargeta">
@@ -161,27 +169,29 @@ export default function DocumentacioHistoricaRentonar() {
 
       {pestanya === 'acta' ? (
         <div id="panel-rentonar-acta" role="tabpanel" aria-labelledby="tab-rentonar-acta">
-          <Alerta to="info" titol="Protecció de dades i custòdia del Llibre d’Actes">
-            {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.notaCustodiaRgpd}
-          </Alerta>
+          <div lang={langDoc}>
+            <Alerta to="info" titol="Protecció de dades i custòdia del Llibre d’Actes">
+              {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.notaCustodiaRgpd}
+            </Alerta>
 
-          <div className="sdp-subtargeta">
-            <h3>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.titol}</h3>
-            <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.subtitol}</p>
-            <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.encapcalament}</p>
-            {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.ordreDelDia.map((item) => (
-              <Fragment key={item.punt}>
-                <h4>{item.punt}</h4>
-                <p>{item.acord}</p>
-              </Fragment>
-            ))}
-            <p><strong>Diligència de tancament:</strong> {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.peuSignatura}</p>
+            <div className="sdp-subtargeta">
+              <h3>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.titol}</h3>
+              <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.subtitol}</p>
+              <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.encapcalament}</p>
+              {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.ordreDelDia.map((item) => (
+                <Fragment key={item.punt}>
+                  <h4>{item.punt}</h4>
+                  <p>{item.acord}</p>
+                </Fragment>
+              ))}
+              <p><strong>Diligència de tancament:</strong> {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.peuSignatura}</p>
+            </div>
+            <p className="sdp-muted">Model redactat per Sóc de Poble; no és cap acta aprovada.</p>
           </div>
-          <p className="sdp-muted">Model redactat per Sóc de Poble; no és cap acta aprovada.</p>
 
           <div className="sdp-alerta__accions">
             <Boto varietat="primari" onClick={imprimeixModelActa}>
-              Imprimir model d’acta
+              {textos.rentonarImprimirActa}
             </Boto>
           </div>
         </div>
@@ -190,7 +200,7 @@ export default function DocumentacioHistoricaRentonar() {
       {/* L'atribució de Pedro Ferrer, només als continguts seus: la història i els
           Estatuts. El model d'acta és de Sóc de Poble i no la porta. */}
       {pestanya === 'acta' ? null : (
-        <footer>
+        <footer lang={langDoc}>
           <p className="sdp-muted">{ATRIBUCIO_RENTONAR}</p>
         </footer>
       )}

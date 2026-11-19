@@ -2,7 +2,7 @@
 /* La pantalla de Facturació i el dibuix del QR passen per les portes del repo
    (Onada 6, 261009; el patró de qualitatPanell.test.js): ESLint del projecte
    amb zero missatges, cada classe del JSX amb la seua regla (les pròpies,
-   dins del bloc de la Gestoria de modules.css), className només literal o
+   dins del bloc de la Gestoria de diferit-gestoria.css des del lot_01 de Gemini R32.11), className només literal o
    ternària de literals, i cap estil en línia, color hex, h1 ni finestra
    nova. Els patrons es componen a trossos perquè les portes que llegixen
    src/ no els troben ací. */
@@ -35,7 +35,7 @@ const CODI = DE_LA_PANTALLA.filter((f) => !/\.test\.jsx?$/.test(f) && !f.include
 const JSX = CODI.filter((f) => f.endsWith('.jsx'));
 
 function blocGestoria() {
-  const css = llig('src/css/modules.css');
+  const css = llig('src/css/diferit-gestoria.css');
   const marca = '/* ── GESTORIA PANELL (261002) ── */';
   const inici = css.indexOf(marca);
   expect(inici).toBeGreaterThan(-1);
@@ -46,6 +46,25 @@ function blocGestoria() {
     if (profunditat === 0) return css.slice(inici, i + 1);
   }
   throw new Error('El bloc de la Gestoria no es tanca.');
+}
+
+/* v1.2.9 · Gemini R32.11 lot_01 (dieta CSS) va moure el bloc de la Gestoria a diferit-gestoria.css, però la
+   còpia per a imprimir i la regla @media print depenen de <html> i <body>, que un full diferit no pot tocar
+   (tests/tractor-vocabulari-diferits.test.mjs): es queden a modules.css, al bloc que seguix la marca. */
+function blocImpressio() {
+  const css = llig('src/css/modules.css');
+  const marca = '/* Moviment R32.11: ── GESTORIA PANELL (261002) ──';
+  const inici = css.indexOf(marca);
+  expect(inici).toBeGreaterThan(-1);
+  const capa = css.indexOf('@layer components {', inici);
+  expect(capa).toBeGreaterThan(-1);
+  let profunditat = 0;
+  for (let i = css.indexOf('{', capa); i < css.length; i++) {
+    if (css[i] === '{') profunditat += 1;
+    if (css[i] === '}') profunditat -= 1;
+    if (profunditat === 0) return css.slice(inici, i + 1);
+  }
+  throw new Error('El bloc d’impressió de la Gestoria no es tanca.');
 }
 
 describe('ESLint', () => {
@@ -90,8 +109,9 @@ describe('CSS i JSX', () => {
     const bloc = blocGestoria();
     expect(bloc).toMatch(/\.sdp-gestoria-factura__full \{[^}]*background: var\(--sdp-sobre-roca\);[^}]*color: var\(--sdp-fons-roca\);/);
     expect(bloc).toMatch(/\.sdp-gestoria-factura__qr-tinta \{ fill: var\(--sdp-fons-roca\); \}/);
-    expect(bloc).toMatch(/\.sdp-gestoria-factura-impresa \{ display: none; \}/);
-    expect(bloc).toMatch(/@media print \{[\s\S]*html\.sdp-gestoria-imprimint body > :not\(\.sdp-gestoria-factura-impresa\) \{ display: none; \}/);
+    const impressio = blocImpressio();
+    expect(impressio).toMatch(/\.sdp-gestoria-factura-impresa \{ display: none; \}/);
+    expect(impressio).toMatch(/@media print \{[\s\S]*html\.sdp-gestoria-imprimint body > :not\(\.sdp-gestoria-factura-impresa\) \{ display: none; \}/);
   });
 
   /* Correcció de la revisió (261009): el <style> sense capa d'index.html fixa l'alçada de html i body al
@@ -100,13 +120,16 @@ describe('CSS i JSX', () => {
   test('en imprimir, html i body allarguen amb la factura: l’alçada amb !important, en bloc i sense contenidor', () => {
     const indexHtml = llig('index.html');
     expect(indexHtml).toMatch(/<style>\s*html, body, #root \{[^}]*height: 100%;/);
-    const impressio = blocGestoria().slice(blocGestoria().indexOf('@media print {'));
+    const impressio = blocImpressio().slice(blocImpressio().indexOf('@media print {'));
     const regla = /html\.sdp-gestoria-imprimint,\s*html\.sdp-gestoria-imprimint body \{([^}]*)\}/.exec(impressio)?.[1] ?? '';
     for (const declaracio of ['display: block;', 'height: auto !important;', 'overflow: visible;', 'container-type: normal;']) {
       expect(regla, declaracio).toContain(declaracio);
     }
-    // L'única !important del bloc de la Gestoria (sense comptar els comentaris) és esta.
-    expect(blocGestoria().replace(/\/\*[\s\S]*?\*\//g, '').match(/!important/g)).toHaveLength(1);
+    // L'única !important de la Gestoria (sense comptar els comentaris), entre el full diferit i el bloc
+    // d'impressió de l'arrencada, és esta.
+    const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(senseComentaris(blocGestoria()).match(/!important/g)).toBeNull();
+    expect(senseComentaris(blocImpressio()).match(/!important/g)).toHaveLength(1);
   });
 });
 

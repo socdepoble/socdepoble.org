@@ -1,6 +1,7 @@
 /** Carpetes privades: el nom es guarda abans d’assignar cap nota a l’id. */
+import { normalitzaUnicodeAmbLimit } from '../utils/normalitzaUnicodeSegura.js';
 export function nomDeCarpetaValid(input) {
-  const nom = typeof input?.nom === 'string' ? input.nom.normalize('NFC').trim() : '';
+  const nom = typeof input?.nom === 'string' ? normalitzaUnicodeAmbLimit(input.nom, 'NFC').trim() : '';
   if (!nom || nom.length > 120 || /[\p{Cc}\p{Cf}]/u.test(nom)) throw new TypeError('Nom de carpeta invàlid.');
   return nom;
 }

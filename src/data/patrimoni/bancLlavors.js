@@ -9,6 +9,8 @@
  * `maduracioLlavors`, i `sembraDirecta: true` on la llegenda de la pàgina diu «Sembra directa».
  * Rebutjos que no s'han de repetir: G9-03 (AVL no és l'Acadèmia), G9-04 (fitxes inventades), G9-05 (lots i custodis).
  */
+import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
+
 const congela = (valor) => {
   if (valor && typeof valor === 'object' && !Object.isFrozen(valor)) {
     for (const fill of Object.values(valor)) congela(fill);
@@ -5759,7 +5761,7 @@ export const ESPECIES_ATLES_CATALUNYA = congela([
  }
 ]);
 
-const pla = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '').replace(/[·.]/g, '').toLowerCase();
+const pla = (text) => normalitzaUnicodeAmbLimit(String(text ?? ''), 'NFD').replace(/\p{M}/gu, '').replace(/[·.]/g, '').toLowerCase();
 
 /** Les entrades d'un catàleg en una forma comuna per a la llista; la cerca no distingix accents ni el punt volat. */
 export function entradesDelCataleg(idFont) {
@@ -5770,7 +5772,13 @@ export function entradesDelCataleg(idFont) {
 }
 
 export function filtraEntrades(entrades, cerca = '') {
-  const q = pla(cerca).trim();
+  let q;
+  try { q = pla(cerca).trim(); }
+  catch (error) {
+    // Rebutjar la consulta, no convertir-la en la consulta buida que mostra tot.
+    if (error?.code === 'UNICODE_MARK_LIMIT') return [];
+    throw error;
+  }
   if (!q) return entrades;
   return entrades.filter((e) => {
     const text = pla([e.nom, e.nomCientific, e.dada?.nomIndex?.text, e.dada?.origen, ...(e.dada?.llista ?? []), ...(e.dada?.altres ?? [])].join(' '));

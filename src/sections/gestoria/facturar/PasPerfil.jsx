@@ -26,6 +26,9 @@ import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Camp, CampText, GrupCamps } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { configDeFormulari, configDeJson, dataCurta, errorsDelPerfil, formulariDeConfig, formulariImportat } from './nucli/formulari.js';
 import { AvisDeZona, ErrorsDelFormulari, llegixText } from './peces.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* El domicili fiscal d'una configuració, en una línia. */
 function domiciliDe(config) {
@@ -91,13 +94,13 @@ export function PasPerfil({ f }) {
     const versio = f.perfil.config;
     return (
       <>
-        <details className="sdp-gestoria-panell__documents">
+        <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
           <summary>{`Les dades desades (versió ${versio.versio})`}</summary>
           <div className="sdp-gestoria-panell__bloc">
             <dl className="sdp-gestoria-panell__dades">
               <div><dt>NIF</dt><dd>{f.config.nif}</dd></div>
               <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
-              {f.config.nomComercial ? <div><dt>Nom comercial</dt><dd>{f.config.nomComercial}</dd></div> : null}
+              {f.config.nomComercial ? <div ref={adoptaEstilsDiferits}><dt>Nom comercial</dt><dd>{f.config.nomComercial}</dd></div> : null}
               <div><dt>Domicili fiscal</dt><dd>{domiciliDe(f.config)}</dd></div>
               <div><dt>Primer dia que factures ací</dt><dd>{dataCurta(f.config.facturacio.dataPas)}</dd></div>
             </dl>
@@ -115,7 +118,7 @@ export function PasPerfil({ f }) {
   }
 
   return (
-    <form id={idForm} className="sdp-gestoria-panell__bloc" noValidate onSubmit={desa}>
+    <form ref={adoptaEstilsDiferits} id={idForm} className="sdp-gestoria-panell__bloc" noValidate onSubmit={desa}>
       <p>
         Estes dades van a cada factura com a emissor. Es guarden només en este ordinador, i cada canvi es
         guarda com una versió nova: les factures ja fetes conserven les dades del dia que es van emetre.
@@ -125,7 +128,7 @@ export function PasPerfil({ f }) {
         <CampText tipus="file" accept=".json,application/json" textBoto="Tria el fitxer" onChange={importa} />
       </Camp>
       {importat ? (
-        <p className="sdp-gestoria-panell__nota">
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
           {`Dades carregades de «${importat}»: revisa-les i desa-les.${fixada ? ' El primer dia que factures ací no canvia: ja hi ha factures emeses.' : ''}`}
         </p>
       ) : null}

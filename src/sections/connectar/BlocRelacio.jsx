@@ -61,6 +61,9 @@ import { omple } from '../../config/moderacio.js';
 import { TEXTOS_ERROR_SEGUIMENT, useSeguiment } from './useSeguiment.js';
 import { botoPrincipalDeLaRelacio } from './modeDeConnectar.js';
 import { VisibilitatDeLaConnexio } from './VisibilitatDeLaConnexio.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 /* IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · `com` i
    `nomCom`: l'entitat que la persona administra i amb la qual es connecta
@@ -108,7 +111,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
 
   if (!contacte) {
     return (
-      <section className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
+      <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
         <h3 id={`${id}-relacio`} className="sdp-connectar__titol-seccio">
           {t('section.connectar.persona.titolSenseNom', 'Connectar amb esta persona')}
         </h3>
@@ -161,11 +164,11 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
       /* C0200-06 · Amb una identitat pròpia no hi ha conversa que fer de
          relació (cap xat amb tu mateixa): el text ho diu sense prometre-la. */
       seguir = propi ? (
-        <p className="sdp-connectar__ajuda">
+        <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">
           {t('section.connectar.seguir.noDisponiblePropia', 'Este poble encara no permet connectar les teues identitats entre elles des de l’app.')}
         </p>
       ) : (
-        <p className="sdp-connectar__ajuda">
+        <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">
           {t('section.connectar.seguir.noDisponible', 'Este poble encara no permet connectar amb ningú des de l’app: de moment, la relació és la conversa.')}
         </p>
       );
@@ -173,7 +176,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
     case 'sense-sessio':
       seguir = (
         <>
-          <p className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.senseSessio', 'Per a connectar amb {nom} has d’entrar amb el teu compte.')}</p>
+          <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.senseSessio', 'Per a connectar amb {nom} has d’entrar amb el teu compte.')}</p>
           {/* FEDI-22 (C3) · A la targeta principal, el primari és entrar per a CONNECTAR, no per a escriure. */}
           {primari === 'entra' ? (
             <Boto {...varietatDe('entra')} onClick={() => onEntra?.()}>
@@ -188,18 +191,18 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
       break;
     case 'segueix':
       /* FEDI-22 · «Deixar la connexió» baixa al final del bloc (davall d'«Escriu-li»). */
-      seguir = resultat ? null : <p>{ambNom('section.connectar.seguir.jaSegueixes', 'Connectat amb {nom}.')}</p>;
+      seguir = resultat ? null : <p ref={adoptaEstilsDiferits}>{ambNom('section.connectar.seguir.jaSegueixes', 'Connectat amb {nom}.')}</p>;
       break;
     case 'no-segueix':
       seguir = (
         <>
           {seguiment.errorLectura ? (
-            <p className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.errorLectura', 'No s’ha pogut comprovar la connexió amb {nom}.')}</p>
+            <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{ambNom('section.connectar.seguir.errorLectura', 'No s’ha pogut comprovar la connexió amb {nom}.')}</p>
           ) : null}
           {/* Directiva del Mestre (261024) · l'avís a l'altra banda es diu ABANS del clic. */}
           {/* IDEA-22 · Com a entitat, cap missatge al xat: ho diu la línia de l'entitat (davall) o esta. */}
           {ambEntitat && seguitEntitat ? null : (
-            <p id={`${id}-avis`} className="sdp-connectar__ajuda">{ambEntitat
+            <p ref={adoptaEstilsDiferits} id={`${id}-avis`} className="sdp-connectar__ajuda">{ambEntitat
               ? omple(t('section.connectar.seguir.avisCom', 'Com a {entitat}, no li enviarem cap missatge al xat: {nom} ho veurà a la llista del veïnat connectat.'), { nom, entitat: nomCom })
               : remot
                 ? ambNom('section.connectar.seguir.avis', '{nom} rebrà un missatge al xat per a dir-li que t’hi has connectat.')
@@ -208,7 +211,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           {/* Integració 261024 (T6b · qui_em_segueix amb orgId) · qui administra
               l'entitat veu el nom del veïnat connectat: es diu abans del clic. */}
           {seguitEntitat ? (
-            <p id={`${id}-avis-entitat`} className="sdp-connectar__ajuda">
+            <p ref={adoptaEstilsDiferits} id={`${id}-avis-entitat`} className="sdp-connectar__ajuda">
               {/* IDEA-22 (T5) · connectant com a entitat, a la llista hi ix l'entitat, no la persona. */}
               {ambEntitat
                 ? omple(t('section.connectar.seguir.avisEntitatCom', 'Les persones que administren {nom} voran {entitat} a la llista del veïnat connectat amb l’entitat, sense cap missatge al xat.'), { nom, entitat: nomCom })
@@ -232,7 +235,7 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
   }
 
   return (
-    <section className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-relacio`}>
       {/* RA-03 · Amb `principal`, el títol només per al lector de pantalla. */}
       <h3 ref={titolRef} tabIndex={-1} id={`${id}-relacio`} className={principal ? 'sdp-sr-only' : 'sdp-connectar__titol-seccio'}>{titol}</h3>
       {seguir}
@@ -255,12 +258,12 @@ export function BlocRelacio({ contacte = null, deFitxa = false, calEntrar = fals
           C0200-06 · Amb tu mateixa (o una entitat teua), cap xat. */}
       {propi ? null : (
         <>
-          <p>{remot
+          <p ref={adoptaEstilsDiferits}>{remot
             ? ambNom('section.connectar.autor.text', 'Obri una conversa privada amb {nom}. Li apareixerà de seguida a la seua llista de converses, però no rebrà cap missatge fins que l’escrigues.')
             : ambNom('section.connectar.autor.textLlavor', 'Obri una conversa privada amb {nom} en este dispositiu. No rebrà cap missatge fins que l’escrigues.')}</p>
           {/* C0200-02 · El barret d'entitat no val per al xat: es diu abans del clic, amb el nom de la persona. */}
           {xatComPersona && remot ? (
-            <p>{omple(t('section.connectar.autor.textCom', 'El xat és personal: {nom} veurà que li escriu {persona}, no {entitat}, que ací no té xat propi.'), { nom, persona: nomPersona, entitat: nomCom })}</p>
+            <p ref={adoptaEstilsDiferits}>{omple(t('section.connectar.autor.textCom', 'El xat és personal: {nom} veurà que li escriu {persona}, no {entitat}, que ací no té xat propi.'), { nom, persona: nomPersona, entitat: nomCom })}</p>
           ) : null}
           <Boto {...varietatDe('escriu')} icona={MessageCircle} onClick={() => (calEntrar ? onEntra?.() : obriXat())}>
             {calEntrar

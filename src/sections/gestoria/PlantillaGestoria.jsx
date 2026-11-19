@@ -41,6 +41,9 @@ import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
 import EnviamentGestoria from './enviament/EnviamentGestoria.jsx';
 import { descarregaPerDefecte } from './PanellGestoria.jsx';
 import VistaPreviaFull from './VistaPreviaFull.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 export function PlantillaGestoria({ full = null, visible = false, descarrega = descarregaPerDefecte, onObreFull }) {
   const entregables = full?.entregables ?? null;
@@ -81,7 +84,7 @@ export function PlantillaGestoria({ full = null, visible = false, descarrega = d
 
   return (
     <>
-      <p role="status" className="sdp-nomes-lector">{anunci}</p>
+      <p ref={adoptaEstilsDiferits} role="status" className="sdp-nomes-lector">{anunci}</p>
       <p className="sdp-gestoria-cabina__nota">{`El full generat del ${full.t}T de ${full.any}: és el que es descarrega i s’adjunta.`}</p>
       {visible ? (
         <VistaPreviaFull full={entregables.full} titol="Taula · Plantilla Gestoria" />
@@ -99,7 +102,7 @@ export function PlantillaGestoria({ full = null, visible = false, descarrega = d
         </Boto>
       </div>
       {correuObert ? (
-        <div id={idCorreu}>
+        <div ref={adoptaEstilsDiferits} id={idCorreu}>
           <EnviamentGestoria key={entregables.empremtes.xlsx} any={full.any} t={full.t} adjunts={adjunts}
             inicials={{ nom: full.titular ?? '' }} nivellTitol={4} descarrega={descarrega} />
         </div>

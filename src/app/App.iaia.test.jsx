@@ -301,7 +301,14 @@ describe('la resta de pàgines de text no canvien', () => {
     expect(ruta).toContain('const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;');
     expect(ruta).toContain('const objecte = objecteDeLaPaginaDeText(pageKey, page.title);');
     expect(ruta).toContain('{accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}');
-    expect(ruta.match(/<TextSection [^>]*>/g)).toEqual(['<TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>']);
+    /* Gemini R32.11 lot_00 (rebase de R32.10, D-v126-IDIOMA) · El peu d'idioma (PeuEditorialIdioma.jsx)
+       va al final de les pàgines públiques de text: TextRoute passa dues props més, `peuDePagina` i
+       `etiquetaPeuDePagina`, que arriben del tros diferit de la ruta i no de cap decisió per pàgina. */
+    const obertures = [...ruta.matchAll(/<TextSection\s([\s\S]*?)\n\s*>/g)].map((m) => m[1].trim().split(/\s*\n\s*/).join(' '));
+    expect(obertures).toEqual([
+      'page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte} peuDePagina={PeuEditorial ? <PeuEditorial /> : null} etiquetaPeuDePagina={etiquetaPeu ? etiquetaPeu(t) : null}'
+    ]);
+    expect(ruta.match(/<TextSection\b/g)).toHaveLength(1);
     expect(ruta.match(/accioDeLaPaginaDeText|AccioDeLaPaginaDeText/g)).toHaveLength(3);
     expect(ruta.match(/accioDeTextAlFinal/g)).toHaveLength(1);
     expect(ruta.match(/objecteDeLaPaginaDeText/g)).toHaveLength(1);

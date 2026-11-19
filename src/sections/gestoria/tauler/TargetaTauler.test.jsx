@@ -202,7 +202,7 @@ describe('Pedra Seca', () => {
     expect(onCommuta).toHaveBeenCalledTimes(1);
     rerender(<UllPrivacitat visible onCommuta={onCommuta} />);
     expect(screen.getByRole('button', { name: 'Mostra les xifres' }).getAttribute('aria-pressed')).toBe('true');
-    const css = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8');
+    const css = readFileSync(path.join(process.cwd(), 'src/css/diferit-gestoria.css'), 'utf8');
     expect(css).toMatch(/\.sdp-gestoria-ull \{[^}]*min-width: var\(--sdp-touch\);[^}]*min-height: var\(--sdp-touch\);/);
   });
 });

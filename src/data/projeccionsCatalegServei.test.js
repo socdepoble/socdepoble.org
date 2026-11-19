@@ -112,13 +112,15 @@ describe('adopció de versions remotes amb dues pestanyes', () => {
   test('la pestanya lectora no escriu ni falla; una fila divergent no escriu ni avisa ningú', async () => {
     const pestanya = navegador();
     const publica = vi.fn(async sub => ({ id: sub.id, sectionId: sub.sectionId, payload: sub.payload }));
+    // Primera confirmació legacy sense token; després s'obri el servei CAS.
+    const legacy = pestanya({ publica }); await legacy.prepara(); await legacy.desa(FONT, ['mur']); await legacy.sincronitza(); legacy.tanca();
     const a = pestanya({ publica, versionada: true }), b = pestanya({ publica, versionada: true });
     const avisos = [];
     b.subscriu(avis => avisos.push(avis));
     try {
       await a.prepara(); await b.prepara();
       expect([a.mode, b.mode]).toEqual(['escriptora', 'lectora']);
-      await a.desa(FONT, ['mur']); await a.sincronitza(); await espera();
+      await espera();
       const registre = (await a.llista())[0];
       // Un ACK sense versió del servidor: el registre queda com un d'abans de R32.
       expect(registre.versions).toEqual({ privada: null, publica: null });
@@ -133,10 +135,11 @@ describe('adopció de versions remotes amb dues pestanyes', () => {
   test('una fila exacta l’adopta només la pestanya escriptora; la lectora ni escriu ni falla', async () => {
     const pestanya = navegador();
     const publica = vi.fn(async sub => ({ id: sub.id, sectionId: sub.sectionId, payload: sub.payload }));
+    const legacy = pestanya({ publica }); await legacy.prepara(); await legacy.desa(FONT, ['bar']); await legacy.sincronitza(); legacy.tanca();
     const a = pestanya({ publica, versionada: true }), b = pestanya({ publica, versionada: true });
     try {
       await a.prepara(); await b.prepara();
-      await a.desa(FONT, ['bar']); await a.sincronitza(); await espera();
+      await espera();
       const registre = (await a.llista())[0];
       expect(registre.versions).toEqual({ privada: null, publica: null });
       // La fila privada tal com la serviria el servidor per a esta mateixa projecció.

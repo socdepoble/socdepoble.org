@@ -15,6 +15,7 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto, Camp, CampText, GrupCamps, MarcColumna, OrdenaCategories } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosVistaNevera } from '../i18nNevera.js';
 import { LIMITS, MAX_COPIA, llegixCopia, serialitzaCopia } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { AJUSTOS } from './constants.js';
@@ -27,13 +28,13 @@ function useAccioEstreta(accio) {
   return mida === 'estret' ? [accio] : [];
 }
 
-function FormulariNom({ llista, onCanvia }) {
+function FormulariNom({ llista, onCanvia, tx }) {
   const [nom, setNom] = useState(llista.nom);
   const [error, setError] = useState(null);
   const envia = (event) => {
     event.preventDefault();
     if (!nom.trim()) {
-      setError('Escriu un nom per a la llista.');
+      setError(tx.escriuNomLlista);
       return;
     }
     setError(null);
@@ -41,45 +42,47 @@ function FormulariNom({ llista, onCanvia }) {
   };
   return (
     <form onSubmit={envia} noValidate>
-      <Camp etiqueta="Nom de la llista" error={error}>
+      <Camp etiqueta={tx.nomDeLaLlista} error={error}>
         <CampText value={nom} maxLength={LIMITS.nom} autoComplete="off" onChange={(event) => setNom(event.target.value)} />
       </Camp>
-      <Boto tipus="submit" varietat="primari" disabled={nom.trim() === llista.nom}>Canvia el nom</Boto>
+      <Boto tipus="submit" varietat="primari" disabled={nom.trim() === llista.nom}>{tx.canviaElNom}</Boto>
     </form>
   );
 }
 
 export function ColumnaAjustosLlista({ params }) {
   const { estat, accions, llistaVigent, ruta, demanaConfirmacio } = useVistaNevera();
+  const { idioma = 'ca' } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
   const navigate = useNavigate();
   const llista = llistaVigent(params);
   const unica = estat.llistes.length < 2;
   const startActions = useAccioEstreta({
-    id: 'dades', icona: Database, etiqueta: 'Dades i còpia', onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id, AJUSTOS.tramDades))
+    id: 'dades', icona: Database, etiqueta: tx.dadesICopia, onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id, AJUSTOS.tramDades))
   });
-  const titol = `Ajustos de «${llista.nom}»`;
+  const titol = tx.ajustosDe(llista.nom);
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} startActions={startActions} />} etiqueta={titol}>
-      <GrupCamps llegenda="La llista">
-        <FormulariNom key={llista.id} llista={llista} onCanvia={(nom) => accions.reanomenaLlista(llista.id, nom)} />
+      <GrupCamps llegenda={tx.laLlista}>
+        <FormulariNom key={llista.id} llista={llista} onCanvia={(nom) => accions.reanomenaLlista(llista.id, nom)} tx={tx} />
       </GrupCamps>
-      <GrupCamps llegenda="Seccions">
+      <GrupCamps llegenda={tx.seccions}>
         <OrdenaCategories
           categories={seccionsDe(estat, llista.id)}
-          etiqueta={`Ordre de les seccions de «${llista.nom}»`}
+          etiqueta={tx.ordreSeccions(llista.nom)}
           onMou={(id, direccio) => accions.mouSeccio(llista.id, id, direccio)}
           onVisibilitat={(id, visible) => accions.amagaSeccio(llista.id, id, !visible)}
         />
-        <Boto icona={RotateCcw} onClick={() => accions.restableixSeccions(llista.id)}>Torna a l’ordre de sempre</Boto>
+        <Boto icona={RotateCcw} onClick={() => accions.restableixSeccions(llista.id)}>{tx.tornaOrdreSempre}</Boto>
       </GrupCamps>
-      <GrupCamps llegenda="Esborrar">
-        {unica ? <p>És l’única llista: crea’n una altra abans d’esborrar esta.</p> : null}
+      <GrupCamps llegenda={tx.esborrar}>
+        {unica ? <p>{tx.unicaLlistaAvis}</p> : null}
         <Boto varietat="perill" icona={Trash2} disabled={unica} onClick={() => demanaConfirmacio({
-          titol: `Vols esborrar «${llista.nom}»?`,
-          descripcio: 'S’esborrarà la llista amb tot el que hi falta i els seus recents.',
-          etiquetaConfirma: 'Esborra la llista',
+          titol: tx.volsEsborrarLlista(llista.nom),
+          descripcio: tx.esborrarLlistaDesc,
+          etiquetaConfirma: tx.esborraLaLlista,
           accio: () => accions.esborraLlista(llista.id)
-        })}>Esborra esta llista</Boto>
+        })}>{tx.esborraEstaLlista}</Boto>
       </GrupCamps>
     </MarcColumna>
   );
@@ -95,12 +98,14 @@ const avui = () => {
 
 export function ColumnaDades({ params }) {
   const { estat, accions, llistaVigent, ruta, demanaConfirmacio, descarrega } = useVistaNevera();
+  const { idioma = 'ca' } = useClosaAplicacio();
+  const tx = textosVistaNevera(idioma);
   const navigate = useNavigate();
   const [errorCopia, setErrorCopia] = useState(null);
   const rondaCopia = useRef(0);
   const llista = llistaVigent(params);
   const startActions = useAccioEstreta({
-    id: 'torna', icona: ArrowLeft, etiqueta: 'Torna als ajustos', onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id))
+    id: 'torna', icona: ArrowLeft, etiqueta: tx.tornaAlsAjustos, onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id))
   });
 
   const exporta = async () => {
@@ -114,7 +119,7 @@ export function ColumnaDades({ params }) {
         dades: serialitzaCopia(desat, { creada })
       });
     } catch {
-      setErrorCopia('No s’han pogut llegir les dades desades.');
+      setErrorCopia(tx.errorLlegirDesades);
     }
   };
 
@@ -124,7 +129,7 @@ export function ColumnaDades({ params }) {
     if (!fitxer) return;
     const ronda = ++rondaCopia.current;
     if (fitxer.size > 4 * MAX_COPIA) {
-      setErrorCopia('El fitxer és massa gran per a ser una còpia de la nevera.');
+      setErrorCopia(tx.copiaMassaGran);
       return;
     }
     fitxer.text().then((text) => {
@@ -137,32 +142,32 @@ export function ColumnaDades({ params }) {
       setErrorCopia(null);
       const { llistes, articles } = resultat.resum;
       demanaConfirmacio({
-        titol: 'Vols recuperar esta còpia?',
-        descripcio: `Porta ${llistes} ${llistes === 1 ? 'llista' : 'llistes'} i ${articles} ${articles === 1 ? 'article' : 'articles'} per comprar. Substituirà tot el que hi ha ara en este dispositiu.`,
-        etiquetaConfirma: 'Recupera la còpia',
+        titol: tx.volsRecuperarCopia,
+        descripcio: tx.recuperarCopiaDesc(llistes, articles),
+        etiquetaConfirma: tx.recuperaLaCopia,
         accio: () => accions.importa(resultat.estat, estat)
       });
     }, () => {
-      if (ronda === rondaCopia.current) setErrorCopia('No s’ha pogut llegir el fitxer.');
+      if (ronda === rondaCopia.current) setErrorCopia(tx.errorLlegirFitxer);
     });
   };
 
   return (
-    <MarcColumna capcalera={<AppGridColumn titol="Dades i còpia" startActions={startActions} />} etiqueta="Dades i còpia">
+    <MarcColumna capcalera={<AppGridColumn titol={tx.dadesICopia} startActions={startActions} />} etiqueta={tx.dadesICopia}>
       <AvisNevera sempre />
-      <GrupCamps llegenda="Còpia de seguretat">
-        <Boto icona={Download} onClick={exporta}>Descarrega una còpia</Boto>
-        <Camp etiqueta="Recupera una còpia" ajuda="Un fitxer .json descarregat d’ací. Substituïx totes les dades d’este dispositiu." error={errorCopia}>
+      <GrupCamps llegenda={tx.copiaSeguretat}>
+        <Boto icona={Download} onClick={exporta}>{tx.descarregaUnaCopia}</Boto>
+        <Camp etiqueta={tx.recuperaUnaCopia} ajuda={tx.ajudaRecuperaCopia} error={errorCopia}>
           <CampText tipus="file" accept=".json,application/json" onChange={recupera} />
         </Camp>
       </GrupCamps>
-      <GrupCamps llegenda="Començar de nou">
+      <GrupCamps llegenda={tx.comencarDeNou}>
         <Boto varietat="perill" icona={Trash2} onClick={() => demanaConfirmacio({
-          titol: 'Vols esborrar-ho tot?',
-          descripcio: 'S’esborraran totes les llistes, els articles propis i el que hi ha a casa. Si en vols guardar alguna cosa, descarrega abans una còpia.',
-          etiquetaConfirma: 'Esborra-ho tot',
+          titol: tx.volsEsborrarTot,
+          descripcio: tx.esborrarTotDesc,
+          etiquetaConfirma: tx.esborraHoTot,
           accio: () => accions.esborraTot()
-        })}>Esborra-ho tot</Boto>
+        })}>{tx.esborraHoTot}</Boto>
       </GrupCamps>
     </MarcColumna>
   );

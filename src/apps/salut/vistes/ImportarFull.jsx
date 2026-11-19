@@ -18,7 +18,7 @@ import { etiquetaData } from '../nucli/hores.js';
 import { diesDe, llegixFitxer, proposaApunts } from '../nucli/importacio.js';
 import { textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
-import { EnllacBoto, MarcSalut } from './comunes.jsx';
+import { EnllacBoto, MarcSalut, useTextosSalut } from './comunes.jsx';
 
 const ACCEPTA = '.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
 /* Les columnes de la vista prèvia: els tipus que porta un diari miccional. */
@@ -36,20 +36,19 @@ function perJornada(apunts) {
 }
 
 /* El que no s'importa, agrupat pel motiu: «motiu: G9, G12». */
-function perMotiu(descartats) {
+function perMotiu(descartats, tx) {
   const motius = new Map();
   for (const { lloc, motiu } of descartats) {
     if (!motius.has(motiu)) motius.set(motiu, []);
     motius.get(motiu).push(lloc.slice(lloc.lastIndexOf('!') + 1));
   }
-  return [...motius].map(([motiu, llocs]) => `${motiu} ${llocs.length === 1 ? 'Cel·la' : 'Cel·les'}: ${llocs.join(', ')}.`);
+  return [...motius].map(([motiu, llocs]) => `${motiu} ${llocs.length === 1 ? tx.cella : tx.celles}: ${llocs.join(', ')}.`);
 }
-
-const apuntsEn = (n) => `${n} ${n === 1 ? 'apunt' : 'apunts'}`;
 
 export function ImportarFull() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const [triat, setTriat] = useState(null);
   const [dates, setDates] = useState([]);
   const [missatge, setMissatge] = useState(null);
@@ -80,7 +79,7 @@ export function ImportarFull() {
       setTriat({ nom: fitxer.name, llibre: llegit.llibre });
     } catch {
       setTriat(null);
-      setMissatge({ to: 'error', text: 'No s’ha pogut llegir el fitxer.' });
+      setMissatge({ to: 'error', text: tx.errorLlegirFitxer });
     }
   };
   const posaData = (i, data) => setDates((abans) => Object.assign([...abans], { [i]: data }));
@@ -91,7 +90,7 @@ export function ImportarFull() {
       setTriat(null);
       setDates([]);
       setVersio((n) => n + 1);
-      setMissatge({ to: 'exit', text: `Fet: ${informe.afegits} ${informe.afegits === 1 ? 'apunt nou' : 'apunts nous'}; ${informe.duplicats} ja hi eren.` });
+      setMissatge({ to: 'exit', text: tx.fetImportarFull(informe.afegits, informe.duplicats) });
     } catch (error) {
       setMissatge({ to: 'error', text: textError(error) });
     }
@@ -101,25 +100,25 @@ export function ImportarFull() {
   const n = proposta ? proposta.apunts.length : 0;
   const jornades = proposta ? perJornada(proposta.apunts) : [];
   const resum = proposta ? [
-    `${n === 1 ? '1 apunt nou' : `${n} apunts nous`}`,
-    proposta.jaHiSon ? `${apuntsEn(proposta.jaHiSon)} que ja hi són` : '',
-    proposta.descartats.length ? `${proposta.descartats.length} ${proposta.descartats.length === 1 ? 'cel·la que no s’importa' : 'cel·les que no s’importen'}` : ''
+    tx.apuntsNousCount(n),
+    proposta.jaHiSon ? tx.jaHiSonCount(tx.apuntsCount(proposta.jaHiSon)) : '',
+    proposta.descartats.length ? tx.cellesNoImportades(proposta.descartats.length) : ''
   ].filter(Boolean).join('; ') : '';
 
   return (
-    <MarcSalut titol="Importar un full de càlcul">
+    <MarcSalut titol={tx.importarFullCalcul}>
       <Pila gap={6}>
         <Pila gap={2}>
-          <p>Un diari fet en un full de càlcul: la plantilla del diari miccional (de Numbers, Excel o LibreOffice, en .xlsx o en .csv) o el full que exporta esta app.</p>
-          <p>El fitxer es llig en este dispositiu i no s’envia enlloc. No es desa res fins que no ho confirmes, i només s’afig: el que ja hi ha es queda.</p>
+          <p>{tx.importarFullIntro1}</p>
+          <p>{tx.importarFullIntro2}</p>
         </Pila>
-        <Camp etiqueta="Full de càlcul (.xlsx o .csv)">
+        <Camp etiqueta={tx.fullCalculEtiqueta}>
           <CampText key={versio} tipus="file" accept={ACCEPTA} onChange={tria} disabled={salut.nomesLectura} />
         </Camp>
         {proposta && proposta.dies.length ? (
-          <GrupCamps llegenda="Quin dia és cada full">
+          <GrupCamps llegenda={tx.quinDiaCadaFull}>
             {proposta.dies.map((dia, i) => (
-              <Camp key={`${dia.nom}-${i}`} etiqueta={`Data de «${dia.nom}»`}>
+              <Camp key={`${dia.nom}-${i}`} etiqueta={tx.dataDeFull(dia.nom)}>
                 <CampText tipus="date" value={dia.data || ''} onChange={(event) => posaData(i, event.target.value)} />
               </Camp>
             ))}
@@ -128,10 +127,10 @@ export function ImportarFull() {
         {proposta ? (
           <Pila gap={4}>
             {jornades.length ? (
-              <Taula titol="Què s’hi afegirà" densa>
+              <Taula titol={tx.queSAfegira} densa>
                 <thead>
                   <tr>
-                    <th scope="col">Jornada</th>
+                    <th scope="col">{tx.jornada}</th>
                     {TIPUS_PREVIA.map((tipus) => <th key={tipus} scope="col">{tipusDe(tipus).nom}</th>)}
                   </tr>
                 </thead>
@@ -148,18 +147,18 @@ export function ImportarFull() {
             <p>{`${resum}.`}</p>
             {proposta.avisos.map((avis, i) => <Alerta key={`${avis.codi}-${i}`} to="avis" viva={false}>{avis.text}</Alerta>)}
             {proposta.descartats.length ? (
-              <Alerta to="info" viva={false} titol="El que no s’importa">
-                {perMotiu(proposta.descartats).map((linia) => <p key={linia}>{linia}</p>)}
+              <Alerta to="info" viva={false} titol={tx.elQueNoSImporta}>
+                {perMotiu(proposta.descartats, tx).map((linia) => <p key={linia}>{linia}</p>)}
               </Alerta>
             ) : null}
             {n > 0 ? (
-              <p>Les hores de la graella són les de cada franja: la nota de l’apunt diu que són aproximades. El que el full no porta (on ha orinat, per exemple) queda com ho proposa el formulari.</p>
+              <p>{tx.horesAproximadesText}</p>
             ) : null}
-            <Boto varietat="primari" icona={Upload} disabled={salut.nomesLectura || desant || n === 0} onClick={afig}>{`Afig ${apuntsEn(n)}`}</Boto>
+            <Boto varietat="primari" icona={Upload} disabled={salut.nomesLectura || desant || n === 0} onClick={afig}>{tx.afigApuntsBoto(tx.apuntsCount(n))}</Boto>
           </Pila>
         ) : null}
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-        <EnllacBoto a={ruta('copia')}>Torna a Còpia i esborrat</EnllacBoto>
+        <EnllacBoto a={ruta('copia')}>{tx.tornaACopiaIEsborrat}</EnllacBoto>
       </Pila>
     </MarcSalut>
   );

@@ -100,7 +100,10 @@ describe('el CSS: el bloc .sdp-subtargeta de modules.css', () => {
   const moduls = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
   const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
   const inici = moduls.indexOf('/* ═══ SUBTARGETA · O4-CLAUDE-2');
-  const bloc = senseComentaris(moduls.slice(inici, moduls.indexOf('/* ── GESTORIA TAULER', inici))).trim();
+  /* Onada v1.2.9 · Gemini R32.11 (lot 01) mou el bloc de la Gestoria a src/css/diferit-gestoria.css i hi deixa la fita
+     «Moviment R32.11: ── GESTORIA TAULER…»: el bloc de la subtargeta acaba en eixa fita, amb el prefix o sense. */
+  const fi = moduls.slice(inici).search(/\/\* (?:Moviment R32\.11: )?── GESTORIA TAULER/);
+  const bloc = senseComentaris(moduls.slice(inici, fi < 0 ? -1 : inici + fi)).trim();
   const regla = (selector) => {
     const i = bloc.indexOf(`${selector} {`);
     return i < 0 ? null : bloc.slice(i, bloc.indexOf('}', i));

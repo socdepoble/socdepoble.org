@@ -79,7 +79,7 @@
 import { llegixExif, teExif } from './exif.js';
 import { PRECISIONS } from './geolocalitzacio.js';
 import { PES_MAXIM_ENTRADA } from './limits.js';
-import { FORMAT_JPEG, FORMAT_PNG, FORMAT_WEBP, formatImatge } from './netejaMetadades.js';
+import { FORMAT_JPEG, FORMAT_PNG, FORMAT_WEBP, formatImatge, netejaMetadades } from './netejaMetadades.js';
 
 /**
  * L'etiqueta de la casella del diàleg quan la foto porta la ubicació o la
@@ -656,16 +656,23 @@ const TRIA_CAMERA = Object.freeze({
   exif: new Set([0xa433, 0xa434]),
   gps: new Set(),
 });
+/* Xat · el lloc consentit viatja en el DTO i es confirma al servidor. El
+   binari conserva data/càmera, sense GPS, MakerNote ni bytes orfes. */
+const TRIA_SENSE_UBICACIO = Object.freeze({
+  ifd0: new Set([0x0112, ...TRIA_UBICACIO_I_DATA.ifd0, ...TRIA_CAMERA.ifd0]),
+  exif: new Set([...TRIA_UBICACIO_I_DATA.exif, ...TRIA_CAMERA.exif]),
+  gps: new Set(),
+});
 
 /**
  * El bloc TIFF de la còpia pública: només les etiquetes de la tria (vegeu
  * dalt), en un bloc nou; o null si no en queda cap o no es pot conservar.
  */
-export function preparaTiffTriat(entrada) {
+function preparaTiffAmbTria(entrada, triaExplicita = null) {
   try {
     const analisi = analitzaTiff(entrada);
     if (analisi?.estat !== ESTAT_EXIF.PUBLICABLE || !analisi.tiff) return null;
-    const tria = teUbicacioOData(analisi) ? TRIA_UBICACIO_I_DATA : TRIA_CAMERA;
+    const tria = triaExplicita ?? (teUbicacioOData(analisi) ? TRIA_UBICACIO_I_DATA : TRIA_CAMERA);
     const t = analisi.tiff;
     const v = new DataView(t.buffer, t.byteOffset, t.byteLength);
     const le = v.getUint16(0) === 0x4949;
@@ -740,6 +747,21 @@ export function preparaTiffTriat(entrada) {
   } catch {
     return null;
   }
+}
+
+export const preparaTiffTriat = entrada => preparaTiffAmbTria(entrada);
+/** TIFF nou de data/càmera, sense cap directori GPS ni càrrega opaca. */
+export const preparaTiffSenseUbicacio = entrada => preparaTiffAmbTria(entrada, TRIA_SENSE_UBICACIO);
+
+/** Contenidor net amb només l'EXIF blanc sense GPS. No recodifica píxels.
+ * null indica format/estructura/mida no acreditable: el transport el veta. */
+export function imatgeSenseUbicacio(entrada) {
+  const net = netejaMetadades(entrada);
+  if (!net || ![FORMAT_JPEG, FORMAT_WEBP].includes(net.format)) return null;
+  const tiff = preparaTiffSenseUbicacio(extreuTiff(entrada));
+  if (!tiff) return net;
+  const bytes = (net.format === FORMAT_JPEG ? incrustaEnJpeg : incrustaEnWebp)(net.bytes, tiff) ?? net.bytes;
+  return { ...net, bytes };
 }
 
 /* ─── La precisió de la ubicació (P1-64, pla 261028_1526 §3.1.1) ──────── */

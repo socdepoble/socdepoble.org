@@ -73,6 +73,37 @@ test('PF03: regressió del rellotge remot i rebuts de captures alienes fallen ta
   const pa = preparaSincronitzacioCrdtRural(aliena, 'alien');
   assert.throws(() => registraAckCrdtRural(s, pa, ack(pa), AUTORITAT), { code: 'RURAL_CRDT_ACK_INVALID' });
 });
+test('PF03: un ACK tardà de la captura original compacta només g+d i no confirma una altra nota local', () => {
+  const g = genesis(), original = join(g, elimina(g));
+  const captura = preparaSincronitzacioCrdtRural(original, 'captura-original');
+  const confirmat = registraAckCrdtRural(original, captura, ack(captura), AUTORITAT);
+  const local = canviaCrdtRural(empty(), { id: 'altra', replica: 'local', comptador: 1,
+    nota: { ...nota('Bytes locals sense ACK'), title: 'Altra nota', slug: 'altra' } });
+  const bytesLocals = canonitzaJsonJcs(local.ops), actual = join(confirmat, local);
+  assert.deepEqual(compactaCrdtRural(actual), actual, 'el primer ACK encara no acredita més de 90 dies');
+  const tardana = registraAckCrdtRural(actual, captura, ack(captura, INICI + RETENCIO_TOMBSTONES_RURAL_MS + 1), AUTORITAT);
+  assert.deepEqual(tardana.sincronitzacio.fronteres[0].dots, original.ops.map(dot).sort());
+  const compactat = compactaCrdtRural(tardana);
+  assert.deepEqual(compactat.sincronitzacio.retirades.map(r => r.id), ['nota']);
+  assert.equal(compactat.ops.length, 1, 'només es retira el payload de g+d');
+  assert.equal(canonitzaJsonJcs(compactat.ops), bytesLocals, 'l’operació local es conserva byte a byte');
+  assert.equal(compactat.sincronitzacio.acks.some(a => a.dot === dot(local.ops[0])), false);
+  assert.deepEqual(projectaCrdtRural(compactat).notes.map(n => [n.id, n.content]), [['altra', 'Bytes locals sense ACK']]);
+  assert.deepEqual(compactaCrdtRural(compactat), compactat, 'cap consolidació local inventa una confirmació');
+});
+test('PF03: una supressió local posterior al primer ACK de g es conserva amb un ACK tardà només de g', () => {
+  const g = genesis(), captura = preparaSincronitzacioCrdtRural(g, 'nomes-genesi');
+  const confirmat = registraAckCrdtRural(g, captura, ack(captura), AUTORITAT);
+  const d = elimina(confirmat), actual = join(confirmat, d), bytesOps = canonitzaJsonJcs(actual.ops);
+  const tardana = registraAckCrdtRural(actual, captura, ack(captura, INICI + RETENCIO_TOMBSTONES_RURAL_MS + 1), AUTORITAT);
+  const compactat = compactaCrdtRural(tardana);
+  assert.equal(canonitzaJsonJcs(compactat.ops), bytesOps, 'la revisió local fora de la captura impedix retirar el payload');
+  assert.deepEqual(compactat.sincronitzacio.fronteres[0].dots, g.ops.map(dot));
+  assert.equal(compactat.sincronitzacio.acks.some(a => a.dot === dot(d.ops[0])), false);
+  assert.deepEqual(compactat.sincronitzacio.retirades, []);
+  assert.deepEqual(projectaCrdtRural(compactat).esborrades.map(n => n.id), ['nota']);
+  assert.deepEqual(compactat.ops.find(op => op.elimina), d.ops[0], 'el tombstone local continua íntegre');
+});
 const AB = { persona: 'persona', tenant: 'torre', endpoint: 'seed', mode: 'seed' };
 async function sessio(t, memoria, offset = 0) {
   const s = await creaSessioRural({ abast: AB, municipi: 'La Torre', motor: 'memoria', memoria, crdt: true,

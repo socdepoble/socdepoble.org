@@ -7,9 +7,13 @@
 import { useId, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Boto, Camp, CampText, Dialeg } from '../../../components/PedraSeca/index.js';
+import { textosVistaNevera } from '../i18nNevera.js';
 import { LIMITS } from '../nucli/index.js';
+import { useVistaNevera } from './context.js';
 
 export function DialegNovaLlista({ obert, onTanca, onCrea }) {
+  const { idioma = 'ca' } = useVistaNevera() || {};
+  const tx = textosVistaNevera(idioma);
   const id = useId();
   const [nom, setNom] = useState('');
   const [error, setError] = useState(null);
@@ -25,7 +29,7 @@ export function DialegNovaLlista({ obert, onTanca, onCrea }) {
   const envia = (event) => {
     event.preventDefault();
     if (!nom.trim()) {
-      setError('Escriu un nom per a la llista (per exemple, «Mercat del dijous»).');
+      setError(tx.escriuNomLlistaEx);
       return;
     }
     const motiu = onCrea(nom);
@@ -35,18 +39,18 @@ export function DialegNovaLlista({ obert, onTanca, onCrea }) {
     <Dialeg
       obert={obert}
       onTanca={onTanca}
-      titol="Llista nova"
+      titol={tx.llistaNovaTitol}
       mida="s"
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => onTanca('boto')}>Cancel·la</Boto>
-          <Boto varietat="primari" tipus="submit" form={id} icona={Plus}>Crea la llista</Boto>
+          <Boto varietat="secundari" onClick={() => onTanca('boto')}>{tx.cancella}</Boto>
+          <Boto varietat="primari" tipus="submit" form={id} icona={Plus}>{tx.creaLaLlista}</Boto>
         </>
       )}
     >
       {obert ? (
         <form id={id} onSubmit={envia} noValidate>
-          <Camp etiqueta="Nom de la llista" error={error}>
+          <Camp etiqueta={tx.nomDeLaLlista} error={error}>
             <CampText value={nom} maxLength={LIMITS.nom} autoComplete="off" onChange={(event) => setNom(event.target.value)} />
           </Camp>
         </form>

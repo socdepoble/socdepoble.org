@@ -28,6 +28,7 @@ import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { receptaPerId } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
@@ -40,8 +41,6 @@ import {
 /* Cap color per secció: la icona i el nom la distingixen. */
 const ICONES = Object.freeze({ 'a-punt': ChefHat, quasi: ShoppingBasket, lluny: CircleDashed });
 const ambIcona = (seccio) => ({ ...seccio, icona: ICONES[seccio.id] });
-const textReceptes = (n) => `${n} ${n === 1 ? 'recepta' : 'receptes'}`;
-const TEXTOS_BUIT = Object.freeze({ buit: 'Cap recepta en esta secció', buitText: 'Tria «Totes» per a vore tot el receptari.' });
 
 /* Posa a la llista l'ingredient d'una línia: l'article que ja el representa o, si no n'hi ha, un de propi. */
 function afigIngredient(accions, llistaId, linia) {
@@ -49,13 +48,13 @@ function afigIngredient(accions, llistaId, linia) {
 }
 
 /* L'avís de dalt: sense res marcat a «A casa», el recomanador no pot saber res. */
-function AvisSenseRebost({ llista }) {
+function AvisSenseRebost({ llista, tx }) {
   const { ruta } = useVistaNevera();
   const navigate = useNavigate();
   return (
-    <Alerta to="info" titol="Encara no has marcat res a «A casa»" viva={false}
-      accions={<Boto icona={Refrigerator} onClick={() => navigate(ruta(CASA.entrada, llista.id))}>Ves a «A casa»</Boto>}>
-      Les receptes es trien amb el que marques allà com a «N’hi ha» o «Se n’acaba». Mentrestant, tot el receptari ix com si faltara tot.
+    <Alerta to="info" titol={tx.senseRebostTitol} viva={false}
+      accions={<Boto icona={Refrigerator} onClick={() => navigate(ruta(CASA.entrada, llista.id))}>{tx.vesAACasa}</Boto>}>
+      {tx.senseRebostText}
     </Alerta>
   );
 }
@@ -63,7 +62,9 @@ function AvisSenseRebost({ llista }) {
 /** «Receptes amb el que tens»: el detall de l'entrada Receptes. */
 export function ColumnaReceptes({ params }) {
   const { estat, accions, llistaVigent, mode, llegit, error, persistent } = useVistaNevera();
-  const { mida } = useClosaAplicacio();
+  const { mida, idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const llista = llistaVigent(params);
   /* Correcció del refutador (261011, R3) · En mode `lectora` (una altra pestanya escriu), o si el
      disc no s'ha pogut llegir, les accions tornen false en silenci: «Afig el que falta» es
@@ -80,15 +81,16 @@ export function ColumnaReceptes({ params }) {
   return (
     <ColumnaCataleg
       forma="targetes"
-      titol="Receptes amb el que tens"
+      ometDataNoIndicada
+      titol={tx.receptesAmbElQueTens}
       categories={seccionsDeReceptes().map(ambIcona)}
       articles={articles}
-      textArticles={textReceptes}
+      textArticles={tx.textReceptes}
       onTria={(article, { obriDetall }) => obriDetall()}
       detall={{
         ambQuantitat: false,
         ambNota: false,
-        textAccepta: 'D’acord',
+        textAccepta: tx.dAcord,
         contingutDe: (article) => {
           const textos = textosDeRecepta(receptaPerId(article.id));
           return textos ? (
@@ -106,20 +108,20 @@ export function ColumnaReceptes({ params }) {
             <Boto icona={Plus} disabled={!potEscriure} onClick={() => {
               falta.forEach((linia) => afigIngredient(accions, llista.id, linia));
               tanca();
-            }}>{`Afig el que falta a «${llista.nom}»`}</Boto>
+            }}>{tx.afigElQueFalta(llista.nom)}</Boto>
           ) : null;
         }
       }}
-      resum={{ etiqueta: 'Cal comprar per a cuinar', comptador: perComprar.length, textComptador: textArticles }}
+      resum={{ etiqueta: tx.calComprarPerACuinar, comptador: perComprar.length, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount }}
       avis={avisDelDisc || senseRebost ? (
         <>
           {avisDelDisc ? <AvisNevera /> : null}
-          {senseRebost ? <AvisSenseRebost llista={llista} /> : null}
+          {senseRebost ? <AvisSenseRebost llista={llista} tx={tx} /> : null}
         </>
       ) : null}
       primer={RECEPTES_VISTA.primer}
       tram={RECEPTES_VISTA.tram}
-      textos={TEXTOS_BUIT}
+      textos={{ buit: txBuit.receptesBuit, buitText: txBuit.receptesBuitText }}
     />
   );
 }
@@ -127,28 +129,31 @@ export function ColumnaReceptes({ params }) {
 /** «Cal comprar per a cuinar»: el mig de l'entrada Receptes. */
 export function ColumnaCalPerACuinar({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { idioma } = useClosaAplicacio();
+  const txBuit = textosBuitNevera(idioma);
+  const tx = textosVistaNevera(idioma);
   const llista = llistaVigent(params);
   const linies = liniesQueFalten(estat, llista.id, recomanacionsDeCasa(estat));
   return (
     <ColumnaColleccio
-      titol="Cal comprar per a cuinar"
+      titol={tx.calComprarPerACuinar}
       linies={linies}
       resum={{
-        etiqueta: `Per a «${llista.nom}»`,
+        etiqueta: tx.perALlistaNom(llista.nom),
         comptador: linies.length,
-        textComptador: textArticles,
+        textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount,
         accio: {
-          text: 'Afig-ho tot',
+          text: tx.afigHoTot,
           onClick: () => linies.forEach((linia) => afigIngredient(accions, llista.id, linia)),
           desactivada: linies.length === 0
         }
       }}
       onSuma={(linia) => afigIngredient(accions, llista.id, linia)}
-      textosLinies={{ suma: (nom) => `Afig ${nom} a «${llista.nom}»` }}
+      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, llista.nom) }}
       textos={{
-        buit: 'No cal comprar res per a cuinar',
-        buitText: 'Quan a una recepta li falten un o dos ingredients, apareixeran ací.',
-        tornaCataleg: 'Torna a les receptes'
+        buit: txBuit.cuinarBuit,
+        buitText: txBuit.cuinarBuitText,
+        tornaCataleg: txBuit.cuinarTornaCataleg
       }}
       peu={<AvisNevera />}
       primer={RECEPTES_VISTA.primer}

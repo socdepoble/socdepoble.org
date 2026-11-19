@@ -19,7 +19,8 @@ import {
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
 import {
-  NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+  NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
+  NOMS_DEL_NUCLI_1_7
 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
@@ -98,6 +99,17 @@ describe('l’objecte SocDePoble.nucli', () => {
       .toEqual({ author: 'Pepa', location: 'Alcoi', time: '', date: '1998', dateTime: null });
   });
 
+  /* R32.11 (v1.2.9) · El nom de l'1.7.0 és el bloc d'accions de composicio (lots 05 i 06 de Gemini):
+     el mateix component de la façana de Pedra Seca, i pinta el bloc centrat .sdp-accions. */
+  test('R32.11: el nucli 1.7 dona Accions, el mateix bloc d’accions de la façana de Pedra Seca', () => {
+    for (const [porta, noms] of Object.entries(NOMS_DEL_NUCLI_1_7)) {
+      for (const nom of noms) expect(NUCLI[porta][nom], `${porta}.${nom}`).toBe(PedraSeca[nom]);
+    }
+    expect(NOMS_PER_FITXER_DE_PEDRA_SECA['src/components/PedraSeca/composicio/index.jsx']).toEqual(['Accions', 'Fila', 'Pila']);
+    const element = NUCLI.pedraSeca.Accions.render({ children: null }, null);
+    expect(element.props.className).toContain('sdp-accions');
+  });
+
   test('cap porta dona el backend, la sessió ni la identitat', () => {
     const vetats = /backend|supabase|session|identitat|adoptaSessio|getCurrentUser|teCapacitat/i;
     for (const { clau } of PORTES_DEL_NUCLI) {
@@ -167,6 +179,9 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.5', '1.6.0', true],
     ['^1.6', '1.6.0', true],
     ['^1.7', '1.6.0', false],
+    ['^1.6', '1.7.0', true],
+    ['^1.7', '1.7.0', true],
+    ['^1.8', '1.7.0', false],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -185,9 +200,11 @@ describe('el contracte (contracteNucli.js)', () => {
      mòdul de '^1.3' ja entra. R14: els serveis de Menjar i Beure i Botonera
      entren en1.4. R15 afig els catàlegs i la revisió pendent en1.5;
      R21.6 afig la capçalera de lectura de la targeta en l'1.6: el primer
-     rang futur rebutjat és ara '^1.7'. */
-  test('el rang 1.6 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
-    expect(VERSIO_NUCLI).toBe('1.6.0');
+     rang futur rebutjat és ara '^1.7'.
+     Actualitzada a posta (R32.11, v1.2.9): l'1.7 afig Accions (lots 05 i 06 de Gemini); el primer rang
+     futur rebutjat és ara '^1.8'. */
+  test('el rang 1.7 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.7.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
@@ -195,7 +212,8 @@ describe('el contracte (contracteNucli.js)', () => {
     expect(nucliSatisfa('^1.4')).toBe(true);
     expect(nucliSatisfa('^1.5')).toBe(true);
     expect(nucliSatisfa('^1.6')).toBe(true);
-    expect(nucliSatisfa('^1.7')).toBe(false);
+    expect(nucliSatisfa('^1.7')).toBe(true);
+    expect(nucliSatisfa('^1.8')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -209,8 +227,9 @@ describe('el contracte (contracteNucli.js)', () => {
      (useServeiNoticies, a la de la plataforma), cap porta nova.
      R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera.
      R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent.
-     R21.6: NOMS_DEL_NUCLI_1_6 fixa la capçalera de lectura de la targeta. */
-  test('el nucli 1.6 conserva tots els noms publicats i només afig els declarats per versió', () => {
+     R21.6: NOMS_DEL_NUCLI_1_6 fixa la capçalera de lectura de la targeta.
+     R32.11 (v1.2.9): NOMS_DEL_NUCLI_1_7 fixa el bloc d'accions (Accions). */
+  test('el nucli 1.7 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -230,7 +249,8 @@ describe('el contracte (contracteNucli.js)', () => {
       if (nous.length) afegits[clau] = ordenat(nous);
     }
     expect(afegits).toEqual(fusiona(
-      NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6
+      NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
+      NOMS_DEL_NUCLI_1_7
     ));
   });
 });

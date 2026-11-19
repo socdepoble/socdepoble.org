@@ -123,7 +123,10 @@ describe('honest markers speak the interface language', () => {
       };
       visita(parse(font, { sourceType: 'module', plugins: ['jsx'] }).program);
     }
-    expect(crides.length).toBeGreaterThanOrEqual(18);
+    /* v1.2.9 · El redisseny de /traduccions (MarIA, ordre del Mestre 261118) ja no pinta targetes
+       editorials: TranslationsSection.jsx ha deixat les seues dues crides. El sòl passa de 18 a 17,
+       les crides que queden; la porta del `t` o l'`idioma` de davall no canvia. */
+    expect(crides.length).toBeGreaterThanOrEqual(17);
     expect(crides.filter((crida) => !crida.ambT && !SENSE_FONT_DE_LLENGUA.has(crida.fitxer)).map((crida) => crida.on)).toEqual([]);
     expect(crides.filter((crida) => SENSE_FONT_DE_LLENGUA.has(crida.fitxer)).map((crida) => crida.ambT)).toEqual([false]);
   });

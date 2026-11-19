@@ -56,6 +56,29 @@
   }
   .sdp-accions:first-child { margin-block-start: 0; }
   .sdp-accions:last-child { margin-block-end: 0; }
+  /* Onada R32.11 · Lot 06 (T3-UI-01 + WCAG 2.5.8 >= 44px + iaia-maria-core §9) ·
+     Un enllaç pur dins d'<Accions> (com a les micro-apps que no admeten className=)
+     adopta la diana tàctil mínima de 44×44 px i pell de botó secundari Pedra Seca. */
+  .sdp-accions > a:not([class]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--sdp-touch-min);
+    min-width: var(--sdp-touch-min);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 2px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+  .sdp-accions > a:not([class]):focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
   /* IDEA-26 (261025) · La taula d'un document en Markdown (parseMarkdown.js)
      es desplaça dins de la seua caixa a qualsevol amplària: la columna de la
      Wiki és estreta fins i tot en una pantalla ampla, i en talla el sobrant. */
@@ -300,10 +323,10 @@
   .sdp-grup__llegenda { max-inline-size: 100%; padding: 0 var(--sdp-space-2); overflow-wrap: anywhere; }
   .sdp-grup__cos { display: grid; gap: 0 var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); }
 
-  .sdp-casella { display: flex; align-items: flex-start; gap: var(--sdp-space-3); min-height: var(--sdp-touch-min); padding-block: var(--sdp-space-2); }
+  .sdp-casella { display: flex; align-items: center; gap: var(--sdp-space-3); min-height: var(--sdp-touch-min); padding-block: var(--sdp-space-1); }
   .sdp-casella__control { flex: none; width: var(--sdp-space-6); height: var(--sdp-space-6); margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
   .sdp-casella__control:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
-  .sdp-casella__etiqueta { display: flex; flex-direction: column; gap: var(--sdp-space-1); cursor: pointer; color: var(--sdp-text-titol); }
+  .sdp-casella__etiqueta { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; gap: var(--sdp-space-1); min-height: var(--sdp-touch); cursor: pointer; color: var(--sdp-text-titol); }
   .sdp-casella__ajuda { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
 
   .sdp-interruptor { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-4); min-height: var(--sdp-touch-min); }
@@ -2285,6 +2308,43 @@ section.bar-orange {
    en edició, la graella de T51 de sempre. */
 section.bar-orange[data-centre="buit"] { grid-template-columns: minmax(0, 1fr) auto max-content; }
 section.bar-orange[data-centre="buit"] > .sp-card-author { justify-self: start; max-width: 100%; }
+/* Onada R32.11 · Lot 03 · Bessó de PS-04 (header.bar-blue) per a section.bar-orange:
+   en contenidors ≤367px (telèfon de 320px o columna de detall amb rail de 56px),
+   garanteix diana tàctil ≥44×44 px a l'enllaç d'autoria (.sp-card-author) i lleva
+   el segon buit quan el centre és buit; en contenidors ≤280px (p. ex. /notes a
+   280–320px amb rail = 224–264px), les accions baixen netament a una segona fila. */
+@container (max-width: 367px) {
+  section.bar-orange {
+    padding-inline: var(--sdp-space-2);
+    gap: var(--sdp-space-1);
+    grid-template-columns: minmax(var(--sdp-touch), 1fr) auto max-content;
+  }
+  section.bar-orange[data-centre="buit"] {
+    grid-template-columns: minmax(var(--sdp-touch), 1fr) max-content;
+  }
+  section.bar-orange[data-centre="buit"] > .bar-actions {
+    grid-column: 2;
+  }
+  section.bar-orange > .bar-actions {
+    gap: var(--sdp-space-1);
+  }
+  section.bar-orange .btn-date-time {
+    padding-inline: var(--sdp-space-2);
+  }
+}
+@container (max-width: 280px) {
+  section.bar-orange {
+    height: auto;
+    min-height: var(--sdp-alt-accio);
+    padding-block: var(--sdp-space-1);
+    grid-template-columns: minmax(var(--sdp-touch), 1fr) auto;
+  }
+  section.bar-orange > .bar-actions,
+  section.bar-orange[data-centre="buit"] > .bar-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
 /* Poliment T51 (260928) · El botó d'emoticona penja directament de la barra,
    fora de .bar-actions: la correcció C15 (modules.css) no l'abastava i en
    tema fosc heretava l'anell general, ≈1,26:1 damunt del taronja (WCAG 2.4.7

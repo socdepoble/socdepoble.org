@@ -252,6 +252,7 @@ export function UniversalPage(props) {
          la config del ContentProvider no hi pot injectar res. */
       despresAutoria={props.despresAutoria ?? null}
       abansIntro={props.abansIntro ?? null}
+      quadreInsignia={props.quadreInsignia ?? null}
       onConnect={handleConnect}
       showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}

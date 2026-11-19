@@ -557,7 +557,7 @@ function Bombolla({
         ) : null}
         {renderAvatarEspill()}
         <div className="sdp-xat-bombolla-col">
-          <div className={bombollaClass}>
+          <article className={bombollaClass}>
             {!meu && !esborrat && primerDelGrup ? (
               <AutorDeLaBombolla missatge={missatge} esGrup={esGrup} triable={triable} t={t} entitatId={entitatId} />
             ) : null}
@@ -640,7 +640,7 @@ function Bombolla({
                 </button>
               </div>
             ) : null}
-          </div>
+          </article>
 
           {teMenu ? (
             <div className={menuObert ? 'sdp-xat-bombolla__accions sdp-xat-bombolla__accions--obert' : 'sdp-xat-bombolla__accions'} ref={menuRef}>

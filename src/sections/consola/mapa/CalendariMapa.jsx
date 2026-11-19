@@ -6,6 +6,9 @@ import { xifresDeVista } from '../xifresMas.js';
 import { textLlancador } from './mapaContent.js';
 import { AL_MES, GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tascaAEsdeveniment } from './calendariMapa.js';
 import { TEXT_ESTAT, TO_ESTAT } from './grafMapa.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCalendari from '../../../css/diferit-calendari.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
@@ -54,7 +57,7 @@ export function CalendariMapa({ mapa, locale }) {
 
   return (
     <>
-      <p>
+      <p ref={adoptaEstilsDiferits}>
         Ací només ixen les tasques que tenen alguna programació. Cada tasca porta
         el seu estat: <strong>viu</strong> si el llançador existix i ha treballat dins
         de dos cicles, <strong>programat</strong> si el job està carregat i espera
@@ -76,7 +79,7 @@ export function CalendariMapa({ mapa, locale }) {
         </thead>
         <tbody>
           {GRUPS_CADENCIA.flatMap(([k, etiqueta]) => grups[k].map((t) => (
-            <tr key={t.id}>
+            <tr ref={adoptaEstilsDiferits} key={t.id}>
               <td>{etiqueta}</td>
               <th scope="row">{t.id}</th>
               <td><Insignia to={TO_ESTAT[t.estat]}>{TEXT_ESTAT[t.estat]}</Insignia></td>
@@ -94,9 +97,9 @@ export function CalendariMapa({ mapa, locale }) {
           mai de la Consola. */}
       <CalendariEsdeveniments esdeveniments={esdeveniments} avui={avui} locale={locale}
         navegacioClassName="sdp-consola__capcal"
-        renderEsdeveniment={(esd) => <div><Xip tasca={tascaDe.get(esd)} /></div>}>
+        renderEsdeveniment={(esd) => <div ref={adoptaEstilsDiferits}><Xip tasca={tascaDe.get(esd)} /></div>}>
         {alMes.length === 0 && (
-          <p>Cap tasca té una cadència que es puga situar en dies: el mes queda buit a posta, no per error.</p>
+          <p ref={adoptaEstilsDiferits}>Cap tasca té una cadència que es puga situar en dies: el mes queda buit a posta, no per error.</p>
         )}
       </CalendariEsdeveniments>
     </>

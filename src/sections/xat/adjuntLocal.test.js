@@ -13,11 +13,11 @@ test('Chrome grava AAC en MP4 i Firefox es queda amb Opus en WebM', () => {
   expect(mimeDeGravacio({ isTypeSupported: () => true })).toBe('audio/mp4;codecs=mp4a.40.2');
   expect(mimeDeGravacio({ isTypeSupported: (mime) => mime.startsWith('audio/webm') || mime.startsWith('audio/ogg') })).toBe('audio/webm;codecs=opus');
 });
-test('la foto es recodifica localment fins i tot si ja és menuda i conserva EXIF publicable de sèrie', async () => {
+test('la foto es recodifica localment fins i tot si ja és menuda i conserva data/càmera sense GPS de sèrie', async () => {
   const comprimeix = vi.fn().mockResolvedValue('data:image/webp;base64,YWJj');
   const foto = new Blob(['original'], { type: 'image/jpeg' });
   const a = await preparaAdjunt(foto, { comprimeix });
-  expect(comprimeix).toHaveBeenCalledWith(foto, expect.objectContaining({ conservaExif: true, maxSize: 1200 }));
+  expect(comprimeix).toHaveBeenCalledWith(foto, expect.objectContaining({ conservaExif: false, maxSize: 1200 }));
   expect(comprimeix).toHaveBeenCalledOnce();
   expect(a.fitxer.type).toBe('image/webp');
   expect(a.fitxer.size).toBe(3);
@@ -28,7 +28,7 @@ test('si el navegador no sap fer WebP, la foto ix en JPEG', async () => {
   const comprimeix = vi.fn(async (_f, { format }) => (format === 'image/webp' ? 'data:image/png;base64,YWJj' : 'data:image/jpeg;base64,YWJjZA=='));
   const a = await preparaAdjunt(new Blob(['original'], { type: 'image/jpeg' }), { comprimeix });
   expect(comprimeix.mock.calls.map(([, o]) => o.format)).toEqual(['image/webp', 'image/jpeg']);
-  expect(comprimeix.mock.calls[1][1]).toMatchObject({ conservaExif: true, maxSize: 1200 });
+  expect(comprimeix.mock.calls[1][1]).toMatchObject({ conservaExif: false, maxSize: 1200 });
   expect(a.fitxer.type).toBe('image/jpeg');
   expect(a.fitxer.size).toBe(4);
 });

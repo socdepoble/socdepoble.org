@@ -38,7 +38,7 @@ vi.mock('./MapaFotografic.jsx', () => ({ default: () => null }));
 import MurSection from './MurSection.jsx';
 
 const ENTRADETA = 'Explora el mur públic a través de les diferents vistes: llista, calendari i mapa.';
-const FILTRES = ['Mostrar tot', 'Sóc de Poble', 'Mercat', 'Calendari', 'Mapa'];
+const FILTRES = ['Mostrar tot', 'Sóc de Poble', 'Mercat', 'Esdeveniments', 'Mapa'];
 
 /* Els selectors de PS-10, del full de veres: els de les regles que penjen de
    .sdp-pagina-mur (el bloc @container i la seua xarxa, els mateixos). */
@@ -104,9 +104,10 @@ test('els selectors de PS-10 del full casen amb els filtres del Mur, les seues c
   expect(new Set(llistes.flat())).toEqual(new Set([grup, ...opcions, entradeta()]));
 });
 
-test('a la pestanya Calendari, el selector de vistes del calendari no hi entra; els filtres del Mur, sí', () => {
+test('a la pestanya Esdeveniments, el selector de vistes del calendari no hi entra; els filtres del Mur, sí', () => {
   render(<MurSection />);
-  act(() => within(grupFiltres()).getByRole('button', { name: 'Calendari' }).click());
+  expect(screen.getByRole('link', { name: 'Publicar al Mur' }).getAttribute('href')).toBe('/notes?ambit=mur');
+  act(() => within(grupFiltres()).getByRole('button', { name: 'Esdeveniments' }).click());
   const vistes = screen.getByRole('group', { name: 'Vista' });
   expect(vistes.classList.contains('sdp-pindola')).toBe(true);
   const tots = new Set(casats().flat());

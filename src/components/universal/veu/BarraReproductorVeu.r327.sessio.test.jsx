@@ -6,7 +6,8 @@ import * as servei from '../../../services/veuIaiaService.js';
 
 let audios, fetchFals, synth, enunciats;
 const PUNT = 'https://veu.test/tts';
-const audioResposta = () => ({ ok: true, headers: new Headers({ 'content-type': 'audio/wav' }), blob: async () => new Blob(['audio'], { type: 'audio/wav' }) });
+const WAV_FIXTURE = Uint8Array.from(atob('UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA=='), char => char.charCodeAt(0));
+const audioResposta = () => new Response(WAV_FIXTURE, { headers: { 'content-type': 'audio/wav' } });
 const diferit = () => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { promise, resolve }; };
 function Pagina({ idioma = 'ca', privat = false, oberta = true, onTanca = () => {} }) {
   const cosRef = useRef(null);

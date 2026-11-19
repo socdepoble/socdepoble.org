@@ -15,6 +15,9 @@
 import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
 import { formatData } from './nucli/dates.js';
 import { formatImport } from './nucli/diners.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const RANG = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/;
 
@@ -59,7 +62,7 @@ function cellesDe(fila, n, combinades) {
 
 function Dada({ cel, colSpan, formats }) {
   return (
-    <td className="sdp-gestoria-full__cel" data-tipus={cel?.tipus ?? 'buida'} colSpan={colSpan > 1 ? colSpan : undefined}>
+    <td ref={adoptaEstilsDiferits} className="sdp-gestoria-full__cel" data-tipus={cel?.tipus ?? 'buida'} colSpan={colSpan > 1 ? colSpan : undefined}>
       {textCel(cel, formats)}
     </td>
   );
@@ -70,15 +73,15 @@ function Fila({ fila, n, combinades, formats }) {
   switch (fila.rol) {
     case 'titol':
       return (
-        <tr className="sdp-gestoria-full__titol">
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__titol">
           {celles.map(({ cel, colSpan, clau }) => <Dada key={clau} cel={cel} colSpan={colSpan} formats={formats} />)}
         </tr>
       );
     case 'barra':
       return (
-        <tr className="sdp-gestoria-full__barra">
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__barra">
           {celles.map(({ cel, colSpan, clau }) => (
-            <th key={clau} scope="colgroup" className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined}>
+            <th ref={adoptaEstilsDiferits} key={clau} scope="colgroup" className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined}>
               {textCel(cel, formats)}
             </th>
           ))}
@@ -86,9 +89,9 @@ function Fila({ fila, n, combinades, formats }) {
       );
     case 'capcalera':
       return (
-        <tr className="sdp-gestoria-full__capcalera">
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__capcalera">
           {celles.map(({ cel, colSpan, clau }) => (
-            <th key={clau} scope="col" className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined}>
+            <th ref={adoptaEstilsDiferits} key={clau} scope="col" className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined}>
               {textCel(cel, formats)}
             </th>
           ))}
@@ -96,22 +99,22 @@ function Fila({ fila, n, combinades, formats }) {
       );
     case 'totals':
       return (
-        <tr className="sdp-gestoria-full__totals">
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__totals">
           {celles.map(({ cel, colSpan, clau }) => <Dada key={clau} cel={cel} colSpan={colSpan} formats={formats} />)}
         </tr>
       );
     case 'dada':
     case 'fila':
       return (
-        <tr className="sdp-gestoria-full__dada">
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__dada">
           {celles.map(({ cel, colSpan, clau }) => <Dada key={clau} cel={cel} colSpan={colSpan} formats={formats} />)}
         </tr>
       );
     default:
       /* Les files buides només separen blocs: el lector de pantalla no les compta. */
       return (
-        <tr className="sdp-gestoria-full__buida" aria-hidden="true">
-          {celles.map(({ clau, colSpan }) => <td key={clau} className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined} />)}
+        <tr ref={adoptaEstilsDiferits} className="sdp-gestoria-full__buida" aria-hidden="true">
+          {celles.map(({ clau, colSpan }) => <td ref={adoptaEstilsDiferits} key={clau} className="sdp-gestoria-full__cel" colSpan={colSpan > 1 ? colSpan : undefined} />)}
         </tr>
       );
   }
@@ -126,7 +129,7 @@ export default function VistaPreviaFull({ full, titol = 'Vista prèvia del full'
   const combinades = combinacionsPerFila(full.combinacions);
   return (
     <Taula titol={titol} densa className="sdp-gestoria-full">
-      <tbody>
+      <tbody ref={adoptaEstilsDiferits}>
         {full.files.map((fila, i) => (
           <Fila key={`${i}-${fila.rol}`} fila={fila} n={n} combinades={combinades.get(i) ?? []} formats={full.formats} />
         ))}

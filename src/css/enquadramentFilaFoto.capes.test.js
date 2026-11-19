@@ -164,7 +164,7 @@ function alcadaDeLaFila() {
   const boto = avalua(declaracio('src/css/components.css', '.sdp-boto', 'min-height'), 0);
   const lletraAjuda = avalua(declaracio('src/css/components.css', '.sdp-camp__ajuda', 'font-size'), 0);
   const interlineat = Number(declaracio('src/css/base.css', '.sdp-root', 'line-height'));
-  const gapFinsAlVisor = avalua(declaracio('src/css/modules.css', '.sdp-enquadrament', 'gap'), 0);
+  const gapFinsAlVisor = avalua(declaracio('src/css/diferit-enquadrament.css', '.sdp-enquadrament', 'gap'), 0);
   return farciment * 2 + boto + gapIntern + lletraAjuda * interlineat + vora + gapFinsAlVisor;
 }
 
@@ -192,8 +192,8 @@ describe('R22.1 · el pressupost del visor compta la fila de «Canviar foto»', 
   });
 
   test('amb la fila davant, el visor guanya a la regla de sèrie, en escriptori i en mòbil, i en este ordre', () => {
-    const base = regles('src/css/modules.css', VISOR_BASE);
-    const ambFila = regles('src/css/modules.css', VISOR_AMB_FILA);
+    const base = regles('src/css/diferit-enquadrament.css', VISOR_BASE);
+    const ambFila = regles('src/css/diferit-enquadrament.css', VISOR_AMB_FILA);
     expect(ambFila.map((r) => r.context)).toEqual([[], MOBIL]);
     expect(especificitat(VISOR_AMB_FILA)).toBeGreaterThan(especificitat(VISOR_BASE));
     // La de mòbil (mateixa especificitat) va després de la d'escriptori.
@@ -209,10 +209,10 @@ describe('R22.1 · el pressupost del visor compta la fila de «Canviar foto»', 
     ['escriptori', [], [[1280, 800], [1280, 720], [1440, 900], [1920, 1080], [1366, 768], [768, 1024]]],
     ['mòbil', MOBIL, [[375, 812], [390, 844], [360, 740], [414, 896]]],
   ])('%s: visor + fila caben on abans cabia el visor sol', (_nom, context, pantalles) => {
-    const valorBase = regles('src/css/modules.css', VISOR_BASE).find((r) => JSON.stringify(r.context) === JSON.stringify(context)).decls['max-height'];
+    const valorBase = regles('src/css/diferit-enquadrament.css', VISOR_BASE).find((r) => JSON.stringify(r.context) === JSON.stringify(context)).decls['max-height'];
     const senseSol = /^max\(10rem, (.*)\)$/.exec(valorBase);
     expect(senseSol).not.toBeNull();
-    const regla = regles('src/css/modules.css', VISOR_AMB_FILA).find((r) => JSON.stringify(r.context) === JSON.stringify(context));
+    const regla = regles('src/css/diferit-enquadrament.css', VISOR_AMB_FILA).find((r) => JSON.stringify(r.context) === JSON.stringify(context));
     expect(regla).toBeTruthy();
     const sol = avalua('10rem', 0);
     for (const [, alt] of pantalles) {

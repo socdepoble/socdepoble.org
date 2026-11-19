@@ -15,21 +15,7 @@
  *        · Si totes les tandes ja han passat (arxiu històric), conserva la primera.
  */
 
-const MESOS_CA = Object.freeze({
-  gener: '01',
-  febrer: '02',
-  marc: '03',
-  març: '03',
-  abril: '04',
-  maig: '05',
-  juny: '06',
-  juliol: '07',
-  agost: '08',
-  setembre: '09',
-  octubre: '10',
-  novembre: '11',
-  desembre: '12'
-});
+import { normalizeDateText, lastLetterDate } from './data-text-scanner.mjs';
 
 const ES_CAPTURA_VIDEO = /(?:^|[_/-])(?:poster|captura|frame|thumb_video)(?:[_.-]|$)/i;
 
@@ -51,26 +37,15 @@ function avuiIso(ara) {
  */
 export function darreraDataDelText(text, anyPerDefecte = null) {
   if (typeof text !== 'string' || !text.trim()) return null;
-  const net = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
-  const dates = [];
+  const net = normalizeDateText(text);
+  let latest = null;
+  const take = date => { if (latest === null || date > latest) latest = date; };
 
   for (const m of net.matchAll(/\b(20\d{2})-(\d{2})-(\d{2})\b/g)) {
-    dates.push(`${m[1]}-${m[2]}-${m[3]}`);
+    take(`${m[1]}-${m[2]}-${m[3]}`);
   }
-
-  const expressioLletres = /((?:\b\d{1,2}\b(?:\s*(?:,|i|y|al|a|-|–)\s*)?)+)\s*(?:de\s+|d['’])?(gener|febrer|març|marc|abril|maig|juny|juliol|agost|setembre|octubre|novembre|desembre)(?:\s+(?:de\s+|del\s+)?(20\d{2}))?/gi;
-  for (const m of net.matchAll(expressioLletres)) {
-    const mesNom = m[2].toLowerCase();
-    const mes = MESOS_CA[mesNom];
-    const any = m[3] || anyPerDefecte;
-    if (!mes || !any) continue;
-    const dies = [...m[1].matchAll(/\b(\d{1,2})\b/g)]
-      .map((d) => Number(d[1]))
-      .filter((d) => d >= 1 && d <= 31);
-    for (const dia of dies) {
-      dates.push(`${any}-${mes}-${String(dia).padStart(2, '0')}`);
-    }
-  }
+  const letterDate = lastLetterDate(net, anyPerDefecte);
+  if (letterDate !== null) take(letterDate);
 
   if (anyPerDefecte) {
     for (const m of net.matchAll(/\b(\d{1,2})\/(\d{1,2})(?:\/(20\d{2}))?\b/g)) {
@@ -78,14 +53,12 @@ export function darreraDataDelText(text, anyPerDefecte = null) {
       const mes = Number(m[2]);
       const any = m[3] || anyPerDefecte;
       if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12) {
-        dates.push(`${any}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`);
+        take(`${any}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`);
       }
     }
   }
 
-  if (!dates.length) return null;
-  dates.sort();
-  return dates[dates.length - 1];
+  return latest;
 }
 
 /**

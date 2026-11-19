@@ -41,6 +41,14 @@
  *           Nevera) i el tauler de la Gestoria. Una funció pura, la mateixa
  *           de la pàgina. Només s'afig un nom: un mòdul de '^1.0' a '^1.5'
  *           continua valent, i els mòduls nous demanen ^1.6.
+ *   1.7.0 · R32.11 (v1.2.9, lots 05 i 06 de Gemini): Accions a Pedra Seca,
+ *           el bloc d'accions canònic de composicio (IDEA-26 i IDEA-27,
+ *           centrat i a 24px del text), amb la diana tàctil mínima
+ *           (--sdp-touch-min, 48px) per a un enllaç sense classe (lot 06).
+ *           El fan servir la
+ *           Gestoria (el pont) i la Nevera (el Rebost). Una peça de pintar,
+ *           sense backend ni context. Només s'afig un nom: un mòdul de '^1.0'
+ *           a '^1.6' continua valent, i els mòduls nous demanen ^1.7.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -48,7 +56,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.6.0';
+export const VERSIO_NUCLI = '1.7.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -95,7 +103,9 @@ const PEDRA_SECA_V1 = Object.freeze([
      l'esquelet comú (src/apps/comu), que arrosseguen el Bar, la Nevera i el
      Lector. Només peces de pintar i funcions pures: cap toca el backend, la
      sessió ni un context de la pàgina. */
-  ['composicio/index.jsx', ['Fila', 'Pila']],
+  /* Nucli 1.7.0 (R32.11, v1.2.9): Accions, el bloc d'accions centrat de la
+     Gestoria i del Rebost de la Nevera (lots 05 i 06 de Gemini). */
+  ['composicio/index.jsx', ['Accions', 'Fila', 'Pila']],
   ['molecules/PillToggle.jsx', ['PillToggle']],
   /* Nucli1.4.0: centred navigation/actions shared by food-domain apps. */
   ['molecules/Botonera.jsx', ['Botonera']],

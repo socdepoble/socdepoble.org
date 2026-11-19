@@ -15,6 +15,9 @@
 import { ChevronRight, Plus } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
 import { fontSegura } from './marca.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 const esClicNormal = (event) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 
@@ -24,33 +27,33 @@ export function TargetesColleccions({
 }) {
   const llista = Array.isArray(colleccions) ? colleccions.filter((c) => c && typeof c.id === 'string') : [];
   return (
-    <div className={['sdp-targetes-colleccions', className].filter(Boolean).join(' ')}>
+    <div ref={adoptaEstilsDiferits} className={['sdp-targetes-colleccions', className].filter(Boolean).join(' ')}>
       {llista.length ? (
-        <ul className="sdp-targetes-colleccions__llista" aria-label={etiqueta}>
+        <ul ref={adoptaEstilsDiferits} className="sdp-targetes-colleccions__llista" aria-label={etiqueta}>
           {llista.map((colleccio) => {
             const n = Number.isSafeInteger(colleccio.comptador) && colleccio.comptador > 0 ? colleccio.comptador : 0;
             const src = fontSegura(colleccio.imatge);
             const contingut = (
               <>
-                <span className="sdp-targeta-colleccio__nom">{colleccio.nom}</span>
+                <span ref={adoptaEstilsDiferits} className="sdp-targeta-colleccio__nom">{colleccio.nom}</span>
                 {' '}<span className="sdp-targeta-colleccio__comptador">{textComptador(n)}</span>
-                {colleccio.secundari ? <>{' '}<span className="sdp-targeta-colleccio__secundari">{colleccio.secundari}</span></> : null}
-                {src ? <img className="sdp-targeta-colleccio__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" /> : null}
+                {colleccio.secundari ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-targeta-colleccio__secundari">{colleccio.secundari}</span></> : null}
+                {src ? <img ref={adoptaEstilsDiferits} className="sdp-targeta-colleccio__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" /> : null}
                 <ChevronRight className="sdp-targeta-colleccio__fletxa" size={24} aria-hidden="true" focusable="false" />
               </>
             );
             const actual = actiu === colleccio.id ? 'true' : undefined;
             const href = typeof hrefDe === 'function' ? hrefDe(colleccio) : null;
             return (
-              <li key={colleccio.id}>
+              <li ref={adoptaEstilsDiferits} key={colleccio.id}>
                 {href ? (
-                  <a className="sdp-targeta-colleccio" href={href} aria-current={actual} onClick={(event) => {
+                  <a ref={adoptaEstilsDiferits} className="sdp-targeta-colleccio" href={href} aria-current={actual} onClick={(event) => {
                     if (!onTria || event.defaultPrevented || !esClicNormal(event)) return;
                     event.preventDefault();
                     onTria(colleccio);
                   }}>{contingut}</a>
                 ) : (
-                  <button type="button" className="sdp-targeta-colleccio" aria-current={actual} onClick={() => onTria?.(colleccio)}>{contingut}</button>
+                  <button ref={adoptaEstilsDiferits} type="button" className="sdp-targeta-colleccio" aria-current={actual} onClick={() => onTria?.(colleccio)}>{contingut}</button>
                 )}
               </li>
             );

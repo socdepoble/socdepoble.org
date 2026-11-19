@@ -42,6 +42,8 @@
  *   d752293a2893bdcb15065bd3314fefa87fc36a00e5fe45be6dc26cfb78100098
  */
 
+import { normalitzaUnicodeAmbLimit } from '../utils/normalitzaUnicodeSegura.js';
+
 export const VERSIO_LLISTA = 1;
 /* Pendent de DM-2: només el Mestre ho passa a true, i fins llavors cap
    consumidor no ha de generar frases reals amb esta llista. */
@@ -246,7 +248,7 @@ const ELA_GEMINADA = /l[\u00b7\u0387\u2027\u2219\u22c5\u2022\u30fb\uff65.]l/g;
  * geminada → «ll». No traduïx ni corregix res més.
  */
 export function plega(text) {
-  return String(text).normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '')
+  return normalitzaUnicodeAmbLimit(String(text), 'NFKD').toLowerCase().replace(/[\u0300-\u036f]/g, '')
     .replace(ELA_GEMINADA, 'll');
 }
 

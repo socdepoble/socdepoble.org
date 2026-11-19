@@ -35,6 +35,9 @@ import {
   nomEsborrany, ompliPlantilla, potCompartirFitxers, urlRedaccioGmail, valorsCorreu
 } from './correuGestoria.js';
 import { copiaAdjunts, empremtaAdjunts, mateixosAdjunts, potCalcularEmpremta } from './revisioAdjunts.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const ORDRE_CAMPS = ['per', 'nom', 'assumpte', 'revisat'];
 const formatKb = new Intl.NumberFormat('ca-ES', { maximumFractionDigits: 1 });
@@ -308,7 +311,7 @@ export default function EnviamentGestoria({
   const trimestre = derivat.periode ? `${derivat.periode.n}T de ${derivat.periode.any}` : null;
 
   return (
-    <section className="sdp-gestoria-enviament" aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament" aria-labelledby={idTitol}>
       <Titol id={idTitol}>Prepara el correu per a la gestoria</Titol>
       <p>
         {trimestre ? `Full del ${trimestre}. ` : ''}
@@ -347,8 +350,8 @@ export default function EnviamentGestoria({
         ) : null}
         {avisos.length ? (
           <Alerta to="avis" titol="La plantilla té marcadors sense valor">
-            <ul>
-              {avisos.map((avis) => <li key={avis.marcador}>{avis.missatge}</li>)}
+            <ul ref={adoptaEstilsDiferits}>
+              {avisos.map((avis) => <li ref={adoptaEstilsDiferits} key={avis.marcador}>{avis.missatge}</li>)}
             </ul>
           </Alerta>
         ) : null}
@@ -363,9 +366,9 @@ export default function EnviamentGestoria({
             <dt>Adjunts</dt>
             <dd>
               {llistaAdjunts.length ? (
-                <ul className="sdp-gestoria-enviament__adjunts">
+                <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament__adjunts">
                   {llistaAdjunts.map((adjunt, i) => (
-                    <li key={`${i}-${adjunt?.nom}`}>{adjunt?.nom} ({midaLlegible(adjunt?.dades)})</li>
+                    <li ref={adoptaEstilsDiferits} key={`${i}-${adjunt?.nom}`}>{adjunt?.nom} ({midaLlegible(adjunt?.dades)})</li>
                   ))}
                 </ul>
               ) : 'Cap.'}
@@ -380,12 +383,12 @@ export default function EnviamentGestoria({
           aria-invalid={errors.revisat ? 'true' : undefined}
           aria-describedby={descripcioRevisat || undefined} />
         {errors.revisat ? (
-          <p id={idErrorRevisat} className="sdp-camp__error">
+          <p ref={adoptaEstilsDiferits} id={idErrorRevisat} className="sdp-camp__error">
             <CircleAlert size={18} aria-hidden="true" focusable="false" />
             <span>{errors.revisat}</span>
           </p>
         ) : null}
-        {ajudaRevisio ? <p id={idAjudaRevisat} className="sdp-gestoria-enviament__ajuda">{ajudaRevisio}</p> : null}
+        {ajudaRevisio ? <p ref={adoptaEstilsDiferits} id={idAjudaRevisat} className="sdp-gestoria-enviament__ajuda">{ajudaRevisio}</p> : null}
 
         {errors.general ? <Alerta to="error">{errors.general}</Alerta> : null}
 
@@ -404,7 +407,7 @@ export default function EnviamentGestoria({
             </p>
           </li>
           {potCompartir ? (
-            <li className="sdp-gestoria-enviament__opcio">
+            <li ref={adoptaEstilsDiferits} className="sdp-gestoria-enviament__opcio">
               <Boto varietat="secundari" onClick={comparteix} carregant={compartint} aria-describedby={idAjudaComparteix}>
                 Comparteix…
               </Boto>
@@ -418,7 +421,7 @@ export default function EnviamentGestoria({
 
       {resultat?.tipus === 'gmail' ? (
         <Alerta to="avis" titol="Falta adjuntar el full">
-          <p>
+          <p ref={adoptaEstilsDiferits}>
             S&apos;ha obert la redacció de Gmail en una pestanya nova i s&apos;ha descarregat {resultat.noms.map((n) => `«${n}»`).join(', ')}.
             Gmail no admet adjunts per l&apos;adreça: arrossega el fitxer descarregat a la finestra del correu,
             revisa-ho tot i prem «Envia» tu.

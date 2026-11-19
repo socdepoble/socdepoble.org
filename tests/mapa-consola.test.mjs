@@ -325,7 +325,8 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   // denominador del diagnòstic l'ha de comptar sense convertir-lo en N/A.
   assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
     'Consola neta (motor; imatges com a dependència explícita)',
-    'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva'],
+    'Integritat del LEDGER', 'Contracte documental', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva',
+    'Conformitat federació pública', 'Economia documental d’arrencada', 'Integritat d’imatges i enquadrament'],
   'els passos readOnly de run-portes.mjs');
   assert.equal(fonts.cadenaPortes.total, PASSOS_DIAGNOSTIC.length, 'els passos readOnly de run-portes.mjs');
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });

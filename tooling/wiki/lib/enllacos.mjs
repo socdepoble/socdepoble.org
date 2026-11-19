@@ -1,3 +1,5 @@
+import { scanDotallWikilinkSpans } from '../../lib/document-link-scanners.mjs';
+
 export function parseWikilink(raw) {
   const match = raw.match(/^(!?)\[\[(.*?)\]\]$/s);
   if (!match) return null;
@@ -38,18 +40,12 @@ export function parseWikilink(raw) {
 }
 
 export function extractWikilinks(text) {
-  // RegExp que permet salts de línia dins l'enllaç com a la Teixidora
-  const re = /(!?)\[\[(.*?)\]\]/gs;
+  // Preserve the legacy string-method failure for non-string arguments.
+  if (typeof text?.matchAll !== 'function') throw new TypeError('text.matchAll is not a function');
   const links = [];
-  for (const match of text.matchAll(re)) {
-    const parsed = parseWikilink(match[0]);
-    if (parsed) {
-      links.push({
-        raw: match[0],
-        index: match.index,
-        ...parsed
-      });
-    }
+  for (const match of scanDotallWikilinkSpans(text)) {
+    const parsed = parseWikilink(match.raw);
+    if (parsed) links.push({...match, ...parsed});
   }
   return links;
 }

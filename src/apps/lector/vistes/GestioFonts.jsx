@@ -27,26 +27,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alerta, Boto, Camp, CampText, Carregant, Dialeg, EstatBuit, GrupCamps, Interruptor, LiniesColleccio, Selector
 } from '../../../components/PedraSeca/index.js';
+import { textosLector } from '../i18nLector.js';
 import { MAX_BYTES_COPIA_LECTOR } from '../nucli/copia.js';
 import { llocDe, seguix } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
 import { textDelMotiu } from './FontsSenseResposta.jsx';
 
-const ESTATS_INTERRUPTOR = Object.freeze({ si: 'La seguixes', no: 'Apagada' });
-const TEXTOS_PERSONALS = Object.freeze({ lleva: (nom) => `Lleva la font ${nom}` });
-
-/* Qui llig les fonts, quan hi ha servei de notícies. */
-const TEXT_SERVEI = 'Les fonts les llig el servei de notícies, no este dispositiu: el navegador no demana mai res a la web d’una font.';
-/* Correcció R5-04 (261024) · El que el servei sap de veres quan llig les fonts teues: les adreces
-   que li demanes i la connexió des d'on les demanes; mai una sessió ni una galeta. */
-const TEXT_PERSONALS_SERVEI = 'Les teues fonts també les llig el servei de notícies. Sap quines adreces li demanes i des de quina '
-  + 'connexió (l’adreça IP), però no qui eres: no hi va cap sessió ni cap galeta. L’adreça de cada font viatja en la petició i '
-  + 'pot quedar als registres del servidor. Si en lleves una, ja no es demana.';
-const TEXT_PERSONALS_PENDENTS = 'Les teues fonts queden guardades en este dispositiu. El servei de notícies encara no les llig: '
-  + 'les llegirà quan el servei les active.';
-
 const SENSE_CARPETA = '';
-const ALTRES = 'Altres fonts';
 
 /* Una adreça per a afegir: absoluta, segura (https) i sense usuari ni contrasenya; si no, el motiu.
    Correcció L-10 (261024 Lector final) · Amb la regla del servei (mitjans.js · adreca,
@@ -54,11 +41,12 @@ const ALTRES = 'Altres fonts';
    llegiria no es desa: el motiu és el text de 'adreca' (FontsSenseResposta.jsx), abans de desar res i
    sense demanar res a ningú. `reglaDelServei`: mitjans.adreca, o null sense la regla. { adreca, motiu }:
    l'adreça que es desa (la normalitzada pel servei, si en dona la regla) o el motiu. */
-function adrecaPerAAfegir(adreca, reglaDelServei) {
-  if (adreca === '') return { adreca: null, motiu: 'Falta l’adreça de la font.' };
+function adrecaPerAAfegir(adreca, reglaDelServei, idioma = 'ca') {
+  const tx = textosLector(idioma);
+  if (adreca === '') return { adreca: null, motiu: tx.faltaAdreca };
   if (reglaDelServei) {
     const neta = reglaDelServei(adreca);
-    return neta ? { adreca: neta, motiu: null } : { adreca: null, motiu: textDelMotiu('adreca', { una: true }) };
+    return neta ? { adreca: neta, motiu: null } : { adreca: null, motiu: textDelMotiu('adreca', { una: true, idioma }) };
   }
   let url = null;
   try {
@@ -69,7 +57,7 @@ function adrecaPerAAfegir(adreca, reglaDelServei) {
   if (!url || url.protocol !== 'https:' || url.username || url.password) {
     return {
       adreca: null,
-      motiu: 'Només es poden afegir adreces web segures (https), sense usuari ni contrasenya: l’adreça del feed RSS o Atom de la web.'
+      motiu: tx.nomesHttps
     };
   }
   return { adreca, motiu: null };
@@ -82,7 +70,8 @@ function adrecaPerAAfegir(adreca, reglaDelServei) {
    d'«Afig una font» (`reserva`, dins del mateix diàleg). Mai al <body> (WCAG 2.4.3). Es resol quan
    el DOM ja és el nou. */
 function FontsPersonals({ fonts, reserva }) {
-  const { lector, personals, noticies, llegixPersonals } = useVistaLector();
+  const { lector, personals, noticies, llegixPersonals, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const arrel = useRef(null);
   const rondaFocus = useRef(0);
   const [focusDesti, setFocusDesti] = useState(null);
@@ -109,8 +98,8 @@ function FontsPersonals({ fonts, reserva }) {
   const delArbre = new Map(fonts.map((font) => [font.id, font]));
   const estatDe = (font) => {
     const vista = delArbre.get(font.id);
-    if (vista?.senseHttps) return 'Sense https: no es pot llegir';
-    return !vista || vista.pendent ? 'Pendent' : null;
+    if (vista?.senseHttps) return tx.senseHttpsEstat;
+    return !vista || vista.pendent ? tx.pendentEstat : null;
   };
   const linies = personals.fonts.map((font) => ({
     id: font.id,
@@ -130,16 +119,16 @@ function FontsPersonals({ fonts, reserva }) {
   };
   return (
     <div ref={arrel}>
-      <Alerta to="info" titol="Les teues fonts" viva={false}>{llegixPersonals ? TEXT_PERSONALS_SERVEI : TEXT_PERSONALS_PENDENTS}</Alerta>
+      <Alerta to="info" titol={tx.lesTeuesFonts} viva={false}>{llegixPersonals ? tx.textPersonalsServei : tx.textPersonalsPendents}</Alerta>
       <LiniesColleccio
         linies={linies}
-        etiqueta="Les teues fonts"
-        textos={TEXTOS_PERSONALS}
+        etiqueta={tx.lesTeuesFonts}
+        textos={{ lleva: tx.llevaFontNom }}
         onLleva={lector.mode === 'lectora' ? undefined : lleva}
       />
       {personals.error ? (
         /* Correcció SN-R9 · Neutre: pot haver fallat la lectura o l'escriptura. */
-        <Alerta to="error" titol="Les teues fonts no estan disponibles">Torna a obrir el lector i prova-ho de nou.</Alerta>
+        <Alerta to="error" titol={tx.fontsNoDisponiblesTitol}>{tx.fontsNoDisponiblesText}</Alerta>
       ) : null}
     </div>
   );
@@ -150,7 +139,8 @@ function FontsPersonals({ fonts, reserva }) {
    comprova abans que l'adreça és segura, perquè el servei només llig https. Correcció L-10: amb el
    servei, que el servei la llegiria (adrecaPerAAfegir). */
 function AfigFont({ formulari }) {
-  const { lector, noticies, afigFont, llegixPersonals, mitjans } = useVistaLector();
+  const { lector, noticies, afigFont, llegixPersonals, mitjans, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const [url, setUrl] = useState('');
   const [nom, setNom] = useState('');
   const [carpeta, setCarpeta] = useState(SENSE_CARPETA);
@@ -159,14 +149,14 @@ function AfigFont({ formulari }) {
   const [enviant, setEnviant] = useState(false);
   const lectora = lector.mode === 'lectora';
   const opcions = [
-    { valor: SENSE_CARPETA, etiqueta: 'Sense carpeta' },
+    { valor: SENSE_CARPETA, etiqueta: tx.senseCarpeta },
     ...noticies.categories.map((categoria) => ({ valor: categoria.id, etiqueta: categoria.nom }))
   ];
   const envia = async (event) => {
     event.preventDefault();
     if (enviant || lectora) return;
     setAfegida(null);
-    const { adreca, motiu } = adrecaPerAAfegir(url.trim(), mitjans.adreca);
+    const { adreca, motiu } = adrecaPerAAfegir(url.trim(), mitjans.adreca, idioma);
     if (motiu) {
       setError({ camp: 'url', text: motiu });
       formulari.current?.querySelector('input')?.focus();
@@ -181,7 +171,7 @@ function AfigFont({ formulari }) {
       setCarpeta(SENSE_CARPETA);
       setError(null);
     } catch (motiuDelDisc) {
-      const text = typeof motiuDelDisc?.message === 'string' && motiuDelDisc.message ? motiuDelDisc.message : 'No s’ha pogut afegir la font.';
+      const text = typeof motiuDelDisc?.message === 'string' && motiuDelDisc.message ? motiuDelDisc.message : tx.noShaPogutAfegir;
       setError({ camp: typeof motiuDelDisc?.camp === 'string' ? motiuDelDisc.camp : null, text });
     } finally {
       setEnviant(false);
@@ -190,36 +180,37 @@ function AfigFont({ formulari }) {
   const errorDe = (camp) => (error?.camp === camp ? error.text : undefined);
   return (
     <form ref={formulari} onSubmit={envia} noValidate>
-      <GrupCamps llegenda="Afig una font">
-        <Camp etiqueta="Adreça del feed" ajuda="L’adreça RSS o Atom de la web, amb https." error={errorDe('url')} obligatori>
+      <GrupCamps llegenda={tx.afigUnaFont}>
+        <Camp etiqueta={tx.adrecaDelFeed} ajuda={tx.ajudaAdrecaFeed} error={errorDe('url')} obligatori>
           <CampText tipus="url" inputMode="url" autoComplete="off" value={url} disabled={lectora}
             onChange={(event) => { setUrl(event.target.value); if (error) setError(null); }} />
         </Camp>
-        <Camp etiqueta="Nom de la font" ajuda="Si no en poses cap, el del lloc web." error={errorDe('nom')}>
+        <Camp etiqueta={tx.nomDeLaFont} ajuda={tx.ajudaNomFont} error={errorDe('nom')}>
           <CampText value={nom} disabled={lectora} onChange={(event) => { setNom(event.target.value); if (error) setError(null); }} />
         </Camp>
-        <Camp etiqueta="Carpeta" error={errorDe('categoria')}>
+        <Camp etiqueta={tx.carpeta} error={errorDe('categoria')}>
           <Selector opcions={opcions} value={carpeta} disabled={lectora} onChange={(event) => setCarpeta(event.target.value)} />
         </Camp>
         {error && !['url', 'nom', 'categoria'].includes(error.camp) ? (
-          <Alerta to="error" titol="La font no s’ha afegit">{error.text}</Alerta>
+          <Alerta to="error" titol={tx.fontNoAfegidaTitol}>{error.text}</Alerta>
         ) : null}
         {afegida ? (
-          <Alerta to="exit" titol="Font afegida">
-            {llegixPersonals ? `«${afegida}» ja és a l’arbre.` : `«${afegida}» ja és a l’arbre, pendent: ${TEXT_PERSONALS_PENDENTS}`}
+          <Alerta to="exit" titol={tx.fontAfegidaTitol}>
+            {llegixPersonals ? tx.jaEsALArbre(afegida) : tx.jaEsALArbrePendent(afegida, tx.textPersonalsPendents)}
           </Alerta>
         ) : null}
         {lectora ? (
-          <Alerta to="avis" titol="Només per a mirar">El lector està obert en una altra pestanya: ací no es poden afegir ni llevar fonts.</Alerta>
+          <Alerta to="avis" titol={tx.nomesMirarTitol}>{tx.nomesMirarFonts}</Alerta>
         ) : null}
-        <Boto tipus="submit" varietat="primari" carregant={enviant} disabled={lectora}>Afig la font</Boto>
+        <Boto tipus="submit" varietat="primari" carregant={enviant} disabled={lectora}>{tx.afigLaFontBoto}</Boto>
       </GrupCamps>
     </form>
   );
 }
 
 function CopiaDelLector() {
-  const { lector } = useVistaLector();
+  const { lector, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const [avis, setAvis] = useState(null);
   const [important, setImportant] = useState(false);
   const copia = async () => {
@@ -232,7 +223,7 @@ function CopiaDelLector() {
       enllac.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      setAvis({ to: 'error', text: 'No s’ha pogut descarregar la còpia del Lector.' });
+      setAvis({ to: 'error', text: tx.noDescarregaCopia });
     }
   };
   const importa = async (event) => {
@@ -240,23 +231,23 @@ function CopiaDelLector() {
     event.target.value = '';
     if (!fitxer || important) return;
     if (fitxer.size > MAX_BYTES_COPIA_LECTOR) {
-      setAvis({ to: 'error', text: 'El fitxer és massa gran per a ser una còpia del Lector.' });
+      setAvis({ to: 'error', text: tx.copiaMassaGran });
       return;
     }
     setImportant(true);
     try {
       const total = await lector.accions.importaCopia(await fitxer.text());
-      setAvis({ to: 'exit', text: `Còpia importada. Ara tens ${total} fonts personals.` });
+      setAvis({ to: 'exit', text: tx.copiaImportada(total) });
     } catch (error) {
-      setAvis({ to: 'error', text: error?.codi ? error.message : 'No s’ha pogut importar la còpia del Lector.' });
+      setAvis({ to: 'error', text: error?.codi ? error.message : tx.noImportaCopia });
     } finally {
       setImportant(false);
     }
   };
   return (
-    <GrupCamps llegenda="Còpia del Lector">
-      <Boto onClick={copia}>Descarrega una còpia</Boto>
-      <Camp etiqueta="Importa una còpia" ajuda="Afig les fonts personals, les lectures i les notícies desades al Lector actual.">
+    <GrupCamps llegenda={tx.copiaDelLector}>
+      <Boto onClick={copia}>{tx.descarregaUnaCopia}</Boto>
+      <Camp etiqueta={tx.importaUnaCopia} ajuda={tx.ajudaImportaCopia}>
         <CampText tipus="file" accept=".json,.opml,.xml,application/json,text/xml,application/xml,text/x-opml" onChange={importa}
           disabled={lector.mode !== 'escriptora' || !lector.persistent || important} />
       </Camp>
@@ -267,28 +258,29 @@ function CopiaDelLector() {
 
 /* El cos del diàleg: el catàleg per carpetes, les teues i «Afig una font». */
 function CosDeLaGestio({ fonts }) {
-  const { lector, noticies, delServei } = useVistaLector();
+  const { lector, noticies, delServei, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const formulari = useRef(null);
   const [reserva] = useState(() => () => formulari.current?.querySelector('input') || null);
-  if (noticies.estat === 'carregant' && noticies.fonts.length === 0) return <Carregant etiqueta="Carregant les fonts…" />;
+  if (noticies.estat === 'carregant' && noticies.fonts.length === 0) return <Carregant etiqueta={tx.carregantFonts} />;
   const delCataleg = fonts.filter((font) => !font.personal);
   const categories = new Set(noticies.categories.map((categoria) => categoria.id));
   const grups = [
     ...noticies.categories.map((categoria) => ({ id: categoria.id, nom: categoria.nom, fonts: delCataleg.filter((font) => font.categoriaId === categoria.id) })),
-    { id: SENSE_CARPETA, nom: ALTRES, fonts: delCataleg.filter((font) => !categories.has(font.categoriaId)) }
+    { id: SENSE_CARPETA, nom: tx.altresFonts, fonts: delCataleg.filter((font) => !categories.has(font.categoriaId)) }
   ].filter((grup) => grup.fonts.length > 0);
   return (
     <>
-      {delServei ? <Alerta to="info" titol="Qui llig les fonts" viva={false}>{TEXT_SERVEI}</Alerta> : null}
+      {delServei ? <Alerta to="info" titol={tx.quiLligLesFonts} viva={false}>{tx.textServei}</Alerta> : null}
       {noticies.estat === 'error' && delCataleg.length === 0 ? (
-        <EstatBuit titol="No s’han pogut carregar les fonts" accio={<Boto varietat="secundari" onClick={noticies.rellegix}>Torna-ho a provar</Boto>}>
-          Pot ser cosa d’un moment.
+        <EstatBuit titol={tx.errorCarregarFonts} accio={<Boto varietat="secundari" onClick={noticies.rellegix}>{tx.tornaHoAProvar}</Boto>}>
+          {tx.cosaDUnMoment}
         </EstatBuit>
       ) : null}
       {grups.map((grup) => (
         <GrupCamps key={grup.id || '~altres'} llegenda={grup.nom}>
           {grup.fonts.map((font) => (
-            <Interruptor key={font.id} etiqueta={font.nom} actiu={seguix(lector.estat, font.id)} textosEstat={ESTATS_INTERRUPTOR}
+            <Interruptor key={font.id} etiqueta={font.nom} actiu={seguix(lector.estat, font.id)} textosEstat={tx.estatsInterruptor}
               onCanvi={() => lector.accions.commutaSeguiment(font.id)} />
           ))}
         </GrupCamps>
@@ -305,9 +297,11 @@ function CosDeLaGestio({ fonts }) {
  * Tancat, no hi ha res muntat: el diàleg no escolta res ni ocupa res.
  */
 export function GestioDeFonts({ obert, onTanca, fonts }) {
+  const { idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   return (
-    <Dialeg obert={obert} onTanca={onTanca} titol="Gestiona les fonts" mida="m"
-      descripcio="Tria què vols llegir i afig les teues fonts. El que tries es guarda en este dispositiu.">
+    <Dialeg obert={obert} onTanca={onTanca} titol={tx.gestionaLesFontsTitol} mida="m"
+      descripcio={tx.gestionaLesFontsDesc}>
       {obert ? <CosDeLaGestio fonts={fonts} /> : null}
     </Dialeg>
   );

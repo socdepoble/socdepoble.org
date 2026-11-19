@@ -26,7 +26,8 @@ import { ControlContrasenya } from '../../components/PedraSeca/atoms/ControlCont
 import { ActionControl, DateTimeControl, IconButton } from '../../components/PedraSeca/atoms/controls.jsx';
 import { Carregant, EstatBuit, Esquelet, Progres } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
-import { Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
+/* Nucli 1.7.0 (R32.11, v1.2.9): Accions, el bloc d'accions centrat, pel seu fitxer de composicio. */
+import { Accions, Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Botonera } from '../../components/PedraSeca/molecules/Botonera.jsx';
 import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
@@ -76,7 +77,7 @@ export const NUCLI = Object.freeze({
   }),
   plataforma: copiaCongelada(plataformaDelNucli),
   pedraSeca: Object.freeze({
-    Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Botonera, Camp, CampFitxer, CampText, Carregant,
+    Accions, Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Botonera, Camp, CampFitxer, CampText, Carregant,
     CandidatsAlergens, Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
     Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,

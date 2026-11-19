@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { webcrypto } from 'node:crypto';
+import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { publicaAdjuntXat, quotaXat, urlAdjuntXat } from './xatMultimedia.js';
 import { ERRORS_ADJUNT_XAT, MISSATGE_QUOTA_XAT, tempsLimitPujada } from '../xatMultimedia.js';
 const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), user: null, entrada: 1, jwt: 'sessio-test' }));
@@ -18,10 +20,11 @@ const RUTA = ID;
 // La memòria de signatures és per mòdul: cada prova d'URL usa el seu id.
 let seguent = 0x100;
 const idNou = () => `00000000-0000-4000-8000-${(seguent++).toString(16).padStart(12, '0')}`;
-const entrada = () => ({ id: ID, fitxer: new Blob(['foto'], { type: 'image/webp' }), tipus: 'imatge' });
+const entrada = () => ({ id: ID, fitxer: new Blob([WEBP_NET], { type: 'image/webp' }), tipus: 'imatge' });
 const deferred = () => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { resolve, promise }; };
 const signada = (id, token = 'temporal') => ({ signedURL: `/object/sign/xat_adjunts/${id}?token=${token}` });
 beforeEach(() => {
+  vi.stubGlobal('crypto', webcrypto);
   vi.clearAllMocks(); m.request.mockReset(); m.user = { id: JO }; m.entrada = 1; m.jwt = 'sessio-test';
   m.rpc.mockImplementation(async (nom, params) => {
     if (nom === 'xat_reserva_adjunt') return { ruta: RUTA, pujat: false };
@@ -30,7 +33,9 @@ beforeEach(() => {
     if (nom === 'xat_llegix_adjunt') return { ruta: params.p_id };
     return true;
   });
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+  vi.stubGlobal('fetch', vi.fn(async (_url, p) => p.method === 'GET'
+    ? new Response(WEBP_NET, { status: 200, headers: { 'Content-Type': 'image/webp' } })
+    : { ok: true, status: 200 }));
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 test('no simula adjunts privats en mode seed ni local', async () => {
@@ -56,7 +61,8 @@ test('un upload fallit allibera la reserva però no confirma missatge', async ()
 });
 test('un reintent de reserva ja pujada no duplica bytes', async () => {
   m.rpc.mockResolvedValueOnce({ ruta: RUTA, pujat: true });
-  await publicaAdjuntXat(FIL, entrada()); expect(fetch).not.toHaveBeenCalled();
+  await publicaAdjuntXat(FIL, entrada()); expect(fetch).toHaveBeenCalledOnce();
+  expect(fetch.mock.calls[0][1]).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error' });
 });
 test('una resposta perduda amb objecte duplicat passa a la validació final', async () => {
   fetch.mockResolvedValueOnce({ ok: false, status: 409 });
@@ -65,6 +71,7 @@ test('una resposta perduda amb objecte duplicat passa a la validació final', as
 test('canviar sessió durant la reserva no inicia upload ni publica amb la nova identitat', async () => {
   const tard = deferred(); m.rpc.mockReturnValueOnce(tard.promise);
   const resultat = publicaAdjuntXat(FIL, entrada());
+  await vi.waitFor(() => expect(m.rpc).toHaveBeenCalledOnce());
   m.user = { id: FIL }; tard.resolve({ ruta: RUTA, pujat: false });
   await expect(resultat).rejects.toMatchObject({ name: 'AbortError' });
   expect(fetch).not.toHaveBeenCalled(); expect(m.rpc).toHaveBeenCalledOnce();
@@ -340,6 +347,7 @@ test.each([true, [1], '1.0', ' 1 '])('R32.6 · seq falsa %j no és ACK de Storag
 test('R32.6 · logout i login del mateix UUID durant la reserva no continua', async () => {
   const tard = deferred(); m.rpc.mockReturnValueOnce(tard.promise);
   const resultat = publicaAdjuntXat(FIL, entrada());
+  await vi.waitFor(() => expect(m.rpc).toHaveBeenCalledOnce());
   m.entrada += 2;
   tard.resolve({ ruta: RUTA, pujat: false });
   await expect(resultat).rejects.toMatchObject({ name: 'AbortError' });

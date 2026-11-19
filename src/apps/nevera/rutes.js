@@ -21,6 +21,7 @@
  * Tot l'estat que es veu viu a la URL; el que s'escriu, mai.
  */
 import { rutesCatalegColleccio } from '../comu/esquelet/index.js';
+import { textosVistaNevera } from './i18nNevera.js';
 import { ColumnaAjustosLlista, ColumnaDades } from './vistes/Ajustos.jsx';
 import { ColumnaACasa, ColumnaCalComprar } from './vistes/Casa.jsx';
 import { ColumnaArticlesPropis, ColumnaCatalegSencer } from './vistes/Cataleg.jsx';
@@ -64,17 +65,17 @@ export const RUTES = Object.freeze([
  * La compra té columna esquerra («Les meues llistes»); a la resta, la
  * plataforma hi posa el seu títol per defecte.
  */
-const TITOLS_PER_ENTRADA = Object.freeze({
-  [ENTRADA_LLISTES]: Object.freeze({ mig: 'Les meues llistes' }),
-  [COMPRA.entrada]: Object.freeze({ esquerra: 'Les meues llistes', mig: 'La llista' }),
-  [CATALEG.entrada]: Object.freeze({ mig: 'Articles propis' }),
-  [CASA.entrada]: Object.freeze({ mig: 'Cal comprar' }),
-  [RECEPTES_VISTA.entrada]: Object.freeze({ mig: 'Cal comprar per a cuinar' }),
-  [TEMPORADA.entrada]: Object.freeze({ mig: 'La llista per temporada' }),
-  [AJUSTOS.entrada]: Object.freeze({ mig: 'Ajustos de la llista' })
-});
-
 /** Els titols de la closca per a una entrada (els de La compra si no n'és cap). */
-export function titolsDe(entrada) {
-  return Object.hasOwn(TITOLS_PER_ENTRADA, entrada) ? TITOLS_PER_ENTRADA[entrada] : TITOLS_PER_ENTRADA[COMPRA.entrada];
+export function titolsDe(entrada, idioma = 'ca') {
+  const tx = textosVistaNevera(idioma);
+  const perEntrada = {
+    [ENTRADA_LLISTES]: { mig: tx.lesMeuesLlistes },
+    [COMPRA.entrada]: { esquerra: tx.lesMeuesLlistes, mig: tx.laLlista },
+    [CATALEG.entrada]: { mig: tx.articlesPropis },
+    [CASA.entrada]: { mig: tx.calComprar },
+    [RECEPTES_VISTA.entrada]: { mig: tx.calComprarPerACuinar },
+    [TEMPORADA.entrada]: { mig: tx.laLlistaPerTemporada },
+    [AJUSTOS.entrada]: { mig: tx.ajustosDeLaLlista }
+  };
+  return Object.hasOwn(perEntrada, entrada) ? perEntrada[entrada] : perEntrada[COMPRA.entrada];
 }

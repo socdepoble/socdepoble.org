@@ -85,5 +85,7 @@ test('una pàgina sense destí no porta cap div.page-title-accio ni cap botó', 
   visita('guia');
   expect(capcalera()).not.toBeNull();
   expect(document.querySelector('.page-title-accio')).toBeNull();
-  expect(document.querySelector('.sdp-boto')).toBeNull();
+  // El peu d'idioma (PeuEditorialIdioma.jsx, «Tria un idioma» cap a /traduccions) és una altra peça, no una acció de la pàgina.
+  // Gemini R32.11 lot_00 (rebase de R32.10, D-v126-IDIOMA): el peu va al final de les pàgines públiques, fora del bloc de l'H1.
+  expect(document.querySelector('.sdp-boto:not(.sdp-peu-editorial-idioma__accio)')).toBeNull();
 });

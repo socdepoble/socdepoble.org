@@ -192,12 +192,6 @@ import {
   loadMissatges,
   enviaMissatge,
   publicaAdjuntXat,
-  urlAdjuntXat,
-  carregaAccionsMissatges as carregaAccionsAlPort,
-  alternaReaccio as reaccioAlPort,
-  alternaDestacat as destacatAlPort,
-  alternaFixat as fixatAlPort,
-  eliminaPerAMi as eliminaAlPort,
   marcaLlegit,
   creaFilDirecte,
   loadPerfilPublic,
@@ -234,7 +228,7 @@ import AvisOblitXat from './components/AvisOblitXat.jsx';
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
-import { capturaSessio, entradaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
+import { capturaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
 /* v1.2.8 · Només la projecció pura és estàtica; el motor d'accions i serveiXat.js es carreguen en diferit
    (pes de l'arrencada estàtica del connector de WordPress). */
 import { projectaAccionsMissatges } from '../../data/xat/projeccioAccionsMissatges.js';
@@ -2718,103 +2712,20 @@ export function XatProvider({ children, config }) {
   const entornAccions = useRef(null);
   entornAccions.current = { ambit: ambitEstable, actiu: dins(), usuariId: joId, modeDades, config,
     missatgesPerFil, esPersonaBloquejada, creaFil, obriFil, enviaAmbNormes, sendChatMedia };
-  const opcionsMotorAccions = () => ({
-    port: {
-      carregaAccionsMissatges: (...args) => carregaAccionsAlPort(...args),
-      alternaReaccio: (...args) => reaccioAlPort(...args), alternaDestacat: (...args) => destacatAlPort(...args),
-      alternaFixat: (...args) => fixatAlPort(...args), eliminaPerAMi: (...args) => eliminaAlPort(...args)
-    },
-    obteContext: () => {
-      const e = entornAccions.current;
-      return { ...e, clau: JSON.stringify([e.ambit, entradaSessio()]), actiu: e.actiu && !desmuntat.current, comprova: capturaSessio() };
-    },
-    obteMissatge: (ref) => {
-      const id = typeof ref === 'string' ? ref : ref?.id ?? ref?.missatgeId;
-      const filDemanat = ref?.threadId ?? ref?.filId;
-      const e = entornAccions.current;
-      for (const [filId, files] of Object.entries(e.missatgesPerFil)) {
-        if (filDemanat && filDemanat !== filId) continue;
-        const m = files.find(m => m.id === id);
-        if (!m || e.esPersonaBloquejada(m.usuariId)) continue;
-        const fil = filsRef.current.find(f => f.id === filId);
-        if (fil?.participant === false) continue;
-        return m;
-      }
-      return null;
-    },
-    onCanvi: setEstatAccions,
-    creaPrivat: id => entornAccions.current.creaFil(id),
-    obreFil: id => entornAccions.current.obriFil(id),
-    enviaText: async (desti, text, opcions) => {
-      const e = entornAccions.current;
-      if (e.modeDades !== 'remote') return e.enviaAmbNormes(desti, text, opcions);
-      const valida = capturaSessio(), ambit = e.ambit;
-      const comprova = () => {
-        valida();
-        if (opcions.signal?.aborted || desmuntat.current || entornAccions.current.ambit !== ambit) throw new DOMException('Operació cancel·lada.', 'AbortError');
-      };
-      const moderacio = moderacioRef.current;
-      if (typeof moderacio?.asseguraNormes === 'function' && !esXatPrivatDeLaIAIA(desti) && !(await moderacio.asseguraNormes())) {
-        throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
-      }
-      comprova();
-      const { serveiXat } = await import('../../data/xat/serveiXat.js');
-      const publica = () => serveiXat.enviaMissatge(desti.id, { id: opcions.clientMsgId, text }, { ...entornAccions.current.config, signal: opcions.signal });
-      let desat;
-      try { desat = await publica(); }
-      catch (error) {
-        if (!esRebuigDeNormes(error) || typeof moderacio?.asseguraNormes !== 'function') throw error;
-        if (!(await moderacio.asseguraNormes({ rebutjades: true }))) throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
-        comprova(); desat = await publica();
-      }
-      comprova();
-      if (desat?.id !== opcions.clientMsgId || desat.filId !== desti.id || desat.encuat === true
-        // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
-        || !Number.isSafeInteger(desat.seq) || desat.seq <= 0) throw (await import('../../data/xatMultimedia.js')).errorAdjuntXat('sense-confirmacio');
-      const definitiu = { ...mapejaMissatge(desat, e.usuariId), author: 'Jo' };
-      mutaMissatges(previs => ({ ...previs, [desti.id]: fusionaPerSeq(previs[desti.id] || [], [definitiu]) }));
-      mutaFils(previs => previs.map(f => f.id === desti.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
-      return [definitiu];
-    },
-    enviaAdjunt: (...args) => entornAccions.current.sendChatMedia(...args),
-    lligBlob: async (m, { signal }) => {
-      // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
-      const { MAXIM_ADJUNT_XAT, MIME_XAT } = await import('../../data/xatMultimedia.js');
-      const meta = m.metadades?.adjunt;
-      if (!meta?.id || MIME_XAT[meta.mime] !== m.tipus) throw new Error('Este adjunt no està disponible per a reenviar.');
-      const url = await urlAdjuntXat(meta.id, { ...entornAccions.current.config, signal }, { renova: true });
-      const resposta = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });
-      if (!resposta.ok) throw Object.assign(new Error('No hem pogut llegir l’adjunt autoritzat.'), { status: resposta.status });
-      const maxim = MAXIM_ADJUNT_XAT[m.tipus];
-      const chunks = []; let bytes = 0;
-      if (resposta.body?.getReader) {
-        const reader = resposta.body.getReader();
-        try {
-          for (;;) {
-            if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
-            const { done, value } = await reader.read(); if (done) break;
-            bytes += value.byteLength;
-            if (bytes > maxim) { await reader.cancel(); throw new Error('L’adjunt supera el límit permés.'); }
-            chunks.push(value);
-          }
-        } finally { reader.releaseLock(); }
-      } else {
-        const blob = await resposta.blob(); bytes = blob.size; chunks.push(blob);
-      }
-      if (!bytes || bytes > maxim) throw new Error('L’adjunt no té una mida vàlida.');
-      return new Blob(chunks, { type: meta.mime });
-    }
-  });
-  const opcionsMotorRef = useRef(opcionsMotorAccions);
-  opcionsMotorRef.current = opcionsMotorAccions;
+  const opcionsMotorRef = useRef(null);
+  opcionsMotorRef.current = { entornAccions, filsRef, desmuntat, moderacioRef,
+    setEstatAccions, mutaMissatges, mutaFils, esXatPrivatDeLaIAIA };
   /* v1.2.8 · Motor diferit: el mòdul es carrega la primera vegada que algú el necessita (una acció o la
      càrrega de flags del fil visible). Fins aleshores sincronitza/activa/tanca només anoten l'estat. */
   const motorAccionsRef = useRef(null);
   if (!motorAccionsRef.current) {
     let promesa = null, instancia = null, actiu = false;
     motorAccionsRef.current = {
-      carrega: () => (promesa ??= import('../../data/xat/accionsMissatge.js').then(({ creaAccionsMissatge }) => {
-        instancia = creaAccionsMissatge(opcionsMotorRef.current());
+      carrega: () => (promesa ??= Promise.all([
+        import('../../data/xat/accionsMissatge.js'),
+        import('../../data/xat/creaOpcionsMotorAccions.js')
+      ]).then(([{ creaAccionsMissatge }, { creaOpcionsMotorAccions }]) => {
+        instancia = creaAccionsMissatge(creaOpcionsMotorAccions(opcionsMotorRef.current));
         instancia.sincronitza();
         if (actiu) instancia.activa();
         return instancia;
@@ -2832,7 +2743,12 @@ export function XatProvider({ children, config }) {
   ].map(nom => [nom, (...args) => {
     setErrorAccions(null);
     const ambit = entornAccions.current.ambit;
-    return motorAccions.carrega().then(motor => motor[nom](...args)).catch(error => {
+    const valida = capturaSessio();
+    return motorAccions.carrega().then(motor => {
+      valida();
+      if (desmuntat.current || entornAccions.current.ambit !== ambit) throw new DOMException('Operació cancel·lada.', 'AbortError');
+      return motor[nom](...args);
+    }).catch(error => {
       if (!desmuntat.current && entornAccions.current.ambit === ambit && error?.name !== 'AbortError') setErrorAccions(error);
       throw error;
     });

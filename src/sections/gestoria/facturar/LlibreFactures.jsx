@@ -44,7 +44,11 @@ import {
   OPCIONS_ESTAT_LLIBRE, OPCIONS_PERIODE, anysDelLlibre, clauDeFactura, estatDeLaCadena, euros, filesDelLlibre, resumDelLlibre
 } from './nucli/formulari.js';
 import { AVIS_SENSE_XIFRAR_LLIBRE } from './nucli/llibreCsv.js';
+import { TEXTOS_FACTURACIO } from './nucli/textosFacturacio.js';
 import { AvisDeZona } from './peces.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** Les factures que es mostren d'entrada; la resta, amb «Mostra-les totes». */
 export const FACTURES_VISIBLES = 50;
@@ -65,7 +69,7 @@ function notaDelTotal(resum) {
   ].filter(Boolean).join(' ');
 }
 
-export function LlibreFactures({ f }) {
+export function LlibreFactures({ f, tx = TEXTOS_FACTURACIO.ca }) {
   const [anulant, setAnulant] = useState(null);
   const [motiu, setMotiu] = useState('');
   const [totes, setTotes] = useState(false);
@@ -110,17 +114,17 @@ export function LlibreFactures({ f }) {
     <>
       <Alerta to={estat.to} viva={false} titol={estat.titol}
         accions={<Boto varietat="secundari" onClick={f.verifica} carregant={f.ocupat === 'verificant'} disabled={Boolean(f.ocupat)}>Torna a verificar</Boto>}>
-        {estat.text ? <p>{estat.text}</p> : null}
-        {hora ? <p className="sdp-gestoria-panell__nota">{`Verificada a les ${hora}.`}</p> : null}
+        {estat.text ? <p ref={adoptaEstilsDiferits}>{estat.text}</p> : null}
+        {hora ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">{`Verificada a les ${hora}.`}</p> : null}
         {estat.incidencies.length ? (
-          <ul className="sdp-gestoria-panell__avisos">
-            {estat.incidencies.map((incidencia, i) => <li key={`${i}-${incidencia}`}>{incidencia}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">
+            {estat.incidencies.map((incidencia, i) => <li ref={adoptaEstilsDiferits} key={`${i}-${incidencia}`}>{incidencia}</li>)}
           </ul>
         ) : null}
       </Alerta>
       <AvisDeZona avis={f.avis} zona="llibre" onTanca={f.tancaAvis} />
       {files.length ? (
-        <div className="sdp-gestoria-panell__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
           {anys.length > 1 ? (
             <PillToggle etiqueta="Any del llibre" valor={any} onCanvi={setAnyTriat} opcions={anys.map((a) => ({ valor: a, text: String(a) }))} />
           ) : null}
@@ -133,7 +137,7 @@ export function LlibreFactures({ f }) {
       ) : null}
       {resum.files.length ? (
         <Taula titol="Factures emeses" className="sdp-gestoria-panell__taula">
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr>
               <th scope="col">Número</th>
               <th scope="col">Data</th>
@@ -148,7 +152,7 @@ export function LlibreFactures({ f }) {
           </thead>
           <tbody>
             {visibles.map((fila) => (
-              <tr key={clauDeFactura(fila.registre)}>
+              <tr ref={adoptaEstilsDiferits} key={clauDeFactura(fila.registre)}>
                 <th scope="row">{fila.numSerie}</th>
                 <td>{fila.data}</td>
                 <td>{fila.tipus}</td>
@@ -185,14 +189,14 @@ export function LlibreFactures({ f }) {
             </tr>
           </tfoot>
         </Taula>
-      ) : <p>{files.length ? 'Cap factura del període amb estos filtres.' : 'Encara no has emés cap factura amb este programa.'}</p>}
+      ) : <p ref={adoptaEstilsDiferits}>{files.length ? tx.llibreBuitFiltres : tx.llibreBuitInicial}</p>}
       {resum.files.length > visibles.length ? (
-        <div className="sdp-gestoria-panell__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
           <Boto varietat="secundari" onClick={() => setTotes(true)}>{`Mostra les ${resum.files.length} factures`}</Boto>
         </div>
       ) : null}
       {files.length ? (
-        <div className="sdp-gestoria-panell__accions">
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__accions">
           <Boto varietat="secundari" onClick={() => setBaixant(true)} disabled={Boolean(f.ocupat) || !f.cadenaBona || !delPeriode.length}
             carregant={f.ocupat === 'csv'}>
             {`Descarrega el llibre${textDelPeriode(any, trimestre)} (CSV)`}
@@ -204,7 +208,7 @@ export function LlibreFactures({ f }) {
           onTanca={f.tancaFactura} imprimix={f.imprimix} />
       ) : null}
       {files.length ? (
-        <details className="sdp-gestoria-panell__documents">
+        <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
           <summary>Detalls tècnics: l’XML de prova per a l’AEAT</summary>
           <div className="sdp-gestoria-panell__bloc">
             <p className="sdp-gestoria-panell__nota">

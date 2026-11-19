@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { escoltaAvisosPush, instantaniaAvisosPush } from '../../config/avisosPushXat.js';
 import { MODEL_BOTIGUES, fraseEstatLocalAvisos } from './botiguesSistemaModel.js';
+import { textosBotiguesSistema } from './i18nBotiguesSistema.js';
 import { VistaBotiguesSistema } from './VistaBotiguesSistema.jsx';
 
+function useIdiomaBotigues() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 export default function BotiguesSistema() {
+  const idioma = useIdiomaBotigues();
+  const tx = textosBotiguesSistema(idioma);
   const inst = useSyncExternalStore(escoltaAvisosPush, instantaniaAvisosPush, instantaniaAvisosPush);
   const [copiant, setCopiant] = useState(false);
   const [avis, setAvis] = useState(null);
@@ -13,19 +25,19 @@ export default function BotiguesSistema() {
   const copia = useCallback(async () => {
     if (ocupat.current) return;
     const clipboard = globalThis.navigator?.clipboard;
-    if (typeof clipboard?.writeText !== 'function') { setAvis('No es pot copiar automàticament. Obri l’enllaç i copia’l des del navegador.'); return; }
+    if (typeof clipboard?.writeText !== 'function') { setAvis(tx.noPotCopiarAuto); return; }
     ocupat.current = true;
     setCopiant(true);
     setAvis(null);
     try {
       await clipboard.writeText(MODEL_BOTIGUES.play.optInUrl);
-      if (viu.current) setAvis('Enllaç de proves copiat. Pots compartir-lo des de la teua aplicació de missatgeria.');
+      if (viu.current) setAvis(tx.copiatExit);
     } catch {
-      if (viu.current) setAvis('No s’ha pogut copiar. Obri l’enllaç i copia’l des del navegador.');
+      if (viu.current) setAvis(tx.noShaPogutCopiar);
     } finally {
       ocupat.current = false;
       if (viu.current) setCopiant(false);
     }
-  }, []);
-  return <VistaBotiguesSistema model={MODEL_BOTIGUES} onCopia={copia} copiant={copiant} avis={avis} estatLocalAvisos={fraseEstatLocalAvisos(inst)} />;
+  }, [tx]);
+  return <VistaBotiguesSistema model={MODEL_BOTIGUES} onCopia={copia} copiant={copiant} avis={avis} estatLocalAvisos={fraseEstatLocalAvisos(inst)} idioma={idioma} />;
 }

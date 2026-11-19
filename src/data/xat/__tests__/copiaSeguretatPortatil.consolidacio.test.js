@@ -482,7 +482,7 @@ describe('un sol motor .sdpbackup', () => {
   it('el motor no importa Capacitor ni res de src/natiu/ (frontera nativa)', () => {
     const font = readFileSync(new URL('../copiaSeguretatPortatil.js', import.meta.url), 'utf8');
     const especificadors = [...font.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1] ?? m[2]);
-    expect(especificadors.sort()).toEqual(['../xatMultimedia.js', '../xifratXatCripto.js']);
+    expect(especificadors.sort()).toEqual(['../../utils/normalitzaUnicodeSegura.js', '../xatMultimedia.js', '../xifratXatCripto.js']);
     expect(especificadors.some((e) => new RegExp(['capa', 'citor'].join(''), 'i').test(e) || e.includes('natiu'))).toBe(false);
   });
 

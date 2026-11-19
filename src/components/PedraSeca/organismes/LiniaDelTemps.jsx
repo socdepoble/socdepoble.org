@@ -16,6 +16,9 @@
  */
 import { Link } from '../../../app/contexts/RouterContext';
 import { EstatBuit } from '../atoms/estats.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitPecesApps from '../../../css/diferit-peces-apps.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'peces-apps', cssDiferitPecesApps); };
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
@@ -23,9 +26,9 @@ function Cos({ apunt }) {
   return (
     <>
       {/* Els espais separen les parts al nom accessible; dins de la graella no es pinten. */}
-      <span className="sdp-nomes-lector">{`${apunt.hora}:`}</span>{' '}
+      <span ref={adoptaEstilsDiferits} className="sdp-nomes-lector">{`${apunt.hora}:`}</span>{' '}
       <span className="sdp-linia-temps__titol">{apunt.titol}</span>
-      {apunt.detall ? <>{' '}<span className="sdp-linia-temps__detall">{apunt.detall}</span></> : null}
+      {apunt.detall ? <>{' '}<span ref={adoptaEstilsDiferits} className="sdp-linia-temps__detall">{apunt.detall}</span></> : null}
     </>
   );
 }
@@ -35,7 +38,7 @@ export function LiniaDelTemps({
 }) {
   if (!apunts.length) return <EstatBuit titol={buit} className={className} />;
   return (
-    <ol className={['sdp-linia-temps', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
+    <ol ref={adoptaEstilsDiferits} className={['sdp-linia-temps', className].filter(Boolean).join(' ')} aria-label={etiqueta}>
       {apunts.map((apunt) => {
         const Icona = apunt.icona || null;
         const actual = seleccionat !== null && apunt.id === seleccionat ? 'true' : undefined;
@@ -44,16 +47,16 @@ export function LiniaDelTemps({
           accio = <Link to={apunt.ruta} className="sdp-linia-temps__accio" aria-current={actual}><Cos apunt={apunt} /></Link>;
         } else if (onTria) {
           accio = (
-            <button type="button" className="sdp-linia-temps__accio" aria-current={actual} onClick={() => onTria(apunt.id)}>
+            <button ref={adoptaEstilsDiferits} type="button" className="sdp-linia-temps__accio" aria-current={actual} onClick={() => onTria(apunt.id)}>
               <Cos apunt={apunt} />
             </button>
           );
         } else {
-          accio = <div className="sdp-linia-temps__accio"><Cos apunt={apunt} /></div>;
+          accio = <div ref={adoptaEstilsDiferits} className="sdp-linia-temps__accio"><Cos apunt={apunt} /></div>;
         }
         const moment = apunt.moment || (HORA.test(apunt.hora ?? '') ? apunt.hora : undefined);
         return (
-          <li key={apunt.id} className="sdp-linia-temps__apunt">
+          <li ref={adoptaEstilsDiferits} key={apunt.id} className="sdp-linia-temps__apunt">
             <time className="sdp-linia-temps__hora" dateTime={moment} aria-hidden="true">{apunt.hora}</time>
             <span className="sdp-linia-temps__eix" aria-hidden="true">
               <span className="sdp-linia-temps__marca">{Icona ? <Icona size={16} focusable="false" /> : null}</span>

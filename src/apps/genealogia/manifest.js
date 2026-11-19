@@ -48,5 +48,6 @@ export default {
   actiuPerDefecte: true,
   entorn: 'produccio',
   dadesPersonals: 'salut',
+  avisBeta: 'general',
   carrega: import.meta.env.VITE_SDP_APP_GENEALOGIA !== '0' ? () => import('./AppGenealogia.jsx') : null
 };

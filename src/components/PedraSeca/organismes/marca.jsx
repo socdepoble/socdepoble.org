@@ -13,6 +13,9 @@ import { esFontImatgeSegura } from '../../../utils/sanitize.js';
 import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { inicialsDe } from '../molecules/Rajola.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 /** Un component de React (funció, memo, forwardRef: les icones de lucide). */
 const esComponent = (valor) => typeof valor === 'function'
@@ -44,7 +47,7 @@ export function pintaMarca(article, categoria, renderMedia) {
   const propi = typeof renderMedia === 'function' ? renderMedia(article) : null;
   if (propi) return propi;
   return (
-    <span className="sdp-marca-article">
+    <span ref={adoptaEstilsDiferits} className="sdp-marca-article">
       {pintaIcona(categoria?.icona)}
       <span className="sdp-marca-article__inicials">{inicialsDe(article?.nom)}</span>
     </span>
@@ -54,6 +57,6 @@ export function pintaMarca(article, categoria, renderMedia) {
 /** El quadrat sencer: la foto si n'hi ha una de segura; si no, la marca. */
 export function pintaQuadrat(article, categoria, renderMedia) {
   const src = fontSegura(article?.imatge);
-  if (src) return <img className="sdp-marca-article__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" />;
+  if (src) return <img ref={adoptaEstilsDiferits} className="sdp-marca-article__imatge" src={src} alt="" loading="lazy" referrerPolicy="no-referrer" />;
   return pintaMarca(article, categoria, renderMedia);
 }

@@ -23,6 +23,9 @@ import { sembraLlegat } from '../facturacio/llegat.js';
 import { seriesQueEsPerden } from '../facturacio/magatzemPerfil.js';
 import { numerosDelText, resumDelLlegat, titolDelLlegat } from './nucli/formulari.js';
 import { AvisDeZona, ErrorsDelFormulari, llegixText } from './peces.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /* Els números no reconeguts que es mostren; la resta es compten. */
 const MAX_NO_RECONEGUTS = 5;
@@ -32,7 +35,7 @@ function NoReconeguts({ llista }) {
   const vistos = llista.slice(0, MAX_NO_RECONEGUTS).map((n) => `«${n}»`).join(', ');
   const resta = llista.length > MAX_NO_RECONEGUTS ? ` i ${llista.length - MAX_NO_RECONEGUTS} més` : '';
   return (
-    <p className="sdp-gestoria-panell__nota">
+    <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
       {`${llista.length === 1 ? 'Un text no té' : `${llista.length} textos no tenen`} la forma d’un número de l’eina d’abans i no compten: ${vistos}${resta}.`}
     </p>
   );
@@ -41,8 +44,8 @@ function NoReconeguts({ llista }) {
 function ResumLlegat({ llegat }) {
   const linies = resumDelLlegat(llegat);
   return linies.length
-    ? <ul className="sdp-gestoria-panell__avisos">{linies.map((linia) => <li key={linia}>{linia}</li>)}</ul>
-    : <p>No hi havia factures d’abans: el programa comença de zero.</p>;
+    ? <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__avisos">{linies.map((linia) => <li ref={adoptaEstilsDiferits} key={linia}>{linia}</li>)}</ul>
+    : <p ref={adoptaEstilsDiferits}>No hi havia factures d’abans: el programa comença de zero.</p>;
 }
 
 export function PasLlegat({ f }) {
@@ -82,12 +85,12 @@ export function PasLlegat({ f }) {
     setObert(true);
   };
 
-  if (!f.config) return <p>Primer cal desar les dades de l’empresa (pas 1).</p>;
+  if (!f.config) return <p ref={adoptaEstilsDiferits}>Primer cal desar les dades de l’empresa (pas 1).</p>;
 
   if (f.llegat && !obert) {
     return (
       <>
-        <details className="sdp-gestoria-panell__documents">
+        <details ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__documents">
           <summary>{titolDelLlegat(f.llegat)}</summary>
           <div className="sdp-gestoria-panell__bloc">
             <ResumLlegat llegat={f.llegat} />
@@ -103,13 +106,13 @@ export function PasLlegat({ f }) {
   }
 
   return (
-    <div className="sdp-gestoria-panell__bloc">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc">
       <p>
         Si abans facturaves amb un altre programa, posa ací els números d’aquelles factures. El programa no
         els continua: obri una sèrie nova i deixa tancades les d’abans, perquè cap número no es puga confondre.
       </p>
       {f.perfilFixat ? (
-        <p className="sdp-gestoria-panell__nota">
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__nota">
           Ja has emés factures amb este programa: ara només pots afegir-hi factures d’abans. Torna a posar-hi
           totes les que ja havies declarat, i les que falten.
         </p>
@@ -122,7 +125,7 @@ export function PasLlegat({ f }) {
       </Camp>
       {quants && previ.llegat ? (
         <>
-          <p>{`Has posat ${quants === 1 ? 'un número' : `${quants} números`}. Quedaran així:`}</p>
+          <p ref={adoptaEstilsDiferits}>{`Has posat ${quants === 1 ? 'un número' : `${quants} números`}. Quedaran així:`}</p>
           <ResumLlegat llegat={previ.llegat} />
           <NoReconeguts llista={previ.llegat.noReconeguts} />
         </>

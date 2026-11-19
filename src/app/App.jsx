@@ -7,7 +7,7 @@ import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import { useScrollDeNavegacio } from '../hooks/useScrollDeNavegacio.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
-import { MoonStar, Search, Settings, Sun } from '../icons.jsx';
+import { Globe, MoonStar, Search, Settings, Sun } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/IaiaIcon.jsx';
 import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
@@ -200,6 +200,7 @@ const NOMS_CLOSCA = Object.freeze({
   tancaMenu: Object.freeze(['nav.tancaMenu', 'Tancar menú']),
   seccions: Object.freeze(['nav.seccions', 'Seccions']),
   sistema: Object.freeze(['nav.sistema', 'Sistema']),
+  idioma: Object.freeze(['nav.idioma', 'Idioma']),
   saltaContingut: Object.freeze(['nav.saltaContingut', 'Salta al contingut principal']),
   navegacioPrincipal: Object.freeze(['nav.navegacioPrincipal', 'Navegació principal']),
   obrirMenu: Object.freeze(['nav.obrirMenu', 'Obrir menú']),
@@ -305,6 +306,17 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
                 </React.Fragment>
               ))}
             </div>
+            <hr className="app-sidebar-divider" />
+            <NavLink
+              to="/traduccions"
+              transicio
+              className="nav-item"
+              aria-label={nom(NOMS_CLOSCA.idioma)}
+              onClick={() => { if (isCompact) toggleSidebar(); }}
+            >
+              <Globe className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+              <span className="nav-item__text">{nom(NOMS_CLOSCA.idioma)}</span>
+            </NavLink>
           </div>
         </div>
     </>
@@ -914,10 +926,18 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
    és un LazyRouteError, com la de qualsevol ruta. */
 const TextRouteAmbCopiaLocal = lazyRoute(() => Promise.all([
   import('../sections/text/pageContent.js'),
-  import('../sections/text/TextSection')
-]).then(([{ PAGE_COPY }]) => ({
+  import('../sections/text/TextSection'),
+  import('../components/universal/PeuEditorialIdioma.jsx')
+]).then(([{ PAGE_COPY }, , { default: PeuEditorialIdioma, etiquetaPeuEditorialIdioma }]) => ({
   default: function AmbCopiaLocal(props) {
-    return <TextRouteContingut {...props} copiaLocal={PAGE_COPY} />;
+    return (
+      <TextRouteContingut
+        {...props}
+        copiaLocal={PAGE_COPY}
+        PeuEditorial={PeuEditorialIdioma}
+        etiquetaPeu={etiquetaPeuEditorialIdioma}
+      />
+    );
   }
 })));
 
@@ -930,7 +950,8 @@ function TextRoute({ pageKey }) {
   );
 }
 
-function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal }) {
+function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal, PeuEditorial = null, etiquetaPeu = null }) {
+  const t = useTraductorOpcional();
   // Fallback a les dades locals (PAGE_COPY) perquè la legalitat carregui de forma segura i ràpida
   // encara que Supabase estiga en fase de càrrega o sense xarxa.
   const page = pageCopy?.[pageKey] || copiaLocal?.[pageKey];
@@ -962,7 +983,14 @@ function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal }) {
      espera TextSection, i una de nova ací pintaria un altre element de càrrega
      en acabar d'arribar la còpia local. */
   return (
-    <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>
+    <TextSection
+      page={page}
+      pageKey={pageKey}
+      accioPrincipal={accioPrincipal}
+      objecte={objecte}
+      peuDePagina={PeuEditorial ? <PeuEditorial /> : null}
+      etiquetaPeuDePagina={etiquetaPeu ? etiquetaPeu(t) : null}
+    >
       {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
           Suspense propi perquè el tauler no torne a tapar el text mentre arriba.
           Onada R29 · R29-RUT-04 · I barrera pròpia: si el tros no arriba, el text es queda sense el tauler

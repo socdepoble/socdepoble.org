@@ -46,6 +46,7 @@
  * La persona que mira és la de la sessió o, sense sessió, el convidat, perquè el
  * xat es puga vore al navegador sense Supabase.
  */
+import { normalitzaUnicodeAmbLimit } from '../utils/normalitzaUnicodeSegura.js';
 import { getDefaultUserId, usuariDeSessio } from './identitat.js';
 import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js';
 import { XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from './xatSeed.js';
@@ -641,7 +642,7 @@ export function createLocalXatAdapter() {
        parleu, més el tipus (persona, entitat o ia) i l'avatar del padró. */
     async carregaMembres(text = null, config = {}) {
       const { estat, jo } = magatzem(config);
-      const plega = value => String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      const plega = value => normalitzaUnicodeAmbLimit(String(value ?? ''), 'NFD').replace(/\p{M}/gu, '').toLowerCase();
       const cerca = plega(text).trim();
       return estat.membres
         .filter((membre) => membre.usuariId !== jo && (!cerca || cerca.split(/\s+/).every(part => plega(membre.nom).includes(part))))

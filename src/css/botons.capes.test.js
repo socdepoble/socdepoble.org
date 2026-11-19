@@ -148,8 +148,10 @@ describe('R26.2 · respiració lateral sense comprimir per encaixar', () => {
       'src/css/components.css': ['.sdp-boto', '.btn', '.btn-sm', '.page-btn', '.pill'],
       /* Onada R28 · D-R27-1 (opció b) · El joc «D'on parles?» porta el seu full diferit. */
       'src/css/diferit-joc-parla.css': ['.sdp-joc-parla__opcio'],
+      'src/css/diferit-enquadrament.css': ['.sdp-enquadrament__format-pindola'],
+      'src/css/diferit-tpv.css': ['.sdp-tpv__accio'],
       'src/css/modules.css': ['.search-filters button', '.sdp-classificacio-botonera > .sdp-boto',
-        '.sdp-enquadrament__format-pindola', '.sdp-tpv__accio', '.sdp-xat-iaia-accio', '.sdp-btn',
+        '.sdp-xat-iaia-accio', '.sdp-btn',
         '.sdp-directori-filtres__boto', '.sdp-workspace-llibres__tab']
     };
     for (const [ruta, selectors] of Object.entries(famílies)) for (const selector of selectors) {
@@ -160,7 +162,7 @@ describe('R26.2 · respiració lateral sense comprimir per encaixar', () => {
   });
 
   test('els contextos estrets no tornen a llevar el coixí del botó', () => {
-    const full = llig('src/css/modules.css');
+    const full = `${llig('src/css/modules.css')}\n${llig('src/css/diferit-enquadrament.css')}`;
     /* Integració R26 · Fora de la llista, amb motiu: '.sdp-workspace .sdp-workspace-column__peu .sdp-boto'
        ocupa tota l'amplària de la columna i conserva el coixí de HEAD (G-D1 i G2-05, MultimediaSection.test.jsx). */
     for (const selector of [
@@ -209,7 +211,7 @@ describe('R26.2 · respiració lateral sense comprimir per encaixar', () => {
 // Refutació independent R26.2: el nom «opcio» o «visor» no prova que siga una icona.
 describe('R26.2 · variants textuals refutades per l’àrbitre', () => {
   test('els filtres de comunitats no tornen a estrényer la píndola base', () => {
-    const full = llig('src/css/modules.css');
+    const full = llig('src/css/diferit-comu.css');
     const filtre = coixi(full, '.sdp-comu .sdp-comu__filtres .sdp-pindola__opcio');
     expect(filtre.lateral).toBeGreaterThanOrEqual(20);
     expect(filtre.lateral).toBeGreaterThan(filtre.bloc * 2);
@@ -261,7 +263,7 @@ describe('R26.2 · text actiu fora dels noms lèxics de botó', () => {
     expect(valor(full, '.sp-card-portes', 'justify-content')).toBe('center');
   });
   test('els CTA del Xat, comunitats i workspace tenen coixí real de text', () => {
-    const full = llig('src/css/modules.css');
+    const full = `${llig('src/css/modules.css')}\n${llig('src/css/diferit-comu.css')}`;
     for (const selector of ['.sdp-workspace-clear', '.sdp-workspace-tag', '.sdp-xat-pindola',
       '.sdp-subnav-pobles-gent__enllac', '.sdp-xat-iaia-suggeriment', '.sdp-xat-adjunts-panell__salta']) {
       const { lateral, bloc } = coixi(full, selector);

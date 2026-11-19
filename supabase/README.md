@@ -1733,7 +1733,7 @@ description: "Documentació canònica de Sóc de Poble."
 
 - `migrations/20261115230000_r30_revisions_editorials_cas.sql`
 
-  R30 P1-79: depén de `2611110455`. `desa_revisio_editorial_wp_cas` compara atòmicament `actualitzat_a`, bloqueja també la primera inserció i conserva la signatura antiga només per a crear. Token nul significa absent; una fila existent exigix token llegit. Si es reaplica `2611110455`, cal tornar a aplicar esta per conservar la guarda CAS de la signatura antiga (`ordre_desplegament.json`). El client d’R30 funciona amb i sense esta migració: sense la RPC CAS (PGRST202) desa amb la signatura de sempre, sense guarda, com fins ara. Els clients anteriors a R30 que continuen oberts (PWA en memòria cau, paquets de WordPress sense actualitzar) només podien crear revisions noves fins que s’aplicara. **Aplicada a producció** pel Mestre el 16-11-2026, després de la `2611110455` (`pas1_wp_cas_ok = true`, captura `261116_1503`; bytes idèntics als de Git). Proves locals PGlite: `tests/r30-editorial-cas.test.mjs`, `tests/r30-editorial-cas-cataleg.test.mjs` i `tests/r30-independent-cas-aal-null.test.mjs`.
+  R30 P1-79: depén de `2611110455`. `desa_revisio_editorial_wp_cas` compara atòmicament `actualitzat_a`, bloqueja també la primera inserció i conserva la signatura antiga només per a crear. Token nul significa absent; una fila existent exigix token llegit. Si es reaplica `2611110455`, cal tornar a aplicar esta per conservar la guarda CAS de la signatura antiga (`ordre_desplegament.json`). El client R32.10 conserva l’esborrany al navegador si falta la RPC CAS (404 + PGRST202 exacte) i retorna `no-disponible`: no intenta la signatura antiga, que sense esta migració podria fer un upsert sense guarda. Els clients anteriors a R30 que continuen oberts (PWA en memòria cau, paquets de WordPress sense actualitzar) només podien crear revisions noves fins que s’aplicara. **Aplicada a producció** pel Mestre el 16-11-2026, després de la `2611110455` (`pas1_wp_cas_ok = true`, captura `261116_1503`; bytes idèntics als de Git). Proves locals PGlite: `tests/r30-editorial-cas.test.mjs`, `tests/r30-editorial-cas-cataleg.test.mjs` i `tests/r30-independent-cas-aal-null.test.mjs`.
 
 - `migrations/20261116031000_r31_push_sessio_i_revocacio.sql`
 
@@ -2019,6 +2019,10 @@ verificador sense avisos.
 | Snippet manual 4 | `snippets/r32_7_fossils_sonda.sql` | Sonda R32 de només lectura dels 7 fòssils (DDL, `prosrc` SHA-256, ACL, propietari, disparadors i dependents); l’exporta el Mestre abans de `20261116170000` i la torna a passar després. A Producció, abans (17-11-2026, 01:44), es va exportar una sonda conjunta sense els dependents (`01_sonda_prevol_r32_read_only.sql` de la carpeta del certificat 261117_0155); la de després no consta exportada |
 | Snippet manual 5 | `snippets/r32_7_fossils_rollback.sql` | Marxa enrere de `20261116170000` des del backup privat, sense DROP ni CASCADE; disponible, no executada (la còpia `rollback_04_fossils.sql` de la carpeta del certificat 261117_0155 té el mateix SHA-256, `e2a7e1ad…`) |
 | Snippet manual 6 | `snippets/r32_baixa_sessions_rollback.sql` | Marxa enrere de `20261116170200` des del backup privat; disponible, no executada (la còpia `rollback_03_baixa_sessions.sql` de la carpeta del certificat 261117_0155 té el mateix SHA-256, `f84fb183…`) |
+| Snippet manual 7 | `snippets/r32_10_xat_privades_rls_repara.sql` | R32.10: reparació manual idempotent de RLS i ACL de taula/columna de les dues taules internes del xat; conserva dades i accés intern del propietari; polítiques o privilegis heretats no revisats avorten. Preparat i provat localment, sense aplicació remota en este torn |
+| Snippet manual 8 | `snippets/r32_10_fossils_acl_enduriment.sql` | R32.10: mínim EXECUTE dels 7 definers amb OID, propietari i DDL postimatge verificats; sense concessions noves, comprova herència efectiva i conserva backup d’ACL. Preparat i provat localment; l’aplica el Mestre després d’exportar i revisar consumidors |
+
+**R32.10 · integritat del pre-vol:** l’export històric `resultat_sonda_produccio_261117_0144.json` concorda amb els seus hashes recalculats en 7/9 files. Els DDL literals de `public.demana_baixa(text)` i `public.omega_invalidate_stale_translations()` no produïxen els hashes declarats. Açò no determina el DDL remot actual ni autoritza substituir pins: cal un export fresc i íntegre. La nova ACL requerix la postimatge exacta de `private.r32_fossils_backup`; un pin NULL o qualsevol deriva avorta. El paquet consolidat i la verificació booleana són a `../_investigacio_ia_de_poble/261118_r32_10_codex_deute_zero/`; no són migracions noves ni s’han executat a Producció.
 
 ### Contracte explícit d'exportació RGPD per a les taules de federació (`P2-09` · `D06/D07`)
 
@@ -3181,3 +3185,79 @@ Cap rebut acredita que la migració s’haja executat sencera contra producció.
 ## Vincles
 
 - [[00_index]]
+
+
+## R32.11 · CAS general preparat, activació manual pendent
+
+`snippets/r32_11_publicacions_cas.sql` és un paquet **manual, no aplicat a
+Producció i fora del catàleg de 123 migracions**. Implementa la RPC nova
+`publica_section_submission_cas(uuid,uuid,text,jsonb,text,text,uuid,boolean,timestamptz,uuid)`.
+El token nul només crea; un token llegit actualitza exactament eixa revisió.
+L'opID lliga una petició immutable i permet recuperar un ACK perdut. Un replay
+després d'una altra edició torna conflicte i conserva l'esborrany local.
+
+El paquet conserva els triggers vigents i afegix una versió estrictament
+monotònica, panys transaccionals, autoria derivada d'Auth i dels helpers reals,
+rebuig d'actes vinculats a Notes o retirats i rebuts privats sense cos UGC. Els
+rebuts s'exporten només a la persona propietària i es retiren per FK quan
+s'esborra la publicació, el compte o el poble. L'embolcall d'exportació conserva
+les extensions vigents de R28. El preflight i el postflight rebutgen identitats
+DDL, polítiques, ACL de columna/rol custom, funcions o ordre de triggers
+inesperats i fan rollback de tota la instal·lació. El cos de l'exportador base
+està fixat al canònic R28, no s'accepta un helper privat homònim desconegut.
+Reaplicar un exportador històric després del
+paquet exigix revisar i restaurar esta extensió abans d'activar clients.
+
+El client reutilitza `appendSectionSubmissionNetworkOnly` amb
+`expectedUpdatedAt` i `operationId` explícits. La cua `versionada: true`
+persistix l'operació abans d'enviar-la i conserva token, opID i esborrany davant
+error, cancel·lació o canvi de sessió/backend. Si falta la RPC, no fa upsert.
+Una fila que ja ha usat CAS conserva eixe requisit en disc i rebutja un
+reintent legacy després de recarregar. `versionada` continua desactivat per
+defecte fins al rebut manual verificat;
+la ruta legacy continua sent compatible i no acredita CAS.
+
+Prova local reproduïble, sense accés remot:
+`SDP_PGLITE_MODULE=/ruta/pglite/dist/index.js node --test tests/r32_11_publicacions_cas.test.mjs`.
+Hidrata el catàleg congelat complet i després el paquet manual, inclosa la
+reaplicació idempotent. PGlite serialitza les connexions: els dos contendents
+són transaccions completes amb el mateix token; no és una mesura de càrrega ni
+una prova de concurrència entre processos d'un servidor desplegat. També hi
+ha proves JS dedicades de client i cua `*.cas.r3211.test.js`.
+
+El CAS general rebutja amb `drets-cas-no-disponibles` qualsevol copyright
+top-level no buit entrant o ja present a la fila. Els projectors de Mur,
+Mercat i Arxiu el lligen com a llicència: purgar-lo i confirmar seria perdre
+atribució legal. El draft, token, opID, publicació existent i fitxer local es
+conserven; falta un contracte dedicat de drets abans d'activar eixe recorregut.
+No es crea cap camp alternatiu i la metadata consentida nested es manté. El
+camí legacy opt-out i les aportacions sense eixa dada no es bloquegen per
+esta guarda. El parser pur de tokens valida el calendari i compara amb
+BigInt, inclosos els sis microsegons de l'any 9999; el client rebutja rebuts
+amb creació posterior a l'edició.
+
+La identitat d'operació es reté durant la vida del recurs/compte/poble: la
+purga per FK també elimina el rebut. No és un registre global etern d'opIDs.
+Un UUID de publicació retirat continua denegat pels tombstones canònics.
+
+El corrector local 05d conserva el `search_path` del caller i qualifica el
+catàleg en els blocs de comprovació i les signatures DDL, sense canviar els
+tres cossos de funció. Una ombra de tipus temporal (`pg_temp.text`, `uuid`,
+`jsonb`, `bytea`, `timestamptz` o `bool`) es rebutja abans de qualsevol DDL:
+el nom visible no acredita l’OID del tipus. Un namespace no temporal davant
+de `pg_catalog` també es rebutja. El paquet manual actual té SHA-256
+`d36dcacd4b644d5ba9eeb16e0988b3af2fe26feb4568ecf7de1704c655677950`; continua
+sense aplicar-se a Producció. La prova local inclou instal·lació, reaplicació
+i preservació del caller davant estes ombres.
+
+La certificació nativa local usa PostgreSQL 18.6 i dues connexions
+`READ COMMITTED`, amb espera del pany acreditada en `pg_locks` i el PID
+bloquejant: creació/actualització, conflicte, replay i rollback. El catàleg
+PG18 representa els huit `NOT NULL` també en `pg_constraint`; es comprova
+exactament una restricció validada, enforced i local per cada columna
+acreditada. PG17 conserva la comprovació `attnotnull` sense eixes files
+addicionals. Les altres cinc restriccions continuen fixades i no s’accepten
+columnes, restriccions ni metadades inesperades. Prova: 
+`node --test tests/r3211-publicacions-cas-native.test.mjs`, només amb la
+fixture de clúster descartable per socket Unix; no acredita Auth/JWT signat,
+PostgREST ni cap desplegament remot.

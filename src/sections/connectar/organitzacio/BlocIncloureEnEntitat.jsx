@@ -55,6 +55,9 @@ import { SelectorDeVariacions } from '../../mercat/SelectorDeVariacions.jsx';
 import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/GestioMembres.jsx';
 import { ROL_PER_DEFECTE, accioDInclusio, opcionsDeRol } from './rolsDInclusio.js';
 import { useIncloureEnEntitat } from './useIncloureEnEntitat.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 /* RA-05 · Dos noms de poble són el mateix si només canvien les majúscules o els espais. */
 const pobleNet = (poble) => (typeof poble === 'string' ? poble.trim().replace(/\s+/g, ' ') : '');
@@ -122,26 +125,26 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
   let cos = null;
   switch (inclusio.estat) {
     case 'comprovant':
-      cos = <p className="sdp-connectar__ajuda">{ambNoms(['section.connectar.incloure.comprovant', 'Comprovant si {nom} ja forma part de {entitat}…'])}</p>;
+      cos = <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{ambNoms(['section.connectar.incloure.comprovant', 'Comprovant si {nom} ja forma part de {entitat}…'])}</p>;
       break;
     case 'no-disponible':
-      cos = <p className="sdp-connectar__ajuda">{t(...ERRORS_MEMBRES['NO-DISPONIBLE'])}</p>;
+      cos = <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{t(...ERRORS_MEMBRES['NO-DISPONIBLE'])}</p>;
       break;
     case 'error-lectura':
       cos = (
         <>
-          <p className="sdp-connectar__ajuda">{ambNoms(['section.connectar.incloure.errorLectura', 'No s’ha pogut comprovar si {nom} ja forma part de {entitat}. Mira-ho al teu Perfil.'])}</p>
+          <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{ambNoms(['section.connectar.incloure.errorLectura', 'No s’ha pogut comprovar si {nom} ja forma part de {entitat}. Mira-ho al teu Perfil.'])}</p>
           {gestiona}
         </>
       );
       break;
     default:
       if (rolActual === 'owner') {
-        cos = <p>{ambNoms(['section.connectar.incloure.jaPropietaria', '{nom} és la propietària de {entitat}.'])}</p>;
+        cos = <p ref={adoptaEstilsDiferits}>{ambNoms(['section.connectar.incloure.jaPropietaria', '{nom} és la propietària de {entitat}.'])}</p>;
       } else if (rolActual === 'admin') {
         cos = (
           <>
-            <p>{ambNoms(['section.connectar.incloure.jaAdmin', '{nom} ja administra {entitat}.'])}</p>
+            <p ref={adoptaEstilsDiferits}>{ambNoms(['section.connectar.incloure.jaAdmin', '{nom} ja administra {entitat}.'])}</p>
             {gestiona}
           </>
         );
@@ -149,7 +152,7 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
         const ascens = accioDInclusio({ rolActual, rolPropi });
         cos = (
           <>
-            <p>{ambNoms(['section.connectar.incloure.jaMembre', '{nom} ja és membre de {entitat}.'])}</p>
+            <p ref={adoptaEstilsDiferits}>{ambNoms(['section.connectar.incloure.jaMembre', '{nom} ja és membre de {entitat}.'])}</p>
             {ascens ? (
               <Boto varietat="secundari" onClick={() => setConfirmacio(ascens)} carregant={inclusio.ocupat}>
                 {ambNoms(['section.connectar.incloure.botoAscens', 'Donar a {nom} l’administració de {entitat}'])}
@@ -165,14 +168,14 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
               opcions={opcionsDeRol({ rolPropi, rolActual, t, ambFuncions })} valor={rolTriat} onCanvi={setRolTriat}
               disabled={inclusio.ocupat} />
             {/* C-01 · Les conseqüències, just abans del botó, i en la seua descripció. */}
-            <p id={idAvis} className="sdp-connectar__ajuda">
+            <p ref={adoptaEstilsDiferits} id={idAvis} className="sdp-connectar__ajuda">
               {ambNoms(ambFuncions
                 ? ['section.connectar.incloure.avisConnexions', 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. Si l’entitat i la persona tenen les connexions públiques, la pertinença, amb el rol, també eixirà a la fitxa pública de l’entitat, llevat que alguna de les dues l’amague.']
                 : ['section.connectar.incloure.avis', 'L’alta és directa i sense cap avís: parleu-ne abans. Ho veuran qui administra {entitat} i {nom}, al seu Perfil, d’on en podrà eixir quan vullga. De moment no es publica enlloc.'])}
             </p>
             {/* RA-05 · Un altre poble a la fitxa: es diu abans del clic, sense desactivar res. */}
             {altrePoble ? (
-              <p id={idAltrePoble} className="sdp-connectar__ajuda">
+              <p ref={adoptaEstilsDiferits} id={idAltrePoble} className="sdp-connectar__ajuda">
                 {omple(t('section.connectar.incloure.altrePoble', 'La fitxa de {nom} diu {poble}, i a {entitat} només s’hi pot incloure veïnat de {pobleEntitat}: si no hi consta, l’alta no es podrà fer.'),
                   { nom, entitat: nomEntitat, poble: pobleDeLaPersona, pobleEntitat })}
               </p>
@@ -196,7 +199,7 @@ export function BlocIncloureEnEntitat({ entitats = [], persona = null, config = 
     : Object.hasOwn(ERRORS_MEMBRES, codi) ? t(...ERRORS_MEMBRES[codi]) : t(...TEXTOS_MEMBRES.errorAfegeix);
 
   return (
-    <section className="sdp-connectar__seccio" aria-labelledby={`${id}-incloure`}
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-incloure`}
       aria-busy={inclusio.estat === 'comprovant' ? 'true' : undefined}>
       {/* RA-03 · El títol, només per al lector de pantalla: el rètol de la targeta ja es veu. */}
       <h3 ref={titolRef} tabIndex={-1} id={`${id}-incloure`} className="sdp-sr-only">

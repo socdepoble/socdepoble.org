@@ -19,6 +19,9 @@
  */
 import { useId } from 'react';
 import { EstatBuit } from '../atoms/estats.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitPecesApps from '../../../css/diferit-peces-apps.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'peces-apps', cssDiferitPecesApps); };
 
 const NIVELLS = 10;
 /* Literals sencers: els noms de classe es busquen al CSS tal qual. */
@@ -52,8 +55,8 @@ export function Histograma({
   const sostre = Number.isFinite(maxim) && maxim > 0 ? maxim : Math.max(...numerics);
   return (
     /* aria-labelledby a més del figcaption: no tots els motors en trauen el nom. */
-    <figure className={['sdp-histograma', className].filter(Boolean).join(' ')} aria-labelledby={titol ? idTitol : undefined}>
-      {titol ? <figcaption id={idTitol} className="sdp-histograma__titol">{titol}</figcaption> : null}
+    <figure ref={adoptaEstilsDiferits} className={['sdp-histograma', className].filter(Boolean).join(' ')} aria-labelledby={titol ? idTitol : undefined}>
+      {titol ? <figcaption ref={adoptaEstilsDiferits} id={idTitol} className="sdp-histograma__titol">{titol}</figcaption> : null}
       <ol className="sdp-histograma__barres">
         {barres.map((barra, i) => {
           const valor = numerics[i];
@@ -61,7 +64,7 @@ export function Histograma({
           const text = formatValor(valor);
           const remarcada = destacada !== null && clau === destacada;
           return (
-            <li key={clau} className={remarcada ? 'sdp-histograma__columna sdp-histograma__columna--destacada' : 'sdp-histograma__columna'}>
+            <li ref={adoptaEstilsDiferits} key={clau} className={remarcada ? 'sdp-histograma__columna sdp-histograma__columna--destacada' : 'sdp-histograma__columna'}>
               <span className="sdp-nomes-lector">{`${barra.etiqueta}: ${text}${unitat ? ` ${unitat}` : ''}`}</span>
               <span className="sdp-histograma__valor" aria-hidden="true">{valors && valor > 0 ? text : ''}</span>
               <span className="sdp-histograma__pista" aria-hidden="true">

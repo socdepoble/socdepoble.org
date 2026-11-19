@@ -55,7 +55,8 @@ const TOTS = [...JSX, ...JS_PURS, ...PROVES, ...TOCATS];
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
 const CSS_SRC = readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => llig(`src/css/${f}`)).join('\n');
-const FULL = blocDeModuls('UniversalListCard');
+void blocDeModuls;
+const FULL = llig('src/css/diferit-comu.css');
 /* Els fulls canònics sense el bloc mateix: src/css, amb els blocs germans de
    modules.css. Sense el bloc, «cap CSS mort» continua mirant les classes que
    només definix la peça. */

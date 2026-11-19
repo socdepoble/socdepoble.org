@@ -18,28 +18,18 @@ import { CAMPS_PERSONA, llegixDecimes, validaPersona } from '../nucli/diccionari
 import { dataCurta, dataLocalDe } from '../nucli/hores.js';
 import { AVIS_SALUT, textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
-import { ControlCamp, Enllac112, EnllacBoto, MarcSalut, useInterruptorsSalut, useNavegaSalut } from './comunes.jsx';
+import { ControlCamp, Enllac112, EnllacBoto, MarcSalut, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 import { descarregaFitxer } from './descarrega.js';
-
-const MENU = Object.freeze([
-  { id: 'persona', nom: 'Persona', secundari: 'Àlies, hores i què voleu apuntar' },
-  { id: 'copia', nom: 'Còpia i esborrat', secundari: 'On són les dades i com no perdre-les' },
-  { id: 'avis', nom: 'Avís i privacitat', secundari: 'Què és, què no és i on van les dades' }
-]);
-const INTERRUPTORS = Object.freeze([
-  { id: 'agitacio', etiqueta: 'Agitació i conducta' },
-  { id: 'medicacio', etiqueta: 'Medicació' },
-  { id: 'deposicions', etiqueta: 'Deposicions' }
-]);
 
 export function MenuAjustos() {
   const navega = useNavegaSalut();
+  const tx = useTextosSalut();
   /* /app/salut/<entrada>: l'entrada és l'ajust obert. */
   const actual = useLocation().pathname.split('/')[3];
-  const articles = MENU.map((opcio) => ({ ...opcio, categoriaId: 'ajustos', estat: actual === opcio.id ? 'en-colleccio' : 'normal' }));
+  const articles = tx.menuAjustos.map((opcio) => ({ ...opcio, categoriaId: 'ajustos', estat: actual === opcio.id ? 'en-colleccio' : 'normal' }));
   return (
-    <MarcSalut titol="Ajustos" columna="mig">
-      <LlistaArticles articles={articles} etiqueta="Ajustos" textos={{ 'en-colleccio': 'Obert' }} onTria={(article) => navega([article.id])} />
+    <MarcSalut titol={tx.ajustos} columna="mig">
+      <LlistaArticles articles={articles} etiqueta={tx.ajustos} textos={{ 'en-colleccio': tx.obert }} onTria={(article) => navega([article.id])} />
     </MarcSalut>
   );
 }
@@ -60,6 +50,7 @@ function aPersona(valors) {
 
 export function AjustosPersona() {
   const salut = useSalut();
+  const tx = useTextosSalut();
   const { actiu, apaga } = useInterruptorsSalut();
   const [valors, setValors] = useState(null);
   const [errors, setErrors] = useState({});
@@ -76,27 +67,27 @@ export function AjustosPersona() {
     try {
       await salut.desaPersona(persona);
       setValors(null);
-      setMissatge({ to: 'exit', text: 'Desat.' });
+      setMissatge({ to: 'exit', text: tx.desat });
     } catch (error) {
       setMissatge({ to: 'error', text: textError(error) });
     }
   };
   return (
-    <MarcSalut titol="Persona">
+    <MarcSalut titol={tx.persona}>
       <Pila gap={6}>
-        <form onSubmit={desa} noValidate aria-label="Persona">
+        <form onSubmit={desa} noValidate aria-label={tx.persona}>
           <Pila gap={4}>
-            <p>Només es veu en este dispositiu. No cal el nom: un àlies és prou.</p>
+            <p>{tx.aliesProuText}</p>
             {CAMPS_PERSONA.map((c) => (
               <ControlCamp key={c.clau} definicio={c} valor={actuals[c.clau]} error={errors[c.clau]}
                 onCanvi={(valor) => setValors({ ...actuals, [c.clau]: valor })} />
             ))}
             {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-            <Boto varietat="primari" tipus="submit" disabled={salut.nomesLectura}>Desa</Boto>
+            <Boto varietat="primari" tipus="submit" disabled={salut.nomesLectura}>{tx.desa}</Boto>
           </Pila>
         </form>
-        <GrupCamps llegenda="Què voleu apuntar">
-          {INTERRUPTORS.map((interruptor) => (
+        <GrupCamps llegenda={tx.queVoleuApuntar}>
+          {tx.interruptorsSalut.map((interruptor) => (
             <Interruptor key={interruptor.id} etiqueta={interruptor.etiqueta} actiu={actiu(interruptor.id)}
               desactivat={salut.nomesLectura} onCanvi={(encés) => commuta(interruptor.id, encés)} />
           ))}
@@ -112,6 +103,7 @@ const megues = (bytes) => `${String(Math.round((bytes / 1048576) * 10) / 10).rep
 export function CopiaIEsborrat() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const [estat, setEstat] = useState(null);
   const [missatge, setMissatge] = useState(null);
   const [llegida, setLlegida] = useState(null);
@@ -132,16 +124,16 @@ export function CopiaIEsborrat() {
   const informa = (to, text) => setMissatge({ to, text });
   const demana = async () => {
     const resultat = await salut.demanaPersistencia();
-    if (resultat === true) informa('exit', 'El navegador ha promés no esborrar-les per falta d’espai.');
-    else if (resultat === false) informa('avis', 'El navegador no ho ha promés. Fes còpies sovint.');
-    else informa('info', 'Este navegador no permet demanar-ho. Fes còpies sovint.');
+    if (resultat === true) informa('exit', tx.navegadorPromes);
+    else if (resultat === false) informa('avis', tx.navegadorNoPromes);
+    else informa('info', tx.navegadorNoPermetDemanar);
     setEstat(await salut.estatPersistencia());
   };
   const copia = async () => {
     try {
       const text = await salut.copia();
-      if (descarregaFitxer({ nom: nomCopia(salut.avui), tipus: 'application/json', dades: text })) informa('exit', 'Còpia descarregada. Guarda-la en un lloc segur.');
-      else informa('avis', 'Este navegador no pot descarregar fitxers.');
+      if (descarregaFitxer({ nom: nomCopia(salut.avui), tipus: 'application/json', dades: text })) informa('exit', tx.copiaDescarregada);
+      else informa('avis', tx.navegadorNoDescarrega);
     } catch (error) {
       informa('error', textError(error));
     }
@@ -154,7 +146,7 @@ export function CopiaIEsborrat() {
     setLlegida(null);
     setConfirmaImportacio(false);
     if (fitxer.size > MAX_BYTES_COPIA) {
-      informa('error', 'El fitxer és massa gran per a ser una còpia de Salut.');
+      informa('error', tx.fitxerMassaGranSalut);
       return;
     }
     try {
@@ -162,9 +154,9 @@ export function CopiaIEsborrat() {
       if (ronda !== rondaCopia.current) return;
       setLlegida(resultat.ok ? resultat : null);
       if (!resultat.ok) informa('error', resultat.error);
-      else informa('info', `La còpia porta ${resultat.dades.apunts.length} apunts${resultat.descartats ? ` (i ${resultat.descartats} registres no vàlids que no entraran)` : ''}.`);
+      else informa('info', tx.copiaPortaApunts(resultat.dades.apunts.length, resultat.descartats));
     } catch {
-      if (ronda === rondaCopia.current) informa('error', 'No s’ha pogut llegir el fitxer de còpia.');
+      if (ronda === rondaCopia.current) informa('error', tx.errorLlegirFitxerCopia);
     }
   };
   const importa = async () => {
@@ -173,8 +165,7 @@ export function CopiaIEsborrat() {
     try {
       const informe = await salut.importa(llegida.dades, mode);
       setLlegida(null);
-      informa('exit', informe.substituits ? `Fet: ara hi ha les dades de la còpia (${informe.afegits} registres).`
-        : `Fet: ${informe.afegits} registres nous; ${informe.duplicats} ja hi eren.`);
+      informa('exit', informe.substituits ? tx.fetSubstituits(informe.afegits) : tx.fetAfegits(informe.afegits, informe.duplicats));
     } catch (error) {
       informa('error', textError(error));
     } finally {
@@ -185,13 +176,13 @@ export function CopiaIEsborrat() {
   const alias = salut.persona.alias || 'el pare';
   const esborra = async () => {
     if (confirmacio.trim() !== alias) {
-      informa('error', `Per a esborrar-ho tot, escriu «${alias}» exactament.`);
+      informa('error', tx.escriuAliasExacte(alias));
       setEsborrant(false);
       return;
     }
     try {
       await salut.esborraTot();
-      informa('exit', 'Tot esborrat.');
+      informa('exit', tx.totEsborrat);
     } catch (error) {
       informa('error', textError(error));
     }
@@ -200,51 +191,51 @@ export function CopiaIEsborrat() {
   };
 
   return (
-    <MarcSalut titol="Còpia i esborrat">
+    <MarcSalut titol={tx.copiaIEsborrat}>
       <Pila gap={6}>
         <Pila gap={2}>
-          <p>{salut.persistent ? 'Les dades es guarden en este navegador, en este dispositiu. No s’envien enlloc.' : 'Ara mateix les dades només són en la memòria: es perdran en tancar la pestanya.'}</p>
-          {estat?.duradora === true ? <p>El navegador ha promés no esborrar-les per falta d’espai.</p> : null}
-          {estat?.duradora === false ? <p>El navegador les podria esborrar si li falta espai o si fa dies que no s’obri (Safari ho fa després de 7 dies).</p> : null}
-          {Number.isFinite(estat?.usat) ? <p>{`Ocupen uns ${megues(estat.usat)}.`}</p> : null}
-          <Boto varietat="secundari" onClick={demana}>Demana que no les esborre</Boto>
+          <p>{salut.persistent ? tx.dadesEnNavegador : tx.dadesEnMemoria}</p>
+          {estat?.duradora === true ? <p>{tx.navegadorPromes}</p> : null}
+          {estat?.duradora === false ? <p>{tx.safari7Dies}</p> : null}
+          {Number.isFinite(estat?.usat) ? <p>{tx.ocupenMegues(megues(estat.usat))}</p> : null}
+          <Boto varietat="secundari" onClick={demana}>{tx.demanaNoEsborre}</Boto>
         </Pila>
         <Pila gap={2}>
-          <p>{salut.ultimaCopia ? `L’última còpia és del ${dataCurta(dataLocalDe(salut.ultimaCopia))}.` : 'Encara no has fet cap còpia.'}</p>
-          <Boto varietat="primari" icona={Download} onClick={copia}>Descarrega una còpia</Boto>
+          <p>{salut.ultimaCopia ? tx.ultimaCopiaDel(dataCurta(dataLocalDe(salut.ultimaCopia))) : tx.encaraCapCopia}</p>
+          <Boto varietat="primari" icona={Download} onClick={copia}>{tx.descarregaUnaCopia}</Boto>
         </Pila>
-        <GrupCamps llegenda="Importar una còpia">
-          <Camp etiqueta="Fitxer de còpia (.json)">
+        <GrupCamps llegenda={tx.importarUnaCopia}>
+          <Camp etiqueta={tx.fitxerDeCopiaJson}>
             <CampText tipus="file" accept="application/json,.json" onChange={tria} disabled={salut.nomesLectura || important} />
           </Camp>
           {llegida ? (
             <>
-              <GrupOpcions llegenda="Com" valor={mode} onCanvi={setMode} opcions={[
-                { valor: MODES_IMPORTACIO[0], etiqueta: 'Afegir el que no hi ha', ajuda: 'El que ja hi ha es queda; no es duplica res.' },
-                { valor: MODES_IMPORTACIO[1], etiqueta: 'Substituir-ho tot', ajuda: 'El que hi ha ara s’esborra i es posa el de la còpia.' }
+              <GrupOpcions llegenda={tx.com} valor={mode} onCanvi={setMode} opcions={[
+                { valor: MODES_IMPORTACIO[0], etiqueta: tx.afegirElQueNoHiHa, ajuda: tx.ajudaAfegirCopia },
+                { valor: MODES_IMPORTACIO[1], etiqueta: tx.substituirHoTot, ajuda: tx.ajudaSubstituirCopia }
               ]} />
               <Boto varietat="primari" icona={Upload} carregant={important} disabled={salut.nomesLectura || (mode === 'substituir' && llegida.descartats > 0)}
-                onClick={() => mode === 'substituir' ? setConfirmaImportacio(true) : importa()}>Importa</Boto>
+                onClick={() => mode === 'substituir' ? setConfirmaImportacio(true) : importa()}>{tx.importa}</Boto>
               {mode === 'substituir' && llegida.descartats > 0
-                ? <p>Per a substituir-ho tot, la còpia ha de contindre registres vàlids.</p> : null}
+                ? <p>{tx.registresValidsPerSubstituir}</p> : null}
             </>
           ) : null}
         </GrupCamps>
-        <EnllacBoto a={ruta('copia', 'full')}>Importar un full de càlcul</EnllacBoto>
+        <EnllacBoto a={ruta('copia', 'full')}>{tx.importarFullCalcul}</EnllacBoto>
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
         <Pila gap={2}>
-          <p>Esborrar-ho tot no es pot desfer. Fes una còpia abans.</p>
-          <Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>Esborra-ho tot</Boto>
+          <p>{tx.esborrarNoEsPotDesfer}</p>
+          <Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>{tx.esborraHoTot}</Boto>
         </Pila>
       </Pila>
-      <DialegConfirmacio obert={confirmaImportacio} destructiu carregant={important} titol="Substituir el diari per la còpia"
-        descripcio="Es reemplaçaran els apunts, les jornades, els períodes, les valoracions i les dades de la persona."
-        etiquetaConfirma="Substituïx el diari" etiquetaCancela="Cancel·la"
+      <DialegConfirmacio obert={confirmaImportacio} destructiu carregant={important} titol={tx.substituirDiariTitol}
+        descripcio={tx.substituirDiariDesc}
+        etiquetaConfirma={tx.substituixElDiari} etiquetaCancela={tx.cancella}
         onTanca={() => setConfirmaImportacio(false)} onConfirma={importa} />
-      <DialegConfirmacio obert={esborrant} destructiu titol="Esborrar-ho tot" etiquetaConfirma="Esborra-ho tot" etiquetaCancela="No esborres res"
-        descripcio="S’esborraran tots els apunts, els dies, els períodes i els ajustos d’este dispositiu."
+      <DialegConfirmacio obert={esborrant} destructiu titol={tx.esborrarTotTitol} etiquetaConfirma={tx.esborraHoTot} etiquetaCancela={tx.noEsborresRes}
+        descripcio={tx.esborrarTotDesc}
         onTanca={() => { setConfirmacio(''); setEsborrant(false); }} onConfirma={esborra}>
-        <Camp etiqueta={`Per a confirmar-ho, escriu «${alias}»`}>
+        <Camp etiqueta={tx.perAConfirmarEscriu(alias)}>
           <CampText autoComplete="off" value={confirmacio} onChange={(event) => setConfirmacio(event.target.value)} />
         </Camp>
       </DialegConfirmacio>
@@ -254,12 +245,13 @@ export function CopiaIEsborrat() {
 
 export function AvisSalut() {
   const salut = useSalut();
+  const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
   const accepta = () => salut.acceptaAvis().then(() => navega(['diari'], { replace: true }), (e) => setError(textError(e)));
   return (
-    <MarcSalut titol="Avís i privacitat">
+    <MarcSalut titol={tx.avisIPrivacitat}>
       <Pila gap={6}>
         {AVIS_SALUT.map((apartat) => (
           <Pila key={apartat.titol} gap={2}>
@@ -270,9 +262,9 @@ export function AvisSalut() {
         <Enllac112 />
         {error ? <Alerta to="error">{error}</Alerta> : null}
         {salut.avisAcceptat ? (
-          <p>{`Avís acceptat el ${dataCurta(dataLocalDe(salut.avis.acceptatA))}.`}</p>
+          <p>{tx.avisAcceptatEl(dataCurta(dataLocalDe(salut.avis.acceptatA)))}</p>
         ) : (
-          <Boto varietat="primari" mida="gran" disabled={salut.nomesLectura} onClick={accepta}>Ho he entés</Boto>
+          <Boto varietat="primari" mida="gran" disabled={salut.nomesLectura} onClick={accepta}>{tx.hoHeEntes}</Boto>
         )}
       </Pila>
     </MarcSalut>

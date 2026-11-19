@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   ambEnquadrament, conservaEnquadrament, enquadramentNet, llevaEnquadrament, mateixEnquadrament, separaEnquadrament,
+  ratioDelMarc, posicioEnCaixa, retallCssDelZoom,
 } from './enquadramentUrl.js';
 
 /* P0-80 / IDEA-211 (llei del Mestre, 09-11-2026: ENQUADRAMENT NO DESTRUCTIU) ·
@@ -9,6 +10,31 @@ import {
 
 const REF = 'sdp-media://mitjans/poble/uid/avatars/foto.webp';
 const MARC = { format: '16:9', zoom: 1.5, cx: 0.4, cy: 0.6 };
+
+test('R32.11: JSONB objects cannot trigger primitive coercion while calculating a crop', () => {
+  const hostile = { toString: 0, valueOf: 0 };
+  expect(ratioDelMarc(hostile, 1)).toBeNull();
+  expect(posicioEnCaixa({ ...MARC, format: hostile }, 1)).toBeNull();
+  expect(retallCssDelZoom({ zoom: hostile, x: 50, y: 50 })).toBeNull();
+  expect(posicioEnCaixa(MARC, 1, 1, { alineacio: { x: hostile, y: hostile } })).toEqual(posicioEnCaixa(MARC, 1, 1));
+});
+
+test.each([null, '', false, 0, 0n, '0'])('R32.11: painting preserves the previous Number semantics for %s', (value) => {
+  expect(posicioEnCaixa(MARC, 1, 1, { alineacio: { x: value, y: value } }))
+    .toEqual(posicioEnCaixa(MARC, 1, 1, { alineacio: { x: 0, y: 0 } }));
+  expect(retallCssDelZoom({ zoom: 2, x: value, y: value })).toBe('inset(0% 50% 50% 0%)');
+});
+
+test('R32.11: painting rejects coercible objects, functions and symbols before coercion', () => {
+  for (const value of [{ toString: 0, valueOf: 0 }, { valueOf: () => 0 }, () => 0, Symbol('crop')]) {
+    expect(retallCssDelZoom({ zoom: value, x: 50, y: 50 })).toBeNull();
+    expect(retallCssDelZoom({ zoom: 2, x: value, y: 50 })).toBeNull();
+    expect(posicioEnCaixa(MARC, 1, 1, { alineacio: { x: value, y: value } })).toEqual(posicioEnCaixa(MARC, 1, 1));
+  }
+  expect(posicioEnCaixa(MARC, 1, 1, { alineacio: { x: undefined, y: undefined } })).toEqual(posicioEnCaixa(MARC, 1, 1));
+  expect(retallCssDelZoom({ zoom: 2, x: undefined, y: undefined })).toBeNull();
+  expect(retallCssDelZoom({ zoom: 2n, x: true, y: '1' })).toBe('inset(0.5% 49.5% 49.5% 0.5%)');
+});
 
 describe('el fragment que es desa', () => {
   test('la forma canònica: format, zoom, cx i cy, en eixe ordre', () => {

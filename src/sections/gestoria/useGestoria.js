@@ -45,7 +45,7 @@ import { SEVERITATS, auditaTrimestre } from './nucli/auditoria.js';
 import { formatImport, parseImport } from './nucli/diners.js';
 import { empremtaProposta, generaEntregables } from './nucli/entregables.js';
 import { inflateDisponible } from './nucli/inflate.js';
-import { CODIS_INCIDENCIA, MONEDA_DEL_FULL, crearFactura } from './nucli/model.js';
+import { CODIS_INCIDENCIA, MONEDA_DEL_FULL, crearFactura, normalitzaNom } from './nucli/model.js';
 import { ErrorTractor, LIMITS_TRACTOR, executaCreuamentCorreus, executaTractorFactures } from './nucli/tractor.js';
 import { TRACTOR_CORREUS, TRACTOR_FACTURES } from './tractors.js';
 
@@ -191,6 +191,11 @@ const pes = (severitat) => {
   return i < 0 ? SEVERITATS.length : i;
 };
 
+/* Comparacions d'identitat: mai convertir un nom rebutjat en una clau buida. */
+function exigeixNomsProposta(proposta) {
+  for (const factura of [...proposta.ingressos, ...proposta.despeses]) normalitzaNom(factura.contrapart);
+}
+
 /**
  * Les incidències de la proposta d'ara: les recalculades amb auditaTrimestre
  * (factures, proveïdors i correu) i les que només ixen dels documents de la
@@ -202,7 +207,10 @@ export function incidenciesDe({ analisi, proposta, correu } = {}) {
   if (!analisi || !proposta) return [];
   const casables = rebutsCasables(analisi.documents);
   const rutesCasables = new Set(casables.map((d) => d.ruta));
-  const auditoria = auditaTrimestre({
+  let auditoria;
+  try {
+    exigeixNomsProposta(proposta);
+    auditoria = auditaTrimestre({
     any: proposta.any,
     t: proposta.t,
     factures: [...proposta.ingressos, ...proposta.despeses],
@@ -219,7 +227,15 @@ export function incidenciesDe({ analisi, proposta, correu } = {}) {
     avui: analisi.avui,
     duplicats: [],
     historial: analisi.historial ?? null
-  });
+    });
+  } catch (error) {
+    if (error?.code !== 'UNICODE_MARK_LIMIT') throw error;
+    // Un llegat invàlid no equival a una auditoria sense incidències.
+    return [...analisi.incidencies.filter((i) => i.codi !== 'UNICODE_MARK_LIMIT'), {
+      codi: 'UNICODE_MARK_LIMIT', severitat: 'alta',
+      missatge: 'No s’ha pogut auditar la proposta: un text supera el pressupost de marques Unicode. Conserva els originals i revisa els noms abans d’aprovar-la.'
+    }];
+  }
   /* La cobertura del correu la diu el creuament, que ha vist tots els missatges i no només els de factura. */
   const recalculades = auditoria.incidencies.filter((i) => !(correu && i.codi === 'CORREU_PARCIAL'));
   const delCorreu = correu ? correu.incidencies.filter((i) => i.codi === 'CORREU_PARCIAL') : [];
@@ -318,7 +334,15 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
 
   /* Un canvi de la proposta: versió nova i cap aprovació ni fitxer de la versió anterior. */
   const canviaProposta = useCallback((proposta, extra = {}) => {
+    try {
+      exigeixNomsProposta(proposta);
+    } catch (error) {
+      if (error?.code !== 'UNICODE_MARK_LIMIT') throw error;
+      memoria.canvia({ error: { ...errorDe('proposta', error, 'El nom supera el pressupost Unicode.'), codi: error.code } });
+      return false;
+    }
     memoria.canvia((e) => ({ ...SENSE_APROVACIO, proposta, versio: e.versio + 1, error: null, ...extra }));
+    return true;
   }, [memoria]);
 
   const usaFont = useCallback((font, { nom } = {}) => {
@@ -468,8 +492,7 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
     }
     const extra = avis ? { avis } : {};
     if (camp === 'total' && enAltraMoneda(vella)) extra.totalsEditats = { ...totalsEditats, [id]: true };
-    canviaProposta({ ...proposta, ingressos, despeses }, extra);
-    return true;
+    return canviaProposta({ ...proposta, ingressos, despeses }, extra);
   }, [memoria, canviaProposta]);
 
   /* G3T-15: el total en euros del càrrec (l'import que diu el banc) d'una factura en una altra moneda. La base i
@@ -603,6 +626,11 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
       return null;
     }
     const altes = incidenciesDe(inicial).filter((i) => i.severitat === 'alta');
+    if (altes.some((i) => i.codi === 'UNICODE_MARK_LIMIT')) {
+      memoria.canvia({ error: { ...falla('proposta', 'No es pot aprovar una proposta que no s’ha pogut auditar.',
+        'Revisa els noms amb massa marques Unicode; els originals es conserven.'), codi: 'UNICODE_MARK_LIMIT' } });
+      return null;
+    }
     if (altes.length > 0 && acceptaIncidencies !== true) {
       memoria.canvia({ error: falla('proposta', `Hi ha ${plural(altes.length, 'una incidència', 'incidències')} d’alta severitat.`,
         'Revisa-les i, si vols generar el full igualment, marca «Genera-la igualment».') });
@@ -641,6 +669,8 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
     const { obteAprovacio: obte, subtle: s } = deps.current;
     memoria.canvia({ ocupat: 'generant', error: null, avis: '' });
     try {
+      // També veta una aprovació llegada anterior al pressupost, abans d'IO.
+      exigeixNomsProposta(proposta);
       await exigeixVigent(obte, TRACTOR_FACTURES, s);
       const empremta = await empremtaProposta(proposta, s);
       if (meu !== torn.current) return false;

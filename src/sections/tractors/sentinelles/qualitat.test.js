@@ -74,7 +74,7 @@ describe('Pedra Seca al panell', () => {
   });
 
   test('cada classe ja té regla al bloc dels tractors o al full canònic: cap CSS nou', () => {
-    const css = ['modules.css', 'components.css', 'layout.css', 'base.css', 'utilities.css'].map((f) => llig(`src/css/${f}`)).join('\n');
+    const css = ['modules.css', 'diferit-tractors.css', 'components.css', 'layout.css', 'base.css', 'utilities.css'].map((f) => llig(`src/css/${f}`)).join('\n');
     const classes = [...new Set([...panell.matchAll(/className="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)))];
     expect(classes.length).toBeGreaterThan(8);
     expect(classes.filter((c) => !c.startsWith('sdp-tractors-panell'))).toEqual([]);
@@ -113,7 +113,7 @@ describe('higiene i Baseline 2022 del codi de producció', () => {
         if (backend.test(especificador)) return true;
         if (!especificador.startsWith('.')) return !['react', 'lucide-react'].includes(especificador);
         const desti = path.posix.normalize(path.posix.join(path.posix.dirname(fitxer), especificador.split('?')[0]));
-        if (desti === 'src/app/contexts/RouterContext') return false;
+        if (desti === 'src/app/contexts/RouterContext' || desti === 'src/config/fullDiferit.js' || desti === 'src/css/diferit-tractors.css') return false;
         return !(desti.startsWith('src/sections/tractors/') || desti.startsWith('src/sections/gestoria/') || desti.startsWith('src/components/PedraSeca/'));
       });
     expect(fora).toEqual([]);

@@ -3,8 +3,8 @@ import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.j
 
 export default function EspecimenMenu() {
   return (
-    <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/Dropdown.jsx"
-        descripcio="Menú contextual. DEUTE: minWidth arriba com a estil en línia i no gestiona focus per fletxes; pendent de migrar a <dialog>       o popover."
+    <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/molecules/Dropdown.jsx"
+        descripcio="Menú contextual amb navegació per fletxes (ArrowDown/ArrowUp/Home/End), tancament LIFO amb Escape (useCapaEnrere), retorn de focus al disparador i amplada per variable CSS sense estils en línia."
         fes={['Accions secundàries d’un element.']} noFacis={['Navegació principal dins d’un menú flotant.']}>
         <Dropdown trigger={<button type="button" className="sdp-boto sdp-boto--secundari">Opcions de la nota</button>}>
           <DropdownItem>Fer pública</DropdownItem>

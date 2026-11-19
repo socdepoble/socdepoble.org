@@ -134,9 +134,12 @@ test('taxonomia: AgendaMur.jsx i AgendaSection.jsx no tenen cap importador; /cal
   assert.doesNotMatch(app, /AgendaSection/);
 });
 
-test('taxonomia: la pestanya del Mur diu «Calendari» i conserva el valor intern', () => {
+/* Ordre del Mestre del 261118 (MarIA, arbre viu integrat a v1.2.9) · La pestanya del Mur es diu «Esdeveniments»,
+   traduïda (section.mur.filter.events), per diferenciar-la del Calendari complet de /calendari; el valor intern
+   continua sent 'events'. */
+test('taxonomia: la pestanya del Mur diu «Esdeveniments» i conserva el valor intern', () => {
   const mur = llig('src/sections/mur/MurSection.jsx');
-  assert.match(mur, /\{ valor: 'events', text: 'Calendari' \}/);
+  assert.match(mur, /\{ valor: 'events', text: t\('section\.mur\.filter\.events', 'Esdeveniments'\) \}/);
   assert.doesNotMatch(mur, /text: 'Agenda'/);
   // Onada 6 (prompt 261009_0230, punt 1) · un sol calendari: la pestanya munta el de /calendari.
   assert.match(mur, /<CalendariDelMur actes=\{actesDelCalendari\} \/>/);
@@ -151,6 +154,7 @@ test('taxonomia: un sol calendari; CalendariMur.jsx no té cap importador', () =
     .filter((f) => !f.endsWith('/CalendariMur.jsx') && !f.endsWith('/CalendariMur.test.jsx'))
     .filter((f) => /['"][^'"]*\/CalendariMur(\.jsx)?['"]/.test(llig(f)));
   assert.deepEqual(importadors, []);
-  assert.match(llig('src/sections/calendari/CalendariSection.jsx'), /<CalendariDelPoble /);
+  /* v1.2.9 · CalendariSection passa les props en diverses línies: l'element pot anar seguit d'un salt. */
+  assert.match(llig('src/sections/calendari/CalendariSection.jsx'), /<CalendariDelPoble\s/);
   assert.match(llig('src/sections/mur/CalendariDelMur.jsx'), /<CalendariDelPoble /);
 });

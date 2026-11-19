@@ -24,6 +24,9 @@ import { formatData } from '../nucli/dates.js';
 import { Xifra } from '../tauler/Tauler.jsx';
 import { CAMPS_SUPOSITS } from './nucli/operacions.js';
 import { TEXT_COBERTURA } from './nucli/targetesHistoric.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** Una xifra d'import en euros per a Xifra, o null si no se sap. */
 export const importDe = (valor) => (Number.isSafeInteger(valor) ? { tipus: 'import', valor, moneda: 'EUR' } : null);
@@ -32,16 +35,16 @@ export const recompteDe = (valor) => (Number.isSafeInteger(valor) ? { tipus: 're
 
 /** Un percentatge, amagat amb l'ull tancat i «Sense dades» si no se sap. */
 export function Percentatge({ valor, visible = false }) {
-  if (typeof valor !== 'number' || !Number.isFinite(valor)) return <span>Sense dades</span>;
+  if (typeof valor !== 'number' || !Number.isFinite(valor)) return <span ref={adoptaEstilsDiferits}>Sense dades</span>;
   if (!visible) {
     return (
-      <span className="sdp-gestoria-tauler__amagat">
+      <span ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__amagat">
         <EyeOff size={20} aria-hidden="true" focusable="false" />
         <span>Xifra amagada</span>
       </span>
     );
   }
-  return <span>{`${String(valor).replace('.', ',')} %`}</span>;
+  return <span ref={adoptaEstilsDiferits}>{`${String(valor).replace('.', ',')} %`}</span>;
 }
 
 /* Un valor de paràmetre, en text per a la pantalla. */
@@ -67,7 +70,7 @@ function ImpostosDeLAny({ any, visible }) {
   const avisos = unics([...any.avisos, ...any.trimestres.flatMap((tr) => [...tr.iva.avisos, ...tr.irpf.avisos])]);
   const r = any.renda;
   return (
-    <div className="sdp-gestoria-historic__any">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__any">
       <h3 className="sdp-gestoria-historic__subtitol">{`Els impostos de ${any.any}`}</h3>
       <Taula titol={`Estimació trimestral de ${any.any}`} densa>
         <thead>
@@ -78,7 +81,7 @@ function ImpostosDeLAny({ any, visible }) {
         </thead>
         <tbody>
           {any.trimestres.map((tr) => (
-            <tr key={tr.t}>
+            <tr ref={adoptaEstilsDiferits} key={tr.t}>
               <th scope="row">{`${tr.t}T ${any.any}`}</th>
               <td>{TEXT_COBERTURA[tr.cobertura] ?? '—'}</td>
               <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(tr.iva.aIngressar)} visible={visible} /></td>
@@ -108,7 +111,7 @@ function ImpostosDeLAny({ any, visible }) {
             ['Quota íntegra estatal', r.quotaEstatal], ['Quota íntegra autonòmica', r.quotaAutonomica], ['Retencions de les factures', r.retencions],
             ['Pagaments del 130', r.pagaments130], ['Resultat (positiu, a pagar; negatiu, a tornar)', r.resultat]
           ].map(([concepte, valor]) => (
-            <tr key={concepte}>
+            <tr ref={adoptaEstilsDiferits} key={concepte}>
               <th scope="row">{concepte}</th>
               <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(valor)} visible={visible} /></td>
             </tr>
@@ -120,8 +123,8 @@ function ImpostosDeLAny({ any, visible }) {
         </tbody>
       </Taula>
       {avisos.length ? (
-        <ul className="sdp-gestoria-historic__avisos" aria-label={`Avisos de ${any.any}`}>
-          {avisos.map((a) => <li key={a.codi}>{a.missatge}</li>)}
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos" aria-label={`Avisos de ${any.any}`}>
+          {avisos.map((a) => <li ref={adoptaEstilsDiferits} key={a.codi}>{a.missatge}</li>)}
         </ul>
       ) : null}
     </div>
@@ -138,7 +141,7 @@ function Escenaris({ h, visible }) {
     setErrors((previ) => ({ ...previ, [clau]: bo || event.target.value === '' ? '' : 'Escriu un percentatge entre -100 i 1000.' }));
   };
   return (
-    <div className="sdp-gestoria-historic__any">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__any">
       <h3 className="sdp-gestoria-historic__subtitol">Escenaris</h3>
       <div className="sdp-gestoria-historic__graella">
         <Camp etiqueta="Facturació (% de canvi)" ajuda="10 vol dir facturar un 10 % més; -20, un 20 % menys." error={errors.facturacio || undefined}>
@@ -150,7 +153,7 @@ function Escenaris({ h, visible }) {
       </div>
       {h.comparacio ? (
         <Taula titol="El que canvia amb l’escenari" densa>
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr>
               <th scope="col">Any</th><th scope="col">IVA (303)</th><th scope="col">IRPF (130)</th><th scope="col">Renda</th>
               <th scope="col">Impostos en total</th><th scope="col">Rendiment</th>
@@ -158,7 +161,7 @@ function Escenaris({ h, visible }) {
           </thead>
           <tbody>
             {h.comparacio.map((c) => (
-              <tr key={c.any}>
+              <tr ref={adoptaEstilsDiferits} key={c.any}>
                 <th scope="row">{c.any}</th>
                 <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.iva)} visible={visible} /></td>
                 <td className="sdp-gestoria-historic__xifra"><Xifra xifra={importDe(c.irpf130)} visible={visible} /></td>
@@ -169,7 +172,7 @@ function Escenaris({ h, visible }) {
             ))}
           </tbody>
         </Taula>
-      ) : <p className="sdp-gestoria-historic__nota">Escriu un canvi per a veure què passaria amb els impostos.</p>}
+      ) : <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">Escriu un canvi per a veure què passaria amb els impostos.</p>}
     </div>
   );
 }
@@ -246,9 +249,9 @@ function EditorTrams({ h, any, clau, nom, unitat, trams }) {
   };
   const etiquetaValor = escala ? 'tipus (%)' : 'minoració (€)';
   return (
-    <form className="sdp-gestoria-historic__trams" onSubmit={aplica} aria-label={`Trams: ${nom} de ${any}`}>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__trams" onSubmit={aplica} aria-label={`Trams: ${nom} de ${any}`}>
       {files.map((f, i) => (
-        <div className="sdp-gestoria-historic__tram" key={f.id}>
+        <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__tram" key={f.id}>
           <Camp etiqueta={`Tram ${i + 1}: fins a (€)`} ajuda={escala && i === files.length - 1 ? 'Buit: la resta de la base.' : undefined}>
             <CampText inputMode="decimal" value={f.fins} onChange={canvia(i, 'fins')} />
           </Camp>
@@ -259,7 +262,7 @@ function EditorTrams({ h, any, clau, nom, unitat, trams }) {
             aria-label={`Lleva el tram ${i + 1}`}>Lleva</Boto>
         </div>
       ))}
-      {error ? <p className="sdp-camp__error" role="alert">{error}</p> : null}
+      {error ? <p ref={adoptaEstilsDiferits} className="sdp-camp__error" role="alert">{error}</p> : null}
       <p role="status" className="sdp-gestoria-historic__nota">{fet}</p>
       <div className="sdp-gestoria-historic__accions">
         <Boto varietat="secundari" icona={Plus} onClick={afig}>Afig un tram</Boto>
@@ -275,7 +278,7 @@ function ParametresDeLAny({ h, any }) {
   const [versio, setVersio] = useState(0);
   return (
     <GrupCamps llegenda={`Paràmetres fiscals de ${any}${p.origen === 'propis' ? ' (canviats per tu)' : ''}`}>
-      <p className="sdp-gestoria-historic__nota">{`${ETIQUETA_NO_VERIFICAT}. Cada valor diu d’on ix: comprova’l amb la gestoria.`}</p>
+      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">{`${ETIQUETA_NO_VERIFICAT}. Cada valor diu d’on ix: comprova’l amb la gestoria.`}</p>
       <div className="sdp-gestoria-historic__graella" key={versio}>
         {CAMPS_PARAMETRES.map(({ clau, nom, unitat, font }) => {
           if (unitat === 'boolea') {
@@ -296,7 +299,7 @@ function ParametresDeLAny({ h, any }) {
             );
           }
           return (
-            <div key={clau} className="sdp-gestoria-historic__escala">
+            <div ref={adoptaEstilsDiferits} key={clau} className="sdp-gestoria-historic__escala">
               <p className="sdp-gestoria-historic__escala-nom">{nom}</p>
               <p>{textValor(p[clau], unitat)}</p>
               <p className="sdp-gestoria-historic__nota">{font}</p>
@@ -324,7 +327,7 @@ export function PanellSimulacio({ h, visible }) {
   const id = useId();
   const banc = h.banc;
   return (
-    <section className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
       <h2 id={id} className="sdp-gestoria-historic__titol">Simulacions d’impostos</h2>
       <Alerta to="avis" titol={ETIQUETA_NO_VERIFICAT} viva={false}>
         Calculat amb els moviments del banc i les suposicions de baix: cada despesa necessita la seua factura per a deduir-se, les entrades
@@ -334,7 +337,7 @@ export function PanellSimulacio({ h, visible }) {
       {h.errorCalcul ? <Alerta to="error" titol="No s’han pogut calcular els impostos">{h.errorCalcul}</Alerta> : null}
       {banc && (banc.senseTractament || banc.noDeduibles) ? (
         /* Els recomptes també són xifres de la persona: amb l'ull tancat, amagats. */
-        <p className="sdp-gestoria-historic__nota">
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">
           {'Despeses sense proveïdor conegut, que van sense IVA deduïble: '}
           <Xifra xifra={recompteDe(banc.senseTractament)} visible={visible} />
           {'. Eixides que no compten com a despesa (transferències, altres o per revisar): '}

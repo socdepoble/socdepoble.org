@@ -59,6 +59,7 @@ class ObservadorAmbNotificacioInicial {
   }
 
   observe(node) {
+    this.node = node;
     setTimeout(() => { if (this.viu) this.callback([{ isIntersecting: true, target: node }], this); }, 0);
   }
 
@@ -137,6 +138,12 @@ afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 async function conversaAmbHistorialQueFalla(ambEspera = true) {
   const vista = render(arbre(false, ambEspera));
   await vi.waitFor(() => expect(value.status).toBe('ready'));
+  /* La primera pàgina pot esperar el tros rural fred (fins a 400 ms).
+     L'acreditem amb temps real abans de muntar Conversa i el seu observador:
+     el rellotge de B09 mesura només els reintents d'historial. */
+  act(() => value.obriFil('fil-A'));
+  await vi.waitFor(() => expect(value.filCarregat('fil-A')).toBe(true));
+  expect(value.getThreadMessages('fil-A')).toHaveLength(LIMIT_PAGINA);
   vi.useFakeTimers();
   vi.stubGlobal('IntersectionObserver', ObservadorAmbNotificacioInicial);
   vista.rerender(arbre(true, ambEspera));
@@ -161,6 +168,19 @@ describe('[DEFECTE] control · sense esperaAntics, el fals reproduïx el bucle d
 });
 
 describe('B09 · l’historial cap arrere que falla no es demana en bucle', () => {
+  it('una notificació ja encolada d’un observador retirat no salta l’espera', async () => {
+    await conversaAmbHistorialQueFalla();
+    expect(antics()).toBe(1);
+    const retirat = observadors.find((o) => !o.viu && o.node?.classList.contains('sdp-xat-sentinella'));
+    expect(retirat).toBeDefined();
+    /* disconnect() no transforma en actual una notificació del lot anterior.
+       La fem arribar directament per provar la guarda del consumidor. */
+    await act(async () => { retirat.callback([{ isIntersecting: true, target: retirat.node }], retirat); });
+    await assenta();
+    expect(antics()).toBe(1);
+    expect(value.esperaAntics('fil-A')).toMatchObject({ fallades: 1, manual: false });
+  });
+
   it('una petició, cap dins de l’espera, una als 2 s i una als 5 s; a la tercera fallada ja no ho torna a provar sol', async () => {
     await conversaAmbHistorialQueFalla();
     /* La notificació inicial del sentinella: la primera petició, i falla. */

@@ -164,7 +164,7 @@ function useTraduiblesDeLesEntrades(entrades) {
 
 export function CalendariDelPoble({
   estat, navega, canviaVista, triaDia, obriDia, entrades, avui, senseData = 0,
-  avisos = null, avisAgenda = null, accions = null, LinkComponent = Link
+  avisos = null, abansNavegacio = null, avisAgenda = null, accions = null, LinkComponent = Link
 }) {
   const { vista, diaTriat, cursor, dilluns } = estat;
   const rang = useMemo(() => rangDeLaVista(estat, avui), [estat, avui]);
@@ -197,6 +197,7 @@ export function CalendariDelPoble({
   return (
     <>
       {avisos}
+      {abansNavegacio}
       {/* Onada 6 (prompt 261009_0230) · El títol del període, a la mateixa fila
           que «Hui ‹ ›» i el selector, com a Google Calendar: és l'h3 de
           sempre (abans, damunt de la barra), dins de la navegació. */}

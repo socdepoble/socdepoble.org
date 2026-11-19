@@ -180,12 +180,14 @@ export function TargetesArticles({
 function FitxaArticle({ article, textos, accio, onTorna, refTitol, children }) {
   const boina = boinaDe(article);
   const estat = estatDe(article);
+  const dataReal = article.date ?? article.data ?? article.dataCaducitat ?? article.caducitat;
   return (
     <PaginaApp
       title={article.nom}
       subtitle={textDe(article.subtitol)}
       lead={entradetaDe(article)}
       author={{ nom: boina.nom, href: boina.href, avatar: boina.avatar, poble: boina.poble }}
+      date={textDe(dataReal)}
       labels={[article.insignia, estat === 'normal' ? null : textos[estat]].filter(ambText)}
       heroImage={article.imatge || undefined}
       accioPrincipal={accio}

@@ -97,6 +97,7 @@ import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES_NOTICIES } from './rutes.js';
 import { useFontsPersonals } from './useFontsPersonals.js';
 import { useLector } from './useLector.js';
 import { useNoticies } from './useNoticies.js';
+import { textosLector } from './i18nLector.js';
 import { ContextLector } from './vistes/context.js';
 import { NOTICIES } from './vistes/navegacio.js';
 import { EspaiNoticies } from './vistes/Noticies.jsx';
@@ -223,7 +224,8 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
     Promise.resolve().then(() => servei.estat()).then((cru) => posa(estatNet(cru)), () => posa(SERVEI_ABSENT));
     return () => { viu = false; };
   }, [delServei, servei, rondaAcabada, enLinia]);
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
+  const tx = textosLector(idioma);
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const deNoticies = useRutaApp(RUTES_NOTICIES);
@@ -258,10 +260,10 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
   /* El fus de qui llig, en minuts respecte d'UTC (+120 a l'estiu de València). */
   const desfas = -new Date(ara).getTimezoneOffset();
   const valor = useMemo(() => (lector.estat ? {
-    lector, personals, noticies, font, ara, desfas, ruta, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont
-  } : null), [lector, personals, noticies, font, ara, desfas, ruta, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont]);
+    lector, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont
+  } : null), [lector, personals, noticies, font, ara, desfas, ruta, idioma, enLinia, llegixPersonals, delServei, estatServei, mitjans, afigFont]);
 
-  if (!valor) return <Carregant etiqueta="Obrint el lector…" />;
+  if (!valor) return <Carregant etiqueta={tx.obrintLector} />;
   /* Ordre del Mestre (261024, 15:05) · «El Lector ha de ser exclusivament un UniversalWorkspace
      pur i fluid de tres columnes»: la gestió de fonts (/fonts) ja no és cap pàgina, viu a l'arbre
      (vistes/GestioFonts.jsx), i la ClosaAplicacio que la portava se'n va. Un camí de notícies
@@ -270,32 +272,42 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
     <ContextLector.Provider value={valor}>
       {deNoticies
         ? <EspaiNoticies params={deNoticies.params} totes={deNoticies.ruta.path === CAMI_TOTES} />
-        : <PaginaQueNoExistix ruta={ruta} />}
+        : <PaginaQueNoExistix ruta={ruta} tx={tx} />}
     </ContextLector.Provider>
   );
 }
 
 /* La pàgina que no existix: el text de l'avís de la plataforma (AvisApp, PAGINA_INEXISTENT) i el
    camí a les notícies. */
-function PaginaQueNoExistix({ ruta }) {
+function PaginaQueNoExistix({ ruta, tx }) {
   return (
-    <EstatBuit titol="Esta pàgina de l’app no existix"
-      accio={<Link className="sdp-boto sdp-boto--secundari" to={ruta(NOTICIES)}>Ves a les notícies</Link>}>
-      Pot ser que l’enllaç siga antic o estiga mal copiat.
+    <EstatBuit titol={tx.paginaInexistentTitol}
+      accio={<Link className="sdp-boto sdp-boto--secundari" to={ruta(NOTICIES)}>{tx.vesALesNoticies}</Link>}>
+      {tx.paginaInexistentText}
     </EstatBuit>
   );
+}
+
+function useIdiomaLectorSegur() {
+  try {
+    return useApp()?.idioma || 'ca';
+  } catch {
+    return 'ca';
+  }
 }
 
 export default function AppLector({ magatzem = null, font: fontPropia = null, ara: araPropi = null }) {
   const rellotge = typeof araPropi === 'function' ? araPropi : ARA_DEL_NAVEGADOR;
   const servei = useServeiNoticies();
+  const idioma = useIdiomaLectorSegur();
+  const tx = textosLector(idioma);
   const [font] = useState(() => fontPropia || fontDeLaLlavor(rellotge) || null);
   /* El servei de la plataforma, una sola vegada i només si no hi ha cap altre port. */
   const [delServei] = useState(() => (font ? null : servei));
   if (!font && !delServei) {
     return (
-      <EstatBuit titol="Encara no hi ha cap font connectada">
-        Quan el poble connecte les seues fonts de notícies, les llegiràs ací.
+      <EstatBuit titol={tx.senseFontConnectadaTitol}>
+        {tx.senseFontConnectadaText}
       </EstatBuit>
     );
   }

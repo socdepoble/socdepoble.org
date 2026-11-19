@@ -17,12 +17,8 @@ import {
 import { FULLA_CSV, exporta } from '../nucli/exportacio.js';
 import { fullDiari } from '../nucli/full.js';
 import { useSalut } from '../useSalut.jsx';
+import { useTextosSalut } from './comunes.jsx';
 import { descarregaFitxer } from './descarrega.js';
-
-const FORMATS = Object.freeze([
-  { valor: 'xlsx', etiqueta: 'Full de càlcul (XLSX)', ajuda: 'Totes les fulles: resum, diari, conducta, medicació i diccionari.' },
-  { valor: 'csv', etiqueta: 'Text separat (CSV)', ajuda: 'Només la fulla del diari.' }
-]);
 
 function potCompartirFitxers() {
   return typeof navigator !== 'undefined' && typeof navigator.canShare === 'function' && typeof navigator.share === 'function'
@@ -31,6 +27,7 @@ function potCompartirFitxers() {
 
 export function DialegExportacio({ obert, onTanca, des, dies }) {
   const salut = useSalut();
+  const tx = useTextosSalut();
   const [format, setFormat] = useState('xlsx');
   const [ambNom, setAmbNom] = useState(false);
   const [nom, setNom] = useState('');
@@ -49,14 +46,14 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
   const fitxer = () => exporta({ model, format, des, dies });
 
   const descarrega = () => {
-    setMissatge(descarregaFitxer(fitxer()) ? 'Fet. Busca el fitxer a les descàrregues.' : 'Este navegador no pot descarregar fitxers.');
+    setMissatge(descarregaFitxer(fitxer()) ? tx.fetBuscaDescarregues : tx.navegadorNoDescarrega);
   };
 
   const compartix = async () => {
     const { nom: nomFitxer, tipus, dades } = fitxer();
     const arxiu = new File([dades], nomFitxer, { type: tipus });
     if (!navigator.canShare({ files: [arxiu] })) {
-      setMissatge('Este sistema no pot compartir este fitxer. Descarrega’l i envia’l tu.');
+      setMissatge(tx.sistemaNoCompartix);
       return;
     }
     try {
@@ -68,26 +65,26 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
 
   const fulles = model ? model.fulles.filter((fulla) => format === 'xlsx' || fulla.nom === FULLA_CSV) : [];
   return (
-    <Dialeg obert={obert} onTanca={tanca} titol="Exportar el full per al metge" mida="g"
-      descripcio="El fitxer es fa en este dispositiu. Quan l’envies, ja no és només teu: pensa a qui l’envies i per on."
+    <Dialeg obert={obert} onTanca={tanca} titol={tx.exportarFullTitol} mida="g"
+      descripcio={tx.exportarFullDesc}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => tanca('boto')}>Tanca</Boto>
-          {potCompartirFitxers() ? <Boto varietat="secundari" icona={Share2} onClick={compartix}>Compartix</Boto> : null}
-          <Boto varietat="primari" icona={Download} onClick={descarrega}>Descarrega</Boto>
+          <Boto varietat="secundari" onClick={() => tanca('boto')}>{tx.tanca}</Boto>
+          {potCompartirFitxers() ? <Boto varietat="secundari" icona={Share2} onClick={compartix}>{tx.compartix}</Boto> : null}
+          <Boto varietat="primari" icona={Download} onClick={descarrega}>{tx.descarrega}</Boto>
         </>
       )}>
       <Pila gap={4}>
-        <GrupOpcions llegenda="Format" opcions={FORMATS} valor={format} onCanvi={setFormat} />
-        <Casella etiqueta="Afig un nom a la capçalera del full" ajuda="S’escriu ara i no es guarda enlloc. El nom del fitxer no el porta mai."
+        <GrupOpcions llegenda={tx.format} opcions={tx.formatsExportacio} valor={format} onCanvi={setFormat} />
+        <Casella etiqueta={tx.afigNomCapcalera} ajuda={tx.ajudaNomCapcalera}
           checked={ambNom} onChange={(event) => setAmbNom(event.target.checked)} />
         {ambNom ? (
-          <Camp etiqueta="Nom per a la capçalera">
+          <Camp etiqueta={tx.nomPerACapcalera}>
             <CampText maxLength={60} autoComplete="off" value={nom} onChange={(event) => setNom(event.target.value)} />
           </Camp>
         ) : null}
         <Pila gap={2}>
-          <p>El fitxer inclou:</p>
+          <p>{tx.fitxerInclou}</p>
           <ul>
             {fulles.map((fulla) => <li key={fulla.nom}>{`${fulla.nom}: ${fulla.columnes.map((c) => c.titol).join(', ')}.`}</li>)}
           </ul>

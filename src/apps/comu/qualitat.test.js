@@ -77,7 +77,8 @@ const JSX_PRODUCCIO = [...JSX_PS, ...COMU_PRODUCCIO.filter((f) => f.endsWith('.j
 
 const senseComentaris = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const classesDelCss = (css) => new Set([...senseComentaris(css).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const FULL = blocDeModuls('catalegColleccio');
+void blocDeModuls;
+const FULL = llig('src/css/diferit-cataleg-colleccio.css');
 /* Els fulls canònics sense el bloc mateix: src/css (amb el bloc pecesApps de
    modules.css) i el de la closca. Sense el bloc, «cap CSS mort» continua
    mirant les classes que només definix l'esquelet. */

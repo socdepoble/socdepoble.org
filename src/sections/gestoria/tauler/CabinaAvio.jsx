@@ -50,6 +50,9 @@ import { formatData, nomMes } from '../nucli/dates.js';
 import { formatImport } from '../nucli/diners.js';
 import { MONEDA_TAULER } from './nucli/resumTauler.js';
 import { AvisosComptes, Xifra, XifraDeFila } from './Tauler.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 const enter = (x) => Number.isSafeInteger(x);
 const IMPORT = (valor) => (enter(valor) ? { tipus: 'import', valor, moneda: MONEDA_TAULER } : null);
@@ -61,7 +64,7 @@ function Instrument({ instrument, visible, onObri }) {
   const amagat = !visible && (Boolean(instrument.xifra) || instrument.privat);
   const ambValor = amagat || Boolean(instrument.xifra);
   return (
-    <div className="sdp-gestoria-cabina__instrument">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__instrument">
       <dt>
         <button type="button" className="sdp-gestoria-comprimida__obri" onClick={() => onObri?.(instrument.targeta)}>{instrument.titol}</button>
       </dt>
@@ -69,7 +72,7 @@ function Instrument({ instrument, visible, onObri }) {
         {amagat ? <Xifra xifra={{ tipus: instrument.tipus }} visible={false} /> : <XifraDeFila targeta={instrument} visible={visible} />}
       </dd>
       <dd className="sdp-gestoria-cabina__nota">{instrument.explica}</dd>
-      {visible && instrument.avis ? <dd className="sdp-gestoria-cabina__avis">{instrument.avis}</dd> : null}
+      {visible && instrument.avis ? <dd ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__avis">{instrument.avis}</dd> : null}
     </div>
   );
 }
@@ -95,7 +98,7 @@ function GrafiquesFlux({ mesos, maxim, visible }) {
   }));
   const format = (valor) => formatImport(Math.round(valor));
   return (
-    <div className="sdp-gestoria-cabina__grafics">
+    <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__grafics">
       <Histograma titol="Entrades per mes" barres={barres('entrades')} maxim={maxim ?? undefined} valors={false} formatValor={format}
         className="sdp-gestoria-cabina__entrades" />
       <Histograma titol="Eixides per mes" barres={barres('eixides')} maxim={maxim ?? undefined} valors={false} formatValor={format}
@@ -108,23 +111,23 @@ function GrafiquesFlux({ mesos, maxim, visible }) {
 function CellaFlux({ mes, valor, visible }) {
   const xifra = IMPORT(valor);
   if (xifra || mes.cobertura === 'cap') {
-    return <td className={xifra ? 'sdp-num' : 'sdp-gestoria-comprimida__motiu'}><Xifra xifra={xifra} visible={visible} /></td>;
+    return <td ref={adoptaEstilsDiferits} className={xifra ? 'sdp-num' : 'sdp-gestoria-comprimida__motiu'}><Xifra xifra={xifra} visible={visible} /></td>;
   }
-  return <td className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">Sense moviments</span></td>;
+  return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">Sense moviments</span></td>;
 }
 
 /* La Taula de cada mes, amb el net: el que el gràfic no pinta (un net negatiu) també hi és. */
 function TaulaFlux({ mesos, visible }) {
   return (
     <Taula titol="Taula · Flux de caixa per mes" densa className="sdp-gestoria-comprimida">
-      <thead>
+      <thead ref={adoptaEstilsDiferits}>
         <tr>
           <th scope="col">Mes</th><th scope="col">Cobertura</th><th scope="col">Entrades</th><th scope="col">Eixides</th><th scope="col">Net</th>
         </tr>
       </thead>
       <tbody>
         {mesos.map((m) => (
-          <tr key={m.clau}>
+          <tr ref={adoptaEstilsDiferits} key={m.clau}>
             <th scope="row">{nomDelMes(m)}</th>
             <td>{COBERTURA[m.cobertura]}</td>
             <CellaFlux mes={m} valor={m.entrades} visible={visible} />
@@ -163,10 +166,10 @@ const SENSE_PAGAMENT = Object.freeze({
 function CellaPagament({ mes, visible }) {
   if (!mes.pagament) {
     const motiu = SENSE_PAGAMENT[mes.sensePagament] ?? (mes.banc === 'sense-extracte' ? SENSE_PAGAMENT['sense-extracte'] : '—');
-    return <td className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{motiu}</span></td>;
+    return <td ref={adoptaEstilsDiferits} className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{motiu}</span></td>;
   }
   return (
-    <td className="sdp-num">
+    <td ref={adoptaEstilsDiferits} className="sdp-num">
       <span>{formatData(mes.pagament.data, 'dd/mm/aaaa')} · </span>
       <Xifra xifra={IMPORT(mes.pagament.centims)} visible={visible} />
     </td>
@@ -176,10 +179,10 @@ function CellaPagament({ mes, visible }) {
 /* La secció «Factures que falten»: indicis per a revisar, mai veredictes. */
 function FacturesQueFalten({ falten, visible }) {
   if (!falten || falten.estat === 'sense-full') {
-    return <p className="sdp-gestoria-cabina__nota">Analitza el trimestre al Full trimestral: amb les seues factures i els extractes del banc, ací es diu quines factures habituals podrien faltar.</p>;
+    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Analitza el trimestre al Full trimestral: amb les seues factures i els extractes del banc, ací es diu quines factures habituals podrien faltar.</p>;
   }
   if (falten.estat === 'error') {
-    return <p className="sdp-gestoria-cabina__nota">No s’ha pogut creuar el Full trimestral amb els extractes: revisa’ls al Full.</p>;
+    return <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">No s’ha pogut creuar el Full trimestral amb els extractes: revisa’ls al Full.</p>;
   }
   const { resultat } = falten;
   const files = (resultat?.linies ?? []).flatMap((linia) => (linia.mesos ?? [])
@@ -187,17 +190,17 @@ function FacturesQueFalten({ falten, visible }) {
     .map((mes) => ({ linia, mes })));
   return (
     <>
-      <p className="sdp-gestoria-cabina__nota">{`Del Full del ${falten.t}T ${falten.any}, amb els extractes que has triat. Són indicis per a revisar: la gestoria decidix el trimestre de cada factura.`}</p>
+      <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{`Del Full del ${falten.t}T ${falten.any}, amb els extractes que has triat. Són indicis per a revisar: la gestoria decidix el trimestre de cada factura.`}</p>
       {files.length ? (
         <Taula titol="Taula · Factures que falten" densa className="sdp-gestoria-comprimida">
-          <thead>
+          <thead ref={adoptaEstilsDiferits}>
             <tr>
               <th scope="col">Proveïdor</th><th scope="col">Mes</th><th scope="col">Estat</th><th scope="col">Càrrec al banc</th><th scope="col">On demanar-la</th>
             </tr>
           </thead>
           <tbody>
             {files.map(({ linia, mes }) => (
-              <tr key={`${linia.clau}-${mes.mes}`}>
+              <tr ref={adoptaEstilsDiferits} key={`${linia.clau}-${mes.mes}`}>
                 <th scope="row">{linia.nom}</th>
                 <td>{nomDeClauMes(mes.mes)}</td>
                 <td>{ESTATS_QUE_FALTEN[mes.estat]}</td>
@@ -208,12 +211,12 @@ function FacturesQueFalten({ falten, visible }) {
           </tbody>
         </Taula>
       ) : (
-        <p className="sdp-gestoria-cabina__nota">Cap proveïdor habitual no té cap mes sense factura amb les dades d’este Full.</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Cap proveïdor habitual no té cap mes sense factura amb les dades d’este Full.</p>
       )}
       {resultat?.incidencies?.length ? (
         <Alerta to="info" viva={false} titol="Altres indicis del trimestre">
-          <ul className="sdp-gestoria-tauler__avisos">
-            {resultat.incidencies.map((inc, i) => <li key={`${inc.codi}-${i}`}>{inc.missatge}</li>)}
+          <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__avisos">
+            {resultat.incidencies.map((inc, i) => <li ref={adoptaEstilsDiferits} key={`${inc.codi}-${i}`}>{inc.missatge}</li>)}
           </ul>
         </Alerta>
       ) : null}
@@ -233,7 +236,7 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
   const id = useId();
   const { cabina } = dades;
   return (
-    <section className="sdp-gestoria-cabina" aria-labelledby={`${id}-cabina`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina" aria-labelledby={`${id}-cabina`}>
       <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">Quadre de comandament</h2>
       <AvisosComptes avisos={dades.avisos ?? []} />
       <p className="sdp-gestoria-cabina__nota">{cabina.referencia}</p>
@@ -246,7 +249,7 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
             <Instrument key={instrument.id} instrument={instrument} visible={visible} onObri={onObri} />
           ))}
         </dl>
-        {cabina.notes.map((nota) => <p key={nota} className="sdp-gestoria-cabina__nota">{nota}</p>)}
+        {cabina.notes.map((nota) => <p ref={adoptaEstilsDiferits} key={nota} className="sdp-gestoria-cabina__nota">{nota}</p>)}
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-flux`}>
@@ -259,13 +262,13 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-venciments`}>
         <h3 id={`${id}-venciments`} className="sdp-gestoria-cabina__seccio">Venciments</h3>
         {cabina.venciments.length ? (
-          <div className="sdp-gestoria-cabina__venciments">
+          <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__venciments">
             {cabina.venciments.map((v) => (
               <Alerta key={v.clau} to={v.fase === 'oberta' ? 'avis' : 'info'} viva={false} titol={v.titol}>{v.text}</Alerta>
             ))}
           </div>
         ) : (
-          <p className="sdp-gestoria-cabina__nota">Sense el dia d’avui no es poden dir els venciments.</p>
+          <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">Sense el dia d’avui no es poden dir els venciments.</p>
         )}
         <p className="sdp-gestoria-cabina__nota">{cabina.notaTerminis}</p>
       </section>
@@ -277,7 +280,7 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-plantilla`}>
         <h3 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">Plantilla Gestoria</h3>
-        {plantilla ?? <p className="sdp-gestoria-cabina__nota">El full de la gestoria el prepara el Full trimestral.</p>}
+        {plantilla ?? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">El full de la gestoria el prepara el Full trimestral.</p>}
       </section>
     </section>
   );

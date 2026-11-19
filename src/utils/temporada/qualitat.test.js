@@ -3,7 +3,8 @@
    ESLint amb la configuració del projecte i zero missatges (com
    --max-warnings=0), i les promeses de la capçalera d'index.js: JS pur (cap
    rellotge, cap atzar, cap DOM, cap xarxa, cap emmagatzematge), cap
-   dependència fora de la carpeta, res fora del Baseline 2022 i la font de les
+   dependència fora de la carpeta excepte l'ajudant Unicode pur verificat,
+   res fora del Baseline 2022 i la font de les
    dades declarada. Els patrons vetats es componen a trossos perquè les portes
    que llegixen src/ no els troben ací (patró de src/utils/fulls/qualitat.test.js). */
 import { readdirSync, readFileSync } from 'node:fs';
@@ -43,7 +44,7 @@ describe('ESLint', () => {
 describe('JS pur', () => {
   test('cap rellotge, atzar, temporitzador, DOM, React ni global del navegador', () => {
     const impurs = new RegExp(['\\b(?:Da', 'te|React|use[A-Z]\\w*|win', 'dow|docu', 'ment|navi', 'gator|global', 'This|set', 'Timeout|set', 'Interval|queue', 'Microtask)\\b|Math\\.ran', 'dom|cryp', 'to\\.'].join(''));
-    for (const fitxer of PRODUCCIO) expect(senseComentaris(llig(fitxer)).match(impurs), fitxer).toBeNull();
+    for (const fitxer of [...PRODUCCIO, 'src/utils/normalitzaUnicodeSegura.js']) expect(senseComentaris(llig(fitxer)).match(impurs), fitxer).toBeNull();
     /* Sonda: el patró casa amb el que veta. */
     expect(impurs.test(['new Da', 'te()'].join(''))).toBe(true);
   });
@@ -56,17 +57,19 @@ describe('JS pur', () => {
       [new RegExp(['local', 'Storage|session', 'Storage|indexed', 'DB|document\\.coo', 'kie'].join('')), 'emmagatzematge'],
       [new RegExp(['https?', ':\\/\\/'].join('')), 'adreça']
     ];
-    const trobats = TOTS.filter((f) => f !== `${CARPETA}/qualitat.test.js`)
+    const trobats = [...TOTS, 'src/utils/normalitzaUnicodeSegura.js'].filter((f) => f !== `${CARPETA}/qualitat.test.js`)
       .flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
   });
 
-  test('la producció només s’importa a ella mateixa (cap paquet, cap fitxer de fora)', () => {
+  test('la producció només s’importa a ella mateixa i a l’ajudant Unicode sense dependències', () => {
     const especificadors = (codi) => [...codi.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])([^'"\n]+)\1/g)].map((m) => m[2]);
-    const fora = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => !/^\.\/[a-z]+\.js$/.test(e)).map((e) => `${f}: ${e}`));
+    const fora = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => !/^\.\/[a-z]+\.js$/.test(e)
+      && !(f === `${CARPETA}/paraules.js` && e === '../normalitzaUnicodeSegura.js')).map((e) => `${f}: ${e}`));
     expect(fora).toEqual([]);
     expect(especificadors(llig(`${CARPETA}/dades.js`))).toEqual([]);
-    expect(especificadors(llig(`${CARPETA}/paraules.js`))).toEqual([]);
+    expect(especificadors(llig(`${CARPETA}/paraules.js`))).toEqual(['../normalitzaUnicodeSegura.js']);
+    expect(especificadors(llig('src/utils/normalitzaUnicodeSegura.js'))).toEqual([]);
   });
 });
 

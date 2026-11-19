@@ -1,3 +1,4 @@
+import { esTokenPublicacio, ordreTokenPublicacio } from '../publicacionsCas.js';
 import { capturaSessio } from '../identitat.js';
 import { marcaFilesEditorials } from '../editorialPublicada.js';
 import { aplicaRevisionsSeed, marcaFontRevisioSeed } from '../seedRevisions.js';
@@ -182,23 +183,87 @@ export async function appendChatMessages(messages, config = {}) {
   }
   return result;
 }
+/* R32.11 · Contracte general nou, preparat localment. Només l'opció explícita
+   expectedUpdatedAt l'activa; una RPC absent no es degrada a l'upsert legacy. */
+function capturaJsonCas(value, depth = 0) {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (!value || typeof value !== 'object' || depth > 24
+      || ![Object.prototype, Array.prototype, null].includes(Object.getPrototypeOf(value))) throw new TypeError('Payload CAS invàlid.');
+  const out = Array.isArray(value) ? [] : {};
+  for (const key of Reflect.ownKeys(value)) {
+    if (Array.isArray(value) && key === 'length') continue;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (typeof key !== 'string' || !descriptor || !Object.hasOwn(descriptor, 'value') || descriptor.value === undefined
+        || ['__proto__', 'constructor', 'prototype'].includes(key)) throw new TypeError('Payload CAS invàlid.');
+    out[key] = capturaJsonCas(descriptor.value, depth + 1);
+  }
+  return out;
+}
+const instantCas = esTokenPublicacio;
+async function publicaCasGeneral(input, config) {
+  // Snapshot complet abans del primer await; ni el DTO ni config poden canviar
+  // l'operació que hem lligat a la sessió i al backend originals.
+  const sub = capturaJsonCas(input), cfg = { ...config }, resolved = getResolvedConfig(cfg);
+  const { tenantId, hasSupabaseConfig, runtimeDataMode, supabaseUrl } = resolved;
+  if (MODES_LOCALS.has(runtimeDataMode)) throw ambCodi(new Error('En mode de proves no es publica al servidor.'), CODI_ENTRADA.MODE_LOCAL);
+  if (!hasSupabaseConfig || !UUID.test(tenantId ?? '')) throw new Error('Falta configuració del servidor.');
+  const checkSession = capturaSessio(), ownerUserId = getCurrentUser()?.id;
+  const check = () => {
+    checkSession(); const current = getResolvedConfig(config);
+    if (cfg.signal?.aborted || config.signal !== cfg.signal || current.tenantId !== tenantId
+      || current.supabaseUrl !== supabaseUrl || current.runtimeDataMode !== runtimeDataMode || !current.hasSupabaseConfig
+      || getCurrentUser()?.id !== ownerUserId) throw new DOMException('El context de publicació ha canviat.', 'AbortError');
+  };
+  if (Array.isArray(sub) || !UUID.test(ownerUserId ?? '') || !UUID.test(sub.id ?? '') || !UUID.test(sub.operationId ?? '')
+    || !SECCIONS.has(sub.sectionId) || sub.noteId !== undefined || sub.consulta === true
+    || sub.expectedUpdatedAt !== null && !instantCas(sub.expectedUpdatedAt)
+    || !sub.payload || Array.isArray(sub.payload) || typeof sub.payload !== 'object') throw new TypeError('Intent CAS de publicació invàlid.');
+  const teDrets = value => value !== undefined && value !== null && (typeof value !== 'string' || value.trim() !== '');
+  if (teDrets(sub.payload.copyright) || teDrets(sub.copyright)) throw Object.assign(new Error('El CAS general encara no té contracte per a conservar estos drets: conserva l’esborrany.'), { codi: 'drets-cas-no-disponibles' });
+  const actor = sub.actor;
+  if (actor !== undefined && (!actor || !['persona', 'entitat'].includes(actor.tipus)
+    || actor.tipus === 'entitat' && !UUID.test(actor.id ?? ''))) throw new TypeError('Autoria CAS invàlida.');
+  const authorOrgId = actor?.tipus === 'entitat' ? actor.id : null;
+  const payload = mapSectionSubmissionToItem({ ...sub, ownerUserId, createdAt: '',
+    payload: { ...sub.payload, id: sub.id, ownerUserId, sectionId: sub.sectionId } });
+  // La data de creació la fixa el servidor: cap data generada en un reintent
+  // pot canviar el hash d'una operació que ja s'ha confirmat.
+  for (const key of ['created_at', 'updated_at', 'updatedAt', 'origen', 'copyright', 'seller', 'autor', 'source', 'srcDelPort']) delete payload[key];
+  const title = typeof sub.title === 'string' ? sub.title : payload.title || '';
+  const description = typeof sub.description === 'string' ? sub.description : payload.description || payload.summary || '';
+  const body = { p_id: sub.id, p_tenant_id: tenantId, p_section_id: sub.sectionId, p_payload: payload,
+    p_title: title, p_description: description, p_author_org_id: authorOrgId, p_preserve_author: actor === undefined,
+    p_expected_updated_at: sub.expectedUpdatedAt, p_operation_id: sub.operationId };
+  check(); let receipt;
+  try { receipt = await request('/rest/v1/rpc/publica_section_submission_cas', cfg, { method: 'POST', body, signal: cfg.signal }); }
+  catch (error) {
+    check();
+    if (esRpcAbsent(error)) throw Object.assign(new Error('El servidor encara no té el CAS general: conserva l’esborrany i l’operació.', { cause: error }), { codi: CODI_ESQUEMA_ABSENT, status: 404 });
+    if (/SDP-PUB-CAS-006/.test(error?.message ?? '')) throw Object.assign(new Error('El CAS general encara no té contracte per a conservar estos drets: conserva l’esborrany.', { cause: error }), { codi: 'drets-cas-no-disponibles' });
+    if (error?.postgrestCode === '40001' || /SDP-PUB-CAS-003/.test(error?.message ?? '')) throw Object.assign(new Error('La publicació ha canviat: conserva l’esborrany i recarrega.', { cause: error }), { codi: 'conflicte-versio' });
+    throw error;
+  }
+  check();
+  const ack = capturaJsonCas(receipt), keys = ['id','tenant_id','owner_user_id','section_id','operation_id','updated_at','created_at','author_org_id','replay'];
+  if (!ack || Array.isArray(ack) || Object.keys(ack).length !== keys.length || !keys.every(key => Object.hasOwn(ack, key))
+    || ack.id !== sub.id || ack.tenant_id !== tenantId || ack.owner_user_id !== ownerUserId || ack.section_id !== sub.sectionId
+    || ack.operation_id !== sub.operationId || !instantCas(ack.updated_at) || !instantCas(ack.created_at)
+    || typeof ack.replay !== 'boolean' || ack.author_org_id !== null && !UUID.test(ack.author_org_id)
+    || actor !== undefined && ack.author_org_id !== authorOrgId
+    || ordreTokenPublicacio(ack.created_at) > ordreTokenPublicacio(ack.updated_at)
+    || sub.expectedUpdatedAt !== null && ordreTokenPublicacio(ack.updated_at) <= ordreTokenPublicacio(sub.expectedUpdatedAt)) throw new TypeError('Rebut CAS de publicació invàlid.');
+  check();
+  return { id: sub.id, ownerUserId, authorOrgId: ack.author_org_id, sectionId: sub.sectionId, title, description,
+    payload, createdAt: ack.created_at, updatedAt: ack.updated_at, operationId: sub.operationId, replay: ack.replay };
+}
 export async function appendSectionSubmissionNetworkOnly(submission, config = {}) {
+  if (submission && Object.hasOwn(submission, 'expectedUpdatedAt')) return publicaCasGeneral(submission, config);
   const { hasSupabaseConfig, tenantId, runtimeDataMode } = getResolvedConfig(config);
   /* T2 · En mode de proves la publicació no viatja: ho diu sense cap petició,
      en lloc de publicar al servidor des d'una demostració. */
   if (MODES_LOCALS.has(runtimeDataMode)) {
     throw ambCodi(new Error('En mode de proves no es publica al servidor.'), CODI_ENTRADA.MODE_LOCAL);
-  }
-  /* Onada R32 · D-R32-PUB-1 (pendent del Mestre) · Una escriptura amb versió
-     (`expectedUpdatedAt`, l'opció A de publicacions de Codex R31) necessita el
-     CAS de section_submissions de la migració 20261115231000, rebutjada a R30:
-     no és al repositori ni a Producció, i este esquema no té cap RPC que el
-     complisca. No es degrada mai a l'upsert de davall (seria sobreescriure
-     sense comprovar la versió que la crida volia protegir): es rebutja abans
-     de cap petició, amb el codi d'esquema absent. */
-  if (submission && Object.hasOwn(submission, 'expectedUpdatedAt')) {
-    throw Object.assign(new Error('El servidor encara no té l’edició de publicacions amb versió: no s’ha publicat res.'),
-      { codi: CODI_ESQUEMA_ABSENT });
   }
   if (!hasSupabaseConfig) throw new Error('No es pot escriure publicació sense connexió al servidor.');
   if (!tenantId) throw new Error('Poble no configurat.');
@@ -260,8 +325,7 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
      updated_at, el text exacte de PostgREST (fins als microsegons, sense passar
      per Date). Només l'acredita una fila única amb el mateix id i un instant
      estricte; si no, el retorn és el d'abans, sense versió, mai una inventada.
-     És informació per a qui publica: cap escriptura la torna a enviar
-     (D-R32-PUB-1, dalt). */
+     El camí legacy continua sense CAS; el camí opt-in usa la RPC explícita de dalt. */
   const desada = Array.isArray(desades) && desades.length === 1 ? desades[0] : null;
   return desada?.id === id && typeof desada.updated_at === 'string' && INSTANT.test(desada.updated_at)
     && Number.isFinite(Date.parse(desada.updated_at)) ? { ...stored, updatedAt: desada.updated_at } : stored;

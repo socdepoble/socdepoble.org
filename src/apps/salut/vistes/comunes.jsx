@@ -19,6 +19,7 @@ import {
   Alerta, Boto, Camp, CampText, Casella, Fila, GrupCamps, GrupOpcions, MarcColumna, Pila
 } from '../../../components/PedraSeca/index.js';
 import { esData, useApp, useClosaAplicacio, useInterruptorsApp, useParametresConsulta } from '../../plataforma/index.js';
+import { codiIdiomaSalut, textosSalut } from '../i18nSalut.js';
 import { textDecimes, tipusDe } from '../nucli/diccionari.js';
 import { dataLocalDe, diesEntre, etiquetaDataLlarga, sumaDies } from '../nucli/hores.js';
 import { useSalut } from '../useSalut.jsx';
@@ -77,17 +78,27 @@ export function useNavegaSalut() {
   return useCallback((trams, opcions) => navigate(ruta(...[].concat(trams)), opcions), [navigate, ruta]);
 }
 
+export function useTextosSalut() {
+  const { idioma = 'ca' } = useApp();
+  return textosSalut(idioma);
+}
+
 export function Enllac112() {
-  return <a href="tel:112" className="sdp-boto sdp-boto--perill">Truca al 112</a>;
+  const { idioma = 'ca' } = useApp();
+  if (codiIdiomaSalut(idioma) === 'ca') {
+    return <a href="tel:112" className="sdp-boto sdp-boto--perill">Truca al 112</a>;
+  }
+  return <a href="tel:112" className="sdp-boto sdp-boto--perill">{textosSalut(idioma).truca112}</a>;
 }
 
 export function PeuSalut() {
   const { obriPanell } = useClosaAplicacio();
+  const tx = useTextosSalut();
   return (
     <Fila gap={2}>
-      <span>Les dades són només en este dispositiu.</span>
+      <span>{tx.dadesNomesDispositiuPeu}</span>
       <Boto varietat="fantasma" data-obri-columna="esquerra" aria-controls="app-grid-sidebar" onClick={() => obriPanell('esquerra')}>
-        Estat
+        {tx.estat}
       </Boto>
       <Enllac112 />
     </Fila>
@@ -134,35 +145,36 @@ export function EnllacDetall({ a, children }) {
 export function PanellEstat() {
   const salut = useSalut();
   const { ruta } = useApp();
+  const tx = useTextosSalut();
   const { mida, tancaPanells } = useClosaAplicacio();
   if (!salut.carregat) return null;
   const apuntsAvui = salut.apunts.filter((apunt) => apunt.jornada === salut.avui).length;
   const diesCopia = salut.ultimaCopia ? diesEntre(dataLocalDe(salut.ultimaCopia), salut.avui) : null;
   const recordaCopia = salut.apunts.length > 0 && (diesCopia === null || diesCopia > DIES_RECORDATORI_COPIA);
   return (
-    <MarcSalut titol="Este dispositiu" columna="esquerra">
+    <MarcSalut titol={tx.esteDispositiu} columna="esquerra">
       <Pila gap={4}>
-        <p>{`Hui és ${etiquetaDataLlarga(salut.avui)}. Portes ${apuntsAvui} ${apuntsAvui === 1 ? 'apunt' : 'apunts'} d’esta jornada.`}</p>
+        <p>{tx.huiEsPortes(etiquetaDataLlarga(salut.avui), apuntsAvui)}</p>
         {salut.persistent ? (
-          <Alerta to="info" viva={false} titol="Només en este dispositiu">
-            Les dades es guarden en este navegador i no s’envien enlloc.
+          <Alerta to="info" viva={false} titol={tx.nomesDispositiuTitol}>
+            {tx.nomesDispositiuText}
           </Alerta>
         ) : (
-          <Alerta to="avis" titol="Només en la memòria">
-            Este navegador no deixa guardar-les: es perdran en tancar la pestanya. Fes una còpia abans d’eixir.
+          <Alerta to="avis" titol={tx.nomesMemoriaTitol}>
+            {tx.nomesMemoriaText}
           </Alerta>
         )}
         {salut.nomesLectura ? (
-          <Alerta to="avis" titol="Només per a mirar">Una altra pestanya està apuntant. Tanca-la per a apuntar ací.</Alerta>
+          <Alerta to="avis" titol={tx.nomesMirarTitol}>{tx.nomesMirarPanell}</Alerta>
         ) : null}
         {recordaCopia ? (
-          <Alerta to="info" viva={false} titol="Còpia de seguretat" accions={<EnllacBoto a={ruta('copia')}>Fes una còpia</EnllacBoto>}>
-            {diesCopia === null ? 'Encara no has fet cap còpia.' : `L’última còpia és de fa ${diesCopia} dies.`}
+          <Alerta to="info" viva={false} titol={tx.copiaSeguretat} accions={<EnllacBoto a={ruta('copia')}>{tx.fesUnaCopia}</EnllacBoto>}>
+            {diesCopia === null ? tx.encaraCapCopia : tx.ultimaCopiaFaDies(diesCopia)}
           </Alerta>
         ) : null}
         <Enllac112 />
         {/* En estret i en mitjana el panell tapa la resta: la tornada és ací. */}
-        {mida !== 'ample' ? <Boto varietat="secundari" onClick={tancaPanells}>Torna</Boto> : null}
+        {mida !== 'ample' ? <Boto varietat="secundari" onClick={tancaPanells}>{tx.torna}</Boto> : null}
       </Pila>
     </MarcSalut>
   );
@@ -180,6 +192,7 @@ const textDeValor = (definicio, valor) => {
  * (els nombres, com a text mentre s'escriuen); `onCanvi(nou)`.
  */
 export function ControlCamp({ definicio: c, valor, onCanvi, error, desactivat = false }) {
+  const tx = useTextosSalut();
   switch (c.tipus) {
     case 'enter':
     case 'decimes':
@@ -199,7 +212,7 @@ export function ControlCamp({ definicio: c, valor, onCanvi, error, desactivat = 
       );
     case 'escala':
     case 'opcio': {
-      const opcions = [...(c.obligatori ? [] : [{ valor: '', etiqueta: 'Sense dir' }]), ...c.valors];
+      const opcions = [...(c.obligatori ? [] : [{ valor: '', etiqueta: tx.senseDir }]), ...c.valors];
       return <GrupOpcions llegenda={c.etiqueta} opcions={opcions} valor={valor ?? ''} onCanvi={onCanvi} error={error} disabled={desactivat} />;
     }
     case 'multiopcio': {
@@ -213,7 +226,7 @@ export function ControlCamp({ definicio: c, valor, onCanvi, error, desactivat = 
         <Casella key={o.valor} etiqueta={o.etiqueta} checked={actius.includes(o.valor)} disabled={desactivat} onChange={() => commuta(o.valor)} />
       ));
       return (
-        <GrupCamps llegenda={c.obligatori ? `${c.etiqueta} (obligatori)` : c.etiqueta}>
+        <GrupCamps llegenda={c.obligatori ? `${c.etiqueta}${tx.obligatoriSufix}` : c.etiqueta}>
           {c.grups ? c.grups.map((grup) => <GrupCamps key={grup.id} llegenda={grup.etiqueta}>{caselles(grup.valors)}</GrupCamps>) : caselles(c.valors)}
           {error ? <Alerta to="error" viva={false}>{error}</Alerta> : null}
         </GrupCamps>

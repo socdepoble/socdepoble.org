@@ -17,7 +17,7 @@ describe('formats que dona el selector del mòbil', () => {
     const adjunt = await preparaAdjunt(original, { comprimeix });
     expect(comprimeix).toHaveBeenCalledOnce();
     expect(comprimeix.mock.calls[0][0].type).toBe(type === 'image/jpg' ? 'image/jpeg' : type);
-    expect(comprimeix.mock.calls[0][1]).toEqual({ maxSize: 1200, quality: 0.8, format: 'image/webp', conservaExif: true });
+    expect(comprimeix.mock.calls[0][1]).toEqual({ maxSize: 1200, quality: 0.8, format: 'image/webp', conservaExif: false });
     expect(adjunt.fitxer).not.toBe(original);
     expect(adjunt).toMatchObject({ tipus: 'imatge', duradaMs: null });
     expect(adjunt.fitxer.type).toBe('image/webp');
@@ -45,7 +45,8 @@ describe('formats que dona el selector del mòbil', () => {
     expect(adjunt).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: false });
     expect(adjunt.fitxer.type).toBe(mime);
     expect(lligDurada.mock.calls[0][0].type).toBe(mime);
-    expect(netejaVideo).not.toHaveBeenCalled();
+    if (mime === 'video/webm') expect(netejaVideo).not.toHaveBeenCalled();
+    else expect(netejaVideo).toHaveBeenCalledOnce();
     expect(comprimeix).not.toHaveBeenCalled();
     expect(() => validaAdjuntXat(adjunt)).not.toThrow();
   });
@@ -75,7 +76,7 @@ describe('descodificador i codificador amb fallada visible', () => {
     await expect(preparaAdjunt(new File(['heic'], 'foto.heic'), { comprimeix: vi.fn().mockRejectedValue(new Error('decode')) })).rejects.toMatchObject({ code: 'format-heic' });
   });
 
-  test('WebP que rebutja encara prova JPEG, amb EXIF publicable de sèrie', async () => {
+  test('WebP que rebutja encara prova JPEG, sense EXIF cru de sèrie', async () => {
     const comprimeix = vi.fn(async (_f, { format }) => {
       if (format === 'image/webp') throw new Error('encoder WebP absent');
       return dataUrl('image/jpeg');
@@ -83,7 +84,7 @@ describe('descodificador i codificador amb fallada visible', () => {
     const adjunt = await preparaAdjunt(new Blob(['foto'], { type: 'image/jpeg' }), { comprimeix });
     expect(adjunt.fitxer.type).toBe('image/jpeg');
     expect(comprimeix).toHaveBeenCalledTimes(2);
-    for (const [, opcions] of comprimeix.mock.calls) expect(opcions.conservaExif).toBe(true);
+    for (const [, opcions] of comprimeix.mock.calls) expect(opcions.conservaExif).toBe(false);
   });
 
   test.each(['data:,', 'data:image/png;base64,YWJj', 'data:image/jpeg;base64,', 'data:image/jpeg;base64,!!!'])('un canvas sense resultat útil (%s) no deixa error cru ni puja l’original', async (resultat) => {
@@ -159,6 +160,6 @@ describe('pressupost finit de la foto', () => {
     const comprimeix = vi.fn(async (_f, { format }) => dataUrl(format === 'image/webp' ? 'image/png' : format, MAXIM_ADJUNT_XAT.imatge));
     await expect(preparaAdjunt(new Blob(['captura'], { type: 'image/png' }), { comprimeix })).rejects.toMatchObject({ code: 'foto-mida' });
     expect(comprimeix).toHaveBeenCalledTimes(15);
-    expect(comprimeix.mock.calls.at(-1)[1]).toMatchObject({ maxSize: 640, quality: 0.55, format: 'image/jpeg', conservaExif: true });
+    expect(comprimeix.mock.calls.at(-1)[1]).toMatchObject({ maxSize: 640, quality: 0.55, format: 'image/jpeg', conservaExif: false });
   });
 });

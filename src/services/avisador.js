@@ -2,7 +2,10 @@ import { esFilSintetic } from '../data/ambitXat.js';
 import { IAIA_UUID } from '../config/xifratXat.js';
 import { generaId } from '../sections/xat/missatges.js';
 
-export const HORES_AVISADOR = Object.freeze([4, 8, 12, 24]);
+/* Onada R32.12 · T1 (ordre del Mestre, 261118 19:33) · Tota l'escala humana d'hores sense activitat, sense
+   l'hora soleta (un avís a l'hora d'estar quiet donaria falsos avisos en una migdiada). Els horaris ja
+   desats amb 4, 8, 12 o 24 hores continuen sent vàlids: l'escala nova els conté. */
+export const HORES_AVISADOR = Object.freeze([2, 3, 4, 5, 6, 7, 8, 12, 24]);
 export const AJUSTOS_AVISADOR = Object.freeze({ horesImmobilitat: 8, horaIniciNit: '22:00', horaFiNit: '08:00' });
 export const MAXIM_DESCANS_MINUTS = 720;
 const HORA_MS = 3_600_000;

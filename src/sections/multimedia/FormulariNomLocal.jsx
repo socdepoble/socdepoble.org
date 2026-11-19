@@ -9,6 +9,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Boto, Camp, CampText } from '../../components/PedraSeca/index.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 export function FormulariNomLocal({
   etiqueta,
@@ -59,7 +62,7 @@ export function FormulariNomLocal({
           disabled={disabled}
         />
       </Camp>
-      <div className="sdp-arxiu-local__fila">
+      <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__fila">
         <Boto varietat="primari" tipus="submit" carregant={enviant} disabled={disabled}>{textBoto}</Boto>
         {onCancela ? <Boto onClick={onCancela} disabled={enviant}>{textCancela}</Boto> : null}
       </div>

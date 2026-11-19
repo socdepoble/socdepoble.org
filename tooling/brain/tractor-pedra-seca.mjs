@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from '
 import { join, dirname, resolve, relative, extname } from 'node:path';
 import { cromStyleOffsets } from '../lib/design-contracts.mjs';
 import { analitzaJsx, codiSenseComentaris, jsxClassValues, propietatsFixades, prosaIComparacions } from '../lib/jsx-class-values.mjs';
+import { blocsCssFulla } from '../lib/lexic-css.mjs';
 
 /* ─────────────────────────── Configuració ─────────────────────────── */
 
@@ -129,8 +130,8 @@ function classesDelsEstilsPropis(net) {
   const classes = new Set();
   for (const m of net.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)) {
     const full = m[1].replace(/\$\{[^}]*\}/g, '0');
-    for (const r of full.matchAll(/([^{}]+)\{[^{}]*\}/g))
-      r[1].match(/\.(-?[_a-zA-Z][\w-]*)/g)?.forEach((c) => classes.add(c.slice(1)));
+    for (const r of blocsCssFulla(full))
+      r.selector.match(/\.(-?[_a-zA-Z][\w-]*)/g)?.forEach((c) => classes.add(c.slice(1)));
   }
   return classes;
 }
@@ -177,11 +178,11 @@ function analitzaCss(rutes) {
     const brut = llig(r);
     if (brut === null) continue;
     const t = senseComentaris(brut);
-    for (const m of t.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-      const selector = m[1].trim();
+    for (const m of blocsCssFulla(t)) {
+      const selector = m.selector.trim();
       if (selector.startsWith('@')) continue;
       selector.match(/\.(-?[_a-zA-Z][\w-]*)/g)?.forEach((c) => classes.add(c.slice(1)));
-      regles.push({ selector, cos: m[2], fitxer: r, linia: liniaDe(t, m.index) });
+      regles.push({ selector, cos: m.body, fitxer: r, linia: liniaDe(t, m.index) });
     }
     for (const m of t.matchAll(/(--[\w-]+)\s*:/g)) tokensDefinits.add(m[1]);
     for (const m of t.matchAll(/var\(\s*(--[\w-]+)/g)) {
@@ -436,10 +437,6 @@ const EXCEPCIONS_ORFE = {
   'src/components/patrimoni/anatomiaRuralGeometria.js': 'geometria del visor general d’Anatomia Rural: només la importa VisorAnatomiaRural3D.jsx, despenjat · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/patrimoni/anatomiaRural.js': 'dades del visor general d’Anatomia Rural: només les importa VisorAnatomiaRural3D.jsx, despenjat (i les proves del Pou i de l’article del Mur) · ordre del Mestre 261107 (P0-45 / IDEA-176) · revisió del Mestre pendent (tornar a muntar o esborrar)',
   'src/data/revisionsEditorialsWpMemoria.js': 'adaptador en memòria del kit de conformitat per a les revisions editorials de WordPress (P0-111, R18)',
-  /* Onada v1.2.7 · Kit R32.5 de Codex: dos motors purs, provats, sense consumidor
-     de producció a posta. Es retiren quan es connecten o s'esborren. */
-  'src/sections/gestoria/historic/nucli/resumAnualGestoria.js': 'resum anual de la Gestoria en cèntims BigInt amb exportació JSON/CSV (kit R32.5 de Codex, P0-112 / IDEA-285): motor pur sense UI encara; el cobrix resumAnualGestoria.test.js · integrat a l’Onada v1.2.7 · revisió del Mestre pendent (connectar a la Gestoria o esborrar)',
-  'src/utils/mapaRedireccions301.js': 'validador del mapa 301 de WordPress/Blogger (kit R32.5 de Codex, P0-115): el carrega tooling/seo/verifica-mapa-301.mjs, fora del paquet del navegador a posta; el cobrix mapaRedireccions301.test.js · integrat a l’Onada v1.2.7 · revisió del Mestre pendent',
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.
@@ -453,7 +450,17 @@ const nomenades = [...new Set(PROVES.flatMap((f) => [...(llig(f) ?? '').matchAll
 const deLaCarpeta = (c) => [...JSX, ...CSS_TOTS].filter((f) => f === c || f.startsWith(c + '/'));
 const deLesProves = grafDesDe([...PROVES, ...nomenades.flatMap(deLaCarpeta)]);
 const esFixtureDeProva = (f) => /(?:^|\/)__fixtures__\//.test(f) && deLesProves.has(f);
-const delBuild = grafDesDe(ENTRADES_DE_BUILD);
+/** Les ordres Node declarades als scripts npm també són entrades reals de L08.
+ * Només compta una invocació directa inicial a tooling/; una prova, un comentari, una
+ * cadena echo o un fitxer solt de tooling no pot amagar un orfe de src/.
+ * No s'executa cap ordre: el graf continua sent lectura estàtica.
+ */
+const scriptsNpm = JSON.parse(llig('package.json') ?? '{}').scripts ?? {};
+const entradesCli = Object.entries(scriptsNpm)
+  .filter(([nom]) => nom !== 'test' && !nom.startsWith('test:'))
+  .flatMap(([, ordre]) => typeof ordre !== 'string' ? []
+    : [...ordre.matchAll(/^\s*node\s+(tooling\/[\w./-]+\.(?:mjs|js))(?=\s|$)/g)].map((m) => m[1]));
+const delBuild = grafDesDe([...ENTRADES_DE_BUILD, ...entradesCli]);
 for (const f of [...JSX, ...CSS_TOTS])
   if (!accessible.has(f) && !delBuild.has(f) && f !== FULL_OMBRA && !EXCEPCIONS_ORFE[f] && !/\.test\.[jt]sx?$/.test(f) && !esFixtureDeProva(f)) // les proves són entrades de vitest
     registra('LLEI_08_SUBARBRE_ORFE', f);

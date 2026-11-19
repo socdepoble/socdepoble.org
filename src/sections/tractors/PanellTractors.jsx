@@ -25,6 +25,9 @@ import { parseMarkdown } from '../wiki-de-poble/parseMarkdown.js';
 import DialegAprovacio, { textError } from './DialegAprovacio.jsx';
 import { empremtaCurta } from './nucli/empremta.js';
 import { esAprovableEnBloc, useTractors } from './useTractors.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitTractors from '../../css/diferit-tractors.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'tractors', cssDiferitTractors); };
 
 /* L'estat mai no es diu només amb el color: la insígnia porta el text. */
 const INSIGNIA = Object.freeze({
@@ -92,7 +95,7 @@ function EmpremtaCurta({ curta }) {
   const etiqueta = { copiada: 'Copiada', fallida: 'No s’ha pogut copiar: copia-la a mà' }[copia] ?? 'Copia l’empremta curta';
   return (
     <>
-      <code className="sdp-tractors-panell__curta">{curta}</code>
+      <code ref={adoptaEstilsDiferits} className="sdp-tractors-panell__curta">{curta}</code>
       <Boto varietat="fantasma" icona={Copy} onClick={copiaCurta}>{etiqueta}</Boto>
     </>
   );
@@ -114,7 +117,7 @@ export function rebaixaTitols(md, salts = 3) {
 }
 
 function Llista({ elements }) {
-  return <ul>{elements.map((element) => <li key={element}>{element}</li>)}</ul>;
+  return <ul ref={adoptaEstilsDiferits}>{elements.map((element) => <li ref={adoptaEstilsDiferits} key={element}>{element}</li>)}</ul>;
 }
 
 /* El resum de l'aprovació en bloc, amb l'estat ja refrescat: si una aprovació
@@ -290,7 +293,7 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
       <h3 id={idPorta} ref={titolPorta} tabIndex={-1} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h3>
       {import.meta.env.DEV ? (
         <>
-          <p id={idBloc}>
+          <p ref={adoptaEstilsDiferits} id={idBloc}>
             {pendents ? `${pendents} ${pendents === 1 ? 'pendent' : 'pendents'} d’aprovar. ` : 'Cap tractor pendent. '}
             Aprovació tècnica del servidor de desenvolupament: no substituïx la lectura de la fitxa ni la revisió
             reflexiva. La primera aprovació després d’un canvi a la porta mateixa es fa d’una en una.
@@ -314,16 +317,16 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
       )}
       {error ? <Alerta to="error">{error}</Alerta> : null}
       {errorAccio ? <Alerta to="error" titol={errorAccio.titol}>{errorAccio.detall || null}</Alerta> : null}
-      <p role="status">{avis}</p>
+      <p ref={adoptaEstilsDiferits} role="status">{avis}</p>
 
       {carregant ? <Carregant etiqueta="Calculant les empremtes…" /> : null}
-      {!carregant && !triat ? <p>No hi ha cap tractor registrat.</p> : null}
+      {!carregant && !triat ? <p ref={adoptaEstilsDiferits}>No hi ha cap tractor registrat.</p> : null}
 
       {!carregant && triat ? (
-        <div className="sdp-tractors-panell__cos">
+        <div ref={adoptaEstilsDiferits} className="sdp-tractors-panell__cos">
           <ul className="sdp-tractors-panell__llista" aria-label="Tractors">
             {tractors.map((t) => (
-              <li key={t.id}>
+              <li ref={adoptaEstilsDiferits} key={t.id}>
                 <button type="button" className="sdp-tractors-panell__tria"
                   aria-current={t.id === triat.id ? 'true' : undefined} onClick={() => setTriatId(t.id)}>
                   <span className="sdp-tractors-panell__tria-nom">{t.manifest.nom}</span>
@@ -343,8 +346,8 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
 
             {triat.estat === 'incomplet' ? (
               <Alerta to="avis" viva={false} titol="Versió incompleta">
-                <p>Encara falten fitxers declarats. Mentre falten, no es pot aprovar ni executar:</p>
-                <ul>{triat.fontsAbsents.map((ruta) => <li key={ruta}><code>{ruta}</code></li>)}</ul>
+                <p ref={adoptaEstilsDiferits}>Encara falten fitxers declarats. Mentre falten, no es pot aprovar ni executar:</p>
+                <ul>{triat.fontsAbsents.map((ruta) => <li ref={adoptaEstilsDiferits} key={ruta}><code>{ruta}</code></li>)}</ul>
               </Alerta>
             ) : null}
 
@@ -371,9 +374,9 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
               {triat.empremta ? (
                 <>
                   <EmpremtaCurta curta={triat.curta} />
-                  <code className="sdp-tractors-panell__completa">{triat.empremta}</code>
+                  <code ref={adoptaEstilsDiferits} className="sdp-tractors-panell__completa">{triat.empremta}</code>
                 </>
-              ) : <p>Sense empremta: no es pot aprovar.</p>}
+              ) : <p ref={adoptaEstilsDiferits}>Sense empremta: no es pot aprovar.</p>}
             </section>
 
             <details className="sdp-tractors-panell__fonts">
@@ -382,13 +385,13 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
                 {m.fonts.map((ruta) => {
                   const font = triat.fonts.find((f) => f.ruta === ruta);
                   return (
-                    <li key={ruta}>
+                    <li ref={adoptaEstilsDiferits} key={ruta}>
                       {font ? (
-                        <details>
+                        <details ref={adoptaEstilsDiferits}>
                           <summary><code>{ruta}</code></summary>
                           <pre className="sdp-tractors-panell__codi"><code>{font.contingut}</code></pre>
                         </details>
-                      ) : <><code>{ruta}</code> <Insignia to="avis">Absent</Insignia></>}
+                      ) : <><code ref={adoptaEstilsDiferits}>{ruta}</code> <Insignia to="avis">Absent</Insignia></>}
                     </li>
                   );
                 })}
@@ -397,8 +400,8 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
 
             <section className="sdp-tractors-panell__fitxa" aria-label="Fitxa explicativa">
               {triat.fitxa
-                ? <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(rebaixaTitols(triat.fitxa))) }} />
-                : <p>Falta la fitxa explicativa: <code>{m.fitxa}</code>.</p>}
+                ? <div ref={adoptaEstilsDiferits} dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(rebaixaTitols(triat.fitxa))) }} />
+                : <p ref={adoptaEstilsDiferits}>Falta la fitxa explicativa: <code>{m.fitxa}</code>.</p>}
             </section>
 
             <div className="sdp-accions">
@@ -412,16 +415,16 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
             <section aria-labelledby={idHistorial}>
               <h5 id={idHistorial} className="sdp-tractors-panell__subtitol">Historial d’aprovacions</h5>
               {triat.registres.length ? (
-                <ol className="sdp-tractors-panell__historial">
+                <ol ref={adoptaEstilsDiferits} className="sdp-tractors-panell__historial">
                   {[...triat.registres].reverse().map((r) => (
-                    <li key={r.nonce}>
+                    <li ref={adoptaEstilsDiferits} key={r.nonce}>
                       <time dateTime={r.data}>{dataLlegible(r.data)}</time>
                       {` · ${r.decisio === 'aprovat' ? 'Aprovat' : 'Revocat'} · ${NIVELLS[r.nivell] ?? r.nivell} · versió ${r.versio} · `}
                       <code>{curtaDe(r.empremta)}</code>
                     </li>
                   ))}
                 </ol>
-              ) : <p>Encara no hi ha cap registre.</p>}
+              ) : <p ref={adoptaEstilsDiferits}>Encara no hi ha cap registre.</p>}
             </section>
           </article>
         </div>

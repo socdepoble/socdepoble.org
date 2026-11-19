@@ -587,6 +587,7 @@ export function PageFrame({
      classe (PageFrame.apps.test.jsx). */
   accioPrincipal = null,
   accioPrincipalDalt = false,
+  quadreInsignia = null,
   /* Ordre del Mestre, 261004 (D-A) · `traduccio={false}`: la pàgina no es
      traduïx. Traduir avisa (AVIS_PAGINA_SENSE_TRADUCCIO) i el Traductor
      de Poble queda inert: cap text ix cap al servei. Sense la prop, el de
@@ -1104,7 +1105,11 @@ export function PageFrame({
      traductor ni l'Índex llegeixen el dia o el preu. */
   const classesTitol = 'page-title';
   const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal));
-  const filaInsignia = activeBadge ? (
+  const filaInsignia = quadreInsignia ? (
+    <div className="sdp-pagina-insignia" translate="no">
+      {quadreInsignia}
+    </div>
+  ) : activeBadge ? (
     <div className={activeBadge.type === 'price' || (!squareBadge && price) ? 'sdp-pagina-insignia sdp-pagina-insignia--preu' : 'sdp-pagina-insignia'} translate="no">
       <SquareBadge badge={activeBadge} />
     </div>

@@ -53,6 +53,9 @@ import {
 } from './textosGestorLocal.js';
 import { useGestorArxiusLocals } from './useGestorArxiusLocals.js';
 import { useLocaleOpcional } from './useLocaleOpcional.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 const CANCELA = ['common.cancela', 'Cancel·lar'];
 const FILTRES_ESTAT = Object.freeze([
@@ -203,7 +206,7 @@ export function PanellGestorLocal({
 
       {font ? (
         <>
-          <section className="sdp-arxiu-local__panell" aria-labelledby={idDiagnostic}>
+          <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local__panell" aria-labelledby={idDiagnostic}>
             <h3 id={idDiagnostic}>{tr(T.diagnostic, { nom: nomVisibleLocal(nomVolum) })}</h3>
             <p>{tr(T.diagnosticXifres, { n: analisi.resum.totalFitxers, pes: formatKb(analisi.resum.pesTotalBytes, locale) })}</p>
             <div className="sdp-arxiu-local__fila">
@@ -221,8 +224,8 @@ export function PanellGestorLocal({
             </div>
             {limitacions.length > 0 ? (
               <Alerta to="avis">
-                <ul className="sdp-arxiu-local__llista">
-                  {limitacions.map((l) => <li key={l.codi}>{missatgeDeLimitacioLocal(t, l.codi)}</li>)}
+                <ul ref={adoptaEstilsDiferits} className="sdp-arxiu-local__llista">
+                  {limitacions.map((l) => <li ref={adoptaEstilsDiferits} key={l.codi}>{missatgeDeLimitacioLocal(t, l.codi)}</li>)}
                 </ul>
               </Alerta>
             ) : null}
@@ -242,23 +245,23 @@ export function PanellGestorLocal({
               )}
             </div>
             {duplicats ? (
-              <div role="status" className="sdp-arxiu-local__resultat">
+              <div ref={adoptaEstilsDiferits} role="status" className="sdp-arxiu-local__resultat">
                 <p>
                   {duplicats.grups.length > 0 || duplicats.cancellat
                     ? tr(T['hash.resultat'], { n: duplicats.grups.length })
                     : tr(T['hash.cap'])}
                 </p>
-                {duplicats.cancellat ? <p>{tr(T['hash.aturada'])}</p> : null}
+                {duplicats.cancellat ? <p ref={adoptaEstilsDiferits}>{tr(T['hash.aturada'])}</p> : null}
                 {duplicats.truncat ? (
-                  <p>{tr(T['hash.truncat'], { fitxers: PRESSUPOST_DUPLICATS.maxFitxers, pes: formatKb(PRESSUPOST_DUPLICATS.maxBytes, locale) })}</p>
+                  <p ref={adoptaEstilsDiferits}>{tr(T['hash.truncat'], { fitxers: PRESSUPOST_DUPLICATS.maxFitxers, pes: formatKb(PRESSUPOST_DUPLICATS.maxBytes, locale) })}</p>
                 ) : null}
-                {duplicats.omesos.length > 0 ? <p>{tr(T['hash.omesos'], { n: duplicats.omesos.length })}</p> : null}
+                {duplicats.omesos.length > 0 ? <p ref={adoptaEstilsDiferits}>{tr(T['hash.omesos'], { n: duplicats.omesos.length })}</p> : null}
               </div>
             ) : null}
           </section>
 
           {autonom ? (
-            <div className="sdp-arxiu-local__explorador">
+            <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__explorador">
               <ArbreCarpetesLocals
                 t={t}
                 carpetes={carpetes}
@@ -278,7 +281,7 @@ export function PanellGestorLocal({
   function principal() {
     const triaFitxer = autonom ? onTriaArxiu : (el) => onTriaArxiu?.(el);
     const llista = filtrats.length === 0 ? (
-      <p>{carpetaBuida ? tr(T.carpetaBuida) : tr(T.buit)}</p>
+      <p ref={adoptaEstilsDiferits}>{carpetaBuida ? tr(T.carpetaBuida) : tr(T.buit)}</p>
     ) : vista === 'taula' ? (
       <TaulaArxiusLocals
         t={t}
@@ -303,7 +306,7 @@ export function PanellGestorLocal({
       />
     );
     return (
-      <div className="sdp-arxiu-local__principal">
+      <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local__principal">
         <div className="sdp-arxiu-local__panell sdp-arxiu-local__filtres">
           <PillToggle
             className="sdp-arxiu-local__pindola"
@@ -374,7 +377,7 @@ export function PanellGestorLocal({
             <p role="status" className="sdp-nomes-lector">{anunciRecompte}</p>
             {llista}
             {pag.pagines > 1 ? (
-              <nav className="sdp-arxiu-local__paginacio" aria-label={tr(T.paginacio)}>
+              <nav ref={adoptaEstilsDiferits} className="sdp-arxiu-local__paginacio" aria-label={tr(T.paginacio)}>
                 <Boto icona={ChevronLeft} disabled={pag.pagina <= 1} onClick={() => triaPagina(pag.pagina - 1)}>{tr(T.anterior)}</Boto>
                 <p aria-live="polite">{tr(T.pagina, { n: pag.pagina, total: pag.pagines })}</p>
                 <Boto icona={ChevronRight} disabled={pag.pagina >= pag.pagines} onClick={() => triaPagina(pag.pagina + 1)}>{tr(T.seguent)}</Boto>
@@ -406,9 +409,9 @@ export function PanellGestorLocal({
     );
   }
 
-  if (!autonom) return <div className="sdp-arxiu-local">{cos}</div>;
+  if (!autonom) return <div ref={adoptaEstilsDiferits} className="sdp-arxiu-local">{cos}</div>;
   return (
-    <section className="sdp-arxiu-local" aria-labelledby={idTitol}>
+    <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local" aria-labelledby={idTitol}>
       <header className="sdp-arxiu-local__capcalera">
         <h2 id={idTitol}>{tr(T.titol)}</h2>
         <p>{tr(T.entradeta)}</p>

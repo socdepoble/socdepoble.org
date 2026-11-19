@@ -15,7 +15,16 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenXat.jsx, 2026-11-17T20:07:00+01:00,
+ * Darrera posada al dia: detalls/EspecimenBandaBetaMicroApp.jsx i manifest.js, 2026-11-18T20:57:20+01:00,
+ * Onada v1.2.9 (revisió de la crònica a l'arbre r26-fusio): l'Avisador ja no munta la banda de fase beta ni té
+ * manifest amb avisBeta, i l'espècimen de la banda i les paraules clau del manifest deixen de nomenar-lo.
+ * Versió anterior: detalls/EspecimenBandaBetaMicroApp.jsx, detalls/EspecimenEnquadrament.jsx,
+ * detalls/EspecimenMenu.jsx, detalls/EspecimenPantallaCompleta.jsx, detalls/EspecimenXat.jsx i manifest.js,
+ * 2026-11-18T20:21:21+01:00, Onada v1.2.9 (integració dels lots de Gemini R32.10 i R32.11 a l'arbre r26-fusio):
+ * l'espècimen de la banda beta tria la variant declarativa del manifest («general» o «fiscal»), el del menú diu
+ * la navegació per fletxes, l'Escape i el retorn del focus, els d'enquadrament i de pantalla completa adopten els
+ * seus fulls diferits i les dues mostres del Xat passen a regions amb nom.
+ * Versió anterior: detalls/EspecimenXat.jsx, 2026-11-17T20:07:00+01:00,
  * Onada R32.8 (P0-125a/d i P0-126): mostra viva a l'espècimen del Xat del xip clicable «Veure al mapa»
  * dins de Bombolla amb coordenades GPS, la píndola activa per defecte «Ubicació inclosa · Amaga el lloc»
  * a la previsualització de ControlsAdjunt i el botó accessible ✕ per a tancar qualsevol avís o alerta.
@@ -384,4 +393,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-17T20:07:00+01:00';
+export const VERSIO_CATALEG = '2026-11-18T20:57:20+01:00';

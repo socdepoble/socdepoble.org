@@ -17,6 +17,7 @@
 import { comparaDates, dinsDeRang, esDataValida, formatData, parseData } from './dates.js';
 import { formatImport, parseImport, sumaImports } from './diners.js';
 import { normalitzaNif, validaNif } from './nif.js';
+import { normalitzaUnicodeAmbLimit } from '../../../utils/normalitzaUnicodeSegura.js';
 
 export const TIPUS_FACTURA = Object.freeze(['ingres', 'despesa']);
 export const METODES_ORIGEN = Object.freeze(['model', 'csv-proveidor', 'pdf', 'correu', 'manual']);
@@ -100,6 +101,7 @@ function confiancaNeta(confianca) {
  * FNV-1a de 64 bits sobre l'UTF-8 del text, en 16 xifres hexadecimals.
  * @param {string} text
  * @returns {string}
+ * @throws {RangeError} UNICODE_MARK_LIMIT: nom fora del pressupost, mai clau buida de reserva.
  */
 export function hashFnv1a(text) {
   let h = 0xcbf29ce484222325n;
@@ -174,8 +176,7 @@ export function crearFactura(parcial = {}) {
  */
 export function normalitzaNom(text) {
   if (text == null) return '';
-  const fitxes = String(text)
-    .normalize('NFD')
+  const fitxes = normalitzaUnicodeAmbLimit(String(text), 'NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[.'’·]/g, '')

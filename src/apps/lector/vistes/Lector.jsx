@@ -52,6 +52,7 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Link } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, PaginaApp } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { textosLector } from '../i18nLector.js';
 import { HUI, dataCurta, dataDeBoina, germanesDe, indexGermanes, senseFinal, seguix } from '../nucli/index.js';
 import { useArticle } from '../useNoticies.js';
 import { AvisLector } from './comunes.jsx';
@@ -159,7 +160,7 @@ const SANDBOX_VIDEO = 'allow-scripts allow-same-origin allow-presentation';
    Correcció L-04 (261024 Lector final, WCAG 2.4.3) · «Mira el vídeo ací» es desmunta en prémer-lo i
    el seu lloc el pren el reproductor: el focus hi va (l'iframe s'enfoca com un control més), si
    encara és lliure, i no es queda al <body>. */
-function VideoDeLArticle({ video, titol }) {
+function VideoDeLArticle({ video, titol, tx }) {
   const [mira, setMira] = useState(false);
   const reproductor = useRef(null);
   const enfocaElReproductor = useRef(false);
@@ -175,17 +176,17 @@ function VideoDeLArticle({ video, titol }) {
   };
   const original = video.enllac ? (
     <p>
-      <a href={video.enllac} target="_blank" rel="noopener noreferrer">Obri’l a YouTube</a>
+      <a href={video.enllac} target="_blank" rel="noopener noreferrer">{tx.obrilAYoutube}</a>
       {' '}
-      <span className="sdp-nomes-lector">(s’obri en una pestanya nova)</span>
+      <span className="sdp-nomes-lector">{tx.pestanyaNova}</span>
     </p>
   ) : null;
   if (!mira) {
     return (
       <>
         <EstatBuit icona={CirclePlay} titol={titol}
-          accio={<Boto varietat="primari" icona={Play} onClick={mirar}>Mira el vídeo ací</Boto>}>
-          En prémer, YouTube rebrà la teua adreça IP.
+          accio={<Boto varietat="primari" icona={Play} onClick={mirar}>{tx.miraElVideoAci}</Boto>}>
+          {tx.avisIpYoutube}
         </EstatBuit>
         {original}
       </>
@@ -194,7 +195,7 @@ function VideoDeLArticle({ video, titol }) {
   return (
     <>
       <div className="embed-container">
-        <iframe src={video.incrustacio} title={`Vídeo: ${titol}`} allow={PERMISOS_VIDEO} referrerPolicy="strict-origin-when-cross-origin"
+        <iframe src={video.incrustacio} title={tx.videoTitol(titol)} allow={PERMISOS_VIDEO} referrerPolicy="strict-origin-when-cross-origin"
           sandbox={SANDBOX_VIDEO} ref={reproductor} />
       </div>
       {original}
@@ -210,7 +211,8 @@ function VideoDeLArticle({ video, titol }) {
    al nucli 1.3.0 (contracteNucli.js) i el mòdul del Lector no compilaria. El Link és de la porta
    'router' del nucli. */
 function NoticiesGermanes({ article, desfas }) {
-  const { noticies, lector, ruta, ara } = useVistaLector();
+  const { noticies, lector, ruta, ara, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const index = useMemo(() => indexGermanes(noticies.articles), [noticies.articles]);
   const seguides = useMemo(
     () => new Set(noticies.fonts.filter((font) => seguix(lector.estat, font.id)).map((font) => font.id)),
@@ -221,8 +223,8 @@ function NoticiesGermanes({ article, desfas }) {
   const noms = new Map(noticies.fonts.map((font) => [font.id, font.nom]));
   return (
     <>
-      <h3>Notícies germanes</h3>
-      <p>Altres fonts que pareixen parlar del mateix fet, triades pel títol i la data.</p>
+      <h3>{tx.noticiesGermanes}</h3>
+      <p>{tx.noticiesGermanesAjuda}</p>
       {germanes.map(({ resum }) => {
         const meta = [noms.get(resum.fontId), dataCurta(resum.data, ara, desfas)].filter(Boolean).join(' · ');
         return (
@@ -242,7 +244,8 @@ function NoticiesGermanes({ article, desfas }) {
 }
 
 function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) {
-  const { ruta, mitjans } = useVistaLector();
+  const { ruta, mitjans, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const boina = dataDeBoina(article.data, desfas);
   const video = mitjans.video(article.enllac);
   return (
@@ -258,24 +261,24 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
       objecte={null}
     >
       {nomesResum ? (
-        <Alerta to="info" viva={false} titol="Només el resum">
-          La font ja no publica esta notícia sencera: ací en tens el resum.
+        <Alerta to="info" viva={false} titol={tx.nomesElResumTitol}>
+          {tx.nomesElResumText}
         </Alerta>
       ) : null}
       {article.mitjansOmesos > 0 ? (
-        <Alerta to="info" viva={false} titol="Imatges i vídeos a part">
-          Per a protegir la teua privacitat, ací no es carreguen les imatges ni els vídeos d’altres webs. Els trobaràs al lloc web.
+        <Alerta to="info" viva={false} titol={tx.mitjansAPartTitol}>
+          {tx.mitjansAPartText}
         </Alerta>
       ) : null}
-      {video ? <VideoDeLArticle key={video.id} video={video} titol={senseFinal(article.titol)} /> : null}
+      {video ? <VideoDeLArticle key={video.id} video={video} titol={senseFinal(article.titol)} tx={tx} /> : null}
       {article.contingutHtml ? <Contingut html={article.contingutHtml} /> : <p>{article.resum}</p>}
       {article.enllac ? (
         <p>
           <a className="sdp-boto sdp-boto--primari sdp-boto--gran" href={article.enllac} target="_blank" rel="noopener noreferrer">
             <ExternalLink size={20} aria-hidden="true" focusable="false" />
-            <span>Visita el lloc web</span>
+            <span>{tx.visitaElLlocWeb}</span>
             {' '}
-            <span className="sdp-nomes-lector">(s’obri en una pestanya nova)</span>
+            <span className="sdp-nomes-lector">{tx.pestanyaNova}</span>
           </a>
         </p>
       ) : null}
@@ -288,7 +291,8 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
    i la closca ({ fitxa, closca }). Qui el munta hi torna el focus en tancar-lo, també amb l'arrere
    del navegador, que no passa per onTanca. */
 export function Lector({ id, onTanca, retorn = null }) {
-  const { lector, noticies, font: port, desfas, delServei, mitjans } = useVistaLector();
+  const { lector, noticies, font: port, desfas, delServei, mitjans, idioma = 'ca' } = useVistaLector();
+  const tx = textosLector(idioma);
   const { estat, article: sencer, rellegix } = useArticle(port, id);
   const desat = lector.estat.despres.find((resum) => resum.id === id) || null;
   const resum = noticies.articles.find((a) => a.id === id) || desat;
@@ -359,13 +363,13 @@ export function Lector({ id, onTanca, retorn = null }) {
 
   const desar = article || resum;
   /* Com a Feedly: l'aspa a l'esquerra de la barra, les accions a la dreta. */
-  const tanca = [{ id: 'tanca', icona: X, etiqueta: 'Tanca l’article', onAcciona: onTanca }];
+  const tanca = [{ id: 'tanca', icona: X, etiqueta: tx.tancaLArticle, onAcciona: onTanca }];
   const accions = [
     {
-      id: 'despres', icona: desat ? BookmarkCheck : Bookmark, etiqueta: 'Desa per a després', pressed: Boolean(desat),
+      id: 'despres', icona: desat ? BookmarkCheck : Bookmark, etiqueta: tx.desaPerADespres, pressed: Boolean(desat),
       onAcciona: desar ? () => commutaDespres(desar) : null
     },
-    { id: 'no-llegit', icona: MailOpen, etiqueta: 'Marca com a no llegit', onAcciona: () => marcaNoLlegit(id) }
+    { id: 'no-llegit', icona: MailOpen, etiqueta: tx.marcaNoLlegit, onAcciona: () => marcaNoLlegit(id) }
   ];
 
   let cos;
@@ -379,18 +383,18 @@ export function Lector({ id, onTanca, retorn = null }) {
         titolRef={titolRef} nomesResum={!sencer} onTanca={onTanca} />
     );
   } else if (estat === 'carregant') {
-    cos = <Carregant etiqueta="Obrint l’article…" />;
+    cos = <Carregant etiqueta={tx.obrintArticle} />;
   } else if (estat === 'error') {
     cos = (
-      <EstatBuit titol="No s’ha pogut obrir l’article" accio={<Boto varietat="secundari" onClick={rellegix}>Torna-ho a provar</Boto>}>
-        La font no ha respost. Pot ser cosa d’un moment.
+      <EstatBuit titol={tx.errorObrirArticle} accio={<Boto varietat="secundari" onClick={rellegix}>{tx.tornaHoAProvar}</Boto>}>
+        {tx.fontNoHaRespostMoment}
       </EstatBuit>
     );
-  } else cos = <EstatBuit titol="Esta notícia ja no hi és">La font ja no la publica.</EstatBuit>;
+  } else cos = <EstatBuit titol={tx.noticiaJaNoHiEs}>{tx.fontJaNoLaPublica}</EstatBuit>;
 
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={fontInfo?.nom || 'Article'} startActions={tanca} accions={accions} />}
-      avis={<AvisLector />} etiqueta="Article">
+    <MarcColumna capcalera={<AppGridColumn titol={fontInfo?.nom || tx.article} startActions={tanca} accions={accions} />}
+      avis={<AvisLector />} etiqueta={tx.article}>
       <div ref={marc}>{cos}</div>
     </MarcColumna>
   );

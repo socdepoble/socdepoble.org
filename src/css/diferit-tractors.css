@@ -1,0 +1,229 @@
+/* ── TRACTORS (261002) ── */
+@layer components {
+  /* Porta d'aprovació de tractors (src/sections/tractors/PanellTractors.jsx).
+     La llista a una banda i el detall a l'altra sense media queries: quan el
+     detall no hi cap amb 30rem, baixa davall (funciona igual dins de
+     l'encastament, que no té el viewport de la finestra). */
+  .sdp-tractors-panell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-block-end: var(--sdp-space-8);
+  }
+  .sdp-tractors-panell > p { margin: 0; }
+  /* G0200-03 (Gemini, 261025) · La regió viva buida no ha de sumar un segon gap
+     de 16px. Es queda a l'arbre (si no, l'avís que hi entra no es llegiria): un
+     marge negatiu d'un gap la fa ocupar zero. */
+  .sdp-tractors-panell > p[role="status"]:empty { margin-block-start: calc(var(--sdp-space-4) * -1); }
+  .sdp-tractors-panell__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h4);
+    text-align: left;
+  }
+  .sdp-tractors-panell__cos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-tractors-panell__llista {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-tractors-panell__llista > li { margin: 0; padding: 0; }
+  /* Tota la fila és el botó; el triat porta aria-current i la vora d'acció. */
+  .sdp-tractors-panell__tria {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    text-align: left;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-tractors-panell__tria:hover { border-color: var(--sdp-vora-forta); }
+  }
+  .sdp-tractors-panell__tria[aria-current="true"] {
+    border-color: var(--sdp-accio);
+    background: var(--sdp-accio-subtil);
+  }
+  .sdp-tractors-panell__tria:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-tractors-panell__tria-nom { font-weight: 700; }
+  .sdp-tractors-panell__detall {
+    display: flex;
+    flex: 999 1 0;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: min(100%, 30rem);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-tractors-panell__detall > p { margin: 0; }
+  .sdp-tractors-panell__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-tractors-panell__nom {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h4);
+  }
+  .sdp-tractors-panell__dades {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3) var(--sdp-space-6);
+    margin: 0;
+  }
+  .sdp-tractors-panell__dades dt { font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-tractors-panell__dades dd { margin: 0; color: var(--sdp-text-cos); }
+  .sdp-tractors-panell__dades ul { margin: 0; padding-inline-start: var(--sdp-space-5); }
+  .sdp-tractors-panell__subtitol {
+    margin: 0 0 var(--sdp-space-2);
+    font-size: var(--sdp-text-h5);
+  }
+  /* L'empremta curta és el que el Mestre escriu per a confirmar: gran i monoespai. */
+  .sdp-tractors-panell__empremta {
+    padding: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  /* La caixa de l'empremta curta (abans un style= en línia a PanellTractors.jsx,
+     261002): mateixa vora i radi, farciment a l'escala de 0.25rem, i se
+     selecciona sencera d'un toc per a copiar-la a mà. */
+  .sdp-tractors-panell__curta {
+    display: inline-block;
+    margin: 0 var(--sdp-space-2) var(--sdp-space-2) 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    user-select: all;
+    color: var(--sdp-text-titol);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h3);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .sdp-tractors-panell__completa {
+    display: block;
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-tractors-panell__fonts summary {
+    display: list-item;
+    min-height: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+  .sdp-tractors-panell__fonts summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-tractors-panell__fonts ul { margin: 0; padding-inline-start: var(--sdp-space-5); }
+  .sdp-tractors-panell__codi {
+    max-height: 24rem;
+    margin: 0 0 var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    overflow: auto;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    white-space: pre;
+  }
+  /* La fitxa ix de parseMarkdown amb els títols dos esglaons més avall (h4-h6). */
+  .sdp-tractors-panell__fitxa {
+    padding-block-start: var(--sdp-space-2);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  /* IDEA-27 (261025) · El tractor és un h4: la fitxa baixa a h5 i h6, amb
+     la mida i el color que tenien quan eren h4 i h5. */
+  .sdp-tractors-panell__fitxa :is(h5, h6) {
+    margin: var(--sdp-space-4) 0 var(--sdp-space-2);
+    padding: 0;
+    border: 0;
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-h5);
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .sdp-tractors-panell__fitxa h5 { font-size: var(--sdp-text-h4); }
+  /* IDEA-27 (ordre del Mestre, 261025) · Els botons van en Accions
+     (composicio), després del text que els explica: al peu, el paràgraf
+     amb la mida de cos i, davall, els dos botons. Dins d'un contenidor amb
+     gap de 16px, 8px de marge fan els 24px del bloc d'accions. */
+  .sdp-tractors-panell__peu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-tractors-panell__peu > p { margin: 0; }
+  .sdp-tractors-panell > .sdp-accions,
+  .sdp-tractors-panell__detall > .sdp-accions,
+  .sdp-tractors-panell__peu > .sdp-accions { margin-block: var(--sdp-space-2); }
+  .sdp-tractors-panell__historial {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-tractors-panell__historial > li + li { margin-block-start: var(--sdp-space-2); }
+
+  /* DialegAprovacio.jsx: les dues vies (signatura i confirmació escrita) en caixes. */
+  .sdp-tractors-dialeg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-tractors-dialeg__empremta { margin: 0; }
+  .sdp-tractors-dialeg__curta {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h5);
+    letter-spacing: 0.08em;
+  }
+  .sdp-tractors-dialeg__via {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+  .sdp-tractors-dialeg__via p { margin: 0; }
+  .sdp-tractors-dialeg__via .sdp-camp { align-self: stretch; }
+  .sdp-tractors-dialeg__titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h5);
+  }
+}

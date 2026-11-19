@@ -27,6 +27,9 @@ import { Dialeg } from './Dialeg.jsx';
 import { TeclatNumeric } from './TeclatNumeric.jsx';
 import { AreaText, Camp, GrupOpcions } from './formulari.jsx';
 import { pintaQuadrat } from './marca.jsx';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssDiferitCatalegColleccio from '../../../css/diferit-cataleg-colleccio.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'cataleg-colleccio', cssDiferitCatalegColleccio); };
 
 const MAX_NOTA = 80;
 
@@ -93,17 +96,17 @@ export function DetallArticle({
       ) : null}
     >
       {visible ? (
-        <div className="sdp-detall-article">
+        <div ref={adoptaEstilsDiferits} className="sdp-detall-article">
           <div className="sdp-detall-article__cap">
             <span className="sdp-detall-article__quadrat" aria-hidden="true">{pintaQuadrat(article, categoria, renderMedia)}</span>
-            {article.valor ? <p className="sdp-detall-article__valor">{article.valor}</p> : null}
+            {article.valor ? <p ref={adoptaEstilsDiferits} className="sdp-detall-article__valor">{article.valor}</p> : null}
           </div>
           {directa ? (
-            <fieldset className="sdp-grup">
+            <fieldset ref={adoptaEstilsDiferits} className="sdp-grup">
               <legend className="sdp-grup__llegenda">{etiquetaVariants}</legend>
               <ul className="sdp-detall-article__opcions">
                 {opcions.map((opcio) => (
-                  <li key={opcio.valor}>
+                  <li ref={adoptaEstilsDiferits} key={opcio.valor}>
                     <Boto mida="gran" ple onClick={() => triaIAccepta(opcio.valor)}>
                       {opcio.ajuda ? `${opcio.etiqueta} · ${opcio.ajuda}` : opcio.etiqueta}
                     </Boto>

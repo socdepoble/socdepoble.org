@@ -17,8 +17,8 @@
  * controls). Un enllaç que no ho és es queda com a text literal.
  *
  * Baseline Safari 16 / Chrome 100 / Firefox 100: cap lookbehind, cap flag «v».
- * Cap expressió amb retrocés quadràtic: les classes excloses tallen cada
- * intent en la marca següent (ReDoS provat amb 50.000 caràcters).
+ * Èmfasi per escaneig lineal, amb sis passades fixes i cap cursor arrere;
+ * les proves adversarials cobrixen 64 KiB sense relaxar la semàntica.
  */
 import { hrefDeImatge } from './extensions/enllacImatge.js';
 
@@ -143,21 +143,83 @@ function separaPuntuacio(cru) {
   return { url: cru.slice(0, fi), cua: cru.slice(fi) };
 }
 
-/* L'èmfasi, sobre el text ja escapat (cap entitat porta *, _ ni ~). Cada marca
-   obri davant d'un caràcter que no és espai i tanca darrere d'un altre; el
-   contingut no travessa cap marca igual, i així cada intent s'acaba en la
-   marca següent (lineal). Els guions baixos no fan èmfasi dins d'una paraula
-   (noms_de_variable). Ordre: cursiva, negreta i cursiva altra volta, perquè
-   «**a *b* c**», «*a **b** c*» i «***x***» isquen niats. */
-const EM_ESTRELA = /(^|[^*])\*([^*\s](?:[^*\n]*[^*\s])?)\*(?!\*)/g;
-const STRONG_ESTRELA = /()\*\*([^*\s](?:[^*\n]*[^*\s])?)\*\*/g;
-const STRONG_BAIX = /(^|[^\p{L}\p{N}_])__([^_\s](?:[^_\n]*[^_\s])?)__(?![\p{L}\p{N}_])/gu;
-const EM_BAIX = /(^|[^\p{L}\p{N}_])_([^_\s](?:[^_\n]*[^_\s])?)_(?![\p{L}\p{N}_])/gu;
-const RATLLAT = /()~~([^~\s](?:[^~\n]*[^~\s])?)~~/g;
+/* Sis passades fixes, amb un cursor que no retrocedix. El contingut d'una
+   marca s'acaba en la marca igual següent o en un salt: ni un intent fallit
+   pot tornar a recórrer eixe tram. Les peces es concatenen una sola vegada.
+   Es conserva l'ordre històric cursiva → negreta → cursiva (els niats), les
+   fronteres Unicode dels guions baixos i el text literal de marques buides. */
+const ESPAI = /\s/;
+const PARAULA = /[\p{L}\p{N}_]$/u;
 const EMFASI = [
-  [EM_ESTRELA, 'em'], [STRONG_ESTRELA, 'strong'], [EM_ESTRELA, 'em'],
-  [STRONG_BAIX, 'strong'], [EM_BAIX, 'em'], [RATLLAT, 's'],
+  ['*', 1, 'em'], ['*', 2, 'strong'], ['*', 1, 'em'],
+  ['_', 2, 'strong'], ['_', 1, 'em'], ['~', 2, 's'],
 ];
+
+function emfasiLineal(text, marca, amplaria, etiqueta, html) {
+  const parts = [];
+  const frontera = marca === '_';
+  let copiat = 0;
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== marca) {
+      i += 1;
+      continue;
+    }
+    const iniciTira = i;
+    while (text[i] === marca) i += 1;
+    const llarg = i - iniciTira;
+    /* Negreta i ratllat poden començar en les dos últimes marques d'una
+       tira. La cursiva i els guions baixos necessiten la tira exacta. */
+    if (llarg < amplaria || ((amplaria === 1 || frontera) && llarg !== amplaria)) continue;
+    const inici = i - amplaria;
+    if (amplaria === 1 || frontera) {
+      /* L'expressió anterior consumia també el caràcter de davant. No es
+         reutilitza el tancament d'una peça acabada de convertir. */
+      if (inici > 0 && inici - 1 < copiat) continue;
+      if (frontera && PARAULA.test(text.slice(Math.max(0, inici - 2), inici))) continue;
+    }
+    if (i === text.length || ESPAI.test(text[i])) continue;
+    const contingut = i;
+    while (i < text.length && text[i] !== marca && text[i] !== '\n') i += 1;
+    if (text[i] !== marca || ESPAI.test(text[i - 1])) continue;
+    if (amplaria === 2 && text[i + 1] !== marca) continue;
+    const fi = i + amplaria;
+    if (amplaria === 1 && marca === '*' && text[fi] === marca) continue;
+    if (frontera && PARAULA.test(String.fromCodePoint(text.codePointAt(fi) ?? 0))) continue;
+    parts.push(text.slice(copiat, inici));
+    const dins = text.slice(contingut, i);
+    parts.push(html ? `<${etiqueta}>${dins}</${etiqueta}>` : dins);
+    copiat = fi;
+    i = fi;
+  }
+  if (!parts.length) return text;
+  parts.push(text.slice(copiat));
+  return parts.join('');
+}
+
+/* Cada fase reconeix el mateix token de la mateixa manera: les peces apartades
+   només s'afigen, mai canvien. Reusar el resultat evita validar i escapar milers
+   de vegades una mateixa URL o imatge literal. La memòria és local a la fase i
+   a la línia, amb un màxim fix de 64 tokens; la cua expulsa el més antic perquè
+   un prefix de tokens únics no anul·le el guany de les repeticions següents. */
+function repeticionsDeToken(transforma) {
+  let anterior;
+  let resultatAnterior;
+  let recents;
+  return (tot, a, b, c) => {
+    if (tot === anterior) return resultatAnterior;
+    let resultat = recents?.get(tot);
+    if (resultat === undefined) {
+      resultat = transforma(tot, a, b, c);
+      recents ||= new Map();
+      if (recents.size === 64) recents.delete(recents.keys().next().value);
+      recents.set(tot, resultat);
+    }
+    anterior = tot;
+    resultatAnterior = resultat;
+    return resultat;
+  };
+}
 
 /**
  * Una línia de Markdown en línia. `html`: cert per a l'HTML del cos (escapat,
@@ -177,34 +239,34 @@ function enLinia(linia, html) {
   /* El text tal qual, ja resolt: escapat (amb les peces de dins) o pla. */
   const literal = (tot) => aparta(html ? escapa(tot).replace(MARCADOR, (_m, i) => peces[Number(i)]) : resolCrus(tot), resolCrus(tot));
 
-  let s = linia.replace(CODI, (_tot, codi) => {
+  let s = linia.replace(CODI, repeticionsDeToken((_tot, codi) => {
     const url = urlWebSegura(codi);
     if (!html) return aparta(url || codi, codi);
     return aparta(url ? enllac(url) : `<code>${escapa(codi)}</code>`, codi);
-  });
+  }));
 
-  s = s.replace(ENLLAC, (tot, imatge, etiqueta, desti) => {
+  s = s.replace(ENLLAC, repeticionsDeToken((tot, imatge, etiqueta, desti) => {
     if (imatge) return literal(tot);
     const href = hrefDeImatge(desti);
     if (!href) return literal(tot);
     const text = resolCrus(etiqueta).trim() || href;
     return aparta(html ? enllac(href, text) : text, text);
-  });
+  }));
 
-  s = s.replace(ENLLAC_ANGULAR, (tot, adreca) => {
+  s = s.replace(ENLLAC_ANGULAR, repeticionsDeToken((tot, adreca) => {
     const url = urlWebSegura(adreca);
     return url ? aparta(html ? enllac(url) : url, url) : tot;
-  });
+  }));
 
-  s = s.replace(URL_SOLTA, (tot) => {
+  s = s.replace(URL_SOLTA, repeticionsDeToken((tot) => {
     const { url, cua } = separaPuntuacio(tot);
     const segura = urlWebSegura(url);
     return segura ? aparta(html ? enllac(segura) : segura, segura) + cua : tot;
-  });
+  }));
 
   if (html) s = escapa(s);
-  for (const [patro, etiqueta] of EMFASI) {
-    s = s.replace(patro, (_tot, abans, dins) => (html ? `${abans}<${etiqueta}>${dins}</${etiqueta}>` : `${abans}${dins}`));
+  for (const [marca, amplaria, etiqueta] of EMFASI) {
+    s = emfasiLineal(s, marca, amplaria, etiqueta, html);
   }
   return s.replace(MARCADOR, (_m, i) => peces[Number(i)]);
 }

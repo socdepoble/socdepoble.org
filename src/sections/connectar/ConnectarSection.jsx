@@ -154,6 +154,9 @@ import { teSeguiments } from './useSeguiment.js';
 import { disposicioDeLaVista, entitatsPerIncloure, esPerfilSocial } from './modeDeConnectar.js';
 import { BlocIncloureEnEntitat } from './organitzacio/BlocIncloureEnEntitat.jsx';
 import { teMembresOrganitzacio } from './organitzacio/useIncloureEnEntitat.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssDiferitConnectar from '../../css/diferit-connectar.css?inline';
+const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 /* P1-22 · Parells [clau, reserva]: l'etiqueta es desa en la llengua de qui connecta. */
 const SUGGESTED_TAGS = Object.freeze([
@@ -820,7 +823,7 @@ function ConnectarElementIntern() {
      la columna de l'esquerra de T1, i la relació (l'avís i el primari) a la de la
      dreta (RA-01, revisió 261104: el primari dins de la pantalla a 1280×800). */
   const fitxaCompacta = perfilDeLaFitxa ? (
-    <div className="sdp-connectar__fitxa">
+    <div ref={adoptaEstilsDiferits} className="sdp-connectar__fitxa">
       <AvatarResolt mida="lg" alt="" nom={perfilDeLaFitxa.nom} llavor={perfilDeLaFitxa.id} src={perfilDeLaFitxa.avatar || null} />
       <div className="sdp-connectar__fitxa-text">
         <p className="sdp-connectar__fitxa-nom">{String(perfilDeLaFitxa.nom).trim()}</p>
@@ -846,7 +849,7 @@ function ConnectarElementIntern() {
           cap capçalera de camí nova ni cap botó primari. */}
       {contacteTitular ? (
         <>
-          <p>{omple(t('section.connectar.titular.intro', '{nom} és titular de {entitat} i ha triat que es veja ací.'), { nom: contacteTitular.nom, entitat: contacte.nom })}</p>
+          <p ref={adoptaEstilsDiferits}>{omple(t('section.connectar.titular.intro', '{nom} és titular de {entitat} i ha triat que es veja ací.'), { nom: contacteTitular.nom, entitat: contacte.nom })}</p>
           <BlocRelacio contacte={contacteTitular} deFitxa calEntrar={calEntrar} onEntra={entra}
             dataMode={dataMode} config={config} com={comEntitat?.valor ?? null} nomCom={comEntitat?.nom ?? ''} nomPersona={nomPersona} />
         </>
@@ -856,16 +859,16 @@ function ConnectarElementIntern() {
   /* Dues columnes dins de T1 només si hi ha qui i barret a l'esquerra (si no, una sola). */
   const ambQui = Boolean(fitxaCompacta) || Boolean(selectorCom);
   const targetaDirecta = ambRelacio || carregantFitxa ? (
-    <section className={social ? 'sdp-connectar__targeta sdp-connectar__targeta--directa' : 'sdp-connectar__targeta'}
+    <section ref={adoptaEstilsDiferits} className={social ? 'sdp-connectar__targeta sdp-connectar__targeta--directa' : 'sdp-connectar__targeta'}
       role="group" aria-labelledby={idRelacio} aria-busy={carregantFitxa ? 'true' : undefined}>
       <p id={idRelacio} className="sdp-connectar__tipus">{t('section.connectar.camins.relacio', 'Connexió directa')}</p>
       {/* Mentre arriba la fitxa, un esquelet de text (sense status): la graella no salta. */}
       {carregantFitxa ? (
-        <p className="sdp-connectar__ajuda">{t('section.connectar.fitxa.carregant', 'Carregant la fitxa…')}</p>
+        <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{t('section.connectar.fitxa.carregant', 'Carregant la fitxa…')}</p>
       ) : social ? (
-        <div className={ambQui ? 'sdp-connectar__directa sdp-connectar__directa--dues' : 'sdp-connectar__directa'}>
+        <div ref={adoptaEstilsDiferits} className={ambQui ? 'sdp-connectar__directa sdp-connectar__directa--dues' : 'sdp-connectar__directa'}>
           {ambQui ? (
-            <div className="sdp-connectar__qui">
+            <div ref={adoptaEstilsDiferits} className="sdp-connectar__qui">
               {fitxaCompacta}
               {selectorCom}
             </div>
@@ -884,7 +887,7 @@ function ConnectarElementIntern() {
      RA-03 (revisió 261104) · El rètol diu el que fa: «Incloure en la teua entitat», no
      «Formar part». RA-05 · El poble de la fitxa de confiança, per a avisar abans del clic. */
   const targetaIncloure = ambIncloure ? (
-    <section className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-incloure`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-incloure`}>
       <p id={`${id}-cami-incloure`} className="sdp-connectar__tipus">{t('section.connectar.camins.incloure', 'Incloure en la teua entitat')}</p>
       <BlocIncloureEnEntitat entitats={entitatsIncloure} persona={{ id: contacte.seguiment.id, nom: contacte.nom, poble: pobleDeLaFitxa }}
         config={config} usuariId={usuariId} />
@@ -892,7 +895,7 @@ function ConnectarElementIntern() {
   ) : null;
   /* IDEA-22 (T5) · Administrar l'organització ja no viu ací: és del Perfil («Membres i connexions»). */
   const targetaFormarPart = orgId ? (
-    <section className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-formar-part`}>
+    <section ref={adoptaEstilsDiferits} className="sdp-connectar__targeta" role="group" aria-labelledby={`${id}-cami-formar-part`}>
       <p id={`${id}-cami-formar-part`} className="sdp-connectar__tipus">{t('section.connectar.camins.formarPart', 'Formar part')}</p>
       <BlocFormarPart orgId={orgId} contacte={contacteOrg} config={config} nom={fitxaOrg?.perfil?.nom || null}
         tipusOrg={fitxaOrg?.perfil?.tipus || 'entitat'} carregant={fitxaOrg?.estat === 'carregant'} onEntra={entra} />
@@ -903,7 +906,7 @@ function ConnectarElementIntern() {
      FEDI-26 (Regla 1; correcció connectar-03, 261104) · Només d'un element: mai
      en la vista 'social' d'un perfil. */
   const notesDelBloc = (
-    <details className="sdp-connectar__notes" open={notesObertes} onToggle={(e) => setNotesObertes(e.currentTarget.open)}>
+    <details ref={adoptaEstilsDiferits} className="sdp-connectar__notes" open={notesObertes} onToggle={(e) => setNotesObertes(e.currentTarget.open)}>
       <summary className="sdp-connectar__notes-resum">
         <span className="sdp-connectar__notes-icona" aria-hidden="true"><NotebookPen size={24} aria-hidden="true" focusable="false" /></span>
         <span className="sdp-connectar__notes-rotul">
@@ -915,7 +918,7 @@ function ConnectarElementIntern() {
         {/* 261024 correccions (G2-02 i R3-05) · L'ajuda diu el que fan les opcions de davall: només la privada no avisa ningú.
             FEDI-26 (261104) · Les notes només es munten en 'element': cap branca d'açò depén ja de 'social'. */}
         {ambCamins ? (
-          <p className="sdp-connectar__ajuda">
+          <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">
             {t('section.connectar.mas.ajuda', 'Una còpia al teu Bloc per a llegir-la després, que no et fa membre de res. Tu tries qui ho pot vore: en privat no avisa ningú; a persones o grups de xat els enviarem l’enllaç per xat, i a tot el poble la compartiràs tu al Mur.')}
           </p>
         ) : null}
@@ -944,20 +947,20 @@ function ConnectarElementIntern() {
                   hi és des que s'obri el panell i es buida mentre busca, i així es torna
                   a dir encara que el nombre no canvie. Sense rol (l'únic status és el del
                   resum) i amb un text distint del visible. */}
-              <p className="sdp-nomes-lector" aria-live="polite">
+              <p ref={adoptaEstilsDiferits} className="sdp-nomes-lector" aria-live="polite">
                 {padro.estat === 'llest' ? omple(t('section.connectar.padro.resultats', 'Resultats al padró: {n}.'), { n: padro.membres.length }) : ''}
               </p>
               {padro.estat === 'error' ? <Alerta to="error">{padro.error || t('section.connectar.padro.error', 'No s’ha pogut obrir el padró del teu poble.')}</Alerta> : null}
               {padro.estat === 'llest' && padro.membres.length === 0 ? (
-                <p className="sdp-connectar__ajuda">{t('section.connectar.padro.cap', 'Ningú del padró coincidix amb la cerca.')}</p>
+                <p ref={adoptaEstilsDiferits} className="sdp-connectar__ajuda">{t('section.connectar.padro.cap', 'Ningú del padró coincidix amb la cerca.')}</p>
               ) : null}
               {padro.membres.length > 0 ? (
-                <ul className="sdp-connectar__pindoles" aria-label={t('section.connectar.padro.gent', 'Gent del padró')}>
+                <ul ref={adoptaEstilsDiferits} className="sdp-connectar__pindoles" aria-label={t('section.connectar.padro.gent', 'Gent del padró')}>
                   {padro.membres.map((membre) => {
                     const clau = String(membre.usuari_id);
                     const triada = persones.some((p) => p.id === clau);
                     return (
-                      <li key={clau}>
+                      <li ref={adoptaEstilsDiferits} key={clau}>
                         <button type="button" className="sdp-connectar__pindola" aria-pressed={triada}
                           disabled={!triada && persones.length >= LIMIT_PERSONES}
                           onClick={() => commutaPersona(membre)}>
@@ -974,7 +977,7 @@ function ConnectarElementIntern() {
               {persones.length > 0 ? (
                 <ul ref={personesTriadesRef} className="sdp-connectar__pindoles" aria-label={t('section.connectar.padro.triadesLlista', 'Persones triades')}>
                   {persones.map((p) => (
-                    <li key={p.id}>
+                    <li ref={adoptaEstilsDiferits} key={p.id}>
                       <button type="button" className="sdp-connectar__pindola sdp-connectar__pindola--triada"
                         aria-label={omple(t('section.connectar.padro.lleva', 'Lleva {nom} de la llista'), { nom: p.nom })} onClick={() => llevaPersona(p.id)}>
                         {p.nom}<X size={16} aria-hidden="true" focusable="false" />
@@ -987,7 +990,7 @@ function ConnectarElementIntern() {
           ) : null}
 
           {mode === 'grups' ? (
-            <div className="sdp-connectar__panell">
+            <div ref={adoptaEstilsDiferits} className="sdp-connectar__panell">
               <GrupCamps llegenda={omple(t('section.connectar.grups.llegenda', 'Grups de xat on ja eres (fins a {n})'), { n: LIMIT_GRUPS })}>
                 {grups.map((grup) => {
                   const triat = grupsTriats.includes(grup.id);
@@ -1021,7 +1024,7 @@ function ConnectarElementIntern() {
               const Icon = iconaDeCarpeta(folder.id);
               const isSelected = selectedFolder === folder.id;
               return (
-                <button
+                <button ref={adoptaEstilsDiferits}
                   key={folder.id}
                   type="button"
                   onClick={() => setSelectedFolder(folder.id)}
@@ -1048,7 +1051,7 @@ function ConnectarElementIntern() {
           <p className="sdp-connectar__ajuda">{t('section.connectar.categories.ajuda', 'Opcional: la connexió també apareixerà en estes categories del teu Bloc.')}</p>
           <ul className="sdp-connectar__pindoles" aria-label={t('section.connectar.categories.llista', 'Categories del teu Bloc')}>
             {[...new Set([...categoriesDisponibles, ...categories])].map((categoria) => (
-              <li key={categoria}>
+              <li ref={adoptaEstilsDiferits} key={categoria}>
                 <button type="button" className="sdp-connectar__pindola" aria-pressed={categories.includes(categoria)}
                   onClick={() => commutaCategoria(categoria)}>
                   {categoria}
@@ -1072,12 +1075,12 @@ function ConnectarElementIntern() {
           </p>
           <ul ref={etiquetesRef} className="sdp-connectar__pindoles" aria-label={t('section.connectar.etiquetes.llista', 'Etiquetes')}>
             {suggerides.map((tag) => (
-              <li key={tag}>
+              <li ref={adoptaEstilsDiferits} key={tag}>
                 <button type="button" onClick={() => triaSuggerida(tag)} className="sdp-connectar__pindola">{tag}</button>
               </li>
             ))}
             {customTags.map((tag) => (
-              <li key={tag}>
+              <li ref={adoptaEstilsDiferits} key={tag}>
                 <button type="button" onClick={() => removeTag(tag)} className="sdp-connectar__pindola sdp-connectar__pindola--triada"
                   aria-label={omple(t('section.connectar.etiquetes.lleva', 'Lleva l’etiqueta {nom}'), { nom: tag })}>
                   {tag}<X size={16} aria-hidden="true" focusable="false" />
@@ -1115,7 +1118,7 @@ function ConnectarElementIntern() {
                 disabled={!calEntrar && (!potConnectar || esperantOriginal || !selectedFolder || faltenDestins)}>
                 {etiquetaConnectar}
               </Boto>
-              <p className="sdp-connectar__nota">
+              <p ref={adoptaEstilsDiferits} className="sdp-connectar__nota">
                 {mode === 'persones' || mode === 'grups'
                   ? (faltenDestins
                     ? (mode === 'persones'
@@ -1162,7 +1165,7 @@ function ConnectarElementIntern() {
           : t('section.connectar.lead', 'Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després.')}
       onConnect={false}
     >
-      <div className={['sdp-connectar', 'sdp-connectar--graella', ambLateral && 'sdp-connectar--amb-lateral'].filter(Boolean).join(' ')}>
+      <div ref={adoptaEstilsDiferits} className={['sdp-connectar', 'sdp-connectar--graella', ambLateral && 'sdp-connectar--amb-lateral'].filter(Boolean).join(' ')}>
         {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
             entrar, i les carpetes no es poden crear. */}
         {isGuest && (
@@ -1179,13 +1182,13 @@ function ConnectarElementIntern() {
             261104); en 'element', l'objecte i les notes a la principal, i la
             relació i formar part a la lateral. */}
         {social ? (
-          <div className="sdp-connectar__principal sdp-connectar__principal--targetes">
+          <div ref={adoptaEstilsDiferits} className="sdp-connectar__principal sdp-connectar__principal--targetes">
             {targetaDirecta}
             {targetaIncloure}
             {targetaFormarPart}
           </div>
         ) : (
-          <div className="sdp-connectar__principal">
+          <div ref={adoptaEstilsDiferits} className="sdp-connectar__principal">
           <section className="sdp-connectar__objecte" aria-label={titolDeLaTargeta}>
             <p className="sdp-connectar__tipus">{etiquetaObjecte(origen.objecte, t)}</p>
             {/* T54/R21.6 · mini-card de lectura: foto, títol i capçalera declarada,
@@ -1203,8 +1206,8 @@ function ConnectarElementIntern() {
                 onDateTime={false}
               />
             </div>
-            {autorVisible ? <p className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
-            {persona ? <p className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
+            {autorVisible ? <p ref={adoptaEstilsDiferits} className="sdp-connectar__autor">{omple(t('section.connectar.de', 'De {nom}'), { nom: autorVisible })}</p> : null}
+            {persona ? <p ref={adoptaEstilsDiferits} className="sdp-connectar__identitat">{omple(t('section.connectar.esConnectaA', 'Es connecta a {nom}.'), { nom: persona })}</p> : null}
             {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
                 amb les mateixes claus que l'avís de l'editor (NotesEditor).
                 Gauntlet R22 (notes-06) · Els parells de visibilitatNota.js: la
@@ -1219,7 +1222,7 @@ function ConnectarElementIntern() {
           </div>
         )}
         {ambLateral ? (
-          <div className="sdp-connectar__lateral">
+          <div ref={adoptaEstilsDiferits} className="sdp-connectar__lateral">
             {targetaDirecta}
             {targetaFormarPart}
           </div>
@@ -1295,7 +1298,7 @@ function ConnectarContingutExtern({ params }) {
       lead={t('section.connectar.extern.lead', 'Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar.')}
       onConnect={false}
     >
-      <div className="sdp-connectar">
+      <div ref={adoptaEstilsDiferits} className="sdp-connectar">
         {!currentUser ? (
           <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
             {calEntrar
@@ -1308,7 +1311,7 @@ function ConnectarContingutExtern({ params }) {
           <p className="sdp-connectar__tipus">{t('section.connectar.extern.tipus', 'Enllaç de fora de Sóc de Poble')}</p>
           {valor ? (
             <>
-              <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
+              <div ref={adoptaEstilsDiferits} id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
                 <UniversalCard
                   {...encapcalamentDeTargeta(null, { t })}
                   title={valor.titol}
@@ -1324,7 +1327,7 @@ function ConnectarContingutExtern({ params }) {
               <p className="sdp-connectar__identitat">{valor.url}</p>
             </>
           ) : (
-            <p id={`${id}-objecte`} className="sdp-connectar__autor">{t('section.connectar.extern.noEsPot', 'Este enllaç no es pot connectar.')}</p>
+            <p ref={adoptaEstilsDiferits} id={`${id}-objecte`} className="sdp-connectar__autor">{t('section.connectar.extern.noEsPot', 'Este enllaç no es pot connectar.')}</p>
           )}
         </section>
 
@@ -1340,7 +1343,7 @@ function ConnectarContingutExtern({ params }) {
               <Boto varietat="primari" mida="gran" ple onClick={connecta} carregant={isSaving} disabled={!calEntrar && !potConnectar}>
                 {etiquetaConnectar}
               </Boto>
-              <p className="sdp-connectar__nota">
+              <p ref={adoptaEstilsDiferits} className="sdp-connectar__nota">
                 {omple(t('section.connectar.extern.arriba', 'Arriba com una nota nova a «{carpeta}», que podràs editar. La imatge de l’altra web no es copia.'), { carpeta: NOM_CARPETA_CONNECTATS })}
               </p>
             </>
