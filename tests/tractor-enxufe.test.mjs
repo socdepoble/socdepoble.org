@@ -168,3 +168,20 @@ test('E5 · la línia base de l’arbre no porta cap entrada ni senyal que HEAD 
   assert.deepEqual(creixementsSenseAlta(abans, ara), [],
     `la línia base només pot baixar: el deute nou va a l’adaptador, o entra amb «alta» (${MINIM_ALTA}+ caràcters: qui, quan i per què)`);
 });
+
+test('E1 · la fulla del port públic només pot importar el seu adaptador pur exacte', () => {
+  const a = arrelDeProves();
+  try {
+    a.escriu('src/data/supabase/protocolPublic.js', 'export const f = () => null;\n');
+    a.escriu('src/data/supabase/secret.js', 'export const secret = 1;\n');
+    a.escriu('src/data/backendProtocolPublic.js', "export { f } from './supabase/protocolPublic.js';\n");
+    assert.deepEqual(a.infraccions('E1'), []);
+    a.escriu('src/data/backendProtocolPublic.js', "export { secret } from './supabase/secret.js';\n");
+    assert.deepEqual(a.infraccions('E1').map(x => x.fitxer), ['src/data/backendProtocolPublic.js']);
+    a.escriu('src/data/backendProtocolPublic.js', "import { sdk } from '@supabase/auth-js';\nexport { sdk };\n");
+    assert.deepEqual(a.infraccions('E1').map(x => x.fitxer), ['src/data/backendProtocolPublic.js']);
+    a.escriu('src/data/backendProtocolPublic.js', "export { f } from './supabase/protocolPublic.js';\n");
+    a.escriu('src/data/altre.js', "export { f } from './supabase/protocolPublic.js';\n");
+    assert.deepEqual(a.infraccions('E1').map(x => x.fitxer), ['src/data/altre.js']);
+  } finally { a.neteja(); }
+});

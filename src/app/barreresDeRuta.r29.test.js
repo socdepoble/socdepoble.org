@@ -95,7 +95,7 @@ describe('App.jsx · barreres', () => {
 describe('R29-RUT-04 · accessoris dins de BarreraDelTrosAccessori', () => {
   test.each([
     ['src/sections/detail/PageDetailSection.jsx', ['<GuiaCanalsActualitzacio />', '<AparadorFediversity/>', '<IaiaWhatsappCard />', '<PanellTraspasPublicacioInline']],
-    ['src/sections/text/TextSection.jsx', ['<AparadorFediversity language={language}/>', '<ConsolaIncrustada/>']],
+    ['src/sections/text/TextSection.jsx', ['<CreditsComunitatS23 language={language}/>', '<AparadorFediversity language={language}/>', '<ConsolaIncrustada/>']],
     ['src/sections/profile/DetallPrivacitat.jsx', ['<BlocPersonesConfianca />', '<PortabilitatFederada ', '<ProvaXifratXat ']],
     ['src/components/universal/PageFrame.jsx', ['<BarraReproductorVeuLazy']],
   ])('%s', (fitxer, accessoris) => {

@@ -15,7 +15,8 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   estatTitularPublic: (...args) => mp.estat(...args),
   marcaTitularPublic: (...args) => mp.marca(...args)
 }));
-import { GestioMembres, ESPERA_CERCA, TriaTitular } from './GestioMembres.jsx';
+import { GestioMembres, TriaTitular } from './GestioMembres.jsx';
+import { ESPERA_CERCA } from './membresModel.js';
 
 /* Ordre del Mestre (261008, grup C) · La gestió dels membres d'una
    organització a «El compte»: llista, alta directa, canvi de rol i baixa,

@@ -46,8 +46,8 @@ describe('el cens', () => {
      Hi entra la presentació llarga de la pàgina (presentacioPlugins.js) i la
      seua prova: com la resta de la carpeta, passen per ESLint i per les
      regles de davall. */
-  test('el registre, la presentació, la pàgina, el destí i les seues proves hi són', () => {
-    for (const esperat of ['registrePlugins.js', 'presentacioPlugins.js', 'PluginPage.jsx', 'useDestiDelPlugin.js', 'registrePlugins.test.js',
+  test('el registre, la presentació, la pàgina, el model, el destí i les seues proves hi són', () => {
+    for (const esperat of ['registrePlugins.js', 'presentacioPlugins.js', 'PluginPage.jsx', 'pluginPageModel.js', 'useDestiDelPlugin.js', 'registrePlugins.test.js',
       'presentacioPlugins.test.js', 'PluginPage.test.jsx', 'PluginPage.app.test.jsx', 'qualitat.test.js']) {
       expect(PLUGINS).toContain(`src/sections/plugins/${esperat}`);
     }

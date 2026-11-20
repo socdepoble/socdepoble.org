@@ -287,7 +287,11 @@
     "tests/r3217-reserva-inventari-postgres.test.mjs",
     "tooling/tests/mapa-editorial-r3217.test.mjs",
     "tests/tractor-craft-paritat-visual.test.mjs",
-    "tests/gauntlet-71-rutes-cdp.r32_18.test.mjs"
+    "tests/gauntlet-71-rutes-cdp.r32_18.test.mjs",
+    "tests/protocol-public-port.r32_19.test.mjs",
+    "tests/r3219-ap-fetch-pinnat.test.mjs",
+    "tests/r3219-lssi-control-postgres.test.mjs",
+    "tests/tarjan-zero-cicles-src.r32_19.test.mjs"
   ],
   "files": [
     {
@@ -2480,6 +2484,26 @@
       "path": "tests/gauntlet-71-rutes-cdp.r32_18.test.mjs",
       "suite": "primary",
       "reason": "Gemini R32.18 · Arnés CDP de les 71 rutes canòniques + /page/guia i 6 micro-apps: cobertura de rutes, viewports, Mode Sènior, temes i 5 llengües, i sonda DOM pura (sense Chrome)."
+    },
+    {
+      "path": "tests/protocol-public-port.r32_19.test.mjs",
+      "suite": "primary",
+      "reason": "R32.19: regressió obligatòria del carril de fortificació, cicles, port, LSSI i transport pinnat."
+    },
+    {
+      "path": "tests/r3219-ap-fetch-pinnat.test.mjs",
+      "suite": "primary",
+      "reason": "R32.19: regressió obligatòria del carril de fortificació, cicles, port, LSSI i transport pinnat."
+    },
+    {
+      "path": "tests/r3219-lssi-control-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.19: regressió obligatòria del carril de fortificació, cicles, port, LSSI i transport pinnat."
+    },
+    {
+      "path": "tests/tarjan-zero-cicles-src.r32_19.test.mjs",
+      "suite": "primary",
+      "reason": "R32.19: regressió obligatòria del carril de fortificació, cicles, port, LSSI i transport pinnat."
     }
   ]
 }

@@ -39,7 +39,7 @@
 import { detectaDelimitador, parseCsv } from './csv.js';
 import { esDataValida, parseData } from './dates.js';
 import { parseImport } from './diners.js';
-import { comercDelConcepte } from './movimentsBanc.js';
+import { comercDelConcepte } from './comercBanc.js';
 
 /** Els codis que pot tornar llegeixExtracteCsv als avisos. */
 export const CODIS_AVIS_EXTRACTE = Object.freeze([

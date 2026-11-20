@@ -376,8 +376,25 @@ const INICIS_R32_18 = {
   eu: '2026ko azaroaren 20a, arratsaldea · R32.17 eta R32.18 olatuak',
   gl: '20 de novembro de 2026, tarde · Ondas R32.17 e R32.18'
 };
-const desDeR32_17 = (cos) => (Object.values(INICIS_R32_18).some((inici) => cos.startsWith(`<h3>${inici}`))
+/* Onada v1.2.15 · La crònica de les Onades R32.19 i R32.20 (versió 1.2.15, build 20) obri /versions, davant de la de
+   R32.17 i R32.18. desDeR32_18 lleva el seu bloc quan obri la pàgina (en qualsevol de les cinc llengües); les proves de
+   la R32.18 lligen /versions des d'ací. */
+const TITOL_FITA_R32_20 = '20 de novembre de 2026, vespre · Onades R32.19 i R32.20 · El Bar sense columna buida i l’Arbre Genealògic amb arbres grans';
+const fitaR32_20Bloc = blocDe(TITOL_FITA_R32_20);
+const INICIS_R32_20 = {
+  ca: '20 de novembre de 2026, vespre · Onades R32.19 i R32.20',
+  es: '20 de noviembre de 2026, noche · Oleadas R32.19 y R32.20',
+  en: '20 November 2026, evening · Waves R32.19 and R32.20',
+  eu: '2026ko azaroaren 20a, iluntzea · R32.19 eta R32.20 olatuak',
+  gl: '20 de novembro de 2026, serán · Ondas R32.19 e R32.20'
+};
+const desDeR32_18 = (cos) => (Object.values(INICIS_R32_20).some((inici) => cos.startsWith(`<h3>${inici}`))
   ? cos.slice(cos.indexOf('<h3>', 4)) : cos);
+/* Onada v1.2.15 · Abans lleva també el bloc de la R32.20 (desDeR32_18), que ara obri la pàgina davant de la R32.18. */
+const desDeR32_17 = (cos) => {
+  const resta = desDeR32_18(cos);
+  return Object.values(INICIS_R32_18).some((inici) => resta.startsWith(`<h3>${inici}`)) ? resta.slice(resta.indexOf('<h3>', 4)) : resta;
+};
 /* Onada v1.2.14 · Abans lleva també el bloc de la R32.18 (desDeR32_17), que ara obri la pàgina davant de la R32.17. */
 const desDeR32_15 = (cos) => {
   const resta = desDeR32_17(cos);
@@ -480,6 +497,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
       // Onada v1.2.12 · La crònica de les Onades R32.14 i R32.15 obri la pàgina, davant de R32.13 i R32.14, sense cap número vX.Y.Z al títol.
       // Onada v1.2.13 · La crònica de les Onades R32.15, R32.16 i R32.17 obri la pàgina, davant de R32.14 i R32.15, sense cap número vX.Y.Z al títol.
       // Onada v1.2.14 · La crònica de les Onades R32.17 i R32.18 obri la pàgina, davant de R32.15, R32.16 i R32.17, sense cap número vX.Y.Z al títol.
+      // Onada v1.2.15 · La crònica de les Onades R32.19 i R32.20 obri la pàgina, davant de R32.17 i R32.18, sense cap número vX.Y.Z al títol.
+      TITOL_FITA_R32_20,
       TITOL_FITA_R32_18,
       TITOL_FITA_R32_17,
       TITOL_FITA_R32_15,
@@ -564,7 +583,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
     // Onada v1.2.11 · I la crònica R32.14: trenta en total.
     // Onada v1.2.12 · I la crònica R32.15: trenta-una en total.
     // Onada v1.2.13 · I la crònica R32.17: trenta-dues en total.
-    expect(entregues).toHaveLength(33);
+    // Onada v1.2.15 · I la crònica R32.20: trenta-quatre en total.
+    expect(entregues).toHaveLength(34);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -651,7 +671,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     /* Onada v1.2.12 · I de la 1.2.11 a la 1.2.12: la crònica de les Onades R32.14 i R32.15 ho explica. */
     /* Onada v1.2.13 · I de la 1.2.12 a la 1.2.13: la crònica de les Onades R32.15, R32.16 i R32.17 ho explica. */
     /* Onada v1.2.14 · I de la 1.2.13 a la 1.2.14: la crònica de les Onades R32.17 i R32.18 ho explica. */
-    expect(PAQUET.version).toBe('1.2.14');
+    /* Onada v1.2.15 · I de la 1.2.14 a la 1.2.15: la crònica de les Onades R32.19 i R32.20 ho explica. */
+    expect(PAQUET.version).toBe('1.2.15');
     expect(TITOL_110).toContain('· v1.1.0 (');
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el publicat a WordPress.org, que no pot ser més nou
        que el del repositori (la capçalera del connector). Onada R21 · El repositori ja porta la 1.1.13 i el títol
@@ -683,15 +704,16 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   /* Onada v1.2.12 · I a la 1.2.12 amb el build 17 (la crònica R32.15), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.13 · I a la 1.2.13 amb el build 18 (la crònica R32.17), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.14 · I a la 1.2.14 amb el build 19 (la crònica R32.18), el mateix número que VERSIO_CLIENT_NATIU. */
-  test('la versió de les apps d’ara és la 1.2.14, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
+  /* Onada v1.2.15 · I a la 1.2.15 amb el build 20 (la crònica R32.20), el mateix número que VERSIO_CLIENT_NATIU. */
+  test('la versió de les apps d’ara és la 1.2.15, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
     const gradle = llegix('android/app/build.gradle');
     const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
-    expect(gradle).toMatch(/versionName "1\.2\.14"/);
-    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.14']));
-    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.14']));
+    expect(gradle).toMatch(/versionName "1\.2\.15"/);
+    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.15']));
+    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.15']));
     const build = gradle.match(/versionCode (\d+)/)[1];
     expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
-    expect(build).toBe('19');
+    expect(build).toBe('20');
     expect(String(VERSIO_CLIENT_NATIU)).toBe(build);
     expect(pla).toContain('el número de build de les apps, el 2, no canvia');
   });
@@ -845,7 +867,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
     // Onada v1.2.12 · La crònica R32.15, una posició més.
     // Onada v1.2.13 · La crònica R32.17, una posició més.
     // Onada v1.2.14 · La crònica R32.18, una posició més.
-    expect(titols[29]).toMatch(/^1 de novembre de 2026 · v/);
+    // Onada v1.2.15 · La crònica R32.20, una posició més.
+    expect(titols[30]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -974,7 +997,7 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
 /* Onada R21 (COMMIT 5) · Amb R21.1 v1+v2, revocacioPublicacions és al contracte i l'adaptador local no l'oferix: entra a
    l'inventari d'ara (com a pageContent.fediversity.test.js), i el rebut de l'1 de novembre continua sense nomenar-la. */
 test('R32.13 · l’inventari local actual no reescriu el rebut històric de l’1 de novembre', () => {
-  expect(CAPACITATS_NO_DECLARADES).toEqual(['ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+  expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
   expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda/);
   expect(entregaAssalt).not.toContain('revocacioPublicacions');
   expect(entregaAssalt).not.toContain('ackCrdtRural');
@@ -1006,7 +1029,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
     // Onada v1.2.12 · La crònica R32.15, una posició més.
     // Onada v1.2.13 · La crònica R32.17, una posició més.
     // Onada v1.2.14 · La crònica R32.18, una posició més.
-    expect(titols[28]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // Onada v1.2.15 · La crònica R32.20, una posició més.
+    expect(titols[29]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -4694,7 +4718,9 @@ describe('Onades R32.14 i R32.15 · Crònica d’obertura en les cinc llengües 
     expect(TITOL_FITA_R32_15).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(fitaR32_15Bloc.startsWith(`<h3>${TITOL_FITA_R32_15}</h3>`)).toBe(true);
     // Onada v1.2.13 · La R32.17 obri la pàgina i la R32.15 la seguix. Onada v1.2.14 · Davant de totes dues, la R32.18.
-    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_18}</h3>`)).toBe(true);
+    // Onada v1.2.15 · I davant de la R32.18, la R32.20 (desDeR32_18 la lleva).
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_20}</h3>`)).toBe(true);
+    expect(desDeR32_18(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_18}</h3>`)).toBe(true);
     expect(desDeR32_17(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_17}</h3>`)).toBe(true);
     expect(desDeR32_15(html.trimStart()).startsWith(fitaR32_15Bloc)).toBe(true);
     expect(interns(fitaR32_15Bloc)).toEqual(expect.arrayContaining(['/app/gestoria', '/app/nevera/rebost', '/wikidepoble', '/xat']));
@@ -4814,8 +4840,9 @@ describe('Onades R32.14 i R32.15 · Crònica d’obertura en les cinc llengües 
     expect(readdirSync(resolve(process.cwd(), 'supabase/snippets'))).toContain('r32_15_patch_registra_denuncia_diligent_produccio.sql');
     /* Onada v1.2.14 · La secció acaba al títol següent: la càpsula R32.17 de Codex (més avall, NO aplicada) no és el pegat R32.15. */
     const iniciR32_15 = readme.indexOf('## R32.15 · Pegat P2 de `registra_denuncia_diligent`');
-    const fiR32_15 = readme.indexOf('\n## ', iniciR32_15 + 1);
-    const seccioR32_15 = readme.slice(iniciR32_15, fiR32_15 === -1 ? undefined : fiR32_15);
+    expect(iniciR32_15).toBeGreaterThanOrEqual(0);
+    const seguentSeccio = readme.indexOf('\n## ', iniciR32_15 + 1);
+    const seccioR32_15 = readme.slice(iniciR32_15, seguentSeccio < 0 ? undefined : seguentSeccio);
     expect(seccioR32_15).toContain('**Aplicat i certificat a Producció (19-11-2026)**');
     expect(seccioR32_15).toContain('`6f9974a0f6a46d8ca8e87e7ed617dd3eb5dbf4dfe0d8a73d61f6a6f8dc178fe9`');
     expect(seccioR32_15).not.toContain('**NO aplicat');
@@ -5064,17 +5091,16 @@ describe('Onades R32.17 i R32.18 · Crònica d’obertura en les cinc llengües:
     ca: Array(2).fill('Millora'), es: Array(2).fill('Mejora'), en: Array(2).fill('Improvement'),
     eu: Array(2).fill('Hobekuntza'), gl: Array(2).fill('Mellora')
   };
-  /* La versió i el build d'ara, els del codi (package.json i VERSIO_CLIENT_NATIU). */
+  /* La versió i el build d'aquella entrega. Onada v1.2.15 · Es fixen literals: la d'ara la diu la crònica R32.20. */
   const VERSIO_R32_18 = {
-    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
-    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
-    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+    ca: 'versió 1.2.14 (build 19)', es: 'versión 1.2.14 (build 19)', en: 'version 1.2.14 (build 19)', eu: '1.2.14 bertsiora (19. builda)',
+    gl: 'versión 1.2.14 (build 19)'
   };
   const NO_BOTIGUES_R32_18 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
     eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
   const BUILD_ANTERIOR_R32_18 = { ca: 'build 18', es: 'build 18', en: 'build 18', eu: '18. builda', gl: 'build 18' };
-  const CONNECTOR_NO_PUBLICAT_R32_18 = { ca: `la ${CONNECTOR} del repositori`, es: `la ${CONNECTOR} del repositorio`,
-    en: `${CONNECTOR} in the repository`, eu: `biltegiko ${CONNECTOR}`, gl: `a ${CONNECTOR} do repositorio` };
+  const CONNECTOR_NO_PUBLICAT_R32_18 = { ca: 'la 1.1.22 del repositori', es: 'la 1.1.22 del repositorio',
+    en: '1.1.22 in the repository', eu: 'biltegiko 1.1.22', gl: 'a 1.1.22 do repositorio' };
   const NO_PUBLICAT_R32_18 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
     eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
   /* Llei 32 · El servidor, pel seu nom de casa; Llei 0 · esta versió no hi canvia res. */
@@ -5088,19 +5114,20 @@ describe('Onades R32.17 i R32.18 · Crònica d’obertura en les cinc llengües:
   const SENIOR_R32_18 = { ca: 'Mode Sènior', es: 'Modo Sénior', en: 'Senior Mode', eu: 'Senior Moduan', gl: 'Modo Sénior' };
   /* Cap promesa de termini ni de sincronització automàtica, cap homologació; i cap «més ràpid» que no s'haja mesurat. */
   const PROMESES_FALSES_R32_18 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|ja és a la botiga|is already in|homolog|certified|garantit|garantizado|guaranteed|bermatu|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%/i;
+  /* Onada v1.2.15 · La R32.20 obri ara la pàgina: el bloc de la R32.18 es llig després de llevar-la (desDeR32_18). */
   const blocR32_18 = (llengua) => {
-    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    const cos = desDeR32_18(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
     return cos.slice(0, cos.indexOf('<h3>', 4));
   };
 
   test('obri /versions en ca, es, en, eu i gl, davant de la R32.17, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R32_18).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(fitaR32_18Bloc.startsWith(`<h3>${TITOL_FITA_R32_18}</h3>`)).toBe(true);
-    expect(html.trimStart().startsWith(fitaR32_18Bloc)).toBe(true);
+    expect(desDeR32_18(html.trimStart()).startsWith(fitaR32_18Bloc)).toBe(true);
     expect(interns(fitaR32_18Bloc)).toEqual(['/el-meu-perfil', '/app', '/el-meu-perfil', '/app', '/el-meu-perfil', '/app']);
     expect(interns(fitaR32_18Bloc).every(rutaExistix)).toBe(true);
     for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_18)) {
-      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      const cos = desDeR32_18(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
       expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
       const bloc = blocR32_18(llengua);
       // L'ordre de /versions: R32.18 → R32.17 → R32.15 (la resta la proven les cròniques d'abans).
@@ -5158,14 +5185,14 @@ describe('Onades R32.17 i R32.18 · Crònica d’obertura en les cinc llengües:
 
   test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, estils a part del Perfil i de les apps, cap canvi al servidor i comprovació de versió apagada', () => {
     // La versió i el build de la crònica són els del codi; el connector publicat no és més nou que el del repositori.
-    expect(PAQUET.version).toBe('1.2.14');
-    expect(VERSIO_CLIENT_NATIU).toBe(19);
+    /* Onada v1.2.15 · És història: la versió d'ara (1.2.15, build 20) és més nova, i la diu la crònica R32.20. */
+    expect(noMesNova('1.2.14', PAQUET.version)).toBe(true);
+    expect(VERSIO_CLIENT_NATIU).toBeGreaterThan(18);
     expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
     expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
     expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
     expect(llegix('src/data/contracte.js')).toContain('Versió\n   unificada 1.2.14 amb el build 19: integra Codex R32.17');
-    expect(CONNECTOR).toBe('1.1.22');
-    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.22$/m);
+    expect(noMesNova('1.1.22', CONNECTOR)).toBe(true);
     expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.22 =$/m);
     expect(noMesNova(CONNECTOR_PUBLICAT, CONNECTOR), `${CONNECTOR_PUBLICAT} ≤ ${CONNECTOR}`).toBe(true);
     expect(llegix('wordpress-plugin/eines/empaqueta.mjs')).toContain('export const LIMIT_DIRECTORI = 10 * 1024 * 1024;');
@@ -5190,7 +5217,7 @@ describe('Onades R32.17 i R32.18 · Crònica d’obertura en les cinc llengües:
        de la frase. */
     const ARRIBADA = /\b(?:arriben|no viatgen|llegan|no viajan|arrive|no longer travel|iristen|ez dute[^.]*bidaiatzen|chegan|non viaxan)\b/i;
     for (const llengua of Object.keys(INICIS_R32_18)) {
-      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      const cos = desDeR32_18(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
       const blocLlengua = cos.slice(0, cos.indexOf('<h3>', 4));
       for (const [, p] of blocLlengua.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
         for (const tros of p.split('href="/app"').slice(1)) {
@@ -5210,5 +5237,142 @@ describe('Onades R32.17 i R32.18 · Crònica d’obertura en les cinc llengües:
     // La comprovació de versió de les publicacions i la federació continuen apagades.
     expect(llegix('src/hooks/useProjeccionsCataleg.js')).toContain("if (import.meta.env.VITE_SDP_PUBLICACIONS_CAS !== '1') return false;");
     expect(llegix('src/data/projeccionsCatalegServei.js')).toContain('versionada = false');
+  });
+});
+
+/* Onada v1.2.15 (ordre del Mestre del 20-11-2026, vespre, encadenada a la v1.2.14) · La crònica de les Onades R32.19 i
+   R32.20 obri /versions en les cinc llengües, davant de la de R32.17 i R32.18. Cada fet té el seu consumidor a l'arbre:
+   El Bar sense columna buida (Gemini R32.19, només al Bar), l'Arbre Genealògic amb arbres grans (Node 0 R796) i els
+   agraïments de /page/legal §23.bis. Gauntlet v1.2.15 · Els noms explícits de botons i enllaços (Gemini R32.19 i R32.20)
+   no són cap millora per als lectors de pantalla (la v1.2.14 ja en tenia 0 sense nom): la crònica no en parla.
+   Llei 32: «el servidor de Sóc de Poble». */
+describe('Onades R32.19 i R32.20 · Crònica d’obertura en les cinc llengües: El Bar, l’Arbre i els agraïments, amb Llei 0', () => {
+  const PREFIXOS_R32_20 = {
+    ca: Array(3).fill('Millora'), es: Array(3).fill('Mejora'), en: Array(3).fill('Improvement'),
+    eu: Array(3).fill('Hobekuntza'), gl: Array(3).fill('Mellora')
+  };
+  /* La versió i el build d'ara, els del codi (package.json i VERSIO_CLIENT_NATIU). */
+  const VERSIO_R32_20 = {
+    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
+    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
+    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+  };
+  const NO_BOTIGUES_R32_20 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
+    eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
+  const BUILD_ANTERIOR_R32_20 = { ca: 'build 19', es: 'build 19', en: 'build 19', eu: '19. builda', gl: 'build 19' };
+  const CONNECTOR_NO_PUBLICAT_R32_20 = { ca: `la ${CONNECTOR} del repositori`, es: `la ${CONNECTOR} del repositorio`,
+    en: `${CONNECTOR} in the repository`, eu: `biltegiko ${CONNECTOR}`, gl: `a ${CONNECTOR} do repositorio` };
+  const NO_PUBLICAT_R32_20 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
+    eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
+  const SERVIDOR_R32_20 = { ca: 'servidor de Sóc de Poble', es: 'servidor de Sóc de Poble', en: 'Sóc de Poble server',
+    eu: 'Sóc de Pobleren zerbitzarian', gl: 'servidor de Sóc de Poble' };
+  const SENSE_CANVI_SERVIDOR_R32_20 = { ca: 'no canvia res', es: 'no cambia nada', en: 'changes nothing', eu: 'ez du ezer aldatzen',
+    gl: 'non cambia nada' };
+  const DECISIO_MESTRE_R32_20 = { ca: 'decisió del Mestre', es: 'decisión del Mestre', en: 'the Mestre’s decision', eu: 'Mestreren erabakia',
+    gl: 'decisión do Mestre' };
+  const LECTORS_R32_20 = { ca: 'lectors de pantalla', es: 'lectores de pantalla', en: 'screen readers', eu: 'pantaila-irakurgailu',
+    gl: 'lectores de pantalla' };
+  /* Cap promesa de termini, de sincronització automàtica ni d'homologació; i cap «més ràpid» que no s'haja mesurat. */
+  const PROMESES_FALSES_R32_20 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|ja és a la botiga|is already in|homolog|certified|garantit|garantizado|guaranteed|bermatu|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%/i;
+  const blocR32_20 = (llengua) => {
+    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    return cos.slice(0, cos.indexOf('<h3>', 4));
+  };
+
+  test('obri /versions en ca, es, en, eu i gl, davant de la R32.18, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+    expect(TITOL_FITA_R32_20).not.toMatch(/ · v\d+\.\d+\.\d+/);
+    expect(fitaR32_20Bloc.startsWith(`<h3>${TITOL_FITA_R32_20}</h3>`)).toBe(true);
+    expect(html.trimStart().startsWith(fitaR32_20Bloc)).toBe(true);
+    expect(interns(fitaR32_20Bloc)).toEqual(['/app/bar', '/app/genealogia', '/page/legal', '/app/bar', '/app/genealogia', '/page/legal']);
+    expect(interns(fitaR32_20Bloc).every(rutaExistix)).toBe(true);
+    for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_20)) {
+      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
+      const bloc = blocR32_20(llengua);
+      // L'ordre de /versions: R32.20 → R32.18 → R32.17 (la resta la proven les cròniques d'abans).
+      expect(cos.startsWith(`<h3>${INICIS_R32_18[llengua]}`, bloc.length), llengua).toBe(true);
+      expect(desDeR32_18(cos), llengua).toBe(cos.slice(bloc.length));
+      expect(desDeR32_17(cos).startsWith(`<h3>${INICIS_R32_17[llengua]}`), llengua).toBe(true);
+      expect(interns(bloc), llengua).toEqual(interns(fitaR32_20Bloc));
+      expect(titolsH4(bloc).map((t) => t.split(' · ')[0])).toEqual(PREFIXOS_R32_20[llengua]);
+      expect(apartats(bloc), llengua).toHaveLength(3);
+      expect(bloc.match(/[^\s>]<a |<\/a>[^\s,.:]/g), llengua).toBeNull();
+      const pla = text(bloc);
+      expect(PLATAFORMA_ALIENA.test(pla), llengua).toBe(false);
+      expect(/Google|Apple|App Store|iPhone|iPad|TestFlight|Android|\bPlay\b|\bAPK\b|\bAAB\b|F-Droid|Safari|Chrome|Firefox|Facebook|Instagram|TikTok|\bLINE\b|Twitter|\bX\.com\b|YouTube|GitHub/i.test(pla), llengua).toBe(false);
+      expect(/\bdesplegad[ae]s?\b|\bdesplegat|en producció|en producción|in production|\bactivad[ao]\b|\bactivat\b|aviat|pròximament|properament|IDEA-\d|P\d-\d|D-R\d|D-v\d|torn_|mas[i]a|sobir/i.test(pla), llengua).toBe(false);
+      expect(/\bdel poble\b|\bdel pueblo\b|\bdo pobo\b/i.test(pla), llengua).toBe(false);
+      // Llei 0 · Cap jerga tècnica ni cap proveïdor: ni CSS, ni HMR, ni cicles d'imports, ni el nom del servidor de dades.
+      expect(/\bCSS\b|\bJS\b|\bHTML\b|\bHMR\b|Tarjan|\bCAS\b|\bRPC\b|\bSQL\b|\bLSSI\b|\bOAuth\b|Supabase|PostgreSQL|\bCDP\b|frontmatter|aria-|\bWCAG\b|O\(n|quadràtic|bytes?\b|servidor compartit|servidor compartido|shared server|zerbitzari partekatu/i.test(pla), llengua).toBe(false);
+      expect(PROMESES_FALSES_R32_20.test(pla), llengua).toBe(false);
+      expect(pla, llengua).toContain(VERSIO_R32_20[llengua]);
+      expect(pla).not.toContain('1.2.14');
+      expect(pla, llengua).toContain(NO_BOTIGUES_R32_20[llengua]);
+      expect(pla, llengua).toContain(BUILD_ANTERIOR_R32_20[llengua]);
+      expect(pla).toContain(CONNECTOR_PUBLICAT);
+      expect(pla, llengua).toContain(CONNECTOR_NO_PUBLICAT_R32_20[llengua]);
+      expect(pla, llengua).toContain(NO_PUBLICAT_R32_20[llengua]);
+      expect(pla).toContain('WordPress.org');
+      expect(pla).toContain('10 MB');
+      expect(pla, llengua).toContain(SERVIDOR_R32_20[llengua]);
+      expect(pla, llengua).toContain(SENSE_CANVI_SERVIDOR_R32_20[llengua]);
+      expect(pla, llengua).toContain(DECISIO_MESTRE_R32_20[llengua]);
+      /* Gauntlet v1.2.15 · Cap promesa per als lectors de pantalla ni cap recompte de pantalles revisades. */
+      expect(pla, llengua).not.toContain(LECTORS_R32_20[llengua]);
+      expect(pla).not.toContain('78');
+      /* Ni «revisar» als agraïments: l'apartat 23.bis agraïx inspiració, no cap revisió. */
+      expect(/ajudat a revisar|ayudado a revisar|helped us review|berrikusten lagundu|axudaron a revisar/i.test(pla), llengua).toBe(false);
+      const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
+      const paragrafsDelBloc = [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect(paragrafsDelBloc).toHaveLength(6);
+      for (const p of paragrafsDelBloc) {
+        const w = [...segmentador.segment(p.replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        const n = (p.match(/<strong>/g) ?? []).length;
+        const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+        expect(n >= min && n <= max, `${llengua}: ${n} negretes per a ${w} paraules (${min}–${max}): «${p.replace(/<[^>]+>/g, '').slice(0, 60)}…»`).toBe(true);
+      }
+      for (const m of bloc.matchAll(/<strong>([\s\S]*?)<\/strong>/g)) {
+        const w = [...segmentador.segment(m[1].replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        expect(w >= 1 && w <= 6, `${llengua} · negreta de ${w} paraules: «${m[1]}»`).toBe(true);
+      }
+      expect(bloc, llengua).not.toMatch(/<h([34])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+    }
+  });
+
+  test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, El Bar, Arbre Genealògic, agraïments i cap canvi al servidor', () => {
+    expect(PAQUET.version).toBe('1.2.15');
+    expect(VERSIO_CLIENT_NATIU).toBe(20);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
+    expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
+    expect(llegix('src/data/contracte.js')).toContain('Versió\n   unificada 1.2.15 amb el build 20: integra Codex R32.19');
+    expect(CONNECTOR).toBe('1.1.23');
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.23$/m);
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.23 =$/m);
+    expect(noMesNova(CONNECTOR_PUBLICAT, CONNECTOR), `${CONNECTOR_PUBLICAT} ≤ ${CONNECTOR}`).toBe(true);
+    expect(llegix('wordpress-plugin/eines/empaqueta.mjs')).toContain('export const LIMIT_DIRECTORI = 10 * 1024 * 1024;');
+    // El Bar: la graella sense columna esquerra (leftColumn === null) no reserva cap columna buida.
+    expect(llegix('src/components/layout/AppGridShell.jsx')).toContain('const senseEsquerra = leftColumn === null;');
+    expect(llegix('src/components/layout/AppGridShell.jsx')).toContain("senseEsquerra ? 'has-left-empty' : ''");
+    expect(existsSync(resolve(process.cwd(), 'src/apps/bar/elBarParitatCraft.r32_19.test.jsx'))).toBe(true);
+    // Només al Bar (Gauntlet v1.2.15): ClosaAplicacio retira la columna buida si l'app ho declara, i només ho declara el Bar.
+    expect(llegix('src/apps/plataforma/ClosaAplicacio.jsx')).toContain('(amagaEsquerraBuida ? null : undefined)');
+    expect(llegix('src/apps/bar/AppBar.jsx')).toContain('titols={titolsBar(idioma)} amagaEsquerraBuida />');
+    expect(llegix('src/apps/nevera/AppNevera.jsx')).not.toContain('amagaEsquerraBuida');
+    // L'avís de torn tancat una sola vegada (columna lateral) i cap tiquet buit acumulat.
+    expect(llegix('src/apps/bar/vistes/comu.jsx')).toContain('<EstatBuit breu titol={tx.senseTornLateral} />');
+    expect(llegix('src/apps/bar/estat/ProveidorBar.jsx')).toContain('esDescartable(c) && mateixOrigen(c.origen, origenValid)');
+    expect(llegix('src/apps/bar/vistes/vestits.js')).toContain('ultimaBuidaPerOrigen');
+    // L'Arbre Genealògic (Node 0 R796): les parelles ja connectades se salten a blocs, amb la seua prova.
+    expect(llegix('src/apps/genealogia/nucli/parentiu.js')).toMatch(/j = seguent\[j\] - 1;/);
+    expect(llegix('src/apps/genealogia/nucli/parentiu.test.js')).toContain('R796 · 20.000 persones connectades');
+    // Els agraïments de /page/legal §23.
+    expect(llegix('src/sections/text/TextSection.jsx')).toContain('CreditsComunitatS23');
+    expect(existsSync(resolve(process.cwd(), 'src/sections/text/legalCreditsS23.js'))).toBe(true);
+    // El servidor: cap migració nova; els fragments de Codex R32.19 es queden sense aplicar.
+    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations'));
+    expect(migracions.some((m) => /r32_19|lssi_control/i.test(m))).toBe(false);
+    expect(existsSync(resolve(process.cwd(), 'supabase/snippets/r32_19_lssi_control_i_unicode.sql'))).toBe(true);
+    expect(llegix('src/hooks/useProjeccionsCataleg.js')).toContain("if (import.meta.env.VITE_SDP_PUBLICACIONS_CAS !== '1') return false;");
   });
 });

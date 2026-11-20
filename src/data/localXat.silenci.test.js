@@ -138,10 +138,10 @@ describe('l’adaptador local (conversesLocal)', () => {
       expect(teCapacitat('denunciesDiligents')).toBe(false);
       // R15 i R54 incorporen grups de servidor; el node local no els declara.
       // Les capacitats locals prèvies, push i silenci incloses, es conserven.
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(Object.keys(CAPACITATS)).toHaveLength(60);
+      expect(Object.keys(CAPACITATS)).toHaveLength(62);
     } finally {
       await a.destroy();
     }

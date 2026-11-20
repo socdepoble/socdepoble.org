@@ -72,7 +72,7 @@ const EXCUSES = new Map([
   ['porta:matrix', 'Consulta de context i encaminament, no validador; l’autoritat es comprova en cada torn.'],
   ['porta:segella:update', 'Mutació manual amb reconciliació explícita i evidència; la cadena executa porta:segella en mode verificació.'],
   ['porta:consola-zero', 'Arnés pesat (vite build, Firebase Hosting local i navegador headless): es passa abans de cada desplegament web, no a cada commit (Onada R24.2, paquet de desplegament).'],
-  ['porta:craft-paritat', 'Arnés pesat (servidor viu a :3340 i Chrome headless): es passa a mà abans d’un desplegament, no a cada commit (v1.2.14). El cicle d’imports heretat de la Gestoria el trenca el carril de Codex R32.19.'],
+  ['porta:craft-paritat', 'Arnés pesat (servidor viu a :3340 i Chrome headless): es passa a mà abans d’un desplegament, no a cada commit (v1.2.14). Des de la v1.2.15 (Codex R32.19) l’anàlisi de cicles dona 0 en tot src/; els Page Claims necessiten el servidor viu.'],
 ]);
 
 /**

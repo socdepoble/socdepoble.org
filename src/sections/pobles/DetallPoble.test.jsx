@@ -1,7 +1,8 @@
 import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import DetallPoble, { resumDelPaquet } from './DetallPoble.jsx';
+import DetallPoble from './DetallPoble.jsx';
+import { resumDelPaquet } from './detallPobleModel.js';
 import fontDetailMeta from '../detail/detailSectionMeta.jsx?raw';
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const poble = { id: 'sella', title: 'Sella' };

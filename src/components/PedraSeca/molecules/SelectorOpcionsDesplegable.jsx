@@ -50,9 +50,10 @@ export function SelectorOpcionsDesplegable({
               <label className="sdp-selector-opcions__tria" htmlFor={id} data-actiu={actiu} data-inhabilitada={disabled || Boolean(opcio.inhabilitada)}>
                 <input id={id} name={grup} type="radio" value={opcio.id} checked={actiu}
                   disabled={opcio.inhabilitada} aria-controls={`${id}-detall`}
+                  aria-labelledby={`${id}-titol`}
                   aria-describedby={actiu ? `${id}-detall` : undefined}
                   onChange={() => { pendent.current = opcio.id; onCanvi(opcio.id); }} />
-                <span>{opcio.titol}</span>
+                <span id={`${id}-titol`}>{opcio.titol}</span>
               </label>
               <div id={`${id}-detall`} className="sdp-selector-opcions__detall" data-revelacio="" hidden={!actiu}>
                 {opcio.explicacio}

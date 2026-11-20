@@ -109,10 +109,10 @@ const FITXERS_OBLIGATORIS = ABAST ? ABAST.filter(p => p.includes('.')) : (PERFIL
   'vite.config.js',
   'eslint.config.js',
   'index.html',
-  '_wiki_de_poble/02_saber/soci_sollutia.md',
+  `${CAMINS.wiki}/02_saber/soci_sollutia.md`,
   'INTEGRACIO.md'
 ] : PERFIL === 'micro' ? [
-  '_wiki_de_poble/01_ser/00_bios.md'
+  `${CAMINS.wiki}/01_ser/00_bios.md`
 ] : PERFIL === 'macro' ? [
   'package.json',
   'vite.config.js',

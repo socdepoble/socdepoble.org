@@ -3816,6 +3816,7 @@ section.bar-orange[data-copublicacio="composta"] {
   /* Una sola columna que no passa mai de l'amplada de l'article: sense el
      minmax(0, …), el logotip editable (sdp-logo-personalitzat, amplada
      100%) eixamplava la cel·la i desbordava la columna estreta. */
+  .sdp-edicio-avancada:not([open]) > :not(summary) { display: none; }
   .sdp-edicio-avancada__cos {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

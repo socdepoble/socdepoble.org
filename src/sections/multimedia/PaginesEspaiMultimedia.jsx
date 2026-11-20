@@ -93,8 +93,9 @@ export function Cella({ item, onObri, t }) {
   const [srcFallit, setSrcFallit] = useState(null);
   const nom = textNet(item.title) || textNet(item.tag);
   const ambImatge = Boolean(item.src) && item.src !== srcFallit;
+  const etiquetaAccessible = nom || tradueix(t, ambImatge ? E.senseTitol : E.senseImatge);
   return (
-    <button ref={adoptaEstilsDiferits} type="button" className="photo-grid__boto" onClick={() => onObri(item)}>
+    <button ref={adoptaEstilsDiferits} type="button" className="photo-grid__boto" aria-label={etiquetaAccessible} onClick={() => onObri(item)}>
       <span className="photo-grid__item">
         {/* T5 · El src es resol en pintar-lo: incrustat, un '/assets/…' penja del paquet. Sense base, el de sempre. */}
         {ambImatge ? (

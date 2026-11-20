@@ -42,6 +42,9 @@ function snapshot(root) {
 function copyReceipt(root) {
   const source = fileURLToPath(new URL('../tooling/gates/fixtures/produccio-r3214', import.meta.url));
   fs.cpSync(source, path.join(root, 'tooling/gates/fixtures/produccio-r3214'), { recursive: true });
+  const bundle = REBUT_PRODUCCIO_R3214.bundle, target = path.join(root, bundle);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(fileURLToPath(new URL('../' + bundle, import.meta.url)), target);
   for (const { ruta } of FONTS_PRODUCCIO_R3215) { const target = path.join(root, ruta); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.copyFileSync(fileURLToPath(new URL('../' + ruta, import.meta.url)), target); }
 }
 function probes(root) {

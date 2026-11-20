@@ -3488,3 +3488,39 @@ immutable i no té cap camí d'esborrat. `creada_per` conserva l'identificador
 pseudònim de qui va reservar encara que deixe el poble, i la clau forana
 `tenant_id` (sense `ON DELETE`) impedix donar de baixa un poble que tinga
 reserves.
+
+## R32.19 · Controls LSSI i sonda de només lectura
+
+`snippets/r32_19_lssi_control_i_unicode.sql` és el pegat incremental
+D-v1213-3, verificat localment en PostgreSQL 18.6 natiu i PGlite.
+Requerix R32.13/R32.15 LSSI i la fila 120. Refusa C0 excepte TAB/LF/CR i
+DEL abans de rebuts i deduplicació; protegix també ampliacions i notes de
+revisió. La preguarda SHA dels tres RPC i dels helpers nous rebutja deriva,
+i la reexecució preserva ACL, històric i CHECK ja validats. El trigger de
+detall deixa revisar denúncies antigues sense reescriure’n el text.
+
+Des del Gauntlet de la v1.2.15, el trigger de detall és `SECURITY DEFINER`
+(`search_path=''`). `public.denuncia_contingut` és `SECURITY INVOKER`, i ni
+anon, ni authenticated, ni service_role tenen EXECUTE sobre l’ajudant privat.
+Amb el trigger INVOKER, totes les denúncies que no són del Mur haurien fallat
+amb 42501. La prova cobrix anon i authenticated, amb detall i sense, el
+control C0 (22023) i l’INSERT i l’UPDATE de service_role (26/26, natiu i
+PGlite).
+
+**NO aplicat a Producció en este lliurament.** L’aplicació correspon al
+Mestre després de revisar la sonda i les preimatges. UTF8/JSON del servidor
+ja refusen NUL i surrogats invàlids; U+FFFD substituït pel client és un
+escalar vàlid i no permet reconstruir el text perdut.
+
+`snippets/r32_19_sonda_readonly_files_120_121.sql` usa `BEGIN READ ONLY` i
+un termini de dos segons: mostra les peces LSSI de `20261117140000` i el
+registre `sistema-nervios` de `20261117150000`, sense dades personals ni
+escriptures. El resultat acredita estat estructural actual; no autoria,
+data d’aplicació ni ledger de migracions. Les files 120–121 del catàleg
+no canvien d’estat per una prova local.
+
+Proves: `tests/r3219-lssi-control-postgres.test.mjs` (26/26 locals),
+`tests/r3219-ap-fetch-pinnat.test.mjs` i regressió AP. `ap-inbox-verifica`
+rep un transport HTTPS pinnat amb Host/SNI i certificat originals, IP pública
+congelada i proxy ambiental desactivat. `SDP_AP_ACTIVA` continua apagada per
+defecte; no s’ha executat Deno/Edge ni desplegat federació remota.

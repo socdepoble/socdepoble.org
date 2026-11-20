@@ -193,6 +193,12 @@ import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js
 import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
 import { fontSegura } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
+import {
+  etiquetaAutorTargeta,
+  etiquetaCategoriaTargeta,
+  etiquetaDretsTargeta,
+  etiquetaObrirDetallTargeta
+} from './textosEnllacosTargeta.js';
 
 function useEstatUIOpcional() {
   try {
@@ -241,11 +247,11 @@ const SENSE_REFERENT = Object.freeze({ referrerPolicy: 'no-referrer' });
 /* Fase D (261020, tasca 2) · `accioModeracio`: el ⋮ «Més opcions»
    (Moderacio.jsx), l'últim, a la vora dreta, després de la pastilla. Null,
    el DOM de sempre. */
-function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction, accioModeracio = null }) {
+function CardHeader({ autor, autorHref, etiquetaAutor, centre, pin, dataHora, headerAction, accioModeracio = null }) {
   return (
     <header className={centre ? 'sp-card-header sp-card-header--amb-emoticona' : 'sp-card-header'}>
       {autor && (autorHref ? (
-        <Link className="sp-card-author-link" to={autorHref}>{autor}</Link>
+        <Link className="sp-card-author-link" to={autorHref} aria-label={etiquetaAutor}>{autor}</Link>
       ) : (
         <span className="sp-card-author-block">{autor}</span>
       ))}
@@ -264,17 +270,18 @@ function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction, acc
 
 export { SquareBadge, midaDelPreu } from './SquareBadge.jsx';
 
-function Etiqueta({ label }) {
+function Etiqueta({ label, idioma = 'ca' }) {
   const text = typeof label === 'string' ? label : label.text;
   const classe = typeof label === 'string' ? 'sdp-badge-tag' : label.className || 'sdp-badge-tag';
   const href = typeof label === 'string' ? null : label.href;
   const segur = href && isSafeUrl(href) ? href : null;
+  const nomAccessible = segur ? etiquetaCategoriaTargeta(text, idioma) : undefined;
   return (
     <li className={`sp-card-label ${classe}`} lang={typeof label === 'string' ? undefined : label.lang}>
       {!segur ? text : segur.startsWith('http') ? (
-        <a href={segur} target="_blank" rel="noopener noreferrer" className="sp-card-label">{text}</a>
+        <a href={segur} target="_blank" rel="noopener noreferrer" className="sp-card-label" aria-label={nomAccessible}>{text}</a>
       ) : (
-        <Link to={segur} className="sp-card-label">{text}</Link>
+        <Link to={segur} className="sp-card-label" aria-label={nomAccessible}>{text}</Link>
       )}
     </li>
   );
@@ -284,10 +291,11 @@ function LlistaEtiquetes({ etiquetes }) {
   /* T7 · P1-22 (261101) · El nom de la llista, en la llengua de la interfície;
      fora de l'app o en valencià, «Categories» com sempre. */
   const t = useTraductorOpcional();
+  const idioma = useEstatUIOpcional()?.language || 'ca';
   return (
     <ul className="sp-card-labels" aria-label={tradueix(t, ['common.categories', 'Categories'])}>
       {etiquetes.map((label, index) => (
-        <Etiqueta key={`${typeof label === 'string' ? label : label.text}-${index}`} label={label} />
+        <Etiqueta key={`${typeof label === 'string' ? label : label.text}-${index}`} label={label} idioma={idioma} />
       ))}
     </ul>
   );
@@ -303,8 +311,10 @@ function LlistaEtiquetes({ etiquetes }) {
    porta useNavigate, no tomben la targeta. */
 function EnllacDrets({ children }) {
   const router = useUbicacioApp();
-  if (!router) return <a href={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{children}</a>;
-  return <Link to={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{children}</Link>;
+  const idioma = useEstatUIOpcional()?.language || 'ca';
+  const nomAccessible = etiquetaDretsTargeta(children, idioma);
+  if (!router) return <a href={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac" aria-label={nomAccessible}>{children}</a>;
+  return <Link to={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac" aria-label={nomAccessible}>{children}</Link>;
 }
 
 /* `portes` (P5) · Les portes de la targeta de doble acció, al final del cos.
@@ -906,19 +916,25 @@ export function UniversalCard({
     : null;
   const ariaPremuda = typeof premuda === 'boolean' ? { 'aria-pressed': premuda ? 'true' : 'false' } : null;
 
+  const idiomaInterficie = ui?.language || 'ca';
+  const etiquetaAutor = safeAuthorHref
+    ? etiquetaAutorTargeta({ author, location, avatarAlt, idioma: idiomaInterficie })
+    : undefined;
+  const etiquetaPrincipal = etiquetaObrirDetallTargeta(title, idiomaInterficie);
+
   return (
     <article className={cardClasses} data-testid={dataTestId || undefined} aria-current={ambPrincipal ? undefined : ariaActual} translate={translate === 'no' ? 'no' : undefined}>
       {(autor || centre || pin || headerAction || dataHora || accioModeracio) && (
-        <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction}
+        <CardHeader autor={autor} autorHref={safeAuthorHref} etiquetaAutor={etiquetaAutor} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction}
           accioModeracio={accioModeracio} />
       )}
 
       {ambPortes ? null : safeMainHref ? (
-        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} {...extresPrincipal} {...capturaDelEnllac}>
+        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={etiquetaPrincipal} aria-current={ariaActual} {...extresPrincipal} {...capturaDelEnllac}>
           {textDescripcio}
         </Link>
       ) : onMainClick ? (
-        <button type="button" className="sp-card-link-overlay" onClick={clicDelBoto} aria-label={title || 'Obrir detall'} aria-current={ariaActual} {...ariaPremuda} {...extresPrincipal}>
+        <button type="button" className="sp-card-link-overlay" onClick={clicDelBoto} aria-label={etiquetaPrincipal} aria-current={ariaActual} {...ariaPremuda} {...extresPrincipal}>
           {textDescripcio}
         </button>
       ) : null}

@@ -21,7 +21,7 @@ export default function AppBar({ magatzem, rellotge, atzar }) {
   const { idioma = 'ca' } = useApp();
   return (
     <ProveidorBar magatzem={magatzem} rellotge={rellotge} atzar={atzar} idioma={idioma}>
-      <ClosaAplicacio rutes={RUTES_BAR} titols={titolsBar(idioma)} />
+      <ClosaAplicacio rutes={RUTES_BAR} titols={titolsBar(idioma)} amagaEsquerraBuida />
     </ProveidorBar>
   );
 }

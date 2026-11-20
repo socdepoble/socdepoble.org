@@ -1,3 +1,4 @@
+import { normalitzaVerificacioRecuperacio } from './backendProtocolPublic.js';
 /**
  * tornadaRecuperacio.js — LA TORNADA D'UN ENLLAÇ DE RECUPERACIÓ DE CONTRASENYA
  *
@@ -117,7 +118,6 @@ export function rutaSenseRecuperacio(href) {
 const URL_EN_TEXT = /https:\/\/[^\s<>"'`]+/gi;
 const PUNTUACIO_FINAL = new Set([')', ']', '}', '.', ',', ';', ':', '!', '?', '…', '»', '’', '”']);
 const MAX_TEXT_EXAMINAT = 8192;
-const CAMI_VERIFICA = '/auth/v1/verify';
 
 /* Els orígens https exactes, sense usuari ni contrasenya; la resta es descarta. */
 function origensPermesos(origens) {
@@ -170,12 +170,16 @@ export function enllacDeRecuperacioEnText(text, { origens = [] } = {}) {
     let url;
     try { url = desembolcalla(new URL(senseCuaDePuntuacio(cru))); } catch { continue; }
     if (!permesos.has(url.origin) || url.username || url.password) continue;
-    if (url.pathname === CAMI_VERIFICA) {
-      if (url.searchParams.get(CLAU_TIPUS) !== TIPUS_RECUPERACIO) continue;
-      const token = url.searchParams.get(CLAU_TOKEN) ?? url.searchParams.get('token');
-      if (!token) continue;
-      const fragment = new URLSearchParams({ [CLAU_TOKEN]: token, [CLAU_TIPUS]: TIPUS_RECUPERACIO });
-      return { href: `${url.origin}/#${fragment}` };
+    const verificacio = normalitzaVerificacioRecuperacio(url);
+    if (verificacio) {
+      if (typeof verificacio.href === 'string') {
+        let tornada;
+        try { tornada = new URL(verificacio.href); } catch { continue; }
+        // L'adaptador no amplia els orígens autoritzats ni el tipus de tornada.
+        if (tornada.protocol === 'https:' && permesos.has(tornada.origin) && !tornada.username && !tornada.password
+            && llegixTornadaDeRecuperacio(tornada.href)) return { href: tornada.href };
+      }
+      continue;
     }
     if (llegixTornadaDeRecuperacio(url.href)) return { href: url.href };
   }

@@ -1,10 +1,10 @@
 {
-  "generat": "2026-11-20T00:29:06.368Z",
+  "generat": "2026-11-20T17:50:49.753Z",
   "esquema": "https://socdepoble.org/schemas/wiki-frontmatter-v2.1.json",
   "esquemaSha256": "ec252c69d5f761d33883ab85f443f1c1eb1d49dfe2baf4ef57a34775bb938233",
   "metode": "F1-per-clau/v2",
   "max": {
-    "F1": 36,
+    "F1": 27,
     "F2": 0,
     "F3": 0,
     "F4": 0,
@@ -12,6 +12,6 @@
     "F6": 0,
     "F7": 0,
     "F8": 0,
-    "F9": 15
+    "F9": 12
   }
 }

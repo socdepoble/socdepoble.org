@@ -147,7 +147,7 @@ export function RecuperacioStep({
 
           <form className="onboarding-form" onSubmit={submit} noValidate>
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="rec-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
+              <label id="rec-email-label" className="sdp-camp__etiqueta" htmlFor="rec-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
               <input
                 ref={correuRef}
                 id="rec-email"
@@ -158,6 +158,7 @@ export function RecuperacioStep({
                 onChange={(event) => { onCanviCorreu?.(event.target.value); setErrorCorreu(''); }}
                 autoComplete="email"
                 inputMode="email"
+                aria-labelledby="rec-email-label"
                 aria-invalid={Boolean(errorCorreu)}
                 aria-describedby={descripcio}
                 disabled={bloquejat || enviant}
@@ -291,7 +292,7 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
 
           <form className="onboarding-form" onSubmit={submit} noValidate>
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="nova-password">{t('section.login.recuperacio.novaCamp', 'Contrasenya nova')}</label>
+              <label id="nova-password-label" className="sdp-camp__etiqueta" htmlFor="nova-password">{t('section.login.recuperacio.novaCamp', 'Contrasenya nova')}</label>
               <ControlContrasenya
                 id="nova-password"
                 etiquetaUll={t('section.login.registre.ullContrasenya', 'Mostra la contrasenya')}
@@ -300,6 +301,7 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
                 onChange={updateField}
                 autoComplete="new-password"
                 minLength={LONGITUD_MINIMA_CONTRASENYA}
+                aria-labelledby="nova-password-label"
                 aria-invalid={Boolean(errors.password)}
                 aria-describedby="nova-password-help"
                 disabled={ocupat || enllacMort}
@@ -311,7 +313,7 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
             </div>
 
             <div className="sdp-camp">
-              <label className="sdp-camp__etiqueta" htmlFor="nova-confirm-password">{t('section.login.recuperacio.novaConfirma', 'Confirmar contrasenya nova')}</label>
+              <label id="nova-confirm-password-label" className="sdp-camp__etiqueta" htmlFor="nova-confirm-password">{t('section.login.recuperacio.novaConfirma', 'Confirmar contrasenya nova')}</label>
               <ControlContrasenya
                 id="nova-confirm-password"
                 etiquetaUll={t('section.login.registre.ullConfirmacio', 'Mostra la confirmació de la contrasenya')}
@@ -320,6 +322,7 @@ export function ContrasenyaNovaStep({ correu = '', onDesa, onEix = null, onTorna
                 onChange={updateField}
                 autoComplete="new-password"
                 minLength={LONGITUD_MINIMA_CONTRASENYA}
+                aria-labelledby="nova-confirm-password-label"
                 aria-invalid={Boolean(errors.confirmPassword)}
                 aria-describedby={errors.confirmPassword ? 'nova-confirm-password-error' : undefined}
                 disabled={ocupat || enllacMort}

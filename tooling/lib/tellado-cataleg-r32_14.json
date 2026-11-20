@@ -95,20 +95,23 @@
     {
       "id": "TELLADO-R3214-06",
       "categoria": "backend-oauth",
-      "fontRevisada": "src/data/oauthRelay.js",
-      "sha256": "f307763520ca6f862de6d0198c67f63f3982c64322a2f4dc94e319c126a7b56e",
-      "linia": 709,
+      "fontRevisada": "src/data/supabase/protocolPublic.js",
+      "sha256": "349a086f71da38fcd7806e87b1d6a464794d32e91558ff19be0e895927835581",
+      "linia": 41,
       "tipus": "DESTI_XARXA_DINAMIC",
-      "regla": "fetch",
-      "embornal": "const resposta = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=${EXCHANGE_GRANT}`, {",
+      "regla": "window.fetch",
+      "embornal": "globalThis.fetch(url, init)",
       "requisits": [
-        "const { supabaseUrl, supabaseAnonKey } = config",
-        "backendScope(config)",
-        "attempt.assertCurrent()",
-        "method: 'POST', redirect: 'error'",
-        "code_verifier: verificador"
+        "fetchImpl = (url, init) => globalThis.fetch(url, init)",
+        "typeof codi !== 'string' || !codi || typeof verificador !== 'string' || !verificador",
+        "typeof config?.supabaseUrl !== 'string' || !config.supabaseUrl",
+        "typeof config?.supabaseAnonKey !== 'string' || !config.supabaseAnonKey",
+        "return fetchImpl(`${config.supabaseUrl}/auth/v1/token?grant_type=pkce`, {",
+        "method: 'POST', redirect: 'error', signal",
+        "headers: { apikey: config.supabaseAnonKey, 'Content-Type': 'application/json' }",
+        "body: JSON.stringify({ auth_code: codi, code_verifier: verificador })"
       ],
-      "limit": "El backend prové de configuració de sessió; la regla conserva estat i redirect:error, sense afirmar destí estàtic ni absència de secrets OAuth en el cos legítim.",
+      "limit": "R32.19: transport OAuth injectable del port, amb PKCE, credencials presents, redirect:error i AbortSignal. Sessió, backendScope, intent i termini continuen al relé; esta signatura no certifica eixe caller, no valida HTTPS/origen per si mateixa ni resol el destí runtime. El digest fixa íntegrament el transport revisat.",
       "certificaDesti": false
     },
     {
@@ -526,17 +529,17 @@
       "id": "TELLADO-R3214-29",
       "categoria": "transport-delegat-tauler",
       "fontRevisada": "src/sections/text/TaulerTelemetria.jsx",
-      "sha256": "7e6e09d1d33f289ca27f2d450a55fa1febec32211df23b73fadc94799dea8e4b",
-      "linia": 583,
+      "sha256": "afb520981f457449ce3b63a73e6542063a85990a81c818c2fb3872ae3a5ab833",
+      "linia": 172,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "window.fetch",
       "embornal": "? (...parametres) => window.fetch(...parametres)",
       "requisits": [
         "(...parametres) => window.fetch(...parametres)",
         "basesDelTauler(shareUrl)",
-        "OPCIONS_DE_CONSULTA"
+        "fetch: fetchTauler || fetchDelNavegador()"
       ],
-      "limit": "Wrapper variàdic: es conserva la delegació del tauler, sense deduir les opcions a partir del sink.",
+      "limit": "Wrapper variàdic: es conserva la delegació del tauler, sense deduir les opcions a partir del sink. Des de Gemini R32.20 la consulta (OPCIONS_DE_CONSULTA, credentials omit, redirect manual) viu a taulerTelemetriaModel.js i la prova TaulerTelemetria.test.jsx la fixa.",
       "certificaDesti": false
     },
     {

@@ -187,7 +187,7 @@ function orderedBijective(input) {
 /** Numeric tails are common in imported CMS URLs. A bounded direct bucket
  * avoids hashing the full URI in that case. One prefix bit distinguishes common
  * .net/.com numeric tails; they never prove equality. Each bucket retains its
- * exact string; colliding prefixes/hosts/leading zeros use the native Set, so
+ * exact string directly, avoiding a second indirection and parallel array; colliding prefixes/hosts/leading zeros use the native Set, so
  * a suffix is never evidence of equality. Non-numeric and large IDs use Set
  * immediately. All operations remain expected O(bytes + rows), including an
  * adversary making every URI collide in the same suffix bucket. */
@@ -195,9 +195,7 @@ class UriIndex {
   constructor(capacity, hostBits = true) {
     this.limit = capacity + 1;
     this.hostBits = hostBits;
-    this.slots = new Int32Array(Math.max(1, this.limit * (hostBits ? 2 : 1)));
-    this.values = new Array(capacity);
-    this.next = 0;
+    this.slots = new Array(Math.max(1, this.limit * (hostBits ? 2 : 1)));
     this.collisions = new Set();
     this.size = 0;
     this.preparedValue = undefined;
@@ -222,7 +220,7 @@ class UriIndex {
     const bucket = this.bucket(value);
     if (bucket < 0) return this.collisions.has(value);
     const slot = this.slots[bucket];
-    return slot > 0 ? this.values[slot - 1] === value : slot < 0 && this.collisions.has(value);
+    return slot === value || slot === null && this.collisions.has(value);
   }
   add(value) {
     const bucket = this.preparedValue === value ? this.preparedBucket : this.bucket(value);
@@ -234,16 +232,15 @@ class UriIndex {
       return;
     }
     const slot = this.slots[bucket];
-    if (!slot) {
-      this.values[this.next] = value;
-      this.slots[bucket] = ++this.next;
+    if (slot === undefined) {
+      this.slots[bucket] = value;
       this.size++;
-    } else if (slot > 0) {
-      const before = this.values[slot - 1];
+    } else if (slot !== null) {
+      const before = slot;
       if (before === value) return;
       this.collisions.add(before);
       this.collisions.add(value);
-      this.slots[bucket] = -1;
+      this.slots[bucket] = null;
       this.size++;
     } else {
       const before = this.collisions.size;

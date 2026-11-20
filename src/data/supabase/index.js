@@ -161,3 +161,6 @@ export async function confirmaCapturaCrdtRural(input, config = {}) { return (awa
 export async function registraDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).registraDenunciaDiligent(input, config); }
 export async function revisaDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).revisaDenunciaDiligent(input, config); }
 export async function llistaDenunciesDiligents(input, config = {}) { return (await import('./denunciesDiligents.js')).llistaDenunciesDiligents(input, config); }
+
+/* R32.19 · Formes pures i transport del protocol darrere del port neutral. */
+export * from './protocolPublic.js';

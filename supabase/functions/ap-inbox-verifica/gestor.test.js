@@ -407,24 +407,25 @@ describe('frontera del mòdul', () => {
   const fonts = readdirSync(DIR).filter((nom) => /\.(?:js|ts)$/.test(nom) && !/\.test\.js$/.test(nom));
   const importsDe = (font) => [...font.matchAll(/^import[^;]*?from\s+'([^']+)'/gms)].map((m) => m[1]);
 
-  test('els imports són relatius: dins de supabase/functions o els dos mòduls purs de src/data', () => {
+  test('nucli portable amb imports relatius; només l’adaptador HTTPS usa node:*', () => {
     const permesos = new Set(['../../../src/data/activitypub.js', '../../../src/data/federacio/inboxActivityPub.js', '../noticies/gestor.js', '../purga-fitxers/gestor.js',
       './cuaLliurament.js', './magatzemPostgrest.js', './gestor.js']);
-    expect(fonts.sort()).toEqual(['conformitatMagatzem.js', 'cuaLliurament.js', 'gestor.js', 'index.ts', 'magatzemPostgrest.js']);
+    expect(fonts.sort()).toEqual(['conformitatMagatzem.js', 'cuaLliurament.js', 'fetchPinnat.js', 'gestor.js', 'index.ts', 'magatzemPostgrest.js']);
     for (const nom of fonts) {
       const font = readFileSync(path.join(DIR, nom), 'utf8');
-      for (const desti of importsDe(font)) expect([nom, desti, permesos.has(desti)]).toEqual([nom, desti, true]);
+      if (nom === 'fetchPinnat.js') expect(importsDe(font)).toEqual(['node:https', 'node:net', 'node:buffer', '../../../src/data/federacio/urlRemota.js', '../noticies/gestor.js']);
+      else for (const desti of importsDe(font)) expect([nom, desti, permesos.has(desti) || (nom === 'index.ts' && desti === './fetchPinnat.js')]).toEqual([nom, desti, true]);
       expect([nom, /from\s+'(?:npm:|jsr:|https?:)/.test(font)]).toEqual([nom, false]);
     }
     expect(importsDe(readFileSync(path.join(DIR, 'conformitatMagatzem.js'), 'utf8'))).toEqual([]);
-    expect(importsDe(readFileSync(path.join(DIR, 'index.ts'), 'utf8'))).toEqual(['./gestor.js']);
+    expect(importsDe(readFileSync(path.join(DIR, 'index.ts'), 'utf8'))).toEqual(['./gestor.js', './fetchPinnat.js']);
   });
 
-  test('cap Deno. ni Buffer fora d’index.ts, i cap secret escrit al codi', () => {
+  test('Deno queda a index.ts i Buffer a l’adaptador HTTPS; cap secret al codi', () => {
     for (const nom of fonts.filter((n) => n !== 'index.ts')) {
       // Sense els comentaris, que en parlen («mai Deno.* ni Buffer»).
       const font = readFileSync(path.join(DIR, nom), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-      expect([nom, /\bDeno\./.test(font), /\bBuffer\b/.test(font), /arrayBuffer\(\)/.test(font)]).toEqual([nom, false, false, false]);
+      expect([nom, /\bDeno\./.test(font), /\bBuffer\b/.test(font), /arrayBuffer\(\)/.test(font)]).toEqual([nom, false, nom === 'fetchPinnat.js', false]);
       expect([nom, /BEGIN (?:RSA )?PRIVATE KEY-----\n[A-Za-z0-9+/]/.test(font), /eyJ[A-Za-z0-9_-]{20,}/.test(font)]).toEqual([nom, false, false]);
     }
     expect(readFileSync(path.join(DIR, 'index.ts'), 'utf8')).toContain('Deno.serve(creaGestor(');

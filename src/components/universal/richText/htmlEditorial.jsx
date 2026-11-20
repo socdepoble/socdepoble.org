@@ -5,6 +5,7 @@
 import { createElement } from 'react';
 import { sanitizeHtml } from '../../../utils/sanitize.js';
 import { resolRecursosDeHtml } from '../../../config/assetResolver.js';
+import { etiquetaEnllacosDImatge } from '../../../sections/detail/etiquetaEnllacosDImatge.js';
 import { VideoEditorial, esIdVideoEditorial } from '../VideoEditorial.jsx';
 
 const MARCA_VIDEO = 'data-sdp-youtube';
@@ -12,7 +13,8 @@ const NOMS_REACT = Object.freeze({ 'class': 'className', referrerpolicy: 'referr
 const BUITS = new Set(['br', 'hr', 'img']);
 function prepara(html) {
   if (typeof html !== 'string' || !html.includes(MARCA_VIDEO) || typeof DOMParser === 'undefined') return null;
-  const net = sanitizeHtml(resolRecursosDeHtml(html));
+  /* Gauntlet v1.2.15 · El mateix ordre que detailRichText i TextSection: s'etiqueta l'HTML cru i el sanejador és l'últim pas. */
+  const net = sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(html)));
   // Un template inert evita iniciar càrregues de recursos mentre s'analitza.
   const arrel = new DOMParser().parseFromString(`<template>${net}</template>`, 'text/html').querySelector('template')?.content;
   if (!arrel) return null;

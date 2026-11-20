@@ -50,7 +50,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { arrelSegura, esMain } from '../lib/arrel.mjs';
+import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
 import { candidats, neteja } from './neteja_brossa_arrel.mjs';
 import * as olivera from '../gates/porta-olivera.mjs';
 import { analitzaVigilant } from '../gates/tractor-vigilant.mjs';
@@ -61,7 +61,7 @@ export const RECEPTES = '.immunitari/receptes';
 export const APROVACIONS = '.immunitari/aprovacions';
 export const PAPERERA = '.sdp-paperera';
 export const BUILDS = 'wordpress-plugin/builds';
-export const ACTES = '_wiki_de_poble/10_actes';
+export const ACTES = CAMINS.actes;
 /** Logs de traça que es poden rotar: els escriuen els hooks i ningú no els llig com a memòria. */
 export const ROTABLES = Object.freeze(['antigravity-hook.log', 'fatiga-hook.log']);
 export const LLINDAR_LOG = 1024 * 1024;
@@ -70,7 +70,7 @@ export const ROTATS_CONSERVATS = 3;
 export const FINESTRA_TORN_MS = 2 * 60 * 60 * 1000;
 export const DIES_QUARANTENA = 30;
 const BLOQUEJOS = Object.freeze([`${RUNTIME}/document-create.lock`, `${RUNTIME}/mutation.lock`, `${RUNTIME}/mutation.pending.json`]);
-const ZONES_PROHIBIDES = /(?:^|\/)(?:04_escriptori|01_produccio|02_investigacio_ia|90_arxiu_historic|\.iaia_auth|\.env[^/]*|\.git)(?:\/|$)/i;
+const ZONES_PROHIBIDES = new RegExp(`(?:^|/)(?:${path.basename(CAMINS.escriptori)}|01_produccio|02_investigacio_ia|90_arxiu_historic|\\.iaia_auth|\\.env[^/]*|\\.git)(?:/|$)`, 'i');
 /** Còpies i restes versionades que l'informe llista (mai les mou): .bak, .tmp, .orig, .rej, ~, .old i .abans-aammdd. */
 const SOSPITOSOS = /(?:\.bak|\.tmp|\.orig|\.rej|~|\.old|\.abans-\d{6})$/i;
 /** Reconeix la taxonomia de zips: canònica (data al davant) o històrica (data al final). */

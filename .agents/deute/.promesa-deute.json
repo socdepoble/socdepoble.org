@@ -1,13 +1,9 @@
 {
-  "generat": "2026-09-21T07:04:51.838Z",
+  "generat": "2026-11-20T12:31:43.359942+00:00",
   "max": {
     "P1": 0,
-    "P2": 3,
+    "P2": 0,
     "P3": 0
   },
-  "ids": [
-    "P2|tooling/brain/cataleg_skills.mjs|executa «tooling/brain/cataleg_skills.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/somiador.mjs|executa «tooling/wiki/llaurador_indexs.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/wiki/reflex_petorreta.mjs|executa «.agents/protocolledge.js» i el catch només registra: la fallada es degrada a avís"
-  ]
+  "ids": []
 }

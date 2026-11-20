@@ -36,7 +36,8 @@ vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await imp
 /* Onada 7 (261009) · La Consola arriba a demanda (lazyRoute): el doble pinta
    una marca perquè la prova veja quan ha arribat. */
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => <p>Doble de la Consola</p> }));
-import WikiDePobleSection, { dataDeDocumentWiki } from './WikiDePobleSection';
+import WikiDePobleSection from './WikiDePobleSection';
+import { dataDeDocumentWiki } from './wikiDePobleModel.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataHoraDeBarra, formatDate, formatTime } from '../../components/universal/editorial.js';
 afterEach(() => { cleanup(); fixture.search = '?item=00_index'; fixture.itemId = '00_index'; document.head.querySelectorAll('style[data-test]').forEach(node => node.remove()); });

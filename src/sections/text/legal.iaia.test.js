@@ -16,9 +16,10 @@
    conversa ho prova pel comportament Conversa.iaiaLocal.test.jsx, que va a la
    bateria d'esta guarda. */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { legalContent } from './legalContent.js';
+import { CREDITS_COMUNITAT_S23_5_LLENGUES, legalContent } from './legalContent.js';
 import { esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 
@@ -172,5 +173,65 @@ describe('P1-24 · la IAIA de /legal és la IAIA del codi', () => {
     expect(blocsDAvisos.some((b) => /Apple/.test(b))).toBe(true);
     expect(blocsDAvisos.some((b) => /Google/.test(b))).toBe(true);
     expect(HTML).not.toMatch(/Versió 2\.3 ·/);
+  });
+
+  test('IDEA-295 (R32.19) · l’ampliació viva de §23 acredita Alejavi Rivera, ArtCraft / Craft Anything, Informática DP, Jorge Marfil i REA en les 5 llengües amb Llei 32, Llei 35 (6–8 strong) i enllaços certificats', () => {
+    const llengues = ['ca', 'es', 'en', 'eu', 'gl'];
+    expect(Object.keys(CREDITS_COMUNITAT_S23_5_LLENGUES)).toEqual(llengues);
+    const urls = new Set();
+
+    for (const lang of llengues) {
+      const fragment = CREDITS_COMUNITAT_S23_5_LLENGUES[lang];
+      expect(fragment).toContain('<h4>23.bis.');
+      expect(fragment).not.toMatch(/<table\b/i);
+
+      for (const referent of [
+        'Alejavi Rivera',
+        'https://academiartificial.com',
+        'https://www.youtube.com/@alejavirivera',
+        'NoticIArtificial',
+        'ArtCraft',
+        'Craft Anything',
+        'https://getartcraft.com',
+        'https://github.com/storytold/craft-anything',
+        'Informática DP',
+        'https://www.youtube.com/@informaticadp',
+        'Jorge Marfil',
+        'https://www.youtube.com/@Jorge_Marfil',
+        'https://www.youtube.com/@jorgemarfil_ia',
+        'MecheTech',
+        'https://www.youtube.com/@MecheTech01',
+        'REA',
+        'https://github.com/morluto/rea'
+      ]) {
+        expect(fragment, `${lang}: ${referent}`).toContain(referent);
+      }
+
+      const textNet = pla(fragment);
+      expect(textNet, `${lang} Llei 32 zero sobirà`).not.toMatch(/\b(?:sobir[àa]|sobirans|sobiranes|soberan[oa]s?|sovereign|burujabe\w*)\b/i);
+      expect(textNet, `${lang} Llei 32 zero servidor del poble`).not.toMatch(/\b(?:el servidor del poble|el servidor del pueblo|the village server|herriko zerbitzaria|o servidor da vila)\b/i);
+      expect(textNet, `${lang} Llei 32 servidor de Sóc de Poble`).toMatch(/Sóc de Poble/);
+
+      const paragrafs = [...fragment.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect(paragrafs.length, `${lang} nombre de paràgrafs`).toBe(2);
+      for (const [idx, p] of paragrafs.entries()) {
+        const strongs = [...p.matchAll(/<strong>([\s\S]*?)<\/strong>/g)];
+        expect(strongs.length, `${lang} p[${idx}] Llei 35 6-8 strong`).toBeGreaterThanOrEqual(6);
+        expect(strongs.length, `${lang} p[${idx}] Llei 35 6-8 strong`).toBeLessThanOrEqual(8);
+      }
+
+      for (const m of fragment.matchAll(/href="([^"]+)"/g)) {
+        urls.add(m[1]);
+      }
+    }
+
+    const informe = JSON.parse(
+      execFileSync(process.execPath, ['tooling/gates/certifica-enllacos.mjs', '--json', '--arrel', ARREL, ...urls], {
+        cwd: ARREL,
+        encoding: 'utf8'
+      })
+    );
+    expect(informe.falles).toEqual([]);
+    expect(informe.ok).toBe(true);
   });
 });

@@ -19,17 +19,16 @@
  *  que és on els agents escriuen de veres (el fitxer creix pel principi). El
  *  bloc delimitat `<!-- SDP:ESTAT_ACTUAL -->` queda com a reserva.
  */
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '../../');
+const rootDir = arrelSegura();
 
-const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
-const ACTES = '_wiki_de_poble/10_actes';
+const ESCRIPTORI = CAMINS.escriptori;
+const ACTES = CAMINS.actes;
 const OMESOS = new Set(['00_bandeja_d_entrada', '01_produccio']);
 
 function runGitCommand(cmd) {

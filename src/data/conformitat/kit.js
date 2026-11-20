@@ -182,6 +182,7 @@ const ESCRIVIBLE = (fil) => !['comunitat', 'canal'].includes(fil?.tipus);
  * @property {string} metode      nom del port
  * @property {string|null} capacitat  null si és del nucli
  * @property {boolean} escriu      crea o canvia dades
+ * @property {boolean} [sincron]   rebutja una promesa abans de normalitzar-la amb await
  * @property {'resol'|'rebutja'} espera
  * @property {string} titol        la signatura i el que s'espera
  * @property {string[]} requerix   claus del context que han d'estar plenes
@@ -1366,6 +1367,15 @@ export const CASOS = Object.freeze([
   cas({ metode: 'alternaFixat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaFixat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
   cas({ metode: 'eliminaPerAMi', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: eliminaPerAMi rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
 
+  /* R32.19 · Formes pures del proveïdor, substituïbles darrere del port.
+     Arestes de tipus neutrals: no fixen els camins de cap proveïdor. */
+  cas({ metode: 'prefixMitjansPublics', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: el prefix públic és un text síncron', arguments: () => ['https://public.example'], comprova: v => typeof v === 'string' && v.startsWith('https://') ? [] : ['cal un prefix públic https'] }),
+  cas({ metode: 'classificaCamiMitja', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: un camí alié no és un mitjà del proveïdor', arguments: () => ['/aliens/foto.webp'], comprova: v => v === null ? [] : ['un camí alié ha de tornar null'] }),
+  cas({ metode: 'esReferenciaMitjaPrivada', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: un valor absent no és una referència privada', arguments: () => [null], comprova: v => v === false ? [] : ['cal false per valor absent'] }),
+  cas({ metode: 'normalitzaVerificacioRecuperacio', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: una URL aliena no és verificació de recuperació', arguments: () => [new URL('https://public.example/aliens')], comprova: v => v === null ? [] : ['cal null per una URL aliena'] }),
+  cas({ metode: 'urlAutoritzacioGoogle', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: l’anada OAuth retorna una URL https', arguments: () => ['https://public.example', 'repte', 'https://host.example/callback'], comprova: v => typeof v === 'string' && v.startsWith('https://') ? [] : ['cal una URL https'] }),
+  cas({ metode: 'bescanviaCodiOAuth', capacitat: 'transportOAuth', titol: 'R32.19: un bescanvi sense credencials es rebutja abans de xarxa', espera: 'rebutja', arguments: () => ['', '', {}, undefined, () => { throw new Error('XARXA_INESPERADA'); }], comprova: e => e instanceof TypeError ? [] : ['cal TypeError abans de xarxa'] }),
+
 ]);
 
 /**
@@ -1415,7 +1425,13 @@ export async function executaCas(c, adaptador, ctx) {
   let valor;
   let rebutjat = false;
   try {
-    valor = await adaptador[c.metode](...c.arguments(ctx));
+    const cru = adaptador[c.metode](...c.arguments(ctx));
+    if (c.sincron && cru && typeof cru.then === 'function') {
+      // Contracte invàlid: observem qualsevol rebuig tardà i certifiquem falla.
+      Promise.resolve(cru).catch(() => {});
+      return { estat: 'falla', falles: ['el mètode havia de ser síncron'], motiu: null };
+    }
+    valor = await cru;
   } catch (error) {
     valor = error;
     rebutjat = true;

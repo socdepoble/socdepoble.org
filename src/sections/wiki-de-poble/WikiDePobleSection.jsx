@@ -18,20 +18,24 @@ import { desaRevisioEditorial, revisioEditorial, subscriuRevisionsEditorials, ve
 import { useSEO } from '../../hooks/useSEO.js';
 import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { PAGE_COPY } from '../text/pageContent';
-import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
 import { metadadesDeDocumentWiki, rutaDeCompartirDocumentWiki } from './seoWiki.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-
-const pWiki = (nom, reserva) => Object.freeze([`section.wiki.${nom}`, reserva]);
-export const TEXTOS_ESPAI_WIKI = Object.freeze({
-  categories: pWiki('categories', 'WIKI DE POBLE'),
-  items: pWiki('items', 'DOCUMENTS'),
-  tria: pWiki('tria', 'Tria un document.'),
-});
+import {
+  AVIS_EINA_LOCAL_SENSE_TRADUCCIO,
+  CATEGORIA_INICIAL_WIKI,
+  TEXTOS_ESPAI_WIKI,
+  TIPUS_DOCUMENTACIO,
+  copyDePortada,
+  dataDeDocumentWiki,
+  destiInternDeWiki,
+  documentacioMaquinariaActiva,
+  modulsLocalsActius as modulsLocalsActiusModel
+} from './wikiDePobleModel.js';
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -39,163 +43,10 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
   console.warn(`[Wiki] Falta la portada «${COVER_PAGE_KEYS.wiki}» a PAGE_COPY; es pinta el títol per defecte.`);
 }
 
-/**
- * Ordre del Mestre, 261001 · El copy d'una portada: primer el del contingut
- * core (useCoreContent().pageCopy) i PAGE_COPY només de reserva, amb la
- * mateixa precedència que TextRoute (App.jsx) i paginaDeText.js.
- *
- * Per què: la targeta de la Wiki al Mur i al Calendari porta la data del
- * pageCopy (en mode seed, les dates de prova de mur/datesDeProvaMur.js, que
- * aplica data/supabase/content.js). Si la portada llig PAGE_COPY directament,
- * la seua pastilla diu un altre dia i porta a un Calendari on la seua targeta
- * no hi és. Mentre el core carrega (pageCopy buit) o si no porta la pàgina,
- * mana PAGE_COPY, com abans.
- */
-const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
-
-/* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola.
-   La fitxa porta glif propi: sense ell heretaria la carpeta de la seua
-   categoria, hui maquinaria_cat (glifDeCategoria; pla 2045, Marató 2230, F3).
-   Ordre del Mestre (261007) · El glif propi ja no és el FileText de Lucide
-   sinó el seu emoji (iconesWiki.js), distint per a cada eina.
-   Revisió del 261007 (M2-15) · Una eina nova sense emoji a iconesWiki.js
-   porta FileText de reserva: mai la carpeta de la categoria.
-   Pla 261027_0845 (Guarda Nocturna), §3 · `type` diu si l'ítem és l'eina
-   (en desenvolupament, 'Eina local') o la seua documentació (fora de
-   desenvolupament, TIPUS_DOCUMENTACIO): la mateixa fitxa, amb el mateix glif. */
-const einaLocal = (id, title, subtitle, categoryId, tags, lead, type = 'Eina local') => ({
-  id,
-  title,
-  subtitle,
-  lead,
-  icon: ICONES_ITEMS_WIKI[id] || FileText,
-  categoryId,
-  categoryIds: [categoryId],
-  tags,
-  attributes: { type, author: 'Sistema' },
-  content: ''
-});
-
-/* Pla 261027_0845 (Guarda Nocturna), §3 · El tipus (i la píndola) de les
-   pàgines de documentació de la Maquinària. */
-export const TIPUS_DOCUMENTACIO = 'Documentació';
-
-/* Revisió adversarial del bloc B (Guarda Nocturna 261027) · T51, regla del
-   Mestre (260928): «Cap document existeix sense data». La data i l'hora de la
-   versió vigent de cada text de documentació (documentacioMaquinaria.js), que
-   pinten la pastilla de la barra taronja i van a attributes.date: viu ací, i
-   no al costat del text, perquè la llista la llig sense carregar el tros de
-   la documentació. Qui canvie un text, hi canvia la data; mai la d'ara. El
-   BIOS no en porta: el seu text és AGENTS.md, que no té cap data al
-   frontmatter. És un deute de DADES, com els documents del manifest sense
-   `date` (dataDeDocumentWiki), i la pàgina es queda sense pastilla. */
-export const DATA_DOCUMENTACIO = Object.freeze({
-  tractors_aprovacio: '2026-10-27T10:04:00+01:00',
-  sentinelles_panell: '2026-10-27T10:01:00+01:00'
-});
-
-/* Revisió adversarial del bloc B (Guarda Nocturna 261027) · Una pàgina que
-   només es llig no convida a cap acció que no fa: a la documentació, el
-   subtítol dels Sentinelles ja no diu «aprova'ls». Els altres dos, el de
-   l'eina: «Què fa cada tractor…» ho explica el text (documentacioMaquinaria.js),
-   i el del BIOS no demana res. */
-const SUBTITOLS_DOCUMENTACIO = Object.freeze({
-  sentinelles_panell: 'Els set sentinelles d’autonomia: què observen i com s’aproven'
-});
-
-/* Les tres peces de la Maquinària de la IAIA, amb el text de la seua pàgina:
-   [id, títol, subtítol, etiquetes, entradilla]. Les mateixes per a l'eina de
-   desenvolupament (modulsLocalsActius) i per a la seua documentació pública
-   (documentacioMaquinariaActiva): l'adreça (?item=) i la capçalera no canvien
-   d'un entorn a l'altre, llevat del subtítol que convidaria a una acció
-   (SUBTITOLS_DOCUMENTACIO).
-   IDEA-27 (ordre del Mestre, àudio de 01:54 del 261025) · Anatomia de
-   pàgina: H1, H2 i l'entradilla centrada davall de l'H2. La de Sentinelles
-   estava perduda al cos, davall de l'h3 de la porta («Els components
-   comuns…»); ara la pinta UniversalPage, i el panell ja no la repetix. */
-const PECES_MAQUINARIA = Object.freeze([
-  ['tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', ['tractors'],
-    'Un tractor és un automatisme que processa dades. Cap s’executa si no n’has aprovat la versió exacta: l’empremta cobrix el manifest, la fitxa i cada línia de les fonts llistades, que són el codi del tractor, el de la seua interfície i el d’esta porta. Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».'],
-  ['sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', ['sentinelles'],
-    'Un sentinella és un tractor que només observa: llig el que tries, alça banderes i proposa, però no aplica, no esborra, no envia i no paga res. Només treballa si n’has aprovat la versió exacta, i l’empremta d’eixa versió cobrix el seu codi, el de la seua interfície i el de la porta. Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».'],
-  ['agents_panell', 'Agents (BIOS)', 'EL BIOS COGNITIU i directrius dels agents (AGENTS.md)', ['agents']]
-]);
-
-/**
- * 261002 · Les eines locals: la porta d'aprovació de Tractors i els
- * Sentinelles viuen a la Wiki NOMÉS en desenvolupament (decisió D3: cap ruta
- * /gestoria ni /tractors a App.jsx, ControlSection.test.jsx). Esta funció
- * pura decidix quines categories i ítems hi afig la Wiki; al punt d'ús es
- * crida amb el literal import.meta.env.DEV, i els components es carreguen
- * amb lazy() dins d'una constant que fora de DEV és null (EINES_LOCALS): Vite
- * reemplaça el literal per false al build i les importacions dinàmiques
- * desapareixen del paquet de producció.
- *
- * Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
- * Gestoria i Wiki»): la Gestoria de Poble ja no viu ací. La seua carpeta,
- * el Full trimestral i Aprendre s'han mogut a la seua app, /app/gestoria
- * (src/apps/gestoria), també només en desenvolupament. La Wiki no en
- * coneix cap id ni cap ruta: una URL vella amb els seus ids cau com
- * qualsevol ítem desconegut (la portada), sense redirigir enlloc.
- *
- * Pla 261027_0845 (Guarda Nocturna), §3 · Les eines (els seus botons) continuen
- * sent només de desenvolupament; la seua documentació, no: fora de DEV la porta
- * documentacioMaquinariaActiva, avall, amb els mateixos ids.
- *
- * @param {{ DEV?: boolean }} [env] només DEV === true les activa
- * @returns {{ categories: object[], items: object[] }}
- */
+/* Delegació pura a wikiDePobleModel.js conservada per compatibilitat amb la
+   guarda estàtica de frontera de src/sections/gestoria/privacitat.test.js. */
 export function modulsLocalsActius(env) {
-  if (env?.DEV !== true) return { categories: [], items: [] };
-  return {
-    /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Regla del glif,
-       fins al §0.7 de baix: una categoria que agrupa documents portava Folder
-       (Tractors i les carpetes del manifest); una entrada directa a una sola
-       pàgina, FileText (Wiki de Poble, Consola); un document final, el seu glif.
-       261006 (MarIA; prompt 261006_0224, T6) · Ni Tractors ni la Consola tenen
-       ja carpeta pròpia: les eines locals i la Consola pengen de maquinaria_cat
-       («Maquinària de la IAIA»), que declara la Wiki. Ací ja no es
-       torna cap categoria, i cada fitxa conserva el glif propi.
-       Ordre del Mestre (261007) · Els ítems que nomena l'ordre porten el seu
-       emoji (iconesWiki.js): la Consola i les eines locals, el seu, i els
-       documents del manifest, el que diuen el seu id o el seu tipus
-       (icones.test.jsx).
-       Ordre del Mestre (pla 261007_0012, §0.7) · Les carpetes i subcarpetes de
-       la Wiki ja no porten Folder ni FileText: cada una, el seu emoji
-       (iconesWiki.js · glifDeCarpetaWiki), també la Maquinària de la IAIA i
-       l'entrada de la portada, «Wiki de Poble», que porta el de la portada
-       (ICONA_PORTADA). */
-    categories: [],
-    items: PECES_MAQUINARIA.map(([id, title, subtitle, tags, lead]) => einaLocal(id, title, subtitle, 'maquinaria_cat', tags, lead))
-  };
-}
-
-/**
- * Pla 261027_0845 (Guarda Nocturna), §3 · Transparència radical: fora de
- * desenvolupament, la documentació pública de les tres peces (Tractors,
- * Sentinelles i el BIOS) es llig a la Maquinària de la IAIA, amb el mateix
- * id, títol, entradilla, etiquetes i glif que l'eina, i el seu subtítol
- * (SUBTITOLS_DOCUMENTACIO) i la seua data (DATA_DOCUMENTACIO) si en té. Les accions
- * mecàniques no hi arriben: el cos és DocumentacioMaquinaria.jsx (text i, per
- * al BIOS, AGENTS.md de lectura), i les eines de veres continuen dins
- * d'EINES_LOCALS, nul·la fora de DEV. La decisió D3 es manté: cap ruta
- * /tractors ni /gestoria a App.jsx. En desenvolupament, cap ítem: hi són les
- * eines, com sempre (modulsLocalsActius). Pura, com modulsLocalsActius:
- * només DEV === true la buida; qualsevol altra cosa porta la documentació
- * (sense accions, que és el costat segur).
- *
- * @param {{ DEV?: unknown }} [env]
- * @returns {{ items: object[] }}
- */
-export function documentacioMaquinariaActiva(env) {
-  if (env?.DEV === true) return { items: [] };
-  return {
-    items: PECES_MAQUINARIA.map(([id, title, subtitle, tags, lead]) => {
-      const fitxa = einaLocal(id, title, SUBTITOLS_DOCUMENTACIO[id] || subtitle, 'maquinaria_cat', tags, lead, TIPUS_DOCUMENTACIO);
-      const date = DATA_DOCUMENTACIO[id];
-      return date ? { ...fitxa, attributes: { ...fitxa.attributes, date } } : fitxa;
-    })
-  };
+  return modulsLocalsActiusModel(env);
 }
 
 const MODULS_LOCALS = modulsLocalsActius({ DEV: import.meta.env.DEV });
@@ -258,11 +109,6 @@ export class BarreraDeLaConsola extends React.Component {
     return this.props.fallback;
   }
 }
-
-/* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió
-   (useTraduccioPagina), i el que mostren les eines locals no ix d'este
-   ordinador: no es traduïxen. */
-export const AVIS_EINA_LOCAL_SENSE_TRADUCCIO = 'Les eines locals no es traduïxen: el que mostren no ix d’este ordinador.';
 
 function EinaLocal({ item, Eina }) {
   const { showToast } = useToast();
@@ -337,55 +183,6 @@ function DocumentacioLocal({ item }) {
   );
 }
 
-/**
- * T51 · Regla del Mestre (260928): cap document sense data (editorial.js,
- * dataDeDocument). La data real d'un document de la Wiki, per ordre:
- *   1. `date` del frontmatter (l'únic camp de data que admet
- *      tooling/wiki/schema.json), que el manifest copia a `attributes`;
- *   2. el segell del nom segons la taxonomia (aammdd_hhmm_…).
- * El manifest generat no porta cap altra data (ni la de modificació ni la
- * de generació): un document sense cap de les dues fonts es queda sense
- * pastilla, i és un deute del generador (compile-wiki-to-app.mjs), no de la
- * pàgina. Mai s'hi posa la data d'ara.
- */
-export function dataDeDocumentWiki(item) {
-  return dataHoraDeBarra({
-    creat: [item?.attributes?.date, dataDelNom(item?.id)],
-    modificat: item?.attributes?.updated ?? item?.updated
-  });
-}
-
-export function destiInternDeWiki(hrefCru, camiActual = '/wikidepoble') {
-  if (typeof hrefCru !== 'string') return null;
-  const href = hrefCru.trim();
-  if (!href || href.startsWith('#') || href.startsWith('//')) return null;
-  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)) return null;
-  if (href.startsWith('?')) return `${camiActual || '/wikidepoble'}${href}`;
-  if (href.startsWith('/')) {
-    if (/^\/(assets|ap|__iaia|api)(\/|$)/.test(href)) return null;
-    if (/\.[a-z0-9]{2,5}(?:[?#]|$)/i.test(href)) return null;
-    return href;
-  }
-  return null;
-}
-
-/* SPEC G · Tot l'HTML que pinta la Wiki passa primer per resolRecursosDeHtml
-   (els src="/assets/…" prenen la base de l'amfitrió) i DESPRÉS pel sanejador,
-   que continua sent l'última paraula. Sense base, el mateix HTML (Llei del
-   Píxel). La crida a sanitizeHtml s'escriu a cada punt d'injecció, sense cap
-   funció intermèdia: tractor-innerhtml.mjs només accepta un __html que
-   comence literalment per sanitizeHtml(. */
-
-/* Gauntlet 261030 (cicle 4, lang-ca-nomes-a-textsection) · Decisió del Mestre
-   (261030): «lang="ca" al contingut original en valencià quan la interfície
-   està en una altra llengua». Els documents de la Wiki, la portada i la
-   documentació de la Maquinària són en valencià: cada pàgina ho declara
-   (llenguaDelContingut="ca"; PageFrame posa el lang a l'H1 i a la
-   .page-intro), i el cos el demana (useLlenguaDelContingut), com
-   CosDeLaPagina a TextSection. Amb la interfície en valencià, undefined:
-   cap atribut, el DOM de sempre.
-   La classe és una ternària de literals (porta Pedra Seca de
-   src/sections/gestoria/qualitat.test.js: cap classe passada en variable). */
 function ProsaDeLaWiki({ encoixinada = false, html }) {
   const lang = useLlenguaDelContingut();
   const navigate = useNavigate();
@@ -664,7 +461,7 @@ function WikiDetail({ item }) {
 }
 
 /* La primera opció de l'arbre: la portada («Wiki de Poble»). */
-const CATEGORIA_INICIAL = '__intro_cat';
+const CATEGORIA_INICIAL = CATEGORIA_INICIAL_WIKI;
 
 export default function WikiDePobleSection() {
   const t = useTraductorOpcional();

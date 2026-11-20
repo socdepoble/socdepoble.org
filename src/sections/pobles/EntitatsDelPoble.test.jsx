@@ -26,7 +26,8 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ externalConfig: { dataMode: 'seed' }, locale: 'ca-ES' })
 }));
 
-import { EntitatsDelPoble, textosDeLesEntitats } from './EntitatsDelPoble.jsx';
+import { EntitatsDelPoble } from './EntitatsDelPoble.jsx';
+import { textosDeLesEntitats } from './entitatsDelPobleModel.js';
 import { nomDelPobleDeLaFitxa } from './useEntitatsDelPoble.js';
 import { buildPoblesDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
 

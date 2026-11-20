@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -7,12 +8,12 @@ import { anchored } from '../documental/core.mjs';
 
 console.log("🌙 [SOMIADOR] Iniciant cicle de son (Consolidació i Neteja en 4 Fases)...");
 
-const ARREL = path.resolve(process.cwd());
-const ESCRIPTORI = path.join(ARREL, '_wiki_de_poble/04_escriptori');
+const ARREL = arrelSegura();
+const ESCRIPTORI = path.join(ARREL, CAMINS.escriptori);
 // Arxiu extern pesant
 const ARXIU_EXTERN = path.join(ARREL, '../_arxiu_wiki_de_poble');
 // Arxiu intern lleuger (per a DESTIL i PROPOSTA)
-const HISTORIC = path.join(ARREL, '_wiki_de_poble/90_arxiu_historic');
+const HISTORIC = path.join(ARREL, CAMINS.arxiuHistoric);
 
 const d = new Date();
 const any = String(d.getFullYear());
@@ -32,7 +33,7 @@ const altres = [];
 for (const item of items) {
   if (item.isDirectory() || item.name === '.DS_Store' || item.name.toLowerCase().includes('index') || item.name === '.ancora_sessio.json') continue;
   
-  const relative = `_wiki_de_poble/04_escriptori/${item.name}`;
+  const relative = `${CAMINS.escriptori}/${item.name}`;
   if (protectedFiles.has(relative) || anchored(desktopIndex, relative)) continue;
   // Extraure segell horari AAMMDD_HHMM
   const match = item.name.match(/^(\d{6}_\d{4})/);
@@ -91,9 +92,9 @@ console.log(`🧹 Fase 4 completada: ${mogutsExtern} arxius pesants a l'arxiu ex
 
 console.log("🚜 [SOMIADOR] Reancorant el sistema amb el Llaurador...");
 try {
-  if (!dryRun) execSync('node tooling/wiki/llaurador_indexs.mjs --escriu', { stdio: 'inherit' });
-} catch {
-  console.error("Error al llaurador.");
+  if (!dryRun) execSync('node tooling/wiki/llaurador_indexs.mjs --escriu', { cwd: ARREL, stdio: 'inherit' });
+} catch (error) {
+  throw new Error("Error al llaurador; el cicle de son no s’ha completat.", { cause: error });
 }
 
 console.log("💤 [SOMIADOR] Cicle de son finalitzat. El cervell ha madurat i descansat.");

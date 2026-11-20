@@ -187,7 +187,7 @@ describe('destinsDeLaWiki', () => {
   });
 
   test('les eines locals de veres (modulsLocalsActius de la Wiki): en desenvolupament, amb el seu emoji i dins de Maquinària; en producció, cap', async () => {
-    const { modulsLocalsActius } = await import('../../wiki-de-poble/WikiDePobleSection.jsx');
+    const { modulsLocalsActius } = await import('../../wiki-de-poble/wikiDePobleModel.js');
     const dev = destinsDeLaWiki({ categories: [], items: [] }, null, { locals: modulsLocalsActius({ DEV: true }).items });
     expect(dev.map((desti) => [desti.id, desti.glif])).toEqual([
       ['wiki:carpeta:maquinaria_cat', '🎛️'],

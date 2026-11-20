@@ -304,7 +304,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
           <form className="onboarding-form" onSubmit={submit} noValidate>
             {mode === 'register' && (
               <div className={errors.name ? 'sdp-camp ' : 'sdp-camp'}>
-                <label className="sdp-camp__etiqueta" htmlFor="reg-name">{t('section.login.placeholder.name', 'Nom i cognoms')}</label>
+                <label id="reg-name-label" className="sdp-camp__etiqueta" htmlFor="reg-name">{t('section.login.placeholder.name', 'Nom i cognoms')}</label>
                 <input
                   id="reg-name"
                   className="sdp-control"
@@ -314,6 +314,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                   onChange={updateField}
                   autoComplete="name"
                   maxLength={120}
+                  aria-labelledby="reg-name-label"
                   aria-invalid={Boolean(errors.name)}
                   aria-describedby={errors.name ? 'onboarding-name-error' : undefined}
                   disabled={desactivat}
@@ -336,7 +337,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             
 
             <div className={errors.email ? 'sdp-camp ' : 'sdp-camp'}>
-              <label className="sdp-camp__etiqueta" htmlFor="reg-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
+              <label id="reg-email-label" className="sdp-camp__etiqueta" htmlFor="reg-email">{t('section.login.loginEmail', 'Correu electrònic')}</label>
               <input
                 ref={correuRef}
                 id="reg-email"
@@ -347,6 +348,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                 onChange={updateField}
                 autoComplete="email"
                 inputMode="email"
+                aria-labelledby="reg-email-label"
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? 'onboarding-email-error' : undefined}
                 disabled={desactivat}
@@ -355,7 +357,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             </div>
 
             <div className={errors.password ? 'sdp-camp ' : 'sdp-camp'}>
-              <label className="sdp-camp__etiqueta" htmlFor="reg-password">{t('section.login.loginPassword', 'Contrasenya')}</label>
+              <label id="reg-password-label" className="sdp-camp__etiqueta" htmlFor="reg-password">{t('section.login.loginPassword', 'Contrasenya')}</label>
               <ControlContrasenya
                 id="reg-password"
                 etiquetaUll={t('section.login.registre.ullContrasenya', 'Mostra la contrasenya')}
@@ -364,6 +366,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                 onChange={updateField}
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                 minLength={mode === 'register' ? 10 : undefined}
+                aria-labelledby="reg-password-label"
                 aria-invalid={Boolean(errors.password)}
                 aria-describedby={mode === 'register' ? 'onboarding-password-help' : errors.password ? 'onboarding-login-password-error' : undefined}
                 disabled={desactivat}
@@ -381,7 +384,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
 
             {mode === 'register' && (
               <div className={errors.confirmPassword ? 'sdp-camp ' : 'sdp-camp'}>
-                <label className="sdp-camp__etiqueta" htmlFor="reg-confirm-password">{t('section.login.registre.confirmaContrasenya', 'Confirmar contrasenya')}</label>
+                <label id="reg-confirm-password-label" className="sdp-camp__etiqueta" htmlFor="reg-confirm-password">{t('section.login.registre.confirmaContrasenya', 'Confirmar contrasenya')}</label>
                 <ControlContrasenya
                   id="reg-confirm-password"
                   etiquetaUll={t('section.login.registre.ullConfirmacio', 'Mostra la confirmació de la contrasenya')}
@@ -390,6 +393,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                   onChange={updateField}
                   autoComplete="new-password"
                   minLength={10}
+                  aria-labelledby="reg-confirm-password-label"
                   aria-invalid={Boolean(errors.confirmPassword)}
                   aria-describedby={errors.confirmPassword ? 'onboarding-confirm-password-error' : undefined}
                   disabled={desactivat}
@@ -406,12 +410,13 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                   id="reg-rgpd"
                   checked={fields.rgpd}
                   onChange={updateField}
+                  aria-labelledby="reg-rgpd-label"
                   aria-invalid={Boolean(errors.rgpd)}
                   aria-describedby={errors.rgpd ? 'onboarding-rgpd-error' : undefined}
                   disabled={desactivat}
                   className="sdp-casella__control"
                 />
-                <label htmlFor="reg-rgpd" className="sdp-casella__etiqueta">
+                <label id="reg-rgpd-label" htmlFor="reg-rgpd" className="sdp-casella__etiqueta">
                   <EtiquetaDelConsentiment t={t} />
                 </label>
                 {errors.rgpd ? <p id="onboarding-rgpd-error" className="sdp-camp__error">{errors.rgpd}</p> : null}

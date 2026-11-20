@@ -178,5 +178,10 @@ export function fusionaEspecificacions(existent, nova, { pendent = true } = {}) 
   const fusio = `${abans || '1'} + ${ara || '1'}`;
   if (fusio.length <= LIMITS_COMU.especificacio) return fusio;
   const suma = sumaEspecificacio(fusio);
-  return suma ? textDeSuma(suma) : abans;
+  if (!suma || !Number.isFinite(suma.quantitat)) return abans;
+  const plegada = textDeSuma(suma);
+  /* Una suma enorme pot escriure's amb exponent (que l'extractor no llig).
+     Tampoc no retallem una quantitat: conservar l'anterior és el contracte
+     quan no cap una suma completa i llegible. */
+  return plegada.length <= LIMITS_COMU.especificacio && quantitatDe(plegada) ? plegada : abans;
 }

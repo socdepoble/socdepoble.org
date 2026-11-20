@@ -9,10 +9,10 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => ({
   ...(await importOriginal()),
   teCapacitat: () => false,
 }));
-import { ERRORS_MEMBRES, ERRORS_TRANSFERENCIA, GestioMembres, TEXTOS_MEMBRES } from './GestioMembres.jsx';
+import { GestioMembres } from './GestioMembres.jsx';
 import { MISSATGES_MEMBRES_ORGANITZACIO } from '../../data/contracte.js';
 import { PARELLS_ROL } from '../../components/universal/identitat/rols.js';
-import { PARELLS_TIPUS } from './membresModel.js';
+import { ERRORS_MEMBRES, ERRORS_TRANSFERENCIA, PARELLS_TIPUS, TEXTOS_MEMBRES } from './membresModel.js';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
 import { LANGUAGE_STORAGE_KEY } from '../../config/i18n.js';
 import { delVal } from '../../config/storage.js';

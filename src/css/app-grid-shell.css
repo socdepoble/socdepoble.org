@@ -78,6 +78,20 @@
 .app-grid-shell[data-layout="ample"] .app-grid-column--right { grid-column: 5; }
 
 /* Collapse via classes React (NO :has()) */
+.app-grid-shell[data-layout="ample"] .app-grid-content.has-left-empty {
+  grid-template-columns:
+    var(--app-grid-col-list-live, var(--app-grid-col-list))
+    var(--app-grid-resizer-middle-live, var(--app-grid-resizer))
+    minmax(0, 1fr);
+}
+.app-grid-shell[data-layout="ample"] .app-grid-content.has-left-empty .app-grid-column--middle { grid-column: 1; }
+.app-grid-shell[data-layout="ample"] .app-grid-content.has-left-empty .app-grid-resizer--middle { grid-column: 2; }
+.app-grid-shell[data-layout="ample"] .app-grid-content.has-left-empty .app-grid-column--right { grid-column: 3; }
+.app-grid-content.has-left-empty .app-grid-column--left,
+.app-grid-content.has-left-empty .app-grid-resizer--left {
+  display: none;
+}
+
 .app-grid-shell[data-layout="ample"] .app-grid-content.has-left-collapsed {
   --app-grid-col-sidebar-live: var(--app-grid-col-collapsed);
   --app-grid-resizer-left-live: 0px;

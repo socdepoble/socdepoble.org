@@ -11,7 +11,8 @@ import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { ETIQUETA_IA, TEXTOS_FITXA_PERFIL } from './fitxaDePerfil.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { fontVideoPropia } from '../../utils/sanitize.js';
-import SubnavigacioPoblesIGent, { encapcalamentDirectoriGent, filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
+import SubnavigacioPoblesIGent from '../pobles/SubnavigacioPoblesIGent.jsx';
+import { encapcalamentDirectoriGent, filtraAgentsDelDirectori } from '../pobles/subnavigacioPoblesIGentModel.js';
 
 /* Technical catalogue fallback, from the same source as the repaired server.
    This is not a person's birth date or legal incorporation date. */

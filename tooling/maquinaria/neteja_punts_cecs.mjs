@@ -1,9 +1,8 @@
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const wikiDir = path.resolve(__dirname, '../../_wiki_de_poble');
+const wikiDir = path.join(arrelSegura(), CAMINS.wiki);
 
 function walkDir(dir, callback) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });

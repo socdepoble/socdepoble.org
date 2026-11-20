@@ -1,10 +1,9 @@
 import fs from 'node:fs';
-import {esMain} from '../lib/arrel.mjs';
+import { CAMINS, esMain } from '../lib/arrel.mjs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { arrel as resolArrel, arrelSegura } from '../lib/arrel.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
-import { WIKI_DIR } from '../wiki/lib/project_paths.mjs';
 
 export const ROOT = fs.realpathSync(arrelSegura());
 export const sha = value => createHash('sha256').update(value).digest('hex');
@@ -12,7 +11,7 @@ export const MIRRORS = [
   '01_ser/00_AGENTS_I_SKILLS_MIRROR',
   '01_Ser/00_AGENTS_I_SKILLS_MIRROR',
   '02_saber/skills_mirror',
-].map(rel => path.posix.join(path.relative(ROOT, WIKI_DIR), rel));
+].map(rel => path.posix.join(CAMINS.wiki, rel));
 export function segura(root, rel) {
   if (typeof rel !== 'string' || !rel || path.isAbsolute(rel) || rel.includes('\\') ||
       rel.split('/').some(p => !p || p === '.' || p === '..')) throw new Error(`Ruta invàlida: ${rel}`);
@@ -114,6 +113,6 @@ export function catalegCLI(args = process.argv.slice(2), root = ROOT) {
     const result = comprovaCataleg(root, skills);
     console.log(JSON.stringify({ porta: 'cataleg-skills', ...result }, null, 2));
     return result.ok ? 0 : 1;
-  } catch (e) { console.error(e.message); return 2; }
+  } catch (e) { console.error(e.message); if (esMain(import.meta.url)) process.exitCode = 2; return 2; }
 }
 if (esMain(import.meta.url)) process.exitCode = catalegCLI();

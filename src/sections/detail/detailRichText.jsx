@@ -1,5 +1,6 @@
 import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
+import { etiquetaEnllacosDImatge } from './etiquetaEnllacosDImatge.js';
 import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
 import { semblaHtml } from './detailHelpers.jsx';
@@ -21,12 +22,12 @@ export function renderRichText(text, { lang = undefined } = {}) {
     // de primer nivell) es pinta hidratat: cada targeta és la del Mur. Sense
     // cap grup, el camí de sempre, byte a byte (Llei del Píxel).
     if (raw.includes(MARCA_GRUP)) {
-      const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(raw)));
+      const segments = segmentsAmbTargetes(sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(raw))));
       if (segments.some((segment) => segment.tipus === 'targetes')) return <CosAmbTargetes segments={segments} lang={lang} />;
     }
     const editorial = renderHtmlEditorial(raw);
     if (editorial) return <article className="detail-content" lang={lang}>{editorial}</article>;
-    return <article className="detail-content" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(raw)) }} />;
+    return <article className="detail-content" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(raw))) }} />;
   }
 
   const paragraphs = raw

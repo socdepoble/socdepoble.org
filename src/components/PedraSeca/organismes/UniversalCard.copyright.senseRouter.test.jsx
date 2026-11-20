@@ -18,6 +18,6 @@ test('sense router, el copyright és un <a> a /page/drets-autor i la targeta es 
   const { container } = render(<UniversalCard title="Nota" body="Text" copyright="© Pepet" hasFooter={false} />);
   expect(container.querySelector('article.sp-card')).not.toBeNull();
   expect(container.querySelector('.sp-card-body > p.sp-card-copyright').outerHTML).toBe(
-    '<p class="sp-card-copyright"><a href="/page/drets-autor" class="sp-card-copyright__enllac">© Pepet</a></p>'
+    '<p class="sp-card-copyright"><a href="/page/drets-autor" class="sp-card-copyright__enllac" aria-label="© Pepet">© Pepet</a></p>'
   );
 });

@@ -23,7 +23,7 @@ import { ALERGENS, ordenaAlergens } from '../../../utils/productes/producteUnive
 import { textosUiBar } from '../i18nBar.js';
 import { nomAlergen } from '../i18nMercaderies.js';
 import { cartaDelCanal, grupsDe, teGrupObligatori } from '../nucli/cataleg.js';
-import { totals } from '../nucli/comanda.js';
+import { esDescartable, totals } from '../nucli/comanda.js';
 import { brutLinia, totalLinia } from '../nucli/linia.js';
 
 /* Les icones de categoria que coneix el Bar (noms de lucide de la carta). GlassWater: els combinats de La Parròquia. */
@@ -239,7 +239,18 @@ export function horaCurta(moment) {
 export function tiquetsOberts(comandes, sala, idioma = 'ca') {
   const tx = textosUiBar(idioma);
   const ordenades = [...comandes].sort((a, b) => (a.obertaA < b.obertaA ? -1 : 1));
-  const targetes = ordenades.map((c) => {
+  const ultimaBuidaPerOrigen = new Map();
+  for (const c of ordenades) {
+    if (!esDescartable(c)) continue;
+    const clau = c.origen?.tipus === 'taula' ? `taula:${c.origen.taulaId}` : String(c.origen?.tipus || 'barra');
+    ultimaBuidaPerOrigen.set(clau, c.id);
+  }
+  const vistes = ordenades.filter((c) => {
+    if (!esDescartable(c)) return true;
+    const clau = c.origen?.tipus === 'taula' ? `taula:${c.origen.taulaId}` : String(c.origen?.tipus || 'barra');
+    return ultimaBuidaPerOrigen.get(clau) === c.id;
+  });
+  const targetes = vistes.map((c) => {
     const t = totals(c);
     const vives = c.linies.filter((l) => l.estat !== 'anullada').length;
     return {
@@ -249,7 +260,7 @@ export function tiquetsOberts(comandes, sala, idioma = 'ca') {
       secundari: t.pagatCents > 0 ? tx.pendentImport(euros(t.pendentCents)) : euros(t.totalCents)
     };
   });
-  if (!comandes.some((c) => c.origen.tipus === 'barra')) targetes.unshift({ id: 'barra', nom: tx.barra, comptador: 0 });
+  if (!vistes.some((c) => c.origen.tipus === 'barra')) targetes.unshift({ id: 'barra', nom: tx.barra, comptador: 0 });
   return targetes;
 }
 

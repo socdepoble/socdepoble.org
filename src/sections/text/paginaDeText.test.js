@@ -18,7 +18,7 @@ import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../comp
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { DRETS_IMATGES, DRETS_TEXT, esFotoValida, esLlicenciaLliure, triaImatges } from '../pobles/pobleDeViquipedia.js';
 /* VQ · Fase 3a (261030) · El panell, la cau i la regla de fitxa completa que la pàgina descriu. */
-import { TEXTOS_VIQUIPEDIA } from '../pobles/CreditsDeViquipedia.jsx';
+import { TEXTOS_VIQUIPEDIA } from '../pobles/creditsDeViquipediaModel.js';
 import { VIDA_MS } from '../pobles/cauDeViquipedia.js';
 import { CAMPS_DE_FITXA } from '../pobles/fitxaDelPoble.js';
 import { LLICENCIA_PER_DEFECTE, LLICENCIES, OPCIO_ACTUAL } from '../../components/universal/drets/llicencies.js';

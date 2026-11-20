@@ -74,6 +74,29 @@ const TITOLS_INSTRUCCIONS = new Set([
   'Como se instala desde o navegador',
 ]);
 
+export const TEXTOS_BOTIGUES_5_LLENGUES = Object.freeze({
+  ca: Object.freeze({
+    grup: 'Canals oficials de descàrrega',
+    canalReserva: 'Canal oficial de descàrrega'
+  }),
+  es: Object.freeze({
+    grup: 'Canales oficiales de descarga',
+    canalReserva: 'Canal oficial de descarga'
+  }),
+  en: Object.freeze({
+    grup: 'Official download channels',
+    canalReserva: 'Official download channel'
+  }),
+  eu: Object.freeze({
+    grup: 'Deskarga-kanal ofizialak',
+    canalReserva: 'Deskarga-kanal ofiziala'
+  }),
+  gl: Object.freeze({
+    grup: 'Canles oficiais de descarga',
+    canalReserva: 'Canle oficial de descarga'
+  })
+});
+
 /* Motius de la captura (motiuPerNoOferir) que diuen que la finestra no és de
    l'entrada pròpia, o que no s'hi pot instal·lar res: cap captura (paquet
    autònom o app nativa), un iframe, l'app nativa o un context insegur. */
@@ -238,7 +261,8 @@ function GuiaDInstalacio({ mode, t, accions }) {
  * després del cos (sense acció, res: cap div buit).
  */
 export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
+  const textosBotigues = TEXTOS_BOTIGUES_5_LLENGUES[language] || TEXTOS_BOTIGUES_5_LLENGUES.ca;
   const [obert, setObert] = useState(false);
   const [ambInstruccions, setAmbInstruccions] = useState(false);
   // L'elecció al diàleg del navegador és d'esta instància: un sol avís, al costat del botó premut.
@@ -332,22 +356,34 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
         </div>
       ) : null}
       {ambBotigues ? (
-        <div className="sdp-accions">
-          {canals.map((canal) => (
-            <a
-              key={canal.id}
-              className={classeDeBotiga(canal)}
-              href={canal.url}
-              download={canal.id === 'apk-directe' ? nomDelFitxer(canal.url) : undefined}
-            >
-              {canal.id === 'app-store' ? <LogotipApple /> : null}
-              {etiquetaDeBotiga(canal, t)}
-            </a>
-          ))}
+        <div className="sdp-accions" role="group" aria-label={textosBotigues.grup}>
+          {canals.map((canal) => {
+            const etiqueta = etiquetaDeBotiga(canal, t);
+            const etiquetaNeta = typeof etiqueta === 'string' ? etiqueta.trim() : '';
+            return (
+              <a
+                key={canal.id}
+                className={classeDeBotiga(canal)}
+                href={canal.url}
+                aria-label={etiquetaNeta ? undefined : textosBotigues.canalReserva}
+                download={canal.id === 'apk-directe' ? nomDelFitxer(canal.url) : undefined}
+              >
+                {canal.id === 'app-store' ? <LogotipApple /> : null}
+                {etiqueta}
+              </a>
+            );
+          })}
         </div>
       ) : null}
       {apk ? (
-        <p><a href={`${apk.url}.sha256`}>{t('section.descarregues.botiga.apkSuma', 'Comprovar la suma SHA-256 del fitxer')}</a></p>
+        <p>
+          <a
+            href={`${apk.url}.sha256`}
+            aria-label={t('section.descarregues.botiga.apkSuma', 'Comprovar la suma SHA-256 del fitxer')}
+          >
+            {t('section.descarregues.botiga.apkSuma', 'Comprovar la suma SHA-256 del fitxer')}
+          </a>
+        </p>
       ) : null}
       {testflight ? (
         <Alerta to="info" viva={false}>

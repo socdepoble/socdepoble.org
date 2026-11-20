@@ -203,7 +203,7 @@ Un sol codi font genera quatre artefactes. Les ordres de build són a `package.j
 
 ### Connector WordPress i el seu sostre d'arrencada
 
-El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.15 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
+El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.23 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
 
 - **Aïllament:** l'element munta l'app dins d'un Shadow DOM tancat (`attachShadow({ mode: 'closed' })` a `src/PedraSecaEmbed.jsx`).
 - **Federació:** instal·lar el connector no convertix el WordPress en un node del Fedivers (`wordpress-plugin/readme.txt`).
@@ -214,7 +214,7 @@ El pes d'arrencada té **trinquets que només poden baixar** sense una decisió 
 | --- | --- | --- |
 | Carregador clàssic | 4.096 B | `LIMIT_DEL_CARREGADOR`, `vite.standalone.config.js` |
 | Tros d'entrada | 1.690.000 B | `SOSTRE_DEL_TROS_D_ENTRADA`, `src/apps/plataforma/pesDelNucli.test.js` |
-| Arrencada estàtica (entrada i trossos que importa) | 1.737.422 B | `SOSTRE_DE_L_ARRENCADA_ESTATICA`, mateix fitxer |
+| Arrencada estàtica (entrada i trossos que importa) | 1.594.000 B | `SOSTRE_DE_L_ARRENCADA_ESTATICA`, mateix fitxer (D-v1215-1) |
 | Zip per al directori de WordPress.org | 10 MiB | `LIMIT_DIRECTORI`, `wordpress-plugin/eines/empaqueta.mjs` |
 
 `tests/standalone-build.test.mjs` llig estos sostres i els comprova sobre el build real.

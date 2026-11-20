@@ -26,19 +26,23 @@ const MODULS_NOUS = Object.freeze([
   /* P1-11 (pla 261024_2230, T5B-01) · La pestanya «Empreses i entitats». */
   'src/sections/pobles/useEntitatsDelPoble.js',
   'src/sections/pobles/EntitatsDelPoble.jsx',
+  'src/sections/pobles/entitatsDelPobleModel.js',
+  'src/sections/pobles/detallPobleModel.js',
   /* VQ · Fase 3a de l'eina de pobles nous (261030) · La fitxa incompleta i la Viquipèdia. */
   'src/sections/pobles/fitxaDelPoble.js',
   'src/sections/pobles/cauDeViquipedia.js',
   'src/sections/pobles/consentimentViquipedia.js',
   'src/sections/pobles/usePobleHidratat.js',
   'src/sections/pobles/CreditsDeViquipedia.jsx',
+  'src/sections/pobles/creditsDeViquipediaModel.js',
   'src/sections/pobles/PanellDeViquipedia.jsx',
   /* D-5 (pla 261101_1246) · La lògica dels àlies de poble: cap nom de poble. */
   'src/sections/pobles/aliesDePobles.js',
   /* R16-S (P0-79) · El catàleg del selector de la fitxa i el nomenclàtor de l'INE. */
   'src/sections/pobles/nomenclatorIne.js',
   /* R16-X1 (Onada R16.12) · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia. */
-  'src/sections/pobles/SubnavigacioPoblesIGent.jsx'
+  'src/sections/pobles/SubnavigacioPoblesIGent.jsx',
+  'src/sections/pobles/subnavigacioPoblesIGentModel.js'
 ]);
 const FITXERS = Object.freeze([
   ...MODULS_NOUS,
@@ -73,7 +77,8 @@ const FITXERS = Object.freeze([
   /* D-5 (pla 261101_1246) · Les dades dels àlies (llavor: porta noms) i les seues proves. */
   'src/sections/pobles/aliesDePoblesSeed.js',
   'src/sections/pobles/aliesDePobles.test.js',
-  'src/sections/pobles/nomenclatorIne.test.js'
+  'src/sections/pobles/nomenclatorIne.test.js',
+  'src/sections/pobles/puresaHmrPoblesWikiPlugins.r32_20.test.js'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

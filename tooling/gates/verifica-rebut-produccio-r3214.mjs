@@ -11,7 +11,7 @@ import { arrelSegura, esMain } from '../lib/arrel.mjs';
 export const REBUT_PRODUCCIO_R3214 = Object.freeze({
   receipt: 'tooling/gates/fixtures/produccio-r3214/REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE.json',
   receiptSHA256: '19aaff52ad70ed3e4c0dd2caa6e6226d166ca229c64a09b85023556cc7030678',
-  bundle: 'tooling/gates/fixtures/produccio-r3214/SUPER_BUNDLE_SQL_PRODUCCIO_R32_14_COPIAR_ENGANXAR.sql',
+  bundle: 'tests/fixtures/produccio-r3214/SUPER_BUNDLE_SQL_PRODUCCIO_R32_14_COPIAR_ENGANXAR.sql',
   bundleSHA256: '1815387bdbe458678c22f414d4397f5d0c13cc0643c1df654f4c6ba0b34b9fab',
   source: '../_investigacio_ia_de_poble/261119_marato_dinar_v1_2_11_r32_14/',
   bundleBytes: 129350, bundleLines: 1126

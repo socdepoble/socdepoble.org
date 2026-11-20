@@ -5,6 +5,7 @@ import { MARCA_GRUP, segmentsAmbTargetes } from '../../components/universal/rich
 import { CosAmbTargetes } from '../../components/universal/richText/extensions/targetes/CosAmbTargetes.jsx';
 import { useLlenguaDelContingut } from '../../components/universal/traduccio/llenguaDelContingut.js';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { etiquetaEnllacosDImatge } from '../detail/etiquetaEnllacosDImatge.js';
 /* T71 · les props de la pàgina viuen a paginaDeText.js: el lector de
    connexions del MAS pinta una pàgina de text amb les mateixes. */
 import { propsDePaginaDeText } from './paginaDeText.js';
@@ -20,6 +21,7 @@ import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRo
    dins de BarreraDelTrosAccessori. Si el tros no arriba, el text de la pàgina es queda sense ells. */
 const AparadorFediversity = lazyRoute(() => import('./AparadorFediversity.jsx'));
 const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx').then((m) => ({ default: m.ConsolaIncrustada })));
+const CreditsComunitatS23 = lazyRoute(() => import('./CreditsComunitatS23.jsx'));
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -69,7 +71,7 @@ export function CosDeLaPagina({ html }) {
   const lang = useLlenguaDelContingut();
   const cos = esAppNativa() ? htmlPerAppNativa(html) : html;
   if (String(cos || '').includes(MARCA_GRUP)) {
-    const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(cos)));
+    const segments = segmentsAmbTargetes(sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos))));
     if (segments.some((segment) => segment.tipus === 'targetes')) {
       return (
         <ProveidorSincronitzacioTargetes>
@@ -78,7 +80,7 @@ export function CosDeLaPagina({ html }) {
       );
     }
   }
-  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(cos)) }} />;
+  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos))) }} />;
 }
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a
@@ -205,6 +207,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       ) : null}
       {pageKey === 'versions' ? <LiniaVersioInstallada llengua={language} /> : null}
       {!amagaCos && <CosDeLaPagina html={page.html} />}
+      {pageKey==='legal'&&<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsComunitatS23 language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}
       {children}

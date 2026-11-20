@@ -109,7 +109,9 @@ test('P-2 · el relleu no pot promoure res cap a la zona humana',t=>{
 
 // ── P-3 · El Somiador respecta la taula? ───────────────────────────────────────
 function somia(root) {
-  return spawnSync(process.execPath,[path.join(REPO,'tooling/brain/somiador.mjs'),'--dry-run'],
+  // El CLI usa el custodi canònic: declarar el fixture evita operar sobre el REPO.
+  marcaArrel(root);
+  return spawnSync(process.execPath,[path.join(REPO,'tooling/brain/somiador.mjs'),'--arrel',root,'--dry-run'],
     {cwd:root,encoding:'utf8'});
 }
 test('P-3 · en sec, el Somiador no s’endú cap document d’un torn obert',t=>{

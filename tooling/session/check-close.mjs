@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildGraph } from '../wiki/core/parse.mjs';
 
-const PROJECT_DIR = process.cwd();
-const WIKI_DIR = path.join(PROJECT_DIR, '_wiki_de_poble');
+const PROJECT_DIR = arrelSegura();
+const WIKI_DIR = path.join(PROJECT_DIR, CAMINS.wiki);
 
 function getWikiDocs(dir) {
   const docs = [];
@@ -70,7 +71,7 @@ async function run() {
     if (r.includes('90_historic')) return false;
     if (r.includes('.quarantena')) return false;
     if (r.includes('00_bandeja_d_entrada')) return false;
-    if (r.includes('04_escriptori') && !r.includes('01_produccio')) return false;
+    if (r.includes(path.basename(CAMINS.escriptori)) && !r.includes('01_produccio')) return false;
     if (path.basename(r) === '00_INDEX.md') return false;
     return true;
   });
@@ -83,7 +84,7 @@ async function run() {
   }
 
   // Transacció de l'Àncora
-  const ancoraPath = path.join(WIKI_DIR, '04_escriptori', '.ancora_sessio.json');
+  const ancoraPath = path.join(PROJECT_DIR, CAMINS.escriptori, '.ancora_sessio.json');
   if (fs.existsSync(ancoraPath)) {
     const ancora = JSON.parse(fs.readFileSync(ancoraPath, 'utf8'));
     console.log(`✅ L'àncora de sessió (${ancora.timestamp}) ha sigut consumida.`);

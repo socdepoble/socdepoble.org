@@ -52,7 +52,7 @@ import { omple } from '../../../config/moderacio.js';
 import { Alerta, Boto, DialegConfirmacio, GrupOpcions } from '../../../components/PedraSeca/index.js';
 import { SelectorDeVariacions } from '../../mercat/SelectorDeVariacions.jsx';
 /* C14 (crític, 261103) · Les taules d'errors i textos dels membres, de la seua font única (només en lectura). */
-import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/GestioMembres.jsx';
+import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/membresModel.js';
 import { ROL_PER_DEFECTE, accioDInclusio, opcionsDeRol } from './rolsDInclusio.js';
 import { useIncloureEnEntitat } from './useIncloureEnEntitat.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';

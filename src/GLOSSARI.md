@@ -1,3 +1,8 @@
+---
+type: document
+status: canonic
+description: "Glossari tècnic de termes arquitectònics i operatius de Sóc de Poble (Online-First, Pedra Seca, Pany de Host i Portes)."
+---
 # GLOSSARI DE TERMES CORE (Sóc de Poble)
 
 *Aquest glossari estableix un vocabulari canònic i precís per a tots els desenvolupadors i intel·ligències artificials que treballen en l'ecosistema Sóc de Poble.*
@@ -17,3 +22,8 @@
 - **Portes Mecàniques (Gates o Tractors)**: Scripts dissenyats per aturar qualsevol IA que intente trencar regles invariants del sistema (per exemple, `tractor-enxufe.mjs`).
 
 *“La confusió lingüística precedeix l'amnèsia arquitectònica.”* (Z - Alt Consell de les IA)
+
+## Vincles
+
+- [[00_index]]
+

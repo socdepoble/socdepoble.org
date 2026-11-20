@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.22
+Stable tag: 1.1.23
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,9 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.23 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.15 de Sóc de Poble, la que explica la seua pàgina «Versions»: El Bar sense columna buida a l'esquerra on no hi havia res i amb l'avís de torn tancat una sola vegada, l'Arbre Genealògic sense penjar-se amb arbres grans i un annex d'agraïments al final de la pàgina legal.
+
 = 1.1.22 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.14 de Sóc de Poble, la que explica la seua pàgina «Versions»: les mateixes pantalles, amb els estils del Perfil i de les aplicacions aplicats només quan s'hi entra.
 * **Menys estils en arrencar:** dins d'una pàgina de WordPress, el visor arrenca amb menys estils aplicats; la pantalla es veu igual que abans.
@@ -250,6 +253,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.23 =
+Visor al dia amb la versió 1.2.15 de Sóc de Poble: El Bar sense columna buida, l'Arbre Genealògic sense penjar-se amb arbres grans i un annex d'agraïments a la pàgina legal.
 
 = 1.1.22 =
 Visor al dia amb la versió 1.2.14 de Sóc de Poble: les mateixes pantalles, amb els estils del Perfil i de les aplicacions aplicats només quan s'hi entra.

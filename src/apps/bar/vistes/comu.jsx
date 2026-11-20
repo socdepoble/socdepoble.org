@@ -36,6 +36,14 @@ function useIdiomaBar() {
   }
 }
 
+function useMidaClosa() {
+  try {
+    return useClosaAplicacio()?.mida || 'estret';
+  } catch {
+    return 'estret';
+  }
+}
+
 /**
  * L'avís de la sessió DINS de la columna de la vista, davall de la seua
  * capçalera, que queda alineada amb les de les columnes del costat. En
@@ -173,6 +181,7 @@ export function AvisBase() {
 export function Preparat({ titol, ambTorn = true, avis = 'damunt', children }) {
   const bar = useBar();
   const idioma = useIdiomaBar();
+  const mida = useMidaClosa();
   const tx = textosUiBar(idioma);
   const { ves } = useVes();
   /* Quantes columnes de la vista han reclamat l'avís (AvisDeLaColumna): una, o cap si la vista no el passa. */
@@ -190,6 +199,13 @@ export function Preparat({ titol, ambTorn = true, avis = 'damunt', children }) {
     return <Columna titol={titol}>{bar.errorCarrega ? <AvisBase /> : <Carregant etiqueta={tx.carregantBar} />}</Columna>;
   }
   if (ambTorn && !bar.tornActual) {
+    if (avis === 'estret' && mida !== 'estret') {
+      return (
+        <Columna titol={titol} avis={null}>
+          <EstatBuit breu titol={tx.senseTornLateral} />
+        </Columna>
+      );
+    }
     return (
       <Columna titol={titol} avis={deLaColumna.avis}>
         <EstatBuit icona={LockKeyhole} titol={tx.tornTancatTitol}

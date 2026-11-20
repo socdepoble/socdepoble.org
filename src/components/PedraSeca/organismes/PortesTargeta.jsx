@@ -37,7 +37,7 @@
  *            «“{nom}” encara està en obres.»
  *   enObres  el complement del nom d'una porta inerta; per defecte «(en obres)»
  */
-import { useCallback } from 'react';
+import { useCallback, useId } from 'react';
 import { Construction } from 'lucide-react';
 import { Link, useNavigate } from '../../../app/contexts/RouterContext';
 import { resolRuta } from '../../../app/contexts/politicaRouter.js';
@@ -110,37 +110,48 @@ export function useObriPorta() {
    i amb «: Compartir vehicle» el nom seria «Publicar : …». Per això, si la
    resta no comença per un espai, el verb visible s'amaga al lector i el nom
    va sencer. */
-function TextDeLaPorta({ porta, inerta }) {
+function idsEtiquetaDeLaPorta(porta, inerta, idText) {
+  const sufix = inerta ? ` ${porta.enObres}` : '';
+  const resta = porta.nom.startsWith(porta.verb) ? porta.nom.slice(porta.verb.length) : null;
+  if (resta !== null && (resta === '' || /^\s/.test(resta))) {
+    const complement = `${resta}${sufix}`.trim();
+    return complement ? `${idText}-v ${idText}-c` : idText;
+  }
+  return idText;
+}
+
+function TextDeLaPorta({ porta, inerta, idText }) {
   const sufix = inerta ? ` ${porta.enObres}` : '';
   const resta = porta.nom.startsWith(porta.verb) ? porta.nom.slice(porta.verb.length) : null;
   if (resta !== null && (resta === '' || /^\s/.test(resta))) {
     const complement = `${resta}${sufix}`.trim();
     return (
       <>
-        <span>{porta.verb}</span>
-        {complement ? <>{' '}<span className="sdp-sr-only">{complement}</span></> : null}
+        <span id={complement ? `${idText}-v` : idText}>{porta.verb}</span>
+        {complement ? <>{' '}<span id={`${idText}-c`} className="sdp-sr-only">{complement}</span></> : null}
       </>
     );
   }
   return (
     <>
       <span aria-hidden="true">{porta.verb}</span>
-      <span className="sdp-sr-only">{`${porta.nom}${sufix}`}</span>
+      <span id={idText} className="sdp-sr-only">{`${porta.nom}${sufix}`}</span>
     </>
   );
 }
 
 function Porta({ porta, obri }) {
+  const idText = useId();
   if (porta.desti) {
     return (
-      <Link to={porta.desti} className={porta.varietat === 'primari' ? 'sdp-boto sdp-boto--primari sp-card-porta' : 'sdp-boto sdp-boto--secundari sp-card-porta'}>
-        <TextDeLaPorta porta={porta} />
+      <Link to={porta.desti} aria-labelledby={idsEtiquetaDeLaPorta(porta, false, idText)} className={porta.varietat === 'primari' ? 'sdp-boto sdp-boto--primari sp-card-porta' : 'sdp-boto sdp-boto--secundari sp-card-porta'}>
+        <TextDeLaPorta porta={porta} idText={idText} />
       </Link>
     );
   }
   return (
-    <button type="button" className="sdp-boto sdp-boto--secundari sp-card-porta" aria-disabled="true" onClick={() => obri(porta)}>
-      <TextDeLaPorta porta={porta} inerta />
+    <button type="button" aria-labelledby={idsEtiquetaDeLaPorta(porta, true, idText)} className="sdp-boto sdp-boto--secundari sp-card-porta" aria-disabled="true" onClick={() => obri(porta)}>
+      <TextDeLaPorta porta={porta} inerta idText={idText} />
       <Construction size={18} aria-hidden="true" focusable="false" />
     </button>
   );
@@ -177,19 +188,20 @@ const CLASSE_DE_PAGINA_SECUNDARIA = 'sdp-boto sdp-boto--secundari sdp-boto--gran
 
 export function PortaDePagina({ porta, varietat = 'primari' }) {
   const obri = useObriPorta();
+  const idText = useId();
   const [neta] = normalitzaPortes(porta ? [porta] : []);
   if (!neta) return null;
   const classe = varietat === 'secundari' ? CLASSE_DE_PAGINA_SECUNDARIA : CLASSE_DE_PAGINA;
   if (neta.desti) {
     return (
-      <Link to={neta.desti} className={classe}>
-        <TextDeLaPorta porta={neta} />
+      <Link to={neta.desti} aria-labelledby={idsEtiquetaDeLaPorta(neta, false, idText)} className={classe}>
+        <TextDeLaPorta porta={neta} idText={idText} />
       </Link>
     );
   }
   return (
-    <button type="button" className={classe} aria-disabled="true" onClick={() => obri(neta)}>
-      <TextDeLaPorta porta={neta} inerta />
+    <button type="button" aria-labelledby={idsEtiquetaDeLaPorta(neta, true, idText)} className={classe} aria-disabled="true" onClick={() => obri(neta)}>
+      <TextDeLaPorta porta={neta} inerta idText={idText} />
       <Construction size={20} aria-hidden="true" focusable="false" />
     </button>
   );

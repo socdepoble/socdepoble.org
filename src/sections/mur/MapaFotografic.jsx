@@ -875,7 +875,9 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
           <Boto aria-pressed={!manual} onClick={() => setLlindarManual(null)}>{tr('section.mur.mapa.segonsElZoom', 'Segons el zoom')}</Boto>
         </div>
         <input id={idLliscador} className="sdp-mapa__lliscador" type="range" min={0} max={9} step={1}
-          value={indexDelLlindar(km)} aria-describedby={idAjuda} aria-valuetext={textDelValor}
+          value={indexDelLlindar(km)} aria-labelledby={idEtiqueta}
+          aria-label={tr('section.mur.mapa.agrupacio', 'Agrupació per distància')}
+          aria-describedby={idAjuda} aria-valuetext={textDelValor}
           onChange={(event) => setLlindarManual(llindarDelLliscador(event.target.value))} />
         <div className="sdp-mapa__extrems" aria-hidden="true">
           <span>{etiquetaDistancia(Infinity, t)}</span>

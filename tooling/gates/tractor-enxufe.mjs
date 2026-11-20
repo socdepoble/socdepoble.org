@@ -77,6 +77,9 @@ function permetImport(origen, desti) {
   if (!desti.startsWith('src/data/supabase/')) return true;
 
   return origen.startsWith('src/data/supabase/')
+    // R32.19 · La fulla del port només pot llegir l'adaptador públic pur.
+    // Cap altre mòdul ni cap altre fitxer de Supabase hereta este permís.
+    || (origen === 'src/data/backendProtocolPublic.js' && desti === 'src/data/supabase/protocolPublic.js')
     || (
       origen === 'src/host.js'
       && desti === 'src/data/supabase/index.js'

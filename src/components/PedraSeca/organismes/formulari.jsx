@@ -27,18 +27,20 @@ const uneix = (...c) => c.filter(Boolean).join(' ');
 
 export function Camp({ etiqueta, ajuda, error, obligatori = false, className, children }) {
   const id = useId();
+  const idEtiqueta = `${id}-etiqueta`;
   const idAjuda = ajuda ? `${id}-ajuda` : null;
   const idError = error ? `${id}-error` : null;
   const descritPer = uneix(idAjuda, idError) || undefined;
 
   /* etiqueta viatja pel context (no pel DOM): CampFitxer la copia al nom del
-     seu botó. Els altres controls no la lligen i el seu DOM no canvia. */
+     seu botó. Els altres controls sense placeholder ni aria-label apunten a
+     idEtiqueta per mantindre nom accessible explícit sota content-visibility. */
   return (
-    <CampCtx.Provider value={{ id, descritPer, invalid: Boolean(error), obligatori, etiqueta }}>
+    <CampCtx.Provider value={{ id, idEtiqueta, descritPer, invalid: Boolean(error), obligatori, etiqueta }}>
       {/* Onada R29 · Segona passada (SQLP-05) · Sense el modificador d'error del camp: cap regla no el pintava
           (l'error el marca aria-invalid al control), i la porta del vocabulari el comptava com a classe forastera. */}
       <div className={uneix('sdp-camp', className)}>
-        <label className="sdp-camp__etiqueta" htmlFor={id}>
+        <label id={idEtiqueta} className="sdp-camp__etiqueta" htmlFor={id}>
           {etiqueta}
           {obligatori ? <span className="sdp-camp__obligatori"> (obligatori)</span> : null}
         </label>
@@ -58,8 +60,10 @@ export function Camp({ etiqueta, ajuda, error, obligatori = false, className, ch
 function useControl(nom, props) {
   const ctx = useContext(CampCtx);
   if (!ctx) throw new Error(`<${nom}> ha d'anar dins de <Camp>: sense etiqueta no hi ha control.`);
+  const teNomPropi = Boolean(props['aria-label'] || props['aria-labelledby'] || props.title || props.placeholder);
   return {
     id: ctx.id,
+    'aria-labelledby': teNomPropi ? undefined : ctx.idEtiqueta,
     'aria-describedby': ctx.descritPer,
     'aria-invalid': ctx.invalid ? 'true' : undefined,
     required: ctx.obligatori || undefined,
@@ -186,7 +190,8 @@ function estatFitxers(noms, { carpeta = false, ambNoms = true } = {}) {
  * el passa pinta el mateix text de sempre.
  */
 export function CampFitxer({ textBoto, nomsVisibles = true, className, disabled = false, onChange, onInvalid, ...rest }) {
-  const { required: obligatori, ...control } = useControl('CampFitxer', rest);
+  const { required: obligatori, 'aria-labelledby': _ignoraEtiqueta, ...control } = useControl('CampFitxer', rest);
+  void _ignoraEtiqueta;
   const { etiqueta, obligatori: campObligatori } = useContext(CampCtx);
   const arrel = useRef(null);
   const input = useRef(null);

@@ -1,6 +1,6 @@
 /* Pla 261027_1154 (P1-61) · El selector de la imatge social
    (config/imatgeSocial.js), amb fixtures en línia i cap xarxa:
-     · és una fulla sense imports que també carrega node pla;
+     · és una lògica pura que carrega Node pla i importa el protocol pel port;
      · el <head> genèric (CAP_SOCIAL_BASE) és el que porta index.html;
      · les marques i la portada de reserva viuen allí i són els mateixos
        objectes que lligen UniversalUtils.js i paginaDeText.js;
@@ -119,7 +119,7 @@ const MARCA_A_LA_GALERIA = Object.freeze({ id: 'marca-a-la-galeria', images: [MA
 
 const camins = (llista) => llista.map(camiDe);
 
-describe('una fulla sense imports, per a Vite i per a node pla', () => {
+describe('una lògica pura amb protocol pel port, per a Vite i Node', () => {
   /* Els identificadors lliures que una fulla neutral no pot nomenar: només el
      global URL i els d'ECMAScript. */
   const GLOBALS_PROHIBITS = new Set(['window', 'document', 'globalThis', 'self', 'navigator', 'location', 'process', 'require', 'module', 'exports', '__dirname', '__filename', 'fetch', 'localStorage', 'sessionStorage']);
@@ -134,7 +134,7 @@ describe('una fulla sense imports, per a Vite i per a node pla', () => {
     for (const [clau, valor] of Object.entries(node)) if (clau !== 'type') yield* nodes(valor);
   }
 
-  test('el codi no importa res: cap import, export … from, import(), import.meta ni require', () => {
+  test('només importa les formes síncrones pel port: cap import directe del proveïdor ni dinàmic', () => {
     const arbre = parse(readFileSync(FONT, 'utf8'), { ecmaVersion: 'latest', sourceType: 'module' });
     const tots = [...nodes(arbre)];
     expect(tots.length).toBeGreaterThan(500);
@@ -142,7 +142,8 @@ describe('una fulla sense imports, per a Vite i per a node pla', () => {
       || node.type === 'MetaProperty' || node.type === 'ExportAllDeclaration'
       || (node.type === 'ExportNamedDeclaration' && node.source)
       || (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require'));
-    expect(importacions.map((node) => `${node.type}@${node.start}`)).toEqual([]);
+    expect(importacions.map((node) => [node.type, node.source?.value])).toEqual([['ImportDeclaration', '../data/backendProtocolPublic.js']]);
+    expect(importacions[0].specifiers.map(node => node.imported.name).sort()).toEqual(['esReferenciaMitjaPrivada', 'prefixMitjansPublics']);
   });
 
   test('cap global de navegador ni de node: només URL', () => {

@@ -7592,6 +7592,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-consola__detall[open] > .sdp-consola__detall-cap > .sdp-consola__detall-xebro {
     transform: rotate(180deg);
   }
+  .sdp-consola__detall:not([open]) > .sdp-consola__detall-cos { display: none; }
   .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
   .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
 

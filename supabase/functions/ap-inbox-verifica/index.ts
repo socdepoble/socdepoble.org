@@ -11,6 +11,7 @@
    de la cua després de respondre. */
 /* global Deno, EdgeRuntime */
 import { creaGestor } from './gestor.js';
+import { creaFetchPinnat } from './fetchPinnat.js';
 
 const NOMS = [
   'SDP_AP_ACTIVA', 'SDP_AP_ORIGEN', 'SDP_AP_INBOX_PUBLICA', 'SDP_AP_CLAUS_PRIVADES', 'SDP_AP_NODES_CONFIANCA',
@@ -40,4 +41,7 @@ const espera = typeof EdgeRuntime !== 'undefined' && typeof EdgeRuntime?.waitUnt
   ? (promesa) => EdgeRuntime.waitUntil(promesa)
   : null;
 
-Deno.serve(creaGestor({ env: Object.fromEntries(NOMS.map((nom) => [nom, variable(nom)])), resolDns, espera }));
+Deno.serve(creaGestor({
+  env: Object.fromEntries(NOMS.map((nom) => [nom, variable(nom)])),
+  resolDns, fetchPinnat: creaFetchPinnat(), requereixPinDns: true, espera
+}));

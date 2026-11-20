@@ -110,7 +110,10 @@ function PanellEstret({ columna }) {
  * `rutes`: la taula (millor una constant del mòdul de l'app).
  * `titols`: { esquerra, mig } per als separadors de les columnes.
  */
-export function ClosaAplicacio({ rutes, titols = {} }) {
+/* `amagaEsquerraBuida` (Gauntlet v1.2.15) · Una ruta sense Esquerra retira la columna buida (leftColumn null
+   a AppGridShell) només en les apps que ho declaren: el Mestre ho va aprovar per al Bar (Gemini R32.19).
+   La resta, com la Nevera, conserva la columna de sempre (leftColumn undefined, Llei del Píxel). */
+export function ClosaAplicacio({ rutes, titols = {}, amagaEsquerraBuida = false }) {
   const unicaAppsRef = useRef(null);
   useFullDiferit(unicaAppsRef, 'apps-plataforma', cssAppsPlataforma);
   const { manifest } = useApp();
@@ -174,7 +177,7 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
           aria-label={titol}
           leftTitle={titols.esquerra || tx.navegacioCol}
           middleTitle={titols.mig || tx.llistaCol}
-          leftColumn={Esquerra ? <Esquerra params={params} /> : null}
+          leftColumn={Esquerra ? <Esquerra params={params} /> : (amagaEsquerraBuida ? null : undefined)}
           middleColumn={<Mig params={params} />}
           rightColumn={<Detall params={params} />}
         >

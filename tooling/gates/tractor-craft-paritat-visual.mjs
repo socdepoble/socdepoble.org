@@ -501,6 +501,14 @@ const SONDA_DOM_CRAFT = `(() => {
 
   for (const tbl of document.querySelectorAll('table')) {
     if (!vis(tbl)) continue;
+    /* Gemini R32.20 (costura opcional, integrada a la v1.2.15) · Una taula dins d'una regió desplaçable accessible
+       (WCAG 2.1.1: role="region", tabIndex >= 0, overflow-x auto/scroll i dins de l'amplada) no és una taula ampla
+       trencada: és el patró de la taula demogràfica de /poblacio, el mateix que accepta gauntlet-71-rutes-cdp.mjs. */
+    const region = tbl.closest('[role="region"]');
+    const rcs = region ? getComputedStyle(region) : null;
+    if (region && region.tabIndex >= 0 && (rcs.overflowX === 'auto' || rcs.overflowX === 'scroll') && region.getBoundingClientRect().right <= w + 1) {
+      continue;
+    }
     const maxCols = Math.max(0, ...[...tbl.querySelectorAll('tr')].map((tr) => tr.children.length));
     if (maxCols >= 3) wideTablesP0128 += 1;
   }

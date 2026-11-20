@@ -33,7 +33,7 @@ function textDeCela(columna, valor, tr) {
   if (columna.clau === 'desti') return tr(`bar.${valor}`);
   if (columna.clau === 'format') return tr(`loteria.${valor}`);
   if (columna.clau === 'pagament') return tr(valor === 'pagat' ? 'banda.pagat' : 'banda.pendentPagar');
-  if (typeof valor === 'number') return String(valor).replace('.', ',');
+  if (typeof valor === 'number') return Number.isFinite(valor) ? String(valor).replace('.', ',') : '';
   return String(valor);
 }
 

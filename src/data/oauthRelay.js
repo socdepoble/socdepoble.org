@@ -1,3 +1,4 @@
+import { bescanviaCodiOAuth, urlAutoritzacioGoogle } from './backendProtocolPublic.js';
 /**
  * oauthRelay.js — ENTRADA AMB GOOGLE QUE TORNA A LA PÀGINA DE L'AMFITRIÓ
  *
@@ -220,8 +221,6 @@ const clauTraspas = (intent) => PREFIX_TRASPAS + intent;
 /* Per on ha d'arribar el codi de cada intent (vegeu TRES CAMINS). */
 const CAMI = Object.freeze({ EMERGENT: 'emergent', REDIRECCIO: 'redireccio' });
 const TIPUS_MISSATGE = 'sdp:oauth';
-const EXCHANGE_GRANT = 'pkce';
-const EXCHANGE_FIELD = 'auth_code';
 const TEMPS_MAXIM_MS = 180000;
 /* Un traspàs més vell que açò no s'accepta: no és la tornada d'ara. */
 const VIGENCIA_TRASPAS_MS = 120000;
@@ -699,18 +698,13 @@ export function urlPerAObrirFora(pagina = globalThis.window?.location) {
 /* ───────────────────────── Bescanvi ───────────────────────── */
 
 async function bescanvia(codi, verificador, config, attempt) {
-  const { supabaseUrl, supabaseAnonKey } = config;
   if (getEfimer('sdp:oauth:backend', null) !== backendScope(config)) {
     throw new Error('El backend de l’entrada ha canviat. Torna a entrar.');
   }
   attempt.assertCurrent();
   const timeout = setTimeout(() => attempt.controller.abort(), 12000);
   try {
-  const resposta = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=${EXCHANGE_GRANT}`, {
-    method: 'POST', redirect: 'error', signal: attempt.signal,
-    headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ [EXCHANGE_FIELD]: codi, code_verifier: verificador })
-  });
+  const resposta = await bescanviaCodiOAuth(codi, verificador, config, attempt.signal);
 
   attempt.assertCurrent();
   if (!resposta.ok) {
@@ -871,11 +865,7 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
   }
 
   // Els mateixos paràmetres que auth-js: PKCE i res més (cap `state`, vegeu la capçalera).
-  const url = `${supabaseUrl}/auth/v1/authorize`
-    + `?provider=google`
-    + `&code_challenge=${encodeURIComponent(repte)}`
-    + `&code_challenge_method=S256`
-    + `&redirect_to=${encodeURIComponent(tornada)}`;
+  const url = urlAutoritzacioGoogle(supabaseUrl, repte, tornada);
 
   /* F1v2 · El registre de l'emergent, ABANS que navegue. Si no es pot escriure
      (emmagatzematge ple o blocat), la tornada de l'emergent no seria

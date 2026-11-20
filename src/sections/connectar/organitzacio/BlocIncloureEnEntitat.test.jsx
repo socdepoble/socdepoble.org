@@ -54,7 +54,7 @@ import { BlocIncloureEnEntitat } from './BlocIncloureEnEntitat.jsx';
 import { configuraBackendSessio, desaSessio, entradaSessio } from '../../../data/identitat.js';
 import { rolDeLaPersona, useIncloureEnEntitat } from './useIncloureEnEntitat.js';
 import { XatSocDePobleContext } from '../../../components/PedraSeca/hooks/xatSocDePoble.js';
-import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/GestioMembres.jsx';
+import { ERRORS_MEMBRES, TEXTOS_MEMBRES } from '../../profile/membresModel.js';
 import { oblidaSondaConnexions } from '../sondaConnexions.js';
 
 const UUID_PEPA = '6f1c2a3b-4d5e-4f60-8a71-92b3c4d5e6f7';

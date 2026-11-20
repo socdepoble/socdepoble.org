@@ -10,7 +10,7 @@ import { resolve } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import PanellDeViquipedia, { TERMINI_MS } from './PanellDeViquipedia.jsx';
-import { TEXTOS_VIQUIPEDIA, dataLlegible } from './CreditsDeViquipedia.jsx';
+import { TEXTOS_VIQUIPEDIA, dataLlegible } from './creditsDeViquipediaModel.js';
 import { MAXIM_CREDIT, pobleDeViquipedia } from './pobleDeViquipedia.js';
 import { UIContext } from '../../app/contexts/objectesDeContext.js';
 import { NOM_BD, STORE, cauDeViquipedia, creaCauDeViquipedia } from './cauDeViquipedia.js';

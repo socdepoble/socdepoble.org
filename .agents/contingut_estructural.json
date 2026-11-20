@@ -68,16 +68,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "9ad1e1e2fe80874e58b9c1981540d48e78f2d51a690bac4c5f0ae72166411c9c",
+      "sha256": "983d5a3eb342af8910101d4f81a33ee7d9b18e737eff0b0d332326673c3c0edc",
       "html": 21957,
-      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
-      "data": "2026-11-19"
+      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
+      "data": "2026-11-20"
     },
     "fediversity": {
-      "sha256": "7a31e671dcf2226fe598a3cac296a31ef6daa9dc00ab2487d8a68c955a256324",
-      "html": 66912,
-      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
-      "data": "2026-11-19"
+      "sha256": "1607e13f9d36ebbf1096849ab89e63a448aec21154cc48bfe866a2b773569b85",
+      "html": 66972,
+      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
+      "data": "2026-11-20"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "f1fd00e4ff7b2e34a01b4c1508995c3e0de0084a530263b1cb4ef36db8467642",
+      "sha256": "8ba2bb86a4f426f03c5764b5e4c18f42905230838b11a7ed3bee8d23ab9b7f18",
       "html": 30207,
-      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
-      "data": "2026-11-19"
+      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
+      "data": "2026-11-20"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "ffc8cd43371054ca996eaab8257435daa0422cd7c068ece31bf96568008c0c11",
-      "html": 143468,
-      "aprovat_per": "Claude v1.2.14 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 12:58 (prompt 261120_1302: fusionar Codex R32.17 i Gemini R32.18, deute zero i desplegar v1.2.14), crònica FITA_R32_18 contrastada amb el codi i corregida per tres passades de Gauntlet (R1, R2 i R2b); pendent de lectura humana",
+      "sha256": "c4647b47a62051d54cd1acb41256d1b24856353873a1b2db5c938051413c5ead",
+      "html": 146285,
+      "aprovat_per": "Claude v1.2.15 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026, vespre (encadenat a la v1.2.14: Codex R32.19 i Gemini R32.19 i R32.20, R796 del Node 0 i desplegament v1.2.15), crònica FITA_R32_20 contrastada amb el codi i corregida per tres passades de Gauntlet (R1, R2 i R2b); pendent de lectura humana, 2026-11-20",
       "data": "2026-11-20"
     },
     "wikidepoble": {

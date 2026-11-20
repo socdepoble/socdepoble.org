@@ -277,3 +277,9 @@ export const legalContent = {
     </blockquote>
   `
 };
+
+/* IDEA-295 (Onada R32.19) · Ampliació viva de l'apartat 23 en les 5 llengües
+   (Alejavi Rivera, ArtCraft / Craft Anything, Informática DP, Jorge Marfil i REA),
+   mantinguda fora de `legalContent.html` per a preservar intacta l'empremta
+   criptogràfica segellada SDP-RGPD-021 de la Política 2.5 en vigor. */
+export { CREDITS_COMUNITAT_S23_5_LLENGUES, htmlCreditsComunitatS23 } from './legalCreditsS23.js';

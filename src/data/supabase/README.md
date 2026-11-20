@@ -1,3 +1,8 @@
+---
+type: index
+status: canonic
+description: "Índex tècnic dels mòduls de l'adaptador Supabase (autenticació, contingut, notes, organitzacions, xat, emmagatzematge i temps real)."
+---
 # 🗃️ Mòduls Supabase
 
 > **Estat**: Refactoritzat (v2.0.0) | **Data**: 2026-09-15 | **Autor**: Consell de la Petorreta
@@ -56,3 +61,8 @@ Cada mòdul exposa un **contracte clar** de funcions. Veure la documentació JSD
 - **Online-First**: El sistema requereix connexió i no hi ha emmagatzematge local de negoci (només autenticació).
 - **Enxufabilitat**: Cada mòdul pot ser reemplaçat sense afectar la resta.
 - **Compatibilitat**: `index.js` manté compatibilitat amb el codi existent.
+
+## Vincles
+
+- [[00_index]]
+

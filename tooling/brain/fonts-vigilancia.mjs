@@ -21,6 +21,7 @@
  * una porta general del graf. La comprovació de signatura del LEDGER conserva
  * el contracte existent amb ledger.mjs i verify-ledger.mjs.
  */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -28,7 +29,7 @@ import { exemptDeRebut } from '../documental/core.mjs';
 import { extractDocumentLinks } from '../lib/document-links.mjs';
 
 const DIR_TORNS = '.agents/runtime/turns';
-const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
+const ESCRIPTORI = CAMINS.escriptori;
 const INDEX_ESCRIPTORI = '00_index_escriptori.md';
 const SAFATA = '00_bandeja_d_entrada';
 /** Límit de la Safata d'Entrada (AGENTS.md §12). */

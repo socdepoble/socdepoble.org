@@ -15,7 +15,7 @@
 export const AUTORIA_RENTONAR = 'Associació El Rentonar';
 export const ESTUDI_TECNIC_RENTONAR = 'Pedro Ferrer Rodríguez';
 export const RUTA_PERFIL_RENTONAR = '/grup/el-rentonar';
-export const AVATAR_RENTONAR = '/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.png';
+export const AVATAR_RENTONAR = '/assets/uploads/grup/el-rentonar/avatars/logo-rentonar-socdepoble-1600-c.webp';
 export const COPYRIGHT_RENTONAR_ARBRES = 'CC BY-NC-SA 4.0 · Associació El Rentonar · Estudi tècnic: Pedro Ferrer Rodríguez';
 
 export const ITEMS_CATALEG_ARBRES_RENTONAR_WP = Object.freeze([

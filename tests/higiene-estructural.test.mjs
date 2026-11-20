@@ -254,10 +254,9 @@ export function infraccionsH9(noms) {
 
 /* H10 · Els .sql versionats viuen a supabase/ i a tests/fixtures/, més les carpetes d'eines que
    en porten de legítims (esquemes de Node 0, auditoria de lectura, corpus i verificació).
-   v1.2.14 · tooling/gates/fixtures/ guarda les còpies literals dels paquets SQL que el Mestre va aplicar a Producció
-   (R32.14 i R32.15), fixades per SHA-256 i llegides només pels verificadors de rebuts (verifica-rebut-produccio-r321*.mjs);
-   el bundle R32.14 hi era des de la v1.2.13 i H10 ho va veure en versionar-se. */
-export const PERMESOS_H10 = Object.freeze(['supabase/', 'tests/fixtures/', 'tooling/node0/', 'tooling/auditoria/', 'tooling/cultura/', 'scripts/supabase/', 'tooling/gates/fixtures/']);
+   v1.2.15 · Les còpies literals dels paquets SQL de Producció R32.14 i R32.15 viuen a tests/fixtures/ (trasllat de
+   Codex R32.19); l'excepció temporal de la v1.2.14 per a tooling/gates/fixtures/ es retira. */
+export const PERMESOS_H10 = Object.freeze(['supabase/', 'tests/fixtures/', 'tooling/node0/', 'tooling/auditoria/', 'tooling/cultura/', 'scripts/supabase/']);
 /* Deute conegut, tancat: el paquet de migracions del 260927 que ningú llig (només el cita el
    comentari de supabase/migrations/2610090100_convergencia_xat_de_pagina.sql:11). Arxivar-lo o
    retirar-lo és decisió del Mestre (IDEA-62); quan isca de l'índex, esta llista es buida. */

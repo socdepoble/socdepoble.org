@@ -75,6 +75,6 @@ export function main(argv = process.argv.slice(2), root = null) {
     const report = mesuraEconomiaArrencada(root ?? arrelSegura());
     console.log(JSON.stringify(report, null, 2));
     return report.valid ? 0 : 1;
-  } catch (error) { console.error(JSON.stringify({ valid: false, code: error.code ?? 'BOOT_READ_FAILED' })); return 1; }
+  } catch (error) { console.error(JSON.stringify({ valid: false, code: error.code ?? 'BOOT_READ_FAILED' })); if (esMain(import.meta.url)) process.exitCode = 1; return 1; }
 }
 if (esMain(import.meta.url)) process.exitCode = main();

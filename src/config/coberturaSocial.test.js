@@ -31,7 +31,7 @@ import { metadadesDeDocumentWiki } from '../sections/wiki-de-poble/seoWiki.js';
 import { rutesPubliquesDeLaConsola } from '../sections/consola/seoConsola.js';
 import { CLAUS_RESERVADES, indexDePerfil, metadadesDePerfil, rutaPublicaDePerfil, schemaDePerfil } from './metadadesDePerfil.js';
 import { ambReservaDelPaquet } from '../sections/profile/perfilsDelPaquet.js';
-import { encapcalamentDirectoriGent } from '../sections/pobles/SubnavigacioPoblesIGent.jsx';
+import { encapcalamentDirectoriGent } from '../sections/pobles/subnavigacioPoblesIGentModel.js';
 import { AMBITS_VERTICALS, TEXTOS_VERTICALS } from '../sections/verticals/SeccioVertical.jsx';
 import ca from './idiomes/ca.js';
 import { CAP_SOCIAL_BASE } from './imatgeSocial.js';

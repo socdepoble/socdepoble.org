@@ -51,7 +51,7 @@ export default function AparadorFediversity({language:idioma,carrega=loadCompile
   {patrimoni.map(([clau,pagina])=>{const lang=pagina.contentLanguage||'ca',altra=lang!==language;return <p key={clau} {...(altra?{lang}:{})}><a href={`/page/${clau}`} {...(altra?{hrefLang:lang}:{})}><strong>{pagina.title}</strong></a>: {pagina.subtitle}</p>;})}
  </nav>:null}<section data-sdp-privat="true" aria-label={t.compiler}>
   <h3>{t.compiler}</h3><p>{t.compilerIntro}</p><p><a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank" rel="noopener noreferrer">{t.inspired}</a></p>
-  <label>{t.label}<textarea value={text} maxLength={16000} onChange={event=>change(event.target.value)} /></label>
+  <label>{t.label}<textarea aria-label={t.label} value={text} maxLength={16000} onChange={event=>change(event.target.value)} /></label>
   <div className="sdp-alerta__accions"><button className="sdp-boto sdp-boto--primari" type="button" onClick={compile} disabled={state==='working'}>{state==='working'?t.working:t.compile}</button><button className="sdp-boto sdp-boto--secundari" type="button" onClick={()=>change('')}>{t.clear}</button></div>
   {['failed','empty'].includes(state)?<p role="status">{t[state]}</p>:null}
   {result?<div aria-live="polite"><h4>{t.result}</h4><p>SHA-256: <code>{result.sha256}</code></p><pre>{result.markdown}</pre></div>:null}

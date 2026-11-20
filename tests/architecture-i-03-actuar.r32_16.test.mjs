@@ -60,7 +60,7 @@ test('R32.16 · ARCHITECTURE.md existeix, té to tècnic sobri i quadra exactame
     "credentials: 'omit'",
     'ESCRIPTURES_PERMESES',
     '3.145.728 B',
-    '1.660.000 B',
+    '1.594.000 B',
     '10 MiB',
     'SECURITY DEFINER',
     'data-sdp-senior="true"',

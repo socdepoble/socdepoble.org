@@ -27,7 +27,7 @@ vi.mock('../../../data/wikiManifest.js', () => ({
     ]
   }
 }));
-vi.mock('../../wiki-de-poble/WikiDePobleSection.jsx', () => ({
+vi.mock('../../wiki-de-poble/wikiDePobleModel.js', () => ({
   modulsLocalsActius: (env) => {
     eines.crides.push(env);
     return env?.DEV === true

@@ -7,7 +7,18 @@ import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { omple } from '../../config/moderacio.js';
 /* IDEA-22, punt 2 (pla 261025_0200) · La tria de la propietària (capacitat 'consentimentTitular'). */
 import { estatTitularPublic, marcaTitularPublic, teCapacitat } from '../../data/backendPort.js';
-import { MINIM_CERCA, accionsSobre, clauDeMembre, ordenaMembres, parellDeTipus, potTransferirPropietat } from './membresModel.js';
+import {
+  ERRORS_MEMBRES,
+  ERRORS_TRANSFERENCIA,
+  ESPERA_CERCA,
+  MINIM_CERCA,
+  TEXTOS_MEMBRES,
+  accionsSobre,
+  clauDeMembre,
+  ordenaMembres,
+  parellDeTipus,
+  potTransferirPropietat,
+} from './membresModel.js';
 import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -26,86 +37,8 @@ import { QuiSegueixOrganitzacio } from './Seguidors.jsx';
    empresa cedix la propietat a una persona membre, amb confirmació.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* La cerca de candidats espera que la persona pare d'escriure. */
-export const ESPERA_CERCA = 300;
-
 /* Els rols que es poden triar en l'alta; l'etiqueta es traduïx en pintar (PARELLS_ROL). */
 const ROLS_D_ALTA = Object.freeze(['member', 'admin']);
-
-/* T5a · P1-22 (assalt 261101) · Els textos de la gestió, en parells [clau
-   i18n, reserva] com TEXTOS_PRIVACITAT: cada reserva és el text de sempre,
-   lletra per lletra, i el valor valencià del diccionari. Frases senceres amb
-   buits d'omple() ({nom}, {org}, {n}, {consulta}), mai trossos cosits. */
-const textMembres = (nom, reserva) => Object.freeze([`section.perfil.membres.${nom}`, reserva]);
-export const TEXTOS_MEMBRES = Object.freeze({
-  errorLlista: textMembres('errorLlista', 'No s’ha pogut llegir la llista de membres.'),
-  errorCerca: textMembres('errorCerca', 'No s’ha pogut cercar a la gent del municipi.'),
-  opcioEscriu: textMembres('opcio.escriu', 'Primer escriu un nom…'),
-  opcioCercant: textMembres('opcio.cercant', 'Cercant…'),
-  opcioTria: textMembres('opcio.tria', 'Tria un resultat…'),
-  opcioCap: textMembres('opcio.cap', 'Cap resultat'),
-  senseNom: textMembres('senseNom', 'Sense nom'),
-  afegit: textMembres('afegit', '{nom} ja és membre de {org}.'),
-  errorAfegeix: textMembres('errorAfegeix', 'No s’ha pogut afegir el membre.'),
-  ascendit: textMembres('ascendit', '{nom} ja administra {org}.'),
-  descendit: textMembres('descendit', '{nom} ja no administra {org}.'),
-  errorRol: textMembres('errorRol', 'No s’ha pogut canviar el rol.'),
-  llevat: textMembres('llevat', '{nom} ja no és membre de {org}.'),
-  errorLleva: textMembres('errorLleva', 'No s’ha pogut llevar el membre.'),
-  carregant: textMembres('carregant', 'Carregant els membres…'),
-  taula: textMembres('taula', 'Membres de {org}'),
-  colMembre: textMembres('col.membre', 'Membre'),
-  colTipus: textMembres('col.tipus', 'Tipus'),
-  colRol: textMembres('col.rol', 'Rol'),
-  colAccions: textMembres('col.accions', 'Accions'),
-  tu: textMembres('tu', '(tu)'),
-  nomenaAdmin: textMembres('nomenaAdmin', 'Nomenar administradora'),
-  tornaMembre: textMembres('tornaMembre', 'Tornar a membre'),
-  lleva: textMembres('lleva', 'Llevar'),
-  buit: textMembres('buit', 'Encara no hi ha cap membre.'),
-  afegirLlegenda: textMembres('afegirLlegenda', 'Afegir un membre'),
-  cercaAjuda: textMembres('cercaAjuda', 'Persones del municipi o organitzacions que també administres. Escriu almenys {n} lletres.'),
-  quiAfegir: textMembres('quiAfegir', 'Qui vols afegir'),
-  afegir: textMembres('afegir', 'Afegir'),
-  dialegTitol: textMembres('dialegTitol', 'Llevar {nom} de {org}?'),
-  dialegTitolSenseNom: textMembres('dialegTitolSenseNom', 'Llevar este membre de {org}?'),
-  dialegTitolBuit: textMembres('dialegTitolBuit', 'Llevar un membre'),
-  dialegDescripcio: textMembres('dialegDescripcio', 'Deixarà de ser-ne membre. Es pot tornar a afegir quan calga.'),
-  /* P1-15 · El recompte de la cerca, per al lector de pantalla (el selector canvia en silenci). */
-  anunciResultats: textMembres('anunciResultats', '{n} resultats per a «{consulta}».'),
-  anunciUnResultat: textMembres('anunciUnResultat', 'Un resultat per a «{consulta}».'),
-  anunciCapResultat: textMembres('anunciCapResultat', 'Cap resultat per a «{consulta}».'),
-  /* IDEA-24 (marató 261101_2143, B4) · Transferir la propietat. */
-  transfereix: textMembres('transfereix', 'Transferir la propietat'),
-  transferit: textMembres('transferit', '{nom} ja és la propietària de {org}. Tu continues com a administradora.'),
-  errorTransfereix: textMembres('errorTransfereix', 'No s’ha pogut transferir la propietat.'),
-  dialegTransfereixTitol: textMembres('dialegTransfereixTitol', 'Transferir la propietat de {org} a {nom}?'),
-  dialegTransfereixTitolBuit: textMembres('dialegTransfereixTitolBuit', 'Transferir la propietat'),
-  dialegTransfereixDescripcio: textMembres('dialegTransfereixDescripcio', '{nom} en serà la propietària i tu passaràs a administradora: continuaràs gestionant la fitxa i els membres, però ja no podràs nomenar ni llevar administradores. Només {nom} et podrà tornar la propietat.'),
-  /* Claus comunes: el camp de cerca i el botó de tornar de la confirmació (abans, «Cancel·lar» en totes les llengües). */
-  cerca: Object.freeze(['common.search', 'Cerca']),
-  cancela: Object.freeze(['common.cancela', 'Cancel·lar']),
-});
-
-/* T11-02 (Gemini, Tall 11; marató 261101_2143) · Els errors del port, pel seu
-   `code` i en la llengua de la interfície. Cada reserva és la frase valenciana
-   de MISSATGES_MEMBRES_ORGANITZACIO (contracte.js), lletra per lletra, i la de
-   NO-DISPONIBLE, la de l'adaptador i PerfilContext. Un error sense codi conegut
-   (la xarxa, el text cru d'un proveïdor) diu el genèric de l'acció: mai el seu
-   `message` (doctrina d'errorsBackend.js: la vista decidix pel codi). */
-const textErrorMembre = (codi, reserva) => Object.freeze([`section.perfil.membres.error.${codi}`, reserva]);
-export const ERRORS_MEMBRES = Object.freeze({
-  'SDP-ORGMEM-000': textErrorMembre('orgmem000', 'Cal iniciar sessió.'),
-  'SDP-ORGMEM-001': textErrorMembre('orgmem001', 'El tipus de membre o el rol no és vàlid.'),
-  'SDP-ORGMEM-002': textErrorMembre('orgmem002', 'Només qui administra l’organització en veu i en gestiona els membres.'),
-  'SDP-ORGMEM-003': textErrorMembre('orgmem003', 'Esta persona no és del municipi de l’organització o ha demanat la baixa.'),
-  'SDP-ORGMEM-004': textErrorMembre('orgmem004', 'No pots canviar el teu propi rol.'),
-  'SDP-ORGMEM-005': textErrorMembre('orgmem005', 'La propietària no es canvia ni es lleva.'),
-  'SDP-ORGMEM-006': textErrorMembre('orgmem006', 'Només la propietària nomena, degrada o lleva administradores.'),
-  'SDP-ORGMEM-007': textErrorMembre('orgmem007', 'Una organització no pot ser membre d’ella mateixa ni d’una d’un altre poble.'),
-  'SDP-ORGMEM-008': textErrorMembre('orgmem008', 'Per a afegir una organització com a membre, cal que també l’administres.'),
-  'NO-DISPONIBLE': textErrorMembre('noDisponible', 'El servidor de Sóc de Poble encara no gestiona els membres de les organitzacions.'),
-});
 
 /* L'error del port, traduït pel seu codi; sense cap codi propi, el genèric. */
 const textDError = (error, generic, t) => {
@@ -114,16 +47,6 @@ const textDError = (error, generic, t) => {
 };
 const esCancel = (error) => error?.name === 'AbortError';
 
-/* IDEA-24 (marató 261101_2143, B4) · Per a la transferència, tres codis volen
-   frase pròpia: la de NO-DISPONIBLE de dalt mentiria (els membres sí que es
-   gestionen; el que falta és la RPC, i la reserva és la frase de l'adaptador
-   remot), la de 006 parla de nomenar i la de 003 no diu que la destinatària
-   ha de ser membre (2610311500). La resta de codis, ERRORS_MEMBRES. */
-export const ERRORS_TRANSFERENCIA = Object.freeze({
-  'SDP-ORGMEM-003': textErrorMembre('transfereixOrgmem003', 'Només es pot transferir a una persona que siga membre de l’organització i del seu poble i que no haja demanat la baixa.'),
-  'SDP-ORGMEM-006': textErrorMembre('transfereixOrgmem006', 'Només la propietària pot transferir la propietat.'),
-  'NO-DISPONIBLE': textErrorMembre('transfereixNoDisponible', 'El servidor de Sóc de Poble encara no sap transferir la propietat de les organitzacions.'),
-});
 const textDErrorTransferencia = (error, generic, t) => {
   const codi = typeof error?.code === 'string' ? error.code : '';
   return Object.hasOwn(ERRORS_TRANSFERENCIA, codi) ? tradueix(t, ERRORS_TRANSFERENCIA[codi]) : textDError(error, generic, t);

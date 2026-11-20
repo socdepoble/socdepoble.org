@@ -52,18 +52,20 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
        (en «mitja», la navegació és un panell i no en resta res; plegada, el
        rail), amb el mínim del detall i, en «ample», els separadors.
    `plegades`: { left, middle }; `amplades`: les desades, { left, middle }. */
-function maximDeColumna(column, { amplada, mida, columnesFixes, plegades, amplades }) {
+function maximDeColumna(column, { amplada, mida, columnesFixes, plegades, amplades, senseEsquerra = false }) {
   const otherColumn = column === 'left' ? 'middle' : 'left';
   if (columnesFixes && mida === 'ample') {
     const minims = minimsDeGraella(amplada, plegades, MINIMS_COLUMNA, SOLS_COLUMNA);
-    const minimAltra = plegades[otherColumn] ? PUNTS_DE_TALL.plegada : minims[otherColumn];
-    const reservat = RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2;
+    const minimAltra = otherColumn === 'left' && senseEsquerra
+      ? 0
+      : plegades[otherColumn] ? PUNTS_DE_TALL.plegada : minims[otherColumn];
+    const reservat = RIGHT_COLUMN_MIN + RESIZER_WIDTH * (senseEsquerra ? 1 : 2);
     return Math.max(minims[column], Math.min(COLUMN_LIMITS[column].max, amplada - minimAltra - reservat));
   }
-  const otherWidth = mida !== 'ample' && otherColumn === 'left'
+  const otherWidth = (otherColumn === 'left' && (senseEsquerra || mida !== 'ample'))
     ? 0
     : plegades[otherColumn] ? PUNTS_DE_TALL.plegada : amplades[otherColumn];
-  const reservedResizers = mida === 'ample' ? RESIZER_WIDTH * 2 : 0;
+  const reservedResizers = mida === 'ample' ? RESIZER_WIDTH * (senseEsquerra ? 1 : 2) : 0;
   const availableMax = amplada - otherWidth - RIGHT_COLUMN_MIN - reservedResizers;
   const limits = COLUMN_LIMITS[column];
   return Math.max(limits.min, Math.min(limits.max, availableMax));
@@ -236,11 +238,14 @@ export default function AppGridShell({
   /* Columnes fixes · El mesurament i resizeColumn en lligen la marca d'ací.
      Si canvia amb la closca muntada, es torna a mesurar. */
   const columnesFixesRef = useRef(columnesFixes);
+  const senseEsquerra = leftColumn === null;
+  const senseEsquerraRef = useRef(senseEsquerra);
   useLayoutEffect(() => {
-    if (columnesFixesRef.current === columnesFixes) return;
+    if (columnesFixesRef.current === columnesFixes && senseEsquerraRef.current === senseEsquerra) return;
     columnesFixesRef.current = columnesFixes;
+    senseEsquerraRef.current = senseEsquerra;
     measureRef.current?.();
-  }, [columnesFixes]);
+  }, [columnesFixes, senseEsquerra]);
   /* MD · L'últim panell obert en estret (d'on es ve) i el que ha d'enfocar
      el commit que l'òbriga (obriPanell). */
   const ultimPanell = useRef(null);
@@ -274,7 +279,9 @@ export default function AppGridShell({
     const measure = () => {
       const w = page.clientWidth;
       setPageWidth(w);
-      const novaMida = midaDeGraella(w, collapsedRef.current, widthsRef.current, { columnesFixes: columnesFixesRef.current });
+      const ampladesMesura = senseEsquerraRef.current ? { ...widthsRef.current, left: 0 } : widthsRef.current;
+      const plegadesMesura = senseEsquerraRef.current ? { ...collapsedRef.current, left: false } : collapsedRef.current;
+      const novaMida = midaDeGraella(w, plegadesMesura, ampladesMesura, { columnesFixes: columnesFixesRef.current });
       const primera = !mesuradaRef.current;
       setMesurada(true);
 
@@ -357,9 +364,9 @@ export default function AppGridShell({
      mesurada (0), els de sempre. */
   const maximsPintats = useMemo(() => {
     if (!(pageWidth > 0)) return { left: COLUMN_LIMITS.left.max, middle: COLUMN_LIMITS.middle.max };
-    const graella = { amplada: pageWidth, mida, columnesFixes, plegades: { left: leftCollapsed, middle: middleCollapsed }, amplades: columnWidths };
+    const graella = { amplada: pageWidth, mida, columnesFixes, plegades: { left: leftCollapsed, middle: middleCollapsed }, amplades: columnWidths, senseEsquerra };
     return { left: maximDeColumna('left', graella), middle: maximDeColumna('middle', graella) };
-  }, [columnesFixes, mida, pageWidth, leftCollapsed, middleCollapsed, columnWidths]);
+  }, [columnesFixes, mida, pageWidth, leftCollapsed, middleCollapsed, columnWidths, senseEsquerra]);
   /* El nom dels separadors (TextosDeLaColumna, si qui munta la closca el tradueix). */
   const textosDeLaColumna = useContext(TextosDeLaColumna);
   const redimensiona = textosDeLaColumna?.redimensionaColumna || REDIMENSIONA_COLUMNA;
@@ -412,7 +419,7 @@ export default function AppGridShell({
       // ocupa 56px. La mida desada del menú desplegat no lleva espai al xat
       // (maximDeColumna, la mateixa regla que declara el separador).
       const limits = COLUMN_LIMITS[column];
-      const max = maximDeColumna(column, { amplada: containerWidth, mida: midaRef.current, columnesFixes: false, plegades: collapsedRef.current, amplades: current });
+      const max = maximDeColumna(column, { amplada: containerWidth, mida: midaRef.current, columnesFixes: false, plegades: collapsedRef.current, amplades: current, senseEsquerra: senseEsquerraRef.current });
       const nextWidth = clamp(requestedWidth, limits.min, max);
       if (nextWidth === current[column]) return current;
       
@@ -519,9 +526,11 @@ export default function AppGridShell({
     : ampladesPintades.middle;
 
   /* Classes modificadores en lloc de :has() (Baseline 2022). */
+  const leftTancada = tancada.left || senseEsquerra;
   const contentMods = [
     'app-grid-content',
-    leftCollapsed && mida === 'ample' ? 'has-left-collapsed' : '',
+    senseEsquerra ? 'has-left-empty' : '',
+    !senseEsquerra && leftCollapsed && mida === 'ample' ? 'has-left-collapsed' : '',
     middleCollapsed && mida === 'ample' ? 'has-middle-collapsed' : '',
   ]
     .filter(Boolean)
@@ -584,13 +593,13 @@ export default function AppGridShell({
               ref={leftRef}
               className="app-grid-column app-grid-column--left"
               id="app-grid-sidebar"
-              data-obert={!tancada.left}
-              inert={tancada.left ? "true" : undefined}
-              aria-hidden={tancada.left ? true : undefined}
+              data-obert={!leftTancada}
+              inert={leftTancada ? "true" : undefined}
+              aria-hidden={leftTancada ? true : undefined}
             >
               {leftColumn}
             </section>
-            {mida === 'ample' && !leftCollapsed ? (
+            {mida === 'ample' && !leftCollapsed && !senseEsquerra ? (
               <AppGridResizer
                 className="app-grid-resizer--left"
                 label={nomDelSeparador(redimensiona, leftTitle)}

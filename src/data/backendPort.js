@@ -1,3 +1,4 @@
+import * as protocolPublicPort from './backendProtocolPublic.js';
 import { CODI_BACKEND_INABASTABLE } from './errorsBackend.js';
 import { heretaServeiXifratXat } from './xifratXatServei.js';
 import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
@@ -481,3 +482,12 @@ export const confirmaCapturaCrdtRural = asseguraMetode('confirmaCapturaCrdtRural
 export const registraDenunciaDiligent = asseguraMetode('registraDenunciaDiligent');
 export const revisaDenunciaDiligent = asseguraMetode('revisaDenunciaDiligent');
 export const llistaDenunciesDiligents = asseguraMetode('llistaDenunciesDiligents');
+
+/* R32.19 · API pública completa del port. Les consultes pures també es
+   poden importar de la seua fulla neutral, sense carregar la resta del port. */
+export const prefixMitjansPublics = protocolPublicPort.prefixMitjansPublics;
+export const classificaCamiMitja = protocolPublicPort.classificaCamiMitja;
+export const esReferenciaMitjaPrivada = protocolPublicPort.esReferenciaMitjaPrivada;
+export const normalitzaVerificacioRecuperacio = protocolPublicPort.normalitzaVerificacioRecuperacio;
+export const urlAutoritzacioGoogle = protocolPublicPort.urlAutoritzacioGoogle;
+export const bescanviaCodiOAuth = protocolPublicPort.bescanviaCodiOAuth;

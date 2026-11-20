@@ -1,3 +1,4 @@
+import { prefixMitjansPublics, esReferenciaMitjaPrivada } from '../data/backendProtocolPublic.js';
 /**
  * imatgeSocial.js — Pla 261027_1154 (P1-61) · La imatge social d'una pàgina
  * pública, una sola regla per a qui escriu el <head>: avui, el client (useSEO
@@ -42,10 +43,10 @@
  * Mercat hi llig el mateix ordre, i així la portada i l'og:image no es poden
  * separar. Amb una triada, se separen a propòsit.
  *
- * Fulla SENSE CAP IMPORT: només el global URL. La carrega Vite i la carrega
+ * Lògica pura sobre URL; les formes del proveïdor entren pel port. La carrega Vite i la carrega
  * node pla (`node -e "import('./src/config/imatgeSocial.js')"`), com
  * politicaDeMitjans.js; ho vigila la prova. Cap React, cap DOM, cap xarxa,
- * cap window ni import.meta: el que depén de l'amfitrió (l'origen públic,
+ * cap window ni import.meta propi: el que depén de l'amfitrió (l'origen públic,
  * l'URL de Supabase) entra per paràmetre.
  *
  * Pla 261027_1154 (P1-61) · Revisió adversarial (261027) · Cada tipus llig
@@ -407,9 +408,9 @@ function clauDeComparacio(ref, { hosts, supabase }) {
   }
   const cami = camiPerComparar(url.pathname);
   if (supabase) {
-    const publica = `${supabase}${PREFIX_PUBLIC_DE_MITJANS}`;
+    const publica = prefixPublicValid(supabase);
     const sencera = `${url.origin}${cami}`;
-    if (sencera.startsWith(publica)) return `mitjans:${sencera.slice(publica.length)}`;
+    if (publica && sencera.startsWith(publica)) return `mitjans:${sencera.slice(publica.length)}`;
   }
   if (url.origin === BASE_INVENTADA || ((url.protocol === 'https:' || url.protocol === 'http:') && hosts.has(url.host))) {
     const assets = cami.indexOf('/assets/');
@@ -921,14 +922,12 @@ export const MOTIUS_DE_BLOQUEIG = Object.freeze({
    per punt, sense '%', barres inverses, espais ni caràcters de control. */
 const FOTO_DEL_BUCKET_PUBLIC = /^sdp-media:\/\/mitjans\/((?:[a-z0-9_-][a-z0-9._-]*\/)*[a-z0-9_-][a-z0-9._-]*)$/i;
 const CAMI_DEL_BUCKET_PUBLIC = /^(?:[a-z0-9_-][a-z0-9._-]*\/)*[a-z0-9_-][a-z0-9._-]*$/i;
-const PREFIX_PUBLIC_DE_MITJANS = '/storage/v1/object/public/mitjans/';
 
 /* Caràcters que una referència d'imatge no porta mai: control (Cc),
    invisibles i bidi (Cf), barra inversa (el navegador la llig com a barra),
    cometes dobles, angles i accent greu. */
 const CARACTER_PROHIBIT = /[\p{Cc}\p{Cf}\\"<>`]/u;
 const CODI_DE_CAMI = /%2e|%2f|%5c/i;
-const MITJA_PRIVAT = /mitjans_privats|\/object\/sign\/|\/object\/authenticated\/|\/render\/image\//i;
 const ES_SVG = /\.svgz?$/i;
 /* Revisió adversarial (261027) · Cap referència de més de 2.048 caràcters:
    cap foto real no en porta tants, i el límit fita el cost de cada expressió
@@ -984,6 +983,19 @@ function baseDeSupabase(valor) {
   }
 }
 
+/* Una capacitat alternativa pot apagar un prefix amb null/buit. Cap valor
+   absent o malformat pot fabricar una URL relativa ni una adreça signada. */
+function prefixPublicValid(base) {
+  const prefix = prefixMitjansPublics(base);
+  if (typeof prefix !== 'string' || !prefix.endsWith('/') || CARACTER_PROHIBIT.test(prefix)
+      || CODI_DE_CAMI.test(prefix) || segmentsDeRetorn(prefix)) return null;
+  try {
+    const url = new URL(prefix);
+    return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
+      && url.href === prefix ? prefix : null;
+  } catch { return null; }
+}
+
 /* Els permesos explícits: parells { origen, prefix } amb un origen https i un
    prefix de camí que comença per '/', sempre acabat en '/' (així '/imatges'
    no deixa passar '/imatgesx/'). Els que no ho són, fora.
@@ -1034,7 +1046,7 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
   const text = senseMarc(ref.trim());
   if (text.length > MAXIM_REFERENCIA) return { motiu: 'llargaria' };
   if (CARACTER_PROHIBIT.test(text) || CODI_DE_CAMI.test(text) || segmentsDeRetorn(text)) return { motiu: 'cami' };
-  if (MITJA_PRIVAT.test(text)) return { motiu: 'privat' };
+  if (esReferenciaMitjaPrivada(text)) return { motiu: 'privat' };
   const propi = origen === undefined || origen === null || origen === '' ? ORIGEN_SOCIAL_PER_DEFECTE : origenHttps(origen);
   const supabase = baseDeSupabase(supabaseUrl);
   const esquema = esquemaDe(text);
@@ -1042,7 +1054,8 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
     const foto = FOTO_DEL_BUCKET_PUBLIC.exec(text);
     if (!foto) return { motiu: /^sdp-media:\/\/mitjans\//i.test(text) ? 'cami' : 'privat' };
     if (ES_SVG.test(foto[1])) return { motiu: 'svg' };
-    return supabase ? { url: `${supabase}${PREFIX_PUBLIC_DE_MITJANS}${foto[1]}` } : { motiu: 'sense-supabase' };
+    const prefix = supabase ? prefixPublicValid(supabase) : null;
+    return prefix ? { url: `${prefix}${foto[1]}` } : { motiu: supabase ? 'no-servit' : 'sense-supabase' };
   }
   if (esquema && esquema !== 'https') return { motiu: 'esquema' };
   if (!esquema && !text.startsWith('/')) return { motiu: 'no-analitzable' };
@@ -1062,7 +1075,7 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
     return { motiu: 'cami' };
   }
   if (CARACTER_PROHIBIT.test(cami) || CODI_DE_CAMI.test(cami) || segmentsDeRetorn(cami)) return { motiu: 'cami' };
-  if (MITJA_PRIVAT.test(cami) || esConsultaSignada(url.search)) return { motiu: 'privat' };
+  if (esReferenciaMitjaPrivada(cami) || esConsultaSignada(url.search)) return { motiu: 'privat' };
   if (ES_SVG.test(url.pathname) || ES_SVG.test(cami)) return { motiu: 'svg' };
   /* Revisió adversarial (261027) · Una carpeta ('/assets/', '/assets/x.svg/')
      no és cap imatge. */
@@ -1070,9 +1083,9 @@ function analitza(ref, { origen, supabaseUrl, permesos } = {}) {
   url.hash = '';
   if (propi && url.origin === propi && url.pathname.startsWith('/assets/')) return { url: ambVariantSocial(url, cami) };
   if (supabase) {
-    const prefix = `${supabase}${PREFIX_PUBLIC_DE_MITJANS}`;
+    const prefix = prefixPublicValid(supabase);
     const sencera = `${url.origin}${url.pathname}`;
-    if (sencera.startsWith(prefix) && CAMI_DEL_BUCKET_PUBLIC.test(sencera.slice(prefix.length))) return { url: url.href };
+    if (prefix && sencera.startsWith(prefix) && CAMI_DEL_BUCKET_PUBLIC.test(sencera.slice(prefix.length))) return { url: url.href };
   }
   if (permesosNets(permesos).some((permes) => url.origin === permes.origen && url.pathname.startsWith(permes.prefix))) {
     return { url: url.href };

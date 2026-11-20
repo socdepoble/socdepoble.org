@@ -17,7 +17,7 @@ import { legalContent } from './legalContent.js';
 import { MAX_CARPETES_RECORDADES, NOM_BD_ARXIUS_LOCALS } from '../multimedia/bibliotecaCarpetesLocals.js';
 import { MAXIM_ENTRADES, NOM_BD, VIDA_MS } from '../pobles/cauDeViquipedia.js';
 import { CLAU_CONSENTIMENT } from '../pobles/consentimentViquipedia.js';
-import { TEXTOS_VIQUIPEDIA } from '../pobles/CreditsDeViquipedia.jsx';
+import { TEXTOS_VIQUIPEDIA } from '../pobles/creditsDeViquipediaModel.js';
 import { CAMPS_DE_FITXA } from '../pobles/fitxaDelPoble.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 

@@ -31,41 +31,16 @@ import { fontVideoPropia } from '../../utils/sanitize.js';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { FalladaDeLHistoric } from '../mur/PublicacionsDeLActor.jsx';
 import { useEntitatsDelPoble } from './useEntitatsDelPoble.js';
-
-const senseTraduccio = (_clau, reserva) => reserva;
+import { entradaDeEntitat, senseTraduccioEntitats, textosDeLesEntitats, tipusDeKind } from './entitatsDelPobleModel.js';
 
 /* El traductor de l'App, o res fora d'ella (una prova, el catàleg). */
 function useTraductor() {
   try {
     return useUIActions().t;
   } catch {
-    return senseTraduccio;
+    return senseTraduccioEntitats;
   }
 }
-
-/* El tipus de la fitxa pública d'una fila del directori (identitatsSeed.js ·
-   TIPUS_DE_KIND): un grup és un grup; una empresa o una entitat, entitat. */
-const tipusDeKind = (kind) => (kind === 'group' ? 'grup' : 'entitat');
-
-/** Els textos del panell ({ titol, buit, carregant, error, noDisponible, sensePoble }) i les etiquetes de tipus. */
-export function textosDeLesEntitats(t = senseTraduccio) {
-  const tradueix = typeof t === 'function' ? t : senseTraduccio;
-  return {
-    titol: '',
-    buit: tradueix('section.detail.pobles.entitats.buit', 'Encara no hi ha cap empresa ni entitat d’este poble al directori.'),
-    carregant: tradueix('section.detail.pobles.entitats.carregant', 'Carregant les empreses i entitats d’este poble…'),
-    error: tradueix('section.detail.pobles.entitats.error', 'No s’han pogut carregar les empreses i entitats d’este poble'),
-    noDisponible: tradueix('section.detail.pobles.entitats.noDisponible', 'Este servidor encara no llista les empreses i entitats dels pobles.'),
-    tipus: {
-      company: tradueix('section.detail.pobles.entitats.empresa', 'Empresa'),
-      entity: tradueix('section.detail.pobles.entitats.entitat', 'Entitat'),
-      group: tradueix('section.detail.pobles.entitats.grup', 'Grup')
-    }
-  };
-}
-
-/* Una fila del directori com a entrada de GraellaTargetes (un id textual propi). */
-const entradaDe = (fila) => ({ id: `entitat:${fila.id}`, fila });
 
 function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   const tipus = tipusDeKind(fila.kind);
@@ -133,7 +108,7 @@ function EntitatsDelPobleAmbDades({ poble, textos, t }) {
   if (estat === 'error') return <EstatErrorDades titol={textos.error} error={error} onReintenta={refresh} />;
   if (estat !== 'ready') return <Carregant etiqueta={textos.carregant} />;
   return (
-    <GraellaTargetes elements={entitats.map(entradaDe)}>
+    <GraellaTargetes elements={entitats.map(entradaDeEntitat)}>
       {({ id, fila }) => <TargetaDeLEntitat key={id} fila={fila} textos={textos} t={t} navigate={navigate} />}
     </GraellaTargetes>
   );

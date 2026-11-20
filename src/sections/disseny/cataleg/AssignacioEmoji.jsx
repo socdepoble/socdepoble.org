@@ -75,7 +75,7 @@ const portadaDe = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau] || nul
    literal import.meta.env.DEV. Al build, Vite el fa false i esta importació
    desapareix del paquet, com les eines de la Wiki (EINES_LOCALS). */
 const carregaEinesLocals = () => (import.meta.env.DEV
-  ? import('../../wiki-de-poble/WikiDePobleSection.jsx')
+  ? import('../../wiki-de-poble/wikiDePobleModel.js')
     .then((modul) => modul.modulsLocalsActius({ DEV: import.meta.env.DEV }).items || CAP)
   : Promise.resolve(CAP));
 

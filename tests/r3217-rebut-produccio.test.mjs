@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FONTS_PRODUCCIO_R3215, comprovaContracteRebutsR3215, verificaRebutProduccioR3215 } from '../tooling/gates/verifica-rebut-produccio-r3215.mjs';
+import { REBUT_PRODUCCIO_R3214 } from '../tooling/gates/verifica-rebut-produccio-r3214.mjs';
 import { avaluaMatriu, PROVES_MATRIU } from '../tooling/gates/avalua-matriu-d01-d15.mjs';
 
 const source = fileURLToPath(new URL('../', import.meta.url));
@@ -100,6 +101,9 @@ test('matrix has 17 probes, includes R32.15 in D04/D05/D10, and never promotes a
   const root = fixture(t);
   for (const p of PROVES_MATRIU) { const target = path.join(root, p.args.find(a => !a.startsWith('-'))); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, '// immutable probe fixture\n'); }
   fs.cpSync(path.join(source, 'tooling/gates/fixtures/produccio-r3214'), path.join(root, 'tooling/gates/fixtures/produccio-r3214'), { recursive: true });
+  const bundle = REBUT_PRODUCCIO_R3214.bundle, target = path.join(root, bundle);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(path.join(source, bundle), target);
   const good = args => { const p = PROVES_MATRIU.find(p => JSON.stringify(p.args) === JSON.stringify(args.filter(a => !a.startsWith('--ara=')))); return { status: 0, stdout: p.tests ? '# tests 1\n# pass 1\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n' : p.json ? '{"valid":true}' : p.senyal }; };
   const result = avaluaMatriu(root, { executa: good });
   assert.equal(result.valid, true); assert.equal(result.resum.senyalsVerificats, 17); assert.equal(result.resum.senyalsPrevistos, 17); assert.equal(result.resum.notaGlobal, null);

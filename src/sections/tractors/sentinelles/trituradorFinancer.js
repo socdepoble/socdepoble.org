@@ -343,7 +343,7 @@ export function observaTriturador(entrada) {
 const preparaTriturador = (fitxers) => ({ fitxers: fitxersTriats(fitxers) });
 
 const MODULS_GESTORIA = [
-  'auditoriaPagaments.js', 'c43.js', 'cataleg.js', 'concilia.js', 'csv.js', 'dates.js', 'diners.js', 'extracteCsv.js',
+  'auditoriaPagaments.js', 'c43.js', 'cataleg.js', 'comercBanc.js', 'concilia.js', 'csv.js', 'dates.js', 'diners.js', 'extracteCsv.js',
   'fontMoviments.js', 'fullModel.js', 'model.js', 'movimentsBanc.js', 'nif.js', 'plantilla.js', 'proveidors.js'
 ].map((f) => `src/sections/gestoria/nucli/${f}`);
 

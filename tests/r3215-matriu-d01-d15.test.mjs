@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { REBUT_PRODUCCIO_R3214 } from '../tooling/gates/verifica-rebut-produccio-r3214.mjs';
 import { avaluaMatriu, PROVES_MATRIU } from '../tooling/gates/avalua-matriu-d01-d15.mjs';
 
 function fixture(t) {
@@ -14,6 +15,9 @@ function fixture(t) {
   }
   const source=fileURLToPath(new URL('../tooling/gates/fixtures/produccio-r3214/',import.meta.url));
   fs.cpSync(source,path.join(root,'tooling/gates/fixtures/produccio-r3214'),{recursive:true});
+  const bundle=REBUT_PRODUCCIO_R3214.bundle,target=path.join(root,bundle);
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  fs.copyFileSync(fileURLToPath(new URL('../'+bundle,import.meta.url)),target);
   for(const {ruta} of FONTS_PRODUCCIO_R3215) {const target=path.join(root,ruta);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(fileURLToPath(new URL('../'+ruta,import.meta.url)),target);}
   return root;
 }

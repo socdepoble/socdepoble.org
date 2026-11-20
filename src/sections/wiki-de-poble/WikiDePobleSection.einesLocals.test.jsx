@@ -63,9 +63,10 @@ vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Ag
 vi.mock('../gestoria/tauler/ShellGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 
-import WikiDePobleSection, {
+import WikiDePobleSection from './WikiDePobleSection.jsx';
+import {
   AVIS_EINA_LOCAL_SENSE_TRADUCCIO, DATA_DOCUMENTACIO, TIPUS_DOCUMENTACIO, documentacioMaquinariaActiva, modulsLocalsActius
-} from './WikiDePobleSection.jsx';
+} from './wikiDePobleModel.js';
 import * as modulWiki from './WikiDePobleSection.jsx';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 

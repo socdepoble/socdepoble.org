@@ -40,7 +40,8 @@ import { clauDeViquipedia, entradaAmbDades, esDelMateixPoble, fitxaOriginal } fr
 import {
   consentimentActiu, consentimentRecordat, donaConsentiment, retiraConsentiment, subscriuConsentiment
 } from './consentimentViquipedia.js';
-import { CreditsDeViquipedia, LOCALE_PER_DEFECTE, traductorDeViquipedia } from './CreditsDeViquipedia.jsx';
+import { CreditsDeViquipedia } from './CreditsDeViquipedia.jsx';
+import { LOCALE_PER_DEFECTE, traductorDeViquipedia } from './creditsDeViquipediaModel.js';
 import { textosFontsTerritorials } from './i18nFontsTerritorials.js';
 
 /** El temps màxim de tota una consulta (el client fa 8 s per intent i fins a 3 reintents). */

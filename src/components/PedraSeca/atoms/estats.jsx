@@ -7,7 +7,11 @@
  */
 import { Inbox, LoaderCircle } from 'lucide-react';
 
-export function EstatBuit({ icona: Icona = Inbox, titol, children, accio = null, className }) {
+/* `breu`: només una línia de text amb la classe de l'estat buit, sense icona ni títol
+   destacat (la columna lateral del Bar sense torn, Gemini R32.19). Així una vista de
+   Pedra Seca no ha d'escriure el `<p className>` a mà. */
+export function EstatBuit({ icona: Icona = Inbox, titol, children, accio = null, className, breu = false }) {
+  if (breu) return <p className={['sdp-buit', className].filter(Boolean).join(' ')}>{titol}</p>;
   return (
     <div className={['sdp-buit', className].filter(Boolean).join(' ')}>
       <Icona className="sdp-buit" size={56} aria-hidden="true" focusable="false" />

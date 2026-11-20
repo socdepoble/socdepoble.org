@@ -1,3 +1,4 @@
+import { classificaCamiMitja } from './backendProtocolPublic.js';
 /**
  * P1-23 · Exportació Open Data per municipi (bala B de la candidatura NLnet
  * NGI Fediversity, expedient 2026-08-1a6; la subvenció NO està concedida i el
@@ -218,8 +219,6 @@ const ANGLE_NEUTRE = '‹';
 /* Les passades d'etiquetes de textDeCos: cada una és lineal; el que en
    quede després, ho neutralitza senseMarcatge. */
 const MAXIM_PASSADES_HTML = 4;
-const PREFIX_STORAGE = '/storage/v1/';
-const PREFIX_STORAGE_PUBLIC = '/storage/v1/object/public/';
 const CAMI_PROPI = /^\/(?![/\\])[A-Za-z0-9/_.~%-]*$/;
 const REF_OPACA = 'sdp-media://';
 /* Un segment d'una referència opaca: lletres ASCII, xifres, «_», «.», «~» i
@@ -386,9 +385,12 @@ export function imatgeDe(valor, base = null) {
   let url = null;
   try { url = new URL(text); } catch { return null; }
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return null;
-  if (url.pathname.startsWith(PREFIX_STORAGE)) {
-    const cami = url.pathname.startsWith(PREFIX_STORAGE_PUBLIC) ? url.pathname.slice(PREFIX_STORAGE_PUBLIC.length) : '';
-    return refSegura(cami) ? `${REF_OPACA}${cami}` : null;
+  const mitja = classificaCamiMitja(url.pathname);
+  // La projecció pública revalida la resposta d'un adaptador substituïble:
+  // una classificació mai pot injectar una URL signada o una ruta privada.
+  if (mitja !== null) {
+    const ref = mitja?.ref;
+    return typeof ref === 'string' && ref.startsWith(REF_OPACA) && refSegura(ref.slice(REF_OPACA.length)) ? ref : null;
   }
   return urlRemota(text)?.href ?? null;
 }
@@ -690,7 +692,7 @@ function recursPublicable(valor) {
   let url = null;
   try { url = new URL(valor); } catch { return false; }
   return Boolean(urlRemota(valor)) && url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
-    && !url.pathname.startsWith(PREFIX_STORAGE) && url.href === valor;
+    && !classificaCamiMitja(url.pathname) && url.href === valor;
 }
 
 /* Els instants d'una fitxa que arriba com a JSON: text, mai un Date. */
@@ -1625,7 +1627,7 @@ const MOTIUS_SENSE_FONT = Object.freeze({
 const MOTIU_DE_LA_CONFIGURACIO = "la personalització és de tot el node, no d'un poble, i la fitxa del poble no la inclou";
 
 /**
- * El que el port (src/data/backendPort.js) ja servix com a PÚBLIC per a un
+ * El que el port (src/data/backendProtocolPublic.js) ja servix com a PÚBLIC per a un
  * municipi, amb dos mètodes públics adequats (decisió 5):
  *   · el directori d'entitats: listPublicOrganizations (capacitat
  *     'directoriEntitats'; visibility 'public' i mai cap correu, contracte.js)

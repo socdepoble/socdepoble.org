@@ -30,7 +30,7 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_cla
 
 import ProfileSection from './ProfileSection.jsx';
 import { AGENTS, AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
-import { filtraAgentsDelDirectori } from '../pobles/SubnavigacioPoblesIGent.jsx';
+import { filtraAgentsDelDirectori } from '../pobles/subnavigacioPoblesIGentModel.js';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { ETIQUETA_IA } from './fitxaDePerfil.js';

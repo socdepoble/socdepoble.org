@@ -9,9 +9,10 @@ import { createHash } from 'node:crypto';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 
 const DIR = 'tooling/gates/fixtures/produccio-r3215/';
+const DIR_SQL = 'tests/fixtures/produccio-r3215/';
 export const FONTS_PRODUCCIO_R3215 = Object.freeze([
-  ['pas1Sql', DIR + 'PAS1_PATCH_LSSI_I_SONDA_DEFINERS_R32_15_COPIAR_ENGANXAR.sql', '89c6ffbf24b3540d922fbab3c9ccdb2124e1ac5e59761a8d6261cc29356951ca'],
-  ['pas2Sql', DIR + 'PAS2_BLINDA_7_DEFINERS_R32_15_COPIAR_ENGANXAR.sql', 'f3c2b962cd52599afd1e0e672650ab641442887619607395fb83be2904dd8e96'],
+  ['pas1Sql', DIR_SQL + 'PAS1_PATCH_LSSI_I_SONDA_DEFINERS_R32_15_COPIAR_ENGANXAR.sql', '89c6ffbf24b3540d922fbab3c9ccdb2124e1ac5e59761a8d6261cc29356951ca'],
+  ['pas2Sql', DIR_SQL + 'PAS2_BLINDA_7_DEFINERS_R32_15_COPIAR_ENGANXAR.sql', 'f3c2b962cd52599afd1e0e672650ab641442887619607395fb83be2904dd8e96'],
   ['rebutPas1', DIR + 'REBUT_SUPABASE_PRODUCCIO_R32_15_PAS1_LSSI_I_CENS_DEFINERS.json', '69d3df9bb9d8b84278ccc2d5ba6500b49926227efa1e902cb06623598df02e6a'],
   ['rebutFinal', DIR + 'REBUT_SUPABASE_PRODUCCIO_R32_15_COMPLET_136_DE_136.json', 'ecc6ae5da504bfc21e896fd6c33ee55ba710e05b0d997a3ea2c5d447e1b98b48'],
   ['snippetLssi', 'supabase/snippets/r32_15_patch_registra_denuncia_diligent_produccio.sql', '43128d6ba9740cc44d7694a996720adf060bd2fbf0c9abfa1d1cc8a2e9c41b91'],

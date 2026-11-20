@@ -76,6 +76,15 @@ export const SECCIONS_PAGINABLES = Object.freeze({
 });
 
 export const CAPACITATS = Object.freeze({
+  /* R32.19 · Consultes pures i síncrones sobre referències públiques, sense
+     sessió ni peticions. Grup complet per a canviar totes les formes alhora.
+     null/false són respostes definitives, mai demandes d'un fallback. */
+  protocolPublic: Object.freeze([
+    'prefixMitjansPublics', 'classificaCamiMitja', 'esReferenciaMitjaPrivada',
+    'normalitzaVerificacioRecuperacio', 'urlAutoritzacioGoogle'
+  ]),
+  /* Transport separat: la presència del protocol pur no anuncia xarxa. */
+  transportOAuth: Object.freeze(['bescanviaCodiOAuth']),
   /* PF-03 optional durable capture acknowledgement; never simulated locally. */
   ackCrdtRural: Object.freeze(['confirmaCapturaCrdtRural']),
   denunciesDiligents: Object.freeze(['registraDenunciaDiligent', 'revisaDenunciaDiligent', 'llistaDenunciesDiligents']),
@@ -899,8 +908,13 @@ export const LIMIT_DADES_OBERTES = 5000;
    unificada 1.2.14 amb el build 19: integra Codex R32.17 (constructor 301, verificació dels rebuts de Producció R32.15 i reserva
    d'inventari idempotent, només local) i Gemini R32.18 (vocabulari tancat a zero, quatre fulls de secció a src/css, tres
    d'ells diferits, frontmatter F2 a zero i l'arnés CDP de 78 rutes), la porta Craft Anything de paritat visual, la
-   retirada de PanellCrom.jsx (D-v1213-1, LLEI_08 a 3) i el connector WordPress 1.1.22. */
-export const VERSIO_CLIENT_NATIU = 19;
+   retirada de PanellCrom.jsx (D-v1213-1, LLEI_08 a 3) i el connector WordPress 1.1.22.
+   Onada v1.2.15 · Onades R32.19 i R32.20 (ordre del Mestre 20-11-2026, vespre, encadenada a la v1.2.14) · Versió
+   unificada 1.2.15 amb el build 20: integra Codex R32.19 (zero cicles d'imports, protocol públic i transport OAuth
+   separats, controls LSSI i AP pinnat, sense aplicar) i Gemini R32.19 i R32.20 (El Bar sense franja, zero controls
+   sense nom en 78 rutes, crèdits de /legal §23 i puresa HMR), el sostre d'arrencada a 1.594.000 B (D-v1215-1: el
+   1.591.000 B de D-v1214-1 demana partir el port públic), la R796 del Node 0 i el connector WordPress 1.1.23. */
+export const VERSIO_CLIENT_NATIU = 20;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

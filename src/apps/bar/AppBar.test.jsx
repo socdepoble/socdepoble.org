@@ -115,7 +115,7 @@ describe('el torn', () => {
     const magatzem = await magatzemDeProva({ ambTorn: false });
     munta('/app/bar/caixa', magatzem);
     const tancats = await screen.findAllByText('El torn està tancat');
-    expect(tancats.length).toBeGreaterThanOrEqual(2);
+    expect(tancats.length).toBeGreaterThanOrEqual(1);
     fireEvent.click(columna('app-grid-main').getByRole('button', { name: 'Obri el torn' }));
     expect(ubicacio()).toBe('/app/bar/torn');
     const detall = columna('app-grid-main');
@@ -639,7 +639,7 @@ describe('el permís de sessió (tot el Bar)', () => {
   test('sense sessió en mode remot: el torn no s’obri, l’avís ho diu una vegada i «Entra» porta a entrar', async () => {
     const magatzem = await magatzemDeProva({ ambTorn: false });
     munta('/app/bar/caixa', magatzem, SENSE_SESSIO);
-    expect((await screen.findAllByText('El torn està tancat')).length).toBeGreaterThanOrEqual(2);
+    expect((await screen.findAllByText('El torn està tancat')).length).toBeGreaterThanOrEqual(1);
     /* Una sola vegada per pantalla: la columna del detall el pinta; les laterals, només en estret. */
     expect(screen.getByText(ENTRA)).toBeTruthy();
     expect(columna('app-grid-main').getByRole('button', { name: 'Obri el torn' }).disabled).toBe(true);

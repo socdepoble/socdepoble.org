@@ -21,6 +21,9 @@ import { parseCsv } from './csv.js';
 import { comparaDates, esDataValida, formatData, parseData } from './dates.js';
 import { parseImport } from './diners.js';
 import { llegeixExtracteCsv } from './extracteCsv.js';
+import { comercDelConcepte } from './comercBanc.js';
+
+export { comercDelConcepte } from './comercBanc.js';
 
 /* Noms de columna (sense accents, espais ni punts) → camp del moviment. */
 const COLUMNES = new Map(Object.entries({
@@ -33,32 +36,12 @@ const COLUMNES = new Map(Object.entries({
 const OBLIGATORIES = Object.freeze(['dataOperacio', 'dataValor', 'concepte', 'import']);
 /* Punt decimal amb tres xifres o més darrere: «-1.234» pot ser 1,234 € o 1.234 €. */
 const IMPORT_AMBIGU = /^[-+]?\d+\.\d{3,}$/;
-/* La primera línia del concepte d'una compra (o devolució) amb targeta: «OP.TARJ.COMPRA COMERCIO». */
-const TARGETA = /TARJ/i;
-/* El número de targeta emmascarat que obri la segona línia: sis xifres, asteriscs i les quatre últimes. */
-const NUMERO_TARGETA = /^\s*\d{4,6}[*xX]+\d{4}\s*/;
-
 /* Els codis que pot tornar llegeixMovimentsCsv als avisos. */
 export const CODIS_AVIS_CSV_BANC = Object.freeze(['CSV_BUIT', 'CAPCALERA', 'FILA_INVALIDA', 'IMPORT_AMBIGU']);
 
 const senseAccents = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '');
 const clauColumna = (nom) => senseAccents(nom).toLowerCase().replace(/[^a-z]/g, '');
 const avis = (codi, severitat, missatge, extra = {}) => ({ codi, severitat, missatge, ...extra });
-
-/**
- * El comerç d'una compra amb targeta: la segona línia del concepte, sense el
- * número de targeta. null si no és una compra amb targeta.
- * @param {string} concepte
- * @returns {string|null}
- */
-export function comercDelConcepte(concepte) {
-  const linies = String(concepte ?? '').split(/\r\n|\n|\r/);
-  if (linies.length < 2 || !TARGETA.test(linies[0])) return null;
-  const resta = linies.slice(1).join(' ');
-  if (!NUMERO_TARGETA.test(resta)) return null;
-  const comerc = resta.replace(NUMERO_TARGETA, '').replace(/\s+/g, ' ').trim();
-  return comerc || null;
-}
 
 /* Un import del CSV: el punt decimal ambigu no es llig. */
 function importDe(text, fila, avisos, nom) {

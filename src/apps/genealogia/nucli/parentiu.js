@@ -91,12 +91,21 @@ export function avisosCognom(complet) {
   const avisos = [];
   for (const cognom of [...perCognom.keys()].sort()) {
     const ids = [...perCognom.get(cognom)].sort();
+    const comp = ids.map((id) => arrel(id));
+    /* seguent[p]: la primera posició posterior a p d'un altre component; així
+       les parelles ja connectades se salten a blocs i el cost no és O(n²). */
+    const seguent = new Array(ids.length).fill(ids.length);
+    for (let p = ids.length - 2; p >= 0; p -= 1) seguent[p] = comp[p + 1] !== comp[p] ? p + 1 : seguent[p + 1];
     for (let i = 0; i < ids.length; i += 1) {
       for (let j = i + 1; j < ids.length; j += 1) {
         if (avisos.length >= MAX_AVISOS_COGNOM) return avisos;
+        if (comp[j] === comp[i]) {
+          j = seguent[j] - 1;
+          continue;
+        }
         const [a, b] = [ids[i], ids[j]];
         const clau = `${a}|${b}`;
-        if (vistes.has(clau) || arrel(a) === arrel(b)) continue;
+        if (vistes.has(clau)) continue;
         vistes.add(clau);
         avisos.push({ a, b });
       }

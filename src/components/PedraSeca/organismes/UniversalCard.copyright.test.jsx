@@ -52,7 +52,7 @@ describe('el copyright és un enllaç a «Drets d’autor»', () => {
     const { container } = pinta({ copyright });
     const paragraf = container.querySelector('.sp-card-body > p.sp-card-copyright');
     expect(paragraf.outerHTML).toBe(
-      `<p class="sp-card-copyright"><a href="${RUTA_DRETS_AUTOR}" class="sp-card-copyright__enllac">${copyright}</a></p>`
+      `<p class="sp-card-copyright"><a href="${RUTA_DRETS_AUTOR}" class="sp-card-copyright__enllac" aria-label="${copyright}">${copyright}</a></p>`
     );
     expect(screen.getByRole('link', { name: copyright }).getAttribute('href')).toBe('/page/drets-autor');
   });

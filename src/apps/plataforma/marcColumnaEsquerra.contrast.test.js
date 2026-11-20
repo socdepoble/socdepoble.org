@@ -117,7 +117,8 @@ describe('R30 · CONTRAST-MARC-01 · text nu del cos de MarcColumna en la column
       for (const part of parts) expect(part.endsWith(':not(:is(.sdp-alerta, dialog) *)')).toBe(true);
     }
     expect(DEL_COS[0].selector).toContain(':is(p:not([class]), .sdp-camp__etiqueta)');
-    expect(DEL_COS[1].selector).toContain(':is(.sdp-camp-fitxer__estat, .sdp-carregant)');
+    /* Gauntlet v1.2.15 · i la línia d'EstatBuit breu (p.sdp-buit), que al Bar quedava a 1,23:1. */
+    expect(DEL_COS[1].selector).toContain(':is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit)');
   });
 
   test('les regles arriben on es pinta MarcColumna: el marc adopta el full diferit a la seua arrel', () => {

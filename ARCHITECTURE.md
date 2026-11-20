@@ -23,7 +23,7 @@ Els pressupostos físics del paquet integrable estan protegits per trinquets aut
 
 - **Carregador inicial (`LIMIT_DEL_CARREGADOR`):** màxim **4.096 B** (`vite.standalone.config.js`).
 - **Tros d'entrada (`SOSTRE_DEL_TROS_D_ENTRADA`):** màxim **1.690.000 B** (`src/apps/plataforma/pesDelNucli.test.js`).
-- **Arrencada estàtica (`SOSTRE_DE_L_ARRENCADA_ESTATICA`):** màxim **1.660.000 B** per a la suma de l'entrada i tots els seus imports estàtics (`src/apps/plataforma/pesDelNucli.test.js` i `tests/standalone-build.test.mjs`).
+- **Arrencada estàtica (`SOSTRE_DE_L_ARRENCADA_ESTATICA`):** màxim **1.594.000 B** per a la suma de l'entrada i tots els seus imports estàtics (`src/apps/plataforma/pesDelNucli.test.js` i `tests/standalone-build.test.mjs`).
 - **Arxiu ZIP per al directori oficial de WordPress.org (`LIMIT_DIRECTORI`):** màxim **10 MiB** (`10.485.760 B`, `wordpress-plugin/eines/empaqueta.mjs`).
 
 ### 1.3 Aplicació mòbil nativa (iOS i Android)
@@ -43,7 +43,7 @@ Cap component visual (`src/components/`, `src/sections/`, `src/pages/` ni `src/a
 El mòdul `src/data/contracte.js` declara de forma explícita:
 
 - **Operacions obligatòries del nucli (`CONTRACTE_NUCLI`):** **32 mètodes** indispensables perquè l'aplicació arrenque.
-- **Capacitats opcionals (`CAPACITATS`):** **60 capacitats** agrupades per domini funcional, que sumen **174 mètodes totals** a `CONTRACTE_BACKEND`.
+- **Capacitats opcionals (`CAPACITATS`):** **62 capacitats** agrupades per domini funcional, que sumen **180 mètodes totals** a `CONTRACTE_BACKEND`.
 - **Atomicitat i segellat:** en iniciar l'aplicació, `backendPort.js` valida que l'adaptador actiu implemente les 32 operacions de nucli i que cada capacitat opcional declarada estiga implementada al 100 % (cap capacitat parcial s'admet), congelant l'adaptador en memòria amb `freezeImplementation`.
 
 ### 2.2 Adaptadors verificats i kit de conformitat

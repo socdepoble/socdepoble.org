@@ -9,7 +9,7 @@ import {
   desaColumnaPlegada,
   normalitzaColumnesPlegades,
 } from './persistenciaColumnesUI.js';
-import { dataDeDocumentWiki, destiInternDeWiki } from '../../../sections/wiki-de-poble/WikiDePobleSection.jsx';
+import { dataDeDocumentWiki, destiInternDeWiki } from '../../../sections/wiki-de-poble/wikiDePobleModel.js';
 import { BOTIGUES_SISTEMA_META } from '../../../sections/botigues/botiguesSistemaMeta.js';
 import { UniversalEditorShell } from '../UniversalEditorShell.jsx';
 import { ContentProvider } from '../ContentProvider.jsx';

@@ -19,7 +19,7 @@ vi.mock('../../../app/contexts/SessionContext.jsx', async (importOriginal) => ({
 vi.mock('../../../data/wikiManifest.js', () => ({
   wikiManifest: { categories: [], items: [{ id: 'genoma', title: 'Genoma', subtitle: 'Qui som', categoryId: null }] }
 }));
-vi.mock('../../wiki-de-poble/WikiDePobleSection.jsx', () => ({ modulsLocalsActius: () => ({ categories: [], items: [] }) }));
+vi.mock('../../wiki-de-poble/wikiDePobleModel.js', () => ({ modulsLocalsActius: () => ({ categories: [], items: [] }) }));
 
 import { AssignacioEmoji } from './AssignacioEmoji.jsx';
 import { NOTE_FOLDERS_SEED } from '../../../data/carpetesSeed.js';

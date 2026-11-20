@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import TaulerTelemetria, {
+import TaulerTelemetria from './TaulerTelemetria';
+import {
   basesDelTauler, horesDelTauler, nomDeLIntent, nomDeSeccio, resumDelTauler, seccionsDelTauler
-} from './TaulerTelemetria';
+} from './taulerTelemetriaModel.js';
 import {
   CLAU_APAGADA, configTelemetria, registraEsdeveniment, registraVisita, _reiniciaTelemetria
 } from '../../data/telemetria.js';

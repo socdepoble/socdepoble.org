@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { execFileSync } from 'node:child_process';
-import { arrelSegura, esMain } from '../lib/arrel.mjs';
+import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
 
 function seguitsPerGit(root) {
   try {
@@ -64,7 +64,7 @@ async function main() {
   
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const paperera = path.join(repoRoot, '.sdp-paperera', `quarantena-${timestamp}`);
-  const arxiu = path.join(repoRoot, '_wiki_de_poble', '90_arxiu_historic');
+  const arxiu = path.join(repoRoot, CAMINS.arxiuHistoric);
   
   let creatPaperera = false;
 

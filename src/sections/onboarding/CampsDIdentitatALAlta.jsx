@@ -10,7 +10,7 @@ export function CampsDIdentitatALAlta({ t, error, usuari, poble, pobles = [], on
   return (
     <>
       <div className={error ? 'sdp-camp ' : 'sdp-camp'}>
-        <label className="sdp-camp__etiqueta" htmlFor="reg-username">{t('section.login.registre.usuari', 'El teu identificador')}</label>
+        <label id="reg-username-label" className="sdp-camp__etiqueta" htmlFor="reg-username">{t('section.login.registre.usuari', 'El teu identificador')}</label>
         <input
           id="reg-username"
           className="sdp-control"
@@ -22,6 +22,7 @@ export function CampsDIdentitatALAlta({ t, error, usuari, poble, pobles = [], on
           autoCapitalize="none"
           spellCheck={false}
           maxLength={MAXIM_USERNAME}
+          aria-labelledby="reg-username-label"
           aria-invalid={Boolean(error)}
           aria-describedby="onboarding-username-help"
           disabled={desactivat}
@@ -32,13 +33,14 @@ export function CampsDIdentitatALAlta({ t, error, usuari, poble, pobles = [], on
       </div>
       {pobles.length ? (
         <div className="sdp-camp">
-          <label className="sdp-camp__etiqueta" htmlFor="reg-poble">{t('section.login.registre.poble', 'El teu poble')}</label>
+          <label id="reg-poble-label" className="sdp-camp__etiqueta" htmlFor="reg-poble">{t('section.login.registre.poble', 'El teu poble')}</label>
           <select
             id="reg-poble"
             className="sdp-control sdp-control--selector"
             name="poble"
             value={poble}
             onChange={onChange}
+            aria-labelledby="reg-poble-label"
             aria-describedby="onboarding-poble-help"
             disabled={desactivat}
           >

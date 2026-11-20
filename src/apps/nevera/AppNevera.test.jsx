@@ -217,6 +217,20 @@ describe('el contracte amb la plataforma', () => {
   });
 });
 
+/* Gauntlet v1.2.15 · Llei del Píxel · La retirada de la columna esquerra buida (Gemini R32.19) només
+   l'ha aprovada el Mestre per al Bar (ClosaAplicacio amagaEsquerraBuida). La Nevera conserva la seua. */
+describe('Llei del Píxel: la Nevera conserva la columna esquerra de sempre', () => {
+  test('el catàleg, sense Esquerra, no marca has-left-empty i manté #app-grid-sidebar', async () => {
+    munta('/app/nevera/cataleg');
+    await screen.findByRole('combobox', { name: 'Busca o crea un article' });
+    expect(closca().dataset.layout).toBe('ample');
+    const contingut = closca().querySelector('.app-grid-content');
+    expect(contingut.classList.contains('has-left-empty')).toBe(false);
+    expect(document.getElementById('app-grid-sidebar')).not.toBeNull();
+    expect(document.querySelector('.app-grid-resizer--left')).not.toBeNull();
+  });
+});
+
 describe('La compra en ample: llistes, la llista i el catàleg de costat', () => {
   /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, «no inventar targetes») · Les
      rajoles de la Nevera ja són UniversalCard (forma="targetes" de l'esquelet): el nom accessible de

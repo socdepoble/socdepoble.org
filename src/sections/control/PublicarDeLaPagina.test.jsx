@@ -199,12 +199,15 @@ describe('T8 · el mateix botó, també davall de l’H1', () => {
       </MemoryRouter>
     );
     const cas = (nom) => container.querySelector(`[data-cas="${nom}"]`);
+    /* Gemini R32.19 · el botó es nomena amb aria-labelledby i identificadors de useId, únics per
+       instància: es comparen amb l'identificador normalitzat (el marcatge és el mateix). */
+    const html = (node) => node.innerHTML.replace(/:r[0-9a-z]+:/g, ':id:');
     for (const nom of ['defecte', 'baix', 'estrany']) {
-      expect([nom, cas(nom).innerHTML]).toEqual([nom, cas('defecte').innerHTML]);
+      expect([nom, html(cas(nom))]).toEqual([nom, html(cas('defecte'))]);
       expect([nom, cas(nom).firstElementChild.className]).toEqual([nom, 'sdp-pagina-accio']);
     }
     expect(cas('dalt').firstElementChild.className).toBe(CLASSE);
-    expect(cas('dalt').innerHTML).toBe(cas('defecte').firstElementChild.innerHTML);
+    expect(html(cas('dalt'))).toBe(html(cas('defecte').firstElementChild));
   });
 });
 

@@ -42,7 +42,7 @@ import { errorBar } from '../nucli/comu.js';
 import { nouId } from '../nucli/ids.js';
 import {
   adoptaComanda, afegeixProducte, anullaLinia, aplicaDescompte, canviaNota, canviaQuantitat, comandaObertaDe, convida, creaComanda,
-  esDescartable, heretaHistorial, marxa, mouLinies, sumaQuantitat, totals
+  esDescartable, heretaHistorial, marxa, mateixOrigen, mouLinies, origenNet, sumaQuantitat, totals
 } from '../nucli/comanda.js';
 import { afegeixPagament, potTancar, tanca } from '../nucli/cobrament.js';
 import { divideixPerLinies } from '../nucli/divisio.js';
@@ -248,10 +248,16 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         return { estat: { traspas: llegida }, valor: llegida };
       }),
 
-      /** Una comanda nova i buida (un tiquet de barra més, per emportar). */
+      /** Una comanda nova i buida (si ja n'hi ha una de buida descartable per al mateix origen, la reutilitza). */
       novaComanda: (origen) => escriu(async (d, ctx) => {
         exigeixVenda(d);
-        const desada = await novaComandaA(d, ctx, origen);
+        const origenValid = origenNet(origen);
+        const buidaExistent = [...d.comandes]
+          .filter((c) => esDescartable(c) && mateixOrigen(c.origen, origenValid))
+          .sort((a, b) => (a.obertaA < b.obertaA ? -1 : 1))
+          .at(-1);
+        if (buidaExistent) return { valor: buidaExistent };
+        const desada = await novaComandaA(d, ctx, origenValid);
         return { estat: ambComanda(d, desada), valor: desada };
       }),
 

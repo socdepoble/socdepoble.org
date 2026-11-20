@@ -101,7 +101,7 @@ describe('Pedra Seca al codi', () => {
        eines locals de la Wiki, de la seua funció i només en desenvolupament
        (el literal DEV que Vite fa false: la importació no arriba al build). */
     expect(pantalla).toMatch(/destinsDelSistema\(SYSTEM_PAGES, SECTIONS,/);
-    expect(pantalla).toMatch(/import\.meta\.env\.DEV\s*\?\s*import\('\.\.\/\.\.\/wiki-de-poble\/WikiDePobleSection\.jsx'\)/);
+    expect(pantalla).toMatch(/import\.meta\.env\.DEV\s*\?\s*import\('\.\.\/\.\.\/wiki-de-poble\/wikiDePobleModel\.js'\)/);
     expect(pantalla).not.toMatch(/^import .*WikiDePobleSection/m);
     /* Les carpetes del Bloc, de la mateixa font que la seua columna. */
     expect(senseComentaris(llig(`${CATALEG}/destinsEmoji.js`))).toMatch(/opcionsDeCarpetes\(noteFolders\)/);
