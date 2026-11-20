@@ -130,7 +130,7 @@ const casa = (el, selector) => { try { return el.matches(selector); } catch { re
 const ARRELS = [
   ...['src/css/tokens.css', 'src/css/design-tokens.css']
     .flatMap((ruta) => regles(llig(ruta)).filter((r) => r.pares.length === 0 && /^:root\b/.test(r.prelud))),
-  ...regles(llig('src/components/layout/AppGridShell.css')).filter((r) => r.pares.length === 0 && r.prelud === '.app-grid-page'),
+  ...regles(llig('src/css/app-grid-shell.css')).filter((r) => r.pares.length === 0 && r.prelud === '.app-grid-page'),
 ].map((r) => r.cos);
 function token(nom) {
   const re = new RegExp(`(?:^|;)\\s*${nom.replace(/[-]/g, '\\-')}\\s*:\\s*([^;]+)`);

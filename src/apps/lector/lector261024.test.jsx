@@ -312,7 +312,7 @@ describe('correcció R5-09 · la barra verda és només del Lector', () => {
   const llig = (ruta) => readFileSync(path.join(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
   test('el full: cap color en brut, la regla base sense fons i la del Lector amb el token del crom, declarat a tokens.css', () => {
-    const apps = llig('src/apps/plataforma/apps.css');
+    const apps = llig('src/css/diferit-apps-plataforma.css');
     expect(apps).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     const base = apps.match(/\n\.sdp-app-barra__titol \{([^}]*)\}/)[1];
     expect(base).not.toMatch(/background/);

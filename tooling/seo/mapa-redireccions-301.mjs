@@ -22,7 +22,74 @@ const UNICODE_PATH = /^\/[\p{L}\p{M}\p{N}._~/-]*$/u;
 const IGNORABLE_UNICODE = /\p{Default_Ignorable_Code_Point}/u;
 const CANONICAL_ASCII_SOURCE = /^https:\/\/socdepoble\.(?:net|com)\/[A-Za-z0-9._~/-]*(?:\?(?:p|page_id|attachment_id)=[1-9][0-9]{0,18})?$/;
 const QUERY_ID = /^(?:p|page_id|attachment_id)=[1-9][0-9]{0,18}$/;
-const own = (o, k) => Object.hasOwn(o, k);
+// Grammar only: no URI, input object or verification result is retained here.
+const ASCII_URI_CLASS = new Uint8Array(128);
+for (const range of [[65, 90], [97, 122]]) for (let c = range[0]; c <= range[1]; c++) ASCII_URI_CLASS[c] = 1;
+for (let c = 48; c <= 57; c++) ASCII_URI_CLASS[c] = 2;
+for (const c of [95, 126, 45]) ASCII_URI_CLASS[c] = 1;
+ASCII_URI_CLASS[46] = 3;
+ASCII_URI_CLASS[47] = 4;
+
+/** Canonical source prefix only; the caller checks primitive/length first. */
+function canonicalSourcePrefix301(value) {
+  return value.startsWith('https://socdepoble.') && value[22] === '/'
+    && (value[19] === 'n' && value[20] === 'e' && value[21] === 't'
+      || value[19] === 'c' && value[20] === 'o' && value[21] === 'm');
+}
+
+function indexedSourceQuery301(value, index, query, segment) {
+  if (segment === 1 || segment === 2) return null;
+  let position;
+  if (value.startsWith('p=', query)) position = query + 2;
+  else if (value.startsWith('page_id=', query)) position = query + 8;
+  else if (value.startsWith('attachment_id=', query)) position = query + 14;
+  else return null;
+  const digits = value.length - position;
+  if (digits < 1 || digits > 19 || value.charCodeAt(position) < 49 || value.charCodeAt(position) > 57) return null;
+  let number = 0, scale = 0;
+  for (; position < value.length; position++) {
+    const digit = value.charCodeAt(position) - 48;
+    if (digit < 0 || digit > 9) return null;
+    number = number * 10 + digit;
+    scale = scale ? scale * 10 : 1;
+  }
+  index.preparedValue = value;
+  index.preparedBucket = scale && number < index.limit && scale <= index.limit
+    ? number * 2 + (value.charCodeAt(19) & 1) : -1;
+  return value;
+}
+
+/** Validate a canonical ASCII source and obtain its numeric tail in one scan.
+ * The prefix slash is position22; unsupported syntax retains the original
+ * full normalizer. Only the fresh source index keeps the pending exact value. */
+function indexedAsciiSource301(value, index) {
+  index.preparedValue = undefined;
+  if (typeof value !== 'string' || value.length === 0 || value.length > MAX_URL || !canonicalSourcePrefix301(value)) return null;
+  let segment = 0, number = 0, scale = 0;
+  for (let position = 23; position < value.length; position++) {
+    const code = value.charCodeAt(position), kind = ASCII_URI_CLASS[code];
+    if (kind === 2) {
+      segment = 3;
+      number = number * 10 + code - 48;
+      scale = scale ? scale * 10 : 1;
+    } else {
+      if (kind === 4) {
+        if (segment !== 3) return null;
+        segment = 0;
+      } else if (kind === 3) {
+        if (segment < 3) segment++;
+      } else if (kind === 1) segment = 3;
+      else if (code === 63) return indexedSourceQuery301(value, index, position + 1, segment);
+      else return null;
+      number = scale = 0;
+    }
+  }
+  if (segment === 1 || segment === 2) return null;
+  index.preparedValue = value;
+  index.preparedBucket = scale && number < index.limit && scale <= index.limit
+    ? number * 2 + (value.charCodeAt(19) & 1) : -1;
+  return value;
+}
 const record = o => {
   if (o === null || typeof o !== 'object' || Array.isArray(o)) return false;
   const prototype = Object.getPrototypeOf(o);
@@ -103,7 +170,7 @@ function orderedBijective(input) {
   let previousSource = '', previousDestination = '';
   for (let i = 0; i < input.redireccions.length; i++) {
     const row = input.redireccions[i];
-    if (!record(row) || !own(row, 'source') || !own(row, 'destination') || row.status !== 301) return null;
+    if (!record(row) || !Object.hasOwn(row, 'source') || !Object.hasOwn(row, 'destination') || row.status !== 301) return null;
     const source = row.source, destination = row.destination;
     if (typeof source !== 'string' || typeof destination !== 'string'
       || source.length > MAX_URL || destination.length > MAX_URL
@@ -118,20 +185,23 @@ function orderedBijective(input) {
 }
 
 /** Numeric tails are common in imported CMS URLs. A bounded direct bucket
- * avoids hashing the full URI in that case. Two prefix bits distinguish common
+ * avoids hashing the full URI in that case. One prefix bit distinguishes common
  * .net/.com numeric tails; they never prove equality. Each bucket retains its
  * exact string; colliding prefixes/hosts/leading zeros use the native Set, so
  * a suffix is never evidence of equality. Non-numeric and large IDs use Set
  * immediately. All operations remain expected O(bytes + rows), including an
  * adversary making every URI collide in the same suffix bucket. */
 class UriIndex {
-  constructor(capacity) {
+  constructor(capacity, hostBits = true) {
     this.limit = capacity + 1;
-    this.slots = new Int32Array(Math.max(1, this.limit * 4));
+    this.hostBits = hostBits;
+    this.slots = new Int32Array(Math.max(1, this.limit * (hostBits ? 2 : 1)));
     this.values = new Array(capacity);
     this.next = 0;
     this.collisions = new Set();
     this.size = 0;
+    this.preparedValue = undefined;
+    this.preparedBucket = -1;
   }
   bucket(value) {
     let index = value.length - 1, digit = value.charCodeAt(index) - 48;
@@ -145,7 +215,7 @@ class UriIndex {
     }
     // Position 19 is n/c in canonical https://socdepoble.net/.com. Short
     // strings produce NaN here, whose bitwise conversion is deterministically 0.
-    return number * 4 + (value.charCodeAt(19) & 3);
+    return this.hostBits ? number * 2 + (value.charCodeAt(19) & 1) : number;
   }
   has(value) {
     if (typeof value !== 'string') return false;
@@ -155,7 +225,8 @@ class UriIndex {
     return slot > 0 ? this.values[slot - 1] === value : slot < 0 && this.collisions.has(value);
   }
   add(value) {
-    const bucket = this.bucket(value);
+    const bucket = this.preparedValue === value ? this.preparedBucket : this.bucket(value);
+    this.preparedValue = undefined;
     if (bucket < 0) {
       const before = this.collisions.size;
       this.collisions.add(value);
@@ -185,9 +256,10 @@ class UriIndex {
 /** Shared raw invariants for both verifier and constructor. Every invocation
  * builds a fresh inventory and exact-source index. No result or input is trusted. */
 function destinationIndex301(inventory) {
-  const index = new UriIndex(inventory.length);
+  const index = new UriIndex(inventory.length, false);
   for (let i = 0; i < inventory.length; i++) {
-    const route = normalitzaDesti301(inventory[i]);
+    const rawRoute = inventory[i];
+    const route = normalitzaDesti301(rawRoute);
     if (!route) return failure('inventari_destins_invalid', i);
     index.add(route);
     if (index.size !== i + 1) return failure('desti_duplicat', i);
@@ -195,7 +267,7 @@ function destinationIndex301(inventory) {
   return index;
 }
 function checkRuleValues301(rawSource, rawDestination, sources, destinations, i) {
-  const source = normalitzaOrigen301(rawSource);
+  const source = indexedAsciiSource301(rawSource, sources) || normalitzaOrigen301(rawSource);
   if (!source) return failure('origen_invalid', i);
   // Membership in this freshly checked inventory also proves path syntax.
   if (!destinations.has(rawDestination)) {
@@ -225,7 +297,7 @@ export function verificaMapaRedireccions301(input) {
   const sources = new UriIndex(input.redireccions.length);
   for (let i = 0; i < input.redireccions.length; i++) {
     const rule = input.redireccions[i];
-    if (!record(rule) || !own(rule, 'source') || !own(rule, 'destination') || rule.status !== 301) return failure('regla_invalida', i);
+    if (!record(rule) || !Object.hasOwn(rule, 'source') || !Object.hasOwn(rule, 'destination') || rule.status !== 301) return failure('regla_invalida', i);
     const checked = checkRuleValues301(rule.source, rule.destination, sources, destinations, i);
     if (typeof checked !== 'string') return checked;
   }
@@ -252,9 +324,9 @@ function directEditorial301(articles, inventory) {
   const sources = new UriIndex(articles.length), redireccions = new Array(articles.length);
   for (let i = 0; i < articles.length; i++) {
     const article = articles[i];
-    if (!record(article) || !own(article, 'linkOriginal') || !own(article, 'rutaDestiCanonica')) throw new TypeError('La via directa exigix linkOriginal i rutaDestiCanonica propis.');
+    if (!record(article) || !Object.hasOwn(article, 'linkOriginal') || !Object.hasOwn(article, 'rutaDestiCanonica')) throw new TypeError('La via directa exigix linkOriginal i rutaDestiCanonica propis.');
     const rawSource = article.linkOriginal, destination = article.rutaDestiCanonica;
-    if (own(article, 'fontsOriginals')) {
+    if (Object.hasOwn(article, 'fontsOriginals')) {
       const originals = article.fontsOriginals;
       if (!Array.isArray(originals) || originals.length !== 1 || originals[0] !== rawSource) throw new TypeError('La via directa exigix expandir cada origen en un article explícit.');
     }
@@ -263,6 +335,20 @@ function directEditorial301(articles, inventory) {
     redireccions[i] = { source, destination, status: 301 };
   }
   return { redireccions, destinsDisponibles: inventory, verificacio: generalSuccess301(sources, destinations) };
+}
+
+// A flat helper keeps the row counter local to the caller. No per-call
+// closure/context allocation, and every output row crosses the same checks.
+function editorialRule301(rawSource, explicitRoute, hasExplicitRoute, mapping, sources, destinations, index) {
+  if (typeof rawSource !== 'string') throw new TypeError('Origen sense correspondència revisada.');
+  if (index >= MAX_ROWS) throw new TypeError('Taula 301 fora de pressupost.');
+  if (!Object.hasOwn(mapping, rawSource)) throw new TypeError(hasExplicitRoute ? 'Correspondències de destinació divergents.' : 'Origen sense correspondència revisada.');
+  const mapped = mapping[rawSource];
+  const destination = hasExplicitRoute ? explicitRoute : mapped;
+  if (hasExplicitRoute && normalitzaDesti301(mapped) !== normalitzaDesti301(destination)) throw new TypeError('Correspondències de destinació divergents.');
+  const source = checkRuleValues301(rawSource, destination, sources, destinations, index);
+  if (typeof source !== 'string') throw new TypeError(`Taula 301 invàlida: ${source.errors[0].code}`);
+  return { source, destination, status: 301 };
 }
 
 /** Construct and fully verify an explicit imported mapping in one pass.
@@ -274,39 +360,21 @@ export function construeixMapaEditorial301(articles, { destinsDisponibles, desti
   if (!Array.isArray(articles) || articles.length > MAX_ROWS || !Array.isArray(destinsDisponibles) || destinsDisponibles.length > MAX_ROWS || destinacions !== undefined && !record(destinacions)) throw new TypeError('Cal corpus, inventari i correspondència explícita de destinacions.');
   if (destinacions === undefined) return directEditorial301(articles, destinsDisponibles);
   const destinations = destinationIndex301(destinsDisponibles);
-  const fail = error => { throw new TypeError(`Taula 301 invàlida: ${error.errors[0].code}`); };
-  if (!(destinations instanceof UriIndex)) fail(destinations);
-  // Capacity is a lookup hint, never proof of uniqueness: extra aliases or
-  // larger numeric IDs fall back to exact Set storage under the MAX_ROWS cap.
+  if (!(destinations instanceof UriIndex)) throw new TypeError(`Taula 301 invàlida: ${destinations.errors[0].code}`);
   const sources = new UriIndex(articles.length), redireccions = new Array(articles.length);
   let count = 0;
-  const add = (rawSource, explicitRoute, hasExplicitRoute) => {
-    if (typeof rawSource !== 'string') throw new TypeError('Origen sense correspondència revisada.');
-    if (count >= MAX_ROWS) throw new TypeError('Taula 301 fora de pressupost.');
-    let destination;
-    if (hasExplicitRoute) {
-      destination = explicitRoute;
-      if (destinacions !== undefined && (!own(destinacions, rawSource) || normalitzaDesti301(destinacions[rawSource]) !== normalitzaDesti301(destination))) throw new TypeError('Correspondències de destinació divergents.');
-    } else {
-      if (destinacions === undefined || !own(destinacions, rawSource)) throw new TypeError('Origen sense correspondència revisada.');
-      destination = destinacions[rawSource];
-    }
-    const source = checkRuleValues301(rawSource, destination, sources, destinations, count);
-    if (typeof source !== 'string') fail(source);
-    redireccions[count++] = { source, destination, status: 301 };
-  };
   for (let i = 0; i < articles.length; i++) {
     const article = articles[i];
     if (!record(article)) throw new TypeError('Article 301 invàlid.');
-    const hasExplicitRoute = own(article, 'rutaDestiCanonica');
+    const hasExplicitRoute = Object.hasOwn(article, 'rutaDestiCanonica');
     const route = hasExplicitRoute ? article.rutaDestiCanonica : undefined;
-    if (own(article, 'fontsOriginals')) {
+    if (Object.hasOwn(article, 'fontsOriginals')) {
       const list = article.fontsOriginals;
       if (!Array.isArray(list) || list.length === 0 || list.length > MAX_ROWS) throw new TypeError('Fonts originals absents o invàlides.');
-      for (let j = 0; j < list.length; j++) add(list[j], route, hasExplicitRoute);
+      for (let j = 0; j < list.length; j++) redireccions[count] = editorialRule301(list[j], route, hasExplicitRoute, destinacions, sources, destinations, count++);
     } else {
-      if (!own(article, 'linkOriginal')) throw new TypeError('Origen original absent.');
-      add(article.linkOriginal, route, hasExplicitRoute);
+      if (!Object.hasOwn(article, 'linkOriginal')) throw new TypeError('Origen original absent.');
+      redireccions[count] = editorialRule301(article.linkOriginal, route, hasExplicitRoute, destinacions, sources, destinations, count++);
     }
   }
   redireccions.length = count;

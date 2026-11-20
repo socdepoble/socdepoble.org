@@ -345,16 +345,18 @@ describe('el lloc a la cascada (ordre del Mestre, 261007: «Moure a components.c
        PerfilShell.css, apps.css, tipografia-estreta.css i utilities.css; des
        del 31-10-2026, ordre del Mestre, el set: taulers.css, el Quadre de
        Comandament, darrere de modules.css). */
-    expect(posteriors.map((i) => i.fitxer)).toEqual(['src/css/modules.css', 'src/css/taulers.css', 'src/components/layout/AppGridShell.css',
-      'src/sections/profile/PerfilShell.css', 'src/apps/plataforma/apps.css',
+    expect(posteriors.map((i) => i.fitxer)).toEqual(['src/css/modules.css', 'src/css/taulers.css', 'src/css/app-grid-shell.css',
       'src/css/tipografia-estreta.css', 'src/css/utilities.css']);
     expect(posteriors[0]).toEqual({ fitxer: 'src/css/modules.css', capa: '' });
     expect(posteriors[posteriors.length - 1].fitxer).toBe('src/css/utilities.css');
-    expect(posteriors.find((i) => i.fitxer === 'src/sections/profile/PerfilShell.css')?.capa).toBe('components');
     const empats = posteriors.flatMap(({ fitxer, capa }) => regles(llig(fitxer))
       .filter((r) => capaDe(capa, r.context) === 'components')
       .flatMap((r) => r.selectors.filter(empataAmbElBoto).map((s) => `${fitxer} · ${s}`)));
-    expect(empats).toEqual(['src/sections/profile/PerfilShell.css · :where(.perfil-pagina) .sdp-boto']);
+    expect(empats).toEqual([]);
+    const empatsDiferitPerfil = regles(llig('src/css/diferit-perfil-shell.css'))
+      .filter((r) => capaDe('', r.context) === 'components')
+      .flatMap((r) => r.selectors.filter(empataAmbElBoto).map((s) => `src/css/diferit-perfil-shell.css · ${s}`));
+    expect(empatsDiferitPerfil).toEqual(['src/css/diferit-perfil-shell.css · :where(.perfil-pagina) .sdp-boto']);
     /* El carrusel només el munten la portada compartida i l'espècimen, fora
        del Perfil. Esmena 3 del pla 261007_1645 · la portada ha passat
        d'ItemDetailSection a detailSectionMeta (portadaDElement). */
@@ -427,8 +429,9 @@ describe('la porta del vocabulari (tooling/gates/tractor-vocabulari.mjs), la de 
   test('V1, V2 i V3: cap infracció nova als fitxers propis (el full vell inclòs), i tota classe del carrusel és al vocabulari de la porta', () => {
     /* Sonda: la porta llig el vocabulari i escaneja el JSX (troba deute conegut). */
     expect(escaneig.vocab.size).toBeGreaterThan(1000);
-    /* Onada R30 · T3-VOC · V1 ja és a zero: la sonda accepta el deute admés del JSX (V1 o V2). */
-    expect(escaneig.infraccions.some((i) => /^classe-(forastera|opaca)$/.test(i.regla) && admesa(i))).toBe(true);
+    /* Onada R32.18 · V1, V2 i V3 a zero absolut en tot el repositori (DEUTE = {}). */
+    expect(DEUTE).toEqual({});
+    expect(escaneig.infraccions).toEqual([]);
     expect([...new Set(classesNomenades(llig(COMPONENT)))].filter((c) => !escaneig.vocab.has(c))).toEqual([]);
     expect(noves.filter((i) => [...CODI_PROPI, FULL_ANTIC].includes(i.fitxer)).map(identitat)).toEqual([]);
   });
@@ -442,7 +445,7 @@ describe('la porta del vocabulari (tooling/gates/tractor-vocabulari.mjs), la de 
      tot l'arbre de components (p. ex. layout/AppGridShell.css). */
   test('S1 · LLEI DURA V3 (css-de-seccio): cap full del carrusel, i les seues classes les dona components.css', () => {
     const v3 = escaneig.infraccions.filter((i) => i.regla === 'css-de-seccio');
-    expect(v3.some((i) => i.fitxer.startsWith('src/components/') && i.fitxer.endsWith('.css'))).toBe(true);
+    expect(v3).toEqual([]);
     expect(v3.filter((i) => /carrusel/i.test(i.fitxer)).map(identitat)).toEqual([]);
     expect(noves.filter((i) => i.regla === 'css-de-seccio' && i.fitxer === FULL_ANTIC).map(identitat)).toEqual([]);
     /* Sense el full propi, el vocabulari de la porta només pot vindre dels

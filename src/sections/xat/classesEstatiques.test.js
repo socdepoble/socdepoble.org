@@ -178,8 +178,9 @@ describe('V2 · classe-opaca: les classes compostes del cicle 1 són estàtiques
     /* Sonda: la porta ha llegit el vocabulari i escaneja el JSX (hi troba deute admés). */
     expect(escaneig.vocab.size).toBeGreaterThan(1000);
     expect(escaneig.vocab.has('sdp-xat-fila--comunitat')).toBe(true);
-    /* Onada R30 · T3-VOC · V1 ja és a zero: la sonda accepta el deute admés del JSX (V1 o V2). */
-    expect(escaneig.infraccions.some((i) => /^classe-(forastera|opaca)$/.test(i.regla) && admesa(i))).toBe(true);
+    /* Onada R32.18 · V1, V2 i V3 a zero absolut en tot el repositori (DEUTE = {}). */
+    expect(DEUTE).toEqual({});
+    expect(escaneig.infraccions).toEqual([]);
 
     const opaques = escaneig.infraccions.filter((i) => i.regla === 'classe-opaca');
     const identitats = new Set(opaques.map(identitat));

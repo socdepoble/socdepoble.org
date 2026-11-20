@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { audita, color, llegeixTemes, llindar, luminancia, parellesSemantiques, ratio, sobre } from '../tooling/gates/contrast-aaa.mjs';
+import { audita, color, llegeixTemes, llindar, luminancia, parellesSemantiques, ratio, selectorAplicaAlMode, sobre, variantsDAlies } from '../tooling/gates/contrast-aaa.mjs';
 
 const near = (a, b, e = 1e-12) => assert.ok(Math.abs(a - b) <= e, `${a} != ${b}`);
 
@@ -62,4 +62,41 @@ test('oracle independent contra la regressió anterior: el text taronja heretat 
   assert.match(css, /--sdp-accent-text:\s*var\(--sdp-primary-800\)/);
   const modes = llegeixTemes();
   for (const map of Object.values(modes)) assert.ok(ratio(color('var(--sdp-accent-text)', map), color('var(--sdp-fons-subtil)', map)) >= 7);
+});
+
+/* Gauntlet v1.2.14 R2 · Els àlies locals: la reserva no amaga el valor real, l'àmbit de tema filtra els valors que
+   no poden coexistir i un àlies niat dins d'un altre valor falla tancat. */
+test('variantsDAlies: reserva, àlies niats, àmbit de tema i fail-closed', () => {
+  const defs = (parells) => new Map(parells.map(([v, sels]) => [v, sels]));
+  const alies = new Map([
+    ['--x', defs([['#777', ['.p']]])],
+    ['--y', defs([['var(--x)', ['.q']]])],
+    ['--f', defs([['#000', ['.p']], ['#fff', ['[data-theme="dark"] .p']]])],
+    ['--g', defs([['linear-gradient(var(--x), var(--x)), #fff', ['.r']]])],
+    ['--c1', defs([['var(--c2)', ['.a']]])],
+    ['--c2', defs([['var(--c1)', ['.a']]])],
+  ]);
+  assert.deepEqual(variantsDAlies('var(--x, #000)', alies), ['#777', '#000']);
+  assert.deepEqual(variantsDAlies('var(--y)', alies), ['#777']);
+  assert.deepEqual(variantsDAlies('var(--f)', alies, 'clar'), ['#000']);
+  assert.deepEqual(variantsDAlies('var(--f)', alies, 'fosc'), ['#000', '#fff']);
+  assert.deepEqual(variantsDAlies('var(--sdp-text)', alies), ['var(--sdp-text)']);
+  assert.deepEqual(variantsDAlies('var(--desconegut, #123)', alies), ['var(--desconegut, #123)']);
+  assert.throws(() => variantsDAlies('var(--g)', alies), /niat/);
+  assert.throws(() => variantsDAlies('var(--c1)', alies), /Cicle/);
+});
+
+/* Gauntlet v1.2.14 R2b · L'àmbit de tema es decidix per a cada selector de la llista: una llista mixta o un selector de
+   només clar (`:not([data-theme="dark"])`) també aplica en clar. Mesurar de més, mai de menys. */
+test('selectorAplicaAlMode: llistes mixtes i :not() no amaguen el mode clar', () => {
+  assert.equal(selectorAplicaAlMode('[data-theme="dark"] .x', 'clar'), false);
+  assert.equal(selectorAplicaAlMode('[data-theme="dark"] .x', 'fosc'), true);
+  assert.equal(selectorAplicaAlMode('.x--invers, [data-theme="dark"] .x', 'clar'), true);
+  assert.equal(selectorAplicaAlMode(':root:not([data-theme="dark"]) .x', 'clar'), true);
+  assert.equal(selectorAplicaAlMode(':host(:not([data-theme="dark"])) .x', 'clar'), true);
+  assert.equal(selectorAplicaAlMode('[data-contrast="bancal"] .x', 'clar'), false);
+  assert.equal(selectorAplicaAlMode('[data-contrast="bancal"] .x', 'bancal fosc'), true);
+  assert.equal(selectorAplicaAlMode('.a, .b', 'fosc'), true);
+  const alies = new Map([['--t', new Map([['var(--sdp-text-cos)', ['.c']], ['#fafafa', ['.c--invers, [data-theme="dark"] .c']]])]]);
+  assert.deepEqual(variantsDAlies('var(--t)', alies, 'clar'), ['var(--sdp-text-cos)', '#fafafa']);
 });

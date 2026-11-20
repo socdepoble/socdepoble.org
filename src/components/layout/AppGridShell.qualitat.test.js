@@ -57,7 +57,7 @@ describe('P6 · Pedra Seca', () => {
   });
 
   test('AppGridShell.css: cap color cru ni style en les regles noves del rail', () => {
-    const css = readFileSync(path.join(ARREL, 'src/components/layout/AppGridShell.css'), 'utf8')
+    const css = readFileSync(path.join(ARREL, 'src/css/app-grid-shell.css'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '');
     const regles = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
       .filter(([, selector]) => selector.includes('data-llista') || selector.includes('app-grid-rail'))

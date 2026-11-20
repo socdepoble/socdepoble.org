@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { FONTS_PRODUCCIO_R3215 } from '../tooling/gates/verifica-rebut-produccio-r3215.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -13,6 +14,7 @@ function fixture(t) {
   }
   const source=fileURLToPath(new URL('../tooling/gates/fixtures/produccio-r3214/',import.meta.url));
   fs.cpSync(source,path.join(root,'tooling/gates/fixtures/produccio-r3214'),{recursive:true});
+  for(const {ruta} of FONTS_PRODUCCIO_R3215) {const target=path.join(root,ruta);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(fileURLToPath(new URL('../'+ruta,import.meta.url)),target);}
   return root;
 }
 function good(args) {

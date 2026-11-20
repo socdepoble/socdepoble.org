@@ -888,3 +888,12 @@
   flex-wrap: wrap;
   gap: var(--sdp-space-2);
 }
+
+/* Gauntlet v1.2.14 (ronda 1, Llei del Píxel) · El text de la caiguda d'un panell (SlotErrorBoundary.jsx) es munta a
+   qualsevol espai de treball, no només al Perfil: la regla viu a la cadena d'arrencada, al lloc on index.css importava
+   PerfilShell.css (darrere d'este full, dins de components), i pinta igual que a la v1.2.13. */
+.perfil-detall-buit {
+  padding: var(--sdp-space-8) var(--sdp-space-4);
+  color: var(--sdp-text-suau);
+  text-align: center;
+}

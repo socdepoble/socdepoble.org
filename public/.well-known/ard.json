@@ -1,5 +1,5 @@
 {
-  "version": "1.2.13",
+  "version": "1.2.14",
   "androidBuild": 1,
   "iosBuild": 1,
   "entries": [
@@ -9,7 +9,7 @@
       "description": "Índex estructurat en Markdown de les rutes públiques, arquitectura Pedra Seca, llicències lliures i recursos oberts de Sóc de Poble.",
       "type": "text/markdown",
       "url": "https://socdepoble.org/llms.txt",
-      "version": "1.2.13",
+      "version": "1.2.14",
       "capabilities": [
         "documentation",
         "site-navigation",
@@ -34,7 +34,7 @@
       "description": "Manifest JSON amb sumes SHA-256 i enllaços directes als conjunts JSON-LD d’entitats, notícies, agenda i patrimoni municipal.",
       "type": "application/json",
       "url": "https://socdepoble.org/opendata/manifest.json",
-      "version": "1.2.13",
+      "version": "1.2.14",
       "capabilities": [
         "open-data",
         "municipal-directory",
@@ -58,7 +58,7 @@
       "description": "Document públic ActivityStreams 2.0 de lectura per a descobrir el node federat, l’outbox pública i WebFinger municipal.",
       "type": "application/activity+json",
       "url": "https://socdepoble.org/ap/actors/socdepoble.json",
-      "version": "1.2.13",
+      "version": "1.2.14",
       "capabilities": [
         "activitypub-read",
         "webfinger-discovery",

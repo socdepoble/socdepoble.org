@@ -814,8 +814,6 @@ const FITXERS = [
   'src/app/App.test.jsx',
   'src/app/EstilDelPoble.jsx',
   'src/app/EstilDelPoble.test.jsx',
-  'src/components/universal/PanellCrom.jsx',
-  'src/components/universal/PanellCrom.test.jsx',
   'src/config/aplicaEstil.js',
   'src/config/aplicaEstil.test.js',
   'src/config/contrast.js',

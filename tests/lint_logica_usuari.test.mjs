@@ -111,16 +111,16 @@ const CSS_TORN = [
   'src/css/components.css',
   'src/css/layout.css',
   'src/css/tokens.css',
-  'src/components/layout/AppGridShell.css',
-  'src/sections/profile/PerfilShell.css'
+  'src/css/app-grid-shell.css',
+  'src/css/diferit-perfil-shell.css'
 ];
 /* Per a resoldre classes compten tots els fulls canònics de src/css més el
    full de secció que el JSX nou usa (PerfilShell). El de Connectar ja no
    existix: T43 el va moure al seu bloc de css/modules.css. */
 const CSS_RESOLUCIO = [
   'src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/css/components.css',
-  'src/css/utilities.css', 'src/css/base.css', 'src/components/layout/AppGridShell.css',
-  'src/sections/profile/PerfilShell.css',
+  'src/css/utilities.css', 'src/css/base.css', 'src/css/app-grid-shell.css',
+  'src/css/diferit-perfil-shell.css',
   /* Onada R28 · D-R27-1 (opció b) · Fulls diferits adoptats amb useFullDiferit. */
   ...fs.readdirSync(path.join(ARREL, 'src/css'))
     .filter((nom) => /^diferit-[a-z0-9-]+\.css$/.test(nom)).sort().map((nom) => `src/css/${nom}`)
@@ -464,7 +464,7 @@ test('T6 · la barra principal i la primera columna són rectangles purs: border
 test('T8 · les llistes desplegades i els rails plegats s’apeguen a la capçalera, sense bots', () => {
   const modules = llig('src/css/modules.css');
   const layout = llig('src/css/layout.css');
-  const shell = llig('src/components/layout/AppGridShell.css');
+  const shell = llig('src/css/app-grid-shell.css');
   assert.match(regla(modules, '.app-sidebar-nav'), /padding\s*:\s*0\s+0\s+var\(--sdp-space-4\)\s*;/);
   assert.match(regla(modules, '.sdp-xat-rail-llista'), /padding\s*:\s*0\s+0\s+var\(--sdp-space-2\)\s*;/);
   assert.match(regla(layout, `${PLEGADA} .app-sidebar-nav`), /padding\s*:\s*0\s+0\s+var\(--sdp-space-2\)\s*;/);
@@ -475,7 +475,7 @@ test('T8 · les llistes desplegades i els rails plegats s’apeguen a la capçal
 test('T9 · les cel·les plegades van de banda a banda i s’apilen sense separació', () => {
   const modules = llig('src/css/modules.css');
   const layout = llig('src/css/layout.css');
-  const shell = llig('src/components/layout/AppGridShell.css');
+  const shell = llig('src/css/app-grid-shell.css');
   assert.match(regla(shell, '.app-grid-col-header.app-grid-col-header--collapsed'), /align-items\s*:\s*stretch\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /align-items\s*:\s*stretch\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /gap\s*:\s*0\s*;/);

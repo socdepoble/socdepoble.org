@@ -66,9 +66,7 @@
    compacte en full propi. Escriu dins de `@layer components` (sense layer():
    amb layer(components) aniria a la subcapa components.components). */
 @import url('./taulers.css');    /* @layer components            */
-@import url('../components/layout/AppGridShell.css') layer(components);
-@import url('../sections/profile/PerfilShell.css') layer(components);
-@import url('../apps/plataforma/apps.css') layer(components);
+@import url('./app-grid-shell.css') layer(components);
 /* Els fulls de les peces (pecesApps, catalegColleccio, alergens, tpv,
    UniversalListCard i AdjuntXat) ja no entren per ací: des del 261030
    (tractor-vocabulari, ordre del Mestre) són els blocs del final de

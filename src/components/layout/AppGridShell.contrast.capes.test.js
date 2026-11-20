@@ -27,7 +27,7 @@ const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
 const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const TOKENS = llig('src/css/tokens.css');
 const CANON = llig('src/css/design-tokens.css');
-const GRAELLA = senseComentaris(llig('src/components/layout/AppGridShell.css'));
+const GRAELLA = senseComentaris(llig('src/css/app-grid-shell.css'));
 const MODULES = senseComentaris(llig('src/css/modules.css'));
 
 const declaracions = (text) => Object.fromEntries(

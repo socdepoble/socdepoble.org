@@ -5,7 +5,7 @@
    · La llista TOKENS_EDITABLES (config/estil.js) amb el valor vigent de cada
      token (el personalitzat, o el que es veu ara a l'arrel: el canònic o el
      girat pel crom), un CampText de color per als colors i un Selector per als
-     radis; el to del crom amb un CampText de color com al PanellCrom (deltaDe);
+     radis; el to del crom amb un CampText de color com a PanellCromIntegrat (deltaDe);
      els parells de contrast per davall de 7:1 en roig, i bloquegen «Desar».
    · «Previsualitza» aplica l'esborrany a l'arrel (aplicaEstil: el mateix full
      que EstilDelPoble); «Torna al que hi ha desat» descarta l'esborrany i
@@ -161,7 +161,7 @@ export function FacetaEstil({ ambit = null }) {
     setColorCrom(null);
   }, [clauDesat]);
 
-  /* L'arrel de la instància, com el PanellCrom (node.closest('.sdp-root')); fora d'una instància, el propi node. */
+  /* L'arrel de la instància, com PanellCromIntegrat (node.closest('.sdp-root')); fora d'una instància, el propi node. */
   const setNode = useCallback((node) => {
     if (node) setArrel((actual) => actual || (ambPoble ? node : node.closest('.sdp-root') || node));
   }, [ambPoble]);

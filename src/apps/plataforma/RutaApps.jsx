@@ -22,7 +22,9 @@
  * Lector) entren pel mateix camí: ContenidorApp els pren de fontServeis.js,
  * que només s'importa ací, i els passa a ProveidorApp.
  */
-import { Suspense } from 'react';
+import { Suspense, useRef } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssAppsPlataforma from '../../css/diferit-apps-plataforma.css?inline';
 import ProveidorProjeccionsCataleg from '../../app/contexts/ProveidorProjeccionsCataleg.jsx';
 import { Navigate, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -74,6 +76,8 @@ function GuardaPermis({ permis, children }) {
 }
 
 function ContenidorApp({ manifest, entrada }) {
+  const contenidorAppsRef = useRef(null);
+  useFullDiferit(contenidorAppsRef, 'apps-plataforma', cssAppsPlataforma);
   const registre = useRegistre();
   const { search } = useLocation();
   /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
@@ -111,7 +115,7 @@ function ContenidorApp({ manifest, entrada }) {
   const enProves = manifest.origen === 'interna' && APPS_BETA.includes(manifest.id);
   return (
     <ProveidorApp manifest={manifest} fontSessio={useFontSessio} serveis={serveis} idioma={llenguaDelText}>
-      <div className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>
+      <div ref={contenidorAppsRef} className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>
         <GuardaPermis permis={manifest.permisos.veure}>
           <GuardaPermis permis={entrada.permis}>
             {enProves ? <BandaBetaMicroApp idioma={llenguaDelText} /> : null}

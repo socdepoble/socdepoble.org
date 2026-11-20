@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -57,6 +57,7 @@
     "torn:obrir": "node tooling/gates/obrir_torn.mjs",
     "porta:cognitiu": "node tooling/wiki/tractor-cognitiu.mjs --arrel=.",
     "porta:pedra-seca": "node tooling/brain/tractor-pedra-seca.mjs",
+    "porta:craft-paritat": "node tooling/gates/tractor-craft-paritat-visual.mjs",
     "porta:design-guard": "node tooling/gates/design_guard.mjs --arrel=src",
     "porta:llaurador": "node tooling/wiki/llaurador_indexs.mjs --check",
     "porta:frontmatter": "node tooling/wiki/tractor-frontmatter.mjs",

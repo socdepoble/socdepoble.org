@@ -101,7 +101,7 @@ const ICONA = 24;
 const { plegada } = PUNTS_DE_TALL;
 
 const LAYOUT = llig('src/css/layout.css');
-const GRAELLA = llig('src/components/layout/AppGridShell.css');
+const GRAELLA = llig('src/css/app-grid-shell.css');
 const MODULS = llig('src/css/modules.css');
 
 /* ── Barra principal i BarraApp ───────────────────────────────────────── */

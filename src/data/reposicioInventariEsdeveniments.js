@@ -22,8 +22,9 @@ function registre(v, camps) {
     if (typeof k !== 'string' || !camps.includes(k) || !Object.hasOwn(d, 'value') || !d.enumerable) throw new TypeError('Camp desconegut o accessor.');
   }
 }
+/* Gauntlet v1.2.14 · Ni espais als extrems: «rebost» i «rebost » serien dues claus que es veuen iguals. */
 function id(v, camp) {
-  if (typeof v !== 'string' || !v.trim() || v.length > 1000 || v !== v.normalize('NFC') || /[\p{Cc}\p{Cf}\p{Cs}]/u.test(v)) throw new TypeError(`${camp}: identificador no canònic.`);
+  if (typeof v !== 'string' || !v.trim() || v !== v.trim() || v.length > 1000 || v !== v.normalize('NFC') || /[\p{Cc}\p{Cf}\p{Cs}]/u.test(v)) throw new TypeError(`${camp}: identificador no canònic.`);
   return v;
 }
 function unitats(v, camp, minim = 0) {
@@ -159,4 +160,62 @@ export function planificaReposicioInventari(entrada) {
   if (inventari.bloquejat) return congela({ inventari, reposicio: { clauIdempotencia, calComandar: false, quantitatComanda: 0, motiu: 'inventari_pendent_revisio' } });
   const reposicio = reposicioAntiDobleComanda({ ...entrada, estocActual: inventari.estocDisponible, enComanda: inventari.enComanda, reservat: inventari.reservat, comandes: inventari.comandes });
   return congela({ inventari, reposicio });
+}
+
+const UUID_CANONIC = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+function uuidReserva(v, camp) {
+  if (typeof v !== 'string' || !UUID_CANONIC.test(v)) throw new TypeError(`${camp}: UUID canònic obligatori.`);
+  return v;
+}
+
+/** DTO neutral, independent del transport. El tenant productiu té identitat UUID.
+ * La quantitat és immutable dins del mateix cicle; no hi ha caducitat local que
+ * permeta reapropiar-se d'una clau. Un cicle nou requerix reconciliar l'anterior.
+ */
+export function creaPeticioReservaCicleInventari(entrada) {
+  registre(entrada, ['tenantId', 'magatzemId', 'articleId', 'cicle', 'quantitat']);
+  const peticio = { tenantId: uuidReserva(entrada.tenantId, 'tenantId'),
+    magatzemId: id(entrada.magatzemId, 'magatzemId'), articleId: id(entrada.articleId, 'articleId'),
+    cicle: id(entrada.cicle, 'cicle'), quantitat: unitats(entrada.quantitat, 'quantitat', 1) };
+  // El motor canònic aplica el límit comú de 160 caràcters i clau sense col·lisions.
+  clauReposicio(peticio);
+  return Object.freeze(peticio);
+}
+
+/** Refuta rebuts aliens/truncats abans d'exposar permís per iniciar una comanda.
+ * Un rebut reutilitzat és informatiu: només creada=true és una reserva nova.
+ * Esta reserva no és un ACK del proveïdor ni prova d'una compra exactament una vegada.
+ */
+export function validaRebutReservaCicleInventari(rebutCru, entrada) {
+  const peticio = creaPeticioReservaCicleInventari(entrada);
+  /* Gauntlet v1.2.14 · Una sola instantània dels valors propis: un Proxy no pot tornar un valor a la validació i un
+     altre a la projecció, i un camp absent no s'hereta del prototip (Object.prototype.creada). */
+  const camps = ['esquema', 'reserva_id', 'tenant_id', 'magatzem_id', 'article_id', 'cicle_id', 'quantitat', 'creada'];
+  registre(rebutCru, camps);
+  const cru = Object.create(null);
+  for (const k of camps) {
+    const d = Object.getOwnPropertyDescriptor(rebutCru, k);
+    if (!d || !Object.hasOwn(d, 'value')) throw new RangeError('Rebut de reserva truncat.');
+    cru[k] = d.value;
+  }
+  if (cru.esquema !== 'sdp.inventari.reserva.v1' || typeof cru.creada !== 'boolean'
+    || cru.tenant_id !== peticio.tenantId || cru.magatzem_id !== peticio.magatzemId
+    || cru.article_id !== peticio.articleId || cru.cicle_id !== peticio.cicle || cru.quantitat !== peticio.quantitat) {
+    throw new RangeError('Rebut de reserva incompatible amb la petició.');
+  }
+  return Object.freeze({ ...peticio, reservaId: uuidReserva(cru.reserva_id, 'reservaId'),
+    clauIdempotencia: clauReposicio(peticio), creada: cru.creada,
+    potIniciarComanda: cru.creada, estat: cru.creada ? 'reservada' : 'ja_reservada' });
+}
+
+/** Adaptador de capacitat injectable del port de dades (cap import de proveïdor).
+ * El transport retorna el rebut d'una transacció confirmada al backend.
+ * Absència o error fallen tancats; mai es fabrica una reserva local. El temps d'espera és del transport:
+ * esta funció no en posa cap, i una promesa que no es resol no dona cap permís.
+ */
+export async function reservaCicleReposicioInventari(entrada, capacitat) {
+  const peticio = creaPeticioReservaCicleInventari(entrada);
+  if (!capacitat || typeof capacitat.reservaCicle !== 'function') throw new TypeError('Capacitat de reserva atòmica no disponible.');
+  const rebut = await capacitat.reservaCicle(peticio);
+  return validaRebutReservaCicleInventari(rebut, peticio);
 }

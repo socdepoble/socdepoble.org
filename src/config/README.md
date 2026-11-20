@@ -1,7 +1,7 @@
 ---
-estat: "canonic"
-tipus: "index"
-description: "Documentació canònica de Sóc de Poble."
+type: index
+status: canonic
+description: "Índex tècnic de configuració transversal, rutes, idiomes i utilitats globals de src/config."
 ---
 # `src/config`
 
@@ -21,6 +21,6 @@ Si una cosa només afecta `mur`, `mercat`, `xat`, `pobles` o qualsevol altra sec
 Si és una fitxa concreta d'eixa secció, la secció pot tindre també `src/sections/<seccio>/detail/`.
 
 
----
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
+- [[00_index]]

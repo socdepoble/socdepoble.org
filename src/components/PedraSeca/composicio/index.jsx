@@ -105,9 +105,25 @@ export const Centre = ({ children, className = '', ...props }) => {
  * Superficie (Surface)
  * Contenidor base per a targetes o àrees elevades.
  */
+const CLASSES_OMBRA_SUPERFICIE = Object.freeze({
+  1: 'sdp-ombra-1',
+  2: 'sdp-ombra-2',
+  3: 'sdp-ombra-3',
+});
+
+const CLASSES_RADI_SUPERFICIE = Object.freeze({
+  s: 'sdp-radi-s',
+  m: 'sdp-radi-m',
+  g: 'sdp-radi-g',
+  pastilla: 'sdp-radi-pastilla',
+});
+
 export const Superficie = ({ children, eleva = 1, radi = 'm', className = '', as: Component = 'div', ...props }) => {
+  const ombra = Object.hasOwn(CLASSES_OMBRA_SUPERFICIE, eleva) ? CLASSES_OMBRA_SUPERFICIE[eleva] : '';
+  const vora = Object.hasOwn(CLASSES_RADI_SUPERFICIE, radi) ? CLASSES_RADI_SUPERFICIE[radi] : '';
+  const classes = ['sdp-superficie', ombra, vora, className].filter(Boolean).join(' ');
   return (
-    <Component className={`sdp-superficie sdp-ombra-${eleva} sdp-radi-${radi} ${className}`} {...props}>
+    <Component className={classes} {...props}>
       {children}
     </Component>
   );

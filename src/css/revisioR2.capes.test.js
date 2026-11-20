@@ -142,7 +142,7 @@ describe('Q2 · sòl tàctil de 48px', () => {
   const FULLS = [
     /* modules.css porta ara els blocs pecesApps i catalegColleccio (261030). */
     'src/css/modules.css', 'src/css/components.css', 'src/css/layout.css',
-    'src/components/layout/AppGridShell.css'
+    'src/css/app-grid-shell.css'
   ];
 
   test.each(FULLS)('%s: cap sòl d’alçada literal per davall de 48px', (ruta) => {

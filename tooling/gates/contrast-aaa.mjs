@@ -193,11 +193,93 @@ const GRAFICS = new Set([
   'header.bar-blue', '.sp-card-footer', '.download-card-btn',
   '.sdp-edicio-avancada__icona', '.sdp-xat-nova', '.sdp-xat-compositor__envia',
   '.page-title-avatar__marca', '.sdp-connectar__notes-icona',
-  '.sdp-graella-articles__marca-colleccio,\n  .sdp-llista-articles__marca-colleccio'
+  '.sdp-graella-articles__marca-colleccio,\n  .sdp-llista-articles__marca-colleccio',
+  /* v1.2.14 · Gemini R32.18 porta AppGridShell.css i PerfilShell.css a src/css i el cens ja els llig. Les dues
+     capçaleres només pinten la icona amb el seu color: el títol (.app-grid-col-header__titol) i l'estat
+     (.perfil-fitxa-publica__estat) porten --sdp-crom-text, i els botons, el seu propi parell. */
+  '.app-grid-col-header', '.perfil-fitxa-publica'
 ]);
+
+/** Àlies locals (custom properties que no són --sdp-*) declarats als fulls de src/css, amb tots els seus valors i el
+ * selector de cada definició (Gauntlet R2: l'àmbit de tema filtra quins valors poden coexistir en cada mode). */
+export function aliesLocals(arrel = process.cwd()) {
+  const alies = new Map();
+  for (const f of readdirSync(resolve(arrel, 'src/css')).filter((n) => n.endsWith('.css')).sort()) {
+    for (const r of regles(readFileSync(resolve(arrel, 'src/css', f), 'utf8'))) {
+      for (const m of r.body.matchAll(/(?:^|;)\s*(--(?!sdp-)[a-z][\w-]*)\s*:\s*([^;]+)/g)) {
+        if (!alies.has(m[1])) alies.set(m[1], new Map());
+        const valor = m[2].trim();
+        const defs = alies.get(m[1]);
+        if (!defs.has(valor)) defs.set(valor, []);
+        defs.get(valor).push(r.selector ?? '');
+      }
+    }
+  }
+  return alies;
+}
+
+/** Parteix una llista de selectors per les comes de primer nivell (fora de parèntesis i claudàtors). */
+function selectorsDeLaLlista(llista) {
+  const parts = [];
+  let prof = 0;
+  let inici = 0;
+  for (let i = 0; i < llista.length; i += 1) {
+    const c = llista[i];
+    if (c === '(' || c === '[') prof += 1;
+    else if (c === ')' || c === ']') prof -= 1;
+    else if (c === ',' && prof === 0) { parts.push(llista.slice(inici, i)); inici = i + 1; }
+  }
+  parts.push(llista.slice(inici));
+  return parts.map((x) => x.trim()).filter(Boolean);
+}
+
+/** Gauntlet v1.2.14 R2b · Si una llista de selectors pot aplicar en un mode. Cada selector de la llista es mira a
+ * part: només un `[data-theme="dark"]` (o `[data-contrast="bancal"]`) POSITIU el restringix a eixe mode. Un atribut de
+ * tema dins de `:not(...)` (selectors de només clar) o en qualsevol altra forma compta com a «tots els modes»: la
+ * porta mesura de més (roig possible), mai de menys (verd fals). */
+export function selectorAplicaAlMode(llista, mode) {
+  return selectorsDeLaLlista(llista).some((sel) => {
+    const positiu = sel.replace(/:not\((?:[^()]|\([^()]*\))*\)/g, '');
+    if (positiu.includes('data-theme="dark"') && !mode.includes('fosc')) return false;
+    if (positiu.includes('data-contrast="bancal"') && !mode.includes('bancal')) return false;
+    return true;
+  });
+}
+
+/** Un valor d'àlies és vàlid en un mode si almenys una de les seues definicions hi aplica. */
+const valorAplicaAlMode = (selectors, mode) => selectors.some((sel) => selectorAplicaAlMode(sel, mode));
+
+/** Un valor «var(--alies)» o «var(--alies, reserva)» d'un àlies local es desplega en totes les definicions que poden
+ * aplicar al mode, també si un valor és al seu torn un altre àlies local, i en la reserva, si n'hi ha. Gauntlet R2: un àlies local niat dins d'un altre valor (p. ex. un gradient) no es pot mesurar amb
+ * seguretat i llança: la porta falla tancada en lloc de mesurar la reserva. */
+export function variantsDAlies(valor, alies, mode = 'clar', vistos = new Set()) {
+  const v = valor.trim();
+  const m = /^var\(\s*(--(?!sdp-)[a-z][\w-]*)\s*(?:,\s*([\s\S]+))?\)$/.exec(v);
+  if (m && alies.has(m[1])) {
+    if (vistos.has(m[1])) throw new Error(`Cicle d'àlies locals: ${[...vistos, m[1]].join(' → ')}`);
+    const valors = [...alies.get(m[1])].filter(([, sels]) => valorAplicaAlMode(sels, mode)).map(([val]) => val);
+    const seguents = new Set([...vistos, m[1]]);
+    /* La porta no sap si el selector del parell cau dins de l'àmbit d'alguna definició: la reserva, si n'hi ha, també
+       es mesura (Gauntlet R2b), a més de cada definició aplicable. */
+    const reserva = m[2] !== undefined ? variantsDAlies(m[2], alies, mode, vistos) : [];
+    if (!valors.length) return reserva.length ? reserva : [v];
+    return [...new Set([...valors.flatMap((val) => variantsDAlies(val, alies, mode, seguents)), ...reserva])];
+  }
+  for (const n of v.matchAll(/var\(\s*(--(?!sdp-)[a-z][\w-]*)/g)) {
+    if (alies.has(n[1])) throw new Error(`Àlies local ${n[1]} niat a «${v}»: no es pot mesurar amb seguretat`);
+  }
+  return [v];
+}
+
+/** Superfície amb un vel d'un sol color: «linear-gradient(X, X), Y» és X compost sobre Y. */
+function fonsCompost(valor, mapa) {
+  const m = /^linear-gradient\(\s*([^,()]+(?:\([^()]*\))?)\s*,\s*\1\s*\)\s*,\s*([\s\S]+)$/.exec(valor.trim());
+  return m ? sobre(color(m[1], mapa), color(m[2], mapa)) : color(valor, mapa);
+}
 
 export function audita(arrel = process.cwd()) {
   const modes = llegeixTemes(arrel);
+  const alies = aliesLocals(arrel);
   const mesures = [];
   const explicites = [];
   const contextuals = [];
@@ -209,20 +291,29 @@ export function audita(arrel = process.cwd()) {
       mesures.push({ mode, ...pair, ratio: r, minim, passa: r >= minim });
     }
     for (const pair of inventari) {
-      if (pair.selector.includes('data-theme="dark"') && !mode.includes('fosc')) continue;
-      if (pair.selector.includes('data-contrast="bancal"') && !mode.includes('bancal')) continue;
+      if (!selectorAplicaAlMode(pair.selector, mode)) continue;
       const contextual = (motiu) => contextuals.push({ mode, ...pair, motiu });
       if (pair.selector.startsWith('.sw-')) { contextual('mostra de paleta primitiva; no és una parella semàntica de text del producte'); continue; }
       if (/:disabled|aria-disabled/.test(pair.selector)) { contextual('component inactiu, exempt de WCAG 1.4.6; no es compta com AAA'); continue; }
       if (['inherit', 'currentColor'].includes(pair.fg) || pair.bg === 'inherit') { contextual('color heretat: cal comprovar l’element pare renderitzat'); continue; }
       if (/Highlight|Canvas/.test(pair.fg + pair.bg)) { contextual('colors forçats del sistema operatiu; no es coneix la paleta'); continue; }
       if (/var\(--(?:cal-|pou-neu-)/.test(pair.fg + pair.bg)) { contextual('àlies locals de calendari/Pou; les seues parelles font estan a la matriu semàntica'); continue; }
-      const fg = color(pair.fg, mapa);
-      const bg = color(pair.bg, mapa);
-      if (bg[3] < 1) { contextual('fons transparent o translúcid: la matriu semàntica mesura les superfícies font, el DOM fixa el fons concret'); continue; }
-      const minim = GRAFICS.has(pair.selector) ? 3 : llindar();
-      const r = ratio(fg, bg);
-      explicites.push({ mode, ...pair, ratio: r, minim, tipus: minim === 3 ? 'icona (1.4.11)' : 'text normal (1.4.6)', passa: r >= minim });
+      /* v1.2.14 · Gemini R32.18 porta AppGridShell.css a src/css i el cens el llig: un àlies local (--app-grid-*) es
+         mesura amb CADA valor que li donen els fulls, i un vel d'un sol color sobre una superfície
+         (linear-gradient(X, X), Y) es compon i es mesura. Cap altra forma s'eximix: falla tancada com abans. */
+      const parells = [];
+      for (const fgVal of variantsDAlies(pair.fg, alies, mode)) for (const bgVal of variantsDAlies(pair.bg, alies, mode)) parells.push([fgVal, bgVal]);
+      let translucid = false;
+      for (const [fgVal, bgVal] of parells) {
+        const fg = color(fgVal, mapa);
+        const bg = fonsCompost(bgVal, mapa);
+        if (bg[3] < 1) { translucid = true; continue; }
+        const minim = GRAFICS.has(pair.selector) ? 3 : llindar();
+        const r = ratio(fg, bg);
+        const detall = parells.length > 1 ? { fgResolt: fgVal, bgResolt: bgVal } : {};
+        explicites.push({ mode, ...pair, ...detall, ratio: r, minim, tipus: minim === 3 ? 'icona (1.4.11)' : 'text normal (1.4.6)', passa: r >= minim });
+      }
+      if (translucid) contextual('fons transparent o translúcid: la matriu semàntica mesura les superfícies font, el DOM fixa el fons concret');
     }
   }
   return {

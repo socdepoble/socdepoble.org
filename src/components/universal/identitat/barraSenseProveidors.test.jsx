@@ -4,21 +4,24 @@ import { afterEach, expect, test, vi } from 'vitest';
 /* Prompt 261014_0400 (ordre del Mestre) · Guarda de la barra negra, sense cap
    simulació de SessionContext ni d'IdentitatContext: els mòduls de veres i la
    mateixa composició que la TopBar d'App.jsx (useIdentitatDeLaBarra,
-   BotoIdentitatActiva, CalaixIdentitats i BotoCrom). La TopBar no s'exporta,
-   i muntar App sense proveïdors peta igualment a CoreContentProvider. */
+   BotoIdentitatActiva i CalaixIdentitats). La TopBar no s'exporta, i muntar
+   App sense proveïdors peta igualment a CoreContentProvider. La roda del
+   Crom del sistema ja no és a la barra negra (AH-29): viu a l'Administració
+   del sistema del Perfil (PanellCromIntegrat), i v1.2.14 retira PanellCrom.jsx
+   (D-v1213-1). La guarda de veres que la TopBar no importa la roda és
+   LaboratoriTaxonomiaDoctoral.test.jsx; ací les asserts «cap roda del crom»
+   només confirmen que esta composició no en pinta cap. */
 import { useIdentitatDeLaBarra } from './useIdentitatDeLaBarra.js';
 import { BotoIdentitatActiva } from './BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from './CalaixIdentitats.jsx';
-import { BotoCrom } from '../PanellCrom.jsx';
 
-function barraAmb({ useBarra, Crom }) {
+function barraAmb({ useBarra }) {
   return function BarraNegra({ onNavega }) {
     const { boto, calaix } = useBarra({ onNavega, etiquetaEntrar: 'Entrar' });
     return (
       <>
         <header className="bar-black">
           <div className="right-icons">
-            <Crom />
             <BotoIdentitatActiva {...boto} />
           </div>
         </header>
@@ -28,7 +31,7 @@ function barraAmb({ useBarra, Crom }) {
   };
 }
 
-const BarraNegra = barraAmb({ useBarra: useIdentitatDeLaBarra, Crom: BotoCrom });
+const BarraNegra = barraAmb({ useBarra: useIdentitatDeLaBarra });
 
 afterEach(() => {
   cleanup();
@@ -73,8 +76,8 @@ test('[DEFECTE] HMR · amb el SessionProvider d’una altra instància de Sessio
   vi.resetModules();
   const nova = await import('../../../app/contexts/SessionContext.jsx');
   vi.resetModules();
-  const [vellaBarra, vellCrom] = await Promise.all([import('./useIdentitatDeLaBarra.js'), import('../PanellCrom.jsx')]);
-  const BarraVella = barraAmb({ useBarra: vellaBarra.useIdentitatDeLaBarra, Crom: vellCrom.BotoCrom });
+  const vellaBarra = await import('./useIdentitatDeLaBarra.js');
+  const BarraVella = barraAmb({ useBarra: vellaBarra.useIdentitatDeLaBarra });
 
   let veuElProveidor;
   function Sonda() {

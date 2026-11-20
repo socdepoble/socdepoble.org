@@ -1,4 +1,6 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { User, Building2, ServerCog, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell';
@@ -232,8 +234,10 @@ function FletxaAlTauler({ onBack }) {
    per l'arrel: la fletxa ← de la capçalera torna al Tauler. Sense, el detall
    d'Usuaris i d'Entitats d'abans, byte a byte. */
 function PaginaDelDetall({ titol, onBack = null, children }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   return (
-    <aside className="perfil-detall">
+    <aside ref={arrelPerfilRef} className="perfil-detall">
       <AppGridColumn titol={titol} esquerra={onBack ? <FletxaAlTauler onBack={onBack} /> : <TornaALaLlista />} />
       {/* Decisions 261030 §7 · Dades d'altres persones: Traduir no envia res fora. */}
       <UniversalPage traduccio={false}>{children}</UniversalPage>

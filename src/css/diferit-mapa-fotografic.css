@@ -1,12 +1,14 @@
+@layer components {
 /* ═══ P1-64 · MAPA FOTOGRÀFIC DEL MUR ════════════════════════════════
    El full de MapaFotografic.jsx, que l'adopta en temps d'execució (?inline)
    a l'arrel on es munta (el document o el shadow root de <soc-de-poble>)
    darrere del full de Leaflet: arriba amb el tros diferit del mapa i mai al
-   paquet principal. Sense @layer, a propòsit: un full afegit en temps
-   d'execució que declarara una capa podria registrar-la abans que index.css i
-   capgirar l'ordre de tota la cascada. Totes les regles pengen de .sdp-mapa
-   (o de les classes pròpies de les targetes) i guanyen les de Leaflet per
-   especificitat. Només tokens: els colors del mapa són el bloc P1-64 de
+   paquet principal. Gemini R32.18 (v1.2.14) el posa dins de @layer components,
+   com els altres fulls diferits (useFullDiferit, adoptat a useLayoutEffect, quan
+   la cascada principal ja ha registrat l'ordre de capes), i el de Leaflet, dins
+   de @layer legacy: les regles del mapa guanyen les de Leaflet per capa. El bloc
+   final torna la precedència que tenia davant del Mode Sènior quan anava sense
+   capa. Només tokens: els colors del mapa són el bloc P1-64 de
    tokens.css. */
 
 .sdp-mapa {
@@ -318,4 +320,25 @@
   .sdp-mapa .leaflet-zoom-anim .leaflet-zoom-animated,
   .sdp-mapa .leaflet-fade-anim .leaflet-tile,
   .sdp-mapa .leaflet-fade-anim .leaflet-popup { transition: none; }
+}
+
+/* Gauntlet v1.2.14 (ronda 1, Llei del Píxel) · Fins a la v1.2.13 este full s'adoptava sense capa i guanyava totes les
+   regles amb capa; dins de @layer components, les de prosa i de camps de diferit-mode-senior.css (0,3,1 i 0,6,1) li
+   passaven per davant i amb el Mode Sènior el mapa canviava de lletra i d'alçada. Ací es torna la mateixa precedència
+   amb el mateix selector del Mode Sènior: (0,4,0) i (0,7,0). Verificat amb tots els estils computats contra v1.2.13. */
+:is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-mapa :is(.sdp-mapa__estat, .sdp-mapa__llegenda, .sdp-mapa__avis) {
+  font-size: var(--sdp-text-meta);
+  line-height: var(--sdp-leading-cos);
+}
+:is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-mapa .sdp-mapa__ajuda {
+  font-size: var(--sdp-text-small);
+  line-height: var(--sdp-leading-cos);
+}
+:is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-mapa .sdp-mapa-targeta__meta {
+  font-size: var(--sdp-text-meta);
+  line-height: 1.3;
+}
+:is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-camp .sdp-mapa .sdp-mapa__agrupacio .sdp-mapa__lliscador[type="range"] {
+  min-block-size: var(--sdp-touch);
+}
 }

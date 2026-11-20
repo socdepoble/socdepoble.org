@@ -894,8 +894,13 @@ export const LIMIT_DADES_OBERTES = 5000;
    unificada 1.2.13 amb el build 18: integra Codex R32.15 (definers, mèdia, federació i matriu D01–D15) i R32.16 (torns
    caducats, importació editorial i 301, motors en cèntims), Gemini R32.15 (Mode Sènior i micro-apps en cinc llengües),
    R32.16 (RSVP del Calendari, guia pas a pas i ARCHITECTURE.md) i R32.17 (resolució d'incidències CAS, safata LSSI i
-   LLEI_01 a zero), i el connector WordPress 1.1.21. */
-export const VERSIO_CLIENT_NATIU = 18;
+   LLEI_01 a zero), i el connector WordPress 1.1.21.
+   Onada v1.2.14 · Onades R32.17 i R32.18 (ordre del Mestre 20-11-2026 12:58; prompt 261120_1302) · Versió
+   unificada 1.2.14 amb el build 19: integra Codex R32.17 (constructor 301, verificació dels rebuts de Producció R32.15 i reserva
+   d'inventari idempotent, només local) i Gemini R32.18 (vocabulari tancat a zero, quatre fulls de secció a src/css, tres
+   d'ells diferits, frontmatter F2 a zero i l'arnés CDP de 78 rutes), la porta Craft Anything de paritat visual, la
+   retirada de PanellCrom.jsx (D-v1213-1, LLEI_08 a 3) i el connector WordPress 1.1.22. */
+export const VERSIO_CLIENT_NATIU = 19;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

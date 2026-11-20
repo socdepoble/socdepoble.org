@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { Alerta, AreaText, Boto, Camp } from '../../components/PedraSeca';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -66,6 +68,8 @@ function descarregaMove(move) {
  * `scopeKey` ha de canviar amb la identitat activa; buida documents i resultats.
  */
 export function PortabilitatFederada({ actorOrigen = null, scopeKey = '' }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const tr = nom => tradueix(t, TEXTOS_PORTABILITAT[nom]);
   const [origen, setOrigen] = useState(() => comJson(actorOrigen));
@@ -136,7 +140,7 @@ export function PortabilitatFederada({ actorOrigen = null, scopeKey = '' }) {
   };
 
   return <BlocPerfil titol={tr('titol')}>
-    <p className="perfil-compte__text">{tr('explica')}</p>
+    <p ref={arrelPerfilRef} className="perfil-compte__text">{tr('explica')}</p>
     <p className="perfil-compte__text">{tr('abast')}</p>
     <form onSubmit={comprova}>
       <Camp etiqueta={tr('origen')} ajuda={tr('ajudaActors')}>

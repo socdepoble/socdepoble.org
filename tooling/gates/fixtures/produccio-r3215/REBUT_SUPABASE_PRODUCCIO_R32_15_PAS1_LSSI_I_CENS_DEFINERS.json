@@ -1,0 +1,56 @@
+{
+  "schema": "sdp.r3215.pas1-produccio-receipt.v1",
+  "verifiedAt": "2026-11-19T23:11:15+01:00",
+  "environment": "Supabase Cloud Production (Postgres 17.6)",
+  "patch_lssi_r32_15_ok": true,
+  "registra_denuncia_diligent": {
+    "sig": "public.registra_denuncia_diligent(p_publicacio uuid, p_motiu text, p_detall text, p_operacio uuid)",
+    "owner": "postgres",
+    "config": ["search_path=\"\""],
+    "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+    "public_exec": false,
+    "anon_exec": true,
+    "auth_exec": true,
+    "path_buit": true,
+    "prosrc_sha256": "6f9974a0f6a46d8ca8e87e7ed617dd3eb5dbf4dfe0d8a73d61f6a6f8dc178fe9"
+  },
+  "total_definers_public_private": 136,
+  "all_definers_empty_search_path": true,
+  "seven_r32_15_fossils_preimage_verified": [
+    {
+      "sig": "public.check_market_rate_limit()",
+      "prosrc_sha256": "6f5707f66ff85992d262c9058180ad8cb3f0c1b28ebf8d90e55f0f4e55cfe242",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "sig": "public.clean_expired_push_subscriptions()",
+      "prosrc_sha256": "738e03edbf6b05979acc1efe377abaf1170e27fc5aed04308045a805c9bb34c1",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "sig": "public.log_push_notification(p_user_id uuid, p_type text, p_payload jsonb, p_success boolean, p_error text)",
+      "prosrc_sha256": "13c3ed3af2bc420ba3f00a19697c0a1e8184b2f470df35b91016d1d8199c847a",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "sig": "public.mark_messages_as_read(conv_id uuid, user_id uuid)",
+      "prosrc_sha256": "7cf96084fb24165c0d5e8275d1a9491b6460e9a1c9f8e5b64f9e1e85b8d541a2",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "sig": "public.omega_invalidate_stale_translations()",
+      "prosrc_sha256": "e5b0539b43ebc815188c0f6cc31df31992fe3477cfc8238e2496d9a12c7f1988",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "sig": "public.omega_set_default_parent_id()",
+      "prosrc_sha256": "90109206137887a8ef4c89ff7c5951c5750e9a97151fd683bd4cf2fa9874b61b",
+      "acl": "{postgres=X/postgres}"
+    },
+    {
+      "sig": "public.refresh_entity_member_map()",
+      "prosrc_sha256": "d98979ae60610521159880428d3f2df27f350513ec65d14352217aab637a3dd4",
+      "acl": "{postgres=X/postgres}"
+    }
+  ]
+}

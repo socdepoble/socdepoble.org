@@ -168,7 +168,7 @@ describe('equilibri de claus i de capes · els tres fulls grans', () => {
 describe('equilibri de claus i de capes · la resta de fulls de src', () => {
   test('n’hi ha, i són fulls de veres', () => {
     expect(RESTA.length).toBeGreaterThan(10);
-    expect(RESTA).toContain('src/components/layout/AppGridShell.css');
+    expect(RESTA).toContain('src/css/app-grid-shell.css');
   });
 
   test.each(RESTA)('%s', (rel) => {

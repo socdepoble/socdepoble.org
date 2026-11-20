@@ -7,7 +7,8 @@
     "90_historic", "90_arxiu_historic",
     "bot",
     "src/sections/*/fitxes/*.md",
-    "public/md"
+    "public/md",
+    "dist-natiu", "android/app/src/main/assets/public", "ios/App/App/public"
   ],
   "immutables": [],
   "perfils": []

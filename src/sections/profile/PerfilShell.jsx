@@ -1,5 +1,7 @@
 import { RequireAuth } from '../../app/guards/RequireAuth.jsx';
-import { Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { Eye, Lock, SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
@@ -188,6 +190,8 @@ export function accesAFitxaPublica(identitat, t = null) {
 }
 
 export function AccesFitxaPublica({ identitat, etiqueta }) {
+  const fitxaPublicaRef = useRef(null);
+  useFullDiferit(fitxaPublicaRef, 'perfil-shell', cssPerfilShell);
   const id = useId();
   const t = useTraductorOpcional();
   const { showToast } = useToast();
@@ -196,7 +200,7 @@ export function AccesFitxaPublica({ identitat, etiqueta }) {
   const etiquetaResolta = etiqueta ?? tradueix(t, TEXTOS_PERFIL_SHELL.fitxaPublica);
   const idAvis = acces.avis ? `${id}-avis` : undefined;
   return (
-    <div className="perfil-fitxa-publica">
+    <div ref={fitxaPublicaRef} className="perfil-fitxa-publica">
       {acces.avis ? (
         <p className="perfil-fitxa-publica__avis" id={idAvis} title={acces.avis.explicacio}>
           <Lock size={20} aria-hidden="true" focusable="false" />
@@ -226,6 +230,8 @@ export function AccesFitxaPublica({ identitat, etiqueta }) {
 }
 
 function PerfilManagerInner({ config, aplicacions, preferides, vista = null, recuperacio = null, connexio, etiquetaFitxaPublica }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const { showToast } = useToast();
   const {
     identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error, ambMembres,
@@ -431,7 +437,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
   /* Abans: pantalla buida i enganyosa mentre carregava. Ara: explícit. */
   if (carregant) {
     return (
-      <div className="sdp-gestor-pagina perfil-pagina">
+      <div ref={arrelPerfilRef} className="sdp-gestor-pagina perfil-pagina">
         <p className="perfil-detall-buit">{tradueix(t, TEXTOS_PERFIL_SHELL.carregant)}</p>
       </div>
     );
@@ -439,7 +445,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
 
   if (error) {
     return (
-      <div className="sdp-gestor-pagina perfil-pagina">
+      <div ref={arrelPerfilRef} className="sdp-gestor-pagina perfil-pagina">
         <div className="sdp-buit" role="alert">
           <p>{error}</p>
           {/* Sense reintent, la persona perdia també «El compte» i «Privacitat i dades». */}
@@ -452,7 +458,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
   /* .perfil-pagina és l'àmbit dels botons del Perfil (PerfilShell.css): la
      porten les tres eixides, i el diàleg de NOVA ORG en queda dins. */
   return (
-    <div className="sdp-gestor-pagina perfil-pagina">
+    <div ref={arrelPerfilRef} className="sdp-gestor-pagina perfil-pagina">
       <ControlModeSenior variantFranja="perfil" />
       <UniversalWorkspace
         key={vista === VISTA_IMPORTACIO ? 'perfil-importacio' : vista === VISTA_COMPTE ? 'perfil-compte' : 'perfil'}

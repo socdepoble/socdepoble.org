@@ -19,7 +19,7 @@ const vegades = (text, tros) => text.split(tros).length - 1;
 const { estret, plegada, detall, eines, compacte } = PUNTS_DE_TALL;
 
 describe('AppGridShell.css', () => {
-  const css = llig('src/components/layout/AppGridShell.css');
+  const css = llig('src/css/app-grid-shell.css');
 
   test('el rail plegat és PUNTS_DE_TALL.plegada, declarat una sola vegada', () => {
     expect(css).toContain(`--app-grid-col-collapsed: ${plegada}px;`);

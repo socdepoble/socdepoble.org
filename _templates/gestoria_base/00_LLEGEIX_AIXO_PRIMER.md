@@ -1,7 +1,7 @@
 ---
-estat: "plantilla"
-tipus: "manual"
-description: "Instruccions per a inicialitzar la Gestoria de Poble."
+type: plantilla
+status: canonic
+description: "Instruccions canòniques d'inicialització segura i privacitat per a la Gestoria de Poble amb Obsidian."
 ---
 # 🛑 ATENCIÓ: LLEGEIX AÇÒ PRIMER
 
@@ -49,3 +49,7 @@ Ves a les Opcions de **Notebook Navigator**:
 > Amb aquesta configuració, el teu Cervell Digital parlarà el mateix idioma que la matriu de Sóc de Poble.
 
 *Sóc de Poble - Trellat i Pedra Seca.*
+
+## Vincles
+
+- [[00_index]]

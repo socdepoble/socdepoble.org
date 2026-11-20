@@ -4,9 +4,10 @@
  * Pla 261028_1526 §3.7.1 (Bloc G) i decisions 1 i 9 del Mestre (261028).
  * MurSection el carrega en diferit (React.lazy) només quan s'obri la pestanya
  * «Mapa», i Leaflet 1.9.4 arriba amb un import() dins d'un efecte: cap byte
- * del mapa viatja amb el Mur fins que es demana. El full de Leaflet i el propi
- * (MapaFotografic.css) s'adopten a l'arrel on es munta (el document o el
- * shadow root de <soc-de-poble>), amb la regla d'aplicaEstil.js.
+ * del mapa viatja amb el Mur fins que es demana. El full de Leaflet (dins de
+ * @layer legacy) i el propi (css/diferit-mapa-fotografic.css, @layer components,
+ * amb useFullDiferit) s'adopten a l'arrel on es munta (el document o el shadow
+ * root de <soc-de-poble>).
  *
  * QUÈ ES VEU
  *   · Els punts i les targetes, sempre, sobre un fons neutre i amb el nom dels
@@ -35,9 +36,10 @@
  * Una fallada (Leaflet que no carrega, un error de pintura) puja a la barrera
  * de MurSection, que torna al mapa de sempre.
  */
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import estilDeLeaflet from 'leaflet/dist/leaflet.css?inline';
-import estilDelMapa from './MapaFotografic.css?inline';
+import estilDelMapa from '../../css/diferit-mapa-fotografic.css?inline';
+import { useFullDiferit } from '../../config/fullDiferit.js';
 import { Boto, VisorImatges } from '../../components/PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { esAppNativa } from '../../config/origenPublic.js';
@@ -130,14 +132,14 @@ function desaPosicions(conjunt, posicions) {
   } catch { /* sense emmagatzematge, les posicions duren la visita */ }
 }
 
-/* ═══ ELS FULLS: el de Leaflet i el del mapa, una vegada per arrel ══ */
+/* ═══ EL FULL DE LEAFLET (dins de @layer legacy), una vegada per arrel; el del mapa l'adopta useFullDiferit ══ */
 
 const ARRELS_AMB_FULL = new WeakSet();
 
 function adoptaFulls(element) {
   const arrel = (typeof element?.getRootNode === 'function' ? element.getRootNode() : null) || document;
   if (ARRELS_AMB_FULL.has(arrel)) return;
-  const css = `${estilDeLeaflet}\n${estilDelMapa}`;
+  const css = `@layer legacy {\n${estilDeLeaflet}\n}`;
   const potAdoptar = typeof CSSStyleSheet === 'function' && typeof CSSStyleSheet.prototype.replaceSync === 'function'
     && 'adoptedStyleSheets' in arrel;
   if (potAdoptar) {
@@ -756,6 +758,11 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
   const idLliscador = useId();
   const idEtiqueta = useId();
   const idAjuda = useId();
+
+  useLayoutEffect(() => {
+    adoptaFulls(arrelRef.current);
+  }, []);
+  useFullDiferit(arrelRef, 'mapa-fotografic', estilDelMapa);
 
   useEffect(() => {
     let viu = true;

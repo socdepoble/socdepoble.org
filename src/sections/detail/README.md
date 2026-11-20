@@ -1,7 +1,7 @@
 ---
-estat: "canonic"
-tipus: "index"
-description: "Documentació canònica de Sóc de Poble."
+type: index
+status: canonic
+description: "Índex de la capa compartida de fitxes, helpers de detall i renderitzat de contingut ric a src/sections/detail."
 ---
 # `src/sections/detail`
 
@@ -29,6 +29,6 @@ Regla pràctica:
 - si només canvien les dades del contingut, toca la secció o la capa de dades corresponent.
 
 
----
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
+- [[00_index]]

@@ -137,8 +137,8 @@ describe('P1-28 · PS-02 · el placeholder dels camps', () => {
      (AppGridShell.css, CSS sense consumidor JSX), amb els tokens --sdp-crom-*
      i el seu bloc Bancal. Clau: «ruta|color». Cap altre full no hi entra. */
   const EXCEPCIONS_DE_COLOR = new Set([
-    'src/components/layout/AppGridShell.css|var(--sdp-crom-text-suau)',
-    'src/components/layout/AppGridShell.css|var(--sdp-crom-text)'
+    'src/css/app-grid-shell.css|var(--sdp-crom-text-suau)',
+    'src/css/app-grid-shell.css|var(--sdp-crom-text)'
   ]);
   /* ::placeholder i els prefixos (::-webkit-input-, ::-moz-, :-ms-input-),
      però no :placeholder-shown ni [data-placeholder]. Lineal: cap grup niat. */

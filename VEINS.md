@@ -26,3 +26,7 @@ Si necessites informació d'un veí (ex. models de dades de gestoria per fer un 
 4. Deixa constància al `LEDGER.md` que has accedit a un domini veí.
 
 *Nota per a crear un portal: Cada veí ha de tindre el seu `00_PORTAL.md` descrivint què hi ha, qui n'és responsable, i per a què s'usa.*
+
+## Vincles
+
+- [[00_index]]

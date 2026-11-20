@@ -1444,6 +1444,12 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
     assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R30)`);
   }
   assert.ok(modulsDArrencada.has('src/data/revisionsEditorialsDelNavegador.js'), 'la fulla del navegador viatja a l\'arrencada (R30)');
+  /* Gauntlet v1.2.14 R2b · La crònica FITA_R32_18 diu que els estils del Perfil ixen de l'arrencada i que els de les
+     aplicacions només «s'apliquen» quan s'hi entra (BarraApp.jsx els importa dins del graf estàtic d'App.jsx). Si el
+     fet canvia en qualsevol sentit, el text de /versions ha de canviar amb ell. */
+  const viatjaALArrencada = (rel) => [...modulsDArrencada].some((m) => m === rel || m.startsWith(`${rel}?`));
+  assert.ok(!viatjaALArrencada('src/css/diferit-perfil-shell.css'), 'el full del Perfil no viatja a l\'arrencada estàtica');
+  assert.ok(viatjaALArrencada('src/css/diferit-apps-plataforma.css'), 'el full de les aplicacions viatja a l\'arrencada: la crònica diu «s\'apliquen», no «arriben»');
   assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
     'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));

@@ -24,15 +24,15 @@ const BLOC_CATALEG = 'src/css/modules.css · bloc catalegColleccio';
 const lligBloc = () => llig('src/css/diferit-cataleg-colleccio.css');
 const RUTES = [
   'src/css/layout.css',
-  'src/components/layout/AppGridShell.css',
+  'src/css/app-grid-shell.css',
   'src/css/sdp.css',
   'src/css/utilities.css',
-  'src/sections/profile/PerfilShell.css',
+  'src/css/diferit-perfil-shell.css',
   BLOC_CATALEG
 ];
 const CSS = Object.fromEntries(RUTES.map((ruta) => [ruta, senseComentaris(ruta === BLOC_CATALEG ? lligBloc('catalegColleccio') : llig(ruta))]));
 const LAYOUT = CSS['src/css/layout.css'];
-const GRAELLA = CSS['src/components/layout/AppGridShell.css'];
+const GRAELLA = CSS['src/css/app-grid-shell.css'];
 /* base.css (mateixa capa `legacy`, abans que layout.css) porta l'anell de
    focus de la closca, barra mòbil inclosa, i l'apagador de moviment reduït. */
 const BASE = senseComentaris(llig('src/css/base.css'));
@@ -374,7 +374,7 @@ describe('Mode Bancal (Q1) · cap translucidesa sobre la roca', () => {
 describe('controls amb rètol blanc (Q1) · AAA en repòs i en hover', () => {
   const CONTROLS = [
     [regles(GRAELLA), '.app-grid-col-header__accio'],
-    [regles(CSS['src/sections/profile/PerfilShell.css']), ':where(.perfil-pagina) .sdp-boto']
+    [regles(CSS['src/css/diferit-perfil-shell.css']), ':where(.perfil-pagina) .sdp-boto']
   ];
   test.each(TEMES)('en %s: el botó de capçalera de columna i el botó del Perfil fan 7:1 o més', (_nom, t) => {
     for (const [llista, selector] of CONTROLS) {

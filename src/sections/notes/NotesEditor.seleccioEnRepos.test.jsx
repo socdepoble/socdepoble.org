@@ -167,7 +167,7 @@ const esEnEdicio = ({ titol, subtitol, entradilla, cos }) => {
    dels fulls de l'App, sense comentaris, @media ni @layer. jsdom no aplica
    els fulls: es comprova que cap regla no casa amb el text ni amb cap dels
    seus avantpassats. */
-const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/utilities.css', 'src/sections/mur/MapaFotografic.css'];
+const FULLS = ['src/css/modules.css', 'src/css/components.css', 'src/css/utilities.css', 'src/css/diferit-mapa-fotografic.css'];
 function selectorsSenseSeleccio() {
   const selectors = [];
   for (const full of FULLS) {

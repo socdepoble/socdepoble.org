@@ -167,7 +167,7 @@ describe('R1 · el CSS de la cadena detall → closca → document → scroll �
   };
 
   test('el detall del Perfil no fa scroll: overflow hidden, una sola regla, sense :has()', () => {
-    const perfil = llig('src/sections/profile/PerfilShell.css');
+    const perfil = llig('src/css/diferit-perfil-shell.css');
     expect(perfil.match(/\.perfil-espai \.perfil-espai__detall \{/g)).toHaveLength(1);
     expect(bloc(perfil, '.perfil-espai .perfil-espai__detall')).toEqual(['overflow: hidden']);
     expect(perfil).not.toMatch(/:has\(/);

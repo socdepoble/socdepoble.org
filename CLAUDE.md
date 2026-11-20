@@ -1,3 +1,10 @@
+---
+type: document
+status: canonic
+description: "Carregador d'arrencada i protocol de reflex de correcció per a l'agent local Claude Code."
+---
+# CLAUDE.md — Arrencada de Claude Code
+
 @.agents/QUI_SOC.md
 @.agents/ON_ESTIC.md
 @AGENTS.md
@@ -5,7 +12,8 @@
 @.agents/skills/wiki-documentacio-i-reflex/SKILL.md
 @.agents/skills/sdp-workflow/SKILL.md
 
-REFLEX DE CORRECCIÓ
+## Reflex de Correcció
+
 Quan el Mestre corregisca una conducta (no un bug de codi, sinó un HÀBIT):
 1. ATURA la resposta. No contestes encara.
 2. ESCRIU la lliçó a .agents/skills/<skill-afectada>/SKILL.md dins de la secció
@@ -16,3 +24,7 @@ Quan el Mestre corregisca una conducta (no un bug de codi, sinó un HÀBIT):
 Si no saps quina skill toca, crea .agents/skills/skill-llicons-pendents/SKILL.md.
 Si el Mestre repeteix una correcció ja anotada, és una FALLA DE CÀRREGA, no
 d'aprenentatge: registra-la al LEDGER com a "recaiguda" i revisa l'ancoratge de les skills.
+
+## Vincles
+
+- [[00_index]]

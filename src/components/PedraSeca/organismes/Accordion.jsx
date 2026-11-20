@@ -4,6 +4,11 @@
  */
 import { useState } from 'react';
 
+const CLASSES_FLETXA_ACCORDION = Object.freeze({
+  obert: 'accordion-item__fletxa accordion-item__fletxa--obert',
+  tancat: 'accordion-item__fletxa',
+});
+
 export function Accordion({ children, className = '' }) {
   return <div className={`accordion ${className}`}>{children}</div>;
 }
@@ -20,7 +25,7 @@ export function AccordionItem({ title, children, defaultOpen = false, className 
       >
         <span>{title}</span>
         <svg
-          className={`accordion-item__fletxa${isOpen ? ' accordion-item__fletxa--obert' : ''}`}
+          className={isOpen ? CLASSES_FLETXA_ACCORDION.obert : CLASSES_FLETXA_ACCORDION.tancat}
           fill="none" height="20" stroke="currentColor" strokeLinecap="round"
           strokeLinejoin="round" strokeWidth="2" viewBox="0 0 20 20" width="20"
           aria-hidden="true" focusable="false"

@@ -16,7 +16,7 @@ import { expect, test } from 'vitest';
    davall). */
 const net = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
-const graella = net('src/components/layout/AppGridShell.css');
+const graella = net('src/css/app-grid-shell.css');
 const fullsCss = (dir) => readdirSync(resolve(process.cwd(), dir), { withFileTypes: true }).flatMap((entrada) => {
   const ruta = join(dir, entrada.name);
   if (entrada.isDirectory()) return fullsCss(ruta);

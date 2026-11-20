@@ -40,7 +40,9 @@
  *   · Les rutes de columnes no porten cap classe pròpia ni cap píxel nou: la
  *     geometria és la d'AppGridShell. L'única classe pròpia és la de l'àrea.
  */
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssAppsPlataforma from '../../css/diferit-apps-plataforma.css?inline';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell.jsx';
@@ -109,6 +111,8 @@ function PanellEstret({ columna }) {
  * `titols`: { esquerra, mig } per als separadors de les columnes.
  */
 export function ClosaAplicacio({ rutes, titols = {} }) {
+  const unicaAppsRef = useRef(null);
+  useFullDiferit(unicaAppsRef, 'apps-plataforma', cssAppsPlataforma);
   const { manifest } = useApp();
   /* Fase D (261020, tasca 4.1) · L1 · El títol seguix la llengua del text, no la demanada. */
   const { language, llenguaDelText = language } = useUIState();
@@ -154,7 +158,7 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
       <IdiomaClosa.Provider value={llenguaDelText || 'ca'}>
         <AvisBetaClosa.Provider value={manifest.avisBeta || 'general'}>
           {capcalera}
-          <div className="sdp-app-unica" role="region" aria-label={titol}>
+          <div ref={unicaAppsRef} className="sdp-app-unica" role="region" aria-label={titol}>
             <Unica params={params} />
           </div>
         </AvisBetaClosa.Provider>

@@ -356,7 +356,7 @@ describe('les regles · modules.css', () => {
 
   test('el token de grup de la roca conserva el seu cens de dos usos (jerarquiaBarraLateral)', () => {
     expect(usosDe(GRUP)).toEqual([
-      'src/apps/plataforma/apps.css: .sdp-app-barra__grup { color }',
+      'src/css/diferit-apps-plataforma.css: .sdp-app-barra__grup { color }',
       'src/css/layout.css: nav.app-sidebar .nav-item--desplegable { color }'
     ]);
   });

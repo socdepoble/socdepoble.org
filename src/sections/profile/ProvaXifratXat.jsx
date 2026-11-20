@@ -1,6 +1,8 @@
 /** FEDI-07 · Laboratori opt-in: primitives reals, identitats de mostra i
  * estat efímer. No importa el servei del backend ni canvia la bandera E2EE. */
 import { useEffect, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { Alerta, Boto, Camp, CampText } from '../../components/PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
@@ -45,6 +47,8 @@ const TEXTOS_COS_MOSTRA = Object.freeze({
 });
 
 export default function ProvaXifratXat({ cripto } = {}) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const tr = (parell, valors = {}) => omple(tradueix(t, parell), valors);
   const sessio = useRef(null);
@@ -96,7 +100,7 @@ export default function ProvaXifratXat({ cripto } = {}) {
   }));
   return (
     <BlocPerfil titol={tr(TEXTOS_PROVA_XIFRAT.titol)}>
-      <p className="perfil-compte__text">{tr(TEXTOS_PROVA_XIFRAT.explica)}</p>
+      <p ref={arrelPerfilRef} className="perfil-compte__text">{tr(TEXTOS_PROVA_XIFRAT.explica)}</p>
       <p className="perfil-compte__text">{tr(TEXTOS_PROVA_XIFRAT.limit)}</p>
       {error ? <Alerta to="error">{tr(TEXTOS_PROVA_XIFRAT.error)}</Alerta> : null}
       <div className="sdp-alerta__accions perfil-compte__accions">

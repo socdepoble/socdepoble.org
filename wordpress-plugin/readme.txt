@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.21
+Stable tag: 1.1.22
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.22 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.14 de Sóc de Poble, la que explica la seua pàgina «Versions»: les mateixes pantalles, amb els estils del Perfil i de les aplicacions aplicats només quan s'hi entra.
+* **Menys estils en arrencar:** dins d'una pàgina de WordPress, el visor arrenca amb menys estils aplicats; la pantalla es veu igual que abans.
+
 = 1.1.21 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.13 de Sóc de Poble, la que explica la seua pàgina «Versions»: el Mode Sènior de lectura gran d'un sol toc, el Calendari amb «Assistiré, Potser o No assistiré» i la guia pas a pas en cinc llengües.
 * **Miniatures del Xat dins de WordPress:** la previsualització d'un enllaç intern del Xat troba la seua imatge també quan el visor s'allotja en un WordPress.
@@ -246,6 +250,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.22 =
+Visor al dia amb la versió 1.2.14 de Sóc de Poble: les mateixes pantalles, amb els estils del Perfil i de les aplicacions aplicats només quan s'hi entra.
 
 = 1.1.21 =
 Visor al dia amb la versió 1.2.13 de Sóc de Poble: el Mode Sènior de lectura gran, el Calendari amb tres respostes d'assistència, la guia pas a pas i les miniatures del Xat dins de WordPress.

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { FONTS_PRODUCCIO_R3215 } from '../tooling/gates/verifica-rebut-produccio-r3215.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -41,6 +42,7 @@ function snapshot(root) {
 function copyReceipt(root) {
   const source = fileURLToPath(new URL('../tooling/gates/fixtures/produccio-r3214', import.meta.url));
   fs.cpSync(source, path.join(root, 'tooling/gates/fixtures/produccio-r3214'), { recursive: true });
+  for (const { ruta } of FONTS_PRODUCCIO_R3215) { const target = path.join(root, ruta); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.copyFileSync(fileURLToPath(new URL('../' + ruta, import.meta.url)), target); }
 }
 function probes(root) {
   for (const p of PROVES_MATRIU) { const f = path.join(root, p.args.find(a => !a.startsWith('-'))); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, '// immutable fixture\n'); }
@@ -129,13 +131,13 @@ test('cada sonda té timeout acotat, SIGKILL i error ETIMEDOUT inequívoc; stdou
     assert.ok(Number.isSafeInteger(opts.timeout) && opts.timeout >= 1000 && opts.timeout <= 120000);
     assert.equal(opts.timeout, p.timeoutMs); assert.equal(opts.killSignal, 'SIGKILL'); assert.equal(opts.shell, false); seen.push(p.id); return good(args);
   } });
-  assert.equal(ok.valid, true); assert.equal(new Set(seen).size, 16); assert.equal(ok.rebutsProduccio.valid, true);
+  assert.equal(ok.valid, true); assert.equal(new Set(seen).size, 17); assert.equal(ok.rebutsProduccio.valid, true);
   const timeout = avaluaMatriu(root, { ara: NOW, executa: args => ({ ...good(args), error: Object.assign(new Error('expired'), { code: 'ETIMEDOUT' }), signal: 'SIGKILL', status: null }) });
   assert.equal(timeout.valid, false); assert.equal(timeout.resum.senyalsVerificats, 0);
   assert.ok(timeout.proves.every(p => p.motiu === 'temps_sonda_exhaurit' && p.codiError === 'ETIMEDOUT'));
   fs.appendFileSync(path.join(root, REBUT_PRODUCCIO_R3214.receipt), ' ');
   const tampered = avaluaMatriu(root, { ara: NOW, executa: good });
-  assert.equal(tampered.resum.senyalsVerificats, 16); assert.equal(tampered.rebutsProduccio.valid, false); assert.equal(tampered.valid, false);
+  assert.equal(tampered.resum.senyalsVerificats, 17); assert.equal(tampered.rebutsProduccio.valid, false); assert.equal(tampered.valid, false);
 });
 
 function abandonedDocument(t) {

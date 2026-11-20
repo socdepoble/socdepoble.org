@@ -444,8 +444,9 @@ test('qualitat · cap classe forastera ni opaca nova als fitxers de la interfíc
   expect(vocab.size).toBeGreaterThan(1000);
   for (const classe of ['sdp-text-exit', 'sdp-camp__error', 'sdp-buit', 'sdp-alerta__accions']) expect(vocab.has(classe), classe).toBe(true);
   expect(vocab.has('classe-que-no-existix')).toBe(false);
-  /* Onada R30 · T3-VOC · V1 ja és a zero: la sonda és el deute admés del JSX (V2, classe-opaca). */
-  expect(infraccions.some((i) => /^classe-(forastera|opaca)$/.test(i.regla) && admesa(i))).toBe(true);
+  /* Onada R32.18 · V1, V2 i V3 a zero absolut en tot el repositori (DEUTE = {}). */
+  expect(DEUTE).toEqual({});
+  expect(infraccions).toEqual([]);
 }, 120000);
 
 test('qualitat · ESLint sense cap missatge als fitxers de la interfície del grup C (i les seues proves)', async () => {

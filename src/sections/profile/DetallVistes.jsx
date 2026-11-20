@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import DocumentPrintPreview from '../../components/universal/DocumentPrintPreview.jsx';
@@ -25,6 +27,8 @@ export const TEXTOS_DETALL_VISTES = Object.freeze({
 });
 
 export function DetallVistes({ identitat }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const { autodesament, identitats } = usePerfil() || {};
   const mena = menaDeFitxa(identitat);
@@ -72,7 +76,7 @@ export function DetallVistes({ identitat }) {
         authorHref: rutaFitxa,
       }}
     >
-      <div className="perfil-compte perfil-vistes">
+      <div ref={arrelPerfilRef} className="perfil-compte perfil-vistes">
         <Bloc titol={tradueix(t, TEXTOS_DETALL_VISTES.a4Titol)}>
           <p className="perfil-compte__text">
             {tradueix(t, TEXTOS_DETALL_VISTES.a4Text)}

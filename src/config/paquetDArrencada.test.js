@@ -75,7 +75,7 @@ describe('trossDArrencada (vite.config.js)', () => {
     ['/x/node_modules/@tiptap/core/dist/index.js', null],
     ['/x/node_modules/some-pkg/node_modules/react/index.js', 'react'],
     ['/x/src/css/index.css', null],
-    ['/x/src/sections/mur/MapaFotografic.css?inline', null],
+    ['/x/src/css/diferit-mapa-fotografic.css?inline', null],
     ['/x/src/config/idiomes/es.js', null],
     ['/x/src/data/wikiManifest.js', null],
     ['\0vite/preload-helper.js', null]

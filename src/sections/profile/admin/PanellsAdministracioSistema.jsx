@@ -20,7 +20,7 @@ export function PanellBotiguesVerificadors() {
 }
 
 /* La mostra de color es pinta per DOM (la propietat --sdp-crom-mostra només s'accepta si és un HEX6);
-   el Design Guard no admet style en línia fora de PanellCrom.jsx. */
+   el Design Guard no admet cap style en línia ací (l'única exempció era PanellCrom.jsx, retirat en v1.2.14). */
 function pintaMostraCrom(el, hex) {
   if (!el) return;
   if (typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex)) el.style.setProperty('--sdp-crom-mostra', hex);

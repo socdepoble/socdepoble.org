@@ -32,10 +32,9 @@
     "coneguts": []
   },
   "LLEI_08_SUBARBRE_ORFE": {
-    "max": 4,
+    "max": 3,
     "coneguts": [
       "src/components/PedraSeca/hooks/useTraduccioTargeta.js",
-      "src/components/universal/PanellCrom.jsx",
       "src/sections/onboarding/ProvaCorreuAmbContrasenya.jsx",
       "src/sections/onboarding/correuBenvinguda.js"
     ]

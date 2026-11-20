@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { LogOut } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
@@ -146,6 +148,8 @@ export function DetallAplicacio({ aplicacio }) {
      al Panell no pinta el bloc de la preferència: «Ocultar del Panell» no
      tindria res a ocultar, i ací no hi ha cap botó que no faça res. Els
      hooks es queden incondicionals; sense bloc, ningú escriu res. */
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const alPanell = aplicacio?.panell !== null;
   const id = aplicacio?.panell || aplicacio?.id;
   const [activa, setActiva] = useState(() => estaAlPanell(id));
@@ -179,7 +183,7 @@ export function DetallAplicacio({ aplicacio }) {
       {...datesDAplicacio(aplicacio)}
       topBarData={AUTORIA_NODE}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         <Bloc titol="Estat">
           {connectada ? <EstatDeLaConnectada aplicacio={aplicacio} /> : (
             <>
@@ -219,6 +223,8 @@ export function DetallAplicacio({ aplicacio }) {
 
 /** «GRUPS I EMPRESES» sense cap organització: com se'n crea una. */
 export function DetallSenseOrganitzacions({ persona }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   return (
     <UniversalPage
       chrome="context"
@@ -229,7 +235,7 @@ export function DetallSenseOrganitzacions({ persona }) {
       {...dataDeFila(persona?.dades)}
       topBarData={autoriaDeLaPersona(persona)}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         <Bloc titol="Com se’n crea una">
           <p className="perfil-compte__text">
             Una empresa o un grup té la seua pròpia fitxa i el seu compte, al costat dels teus.
@@ -247,6 +253,8 @@ export function DetallSenseOrganitzacions({ persona }) {
  * cap botó. `etiquetaEstat` és l'estat dit amb paraules, per al lector.
  */
 export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   return (
     <UniversalPage
       chrome="context"
@@ -258,7 +266,7 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
       {...dataDeFila(persona?.dades)}
       topBarData={autoriaDeLaPersona(persona)}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         <Bloc titol="Connexió d’ara">
           <LlistaNodes nodes={nodes} estat={estat} etiquetaEstat={etiquetaEstat} />
           <p className="perfil-compte__text">
@@ -364,6 +372,8 @@ const TEXTOS_DETALL_EIXIR = Object.freeze({
  * personals d'/el-meu-perfil: canvi d'idioma en un sol clic i enllaç a /traduccions.
  */
 export function DetallIdioma({ persona }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const estatUI = useEstatUISegur();
   const accionsUI = useAccionsUISegures();
@@ -386,7 +396,7 @@ export function DetallIdioma({ persona }) {
       {...dataDeFila(persona?.dades)}
       topBarData={autoriaDeLaPersona(persona)}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         <Bloc titol={tradueix(t, ['nav.idiomaTitle', 'Tria un idioma'])}>
           <GrupOpcions
             llegenda={tradueix(t, ['section.translations.pick', 'Selecciona un idioma'])}
@@ -413,6 +423,8 @@ export function DetallIdioma({ persona }) {
  * «🚪 Eixir de Sóc de Poble», amb comprovació prèvia d'esborranys pendents.
  */
 export function DetallEixir({ persona }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const estatUI = useEstatUISegur();
   const codiLlengua = estatUI?.language || llenguaDelTraductor(t);
@@ -478,7 +490,7 @@ export function DetallEixir({ persona }) {
       {...dataDeFila(persona?.dades)}
       topBarData={autoriaDeLaPersona(persona)}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         <Bloc titol={textos.bloc}>
           <p className="perfil-compte__text">{textos.cos}</p>
           {pendents ? (

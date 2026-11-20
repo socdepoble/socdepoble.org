@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
-const css = readFileSync(path.join(process.cwd(), 'src/apps/plataforma/apps.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const css = readFileSync(path.join(process.cwd(), 'src/css/diferit-apps-plataforma.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const declaracions = (selector) => {
   const regles = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, sel]) => sel.trim() === selector);
   expect(regles, selector).toHaveLength(1);

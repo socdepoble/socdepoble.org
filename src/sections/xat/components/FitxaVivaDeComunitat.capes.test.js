@@ -30,7 +30,7 @@ function valor(text, selector, propietat) {
   return trobat;
 }
 
-const graella = full('src/components/layout/AppGridShell.css');
+const graella = full('src/css/app-grid-shell.css');
 const utilitats = full('src/css/utilities.css');
 const modules = full('src/css/modules.css');
 

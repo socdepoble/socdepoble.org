@@ -1,0 +1,60 @@
+{
+  "schema": "sdp.r3215.produccio-completa-receipt.v1",
+  "verifiedAt": "2026-11-19T23:22:12+01:00",
+  "environment": "Supabase Cloud Production (Postgres 17.6)",
+  "pas1_patch_lssi_r32_15_ok": true,
+  "pas2_7_definers_blindats_ok": true,
+  "tots_136_search_path_buit": true,
+  "registra_denuncia_diligent_sha256": "6f9974a0f6a46d8ca8e87e7ed617dd3eb5dbf4dfe0d8a73d61f6a6f8dc178fe9",
+  "postimatges_7_definers": [
+    {
+      "sig": "public.check_market_rate_limit()",
+      "prosrc_sha256": "0d0bb652a4090ab4098b841a2914402cf954a30af694e26e8a49b055f344ec4a",
+      "acl": "{postgres=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.clean_expired_push_subscriptions()",
+      "prosrc_sha256": "48c45d8c2823e5910ecd88b56fcd8e7d550b7aa6d3e7d58181861b194e6f6627",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.log_push_notification(p_user_id uuid, p_type text, p_payload jsonb, p_success boolean, p_error text)",
+      "prosrc_sha256": "531a47e2eb51466f672f4a1c4546e3a69a340596cd8fbead0bfc97e429ab6400",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.mark_messages_as_read(conv_id uuid, user_id uuid)",
+      "prosrc_sha256": "a6b04887c6700c2f2434c71f87a7d75a6a1dec12e39d415859ba4787314d93f8",
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.omega_invalidate_stale_translations()",
+      "prosrc_sha256": "e5b0539b43ebc815188c0f6cc31df31992fe3477cfc8238e2496d9a12c7f1988",
+      "acl": "{postgres=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.omega_set_default_parent_id()",
+      "prosrc_sha256": "90109206137887a8ef4c89ff7c5951c5750e9a97151fd683bd4cf2fa9874b61b",
+      "acl": "{postgres=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    },
+    {
+      "sig": "public.refresh_entity_member_map()",
+      "prosrc_sha256": "d98979ae60610521159880428d3f2df27f350513ec65d14352217aab637a3dd4",
+      "acl": "{postgres=X/postgres}",
+      "anon_exec": false,
+      "public_exec": false
+    }
+  ]
+}

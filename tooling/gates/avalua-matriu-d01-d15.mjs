@@ -8,6 +8,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { verificaRebutProduccioR3214 } from './verifica-rebut-produccio-r3214.mjs';
+import { verificaRebutProduccioR3215 } from './verifica-rebut-produccio-r3215.mjs';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 
 const testArgs = file => ['--test','--test-reporter=tap',file];
@@ -27,13 +28,14 @@ export const PROVES_MATRIU = Object.freeze([
   {id:'contrast',timeoutMs:30000,args:testArgs('tests/contrast-aaa.test.mjs'),tests:true,limit:'Contrastos resolubles sense DOM; no certifica WCAG completa, lector de pantalla ni 320px real.'},
   {id:'offline',timeoutMs:60000,args:testArgs('tests/cua-operacions-offline.test.mjs'),tests:true,limit:'Convergència en fixtures locals; no simula tots els dispositius, xarxes ni corrupció física.'},
   {id:'consola',timeoutMs:60000,args:['tooling/gates/tractor-consola-neta.mjs','--json'],json:true,limit:'Motor local amb els torns presents i el rellotge declarat; no acredita instal·lació de dimonis ni el catàleg del viu.'},
+  {id:'rebuts-r3215',timeoutMs:30000,args:['tooling/gates/verifica-rebut-produccio-r3215.mjs','--json'],json:true,limit:'Integritat SHA-256 dels rebuts humans R32.15 i correspondència SQL; sense firma d’autoria ni connexió directa a Producció.'},
   {id:'arrel',timeoutMs:30000,args:['tooling/gates/tractor-arrel.mjs','--json'],json:true,limit:'Integritat de punts d’entrada; no substituïx Vitest, NodeALL, ESLint ni benchmark de producció.'}
 ].map(p=>Object.freeze({...p,args:Object.freeze(p.args)})));
 
 const DIMENSIONS = [
   ['D01',['doctrina']],['D02',['vocabulari']],['D03',['llengues']],
-  ['D04',['rls','definers']],['D05',['rls','definers']],['D06',['arrencada']],['D07',['federacio']],
-  ['D08',['xat']],['D09',['persistencia']],['D10',['social']],
+  ['D04',['rls','definers','rebuts-r3215']],['D05',['rls','definers','rebuts-r3215']],['D06',['arrencada']],['D07',['federacio']],
+  ['D08',['xat']],['D09',['persistencia']],['D10',['social','rebuts-r3215']],
   ['D11',['media-porta']],['D12',['contrast']],['D13',['offline']],
   ['D14',['consola']],['D15',['redireccions','arrel']]
 ];
@@ -41,7 +43,7 @@ const EXTERNS = Object.freeze([
   {id:'apple-testflight',dimensions:['D06','D15'],motiu:'Credencials SDP_ASC_* i verificació TestFlight amb dispositiu. No llegides ni comprovades.'},
   {id:'google-play',dimensions:['D06','D15'],motiu:'Service Account Google Play i prova del lliurament real. No llegits ni comprovats.'},
   {id:'push-fisic',dimensions:['D09','D13','D15'],motiu:'Claus FCM/APNs i recepció en dispositius físics. No llegides ni comprovades.'},
-  {id:'sql-produccio',dimensions:['D04','D05','D08'],motiu:'Rebut R32.14 aportat verificat separadament per SHA-256; P2 registra_denuncia_diligent i blindatge dels 7 definers R32.15 continuen pendents. Les fixtures locals no acrediten SQL posterior en Producció.'},
+  {id:'sql-produccio',dimensions:['D04','D05','D08'],motiu:'Estat actual de Supabase no consultat directament. Els rebuts humans R32.14/R32.15 s’avaluen separadament per SHA-256 i no equivalen a una connexió en viu ni acrediten canvis posteriors.'},
   {id:'sollutia',dimensions:['D07','D13'],motiu:'Endpoints reals i credencials de Sollutia, sense xarxa externa en esta execució.'},
   {id:'federacio-remota',dimensions:['D07','D13'],motiu:'Interoperabilitat real, transport amb IP fixada i entrega remota encara requerixen validació de desplegament.'}
 ]);
@@ -87,7 +89,12 @@ function resultat(prova, raw) {
 export function avaluaMatriu(root, { ara = Date.now(), executa = (args,opts)=>spawnSync(process.execPath,args,opts) } = {}) {
   if(!Number.isSafeInteger(ara)||!Number.isFinite(new Date(ara).getTime()))throw Error('MATRIU_RELLOTGE_INVALID');
   const base=fs.realpathSync(root), proves=[];
-  const rebutsProduccio=verificaRebutProduccioR3214(base);
+  const rebutR3214=verificaRebutProduccioR3214(base), rebutsProduccioR3215=verificaRebutProduccioR3215(base);
+  // R32.14 keeps its historical scope. A later attestation resolves its two
+  // omissions only at receipt level; it never promotes them to a live check.
+  const rebutsProduccio={...rebutR3214,pendents:rebutR3214.pendents.map(p=>rebutsProduccioR3215.valid
+    ?{...p,estat:'attestacio_posterior_verificada',motiu:'Fora de l’abast del rebut R32.14; cobert posteriorment pels rebuts R32.15 fixats per SHA-256, sense consulta directa a Producció.'}
+    :p)};
   for(const p of PROVES_MATRIU) {
     let font;
     try {
@@ -105,10 +112,11 @@ export function avaluaMatriu(root, { ara = Date.now(), executa = (args,opts)=>sp
     return {id,evidenciesVerificades:selected.filter(p=>p.estat==='verificada'),
       estatCodiLocal:selected.some(p=>p.estat==='fallida')?'regressio_detectada':selected.some(p=>p.estat==='no_mesurada')?'no_mesurat':'senyals_parcials_verificats',
       notaCodiLocal:null,
+      attestacionsProduccio:['D04','D05','D08','D10'].includes(id)?[{wave:'R32.15',estat:rebutsProduccioR3215.estat,integritatVerificada:rebutsProduccioR3215.valid,connexioDirectaProduccio:false}]:[],
       limitsTecnicsReals:[...ids.map(k=>PROVES_MATRIU.find(p=>p.id===k).limit),'Cap senyal parcial equival a una nota 10/10 de tota la dimensió.'],
       bloquejosExternsLlei0:EXTERNS.filter(e=>e.dimensions.includes(id)).map(({id,motiu})=>({id,estat:'no_verificat',motiu}))};
   });
-  return {schema:'sdp.matriu-d01-d15.v1',rellotge:new Date(ara).toISOString(),valid:proves.every(p=>p.estat==='verificada')&&rebutsProduccio.valid,rebutsProduccio,nomesLectura:true,xarxaExterna:false,
+  return {schema:'sdp.matriu-d01-d15.v1',rellotge:new Date(ara).toISOString(),valid:proves.every(p=>p.estat==='verificada')&&rebutsProduccio.valid&&rebutsProduccioR3215.valid,rebutsProduccio,rebutsProduccioR3215,nomesLectura:true,xarxaExterna:false,
     criteri:'valid acredita exclusivament les portes enumerades, mai Producció ni una nota global.',proves,dimensions,
     resum:{dimensions:15,senyalsVerificats:proves.filter(p=>p.estat==='verificada').length,senyalsPrevistos:PROVES_MATRIU.length,
       notaGlobal:null,bloquejosExterns:EXTERNS.map(e=>e.id)}};

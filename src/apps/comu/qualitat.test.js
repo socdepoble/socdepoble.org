@@ -82,7 +82,7 @@ const FULL = llig('src/css/diferit-cataleg-colleccio.css');
 /* Els fulls canònics sense el bloc mateix: src/css (amb el bloc pecesApps de
    modules.css) i el de la closca. Sense el bloc, «cap CSS mort» continua
    mirant les classes que només definix l'esquelet. */
-const CSS_CANONIC_SENCER = [...fitxersDe('src/css', /\.css$/), 'src/components/layout/AppGridShell.css'].map(llig).join('\n');
+const CSS_CANONIC_SENCER = [...fitxersDe('src/css', /\.css$/), 'src/css/app-grid-shell.css'].map(llig).join('\n');
 const CSS_CANONIC = CSS_CANONIC_SENCER.replace(FULL, '');
 const FULL_NET = senseComentaris(FULL);
 

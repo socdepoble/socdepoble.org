@@ -99,7 +99,7 @@ describe('P1-28 · la Columna 1 estreta no talla paraules', () => {
     const esquerra = fillsJsx(graella).find((el) => (classeDe(el) || '').split(' ').includes('app-grid-column--left'));
     expect(esquerra, 'la columna esquerra, filla directa de la graella').toBeTruthy();
     /* En «estret» la navegació és un panell de max-content: per això el contenidor només viu en «ample». */
-    expect(llig('src/components/layout/AppGridShell.css')).toMatch(/\.app-grid-shell\[data-layout="estret"\] \.app-grid-column--left \{[^}]*width: max-content;/);
+    expect(llig('src/css/app-grid-shell.css')).toMatch(/\.app-grid-shell\[data-layout="estret"\] \.app-grid-column--left \{[^}]*width: max-content;/);
     expect(llig('src/components/universal/workspace/UniversalWorkspace.jsx')).toContain('<div className="sdp-workspace-groups"');
   });
 
@@ -197,7 +197,7 @@ describe('PS-11 · el títol de la Columna 1 estreta no el talla el [|<] repetit
   });
 
   test('el llindar és la columna de 240 px: la consulta mesura la caixa de contingut, sense el coixí de 16 + 16 de la capçalera', () => {
-    const closca = regles(llig('src/components/layout/AppGridShell.css'));
+    const closca = regles(llig('src/css/app-grid-shell.css'));
     const base = closca.filter((x) => x.prelud === '.app-grid-col-header' && x.pares.length === 0);
     expect(base).toHaveLength(1);
     expect(declaracions(base[0].cos).padding.split(/\s+/)).toEqual(['0', 'var(--sdp-space-4)']);

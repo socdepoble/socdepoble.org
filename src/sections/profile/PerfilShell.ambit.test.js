@@ -112,20 +112,20 @@ describe('el detector d’àmbit', () => {
   });
 });
 
-describe('els fulls de CSS de src/sections', () => {
-  const fulls = fitxersDe('src/sections', /\.css$/);
+describe('els fulls de CSS de src/sections i el full diferit del Perfil', () => {
+  const fullsSeccio = fitxersDe('src/sections', /\.css$/);
 
-  test('n’hi ha almenys un (el del Perfil): la guarda no passa en buit', () => {
-    expect(fulls).toContain('src/sections/profile/PerfilShell.css');
+  test('cap full .css solt dins de src/sections (migrat a src/css/diferit-perfil-shell.css)', () => {
+    expect(fullsSeccio).toEqual([]);
   });
 
-  test.each(fulls)('%s no redefinix .sdp-boto* sense un selector d’àmbit de secció', (full) => {
-    expect(infraccionsDAmbit(llig(full))).toEqual([]);
+  test('src/css/diferit-perfil-shell.css no redefinix .sdp-boto* sense un selector d’àmbit de secció', () => {
+    expect(infraccionsDAmbit(llig('src/css/diferit-perfil-shell.css'))).toEqual([]);
   });
 });
 
 describe('el Perfil conserva els seus botons sense tocar la resta de l’app', () => {
-  const css = llig('src/sections/profile/PerfilShell.css');
+  const css = llig('src/css/diferit-perfil-shell.css');
   const jsx = llig('src/sections/profile/PerfilShell.jsx');
 
   test('els botons del Perfil van dins de :where(.perfil-pagina): mateixa especificitat que abans', () => {

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import { Alerta, Boto, Carregant, DialegConfirmacio, Insignia } from '../../components/PedraSeca';
@@ -586,6 +588,8 @@ const esObrible = (entrada) => esFontImatgePropia(entrada.font);
 const FILES_SENSE_ARTICLE = Object.freeze(['poble', 'publicat']);
 
 export function DetallMultimedia({ identitat, config }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const perfil = usePerfilOpcional();
   const { mediaItems } = useMultimedia();
   const dades = useMemo(() => identitat?.dades || {}, [identitat]);
@@ -926,7 +930,7 @@ export function DetallMultimedia({ identitat, config }) {
         authorHref: rutaDeFitxaPublica(identitat),
       }}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
         {!potEditar ? (
           <Alerta to="info" viva={false}>{textos.lectura}</Alerta>

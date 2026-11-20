@@ -16,7 +16,7 @@ import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
-const perfil = llig('src/sections/profile/PerfilShell.css');
+const perfil = llig('src/css/diferit-perfil-shell.css');
 const modules = llig('src/css/modules.css');
 const tokens = llig('src/css/tokens.css');
 

@@ -10,7 +10,10 @@
  * el registre de plugins marca en proves (`estat` 'proves') porten la
  * insígnia «En proves · Beta oberta», la mateixa del Panell de Control.
  */
+import { useRef } from 'react';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssAppsPlataforma from '../../css/diferit-apps-plataforma.css?inline';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { PaginaApp } from '../../components/PedraSeca/index.js';
 import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
@@ -135,6 +138,8 @@ function FitxaApp({ app, idioma, llenguaInterficie, onApaga }) {
    (`esSuperadmin`, el booleà de la sessió que passa RutaApps), l'accés directe
    al grup de verificadors i a les botigues oficials, davant de la llista. */
 export function PortalApps({ esSuperadmin = false }) {
+  const portalAppsRef = useRef(null);
+  useFullDiferit(portalAppsRef, 'apps-plataforma', cssAppsPlataforma);
   const apps = useApps();
   const apaga = useApagaApp();
   const navigate = useNavigate();
@@ -147,7 +152,7 @@ export function PortalApps({ esSuperadmin = false }) {
       lead={tx.entradeta}
       onBack={() => navigate(-1)}
     >
-      <div className="sdp-app-portal">
+      <div ref={portalAppsRef} className="sdp-app-portal">
         {esSuperadmin ? (
           <section className="sdp-app-portal__testers" aria-labelledby="sdp-app-portal-testers-titol">
             <h2 id="sdp-app-portal-testers-titol" className="sdp-app-portal__testers-titol">{tx.testersTitol}</h2>

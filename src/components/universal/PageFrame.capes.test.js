@@ -148,7 +148,7 @@ test('261004 · M1 · el recorregut troba tots els fulls de src/, no només els 
   const fulls = fullsCss('src');
   expect(fulls).toEqual(expect.arrayContaining([
     'src/css/components.css', 'src/css/modules.css', 'src/css/layout.css', 'src/css/utilities.css',
-    'src/components/layout/AppGridShell.css'
+    'src/css/app-grid-shell.css'
   ]));
   expect(fulls.length).toBeGreaterThan(8);
 });
@@ -199,10 +199,10 @@ test('261004 · D3 · sense blava, una graella absoluta comença davall de la ta
   // L'alçada de la taronja és la mateixa variable (layout.css): ni més ni menys.
   expect(net('src/css/layout.css')).toContain('section.bar-orange { height: var(--sdp-alt-accio);');
   // AppGridShell.css continua sense saber res de la barra, i viu a la capa components.
-  const graella = net('src/components/layout/AppGridShell.css');
+  const graella = net('src/css/app-grid-shell.css');
   expect(graella).toContain('.app-grid-page { position: absolute; inset: 0;');
   expect(graella).not.toContain('bar-orange');
-  expect(net('src/css/index.css')).toContain("@import url('../components/layout/AppGridShell.css') layer(components);");
+  expect(net('src/css/index.css')).toContain("@import url('./app-grid-shell.css') layer(components);");
 });
 
 test('T51 · l’excepció del Perfil ja no pot tornar la barra com a flex (esclafaria les tres columnes)', () => {

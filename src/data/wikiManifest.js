@@ -97,8 +97,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-09-02T04:38:14+02:00",
-      "updated": "2026-11-19T22:27:05+01:00",
-      "revisions": 24,
+      "updated": "2026-11-20T02:47:25+01:00",
+      "revisions": 25,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -115,8 +115,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-09-02T04:38:14+02:00",
-        "updated": "2026-11-19T22:27:05+01:00",
-        "revisions": 24,
+        "updated": "2026-11-20T02:47:25+01:00",
+        "revisions": 25,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -377,14 +377,14 @@ export const wikiManifest = {
         "core",
         "identitat"
       ],
-      "date": "1970-01-01T00:00:00Z",
-      "updated": "1970-01-01T00:00:00Z",
-      "revisions": 0,
+      "date": "2026-11-20T02:47:25+01:00",
+      "updated": "2026-11-20T02:47:25+01:00",
+      "revisions": 1,
       "mur": false,
       "origenEditorial": {
-        "date": "reserva",
-        "updated": "reserva",
-        "revisions": "sense-historial"
+        "date": "git",
+        "updated": "git",
+        "revisions": "git"
       },
       "attributes": {
         "type": "document",
@@ -395,14 +395,14 @@ export const wikiManifest = {
           "core",
           "identitat"
         ],
-        "date": "1970-01-01T00:00:00Z",
-        "updated": "1970-01-01T00:00:00Z",
-        "revisions": 0,
+        "date": "2026-11-20T02:47:25+01:00",
+        "updated": "2026-11-20T02:47:25+01:00",
+        "revisions": 1,
         "mur": false,
         "origenEditorial": {
-          "date": "reserva",
-          "updated": "reserva",
-          "revisions": "sense-historial"
+          "date": "git",
+          "updated": "git",
+          "revisions": "git"
         }
       },
       "content": "# Guia pas a pas de Sóc de Poble\n\nAquest capítol acompanya la pàgina interactiva [Tot el que pots fer a Sóc de Poble, pas a pas](https://socdepoble.org/page/tot-el-que-pots-fer) (accessible també per l'àlies curt [socdepoble.org/page/guia](https://socdepoble.org/page/guia)) perquè **qualsevol veí, veïna o associació** puga recórrer amb **paraules planeres** les **eines reals** del projecte en les **cinc llengües de la interfície**, amb **zero taules amples** i **sense tecnicismes innecessaris**.\n\n## Espais compartits de la comunitat\n\n### Publicar i llegir al Mur i al Mercat\n\nAl [Mur](https://socdepoble.org/mur) consultes les **notícies, cròniques i fotografies** de les associacions i del veïnat sense **cap anunci comercial**, i des de les [Notes](https://socdepoble.org/notes) redactes esborranys que pots publicar quan vulgues en el **servidor de Sóc de Poble**. Al [Mercat](https://socdepoble.org/mercat) es comparteixen **anuncis de proximitat** per a productes locals i objectes de segona vida on els **acords i pagaments** es tanquen sempre **directament entre persones**, sense **cap comissió** de plataforma.\n\n### Parlar al Xat i organitzar el Calendari amb assistència RSVP\n\nAl [Xat](https://socdepoble.org/xat) obris **converses directes** amb veïns, canals municipals i consultes amb les **entitats organitzadores** sense que les teues converses es **venguen ni cedisquen** a tercers. Al [Calendari](https://socdepoble.org/calendari) consultes les **festes, cursos i assemblees** en vista mensual o d'agenda, marques la teua assistència amb el selector de **tres opcions** (**Assistiré, Potser o No assistiré**) guardat al navegador i reps un **avís amable de coincidència** si dos actes confirmats se solapen en horari.\n\n## Eines al teu dispositiu i lectura accessible\n\n### Portar la casa, la Salut, l'Arbre Genealògic i l'esborrany per a la Gestoria\n\nLes eines personals i d'associació —[El Rebost i La Nevera](https://socdepoble.org/plugin/rebost), el quadern quotidià [Salut · Cuidant dels Nostres](https://socdepoble.org/plugin/salut), [El Bar](https://socdepoble.org/plugin/tpv), l'[Arbre Genealògic](https://socdepoble.org/plugin/genealogia) amb frase de pas i el [Lector de notícies](https://socdepoble.org/plugin/rss)— funcionen en **proves obertes** guardant les dades de treball **al teu dispositiu**. En particular, la [Gestoria de Poble](https://socdepoble.org/plugin/gestoria) prepara un **esborrany trimestral** net per lliurar-lo a la teua **gestoria humana**, sense enviar res a l'AEAT ni substituir **cap programa fiscal homologat** ni **cap assessorament professional**.\n\n### Activar el Mode Sènior i conéixer els límits de l'Avisador\n\nDes del [Perfil](https://socdepoble.org/el-meu-perfil), del [Panell de Control](https://socdepoble.org/control) i de [L'Avisador](https://socdepoble.org/plugin/avisador) pots encendre d'**un sol toc** el **Mode Sènior (Lectura Gran)**, que amplia el cos de **Noto Sans**, garantix dianes d'almenys **56 × 56 píxels** i eleva el contrast real a **10:1 AAA** sense talls a **320 i 359 píxels**. Quan uses [L'Avisador](https://socdepoble.org/plugin/avisador), recorda sempre que **només funciona amb la sessió oberta**, l'aplicació en marxa i el Xat disponible, i que **no substituïx el 112** ni la teleassistència.\n\n## Vincles\n\n- [00_index_identitat](?item=00_index_identitat)\n- [02_genotip](?item=02_genotip)\n- [el_projecte](?item=el_projecte)\n"
@@ -2714,8 +2714,8 @@ export const wikiManifest = {
         "portes"
       ],
       "date": "2026-09-08T19:11:12+02:00",
-      "updated": "2026-09-26T12:23:49+02:00",
-      "revisions": 8,
+      "updated": "2026-11-20T02:47:25+01:00",
+      "revisions": 9,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -2732,8 +2732,8 @@ export const wikiManifest = {
           "portes"
         ],
         "date": "2026-09-08T19:11:12+02:00",
-        "updated": "2026-09-26T12:23:49+02:00",
-        "revisions": 8,
+        "updated": "2026-11-20T02:47:25+01:00",
+        "revisions": 9,
         "mur": false,
         "origenEditorial": {
           "date": "git",

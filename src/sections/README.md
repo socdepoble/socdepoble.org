@@ -1,7 +1,7 @@
 ---
-estat: "canonic"
-tipus: "index"
-description: "Documentació canònica de Sóc de Poble."
+type: index
+status: canonic
+description: "Índex d'arquitectura de dominis funcionals, vistes, llavors i subcarpetes de detall a src/sections."
 ---
 # `src/sections`
 
@@ -55,6 +55,6 @@ Nota important per al futur:
 - si entra una IA real, convé tractar-la com una capa explícita i no confondre-la amb la simulació actual.
 
 
----
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
+- [[00_index]]

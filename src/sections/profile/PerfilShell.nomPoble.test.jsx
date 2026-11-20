@@ -27,7 +27,7 @@ const reglesDAutoria = (css) => (css.match(/[^{}]*\{[^{}]*\}/g) || [])
   .map((regla) => regla.trim())
   .filter((regla) => /sp-card-author-(info|name|location)/.test(regla.split('{')[0]));
 
-const FULLS = ['src/css/components.css', 'src/css/modules.css', 'src/sections/profile/PerfilShell.css'];
+const FULLS = ['src/css/components.css', 'src/css/modules.css', 'src/css/diferit-perfil-shell.css'];
 const POBLE = 'La Torre de les Maçanes';
 const teTextGenerat = (css) => /(?:^|[;{])\s*content\s*:/i.test(css);
 

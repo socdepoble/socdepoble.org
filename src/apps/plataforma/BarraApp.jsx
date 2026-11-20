@@ -10,7 +10,10 @@
  *   · les entrades són NavLink germans a /app/<id>/<slug>: només l'activa porta
  *     aria-current (la regla de segment de NavLink), i navegar fa push.
  */
+import { useRef } from 'react';
 import { ArrowLeft, PanelLeftClose } from 'lucide-react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssAppsPlataforma from '../../css/diferit-apps-plataforma.css?inline';
 import BrandMark from '../../components/BrandMark';
 import { NavLink } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -18,6 +21,8 @@ import { iconaDe } from './iconesApp.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 
 export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = false, toggleSidebar, onTorna }) {
+  const titolAppsRef = useRef(null);
+  useFullDiferit(titolAppsRef, 'apps-plataforma', cssAppsPlataforma);
   /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */
   const { language, llenguaDelText = language } = useUIState();
   const titol = titolDe(app.titol, llenguaDelText);
@@ -61,7 +66,7 @@ export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = fals
 
       {/* Correcció R5-09 (261024) · L'id de l'app, perquè apps.css puga donar
           el fons verd només al títol del Lector (ordre del Mestre, 14:40). */}
-      <p className="sdp-app-barra__titol" data-sdp-app={app.id}>
+      <p ref={titolAppsRef} className="sdp-app-barra__titol" data-sdp-app={app.id}>
         <IconaApp className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">{titol}</span>
       </p>

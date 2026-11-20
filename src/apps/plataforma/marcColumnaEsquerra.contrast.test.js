@@ -19,7 +19,7 @@ const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 
 const TOKENS = llig('src/css/tokens.css');
 const CANON = llig('src/css/design-tokens.css');
-const GRAELLA = senseComentaris(llig('src/components/layout/AppGridShell.css'));
+const GRAELLA = senseComentaris(llig('src/css/app-grid-shell.css'));
 /* Onada R32.11 · Gemini lot_01 (dieta del CSS) · El bloc catalegColleccio, MarcColumna inclosa, va
    eixir de modules.css cap al full diferit diferit-cataleg-colleccio.css, que MarcColumna.jsx adopta a
    la seua arrel (el document o el shadow root de <soc-de-poble>). Les regles es busquen allí. */

@@ -31,7 +31,8 @@ const P = (...t) => join(arrel, ...t);
 const FITXA = P(CAMINS.escriptori, '01_produccio', 'contracte_graella.md');
 const SHELL = P('src', 'components', 'layout', 'AppGridShell.jsx');
 const COLUMNA = P('src', 'components', 'layout', 'AppGridColumn.jsx');
-const CSS = P('src', 'components', 'layout', 'AppGridShell.css');
+/* v1.2.14 · Gemini R32.18 porta el full a src/css; el camí vell ja no existix i no es manté cap recanvi. */
+const CSS = P('src', 'css', 'app-grid-shell.css');
 
 const faltes = [];
 const nota = (regla, msg) => faltes.push({ regla, msg });
@@ -150,10 +151,10 @@ for (const f of ['src/css/tokens.css', 'src/css/design-tokens.css', 'src/css/ind
   const t = llig(P(f), f !== 'src/css/tokens.css');
   if (t) for (const d of declaracionsTokensCSS(t)) if (d.nom.startsWith('--sdp-')) tokensCanon.add(d.nom.slice(2));
 }
-if (!tokensCanon.size) throw new Error('Cap token declarat a les fonts canòniques: no es pot certificar AppGridShell.css');
+if (!tokensCanon.size) throw new Error('Cap token declarat a les fonts canòniques: no es pot certificar src/css/app-grid-shell.css');
 {
   for (const m of cssAnalitzable(css).matchAll(/var\(\s*--(sdp-[\w-]+)/g)) {
-    if (!tokensCanon.has(m[1])) nota('token-inventat', `AppGridShell.css usa \`--${m[1]}\`, que no està definit enlloc.`);
+    if (!tokensCanon.has(m[1])) nota('token-inventat', `src/css/app-grid-shell.css usa \`--${m[1]}\`, que no està definit enlloc.`);
   }
 }
 

@@ -47,16 +47,16 @@ function brain(t) {
 const GRAELLA = {
   'src/components/layout/AppGridShell.jsx': 'export default function AppGridShell({children}) { return <div inert>{children}</div>; }',
   'src/components/layout/AppGridColumn.jsx': 'export default function AppGridColumn({children}) { return <div>{children}</div>; }',
-  'src/components/layout/AppGridShell.css': '.a {color:var(--sdp-conegut)}',
+  'src/css/app-grid-shell.css': '.a {color:var(--sdp-conegut)}',
   'src/css/tokens.css': TOKENS,
   '_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md': '## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n'
 };
 test('graella: un CSS absent no es certifica com a contracte coherent', t => {
   const { root } = fixture(t, GRAELLA);
-  fs.unlinkSync(path.join(root, 'src/components/layout/AppGridShell.css'));
+  fs.unlinkSync(path.join(root, 'src/css/app-grid-shell.css'));
   const r = run('tooling/gates/tractor-graella.mjs', root, [`--arrel=${root}`]);
   assert.equal(r.status, 2, r.output);
-  assert.match(r.output, /AppGridShell\.css/);
+  assert.match(r.output, /app-grid-shell\.css/);
 });
 test('graella: no omet la llei de tokens quan la font no té declaracions', t => {
   const { root, put } = fixture(t, GRAELLA);
@@ -134,7 +134,7 @@ test('fronteres: src symlink no es converteix en mapa de tokens buit', t => {
 test('graella: els comentaris de la font no inventen definicions de tokens', t => {
   const { root, put } = fixture(t, GRAELLA);
   put('src/css/tokens.css', `${TOKENS}\n/* --sdp-fantasma:red; */`);
-  put('src/components/layout/AppGridShell.css', '.a {color:var(--sdp-fantasma)}');
+  put('src/css/app-grid-shell.css', '.a {color:var(--sdp-fantasma)}');
   const r = run('tooling/gates/tractor-graella.mjs', root, [`--arrel=${root}`]);
   assert.equal(r.status, 1, r.output);
   assert.match(r.output, /token-inventat/);
@@ -198,7 +198,7 @@ const CRITIC_CASES = [
     "expected": 0,
     "files": {
       "src/css/tokens.css": ":root {\n--sdp-conegut:red;\n}\n",
-      "src/components/layout/AppGridShell.css": ".a{color:var(--sdp-conegut)}",
+      "src/css/app-grid-shell.css": ".a{color:var(--sdp-conegut)}",
       "src/components/layout/AppGridColumn.jsx": "export default function AppGridColumn({children}) { return <div>{children}</div>; }",
       "src/components/layout/AppGridShell.jsx": "export default function AppGridShell({children}) { return <div inert>{children}</div>; }",
       "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n"
@@ -214,7 +214,7 @@ const CRITIC_CASES = [
     "expected": 1,
     "files": {
       "src/css/tokens.css": ":root {\n--sdp-conegut:red;\n}\n",
-      "src/components/layout/AppGridShell.css": ".a{color:var(--sdp-conegut)}",
+      "src/css/app-grid-shell.css": ".a{color:var(--sdp-conegut)}",
       "src/components/layout/AppGridColumn.jsx": "export default function AppGridColumn({children}) { return <div>{children}</div>; }",
       "src/components/layout/AppGridShell.jsx": "export default function AppGridShell({children}) { /* inert */ return <div>{children}</div>; }",
       "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n"
@@ -230,7 +230,7 @@ const CRITIC_CASES = [
     "expected": 1,
     "files": {
       "src/css/tokens.css": ":root {\n--sdp-conegut:red;\n}\n",
-      "src/components/layout/AppGridShell.css": ".a{color:var(--sdp-conegut)}",
+      "src/css/app-grid-shell.css": ".a{color:var(--sdp-conegut)}",
       "src/components/layout/AppGridColumn.jsx": "export default function AppGridColumn({children}) { return <div>{children}</div>; }",
       "src/components/layout/AppGridShell.jsx": "/* export default function AppGridShell({children}) */\nexport default function Actual({undocumented}) { return <div inert>{undocumented}</div>; }",
       "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n"
@@ -246,7 +246,7 @@ const CRITIC_CASES = [
     "expected": 1,
     "files": {
       "src/css/tokens.css": ":root{--sdp-conegut:red;content:\"--sdp-fantasma: red;\";}",
-      "src/components/layout/AppGridShell.css": ".a{color:var(--sdp-fantasma)}",
+      "src/css/app-grid-shell.css": ".a{color:var(--sdp-fantasma)}",
       "src/components/layout/AppGridColumn.jsx": "export default function AppGridColumn({children}) { return <div>{children}</div>; }",
       "src/components/layout/AppGridShell.jsx": "export default function AppGridShell({children}) { return <div inert>{children}</div>; }",
       "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n"
@@ -262,7 +262,7 @@ const CRITIC_CASES = [
     "expected": 1,
     "files": {
       "src/css/tokens.css": ":root {\n--sdp-conegut:red;\n}\n",
-      "src/components/layout/AppGridShell.css": ".a{color:var(--sdp-conegut)}",
+      "src/css/app-grid-shell.css": ".a{color:var(--sdp-conegut)}",
       "src/components/layout/AppGridColumn.jsx": "export default function AppGridColumn({children}) { return <div>{children}</div>; }",
       "src/components/layout/AppGridShell.jsx": "export default function AppGridShell({children}) { return <div inert>{children}</div>; }\nconst w=0; const size=w<777;",
       "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "## AppGridShell\n| `children` | contingut |\n## AppGridColumn\n| `children` | contingut |\n"
@@ -811,7 +811,7 @@ for (const command of ['sed -i "s/a/b/" docs/a.md && echo --exclude=01_produccio
 });
 for (const script of ['tooling/gates/tractor-graella.mjs','tooling/gates/tractor-tokens.mjs','tooling/gates/tractor-fitxa-gestor.mjs','tooling/gates/tractor-cens.mjs','tooling/brain/fronteres-skills.mjs','tooling/brain/cataleg_skills.mjs']) test(`Peix crític CLI: UTF-8 invàlid és error de lectura ${script}`, t => {
   let f,args,broken;
-  if (script.endsWith('tractor-graella.mjs')) { f=fixture(t,GRAELLA); args=[`--arrel=${f.root}`]; broken='src/components/layout/AppGridShell.css'; }
+  if (script.endsWith('tractor-graella.mjs')) { f=fixture(t,GRAELLA); args=[`--arrel=${f.root}`]; broken='src/css/app-grid-shell.css'; }
   else if (script.endsWith('tractor-fitxa-gestor.mjs')) { f=fitxa(t,`export function DefaultItemCard({${PARAMS}}) { return <button type="button" className="sdp-gestor-fitxa"/>; }`); args=[`--arrel=${f.root}`,'--nomes','F1']; broken='src/css/modules.css'; }
   else if (script.endsWith('tractor-cens.mjs')) { f=fixture(t,{'.agents/consell.json':JSON.stringify({membres:[{id:'m',nom:'M',fortalesa:'f',debilitat:'d',rol:'r'}]}),'.agents/skills/core-consell-i-colmena/SKILL.md':'Font consell.json','_wiki_de_poble/a.md':'Doctrina'}); args=['--arrel',f.root]; broken='_wiki_de_poble/a.md'; }
   else { f=brain(t); args=script.endsWith('tractor-tokens.mjs')?['--root',f.root]:[`--arrel=${f.root}`]; broken=script.endsWith('cataleg_skills.mjs')?'.agents/skills/sdp-prova/SKILL.md':'src/css/tokens.css'; }

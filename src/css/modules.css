@@ -10950,8 +10950,10 @@ details[open] summary.accordion-header svg:last-child {
    igual que abans les regles de components.css i modules.css que ajusten
    (.sdp-control, .sdp-pindola, .sdp-pestanyes, .sdp-camp). L'únic canvi de
    posició és que ara van davant d'AppGridShell.css, PerfilShell.css i
-   apps.css, que index.css importa darrere de modules.css amb
-   layer(components): cap element no casa alhora amb una regla d'aquells
+   apps.css, que index.css importava darrere de modules.css amb
+   layer(components) (v1.2.14: app-grid-shell.css continua a index.css;
+   diferit-perfil-shell.css i diferit-apps-plataforma.css s'adopten amb
+   useFullDiferit després de la cascada principal): cap element no casa alhora amb una regla d'aquells
    fulls i una d'estos amb la mateixa especificitat i la mateixa propietat, i
    l'estil computat a 375 i 1280 px no canvia (instantànies de Chrome,
    261030). Una regla nova que ajuste estes peces va darrere del seu bloc.

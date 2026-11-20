@@ -1,14 +1,14 @@
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'estil desat del poble,
    aplicat a l'arrel de la instància. Llig useCoreContent().personalitzacio
    .estil.payload (camp additiu de loadCoreContent, el que desa la faceta
-   «Estil del poble» del Tauler o el «Desar» del PanellCrom) i crida
+   «Estil del poble» del Tauler o el «Desar» de PanellCromIntegrat) i crida
    aplicaEstil/llevaEstil (config/aplicaEstil.js) sobre la .sdp-root.
    · L'arrel: dins del shadow root de l'encastat (targetNode, el mateix que rep
      App) o, a la SPA i a l'app nativa, al document. Hi ha DUES .sdp-root
      niades: l'exterior (el punt de muntatge de PedraSecaEmbed.jsx:738, o el
      <body class="sdp-root"> d'index.html) i la interior, la d'AppShell
      (App.jsx:532). Es tria la interior, la que node.closest('.sdp-root') dona
-     des de dins de l'app al PanellCrom, a FacetaEstil i al Dialeg: tokens.css
+     des de dins de l'app a PanellCromIntegrat, a FacetaEstil i al Dialeg: tokens.css
      (:34) redeclara els tokens sobre .sdp-root, així que la interior no hereta
      el crom en línia de l'exterior, i BASES (crom.js) i ESTATS (aplicaEstil.js)
      són per element. S'escriu sobre la instància, mai sobre la pàgina amfitriona.

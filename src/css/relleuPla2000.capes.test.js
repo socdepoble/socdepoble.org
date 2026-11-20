@@ -56,7 +56,7 @@ function especificitat(selector) {
 const llig = (ruta) => regles(readFileSync(resolve(process.cwd(), ruta), 'utf8'));
 const COMPONENTS = llig('src/css/components.css');
 const MODULS = llig('src/css/modules.css');
-const PERFIL = llig('src/sections/profile/PerfilShell.css');
+const PERFIL = llig('src/css/diferit-perfil-shell.css');
 const unica = (full, prelud) => {
   const trobades = full.filter((r) => r.prelud === prelud);
   expect(trobades, prelud).toHaveLength(1);

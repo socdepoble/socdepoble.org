@@ -3452,3 +3452,39 @@ R32.15, els replays antics poden refusar la deriva, com correspon als seus
 pins històrics. La costura del rebut repetit LSSI d'R32.13 identificada pel
 Gauntlet v1.2.11 correspon al carril integrador; este blindatge de definers
 no la dona per resolta ni altera el dipòsit immutable del paquet R32.14.
+
+## R32.17 · Reserva immutable de reposició per cicle
+
+`snippets/r32_17_reserva_inventari_cicle_idempotent.sql` és un paquet manual
+fora del catàleg de migracions, **NO aplicat a Producció en aquest
+lliurament**: no s'ha executat SQL remot ni hi ha un rebut propi d'aplicació.
+Requerix `public.towns`, `public.town_memberships`, `auth.uid()` i
+`private.is_town_member` del catàleg canònic.
+
+La reserva conserva la clau única exacta `(tenant_id, magatzem_id,
+article_id, cicle_id)` i la quantitat del primer rebut; una repetició amb
+quantitat divergent es rebutja i les claus no es reciclen per caducitat.
+Les guardes comproven els tipus `pg_catalog.uuid`, `text`, `int8` i
+`timestamptz`, el propietari i els índexs; el CHECK dels identificadors (sense
+format Unicode invisible, també els astrals, ni espais als extrems) es renova a
+cada instal·lació, i una fila antiga que el viole fa fallar la transacció. La taula té RLS activada (sense FORCE, com la resta del catàleg: la RPC definer no depén de BYPASSRLS) per
+pertinença al poble. L’ACL revoca PUBLIC, anon i service_role; les
+concessions directes a `authenticated` són només SELECT de la taula i
+EXECUTE de la RPC, sense escriptura directa.
+La RPC és SECURITY DEFINER amb `search_path = ''`, dependències qualificades
+i verificació de l'administració del poble amb pany fins al commit.
+
+Verificació local: `tests/r3217-reserva-inventari-postgres.test.mjs`,
+**31/31 PASS** sobre un esquema local de prova amb **PostgreSQL 18.6**
+(dues sessions natives independents) i **PGlite 0.3.16 / PostgreSQL 17.5**
+(sense sessions independents). Inclou COMMIT/ROLLBACK concurrent,
+READ COMMITTED, avortament segur 40001 en REPEATABLE READ, ACL/RLS i
+preimatges hostils. Les proves locals no acrediten Producció. La reserva
+no executa compres externes ni promet una compra exactament una vegada;
+`creada=false` mai autoritza repetir una compra.
+
+Cicle de vida (pendent de decisió del Mestre abans d'aplicar-lo): la taula és
+immutable i no té cap camí d'esborrat. `creada_per` conserva l'identificador
+pseudònim de qui va reservar encara que deixe el poble, i la clau forana
+`tenant_id` (sense `ON DELETE`) impedix donar de baixa un poble que tinga
+reserves.

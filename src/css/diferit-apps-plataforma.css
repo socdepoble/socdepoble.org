@@ -1,7 +1,8 @@
+@layer components {
 /* ═══════════════════════════════════════════════════════════════════
    PLATAFORMA D'APPS ENXUFABLES (261002) · portal /app i relleu de barra
-   S'importa des de src/css/index.css amb layer(components): ací no hi
-   ha cap @layer propi. Totes les classes porten el prefix .sdp-app-*
+   Full diferit (Gemini R32.18, v1.2.14): l'adopten RutaApps.jsx i les seues
+   companyes amb useFullDiferit, dins de @layer components. Totes les classes porten el prefix .sdp-app-*
    (lliures de .sdp-app-grid-shell, .sdp-app-error i .sdp-app-loading),
    només tokens semàntics --sdp-*, cap color en brut, cap ombra, cap
    :has(), espais en múltiples de 0.25rem.
@@ -216,4 +217,5 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sdp-space-2);
+}
 }

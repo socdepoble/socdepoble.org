@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "9dca14298474d37911eb26eeaea7b38a97add224f68600ac5d5b5a889a19269c",
-      "html": 140958,
-      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), crònica FITA_R32_17 contrastada amb el codi i corregida per dues rondes de Gauntlet; pendent de lectura humana",
+      "sha256": "ffc8cd43371054ca996eaab8257435daa0422cd7c068ece31bf96568008c0c11",
+      "html": 143468,
+      "aprovat_per": "Claude v1.2.14 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 12:58 (prompt 261120_1302: fusionar Codex R32.17 i Gemini R32.18, deute zero i desplegar v1.2.14), crònica FITA_R32_18 contrastada amb el codi i corregida per tres passades de Gauntlet (R1, R2 i R2b); pendent de lectura humana",
       "data": "2026-11-20"
     },
     "wikidepoble": {

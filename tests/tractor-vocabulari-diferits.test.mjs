@@ -253,7 +253,8 @@ test('worktree de veres: cap classe diferida orfe ni cap full diferit trencat, i
     assert.equal(arrencada.includes(full), false, `${full} no entra per index.css`);
     assert.ok([...nomesDiferides.values()].some((claus) => claus.has(clau)), `${clau}: té classes que només declara el seu full`);
   }
-  assert.ok(arrencada.includes('src/apps/plataforma/apps.css'), 'apps.css és a la cadena d’arrencada');
+  assert.ok(arrencada.includes('src/css/app-grid-shell.css'), 'app-grid-shell.css és a la cadena d’arrencada');
+  assert.ok(diferits.some((d) => d.clau === 'apps-plataforma' && d.full === 'src/css/diferit-apps-plataforma.css'), 'apps-plataforma és full diferit');
 });
 
 test('guarda barata dels fulls diferits de veres: dins de @layer components, sense html ni body i cada :root amb el seu :host()', () => {

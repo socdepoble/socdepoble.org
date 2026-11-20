@@ -170,7 +170,7 @@ const JS_ARBRE_COMPARTIT = [
 /* Els fulls que el torn toca. Per a resoldre classes també compten els altres
    fulls canònics de src/css (components.css declara les utilitats compartides,
    com sdp-nomes-lector o sdp-especimen__fila). */
-const CSS_CANONIC = ['src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/components/layout/AppGridShell.css'];
+const CSS_CANONIC = ['src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/css/app-grid-shell.css'];
 /* Onada R28 · D-R27-1 (opció b) · Els fulls diferits `src/css/diferit-*.css` també són canònics:
    cada component els adopta amb useFullDiferit (src/config/fullDiferit.js). */
 const CSS_DIFERITS = fs.readdirSync(path.join(ARREL, 'src/css'))
@@ -558,7 +558,7 @@ test('3B · el peu del rail té la mateixa geometria plegat i desplegat', () => 
   }
   assert.match(plegat, /display\s*:\s*flex\s*;/);
   assert.match(plegat, /padding\s*:\s*0\s*;/);
-  const capcalera = cosDeRegles('src/components/layout/AppGridShell.css')('.app-grid-col-header.app-grid-col-header--collapsed');
+  const capcalera = cosDeRegles('src/css/app-grid-shell.css')('.app-grid-col-header.app-grid-col-header--collapsed');
   const coixi = capcalera.match(/padding\s*:\s*0\s+0\s+var\((--sdp-space-\d+)\)\s*;/);
   assert.ok(coixi, 'La capçalera plegada ha canviat de coixí: revisa el marge del peu plegat');
   assert.match(plegat, new RegExp(`margin-bottom\\s*:\\s*calc\\(var\\(${coixi[1]}\\)\\s*\\*\\s*-1\\)\\s*;`));
@@ -600,6 +600,8 @@ test('3B · el segment premut porta una vora de ≥ 3:1 i el títol «En constru
   const vora = declaracions(tokens, '--sdp-vora-control');
   const subtil = declaracions(tokens, '--sdp-fons-subtil');
   const targeta = declaracions(tokens, '--sdp-fons-targeta');
+  /* Onada v1.2.14 · La fusió amb Gemini R32.18 havia barrejat les dues lectures: es conserva la de v1.2.13 (sense els
+     blocs del Mode Sènior, dos valors, clar i fosc); el contrast del Mode Sènior el guarda tests/contrast-aaa.test.mjs. */
   assert.equal(vora.length, 2, 'Esperava --sdp-vora-control en clar i en fosc');
   const xifres = vora.map((v, i) => [
     contrastWcag(hexDe(tokens, v), hexDe(tokens, subtil[i])),

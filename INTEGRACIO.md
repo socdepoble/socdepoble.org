@@ -1,3 +1,8 @@
+---
+type: document
+status: canonic
+description: "Guia tècnica d'integració de la porta tractor-psicopatia al flux de compilació i integració contínua."
+---
 # Integració del Tractor de Psicopatia
 
 ## Fitxers
@@ -69,3 +74,7 @@ const legacyFixture = 'iPad A10';
 ```
 
 No afegisques excepcions globals per comoditat. Els documents que realment ja no són vigents han de portar `status: historical`, `status: superseded` o moure's a una ruta històrica declarada.
+
+## Vincles
+
+- [[00_index]]

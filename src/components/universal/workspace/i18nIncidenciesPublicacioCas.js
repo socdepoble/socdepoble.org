@@ -3,8 +3,7 @@
  * per al panell de resolució d'incidències durables de la cua CAS de publicacions
  * (Onada R32.17 · Lot 01 · D-R32.15-1).
  *
- * Complix estrictament la Llei 32: sempre «el servidor de Sóc de Poble», sense cap altra
- * denominació del servidor ni cap adjectiu de sobirania.
+ * Complix estrictament la Llei 32: sempre «el servidor de Sóc de Poble».
  */
 
 export const CODIS_IDIOMA_INCIDENCIES_CAS = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);

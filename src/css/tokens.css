@@ -891,7 +891,7 @@
    la que ha indicat l'autor. El recorregut (l'ordre de les fotos d'una
    publicació, mai els carrers exactes) va damunt d'un halo clar, i les
    línies discontínues lliguen cada targeta al seu punt. Només els consumix
-   src/sections/mur/MapaFotografic.css: els camins de Leaflet porten una
+   src/css/diferit-mapa-fotografic.css (abans src/sections/mur/MapaFotografic.css): els camins de Leaflet porten una
    classe (className), mai un color en línia.
    Un bloc a banda i sense tema fosc, a propòsit: el fons del mapa sense
    tessel·les és clar en els dos temes, com les tessel·les d'OpenStreetMap

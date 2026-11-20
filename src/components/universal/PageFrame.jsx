@@ -214,6 +214,15 @@ const esEditable = (element) => Boolean(element?.closest?.(SELECTOR_EDITABLE));
 /* Gauntlet 261030 (cicle 2) · El lang que declara la pàgina per a un
    element: el de l'avantpassat més proper amb lang, si és dins del cos o de
    la capçalera (mai el de l'<html> ni el de l'amfitrió); si no, undefined. */
+const CLASSES_NIVELL_TOC = Object.freeze({
+  1: 'toc-item toc-level-1',
+  2: 'toc-item toc-level-2',
+  3: 'toc-item toc-level-3',
+  4: 'toc-item toc-level-4',
+  5: 'toc-item toc-level-5',
+  6: 'toc-item toc-level-6',
+});
+
 function langDeLaPagina(element, ...arrels) {
   const ambLang = element?.closest?.('[lang]');
   return ambLang && arrels.some((arrel) => arrel?.contains?.(ambLang)) ? ambLang.getAttribute('lang') || undefined : undefined;
@@ -454,7 +463,7 @@ export function TableOfContentsDrawer({
           ) : (
             <ul>
               {headings.map((h, idx) => (
-                <li key={idx} className={`toc-item toc-level-${h.level}`}>
+                <li key={idx} className={CLASSES_NIVELL_TOC[h.level] || CLASSES_NIVELL_TOC[6]}>
                   <button
                     type="button"
                     lang={h.lang}

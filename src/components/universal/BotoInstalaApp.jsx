@@ -3,7 +3,7 @@
  * · «Instal·la al teu ordinador»: la pastilla de la barra negra que instal·la
  * Sóc de Poble com una aplicació en finestra pròpia (Mac, Windows i Linux).
  *
- * Autònom, com BotoCrom (PanellCrom.jsx): és fill de la TopBar (App.jsx), dins
+ * Autònom, com ho era BotoCrom (PanellCrom.jsx, retirat en v1.2.14): és fill de la TopBar (App.jsx), dins
  * de .right-icons, i no pinta res si no hi ha oferta. L'oferta la captura
  * src/main.jsx (src/pwa/instalacio.js) i només arriba a Chromium d'escriptori,
  * fora d'iframe, fora de l'app nativa i quan l'app encara no és instal·lada.

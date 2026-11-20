@@ -88,7 +88,7 @@ function fullsCss(dir) {
 const TOKENS = llig('src/css/tokens.css');
 const CANON = llig('src/css/design-tokens.css');
 const LAYOUT = llig('src/css/layout.css');
-const APPS = llig('src/apps/plataforma/apps.css');
+const APPS = llig('src/css/diferit-apps-plataforma.css');
 
 const GRUP = '--sdp-crom-grup-text';
 const DESPLEGABLE = 'nav.app-sidebar .nav-item--desplegable';
@@ -351,7 +351,7 @@ describe('les regles · layout.css i apps.css', () => {
       .flatMap((abs) => usosDelToken(readFileSync(abs, 'utf8')).map((u) => `${abs.slice(ARREL.length + 1)}: ${u}`))
       .sort();
     expect(usos).toEqual([
-      `src/apps/plataforma/apps.css: ${TITOL_GRUP} { color }`,
+      `src/css/diferit-apps-plataforma.css: ${TITOL_GRUP} { color }`,
       `src/css/layout.css: ${DESPLEGABLE} { color }`
     ]);
   });

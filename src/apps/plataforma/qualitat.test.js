@@ -31,7 +31,7 @@ const TOTS = [...APPS, ...NUCLI_TOCAT];
 const esProva = (f) => /\.test\.jsx?$/.test(f) || f.includes('/__fixtures__/');
 const PRODUCCIO = APPS.filter((f) => !esProva(f));
 const JSX = PRODUCCIO.filter((f) => f.endsWith('.jsx'));
-const CSS_APPS = 'src/apps/plataforma/apps.css';
+const CSS_APPS = 'src/css/diferit-apps-plataforma.css';
 const especificadors = (codi) => [...codi.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].map((m) => m[1]);
 const senseComentarisCss = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 
@@ -115,7 +115,7 @@ describe('Pedra Seca · JSX', () => {
 
   test('tota classe sdp-app-* té regla a apps.css; la resta, a un full canònic o heretada de la barra d’App.jsx', () => {
     const propies = classesAmbRegla([CSS_APPS]);
-    const canoniques = classesAmbRegla([...fitxersDe('src/css', /\.css$/), 'src/components/layout/AppGridShell.css']);
+    const canoniques = classesAmbRegla(fitxersDe('src/css', /\.css$/));
     const heretades = new Set(classesDe(llig('src/app/App.jsx')));
     const sdpApp = [];
     const orfes = [];
@@ -162,8 +162,10 @@ describe('Pedra Seca · apps.css', () => {
     expect(css).not.toMatch(new RegExp(['#[0-9a-fA-F]{3,8}\\b|\\brgba?\\(|\\bhsla?\\(', '|--sdp-[a-z0-9-]+\\s*:'].join('')));
   });
 
-  test('sense ombres, :has(), !important, @layer ni @import; rem en múltiples de 0,25 i px només per a vores d’1px', () => {
-    const vetat = new RegExp(['box-', 'shadow|:', 'has\\(|!', 'important|@', 'layer|@', 'import'].join(''));
+  test('dins d’un sol @layer components, sense ombres, :has(), !important ni @import; rem en múltiples de 0,25 i px només per a vores d’1px', () => {
+    expect(css.trimStart().startsWith('@layer components {')).toBe(true);
+    expect(css.match(/@layer\b/g)).toHaveLength(1);
+    const vetat = new RegExp(['box-', 'shadow|:', 'has\\(|!', 'important|@', 'import'].join(''));
     expect(vetat.test(css)).toBe(false);
     for (const [, valor] of css.matchAll(/(\d*\.?\d+)rem/g)) expect(Number(valor) % 0.25, `${valor}rem`).toBe(0);
     for (const [, valor] of css.matchAll(/(\d*\.?\d+)px/g)) expect(valor, `${valor}px`).toBe('1');
@@ -178,10 +180,14 @@ describe('Pedra Seca · apps.css', () => {
     expect(base.cos).toMatch(/overflow:\s*hidden/);
   });
 
-  test('index.css l’importa una sola vegada, dins de la capa components', () => {
+  test('és un full diferit fora d’index.css i adoptat amb useFullDiferit pels components de la plataforma', () => {
     const index = llig('src/css/index.css');
-    expect(index.split('apps/plataforma/apps.css').length - 1).toBe(1);
-    expect(index).toContain("@import url('../apps/plataforma/apps.css') layer(components);");
+    expect(index).not.toContain('apps.css');
+    expect(index).not.toContain('diferit-apps-plataforma.css');
+    for (const propietari of ['AvisApp.jsx', 'BarraApp.jsx', 'ClosaAplicacio.jsx', 'PortalApps.jsx', 'RutaApps.jsx']) {
+      expect(llig(`src/apps/plataforma/${propietari}`), propietari).toContain("useFullDiferit(");
+      expect(llig(`src/apps/plataforma/${propietari}`), propietari).toContain("'apps-plataforma'");
+    }
   });
 });
 

@@ -20,7 +20,7 @@ import AppGridColumn, { TextosDeLaColumna } from './AppGridColumn.jsx';
 import { AppGridContext } from './AppGridShell.jsx';
 
 /* La CSS de la closca, llegida de veres (com AppGridShell.contrast.capes.test.js). */
-const CSS = readFileSync(resolve(process.cwd(), 'src/components/layout/AppGridShell.css'), 'utf8')
+const CSS = readFileSync(resolve(process.cwd(), 'src/css/app-grid-shell.css'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '');
 const FONT = readFileSync(resolve(process.cwd(), 'src/components/layout/AppGridColumn.jsx'), 'utf8');
 
@@ -291,7 +291,7 @@ describe('CSS de la closca (AppGridShell.css)', () => {
    conserva regles per a una icona dins de l'acordió, que no casarien mai. */
 describe('cap regla morta per a la icona de dins de l’acordió', () => {
   test('cap selector de la CSS nomena .app-grid-col-header__plegable .sdp-workspace-nav-item__icon', () => {
-    const fulls = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css', 'src/components/layout/AppGridShell.css'];
+    const fulls = ['src/css/modules.css', 'src/css/components.css', 'src/css/layout.css', 'src/css/app-grid-shell.css'];
     const morts = [];
     for (const full of fulls) {
       const css = readFileSync(resolve(process.cwd(), full), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');

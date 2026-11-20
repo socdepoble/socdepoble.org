@@ -1,4 +1,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila, diaIso } from '../../components/universal/editorial.js';
@@ -724,6 +726,8 @@ function recarregaSenseSessio(navigate) {
 export function DetallPrivacitat({
   identitat, config = {}, onPerfilCanviat, onSessioTancada,
 }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const navigate = useNavigate();
   const tancaSessio = useCallback(
     () => (onSessioTancada ? onSessioTancada() : recarregaSenseSessio(navigate)),
@@ -762,7 +766,7 @@ export function DetallPrivacitat({
         authorHref: rutaDePerfil('persona', dades?.id),
       }}
     >
-      <div className="perfil-compte">
+      <div ref={arrelPerfilRef} className="perfil-compte">
         {ambCompte ? <BlocDades config={config} /> : null}
         <VisibilitatConnexions id={dades?.id || identitat.id} config={config} t={t || undefined} />
         {ambConsentiment ? <BlocConsentiment config={config} /> : null}

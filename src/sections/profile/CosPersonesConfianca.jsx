@@ -13,7 +13,10 @@
  * `textosMostra`, exclusiu del laboratori, substituïx els missatges de compte
  * i recuperació per estat de mostra; el comportament real per defecte es conserva.
  */
+import { useRef } from 'react';
 import { ShieldAlert, ShieldCheck, UserCheck, UserRound } from 'lucide-react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { Alerta, Boto, Insignia } from '../../components/PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { omple } from '../../config/moderacio.js';
@@ -84,6 +87,8 @@ export default function CosPersonesConfianca({
   onDisputa = null,
   textosMostra = null
 }) {
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const tr = (parell, valors = {}) => omple(tradueix(t, parell), valors);
   const ranuresNormalitzades = normalitzaRanuresCerimonia(ranures);
@@ -118,6 +123,7 @@ export default function CosPersonesConfianca({
 
   return (
     <div
+      ref={arrelPerfilRef}
       className="perfil-compte__confianca-targeta"
       data-estat={enDisputa ? ESTATS_CERIMONIA_SAS.disputa : (estat?.estat ?? (error ? 'error' : 'carregant'))}
     >

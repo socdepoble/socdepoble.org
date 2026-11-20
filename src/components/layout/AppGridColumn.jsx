@@ -52,6 +52,24 @@ const posaNom = (plantilla, titol) => plantilla.replace('{nom}', () => String(ti
  * document a la llista (NOTES; al Bloc, NotebookPen). PanelLeftOpen queda
  * com a reserva per a qui no en passa cap.
  */
+const CLASSES_CAPCALERA_OBERTA = Object.freeze({
+  base: 'app-grid-col-header',
+  dark: 'app-grid-col-header app-grid-col-header--dark',
+  intens: 'app-grid-col-header app-grid-col-header--dark-intens',
+  acordio: 'app-grid-col-header app-grid-col-header--accordion',
+  acordioDark: 'app-grid-col-header app-grid-col-header--accordion app-grid-col-header--dark',
+  acordioIntens: 'app-grid-col-header app-grid-col-header--accordion app-grid-col-header--dark-intens',
+});
+
+function classeCapcaleraOberta(esAcordio, esDark) {
+  if (esAcordio) {
+    if (esDark === 'intens') return CLASSES_CAPCALERA_OBERTA.acordioIntens;
+    return esDark ? CLASSES_CAPCALERA_OBERTA.acordioDark : CLASSES_CAPCALERA_OBERTA.acordio;
+  }
+  if (esDark === 'intens') return CLASSES_CAPCALERA_OBERTA.intens;
+  return esDark ? CLASSES_CAPCALERA_OBERTA.dark : CLASSES_CAPCALERA_OBERTA.base;
+}
+
 export default function AppGridColumn({
   titol,
   icona: Icona = null,
@@ -202,7 +220,7 @@ export default function AppGridColumn({
   }
 
   return (
-    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark === 'intens' ? ' app-grid-col-header--dark-intens' : esDark ? ' app-grid-col-header--dark' : ''}`}>
+    <div className={classeCapcaleraOberta(esAcordio, esDark)}>
       {esquerra}
       {startActions.length > 0 && (
         <div className="app-grid-col-header__accions">

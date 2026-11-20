@@ -67,7 +67,7 @@ async function obri(titol) {
 function classesConegudes() {
   const fulls = [
     ...readdirSync(path.join(process.cwd(), 'src/css')).filter((f) => f.endsWith('.css')).map((f) => `src/css/${f}`),
-    'src/components/layout/AppGridShell.css'
+    'src/css/app-grid-shell.css'
   ];
   const text = fulls.map((f) => readFileSync(path.join(process.cwd(), f), 'utf8')).join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
   return new Set([...text.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));

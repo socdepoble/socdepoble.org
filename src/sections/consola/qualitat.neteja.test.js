@@ -21,8 +21,8 @@ const FITXERS = [
   'src/sections/consola/ConsolaSection.neteja.test.jsx',
   'src/sections/consola/qualitat.neteja.test.js',
   // Només el comentari ranci.
-  'src/sections/consola/mapa/actorsMapa.test.js',
-  'src/components/universal/PanellCrom.jsx'
+  'src/sections/consola/mapa/actorsMapa.test.js'
+  // src/components/universal/PanellCrom.jsx ix del pany: v1.2.14 el retira (D-v1213-1).
   // guardaConsola.test.js ix amb la guarda (ordre del Mestre 30-10-2026, T2.2):
   // /consola/* ja no té barrera de sessió (App.jsx).
 ];

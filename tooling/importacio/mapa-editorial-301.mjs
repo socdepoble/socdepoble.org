@@ -1,6 +1,6 @@
 /** R32.16 · Explicit destination inventory + imported review artifacts.
  * Reuses the complete R32.14 verifier; no guessed slugs, HTTP or deployment. */
-import { construeixMapaEditorial301, compilaMapaRedireccions301 } from '../seo/mapa-redireccions-301.mjs';
+import { construeixMapaEditorial301, compilaMapaRedireccions301, benchmark301 } from '../seo/mapa-redireccions-301.mjs';
 
 export function generaTaulaEditorial301(articles, { destinsDisponibles, destinacions } = {}) {
   return { schema: 'sdp.editorial.redirect301.review.v1', ...construeixMapaEditorial301(articles, { destinsDisponibles, destinacions }) };
@@ -41,5 +41,17 @@ export function benchmarkTaulaEditorial301({ count = 100000, samples = 9, profil
     if (table.redireccions.length !== count || table.verificacio.mode !== 'general') throw new Error('Benchmark no general o corpus incomplet.');
   }
   const medianMs = [...samplesMs].sort((a, b) => a - b)[Math.floor(samples / 2)];
-  return { schema: 'sdp.editorial.redirect301.benchmark.v1', profile, count, fixtureMs, samplesMs, medianMs, targetMs: 25, targetMet: medianMs < 25, workload: { shuffledArticles: true, shuffledInventory: true, queryRows, seed: 3216 }, timingIncludes: `new row construction, ${profile === 'direct' ? 'explicit reviewed article route property' : 'explicit URL dictionary destination'} lookup and full fresh verifier; no result cache`, limits: 'Fixture generation, output JSON serialization and hosting configuration emission excluded; this is a measured local profile, not a universal latency guarantee.' };
+  return { schema: 'sdp.editorial.redirect301.benchmark.v1', profile, count, fixtureMs, samplesMs, medianMs, targetMs: 25, targetMet: medianMs < 25, workload: { shuffledArticles: true, shuffledInventory: true, queryRows, seed: 3216, firstSampleIncluded: true }, timingIncludes: `new row construction, ${profile === 'direct' ? 'explicit reviewed article route property' : 'explicit URL dictionary destination'} lookup and full fresh invariant validation in the fused constructor; no result cache`, limits: 'Fixture generation, output JSON serialization and hosting configuration emission excluded; this is a measured local profile, not a universal latency guarantee.' };
+}
+
+/** One explicit acceptance receipt. The historical R32.16 corpora and their
+ * seeds remain unchanged; no warmup samples or GC work are removed. */
+export function benchmarkOnadaR3217() {
+  const verifier = benchmark301({ shape: 'general-shuffled', count: 100000, samples: 9 });
+  const direct = benchmarkTaulaEditorial301({ profile: 'direct', count: 100000, samples: 9 });
+  const lookup = benchmarkTaulaEditorial301({ profile: 'lookup', count: 100000, samples: 9 });
+  return { schema: 'sdp.redirect301.acceptance.r3217.v1', verifier, direct, lookup,
+    valid: verifier.targetMet && direct.targetMet && lookup.targetMet,
+    firstSampleIncluded: true, targetMs: 25,
+    limits: 'Measured local latency of three explicit corpora; no universal latency guarantee, deployment or HTTP destination validation.' };
 }

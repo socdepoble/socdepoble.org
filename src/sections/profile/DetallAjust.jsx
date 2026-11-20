@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { Globe, Lock } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { MIDA_AVATAR, esAvisDeLaFoto, fotoDinsDelPressupost } from '../../utils/pujadaImatge.js';
@@ -166,6 +168,8 @@ export default function DetallAjust({
      el botó premut desapareix o es desactiva. El focus va a un lloc estable
      (el «Llevar» del costat, el del poble que ara és principal, el Selector o
      la llista) i una regió viva diu el canvi i que encara cal «Guardar». */
+  const arrelPerfilRef = useRef(null);
+  useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const contenidorPobles = useRef(null);
   const focusPobles = useRef(null);
   const [avisPobles, setAvisPobles] = useState('');
@@ -855,7 +859,7 @@ export default function DetallAjust({
   }
 
   return (
-    <div className="perfil-detall">
+    <div ref={arrelPerfilRef} className="perfil-detall">
       {ajust ? renderitzaFormulari() : (
         <p className="sdp-buit">
           Selecciona un ajust de l'esquerra per a modificar-lo.

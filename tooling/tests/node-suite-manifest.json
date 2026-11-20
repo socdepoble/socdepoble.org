@@ -282,7 +282,12 @@
     "tests/r3216-entrades-dades.test.mjs",
     "tests/r3216-torns-rebuts-matriu.test.mjs",
     "tooling/tests/importacio-editorial-r3216.test.mjs",
-    "tests/architecture-i-03-actuar.r32_16.test.mjs"
+    "tests/architecture-i-03-actuar.r32_16.test.mjs",
+    "tests/r3217-rebut-produccio.test.mjs",
+    "tests/r3217-reserva-inventari-postgres.test.mjs",
+    "tooling/tests/mapa-editorial-r3217.test.mjs",
+    "tests/tractor-craft-paritat-visual.test.mjs",
+    "tests/gauntlet-71-rutes-cdp.r32_18.test.mjs"
   ],
   "files": [
     {
@@ -2450,6 +2455,31 @@
       "path": "tests/architecture-i-03-actuar.r32_16.test.mjs",
       "suite": "primary",
       "reason": "R32.16 Gemini · ARCHITECTURE.md quadra amb els comptadors del codi viu i 03_actuar no porta taules de tres columnes o més."
+    },
+    {
+      "path": "tests/r3217-rebut-produccio.test.mjs",
+      "suite": "primary",
+      "reason": "Attestació R32.15 pinada: SQL, hashes, mutacions i límits de consulta remota."
+    },
+    {
+      "path": "tests/r3217-reserva-inventari-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "Reserva atòmica multi-tenant PostgreSQL natiu i PGlite R32.17."
+    },
+    {
+      "path": "tooling/tests/mapa-editorial-r3217.test.mjs",
+      "suite": "primary",
+      "reason": "Invariants 301: collisions exactes, aliases i corpus mutat R32.17."
+    },
+    {
+      "path": "tests/tractor-craft-paritat-visual.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.14 · Porta Craft Anything de paritat visual: Tarjan sobre el graf d'imports, Page Claims purs i Chrome headless aïllat sense processos ni temporals residuals (se salta sense Chrome)."
+    },
+    {
+      "path": "tests/gauntlet-71-rutes-cdp.r32_18.test.mjs",
+      "suite": "primary",
+      "reason": "Gemini R32.18 · Arnés CDP de les 71 rutes canòniques + /page/guia i 6 micro-apps: cobertura de rutes, viewports, Mode Sènior, temes i 5 llengües, i sonda DOM pura (sense Chrome)."
     }
   ]
 }

@@ -45,7 +45,7 @@ const declaracions = (cos) => cos.split(';')
   .map(([prop, ...valor]) => [prop.trim(), valor.join(':').trim()]);
 
 const modules = llig('src/css/modules.css');
-const perfil = llig('src/sections/profile/PerfilShell.css');
+const perfil = llig('src/css/diferit-perfil-shell.css');
 const layout = llig('src/css/layout.css');
 const tokens = llig('src/css/tokens.css');
 const especimen = llig('src/sections/disseny/cataleg/detalls/EspecimenColor.jsx');
@@ -394,7 +394,7 @@ function hexFora(css) {
 
 test.each([
   ['src/css/modules.css', modules],
-  ['src/sections/profile/PerfilShell.css', perfil],
+  ['src/css/diferit-perfil-shell.css', perfil],
   ['src/css/tokens.css', tokens],
 ])('%s no porta cap hex cru fora dels blocs de tema (Design Guard)', (_ruta, css) => {
   expect(hexFora(css)).toEqual([]);

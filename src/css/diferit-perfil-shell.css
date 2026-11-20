@@ -1,3 +1,4 @@
+@layer components {
 /* ═══════════════════════════════════════════════════════════════════
    Estils interns del Gestor de Perfils i Ajustos
    ═══════════════════════════════════════════════════════════════════ */
@@ -41,8 +42,8 @@
    quadra si el contenidor que fa scroll és el mateix on la blava i la
    taronja són sticky. Tot el que pinta la tercera columna del Perfil
    (PerfilEditor, El compte, Privacitat i dades, les utilitats) ja porta
-   el seu contenidor amb scroll. Aquest fitxer s'importa a la capa
-   `components` després de modules.css: (0,2,0) guanya a
+   el seu contenidor amb scroll. Aquest full diferit s'adopta a la capa
+   `components` darrere de la cascada principal (i, per tant, de modules.css): (0,2,0) guanya a
    `.sdp-workspace-detail { overflow-y: auto }`. */
 .perfil-espai .perfil-espai__detall {
   overflow: hidden;
@@ -125,12 +126,6 @@
 /* ── Detall ── */
 .perfil-detall {
   padding: var(--sdp-space-6) var(--sdp-space-4);
-}
-
-.perfil-detall-buit {
-  padding: var(--sdp-space-8) var(--sdp-space-4);
-  color: var(--sdp-text-suau);
-  text-align: center;
 }
 
 /* ── El compte (DetallCompte): un bloc per ajust o dret ── */
@@ -373,5 +368,4 @@
   gap: var(--sdp-space-2);
   margin-block-start: auto;
 }
-
-
+}

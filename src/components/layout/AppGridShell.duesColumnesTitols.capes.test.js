@@ -57,7 +57,7 @@ const RESERVA = '@supports not (container-type: inline-size)';
 const MEDIA = (px) => `@media (max-width: ${px}px)`;
 
 const modules = regles(llig('src/css/modules.css'));
-const graella = regles(llig('src/components/layout/AppGridShell.css'));
+const graella = regles(llig('src/css/app-grid-shell.css'));
 
 /* La regla única amb eixe selector i eixes condicions (la capa components de
    modules.css no compta: AppGridShell.css hi entra sencer per l'@import). */

@@ -266,7 +266,7 @@ test('Decisió 4 · en mitjà, el separador del mig compta només el detall', ()
 });
 
 /* ═══ La regla CSS (jsdom no pinta: es llig el full) ═══════════════════ */
-const css = readFileSync(resolve(process.cwd(), 'src/components/layout/AppGridShell.css'), 'utf8')
+const css = readFileSync(resolve(process.cwd(), 'src/css/app-grid-shell.css'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
 
 test('P6 · CSS: el rail és --app-grid-col-collapsed i el detall, la resta; tot penja de data-llista="rail"', () => {

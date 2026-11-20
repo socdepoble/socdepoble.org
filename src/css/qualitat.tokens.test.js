@@ -143,7 +143,7 @@ const INSTANTANIA_CODI = new Set([
      (ordre del Mestre del 31-10-2026; el criteri del visor del 30-10). */
   /* Desplegable (Dropdown.jsx): amplada mesurada del disparador. */
   '--sdp-desplegable-ample',
-  /* Panell del crom (PanellCrom.jsx): la mostra del color triat. */
+  /* Panell del crom (PanellCromIntegrat, PanellsAdministracioSistema.jsx): la mostra del color triat. */
   '--sdp-crom-mostra',
   /* Fons d'imatge del Xat (PedraSecaEmbed.jsx). */
   '--sdp-xat-fons-imatge'

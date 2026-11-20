@@ -92,7 +92,7 @@ test('encastat: dues .sdp-root niades dins de l’ombra (punt de muntatge > AppS
   const node = document.createElement('button');
   interior.appendChild(node);
   expect(arrelDelPoble(ombra)).toBe(interior);
-  expect(node.closest('.sdp-root')).toBe(interior);   // el que fan PanellCrom, FacetaEstil i Dialeg
+  expect(node.closest('.sdp-root')).toBe(interior);   // el que fan PanellCromIntegrat, FacetaEstil i Dialeg
   m.core = { personalitzacio: { estil: { payload: { v: 1, tokens: { '--sdp-radi-s': '12px' }, crom: { to: 30 } }, versio: 1 } } };
   const { unmount } = render(<EstilDelPoble targetNode={ombra} />);
   expect(teEstilAplicat(interior)).toBe(true);
