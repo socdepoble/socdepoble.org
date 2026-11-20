@@ -350,22 +350,24 @@ function grupsDe(text) {
 
 /** Si una IP en text (IPv4 o IPv6) NO és de la xarxa pública; una que no s'entén, tampoc no ho és. */
 export function esIpNoPublica(text) {
+  // DNS answers must be literal addresses, never URL syntax, scoped zones or
+  // ambiguous octal/decimal spellings that a later socket parser can reinterpret.
+  if (typeof text !== 'string' || !text || text.length > 45 || /[\s%]/.test(text) || text.includes('[') || text.includes(']')) return true;
   const octets = octetsDe(text);
-  if (octets) return ipv4NoPublica(octets);
+  if (octets) return octets.join('.') !== text || ipv4NoPublica(octets);
   const g = grupsDe(text);
   if (!g) return true;
-  const v4 = (alt, baix) => ipv4NoPublica([alt >> 8, alt & 0xff, baix >> 8, baix & 0xff]);
   const zeros = (fins) => g.slice(0, fins).every((grup) => grup === 0);
   if (zeros(8)) return true;
   if (zeros(7) && g[7] === 1) return true;
-  if (zeros(5) && g[5] === 0xffff) return v4(g[6], g[7]);
+  if (zeros(5) && g[5] === 0xffff) return true; // IPv4-mapped: no alternate socket family bypass.
   /* SIIT, ::ffff:0:0:0/96 (RFC 2765): una adreça traduïda, mai una de pública. */
   if (zeros(4) && g[4] === 0xffff && g[5] === 0) return true;
-  if (zeros(6)) return v4(g[6], g[7]);
-  if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((grup) => grup === 0)) return v4(g[6], g[7]);
+  if (zeros(6)) return true;
+  if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((grup) => grup === 0)) return true;
   /* NAT64 d'ús local, 64:ff9b:1::/48 (RFC 8215): una xarxa de traducció pròpia. */
   if (g[0] === 0x64 && g[1] === 0xff9b && g[2] === 1) return true;
-  if (g[0] === 0x2002) return v4(g[1], g[2]);
+  if (g[0] === 0x2002) return true; // Deprecated 6to4 relay space, not a direct public endpoint.
   if ((g[0] & 0xfe00) === 0xfc00) return true;
   if ((g[0] & 0xffc0) === 0xfe80 || (g[0] & 0xffc0) === 0xfec0) return true;
   if ((g[0] & 0xff00) === 0xff00) return true;
@@ -373,7 +375,9 @@ export function esIpNoPublica(text) {
      documentació: 2001:db8::/32 i 3fff::/20 (RFC 9637). */
   if (g[0] === 0x2001 && (g[1] < 0x0200 || g[1] === 0x0db8)) return true;
   if (g[0] === 0x3fff && g[1] < 0x1000) return true;
-  return g[0] === 0x0100 && g[1] === 0 && g[2] === 0 && g[3] === 0;
+  // Only currently allocated global unicast space (2000::/3). This also
+  // excludes unspecified, discard, NAT64 local/translated and reserved space.
+  return (g[0] & 0xe000) !== 0x2000;
 }
 
 /* ── Qui demana (el límit) ────────────────────────────────────────────────── */

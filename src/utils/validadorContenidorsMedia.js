@@ -1,10 +1,12 @@
-/** R32.14. Validador estructural O(bytes), sense DOM, I/O o descodificador.
+/** R32.15. Validador estructural O(bytes), sense DOM, I/O o descodificador.
  * Rebutja truncaments, MIME fals i dades fora del contenidor. No acredita el
  * còdec ni detecta codi amagat dins de metadades/mostres legítimes. PNG
  * té CRC; JPEG, WebP, MP4 i WAV no tenen un CRC global al format.
  * Referències: W3C PNG3, Apple QTFF, WebM Container Guidelines, RIFF WebP.
  */
 import { validaEstructuraImatge } from '../data/mitjansPublicsNets.js';
+import { validaOggMedia, validaAvifMedia } from './validadorOggAvifMedia.js';
+import { validaPdfMedia } from './validadorPdfMedia.js';
 
 const MAX_BYTES = 150_000_000;
 const fail = () => { throw Object.assign(new TypeError('El contenidor multimèdia és invàlid o està incomplet.'), { code: 'format', codi: 'contenidor-media-invalid' }); };
@@ -219,6 +221,11 @@ function webm(b) {
   for (const number of referencedTracks) must(trackNumbers.has(number));
 }
 
+const MPEG_CRC_TABLE = Uint16Array.from({ length: 256 }, (_, n) => {
+  let crc = n << 8;
+  for (let bit = 0; bit < 8; bit++) crc = ((crc << 1) ^ (crc & 0x8000 ? 0x8005 : 0)) & 0xffff;
+  return crc;
+});
 function mp3(b) {
   let p = 0, frames = 0, version, rate;
   if (text(b, 0, 3) === 'ID3') {
@@ -238,7 +245,17 @@ function mp3(b) {
     const hz = [44100, 48000, 32000][sampling] / (v === 3 ? 1 : v === 2 ? 2 : 4);
     if (frames) must(version === v && rate === hz); else { version = v; rate = hz; }
     const size = Math.floor((v === 3 ? 144000 : 72000) * (v === 3 ? v1 : v2)[index] / hz) + ((b[p + 2] >> 1) & 1);
-    must(size >= 4 && p + size <= b.length); p += size; frames++;
+    must(size >= 4 && p + size <= b.length);
+    if ((b[p + 1] & 1) === 0) {
+      // ISO MPEG Layer III protects header bits16..31 and the entire side-info,
+      // not main_data/Huffman samples. MPEG1: mono17/stereo32; LSF: mono9/stereo17.
+      const mono = (b[p + 3] >> 6) === 3, side = v === 3 ? mono ? 17 : 32 : mono ? 9 : 17;
+      must(size >= 6 + side); let crc = 0xffff;
+      const feed = byte => { crc = ((crc << 8) ^ MPEG_CRC_TABLE[((crc >>> 8) ^ byte) & 255]) & 0xffff; };
+      feed(b[p + 2]); feed(b[p + 3]); for (let at = p + 6; at < p + 6 + side; at++) feed(b[at]);
+      must(crc === b[p + 4] * 256 + b[p + 5]);
+    }
+    p += size; frames++;
   }
   must(frames > 0 && p === b.length);
 }
@@ -256,11 +273,14 @@ export function validaContenidorMedia(bytes, mime) {
   else if (['video/webm', 'audio/webm'].includes(mime)) { webm(bytes); format = 'webm'; }
   else if (['audio/wav', 'audio/wave', 'audio/x-wav'].includes(mime)) { wav(bytes); format = 'wav'; }
   else if (['audio/mpeg', 'audio/mp3'].includes(mime)) { mp3(bytes); format = 'mp3'; }
+  else if (['audio/ogg', 'application/ogg'].includes(mime)) { validaOggMedia(bytes); format = 'ogg'; }
+  else if (mime === 'image/avif') { validaAvifMedia(bytes); format = 'avif'; }
+  else if (mime === 'application/pdf') { try { validaPdfMedia(bytes); } catch { fail(); } format = 'pdf'; }
   else fail();
   return Object.freeze({ format, mime, bytes: bytes.length });
 }
 
-/** Porta de pujada per als set formats validats; el propietari comprova la
+/** Porta de pujada per als formats validats; el propietari comprova la
  * sessió després de l'await i abans de reservar/enviar cap byte remot. */
 export async function validaFitxerMedia(fitxer, { signal } = {}) {
   must(fitxer instanceof Blob && fitxer.size > 0 && fitxer.size <= MAX_BYTES);

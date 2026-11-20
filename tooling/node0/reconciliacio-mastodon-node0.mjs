@@ -5,8 +5,10 @@
  * require operator review before any later public resurrection of the same URI.
  */
 import {COMPTE_MASTODON as C,normalitzaEstatMastodon,textMastodon,executaAmbTerminiMastodon} from '../../src/data/federacio/pontMastodon.js';
+import {peticioMastodont} from './xarxa-node0.mjs';
 import {sqlText,sqlJson} from './postgres-node0.mjs';
 
+const fetchNatiu=globalThis.fetch;
 const URI=/^https:\/\/mastodont\.cat\/users\/depoble\/statuses\/([1-9][0-9]{0,29})$/;
 const ID=/^[1-9][0-9]{0,29}$/;
 const fail=code=>{throw Error(code);};
@@ -79,6 +81,7 @@ export function sqlReconciliacioMastodon(plan){
   return envoltaSqlMastodon([...uris],statement);
 }
 async function jsonPublic(url,{fetchImpl,signal,allowMissing=false}){
+  if(fetchImpl===fetchNatiu||fetchImpl===globalThis.fetch)fail('mastodon_reconciliation_dns_pin_required');
   if(signal.aborted)fail('mastodon_reconciliation_aborted');let response;
   try{response=await fetchImpl(url,{method:'GET',headers:{Accept:'application/json, application/jrd+json','Cache-Control':'no-cache',Pragma:'no-cache'},redirect:'error',credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',signal});}catch{fail('mastodon_reconciliation_transport');}
   if(signal.aborted)fail('mastodon_reconciliation_aborted');
@@ -108,7 +111,8 @@ function project(status,accountId,checkedAt){
 async function comptePublicVerificat(fetchImpl,signal){
   const get=url=>jsonPublic(url,{fetchImpl,signal});
   const wf=(await get(`${C.origen}/.well-known/webfinger?resource=acct%3Adepoble%40mastodont.cat`)).value;
-  if(wf?.subject!=='acct:'+C.acct||!Array.isArray(wf.links)||!wf.links.some(link=>link?.rel==='self'&&['application/activity+json','application/ld+json; profile="https://www.w3.org/ns/activitystreams"'].includes(link.type)&&link.href===C.actor))fail('mastodon_reconciliation_webfinger');
+  const self=Array.isArray(wf?.links)?wf.links.filter(link=>link?.rel==='self'):[];
+  if(wf?.subject!=='acct:'+C.acct||self.length!==1||!['application/activity+json','application/ld+json; profile="https://www.w3.org/ns/activitystreams"'].includes(self[0].type)||self[0].href!==C.actor)fail('mastodon_reconciliation_webfinger');
   const account=(await get(C.origen+'/api/v1/accounts/lookup?acct=depoble')).value;if(!verifiedAccount(account))fail('mastodon_reconciliation_account');return account;
 }
 async function estatActualVerificat(uri,{account,fetchImpl,signal,checkedAt}){
@@ -123,11 +127,11 @@ async function estatActualVerificat(uri,{account,fetchImpl,signal,checkedAt}){
  * edited_at retains milliseconds. Neither packet arrival order nor that coarse
  * timestamp can establish the current public body. Revalidate its exact URI.
  */
-export async function lligEstatMastodonActual({uri,fetchImpl=globalThis.fetch,now=Date.now,deadlineMs=LIMITS_RECONCILIACIO.deadlineMs}={}){
+export async function lligEstatMastodonActual({uri,fetchImpl=peticioMastodont,now=Date.now,deadlineMs=LIMITS_RECONCILIACIO.deadlineMs}={}){
   idUriMastodon(uri);const checkedAt=new Date(now()).toISOString();
   return executaAmbTerminiMastodon(async signal=>{const account=await comptePublicVerificat(fetchImpl,signal);return estatActualVerificat(uri,{account,fetchImpl,signal,checkedAt});},{terminiMs:deadlineMs});
 }
-export async function preparaReconciliacioMastodon({knownUris=[],knownComplete=true,fetchImpl=globalThis.fetch,now=Date.now,deadlineMs=LIMITS_RECONCILIACIO.deadlineMs}={}){
+export async function preparaReconciliacioMastodon({knownUris=[],knownComplete=true,fetchImpl=peticioMastodont,now=Date.now,deadlineMs=LIMITS_RECONCILIACIO.deadlineMs}={}){
   if(!Array.isArray(knownUris)||knownUris.length>100||new Set(knownUris).size!==knownUris.length)fail('mastodon_reconciliation_known_invalid');for(const uri of knownUris)idUriMastodon(uri);
   const checkedAt=new Date(now()).toISOString();
   return executaAmbTerminiMastodon(async signal=>{

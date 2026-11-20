@@ -17,7 +17,7 @@ import { useApp } from '../../plataforma/index.js';
 import {
   OPCIONS_FONT, PASSOS_ENTREVISTA, PASSOS_G2, VIVA, estatInicialEntrevista, pasActual, progresEntrevista, useGenealogia
 } from '../nucli/index.js';
-import { textError } from '../textos.js';
+import { textError } from '../i18nGenealogia.js';
 import { CampData, EnllacBoto, MarcGenealogia, useIdioma, useT } from './comunes.jsx';
 
 const GENERACIONS_VISIBLES = Object.freeze(['G4', 'G3', 'G2', 'G1']);

@@ -40,6 +40,8 @@ export const PAGE_ROUTE_MAP = {
      /page/nodrir-la-iaia, van a /page/la-iaia-sabuda (R16b, C4-12). */
   'iaia-sabuda': '/page/la-iaia-sabuda',
   'nodrir-la-iaia': '/page/la-iaia-sabuda',
+  /* R32.16 · IDEA-287 · Àlies curt /page/guia cap a la guia didàctica pas a pas. */
+  guia: '/page/tot-el-que-pots-fer',
   /* Ordre del Mestre (R53, 261108) · Una sola publicació completa del pou:
      l'adreça antiga entra a l'article del Mur amb el replace de PageDetailSection. */
   'anatomia-rural': '/mur/noves-tecnologies-aplicades-a-la-cultura-rural',

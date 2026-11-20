@@ -17,7 +17,8 @@ const declarat = new Map(informe.migracions.map((m) => [m.versio, m.estatDeclara
 const fila = (versio) => taula.find((f) => f.versio === versio);
 
 // Rebuts d'una lectura de la base (no narratives del manifest com el «70/70»).
-const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11/;
+// Onada v1.2.13 · També la postverificació 10/10 del Super-Bundle R32.14 que el Mestre va executar a producció el 19-11-2026.
+const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE/;
 // NO aplicades que el bolcat del 13-11-2026 confirma o contradiu: cada una ho cita.
 const NO_APLICADES_DEL_BOLCAT = [
   '2610061448', '2610061450', '2610081400', '2610081543', '2610101900', '2611110010',
@@ -43,15 +44,16 @@ const DESCONEGUDES = [
 ];
 
 test('la taula canònica es llig sencera i cada estat és reconegut', () => {
-  // R32.14 adds only 20261119143000; the historical124 receipts stay exactly as in HEAD.
+  // R32.14 adds only 20261119143000. Onada v1.2.13 · Les files 122–124 giren a «Aplicada» amb el rebut del Super-Bundle
+  // R32.14 (19-11-2026); la resta de rebuts històrics es queden com eren, i l'empremta es torna a fixar.
   assert.equal(taula.length, 125);
   const historic = taula.filter(f => f.versio !== '20261119143000');
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
-    '693bb79f55e01622169354fc7d1a1eee3ad300d89c47465f9985353048cb7464');
+    'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
   assert.equal(fila('20261119143000').ordre, 125);
   assert.equal(fila('20261119143000').fitxer, '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql');
-  assert.equal(declarat.get('20261119143000'), 'declarada_no_aplicada');
+  assert.equal(declarat.get('20261119143000'), 'declarada_aplicada');
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
 });
@@ -123,6 +125,6 @@ test('tota vinyeta d’una fila declarada aplicada que encara diu «NO aplicada�
     while (j < linies.length && !/^(- |#)/.test(linies[j])) j += 1;
     const text = linies.slice(i, j).join(' ').replace(/\s+/g, ' ');
     if (!/NO aplicada|no acreditat/.test(text)) continue;
-    assert.match(text, /Estat vigent: aplicada a producció segons el bolcat del 13-11-2026/, `vinyeta de ${f.versio}`);
+    assert.match(text, /Estat vigent: aplicada a producció (?:segons el bolcat del 13-11-2026|el 19-11-2026)/, `vinyeta de ${f.versio}`);
   }
 });

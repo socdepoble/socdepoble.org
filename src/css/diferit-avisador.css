@@ -265,4 +265,12 @@
   .sdp-avisador__copia-estat:empty {
     margin: 0;
   }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-avisador__persona {
+    min-block-size: 3.5rem;
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-avisador__copia-titol {
+    padding-block: var(--sdp-space-4);
+  }
 }

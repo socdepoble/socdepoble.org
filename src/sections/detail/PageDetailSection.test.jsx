@@ -49,12 +49,12 @@ test('BOTIGUES · /page/privadesa és un àlies de la política i baixa existent
 });
 
 test('W01: una pàgina sense ruta pròpia es pinta, no salta al Mur', () => {
-  visita('guia', { pages: [{ id: 'guia', title: 'Guia del poble' }] });
-  expect(screen.getByText('pàgina:guia:Guia del poble')).toBeTruthy();
+  visita('guia-local', { pages: [{ id: 'guia-local', title: 'Guia del poble' }] });
+  expect(screen.getByText('pàgina:guia-local:Guia del poble')).toBeTruthy();
 });
 
 test('W01: sense contingut encara no hi ha ni redirecció ni 404', () => {
-  visita('guia', { status: 'loading' });
+  visita('guia-local', { status: 'loading' });
   expect(screen.getByRole('status')).toBeTruthy();
   expect(screen.queryByText('404')).toBeNull();
 });
@@ -122,10 +122,10 @@ test('Onada 10 · cap pàgina amb destí al Panell té també acció de pàgina 
 });
 
 test('T8 · una pàgina sense destí no porta cap acció dalt (null, no un element que pinta null)', () => {
-  visita('guia', { pages: [{ id: 'guia', title: 'Guia del poble' }] });
+  visita('guia-local', { pages: [{ id: 'guia-local', title: 'Guia del poble' }] });
   expect(m.props.accioPrincipal).toBeNull();
   /* El de baix es passa com sempre: PublicarDeLaPagina no hi pinta res. */
-  expect(m.props.children.props).toEqual({ clau: 'guia' });
+  expect(m.props.children.props).toEqual({ clau: 'guia-local' });
 });
 
 /* Higiene d'amfitrió (ordre del Mestre, 261004) · Canviar de pàgina no busca
@@ -138,7 +138,7 @@ test('canviar de slug no consulta el document ni mou cap .app-main', () => {
   document.body.appendChild(main);
   const consulta = vi.spyOn(document, 'querySelector');
   try {
-    const { rerender } = visita('guia', { pages: [{ id: 'guia', title: 'Guia' }, { id: 'altra', title: 'Altra' }] });
+    const { rerender } = visita('guia-local', { pages: [{ id: 'guia-local', title: 'Guia' }, { id: 'altra', title: 'Altra' }] });
     m.slug = 'altra';
     rerender(<PageDetailSection />);
     expect(screen.getByText('pàgina:altra:Altra')).toBeTruthy();

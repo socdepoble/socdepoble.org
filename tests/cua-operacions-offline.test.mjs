@@ -254,13 +254,17 @@ test('termini de replay és fitat i avorta el transport sense ack ni timer recur
   assert.equal((await queue.peekOfflineQueue()).entries.length, 1);
 });
 
-test('una lease interrompuda es pot reprendre amb rellotge físic enrere, sempre amb el mateix opId idempotent', async () => {
+test('una lease interrompuda conserva el bloqueig si el rellotge recula i reprén després de caducar amb el mateix opId', async () => {
   let now = 1000; const { queue, memoria } = fixture({ ara: () => now }); const op = await queue.enqueueOfflineMutation(mutation());
   const begun = deferred(); const done = deferred();
   const drain = queue.drainOfflineQueue(replay(async (x) => { begun.resolve(); await done.promise; return { opId: x.opId, committed: true }; }));
   await begun.promise; queue.close(); done.resolve(); await drain; now = 1;
   const restarted = fixture({ memoria, ara: () => now }).queue; let seen;
-  const r = await restarted.drainOfflineQueue(replay(async (x) => { seen = x.opId; return { opId: x.opId, committed: true }; }));
+  const port = replay(async (x) => { seen = x.opId; return { opId: x.opId, committed: true }; });
+  assert.equal((await restarted.drainOfflineQueue(port)).status, 'busy');
+  assert.equal(seen, undefined);
+  now = 31000;
+  const r = await restarted.drainOfflineQueue(port);
   assert.equal(r.acknowledged, 1); assert.equal(seen, op.opId);
 });
 

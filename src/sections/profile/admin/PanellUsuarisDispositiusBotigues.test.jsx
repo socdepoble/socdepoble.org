@@ -45,8 +45,8 @@ const consultaAra = () => fireEvent.click(screen.getByRole('button', { name: TEX
 
 test('la card és la 7a, just davall d’Empaquetats, amb els camps del Mestre i «verificadors sobre 12» en lloc de «X/12»', () => {
   const apartats = itemsDAdministracioSistema();
-  expect(apartats).toHaveLength(7);
-  expect(apartats.map((a) => a.id).slice(-2)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
+  expect(apartats).toHaveLength(8);
+  expect(apartats.map((a) => a.id).slice(5, 7)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
   // Expectativa actualitzada a propòsit: P0-116 / IDEA-290 (ordre del Mestre, 261117) · Icona vectorial única del sistema sense emoji duplicat al text.
   expect(apartats[6]).toMatchObject({
     id: 'administracio-usuaris-i-dispositius',

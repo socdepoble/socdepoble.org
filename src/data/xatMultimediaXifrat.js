@@ -263,7 +263,7 @@ export async function xifraAdjuntXat({ cripto, fil, adjunt, emissor, bytes, mime
   if (classe === undefined) throw errorAdjunt('format', CODI_ADJUNT.mime);
   if (!capAlBucket(bytes.length, classe)) throw errorAdjunt('SDP-XAT-020', CODI_ADJUNT.sostre);
   if (!duradaValida(classe, durada)) throw errorAdjunt('durada', CODI_ADJUNT.durada);
-  if (mime !== 'audio/ogg') {
+  {
     const { validaContenidorMedia } = await import('../utils/validadorContenidorsMedia.js');
     validaContenidorMedia(bytes, mime);
     vigent?.();

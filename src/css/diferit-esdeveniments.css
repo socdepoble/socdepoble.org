@@ -1,11 +1,15 @@
-/* Full diferit (261118 · ordre del Mestre): regles del Quadre d'Esdeveniment i
-   Assistència (RSVP + nota al Xat) a les fitxes /events/:id i /calendari/:id, i
-   del desplegable ràpid d'esdeveniments a /calendari. S'adopta amb useFullDiferit
-   (0 B al full d'arrencada). Només tokens semàntics; cap ombra. */
+/* Full diferit (261118 · ordre del Mestre; ampliat a R32.16 · T1 IDEA-284):
+   regles del Quadre d'Esdeveniment i Assistència (RSVP 3 opcions + avís amable
+   de solapament horari + nota al Xat) a /events/:id i /calendari/:id, i del
+   desplegable ràpid d'esdeveniments a /calendari. S'adopta amb useFullDiferit
+   (0 B al full d'arrencada). Només tokens semàntics; cap ombra; sense selectors d'ancestre. */
 @layer components {
   .sdp-quadre-esdeveniment {
     flex: 1 1 100%;
     inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
     display: grid;
     gap: var(--sdp-space-4);
     padding: var(--sdp-space-5);
@@ -35,6 +39,7 @@
     font-weight: 800;
     line-height: var(--sdp-leading-titol);
     color: var(--sdp-text-titol);
+    overflow-wrap: anywhere;
   }
 
   .sdp-quadre-esdeveniment__meta {
@@ -42,6 +47,7 @@
     font-size: var(--sdp-fluid-cos);
     line-height: var(--sdp-leading-cos);
     color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
   }
 
   .sdp-quadre-esdeveniment__insignies {
@@ -71,6 +77,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--sdp-space-2);
+    max-inline-size: 100%;
   }
 
   .sdp-quadre-esdeveniment__nota {
@@ -100,8 +107,10 @@
 
   .sdp-cal-filtre-barra {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     margin-block-end: var(--sdp-space-4);
+    max-inline-size: 100%;
   }
 
   .sdp-cal-desplegable {
@@ -112,6 +121,9 @@
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-g);
     background: var(--sdp-fons-targeta);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
   }
 
   .sdp-cal-desplegable__cap {
@@ -120,6 +132,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--sdp-space-3);
+    min-inline-size: 0;
   }
 
   .sdp-cal-desplegable__titol {
@@ -127,6 +140,7 @@
     font-size: var(--sdp-text-h4);
     font-weight: 800;
     color: var(--sdp-text-titol);
+    overflow-wrap: anywhere;
   }
 
   .sdp-cal-desplegable__llista {
@@ -135,6 +149,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    min-inline-size: 0;
   }
 
   .sdp-cal-desplegable__llista[hidden] {
@@ -151,10 +166,13 @@
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-subtil);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
   }
 
   .sdp-cal-desplegable__info {
-    flex: 1 1 14rem;
+    flex: 1 1 12rem;
     min-inline-size: 0;
     display: grid;
     gap: var(--sdp-space-1);
@@ -164,18 +182,122 @@
     font-size: var(--sdp-fluid-cos);
     font-weight: 800;
     color: var(--sdp-text-titol);
+    overflow-wrap: anywhere;
   }
 
   .sdp-cal-desplegable__detall {
     margin: 0;
     font-size: var(--sdp-text-small);
     color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-cal-rsvp-comptador {
+    margin: 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-cal-rsvp-comptador__potser {
+    font-weight: 600;
+    color: var(--sdp-text-suau);
   }
 
   .sdp-cal-desplegable__accions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
     gap: var(--sdp-space-2);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .sdp-cal-rsvp-grup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .sdp-cal-rsvp-grup__boto,
+  .sdp-cal-rsvp-grup__accio {
+    min-block-size: 3rem;
+    min-inline-size: 3rem;
+    max-inline-size: 100%;
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-cal-rsvp-grup__boto[aria-pressed="true"] {
+    font-weight: 800;
+  }
+
+  .sdp-cal-rsvp-avis-solapament {
+    flex: 1 1 100%;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 2px solid var(--sdp-avis);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+
+  .sdp-cal-rsvp-avis-solapament > svg {
+    flex: 0 0 auto;
+    margin-block-start: var(--sdp-space-1);
+  }
+
+  .sdp-cal-rsvp-avis-solapament__text {
+    margin: 0;
+    min-inline-size: 0;
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  /* Mode Sènior (data-sdp-senior="true"): dianes >= 56x56 px (3.5rem) i alt contrast AAA */
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-cal-rsvp-grup__boto,
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-cal-rsvp-grup__accio {
+    min-block-size: 3.5rem;
+    min-inline-size: 3.5rem;
+    padding-inline: var(--sdp-space-4);
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-cal-rsvp-avis-solapament {
+    border-color: var(--sdp-vora-forta);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+  }
+
+  @media (max-width: 380px) {
+    .sdp-quadre-esdeveniment,
+    .sdp-cal-desplegable {
+      padding: var(--sdp-space-3);
+    }
+
+    .sdp-cal-rsvp-grup {
+      inline-size: 100%;
+    }
+
+    .sdp-cal-rsvp-grup__boto,
+    .sdp-cal-rsvp-grup__accio {
+      flex: 1 1 auto;
+    }
   }
 }

@@ -56,8 +56,8 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Link } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, PaginaApp } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { textosLector } from '../i18nLector.js';
-import { HUI, dataCurta, dataDeBoina, germanesDe, indexGermanes, senseFinal, seguix } from '../nucli/index.js';
+import { dataCurtaLector, textosLector } from '../i18nLector.js';
+import { HUI, dataDeBoina, germanesDe, indexGermanes, senseFinal, seguix } from '../nucli/index.js';
 import { useArticle } from '../useNoticies.js';
 import { AvisLector } from './comunes.jsx';
 import { Contingut } from './Contingut.jsx';
@@ -231,7 +231,7 @@ function NoticiesGermanes({ article, desfas }) {
       <h3>{tx.noticiesGermanes}</h3>
       <p>{tx.noticiesGermanesAjuda}</p>
       {germanes.map(({ resum }) => {
-        const meta = [noms.get(resum.fontId), dataCurta(resum.data, ara, desfas)].filter(Boolean).join(' · ');
+        const meta = [noms.get(resum.fontId), dataCurtaLector(resum.data, ara, desfas, idioma)].filter(Boolean).join(' · ');
         return (
           <article key={resum.id}>
             <h4>

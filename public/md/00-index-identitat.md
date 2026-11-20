@@ -56,6 +56,7 @@ Preserva la **memòria consultiva** d'etapes tancades a `90_arxiu_historic/`, ma
 - [[02_genotip]]
 - [[03_llibre_d_or_memoria_episodica]]
 - [[el_projecte]]
+- [[guia_pas_a_pas]]
 - [[soci_sollutia]]
 - [[01_trellat]]
 - [[doc_governanca]]

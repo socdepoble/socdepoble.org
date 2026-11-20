@@ -19,7 +19,7 @@ import { Carregant, EstatBuit } from '../../components/PedraSeca/index.js';
 import { ClosaAplicacio, useApp } from '../plataforma/index.js';
 import { ProveidorGenealogia, useGenealogia } from './nucli/index.js';
 import { RUTES_GENEALOGIA } from './rutesGenealogia.js';
-import { VERSIO_AVIS, t, textError } from './textos.js';
+import { VERSIO_AVIS, t, textError } from './i18nGenealogia.js';
 import { PortaFrase } from './vistes/comunes.jsx';
 
 /* Onada R32.11 · Els separadors de la closca i la porta d'avís seguixen l'idioma actiu (ca, es, en, eu, gl). */

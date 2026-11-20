@@ -136,7 +136,7 @@ test('Bloc 3.4 · amb superadmin, Aplicacions queda just davall d’Administraci
 test('P1-b · sense superadmin: ni el grup, ni els 7 apartats, ni la ruta, ni el detall d’un panell; amb superadmin, tots 7 (R13-C7: el 7é, «👥 Usuaris, Dispositius i Botigues»)', async () => {
   const { itemsDAdministracioSistema } = await import('./perfilModel.js');
   const panells = itemsDAdministracioSistema();
-  expect(panells).toHaveLength(7);
+  expect(panells).toHaveLength(8);
   for (const sessio of [null, { esSuperadmin: false }, { rol: 'veí' }]) {
     cleanup();
     m.sessio = sessio;
@@ -164,7 +164,7 @@ test('R13-C7 · «👥 Usuaris, Dispositius i Botigues»: el panell diferit, i a
   const { TEXTOS_APP_IOS } = await import('./admin/appNativaIos.js');
   m.sessio = { esSuperadmin: true };
   render(<PerfilShell />);
-  expect(filsDe('administracio-sistema').slice(-2)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
+  expect(filsDe('administracio-sistema').slice(5, 7)).toEqual(['admin-empaquetats', 'administracio-usuaris-i-dispositius']);
   render(m.workspace.renderDetail({ item: item('administracio-usuaris-i-dispositius') }));
   expect(await screen.findByTestId('panell-usuaris-dispositius-botigues')).toBeTruthy();
   expect(screen.getByRole('heading', { level: 1, name: 'Usuaris, Dispositius i Botigues (Google i Apple)' })).toBeTruthy();

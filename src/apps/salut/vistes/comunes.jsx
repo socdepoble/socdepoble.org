@@ -19,9 +19,9 @@ import {
   Alerta, Boto, Camp, CampText, Casella, Fila, GrupCamps, GrupOpcions, MarcColumna, Pila
 } from '../../../components/PedraSeca/index.js';
 import { esData, useApp, useClosaAplicacio, useInterruptorsApp, useParametresConsulta } from '../../plataforma/index.js';
-import { codiIdiomaSalut, textosSalut } from '../i18nSalut.js';
+import { campSalutTraduit, codiIdiomaSalut, etiquetaDataLlargaSalut, textosSalut } from '../i18nSalut.js';
 import { textDecimes, tipusDe } from '../nucli/diccionari.js';
-import { dataLocalDe, diesEntre, etiquetaDataLlarga, sumaDies } from '../nucli/hores.js';
+import { dataLocalDe, diesEntre, sumaDies } from '../nucli/hores.js';
 import { useSalut } from '../useSalut.jsx';
 
 const ICONES = Object.freeze({ Toilet, GlassWater, Droplets, Layers, CircleDot, HandHeart, Pill, Bed, Eye });
@@ -144,7 +144,7 @@ export function EnllacDetall({ a, children }) {
 /* La columna de l'esquerra: igual en totes les rutes, i per això no es desmunta. */
 export function PanellEstat() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const { mida, tancaPanells } = useClosaAplicacio();
   if (!salut.carregat) return null;
@@ -154,7 +154,7 @@ export function PanellEstat() {
   return (
     <MarcSalut titol={tx.esteDispositiu} columna="esquerra">
       <Pila gap={4}>
-        <p>{tx.huiEsPortes(etiquetaDataLlarga(salut.avui), apuntsAvui)}</p>
+        <p>{tx.huiEsPortes(etiquetaDataLlargaSalut(salut.avui, idioma), apuntsAvui)}</p>
         {salut.persistent ? (
           <Alerta to="info" viva={false} titol={tx.nomesDispositiuTitol}>
             {tx.nomesDispositiuText}
@@ -191,8 +191,10 @@ const textDeValor = (definicio, valor) => {
  * El control d'un camp del diccionari. `valor` és el que hi ha al formulari
  * (els nombres, com a text mentre s'escriuen); `onCanvi(nou)`.
  */
-export function ControlCamp({ definicio: c, valor, onCanvi, error, desactivat = false }) {
+export function ControlCamp({ definicio: crua, valor, onCanvi, error, desactivat = false }) {
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
+  const c = campSalutTraduit(crua, idioma);
   switch (c.tipus) {
     case 'enter':
     case 'decimes':

@@ -8,6 +8,7 @@ import { PAGINES_PATRIMONI_R9, TRADUCCIONS_ANATOMIA } from './pageContent.patrim
 import { PAGINES_PATRIMONI_R14 } from './pageContent.patrimoniR14.js';
 import { TRADUCCIONS_DESCARREGUES } from './pageContent.descarreguesR27.js';
 import { BLOC_DISSENY_R32_10, BLOC_PROJECTE_R32_10 } from './pageContent.coherenciaR32_10.js';
+import { BLOC_DISSENY_R32_15 } from './pageContent.coherenciaR32_15.js';
 import { BLOC_DISSENY_R16P } from './pageContent.propiAdaptatR16P.js';
 
 /*
@@ -154,12 +155,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.12 · Connector WordPress v1.1.12 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.13 · Connector WordPress v1.1.12 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.12 · WP v1.1.12", "className": "sdp-badge-system" },
+      { "text": "v1.2.13 · WP v1.1.12", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],
@@ -974,6 +975,8 @@ PAGE_COPY.projecte.html = PAGE_COPY.projecte.html.replace(
   `${BLOC_PROJECTE_R32_10.ca}\n      <h3>Les quatre infografies històriques</h3>`,
 );
 PAGE_COPY.disseny.html += BLOC_DISSENY_R32_10.ca;
+/* Onada R32.15 · Lot 03 · Mode Sènior (56 px + 10:1 AAA), Wiki vertical P0-128, 100 % eines en 5 llengües i connector < 10 MiB. */
+PAGE_COPY.disseny.html += BLOC_DISSENY_R32_15.ca;
 /* P0-77 / IDEA-208 (R16-P) · Què és propi i què hem adaptat, i què fa la data de cada targeta del Mur. */
 PAGE_COPY.disseny.html += BLOC_DISSENY_R16P.ca;
 

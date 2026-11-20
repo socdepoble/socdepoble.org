@@ -64,6 +64,8 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
       ['admin-empaquetats', 'Empaquetats i Desplegament (Mode Jarvis)'],
       /* R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat, just davall d'Empaquetats. Actualitzada a posta (P0-116). */
       ['administracio-usuaris-i-dispositius', 'Usuaris, Dispositius i Botigues (Google i Apple)'],
+      /* R32.17 · D-R32.15-2 · Safata de Denúncies Diligents LSSI Art. 16 via port neutral. */
+      ['admin-denuncies-lssi', 'Safata de Denúncies Diligents (LSSI Art. 16)'],
     ]);
     for (const apartat of apartats) expect(typeof apartat.icon).not.toBe('string');
   });

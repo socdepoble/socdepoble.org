@@ -47,6 +47,11 @@ export default function EspecimenPanell() {
   const canviaBancal = (actiu) => {
     if (potTriar) accions.setContrast(actiu ? CONTRAST_BANCAL : 'normal');
   };
+  const potTriarSenior = typeof accions?.setModeSenior === 'function';
+  const seniorActiu = estat?.modeSenior === true;
+  const canviaSenior = (actiu) => {
+    if (potTriarSenior) accions.setModeSenior(Boolean(actiu));
+  };
 
   const [ombra, setOmbra] = useState(OMBRA_DE_SEMPRE);
   const mostraRef = useRef(null);
@@ -70,6 +75,24 @@ export default function EspecimenPanell() {
           <Interruptor etiqueta="Activar el Mode Bancal" actiu={bancalActiu} onCanvi={canviaBancal} desactivat={!potTriar} />
         </GrupCamps>
         {potTriar ? null : <p>Fora de l’app no hi ha cap preferència de contrast a canviar.</p>}
+      </Especimen>
+
+      <Especimen
+        id="panell-mode-senior"
+        nom="Mode Sènior / Lectura Gran"
+        fitxer="src/components/universal/ControlModeSenior.jsx"
+        descripcio="El mateix interruptor d’un sol toc disponible a El meu perfil, al Panell de Control i a la capçalera de L’Avisador · Batec de Vida. Quan s’activa, l’arrel de l’app amplia la lletra Noto Sans, puja les dianes d’acció primària a un mínim de 56 × 56 píxels centrats i eleva el contrast real a 10:1 o més (AAA) en clar i en fosc."
+        a11y={[
+          'Interruptor natiu amb role="switch" i estat anunciat per veu i en text.',
+          'Dianes primàries centrades de 56 × 56 píxels mínims i contrast 10:1 AAA sense trencar pantalles de 320 o 359 píxels.'
+        ]}
+        fes={['Canviar la preferència amb setModeSenior (UIContext) perquè totes les instàncies ho recorden.']}
+        noFacis={['Posar atributs de presentació a mà fora de l’arrel governada per App.jsx.']}
+      >
+        <GrupCamps llegenda="Lectura gran i dianes tàctils de 56 píxels">
+          <Interruptor etiqueta="Activar el Mode Sènior (Lectura Gran)" actiu={seniorActiu} onCanvi={canviaSenior} desactivat={!potTriarSenior} />
+        </GrupCamps>
+        {potTriarSenior ? null : <p>Fora de l’app no hi ha cap preferència de lectura gran a canviar.</p>}
       </Especimen>
 
       <Especimen

@@ -121,6 +121,8 @@ export function llegeixTemes(arrel = process.cwd()) {
   for (const [nom, dark, bancal] of [['clar', false, false], ['fosc', true, false], ['bancal', false, true], ['bancal fosc', true, true]]) {
     const mapa = { ...base };
     for (const r of roots) {
+      // Gauntlet v1.2.13 · Els blocs del Mode Sènior no són la paleta base: plegar-los ací amagaria regressions.
+      if (r.selector.includes('data-sdp-senior')) continue;
       if (r.selector.includes('data-theme') && !dark) continue;
       if (r.selector.includes('data-contrast') && !bancal) continue;
       Object.assign(mapa, declaracions(r.body));

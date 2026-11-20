@@ -1,6 +1,9 @@
+import { useRef } from 'react';
 import { Link } from '../../app/contexts/RouterContext';
 import { useUIStateOpcional } from '../../app/contexts/UIContext';
+import { useFullDiferit } from '../../config/fullDiferit.js';
 import { SUPPORTED_LANGUAGES, normalizeLanguage } from '../../config/i18n.js';
+import cssPeuICanals from '../../css/diferit-peu-i-canals.css?inline';
 import { Globe } from '../../icons.jsx';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 
@@ -27,6 +30,8 @@ export function etiquetaPeuEditorialIdioma(t) {
 }
 
 export default function PeuEditorialIdioma() {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'peu-i-canals', cssPeuICanals);
   const ui = useUIStateOpcional();
   const t = useTraductorOpcional();
   const EnllacRouter = resolLink();
@@ -42,7 +47,7 @@ export default function PeuEditorialIdioma() {
   );
 
   return (
-    <div className="sdp-peu-editorial-idioma">
+    <div ref={arrelRef} className="sdp-peu-editorial-idioma">
       <div className="sdp-peu-editorial-idioma__text">
         <p className="sdp-peu-editorial-idioma__titol">
           <span>{tradueix(t, PARELLS_PEU_IDIOMA.titol)}</span>

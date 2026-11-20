@@ -13,9 +13,10 @@ import { useState } from 'react';
 import {
   Alerta, Boto, Camp, CampText, Fila, Pila
 } from '../../../components/PedraSeca/index.js';
+import { useApp } from '../../plataforma/index.js';
+import { textErrorSalut, tipusSalutTraduit, tradueixValidacioSalut } from '../i18nSalut.js';
 import { CAMPS_COMUNS, campActiu, llegixDecimes, tipusDe, validaApunt, valorsPerDefecte } from '../nucli/diccionari.js';
 import { dataDe, horaDe, momentDe } from '../nucli/hores.js';
-import { textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
 import { ControlCamp, useTextosSalut } from './comunes.jsx';
 
@@ -56,8 +57,9 @@ function aApunt(tipus, valors, inicial, ofsetDe) {
  */
 export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDesa, onCancela, accions = null }) {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
-  const definicio = tipusDe(tipus);
+  const definicio = tipusSalutTraduit(tipusDe(tipus), idioma);
   const [valors, setValors] = useState(() => valorsInicials(tipus, inicial, salut.ara()));
   const [errors, setErrors] = useState({});
   const [avisos, setAvisos] = useState({});
@@ -87,7 +89,7 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
     ...(p === PASSOS_CONDUCTA[PASSOS_CONDUCTA.length - 1] ? ['nota'] : [])];
 
   const seguent = () => {
-    const { errors: tots } = validaApunt(apunt);
+    const { errors: tots } = tradueixValidacioSalut(validaApunt(apunt), tipus, idioma);
     const delPas = Object.fromEntries(Object.entries(tots).filter(([clau]) => clausDelPas(pas).includes(clau)));
     setErrors(delPas);
     if (Object.keys(delPas).length === 0) onPas?.(PASSOS_CONDUCTA[PASSOS_CONDUCTA.indexOf(pas) + 1]);
@@ -99,7 +101,7 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
       seguent();
       return;
     }
-    const validacio = validaApunt(apunt);
+    const validacio = tradueixValidacioSalut(validaApunt(apunt), tipus, idioma);
     setErrors(validacio.errors);
     if (!validacio.ok) {
       const ambError = ambPassos ? PASSOS_CONDUCTA.find((p) => clausDelPas(p).some((clau) => validacio.errors[clau])) : null;
@@ -115,9 +117,9 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
     setErrorDesat(null);
     try {
       const resultat = await onDesa(apunt);
-      if (resultat && resultat.ok === false) setErrors(resultat.errors);
+      if (resultat && resultat.ok === false) setErrors(tradueixValidacioSalut(resultat, tipus, idioma).errors);
     } catch (error) {
-      setErrorDesat(textError(error));
+      setErrorDesat(textErrorSalut(error, idioma));
     } finally {
       setDesant(false);
     }

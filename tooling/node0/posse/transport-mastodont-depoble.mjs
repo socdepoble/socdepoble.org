@@ -9,18 +9,21 @@ import {textPosse} from './formatador-posse.mjs';
 
 const ORIGIN='https://mastodont.cat',ACTOR=ORIGIN+'/users/depoble',PROFILE=ORIGIN+'/@depoble',ID=/^[1-9][0-9]{0,29}$/;
 const privateFailure=Symbol('posse-adapter-failure');
+const fetchNatiu=globalThis.fetch;
 const failure=(code,effect='unknown')=>Object.assign(Error(code),{code,effect,[privateFailure]:true});
 const stop=(code,effect)=>{throw failure(code,effect);};
 function cancel(body){try{Promise.resolve(body?.cancel()).catch(()=>{});}catch{/* consumed or locked */}}
 export function creaTransportMastodontDepoble({fetchImpl,token,certifyScopes,beforeMutation,noteRateLimit=async()=>{},now=Date.now,deadlineMs=10000}={}){
-  if(typeof fetchImpl!=='function'||typeof certifyScopes!=='function'||typeof beforeMutation!=='function'||typeof token!=='string'||token.length<8||token.length>4096||/[\s\x00-\x1f\x7f]/.test(token))throw TypeError('POSSE_PRIVATE_ADAPTER_CONFIGURATION_REQUIRED');
+  if(typeof fetchImpl!=='function'||fetchImpl===fetchNatiu||fetchImpl===globalThis.fetch||typeof certifyScopes!=='function'||typeof beforeMutation!=='function'||typeof token!=='string'||token.length<8||token.length>4096||/[\s\x00-\x1f\x7f]/.test(token))throw TypeError('POSSE_PRIVATE_ADAPTER_CONFIGURATION_REQUIRED');
   let certificate=null;
+  const instant = () => { const value = now(); if (!Number.isSafeInteger(value) || value < 0) stop('POSSE_CLOCK_INVALID','not-dispatched'); return value; };
   async function json(endpoint,{method='GET',body,headers={},allowed=[200],leaseId,scope}={}){
     if(!endpoint.startsWith(ORIGIN+'/api/')||new URL(endpoint).origin!==ORIGIN)stop('POSSE_REMOTE_ENDPOINT_REJECTED','not-dispatched');
     let dispatched=false;
     try{return await executaAmbTerminiMastodon(async signal=>{
       if(method!=='GET'){
-        if(!certificate||certificate.expiresAt<now()||!certificate.scopes.includes(scope))stop('POSSE_CREDENTIAL_NOT_CERTIFIED','not-dispatched');
+        const time=instant();
+        if(!certificate||time<certificate.issuedAt||certificate.expiresAt<=time||!certificate.scopes.includes(scope))stop('POSSE_CREDENTIAL_NOT_CERTIFIED','not-dispatched');
         let permit;try{permit=await beforeMutation({leaseId,endpoint,method,scope,accountIdentity:ACTOR});}catch{stop('POSSE_QUOTA_NOT_RESERVED','not-dispatched');}
         if(permit?.allowed!==true)stop('POSSE_QUOTA_NOT_RESERVED','not-dispatched');
       }
@@ -50,7 +53,8 @@ export function creaTransportMastodontDepoble({fetchImpl,token,certifyScopes,bef
     certificate=null;const value=(await json(ORIGIN+'/api/v1/accounts/verify_credentials')).value,id=account(value);
     let proof;try{proof=await certifyScopes({accountId:id,accountIdentity:ACTOR,requiredScopes:[...requiredScopes]});}catch{stop('POSSE_SCOPE_CERTIFICATION_REQUIRED','not-dispatched');}
     if(proof?.ok!==true||!Array.isArray(proof.scopes)||!requiredScopes.every(scope=>proof.scopes.includes(scope))||!/^[a-f0-9]{64}$/.test(proof.proofSha256??''))stop('POSSE_SCOPE_CERTIFICATION_REQUIRED','not-dispatched');
-    certificate={accountId:id,accountIdentity:ACTOR,scopes:[...proof.scopes],certificationId:proof.proofSha256,expiresAt:now()+300000};
+    const issuedAt=instant();
+    certificate={accountId:id,accountIdentity:ACTOR,scopes:[...proof.scopes],certificationId:proof.proofSha256,issuedAt,expiresAt:issuedAt+300000};
     return{accountIdentity:ACTOR,accountId:id,scopes:[...certificate.scopes],certificationId:certificate.certificationId};
   }
   function media(value){if(!value||typeof value.id!=='string'||!ID.test(value.id)||value.type!=='image')stop('POSSE_MEDIA_RESPONSE_UNVERIFIED');return value.id;}

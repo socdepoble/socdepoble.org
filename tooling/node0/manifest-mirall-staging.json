@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "859745f2a6386f73805f6adb06fc764dcf35f143f67e79f769a6955d581e3ed7"
+      "sha256": "138b46339dbece86976d3ec46febf8e2e0fbb539796daebc957fb37cc8aedd0e"
     },
     {
       "path": "src/data/dadesObertesLot.js",
@@ -35,7 +35,11 @@
     },
     {
       "path": "src/data/exportaMunicipiOpenData.js",
-      "sha256": "d77cb301c4de3260423a20a705f136c3bd82f9c777f8e783193014cae3ca14cf"
+      "sha256": "19a9f696fb96395ec64e26c271d01c0ead85deb6dba9c24faff9e51b7790b33e"
+    },
+    {
+      "path": "src/data/federacio/urlRemota.js",
+      "sha256": "c7a13e87cc88d0f0181d32419ae4e38276f7a8cf76bcf17ce7b7736a5466c167"
     },
     {
       "path": "src/data/importaMunicipiOpenData.js",

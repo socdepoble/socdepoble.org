@@ -134,9 +134,10 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       const body = doc(pagina(clau, llengua).html).body;
       const titols = [...body.querySelectorAll('h3')].map((h) => h.textContent);
       // fediversity obri amb NLnet i node-zero obri amb el balanç didàctic del 14 de novembre (Onades R1–R23).
-      /* Onada v1.2.9 · Gemini R32.10 (lot 04, Coherència Editorial Viva) posa a /page/fediversity, darrere de NLnet, el
-         preàmbul «Continuïtat viva R32.5–R32.10» (FEDIVERSITY_R32_10_PREAMBUL): el balanç hi passa a la tercera h3. */
-      const inici = clau === 'fedivers' ? 0 : clau === 'fediversity' ? 2 : 1;
+      /* Onada v1.2.9 · Gemini R32.10 (lot 04) + Onada R32.15 · Gemini (lot 03, Coherència Editorial Viva) posen a
+         /page/fediversity, darrere de NLnet, els dos preàmbuls «Continuïtat viva R32.11–R32.15» i «R32.5–R32.10»:
+         el balanç del 7 de novembre passa a la quarta h3. */
+      const inici = clau === 'fedivers' ? 0 : clau === 'fediversity' ? 3 : 1;
       expect(titols.slice(inici, inici + 3), `${clau} ${llengua}`).toEqual(BALANC[llengua]);
       const produccio = seccio(body, BALANC[llengua][0]);
       const externs = produccio.flatMap((n) => [...n.querySelectorAll('a[href^="https://"]')].map((a) => a.getAttribute('href')));
@@ -216,7 +217,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.10 · La crònica de la segona part de R32.11 i R32.12 obri /versions, davant de la crònica R32.10, R32.11 i R32.12.
     // Onada v1.2.11 · La crònica de les Onades R32.13 i R32.14 obri /versions, davant de la segona part de R32.11 i R32.12.
     // Onada v1.2.12 · La crònica de les Onades R32.14 i R32.15 obri /versions, davant de la crònica R32.13 i R32.14.
-    expect([...versions.querySelectorAll('h3')].slice(0, 24).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.13 · La crònica de les Onades R32.15, R32.16 i R32.17 obri /versions, davant de la crònica R32.14 i R32.15.
+    expect([...versions.querySelectorAll('h3')].slice(0, 25).map((h3) => h3.textContent)).toEqual([
+      '20 de novembre de 2026, matinada · Onades R32.15, R32.16 i R32.17 · El Mode Sènior d’un sol toc, el Calendari amb tres respostes i la guia pas a pas',
       '19 de novembre de 2026, nit · Onades R32.14 i R32.15 · La Gestoria en cinc llengües, el Rebost en pantalles estretes i una Wiki sense taules amples',
       '19 de novembre de 2026, vesprada · Onades R32.13 i R32.14 · El Bar en cinc llengües, l’avís de contingut il·lícit i un connector de WordPress més lleuger',
       '19 de novembre de 2026 · Onades R32.11 i R32.12, segona part · La guia de tot el que pots fer, la data de cada targeta segons el tipus i l’Arbre Genealògic amb frase de pas',
@@ -718,9 +721,9 @@ describe('Onada R23 · /page/node-zero obri amb la guia divulgativa del 14 de no
     const primerH3 = body.querySelector('h3');
     /* Onada R27 (kit de Gemini, IDEA-268 i frescor post-SQL) · La guia s'ha posat al dia el 15-11-2026
        amb les Onades R1–R27; la resta de fets de la guia es continuen exigint igual. */
-    /* Onada v1.2.9 · Gemini R32.10 (lot 04) posa la guia al dia el 18-11-2026 amb les Onades R1–R32.10 i hi afig l'apartat
-       APARTAT_NODE_ZERO_R32_10; la resta de fets de la guia es continuen exigint igual. */
-    expect(primerH3?.textContent).toMatch(/R1–R32\.10/);
+    /* Onada R32.15 (lot 03) · Gemini posa la guia al dia el 19-11-2026 amb les Onades R1–R32.15 i hi afig l'apartat
+       APARTAT_NODE_ZERO_R32_15; la resta de fets de la guia es continuen exigint igual. */
+    expect(primerH3?.textContent).toMatch(/R1–R32\.15/);
     const obertura = seccio(body, primerH3.textContent).map((n) => n.textContent).join(' ');
     expect(obertura).toContain('La Torre de les Maçanes');
     expect(obertura).toContain('L’Alacantí');

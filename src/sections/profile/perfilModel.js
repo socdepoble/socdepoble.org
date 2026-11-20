@@ -1,4 +1,4 @@
-import { Bot, Building2, Download, Globe, LayoutGrid, LogOut, Package, Palette, Shield, SlidersHorizontal, Tag, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, Download, Globe, LayoutGrid, LogOut, Package, Palette, Scale, Shield, SlidersHorizontal, Tag, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { avatarDeLaFitxa, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 import { documentDeFitxa } from './perfilCamps.js';
@@ -68,20 +68,12 @@ export { PARAM_FITXA_ORGANITZACIO, rutaFitxaOrganitzacio } from '../../config/na
 export const PARAM_VISTA = 'vista';
 export const VISTA_COMPTE = 'compte';
 export const VISTA_IMPORTACIO = 'admin-importacio';
+export const VISTA_DENUNCIES_LSSI = 'admin-denuncies-lssi';
 
-/**
- * La primera categoria del Perfil: l'organització demanada per la ruta o,
- * si no, la que és l'actor actiu, sempre que siga una de les seues; si no,
- * la persona ('jo').
- * Ordre del Mestre (261021, prompt 261021_0015, tasca 7) · També un agent IA
- * que administra («Edita la fitxa» de /iaia): obri la seua fitxa, no la de la
- * persona.
- * P0-63 (261108) · Amb `vista` VISTA_COMPTE, «El compte» de la persona (la
- * categoria i l'element), per damunt de l'actor actiu i de la ruta: la
- * contrasenya és del compte de la persona, no d'una organització.
- */
 export function seleccioInicialDePerfil(identitats, preferides = [], { superadmin = false, aplicacions = [], vista = null, apartat = null } = {}) {
-  if (superadmin === true && vista === VISTA_IMPORTACIO) return { categoryId: ID_ADMINISTRACIO_SISTEMA, itemId: VISTA_IMPORTACIO };
+  if (superadmin === true && (vista === VISTA_IMPORTACIO || vista === VISTA_DENUNCIES_LSSI)) {
+    return { categoryId: ID_ADMINISTRACIO_SISTEMA, itemId: vista };
+  }
   const persona = (vista === VISTA_COMPTE || apartat === VISTA_COMPTE) ? identitats.find(esPersona) : null;
   if (persona) return { categoryId: String(persona.id), itemId: `${persona.id}-compte` };
   const seleccionables = identitats.filter((identitat) => !esPersona(identitat));
@@ -396,6 +388,7 @@ export const ICONES_ADMINISTRACIO_SISTEMA = Object.freeze({
   nodesFedivers: Globe,
   empaquetats: Package,
   usuarisBotigues: Users,
+  denunciesLssi: Scale,
 });
 
 /**
@@ -473,6 +466,15 @@ export function itemsDAdministracioSistema() {
       searchText: 'usuaris dispositius botigues google play app store iphone ipad web verificadors sessions connectats',
       // La vista conserva el prefix admin-: la porta de superadmin de PerfilShell.jsx filtra per eixe prefix.
       data: { vista: 'admin-usuaris-i-dispositius' },
+    },
+    {
+      id: VISTA_DENUNCIES_LSSI,
+      categoryIds,
+      title: 'Safata de Denúncies Diligents (LSSI Art. 16)',
+      subtitle: 'Revisió motivada amb control de versió CAS, estats de custòdia i registre append-only d’ampliacions',
+      icon: ICONES_ADMINISTRACIO_SISTEMA.denunciesLssi,
+      searchText: 'safata denuncies diligents lssi dsa moderacio cautelar revisio justificacio cas ampliacions',
+      data: { vista: VISTA_DENUNCIES_LSSI },
     },
   ];
 }

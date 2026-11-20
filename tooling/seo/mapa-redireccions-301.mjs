@@ -182,6 +182,33 @@ class UriIndex {
   }
 }
 
+/** Shared raw invariants for both verifier and constructor. Every invocation
+ * builds a fresh inventory and exact-source index. No result or input is trusted. */
+function destinationIndex301(inventory) {
+  const index = new UriIndex(inventory.length);
+  for (let i = 0; i < inventory.length; i++) {
+    const route = normalitzaDesti301(inventory[i]);
+    if (!route) return failure('inventari_destins_invalid', i);
+    index.add(route);
+    if (index.size !== i + 1) return failure('desti_duplicat', i);
+  }
+  return index;
+}
+function checkRuleValues301(rawSource, rawDestination, sources, destinations, i) {
+  const source = normalitzaOrigen301(rawSource);
+  if (!source) return failure('origen_invalid', i);
+  // Membership in this freshly checked inventory also proves path syntax.
+  if (!destinations.has(rawDestination)) {
+    const destination = normalitzaDesti301(rawDestination);
+    if (!destination) return failure('desti_extern_cadena_o_bucle', i);
+    if (!destinations.has(destination)) return failure('desti_no_verificat', i);
+  }
+  sources.add(source);
+  if (sources.size !== i + 1) return failure('origen_duplicat_o_conflictiu', i);
+  return source;
+}
+const generalSuccess301 = (sources, destinations) => ({ valid: true, count: sources.size, destinations: destinations.size, errors: [], mode: 'general' });
+
 /** Complete raw verification, with destination-index construction included.
  * First-error result avoids allocating attacker-controlled error lists. Every
  * successful call rechecks each source and destination: no trusted-object cache.
@@ -193,28 +220,14 @@ export function verificaMapaRedireccions301(input) {
     || input.redireccions.length > MAX_ROWS || input.destinsDisponibles.length > MAX_ROWS) return failure('inventari_invalid');
   const ordered = orderedBijective(input);
   if (ordered) return ordered;
-  const destinations = new UriIndex(input.destinsDisponibles.length);
-  for (let i = 0; i < input.destinsDisponibles.length; i++) {
-    const route = normalitzaDesti301(input.destinsDisponibles[i]);
-    if (!route) return failure('inventari_destins_invalid', i);
-    destinations.add(route);
-    if (destinations.size !== i + 1) return failure('desti_duplicat', i);
-  }
+  const destinations = destinationIndex301(input.destinsDisponibles);
+  if (!(destinations instanceof UriIndex)) return destinations;
   const sources = new UriIndex(input.redireccions.length);
   for (let i = 0; i < input.redireccions.length; i++) {
     const rule = input.redireccions[i];
     if (!record(rule) || !own(rule, 'source') || !own(rule, 'destination') || rule.status !== 301) return failure('regla_invalida', i);
-    const source = normalitzaOrigen301(rule.source);
-    if (!source) return failure('origen_invalid', i);
-    // Membership in the freshly validated canonical inventory also proves
-    // syntax; normalize only when the raw destination is not already a member.
-    if (!destinations.has(rule.destination)) {
-      const destination = normalitzaDesti301(rule.destination);
-      if (!destination) return failure('desti_extern_cadena_o_bucle', i);
-      if (!destinations.has(destination)) return failure('desti_no_verificat', i);
-    }
-    sources.add(source);
-    if (sources.size !== i + 1) return failure('origen_duplicat_o_conflictiu', i);
+    const checked = checkRuleValues301(rule.source, rule.destination, sources, destinations, i);
+    if (typeof checked !== 'string') return checked;
   }
   if (input.origensEsperats !== undefined) {
     if (!Array.isArray(input.origensEsperats) || input.origensEsperats.length > MAX_ROWS) return failure('corpus_invalid');
@@ -227,7 +240,77 @@ export function verificaMapaRedireccions301(input) {
     }
     if (sources.size !== expected.size) return failure('origen_fora_corpus');
   }
-  return { valid: true, count: sources.size, destinations: destinations.size, errors: [], mode: 'general' };
+  return generalSuccess301(sources, destinations);
+}
+
+/** Canonical R32.13 direct contract: one original URL + one explicitly
+ * reviewed destination per article. Additional origins must be expanded into
+ * separate records; silently dropping an alias is never permitted. */
+function directEditorial301(articles, inventory) {
+  const destinations = destinationIndex301(inventory);
+  if (!(destinations instanceof UriIndex)) throw new TypeError(`Taula 301 invàlida: ${destinations.errors[0].code}`);
+  const sources = new UriIndex(articles.length), redireccions = new Array(articles.length);
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+    if (!record(article) || !own(article, 'linkOriginal') || !own(article, 'rutaDestiCanonica')) throw new TypeError('La via directa exigix linkOriginal i rutaDestiCanonica propis.');
+    const rawSource = article.linkOriginal, destination = article.rutaDestiCanonica;
+    if (own(article, 'fontsOriginals')) {
+      const originals = article.fontsOriginals;
+      if (!Array.isArray(originals) || originals.length !== 1 || originals[0] !== rawSource) throw new TypeError('La via directa exigix expandir cada origen en un article explícit.');
+    }
+    const source = checkRuleValues301(rawSource, destination, sources, destinations, i);
+    if (typeof source !== 'string') throw new TypeError(`Taula 301 invàlida: ${source.errors[0].code}`);
+    redireccions[i] = { source, destination, status: 301 };
+  }
+  return { redireccions, destinsDisponibles: inventory, verificacio: generalSuccess301(sources, destinations) };
+}
+
+/** Construct and fully verify an explicit imported mapping in one pass.
+ * Raw articles/mapping/inventory are untrusted. Newly created output rows have
+ * known own fields/status, so they do not need a second schema-check pass.
+ * URI, membership and duplicate invariants are exactly the verifier's helpers.
+ * Destination paths are never inferred from source slugs. */
+export function construeixMapaEditorial301(articles, { destinsDisponibles, destinacions } = {}) {
+  if (!Array.isArray(articles) || articles.length > MAX_ROWS || !Array.isArray(destinsDisponibles) || destinsDisponibles.length > MAX_ROWS || destinacions !== undefined && !record(destinacions)) throw new TypeError('Cal corpus, inventari i correspondència explícita de destinacions.');
+  if (destinacions === undefined) return directEditorial301(articles, destinsDisponibles);
+  const destinations = destinationIndex301(destinsDisponibles);
+  const fail = error => { throw new TypeError(`Taula 301 invàlida: ${error.errors[0].code}`); };
+  if (!(destinations instanceof UriIndex)) fail(destinations);
+  // Capacity is a lookup hint, never proof of uniqueness: extra aliases or
+  // larger numeric IDs fall back to exact Set storage under the MAX_ROWS cap.
+  const sources = new UriIndex(articles.length), redireccions = new Array(articles.length);
+  let count = 0;
+  const add = (rawSource, explicitRoute, hasExplicitRoute) => {
+    if (typeof rawSource !== 'string') throw new TypeError('Origen sense correspondència revisada.');
+    if (count >= MAX_ROWS) throw new TypeError('Taula 301 fora de pressupost.');
+    let destination;
+    if (hasExplicitRoute) {
+      destination = explicitRoute;
+      if (destinacions !== undefined && (!own(destinacions, rawSource) || normalitzaDesti301(destinacions[rawSource]) !== normalitzaDesti301(destination))) throw new TypeError('Correspondències de destinació divergents.');
+    } else {
+      if (destinacions === undefined || !own(destinacions, rawSource)) throw new TypeError('Origen sense correspondència revisada.');
+      destination = destinacions[rawSource];
+    }
+    const source = checkRuleValues301(rawSource, destination, sources, destinations, count);
+    if (typeof source !== 'string') fail(source);
+    redireccions[count++] = { source, destination, status: 301 };
+  };
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+    if (!record(article)) throw new TypeError('Article 301 invàlid.');
+    const hasExplicitRoute = own(article, 'rutaDestiCanonica');
+    const route = hasExplicitRoute ? article.rutaDestiCanonica : undefined;
+    if (own(article, 'fontsOriginals')) {
+      const list = article.fontsOriginals;
+      if (!Array.isArray(list) || list.length === 0 || list.length > MAX_ROWS) throw new TypeError('Fonts originals absents o invàlides.');
+      for (let j = 0; j < list.length; j++) add(list[j], route, hasExplicitRoute);
+    } else {
+      if (!own(article, 'linkOriginal')) throw new TypeError('Origen original absent.');
+      add(article.linkOriginal, route, hasExplicitRoute);
+    }
+  }
+  redireccions.length = count;
+  return { redireccions, destinsDisponibles, verificacio: generalSuccess301(sources, destinations) };
 }
 
 const regexLiteral = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

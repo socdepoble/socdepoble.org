@@ -188,7 +188,7 @@
       "id": "TELLADO-R3214-11",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "e78a4315bc05184b583d835198af745132ae32d66745f107df6b7522538cf4e5",
+      "sha256": "1e4a7211a7180ce6febe43f0da450c5dd6bf7916a85e648d04f0b10ccdee3df7",
       "linia": 130,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -198,16 +198,19 @@
         "jwtPerBackend(config)",
         "redirect: 'error'",
         "comprova()",
-        "Authorization: `Bearer ${jwt}`"
+        "Authorization: `Bearer ${jwt}`",
+        "const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js')",
+        "await validaFitxerMedia(fitxer, { signal: config.signal })"
       ],
-      "limit": "Storage privat de la sessió amb JWT i redirect:error. El catàleg no certifica la RLS remota ni el bucket servit.",
-      "certificaDesti": false
+      "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
+      "certificaDesti": false,
+      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària."
     },
     {
       "id": "TELLADO-R3214-12",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "e78a4315bc05184b583d835198af745132ae32d66745f107df6b7522538cf4e5",
+      "sha256": "1e4a7211a7180ce6febe43f0da450c5dd6bf7916a85e648d04f0b10ccdee3df7",
       "linia": 243,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -217,10 +220,13 @@
         "jwtPerBackend(config)",
         "redirect: 'error'",
         "comprova()",
-        "Authorization: `Bearer ${jwt}`"
+        "Authorization: `Bearer ${jwt}`",
+        "const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js')",
+        "await validaFitxerMedia(fitxer, { signal: config.signal })"
       ],
-      "limit": "Storage privat de la sessió amb JWT i redirect:error. El catàleg no certifica la RLS remota ni el bucket servit.",
-      "certificaDesti": false
+      "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
+      "certificaDesti": false,
+      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària."
     },
     {
       "id": "TELLADO-R3214-13",

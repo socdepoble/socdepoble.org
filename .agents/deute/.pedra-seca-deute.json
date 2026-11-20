@@ -1,16 +1,7 @@
 {
   "LLEI_01_CLASSE_ORFENA": {
-    "max": 8,
-    "coneguts": [
-      ".page-content-quote  →  src/sections/text/legalContent.js",
-      ".sdp-embed-video  →  src/utils/transformadorEditorialWpBlogger.js",
-      ".sdp-esquelet  →  src/components/PedraSeca/atoms/estats.jsx",
-      ".sdp-imatge-cos  →  src/components/universal/richText/extensions/index.js",
-      ".sdp-molla  →  src/components/PedraSeca/organismes/navegacio.jsx",
-      ".sdp-pestanyes  →  src/components/PedraSeca/organismes/Pestanyes.jsx",
-      ".sdp-pindola--vertical  →  src/components/PedraSeca/molecules/Botonera.jsx",
-      ".sdp-targeta-enllac-extern  →  src/utils/transformadorEditorialWpBlogger.js"
-    ]
+    "max": 0,
+    "coneguts": []
   },
   "LLEI_02_TOKEN_FANTASMA": {
     "max": 0,

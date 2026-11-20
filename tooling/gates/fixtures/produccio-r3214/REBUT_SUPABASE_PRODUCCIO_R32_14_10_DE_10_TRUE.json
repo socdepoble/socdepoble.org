@@ -1,0 +1,33 @@
+{
+  "schema": "sdp.supabase.production.receipt.v1",
+  "wave": "R32.14",
+  "appliedAt": "2026-11-19T18:02:42+01:00",
+  "postgresVersion": "17.6",
+  "bundlePath": "../_investigacio_ia_de_poble/261119_marato_dinar_v1_2_11_r32_14/SUPER_BUNDLE_SQL_PRODUCCIO_R32_14_COPIAR_ENGANXAR.sql",
+  "bundleBytes": 129350,
+  "bundleLines": 1126,
+  "preflight": {
+    "postgres": "17.6",
+    "xat_base": true,
+    "inbox_base": true,
+    "fossils_revisats": true,
+    "reconciliacio": true,
+    "r32_11_ja_aplicada": true
+  },
+  "postVerification": {
+    "accions_r327": true,
+    "ubicacio_r328": true,
+    "quota_250mb": true,
+    "push_v2": true,
+    "push_nomes_servidor": true,
+    "reconciliacio_rls": true,
+    "fossils_acl": true,
+    "pf03": true,
+    "lssi": true,
+    "previa_sense_amagats": true
+  },
+  "allChecksPassed": true,
+  "checksPassedCount": 10,
+  "checksTotalCount": 10,
+  "notes": "Aplicat en transacció atòmica sobre Supabase Cloud (Postgres 17.6). El patch incremental P2 sobre registra_denuncia_diligent (repetida des de denuncia_publicacio_mur) queda assignat a l'Onada R32.15 / v1.2.12 (T2.1)."
+}

@@ -1,0 +1,120 @@
+/* diferit-incidencies-cas.css — Estils Pedra Seca adoptats en calent per
+   PanellIncidenciesPublicacioCas.jsx (0 B al boot estàtic de WordPress). */
+@layer components {
+  .sdp-incidencies-cas {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    margin-block: var(--sdp-space-3);
+    background: var(--sdp-avis-fons);
+    border: 2px solid var(--sdp-avis);
+    border-radius: var(--sdp-radi-m);
+    color: var(--sdp-text-cos);
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-incidencies-cas__cap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+
+  .sdp-incidencies-cas__titol {
+    margin: 0;
+    font-size: var(--sdp-fluid-h4);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-incidencies-cas__resum {
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-incidencies-cas__llista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sdp-incidencies-cas__targeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    max-inline-size: 100%;
+    box-sizing: border-box;
+  }
+
+  .sdp-incidencies-cas__etiquetes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    align-items: center;
+  }
+
+  .sdp-incidencies-cas__fitxa-titol {
+    margin: 0;
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-incidencies-cas__text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-incidencies-cas__retirada {
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    background: var(--sdp-error-fons);
+    border-inline-start: 4px solid var(--sdp-error);
+    border-radius: var(--sdp-radi-s);
+    color: var(--sdp-error-text);
+    font-weight: 600;
+  }
+
+  .sdp-incidencies-cas__meta {
+    margin: 0;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-incidencies-cas__accions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    align-items: center;
+    padding-block-start: var(--sdp-space-1);
+  }
+
+  .sdp-incidencies-cas__boto {
+    min-block-size: 3rem;
+    min-inline-size: 3rem;
+    max-inline-size: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+
+  [data-sdp-senior="true"] .sdp-incidencies-cas__boto {
+    min-block-size: 3.5rem;
+    min-inline-size: 3.5rem;
+  }
+
+  .sdp-incidencies-cas__feedback {
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: 600;
+  }
+}

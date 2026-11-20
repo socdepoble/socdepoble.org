@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
+import { ogg } from '../../../tests/helpers/contenidorsMediaR3215.js';
 import { mp4DeMida } from '../../../tests/helpers/contenidorsMedia.js';
 import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { publicaAdjuntXat, quotaXat, urlAdjuntXat } from './xatMultimedia.js';
@@ -453,4 +454,11 @@ test.each([{ lat: 91, lng: 0 }, { lat: '38', lng: 0 }, { lat: 38, lng: 0, autor:
 test('opt-out amb metadades de lloc contradictòries falla abans de qualsevol xarxa', async () => {
   await expect(publicaAdjuntXat(FIL, { ...entrada(), conservaUbicacio: false, ubicacio: { lat: 38.64, lng: -0.49 } })).rejects.toMatchObject({ code: 'ubicacio-invalida' });
   expect(m.rpc).not.toHaveBeenCalled();expect(fetch).not.toHaveBeenCalled();
+});
+
+
+test('R32.15: OGG corrupte no reserva quota ni envia bytes', async () => {
+  const good = ogg(), bad = good.slice(); bad[35] ^= 1;
+  await expect(publicaAdjuntXat(FIL, { id: ID, fitxer: new Blob([bad], { type: 'audio/ogg' }), tipus: 'veu', duradaMs: 1500 })).rejects.toMatchObject({ code: 'format' });
+  expect(m.rpc).not.toHaveBeenCalled(); expect(fetch).not.toHaveBeenCalled();
 });

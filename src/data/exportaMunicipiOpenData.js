@@ -96,6 +96,7 @@
  * poble a Sóc de Poble, no el municipi ni el compte de l'Ajuntament. Sense
  * eixe actor publicat, cap enllaç ni cap compte @ a memoria.md.
  */
+import { urlRemota } from './federacio/urlRemota.js';
 import { comparaInstants, dataIso, normalitzaOrigen, normalitzaSlugMunicipi, urlsDeMunicipi } from './activitypub.js';
 import { COLECCIONS_DADES_OBERTES, LIMIT_DADES_OBERTES, LIMIT_DIRECTORI_ENTITATS } from './contracte.js';
 import { fallesDeDadesObertes } from './dadesObertesLot.js';
@@ -389,7 +390,7 @@ export function imatgeDe(valor, base = null) {
     const cami = url.pathname.startsWith(PREFIX_STORAGE_PUBLIC) ? url.pathname.slice(PREFIX_STORAGE_PUBLIC.length) : '';
     return refSegura(cami) ? `${REF_OPACA}${cami}` : null;
   }
-  return url.href;
+  return urlRemota(text)?.href ?? null;
 }
 
 /* ── Dates ──────────────────────────────────────────────────────────────── */
@@ -688,7 +689,7 @@ function recursPublicable(valor) {
   if (typeof valor !== 'string' || valor.length > 2048) return false;
   let url = null;
   try { url = new URL(valor); } catch { return false; }
-  return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
+  return Boolean(urlRemota(valor)) && url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
     && !url.pathname.startsWith(PREFIX_STORAGE) && url.href === valor;
 }
 

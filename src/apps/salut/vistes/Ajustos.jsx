@@ -13,10 +13,10 @@ import {
   Alerta, Boto, Camp, CampText, DialegConfirmacio, GrupCamps, GrupOpcions, Interruptor, LlistaArticles, Pila
 } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
+import { avisSalutTraduit, textErrorSalut, tradueixErrorsPersonaSalut } from '../i18nSalut.js';
 import { MAX_BYTES_COPIA, MODES_IMPORTACIO, llegixCopia, nomCopia } from '../nucli/copia.js';
 import { CAMPS_PERSONA, llegixDecimes, validaPersona } from '../nucli/diccionari.js';
 import { dataCurta, dataLocalDe } from '../nucli/hores.js';
-import { AVIS_SALUT, textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
 import { ControlCamp, Enllac112, EnllacBoto, MarcSalut, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 import { descarregaFitxer } from './descarrega.js';
@@ -50,6 +50,7 @@ function aPersona(valors) {
 
 export function AjustosPersona() {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const { actiu, apaga } = useInterruptorsSalut();
   const [valors, setValors] = useState(null);
@@ -57,19 +58,19 @@ export function AjustosPersona() {
   const [missatge, setMissatge] = useState(null);
   const [errorInterruptor, setErrorInterruptor] = useState(null);
   if (!salut.carregat) return null;
-  const commuta = (id, encés) => apaga(id, !encés).then(() => setErrorInterruptor(null), (error) => setErrorInterruptor(textError(error)));
+  const commuta = (id, encés) => apaga(id, !encés).then(() => setErrorInterruptor(null), (error) => setErrorInterruptor(textErrorSalut(error, idioma)));
   const actuals = valors || salut.persona;
   const desa = async (event) => {
     event.preventDefault();
     const { ok, errors: nous, persona } = validaPersona(aPersona(actuals));
-    setErrors(nous);
+    setErrors(tradueixErrorsPersonaSalut(nous, CAMPS_PERSONA, idioma));
     if (!ok) return;
     try {
       await salut.desaPersona(persona);
       setValors(null);
       setMissatge({ to: 'exit', text: tx.desat });
     } catch (error) {
-      setMissatge({ to: 'error', text: textError(error) });
+      setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
     }
   };
   return (
@@ -102,7 +103,7 @@ const megues = (bytes) => `${String(Math.round((bytes / 1048576) * 10) / 10).rep
 
 export function CopiaIEsborrat() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [estat, setEstat] = useState(null);
   const [missatge, setMissatge] = useState(null);
@@ -135,7 +136,7 @@ export function CopiaIEsborrat() {
       if (descarregaFitxer({ nom: nomCopia(salut.avui), tipus: 'application/json', dades: text })) informa('exit', tx.copiaDescarregada);
       else informa('avis', tx.navegadorNoDescarrega);
     } catch (error) {
-      informa('error', textError(error));
+      informa('error', textErrorSalut(error, idioma));
     }
   };
   const tria = async (event) => {
@@ -153,7 +154,7 @@ export function CopiaIEsborrat() {
       const resultat = llegixCopia(await fitxer.text());
       if (ronda !== rondaCopia.current) return;
       setLlegida(resultat.ok ? resultat : null);
-      if (!resultat.ok) informa('error', resultat.error);
+      if (!resultat.ok) informa('error', idioma === 'ca' ? resultat.error : tx.errorLlegirFitxerCopia);
       else informa('info', tx.copiaPortaApunts(resultat.dades.apunts.length, resultat.descartats));
     } catch {
       if (ronda === rondaCopia.current) informa('error', tx.errorLlegirFitxerCopia);
@@ -167,7 +168,7 @@ export function CopiaIEsborrat() {
       setLlegida(null);
       informa('exit', informe.substituits ? tx.fetSubstituits(informe.afegits) : tx.fetAfegits(informe.afegits, informe.duplicats));
     } catch (error) {
-      informa('error', textError(error));
+      informa('error', textErrorSalut(error, idioma));
     } finally {
       setImportant(false);
       setConfirmaImportacio(false);
@@ -184,7 +185,7 @@ export function CopiaIEsborrat() {
       await salut.esborraTot();
       informa('exit', tx.totEsborrat);
     } catch (error) {
-      informa('error', textError(error));
+      informa('error', textErrorSalut(error, idioma));
     }
     setConfirmacio('');
     setEsborrant(false);
@@ -245,15 +246,17 @@ export function CopiaIEsborrat() {
 
 export function AvisSalut() {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
-  const accepta = () => salut.acceptaAvis().then(() => navega(['diari'], { replace: true }), (e) => setError(textError(e)));
+  const apartats = avisSalutTraduit(idioma);
+  const accepta = () => salut.acceptaAvis().then(() => navega(['diari'], { replace: true }), (e) => setError(textErrorSalut(e, idioma)));
   return (
     <MarcSalut titol={tx.avisIPrivacitat}>
       <Pila gap={6}>
-        {AVIS_SALUT.map((apartat) => (
+        {apartats.map((apartat) => (
           <Pila key={apartat.titol} gap={2}>
             <p><strong>{apartat.titol}</strong></p>
             {apartat.paragrafs.map((paragraf) => <p key={paragraf}>{paragraf}</p>)}

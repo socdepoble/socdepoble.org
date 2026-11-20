@@ -20,10 +20,15 @@
  *     duplicat a les botigues oficials ni a `/versions`: un botó centrat puja
  *     suaument a les opcions oficials de descàrrega de la capçalera.
  */
+import { useRef } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssPeuICanals from '../../css/diferit-peu-i-canals.css?inline';
 
 export default function GuiaCanalsActualitzacio() {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'peu-i-canals', cssPeuICanals);
   const { t } = useUIActions();
 
   /* Auditoria del kit de Gemini R22 · El títol es busca a l'arrel del botó
@@ -40,7 +45,7 @@ export default function GuiaCanalsActualitzacio() {
   };
 
   return (
-    <div className="sdp-guia-canals">
+    <div ref={arrelRef} className="sdp-guia-canals">
       <h3 className="sdp-guia-canals__titol">
         {t('descarregues.canals.titol', 'Com es manté al dia l’aplicació en cada canal')}
       </h3>

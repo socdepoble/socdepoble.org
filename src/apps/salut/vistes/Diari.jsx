@@ -19,10 +19,13 @@ import {
   Alerta, Boto, DialegConfirmacio, EstatBuit, Fila, GraellaArticles, Interruptor, LiniaDelTemps, LlistaArticles, Pila, Taula
 } from '../../../components/PedraSeca/index.js';
 import { esData, esSlug, useApp, useParametresConsulta } from '../../plataforma/index.js';
-import { IDS_TIPUS, INTERRUPTOR_DE_TIPUS, TIPUS_APUNT, resumApunt, tipusDe } from '../nucli/diccionari.js';
-import { dataLocalDe, etiquetaData, etiquetaDataLlarga, horaDe, jornadesAmbApunts, ordenaPerInstant, sumaDies } from '../nucli/hores.js';
-import { MOTIUS_SENSE_VOLUMS, metriquesJornada, textCobertura } from '../nucli/metriques.js';
-import { textError } from '../textos.js';
+import {
+  etiquetaDataLlargaSalut, etiquetaDataSalut, motiuSenseVolumsSalut, resumApuntSalut,
+  textCoberturaSalut, textErrorSalut, tipusSalutTraduit
+} from '../i18nSalut.js';
+import { IDS_TIPUS, INTERRUPTOR_DE_TIPUS, TIPUS_APUNT, tipusDe } from '../nucli/diccionari.js';
+import { dataLocalDe, horaDe, jornadesAmbApunts, ordenaPerInstant, sumaDies } from '../nucli/hores.js';
+import { metriquesJornada } from '../nucli/metriques.js';
 import { useSalut } from '../useSalut.jsx';
 import { EnllacBoto, EnllacDetall, MarcSalut, iconaDeTipus, useEstret, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 import { FormulariApunt, PASSOS_CONDUCTA } from './FormulariApunt.jsx';
@@ -88,12 +91,12 @@ export function useTipusActius() {
 }
 
 /* Els apunts d'una jornada per a la LiniaDelTemps de Pedra Seca. */
-function apuntsDeLinia(apunts, ruta) {
+function apuntsDeLinia(apunts, ruta, idioma) {
   return ordenaPerInstant(apunts).map((apunt) => ({
     id: apunt.id,
     hora: horaDe(apunt.moment),
     moment: apunt.moment,
-    titol: resumApunt(apunt),
+    titol: resumApuntSalut(apunt, idioma),
     icona: iconaDeTipus(apunt.tipus),
     ruta: ruta('dies', apunt.jornada, apunt.id)
   }));
@@ -101,10 +104,11 @@ function apuntsDeLinia(apunts, ruta) {
 
 function LiniaDeJornada({ data, seleccionat = null, titol }) {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   if (!salut.carregat) return null;
   const delDia = salut.apunts.filter((apunt) => apunt.jornada === data);
+  const dataLlarga = etiquetaDataLlargaSalut(data, idioma);
   const eines = (
     <Fila gap={2}>
       <EnllacBoto a={ruta('dies', sumaDies(data, -1))}>{tx.diaAnterior}</EnllacBoto>
@@ -113,8 +117,8 @@ function LiniaDeJornada({ data, seleccionat = null, titol }) {
     </Fila>
   );
   return (
-    <MarcSalut titol={titol || etiquetaDataLlarga(data)} eines={eines} columna="mig">
-      <LiniaDelTemps apunts={apuntsDeLinia(delDia, ruta)} etiqueta={tx.apuntsDe(etiquetaDataLlarga(data))} seleccionat={seleccionat}
+    <MarcSalut titol={titol || dataLlarga} eines={eines} columna="mig">
+      <LiniaDelTemps apunts={apuntsDeLinia(delDia, ruta, idioma)} etiqueta={tx.apuntsDe(dataLlarga)} seleccionat={seleccionat}
         buit={tx.buitJornada} />
     </MarcSalut>
   );
@@ -130,7 +134,7 @@ export function LiniaAvui() {
 
 export function Apuntar() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [consulta, posa] = useParametresConsulta(CONSULTA_DIARI);
   const historial = useHistorialFormulari(CONSULTA_DIARI);
@@ -140,6 +144,7 @@ export function Apuntar() {
 
   const definicio = consulta.nou ? tipusDe(consulta.nou) : null;
   if (definicio && tipusActius.includes(definicio)) {
+    const traduida = tipusSalutTraduit(definicio, idioma);
     const pas = definicio.id === 'conducta' ? consulta.pas || PASSOS_CONDUCTA[0] : null;
     const desa = async (apunt) => {
       const resultat = await salut.desaApunt(apunt);
@@ -150,7 +155,7 @@ export function Apuntar() {
       return resultat;
     };
     return (
-      <MarcSalut titol={definicio.nom}>
+      <MarcSalut titol={traduida.nom}>
         <FormulariApunt key={definicio.id} tipus={definicio.id} pas={pas} onPas={(nou) => historial.pas({ pas: nou })} onDesa={desa}
           onCancela={() => historial.tanca({ nou: null, pas: null })} />
       </MarcSalut>
@@ -159,7 +164,10 @@ export function Apuntar() {
 
   const nit = consulta.mode === 'nit';
   const tipus = nit ? tipusActius.filter((t) => TIPUS_NIT.includes(t.id)) : tipusActius;
-  const articles = tipus.map((t) => ({ id: t.id, nom: (nit && t.id === 'son' ? tx.etiquetaNitSon : t.boto), categoriaId: 'apuntar' }));
+  const articles = tipus.map((t) => {
+    const trTipus = tipusSalutTraduit(t, idioma);
+    return { id: t.id, nom: (nit && t.id === 'son' ? tx.etiquetaNitSon : trTipus.boto), categoriaId: 'apuntar' };
+  });
   const media = (article) => {
     const Icona = iconaDeTipus(article.id);
     return <Icona size={40} aria-hidden="true" focusable="false" />;
@@ -176,7 +184,7 @@ export function Apuntar() {
       )}>
       <Pila gap={4}>
         {darrer ? (
-          <Alerta to="exit" titol={tx.apuntatTitol}>{tx.resumALes(resumApunt(darrer), horaDe(darrer.moment))}</Alerta>
+          <Alerta to="exit" titol={tx.apuntatTitol}>{tx.resumALes(resumApuntSalut(darrer, idioma), horaDe(darrer.moment))}</Alerta>
         ) : null}
         <GraellaArticles articles={articles} etiqueta={tx.queVolsApuntar} renderMedia={media}
           onTria={(article) => { setDarrer(null); historial.obri({ nou: article.id, pas: null }); }} />
@@ -189,7 +197,7 @@ export function Apuntar() {
 
 export function LlistaDies() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const estret = useEstret();
@@ -199,7 +207,7 @@ export function LlistaDies() {
     const n = salut.apunts.filter((apunt) => apunt.jornada === data).length;
     return {
       id: data,
-      nom: etiquetaDataLlarga(data),
+      nom: etiquetaDataLlargaSalut(data, idioma),
       secundari: tx.apuntsCount(n),
       valor: salut.jornades.get(data)?.completa ? tx.completa : '',
       categoriaId: 'dies'
@@ -218,13 +226,13 @@ export function LlistaDies() {
 
 export function Periodes() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
   const enCurs = salut.periodes.find((periode) => periode.estat === 'en-curs') || null;
   const acabats = salut.periodes.filter((periode) => periode.estat === 'acabat').sort((a, b) => (a.inici < b.inici ? 1 : -1));
-  const executa = (fn) => fn().then(() => setError(null), (e) => setError(textError(e)));
+  const executa = (fn) => fn().then(() => setError(null), (e) => setError(textErrorSalut(e, idioma)));
   const enllacFull = (periode) => `${ruta('full')}?des=${periode.inici}&dies=${periode.dies}`;
   /* En acabar un diari, el recordatori de la còpia si no n'hi ha cap de després. */
   const darrerAcabat = acabats[0] || null;
@@ -240,7 +248,7 @@ export function Periodes() {
                 <Boto varietat="secundari" disabled={salut.nomesLectura} onClick={() => executa(() => salut.acabaPeriode(enCurs.id))}>{tx.acabal}</Boto>
               </Fila>
             )}>
-            {tx.comencaIDura(etiquetaDataLlarga(enCurs.inici), enCurs.dies)}
+            {tx.comencaIDura(etiquetaDataLlargaSalut(enCurs.inici, idioma), enCurs.dies)}
           </Alerta>
         ) : (
           <Pila gap={2}>
@@ -263,7 +271,7 @@ export function Periodes() {
             <tbody>
               {acabats.map((periode) => (
                 <tr key={periode.id}>
-                  <td>{etiquetaData(periode.inici)}</td>
+                  <td>{etiquetaDataSalut(periode.inici, idioma)}</td>
                   <td>{periode.dies}</td>
                   <td><EnllacBoto a={enllacFull(periode)}>{tx.obriElFull}</EnllacBoto></td>
                 </tr>
@@ -286,7 +294,7 @@ const xifra = (valor, unitat = '') => (valor === null || valor === undefined ? '
 
 export function ResumJornada({ params }) {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
@@ -297,7 +305,7 @@ export function ResumJornada({ params }) {
     [tx.filesResum.adormir, hora(m.limits.adormir)],
     [tx.filesResum.orinaDia, xifra(m.frequenciaDiurna)],
     [tx.filesResum.orinaNit, xifra(m.nicturia)],
-    [tx.filesResum.mesurades, textCobertura(m)],
+    [tx.filesResum.mesurades, textCoberturaSalut(m, idioma)],
     [tx.filesResum.orina24h, xifra(m.volum24h, ' ml')],
     [tx.filesResum.orinaNitMl, xifra(m.volumNocturn, ' ml')],
     [tx.filesResum.partNit, xifra(m.indexPoliuriaNocturna, ' %')],
@@ -307,14 +315,14 @@ export function ResumJornada({ params }) {
     [tx.filesResum.deposicions, xifra(m.deposicions)],
     [tx.filesResum.episodis, xifra(m.episodis)]
   ];
-  const marca = (completa) => salut.marcaJornada(params.data, { completa }).then(() => setError(null), (e) => setError(textError(e)));
+  const marca = (completa) => salut.marcaJornada(params.data, { completa }).then(() => setError(null), (e) => setError(textErrorSalut(e, idioma)));
   return (
     <MarcSalut titol={tx.resumJornadaTitol}>
       <Pila gap={4}>
         <Interruptor etiqueta={tx.heApuntatTotElDia} actiu={m.completa} desactivat={salut.nomesLectura} onCanvi={marca} />
-        {m.motiuSenseVolums ? <Alerta to="info" viva={false}>{`${tx.senseVolumsPrefix}${MOTIUS_SENSE_VOLUMS[m.motiuSenseVolums]}`}</Alerta> : null}
+        {m.motiuSenseVolums ? <Alerta to="info" viva={false}>{`${tx.senseVolumsPrefix}${motiuSenseVolumsSalut(m.motiuSenseVolums, idioma)}`}</Alerta> : null}
         {error ? <Alerta to="error">{error}</Alerta> : null}
-        <Taula titol={tx.resumDeData(etiquetaDataLlarga(params.data))}>
+        <Taula titol={tx.resumDeData(etiquetaDataLlargaSalut(params.data, idioma))}>
           <tbody>
             {files.map(([nom, valor]) => <tr key={nom}><th scope="row">{nom}</th><td>{valor}</td></tr>)}
           </tbody>
@@ -332,6 +340,7 @@ export function ResumJornada({ params }) {
 
 export function EditorApunt({ params }) {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const [esborrant, setEsborrant] = useState(false);
@@ -359,18 +368,18 @@ export function EditorApunt({ params }) {
       setEsborrant(false);
       torna();
     } catch (e) {
-      setError(textError(e));
+      setError(textErrorSalut(e, idioma));
     }
   };
   return (
-    <MarcSalut titol={tx.corregirTipus(tipusDe(apunt.tipus).nom)}>
+    <MarcSalut titol={tx.corregirTipus(tipusSalutTraduit(tipusDe(apunt.tipus), idioma).nom)}>
       <Pila gap={4}>
         <FormulariApunt key={apunt.id} tipus={apunt.tipus} inicial={apunt} onDesa={desa} onCancela={torna}
           accions={<Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>{tx.esborra}</Boto>} />
         {error ? <Alerta to="error">{error}</Alerta> : null}
       </Pila>
       <DialegConfirmacio obert={esborrant} destructiu titol={tx.esborrarApuntTitol} etiquetaConfirma={tx.esborra} etiquetaCancela={tx.noLEsborres}
-        descripcio={tx.esborrarApuntDesc(resumApunt(apunt), horaDe(apunt.moment))}
+        descripcio={tx.esborrarApuntDesc(resumApuntSalut(apunt, idioma), horaDe(apunt.moment))}
         onTanca={() => setEsborrant(false)} onConfirma={esborra} />
     </MarcSalut>
   );

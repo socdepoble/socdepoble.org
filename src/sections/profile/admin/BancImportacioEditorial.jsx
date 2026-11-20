@@ -1,5 +1,5 @@
 import { consultaRevisioEditorialWp, llegeixEstatRevisioEditorial } from '../../../utils/revisioEditorialWp.js';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { UniversalCard } from '../../../components/PedraSeca/organismes/UniversalCard.jsx';
@@ -13,6 +13,7 @@ import { esPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogi
 import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceWp.js';
 import { ETIQUETES_ESTAT_REVISIO_WP, desaRevisio, notificaRevisio, subscriu } from '../../../data/importacio/revisioImportacioWpStore.js';
 import { desplacaDinsApp, enfocaSenseSalt } from '../../../utils/desplacamentProxim.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../../apps/plataforma/lazyRoute.js';
 import {
   CASOS_US_EDITORIALS,
   desaDestinacioArticleImportat,
@@ -26,6 +27,8 @@ import {
 } from '../../../utils/transformadorEditorialWpBlogger.js';
 
 const ETIQUETA_ESTAT = ETIQUETES_ESTAT_REVISIO_WP;
+/* Gauntlet v1.2.13 · lazyRoute i la barrera del tros accessori: si el tros no carrega, el banc continua. */
+const PanellIncidenciesPublicacioCas = lazyRoute(() => import('../../../components/universal/workspace/PanellIncidenciesPublicacioCas.jsx'));
 
 const DESTINACIONS = Object.freeze([
   { valor: 'mur', etiqueta: 'Mur' },
@@ -39,7 +42,8 @@ export function BancImportacioEditorial() {
   const sessio = useSessioOpcional();
   /* Les marques honestes de la targeta parlen la llengua de la interfície; sense UIProvider
      (proves del banc) `t` és undefined i el helper torna al valencià de sempre. */
-  const t = useUIActionsOpcional()?.t;
+  const ui = useUIActionsOpcional();
+  const t = ui?.t;
   const potPublicar = Boolean(sessio?.currentUser?.id && sessio?.estat === 'dins');
   const publicacio = useProjeccionsCataleg({ enabled: potPublicar });
   const [versio, setVersio] = useState(0);
@@ -249,6 +253,16 @@ export function BancImportacioEditorial() {
           <Boto disabled={revisant} onClick={() => canviaEstatArticle(conflicteRevisio.wpId, conflicteRevisio.estat, conflicteRevisio.nota, conflicteRevisio.remota?.actualitzatA ?? null)}>Reintenta amb la nota conservada</Boto>
         </>}
       </div>}
+      {Array.isArray(publicacio.incidencies) && publicacio.incidencies.length > 0 ? (
+        <BarreraDelTrosAccessori><Suspense fallback={null}>
+          <PanellIncidenciesPublicacioCas
+            incidencies={publicacio.incidencies}
+            onResol={publicacio.resolIncidencia}
+            onRefresca={publicacio.refresca}
+            idioma={ui?.language}
+          />
+        </Suspense></BarreraDelTrosAccessori>
+      ) : null}
       <header className="sdp-admin-taxonomia__header">
         <div className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Motor Universal WordPress + Blogger</Insignia>

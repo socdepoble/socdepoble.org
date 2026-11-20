@@ -19,7 +19,7 @@ import {
   ESTATS, ETIQUETES_ESTAT, GENERACIONS, SEXES, TIPUS_FONT, VIVA, colateralsFan, escriuData, estatDeVincle, estatEfectiu, llegeixData,
   useGenealogia
 } from '../nucli/index.js';
-import { nomVisible, textError } from '../textos.js';
+import { nomVisible, textError } from '../i18nGenealogia.js';
 import { paperDeLAltra, usePersonesPerId, useTextData } from './Arbre.jsx';
 import {
   CampData, EnllacBoto, EtiquetaEstat, MarcGenealogia, useIdioma, useNavegaGenealogia, useT

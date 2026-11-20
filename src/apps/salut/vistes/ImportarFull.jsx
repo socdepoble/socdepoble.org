@@ -13,10 +13,9 @@ import { useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, GrupCamps, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
+import { etiquetaDataSalut, textErrorSalut, tipusSalutTraduit } from '../i18nSalut.js';
 import { tipusDe } from '../nucli/diccionari.js';
-import { etiquetaData } from '../nucli/hores.js';
 import { diesDe, llegixFitxer, proposaApunts } from '../nucli/importacio.js';
-import { textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
 import { EnllacBoto, MarcSalut, useTextosSalut } from './comunes.jsx';
 
@@ -47,7 +46,7 @@ function perMotiu(descartats, tx) {
 
 export function ImportarFull() {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [triat, setTriat] = useState(null);
   const [dates, setDates] = useState([]);
@@ -72,7 +71,7 @@ export function ImportarFull() {
       const llegit = llegixFitxer(new Uint8Array(await fitxer.arrayBuffer()), fitxer.name);
       if (!llegit.ok) {
         setTriat(null);
-        setMissatge({ to: 'error', text: llegit.error });
+        setMissatge({ to: 'error', text: idioma === 'ca' ? llegit.error : tx.errorLlegirFitxer });
         return;
       }
       setDates(diesDe(llegit.llibre).map((dia) => dia.data || ''));
@@ -92,7 +91,7 @@ export function ImportarFull() {
       setVersio((n) => n + 1);
       setMissatge({ to: 'exit', text: tx.fetImportarFull(informe.afegits, informe.duplicats) });
     } catch (error) {
-      setMissatge({ to: 'error', text: textError(error) });
+      setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
     }
     setDesant(false);
   };
@@ -131,13 +130,13 @@ export function ImportarFull() {
                 <thead>
                   <tr>
                     <th scope="col">{tx.jornada}</th>
-                    {TIPUS_PREVIA.map((tipus) => <th key={tipus} scope="col">{tipusDe(tipus).nom}</th>)}
+                    {TIPUS_PREVIA.map((tipus) => <th key={tipus} scope="col">{tipusSalutTraduit(tipusDe(tipus), idioma).nom}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {jornades.map(({ jornada, perTipus }) => (
                     <tr key={jornada}>
-                      <th scope="row">{etiquetaData(jornada)}</th>
+                      <th scope="row">{etiquetaDataSalut(jornada, idioma)}</th>
                       {TIPUS_PREVIA.map((tipus) => <td key={tipus}>{perTipus[tipus] || 0}</td>)}
                     </tr>
                   ))}

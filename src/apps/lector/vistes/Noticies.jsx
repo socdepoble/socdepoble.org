@@ -69,7 +69,7 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Boto, EstatBuit, MarcColumna } from '../../../components/PedraSeca/index.js';
 import { UniversalWorkspace } from '../../../components/universal/workspace/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { textosLector } from '../i18nLector.js';
+import { descripcioFontLector, textosLector } from '../i18nLector.js';
 import {
   DESPRES, HUI, articlesDeCarpeta, comptadorsCarpetes, dataDeBoina, esDeHui, ordenaPerData, senseFinal, seguix
 } from '../nucli/index.js';
@@ -308,7 +308,7 @@ function SenseNoticia({ titol, ids, resultats = null, buit, ancora, callades = n
     cos = (
       <EstatBuit icona={EyeOff} titol={tx.fontApagadaTitol}
         accio={<Boto varietat="primari" data-accio-font="torna" onClick={commuta}>{tx.tornaASeguirla}</Boto>}>
-        <span ref={ancora}>{font.descripcio || tx.encenLaText}</span>
+        <span ref={ancora}>{descripcioFontLector(font, idioma) || tx.encenLaText}</span>
       </EstatBuit>
     );
   } else if (ids.length) {

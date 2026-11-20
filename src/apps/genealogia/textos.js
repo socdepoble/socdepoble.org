@@ -1,6 +1,6 @@
 /**
- * textos.js — els textos de la interfície de l'Arbre Genealògic en les cinc
- * llengües de la plataforma (ca, es, en, eu, gl).
+ * i18nGenealogia.js — diccionari diferit pur de l'Arbre Genealògic en les cinc
+ * llengües de la plataforma (ca, es, en, eu, gl). 0 B al boot estàtic de WP.
  *
  * El nucli, gedcom i arxius no porten frases: només claus i valors. Ací es
  * traduïxen. Les cinc llengües tenen exactament les mateixes claus (ho vigila
@@ -2140,3 +2140,7 @@ export function nomVisible(persona, idioma) {
   const nom = [persona.nom, persona.cognom1, persona.cognom2].filter((part) => typeof part === 'string' && part.trim()).join(' ');
   return nom || t(idioma, 'persona.senseNom');
 }
+
+export const TEXTOS_GENEALOGIA = TEXTOS;
+export const codiIdiomaGenealogia = llenguaDe;
+export const textosGenealogia = (idioma) => TEXTOS[llenguaDe(idioma)];

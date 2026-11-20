@@ -8,8 +8,9 @@ import {
 } from '../../config/i18n';
 import { registraIncident } from '../../utils/autocuracio.js';
 import {
-  ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference, readThemePreference,
-  resolveContrast, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema, writeContrastPreference, writeThemePreference
+  ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference,
+  readSeniorPreference, readThemePreference, resolveContrast, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema,
+  subscriuModeSenior, writeContrastPreference, writeSeniorPreference, writeThemePreference
 } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
 import { normalizeSearchText } from '../../config/contentHelpers';
@@ -198,6 +199,25 @@ export function UIProvider({ children, externalConfig = {} }) {
     }
   }, []);
 
+  // === MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252) ===
+  const [seniorMode, setSeniorModeState] = useState(() => readSeniorPreference(externalConfig?.senior));
+
+  useEffect(() => subscriuModeSenior(setSeniorModeState), []);
+
+  const setSeniorMode = useCallback((actiu) => {
+    if (typeof actiu !== 'boolean') return;
+    writeSeniorPreference(actiu);
+    setSeniorModeState(actiu);
+  }, []);
+
+  const toggleSeniorMode = useCallback(() => {
+    setSeniorModeState((previ) => {
+      const seg = !previ;
+      writeSeniorPreference(seg);
+      return seg;
+    });
+  }, []);
+
   const stateValue = useMemo(() => ({
     language,
     llenguaDelText,
@@ -208,9 +228,10 @@ export function UIProvider({ children, externalConfig = {} }) {
     systemDark,
     contrastMode,
     contrastPreference,
+    seniorMode,
     externalConfig,
     status: globalStatus
-  }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, externalConfig, globalStatus]);
+  }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, seniorMode, externalConfig, globalStatus]);
 
   const actionsValue = useMemo(() => ({
     language,
@@ -218,11 +239,14 @@ export function UIProvider({ children, externalConfig = {} }) {
     toggleTheme,
     setTheme,
     setContrast,
+    seniorMode,
+    setSeniorMode,
+    toggleSeniorMode,
     t: translator,
     resolveAsset,
     normalizeSearchText,
     setGlobalStatus
-  }), [language, setLanguageFn, toggleTheme, setTheme, setContrast, translator, setGlobalStatus]);
+  }), [language, setLanguageFn, toggleTheme, setTheme, setContrast, seniorMode, setSeniorMode, toggleSeniorMode, translator, setGlobalStatus]);
 
   return (
     <UIContext.Provider value={stateValue}>

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import {DIAGNOSTICS_R6_PROVATS,verificaProvaR6R3215} from '../lib/rls-prova-postgres-r3215.mjs';
 import { capcalera, comparaVersions, dependenciesDeclarades, llegixOrdre, ordena, versioDeFitxer } from '../../scripts/supabase/verifica-migracions.mjs';
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -1117,7 +1118,14 @@ let views = new Set();
 let policies = [];
 let grants = [];
 
+const fontsProvaR6 = new Map(), provesR6 = new Map();
 function falla(llei, on, detall) {
+  // R32.15: only these two dynamic diagnostics for one exact, empirically
+  // verified source. R0/R1/R2..R9 and the catalog model remain unchanged.
+  if (llei === 'R6' && DIAGNOSTICS_R6_PROVATS.includes(detall)) {
+    const prova = verificaProvaR6R3215(on, { sql: fontsProvaR6.get(on) });
+    if (prova.valid) { provesR6.set(on, prova); return; }
+  }
   infr.push({ llei, on, detall });
 }
 
@@ -1495,6 +1503,7 @@ for (const file of files) {
   // R32.2 · El nom no quoted es plega com PostgreSQL, igual que les polítiques R1.
   for (const grant of grantsR5(content)) grants.push({ ...grant, table: grant.table.toLowerCase(), file });
 
+  fontsProvaR6.set(file, content);
   // R6: només opcions reals de CREATE FUNCTION, sense text de cos o arguments.
   statements.forEach((statement, posicio) => estatFuncionsR6(statement, file, estatDefiner, posicio));
   // R32 · P2 (a): el model aplica cada DDL de rutina, però PostgreSQL en desfà
@@ -1568,6 +1577,8 @@ for (const g of grants) {
   }
 }
 
+
+for (const [file, prova] of provesR6) console.log(`ℹ [R6 prova local] ${file}: PostgreSQL ${prova.nativeVersion} + PGlite ${prova.pglitePackage}, ${prova.assertions} assertions; bytes/fixtures/proves obligatoris fixats, cap prova remota.`);
 
 for (const [file, font] of fontsR1) {
   for (const desconegut of font.desconeguts) {

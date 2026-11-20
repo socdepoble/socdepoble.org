@@ -31,7 +31,7 @@ import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
 import { columnaPlegadaDe, desaColumnaPlegada } from '../components/universal/workspace/persistenciaColumnesUI.js';
-import { ATRIBUT_CONTRAST, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
+import { ATRIBUT_CONTRAST, ATRIBUT_SENIOR, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
 import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../apps/plataforma/lazyRoute.js';
 import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
@@ -82,6 +82,7 @@ const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
 const PluginPage = lazyRoute(() => import('../sections/plugins/PluginPage.jsx'));
 const NotFoundPage = lazyRoute(() => import('../pages/NotFoundPage'));
+const EstilsModeSeniorActiu = lazyRoute(() => import('../components/universal/EstilsModeSeniorActiu.jsx'));
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
@@ -397,7 +398,7 @@ function AppShell({ children, mobileNav }) {
   /* Fase D (261020, tasca 4.1) · L1 · El lang i la barra lateral seguixen la
      llengua del text (la que té el diccionari carregat), no la demanada. El
      valor per defecte manté les proves que simulen UIContext. */
-  const { language, llenguaDelText = language, status, themeMode, contrastMode, externalConfig } = useUIState();
+  const { language, llenguaDelText = language, status, themeMode, contrastMode, seniorMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
   const { basename, memoria, navegacio, subscriuAbansDeNavegar } = useRouter();
@@ -696,6 +697,17 @@ function AppShell({ children, mobileNav }) {
     return reclamaAtribut(arrel, ATRIBUT_CONTRAST, contrastMode === CONTRAST_BANCAL ? CONTRAST_BANCAL : null);
   }, [contrastMode, amaDelDocument]);
 
+  React.useLayoutEffect(() => {
+    const arrel = arrelDePresentacio(rootRef.current, { amaDelDocument });
+    const valor = seniorMode === true ? 'true' : null;
+    const allibera = reclamaAtribut(arrel, ATRIBUT_SENIOR, valor);
+    /* Gauntlet v1.2.13 · Dins del shadow root del connector l'atribut viu al host, i no tots els navegadors casen
+       :host() dins de :is(). Els fulls del Mode Sènior ja admeten .sdp-root[data-sdp-senior]: també s'hi posa. */
+    const sdpRoot = rootRef.current;
+    const alliberaRoot = sdpRoot && sdpRoot !== arrel ? reclamaAtribut(sdpRoot, ATRIBUT_SENIOR, valor) : null;
+    return () => { alliberaRoot?.(); allibera?.(); };
+  }, [seniorMode, amaDelDocument]);
+
   /* Revisió adversarial de C1 (W4-12) · La llengua seguix la mateixa política
      d'arrel i domini que el contrast: l'amfitrió del Shadow DOM, <html> NOMÉS
      quan l'app és ama del document (socdepoble.org, com sempre) i, en un
@@ -748,6 +760,14 @@ function AppShell({ children, mobileNav }) {
           </BarraLateral>
         </nav>
       )}
+
+      {seniorMode === true ? (
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <EstilsModeSeniorActiu arrelRef={rootRef} />
+          </Suspense>
+        </BarreraDelTrosAccessori>
+      ) : null}
 
       <main 
         id="main-content"

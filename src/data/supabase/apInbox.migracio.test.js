@@ -274,10 +274,12 @@ describe('la migració de la inbox ActivityPub i la cua d’eixida', () => {
   });
 
   test('les retencions per defecte de la migració cobrixen les de la biblioteca (finestra de signatura i làpida)', () => {
-    const retencio = (inbox.FINESTRA_SIGNATURA.maximMs + 2 * inbox.FINESTRA_SIGNATURA.margeMs) / 1000;
-    const lapida = (inbox.MAXIM_VIGENCIA_ALERTA_MS + inbox.FINESTRA_SIGNATURA.maximMs + 2 * inbox.FINESTRA_SIGNATURA.margeMs) / 1000;
-    if ('RETENCIO_ACTIVITAT_MS' in inbox) expect(inbox.RETENCIO_ACTIVITAT_MS / 1000).toBe(retencio);
-    if ('RETENCIO_LAPIDA_MS' in inbox) expect(inbox.RETENCIO_LAPIDA_MS / 1000).toBe(lapida);
+    // R32.15 escurça la finestra de signatura; la retenció SQL de 14 h es preserva.
+    const retencio = 14 * 3600;
+    const lapida = (inbox.MAXIM_VIGENCIA_ALERTA_MS + inbox.RETENCIO_ACTIVITAT_MS) / 1000;
+    expect(inbox.RETENCIO_ACTIVITAT_MS / 1000).toBe(retencio);
+    expect(inbox.RETENCIO_LAPIDA_MS / 1000).toBe(lapida);
+    expect(inbox.FINESTRA_SIGNATURA.maximMs + 2 * inbox.FINESTRA_SIGNATURA.margeMs).toBeLessThanOrEqual(inbox.RETENCIO_ACTIVITAT_MS);
     const codi = senseComentaris(SQL);
     /* greatest(mínim, least(coalesce(p_x, per defecte), màxim)): el per defecte és la retenció i el màxim l'admet. */
     const [, minimR, perDefecteR, maximR] = codi.match(/greatest\((\d+), least\(coalesce\(p_retencio_s, (\d+)\), (\d+)\)\)/).map(Number);

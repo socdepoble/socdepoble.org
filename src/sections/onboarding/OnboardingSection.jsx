@@ -616,6 +616,9 @@ export default function OnboardingSection() {
       <Boto varietat="secundari" icona={Globe} onClick={() => navigate('/traduccions')}>
         {tr('section.translations.system.title', 'Idioma del Sistema')}
       </Boto>
+      <Boto varietat="secundari" onClick={() => navigate('/page/guia')}>
+        {txExtra.guiaPasAPasBoto}
+      </Boto>
     </Accions>
   );
 

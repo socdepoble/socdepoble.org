@@ -81,3 +81,32 @@ test('R32.14 · cost lineal: font adversarial de 8 MiB, molts tokens repetits se
   assert.equal(r.size,0);
   assert.ok(performance.now()-inici<1000);
 });
+
+test('R32.15 · recatàleg xat conserva totes les obligacions de xarxa i exigeix porta binària', () => {
+  const previous = ["getResolvedConfig(config)", "jwtPerBackend(config)", "redirect: 'error'", "comprova()", "Authorization: `Bearer ${jwt}`"];
+  // És una obligació de la font revisada, no una importació d’este test.
+  const binaryImport = ["const { validaFitxerMedia } = await ", 'im', 'port', "('../../utils/validadorContenidorsMedia.js')"].join('');
+  const binary = [binaryImport, 'await validaFitxerMedia(fitxer, { signal: config.signal })'];
+  for (const id of ['TELLADO-R3214-11', 'TELLADO-R3214-12']) {
+    const s = CATALEG_TELLADO_R3214.find(s => s.id === id), cru = font(s), cleaned = net(cru, s);
+    assert.notEqual(s.sha256, 'e78a4315bc05184b583d835198af745132ae32d66745f107df6b7522538cf4e5');
+    assert.equal(s.requisits.length, previous.length + binary.length);
+    for (const obligation of [...previous, ...binary]) {
+      assert.ok(s.requisits.includes(obligation), obligation);
+      const mutant = cleaned.split(obligation).join('');
+      assert.equal(compleixObligacionsTellado(mutant, s), false);
+      assert.equal(catalogaTellado(observacio(s), preparaRevisioTellado(mutant, mutant)), null);
+    }
+    assert.equal(s.certificaDesti, false);
+  }
+});
+
+test('R32.15 · anomenar un nou sink fetchAmbResolucioPublica no li atorga cobertura', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-tellado-new-guard-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, 'src'));
+  fs.writeFileSync(path.join(root, 'src/guard.js'), 'export function fetchAmbResolucioPublica(url, init) { return fetch(url, init); }\n');
+  const r = avaluaPerimetreTellado(root);
+  assert.equal(r.totalDesconeguts, 1); assert.equal(r.catalegDinamic.cobertes, 0); assert.equal(r.catalegDinamic.pendents, 1);
+  assert.equal(r.catalegDinamic.certificaZeroExfiltracio, false);
+});

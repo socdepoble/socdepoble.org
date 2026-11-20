@@ -30,6 +30,7 @@ import {
 } from '../services/avisador.js';
 import { ambBloqueigPreferenciesAvisador, desaAvisador, escoltaAvisador, llegixAvisador } from '../services/avisadorPreferencies.js';
 import { omple, TEXTOS_AVISADOR as TX } from './textosAvisador.js';
+import ControlModeSenior from '../components/universal/ControlModeSenior.jsx';
 
 /* Els enllaços que la pàgina posa dins dels textos rics (textosAvisador.js). */
 const ENLLACOS_GUIA = Object.freeze({
@@ -349,6 +350,7 @@ export default function AvisadorPage() {
   useFullDiferit(arrelRef, 'avisador', cssAvisador);
   return (
     <PageFrame title={tx(TX.titol)} subtitle={tx(TX.subtitol)} lead={tx(TX.intro)} showConnect={false} showComment={false}>
+      <ControlModeSenior />
       <section className="sdp-avisador" ref={arrelRef} aria-labelledby={`${idGuia}-guia`}>
         <h3 id={`${idGuia}-guia`}>{tx(TX.guiaTitol)}</h3>
         <p>{textRic(tx(TX.guiaSessio), tx)}</p>

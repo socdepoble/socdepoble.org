@@ -63,6 +63,7 @@ export const EXEMPCIONS_SOCIALS = Object.freeze([
   exempcio({ruta: '/page/dispositius', classe: 'redireccio', desti: '/dispositius', motiu: 'PAGE_ROUTE_MAP la porta a /dispositius, una eina exempta.'}),
   exempcio({ruta: '/page/iaia-sabuda', classe: 'redireccio', desti: '/page/la-iaia-sabuda', motiu: 'Àlies defensiu de La IAIA Sabuda: el seu destí no té head públic.'}),
   exempcio({ruta: '/page/nodrir-la-iaia', classe: 'redireccio', desti: '/page/la-iaia-sabuda', motiu: 'Àlies defensiu (adreça de R15) de La IAIA Sabuda: el seu destí no té head públic.'}),
+  exempcio({ruta: '/page/guia', classe: 'redireccio', desti: '/page/tot-el-que-pots-fer', motiu: 'Àlies curt de la guia pas a pas (IDEA-287): redirigix a /page/tot-el-que-pots-fer.'}),
 
   exempcio({ruta: '/page/la-iaia-sabuda', classe: 'pendent', revisio: 'D-SEO-26',
     motiu: 'Espai de curadoria amb rol verificat i safata privada: una prova vigent (build-social-manifest.test.mjs) diu que no té head públic; el Mestre decidix.'}),

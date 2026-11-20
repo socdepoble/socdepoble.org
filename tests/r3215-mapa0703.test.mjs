@@ -34,9 +34,16 @@ test('the real compiler keeps missing-receipt warnings for every non-exempt date
 });
 test('gate is green with historical records, red for new/invalid records, and never edits them', async t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-r3215-consola-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const sourceDesk = path.join(process.cwd(), '_wiki_de_poble/04_escriptori');
   for(const n of ['.agents','.claude','.codex','.husky','tooling','src','public','_wiki_de_poble','package.json','AGENTS.md','CLAUDE.md','README.md','firebase.json','vercel.json','index.html','supabase','tests','scripts','wordpress-plugin','vite.config.js','vite.natiu.config.js','vite.standalone.config.js']) {
-    const from=path.join(process.cwd(),n);if(fs.existsSync(from))fs.cpSync(from,path.join(root,n),{recursive:true,dereference:true,filter:s=>!s.split(path.sep).some(p=>['runtime','90_arxiu_historic'].includes(p)||p.startsWith('.env'))});
+    const from=path.join(process.cwd(),n);if(fs.existsSync(from))fs.cpSync(from,path.join(root,n),{recursive:true,dereference:true,filter:s=>s!==sourceDesk&&!s.startsWith(sourceDesk+path.sep)&&!s.split(path.sep).some(p=>['runtime','90_arxiu_historic'].includes(p)||p.startsWith('.env'))});
   }
+  // MAPA0703 tests the turn boundary, independently of the active human desk
+  // and its machine-local receipts. Build a complete minimal desk only inside
+  // this disposable fixture; missing-receipt documents retain their own tests.
+  const desk=path.join(root,'_wiki_de_poble/04_escriptori');fs.mkdirSync(desk,{recursive:true});
+  fs.writeFileSync(path.join(desk,'00_index_escriptori.md'),'---\ntype: index\nstatus: canonic\ndescription: Índex documental autocontingut de la fixture MAPA0703\n---\n# Índex de prova\n\n- [[03_llibre_mestre_tasques_i_idees]]\n');
+  fs.writeFileSync(path.join(desk,'03_llibre_mestre_tasques_i_idees.md'),'---\ntype: document\nstatus: canonic\ndescription: Llibre permanent mínim de la fixture MAPA0703\n---\n# Llibre de prova\n\nSense tasques alienes ni rebuts importats.\n\n## Matriu P0\n\n| ID | Estat |\n| --- | --- |\n| P0-01 | Pendent |\n');
   execFileSync('git',['init','-q'],{cwd:root});
   execFileSync('git',['-c','core.hooksPath=/dev/null','-c','user.name=Fixture','-c','user.email=test@example.invalid','-c','commit.gpgsign=false','commit','--allow-empty','-qm','fixture'],{cwd:root});
   const dir=path.join(root,'.agents/runtime/turns');fs.mkdirSync(dir,{recursive:true});

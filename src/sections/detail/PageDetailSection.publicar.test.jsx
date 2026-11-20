@@ -81,8 +81,9 @@ test('Vehicle Compartit: dalt i baix, el mateix enllaç cap al Bloc amb ?ambit=v
 });
 
 test('una pàgina sense destí no porta cap div.page-title-accio ni cap botó', () => {
-  estat.pageCopy = { guia: { title: 'Guia del poble', html: '<p>Text</p>' } };
-  visita('guia');
+  // Onada v1.2.13 · «guia» ja és l'àlies de /page/tot-el-que-pots-fer (IDEA-287): la pàgina genèrica es diu «guia-local».
+  estat.pageCopy = { 'guia-local': { title: 'Guia del poble', html: '<p>Text</p>' } };
+  visita('guia-local');
   expect(capcalera()).not.toBeNull();
   expect(document.querySelector('.page-title-accio')).toBeNull();
   // El peu d'idioma (PeuEditorialIdioma.jsx, «Tria un idioma» cap a /traduccions) és una altra peça, no una acció de la pàgina.

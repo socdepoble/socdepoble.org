@@ -14,7 +14,7 @@ import { Link } from '../../../app/contexts/RouterContext';
 import { Accions, Alerta, Boto, EstatBuit, GrupCamps, Insignia, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import { avisosCognom, estatEfectiu, etiquetaData, urlSegura, useGenealogia } from '../nucli/index.js';
-import { nomVisible, textAlerta, textError } from '../textos.js';
+import { nomVisible, textAlerta, textError } from '../i18nGenealogia.js';
 import { EnllacBoto, EtiquetaEstat, LlegendaEstats, MarcGenealogia, useEstret, useIdioma, useT } from './comunes.jsx';
 
 /** Les persones de l'arbre per id. */

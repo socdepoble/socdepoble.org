@@ -76,8 +76,8 @@ const copia = valor => structuredClone(valor);
 async function aplica(muta) {
   const {router, manifest} = base;
   const dades = {router: copia(router), manifest: copia(manifest), exempcions: EXEMPCIONS_SOCIALS.map(e => ({...e})), instancies: [], redireccionsDePagina: {'/page/dispositius': '/dispositius',
-    '/page/iaia-sabuda': '/page/la-iaia-sabuda', '/page/nodrir-la-iaia': '/page/la-iaia-sabuda'}, servidor: ['perfil', 'notes', 'xat'], sintetic: undefined};
-  for (const cami of ['/page/dispositius', '/page/iaia-sabuda', '/page/nodrir-la-iaia', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/projecte', '/page/tot-el-que-pots-fer']) dades.instancies.push({cami, familia: '/page/:slug'});
+    '/page/guia': '/page/tot-el-que-pots-fer', '/page/iaia-sabuda': '/page/la-iaia-sabuda', '/page/nodrir-la-iaia': '/page/la-iaia-sabuda'}, servidor: ['perfil', 'notes', 'xat'], sintetic: undefined};
+  for (const cami of ['/page/dispositius', '/page/guia', '/page/iaia-sabuda', '/page/nodrir-la-iaia', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/projecte', '/page/tot-el-que-pots-fer']) dades.instancies.push({cami, familia: '/page/:slug'});
   muta(dades);
   const client = new Set(dades.router.privades);
   const indexable = cami => !client.has(String(cami).replace(/^\/+/, '').split(/[/?#]/)[0]);

@@ -3,6 +3,7 @@
    via el protocol, hash SHA-256 verificat ABANS de desxifrar, llista blanca
    de MIME al receptor i sostres del bucket. WebCrypto real de Node. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { ogg } from '../../tests/helpers/contenidorsMediaR3215.js';
 import { jpegDeMida } from '../../tests/helpers/contenidorsMedia.js';
 import { WEBP_NET } from '../../tests/helpers/mitjansPublicsNets.js';
 import { readFileSync } from 'node:fs';
@@ -56,7 +57,7 @@ describe('xifraAdjuntXat / desxifraAdjuntXat', () => {
   });
 
   test('un blob manipulat o un hash que no quadra es rebutgen ABANS de desxifrar', async () => {
-    const clar = bytes(2048);
+    const clar = ogg();
     const { blob, a } = await xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: clar, mime: 'audio/ogg', durada: 1500 });
     const decrypt = vi.spyOn(cripto.subtle, 'decrypt');
     await expect(desxifraAdjuntXat({ cripto, fil: FIL, emissor: A, a, blob: muta(blob, 40) })).rejects.toMatchObject({ code: 'obrir', codi: CODI_ADJUNT.manipulat });
@@ -69,6 +70,12 @@ describe('xifraAdjuntXat / desxifraAdjuntXat', () => {
     expect(obert.bytes).toEqual(clar);
     expect(obert).toMatchObject({ tipus: 'veu', durada: 1500 });
     expect(decrypt).toHaveBeenCalled();
+  });
+
+  test('R32.15: OGG fals o CRC corrupte es rebutja abans de xifrar', async () => {
+    const encrypt = vi.spyOn(cripto.subtle, 'encrypt'), corrupt = ogg(); corrupt[35] ^= 1;
+    for (const data of [bytes(200), corrupt]) await expect(xifraAdjuntXat({ cripto, fil: FIL, adjunt: ADJ, emissor: A, bytes: data, mime: 'audio/ogg', durada: 1500 })).rejects.toMatchObject({ code: 'format' });
+    expect(encrypt).not.toHaveBeenCalled();
   });
 
   test('una FK d’un altre adjunt no obri el blob (GCM rebutja) i ix com a manipulat', async () => {

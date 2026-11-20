@@ -56,9 +56,9 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "a2ac3f169b88a8eac605cfc45321f254dffd9ec2baebf96758d4866a444031cd",
-      "html": 8512,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
+      "sha256": "2f496c3309cec98671540b7334e928f980fd92c8686fc5a2c44d7e027d1add50",
+      "html": 10413,
+      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
       "data": "2026-11-19"
     },
     "drets-autor": {
@@ -74,9 +74,9 @@
       "data": "2026-11-19"
     },
     "fediversity": {
-      "sha256": "4757102c3a588090114156fd226a9307a08e90d9000811045de9b6d42fce0020",
-      "html": 65358,
-      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
+      "sha256": "7a31e671dcf2226fe598a3cac296a31ef6daa9dc00ab2487d8a68c955a256324",
+      "html": 66912,
+      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
       "data": "2026-11-19"
     },
     "habitatge": {
@@ -104,9 +104,9 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "1a55f0796a029428ac37ed99960d80c143ebdcd5fca77610c9b62964a34de439",
-      "html": 28676,
-      "aprovat_per": "Claude v1.2.11 (Carril 1), per l'encàrrec autònom del Mestre Javi del 19-11-2026 14:14 (pla 261119_1414: integrar R32.13 i desplegar v1.2.11); pendent de lectura humana",
+      "sha256": "f1fd00e4ff7b2e34a01b4c1508995c3e0de0084a530263b1cb4ef36db8467642",
+      "html": 30207,
+      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
       "data": "2026-11-19"
     },
     "notes": {
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "5959f35ca5b1ea2c7bb767c0821a54d14077cecb21f1605643c251cfc7ab6995",
-      "html": 136085,
-      "aprovat_per": "Claude v1.2.12 (Carril 1), per l'encàrrec del Mestre Javi del 19-11-2026 (prompt 261119_1754: integrar R32.14 i desplegar v1.2.12), crònica FITA_R32_15 contrastada amb el codi; pendent de lectura humana",
-      "data": "2026-11-19"
+      "sha256": "9dca14298474d37911eb26eeaea7b38a97add224f68600ac5d5b5a889a19269c",
+      "html": 140958,
+      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), crònica FITA_R32_17 contrastada amb el codi i corregida per dues rondes de Gauntlet; pendent de lectura humana",
+      "data": "2026-11-20"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

@@ -5,8 +5,10 @@
  */
 import { createHash, webcrypto } from 'node:crypto';
 import { COMPTE_MASTODON, LIMITS_MASTODON, formataPublicacioMastodon, creaActivitatMastodon, executaAmbTerminiMastodon } from '../../src/data/federacio/pontMastodon.js';
+import { peticioMastodont } from './xarxa-node0.mjs';
 import { signaPeticioHttpMessageActivityPub } from './http-message-signatures-ed25519.mjs';
 const ERROR_LOCAL = Symbol('mastodon-server-failure');
+const fetchNatiu = globalThis.fetch;
 const falla = (code) => Object.assign(new Error(code), { code, [ERROR_LOCAL]: true });
 export function clauIdempotenciaMastodon(item) {
   const post = formataPublicacioMastodon(item);
@@ -64,10 +66,11 @@ function compteDelToken(compte, compteIdVerificat) {
  */
 export async function publicaAMastodonServidor(item, {
   token = process.env.MASTODON_ACCESS_TOKEN ?? process.env.SDP_MASTODON_ACCESS_TOKEN,
-  fetchImpl = globalThis.fetch, signal, terminiMs, compteIdVerificat = null
+  fetchImpl = peticioMastodont, signal, terminiMs, compteIdVerificat = null
 } = {}) {
   if (typeof token !== 'string' || token.length < 8 || token.length > 4096 || /[\s\x00-\x1f\x7f]/.test(token)) throw falla('MASTODON_TOKEN_ABSENT_O_INVALID');
   if (typeof fetchImpl !== 'function' || compteIdVerificat !== null && (typeof compteIdVerificat !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(compteIdVerificat))) throw falla('MASTODON_TOKEN_COMPTE_NO_VERIFICAT');
+  if (fetchImpl === fetchNatiu || fetchImpl === globalThis.fetch) throw falla('MASTODON_DNS_PIN_REQUERIT');
   const post = formataPublicacioMastodon(item); const idempotencyKey = clauIdempotenciaMastodon(item);
   const endpoint = `${COMPTE_MASTODON.origen}/api/v1/statuses`;
   const credentialsEndpoint = `${COMPTE_MASTODON.origen}/api/v1/accounts/verify_credentials`;

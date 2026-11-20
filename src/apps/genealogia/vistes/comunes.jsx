@@ -25,7 +25,7 @@ import {
 import { useApp, useClosaAplicacio } from '../../plataforma/index.js';
 import { llegeixFitxerArbre, lligTextFitxerArbre } from '../gedcom/index.js';
 import { ESTATS, ETIQUETES_ESTAT, MIDA_MAXIMA_IMPORTACIO, PRECISIONS, useGenealogia } from '../nucli/index.js';
-import { llenguaDe, t, textCodiLectura, textError } from '../textos.js';
+import { llenguaDe, t, textCodiLectura, textError } from '../i18nGenealogia.js';
 
 /* El to de la insígnia de cada estat: el text la fa llegible sense color. */
 const TO_ESTAT = Object.freeze({ confirmat: 'exit', aproximat: 'info', 'falta-confirmar': 'avis', contradiccio: 'error' });

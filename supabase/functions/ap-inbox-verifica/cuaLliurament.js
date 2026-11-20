@@ -68,13 +68,41 @@ export const finsAlTopall = (promesa, senyal) => new Promise((resol, rebutja) =>
  * adreça o alguna família sense resposta) o 'sense-dns' (l'entorn no té
  * resoledor: mai pública). `resolDns(host, 'A'|'AAAA', {signal})` → [ip].
  */
-export async function xarxaDe(host, { resolDns = null, senyal = undefined } = {}) {
-  if (typeof resolDns !== 'function') return 'sense-dns';
+const concessionsDns = new WeakSet();
+const fetchNatiu = globalThis.fetch;
+/** One-use immutable DNS snapshot. The pinned transport must dial exactly one
+ * of these addresses and verify TLS for host; native fetch cannot do that. */
+export async function resolXarxaPublica(host, { resolDns = null, senyal = undefined } = {}) {
+  const result = (estat, adreces = []) => {
+    const snapshot = Object.freeze({ estat, host, adreces: Object.freeze(adreces) });
+    if (estat === 'publica') concessionsDns.add(snapshot);
+    return snapshot;
+  };
+  if (typeof host !== 'string' || !urlRemota(`https://${host}/`)) return result('privada');
+  if (typeof resolDns !== 'function') return result('sense-dns');
   const resol = (tipus) => Promise.resolve().then(() => resolDns(host, tipus, { signal: senyal }));
   const respostes = await Promise.allSettled([resol('A'), resol('AAAA')]);
-  const adreces = respostes.flatMap((r) => (r.status === 'fulfilled' && Array.isArray(r.value) ? r.value : []));
-  if (adreces.some((ip) => esIpNoPublica(String(ip)))) return 'privada';
-  return respostes.some((r) => r.status === 'rejected') || adreces.length === 0 ? 'desconeguda' : 'publica';
+  if (respostes.some(r => r.status === 'fulfilled' && (!Array.isArray(r.value) || r.value.length > 256))) return result('desconeguda');
+  const adreces = respostes.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  if (adreces.some(ip => esIpNoPublica(ip))) return result('privada');
+  if (respostes.some(r => r.status === 'rejected') || adreces.length === 0) return result('desconeguda');
+  if (respostes.some((r,i) => r.status === 'fulfilled' && r.value.some(ip => i === 0 ? ip.includes(':') : !ip.includes(':')))) return result('privada');
+  return result('publica', [...new Set(adreces)].sort());
+}
+export async function xarxaDe(host, opcions = {}) {
+  return (await resolXarxaPublica(host, opcions)).estat;
+}
+/** No fallback from a failed pinned provider. Explicit injected transports are
+ * a trusted server seam; global/native fetch ALWAYS requires IP/TLS pinning. */
+export async function fetchAmbResolucioPublica(url, init, { resolucio, fetch, fetchPinnat = null, requereixPinDns = false } = {}) {
+  const target = urlRemota(url);
+  if (!target || !concessionsDns.has(resolucio) || resolucio.host !== target.hostname
+      || !['manual', 'error'].includes(init?.redirect)) throw new Error('dns_concessio_invalida');
+  concessionsDns.delete(resolucio);
+  if (typeof fetchPinnat === 'function') return fetchPinnat(url, init, resolucio);
+  if (requereixPinDns || fetch === fetchNatiu || fetch === globalThis.fetch) throw new Error('dns_no_pinnat');
+  if (typeof fetch !== 'function') throw new Error('xarxa');
+  return fetch(url, init);
 }
 
 /** La clau privada d'un actor (PKCS#8 PEM, RSA de 2048–8192 bits o Ed25519), o null. */
@@ -153,7 +181,7 @@ function retryAfterDe(valor, ara) {
  * fetch des de l'URL: és la mateixa que la signada. Torna {status,
  * retryAfterS} o {error}.
  */
-export async function lliura({ fila, claus, origen, fetch, resolDns = null, ara, subtle = globalThis.crypto?.subtle, topallMs = CUA.TOPALL_MS }) {
+export async function lliura({ fila, claus, origen, fetch, resolDns = null, fetchPinnat = null, requereixPinDns = false, ara, subtle = globalThis.crypto?.subtle, topallMs = CUA.TOPALL_MS }) {
   const desti = urlRemota(fila?.inbox);
   if (!desti || !esSlugFederat(fila?.slug) || !esObjecte(fila?.cos) || typeof fila.cos.id !== 'string') return { error: 'fila_invalida' };
   const clau = claus instanceof Map ? claus.get(fila.slug) : null;
@@ -162,14 +190,15 @@ export async function lliura({ fila, claus, origen, fetch, resolDns = null, ara,
   const rellotge = setTimeout(() => control.abort(), topallMs);
   let r = null;
   try {
-    const xarxa = await finsAlTopall(xarxaDe(desti.hostname, { resolDns, senyal: control.signal }), control.signal);
+    const resolucio = await finsAlTopall(resolXarxaPublica(desti.hostname, { resolDns, senyal: control.signal }), control.signal);
+    const xarxa = resolucio.estat;
     if (xarxa === 'sense-dns') return { error: 'sense_dns' };
     if (xarxa === 'privada') return { error: 'adreca_vetada' };
     if (xarxa !== 'publica') return { error: 'dns' };
     const cos = JSON.stringify(fila.cos);
     const keyId = `${urlsDeMunicipi(fila.slug, { origen }).actor}#main-key`;
     const signades = await signaPeticioHttpActivityPub({ url: desti.href, cos, keyId, clauPrivada: clau, ara: ara(), subtle });
-    r = await finsAlTopall(fetch(desti.href, {
+    r = await finsAlTopall(fetchAmbResolucioPublica(desti.href, {
       method: 'POST',
       redirect: 'manual',
       signal: control.signal,
@@ -178,12 +207,12 @@ export async function lliura({ fila, claus, origen, fetch, resolDns = null, ara,
         'content-type': 'application/activity+json', accept: 'application/activity+json', 'user-agent': AGENT_USUARI
       },
       body: cos
-    }), control.signal);
+    }, { resolucio, fetch, fetchPinnat, requereixPinDns }), control.signal);
     const status = Number(r?.status);
     if (r?.type === 'opaqueredirect' || (status >= 300 && status < 400)) return { error: 'redireccio' };
     return { status: Number.isInteger(status) ? status : 0, retryAfterS: retryAfterDe(r?.headers?.get?.('retry-after') ?? null, ara()) };
-  } catch {
-    return { error: control.signal.aborted ? 'temps' : 'xarxa' };
+  } catch (error) {
+    return { error: control.signal.aborted ? 'temps' : error?.message === 'dns_no_pinnat' ? 'dns_no_pinnat' : 'xarxa' };
   } finally {
     clearTimeout(rellotge);
     try { r?.body?.cancel?.()?.catch?.(() => {}); } catch { /* ja tancat */ }
@@ -198,7 +227,7 @@ export async function lliura({ fila, claus, origen, fetch, resolDns = null, ara,
  * falla, llança: qui la crida respon que la base no està disponible.
  */
 export async function drenaCua({
-  cua, claus, origen, fetch, resolDns = null, ara, subtle = globalThis.crypto?.subtle, aleatori = Math.random,
+  cua, claus, origen, fetch, resolDns = null, fetchPinnat = null, requereixPinDns = false, ara, subtle = globalThis.crypto?.subtle, aleatori = Math.random,
   pressupostMs = CUA.PRESSUPOST_MS, lot = CUA.LOT, maxLots = CUA.MAX_LOTS, topallMs = CUA.TOPALL_MS
 }) {
   const inici = ara();
@@ -212,7 +241,7 @@ export async function drenaCua({
     recompte.lots += 1;
     for (const fila of files) {
       if (queda() < topallMs) { esgotat = true; recompte.sense_provar += 1; continue; }
-      const eixida = await lliura({ fila, claus, origen, fetch, resolDns, ara, subtle, topallMs });
+      const eixida = await lliura({ fila, claus, origen, fetch, resolDns, fetchPinnat, requereixPinDns, ara, subtle, topallMs });
       const { resultat, motiu } = classificaLliurament(eixida);
       const retryAfterS = eixida.status === 429 || eixida.status === 503 ? eixida.retryAfterS : null;
       const esperaS = resultat === 'reintent' ? esperaReintent(fila.intents, { aleatori, retryAfterS }) : null;

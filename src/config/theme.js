@@ -212,3 +212,95 @@ export function subscriuContrastSistema(alCanviar) {
   }
   return res;
 }
+
+/* ════════════════ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252) ════════════════
+ *
+ * Preferència persistent universal d'1 sol toc per a gent gran i baixa visió
+ * (storage.js, Model B: local per dispositiu):
+ *   · false → pantalla de sempre (cap atribut, Llei del Píxel);
+ *   · true  → data-sdp-senior="true" a l'arrel de presentació (<html> a
+ *             socdepoble.org, :host a <soc-de-poble>, .sdp-root en un amfitrió
+ *             ordinari): dianes d'acció primària >= 56x56 px (3.5rem), escalat
+ *             tipogràfic fluid i contrast reforçat >= 10:1 AAA en clar i fosc.
+ * Si l'emmagatzematge falla (mode privat o quota), la preferència es conserva
+ * en memòria cau durant tota la sessió i avisa totes les instàncies obertes. */
+export const SENIOR_KEY = 'sdp-senior';
+export const ATRIBUT_SENIOR = 'data-sdp-senior';
+export const ESDEVENIMENT_SENIOR = 'sdp:senior-changed';
+
+let seniorEnMemoria = null;
+const oientsSenior = new Set();
+
+function normalitzaBooleaSenior(valor) {
+  if (valor === true || valor === 'true') return true;
+  if (valor === false || valor === 'false') return false;
+  return null;
+}
+
+/** Llig la preferència de Mode Sènior: configurada vàlida, o storage.js, o memòria, o false. */
+export function readSeniorPreference(configured) {
+  const conf = normalitzaBooleaSenior(configured);
+  if (conf !== null) return conf;
+  const desada = normalitzaBooleaSenior(getVal(SENIOR_KEY));
+  if (desada !== null) {
+    seniorEnMemoria = desada;
+    return desada;
+  }
+  return seniorEnMemoria === true;
+}
+
+/** Desa la preferència booleana de Mode Sènior i notifica oients i instàncies. */
+export function writeSeniorPreference(actiu, { emet = true } = {}) {
+  if (typeof actiu !== 'boolean') return false;
+  seniorEnMemoria = actiu;
+  const desat = setVal(SENIOR_KEY, actiu);
+  if (emet) {
+    for (const oient of [...oientsSenior]) oient(actiu);
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent(ESDEVENIMENT_SENIOR, { detail: { senior: actiu } }));
+    }
+  }
+  return desat;
+}
+
+/** Commuta Mode Sènior d'1 sol toc i torna el nou estat booleà. */
+export function commutaModeSenior() {
+  const seg = !readSeniorPreference();
+  writeSeniorPreference(seg);
+  return seg;
+}
+
+/** Subscriu un oient als canvis de Mode Sènior dins de la mateixa finestra. */
+export function subscriuModeSenior(alCanviar) {
+  if (typeof alCanviar !== 'function') return () => {};
+  oientsSenior.add(alCanviar);
+  const enEvent = (event) => {
+    const val = normalitzaBooleaSenior(event?.detail?.senior);
+    if (val !== null) {
+      seniorEnMemoria = val;
+      alCanviar(val);
+    }
+  };
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener(ESDEVENIMENT_SENIOR, enEvent);
+  }
+  return () => {
+    oientsSenior.delete(alCanviar);
+    if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+      window.removeEventListener(ESDEVENIMENT_SENIOR, enEvent);
+    }
+  };
+}
+
+/** Posa o lleva data-sdp-senior="true" sobre l'element arrel de presentació. */
+export function aplicaSenior(element, actiu) {
+  if (!element || typeof element.setAttribute !== 'function') return;
+  if (actiu === true) element.setAttribute(ATRIBUT_SENIOR, 'true');
+  else element.removeAttribute(ATRIBUT_SENIOR);
+}
+
+/** Neteja la memòria cau en proves unitàries quan es reseteja l'emmagatzematge (storage.js). */
+export function reiniciaMemoriaSenior() {
+  seniorEnMemoria = null;
+}
+

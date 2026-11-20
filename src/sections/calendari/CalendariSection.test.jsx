@@ -134,10 +134,12 @@ test('per defecte, /calendari obri «Esdeveniments», mostra el botó «Publicar
   expect(within(desplegable).getByText('2n Aplec pel Territori')).toBeTruthy();
   expect(within(desplegable).getByText(/29 de gener del? 2023 · Benillup/)).toBeTruthy();
 
-  // «Compta amb mi» funciona amb un sol clic des del llistat ràpid.
+  // El selector RSVP de 3 opcions («Assistiré», «Potser», «No assistiré») actualitza «Compta amb mi» amb un sol clic.
   const filaAplec = within(desplegable).getByText('2n Aplec pel Territori').closest('li');
-  act(() => within(filaAplec).getByRole('button', { name: 'Compta amb mi: 0' }).click());
-  expect(within(filaAplec).getByRole('button', { name: 'Compta amb mi: 1', pressed: true })).toBeTruthy();
+  expect(within(filaAplec).getByText('Compta amb mi: 0')).toBeTruthy();
+  act(() => within(filaAplec).getByRole('button', { name: 'Assistiré' }).click());
+  expect(within(filaAplec).getByRole('button', { name: 'Assistiré', pressed: true })).toBeTruthy();
+  expect(within(filaAplec).getByText('Compta amb mi: 1')).toBeTruthy();
 
   // El botó «Veure al calendari» de l'Aplec salta a gener del 2023 conservant el mode Esdeveniments.
   act(() => within(filaAplec).getByRole('button', { name: 'Veure al calendari' }).click());

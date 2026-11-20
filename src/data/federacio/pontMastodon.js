@@ -1,5 +1,6 @@
 /** Pont públic portable. HTTPS + WebFinger + autor; no prova criptogràfica.
  * Mai rep OAuth: l'eixida es delega a un transport autoritzat del servidor. */
+import { urlRemota } from './urlRemota.js';
 import { CONTEXT_AS, PUBLIC, htmlDeText, textPla } from '../activitypub.js';
 import { llevaEtiquetes, llevaScriptsIEstils } from '../../config/contentHelpers.js';
 export const COMPTE_MASTODON = Object.freeze({ acct: 'depoble@mastodont.cat', origen: 'https://mastodont.cat', perfil: 'https://mastodont.cat/@depoble', actor: 'https://mastodont.cat/users/depoble', rss: 'https://mastodont.cat/@depoble.rss' });
@@ -19,6 +20,7 @@ export function retallaTextFederat(v,n=10000){
 }
 const txt = retallaTextFederat;
 const falla = (code) => Object.assign(new Error(code), { code });
+const fetchNatiu = globalThis.fetch;
 const idValid = (v) => typeof v === 'string' && /^[0-9]{1,30}$/.test(v);
 const iso = (v) => { const t = typeof v === 'string' ? Date.parse(v) : NaN; return Number.isFinite(t) ? new Date(t).toISOString() : null; };
 function desescapa(v) {
@@ -32,7 +34,7 @@ function desescapa(v) {
 /** Text pla, per a renderitzar com a text; mai innerHTML. */
 export function textMastodon(v) { return txt(textPla(desescapa(llevaEtiquetes(llevaScriptsIEstils(txt(v, 65536)))))); }
 function urlHttps(v, origen = null) {
-  if (typeof v !== 'string' || v.length > 2048 || !v.startsWith('https://')) return null;
+  if (!urlRemota(v)) return null;
   try {
     const u = new URL(v); const h = u.hostname;
     if (u.protocol !== 'https:' || u.username || u.password || u.port || u.hash || !h.includes('.') || h.endsWith('.') || /^[\d.]+$/.test(h) || h.includes(':')
@@ -100,10 +102,12 @@ export async function executaAmbTerminiMastodon(feina, { signal, terminiMs = LIM
   } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
 }
 /** Fetch fixat a mastodont.cat, sense credencials, redireccions ni cos il·limitat. */
-export async function lligRespostaMastodon(url, { fetchImpl = globalThis.fetch, signal, tipus = 'json', terminiMs } = {}) {
+export async function lligRespostaMastodon(url, { fetchImpl = globalThis.fetch, fetchPinnat = null, signal, tipus = 'json', terminiMs } = {}) {
   if (typeof fetchImpl !== 'function' || !urlHttps(url, COMPTE_MASTODON.origen)) throw falla('MASTODON_URL_INVALIDA');
+  if ((fetchImpl === fetchNatiu || fetchImpl === globalThis.fetch) && typeof fetchPinnat !== 'function') throw falla('MASTODON_DNS_PIN_REQUERIT');
+  const transport = typeof fetchPinnat === 'function' ? fetchPinnat : fetchImpl;
   return executaAmbTerminiMastodon(async (senyal) => {
-    const res = await fetchImpl(url, { method: 'GET', redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { Accept: tipus === 'rss' ? 'application/rss+xml, application/xml;q=0.9' : 'application/activity+json, application/json;q=0.9' }, signal: senyal });
+    const res = await transport(url, { method: 'GET', redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { Accept: tipus === 'rss' ? 'application/rss+xml, application/xml;q=0.9' : 'application/activity+json, application/json;q=0.9' }, signal: senyal });
     if (!res?.ok) throw falla(`MASTODON_HTTP_${Number(res?.status) || 0}`);
     if (res.url && res.url !== url) throw falla('MASTODON_REDIRECCIO');
     const ct = (res.headers?.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
@@ -121,7 +125,8 @@ export async function lligRespostaMastodon(url, { fetchImpl = globalThis.fetch, 
 }
 async function verificaCompte(opts) {
   const wf = await lligRespostaMastodon(`${COMPTE_MASTODON.origen}/.well-known/webfinger?resource=acct%3Adepoble%40mastodont.cat`, opts);
-  if (wf?.subject !== `acct:${COMPTE_MASTODON.acct}` || !Array.isArray(wf.links) || !wf.links.some((l) => l?.rel === 'self' && ['application/activity+json', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'].includes(l.type) && l.href === COMPTE_MASTODON.actor)) throw falla('MASTODON_WEBFINGER_NO_VERIFICAT');
+  const self = Array.isArray(wf?.links) ? wf.links.filter(l => l?.rel === 'self') : [];
+  if (wf?.subject !== `acct:${COMPTE_MASTODON.acct}` || self.length !== 1 || !['application/activity+json', 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'].includes(self[0].type) || self[0].href !== COMPTE_MASTODON.actor) throw falla('MASTODON_WEBFINGER_NO_VERIFICAT');
 }
 function elementXml(xml, nom) {
   const o = `<${nom}>`; const p = xml.indexOf(o); if (p === -1) return ''; const fi = xml.indexOf(`</${nom}>`, p + o.length); if (fi === -1) return '';
@@ -144,9 +149,9 @@ export function normalitzaRssMastodon(xml) {
   return posts;
 }
 /** API, RSS o primera pàgina AP. Retorna DTOs públics deduplicats per URI. */
-export async function lligPublicacionsMastodon({ fetchImpl = globalThis.fetch, signal, limit = 20, format = 'api' } = {}) {
+export async function lligPublicacionsMastodon({ fetchImpl = globalThis.fetch, fetchPinnat = null, signal, limit = 20, format = 'api' } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 40 || !['api', 'rss', 'activitypub'].includes(format)) throw falla('MASTODON_OPCIONS_INVALIDES');
-  const opts = { fetchImpl, signal }; await verificaCompte(opts); let posts = [];
+  const opts = { fetchImpl, fetchPinnat, signal }; await verificaCompte(opts); let posts = [];
   if (format === 'rss') posts = normalitzaRssMastodon(await lligRespostaMastodon(COMPTE_MASTODON.rss, { ...opts, tipus: 'rss' }));
   else if (format === 'api') {
     const compte = await lligRespostaMastodon(`${COMPTE_MASTODON.origen}/api/v1/accounts/lookup?acct=depoble`, opts);

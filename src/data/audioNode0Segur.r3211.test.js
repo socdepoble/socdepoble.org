@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { identificaAudioNode0, llegeixAudioNode0, MAX_BYTES_AUDIO_NODE0, MAX_FRAGMENTS_AUDIO_NODE0 } from './audioNode0Segur.js';
 const ascii = (bytes, offset, text) => { for (let i = 0; i < text.length; i++) bytes[offset + i] = text.charCodeAt(i); };
 function wav({ rate = 22050, channels = 1, bits = 16, tag = 1, extensible = false, junk = false, samples = 4 } = {}) {
@@ -45,7 +46,16 @@ test.each([1, 3])('WAVEFORMATEXTENSIBLE recognizes only the declared PCM/float s
 test('every current seven WAV sample assets passes the profile without modification', () => {
   const dir = new URL('../../public/assets/audio/veus_node0/', import.meta.url), names = fs.readdirSync(dir).filter(n => n.endsWith('.wav'));
   expect(names.length).toBe(7);
-  for (const name of names) { const bytes = fs.readFileSync(new URL(name, dir)), before = bytes.slice(); expect(identificaAudioNode0(bytes, 'audio/wav').sampleRate).toBe(22050); expect(bytes).toEqual(before); }
+  // La còpia és independent: el comparador ha de detectar una mutació real.
+  const canary = Buffer.from([10, 20, 30]), snapshot = Buffer.from(canary);
+  canary[1] ^= 0xff;
+  expect(canary.equals(snapshot)).toBe(false);
+  expect(snapshot.equals(Buffer.from([10, 20, 30]))).toBe(true);
+  for (const name of names) {
+    const bytes = fs.readFileSync(new URL(name, dir)), before = Buffer.from(bytes);
+    expect(identificaAudioNode0(bytes, 'audio/wav').sampleRate).toBe(22050);
+    expect(bytes.equals(before)).toBe(true); // Comparació nativa de TOTS els bytes.
+  }
 });
 test('RIFF length, chunk traversal, fmt/data order and actual frame alignment fail closed', () => {
   const cases = [b => { b[0] = 0; }, b => { b[4]--; }, b => { b[16] = 255; }, b => { b[20] = 2; }, b => { b[22] = 0; }, b => { b[28] = 0; }, b => { b[32] = 3; }, b => { b[36] = 0; }, b => { b[40] = 255; }, b => { b[40] = 1; }];

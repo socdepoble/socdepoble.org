@@ -110,9 +110,11 @@ test('la salutació és, lletra per lletra, la del Mestre, i el diccionari valen
    de la IAIA: el cercador guiat continua sent la Wiki sola.
    Ordre del Mestre (30-10-2026; f4 D.2, P1-49) · «Què és el Mercat?» ja no
    torna buit: troba les dues pàgines de la Wiki que nomenen el Mercat, i
-   continua sense cap entrada de l'Atles (actualitzat a posta). */
+   continua sense cap entrada de l'Atles (actualitzat a posta). Onada v1.2.13 · Ara
+   en són tres: la guia pas a pas (Gemini R32.16) també el definix. */
 test('el cercador guiat és la Wiki: «Què és el Mercat?» troba la Wiki, i cap font és de l’Atles, d’un poble ni d’una pàgina', () => {
-  expect(ids(guiat(wiki(), 'Què és el Mercat?'))).toEqual(['ADR-2026-11-PAGINACIO-SECCIONS', '00_index_maquina']);
+  // Onada v1.2.13 · El capítol públic guia_pas_a_pas (Gemini R32.16) també parla del Mercat i entra a les fonts.
+  expect(ids(guiat(wiki(), 'Què és el Mercat?'))).toEqual(['ADR-2026-11-PAGINACIO-SECCIONS', 'guia_pas_a_pas', '00_index_maquina']);
   for (const pregunta of ['Què és el Mercat?', 'Qui és Javi?', 'Què és un node?', 'Penàguila', 'Què és Sollutia?']) {
     const fonts = guiat(wiki(), pregunta);
     expect([pregunta, ids(fonts).filter((id) => /^(?:atles|poble|pagina):/.test(id))]).toEqual([pregunta, []]);
@@ -195,7 +197,8 @@ test('f4a · una paraula que la Wiki escriu sobretot en minúscula no és nom d�
 test.each([
   ['Consola', 'el_projecte', 'Consola'],
   ['Mercat', 'ADR-2026-11-PAGINACIO-SECCIONS', 'Mercat'],
-  ['Què és el Xat?', '00_full_de_ruta', 'Xat'],
+  // Onada v1.2.13 · La guia pas a pas (Gemini R32.16) explica el Xat i passa al davant del full de ruta.
+  ['Què és el Xat?', 'guia_pas_a_pas', 'Xat'],
   // Onada R32.4 · La pàgina didàctica del sistema nerviós explica els tractors i passa al davant de l'ADR de mòduls.
   ['Com funcionen els tractors?', 'sistema_nervios_skills_i_repositoris', 'Tractors']
 ])('f4 D.2 · «%s» troba la Wiki pública que en parla', (pregunta, primera, nom) => {
@@ -245,7 +248,8 @@ test('f4a · cap font del cercador guiat és l’índex de les plantilles, els c
 test('f4a · «Què és Salut?» troba l’app a la Wiki; «Salut!» continua sent una salutació', async () => {
   for (const pregunta of ['Què és Salut?', 'Com funciona Salut']) {
     const fonts = guiat(wiki(), pregunta);
-    expect([pregunta, ids(fonts).includes('ADR-2026-10-APPS-DEL-DISPOSITIU')]).toEqual([pregunta, true]);
+    // Onada v1.2.13 · La guia pas a pas (Gemini R32.16) definix l'app i ocupa la tercera font, abans de l'ADR de les apps.
+    expect([pregunta, ids(fonts)]).toEqual([pregunta, ['ADR-2026-13-BYOP-XIFRAT-LOCAL', 'ADR-2026-12-MODULS-OPCIONALS', 'guia_pas_a_pas']]);
     expect([pregunta, fonts.filter((font) => !font.fragment.includes('Salut')).map((font) => font.id)]).toEqual([pregunta, []]);
   }
   for (const salutacio of ['Salut!', 'Salut', 'IAIA, salut! Com va?', 'IAIA salut, com va?', 'Moltes gràcies i salut']) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGrid, List, Rows3 } from 'lucide-react';
 import { UniversalCard, Boto } from '../PedraSeca/index.js';
 import { Link, useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -10,10 +10,15 @@ import { textosCatalegWorkspace } from './workspace/textosCatalegWorkspace.js';
 import { useProjeccionsCatalegContext } from './workspace/ProjeccionsCatalegContext.js';
 import { capturaFontCataleg, itemWorkspaceDeProjeccio, perDestiCataleg, projeccioCatalegDe, rutaDeFitxaCataleg } from '../../data/projeccionsCataleg.js';
 import SelectorDestinsPublicacio from './workspace/SelectorDestinsPublicacio.jsx';
+
 import { fusionaModelProjeccionsCataleg } from '../../data/modelProjeccionsCataleg.js';
 import DetallCataleg from './workspace/DetallCataleg.jsx';
 import { desaVista, vistaDesada } from './workspace/vistaCataleg.js';
 import { useModeracio } from '../PedraSeca/hooks/moderacioDePoble.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+
+/* Gauntlet v1.2.13 · lazyRoute i la barrera del tros accessori: si el tros no carrega, el catàleg continua. */
+const PanellIncidenciesPublicacioCas = lazyRoute(() => import('./workspace/PanellIncidenciesPublicacioCas.jsx'));
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
 import { useTextCanonicCataleg } from '../../hooks/useTextCanonicCataleg.js';
@@ -265,11 +270,25 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
       setSearchParams({ llibre: null, fitxa: null });
     }
   };
+  const incidenciesDelCataleg = useMemo(() => {
+    if (!publicacio.autoritzat || !Array.isArray(publicacio.incidencies) || !publicacio.incidencies.length) return [];
+    return font ? publicacio.incidencies.filter(inc => inc.font?.font === font) : publicacio.incidencies;
+  }, [publicacio.autoritzat, publicacio.incidencies, font]);
   if (resolucioSlug && !resolucioSlug.trobat) return <NotFoundPage />;
   const mostraPrincipal = selection.itemId != null;
   /* R21.7 · «+ Afegir catàleg» només per a superadministració. El nucli dels mòduls no veu mai la sessió
      (Model B, fronteres.test.js): és la secció amfitriona qui passa afegirCataleg={true} només si ho és. */
   const mostraAdminImportacio = afegirCataleg === true;
+  const panellIncidencies = incidenciesDelCataleg.length > 0 ? (
+    <BarreraDelTrosAccessori><Suspense fallback={null}>
+      <PanellIncidenciesPublicacioCas
+        incidencies={incidenciesDelCataleg}
+        onResol={publicacio.resolIncidencia}
+        onRefresca={publicacio.refresca}
+        idioma={ui?.language}
+      />
+    </Suspense></BarreraDelTrosAccessori>
+  ) : null;
   const gestor = <GestorDeLaFitxa peticio={peticio} atesa={atesa} />;
   return <UniversalWorkspace idEspai={id} model={modelVisible} labels={{ count: textos.count, ...labels }} tagFilter={false}
     selection={selection} onSelectionChange={canviaSeleccio} inclouDescendents={inclouDescendents}
@@ -304,7 +323,7 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
       if (props.item?.projeccio) {
         const referencia = props.item.projeccio;
         const rutaOriginal = rutaDeFitxaCataleg(referencia.font);
-        return <><DetallCataleg title={props.item.title} subtitle={props.item.subtitle} lead={props.item.lead}
+        return <>{panellIncidencies}<DetallCataleg title={props.item.title} subtitle={props.item.subtitle} lead={props.item.lead}
           showConnect={false} showComment={false} showShare={!privateItems} barActions={botoModeracioDe(moderacio, props.item.objecte, props.item.title)}>
           <p>{referencia.pendent ? textos.pendingReference : textos.publishedReference}</p>
           {rutaOriginal ? <p><Link to={rutaOriginal}>{textos.openOriginal}</Link></p> : null}
@@ -317,7 +336,7 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
         && row.ownerId === publicacio.ownerId && row.font.font === font && row.font.id === referencia.id) : [];
       /* SEG-R15b-05 · Una fitxa privada (Rebost, Bar) no naix amb cap destí públic triat. */
       const inicials = files.length ? [...new Set(files.flatMap(row => row.destins))] : privateItems ? [] : ['mur'];
-      return <>{renderDetail({ ...props,
+      return <>{panellIncidencies}{renderDetail({ ...props,
         onTriaCategoria: categoryId => canviaSeleccio({ categoryId: categoryId ?? '__all__', itemId: null }),
         onTriaItem: itemId => {
           setSelection(current => {

@@ -556,6 +556,7 @@
   .sdp-boto.sdp-pantalla-completa__entra { inline-size: var(--sdp-touch); min-inline-size: var(--sdp-touch); padding: 0; gap: 0; }
 
   /* ── PESTANYES ────────────────────────────────────────────────────── */
+  .sdp-pestanyes { display: block; } /* Gauntlet v1.2.13 · ganxo neutre: el display per defecte del div (Llei del Píxel) */
   .sdp-pestanyes__llista {
     display: flex; gap: var(--sdp-space-1); overflow-x: visible; scrollbar-width: thin;
     border-bottom: 2px solid var(--sdp-vora);
@@ -590,6 +591,7 @@
   /* El separador és l'únic espai entre passos: el mateix marge als dos costats
      del «›». El `li` de base.css porta 4px de padding-left que feien l'espai
      desigual (12px abans i 8px després); ací es posa a zero. */
+  .sdp-molla { display: block; } /* Gauntlet v1.2.13 · ganxo neutre del nav (Llei del Píxel) */
   .sdp-molla__llista { display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 0; list-style: none; }
   .sdp-molla__pas { display: inline-flex; align-items: center; margin: 0; padding: 0; color: var(--sdp-text-suau); }
   .sdp-molla__pas + .sdp-molla__pas::before { content: '›'; margin-inline: var(--sdp-space-2); color: var(--sdp-text-suau); }
@@ -638,6 +640,7 @@
   .sdp-buit.sdp-cal-actualitzar > :first-child { margin-block-start: auto; }
   .sdp-buit.sdp-cal-actualitzar > :last-child { margin-block-end: auto; }
   .sdp-carregant { display: inline-flex; align-items: center; gap: var(--sdp-space-3); color: var(--sdp-text-suau); font-weight: 700; }
+  .sdp-esquelet { display: block; } /* Gauntlet v1.2.13 · ganxo neutre del div (Llei del Píxel) */
   .sdp-esquelet__forma { display: grid; gap: var(--sdp-space-3); }
   .sdp-esquelet__linia, .sdp-esquelet__media {
     display: block; height: 1rem; border-radius: var(--sdp-radi-s);

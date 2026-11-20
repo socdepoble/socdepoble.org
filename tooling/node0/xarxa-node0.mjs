@@ -1,19 +1,18 @@
 import https from 'node:https';
 import { lookup } from 'node:dns/promises';
-import { BlockList, isIP } from 'node:net';
+import { isIP } from 'node:net';
+import { urlRemota } from '../../src/data/federacio/urlRemota.js';
+import { esIpNoPublica } from '../../supabase/functions/noticies/gestor.js';
 
-const blocked = new BlockList();
-for (const [address, prefix] of [['0.0.0.0',8],['10.0.0.0',8],['100.64.0.0',10],['127.0.0.0',8],['169.254.0.0',16],['172.16.0.0',12],['192.0.0.0',24],['192.0.2.0',24],['192.168.0.0',16],['198.18.0.0',15],['198.51.100.0',24],['203.0.113.0',24],['224.0.0.0',3]]) blocked.addSubnet(address, prefix, 'ipv4');
+/** Same pure address policy as the ActivityPub/news boundary; no second range table. */
 export function esIpPublica(address) {
-  if (isIP(address) === 4) return !blocked.check(address, 'ipv4');
-  // Only global unicast IPv6. Reject mapped IPv4, local, multicast and documentation ranges.
-  return isIP(address) === 6 && /^[23]/i.test(address) && !address.toLowerCase().startsWith('2001:db8:');
+  return typeof address === 'string' && isIP(address) !== 0 && !esIpNoPublica(address);
 }
 
 /** Fixed federation trust boundary for this bridge. DNS is pinned to the TLS socket. */
 export async function peticioMastodont(url, { method = 'GET', headers = {}, body = null, timeoutMs = 10000, maxBytes = 1024 * 1024, resolver = lookup, signal } = {}) {
-  const target = new URL(url);
-  if (target.protocol !== 'https:' || target.hostname !== 'mastodont.cat' || (target.port && target.port !== '443') || target.username || target.password) throw new Error('node0_remote_origin_rejected');
+  const target = urlRemota(url);
+  if (!target || target.protocol !== 'https:' || target.hostname !== 'mastodont.cat' || (target.port && target.port !== '443') || target.username || target.password) throw new Error('node0_remote_origin_rejected');
   if (signal?.aborted) throw new Error('node0_remote_aborted');
   const start = Date.now(); let dnsTimer, dnsAbort;
   let addresses;
@@ -29,7 +28,9 @@ export async function peticioMastodont(url, { method = 'GET', headers = {}, body
     })]);
   } finally { clearTimeout(dnsTimer); signal?.removeEventListener('abort', dnsAbort); }
   if (signal?.aborted) throw new Error('node0_remote_aborted');
-  if (!addresses.length || addresses.some(({ address }) => !esIpPublica(address))) throw new Error('node0_remote_address_rejected');
+  if (!Array.isArray(addresses) || !addresses.length || addresses.length > 256
+      || addresses.some(entry => !entry || !esIpPublica(entry.address) || entry.family !== isIP(entry.address))) throw new Error('node0_remote_address_rejected');
+  addresses = Object.freeze(addresses.map(({ address, family }) => Object.freeze({ address, family })));
   const remainingMs = timeoutMs - (Date.now() - start);
   if (remainingMs <= 0) throw new Error('node0_remote_timeout');
   return new Promise((resolve, reject) => {

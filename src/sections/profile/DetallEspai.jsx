@@ -16,6 +16,8 @@ import { TEXTOS_EIXIR_PER_LLENGUA, llenguaDelTraductor } from './perfilModel.js'
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
+import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
+import { textosModeSenior } from '../../config/textosModeSenior.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -397,6 +399,9 @@ export function DetallIdioma({ persona }) {
           <p className="perfil-compte__text">
             <Link to="/traduccions">{tradueix(t, ['section.translations.pages.title', 'Traductor per a Pàgines'])}</Link>
           </p>
+        </Bloc>
+        <Bloc titol={textosModeSenior(codiActiu, t).seccioPerfil}>
+          <ControlModeSenior llengua={codiActiu} ambDescripcio testId="control-mode-senior-idioma" />
         </Bloc>
       </div>
     </UniversalPage>

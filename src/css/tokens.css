@@ -828,6 +828,52 @@
   --sdp-accent-text-hover: var(--sdp-primary-100);  /* P1-22 · el hover augmenta el contrast */
 }
 
+/* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · ≥ 10:1 AAA) ═════════
+   Preferència persistent d'1 sol toc (data-sdp-senior="true") per a gent gran
+   i baixa visió. Eleva tots els parells de text i controls d'acció primària a
+   un contrast mínim >= 10:1 tant en clar com en fosc sobre targeta, app i fons
+   subtil, conserva les ombres canòniques i desactiva l'escala de premut. */
+.sdp-root[data-sdp-senior="true"],
+:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]),
+:root[data-sdp-senior="true"] .sdp-root, :host([data-sdp-senior="true"]) .sdp-root {
+  --sdp-fons-subtil:         var(--sdp-pedra-150);     /* garanteix >= 10,33:1 també per a primary-900 */
+  --sdp-text-titol:          var(--sdp-pedra-900);     /* 19,42:1 blanc · 17,09:1 subtil */
+  --sdp-text-cos:            var(--sdp-pedra-850);     /* 17,91:1 blanc · 15,30:1 subtil */
+  --sdp-text-suau:           var(--sdp-pedra-750);     /* 13,54:1 blanc · 11,56:1 subtil (>= 10:1) */
+  --sdp-vora-control:        var(--sdp-pedra-800);
+  --sdp-accent:              var(--sdp-primary-900);   /* 11,74:1 amb blanc */
+  --sdp-accent-hover:        var(--sdp-pedra-900);
+  --sdp-sobre-accent:        var(--sdp-blanc-pur);
+  --sdp-accent-text:         var(--sdp-primary-900);   /* 11,74:1 blanc · 10,03:1 subtil */
+  --sdp-accent-titol:        var(--sdp-primary-900);
+  --sdp-accent-text-hover:   var(--sdp-pedra-900);
+  --sdp-accent-control:      var(--sdp-primary-900);
+  --sdp-accio-text:          var(--sdp-secondary-800); /* 12,63:1 blanc · 10,50:1 subtil */
+  --sdp-accio-control:       var(--sdp-secondary-800); /* 12,63:1 amb blanc */
+  --sdp-accio-control-hover: var(--sdp-secondary-900);
+  --sdp-sobre-accio:         var(--sdp-blanc-pur);
+  --sdp-escala-premut:       1;
+}
+
+:root[data-theme='dark'] .sdp-root[data-sdp-senior="true"],
+:root[data-theme='dark'][data-sdp-senior="true"], :host([data-theme='dark'][data-sdp-senior="true"]),
+:root[data-theme='dark'][data-sdp-senior="true"] .sdp-root, :host([data-theme='dark'][data-sdp-senior="true"]) .sdp-root {
+  --sdp-fons-subtil:         var(--sdp-pedra-750);
+  --sdp-text-titol:          var(--sdp-pedra-50);      /* 17,91:1 targeta · 13,54:1 subtil */
+  --sdp-text-cos:            var(--sdp-pedra-100);     /* 16,62:1 targeta · 12,55:1 subtil */
+  --sdp-text-suau:           var(--sdp-pedra-200);     /* 15,30:1 targeta · 11,56:1 subtil (>= 10:1) */
+  --sdp-vora-control:        var(--sdp-pedra-200);
+  --sdp-accent:              var(--sdp-primary-200);   /* 14,01:1 amb pedra-900 */
+  --sdp-accent-hover:        var(--sdp-primary-100);
+  --sdp-sobre-accent:        var(--sdp-pedra-900);
+  --sdp-accent-text:         var(--sdp-primary-100);   /* 15,13:1 targeta · 11,43:1 subtil */
+  --sdp-accent-titol:        var(--sdp-primary-100);
+  --sdp-accent-text-hover:   var(--sdp-pedra-50);
+  /* Gauntlet v1.2.13 · --sdp-accent-control s'hereta del bloc clar del Mode Sènior (primary-900, 11,74:1 amb el
+     text blanc): amb primary-200, el text blanc de .sp-card-calendar-badge hi quedava a 1,39:1. */
+  --sdp-accio-text:          var(--sdp-secondary-100); /* 15,49:1 targeta · 11,70:1 subtil */
+}
+
 /* Moviment reduït · les escales valen 1 i el desplaçament 0: ni el CSS ni
    el JS que llig estos tokens mouen res. L'apagador global de les durades
    viu a base.css (un de sol). */

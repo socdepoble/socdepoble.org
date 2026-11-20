@@ -16,9 +16,8 @@
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Carregant, EstatBuit } from '../../components/PedraSeca/index.js';
 import { ClosaAplicacio, useApp } from '../plataforma/index.js';
-import { textosSalut } from './i18nSalut.js';
+import { textErrorSalut, textosSalut } from './i18nSalut.js';
 import { RUTES_SALUT } from './rutesSalut.js';
-import { textError } from './textos.js';
 import { ProveidorSalut, useSalut } from './useSalut.jsx';
 
 function useIdiomaSalutSegur() {
@@ -36,7 +35,7 @@ function PortaAvis({ children }) {
   const { pathname } = useLocation();
   if (!salut.carregat) {
     return salut.error
-      ? <EstatBuit titol={tx.errorLlegirDades}>{textError(salut.error)}</EstatBuit>
+      ? <EstatBuit titol={tx.errorLlegirDades}>{textErrorSalut(salut.error, idioma)}</EstatBuit>
       : <Carregant etiqueta={tx.obrintQuadern} />;
   }
   if (!salut.avisAcceptat && pathname !== ruta('avis')) return <Navigate to={ruta('avis')} replace />;

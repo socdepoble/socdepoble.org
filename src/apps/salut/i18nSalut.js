@@ -1420,3 +1420,32 @@ export function codiIdiomaSalut(idioma) {
 export function textosSalut(idioma) {
   return TEXTOS_SALUT[codiIdiomaSalut(idioma)];
 }
+
+export {
+  alertaSalutTraduida,
+  apartatsGuiaSalut,
+  avisSalutTraduit,
+  campSalutTraduit,
+  entitatsSalutTraduites,
+  etiquetaDataLlargaSalut,
+  etiquetaDataSalut,
+  etiquetaNivellSalut,
+  etiquetaValorSalut,
+  finalitatSalut,
+  frangesSalut,
+  metriquesSalutTraduites,
+  motiuSenseVolumsSalut,
+  nomDadaAlertaSalut,
+  peuAlertesSalut,
+  resumApuntSalut,
+  resumFullTraduit,
+  textAssociacioSalut,
+  textCoberturaSalut,
+  textErrorSalut,
+  textValorsAdmesosSalut,
+  tipusSalutTraduit,
+  tradueixErrorsPersonaSalut,
+  tradueixValidacioSalut,
+  valorMotiuFebreSalut,
+  valoracioSetmanalSalut,
+} from './i18nSalutDomini.js';

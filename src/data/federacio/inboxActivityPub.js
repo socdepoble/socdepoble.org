@@ -30,10 +30,11 @@
  *
  * Perfil propi de signatures draft-cavage-http-signatures-12: rsa-sha256
  * (RSA), hs2019 (RSA o Ed25519) i ed25519; (request-target), host i Digest signats
- * en un POST; finestra de 5 min sense expires, mai més de 12 h, i 1 h de marge
- * de rellotge. No és RFC 9421 (Signature-Input és un altre format).
+ * en un POST; finestra màxima de ±5 min; expires només la pot escurçar, mai allargar.
+ * La data HTTP ha de ser canònica i un únic SHA-256 ha de lligar el cos. No és RFC 9421 (Signature-Input és un altre format).
  * La interoperabilitat remota amb Mastodon no està acreditada.
  */
+import { urlRemota } from './urlRemota.js';
 import {
   CONTEXT_AS, PUBLIC, TIPUS_JRD, analitzaRecursWebFinger, construeixWebFinger, dataIso, esSlugFederat, normalitzaOrigen,
   textPla, urlsDeMunicipi
@@ -43,7 +44,7 @@ export const MAXIM_COS_INBOX = 256 * 1024;
 export const LIMITS_SIGNATURA = Object.freeze({ capcalera: 4096, keyId: 2048, signatura: 2048, capcaleres: 16, url: 2048 });
 /* B5 · La clau pública més llarga que s'importa (importaClauPublica): qui la desa en memòria cau no en guarda cap de més llarga. */
 export const LIMITS_CLAU_PUBLICA = Object.freeze({ pem: 8192, multibase: 128 });
-export const FINESTRA_SIGNATURA = Object.freeze({ caducitatMs: 5 * 60_000, maximMs: 12 * 3_600_000, margeMs: 3_600_000 });
+export const FINESTRA_SIGNATURA = Object.freeze({ caducitatMs: 5 * 60_000, maximMs: 5 * 60_000, margeMs: 5 * 60_000 });
 export const ALGORISMES = Object.freeze(['rsa-sha256', 'hs2019', 'ed25519']);
 export const TIPUS_ENTRANTS = Object.freeze(['Follow', 'Undo', 'Create', 'Delete', 'Announce']);
 /* Els objectes que poden portar una alerta (Mastodon envia Note; un altre node, Article o Event). */
@@ -51,8 +52,9 @@ export const TIPUS_OBJECTE_ALERTA = Object.freeze(['Note', 'Article', 'Page', 'E
 /* La mateixa vigència que VIGENCIA_ALERTA_MS de src/sections/mur/alertesMunicipals.js (la prova ho compara). */
 export const VIGENCIA_ALERTA_REMOTA_MS = 72 * 3_600_000;
 export const MAXIM_VIGENCIA_ALERTA_MS = 30 * 24 * 3_600_000;
-/* B5 · Quant es conserva l'id d'una activitat rebuda: la finestra màxima en què una rèplica encara verificaria (14 h). */
-export const RETENCIO_ACTIVITAT_MS = FINESTRA_SIGNATURA.maximMs + 2 * FINESTRA_SIGNATURA.margeMs;
+/* Retenció durable existent (ap_purga): 14 h, deliberadament superior a la
+ * nova finestra de signatura de 5 min. Cap canvi SQL ni esborrat anticipat. */
+export const RETENCIO_ACTIVITAT_MS = 14 * 3_600_000;
 /* Una làpida dura més que la vigència màxima d'una alerta més la retenció. */
 export const RETENCIO_LAPIDA_MS = MAXIM_VIGENCIA_ALERTA_MS + RETENCIO_ACTIVITAT_MS;
 /* Una alerta caducada es conserva un dia més abans de purgar-la (el mateix interval que ap_purga). */
@@ -71,11 +73,8 @@ const NOM_CAPCALERA = /^(?:\([a-z-]+\)|[a-z0-9-]+)$/;
 const CAMI_INBOX = /^\/ap\/inbox\/([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 /* B5 · El prefix d'una inbox que no penja de l'arrel: buit, o segments «/nom» (cada repetició comença per «/»: lineal). */
 const PREFIX_CAMI = /^(?:\/[A-Za-z0-9._~-]+)*$/;
-const IPV4 = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 /* B5 · Un host LDH tal com el deixa el parser (minúscules i punycode): sense «_» ni els signes que el parser admet. Lineal. */
-const HOST_LDH = /^[a-z0-9.-]+$/;
 /* Noms de la mateixa màquina o de la xarxa local (RFC 6761, 6762 i 8375, i .internal d'ICANN). */
-const DOMINIS_LOCALS = Object.freeze(['localhost', 'localdomain', 'local', 'internal', 'home.arpa']);
 const ED25519_SPKI = Object.freeze([0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00]);
 const OID_RSA = Object.freeze([0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01]);
 const ALFABET_58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -117,16 +116,7 @@ const tallaBe = (text, maxim) => {
  * a 2048, també la .href normalitzada, i el host és LDH (cap «_»: cap
  * certificat públic no en porta) de 253 caràcters com a molt.
  */
-export function urlRemota(valor) {
-  if (typeof valor !== 'string' || valor.length < 12 || valor.length > LIMITS_SIGNATURA.url || !valor.startsWith('https://')) return null;
-  let url = null;
-  try { url = new URL(valor); } catch { return null; }
-  const host = url.hostname;
-  if (url.protocol !== 'https:' || url.username || url.password || !host.includes('.') || host.endsWith('.')
-    || host.length > 253 || !HOST_LDH.test(host) || url.href.length > LIMITS_SIGNATURA.url
-    || IPV4.test(host) || host.startsWith('[') || DOMINIS_LOCALS.some((d) => host === d || host.endsWith(`.${d}`))) return null;
-  return url;
-}
+export { urlRemota } from './urlRemota.js';
 
 /**
  * B5 · El host de la quota d'un actor: el hostname en minúscules i sense els
@@ -270,17 +260,16 @@ function base58(text) {
 export function clauDeDocumentActor(perfil, keyId) {
   if (!perfil || typeof perfil !== 'object' || !urlRemota(perfil.id)) return null;
   const actor = perfil.id;
+  const candidates = [];
   for (const clau of [].concat(perfil.publicKey ?? [])) {
-    if (clau?.id === keyId && (clau.owner ?? actor) === actor && typeof clau.publicKeyPem === 'string') {
-      return { id: keyId, owner: actor, publicKeyPem: clau.publicKeyPem };
-    }
+    if (clau?.id === keyId) candidates.push((clau.owner ?? actor) === actor && typeof clau.publicKeyPem === 'string'
+      ? { id: keyId, owner: actor, publicKeyPem: clau.publicKeyPem } : null);
   }
   for (const clau of [].concat(perfil.assertionMethod ?? [])) {
-    if (clau?.id === keyId && clau.type === 'Multikey' && (clau.controller ?? actor) === actor && typeof clau.publicKeyMultibase === 'string') {
-      return { id: keyId, owner: actor, publicKeyMultibase: clau.publicKeyMultibase };
-    }
+    if (clau?.id === keyId) candidates.push(clau.type === 'Multikey' && (clau.controller ?? actor) === actor && typeof clau.publicKeyMultibase === 'string'
+      ? { id: keyId, owner: actor, publicKeyMultibase: clau.publicKeyMultibase } : null);
   }
-  return null;
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 const comenca = (der, prefix) => der.length >= prefix.length && prefix.every((b, i) => der[i] === b);
@@ -353,19 +342,23 @@ export async function verificaSignaturaHttpActivityPub({
   else {
     const data = mapa.get('date') ?? '';
     creat = DATA_HTTP.test(data) ? Date.parse(data) : null;
+    if (Number.isFinite(creat) && new Date(creat).toUTCString() !== data) return no('date_invalid');
   }
   if (!Number.isFinite(creat)) return no('date_invalid');
   // Només un `expires` signat ((expires) a headers) canvia la finestra: el paràmetre solt, qualsevol el pot afegir.
   const expires = params.headers.includes('(expires)') ? params.expires : null;
-  const caduca = Math.min(expires !== null ? expires * 1000 : creat + finestra.caducitatMs, creat + finestra.maximMs);
-  if (creat > ara + finestra.margeMs || ara > caduca + finestra.margeMs) return no('date_out_of_window');
+  if (!finestra || ![finestra.caducitatMs, finestra.maximMs, finestra.margeMs].every(n => Number.isSafeInteger(n) && n >= 0)) return no('date_invalid');
+  const age = Math.min(finestra.caducitatMs, finestra.maximMs, 300000);
+  const future = Math.min(finestra.margeMs, 300000);
+  const caduca = Math.min(expires !== null ? expires * 1000 : creat + age, creat + age);
+  if (caduca < creat || creat > ara + future || ara > caduca) return no('date_out_of_window');
   if (hostEsperat && (mapa.get('host') ?? '').toLowerCase() !== String(hostEsperat).toLowerCase()) return no('host_mismatch');
   if (ambCos) {
     const digest = mapa.get('digest');
     if (!digest) return no('digest_missing');
     const esperat = await digestSha256(bytes, { subtle });
     const declarats = digest.split(',').map((d) => d.trim()).filter((d) => d.slice(0, 8).toLowerCase() === 'sha-256=').map((d) => `SHA-256=${d.slice(8)}`);
-    if (!declarats.length || !declarats.includes(esperat)) return no('digest_mismatch');
+    if (declarats.length !== 1 || declarats[0] !== esperat) return no('digest_mismatch');
   }
   const cadena = cadenaDeSignatura({ metode, cami, capcaleres: mapa, noms: params.headers, created: params.created, expires: params.expires });
   if (cadena === null) return no('headers_insufficient');
@@ -374,7 +367,8 @@ export async function verificaSignaturaHttpActivityPub({
   try { obtinguda = await obtenClauPublica(params.keyId); } catch { obtinguda = null; }
   const clau = obtinguda?.clau;
   // La clau ha de ser la del keyId, i el seu propietari, del mateix origen (mai la d'un altre servidor).
-  if (!clau || clau.id !== params.keyId || !urlRemota(clau.owner) || !mateixOrigen(clau.owner, params.keyId)) return no('key_not_found');
+  if (!clau || clau.id !== params.keyId || !urlRemota(clau.owner) || !mateixOrigen(clau.owner, params.keyId)
+    || obtinguda.documentActor && idDe(obtinguda.documentActor) !== clau.owner) return no('key_not_found');
   const importada = await importaClauPublica(clau, { subtle });
   if (!importada || (params.algorithm === 'rsa-sha256' && importada.tipus !== 'rsa') || (params.algorithm === 'ed25519' && importada.tipus !== 'ed25519')) {
     return no('key_unsupported');

@@ -1,0 +1,112 @@
+/* Full diferit (Onada R32.17 · Lot 03):
+   peu d'idioma editorial (PeuEditorialIdioma.jsx), quadre de canals de
+   /page/descarregues (GuiaCanalsActualitzacio.jsx). S'adopta amb
+   useFullDiferit (0 B al full d'arrencada del connector de WordPress).
+   Gauntlet v1.2.13 · Els ganxos .sdp-embed-video i .sdp-targeta-enllac-extern
+   viuen a modules.css, neutres (Llei del Píxel). */
+@layer components {
+  .sdp-guia-canals {
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    padding: var(--sdp-space-4);
+    margin: var(--sdp-space-4) 0;
+    box-sizing: border-box;
+  }
+
+  .sdp-guia-canals__titol {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-guia-canals__intro {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-text-cos);
+    line-height: 1.6;
+  }
+
+  .sdp-guia-canals__bloc {
+    padding-top: var(--sdp-space-3);
+    margin-top: var(--sdp-space-3);
+    border-top: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-guia-canals__bloc h4 {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-guia-canals__bloc p {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: 1.6;
+  }
+
+  .sdp-guia-canals__bloc--avis {
+    background-color: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    padding: var(--sdp-space-3);
+  }
+
+  .sdp-guia-canals__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--sdp-space-4);
+  }
+
+  .sdp-peu-editorial-idioma {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    margin: var(--sdp-space-4) 0;
+    background-color: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    box-sizing: border-box;
+  }
+
+  .sdp-peu-editorial-idioma__text {
+    flex: 1 1 calc(var(--sdp-space-12) * 4);
+    min-width: 0;
+  }
+
+  .sdp-peu-editorial-idioma__titol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sdp-space-2);
+    margin: 0 0 var(--sdp-space-1);
+    font-size: var(--sdp-text-base);
+    font-weight: var(--sdp-pes-negreta);
+    color: var(--sdp-text-titol);
+    line-height: var(--sdp-leading-titol);
+  }
+
+  .sdp-peu-editorial-idioma__actual {
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-peu-editorial-idioma__subtitol {
+    margin: 0;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    line-height: var(--sdp-leading-cos);
+  }
+
+  .sdp-peu-editorial-idioma__accio {
+    flex: 0 0 auto;
+    max-inline-size: 100%;
+    white-space: normal;
+  }
+
+}

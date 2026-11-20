@@ -18,7 +18,7 @@ import { Accions, Alerta, AreaText, Camp, EstatBuit, GrupCamps, Pila, Selector, 
 import { useApp } from '../../plataforma/index.js';
 import { ARXIUS, PLANTILLES_PROMPT, arxiuPerId, generaConsultes, generaPrompt } from '../arxius/index.js';
 import { useGenealogia } from '../nucli/index.js';
-import { nomVisible } from '../textos.js';
+import { nomVisible } from '../i18nGenealogia.js';
 import { BotoCopia, CasellaVius, MarcGenealogia, useIdioma, useT } from './comunes.jsx';
 import { enLlengua } from './Entrevista.jsx';
 

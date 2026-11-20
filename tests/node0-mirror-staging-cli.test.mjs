@@ -16,7 +16,11 @@ test('canonical CLI is dry-run by default and rejects unreviewed apply before na
   assert.equal(TARGET.mirrorDir,'/Users/javi/socdepoble-node0/mirall-workspace-staging');
 });
 test('canonical source manifest pins all current files and contains no hidden LAB dependency or self recursion',async()=>{
-  const manifest=JSON.parse(await fs.readFile(path.join(ROOT,'tooling/node0/manifest-mirall-staging.json')));assert.equal(manifest.schema,'sdp.node0.mirror.deployment.v1');assert.equal(manifest.files.length,34);
+  const manifest=JSON.parse(await fs.readFile(path.join(ROOT,'tooling/node0/manifest-mirall-staging.json')));assert.equal(manifest.schema,'sdp.node0.mirror.deployment.v1');assert.equal(manifest.files.length,35);
+  for(const [source,pin] of Object.entries({
+    'src/data/exportaMunicipiOpenData.js':'19a9f696fb96395ec64e26c271d01c0ead85deb6dba9c24faff9e51b7790b33e',
+    'src/data/federacio/urlRemota.js':'c7a13e87cc88d0f0181d32419ae4e38276f7a8cf76bcf17ce7b7736a5466c167'
+  }))assert.deepEqual(manifest.files.filter(f=>f.path===source),[{path:source,sha256:pin}]);
   for(const f of manifest.files){assert.equal(f.path.includes('.r6-lab'),false);assert.equal(f.path.includes('manifest-mirall-staging.json'),false);assert.equal(sha(await fs.readFile(path.join(ROOT,f.path))),f.sha256);}
 });
 test('canonical recipe preparation reads canonical assets, copies no secrets and never executes restoration code',async t=>{

@@ -14,6 +14,7 @@ vi.mock('./config.js', () => ({ getClient: async () => ({ storage: { from: (buck
 vi.mock('../identitat.js', () => ({ capturaSessio: () => () => {}, usuariDeSessio: () => m.usuari }));
 
 import { errorDePujada, uploadToStorage } from './storage.js';
+import { AVIF_REAL, pdf } from '../../../tests/helpers/contenidorsMediaR3215.js';
 import { webpDeMida } from '../../../tests/helpers/contenidorsMedia.js';
 import { WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../errorsBackend.js';
@@ -297,6 +298,17 @@ describe('uploadToStorage · privacitat del rebuig', () => {
     const overPrivateLimit = new Blob([new Uint8Array(26_214_401)], { type: 'image/webp' });
     await expect(uploadToStorage(overPrivateLimit, { carpeta: 'notes' }, { tenantId: POBLE })).rejects.toThrow('Mida de fitxer no admesa');
     expect(m.upload).toHaveBeenCalledTimes(1);
+  });
+
+  test('R32.15: AVIF públic i PDF privat es validen abans de Storage', async () => {
+    m.upload.mockResolvedValue({ data: { path: 'x' }, error: null });
+    await expect(uploadToStorage(new Blob([AVIF_REAL], { type: 'image/avif' }), { carpeta: 'avatars' }, { tenantId: POBLE })).resolves.toHaveProperty('ruta');
+    await expect(uploadToStorage(new Blob([pdf()], { type: 'application/pdf' }), { carpeta: 'notes' }, { tenantId: POBLE })).resolves.toHaveProperty('ruta');
+    expect(m.upload).toHaveBeenCalledTimes(2);
+    m.upload.mockClear();
+    for (const mime of ['image/avif', 'application/pdf']) await expect(uploadToStorage(new Blob(['<script>'], { type: mime }), { carpeta: 'notes' }, { tenantId: POBLE })).rejects.toMatchObject({ code: 'format' });
+    await expect(uploadToStorage(new Blob([pdf({ extra: '/#4A#53 (x)' })], { type: 'application/pdf' }), { carpeta: 'notes' }, { tenantId: POBLE })).rejects.toMatchObject({ code: 'format' });
+    expect(m.upload).not.toHaveBeenCalled();
   });
 
   test('una pujada acceptada no avisa i torna la referència opaca', async () => {

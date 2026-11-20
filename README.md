@@ -5,7 +5,7 @@ description: "README d'enginyeria per a equips tècnics externs: arquitectura mo
 ---
 # Sóc de Poble
 
-Sóc de Poble és una **aplicació web cívica per a pobles**, escrita en React i distribuïda com a SPA, Web Component i app nativa. Este README és per a **tècnics externs** (Sollutia, auditories de seguretat o de programari lliure) i descriu el que el codi fa hui. Cada xifra porta el fitxer o l'ordre que la reproduïx.
+Sóc de Poble és una **aplicació web cívica per a pobles**, escrita en React i distribuïda com a SPA, Web Component i app nativa. Este README és per a **tècnics externs** (Sollutia, auditories de seguretat o de programari lliure) i descriu el que el codi fa hui; per al detall complet de capes, fronteres del Model B, seguretat RLS i pressupostos d'execució, consulteu també [`ARCHITECTURE.md`](ARCHITECTURE.md). Cada xifra porta el fitxer o l'ordre que la reproduïx.
 
 ## Mapa del repositori
 

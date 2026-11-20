@@ -27,7 +27,8 @@ test('/page/node-zero munta el WhatsApp de la IAIA davant de l’aparador, i el 
 });
 
 test('ni /page/fediversity ni una altra pàgina no munten la targeta', async () => {
-  for (const slug of ['fediversity', 'guia']) {
+  /* Onada v1.2.13 · «guia» ja és un àlies (IDEA-287): la pàgina genèrica es diu «guia-local». */
+  for (const slug of ['fediversity', 'guia-local']) {
     m.slug = slug;
     const { unmount } = render(<PageDetailSection />);
     await waitFor(() => expect(screen.getByRole('button', { name: `Publicar ${slug}` })).toBeTruthy());

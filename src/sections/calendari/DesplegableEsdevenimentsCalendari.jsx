@@ -1,14 +1,17 @@
-import { useId, useRef, useState } from 'react';
-import { CalendarDays, Check, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { useId, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, CalendarDays, Check, ChevronDown, ChevronUp, CircleHelp, Users, X } from 'lucide-react';
 import { Link } from '../../app/contexts/RouterContext';
 import { PillToggle } from '../../components/PedraSeca/index.js';
+import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import cssEsdeveniments from '../../css/diferit-esdeveniments.css?inline';
 import { diaDeLaClau, rutaDeLEntrada } from './calendariGlobal.js';
+import { resolTextCalendariRsvp, textosCalendariRsvp } from './i18nCalendariRsvp.js';
 import {
   desaRsvpEsdeveniment,
+  detectaSolapamentsRsvp,
   llegeixRsvpEsdeveniment,
   participantRsvpActual,
   useMagatzemRsvpEsdeveniments
@@ -58,17 +61,25 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
 
   const idLlista = useId();
   const { t, language = 'ca' } = useUIActions();
-  const locale = `${language}-ES`;
+  const tx = textosCalendariRsvp(language);
+  const tr = (clau, valor) => resolTextCalendariRsvp(t, language, clau, valor);
+  const locale = language === 'en' ? 'en-GB' : `${language}-ES`;
   const [desplegat, setDesplegat] = useState(true);
+
   const currentUser = useSessioOpcional()?.currentUser || null;
-  const idParticipant = participantRsvpActual(currentUser);
+  const identitat = useIdentitatOpcional();
+  const idParticipant = participantRsvpActual(currentUser, identitat);
   const magatzemRsvp = useMagatzemRsvpEsdeveniments();
 
-  const totalActes = entradesEsdeveniments.length;
-  const etiquetaActes = `${t('section.calendari.filtre.esdeveniments', 'Esdeveniments')} (${totalActes})`;
+  const solapaments = useMemo(
+    () => detectaSolapamentsRsvp(entradesEsdeveniments, { idParticipant, magatzem: magatzemRsvp }),
+    [entradesEsdeveniments, idParticipant, magatzemRsvp]
+  );
 
-  const commutaAssistenciaRapida = (item, rsvpActual) => {
-    const novaIntencio = rsvpActual.intencio === 'si' ? 'no' : 'si';
+  const totalActes = entradesEsdeveniments.length;
+  const etiquetaActes = `${tr('section.calendari.filtre.esdeveniments', tx.filtreEsdeveniments)} (${totalActes})`;
+
+  const triaIntencioRapida = (item, rsvpActual, novaIntencio) => {
     desaRsvpEsdeveniment(item, {
       idParticipant,
       intencio: novaIntencio,
@@ -80,7 +91,7 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
     <div ref={arrelRef}>
       <div className="sdp-cal-filtre-barra">
         <PillToggle
-          etiqueta={t('section.calendari.filtre.aria', 'Contingut del calendari')}
+          etiqueta={tr('section.calendari.filtre.aria', tx.filtreAria)}
           valor={mode}
           onCanvi={(nouMode) => {
             onCanviMode(nouMode);
@@ -88,7 +99,7 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
           }}
           opcions={[
             { valor: 'events', text: etiquetaActes },
-            { valor: 'all', text: t('section.calendari.filtre.tot', 'Totes les publicacions') }
+            { valor: 'all', text: tr('section.calendari.filtre.tot', tx.filtreTot) }
           ]}
         />
       </div>
@@ -96,12 +107,12 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
       {mode === 'events' ? (
         <section
           className="sdp-cal-desplegable"
-          aria-label={t('section.calendari.desplegable.titol', 'Esdeveniments de Sóc de Poble')}
+          aria-label={tr('section.calendari.desplegable.titol', tx.desplegableTitol)}
           data-testid="desplegable-esdeveniments-calendari"
         >
           <div className="sdp-cal-desplegable__cap">
             <h3 className="sdp-cal-desplegable__titol">
-              {`${t('section.calendari.desplegable.titol', 'Esdeveniments de Sóc de Poble')} (${totalActes})`}
+              {`${tr('section.calendari.desplegable.titol', tx.desplegableTitol)} (${totalActes})`}
             </h3>
             {totalActes > 0 ? (
               <button
@@ -114,8 +125,8 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
                 {desplegat ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
                 <span>
                   {desplegat
-                    ? t('section.calendari.desplegable.plega', 'Amaga el llistat ràpid')
-                    : t('section.calendari.desplegable.desplega', 'Mostra tots els esdeveniments')}
+                    ? tr('section.calendari.desplegable.plega', tx.desplegablePlega)
+                    : tr('section.calendari.desplegable.desplega', tx.desplegableDesplega)}
                 </span>
               </button>
             ) : null}
@@ -123,7 +134,7 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
 
           {totalActes === 0 ? (
             <p className="sdp-cal-desplegable__detall" role="status">
-              {t('section.calendari.desplegable.buit', 'Encara no hi ha cap esdeveniment publicat.')}
+              {tr('section.calendari.desplegable.buit', tx.desplegableBuit)}
             </p>
           ) : (
             <ul id={idLlista} className="sdp-cal-desplegable__llista" hidden={!desplegat}>
@@ -134,43 +145,100 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
                 const detall = resumDataEntrada(entrada, locale);
                 const rsvp = entrada.item
                   ? llegeixRsvpEsdeveniment(entrada.item, idParticipant, magatzemRsvp)
-                  : { confirmats: 0, intencio: null, nota: '' };
-                const apuntat = rsvp.intencio === 'si';
+                  : { confirmats: 0, potser: 0, intencio: null, nota: '' };
+                const idActe = textNet(String(entrada.item?.id ?? entrada.acte?.id ?? ''));
+                const actesSolapats = idActe ? (solapaments.perActe[idActe] ?? []) : [];
+                const titolsSolapats = actesSolapats.map((c) => c.titol).join(', ');
+                const teSolapamentHorari = actesSolapats.some((c) => c.tipus === 'horari');
 
                 return (
                   <li key={entrada.clau} className="sdp-cal-desplegable__item">
                     <div className="sdp-cal-desplegable__info">
                       <span className="sdp-cal-desplegable__nom">{titol}</span>
                       {detall ? <p className="sdp-cal-desplegable__detall">{detall}</p> : null}
+                      {entrada.item ? (
+                        <p className="sdp-cal-rsvp-comptador">
+                          <Users size={14} aria-hidden="true" />
+                          <span>{`${tr('section.events.rsvp.confirmats', tx.confirmats)}: ${rsvp.confirmats}`}</span>
+                          {rsvp.potser > 0 ? (
+                            <span className="sdp-cal-rsvp-comptador__potser">{`· ${tx.potserComptador}: ${rsvp.potser}`}</span>
+                          ) : null}
+                        </p>
+                      ) : null}
                     </div>
+
                     <div className="sdp-cal-desplegable__accions">
                       {entrada.item ? (
-                        <button
-                          type="button"
-                          aria-pressed={apuntat}
-                          className={apuntat ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
-                          onClick={() => commutaAssistenciaRapida(entrada.item, rsvp)}
+                        <div
+                          className="sdp-cal-rsvp-grup"
+                          role="group"
+                          aria-label={tx.grupAria(titol)}
                         >
-                          {apuntat ? <Check size={16} aria-hidden="true" /> : <Users size={16} aria-hidden="true" />}
-                          <span>{`${t('section.events.rsvp.confirmats', 'Compta amb mi')}: ${rsvp.confirmats}`}</span>
-                        </button>
+                          <button
+                            type="button"
+                            aria-pressed={rsvp.intencio === 'si'}
+                            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'si' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
+                            onClick={() => triaIntencioRapida(entrada.item, rsvp, 'si')}
+                          >
+                            <Check size={16} aria-hidden="true" />
+                            <span>{tr('section.events.rsvp.curt.si', tx.assistire)}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            aria-pressed={rsvp.intencio === 'potser'}
+                            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'potser' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
+                            onClick={() => triaIntencioRapida(entrada.item, rsvp, 'potser')}
+                          >
+                            <CircleHelp size={16} aria-hidden="true" />
+                            <span>{tr('section.events.rsvp.potser', tx.potser)}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            aria-pressed={rsvp.intencio === 'no'}
+                            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'no' ? 'sdp-boto--accent' : 'sdp-boto--secundari'}`}
+                            onClick={() => triaIntencioRapida(entrada.item, rsvp, 'no')}
+                          >
+                            <X size={16} aria-hidden="true" />
+                            <span>{tr('section.events.rsvp.curt.no', tx.noAssistire)}</span>
+                          </button>
+                        </div>
                       ) : null}
+
                       {mes && typeof onSaltaAMes === 'function' ? (
                         <button
                           type="button"
-                          className="sdp-boto sdp-boto--secundari"
+                          className="sdp-boto sdp-boto--secundari sdp-cal-rsvp-grup__accio"
                           onClick={() => onSaltaAMes(mes)}
                         >
                           <CalendarDays size={16} aria-hidden="true" />
-                          <span>{t('section.calendari.desplegable.mes', 'Veure al calendari')}</span>
+                          <span>{tr('section.calendari.desplegable.mes', tx.desplegableMes)}</span>
                         </button>
                       ) : null}
+
                       {ruta ? (
-                        <Link className="sdp-boto sdp-boto--primari" to={ruta}>
-                          {t('section.calendari.desplegable.veure', 'Obrir i apuntar-s’hi')}
+                        <Link className="sdp-boto sdp-boto--primari sdp-cal-rsvp-grup__accio" to={ruta}>
+                          {tr('section.calendari.desplegable.veure', tx.desplegableVeure)}
                         </Link>
                       ) : null}
                     </div>
+
+                    {actesSolapats.length > 0 ? (
+                      <div
+                        className="sdp-cal-rsvp-avis-solapament"
+                        role="status"
+                        data-testid={`avis-solapament-${idActe}`}
+                      >
+                        <AlertTriangle size={18} aria-hidden="true" />
+                        <p className="sdp-cal-rsvp-avis-solapament__text">
+                          <strong>{`${tx.solapamentTitol}: `}</strong>
+                          {teSolapamentHorari
+                            ? tx.solapamentHorari(titolsSolapats)
+                            : tx.solapamentMateixDia(titolsSolapats)}
+                        </p>
+                      </div>
+                    ) : null}
                   </li>
                 );
               }) : null}

@@ -1,10 +1,12 @@
 /**
- * Notícies del Poble · i18nLector.js (Onada R32.11 · Lot 04).
+ * Notícies del Poble · i18nLector.js (Onada R32.11 · Lot 04 + Onada R32.15).
  *
  * Diccionari modular pur en les 5 llengües oficials (ca, es, en, eu, gl).
  * El valencià (ca) conserva byte a byte la còpia canònica de les vistes.
  * Zero xarxa, zero DOM, zero rellotge, zero menció d'infraestructura impròpia (Llei 32).
  */
+import { civilDe, dataCurta, msDeData } from './nucli/dates.js';
+
 const enumeracioRomana = (conjuncio) => (noms) => (noms.length < 2
   ? noms.join('')
   : `${noms.slice(0, -1).join(', ')} ${conjuncio} ${noms[noms.length - 1]}`);
@@ -165,6 +167,21 @@ export const TEXTOS_LECTOR = Object.freeze({
       copiada: 'Fitxa copiada. Revisa-la i enganxa-la al Llibre Mestre.',
       noCopiada: 'No s’ha pogut copiar la fitxa.',
     }),
+    descripcioFontPersonal: 'Una font que has afegit tu.',
+    descripcioObservatori: 'Les troballes de l’observatori de mestres, amb el veredicte del sedàs. Només per a administradors.',
+    motiusPersonal: Object.freeze({
+      url: 'Falta l’adreça de la font.',
+      'url-no-web': 'Només es poden afegir adreces web (http o https), sense usuari ni contrasenya i de 2048 caràcters com a màxim.',
+      nom: 'Cal un nom per a la font.',
+      categoria: 'Esta categoria no és del catàleg de fonts: tria’n una de la llista.',
+      repetida: 'Esta font ja és al teu Lector.',
+      plena: 'El Lector admet 100 fonts teues com a màxim: lleva’n alguna abans.',
+      'no-persistent': 'Este navegador no deixa guardar dades en este dispositiu (per exemple, en una finestra privada): el Lector no pot guardar les teues fonts.',
+    }),
+    errorsCopia: Object.freeze({
+      COPIA_INVALIDA: 'El fitxer no és una còpia vàlida del Lector.',
+      COPIA_PLENA: 'La còpia i les dades actuals juntes superen la capacitat del Lector.',
+    }),
   }),
   es: Object.freeze({
     obrintLector: 'Abriendo el lector…',
@@ -315,6 +332,21 @@ export const TEXTOS_LECTOR = Object.freeze({
       promou: 'Promover al Libro Maestro',
       copiada: 'Ficha copiada. Revísala y pégala en el Libro Maestro.',
       noCopiada: 'No se ha podido copiar la ficha.',
+    }),
+    descripcioFontPersonal: 'Una fuente que has añadido tú.',
+    descripcioObservatori: 'Los hallazgos del observatorio de maestros, con el veredicto del filtro. Solo para administradores.',
+    motiusPersonal: Object.freeze({
+      url: 'Falta la dirección de la fuente.',
+      'url-no-web': 'Solo se pueden añadir direcciones web (http o https), sin usuario ni contraseña y de 2048 caracteres como máximo.',
+      nom: 'Hace falta un nombre para la fuente.',
+      categoria: 'Esta categoría no pertenece al catálogo de fuentes: elige una de la lista.',
+      repetida: 'Esta fuente ya está en tu Lector.',
+      plena: 'El Lector admite 100 fuentes personales como máximo: quita alguna antes.',
+      'no-persistent': 'Este navegador no permite guardar datos en este dispositivo (por ejemplo, en una ventana privada): el Lector no puede guardar tus fuentes.',
+    }),
+    errorsCopia: Object.freeze({
+      COPIA_INVALIDA: 'El archivo no es una copia válida del Lector.',
+      COPIA_PLENA: 'La copia y los datos actuales juntos superan la capacidad del Lector.',
     }),
   }),
   en: Object.freeze({
@@ -467,6 +499,21 @@ export const TEXTOS_LECTOR = Object.freeze({
       copiada: 'Entry copied. Review it and paste it into the Master Book.',
       noCopiada: 'The entry could not be copied.',
     }),
+    descripcioFontPersonal: 'A source you added yourself.',
+    descripcioObservatori: 'Curated findings from the masters observatory, with filter verdicts. Administrators only.',
+    motiusPersonal: Object.freeze({
+      url: 'Feed address is required.',
+      'url-no-web': 'Only web addresses (http or https) without credentials and up to 2048 characters can be added.',
+      nom: 'A name for the source is required.',
+      categoria: 'This folder is not in the source catalogue: pick one from the list.',
+      repetida: 'This source is already in your Reader.',
+      plena: 'The Reader allows up to 100 personal sources: remove one first.',
+      'no-persistent': 'This browser does not allow persistent storage (for instance, in a private window): the Reader cannot save your sources.',
+    }),
+    errorsCopia: Object.freeze({
+      COPIA_INVALIDA: 'This file is not a valid Reader backup.',
+      COPIA_PLENA: 'Combining this backup with your current data exceeds the Reader capacity.',
+    }),
   }),
   eu: Object.freeze({
     obrintLector: 'Irakurgailua irekitzen…',
@@ -617,6 +664,21 @@ export const TEXTOS_LECTOR = Object.freeze({
       promou: 'Sustatu Liburu Nagusira',
       copiada: 'Fitxa kopiatu da. Berrikusi eta itsatsi Liburu Nagusian.',
       noCopiada: 'Ezin izan da fitxa kopiatu.',
+    }),
+    descripcioFontPersonal: 'Zuk gehitutako iturri bat.',
+    descripcioObservatori: 'Maisuen behatokiko aurkikuntzak, bahearen epaiarekin. Administratzaileentzat soilik.',
+    motiusPersonal: Object.freeze({
+      url: 'Iturriaren helbidea falta da.',
+      'url-no-web': 'Web helbideak (http edo https) soilik gehi daitezke, erabiltzaile edo pasahitzik gabe eta gehienez 2048 karakterekoak.',
+      nom: 'Iturriarentzat izen bat behar da.',
+      categoria: 'Karpeta hau ez dago iturrien katalogoan: aukeratu zerrendako bat.',
+      repetida: 'Iturri hau zure Irakurgailuan dago jada.',
+      plena: 'Irakurgailuak gehienez 100 iturri pertsonal onartzen ditu: kendu baten bat lehenik.',
+      'no-persistent': 'Nabigatzaile honek ez du gailu honetan datuak gordetzen uzten (adibidez, leiho pribatu batean): Irakurgailuak ezin ditu zure iturriak gorde.',
+    }),
+    errorsCopia: Object.freeze({
+      COPIA_INVALIDA: 'Fitxategia ez da Irakurgailuaren baliozko kopia bat.',
+      COPIA_PLENA: 'Kopiak eta egungo datuek batera Irakurgailuaren edukiera gainditzen dute.',
     }),
   }),
   gl: Object.freeze({
@@ -769,7 +831,29 @@ export const TEXTOS_LECTOR = Object.freeze({
       copiada: 'Ficha copiada. Revísaa e pégaa no Libro Mestre.',
       noCopiada: 'Non se puido copiar a ficha.',
     }),
+    descripcioFontPersonal: 'Unha fonte que engadiches ti.',
+    descripcioObservatori: 'Os achados do observatorio de mestres, co veredicto da peneira. Só para administradores.',
+    motiusPersonal: Object.freeze({
+      url: 'Falta o enderezo da fonte.',
+      'url-no-web': 'Só se poden engadir enderezos web (http ou https), sen usuario nin contrasinal e de 2048 caracteres como máximo.',
+      nom: 'Cómpre un nome para a fonte.',
+      categoria: 'Este cartafol non é do catálogo de fontes: escolle un da lista.',
+      repetida: 'Esta fonte xa está no teu Lector.',
+      plena: 'O Lector admite 100 fontes persoais como máximo: quita algunha antes.',
+      'no-persistent': 'Este navegador non deixa gardar datos neste dispositivo (por exemplo, nunha xanela privada): o Lector non pode gardar as túas fontes.',
+    }),
+    errorsCopia: Object.freeze({
+      COPIA_INVALIDA: 'O ficheiro non é unha copia válida do Lector.',
+      COPIA_PLENA: 'A copia e os datos actuais xuntos superan a capacidade do Lector.',
+    }),
   }),
+});
+
+const MESOS_CURTS = Object.freeze({
+  es: Object.freeze(['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']),
+  en: Object.freeze(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']),
+  eu: Object.freeze(['urtarrilak', 'otsailak', 'martxoak', 'apirilak', 'maiatzak', 'ekainak', 'uztailak', 'abuztuak', 'irailak', 'urriak', 'azaroak', 'abenduak']),
+  gl: Object.freeze(['xaneiro', 'febreiro', 'marzo', 'abril', 'maio', 'xuño', 'xullo', 'agosto', 'setembro', 'outubro', 'novembro', 'decembro']),
 });
 
 export function codiIdiomaLector(idioma) {
@@ -779,4 +863,42 @@ export function codiIdiomaLector(idioma) {
 
 export function textosLector(idioma) {
   return TEXTOS_LECTOR[codiIdiomaLector(idioma)];
+}
+
+export function textMotiuPersonalLector(error, idioma) {
+  const tx = textosLector(idioma);
+  const codi = typeof error?.codi === 'string' ? error.codi : '';
+  if (codi && Object.hasOwn(tx.motiusPersonal, codi)) return tx.motiusPersonal[codi];
+  return typeof error?.message === 'string' && error.message ? error.message : tx.noShaPogutAfegir;
+}
+
+export function textErrorCopiaLector(error, idioma) {
+  const tx = textosLector(idioma);
+  const codi = typeof error?.codi === 'string' ? error.codi : '';
+  if (codi && Object.hasOwn(tx.errorsCopia, codi)) return tx.errorsCopia[codi];
+  return error?.codi && typeof error.message === 'string' ? error.message : tx.noImportaCopia;
+}
+
+export function descripcioFontLector(font, idioma) {
+  if (!font?.descripcio) return null;
+  const codi = codiIdiomaLector(idioma);
+  if (codi === 'ca') return font.descripcio;
+  const tx = TEXTOS_LECTOR[codi];
+  if (font.descripcio === TEXTOS_LECTOR.ca.descripcioFontPersonal) return tx.descripcioFontPersonal;
+  if (font.id === 'observatori-mestres') return tx.descripcioObservatori;
+  return font.descripcio;
+}
+
+export function dataCurtaLector(iso, ara, desfas = 0, idioma = 'ca') {
+  const codi = codiIdiomaLector(idioma);
+  if (codi === 'ca') return dataCurta(iso, ara, desfas);
+  const ms = msDeData(iso);
+  if (ms === null) return '';
+  const localDies = (instant) => Math.floor((instant + (Number.isFinite(desfas) ? desfas : 0) * 60000) / 86400000);
+  const [any, mes, dia] = civilDe(localDies(ms));
+  const anyAra = Number.isFinite(ara) ? civilDe(localDies(ara))[0] : any;
+  const mesNom = MESOS_CURTS[codi][mes - 1];
+  if (codi === 'en') return `${dia} ${mesNom}${any === anyAra ? '' : ` ${any}`}`;
+  if (codi === 'eu') return `${any === anyAra ? '' : `${any}ko `}${mesNom} ${dia}`;
+  return `${dia} de ${mesNom}${any === anyAra ? '' : ` de ${any}`}`;
 }

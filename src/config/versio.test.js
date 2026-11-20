@@ -60,8 +60,9 @@ describe('la versió canònica', () => {
        Onada v1.2.9 (ordre del Mestre 18-11-2026, nit): versió unificada 1.2.9 amb el build 14 (VERSIO_CLIENT_NATIU 14).
        Onada v1.2.10 (ordre del Mestre 19-11-2026): versió unificada 1.2.10 amb el build 15 (VERSIO_CLIENT_NATIU 15).
        Onada v1.2.11 (ordre del Mestre 19-11-2026, dinar): versió unificada 1.2.11 amb el build 16 (VERSIO_CLIENT_NATIU 16).
-       Onada v1.2.12 (ordre del Mestre 19-11-2026, nit; prompt 261119_1754): versió unificada 1.2.12 amb el build 17 (VERSIO_CLIENT_NATIU 17). */
-    expect(versioCanonica()).toBe('v1.2.12');
+       Onada v1.2.12 (ordre del Mestre 19-11-2026, nit; prompt 261119_1754): versió unificada 1.2.12 amb el build 17 (VERSIO_CLIENT_NATIU 17).
+       Onada v1.2.13 (ordre del Mestre 20-11-2026, nit autònoma; prompt 261120_0016): versió unificada 1.2.13 amb el build 18 (VERSIO_CLIENT_NATIU 18). */
+    expect(versioCanonica()).toBe('v1.2.13');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

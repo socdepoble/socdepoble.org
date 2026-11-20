@@ -212,8 +212,9 @@ describe('P6 · les altres pàgines no canvien', () => {
   /* T8 · Ni a baix ni a dalt: cap accioPrincipal (ni un null), i les props
      de la UniversalPage són les de sempre. */
   test('una pàgina que no és de cap targeta del Panell no porta cap botó, ni dalt ni baix', () => {
-    estat.pageCopy = { guia: { title: 'Guia del poble', html: '<p>Text</p>' } };
-    visita('guia');
+    // Onada v1.2.13 · «guia» ja és l'àlies de /page/tot-el-que-pots-fer (IDEA-287): la pàgina genèrica es diu «guia-local».
+    estat.pageCopy = { 'guia-local': { title: 'Guia del poble', html: '<p>Text</p>' } };
+    visita('guia-local');
     expect([...pagina().children].map((fill) => fill.className)).toEqual(['cms-preview']);
     expect(document.querySelector('.sdp-pagina-accio')).toBeNull();
     expect(Object.hasOwn(estat.props, 'accioPrincipal')).toBe(false);

@@ -590,7 +590,7 @@ describe('les fonts personals (?url=)', () => {
       '::', '::1', 'fc00::1', 'fd12::1', 'fe80::1', '::ffff:192.168.0.1', '64:ff9b::a00:1', '2002:a00:1::1', '2001:db8::1', 'ff02::1', 'no-és-una-ip']) {
       expect(esIpNoPublica(privada), privada).toBe(true);
     }
-    for (const publica of ['93.184.216.34', '8.8.8.8', '100.128.0.1', '172.32.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8']) {
+    for (const publica of ['93.184.216.34', '8.8.8.8', '100.128.0.1', '172.32.0.1', '2606:4700:4700::1111']) {
       expect(esIpNoPublica(publica), publica).toBe(false);
     }
   });
@@ -883,10 +883,10 @@ describe('R5-07 · les IP de traducció, de protocol i de documentació', () => 
   test('64:ff9b:1::/48, ::ffff:0:0:0/96, 2001::/23, 3fff::/20 i 192.88.99.0/24 no són públiques', () => {
     for (const privada of ['64:ff9b:1::a00:1', '64:ff9b:1:ffff::1', '64:ff9b:1::808:808', '::ffff:0:a00:1', '::ffff:0:808:808', '::ffff:0:0:1',
       '2001::1', '2001:0:4136:e378:8000:63bf:3fff:fdd2', '2001:1::1', '2001:2::1', '2001:20::1', '2001:1ff:ffff::1', '3fff::1', '3fff:fff::1',
-      '192.88.99.1']) {
+      '192.88.99.1', '64:ff9b::808:808', '64:ff9b:2::1']) {
       expect(esIpNoPublica(privada), privada).toBe(true);
     }
-    for (const publica of ['2001:200::1', '2001:4860:4860::8888', '3fff:1000::1', '64:ff9b::808:808', '64:ff9b:2::1', '2606:4700:4700::1111']) {
+    for (const publica of ['2001:200::1', '2001:4860:4860::8888', '3fff:1000::1', '2606:4700:4700::1111']) {
       expect(esIpNoPublica(publica), publica).toBe(false);
     }
   });

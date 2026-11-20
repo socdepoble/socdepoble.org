@@ -111,6 +111,14 @@ export function reconciliaConflicteOffline(localOp, remoteRecord) {
   if (remote.deleted != null && typeof remote.deleted !== 'boolean') throw invalid();
   if (local.abast != null && remote.abast != null && !igual(json(local.abast), json(remote.abast))) throw invalid();
   const lClock = clock(local.hlc); const rClock = clock(remote.hlc);
+  // The same HLC point cannot identify contradictory contents, even when a
+  // legacy peer omitted causal vectors. Picking the right-hand value would
+  // make reconciliation depend on input order.
+  if (comparaRellotgesHLC(lClock, rClock) === 0
+      && ((local.action === 'delete') !== (remote.deleted === true)
+        || Object.entries(local.changes).some(([key, value]) => Object.hasOwn(remote.values, key) && remote.values[key] !== value))) {
+    throw err('OFFLINE_CAUSAL_INCONSISTENCY');
+  }
   for (const val of Object.values(local.changes)) if (typeof val !== 'string') throw err('OFFLINE_RECONCILE_TEXT_ONLY');
   const relation = relacioCausal(local.version, remote.version);
   const concurrent = relation === 'concurrent';
@@ -141,6 +149,7 @@ export function reconciliaConflicteOffline(localOp, remoteRecord) {
       if (present && typeof remote.values[key] !== 'string') throw err('OFFLINE_RECONCILE_TEXT_ONLY');
       const lc = fields[key] == null ? lClock : clock(fields[key]);
       const rc = remoteFields[key] == null ? rClock : clock(remoteFields[key]);
+      if (present && comparaRellotgesHLC(lc, rc) === 0 && remote.values[key] !== value) throw err('OFFLINE_CAUSAL_INCONSISTENCY');
       const wins = relation === 'after' || (relation !== 'before' && (!present || comparaRellotgesHLC(lc, rc) > 0));
       if (wins) { record.values[key] = value; record.fieldClocks[key] = lc; }
       if ((concurrent || needsReview) && present && remote.values[key] !== value) losses[key] = wins ? remote.values[key] : value;
@@ -342,6 +351,7 @@ export async function enqueueOfflineMutation(queue, input, { signal } = {}) {
   const causal = value.causalContext == null ? {} : vector(value.causalContext);
   const opId = ctx.crypto.randomUUID();
   return revise(ctx, async s => {
+    if (s.entries.some(op => op.opId === opId) || s.resolved?.some(op => op.opId === opId)) throw err('OFFLINE_DUPLICATE_OPERATION_ID');
     if (s.entries.length >= ctx.maxOperations) throw err('OFFLINE_QUEUE_FULL');
     if (!enter(s.nextSeq + 1)) throw err('OFFLINE_SEQUENCE_EXHAUSTED');
     const now = ctx.ara(); if (!enter(now)) throw invalid();
@@ -430,7 +440,7 @@ async function runDrain(ctx, port, { signal, maxOperations = 1000 } = {}) {
         if (!s.entries.length) return { write: false, value: { status: 'drained' } };
         if (s.blocked) return { write: false, value: { status: 'blocked', reason: s.blocked.kind } };
         const now = ctx.ara(); if (!enter(now) || !enter(now + ctx.leaseMs)) throw invalid();
-        if (s.inflight && s.inflight.expiresAt > now && s.inflight.claimedAt <= now) return { write: false, value: { status: 'busy' } };
+        if (s.inflight && s.inflight.expiresAt > now) return { write: false, value: { status: 'busy' } };
         const leaseId = ctx.crypto.randomUUID();
         s.inflight = { opId: s.entries[0].opId, leaseId, claimedAt: now, expiresAt: now + ctx.leaseMs };
         return { value: { status: 'claimed', op: json(s.entries[0]), leaseId } };

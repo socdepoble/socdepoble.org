@@ -6,6 +6,9 @@
  * ha cap endpoint remot públic configurat: `transportCrdtRemot` és opt-in. Un
  * certificat de retirada només el fa este dispositiu amb el seu ACK remot; un
  * certificat que arriba d'una còpia o de la carpeta no s'aplica mai. */
+// Constructor públic del transport opt-in, al costat de la sessió que el consumix.
+// Reexportar-lo no activa xarxa ni configura una autoritat per defecte.
+export { creaTransportCrdtRuralRemot } from './crdtRuralRemot.js';
 import { creaMagatzemAtomicRural, creaPersistenciaLocalRural, copiaJsonRural, normalitzaAbastRural } from './persistenciaLocalRural.js';
 import { creaCuaOperacionsOffline, verifyOfflineQueueChain } from './cuaOperacionsOffline.js';
 import { consolidaOperacionsEmergencia, normalitzaOperacioEmergencia, exportaDeltaEmergenciaRural, importaDeltaEmergenciaRural } from './pontEmergenciaRural.js';

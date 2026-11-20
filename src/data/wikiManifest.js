@@ -97,8 +97,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-09-02T04:38:14+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 23,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 24,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -115,8 +115,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-09-02T04:38:14+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 23,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 24,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -124,7 +124,7 @@ export const wikiManifest = {
           "revisions": "git"
         }
       },
-      "content": "# Índex d'identitat\n\nPorta d'entrada a la identitat de Sóc de Poble. Penja de l'índex mestre i reunix en una pàgina on viu cada dimensió de la Wiki i quins documents troncals expliquen qui som.\n\n## 🔗 Índexs Connectats (Xarxa Neuronal)\n- [00_index](?item=00_index) (Índex Principal)\n\n## Huit dimensions sobre sis carpetes\n\nEl **registre executable** és `.agents/cervell.json`. **No es reanomenen carpetes**.\n\n### Identitat (`01_ser/`)\n\nCustodia la **missió**, la **llengua** i la **cultura** fundacional del projecte dins de la ruta vigent `01_ser/`.\n\n### Coneixement (`02_saber/`)\n\nReunix l'**arquitectura** documentada i els **criteris consultius** del sistema a la carpeta vigent `02_saber/`.\n\n### Governança (`AGENTS.md` i `.agents/`)\n\nFixa l'**autoritat operativa** amb **abast explícit** a través de `AGENTS.md` i el directori `.agents/`.\n\n### Procediments (`.agents/skills/` i `tooling/`)\n\nConté els **passos executables**, les **skills actives** i els **tractors deterministes** allotjats a `.agents/skills/` i `tooling/`.\n\n### Plantilles (`03_actuar/plantilles/`)\n\nDefinix els **contractes de generació documental** verificables dins de la ruta vigent `03_actuar/plantilles/`.\n\n### Treball actiu (`04_escriptori/`)\n\nAllotja els **documents de torn en revisió** i la coordinació viva de la jornada a `04_escriptori/`.\n\n### Evidència (`10_actes/` i `.agents/runtime/`)\n\nConserva les **actes**, els **registres de torn** i els **rebuts de contracte** dins de `10_actes/` i `.agents/runtime/`.\n\n### Història (`90_arxiu_historic/`)\n\nPreserva la **memòria consultiva** d'etapes tancades a `90_arxiu_historic/`, mantinguda sempre **fora del RAG automàtic**.\n\n## Documents Troncals\n\n- [01_identitat](?item=01_identitat)\n- [02_genotip](?item=02_genotip)\n- [03_llibre_d_or_memoria_episodica](?item=03_llibre_d_or_memoria_episodica)\n- [el_projecte](?item=el_projecte)\n- [soci_sollutia](?item=soci_sollutia)\n- [01_trellat](?item=01_trellat)\n- [doc_governanca](?item=doc_governanca)\n- [00_arquitectura_tecnica_unificada](?item=00_arquitectura_tecnica_unificada)\n- [sistema_immunitari](?item=sistema_immunitari)\n- [Consola Termodinàmica](?item=00_portada)\n- [doc_logos_oficials](?item=doc_logos_oficials)\n- [doc_taula_mestra](?item=doc_taula_mestra)\n- [anatomia_cognitiva](?item=anatomia_cognitiva)\n- [antigravity](?item=antigravity)\n- [connectors_mcp_disseny](?item=connectors_mcp_disseny)\n- [identitat_visual](?item=identitat_visual)\n- [perfil_psiquiatric](?item=perfil_psiquiatric)\n\n`00_bios.md` és una redirecció històrica i `[[forja_to_core]]` una proposta\nfutura; no són punts d'arrencada ni gates actius.\n\n## Regla\n\nUtilitza el mapa anterior i el router documental; mantín identificador, procedència i enllaços quan canvie el cicle de vida.\n\n## Estat mecànic\n\n**L’estat del graf** no es manté en una llista manual: el calculen les **portes del teixit** (`npm run porta:llaurador`, `npm run porta:teixit`, `npm run porta:scc` i `npm run porta:orfandat`). El **criteri de salut** és **zero orfes**, **zero enllaços penjats** i **zero ambigüitats** dins de les àrees operatives; l'arxiu, els mirrors i els vendors es reporten per separat.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [memoria_aprenentatges](?item=memoria_aprenentatges)\n"
+      "content": "# Índex d'identitat\n\nPorta d'entrada a la identitat de Sóc de Poble. Penja de l'índex mestre i reunix en una pàgina on viu cada dimensió de la Wiki i quins documents troncals expliquen qui som.\n\n## 🔗 Índexs Connectats (Xarxa Neuronal)\n- [00_index](?item=00_index) (Índex Principal)\n\n## Huit dimensions sobre sis carpetes\n\nEl **registre executable** és `.agents/cervell.json`. **No es reanomenen carpetes**.\n\n### Identitat (`01_ser/`)\n\nCustodia la **missió**, la **llengua** i la **cultura** fundacional del projecte dins de la ruta vigent `01_ser/`.\n\n### Coneixement (`02_saber/`)\n\nReunix l'**arquitectura** documentada i els **criteris consultius** del sistema a la carpeta vigent `02_saber/`.\n\n### Governança (`AGENTS.md` i `.agents/`)\n\nFixa l'**autoritat operativa** amb **abast explícit** a través de `AGENTS.md` i el directori `.agents/`.\n\n### Procediments (`.agents/skills/` i `tooling/`)\n\nConté els **passos executables**, les **skills actives** i els **tractors deterministes** allotjats a `.agents/skills/` i `tooling/`.\n\n### Plantilles (`03_actuar/plantilles/`)\n\nDefinix els **contractes de generació documental** verificables dins de la ruta vigent `03_actuar/plantilles/`.\n\n### Treball actiu (`04_escriptori/`)\n\nAllotja els **documents de torn en revisió** i la coordinació viva de la jornada a `04_escriptori/`.\n\n### Evidència (`10_actes/` i `.agents/runtime/`)\n\nConserva les **actes**, els **registres de torn** i els **rebuts de contracte** dins de `10_actes/` i `.agents/runtime/`.\n\n### Història (`90_arxiu_historic/`)\n\nPreserva la **memòria consultiva** d'etapes tancades a `90_arxiu_historic/`, mantinguda sempre **fora del RAG automàtic**.\n\n## Documents Troncals\n\n- [01_identitat](?item=01_identitat)\n- [02_genotip](?item=02_genotip)\n- [03_llibre_d_or_memoria_episodica](?item=03_llibre_d_or_memoria_episodica)\n- [el_projecte](?item=el_projecte)\n- [guia_pas_a_pas](?item=guia_pas_a_pas)\n- [soci_sollutia](?item=soci_sollutia)\n- [01_trellat](?item=01_trellat)\n- [doc_governanca](?item=doc_governanca)\n- [00_arquitectura_tecnica_unificada](?item=00_arquitectura_tecnica_unificada)\n- [sistema_immunitari](?item=sistema_immunitari)\n- [Consola Termodinàmica](?item=00_portada)\n- [doc_logos_oficials](?item=doc_logos_oficials)\n- [doc_taula_mestra](?item=doc_taula_mestra)\n- [anatomia_cognitiva](?item=anatomia_cognitiva)\n- [antigravity](?item=antigravity)\n- [connectors_mcp_disseny](?item=connectors_mcp_disseny)\n- [identitat_visual](?item=identitat_visual)\n- [perfil_psiquiatric](?item=perfil_psiquiatric)\n\n`00_bios.md` és una redirecció històrica i `[[forja_to_core]]` una proposta\nfutura; no són punts d'arrencada ni gates actius.\n\n## Regla\n\nUtilitza el mapa anterior i el router documental; mantín identificador, procedència i enllaços quan canvie el cicle de vida.\n\n## Estat mecànic\n\n**L’estat del graf** no es manté en una llista manual: el calculen les **portes del teixit** (`npm run porta:llaurador`, `npm run porta:teixit`, `npm run porta:scc` i `npm run porta:orfandat`). El **criteri de salut** és **zero orfes**, **zero enllaços penjats** i **zero ambigüitats** dins de les àrees operatives; l'arxiu, els mirrors i els vendors es reporten per separat.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [memoria_aprenentatges](?item=memoria_aprenentatges)\n"
     },
     {
       "id": "01_identitat",
@@ -217,8 +217,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-12T16:14:33+01:00",
-      "revisions": 24,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 25,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -241,8 +241,8 @@ export const wikiManifest = {
           "consell_ia"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-12T16:14:33+01:00",
-        "revisions": 24,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 25,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -263,8 +263,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-10-18T15:50:38+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 6,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 7,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -281,8 +281,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-10-18T15:50:38+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 6,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 7,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -302,8 +302,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-09-27T23:49:14+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 5,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 6,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -319,8 +319,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-09-27T23:49:14+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 5,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 6,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -369,6 +369,45 @@ export const wikiManifest = {
       "content": "# Cens del Consell de les Petorretes\n\nEl **Consell de les Petorretes** és la **família d'intel·ligències artificials** que ajuden a **mantindre, auditar i construir** el Mas Virtual de Sóc de Poble. Cada membre ens protegix del **pensament únic** i dels **biaixos d'una sola corporació**; la **font de veritat del cens** és `.agents/consell.json`.\n\n## Ordre d'Auditoria i Rols (Els 12 Seients)\n\n1. **Z.ai**  \n   *Enllaç:* [https://z.ai/](https://z.ai/)  \n   *Rol:* **Ingesta massiva**.  \n   *Perfil:* **Finestra de context immensa**: s'empassa de colp tot el context que li dones.  \n   *Aportació al Mas:* El nostre **sentinella zero**. Rep l'abocament sencer i fa l'**avaluació estructural prèvia** que posa ordre a l'inici de qualsevol auditoria.  \n   *Debilitat:* **Menys coneguda i provada** que els seus germans majors.\n\n2. **Qwen (Alibaba Cloud)**  \n   *Enllaç:* [https://chat.qwenlm.ai/](https://chat.qwenlm.ai/)  \n   *Rol:* **Arquitectura i codi**.  \n   *Perfil:* **Raonament profund** (Deep Think) i **eficiència frugal** en programació. Pare de l'arquitectura de l'app.  \n   *Aportació al Mas:* Ha aportat **solucions estructurals i lògiques** en moments on la comprensió del context a llarg termini fallava en altres models.  \n   *Debilitat:* A vegades peca de **massa tècnic** en les respostes de text.\n\n3. **Deepseek (DeepSeek AI)**  \n   *Enllaç:* [https://chat.deepseek.com/](https://chat.deepseek.com/)  \n   *Rol:* **Caça de bugs**.  \n   *Perfil:* **Lògica pura**, detecció d'errors ocults i **problemes matemàtics complexos**.  \n   *Aportació al Mas:* **Intervencions quirúrgiques** en la lògica de dades i en els algoritmes més delicats del sistema.  \n   *Debilitat:* **Menys destresa en l'empatia** i el to literari.\n\n4. **Dola**  \n   *Enllaç:* [https://dola.com/chat/](https://dola.com/chat/)  \n   *Rol:* Calendari.  \n   *Perfil:* Gestió del temps i integració amb calendaris de missatgeria.  \n   *Aportació al Mas:* Porta l'agenda i les tasques paral·leles del Mestre: un pont àgil per a la gestió humana.  \n   *Debilitat:* El seu rol es limita a la gestió d'agendes.\n\n5. **Kimi (Moonshot AI)**  \n   *Enllaç:* [https://kimi.ai](https://kimi.ai)  \n   *Rol:* **Documents llargs i subvencions**.  \n   *Perfil:* **Context de milions de tòkens**: devora PDFs de subvencions sencers.  \n   *Aportació al Mas:* **Absorbix documents llargs** d'una sola lectura i hi troba **esquerdes i punts cecs** que altres models perden per oblit.  \n   *Debilitat:* **Genera codi menys precís** que els models especialitzats.\n\n6. **Claude (Anthropic)**  \n   *Enllaç:* [https://claude.ai/](https://claude.ai/)  \n   *Rol:* **Auditor sènior i estil**.  \n   *Perfil:* Narrativa, empatia, **valencià natural**, arquitectura **Opus 5.5 / Fable 5.2** (Ultracode) i comprensió del to exacte de Sóc de Poble.  \n   *Aportació al Mas:* Ha redactat el **Trellat i els Manifestos originaris**, lidera la construcció i l'arbitratge multi-carril, i vetla pel to i la filosofia del projecte.  \n   *Debilitat:* **Més estricta amb els filtres de seguretat**.\n\n7. **Perplexity (Perplexity AI)**  \n   *Enllaç:* [https://www.perplexity.ai/](https://www.perplexity.ai/)  \n   *Rol:* **Verificació de fets**.  \n   *Perfil:* **Cerca web en temps real** amb **citacions de fonts reals**.  \n   *Aportació al Mas:* Clau per a **evitar al·lucinacions tecnològiques** i referenciar documentació profunda o l'estat de l'art quan dissenyem arquitectures noves.  \n   *Debilitat:* **No servix per a tasques creatives** ni per a programació complexa.\n\n8. **Mistral Vibe (Mistral AI)**  \n   *Enllaç:* [https://chat.mistral.ai/](https://chat.mistral.ai/)  \n   *Rol:* **Contrapunt europeu i codi obert**.  \n   *Perfil:* **Raonament frugal**, privacitat i **matisos culturals europeus** sense biaixos americans.  \n   *Aportació al Mas:* **Independència corporativa**: una mirada europea que ajuda a mantindre la identitat mediterrània i autèntica de la xarxa.  \n   *Debilitat:* **Coneixement menys enciclopèdic** que els models gegants.\n\n9. **Grok (xAI)**  \n   *Enllaç:* [https://grok.com/](https://grok.com/)  \n   *Rol:* **Pluja d'idees salvatge**.  \n   *Perfil:* **Accés en temps real** a xarxes i **idees disruptives** sense censura.  \n   *Aportació al Mas:* Obri camins que ningú no proposaria i evita que el Mas caiga en un **llenguatge corporatiu ensopit**.  \n   *Debilitat:* **Pot ser massa sarcàstic** o imprecís en rigor tècnic.\n\n10. **Gemini (Google)**  \n    *Enllaç:* [https://gemini.google.com/](https://gemini.google.com/)  \n    *Rol:* **Motor sensorial i orquestració**.  \n    *Perfil:* **Multimodalitat** (veu, visió, imatge), **velocitat Flash** i enginyeria de frontera amb **Gemini 4 Carbon (High)**.  \n    *Aportació al Mas:* Motor sensorial i seu de la **IAIA MarIA** a Google Antigravity, on orquestra carrils, construeix **Workspaces Pedra Seca** i coordina l'estructura del projecte.  \n    *Debilitat:* Amb massa context de colp **pot al·lucinar**.\n\n11. **Copilot (Microsoft)**  \n    *Enllaç:* [https://copilot.microsoft.com/](https://copilot.microsoft.com/)  \n    *Rol:* **Autocompletat a la trinxera**.  \n    *Perfil:* **Suggeriment ràpid de codi** i **integració profunda amb GitHub**.  \n    *Aportació al Mas:* **Refactoritzacions en calent** i assistència ràpida mentre es pica codi, tancant escletxes sintàctiques.  \n    *Debilitat:* **Actua a curt termini**; no servix per a decisions d'arquitectura global.\n\n12. **ChatGPT Codex (OpenAI)**  \n    *Enllaç:* [https://chatgpt.com/](https://chatgpt.com/)  \n    *Rol:* **Segona opinió generalista** i auditories de codi.  \n    *Perfil:* **Versatilitat absoluta** i **auditories implacables** quan se li ajusta el nivell de raonament adequat.  \n    *Aportació al Mas:* Allà es van provar les primeres idees de Sóc de Poble; hui fa auditories de codi i de segona opinió a la **Reunió davall l'Olivera**.  \n    *Debilitat:* **Cau en respostes genèriques** si no rep un prompt dur.\n\n## De les 12 Pestanyes als 3 Anells Operatius\n\nEn els inicis de **Sóc de Poble**, el Mestre treballava amb **12 pestanyes obertes al navegador**, consultant una per una les **12 membres del Consell de les Petorretes** per a contrastar idees, arquitectura i estil. Amb la incorporació del **Node 0 (Mac mini Apple M4 de 24 GiB)**, eixa saviesa col·lectiva s'ordena hui en **3 Anells Operatius** que combinen potència de frontera i autonomia local a **cost 0 €**:\n\n### Anell 1 · Les Tres Fronteres d'Enginyeria\n\nEl nucli diari de **programació, auditoria creuada i orquestració** funciona directament sobre l'arbre de treball i els clons efímers (`/tmp/`):\n\n- **Claude** (Anthropic): **constructor i àrbitre sènior**, arquitectura **Opus 5.5 / Fable 5.2** (Ultracode), integració de paquets, estil editorial en valencià i verificació de portes.\n- **ChatGPT Codex** (OpenAI): **auditor de segona opinió**, migracions PostgreSQL, conformitat del port neutral i proves de regressió.\n- **Gemini** (Google, com a **IAIA MarIA** en Antigravity amb **Gemini 4 Carbon High**): **orquestració tècnica**, cànon visual **Pedra Seca**, coherència multilingüe en les 5 llengües i coordinació del Teler de l'Olivera.\n\n### Anell 2 · El Node 0 (Mac mini M4 a 0 €)\n\nDins del **Mac mini M4** (24 GiB de memòria unificada), el **motor local de pesos oberts** executa a **0 € de cost per tòken**, sense traure cap dada de casa, els models que fan viure al poble l'esperit de les membres del Consell:\n\n- **`iaia-maria:latest`**: la veu pròpia del Mas amb el **prompt de sistema de la IAIA MarIA** i el trellat rural.\n- **`mistral-nemo:12b`**: el contrapunt europeu de **Mistral Vibe** en local.\n- **`glm4:9b`**: la representació en pes obert de **Z.ai** (THUDM) per a síntesi estructurada.\n- **`deepseek-r1:14b`**: el raonament pas a pas de **Deepseek** per a caça de bugs i lògica pura.\n- **`qwen2.5-coder:14b` i `qwen3:8b`**: els motors de **Qwen** per a assistència de codi i autocompletat ràpid (el rol de trinxera de **Copilot**).\n- **`gemma3:12b`, `phi4:14b` i `hermes3:8b`**: la **Quadrilla local** per a síntesi pedagògica, lògica compacta i pluja d'idees sense filtres corporatius.\n\nQuan s'escriu codi, textos públics o articles culturals nous, estes **8 escoles locals** formen un **segon parell d'ulls obligatori** que completa **nou mirades** juntament amb l'agent autor de l'Anell 1 (Gauntlet local), revisant la fidelitat geogràfica i comarcal (**La Torre de les Maçanes = L'Alacantí**), la precisió acústica de les veus, l'honestedat documental i el respecte a la dignitat humana. En el mateix Mac mini M4 treballen també el servei obert de síntesi de veu **Matxa-TTS v2 Multiaccent** (260 MB ONNX, Projecte AINA, connectat en viu a `https://socdepoble.cat/api/v1/node0/veu` amb set veus obertes verificades pel seu to fonamental i marc filològic **NEL-VIVES** de la Universitat d'Alacant, mentre **F5-TTS-MLX** s'estudia al taller per a futures gravacions comunitàries CC BY-SA 4.0) i el vigilant matinal de frescor editorial (`org.socdepoble.node0.frescor-editorial`), que comprova cada dia en **només lectura** que les pàgines públiques i la Wiki estiguen al dia de les últimes entregues.\n\n### Anell 3 · Cerca Verificada i Documents Llargs\n\nQuan una tasca demana **fonts externes o ingesta documental massiva**, l'equip combina les eines del Mas amb les membres especialistes:\n\n- **Perplexity** + **Lector RSS intern (`/app/lector`)**: verificació de fets en viu i seguiment independent de les fonts de codi obert i tecnologia rural des del mateix lector de Sóc de Poble.\n- **Grok** + **`hermes3:8b`**: exploració d'idees disruptives i contrapunt creatiu.\n- **Kimi** i **Dola**: lectura de **dossiers llargs i convocatòries europees** (com NGI Fediversity) i organització del calendari humà del Mestre.\n\n### El Desdoblament Operatiu, la Simbiosi Pesos Locals + Hermes Agent i la Frontera Sistema vs Editorial vs Plugins\n\nEn l'execució diària i nocturna sobre el codi, les **8 escoles locals del Node 0** (`iaia-maria:latest`, `qwen2.5-coder:14b`, `deepseek-r1:14b`, `hermes3:8b`, `mistral-nemo:12b`, `glm4:9b`, `gemma3:12b` i `phi4:14b`) i les **3 fronteres d'enginyeria** (Claude, ChatGPT Codex i Gemini) operen amb la **IAIA MarIA desdoblada** en dos llocs alhora: com a model local dins del Mac mini M4 i com a Directora Tècnica en Antigravity, assistides per Perplexity i el Lector RSS (`/app/lector`). Dins del Mac mini M4 conviuen dues capes complementàries representades a la nostra **Infografia Didàctica Pedra Seca (estil NotebookLM, passos 1 → 2 → 3 → 4)**: la **Capa 1 (`Motor local de pesos oberts` / `Open WebUI · OpenClaw`)**, que guarda al disc els `62,8 GB` de pesos de les 8 escoles locals i en carrega una o dues alhora a la memòria unificada de 24 GiB, i la **Capa 2 (`Hermes Agent`, creat per *Nous Research* i diferent del model neuronal `hermes3:8b`)**, que aporta la memòria episòdica persistent en SQLite FTS5, l'agenda de tasques i el Pont de WhatsApp. Tota aquesta activitat i el cabal de [«La IAIA Sabuda»](https://socdepoble.org/page/la-iaia-sabuda) (llibres de Pep Cascant i Javi Llinares, Wiki de Poble, 62,8 GB de pesos locals i els 8.132 municipis de l'INE) es documenten a la Wiki de Poble, i la **Consola Termodinàmica** del sistema en mostra les skills, els agents i els fluxos declarats. La plataforma manté una separació estricta entre:\n\n- **Sistema (immutable):** les seccions estructurals de la barra lateral superior (`Xat`, `Mur`, `Mercat`, `Pobles`, `Notes`, `Calendari`, `Multimèdia`, `Dispositius`, `Disseny` i `Wiki de Poble`), cadascuna amb la seua definició de Card i imatge Hero pròpia.\n- **Editorial (revista i manifest):** les pàgines de fons davall la línia divisòria (`El Projecte`, `Constitució`, `Ànima`, `Mapa de Ruta`, `Versions` i `Legalitat`), governades per l'etiqueta d'acció `Editorial`.\n- **Plugins i Laboratori (`/control`):** les eines del Panell de Control (`Mapa`, `Vehicle Compartit` i `Animalets`, que publiquen al poble) i les apps de la plataforma (`Gestoria`, `TPV del Bar`, `Rebost`, `Salut`, `Arbre Genealògic` i `Lector RSS`), que guarden les dades en este dispositiu (l'`Arbre Genealògic` no cerca als arxius ni envia res: prepara consultes i prompts que copia la persona); `L’Avisador` (Batec de Vida, a «La llar») avisa pel Xat les persones de confiança i en guarda els ajustos en este dispositiu; i una eina que encara és en proves ho diu a la seua targeta amb l'avís «En proves · Beta oberta».\n\n## Regla d'enumeració\n\nQuan es parla del Consell com a conjunt, s'anomenen totes les membres actives sense excepció. Convocar-les totes per a una tasca no és obligatori mai: una tasca local, reversible i ben coberta per proves no necessita un eixam.\n\n> Aquest és l'equip. Quan un sol model dubta, la resta del Consell de les Petorretes fa foc de cobertura.\n\n## Vincles\n\n- [03_equip_ia](?item=03_equip_ia)\n- [00_index_identitat](?item=00_index_identitat)\n"
     },
     {
+      "id": "guia_pas_a_pas",
+      "title": "guia_pas_a_pas",
+      "subtitle": "Guia didàctica pas a pas de totes les capacitats i eines quotidianes de Sóc de Poble, enllaçada amb /page/guia i /page/tot-el-que-pots-fer.",
+      "categoryId": "folder:01_ser",
+      "tags": [
+        "core",
+        "identitat"
+      ],
+      "date": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z",
+      "revisions": 0,
+      "mur": false,
+      "origenEditorial": {
+        "date": "reserva",
+        "updated": "reserva",
+        "revisions": "sense-historial"
+      },
+      "attributes": {
+        "type": "document",
+        "status": "canonic",
+        "visibility": "public",
+        "description": "Guia didàctica pas a pas de totes les capacitats i eines quotidianes de Sóc de Poble, enllaçada amb /page/guia i /page/tot-el-que-pots-fer.",
+        "tags": [
+          "core",
+          "identitat"
+        ],
+        "date": "1970-01-01T00:00:00Z",
+        "updated": "1970-01-01T00:00:00Z",
+        "revisions": 0,
+        "mur": false,
+        "origenEditorial": {
+          "date": "reserva",
+          "updated": "reserva",
+          "revisions": "sense-historial"
+        }
+      },
+      "content": "# Guia pas a pas de Sóc de Poble\n\nAquest capítol acompanya la pàgina interactiva [Tot el que pots fer a Sóc de Poble, pas a pas](https://socdepoble.org/page/tot-el-que-pots-fer) (accessible també per l'àlies curt [socdepoble.org/page/guia](https://socdepoble.org/page/guia)) perquè **qualsevol veí, veïna o associació** puga recórrer amb **paraules planeres** les **eines reals** del projecte en les **cinc llengües de la interfície**, amb **zero taules amples** i **sense tecnicismes innecessaris**.\n\n## Espais compartits de la comunitat\n\n### Publicar i llegir al Mur i al Mercat\n\nAl [Mur](https://socdepoble.org/mur) consultes les **notícies, cròniques i fotografies** de les associacions i del veïnat sense **cap anunci comercial**, i des de les [Notes](https://socdepoble.org/notes) redactes esborranys que pots publicar quan vulgues en el **servidor de Sóc de Poble**. Al [Mercat](https://socdepoble.org/mercat) es comparteixen **anuncis de proximitat** per a productes locals i objectes de segona vida on els **acords i pagaments** es tanquen sempre **directament entre persones**, sense **cap comissió** de plataforma.\n\n### Parlar al Xat i organitzar el Calendari amb assistència RSVP\n\nAl [Xat](https://socdepoble.org/xat) obris **converses directes** amb veïns, canals municipals i consultes amb les **entitats organitzadores** sense que les teues converses es **venguen ni cedisquen** a tercers. Al [Calendari](https://socdepoble.org/calendari) consultes les **festes, cursos i assemblees** en vista mensual o d'agenda, marques la teua assistència amb el selector de **tres opcions** (**Assistiré, Potser o No assistiré**) guardat al navegador i reps un **avís amable de coincidència** si dos actes confirmats se solapen en horari.\n\n## Eines al teu dispositiu i lectura accessible\n\n### Portar la casa, la Salut, l'Arbre Genealògic i l'esborrany per a la Gestoria\n\nLes eines personals i d'associació —[El Rebost i La Nevera](https://socdepoble.org/plugin/rebost), el quadern quotidià [Salut · Cuidant dels Nostres](https://socdepoble.org/plugin/salut), [El Bar](https://socdepoble.org/plugin/tpv), l'[Arbre Genealògic](https://socdepoble.org/plugin/genealogia) amb frase de pas i el [Lector de notícies](https://socdepoble.org/plugin/rss)— funcionen en **proves obertes** guardant les dades de treball **al teu dispositiu**. En particular, la [Gestoria de Poble](https://socdepoble.org/plugin/gestoria) prepara un **esborrany trimestral** net per lliurar-lo a la teua **gestoria humana**, sense enviar res a l'AEAT ni substituir **cap programa fiscal homologat** ni **cap assessorament professional**.\n\n### Activar el Mode Sènior i conéixer els límits de l'Avisador\n\nDes del [Perfil](https://socdepoble.org/el-meu-perfil), del [Panell de Control](https://socdepoble.org/control) i de [L'Avisador](https://socdepoble.org/plugin/avisador) pots encendre d'**un sol toc** el **Mode Sènior (Lectura Gran)**, que amplia el cos de **Noto Sans**, garantix dianes d'almenys **56 × 56 píxels** i eleva el contrast real a **10:1 AAA** sense talls a **320 i 359 píxels**. Quan uses [L'Avisador](https://socdepoble.org/plugin/avisador), recorda sempre que **només funciona amb la sessió oberta**, l'aplicació en marxa i el Xat disponible, i que **no substituïx el 112** ni la teleassistència.\n\n## Vincles\n\n- [00_index_identitat](?item=00_index_identitat)\n- [02_genotip](?item=02_genotip)\n- [el_projecte](?item=el_projecte)\n"
+    },
+    {
       "id": "personalitat_iaia",
       "title": "personalitat_iaia",
       "subtitle": "Prioritats, to i protocol de treball de la IAIA MarIA; el cens del Consell viu a agents_equip_ia.",
@@ -415,8 +454,8 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-16T21:21:14+01:00",
-      "revisions": 22,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 23,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -434,8 +473,8 @@ export const wikiManifest = {
           "Arquitectura tècnica"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-16T21:21:14+01:00",
-        "revisions": 22,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 23,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -603,8 +642,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-03T14:33:41+01:00",
-      "revisions": 19,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 20,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -621,8 +660,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-03T14:33:41+01:00",
-        "revisions": 19,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 20,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -643,8 +682,8 @@ export const wikiManifest = {
         "skills"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 4,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 5,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -661,8 +700,8 @@ export const wikiManifest = {
           "skills"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 4,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 5,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -683,8 +722,8 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-03T14:33:41+01:00",
-      "revisions": 4,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 5,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -701,8 +740,8 @@ export const wikiManifest = {
           "maquina"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-03T14:33:41+01:00",
-        "revisions": 4,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 5,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -723,8 +762,8 @@ export const wikiManifest = {
         "tractors"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-18T16:29:51+01:00",
-      "revisions": 8,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 9,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -741,8 +780,8 @@ export const wikiManifest = {
           "tractors"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-18T16:29:51+01:00",
-        "revisions": 8,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 9,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -803,8 +842,8 @@ export const wikiManifest = {
         "govern"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-03T14:33:41+01:00",
-      "revisions": 4,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 5,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -821,8 +860,8 @@ export const wikiManifest = {
           "govern"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-03T14:33:41+01:00",
-        "revisions": 4,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 5,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -1244,8 +1283,8 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-11-01T12:55:26+01:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 4,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 5,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -1261,8 +1300,8 @@ export const wikiManifest = {
           "maquina"
         ],
         "date": "2026-11-01T12:55:26+01:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 4,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 5,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -1539,8 +1578,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 17,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 18,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -1557,8 +1596,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 17,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 18,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2287,8 +2326,8 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 20,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 21,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -2303,8 +2342,8 @@ export const wikiManifest = {
           "maquina"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 20,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 21,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2433,8 +2472,8 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-07-16T15:53:41+02:00",
-      "updated": "2026-11-14T18:20:29+01:00",
-      "revisions": 20,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 21,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -2452,8 +2491,8 @@ export const wikiManifest = {
           "Successió Lázaro"
         ],
         "date": "2026-07-16T15:53:41+02:00",
-        "updated": "2026-11-14T18:20:29+01:00",
-        "revisions": 20,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 21,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2474,8 +2513,8 @@ export const wikiManifest = {
         "portes"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-03T14:33:41+01:00",
-      "revisions": 5,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 6,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -2492,8 +2531,8 @@ export const wikiManifest = {
           "portes"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-03T14:33:41+01:00",
-        "revisions": 5,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 6,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2548,8 +2587,8 @@ export const wikiManifest = {
         "saber"
       ],
       "date": "2026-07-19T19:46:01+02:00",
-      "updated": "2026-11-03T14:33:41+01:00",
-      "revisions": 15,
+      "updated": "2026-11-19T22:27:05+01:00",
+      "revisions": 16,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -2564,8 +2603,8 @@ export const wikiManifest = {
           "saber"
         ],
         "date": "2026-07-19T19:46:01+02:00",
-        "updated": "2026-11-03T14:33:41+01:00",
-        "revisions": 15,
+        "updated": "2026-11-19T22:27:05+01:00",
+        "revisions": 16,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2668,10 +2707,11 @@ export const wikiManifest = {
     {
       "id": "00_index_actuar",
       "title": "00_index_actuar",
-      "subtitle": "Índex de l'anell Actuar, on aniran les fitxes curtes dels scripts i les eines, amb l'accés al catàleg de plantilles del circuit documental.",
+      "subtitle": "Índex vertical de l'anell Actuar amb el mapa funcional de portes, scripts i el catàleg de plantilles documentals sense taules amples.",
       "categoryId": "folder:03_actuar",
       "tags": [
-        "skills"
+        "skills",
+        "portes"
       ],
       "date": "2026-09-08T19:11:12+02:00",
       "updated": "2026-09-26T12:23:49+02:00",
@@ -2684,10 +2724,12 @@ export const wikiManifest = {
       },
       "attributes": {
         "type": "index",
-        "status": "esborrany",
-        "description": "Índex de l'anell Actuar, on aniran les fitxes curtes dels scripts i les eines, amb l'accés al catàleg de plantilles del circuit documental.",
+        "status": "canonic",
+        "visibility": "public",
+        "description": "Índex vertical de l'anell Actuar amb el mapa funcional de portes, scripts i el catàleg de plantilles documentals sense taules amples.",
         "tags": [
-          "skills"
+          "skills",
+          "portes"
         ],
         "date": "2026-09-08T19:11:12+02:00",
         "updated": "2026-09-26T12:23:49+02:00",
@@ -2699,7 +2741,7 @@ export const wikiManifest = {
           "revisions": "git"
         }
       },
-      "content": "# Actuar (scripts i eines)\n\nL'anell Actuar explica com es fan les coses sense guardar el codi que les fa. Els scripts viuen a `tooling/` i `scripts/`, els procediments a `.agents/skills/`, i de moment ací només hi ha les plantilles del circuit documental.\n\nEl codi es queda fora a posta: la IAIA només necessita saber per a què servix un script, no carregar centenars de línies irrellevants al seu context.\n\n## Catàleg de fitxes tècniques\n\nCada fitxa apuntarà a l'script extern i n'indicarà el risc (`lectura`, `escriptura` o `destructiu`). De moment, el catàleg viu és el de plantilles:\n\n- [plantilles/00_index_plantilles](?item=00_index_plantilles)\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [plantilles/00_index_plantilles](?item=00_index_plantilles)\n"
+      "content": "# Actuar: scripts, portes i plantilles\n\nL'anell **Actuar** explica com s'executen les **verificacions** i els **procediments** del repositori sense incrustar-hi el **codi font** ni **taules amples** que trenquen la **lectura mòbil** (`P0-128`). Els **programes executables** viuen a `tooling/` i `scripts/`, els procediments operatius a `.agents/skills/`, l'arquitectura d'enginyeria per a equips externs a `ARCHITECTURE.md` i les plantilles documentals ací mateix.\n\n## Famílies d'eines verificables (lectura vertical)\n\n### Portes d'arquitectura, seguretat i estil (`tooling/gates/`)\n\n- **Àmbit d'execució:** pre-commit (`.husky/pre-commit`), integració contínua i `npm run porta -- --nomes-portes`.\n- **Nivell de risc:** `lectura` (verificació estàtica i sobre artefactes compilats; bloqueja amb eixida diferent de zero si detecta una regressió).\n- **Peces clau:** `tractor-frontissa.mjs`, `tractor-adaptadors.mjs`, `tractor-enxufe.mjs`, `tractor-rls.mjs`, `tractor-psicopatia.mjs`, `design_guard.mjs`, `certifica-enllacos.mjs` i `tractor-coherencia-editorial-viva.mjs`.\n\n### Higiene documental i compilació de la Wiki (`tooling/wiki/`)\n\n- **Àmbit d'execució:** creació i validació de documents amb rebut (`document.mjs`), esquema `wiki-frontmatter-v2.1` (`tractor-frontmatter.mjs`), graf sense orfes (`tractor-orfandat.mjs`) i projecció a l'aplicació (`compile-wiki-to-app.mjs`).\n- **Nivell de risc:** `lectura` en mode auditoria; `escriptura` acotada quan es compila `src/data/wikiManifest.js` o es crea un document de torn a `04_escriptori/`.\n\n### Cobertura social, SEO i dades obertes (`tooling/seo/` i `scripts/`)\n\n- **Àmbit d'execució:** validació de cobertura social del router (`cobertura-router.mjs`), generació de `public/llms.txt` i còpies Markdown públiques (`genera-llms.mjs`), pla d'ordre de migracions SQL (`scripts/supabase/verifica-migracions.mjs`) i preflight de botigues (`scripts/botigues/`).\n- **Nivell de risc:** `lectura` en verificació; `escriptura` reproduïble sobre artefactes de `public/` i `dist/` durant el build.\n\n## Catàleg de plantilles operatives\n\nCada ruta declarada a `.agents/protocolledge.json` instancia la seua plantilla des de la subcarpeta següent:\n\n- [plantilles/00_index_plantilles](?item=00_index_plantilles)\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [00_arquitectura_tecnica_unificada](?item=00_arquitectura_tecnica_unificada)\n- [plantilles/00_index_plantilles](?item=00_index_plantilles)\n"
     },
     {
       "id": "00_index_plantilles",

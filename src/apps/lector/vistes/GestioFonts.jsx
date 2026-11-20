@@ -27,7 +27,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alerta, Boto, Camp, CampText, Carregant, Dialeg, EstatBuit, GrupCamps, Interruptor, LiniesColleccio, Selector
 } from '../../../components/PedraSeca/index.js';
-import { textosLector } from '../i18nLector.js';
+import { textErrorCopiaLector, textMotiuPersonalLector, textosLector } from '../i18nLector.js';
 import { MAX_BYTES_COPIA_LECTOR } from '../nucli/copia.js';
 import { llocDe, seguix } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
@@ -171,7 +171,7 @@ function AfigFont({ formulari }) {
       setCarpeta(SENSE_CARPETA);
       setError(null);
     } catch (motiuDelDisc) {
-      const text = typeof motiuDelDisc?.message === 'string' && motiuDelDisc.message ? motiuDelDisc.message : tx.noShaPogutAfegir;
+      const text = textMotiuPersonalLector(motiuDelDisc, idioma);
       setError({ camp: typeof motiuDelDisc?.camp === 'string' ? motiuDelDisc.camp : null, text });
     } finally {
       setEnviant(false);
@@ -239,7 +239,7 @@ function CopiaDelLector() {
       const total = await lector.accions.importaCopia(await fitxer.text());
       setAvis({ to: 'exit', text: tx.copiaImportada(total) });
     } catch (error) {
-      setAvis({ to: 'error', text: error?.codi ? error.message : tx.noImportaCopia });
+      setAvis({ to: 'error', text: textErrorCopiaLector(error, idioma) });
     } finally {
       setImportant(false);
     }

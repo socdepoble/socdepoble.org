@@ -749,6 +749,8 @@ export default {
   'section.events.rsvp.titol': 'Assistiràs a este esdeveniment?',
   'section.events.rsvp.si': 'Sí, compta amb mi',
   'section.events.rsvp.potser': 'Potser',
+  'section.events.rsvp.curt.si': 'Assistiré',
+  'section.events.rsvp.curt.no': 'No assistiré',
   'section.events.rsvp.no': 'No podré anar-hi',
   'section.events.rsvp.notaLabel': 'Vols afegir un comentari o motiu? (opcional)',
   'section.events.rsvp.notaPlaceholder': 'Ex.: Eixes dates coincidixen amb festes al meu poble, anem dos en cotxe…',

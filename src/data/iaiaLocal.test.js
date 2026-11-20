@@ -302,12 +302,14 @@ describe('amb la Wiki de veres del paquet', () => {
      nota?») continuen sense cap font; «Què és un node?» respon amb el document
      del Model B (decisió del Mestre, xat 261031). */
   test.each([
-    ['Com puc publicar al Mercat?', 'sense_resultats'],
+    /* Onada v1.2.13 · El capítol públic guia_pas_a_pas (Gemini R32.16, IDEA-287) nomena «publicar» i el Mercat a la
+       mateixa secció (no n'explica els passos): la pregunta passa de sense_resultats a eixa font, i entra a les permeses d'altres dues files (actualitzat a posta). */
+    ['Com puc publicar al Mercat?', 'resposta', 'guia_pas_a_pas', ['guia_pas_a_pas']],
     ['Què és la Gestoria?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
       ['ADR-2026-12-MODULS-OPCIONALS', 'ADR-2026-13-BYOP-XIFRAT-LOCAL', 'ADR-2026-10-APPS-DEL-DISPOSITIU']],
     ['Com pujo una foto al xat?', 'sense_resultats'],
     ['Qui porta Sóc de Poble?', 'resposta', '00_visio_i_pilars',
-      ['00_full_de_ruta', '00_visio_i_pilars', 'identitat_visual', 'el_projecte', 'arquitectura_l_anima', '01_identitat', '00_index_identitat']],
+      ['00_full_de_ruta', '00_visio_i_pilars', 'identitat_visual', 'el_projecte', 'arquitectura_l_anima', '01_identitat', '00_index_identitat', 'guia_pas_a_pas']],
     ['Com esborre el meu compte?', 'sense_resultats'],
     /* Lot 5 (Codex, reconciliat per Claude) · Decisió del Mestre (xat 261031):
        la IAIA local pot respondre «Què és un node?» amb el document verificat
@@ -327,7 +329,7 @@ describe('amb la Wiki de veres del paquet', () => {
     ['Quant costa?', 'sense_resultats'],
     ['Com instal·le l’app al mòbil?', 'sense_resultats'],
     ['Com em registre?', 'sense_resultats'],
-    ['Què és el Rebost?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS', ['ADR-2026-12-MODULS-OPCIONALS']],
+    ['Què és el Rebost?', 'resposta', 'guia_pas_a_pas', ['guia_pas_a_pas', 'ADR-2026-12-MODULS-OPCIONALS']],
     ['Com funciona el Bar?', 'resposta', 'ADR-2026-12-MODULS-OPCIONALS',
       ['ADR-2026-12-MODULS-OPCIONALS', 'ADR-2026-10-APPS-DEL-DISPOSITIU', 'ADR-2026-13-BYOP-XIFRAT-LOCAL']],
     ['Com passe les portes de qualitat?', 'sense_resultats']

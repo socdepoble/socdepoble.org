@@ -15,21 +15,21 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import {
-  accionsQueCalmen, antecedentsFrequents, associacioMiccio, episodis, episodisPerHora, FRANGES, nitsDolentes, perFranja,
-  textAssociacio
-} from '../nucli/agitacio.js';
+  etiquetaDataLlargaSalut, etiquetaDataSalut, etiquetaValorSalut, frangesSalut,
+  textAssociacioSalut, textErrorSalut, valoracioSetmanalSalut
+} from '../i18nSalut.js';
 import {
-  AVIS_VALORACIO, DOMINIS_VALORACIO, FREQUENCIES_VALORACIO, GRUPS_CONDUCTA, INSTRUMENTS_OFICIALS, campDe, etiquetaValor
-} from '../nucli/diccionari.js';
-import { dataCurta, dillunsDe, etiquetaData, etiquetaDataLlarga, horaDe, sumaDies } from '../nucli/hores.js';
-import { textError } from '../textos.js';
+  accionsQueCalmen, antecedentsFrequents, associacioMiccio, episodis, episodisPerHora, nitsDolentes, perFranja
+} from '../nucli/agitacio.js';
+import { INSTRUMENTS_OFICIALS } from '../nucli/diccionari.js';
+import { dataCurta, dillunsDe, horaDe, sumaDies } from '../nucli/hores.js';
 import { useSalut } from '../useSalut.jsx';
 import { EnllacBoto, EnllacDetall, MarcSalut, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 
 /* Els patrons es miren sobre les últimes quatre setmanes. */
 const DIES_PATRONS = 28;
-const e = (clau, valor) => etiquetaValor(campDe('conducta', clau), valor);
-const llista = (clau, valors) => (valors || []).map((valor) => e(clau, valor)).join(', ');
+const e = (clau, valor, idioma = 'ca') => etiquetaValorSalut('conducta', clau, valor, idioma);
+const llista = (clau, valors, idioma = 'ca') => (valors || []).map((valor) => e(clau, valor, idioma)).join(', ');
 
 function useAgitacioActiva() {
   const { actiu } = useInterruptorsSalut();
@@ -48,7 +48,7 @@ function Apagat() {
 
 export function Episodis({ params }) {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const activa = useAgitacioActiva();
@@ -56,12 +56,12 @@ export function Episodis({ params }) {
   if (!activa) return <MarcSalut titol={tx.episodis} columna="mig"><Apagat /></MarcSalut>;
   const llistaEpisodis = episodis(salut.apunts).reverse();
   const dates = [...new Set(llistaEpisodis.map((apunt) => apunt.jornada))];
-  const categories = dates.map((data, ordre) => ({ id: data, nom: etiquetaDataLlarga(data), visible: true, ordre }));
+  const categories = dates.map((data, ordre) => ({ id: data, nom: etiquetaDataLlargaSalut(data, idioma), visible: true, ordre }));
   const articles = llistaEpisodis.map((apunt) => ({
     id: apunt.id,
-    nom: `${horaDe(apunt.moment)} · ${e('intensitat', apunt.intensitat)}`,
-    secundari: llista('conductes', apunt.conductes),
-    valor: e('resultat', apunt.resultat),
+    nom: `${horaDe(apunt.moment)} · ${e('intensitat', apunt.intensitat, idioma)}`,
+    secundari: llista('conductes', apunt.conductes, idioma),
+    valor: e('resultat', apunt.resultat, idioma),
     categoriaId: apunt.jornada,
     estat: params?.apunt === apunt.id ? 'en-colleccio' : 'normal'
   }));
@@ -86,6 +86,7 @@ export function Episodis({ params }) {
 
 export function Patrons() {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const activa = useAgitacioActiva();
   if (!salut.carregat) return null;
@@ -96,7 +97,11 @@ export function Patrons() {
   const completes = [...salut.jornades.values()].filter((j) => j.completa && j.data >= des && j.data <= salut.avui).map((j) => j.data).sort();
   const hores = episodisPerHora(llistaEpisodis);
   const franges = perFranja(llistaEpisodis);
-  const associacio = textAssociacio(associacioMiccio(recents, { persona: salut.persona, jornadesCompletes: completes, ofsetDe: salut.ofsetDe }));
+  const frangesList = frangesSalut(idioma);
+  const associacio = textAssociacioSalut(
+    associacioMiccio(recents, { persona: salut.persona, jornadesCompletes: completes, ofsetDe: salut.ofsetDe }),
+    idioma
+  );
   const nits = nitsDolentes(recents, completes);
   const barres = hores.map((valor, hora) => {
     const text = String(hora).padStart(2, '0');
@@ -111,14 +116,14 @@ export function Patrons() {
           <Histograma titol={tx.episodisPerHora} barres={barres} unitat={tx.unitatEpisodis} />
           <Taula titol={tx.episodisPerFranja}>
             <tbody>
-              {FRANGES.map((franja) => <tr key={franja.id}><th scope="row">{franja.etiqueta}</th><td>{franges[franja.id]}</td></tr>)}
+              {frangesList.map((franja) => <tr key={franja.id}><th scope="row">{franja.etiqueta}</th><td>{franges[franja.id]}</td></tr>)}
             </tbody>
           </Taula>
           <Taula titol={tx.quePassavaAbans}>
             <thead><tr><th scope="col">{tx.quePassava}</th><th scope="col">{tx.vegades}</th></tr></thead>
             <tbody>
               {antecedentsFrequents(llistaEpisodis).map((fila) => (
-                <tr key={fila.valor}><th scope="row">{e('antecedents', fila.valor)}</th><td>{fila.vegades}</td></tr>
+                <tr key={fila.valor}><th scope="row">{e('antecedents', fila.valor, idioma)}</th><td>{fila.vegades}</td></tr>
               ))}
             </tbody>
           </Taula>
@@ -126,7 +131,7 @@ export function Patrons() {
             <thead><tr><th scope="col">{tx.queHemFet}</th><th scope="col">{tx.vegades}</th><th scope="col">{tx.esCalmaPrompte}</th></tr></thead>
             <tbody>
               {accionsQueCalmen(llistaEpisodis).map((fila) => (
-                <tr key={fila.valor}><th scope="row">{e('accions', fila.valor)}</th><td>{fila.vegades}</td><td>{`${fila.calmaPrompte} (${fila.percent} %)`}</td></tr>
+                <tr key={fila.valor}><th scope="row">{e('accions', fila.valor, idioma)}</th><td>{fila.vegades}</td><td>{`${fila.calmaPrompte} (${fila.percent} %)`}</td></tr>
               ))}
             </tbody>
           </Taula>
@@ -145,20 +150,20 @@ export function Patrons() {
 
 export function EpisodiDetall({ params }) {
   const salut = useSalut();
-  const { ruta } = useApp();
+  const { ruta, idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   if (!salut.carregat) return null;
   const apunt = salut.apunts.find((candidat) => candidat.id === params.apunt && candidat.tipus === 'conducta');
   if (!apunt) return <MarcSalut titol={tx.episodi}><EstatBuit titol={tx.noTrobat}>{tx.episodiNoExistix}</EstatBuit></MarcSalut>;
   const files = [
-    [tx.quan, tx.aLes(etiquetaDataLlarga(apunt.jornada), horaDe(apunt.moment))],
-    [tx.titolPas.a, llista('conductes', apunt.conductes)],
-    [tx.comDeFort, e('intensitat', apunt.intensitat)],
+    [tx.quan, tx.aLes(etiquetaDataLlargaSalut(apunt.jornada, idioma), horaDe(apunt.moment))],
+    [tx.titolPas.a, llista('conductes', apunt.conductes, idioma)],
+    [tx.comDeFort, e('intensitat', apunt.intensitat, idioma)],
     [tx.quantHaDurat, apunt.duradaMin ? `${apunt.duradaMin} min` : '—'],
-    [tx.quePassavaAbans, [llista('antecedents', apunt.antecedents), apunt.antecedentsAltre].filter(Boolean).join('; ') || '—'],
-    [tx.queHemFet, llista('accions', apunt.accions) || '—'],
-    [tx.comHaAcabat, e('resultat', apunt.resultat)],
-    [tx.perill, llista('risc', apunt.risc) || tx.cap],
+    [tx.quePassavaAbans, [llista('antecedents', apunt.antecedents, idioma), apunt.antecedentsAltre].filter(Boolean).join('; ') || '—'],
+    [tx.queHemFet, llista('accions', apunt.accions, idioma) || '—'],
+    [tx.comHaAcabat, e('resultat', apunt.resultat, idioma)],
+    [tx.perill, llista('risc', apunt.risc, idioma) || tx.cap],
     [tx.nota, apunt.nota || '—']
   ];
   return (
@@ -178,11 +183,12 @@ export function EpisodiDetall({ params }) {
 
 export function Valoracions() {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   if (!salut.carregat) return null;
   const articles = salut.valoracions.slice().sort((a, b) => (a.setmanaInici < b.setmanaInici ? 1 : -1)).map((v) => ({
-    id: v.setmanaInici, nom: tx.setmanaDel(etiquetaData(v.setmanaInici)), secundari: v.oficial ? `${v.oficial.instrument}: ${v.oficial.total}` : '', categoriaId: 'valoracions'
+    id: v.setmanaInici, nom: tx.setmanaDel(etiquetaDataSalut(v.setmanaInici, idioma)), secundari: v.oficial ? `${v.oficial.instrument}: ${v.oficial.total}` : '', categoriaId: 'valoracions'
   }));
   return (
     <MarcSalut titol={tx.valoracionsSetmanals} columna="mig"
@@ -200,8 +206,6 @@ const opcionsNumeriques = (min, max, etiquetes = null) => Array.from({ length: m
   const valor = String(min + i);
   return { valor, etiqueta: etiquetes?.[i] || valor };
 });
-const GRAVETATS = ['0 · No', '1 · Lleu', '2 · Moderada', '3 · Greu'];
-const ANGOIXES = ['0 · Gens', '1', '2', '3', '4', '5 · Moltíssima'];
 
 /* Un formulari per setmana: canviar de setmana el torna a muntar, sense esborranys d'una altra. */
 export function ValoracioSetmanal({ params }) {
@@ -212,7 +216,9 @@ export function ValoracioSetmanal({ params }) {
 
 function FormulariValoracio({ setmana }) {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
+  const vTr = valoracioSetmanalSalut(idioma);
   const existent = salut.valoracions.find((v) => v.setmanaInici === setmana) || null;
   const inicial = useMemo(() => existent || { conductesFreq: {}, dominis: {} }, [existent]);
   const [esborrany, setEsborrany] = useState(null);
@@ -234,32 +240,32 @@ function FormulariValoracio({ setmana }) {
       setEsborrany(null);
       setMissatge({ to: 'exit', text: tx.valoracioDesada });
     } catch (error) {
-      setMissatge({ to: 'error', text: textError(error) });
+      setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
     }
   };
   return (
     <MarcSalut titol={tx.setmanaDel(dataCurta(setmana))}>
       <form onSubmit={desa} noValidate aria-label={tx.valoracioSetmanal}>
         <Pila gap={4}>
-          <Alerta to="info" viva={false}>{AVIS_VALORACIO}</Alerta>
+          <Alerta to="info" viva={false}>{vTr.avis}</Alerta>
           <GrupCamps llegenda={tx.quantesVegadesSetmana}>
-            {GRUPS_CONDUCTA.map((grup) => (
+            {vTr.grups.map((grup) => (
               <Camp key={grup.id} etiqueta={grup.etiqueta}>
                 <Selector value={valors.conductesFreq?.[grup.id] === undefined ? '' : String(valors.conductesFreq[grup.id])}
-                  opcions={[{ valor: '', etiqueta: tx.senseDir }, ...FREQUENCIES_VALORACIO.map((o) => ({ valor: String(o.valor), etiqueta: o.etiqueta }))]}
+                  opcions={[{ valor: '', etiqueta: tx.senseDir }, ...vTr.frequencies.map((o) => ({ valor: String(o.valor), etiqueta: o.etiqueta }))]}
                   onChange={(event) => posaFreq(grup.id, event.target.value)} />
               </Camp>
             ))}
           </GrupCamps>
           <GrupCamps llegenda={tx.comHaEstatIViscut}>
-            {DOMINIS_VALORACIO.map((domini) => (
+            {vTr.dominis.map((domini) => (
               <Fila key={domini.valor} gap={4} align="flex-end">
                 <Camp etiqueta={tx.dominiFort(domini.etiqueta)}>
-                  <Selector value={String(valors.dominis?.[domini.valor]?.gravetat ?? 0)} opcions={opcionsNumeriques(0, 3, GRAVETATS)}
+                  <Selector value={String(valors.dominis?.[domini.valor]?.gravetat ?? 0)} opcions={opcionsNumeriques(0, 3, vTr.gravetats)}
                     onChange={(event) => posaDomini(domini.valor, 'gravetat', event.target.value)} />
                 </Camp>
                 <Camp etiqueta={tx.dominiAngoixa(domini.etiqueta)}>
-                  <Selector value={String(valors.dominis?.[domini.valor]?.angoixa ?? 0)} opcions={opcionsNumeriques(0, 5, ANGOIXES)}
+                  <Selector value={String(valors.dominis?.[domini.valor]?.angoixa ?? 0)} opcions={opcionsNumeriques(0, 5, vTr.angoixes)}
                     onChange={(event) => posaDomini(domini.valor, 'angoixa', event.target.value)} />
                 </Camp>
               </Fila>

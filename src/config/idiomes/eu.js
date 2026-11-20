@@ -754,6 +754,8 @@ export default {
   'section.events.rsvp.titol': 'Ekitaldi honetara joango zara?',
   'section.events.rsvp.si': 'Bai, kontatu nirekin',
   'section.events.rsvp.potser': 'Beharbada',
+  'section.events.rsvp.curt.si': 'Joango naiz',
+  'section.events.rsvp.curt.no': 'Ez naiz joango',
   'section.events.rsvp.no': 'Ezingo naiz joan',
   'section.events.rsvp.notaLabel': 'Iruzkina edo arrazoia gehitu nahi duzu? (aukerakoa)',
   'section.events.rsvp.notaPlaceholder': 'Adib.: Data horiek nire herriko jaiekin bat datoz, bi lagun goaz autoan…',

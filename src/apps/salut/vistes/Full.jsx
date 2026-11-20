@@ -10,10 +10,9 @@ import { FileSpreadsheet } from 'lucide-react';
 import {
   Boto, Camp, CampText, Fila, LlistaArticles, Pila, Selector, Taula
 } from '../../../components/PedraSeca/index.js';
-import { esData } from '../../plataforma/index.js';
+import { esData, useApp } from '../../plataforma/index.js';
+import { etiquetaDataLlargaSalut, resumFullTraduit, textCoberturaSalut } from '../i18nSalut.js';
 import { fullDiari } from '../nucli/full.js';
-import { etiquetaDataLlarga } from '../nucli/hores.js';
-import { textCobertura } from '../nucli/metriques.js';
 import { useSalut } from '../useSalut.jsx';
 import { MarcSalut, diesPossiblesAmb, useNavegaSalut, usePeriodeTriat, useTextosSalut } from './comunes.jsx';
 import { DialegExportacio } from './DialegExportacio.jsx';
@@ -40,29 +39,34 @@ const cela = (valor) => {
 
 export function ResumDies() {
   const { full, des, dies } = useFullDelPeriode();
+  const { idioma = 'ca' } = useApp();
   const navega = useNavegaSalut();
   const tx = useTextosSalut();
   if (!full) return null;
   const articles = full.periode.jornades.map((m) => ({
     id: m.data,
-    nom: etiquetaDataLlarga(m.data),
-    secundari: tx.secundariJornadaFull(m.frequenciaDiurna, m.nicturia, textCobertura(m)),
+    nom: etiquetaDataLlargaSalut(m.data, idioma),
+    secundari: tx.secundariJornadaFull(m.frequenciaDiurna, m.nicturia, textCoberturaSalut(m, idioma)),
     valor: m.completa ? tx.completa : tx.oberta,
     categoriaId: 'periode'
   }));
   return (
-    <MarcSalut titol={tx.diesDesDe(dies, etiquetaDataLlarga(des))} columna="mig">
+    <MarcSalut titol={tx.diesDesDe(dies, etiquetaDataLlargaSalut(des, idioma))} columna="mig">
       <LlistaArticles articles={articles} etiqueta={tx.jornadesDelPeriode} onTria={(article) => navega(['dies', article.id])} />
     </MarcSalut>
   );
 }
 
 export function FullMetge() {
-  const { full, des, dies, posa } = useFullDelPeriode();
+  const salut = useSalut();
+  const { full, des, fins, dies, posa } = useFullDelPeriode();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [obert, setObert] = useState(false);
   if (!full) return null;
-  const [resum] = full.model.fulles;
+  const resum = resumFullTraduit(full.model.fulles[0], {
+    des, fins, dies, completes: full.periode.completes, nomPersona: salut.persona.alias, idioma
+  });
   const capcalera = resum.files.slice(0, 3).map((fila) => fila[0]);
   const files = resum.files.slice(3);
   const eines = (

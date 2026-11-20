@@ -21,7 +21,7 @@ import {
   TIPUS_GED, TIPUS_JSON, creaCopiaJson, descarregaText, escriuGedcom, llegeixFitxerArbre, lligTextFitxerArbre, nomFitxer
 } from '../gedcom/index.js';
 import { MIDA_MAXIMA_IMPORTACIO, useGenealogia } from '../nucli/index.js';
-import { textCodiLectura, textError } from '../textos.js';
+import { textCodiLectura, textError } from '../i18nGenealogia.js';
 import { BotoCopia, CasellaVius, EnllacBoto, MarcGenealogia, useIdioma, useNavegaGenealogia, useT } from './comunes.jsx';
 
 const FORMATS = Object.freeze(['ged7', 'ged551', 'json']);

@@ -47,6 +47,15 @@
 .sdp-gestor-pagina {
   height: 100%;
 }
+.sdp-gestor-pagina.perfil-pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sdp-gestor-pagina.perfil-pagina > .sdp-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+}
 
 /* La llista neutralitza la tipografia editorial global de ul/li:
    sagnat de 28px, pic, i 8px de marge entre elements. */
@@ -905,6 +914,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   .sdp-pindola__icona { display: inline-flex; }
   /* Centrat dins d'un bloc (Onboarding): 0,1,0 com .sdp-pindola, va després. */
   .sdp-pindola--centrada { display: flex; width: fit-content; margin-inline: auto; }
+  .sdp-pindola--vertical { flex-direction: column; align-items: stretch; border-radius: var(--sdp-radi-m); }
   /* PS-10 (marató 261101_2143, B7f; default D-3 del Mestre) · El Mur en
      mòbil. Amb la pàgina a 480px o menys (el contenidor és la
      .sdp-universal-page-container, T20), les píndoles del Mur van en una sola
@@ -12867,7 +12877,7 @@ details[open] summary.accordion-header svg:last-child {
     }
     .sdp-workspace-detail header.page-title h1,
     .sdp-workspace-detail header.page-title .h1 {
-      font-size: max(var(--sdp-fluid-h2), clamp(var(--sdp-text-h6), 0.95rem + 3.5cqi, var(--sdp-text-h4)));
+      font-size: max(calc(var(--sdp-fluid-h2) + 0.125rem), clamp(var(--sdp-text-h6), 0.95rem + 3.5cqi, var(--sdp-text-h4)));
     }
   }
   .sdp-cataleg-workspace__fitxa { min-width: 0; overflow-wrap: anywhere; }
@@ -13824,59 +13834,8 @@ details[open] summary.accordion-header svg:last-child {
     text-align: center;
   }
 
-  /* Quadre blanc editorial dels canals d'actualització a /page/descarregues (T2) */
-  .sdp-guia-canals {
-    background-color: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    padding: var(--sdp-space-4);
-    margin: var(--sdp-space-4) 0;
-    box-sizing: border-box;
-  }
-
-  .sdp-guia-canals__titol {
-    margin: 0 0 var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-  }
-
-  .sdp-guia-canals__intro {
-    margin: 0 0 var(--sdp-space-4);
-    color: var(--sdp-text-cos);
-    line-height: 1.6;
-  }
-
-  .sdp-guia-canals__bloc {
-    padding-top: var(--sdp-space-3);
-    margin-top: var(--sdp-space-3);
-    border-top: 1px solid var(--sdp-vora);
-  }
-
-  .sdp-guia-canals__bloc h4 {
-    margin: 0 0 var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-  }
-
-  .sdp-guia-canals__bloc p {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    line-height: 1.6;
-  }
-
-  .sdp-guia-canals__bloc--avis {
-    background-color: var(--sdp-fons-subtil);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-s);
-    padding: var(--sdp-space-3);
-  }
-
-  .sdp-guia-canals__accions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    margin-top: var(--sdp-space-4);
-  }
+  /* Quadre blanc editorial dels canals d'actualització a /page/descarregues (T2):
+     Onada R32.17 · Lot 03 · ara a src/css/diferit-peu-i-canals.css (useFullDiferit). */
 
   @media (forced-colors: active) {
     .sdp-xat-adjunts-panell__pestanya {
@@ -13915,59 +13874,8 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
-/* ═══ BLOC ONADA R32.10 · D-v126-IDIOMA (peu editorial) + sostre 320px–359px en targetes amb quadrat ═══ */
+/* ═══ BLOC ONADA R32.10 · sostre 320px–359px en targetes amb quadrat (.sdp-peu-editorial-idioma ara a src/css/diferit-peu-i-canals.css) ═══ */
 @layer components {
-  .sdp-peu-editorial-idioma {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-3);
-    padding: var(--sdp-space-4);
-    margin: var(--sdp-space-4) 0;
-    background-color: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    box-sizing: border-box;
-  }
-
-  .sdp-peu-editorial-idioma__text {
-    flex: 1 1 calc(var(--sdp-space-12) * 4);
-    min-width: 0;
-  }
-
-  .sdp-peu-editorial-idioma__titol {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--sdp-space-2);
-    margin: 0 0 var(--sdp-space-1);
-    font-size: var(--sdp-text-base);
-    font-weight: var(--sdp-pes-negreta);
-    color: var(--sdp-text-titol);
-    line-height: var(--sdp-leading-titol);
-  }
-
-  .sdp-peu-editorial-idioma__actual {
-    font-size: var(--sdp-text-meta);
-    font-weight: var(--sdp-pes-semi);
-    color: var(--sdp-text-suau);
-  }
-
-  .sdp-peu-editorial-idioma__subtitol {
-    margin: 0;
-    font-size: var(--sdp-text-meta);
-    color: var(--sdp-text-suau);
-    line-height: var(--sdp-leading-cos);
-  }
-
-  .sdp-peu-editorial-idioma__accio {
-    flex: 0 0 auto;
-    max-inline-size: 100%;
-    white-space: normal;
-  }
-
   @container sdp-arrel (max-width: 359px) {
     .sp-card-body > .sp-card-calendar-badge {
       width: calc(var(--sdp-space-12) * 2);
@@ -14011,4 +13919,14 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-app-unica .sdp-cataleg-workspace .sdp-cataleg-workspace__canonica .sdp-gestor-fitxa__subtitol {
     white-space: normal;
   }
+
+  /* Onada R32.17 · Lot 03 · Zero classes òrfenes (LLEI_01 = 0).
+     Gauntlet v1.2.13 (Llei del Píxel) · Són ganxos semàntics neutres: només declaren el que l'element ja feia (el
+     display per defecte de l'etiqueta, o el max-width d'img de base.css), de manera que la pantalla es veu igual que
+     abans. Donar-los estil propi (la cita amb fons, el vídeo 16:9, la targeta d'enllaç extern) és un redisseny que
+     decidix el Mestre. */
+  .sdp-imatge-cos { max-inline-size: 100%; }
+  .page-content-quote { display: block; }
+  .sdp-embed-video { display: block; }
+  .sdp-targeta-enllac-extern { display: block; }
 }

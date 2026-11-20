@@ -889,8 +889,13 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.12 · Onades R32.14 i R32.15 (ordre del Mestre 19-11-2026, nit; prompt 261119_1754) · Versió unificada 1.2.12
    amb el build 17: integra Codex R32.14 (vista prèvia del Xat sense amagats, contenidors mèdia, mapa 301 i Tellado) i
    Gemini R32.14 (Gestoria en cinc llengües, Rebost a 320 px i Wiki sense taules amples), l'eixida de la cua CAS de
-   publicacions (D-R32.14-1, encara apagada), el pegat P2 de registra_denuncia_diligent i el connector WordPress 1.1.20. */
-export const VERSIO_CLIENT_NATIU = 17;
+   publicacions (D-R32.14-1, encara apagada), el pegat P2 de registra_denuncia_diligent i el connector WordPress 1.1.20.
+   Onada v1.2.13 · Onades R32.15, R32.16 i R32.17 (ordre del Mestre 20-11-2026, nit autònoma; prompt 261120_0016) · Versió
+   unificada 1.2.13 amb el build 18: integra Codex R32.15 (definers, mèdia, federació i matriu D01–D15) i R32.16 (torns
+   caducats, importació editorial i 301, motors en cèntims), Gemini R32.15 (Mode Sènior i micro-apps en cinc llengües),
+   R32.16 (RSVP del Calendari, guia pas a pas i ARCHITECTURE.md) i R32.17 (resolució d'incidències CAS, safata LSSI i
+   LLEI_01 a zero), i el connector WordPress 1.1.21. */
+export const VERSIO_CLIENT_NATIU = 18;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

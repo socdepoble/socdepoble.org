@@ -43,7 +43,7 @@ Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa f
 - [00_arquitectura_tecnica_unificada](https://socdepoble.org/md/00-arquitectura-tecnica-unificada.md): Mapa de l'arquitectura de Sóc de Poble que separa el que està implementat, els contractes vigents i les línies de recerca.
 - [00_full_de_ruta](https://socdepoble.org/md/00-full-de-ruta.md): Registre històric de les llavors de Sóc de Poble, des del que ja funciona fins a les idees per sembrar, amb les retirades per l'online-first.
 - [00_index](https://socdepoble.org/md/00-index.md): Índex mestre del coneixement i dels procediments del projecte
-- [00_index_actuar](https://socdepoble.org/md/00-index-actuar.md): Índex de l'anell Actuar, on aniran les fitxes curtes dels scripts i les eines, amb l'accés al catàleg de plantilles del circuit documental.
+- [00_index_actuar](https://socdepoble.org/md/00-index-actuar.md): Índex vertical de l'anell Actuar amb el mapa funcional de portes, scripts i el catàleg de plantilles documentals sense taules amples.
 - [00_index_identitat](https://socdepoble.org/md/00-index-identitat.md): Mapa de les huit dimensions de la Wiki sobre les sis carpetes vigents i llista dels documents troncals que expliquen qui és Sóc de Poble.
 - [00_index_maquina](https://socdepoble.org/md/00-index-maquina.md): Índex de la maquinària tècnica de Sóc de Poble, amb les decisions d'arquitectura, els estàndards del codi i les portes que el vigilen.
 - [00_index_plantilles](https://socdepoble.org/md/00-index-plantilles.md): Índex de plantilles operatives i històriques conservades per compatibilitat.
@@ -96,6 +96,7 @@ Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa f
 - [futur_adaptacio](https://socdepoble.org/md/futur-adaptacio.md): Defineix com experimentar amb IA local i RAG sense convertir prototips futurs en garanties del sistema.
 - [govern](https://socdepoble.org/md/govern.md): Nota d'etiqueta de la governança de Sóc de Poble, amb qui té autoritat, amb quin abast i on queda registrada cada decisió.
 - [graf](https://socdepoble.org/md/graf.md): Nota d'etiqueta del graf de la Wiki, amb com es cusen els documents entre ells i quines portes vigilen orfes, enllaços penjats i illes.
+- [guia_pas_a_pas](https://socdepoble.org/md/guia-pas-a-pas.md): Guia didàctica pas a pas de totes les capacitats i eines quotidianes de Sóc de Poble, enllaçada amb /page/guia i /page/tot-el-que-pots-fer.
 - [homepage](https://socdepoble.org/md/homepage.md): Fitxa del connector comunitari Homepage d'Obsidian, que obri una nota, una base o un espai de treball en arrencar.
 - [identitat](https://socdepoble.org/md/identitat.md): Nota d'etiqueta de la identitat de Sóc de Poble, amb la missió, la veu de la IAIA MarIA i la família que construïx el Mas.
 - [identitat_visual](https://socdepoble.org/md/identitat-visual.md): Defineix la identitat visual accessible, rural i coherent de Sóc de Poble.

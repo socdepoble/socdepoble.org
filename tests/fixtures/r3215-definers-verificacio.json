@@ -1,0 +1,38 @@
+{
+  "schema": "sdp.r3215.definers-proof.v1",
+  "recordedAt": "2026-11-19T16:54:23.902751+00:00",
+  "sqlPath": "supabase/snippets/r32_15_blinda_definers_heretats_idempotent.sql",
+  "sqlSha256": "922c1b3cd542f41b849164e39e8e0055187f71c5ba797efe4a26991883cfd82c",
+  "diagnosticSha256": "f9235d50ecd4f9898ebaa6bf69567874279fdd92fa5fd8280580320df69f9c58",
+  "tests": {
+    "pass": 67,
+    "fail": 0,
+    "skip": 0
+  },
+  "nativeVersion": "18.6",
+  "pgliteVersion": "17.5",
+  "pglitePackage": "0.3.16",
+  "offlinePackageSha256": "aa32940affcfad9aa1b955f73ebe47be94aad027d884927a995c10230b9333d8",
+  "nativeIndependentBackendPids": [
+    96663,
+    96664
+  ],
+  "nativeObservedAdvisoryLock": [
+    1935960372,
+    1732150000
+  ],
+  "logSha256": "d5b01b66a3199a49e40c4aaf7f46c542056c04b239edc3218c3c1339658971f7",
+  "testPath": "tests/r3215-definers-postgres.test.mjs",
+  "testSha256": "4bc8d3c0a67de222bbdbeb5e9f9ef890a41c6314c27f0c9693c60f2e68f0b259",
+  "fixturePath": "tests/fixtures/r32-fossils.json",
+  "fixtureSha256": "7e6164936dc8ee82459cc514c0328c7a42cf75d4289f7eb453e12faf0f856bf1",
+  "remoteExecuted": false,
+  "limits": [
+    "Receipt proves these reviewed bytes in disposable local engines, not production deployment.",
+    "Unknown bodies/signatures/configuration fail closed. Mutation scope is public/private; diagnostic inventories other non-system schemas too.",
+    "No generic SQL parser is claimed; canonical signatures and exact body variants form the reviewed capsules.",
+    "Old R32/R32.10 backup pins are preserved and refuse replay after a newer reviewed body replaces their postimage.",
+    "Unknown SECURITY DEFINER routines already carrying an empty path remain outside mutation; their ACL and digest remain visible in the diagnostic.",
+    "auth.uid() is a schema-qualified trusted provider dependency; its implementation is not a body capsule of this application kit."
+  ]
+}

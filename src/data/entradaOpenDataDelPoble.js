@@ -5,11 +5,13 @@
  * (POBLES_FEDERATS, hui La Torre) tenen actor i outbox. Per a un poble de
  * mostra el paquet no porta activitystreams.json ni cap enllaç federat, i no es
  * demana cap outbox que no existix. */
+import { urlRemota } from './federacio/urlRemota.js';
 import { esPobleFederat, esSlugFederat, CONTEXT_AS, PUBLIC, urlsDeMunicipi } from './activitypub.js';
 import { ORIGEN_PUBLIC_PER_DEFECTE } from '../config/origenPublic.js';
+const fetchNatiu = globalThis.fetch;
 
 export async function entradaOpenDataDelPoble(slug, { municipi, port, ara = new Date().toISOString(),
-  origen = ORIGEN_PUBLIC_PER_DEFECTE, fetchImpl = globalThis.fetch } = {}) {
+  origen = ORIGEN_PUBLIC_PER_DEFECTE, fetchImpl = globalThis.fetch, fetchPinnat = null } = {}) {
   if (!esSlugFederat(slug)) throw new TypeError('Slug municipal invàlid.');
   const backend = port ?? await import('./backendPort.js');
   let poble = municipi;
@@ -28,7 +30,15 @@ export async function entradaOpenDataDelPoble(slug, { municipi, port, ara = new 
   for (const coleccio of ['noticies', 'agenda', 'memoria', 'memoriaOral']) if (Array.isArray(dades[coleccio])) llegides[coleccio] = dades[coleccio];
   if (!esPobleFederat(slug)) return { municipi: poble, ara, origen, actorsPublicats: [], ...llegides };
   const urls = urlsDeMunicipi(slug, { origen });
-  const resposta = await fetchImpl(urls.outbox, { method: 'GET', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000), headers: { Accept: 'application/activity+json' } });
+  if (!urlRemota(urls.outbox)) throw new TypeError('Origen públic OpenData invàlid.');
+  const sameOrigin = globalThis.location?.origin === new URL(urls.outbox).origin;
+  /* Gauntlet v1.2.13 · El pin DNS/TLS és per al servidor (Node). Al navegador (apps, .cat, WordPress) no es pot pinar i
+     manen CORS i la política del navegador: com a c71f3f163, el fetch propi hi continua valent. */
+  const navegador = typeof window !== 'undefined' && typeof document !== 'undefined';
+  if (!navegador && (fetchImpl === fetchNatiu || fetchImpl === globalThis.fetch) && !sameOrigin && typeof fetchPinnat !== 'function') throw new TypeError('OpenData necessita un transport DNS/TLS pinat al servidor.');
+  const transport = typeof fetchPinnat === 'function' ? fetchPinnat : fetchImpl;
+  const resposta = await transport(urls.outbox, { method: 'GET', credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(15000), headers: { Accept: 'application/activity+json' } });
+  if (resposta.redirected || resposta.url && resposta.url !== urls.outbox) throw new Error('Redirecció OpenData no admesa.');
   if (!resposta.ok) throw new Error('L’outbox públic no està disponible.');
   // Sostre abans de parsejar; no es carrega una resposta il·limitada.
   if (Number(resposta.headers.get('content-length')) > 16 * 1024 * 1024) throw new Error('Outbox massa gran.');

@@ -42,6 +42,7 @@ const WORKSPACES_PATRIMONI = {
 const NodrirLaIaiaSection = lazyRoute(() => import('../patrimoni/NodrirLaIaiaSection.jsx'));
 const PaginesImportadesSection = lazyRoute(() => import('../text/PaginesImportadesSection.jsx'));
 const AparadorFediversity = lazyRoute(() => import('../text/AparadorFediversity.jsx'));
+const AparadorGuiaPasAPas = lazyRoute(() => import('../text/AparadorGuiaPasAPas.jsx'));
 const PanellTraspasPublicacioInline = lazyRoute(() => import('../admin/PanellTraspasPublicacioInline.jsx'));
 const GuiaCanalsActualitzacio = lazyRoute(() => import('./GuiaCanalsActualitzacio.jsx'));
 
@@ -253,6 +254,7 @@ export default function PageDetailSection() {
       );
     }
     else if (slug === 'la-iaia-sabuda') alFinal = <><Suspense fallback={null}><NodrirLaIaiaSection /></Suspense>{alFinal}</>;
+    else if (slug === 'tot-el-que-pots-fer') alFinal = <><BarreraDelTrosAccessori><Suspense fallback={null}><AparadorGuiaPasAPas /></Suspense></BarreraDelTrosAccessori>{alFinal}</>;
     else if (Object.hasOwn(SECCIONS_DE_PATRIMONI, slug)) { const Consulta = SECCIONS_DE_PATRIMONI[slug]; alFinal = <><Suspense fallback={null}><Consulta /></Suspense>{alFinal}</>; }
     else if (slug === PAGINA_PUBLICAR_MAPA) {
       alFinal = (

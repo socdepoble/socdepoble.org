@@ -43,6 +43,7 @@ import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { avatarDeLaFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
 import { textosDeFitxa } from './visibilitatFitxa.js';
 import { registraIncident } from '../../utils/autocuracio.js';
+import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
 /* P1-f (Onada R6 · Bloc 2) i Onada R32 · Els panells pesants d'administració i la pàgina de l'agent es carreguen
    amb lazyRouteRenovable dins d'una barrera local: una fallada de xarxa queda acotada a l'apartat sense tombar
    la resta del Perfil i oferix un reintent real en cada nova intenció (sense el fals reintent del lazy nu). */
@@ -50,6 +51,7 @@ const laboratoriTaxonomiaRenovable = lazyRouteRenovable(() => import('./admin/La
 const bancImportacioRenovable = lazyRouteRenovable(() => import('./admin/BancImportacioEditorial.jsx'));
 /* R13-C7 (ordre del Mestre, 08-11-2026) · «👥 Usuaris, Dispositius i Botigues»: el panell i les seues dades, diferits. */
 const panellUsuarisRenovable = lazyRouteRenovable(() => import('./admin/PanellUsuarisDispositiusBotigues.jsx'));
+const safataDenunciesRenovable = lazyRouteRenovable(() => import('./admin/SafataDenunciesDiligentsAdmin.jsx'));
 
 const paginaDeLAgentRenovable = lazyRouteRenovable(
   () => import('./PerfilPublicSection.jsx').then((modul) => ({ default: modul.PaginaDeLAgent })),
@@ -114,6 +116,7 @@ export function PanellDiferitDelPerfil({ renovable, propsPanell = null, on = 'pe
 const LaboratoriTaxonomiaDoctoral = () => <PanellDiferitDelPerfil renovable={laboratoriTaxonomiaRenovable} on="perfil-taxonomia" />;
 const BancImportacioEditorial = () => <PanellDiferitDelPerfil renovable={bancImportacioRenovable} on="perfil-importacio" />;
 const PanellUsuarisDispositiusBotigues = () => <PanellDiferitDelPerfil renovable={panellUsuarisRenovable} on="perfil-usuaris" />;
+const SafataDenunciesDiligentsAdmin = () => <PanellDiferitDelPerfil renovable={safataDenunciesRenovable} on="perfil-denuncies-lssi" />;
 const ICONES = { categories: UserRound, items: SlidersHorizontal };
 
 /* AH-02 · A la columna central d'APARTATS del Perfil, totes les files (actives
@@ -322,6 +325,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
     if (vista === 'admin-nodes-fedivers') return <DetallAdministracio item={item}><PanellNodesFediversResiliencia /></DetallAdministracio>;
     if (vista === 'admin-empaquetats') return <DetallAdministracio item={item}><PanellEmpaquetatsDesplegament /></DetallAdministracio>;
     if (vista === 'admin-usuaris-i-dispositius') return <DetallAdministracio item={item}><PanellUsuarisDispositiusBotigues /></DetallAdministracio>;
+    if (vista === 'admin-denuncies-lssi') return <DetallAdministracio item={item}><SafataDenunciesDiligentsAdmin /></DetallAdministracio>;
     if (vista === 'aplicacio') {
       const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
       return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
@@ -449,6 +453,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, vista = null, rec
      porten les tres eixides, i el diàleg de NOVA ORG en queda dins. */
   return (
     <div className="sdp-gestor-pagina perfil-pagina">
+      <ControlModeSenior variantFranja="perfil" />
       <UniversalWorkspace
         key={vista === VISTA_IMPORTACIO ? 'perfil-importacio' : vista === VISTA_COMPTE ? 'perfil-compte' : 'perfil'}
         model={model}

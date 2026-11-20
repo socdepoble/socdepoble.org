@@ -214,6 +214,7 @@ import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada v1.2.7 · P0-123 · «Instal·lada al dispositiu · Última publicada» (cinc llengües, fora dels diccionaris). */
 import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstallada.jsx';
+import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
    ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
 const ModeRural = lazyRoute(() => import('./ModeRural.jsx'));
@@ -555,6 +556,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
       <div ref={vistaRef} className="content-wrapper">
         {/* Onada v1.2.7 · P0-123 · La versió instal·lada i la publicada, d'un cop d'ull. */}
         <LiniaVersioInstallada llengua={idioma} />
+        <ControlModeSenior llengua={idioma} />
         <section aria-labelledby={idDestins}>
           <h2 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h2>
           {/* P5 · Les targetes de doble acció, en la graella de sempre (destinsControl.js):

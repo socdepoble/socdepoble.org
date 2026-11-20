@@ -37,5 +37,8 @@ export function rebutDenunciaDiligent(value) {
 export function filaDenunciaDiligent(value) {
   const v = fields(value, ['id', 'publicacioId', 'motiu', 'detall', 'estat', 'versio']);
   if (!ESTATS_DENUNCIA_DILIGENT.includes(v.estat) || !Number.isSafeInteger(v.versio) || v.versio < 1 || !MOTIUS.includes(v.motiu)) throw invalid();
-  return Object.freeze({ id: uuid(v.id), publicacioId: uuid(v.publicacioId), motiu: v.motiu, detall: v.detall === null || v.detall === '' ? '' : text(v.detall, 1000), estat: v.estat, versio: v.versio });
+  /* Gauntlet v1.2.13 · El servidor no refusa els caràcters de control del detall: la fila que en porta es llig sense
+     ells (només es mostren), en lloc de fer fallar tota la llista d'eixe estat. L'estructura continua sent estricta. */
+  const detall = typeof v.detall === 'string' ? v.detall.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/gu, '') : v.detall;
+  return Object.freeze({ id: uuid(v.id), publicacioId: uuid(v.publicacioId), motiu: v.motiu, detall: detall === null || !String(detall).trim() ? '' : text(detall, 1000), estat: v.estat, versio: v.versio });
 }

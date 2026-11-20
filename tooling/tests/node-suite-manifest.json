@@ -272,7 +272,17 @@
     "tooling/tests/mapa-redireccions-r32_14-301.test.mjs",
     "tooling/gates/__tests__/tellado-cataleg-r32_14.test.mjs",
     "tests/r3215-lssi-repetida-postgres.test.mjs",
-    "tests/r3215-mapa0703.test.mjs"
+    "tests/r3215-mapa0703.test.mjs",
+    "tests/r3215-definers-postgres.test.mjs",
+    "tests/r3215-dns-pinning-posse.test.mjs",
+    "tests/r3215-federation-adversarial.test.mjs",
+    "tests/r3215-matriu-d01-d15.test.mjs",
+    "tests/r3215-media-porta.test.mjs",
+    "tests/r3215-rls-proof.test.mjs",
+    "tests/r3216-entrades-dades.test.mjs",
+    "tests/r3216-torns-rebuts-matriu.test.mjs",
+    "tooling/tests/importacio-editorial-r3216.test.mjs",
+    "tests/architecture-i-03-actuar.r32_16.test.mjs"
   ],
   "files": [
     {
@@ -2390,6 +2400,56 @@
       "path": "tests/r3215-mapa0703.test.mjs",
       "suite": "primary",
       "reason": "R32.15 MAPA-07-03 (lot_01 de Codex): torns pre-rebut <= 2026-11-14 segregats per createdAt; dates noves, absents o invàlides continuen bloquejant."
+    },
+    {
+      "path": "tests/r3215-definers-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 mandatory native PostgreSQL18.6 and PGlite: read-only diagnostics and guarded fossil definers, rollback, ACL and advisory-lock concurrency."
+    },
+    {
+      "path": "tests/r3215-dns-pinning-posse.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 immutable one-use DNS pins and existing POSSE HTTPS lookup; native AP transport fails closed."
+    },
+    {
+      "path": "tests/r3215-federation-adversarial.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 federation signatures, IPv4/IPv6 SSRF, canonical dates, Digest and replay hostile vectors offline."
+    },
+    {
+      "path": "tests/r3215-matriu-d01-d15.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 honest executable D01-D15 matrix, fail-closed probe receipts and external blockers."
+    },
+    {
+      "path": "tests/r3215-media-porta.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 real media upload gate smoke: MIME, truncated containers, CRC MP3 and abort."
+    },
+    {
+      "path": "tests/r3215-rls-proof.test.mjs",
+      "suite": "primary",
+      "reason": "R32.15 narrowly pinned PostgreSQL/PGlite proof for dynamic hardener; mutations remain blocked."
+    },
+    {
+      "path": "tests/r3216-entrades-dades.test.mjs",
+      "suite": "primary",
+      "reason": "R32.16 · Contractes de domini, entrada segura i reconciliació auditable; regressió portable obligatòria."
+    },
+    {
+      "path": "tests/r3216-torns-rebuts-matriu.test.mjs",
+      "suite": "primary",
+      "reason": "R32.16 · Contractes de domini, entrada segura i reconciliació auditable; regressió portable obligatòria."
+    },
+    {
+      "path": "tooling/tests/importacio-editorial-r3216.test.mjs",
+      "suite": "primary",
+      "reason": "R32.16 · Importació editorial segura i CLI acotada; regressió portable obligatòria."
+    },
+    {
+      "path": "tests/architecture-i-03-actuar.r32_16.test.mjs",
+      "suite": "primary",
+      "reason": "R32.16 Gemini · ARCHITECTURE.md quadra amb els comptadors del codi viu i 03_actuar no porta taules de tres columnes o més."
     }
   ]
 }

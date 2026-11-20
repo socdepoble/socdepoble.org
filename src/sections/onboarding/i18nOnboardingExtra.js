@@ -23,6 +23,7 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaExit: 'Contrasenya establida. Ara pots entrar amb el correu.',
     provaRecarrega: 'Cal recarregar per comprovar el resultat.',
     provaNoConfirmada: 'No s’ha confirmat la prova del correu. No s’ha tornat a enviar.',
+    guiaPasAPasBoto: 'Guia pas a pas',
   }),
   es: Object.freeze({
     pilotDevTitol: 'Acceso piloto de desarrollo · solo en este ordenador',
@@ -44,6 +45,7 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaExit: 'Contraseña establecida. Ahora puedes entrar con tu correo.',
     provaRecarrega: 'Es necesario recargar para comprobar el resultado.',
     provaNoConfirmada: 'No se ha confirmado la prueba del correo. No se ha vuelto a enviar.',
+    guiaPasAPasBoto: 'Guía paso a paso',
   }),
   en: Object.freeze({
     pilotDevTitol: 'Development pilot access · this computer only',
@@ -65,6 +67,7 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaExit: 'Password set. You can now sign in with your email.',
     provaRecarrega: 'Reload the page to verify the result.',
     provaNoConfirmada: 'Email proof was not confirmed. Nothing was resent.',
+    guiaPasAPasBoto: 'Step-by-step guide',
   }),
   eu: Object.freeze({
     pilotDevTitol: 'Garapeneko sarbide pilotua · ordenagailu honetan soilik',
@@ -86,6 +89,7 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaExit: 'Pasahitza ezarrita. Orain postarekin sar zaitezke.',
     provaRecarrega: 'Birkargatu emaitza egiaztatzeko.',
     provaNoConfirmada: 'Postaren froga ez da baieztatu. Ez da berriro bidali.',
+    guiaPasAPasBoto: 'Urratsez urratseko gida',
   }),
   gl: Object.freeze({
     pilotDevTitol: 'Acceso piloto de desenvolvemento · só neste ordenador',
@@ -107,6 +111,7 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaExit: 'Contrasinal establecido. Agora podes entrar co correo.',
     provaRecarrega: 'Cómpre recargar para comprobar o resultado.',
     provaNoConfirmada: 'Non se confirmou a proba do correo. Non se volveu enviar.',
+    guiaPasAPasBoto: 'Guía paso a paso',
   }),
 });
 

@@ -291,7 +291,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
   const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
-  if (fitxer.type !== 'audio/ogg') {
+  {
     const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js');
     try { await validaFitxerMedia(fitxer, { signal: config.signal }); }
     catch (cause) {

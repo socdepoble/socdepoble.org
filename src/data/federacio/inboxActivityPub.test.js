@@ -188,16 +188,16 @@ describe('signatures HTTP (verificaSignaturaHttpActivityPub)', () => {
     expect(await verifica(peticio(follow, { noms, created, expires: created + 300 }))).toEqual({ valida: false, motiu: 'signature_malformed' });
   });
 
-  test('la finestra de Mastodon: 5 min de vigència i 1 h de marge, mai més de 12 h', async () => {
+  test('R32.15 · finestra màxima de cinc minuts en cada direcció, sense ampliació expires', async () => {
     const amb = (desfase) => verifica(peticio(follow, { data: new Date(ARA + desfase).toUTCString() }));
-    for (const desfase of [-65 * 60_000, -HORA, 0, HORA]) expect([desfase, (await amb(desfase)).valida]).toEqual([desfase, true]);
-    for (const desfase of [-66 * 60_000, -2 * HORA, HORA + 60_000, 2 * HORA]) expect([desfase, await amb(desfase)]).toEqual([desfase, { valida: false, motiu: 'date_out_of_window' }]);
-    expect(FINESTRA_SIGNATURA).toEqual({ caducitatMs: 300_000, maximMs: 43_200_000, margeMs: 3_600_000 });
+    for (const desfase of [-300_000, 0, 300_000]) expect([desfase, (await amb(desfase)).valida]).toEqual([desfase, true]);
+    for (const desfase of [-301_000, -HORA, 301_000, HORA]) expect([desfase, await amb(desfase)]).toEqual([desfase, { valida: false, motiu: 'date_out_of_window' }]);
+    expect(FINESTRA_SIGNATURA).toEqual({ caducitatMs: 300_000, maximMs: 300_000, margeMs: 300_000 });
     const llarga = peticio(follow, { algorithm: 'hs2019', noms: '(request-target) host (created) (expires) digest', created: ARA / 1000 - 14 * 3600, expires: ARA / 1000 + 3600 });
     expect(await verifica(llarga)).toEqual({ valida: false, motiu: 'date_out_of_window' });
   });
 
-  test('Gauntlet B SEG-02: un expires no signat no allarga la finestra; un (expires) signat sí que hi mana', async () => {
+  test('Gauntlet B SEG-02: un expires no signat no allarga la finestra; un (expires) signat tampoc supera cinc minuts', async () => {
     const tard = ARA + 6 * HORA;
     const fins = Math.floor((ARA + 12 * HORA) / 1000);
     // La petició capturada, reproduïda a +6 h amb `,expires=` afegit per qui la reenvia.
@@ -207,12 +207,12 @@ describe('signatures HTTP (verificaSignaturaHttpActivityPub)', () => {
     expect(await verifica(replica, { ara: tard })).toEqual({ valida: false, motiu: 'date_out_of_window' });
     const resposta = await atenPeticioInbox(replica, opcions(creaMagatzemInboxEnMemoria(), { ara: tard }));
     expect([resposta.status, resposta.cos]).toEqual([401, { error: 'date_out_of_window' }]);
-    // hs2019: amb (created) signat i expires solt, igual; amb (expires) signat, la finestra s'allarga fins a 12 h.
+    // hs2019: ni expires solt ni expires signat poden ampliar el sostre local de cinc minuts.
     const created = ARA / 1000;
     const solt = peticio(follow, { algorithm: 'hs2019', noms: '(request-target) host (created) digest', created, expires: fins });
     expect(await verifica(solt, { ara: tard })).toEqual({ valida: false, motiu: 'date_out_of_window' });
     const signat = peticio(follow, { algorithm: 'hs2019', noms: '(request-target) host (created) (expires) digest', created, expires: fins });
-    expect((await verifica(signat, { ara: tard })).valida).toBe(true);
+    expect(await verifica(signat, { ara: tard })).toEqual({ valida: false, motiu: 'date_out_of_window' });
   });
 
   test('mutants: cada manipulació té el seu motiu, i obtenClauPublica no es crida si falla el que és local', async () => {
@@ -281,10 +281,10 @@ describe('signatures HTTP (verificaSignaturaHttpActivityPub)', () => {
     }
   });
 
-  test('Gauntlet B T3-V2: documentActor és null si el document obtingut és d’un altre actor', async () => {
+  test('Gauntlet B T3-V2: un documentActor d’una altra identitat invalida la clau', async () => {
     const altra = { ...docActor(pemRsa), id: ALTRA, inbox: `${ALTRA}/inbox` };
     const r = await verifica(peticio(follow), { obtenClauPublica: async (k) => ({ clau: clauDeDocumentActor(docActor(pemRsa), k), documentActor: altra }) });
-    expect(r).toEqual({ valida: true, keyId: KEY, actor: REMOT, algorisme: 'rsa-sha256', documentActor: null });
+    expect(r).toEqual({ valida: false, motiu: 'key_not_found' });
     // Control: el document del mateix actor sí que torna.
     expect((await verifica(peticio(follow))).documentActor).toEqual(docActor(pemRsa));
   });
@@ -840,10 +840,12 @@ describe('alertes municipals federades (Create, Announce, Delete)', () => {
 describe('frontera del mòdul', () => {
   const font = readFileSync(path.join(ARREL, 'src/data/federacio/inboxActivityPub.js'), 'utf8');
 
-  test('només importa ../activitypub.js i no toca xarxa, navegador ni procés', () => {
-    expect([...font.matchAll(/^import[^;]*?from\s+'([^']+)'/gms)].map((m) => m[1])).toEqual(['../activitypub.js']);
+  test('només importa activitypub i la frontera URL pura, sense xarxa, navegador ni procés', () => {
+    expect([...font.matchAll(/^import[^;]*?from\s+'([^']+)'/gms)].map((m) => m[1])).toEqual(['./urlRemota.js', '../activitypub.js']);
+    const fronteraUrl = readFileSync(path.join(ARREL, 'src/data/federacio/urlRemota.js'), 'utf8');
+    expect([...fronteraUrl.matchAll(/^import[^;]*?from\s+'([^']+)'/gms)]).toEqual([]);
     for (const prohibit of ['fetch(', 'document.', 'localStorage', 'XMLHttpRequest', 'process.', 'http://', 'Date.now(', 'new Date()']) {
-      expect([prohibit, font.includes(prohibit)]).toEqual([prohibit, false]);
+      expect([prohibit, (font + fronteraUrl).includes(prohibit)]).toEqual([prohibit, false]);
     }
     // «window» com a identificador (el motiu date_out_of_window és text de protocol).
     expect(font.match(/(?<!\w)window\b/g)).toBe(null);
@@ -873,7 +875,7 @@ describe('B5 · purga, confirmació, prefix del camí i host de la quota', () =>
 
   test('una sola font per a les retencions: 14 h per a les activitats, 30 dies i 14 h per a les làpides', () => {
     expect(RETENCIO_ACTIVITAT_MS).toBe(14 * HORA);
-    expect(RETENCIO_ACTIVITAT_MS).toBe(FINESTRA_SIGNATURA.maximMs + 2 * FINESTRA_SIGNATURA.margeMs);
+    expect(RETENCIO_ACTIVITAT_MS).toBeGreaterThanOrEqual(FINESTRA_SIGNATURA.maximMs + 2 * FINESTRA_SIGNATURA.margeMs);
     expect(RETENCIO_LAPIDA_MS).toBe(MAXIM_VIGENCIA_ALERTA_MS + RETENCIO_ACTIVITAT_MS);
     expect(MARGE_PURGA_ALERTA_MS).toBe(24 * HORA);
   });
@@ -916,12 +918,12 @@ describe('B5 · purga, confirmació, prefix del camí i host de la quota', () =>
 
   test('rèplica: dins de la retenció és duplicada; passada la retenció, la verificació ja la rebutja', async () => {
     const magatzem = creaMagatzemInboxEnMemoria();
-    // La signatura més llarga que s'admet: hs2019 amb (expires) signat a 12 h, més 1 h de marge.
+    // Un expires a 12 h no allarga la finestra nova: duplicat sols fins a +5 min.
     const created = ARA / 1000;
     const p = peticio({ ...follow, id: `${REMOT}#follows/b5` }, { algorithm: 'hs2019', noms: '(request-target) host (created) (expires) digest', created, expires: created + 12 * 3600 });
     const aten = (ara) => atenPeticioInbox(p, opcions(magatzem, { ara }));
     expect((await aten(ARA)).cos).toEqual({ estat: 'processada' });
-    const darrer = ARA + FINESTRA_SIGNATURA.maximMs + FINESTRA_SIGNATURA.margeMs;
+    const darrer = ARA + FINESTRA_SIGNATURA.maximMs;
     await magatzem.purga(darrer);
     expect((await aten(darrer)).cos).toEqual({ estat: 'duplicada' });
     const tard = ARA + RETENCIO_ACTIVITAT_MS + 1;

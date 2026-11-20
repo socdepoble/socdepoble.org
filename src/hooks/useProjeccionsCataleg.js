@@ -8,7 +8,10 @@ import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js
 import { appendSectionSubmissionNetworkOnly, loadProjeccionsCataleg, teCapacitat } from '../data/backendPort.js';
 import { capturaSessio } from '../data/identitat.js';
 import { creaServeiProjeccionsCataleg, filesDeRegistreProjeccio, registreProjeccioPendent } from '../data/projeccionsCatalegServei.js';
-import { clauFontCataleg, errorProjeccioCataleg } from '../data/projeccionsCataleg.js';
+import { clauFontCataleg, destinsPerAudiencia, errorProjeccioCataleg } from '../data/projeccionsCataleg.js';
+import { esTokenPublicacio } from '../data/publicacionsCas.js';
+
+const AUDIENCIES_CAS = Object.freeze(['privada', 'publica']);
 
 const EMPTY = Object.freeze({}), NONE = Object.freeze([]);
 const disponible = () => { try { return teCapacitat('projeccionsCataleg'); } catch { return false; } };
@@ -57,7 +60,7 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
   const versioBloquejos = moderacio?.versioBloquejos || 0;
   const scopeKey = JSON.stringify([backendId, ownerId, autoritzat, capacitat, enabled, escriptura]);
   const viu = useRef(scopeKey); viu.current = scopeKey;
-  const [state, setState] = useState({ scopeKey: null, projeccions: NONE, estat: 'carregant', error: null, persistent: false });
+  const [state, setState] = useState({ scopeKey: null, projeccions: NONE, incidencies: NONE, estat: 'carregant', error: null, persistent: false });
   const connexioActual = useRef(null);
   const creaConnexio = useMemo(() => () => {
     const checkSession = capturaSessio(), remote = { rows: [], ok: false }, active = new Map();
@@ -65,12 +68,13 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     const controller = new AbortController();
     const check = () => { checkSession(); if (closed || viu.current !== scopeKey || controller.signal.aborted) throw new DOMException('Sessió canviada.', 'AbortError'); };
     const abast = autoritzat ? { tenantId: normalizeBackendConfig(config).tenantId, ownerId, backendId } : null;
+    const casActiu = publicacionsVersionades(config);
     // Missing/invalid tenant is a configuration error, never a guest scope.
     let service = null, configurationError = null;
     if (abast) {
       try {
         service = creaServeiProjeccionsCataleg({ abast, comprovaSessio: check, lectora: !escriptura,
-          versionada: publicacionsVersionades(config),
+          versionada: casActiu,
           publica: submission => appendSectionSubmissionNetworkOnly({ ...submission,
             actor: { tipus: identitat.actor?.tipus === 'entitat' ? 'entitat' : 'persona', id: identitat.actor?.id ?? identitat.actorId ?? ownerId } }, { ...config, signal: controller.signal }) });
       } catch (error) { configurationError = error; }
@@ -78,12 +82,41 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     const publishState = error => {
       if (closed || viu.current !== scopeKey) return;
       const rows = new Map(remote.rows.map(row => [row.id, row]));
+      const llistaIncidencies = [];
       for (const row of queue) {
         // An acknowledged cache cannot resurrect a remote deletion/revocation.
         if (remote.ok && !active.has(row.clau) && !registreProjeccioPendent(row)) continue;
         for (const item of filesDeRegistreProjeccio(row, abast)) rows.set(item.id, item);
+        if (casActiu && abast && registreProjeccioPendent(row)) {
+          for (const audiencia of AUDIENCIES_CAS) {
+            const inc = row.incidencies?.[audiencia] ?? null;
+            if (!inc) continue;
+            const idPublicacio = row.ids[audiencia];
+            const remota = remote.rows.find(r => r?.id === idPublicacio) ?? null;
+            const tokenRemot = esTokenPublicacio(remota?.updated_at) ? remota.updated_at
+              : (esTokenPublicacio(remota?.updatedAt) ? remota.updatedAt : null);
+            const destinsAud = destinsPerAudiencia(row.destins, audiencia);
+            llistaIncidencies.push(Object.freeze({
+              clau: row.clau,
+              audiencia,
+              idPublicacio,
+              codi: inc.codi,
+              seq: inc.seq,
+              font: row.font,
+              destins: destinsAud,
+              esRetirada: audiencia === 'publica' && destinsAud.length === 0 && row.publicaIntentada === true,
+              versioLocal: row.versions?.[audiencia] ?? null,
+              lecturaRemotaOk: remote.ok === true,
+              filaRemotaExisteix: remote.ok === true ? Boolean(remota) : null,
+              versioRemotaActual: tokenRemot,
+              titolRemot: typeof remota?.title === 'string' ? remota.title : null
+            }));
+          }
+        }
       }
-      setState({ scopeKey, projeccions: [...rows.values()], persistent: service?.persistent === true,
+      setState({ scopeKey, projeccions: [...rows.values()],
+        incidencies: llistaIncidencies.length ? Object.freeze(llistaIncidencies) : NONE,
+        persistent: service?.persistent === true,
         estat: queue.some(registreProjeccioPendent) ? 'pendent' : error ? 'error' : 'sincronitzat', error: error ?? null });
     };
     const update = async (error, acknowledged = false) => {
@@ -182,6 +215,18 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
         }
         return row;
       },
+      async resolIncidencia(clau, audiencia, opcions = {}) {
+        await this.prepara(); check();
+        if (!service || !escriptura) throw configurationError ?? errorProjeccioCataleg('sense-permis');
+        const versioRemota = opcions && Object.hasOwn(opcions, 'versioRemota') ? opcions.versioRemota : undefined;
+        const saved = await service.resolIncidencia(clau, audiencia, { versioRemota }); check();
+        active.set(clau, Infinity); await update(null);
+        try { await sync(); } catch (error) {
+          if (error?.codi !== 'incidencia-versio' || !Array.isArray(error.incidencies)
+            || error.incidencies.some(i => i.clau === clau && i.audiencia === audiencia)) throw error;
+        }
+        return saved;
+      },
       sync,
       /* Gauntlet R22 (notes-04) · Un bloqueig o un desbloqueig nou: es tornen a
          llegir les audiències sense buidar l'estat ni tancar la connexió. */
@@ -218,5 +263,15 @@ export function useProjeccionsCataleg({ enabled = true, escriptura = true } = {}
     if (!actual || actual.scopeKey !== scopeKey) return Promise.reject(errorProjeccioCataleg('sense-permis'));
     return actual.connection.desa(font, destins);
   }, [scopeKey]);
-  return { ...(enabled && state.scopeKey === scopeKey ? state : { projeccions: NONE, estat: enabled ? 'carregant' : 'inactiu', error: null, persistent: false }), desa, autoritzat, ownerId };
+  const resolIncidencia = useCallback((clau, audiencia, opcions) => {
+    const actual = connexioActual.current;
+    if (!actual || actual.scopeKey !== scopeKey) return Promise.reject(errorProjeccioCataleg('sense-permis'));
+    return actual.connection.resolIncidencia(clau, audiencia, opcions);
+  }, [scopeKey]);
+  const refresca = useCallback(() => {
+    const actual = connexioActual.current;
+    if (!actual || actual.scopeKey !== scopeKey) return Promise.resolve();
+    return actual.connection.refresca();
+  }, [scopeKey]);
+  return { ...(enabled && state.scopeKey === scopeKey ? state : { projeccions: NONE, incidencies: NONE, estat: enabled ? 'carregant' : 'inactiu', error: null, persistent: false }), desa, resolIncidencia, refresca, autoritzat, ownerId };
 }

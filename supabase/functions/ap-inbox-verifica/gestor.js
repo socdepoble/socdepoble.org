@@ -33,7 +33,7 @@ import {
 import { POBLES_FEDERATS, normalitzaOrigen, urlsDeMunicipi } from '../../../src/data/activitypub.js';
 import { igualsEnTempsConstant } from '../purga-fitxers/gestor.js';
 import { AGENT_USUARI } from '../noticies/gestor.js';
-import { drenaCua, finsAlTopall, importaClauPrivada, xarxaDe } from './cuaLliurament.js';
+import { drenaCua, finsAlTopall, importaClauPrivada, resolXarxaPublica, fetchAmbResolucioPublica } from './cuaLliurament.js';
 import { creaMagatzemPostgrest } from './magatzemPostgrest.js';
 
 export const AP = Object.freeze({
@@ -184,7 +184,7 @@ export const llegixCosFitat = (req, maxim, senyal = null) => llegixFluxFitat(req
  * podia fer retindre sense cap signatura vàlida.
  */
 export function creaObtenidor({
-  fetch, resolDns = null, ara, topallMs = AP.TOPALL_MS, maximBytes = AP.MAXIM_DOCUMENT, cauClaus = AP.CAU_CLAUS,
+  fetch, resolDns = null, fetchPinnat = null, requereixPinDns = false, ara, topallMs = AP.TOPALL_MS, maximBytes = AP.MAXIM_DOCUMENT, cauClaus = AP.CAU_CLAUS,
   vidaClauMs = AP.VIDA_CLAU_MS, obtencionsPerMinut = AP.OBTENCIONS_PER_MINUT
 } = {}) {
   const cau = new Map();
@@ -209,11 +209,12 @@ export function creaObtenidor({
     const rellotge = setTimeout(() => control.abort(), topallMs);
     let r = null;
     try {
-      const xarxa = await finsAlTopall(xarxaDe(url.hostname, { resolDns, senyal: control.signal }), control.signal);
+      const resolucio = await finsAlTopall(resolXarxaPublica(url.hostname, { resolDns, senyal: control.signal }), control.signal);
+      const xarxa = resolucio.estat;
       if (xarxa !== 'publica') throw new Error(`xarxa_${xarxa}`);
-      r = await finsAlTopall(fetch(url.href, {
+      r = await finsAlTopall(fetchAmbResolucioPublica(url.href, {
         method: 'GET', redirect: 'manual', signal: control.signal, headers: { accept: ACCEPT_AP, 'user-agent': AGENT_USUARI }
-      }), control.signal);
+      }, { resolucio, fetch, fetchPinnat, requereixPinDns }), control.signal);
       if (r?.type === 'opaqueredirect' || !(r?.status >= 200 && r.status < 300)) throw new Error('estat');
       const tipus = String(r.headers?.get?.('content-type') ?? '').split(';')[0].trim().toLowerCase();
       if (!TIPUS_DOCUMENT.includes(tipus)) throw new Error('tipus');
@@ -268,7 +269,7 @@ function camiIntern(cami, prefixIntern) {
  * són l'adaptador PostgREST. `espera`: EdgeRuntime.waitUntil, si n'hi ha.
  */
 export function creaGestor({
-  env = {}, fetch = globalThis.fetch, resolDns = null, ara = () => Date.now(), subtle = globalThis.crypto?.subtle,
+  env = {}, fetch = globalThis.fetch, resolDns = null, fetchPinnat = null, requereixPinDns = false, ara = () => Date.now(), subtle = globalThis.crypto?.subtle,
   aleatori = Math.random, espera = null, magatzem = null, cua = null, registre = console
 } = {}) {
   const activa = typeof env?.SDP_AP_ACTIVA === 'string' && env.SDP_AP_ACTIVA.trim() === '1';
@@ -277,7 +278,7 @@ export function creaGestor({
   const postgrest = bona && (!magatzem || !cua) ? creaMagatzemPostgrest({ base: config.supabase.base, clau: config.supabase.clau, fetch }) : null;
   const magatzemInbox = magatzem ?? postgrest;
   const cuaEixida = cua ?? postgrest;
-  const obtenidor = bona ? creaObtenidor({ fetch, resolDns, ara }) : null;
+  const obtenidor = bona ? creaObtenidor({ fetch, resolDns, fetchPinnat, requereixPinDns, ara }) : null;
   let claus = null;
   /* Les claus privades, importades una vegada: un slug amb una clau que no s'importa no és actor local. */
   const clausPrivades = () => {
@@ -355,7 +356,7 @@ export function creaGestor({
     }
     if (r.lliuraments.length && typeof espera === 'function') {
       espera(drenaCua({
-        cua: cuaEixida, claus: actius, origen: config.origen, fetch, resolDns, ara, subtle, aleatori,
+        cua: cuaEixida, claus: actius, origen: config.origen, fetch, resolDns, fetchPinnat, requereixPinDns, ara, subtle, aleatori,
         lot: AP.LOT_EN_SEGON_PLA, maxLots: 1, pressupostMs: AP.PRESSUPOST_EN_SEGON_PLA_MS
       }).catch(() => {}));
     }
@@ -374,7 +375,7 @@ export function creaGestor({
     }
     try {
       const actius = await clausPrivades();
-      const recompte = await drenaCua({ cua: cuaEixida, claus: actius, origen: config.origen, fetch, resolDns, ara, subtle, aleatori });
+      const recompte = await drenaCua({ cua: cuaEixida, claus: actius, origen: config.origen, fetch, resolDns, fetchPinnat, requereixPinDns, ara, subtle, aleatori });
       const purgades = typeof magatzemInbox.purga === 'function' ? await magatzemInbox.purga(ara()) : {};
       const purga = {
         activitats: purgades.activitats ?? 0, alertes: purgades.alertes ?? 0, lapides: purgades.lapides ?? 0,

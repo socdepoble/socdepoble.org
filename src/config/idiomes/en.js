@@ -745,6 +745,8 @@ export default {
   'section.events.rsvp.titol': 'Will you attend this event?',
   'section.events.rsvp.si': 'Yes, count me in',
   'section.events.rsvp.potser': 'Maybe',
+  'section.events.rsvp.curt.si': 'Attending',
+  'section.events.rsvp.curt.no': 'Not attending',
   'section.events.rsvp.no': 'Cannot make it',
   'section.events.rsvp.notaLabel': 'Want to leave a note or reason? (optional)',
   'section.events.rsvp.notaPlaceholder': 'E.g.: Those dates overlap with festivities in my village, two of us are driving…',
