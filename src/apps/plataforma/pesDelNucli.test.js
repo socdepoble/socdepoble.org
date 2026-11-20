@@ -76,7 +76,7 @@ const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
    l'arbre v1.2.10 (261119, compilaDeVeritat de tests/standalone-build.test.mjs i npm run build:wp):
    1.588.981 B, després de la dieta CSS R32.11 i la factoria del motor d'accions diferida.
    D-v1214-1 (aprovada pel Mestre el 20-11-2026 per a la v1.2.15: 1.591.000 B) · D-v1215-1 · Baixat de 1.660.000 a
-   1.594.000 B, no a 1.591.000 B. Build real de la v1.2.14: 1.589.272 B. Amb els kits de la v1.2.15 integrats, l'arrencada
+   1.594.100 B, no a 1.591.000 B. Build real de la v1.2.14: 1.589.272 B. Amb els kits de la v1.2.15 integrats, l'arrencada
    mesura 1.593.443 B amb les credencials de prova de tests/standalone-build.test.mjs i 1.593.848 B amb credencials de
    llargària de producció (release: URL de 40 caràcters, clau anon de 208), que és el que llig este fitxer sobre el dist de
    build:wp (Gauntlet v1.2.15, 20-11-2026). El creixement (+4.171 B) ve sobretot del port públic neutral de Codex R32.19
@@ -84,8 +84,12 @@ const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
    i data/backendPort.js). Tornar a 1.591.000 B demana partir eixe port (una fulla de mitjans per a l'arrencada; el transport
    OAuth només als trossos diferits: −1.676 B mesurats) i retallar ≥1,2 KB més en release (≥0,8 KB amb les credencials de
    prova). Són fitxers del carril de Codex R32.21, que
-   els està tocant: queda com a D-v1215-1 per al Mestre. Només pot baixar. */
-const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1594000;
+   els està tocant: queda com a D-v1215-1 per al Mestre.
+   Release real de la v1.2.15 (deploy_v1215 sobre 84df563ac, build:wp amb l'entorn de producció, 20-11-2026 22:26):
+   1.594.008 B. L'entorn real afig a l'arrencada els emissors (VITE_APP_ISSUER, VITE_SOLLUTIA_ISSUER) i el comptador
+   (VITE_UMAMI_HOST, VITE_UMAMI_SHARE_URL, VITE_UMAMI_WEBSITE_ID), uns 160 B que la mesura amb credencials fictícies no
+   portava. El sostre queda a 1.594.100 B (D-v1215-1). Només pot baixar. */
+const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1594100;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */
 const CARPETES_DE_LES_APPS = Object.freeze([

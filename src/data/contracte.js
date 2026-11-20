@@ -912,7 +912,7 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.15 · Onades R32.19 i R32.20 (ordre del Mestre 20-11-2026, vespre, encadenada a la v1.2.14) · Versió
    unificada 1.2.15 amb el build 20: integra Codex R32.19 (zero cicles d'imports, protocol públic i transport OAuth
    separats, controls LSSI i AP pinnat, sense aplicar) i Gemini R32.19 i R32.20 (El Bar sense franja, zero controls
-   sense nom en 78 rutes, crèdits de /legal §23 i puresa HMR), el sostre d'arrencada a 1.594.000 B (D-v1215-1: el
+   sense nom en 78 rutes, crèdits de /legal §23 i puresa HMR), el sostre d'arrencada a 1.594.100 B (D-v1215-1: el
    1.591.000 B de D-v1214-1 demana partir el port públic), la R796 del Node 0 i el connector WordPress 1.1.23. */
 export const VERSIO_CLIENT_NATIU = 20;
 
