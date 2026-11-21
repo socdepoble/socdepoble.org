@@ -31,10 +31,12 @@
        origen, i la política de capçalera només governa el nostre document i
        els iframes que ell incrusta.
    Onada v1.2.6 (ordre del Mestre del 17-11-2026: «verificant que cap descàrrega
-   d'APK dispare costos en Firebase Hosting») · Les dues úniques redireccions
-   són les de l'APK públic i el seu .sha256 cap al mirall del Node 0, i l'ignore
-   deixa fora del paquet de Firebase tot .apk i tot .apk.sha256 (proves de
-   l'APK, més avall). */
+   d'APK dispare costos en Firebase Hosting») · L'ignore deixa fora del paquet de
+   Firebase tot .apk i tot .apk.sha256 (proves de l'APK, més avall).
+   Onada v1.2.16 (ordres del Mestre del 21-11-2026, 01:32 i 01:55: ZERO APK fora de
+   botiga) · Les dues redireccions de l'APK públic (302 cap al mirall del Node 0)
+   es retiren: firebase.json no té cap redirecció, i l'adreça vella de l'APK cau a
+   l'SPA, que hi diu «Element no trobat» (prova de l'APK, més avall). */
 import { expect, test } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -46,10 +48,9 @@ test('dist, sense barra final i sense URL netes', () => {
   expect(hosting.public).toBe('dist');
   expect(hosting.trailingSlash).toBe(false);
   expect(hosting.cleanUrls).toBe(false);
-  // Onada v1.2.6 · Les redireccions són només les de l'APK (contracte exacte a la prova de l'APK, més avall).
-  expect(hosting.redirects.map((r) => r.source)).toEqual([
-    '/descarregues/socdepoble-android-latest.apk', '/descarregues/socdepoble-android-latest.apk.sha256'
-  ]);
+  /* Onada v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · Cap redirecció: les dues de l'APK
+     (Onada v1.2.6) s'han retirat i no n'hi ha cap altra (contracte a la prova de l'APK, més avall). */
+  expect(Object.hasOwn(hosting, 'redirects')).toBe(false);
   // Els fitxers amb punt no es despleguen (el prerender no n'escriu cap); .well-known/ sí (vegeu la prova de WebFinger).
   /* O4-CLAUDE-3 · O3-GEMINI-1 (261102) hi afig _headers i _redirects: són les
      regles del domini per a Netlify i Cloudflare Pages (public/, Vite les copia
@@ -225,13 +226,13 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
     .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json',
       '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/md/*.md', '/ap/**']);
-  // Cap redirecció (Onada v1.2.6: les úniques són les de l'APK, a /descarregues/) ni cap reescriptura casa amb /ap/:
+  // Cap redirecció (Onada v1.2.16: ja no n'hi ha cap; les de l'APK s'han retirat) ni cap reescriptura casa amb /ap/:
   // ni els camins que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   for (const cami of [
     '/ap/', '/ap/actors/socdepoble.json', '/ap/actors/ningu.json', '/ap/outbox/ningu.json',
     '/ap/followers/ningu.json', '/ap/inbox/ningu', '/ap/objectes/socdepoble/no-existix.json', '/ap/col-leccio-futura/x.json'
   ]) {
-    expect(hosting.redirects.filter((r) => casaGlob(r.source, cami)), cami).toEqual([]);
+    expect((hosting.redirects ?? []).filter((r) => casaGlob(r.source, cami)), cami).toEqual([]);
     expect(reescritA(cami), cami).toBeUndefined();
     expect(casaGlob('/ap/**', cami), cami).toBe(true);
   }
@@ -520,35 +521,38 @@ test('P1-23 · ignore: .well-known/ es desplega amb les dues lectures (glob de f
      de la seua memòria cau al costat de la suma nova. Esta prova no ho comprova (INFRA-01).
    · Un APK ignorat sense redirecció cauria a la reescriptura de l'SPA (200 amb l'index.html en
      lloc del fitxer): cada redirecció apunta a un nom ignorat, i cada APK de dist/descarregues/
-     té la seua redirecció. */
-const MIRALL_APK = 'https://socdepoble.cat';
+     té la seua redirecció.
+   Onada v1.2.16 (ordres del Mestre del 21-11-2026, 01:32 i 01:55: ZERO APK fora de botiga; prompt
+   261121_0216, T3.1; blueprint P0-ANDROID-PUSH §0.0.1) · DEROGA l'apartat anterior: cap eina publica
+   cap APK (publica-tot.mjs refusa --publica-apk), i les dues redireccions es retiren. Per què
+   retirar-les i no portar-les a la fitxa de Google Play: (1) la fitxa no és oberta a tothom
+   (google-play continua amb url: null a canalsDeBotiga.js; només la veuen els verificadors de la
+   prova tancada alpha), i una redirecció hi deixaria el Foraster davant d'un «no trobat» de Google,
+   just el que la pàgina promet no fer («no enllaça botigues que encara no estan obertes»); (2) una
+   regla amb el nom d'un .apk al Hosting és un rastre del canal apagat; (3) el dia que Google Play
+   òbriga, l'enllaç viu a la ranura google-play, no a una adreça de fitxer. Sense regla, l'adreça vella
+   cau a la reescriptura de l'SPA (200 amb l'index.html, mai cap fitxer), la ruta «:sectionId/:itemId»
+   diu «Element no trobat» i el botó «Torna» porta a /xat. Ni socdepoble.org ni el connector ja no
+   apunten a l'APK que encara puga quedar al Node 0 (l'rsync no esborra): retirar-lo d'allí és del
+   Mestre (informe del carril C). L'ignore de tot .apk i .apk.sha256 es queda: cap APK entra al paquet. */
 const NOM_APK_PUBLIC = /export const NOM_APK_PUBLIC = '([^']+)';/
   .exec(readFileSync(path.join(process.cwd(), 'scripts/botigues/publica-tot.mjs'), 'utf8'))?.[1];
 
-test('Onada v1.2.6 · l’APK públic i el seu .sha256 redirigixen (302) a la mateixa ruta de socdepoble.cat, amb noms exactes i res més', () => {
+test('Onada v1.2.16 · ZERO APK: cap redirecció de l’APK (ni a socdepoble.cat ni enlloc), l’adreça vella cau a l’SPA i la ranura apk-directe no s’obri', () => {
   expect(NOM_APK_PUBLIC).toBe('socdepoble-android-latest.apk');
   const camins = [`/descarregues/${NOM_APK_PUBLIC}`, `/descarregues/${NOM_APK_PUBLIC}.sha256`];
-  expect(hosting.redirects).toEqual(camins.map((cami) => ({ source: cami, destination: `${MIRALL_APK}${cami}`, type: 302 })));
-  // La primera és l'adreça canònica de canalsDeBotiga.js (FORMES['apk-directe']), que continua valent; la segona, la seua suma (InstalaLaPwa).
-  expect(urlDeCanal({ id: 'apk-directe', url: `https://socdepoble.org${camins[0]}` })).toBe(`https://socdepoble.org${camins[0]}`);
-  for (const r of hosting.redirects) {
-    const desti = new URL(r.destination);
-    expect([desti.origin, desti.pathname, desti.search, desti.hash], r.source).toEqual([MIRALL_APK, r.source, '', '']);
-    // Font literal: cap comodí, extglob, captura ni negació.
-    expect(r.source, r.source).toMatch(/^\/descarregues\/[a-z0-9.-]+$/);
-  }
-  const redirigit = (cami) => hosting.redirects.filter((r) => casaGlob(r.source, cami)).map((r) => r.destination);
-  for (const cami of camins) expect(redirigit(cami), cami).toEqual([`${MIRALL_APK}${cami}`]);
-  // La pàgina /descarregues (el seu index.html prerenderitzat i l'SPA), la resta de l'app, la federació i les altres sumes, no.
-  for (const cami of ['/descarregues', '/descarregues/', '/descarregues/index.html', '/page/descarregues', '/descarregues/altre',
-    `/${NOM_APK_PUBLIC}`, `/descarregues/${NOM_APK_PUBLIC}x`, `/descarregues/${NOM_APK_PUBLIC}.sha256x`, `/descarregues/x/${NOM_APK_PUBLIC}`,
-    '/', '/xat', '/.well-known/webfinger', '/ap/actors/socdepoble.json', '/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256']) {
-    expect(redirigit(cami), cami).toEqual([]);
-  }
-  for (const cami of ['/descarregues', '/page/descarregues']) expect(reescritA(cami), cami).toBe('/index.html');
+  // Cap regla de redirecció, de cap mena: ni les dues de l'APK ni cap altra que les substituïsca.
+  expect(hosting.redirects ?? []).toEqual([]);
+  // Cap destí al mirall del Node 0, i els únics «.apk» de la configuració són els dos de l'ignore.
+  expect(JSON.stringify(hosting)).not.toMatch(/socdepoble\.cat/);
+  expect(JSON.stringify(hosting).match(/[^"]*\.apk[^"]*/g)).toEqual(['**/*.apk', '**/*.apk.sha256']);
+  // L'adreça vella (i la seua suma) cau a l'SPA, com qualsevol ruta de l'app: mai a un fitxer ni a un mirall.
+  for (const cami of [...camins, '/descarregues', '/page/descarregues']) expect(reescritA(cami), cami).toBe('/index.html');
+  // I l'adreça canònica de la ranura ja no obri res (canalsDeBotiga.js, FORMES['apk-directe']: ZERO APK).
+  expect(urlDeCanal({ id: 'apk-directe', url: `https://socdepoble.org${camins[0]}` })).toBeNull();
 });
 
-test('Onada v1.2.6 · cap APK entra al paquet de Firebase (les dues lectures de l’ignore), i cada APK de dist/descarregues/ té la seua redirecció', () => {
+test('Onada v1.2.6 · cap APK entra al paquet de Firebase (les dues lectures de l’ignore); v1.2.16 · i cap APK a dist/', () => {
   const apks = [`descarregues/${NOM_APK_PUBLIC}`, `descarregues/${NOM_APK_PUBLIC}.sha256`, NOM_APK_PUBLIC,
     'descarregues/socdepoble-android-1.2.6+11.apk', 'qualsevol/carpeta/app-release.apk', 'qualsevol/carpeta/app-release.apk.sha256'];
   for (const fitxer of apks) expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
@@ -564,21 +568,15 @@ test('Onada v1.2.6 · cap APK entra al paquet de Firebase (les dues lectures de 
     'opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip']) {
     expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, false, false]);
   }
-  // Cada redirecció és d'un fitxer que Firebase no té: la redirecció mana igualment, però el fitxer no ocupa ni es servix.
-  for (const r of hosting.redirects) {
-    const fitxer = r.source.slice(1);
-    expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
-  }
   const apkDe = (arrel) => (existsSync(arrel)
     ? readdirSync(arrel, { recursive: true }).map((f) => String(f).split(path.sep).join('/')).filter((f) => /\.apk(?:\.sha256)?$/i.test(f))
     : []);
   // Cap APK a public/: Vite el copiaria a dist/, a dist-natiu/ (dins de l'app) i al connector WordPress.
   expect(apkDe(path.join(process.cwd(), 'public'))).toEqual([]);
-  // Si hi ha un dist/ (després de --publica-apk), cap dels seus APK es puja i cada un de /descarregues/ redirigix.
-  for (const fitxer of apkDe(path.join(process.cwd(), 'dist'))) {
-    expect([fitxer, ignoratGlob(fitxer), ignoratGit(fitxer)]).toEqual([fitxer, true, true]);
-    if (fitxer.startsWith('descarregues/')) expect(hosting.redirects.map((r) => r.source), fitxer).toContain(`/${fitxer}`);
-  }
+  /* v1.2.16 · ZERO APK fora de botiga: si hi ha un dist/, no porta cap APK (abans, --publica-apk el deixava a
+     dist/descarregues/ per a l'rsync al Node 0; ara publica-tot.mjs el refusa). Un APK ací vol dir que algú
+     l'hi ha copiat a mà: es retira abans de cap rsync o desplegament. */
+  expect(apkDe(path.join(process.cwd(), 'dist'))).toEqual([]);
 });
 
 test('NodeInfo 2.1 es publica amb JSON i CORS sense confondre’l amb l’SPA', () => {

@@ -291,7 +291,11 @@
     "tests/protocol-public-port.r32_19.test.mjs",
     "tests/r3219-ap-fetch-pinnat.test.mjs",
     "tests/r3219-lssi-control-postgres.test.mjs",
-    "tests/tarjan-zero-cicles-src.r32_19.test.mjs"
+    "tests/tarjan-zero-cicles-src.r32_19.test.mjs",
+    "tests/node/edgeNoticiesPushHostil.r32_23.test.mjs",
+    "tooling/tests/mapa-editorial-r3223.test.mjs",
+    "tests/botigues-alpha-zero-apk.v1216.test.mjs",
+    "tests/botigues-wordpress-svn.v1216.test.mjs"
   ],
   "files": [
     {
@@ -359,12 +363,12 @@
     {
       "path": "tests/botigues-canal-proves.test.mjs",
       "suite": "primary",
-      "reason": "Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves del manifest públic (testflightIosBuild, apkDirectBuild + apkSha256 i latestBuild) de publica-tot.mjs --sincronitza-proves: les garanties de --sincronitza-ard (versió de package.json, sostre de VERSIO_CLIENT_NATIU, mai baixa sense --corregeix-ard), l'evidència del registre de pujades d'iOS i de l'APK publicat (sumes i signatura fingida), i l'escriptura de public/ i dist/ junts o cap. mkdtemp, cap xarxa ni cap eina real."
+      "reason": "Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves del manifest públic (testflightIosBuild i latestBuild) de publica-tot.mjs --sincronitza-proves: les garanties de --sincronitza-ard (versió de package.json, sostre de VERSIO_CLIENT_NATIU, mai baixa sense --corregeix-ard), l'evidència del registre de pujades d'iOS i l'escriptura de public/ i dist/ junts o cap. v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121): --publica-apk i --build-apk es refusen, i els anuncis heretats apkDirectBuild i apkSha256 es retiren de public/ i dist/. mkdtemp, cap xarxa ni cap eina real."
     },
     {
       "path": "tests/botigues-play-api-rest.test.mjs",
       "suite": "primary",
-      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, APK públic verificat amb apksigner i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1): R32.3-PEIX-ARD, només la pista production «completed» s'anuncia a tots els Android i el pla omnicanal de producció l'encadena abans de npm run build. Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
+      "reason": "Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense fastlane, commit d'un sol intent amb verificació de l'estat a Play i eixida 11 si és desconegut), consultaLlancament de només lectura, clau del compte de servei de preflight.mjs, --publica-apk refusat (v1.2.16 · ZERO APK fora de botiga) i --sincronitza-ard de publica-tot.mjs contra un Google Play local amb estat (127.0.0.1): R32.3-PEIX-ARD, només la pista production «completed» s'anuncia a tots els Android i el pla omnicanal de producció l'encadena abans de npm run build. Clau RSA generada al vol, mkdtemp, cap xarxa de fora."
     },
     {
       "path": "tests/botigues.estat.test.mjs",
@@ -2504,6 +2508,26 @@
       "path": "tests/tarjan-zero-cicles-src.r32_19.test.mjs",
       "suite": "primary",
       "reason": "R32.19: regressió obligatòria del carril de fortificació, cicles, port, LSSI i transport pinnat."
+    },
+    {
+      "path": "tests/node/edgeNoticiesPushHostil.r32_23.test.mjs",
+      "suite": "primary",
+      "reason": "R32.23: regressio adversarial obligatoria Edge/push i invariants independents del motor 301; sense serveis remots."
+    },
+    {
+      "path": "tooling/tests/mapa-editorial-r3223.test.mjs",
+      "suite": "primary",
+      "reason": "R32.23: regressio adversarial obligatoria Edge/push i invariants independents del motor 301; sense serveis remots."
+    },
+    {
+      "path": "tests/botigues-alpha-zero-apk.v1216.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.16 (prompt 261121_0216, T3.1; ordres del Mestre 261121 01:32 i 01:55) · La pista tancada «alpha» de Google Play a entorn.mjs, puja-android.mjs, preflight.mjs, puja-ios.mjs i publica-tot.mjs: --canal alpha, el «sí» alpha:V+B, --desplega amb status completed a alpha, producció sempre en esborrany i el canal intern de sempre; i ZERO APK fora de botiga: cap camí d'eina compila, publica, oferix ni anuncia cap APK directe. Google Play local a 127.0.0.1, clau RSA generada al vol i mkdtemp; cap xarxa de fora ni cap eina real."
+    },
+    {
+      "path": "tests/botigues-wordpress-svn.v1216.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.16 (prompt 261121_0216, T3.3) · El publicador de WordPress.org per SVN amb Docker (scripts/botigues/puja-wordpress-svn.mjs): zip --directori verificat en local (CRC32, rutes, 10 MiB, Stable tag i Version), la contrasenya només per stdin (mai a argv, entorn ni eixida, filtrada fins i tot si svn l'escriu), el sec que no escriu res i les refuses (tag amb un altre contingut, versió més vella, «sí» d'un altre zip, contrasenya oberta o enllaçada). Docker fals injectat i mkdtemp; cap xarxa ni cap docker de veres."
     }
   ]
 }

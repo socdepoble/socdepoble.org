@@ -49,7 +49,12 @@ const fitxerDEntorn = (linies) => {
 
 describe('el «sí» lligat al canal i al binari', () => {
   test('intern com sempre; producció amb el canal i els 12 primers del sha256; cap «sí» d’un canal val per a l’altre', () => {
-    expect(e.CANALS).toEqual({ INTERN: 'intern', PRODUCCIO: 'produccio' });
+    // v1.2.16 · alpha, la prova tancada de Google Play (només Android): el seu «sí» és alpha:V+B.
+    expect(e.CANALS).toEqual({ INTERN: 'intern', PRODUCCIO: 'produccio', ALPHA: 'alpha' });
+    expect(e.confirmacioEsperada('1.0.0', '2', { canal: 'alpha' })).toBe('alpha:1.0.0+2');
+    expect(e.analitzaConfirmacio('alpha:1.0.0+2', { versio: '1.0.0', build: '2', canal: 'alpha' }).valida).toBe(true);
+    expect(e.analitzaConfirmacio('1.0.0+2', { versio: '1.0.0', build: '2', canal: 'alpha' }).valida).toBe(false);
+    expect(e.analitzaConfirmacio('alpha:1.0.0+2', { versio: '1.0.0', build: '2' }).valida).toBe(false);
     expect(e.confirmacioEsperada('1.0.0', '2')).toBe('1.0.0+2');
     expect(e.confirmacioEsperada('1.0.0', '2', { canal: 'produccio', sha256: SHA })).toBe(`produccio:1.0.0+2@${SHA.slice(0, 12)}`);
     expect(e.confirmacioEsperada('1.0.0', '2', { canal: 'produccio' })).toBe('produccio:1.0.0+2@<12 primers del sha256>');

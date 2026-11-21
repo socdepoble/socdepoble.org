@@ -5,42 +5,16 @@ import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import * as backendPort from '../../data/backendPort.js';
 import { textosOpenDataEstats } from './i18nOpenDataEstats.js';
+import {
+  COLLECCIONS_RESUM,
+  CONFIG_OPENDATA_BUIDA,
+  MAXIM_BYTES_OPENDATA,
+  TEXTOS_RESTAURADOR,
+  teCapacitatRestauracioOpenData,
+} from './restauradorOpenDataModel.js';
 
-const txt = (clau, reserva) => Object.freeze([`section.pobles.restaurador.${clau}`, reserva]);
-export const TEXTOS_RESTAURADOR = Object.freeze({
-  titol: txt('titol', 'Restaurar dades obertes del municipi'),
-  explica: txt('explica', 'Comprova un paquet abans de restaurar les seues dades públiques. No inclou comptes, xats ni notes privades.'),
-  fitxer: txt('fitxer', 'Paquet Open Data (ZIP)'),
-  ajudaFitxer: txt('ajudaFitxer', 'Tria un paquet municipal de fins a 64 MB. La lectura i la comprovació es fan en este dispositiu.'),
-  sha: txt('sha', 'Empremta SHA-256 esperada'),
-  ajudaSha: txt('ajudaSha', 'Aporta els 64 caràcters de l’empremta obtinguda d’una font de confiança. El resum del mateix fitxer, per si sol, no acredita qui l’ha publicat.'),
-  comprova: txt('comprova', 'Comprovar i previsualitzar'),
-  descarta: txt('descarta', 'Descartar el paquet'),
-  comprovant: txt('comprovant', 'Comprovant el paquet…'),
-  valid: txt('valid', 'El paquet coincidix amb l’empremta aportada; l’esquema DataPackage v2, les llicències per element i el contingut s’han comprovat. Encara no s’ha restaurat.'),
-  error: txt('error', 'No es pot verificar el paquet. Revisa el fitxer ZIP i l’empremta de confiança; no s’ha escrit cap dada.'),
-  senseCapacitat: txt('senseCapacitat', 'Este servidor permet comprovar el paquet, però encara no admet restaurar-lo. No s’enviarà cap dada.'),
-  sensePermis: txt('sensePermis', 'La restauració necessita permís d’administració i un municipi actiu confirmat.'),
-  altreMunicipi: txt('altreMunicipi', 'El paquet és d’un altre municipi. Canvia al poble corresponent abans de restaurar-lo.'),
-  resum: txt('resum', 'Contingut verificat'),
-  municipi: txt('municipi', 'Municipi'),
-  noticies: txt('noticies', 'Notícies'),
-  agenda: txt('agenda', 'Agenda'),
-  directori: txt('directori', 'Entitats'),
-  memoria: txt('memoria', 'Memòria cultural'),
-  memoriaOral: txt('memoriaOral', 'Memòria oral revisada'),
-  restaura: txt('restaura', 'Restaurar en el municipi actiu'),
-  restaurat: txt('restaurat', 'El servidor de dades ha confirmat la restauració del contingut públic.'),
-  errorRestauracio: txt('errorRestauracio', 'El servidor no ha confirmat la restauració. Revisa els permisos o els conflictes abans de tornar-ho a provar.'),
-  limit: txt('limit', 'La configuració del node, la publicació ActivityPub i els fitxers d’imatge no es restauren amb esta operació.'),
-});
-
-const COLLECCIONS_RESUM = Object.freeze(['noticies', 'agenda', 'directori', 'memoria', 'memoriaOral']);
-const MAXIM = 64 * 1024 * 1024;
-const BUIDA = Object.freeze({});
 const llig = (...args) => import('../../data/importaMunicipiOpenData.js').then(m => m.llegeixPaquetOpenData(...args));
 const importa = (...args) => import('../../data/importaMunicipiOpenData.js').then(m => m.importaMunicipiOpenData(...args));
-const capacitat = port => Boolean(port?.teCapacitat?.('restauracioDadesObertes') && typeof port.restauraDadesObertes === 'function');
 
 function useIdiomaRestaurador() {
   try {
@@ -58,7 +32,7 @@ function useIdiomaRestaurador() {
  * Onada R32.11 · Lot 05: 6 estats UI complets (Empty, Loading diferenciat,
  * Error accionable, Permission, Partial i Success) i botons centrats (<Accions>).
  */
-export default function RestauradorOpenData({ municipi = null, scopeKey = '', port = backendPort, config = BUIDA, autoritzat = false, introduccio = true, idioma }) {
+export default function RestauradorOpenData({ municipi = null, scopeKey = '', port = backendPort, config = CONFIG_OPENDATA_BUIDA, autoritzat = false, introduccio = true, idioma }) {
   const idiomaContext = useIdiomaRestaurador();
   const tx = textosOpenDataEstats(idioma ?? idiomaContext);
   const t = useTraductorOpcional();
@@ -95,7 +69,7 @@ export default function RestauradorOpenData({ municipi = null, scopeKey = '', po
   }, []);
   useEffect(() => { invalida(); setFitxer(null); setSha(''); }, [context, port, autoritzat]);
   const coincideix = Boolean(preview && municipi?.slug && preview.slug === municipi.slug);
-  const potRestaurar = Boolean(coincideix && autoritzat && scopeKey && capacitat(port));
+  const potRestaurar = Boolean(coincideix && autoritzat && scopeKey && teCapacitatRestauracioOpenData(port));
   const esBuitInicial = Boolean(!fitxer && !sha && !preview && !error && !ocupat && !restaurat);
 
   async function comprova(event) {
@@ -105,9 +79,9 @@ export default function RestauradorOpenData({ municipi = null, scopeKey = '', po
     const actual = versio.current;
     enVol.current = true; setOcupat(true); setFaseOcupat('comprovant');
     try {
-      if (!fitxer || fitxer.size <= 0 || fitxer.size > MAXIM || !/^[a-f0-9]{64}$/i.test(sha.trim())) throw new TypeError('fitxer');
+      if (!fitxer || fitxer.size <= 0 || fitxer.size > MAXIM_BYTES_OPENDATA || !/^[a-f0-9]{64}$/i.test(sha.trim())) throw new TypeError('fitxer');
       const bytes = new Uint8Array(await fitxer.arrayBuffer());
-      if (bytes.byteLength > MAXIM || bytes.byteLength !== fitxer.size) throw new TypeError('mida');
+      if (bytes.byteLength > MAXIM_BYTES_OPENDATA || bytes.byteLength !== fitxer.size) throw new TypeError('mida');
       if (!viu.current || actual !== versio.current) return;
       const llegit = await llig(bytes, { sha256Esperat: sha.trim().toLowerCase() });
       if (!viu.current || actual !== versio.current) return;
@@ -196,7 +170,7 @@ export default function RestauradorOpenData({ municipi = null, scopeKey = '', po
           <Alerta to="error">{tr(error)}</Alerta>
         ) : null}
 
-        {!capacitat(port) ? (
+        {!teCapacitatRestauracioOpenData(port) ? (
           <Alerta to="info" viva={false} titol={tx.modeVerificacioLocalTitol}>{tr('senseCapacitat')}</Alerta>
         ) : !autoritzat || !municipi?.slug || !scopeKey ? (
           <Alerta to="info" viva={false} titol={tx.modeVerificacioLocalTitol}>{tr('sensePermis')}</Alerta>

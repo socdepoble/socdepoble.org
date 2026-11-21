@@ -203,7 +203,7 @@ Un sol codi font genera quatre artefactes. Les ordres de build són a `package.j
 
 ### Connector WordPress i el seu sostre d'arrencada
 
-El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.23 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
+El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.24 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
 
 - **Aïllament:** l'element munta l'app dins d'un Shadow DOM tancat (`attachShadow({ mode: 'closed' })` a `src/PedraSecaEmbed.jsx`).
 - **Federació:** instal·lar el connector no convertix el WordPress en un node del Fedivers (`wordpress-plugin/readme.txt`).
@@ -223,8 +223,7 @@ El pes d'arrencada té **trinquets que només poden baixar** sense una decisió 
 
 - **Identitat:** `org.socdepoble.app`, Capacitor 8.5.3 (`capacitor.config.json`). La versió i el build són a `package.json`, `android/app/build.gradle` i el projecte d'Xcode.
 - **Botigues:** els scripts de pujada i preflight són a `scripts/botigues/`. Els canals que la web enllaça es declaren a `src/config/canalsDeBotiga.js`.
-- **APK directe:** `scripts/botigues/publica-tot.mjs --publica-apk` copia l'APK signat i el seu `.sha256` a `dist/descarregues/`, després de `npm run build`. **Qui el servix és el Node 0**, no Firebase: `firebase.json` el deixa fora del paquet (`hosting.ignore`: `**/*.apk` i `**/*.apk.sha256`) i redirigix amb un 302 `/descarregues/socdepoble-android-latest.apk` i el seu `.sha256` a la mateixa ruta de `https://socdepoble.cat`. L'APK només arriba al Node 0 amb la còpia de `dist/` al mirall, que s'ha de fer **després** de `--publica-apk`; la recepta d'eixa còpia no és al repositori. L'adreça pública continua sent `https://socdepoble.org/descarregues/socdepoble-android-latest.apk`, i el canal continua tancat a `canalsDeBotiga.js` (`url: null`).
-- **Cost de l'APK:** amb la redirecció, cada descàrrega des de socdepoble.org només costa a Firebase la resposta 302, no els 107 MB del fitxer. La tarifa pública de Firebase (consultada el 17-11-2026) dona 360 MB/dia sense cost i, al pla Blaze, factura l'excés per GB. El canvi val quan es desplega este `firebase.json`; fins llavors, Firebase continua servint l'APK. `curl -sI` del 17-11-2026 a socdepoble.cat: `200` amb `content-length: 107283534` per a l'APK i `200` amb `content-length: 96` per al `.sha256`. **Si el Node 0 cau, l'APK no es pot baixar** fins que torne: Cloudflare només ho pot pal·liar si en té una còpia (dues consultes del mateix dia van tornar `cf-cache-status: EXPIRED`).
+- **APK directe:** retirat a la v1.2.16 (ordre del Mestre del 21-11-2026: ZERO APK fora de botiga). `scripts/botigues/publica-tot.mjs` refusa `--publica-apk` i `--build-apk`, `firebase.json` no té cap redirecció (l'`ignore` de `**/*.apk` i `**/*.apk.sha256` es queda), el canal `apk-directe` de `src/config/canalsDeBotiga.js` no té cap adreça que l'obriga i Android s'actualitza només per Google Play.
 
 ## Nucli en producció i apps en fase beta
 

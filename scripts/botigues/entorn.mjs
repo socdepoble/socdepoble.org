@@ -248,17 +248,41 @@ export const BUILD = /^[1-9]\d{0,8}$/;
 /* B9 (marató 261101_2143) · Els canals de pujada. «intern» és el de sempre (prova interna de Play;
    a iOS, la build a App Store Connect). «produccio» deixa un ESBORRANY a la pista production de Play,
    o la build d'iOS llesta per a adjuntar-la a la versió de l'App Store. Enviar a revisió i publicar
-   són sempre del Mestre (RUNBOOK P9 i S6). El canal per defecte és intern (D-B9-1). */
-export const CANALS = Object.freeze({ INTERN: 'intern', PRODUCCIO: 'produccio' });
+   són sempre del Mestre (RUNBOOK P9 i S6). El canal per defecte és intern (D-B9-1).
+   Onada v1.2.16 (prompt 261121_0216, T3.1; ordre del Mestre 261121 01:32 i 01:55: ZERO APK fora de
+   botiga) · «alpha» és la prova TANCADA de Google Play (la pista «alpha» de l'API, la dels verificadors
+   del grup socdepoble-testers): només Android. A iOS, la prova tancada és TestFlight, que ja és el
+   canal intern. El «sí» d'alpha va lligat al canal (`alpha:V+B`): ni un «sí» intern ni un de producció
+   hi valen, ni al revés. */
+export const CANALS = Object.freeze({ INTERN: 'intern', PRODUCCIO: 'produccio', ALPHA: 'alpha' });
+/** Els canals que admet cada plataforma: alpha és una pista de Google Play i no té parella a iOS. */
+export const CANALS_PER_PLATAFORMA = Object.freeze({
+  android: Object.freeze([CANALS.INTERN, CANALS.PRODUCCIO, CANALS.ALPHA]),
+  ios: Object.freeze([CANALS.INTERN, CANALS.PRODUCCIO])
+});
+
+/** Cert si `canal` val per a totes les `plataformes` (['android'], ['ios'] o les dues). Pura. */
+export function canalAdmes(canal, plataformes = ['android', 'ios']) {
+  return plataformes.length > 0 && plataformes.every((plataforma) => (CANALS_PER_PLATAFORMA[plataforma] ?? []).includes(canal));
+}
+
+/** El text de l'error d'un --canal que no val per a les `plataformes`. Comença sempre igual («--canal ha de ser intern o produccio»). */
+export function usDelCanal(plataformes = ['android', 'ios']) {
+  return plataformes.every((plataforma) => plataforma === 'android')
+    ? '--canal ha de ser intern o produccio, o alpha (la prova tancada de Google Play)'
+    : '--canal ha de ser intern o produccio (alpha és només la prova tancada de Google Play, d\'Android; a iOS la prova tancada és TestFlight, el canal intern)';
+}
 const SHA12 = /^[0-9a-f]{12}$/;
 export const MARCADOR_SHA12 = '<12 primers del sha256>';
 
 /**
  * El text que ha de portar --confirma. Sense opcions (canal intern), `${versio}+${build}`, com
  * sempre. En producció, lligat al canal i als 12 primers caràcters del sha256 del binari (D-B9-7):
- * `produccio:V+B@<sha12>`, o el marcador si el sha256 encara no se sap.
+ * `produccio:V+B@<sha12>`, o el marcador si el sha256 encara no se sap. A la prova tancada (alpha),
+ * lligat al canal: `alpha:V+B`.
  */
 export function confirmacioEsperada(versio, build, { canal = CANALS.INTERN, sha256 = null } = {}) {
+  if (canal === CANALS.ALPHA) return `alpha:${versio}+${build}`;
   if (canal !== CANALS.PRODUCCIO) return `${versio}+${build}`;
   const sha12 = String(sha256 ?? '').toLowerCase().slice(0, 12);
   return `produccio:${versio}+${build}@${SHA12.test(sha12) ? sha12 : MARCADOR_SHA12}`;
@@ -266,12 +290,13 @@ export function confirmacioEsperada(versio, build, { canal = CANALS.INTERN, sha2
 
 /**
  * Primera passada, abans de tocar res: si --confirma té la forma d'este canal. Un «sí» intern no
- * val per a producció, ni al revés; un canal desconegut no val mai. Pura.
+ * val per a producció ni per a alpha, ni al revés; un canal desconegut no val mai. Pura.
  * @returns {{ valida: boolean, sha12: string|null }}
  */
 export function analitzaConfirmacio(text, { versio, build, canal = CANALS.INTERN } = {}) {
   if (typeof text !== 'string') return { valida: false, sha12: null };
   if (canal === CANALS.INTERN) return { valida: text === `${versio}+${build}`, sha12: null };
+  if (canal === CANALS.ALPHA) return { valida: text === `alpha:${versio}+${build}`, sha12: null };
   if (canal !== CANALS.PRODUCCIO) return { valida: false, sha12: null };
   const prefix = `produccio:${versio}+${build}@`;
   if (!text.startsWith(prefix)) return { valida: false, sha12: null };
@@ -318,10 +343,16 @@ export function analitzaRegistre(text = '') {
   return { entrades, errors };
 }
 
+/* L'obertura de cada canal d'Android (de més tancat a més obert) i com es diu on és un build. */
+const OBERTURA_ANDROID = Object.freeze({ [CANALS.INTERN]: 0, [CANALS.ALPHA]: 1, [CANALS.PRODUCCIO]: 2 });
+const LLOC_ANDROID = Object.freeze({ [CANALS.INTERN]: 'la prova interna', [CANALS.ALPHA]: 'la prova tancada (alpha)', [CANALS.PRODUCCIO]: 'la pista production' });
+
 /**
  * Per què esta pujada no és monòtona respecte del registre, o null. Pura.
  * · el mateix build ja pujat a intern i ara a producció: es promou o s'adjunta, no es torna a pujar;
- * · el mateix build ja pujat al mateix canal (o a producció i ara a intern): cada pujada porta un build nou;
+ *   a Android, igual d'intern a alpha i d'alpha a producció (la prova tancada és entre les dues);
+ * · el mateix build ja pujat al mateix canal (o a un canal més obert i ara a un de més tancat): cada
+ *   pujada porta un build nou;
  * · un build que no és més gran que el màxim de la plataforma, o una versió més vella que una de pujada: s'atura.
  */
 export function problemaDeMonotonia({ plataforma, canal, versio, build }, entrades = []) {
@@ -329,10 +360,11 @@ export function problemaDeMonotonia({ plataforma, canal, versio, build }, entrad
   const quan = (e) => e.data ?? 'data desconeguda';
   const mateix = meues.find((e) => e.build === String(build));
   if (mateix) {
-    if (mateix.canal === CANALS.INTERN && canal === CANALS.PRODUCCIO) {
-      return plataforma === 'android'
-        ? `el build ${build} ja és a la prova interna (${quan(mateix)}): promou-lo des de Play Console (RUNBOOK P9) o puja el build següent`
-        : `el build ${build} ja és a App Store Connect (${quan(mateix)}): adjunta'l a la versió de l'App Store (RUNBOOK P9) o puja el build següent`;
+    if (plataforma === 'android' && OBERTURA_ANDROID[mateix.canal] < OBERTURA_ANDROID[canal]) {
+      return `el build ${build} ja és a ${LLOC_ANDROID[mateix.canal]} (${quan(mateix)}): promou-lo des de Play Console (RUNBOOK P9) a ${LLOC_ANDROID[canal]} o puja el build següent`;
+    }
+    if (plataforma !== 'android' && mateix.canal === CANALS.INTERN && canal === CANALS.PRODUCCIO) {
+      return `el build ${build} ja és a App Store Connect (${quan(mateix)}): adjunta'l a la versió de l'App Store (RUNBOOK P9) o puja el build següent`;
     }
     return `el build ${build} ja s'ha pujat (${mateix.canal}, ${quan(mateix)}): cada pujada porta un build nou`;
   }
@@ -762,8 +794,9 @@ export const rutaDe = (arrel, valors, nom) => path.resolve(arrel, ambCasa(String
  * B9 · La guarda del registre de pujades, després del preflight i abans de compilar o pujar.
  * Torna { carpeta, codi, problemes, avisos }; `carpeta` (o null) és on s'apuntarà la pujada feta.
  * En producció tot tanca: sense SDP_BUILDS_DIR (eixida 5), un registre il·legible o una pujada no
- * monòtona (eixida 7). En intern, sense carpeta (o dins del repositori) no hi ha registre, i una
- * línia il·legible només és un avís; la monotonia sí que para. Cap missatge porta cap ruta.
+ * monòtona (eixida 7). En intern i en alpha (la prova tancada de Play, v1.2.16), sense carpeta (o dins
+ * del repositori) no hi ha registre, i una línia il·legible només és un avís; la monotonia sí que para.
+ * Cap missatge porta cap ruta.
  */
 export function guardaDelRegistre({ arrel, valors = {}, canal = CANALS.INTERN, plataforma, versio, build }) {
   const produccio = canal === CANALS.PRODUCCIO;

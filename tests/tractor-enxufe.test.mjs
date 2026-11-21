@@ -122,7 +122,7 @@ test('E5 · el protocol del proveïdor fora de l’adaptador és una infracció,
 test('E5 · la línia base de l’arbre té motiu i senyals coneguts a cada entrada, i cap entrada és de l’adaptador', () => {
   const { E5 } = JSON.parse(fs.readFileSync('.agents/deute/.enxufe-deute.json', 'utf8'));
   const coneguts = new Set(['GoTrue', 'PostgREST', 'Realtime', 'Storage', 'Edge Functions', 'GraphQL', 'capçalera apikey']);
-  assert.ok(Object.keys(E5).length > 0);
+  assert.ok(E5 && typeof E5 === 'object' && !Array.isArray(E5));
   for (const [cami, entrada] of Object.entries(E5)) {
     assert.ok(fs.existsSync(cami), `${cami} no existix`);
     assert.ok(!/^src\/data\/(?:supabase|adaptadors)\//.test(cami), `${cami} és de l’adaptador: no és deute`);

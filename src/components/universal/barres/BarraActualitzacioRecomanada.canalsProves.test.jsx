@@ -1,7 +1,10 @@
 /**
  * Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · La barra de sempre amb els canals
- * nous: TestFlight (iOS), l'APK directe (Android, amb la SHA-256 sencera) i la web (la PWA), en les
- * cinc llengües, i el botó d'un toc de cada un. Sense canal, la barra és la d'abans.
+ * nous: TestFlight (iOS) i la web (la PWA), en les cinc llengües, i el botó d'un toc de cada un. Sense
+ * canal, la barra és la d'abans.
+ * Onada v1.2.16 · ZERO APK fora de botiga (ordre del Mestre, 21-11-2026) · L'APK directe ja no és cap
+ * canal: l'avís no entra al registre, la barra no es pinta i cap botó no obri l'APK, tampoc amb una
+ * `mostra` que no passa pel registre. Els textos de l'APK esperen la neteja de la v1.2.17.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -70,16 +73,17 @@ describe('la barra', () => {
     expect(finestraOpen).toHaveBeenCalledWith(ESQUEMA_TESTFLIGHT, '_blank', 'noopener,noreferrer');
   });
 
-  test('l\'APK directe: el text, la SHA-256 sencera (sense traduir) i el botó que baixa l\'APK', () => {
+  test('v1.2.16 · ZERO APK: un avís APK, amb la suma bona, no entra al registre, no pinta cap barra i no obri cap APK', () => {
     publicaActualitzacioRecomanada(apk, FONT_MANIFEST);
+    expect(llegixActualitzacioRecomanada()).toBeNull();
     const finestraOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
-    const { container } = render(<BarraActualitzacioRecomanada />);
-    const suma = container.querySelector('code');
-    expect(suma.textContent).toBe(SHA);
-    expect(suma.getAttribute('translate')).toBe('no');
-    expect(container.textContent).not.toMatch(/Google Play/);
-    fireEvent.click(screen.getByRole('button', { name: /Baixa l’APK/ }));
-    expect(finestraOpen).toHaveBeenCalledWith(ENLLAC_APK_DIRECTE, '_blank', 'noopener,noreferrer');
+    const { container, rerender } = render(<BarraActualitzacioRecomanada />);
+    expect(container.innerHTML).toBe('');
+    // Ni amb una mostra que no passa pel registre: el botó no obri res.
+    rerender(<BarraActualitzacioRecomanada mostra={apk} />);
+    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ACTUALITZACIO.ca.accioApk }));
+    expect(finestraOpen).not.toHaveBeenCalled();
+    expect(finestraOpen.mock.calls.flat()).not.toContain(ENLLAC_APK_DIRECTE);
   });
 
   test('la web: la versió nova al text i el botó que la carrega', () => {
@@ -94,7 +98,7 @@ describe('la barra', () => {
   });
 
   test('«Més tard» ajorna el build del canal', () => {
-    publicaActualitzacioRecomanada(apk, FONT_MANIFEST);
+    publicaActualitzacioRecomanada(tf, FONT_MANIFEST);
     render(<BarraActualitzacioRecomanada />);
     fireEvent.click(screen.getByRole('button', { name: /^Més tard/ }));
     expect(llegixActualitzacioRecomanada()).toBeNull();
@@ -102,7 +106,7 @@ describe('la barra', () => {
 
   test('en les cinc llengües, cada canal diu el seu text', () => {
     for (const llengua of ['ca', 'es', 'en', 'eu', 'gl']) {
-      for (const [avis, clau] of [[tf, 'detallTestflight'], [apk, 'detallApk'], [web, 'detallWeb']]) {
+      for (const [avis, clau] of [[tf, 'detallTestflight'], [web, 'detallWeb']]) {
         const { container, unmount } = render(<BarraActualitzacioRecomanada mostra={avis} llengua={llengua} />);
         const esperat = TEXTOS_ACTUALITZACIO[llengua][clau].replace('{versio}', '1.2.7');
         expect(container.querySelector('.sdp-barra-actualitzacio__detall').textContent, `${llengua} ${clau}`).toBe(esperat);

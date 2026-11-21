@@ -17,6 +17,12 @@
  *     i la PWA (src/pwa/actualitzacioWeb.js) hi publica la versió web nova amb FONT_WEB (l'enter
  *     `versioRecomanada` de la web és ordinalSemver de config/manifestVersio.js). El botó obri el canal
  *     de l'avís (obriBotigaActualitzacio). Sense canal, l'avís i el botó de sempre.
+ *   · Onada v1.2.16 · ZERO APK fora de botiga (ordre del Mestre, 21-11-2026) · Android només admet el
+ *     canal de Google Play: un avís amb el canal 'apk' no entra al registre (normalitzaAvis), i a
+ *     Android l'únic enllaç que s'admet és l'https de play.google.com (enllacDeLaPlataforma) o el
+ *     market:// de sempre; qualsevol altre, també un .apk servit per https, cau a ENLLAC_ANDROID_PLAY.
+ *     Així el botó no obri mai cap APK (obriBotigaActualitzacio), porte el canal que porte l'avís.
+ *     Tota actualització viatja per les botigues oficials.
  */
 import { useSyncExternalStore } from 'react';
 import { delVal, getVal, setVal } from './storage.js';
@@ -31,8 +37,10 @@ export const ENLLAC_IOS_APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/
      d'Apple que l'App Store); si TestFlight no s'obri, la mateixa adreça en https, a Safari.
      [NO VERIFICAT en un iPhone: la forma beta.itunes.apple.com/v1/app/<id> és la que fan servir les
      apps per a obrir TestFlight; l'App ve de TestFlight i, per tant, TestFlight hi és.]
-   · APK directe · l'adreça única de canalsDeBotiga.js (FITXER_APK), que socdepoble.org redirigix (302)
-     al Node 0; Android l'obri al navegador, que el baixa.
+   · APK directe · apagat des de la v1.2.16 (ordre del Mestre 261121: ZERO APK fora de botiga). Cap
+     plataforma no admet el canal 'apk', i a Android un enllaç que no és de play.google.com cau a
+     ENLLAC_ANDROID_PLAY (enllacDeLaPlataforma): el botó no obri mai ENLLAC_APK_DIRECTE, tampoc si un
+     avís sense canal, o amb el canal 'play', el porta. La constant només espera la neteja de la v1.2.17.
    · Web · recarregar la pàgina amb la versió nova (src/pwa/actualitzacioWeb.js n'és l'amo). */
 export const ID_APPLE = '6826441844';
 export const ENLLAC_TESTFLIGHT = `https://beta.itunes.apple.com/v1/app/${ID_APPLE}`;
@@ -48,7 +56,8 @@ export const CANALS_ACTUALITZACIO = Object.freeze({
   WEB: 'web'
 });
 const CANALS_PER_PLATAFORMA = Object.freeze({
-  android: Object.freeze([CANALS_ACTUALITZACIO.PLAY, CANALS_ACTUALITZACIO.APK]),
+  /* v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121): Android, només Google Play. */
+  android: Object.freeze([CANALS_ACTUALITZACIO.PLAY]),
   ios: Object.freeze([CANALS_ACTUALITZACIO.APP_STORE, CANALS_ACTUALITZACIO.TESTFLIGHT]),
   web: Object.freeze([CANALS_ACTUALITZACIO.WEB])
 });
@@ -73,6 +82,21 @@ export function enllacBotigaPerDefecte(plataforma) {
   if (plataforma === 'android') return ENLLAC_ANDROID_PLAY;
   if (plataforma === 'ios') return ENLLAC_IOS_APP_STORE;
   return null;
+}
+
+/* v1.2.16 · ZERO APK fora de botiga (Gauntlet v1.2.16, ronda 2, L3R2-03) · L'únic host https que s'admet a
+   Android: la fitxa de Google Play, sense cap port. */
+const HOST_ANDROID_PLAY = 'play.google.com';
+
+/**
+ * L'enllaç d'actualitzar d'una plataforma, el de l'avís o el del servidor. Com enllacSegur (sense una
+ * adreça https, null, i cada qui la crida conserva la seua reserva), però a Android només admet l'https
+ * de play.google.com: qualsevol altre (també un .apk servit per https) cau a ENLLAC_ANDROID_PLAY. Mai llança.
+ */
+export function enllacDeLaPlataforma(plataforma, valor) {
+  const url = enllacSegur(valor);
+  if (plataforma !== 'android' || url === null) return url;
+  return new URL(url).host === HOST_ANDROID_PLAY ? url : ENLLAC_ANDROID_PLAY;
 }
 
 /* R32.3 · Quant espera l'App que Google Play (o, des de la v1.2.7, TestFlight) prenga el primer pla
@@ -153,16 +177,20 @@ export function obriBotigaActualitzacio(avis, {
 } = {}) {
   if (!avis || typeof avis !== 'object' || !finestra) return null;
   /* v1.2.7 · P0-123 · La web no obri cap botiga: recarrega amb la versió nova. TestFlight, amb
-     l'esquema i la reserva https; l'APK directe, l'adreça fixa (mai una que vinga de fora). */
+     l'esquema i la reserva https. */
   if (avis.plataforma === 'web') return recarregaWeb(finestra) ? CANALS_ACTUALITZACIO.WEB : null;
+  /* v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121) · Un canal que no és de la plataforma
+     (l'APK directe, per exemple, que ja no ho és de cap) no obri res: ni l'adreça fixa de l'APK, ni la
+     que porte l'avís, ni la botiga. També val per a un avís que no ha passat pel registre (la `mostra`). */
+  if (avis.canal !== undefined && avis.canal !== null
+    && !(PLATAFORMES_VALIDES.has(avis.plataforma) && CANALS_PER_PLATAFORMA[avis.plataforma].includes(avis.canal))) return null;
   if (avis.plataforma === 'ios' && avis.canal === CANALS_ACTUALITZACIO.TESTFLIGHT) {
     if (obriEsquemaAmbReserva(finestra, ESQUEMA_TESTFLIGHT, ENLLAC_TESTFLIGHT, espera)) return ESQUEMA_TESTFLIGHT;
     return obri(finestra, ENLLAC_TESTFLIGHT) ? ENLLAC_TESTFLIGHT : null;
   }
-  if (avis.plataforma === 'android' && avis.canal === CANALS_ACTUALITZACIO.APK) {
-    return obri(finestra, ENLLAC_APK_DIRECTE) ? ENLLAC_APK_DIRECTE : null;
-  }
-  const httpsUrl = enllacSegur(avis.enllac) || enllacBotigaPerDefecte(avis.plataforma);
+  /* v1.2.16 · L3R2-03 · I a Android, només l'https de Google Play: un avís sense canal, o amb el canal 'play',
+     que porte l'adreça d'un APK obri la fitxa de Google Play (enllacDeLaPlataforma). */
+  const httpsUrl = enllacDeLaPlataforma(avis.plataforma, avis.enllac) || enllacBotigaPerDefecte(avis.plataforma);
   if (!httpsUrl) return null;
   const market = avis.plataforma === 'android' && typeof avis.marketUrl === 'string' && MARKET_VALID.test(avis.marketUrl)
     ? avis.marketUrl
@@ -233,7 +261,9 @@ export function versioRecomanadaDescartada() {
 
 /* v1.2.7 · P0-123 · Els camps nous (canal, versio i sha256) només hi són quan l'avís els porta: l'avís
    de la botiga de sempre té la forma de sempre. Un canal que no és de la plataforma, o un APK sense
-   una SHA-256 vàlida (la barra l'ha de dir), no és cap avís. La web sempre porta el seu canal. */
+   una SHA-256 vàlida (la barra l'ha de dir), no és cap avís. La web sempre porta el seu canal.
+   v1.2.16 · ZERO APK fora de botiga: l'APK ja no és canal de cap plataforma (CANALS_PER_PLATAFORMA), i
+   cap avís APK, tampoc amb la suma bona, no hi entra; les dues línies de la suma esperen la neteja de la v1.2.17. */
 function normalitzaAvis(dades) {
   if (!dades || typeof dades !== 'object') return null;
   const plataforma = PLATAFORMES_VALIDES.has(dades.plataforma) ? dades.plataforma : null;
@@ -248,7 +278,8 @@ function normalitzaAvis(dades) {
   if (canal === CANALS_ACTUALITZACIO.APK && !sha256) return null;
   const versio = typeof dades.versio === 'string' && SEMVER.test(dades.versio) ? dades.versio : null;
   if (plataforma === 'web' && !versio) return null;
-  const enllac = plataforma === 'web' ? null : enllacSegur(dades.enllac);
+  // v1.2.16 · L3R2-03 · A Android, un enllaç que no és de Google Play entra com ENLLAC_ANDROID_PLAY.
+  const enllac = plataforma === 'web' ? null : enllacDeLaPlataforma(plataforma, dades.enllac);
   const marketUrl = plataforma === 'android'
     && typeof dades.marketUrl === 'string'
     && /^market:\/\/details\?id=[A-Za-z0-9._-]+$/.test(dades.marketUrl)

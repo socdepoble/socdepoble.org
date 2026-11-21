@@ -36,18 +36,30 @@
  */
 import { useId } from 'react';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
+import {
+  TEXT_ESGOTAT_PER_DEFECTE,
+  classeVariantOpcio,
+  idLlegendaVariacions,
+  idOpcioVariacio,
+} from './selectorDeVariacionsModel.js';
 
-export function SelectorDeVariacions({ llegenda, opcions = [], valor, onCanvi, textEsgotat = 'Esgotat' }) {
+export function SelectorDeVariacions({
+  llegenda,
+  opcions = [],
+  valor,
+  onCanvi,
+  textEsgotat = TEXT_ESGOTAT_PER_DEFECTE,
+}) {
   const id = useId();
-  const idLlegenda = `${id}-llegenda`;
+  const idLlegenda = idLlegendaVariacions(id);
   return (
     <fieldset className="sdp-variants" role="radiogroup" aria-labelledby={idLlegenda}>
       <legend id={idLlegenda} className="sdp-variants__llegenda">{llegenda}</legend>
       <div className="sdp-variants__pindoles">
         {opcions.map((opcio) => {
-          const idOpcio = `${id}-${opcio.valor}`;
+          const idOpcio = idOpcioVariacio(id, opcio.valor);
           return (
-            <div key={opcio.valor} className={opcio.esgotada ? 'sdp-variant sdp-variant--esgotada' : 'sdp-variant'}>
+            <div key={opcio.valor} className={classeVariantOpcio(opcio.esgotada)}>
               <input type="radio" id={idOpcio} name={id} value={opcio.valor}
                 className="sdp-variant__control sdp-sr-only"
                 checked={opcio.valor === valor}

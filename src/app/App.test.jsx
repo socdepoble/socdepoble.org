@@ -985,6 +985,18 @@ test('261012 · una tornada d’OAuth amb el ?tornar d’una altra app continua 
   await tornadaOAuthAmbSessio('/registre?mode=entrar&tornar=%2Fapp%2Fbar%2Fcarta', '/el-meu-perfil');
 });
 
+/* P0-ANDROID-PUSH (v1.2.16) · B8b (doctrina del Foraster, ordre del Mestre 261121; prompt 0216, T2.4) ·
+   La tornada de Google per redirecció a /registre torna a la fitxa de lectura d'on venia la persona
+   (OnboardingSection decidix amb aterratgeAmbLectura; la closca no hi navega darrere). Fora de la
+   llista tancada, al perfil com sempre. */
+test('B8b · una tornada d’OAuth amb sessió des d’un enllaç de lectura hi torna', async () => {
+  await tornadaOAuthAmbSessio('/registre?mode=entrar&tornar=%2Fevents%2Faplec-2023', '/events/aplec-2023');
+});
+
+test('B8b · una tornada d’OAuth amb sessió des del calendari continua aterrant al perfil', async () => {
+  await tornadaOAuthAmbSessio('/registre?mode=entrar&tornar=%2Fcalendari%3Fmes%3D2026-11', '/el-meu-perfil');
+});
+
 test('261002 · una tornada d’OAuth sense sessió no mou la ruta', async () => {
   vi.stubGlobal('innerWidth', 1024);
   const recull = vi.fn(async () => null);

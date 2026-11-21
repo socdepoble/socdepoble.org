@@ -1,12 +1,15 @@
 // @vitest-environment node
 /* Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · La lectura pura del manifest públic
    (/.well-known/ard.json) i de versio-viva.json: cada camp es valida a part, un camp dolent no tomba el
-   manifest, apkDirectBuild i apkSha256 van junts, latestBuild mai és més baix que cap canal, i el GET
-   acotat no llança mai. Cap xarxa: fetch simulat. */
+   manifest, latestBuild mai és més baix que cap canal, i el GET acotat no llança mai. Cap xarxa: fetch
+   simulat. Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · apkDirectBuild
+   i apkSha256 ja no es lligen: fins a la v1.2.15 anaven junts i anunciaven l'APK directe (estes proves ho
+   fixaven); ara, també amb els dos ben formats, tornen null, i latestBuild no els compta. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import {
+  CAMPS_APK_RETIRATS,
   CAMPS_BUILD_MANIFEST,
   MIDA_MAXIMA_JSON_PUBLIC,
   comparaSemver,
@@ -47,7 +50,9 @@ describe('les peces', () => {
 
 describe('llegixCanalsManifest', () => {
   test('un manifest d\'abans (sense camps nous): les botigues públiques i latestBuild calculat', () => {
-    expect(CAMPS_BUILD_MANIFEST).toEqual(['androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild']);
+    // v1.2.16 · Sense apkDirectBuild (ZERO APK): els dos camps de l'APK són a CAMPS_APK_RETIRATS.
+    expect(CAMPS_BUILD_MANIFEST).toEqual(['androidBuild', 'iosBuild', 'testflightIosBuild']);
+    expect(CAMPS_APK_RETIRATS).toEqual(['apkDirectBuild', 'apkSha256']);
     expect(llegixCanalsManifest({ version: '1.2.6', androidBuild: 1, iosBuild: 1, entries: [] })).toEqual({
       versio: '1.2.6', androidBuild: 1, iosBuild: 1, testflightIosBuild: null, apkDirectBuild: null, apkSha256: null, latestBuild: 1
     });
@@ -62,15 +67,26 @@ describe('llegixCanalsManifest', () => {
     expect(canals.latestBuild).toBeGreaterThanOrEqual(Math.max(real.androidBuild, real.iosBuild));
   });
 
-  test('els canals de proves i latestBuild: el més alt, també si el manifest en diu un de més baix', () => {
-    const complet = { version: '1.2.7', androidBuild: 1, iosBuild: 1, testflightIosBuild: 12, apkDirectBuild: 12, apkSha256: SHA, latestBuild: 12 };
-    expect(llegixCanalsManifest(complet)).toEqual({ ...complet, versio: '1.2.7', version: undefined });
+  test('el canal de proves (TestFlight) i latestBuild: el més alt, també si el manifest en diu un de més baix', () => {
+    const complet = { version: '1.2.7', androidBuild: 1, iosBuild: 1, testflightIosBuild: 12, latestBuild: 12 };
+    expect(llegixCanalsManifest(complet)).toEqual({ ...complet, versio: '1.2.7', version: undefined, apkDirectBuild: null, apkSha256: null });
     expect(llegixCanalsManifest({ ...complet, latestBuild: 3 }).latestBuild).toBe(12);
     expect(llegixCanalsManifest({ ...complet, latestBuild: 15 }).latestBuild).toBe(15);
     expect(Object.isFrozen(llegixCanalsManifest(complet))).toBe(true);
   });
 
-  test('valors no vàlids: cada camp cau a null sense tombar la resta; l\'APK sense suma (o la suma sense APK) no val', () => {
+  /* v1.2.16 · ZERO APK fora de botiga: un manifest heretat amb l'anunci de l'APK ben format (el que fins a la
+     v1.2.15 la prova de dalt llegia sencer) no anuncia cap APK, i el seu build no puja latestBuild. */
+  test('v1.2.16 · ZERO APK: apkDirectBuild i apkSha256 heretats, ben formats, es lligen null i no compten', () => {
+    const heretat = { version: '1.2.7', androidBuild: 1, iosBuild: 1, testflightIosBuild: 12, apkDirectBuild: 13, apkSha256: SHA };
+    const llegit = llegixCanalsManifest(heretat);
+    expect([llegit.apkDirectBuild, llegit.apkSha256, llegit.androidBuild, llegit.latestBuild]).toEqual([null, null, 1, 12]);
+    expect(llegixCanalsManifest({ version: '1.2.7', androidBuild: 2, apkDirectBuild: 99, apkSha256: SHA }).latestBuild).toBe(2);
+    expect(Object.keys(llegit)).toEqual(['versio', 'androidBuild', 'iosBuild', 'testflightIosBuild', 'apkDirectBuild', 'apkSha256', 'latestBuild']);
+  });
+
+  // v1.2.16 · Els casos de l'APK continuen: mal formats o no, sempre null (ZERO APK).
+  test('valors no vàlids: cada camp cau a null sense tombar la resta; l\'APK, de cap manera', () => {
     const base = { version: '1.2.7', androidBuild: 2, iosBuild: 3 };
     for (const [cas, camps, esperat] of [
       ['testflight en text', { testflightIosBuild: '12' }, { testflightIosBuild: null }],

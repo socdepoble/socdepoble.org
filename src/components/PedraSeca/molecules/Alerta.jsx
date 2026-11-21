@@ -3,8 +3,10 @@
  *
  * El rol NO és sempre "alert": `alert` interromp el lector de pantalla.
  *   error → role="alert" (cal actuar ja) · info/exit/avis → role="status".
- * Emet el canon `sdp-alerta--*` de @layer sdp. `ok` queda com a àlies
- * obsolet d'`exit` (el token es diu --sdp-exit).
+ * Emet el canon `sdp-alerta--*` de @layer sdp: els tons són info, exit, avis i
+ * error. L'àlies `ok` ja no existix (v1.2.16: .sdp-alerta--ok no té regla i
+ * eixiria sense color i amb la icona Info): per a un èxit, `exit` (el token es
+ * diu --sdp-exit).
  *
  * Correcció C17 (260928) · `viva` (per defecte true: els usos de sempre no
  * canvien). Amb viva={false} no porta cap rol, i la pell és la mateixa: per

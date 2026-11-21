@@ -124,7 +124,7 @@ describe('els passos inicials', () => {
     expect(PASSOS_INICIALS()).toEqual([
       { id: 'web', canal: 'web', titol: '1/4 Web al dia', estat: 'pendent' },
       { id: 'wordpress', canal: 'wordpress', titol: '2/4 WordPress al dia', estat: 'pendent' },
-      { id: 'android', canal: 'android', titol: '3/4 Google Play i APK enviats', estat: 'pendent' },
+      { id: 'android', canal: 'android', titol: '3/4 Google Play enviat', estat: 'pendent' },
       { id: 'ios', canal: 'ios', titol: '4/4 Apple enviat', estat: 'pendent' }
     ]);
     expect(Object.keys(TITOL_PAS)).toEqual(CANALS_JARVIS.map((c) => c.id));

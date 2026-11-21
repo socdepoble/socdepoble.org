@@ -42,7 +42,9 @@ import { cursorDe, dosDigits } from '../../utils/calendari.js';
 import { clauDia, creaEsdeveniment, llegixDataHora } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
 import { ambitDe } from '../../utils/publicacioUniversal.js';
-import { acteAEsdeveniment, acteOcorreElDia, cursorDeClau, esActeDelCalendari, momentDe } from '../mur/agendaMur.js';
+import {
+  acteAEsdeveniment, acteOcorreElDia, cursorDeClau, esActeDelCalendari, mesDeLActeMesProper, momentDe
+} from '../mur/agendaMur.js';
 import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
 
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
@@ -256,20 +258,37 @@ export function diaDeLaClau(clau) {
 
 /**
  * El mes on s'obri la pàgina sense ?date= ni ?mes=: el de hui si hi ha alguna targeta;
- * si no, el de la targeta més recent fins a hui (la de dalt del Mur); si totes
- * són futures, el de la més pròxima; sense cap targeta amb data, el de hui.
- * Així el calendari no s'obri mai en un mes buit havent-hi targetes.
+ * si no, el de la pròxima targeta a partir de hui; si no n'hi ha cap de futura (o cap
+ * amb data), el de hui.
+ *
+ * P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12, ordre de les 01:55 del
+ * 21-11-2026) · Mai un mes passat. Abans, si el mes de hui no en tenia cap, s'obria
+ * al de la targeta més recent fins a hui (la de dalt del Mur), i el veí que entrava al
+ * calendari el novembre es trobava l'octubre. Esmena en part l'ordre del 261001 («mai
+ * en un mes buit havent-hi targetes»): si totes són passades, s'obri al mes de hui
+ * encara que estiga buit. Les fletxes i la pastilla (?mes=) continuen duent a qualsevol
+ * mes, també als passats.
+ *
+ * Gauntlet R1 de la v1.2.16 (L2-03) · Un acte compta pel seu dia, mai pel moment
+ * editorial: amb la boina de publicació (boinaDataPublicacio), el `moment` de
+ * l'entrada és el dia que es va publicar, i un acte del 5 de desembre publicat el 10
+ * d'octubre no comptava com a futur el 21 de novembre. Els actes van pel mes de la
+ * seua primera ocurrència a partir de hui (mesDeLActeMesProper): el del seu inici si
+ * no es repetix, i mai el d'un inici passat si es repetix. La resta de targetes, pel
+ * moment de la seua pastilla.
  */
 export function mesDObertura(entrades, avui = new Date()) {
   const mesDeHui = cursorDe(avui);
-  const ambData = (entrades ?? []).filter((entrada) => entrada?.esdeveniment && entrada.moment !== null);
+  const ambData = (entrades ?? []).filter((entrada) => entrada?.esdeveniment && (entrada.acte || entrada.moment !== null));
   if (!ambData.length || entradesDelMes(ambData, mesDeHui).length) return mesDeHui;
-  const fiDeHui = new Date(avui.getFullYear(), avui.getMonth(), avui.getDate() + 1).getTime();
-  const passades = ambData.filter((entrada) => entrada.moment < fiDeHui);
-  const triada = passades.length
-    ? passades.reduce((a, b) => (b.moment > a.moment ? b : a))
-    : ambData.reduce((a, b) => (b.moment < a.moment ? b : a));
-  return cursorDe(new Date(triada.moment));
+  const iniciDeHui = new Date(avui.getFullYear(), avui.getMonth(), avui.getDate()).getTime();
+  if (!Number.isFinite(iniciDeHui)) return mesDeHui;
+  const candidats = [mesDeLActeMesProper(ambData.filter((entrada) => entrada.acte).map((entrada) => entrada.acte), avui)];
+  const pastilles = ambData.filter((entrada) => !entrada.acte && entrada.moment >= iniciDeHui);
+  if (pastilles.length) candidats.push(cursorDe(new Date(pastilles.reduce((a, b) => (b.moment < a.moment ? b : a)).moment)));
+  const futurs = candidats.filter(Boolean);
+  if (!futurs.length) return mesDeHui;
+  return futurs.reduce((a, b) => (b.any * 12 + b.mes < a.any * 12 + a.mes ? b : a));
 }
 
 const MES = /^\d{4}-\d{2}$/;

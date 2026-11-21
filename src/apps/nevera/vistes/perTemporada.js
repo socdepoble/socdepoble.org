@@ -51,9 +51,58 @@ export const GRUPS_TEMPORADA = Object.freeze([
   { id: SENSE_DADA, nom: 'Sense dada de temporada', deTemporada: false }
 ].map((grup) => Object.freeze(grup)));
 
+const NOMS_GRUPS_PER_IDIOMA = Object.freeze({
+  es: Object.freeze({
+    plena: 'Plena temporada',
+    inici: 'Empieza la temporada',
+    final: 'Termina la temporada',
+    fora: 'Fuera de temporada',
+    [SENSE_DADA]: 'Sin dato de temporada'
+  }),
+  en: Object.freeze({
+    plena: 'Peak season',
+    inici: 'Early season',
+    final: 'Late season',
+    fora: 'Out of season',
+    [SENSE_DADA]: 'No season data'
+  }),
+  eu: Object.freeze({
+    plena: 'Sasoian bete-betean',
+    inici: 'Sasoia hasten',
+    final: 'Sasoia amaitzen',
+    fora: 'Sasoitik kanpo',
+    [SENSE_DADA]: 'Sasoi-daturik gabe'
+  }),
+  gl: Object.freeze({
+    plena: 'Plena tempada',
+    inici: 'Comeza a tempada',
+    final: 'Remata a tempada',
+    fora: 'Fóra de tempada',
+    [SENSE_DADA]: 'Sen dato de tempada'
+  })
+});
+
 const MESOS = Object.freeze([
   'gener', 'febrer', 'març', 'abril', 'maig', 'juny', 'juliol', 'agost', 'setembre', 'octubre', 'novembre', 'desembre'
 ]);
+
+const MESOS_PER_IDIOMA = Object.freeze({
+  ca: MESOS,
+  es: Object.freeze(['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']),
+  en: Object.freeze(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']),
+  eu: Object.freeze(['urtarrila', 'otsaila', 'martxoa', 'apirila', 'maiatza', 'ekaina', 'uztaila', 'abuztua', 'iraila', 'urria', 'azaroa', 'abendua']),
+  gl: Object.freeze(['xaneiro', 'febreiro', 'marzo', 'abril', 'maio', 'xuño', 'xullo', 'agosto', 'setembro', 'outubro', 'novembro', 'decembro'])
+});
+
+const MESOS_EU_EN = Object.freeze([
+  'urtarrilean', 'otsailean', 'martxoan', 'apirilean', 'maiatzean', 'ekainean',
+  'uztailean', 'abuztuan', 'irailean', 'urrian', 'azaroan', 'abenduan'
+]);
+
+const codiIdioma = (idioma) => {
+  const base = typeof idioma === 'string' ? idioma.toLowerCase().split('-')[0] : 'ca';
+  return Object.hasOwn(MESOS_PER_IDIOMA, base) ? base : 'ca';
+};
 
 /** ?mes=: un mes de l'1 al 12 en la forma canònica (sense zeros, signes ni espais). */
 export const esParametreMes = (valor) => typeof valor === 'string' && /^(?:[1-9]|1[0-2])$/.test(valor);
@@ -62,15 +111,26 @@ export const esParametreMes = (valor) => typeof valor === 'string' && /^(?:[1-9]
 export const mesVei = (mes, pas) => ((((mes - 1 + pas) % 12) + 12) % 12) + 1;
 
 /** «Octubre» (cadena buida si no és un mes). */
-export function nomDelMes(mes) {
-  const nom = MESOS[mes - 1];
-  return nom ? `${nom[0].toLocaleUpperCase('ca')}${nom.slice(1)}` : '';
+export function nomDelMes(mes, idioma = 'ca') {
+  const codi = codiIdioma(idioma);
+  const nom = MESOS_PER_IDIOMA[codi][mes - 1];
+  return nom ? `${nom[0].toLocaleUpperCase(codi)}${nom.slice(1)}` : '';
 }
 
 /** «De temporada al gener», «De temporada a l’octubre». */
-export function titolDeTemporada(mes) {
-  const nom = MESOS[mes - 1];
-  if (!nom) return 'De temporada';
+export function titolDeTemporada(mes, idioma = 'ca') {
+  const codi = codiIdioma(idioma);
+  const nom = MESOS_PER_IDIOMA[codi][mes - 1];
+  if (!nom) {
+    if (codi === 'en') return 'In season';
+    if (codi === 'eu') return 'Sasoikoa';
+    if (codi === 'gl') return 'De tempada';
+    return 'De temporada';
+  }
+  if (codi === 'es') return `De temporada en ${nom}`;
+  if (codi === 'en') return `In season in ${nom}`;
+  if (codi === 'eu') return `Sasoikoa ${MESOS_EU_EN[mes - 1]}`;
+  if (codi === 'gl') return `De tempada en ${nom}`;
   return `De temporada ${/^[aeiou]/.test(nom) ? `a l’${nom}` : `al ${nom}`}`;
 }
 
@@ -104,8 +164,14 @@ export function liniesPerTemporada(estat, llistaId, mes) {
 }
 
 /** Les cinc seccions { id, nom, ordre, visible }; el filtre «De temporada» amaga Fora i Sense dada. */
-export function grupsDeTemporada(nomesDeTemporada = false) {
-  return GRUPS_TEMPORADA.map((grup, ordre) => ({ id: grup.id, nom: grup.nom, ordre, visible: !nomesDeTemporada || grup.deTemporada }));
+export function grupsDeTemporada(nomesDeTemporada = false, idioma = 'ca') {
+  const mapa = NOMS_GRUPS_PER_IDIOMA[codiIdioma(idioma)] || null;
+  return GRUPS_TEMPORADA.map((grup, ordre) => ({
+    id: grup.id,
+    nom: mapa?.[grup.id] || grup.nom,
+    ordre,
+    visible: !nomesDeTemporada || grup.deTemporada
+  }));
 }
 
 /**
@@ -114,8 +180,8 @@ export function grupsDeTemporada(nomesDeTemporada = false) {
  * secció i la rajola no porta línia de davall: amb un nom de dues línies, la
  * línia de davall aixafava el quadre 1:1 de la marca (Pedra Seca §8).
  */
-export function seccionsDeTemporada() {
-  return grupsDeTemporada(true).filter((grup) => grup.visible);
+export function seccionsDeTemporada(idioma = 'ca') {
+  return grupsDeTemporada(true, idioma).filter((grup) => grup.visible);
 }
 
 /**

@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile, rename, rm, stat, open } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, basename } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { CAMINS } from '../../lib/arrel.mjs';
 
 export class SdpSafetyError extends Error {
   constructor(code, message, data = {}) {
@@ -19,7 +20,7 @@ export const WRITE_ZONES = {
     '03_GOVERNAR_Normativa_Regles'
   ],
   archive: ['90_historic'],
-  ephemeral: ['04_escriptori'],
+  ephemeral: [basename(CAMINS.escriptori)],
   generated: [
     '_build',
     '.snapshots'

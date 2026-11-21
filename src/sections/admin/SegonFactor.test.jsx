@@ -19,7 +19,8 @@ vi.mock('../../data/backendPort.js', () => ({
   retiraFactor: (...args) => m.retira(...args),
 }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => m.sessio }));
-import { SegonFactor, NOM_FACTOR, XIFRES_CODI } from './SegonFactor.jsx';
+import { SegonFactor } from './SegonFactor.jsx';
+import { NOM_FACTOR, XIFRES_CODI } from './segonFactorModel.js';
 import { CODI_SEGON_FACTOR, MISSATGE_SEGON_FACTOR, errorDeSegonFactor } from '../../data/errorsBackend.js';
 
 const VERIFICAT = Object.freeze({ id: 'f1', nom: 'Autenticador del Mestre', tipus: 'totp', estat: 'verificat' });

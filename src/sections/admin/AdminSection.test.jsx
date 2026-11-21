@@ -47,7 +47,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
   )
 }));
 import AdminSection, { FACETES, FACETA_SEGON_FACTOR } from './AdminSection.jsx';
-import { FACETA_TAXONOMIA } from './FacetaTaxonomia.jsx';
+import { FACETA_TAXONOMIA } from './facetaTaxonomiaModel.js';
 import { FACETA_ESTIL } from './FacetaEstil.jsx';
 
 /* El JSX d'AdminDashboard abans dels Indicadors (commit b22b168b9). */

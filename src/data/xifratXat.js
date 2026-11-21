@@ -76,20 +76,29 @@ function errorSenseAmbit() {
   );
 }
 
+/* El getter intrínsec llig la marca interna, sense consultar un
+   Symbol.toStringTag ni un mètode fill substituït per qui aporta l'objecte. */
+const tipusVista = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), Symbol.toStringTag).get;
 function netejaBytes(valor) {
-  if (!valor) return;
-  if (Object.prototype.toString.call(valor) === '[object Uint8Array]') {
-    valor.fill(0);
-    return;
-  }
-  if (Array.isArray(valor)) {
-    for (const element of valor) netejaBytes(element);
-    return;
-  }
-  if (typeof valor === 'object') {
-    for (const v of Object.values(valor)) {
-      if (Object.prototype.toString.call(v) === '[object Uint8Array]') v.fill(0);
-    }
+  const vistos = new WeakSet(), pendents = [valor];
+  while (pendents.length) {
+    const actual = pendents.pop();
+    if (!actual || typeof actual !== 'object' || vistos.has(actual)) continue;
+    vistos.add(actual);
+    try {
+      if (ArrayBuffer.isView(actual) && tipusVista.call(actual) === 'Uint8Array') {
+        Uint8Array.prototype.fill.call(actual, 0);
+        continue;
+      }
+      /* Les FK poden estar dins de contingut.a.k, també amb claus Symbol.
+         Cap accessor s'executa, i una branca no inspeccionable no talla
+         l'esborrat de les altres. No hi ha recursió ni bucles per cicles. */
+      const descriptors = Object.getOwnPropertyDescriptors(actual);
+      for (const clau of Reflect.ownKeys(descriptors)) {
+        const descriptor = descriptors[clau];
+        if (Object.hasOwn(descriptor, 'value')) pendents.push(descriptor.value);
+      }
+    } catch { /* Un proxy revocat o un buffer desconnectat no bloqueja la resta. */ }
   }
 }
 

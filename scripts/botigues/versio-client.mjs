@@ -9,7 +9,9 @@
  * botiga. A iOS el número de build de la pujada viu a la línia d'ordres de puja-ios.mjs (l'arxiu es
  * compila amb el --build; el CURRENT_PROJECT_VERSION del pbxproj és el mateix número que la constant,
  * 5 a la v1.2.0, i src/config/versio.test.js els lliga): per això ho mira el script, abans de tocar res. puja-android.mjs ho mira igual, a més
- * del versionCode de build.gradle. contracte.js és pur (cap import): Node el carrega tal com és.
+ * del versionCode de build.gradle. contracte.js és pur: només re-exporta tres fulles pures del mateix
+ * directori (contracteAvisos, contracteConnexions i contracteOrganitzacions, R32.25), i Node el carrega
+ * tal com és.
  * Proves: tests/botigues.test.mjs.
  */
 import { VERSIO_CLIENT_NATIU } from '../../src/data/contracte.js';

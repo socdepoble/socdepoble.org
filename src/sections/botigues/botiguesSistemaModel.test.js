@@ -79,6 +79,17 @@ test('canals nuls, invàlids o duplicats no s’obrin; el directori WordPress co
   expect(creaModelBotigues({ canals: null }).canals.every(c => c.url === null)).toBe(true);
 });
 
+/* Onada v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121) · La Consola diu que el canal està
+   apagat i que cap adreça no l'obri, i ho fa veritat: ni l'adreça canònica d'abans no li dona enllaç. */
+test('v1.2.16 · ZERO APK: el canal apk-directe es diu apagat, sense cap adreça que l’obriga', () => {
+  const descripcio = MODEL_BOTIGUES.canals.find(c => c.id === 'apk-directe').descripcio;
+  expect(descripcio).toBe('Apagat per ordre del Mestre (261121): ZERO APK fora de botiga; cap adreça no obri este canal.');
+  expect(descripcio).not.toMatch(/adreça vàlida configurada|s’enllaça/);
+  const canonica = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
+  const canals = CANALS_DE_BOTIGA.map(c => (c.id === 'apk-directe' ? { ...c, url: canonica } : c));
+  expect(creaModelBotigues({ canals }).canals.find(c => c.id === 'apk-directe')).toEqual({ id: 'apk-directe', nom: 'APK directe', descripcio, url: null });
+});
+
 test('la projecció del cens és exacta i sanejada, sense importar el BIOS o afirmar salut', () => {
   const bytes = readFileSync('.agents/consell.json');
   const original = JSON.parse(bytes);

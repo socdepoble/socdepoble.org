@@ -5,9 +5,9 @@ description: Mapa didàctic del sistema nerviós de Sóc de Poble (44 skills neu
 image: /assets/ui/plugins/sistema_nervios_vinyeta.jpg
 imageAlt: Una iaia governa una màquina de fusta amb manòmetres i campanes a la plaça, amb dos robotets, un veí i una cabra, en estil Bruguera.
 date: '2026-11-17T00:14:00+01:00'
-updated: '2026-11-19T02:00:00+01:00'
-version: 1.2.0
-mur: true
+updated: '2026-11-21T03:48:00+01:00'
+version: 1.2.1
+mur: false
 tags:
   - saber
   - skills
@@ -134,7 +134,7 @@ Repositori **sense llicència lliure acreditada** i dependent de serveis externs
 
 ## 4. Una sola pàgina viva i límits de les comprovacions
 
-Esta és la **pàgina canònica** del sistema nerviós. L’**adreça antiga** `/page/sistema-nervios` hi redirigix; la targeta del Mur és una **projecció** del mateix capítol. Llevar-la del Mur **no esborra el llibre**. La **[Consola Termodinàmica](https://socdepoble.org/consola)** mostra **dades i proves**, no certificats de comprensió ni una garantia d’accessibilitat universal. Les proves de codi cobrixen el seu abast; contrast, geometria tàctil i comportament en cada aparell es comproven també en **navegador**.
+Esta és la **pàgina canònica** del sistema nerviós. L’**adreça antiga** `/page/sistema-nervios` hi redirigix. Des de la **v1.2.16** el capítol **ja no es projecta al Mur** (`mur: false`): el Mur és del poble, no de la maquinària interna, i llevar-lo del Mur **no esborra el llibre**. La **[Consola Termodinàmica](https://socdepoble.org/consola)** mostra **dades i proves**, no certificats de comprensió ni una garantia d’accessibilitat universal. Les proves de codi cobrixen el seu abast; contrast, geometria tàctil i comportament en cada aparell es comproven també en **navegador**.
 
 Les **fonts originals** anteriors expliquen els mètodes i projectes citats. Les afirmacions sobre ús al Node 0 descriuen el **registre local** del projecte; un enllaç extern viu **no acredita** per si sol **instal·lació**, **execució** ni **adopció completa**. Les **llicències** d'este capítol corresponen a la lectura registrada el 17-11-2026; cal rellegir-les abans d’incorporar codi.
 

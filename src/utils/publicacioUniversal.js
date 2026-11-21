@@ -428,10 +428,13 @@ export function campDe(ambit, id) {
 /* ── Validació i normalització ─────────────────────────────────────── */
 
 /* G3-g2-matriu-05 (AH-04.3: calendari multi-dia) · Les regles entre camps:
-   la fi d'un interval no pot ser anterior a l'inici. Sense dia de fi l'acte
-   acaba el dia d'inici (agendaMur.js · acteAEsdeveniment), i llavors mana
-   l'hora. Una fi igual a l'inici és vàlida. Les dates (aaaa-mm-dd) i les hores
-   (HH:MM) netes es comparen com a text: cap Date. */
+   la fi d'un interval no pot ser anterior a l'inici. Sense dia de fi, l'editor
+   exigix que l'hora de fi no siga anterior a la d'inici: una revetla que passa
+   de mitjanit porta data_fi. acteAEsdeveniment (agendaMur.js) llig una hora de
+   fi anterior com de l'endemà (Gauntlet R1 de la v1.2.16, L2-01) per als
+   payloads que no passen per este validador. Una fi igual a l'inici és vàlida.
+   Les dates (aaaa-mm-dd) i les hores (HH:MM) netes es comparen com a text: cap
+   Date. */
 const INTERVALS = Object.freeze({
   calendari: Object.freeze({ dataInici: 'data_inici', horaInici: 'hora_inici', dataFi: 'data_fi', horaFi: 'hora_fi' })
 });

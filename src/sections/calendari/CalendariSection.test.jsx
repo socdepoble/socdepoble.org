@@ -135,11 +135,19 @@ test('per defecte, /calendari obri «Esdeveniments», mostra el botó «Publicar
   expect(within(desplegable).getByText(/29 de gener del? 2023 · Benillup/)).toBeTruthy();
 
   // El selector RSVP de 3 opcions («Assistiré», «Potser», «No assistiré») actualitza «Compta amb mi» amb un sol clic.
+  /* P0-ANDROID-PUSH (v1.2.16) · B10c (D-12) · Abans es provava sobre l'Aplec del 2023, que ja s'ha
+     fet: ara el selector només ix en un acte que encara ha de vindre (els cursos, hui és l'1-10-2026). */
+  const filaCursos = within(desplegable).getByText('Cursos de pedra en sec a Fageca i Alcosser').closest('li');
+  expect(within(filaCursos).getByText('Compta amb mi: 0')).toBeTruthy();
+  act(() => within(filaCursos).getByRole('button', { name: 'Assistiré' }).click());
+  expect(within(filaCursos).getByRole('button', { name: 'Assistiré', pressed: true })).toBeTruthy();
+  expect(within(filaCursos).getByText('Compta amb mi: 1')).toBeTruthy();
+
+  // L'Aplec del 2023 ja s'ha fet: cap «Assistiré / Potser / No assistiré»; el recompte i els enllaços es queden.
   const filaAplec = within(desplegable).getByText('2n Aplec pel Territori').closest('li');
+  expect(filaAplec.querySelectorAll('.sdp-cal-rsvp-grup, button[aria-pressed]')).toHaveLength(0);
+  expect(within(filaAplec).queryByRole('button', { name: /Assistiré|Potser|No assistiré/ })).toBeNull();
   expect(within(filaAplec).getByText('Compta amb mi: 0')).toBeTruthy();
-  act(() => within(filaAplec).getByRole('button', { name: 'Assistiré' }).click());
-  expect(within(filaAplec).getByRole('button', { name: 'Assistiré', pressed: true })).toBeTruthy();
-  expect(within(filaAplec).getByText('Compta amb mi: 1')).toBeTruthy();
 
   // El botó «Veure al calendari» de l'Aplec salta a gener del 2023 conservant el mode Esdeveniments.
   act(() => within(filaAplec).getByRole('button', { name: 'Veure al calendari' }).click());
@@ -235,11 +243,53 @@ test('una targeta amb data però sense identificador no ix ni a la graella ni a 
   expect(screen.queryByText(/no porta cap data i no ix al calendari/)).toBeNull();
 });
 
-test('si el mes de hui no té cap targeta, s’obri al de la targeta més recent, no en un mes buit', () => {
+/* P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12) · Mai un mes passat: abans s'obria
+   al setembre (la targeta més recent fins a hui); ara, al de la pròxima targeta futura. */
+test('si el mes de hui no té cap targeta, s’obri al de la pròxima targeta futura, mai en un mes passat', () => {
   mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedMarketItems: [] };
   pinta('mostrar=tot');
-  expect(regioMes(2026, 8)).toBeTruthy();
-  expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
+  expect(regioMes(2026, 11)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+});
+
+/* Gauntlet R1 de la v1.2.16 (L2-03) · Un acte amb la boina de publicació porta el moment del dia que es
+   va publicar: abans no comptava com a futur i «Totes les publicacions» s'obria a l'octubre buit, amb
+   la fira pintada al desembre. */
+test('[L2-03] un acte del desembre amb la boina de publicació del setembre obri el desembre', () => {
+  const ambBoina = { ...FIRA, date: '2026-12-05', publish_date: '2026-09-10T08:00:00.000Z', boinaDataPublicacio: true };
+  mocks.mur = { ...mocks.mur, sortedEvents: [ambBoina], sortedMarketItems: [] };
+  pinta('mostrar=tot');
+  expect(regioMes(2026, 11)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+});
+
+/* B10a (revisió [VA-1]) · Sense ?mostrar, el mode és «Esdeveniments» i el mes l'obri
+   mesDeLActeMesProper: abans tornava el mes de l'acte més recent encara que fóra passat. */
+test('B10a · sense paràmetres i amb només actes passats, s’obri al mes de hui, no al de l’últim acte', () => {
+  mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-09-15' }] };
+  pinta();
+  expect(screen.getByRole('button', { name: 'Esdeveniments (1)', pressed: true })).toBeTruthy();
+  expect(regioMes(2026, 9)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual([]);
+  expect(onSoc()).toBe('/calendari');
+});
+
+/* B10a i B10c amb la pantalla de la base de la Plaça (evidencia/base/normal_calendari.json, 20-11-2026):
+   el curs (del 23-10 al 14-11) i l'Aplec del 2023, tots dos passats, obrien «Octubre del 2026» amb
+   «Assistiré», «Potser» i «No assistiré» dues vegades. */
+test('B10a i B10c · el 20-11-2026, el curs acabat i l’Aplec del 2023 obrin el novembre i no oferixen cap «Assistiré»', () => {
+  vi.setSystemTime(new Date(2026, 10, 20, 12, 0));
+  const aplec2023 = { id: 'aplec-2023', type: 'event', title: '2n Aplec pel Territori', date: '2023-01-29', location: 'Benillup' };
+  const cursos2026 = { id: 'cursos-2026', type: 'event', title: 'Cursos de pedra en sec a Fageca i Alcosser', inici: '2026-10-23', fi: '2026-11-15' };
+  mocks.mur = { ...mocks.mur, sortedEvents: [cursos2026, aplec2023] };
+  pinta();
+  expect(regioMes(2026, 10)).toBeTruthy();
+  expect(titolDelMes(2026, 10)).toBeTruthy();
+  const desplegable = screen.getByTestId('desplegable-esdeveniments-calendari');
+  expect(within(desplegable).getByText('Cursos de pedra en sec a Fageca i Alcosser')).toBeTruthy();
+  expect(within(desplegable).getByText('2n Aplec pel Territori')).toBeTruthy();
+  expect(desplegable.querySelectorAll('.sdp-cal-rsvp-grup, button[aria-pressed]')).toHaveLength(0);
+  expect(within(desplegable).queryByRole('button', { name: /^(Assistiré|Potser|No assistiré)$/ })).toBeNull();
 });
 
 test('les targetes són les del Mur: l’acte amb la seua insígnia i el producte amb la seua etiqueta i el seu enllaç', () => {
@@ -341,12 +391,12 @@ test('les fletxes i «Hui» escriuen el ?mes= i lleven el ?date=: la graella i l
 });
 
 test('un ?mes= que no és cap mes cau al mes d’obertura (mesDObertura)', () => {
-  // Hui (octubre) sense cap targeta: el mes d'obertura és setembre, el de la més recent.
+  // Hui (octubre) sense cap targeta: el mes d'obertura és desembre, el de la pròxima futura (B10a, v1.2.16: mai un mes passat).
   mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedMarketItems: [] };
   for (const mes of ['2026-13', '2026-00', '0026-01', '2026-9', '2026-09-01', 'demà', '']) {
     pinta(`mes=${encodeURIComponent(mes)}`);
-    expect(regioMes(2026, 8), mes).toBeTruthy();
-    expect(titolsDeTargetes(), mes).toEqual(['Crònica de la setmana', 'Crònica vella']);
+    expect(regioMes(2026, 11), mes).toBeTruthy();
+    expect(titolsDeTargetes(), mes).toEqual(['Fira de tardor']);
     cleanup();
   }
 });
@@ -355,11 +405,14 @@ test('un ?mes= que no és cap mes cau al mes d’obertura (mesDObertura)', () =>
    arribar després de les targetes del Mur: el mes d'obertura es recalcula
    amb elles, no es queda en el de la primera llista. */
 test('les pàgines del sistema que arriben després recalculen el mes d’obertura', () => {
+  /* B10a (v1.2.16) · Amb VELLA sola (setembre) ja no s'obria mai al setembre, sinó a l'octubre en
+     les dues meitats, i la prova no veia cap recàlcul: per això la primera llista porta també una
+     targeta futura (desembre), i l'arribada de la pàgina d'octubre ha de moure el mes. */
   mocks.core = { status: 'loading', error: null, pageCopy: {} };
-  mocks.mur = { ...mocks.mur, sortedEvents: [], sortedFeedPosts: [VELLA], sortedMarketItems: [] };
+  mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedFeedPosts: [VELLA], sortedMarketItems: [] };
   const { rerender } = pinta('mostrar=tot');
-  expect(regioMes(2026, 8)).toBeTruthy();
-  expect(titolsDeTargetes()).toEqual(['Crònica vella']);
+  expect(regioMes(2026, 11)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
 
   mocks.core = { status: 'ready', error: null, pageCopy: { projecte: { ...PROJECTE, date: '2026-10-01T00:00:00.000Z' } } };
   rerender(arbre('mostrar=tot'));

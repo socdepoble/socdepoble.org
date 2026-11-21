@@ -112,12 +112,18 @@ function useNavegaOpcional() {
   try { return useNavigate(); } catch { return null; }
 }
 
+/* P0-ANDROID-PUSH (v1.2.16) · B5 · Doctrina del Foraster (ordre del Mestre, 261121 01:55): qui
+   aterra a /xat sense sessió passeja sense enganys. Cap fil de mostra porta cap no llegit: els
+   Avisos de Sóc de Poble i del poble i la IAIA ja es donen per llegits (noLlegits 0 i
+   llegitFinsSeq igual a ultimSeq), així que ni la insígnia, ni la de la comunitat, ni el «(N)» del
+   títol (totalNoLlegits) ni el separador de no llegits de la conversa no diuen res que no siga cert,
+   i «Marcar com a llegides» en marca 0. Els quatre actors (ordre del 261016) es queden. */
 function filsDeSocDePoble(t, ara) {
   const subjecte = { tipus: 'entitat', id: ENTITAT_PILOT_ID, ruta: RUTA_DE_SOC_DE_POBLE, titol: SOC_DE_POBLE.nom };
   const comuna = { comunitatId: ID_COMUNITAT_SDP, subjecte, ultimAl: ara, llegitFinsSeq: 0 };
   return [
     { id: ID_COMUNITAT_SDP, tipus: 'comunitat', esComunitat: true, name: SOC_DE_POBLE.nom, title: SOC_DE_POBLE.nom, avatar_url: SOC_DE_POBLE.avatar, subjecte, ultimAl: ara, noLlegits: 0 },
-    { ...comuna, id: `${ID_COMUNITAT_SDP}-avisos`, tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 1, ultimSeq: 2,
+    { ...comuna, id: `${ID_COMUNITAT_SDP}-avisos`, tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 0, ultimSeq: 2, llegitFinsSeq: 2,
       ultimText: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim.") },
     { ...comuna, id: `${ID_COMUNITAT_SDP}-general`, tipus: 'grup', esGrup: true, name: t('section.xat.fake.general', 'General'), title: t('section.xat.fake.general', 'General'), noLlegits: 0, ultimSeq: 0, ultimText: '' },
     { ...comuna, id: `${ID_COMUNITAT_SDP}-beta`, tipus: 'grup', esGrup: true, name: NOM_BETA_TESTERS, title: NOM_BETA_TESTERS, noLlegits: 0, ultimSeq: 0, ultimText: '' }
@@ -140,7 +146,7 @@ function filsDelPoble(poble, t, ara, avatar, nom) {
   const comuna = { comunitatId: 'fake-poble', ultimAl: ara, llegitFinsSeq: 0 };
   return [
     { id: 'fake-poble', tipus: 'comunitat', esComunitat: true, name: nom, title: nom, avatar_url: avatar, subjecte: { ...objecteDelPoble(poble), titol: nom }, ultimAl: ara, noLlegits: 0 },
-    { ...comuna, id: 'fake-poble-avisos', tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 1, ultimSeq: 1, ultimText: benvinguda },
+    { ...comuna, id: 'fake-poble-avisos', tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 0, ultimSeq: 1, llegitFinsSeq: 1, ultimText: benvinguda },
     { ...comuna, id: 'fake-poble-general', tipus: 'grup', esGrup: true, name: t('section.xat.fake.general', 'General'), title: t('section.xat.fake.general', 'General'), noLlegits: 0, ultimSeq: 0, ultimText: '' }
   ];
 }
@@ -219,9 +225,9 @@ function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIA
       tipus: IAIA.tipus,
       participants: [{ id: `ajuda:${IAIA.tipus}`, nom: IAIA.nom, tipus: IAIA.tipus }],
       ultimAl: ara,
-      noLlegits: 1,
+      noLlegits: 0,
       ultimSeq: 2,
-      llegitFinsSeq: 0,
+      llegitFinsSeq: 2,
       ultimText: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!")
     }]),
     /* Gauntlet 261016 (Bloc 3.6.1) · Javi Llinares: el missatge automàtic ja
@@ -422,8 +428,8 @@ function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIA
     marcaVist,
     marcaLlegides,
     /* Onada 261030 (cicle 2) · El títol de la pestanya suma els no llegits
-       dels mateixos fils que pinta la llista, com XatContext (sumaNoLlegits):
-       els Avisos de Sóc de Poble, els del poble i la IAIA si està encesa. */
+       dels mateixos fils que pinta la llista, com XatContext (sumaNoLlegits).
+       P0-ANDROID-PUSH (v1.2.16) · B5 · A la mostra, 0: cap «(N)» al títol de /xat. */
     totalNoLlegits: sumaNoLlegits(fakeThreads),
     cercaMembres: async () => AJUDA.filter(({ clau }) => !(iaiaApagada && clau === 'iaia')).map(({ nom, tipus, avatar }) => ({
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false

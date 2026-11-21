@@ -33,17 +33,8 @@ import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { Alerta, Boto, Camp, CampText, Carregant, DialegConfirmacio, EstatBuit, Insignia } from '../../components/PedraSeca/index.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { inscriuFactor, llistaFactors, reptaFactor, retiraFactor, teCapacitat, verificaFactor } from '../../data/backendPort.js';
-import { CODI_SEGON_FACTOR, MISSATGE_SEGON_FACTOR, esBackendInabastable } from '../../data/errorsBackend.js';
-
-/* El nom amb què el factor s'inscriu al servidor d'autenticació (friendly_name). */
-export const NOM_FACTOR = 'Autenticador del Mestre';
-/* Les xifres d'un codi TOTP, i la mida (en píxels CSS) de la imatge del QR. */
-export const XIFRES_CODI = 6;
-const MIDA_QR = 200;
-
-const TEXT_RECUPERACIO = 'Si perds l’autenticador, este client no té codis de recuperació: cal demanar a l’equip que retire el factor des del servidor d’autenticació.';
-const TEXT_PISTA = 'Val qualsevol aplicació d’autenticació: Google Authenticator, Aegis, FreeOTP…';
-const TEXT_SERVIDOR_INABASTABLE = 'No s’ha pogut contactar amb el servidor. Comprova la connexió i torna-ho a provar.';
+import { CODI_SEGON_FACTOR, MISSATGE_SEGON_FACTOR } from '../../data/errorsBackend.js';
+import { MIDA_QR, NOM_FACTOR, TEXT_PISTA, TEXT_RECUPERACIO, XIFRES_CODI, nomesXifres, textDErrorSegonFactor } from './segonFactorModel.js';
 
 const esCancel = (error) => error?.name === 'AbortError';
 
@@ -60,18 +51,6 @@ function portDeSegonFactor() {
     return null;
   }
 }
-
-/* La frase de CODI_SEGON_FACTOR del `code` de l'error; sense un codi conegut,
-   la del servidor inabastable o la genèrica. Mai el text del proveïdor. */
-function textDError(error) {
-  const code = error?.code;
-  if (typeof code === 'string' && Object.hasOwn(MISSATGE_SEGON_FACTOR, code)) return MISSATGE_SEGON_FACTOR[code];
-  if (esBackendInabastable(error)) return TEXT_SERVIDOR_INABASTABLE;
-  return MISSATGE_SEGON_FACTOR[CODI_SEGON_FACTOR.DESCONEGUT];
-}
-
-/* Només xifres, i com a molt les del codi: el camp no accepta res més. */
-const nomesXifres = (text) => String(text ?? '').replace(/\D/g, '').slice(0, XIFRES_CODI);
 
 export function SegonFactor() {
   const { nivell = null } = useSession();
@@ -102,7 +81,7 @@ export function SegonFactor() {
         if (viva) setFactors({ fase: 'llest', llista: Array.isArray(llista) ? llista : [], error: null });
       })
       .catch((error) => {
-        if (viva && !esCancel(error)) setFactors({ fase: 'error', llista: [], error: textDError(error) });
+        if (viva && !esCancel(error)) setFactors({ fase: 'error', llista: [], error: textDErrorSegonFactor(error) });
       });
     return () => { viva = false; };
   }, [port, versio]);
@@ -122,7 +101,7 @@ export function SegonFactor() {
       const exit = await feina();
       if (viu.current && exit) setMissatge({ tipus: 'exit', text: exit });
     } catch (error) {
-      if (viu.current && !esCancel(error)) setMissatge({ tipus: 'error', text: textDError(error) });
+      if (viu.current && !esCancel(error)) setMissatge({ tipus: 'error', text: textDErrorSegonFactor(error) });
     } finally {
       ocupatRef.current = false;
       if (viu.current) setOcupat(null);

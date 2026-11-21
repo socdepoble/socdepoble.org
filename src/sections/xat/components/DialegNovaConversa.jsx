@@ -285,7 +285,7 @@ function Contingut({
       {senseSessio ? <p className="sdp-xat-avis" role="status">
         {t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}
         {' '}<button type="button" className="sdp-xat-pindola" onClick={() => onVes(rutaDEntrada({ tornar }))}>
-          {t('section.xat.sessio.entrar', 'Entrar')}
+          {t('section.login.loginButton', 'Entrar')}
         </button>
       </p> : null}
 

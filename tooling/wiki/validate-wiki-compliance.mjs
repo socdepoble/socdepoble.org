@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const FORBIDDEN_PHRASES = [
   /ignore all previous/i,
@@ -18,7 +19,7 @@ const FORBIDDEN_PHRASES = [
 ];
 
 const SCAN_DIRS = [
-  '_wiki_de_poble',
+  CAMINS.wiki,
   '.agents'
 ];
 

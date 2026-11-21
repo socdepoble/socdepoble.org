@@ -1,11 +1,4 @@
 {
   "descripcio": "Onada R30 · A3-ENX-03 · Línia base d'E5 de tooling/gates/tractor-enxufe.mjs: els mòduls de fora de l'adaptador que ja parlaven el protocol de Supabase el 261115, cadascun amb el seu motiu. Es manté a mà (la porta només llig). La porta no deixa passar cap mòdul ni senyal que no hi siga, i una entrada que l'arbre ja no porta també és una infracció (cal llevar-la). Que no cresca ho mira tests/tractor-enxufe.test.mjs contra HEAD: una entrada o un senyal nou hi ha d'entrar amb el camp «alta» (qui accepta el deute nou, quan i per què no pot anar a l'adaptador).",
-  "E5": {
-    "src/sections/profile/DetallMultimedia.jsx": {
-      "senyals": [
-        "Storage"
-      ],
-      "motiu": "Secció d'UI (el detall de la foto de l'espai multimèdia del perfil). Reconeix la forma de l'URL pública del bucket mitjans (/storage/v1/object/public/mitjans/, escrita com a regex) per a saber que una URL pública i la seua referència opaca sdp-media:// són la mateixa foto (clauDeFont) i per a trobar les fotos que fa servir la presentació de la fitxa (fotesDelText), perquè esborrar-ne una no hi deixe un forat. És la mateixa forma que imatgeSocial.js, sense cap petició; pagar-la vol una sola font de la forma de les URL de mitjans darrere del port (Onada R30, àrbitre, P2)."
-    }
-  }
+  "E5": {}
 }

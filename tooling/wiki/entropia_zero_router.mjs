@@ -7,6 +7,7 @@
  * a un pilar inventat.
  */
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const _metaUrl = import.meta.url.startsWith('file:') ? import.meta.url : 'file://' + import.meta.url;
 import { normalitza } from './lib/text.mjs';
@@ -153,7 +154,7 @@ export function determinarCarpeta(fm, { currentPath } = {}) {
 
   if (st === 'arxivat') return '90_arxiu_historic/';
   if (st === 'esborrany' || st === 'futur') {
-    return '04_escriptori/';
+    return `${path.posix.basename(CAMINS.escriptori)}/`;
   }
 
   if (tp === 'norma' || tp === 'protocol') {

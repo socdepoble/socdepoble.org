@@ -2,7 +2,9 @@
    selector d'assistència RSVP (Assistiré / Potser / No assistiré) i l'avís
    amable de coincidència horària a /calendari, /events/:id i /calendari/:id.
    Viatja exclusivament dins dels trossos diferits (0 B a l'arrencada estàtica
-   de WordPress). Llei 32 estricta. */
+   de WordPress). Llei 32 estricta.
+   P0-ANDROID-PUSH (v1.2.16) · B10b · `actePassat`: el que diu el detall d'un
+   acte que ja s'ha fet, en lloc de la pregunta i dels tres botons (actePassat.js). */
 
 import { createTranslator } from '../../config/i18n.js';
 
@@ -35,6 +37,7 @@ const DICCIONARI_CALENDARI_RSVP = Object.freeze({
     notaPlaceholder: 'Ex.: Eixes dates coincidixen amb festes al meu poble, anem dos en cotxe…',
     desa: 'Desar resposta',
     desat: 'S’ha desat la teua resposta en este navegador.',
+    actePassat: 'Este acte ja s’ha fet.',
     enviaXat: 'Comentar al xat públic',
     obriXat: 'Xat públic de l’esdeveniment',
     xatPrivat: 'Preguntar en privat',
@@ -68,6 +71,7 @@ const DICCIONARI_CALENDARI_RSVP = Object.freeze({
     notaPlaceholder: 'Ej.: Esas fechas coinciden con fiestas en mi pueblo, vamos dos en coche…',
     desa: 'Guardar respuesta',
     desat: 'Se ha guardado tu respuesta en este navegador.',
+    actePassat: 'Este acto ya se celebró.',
     enviaXat: 'Comentar en el chat público',
     obriXat: 'Chat público del evento',
     xatPrivat: 'Preguntar en privado',
@@ -101,6 +105,7 @@ const DICCIONARI_CALENDARI_RSVP = Object.freeze({
     notaPlaceholder: 'E.g.: Those dates overlap with our town festival, two of us are driving…',
     desa: 'Save response',
     desat: 'Your response has been saved in this browser.',
+    actePassat: 'This event has already taken place.',
     enviaXat: 'Comment in public chat',
     obriXat: 'Public event chat',
     xatPrivat: 'Ask privately',
@@ -134,6 +139,7 @@ const DICCIONARI_CALENDARI_RSVP = Object.freeze({
     notaPlaceholder: 'Adib.: Data horiek nire herriko jaiekin bat datoz, bi goaz autoan…',
     desa: 'Gorde erantzuna',
     desat: 'Zure erantzuna nabigatzaile honetan gorde da.',
+    actePassat: 'Ekitaldi hau dagoeneko egin da.',
     enviaXat: 'Idatzi txat publikoan',
     obriXat: 'Ekitaldiaren txat publikoa',
     xatPrivat: 'Galdetu pribatuan',
@@ -167,6 +173,7 @@ const DICCIONARI_CALENDARI_RSVP = Object.freeze({
     notaPlaceholder: 'Ex.: Esas datas coinciden con festas na miña vila, imos dous en coche…',
     desa: 'Gardar resposta',
     desat: 'Gardouse a túa resposta neste navegador.',
+    actePassat: 'Este acto xa se celebrou.',
     enviaXat: 'Comentar no chat público',
     obriXat: 'Chat público do evento',
     xatPrivat: 'Preguntar en privado',

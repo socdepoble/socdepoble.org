@@ -18,7 +18,8 @@ vi.mock('../../components/universal/UniversalPage', () => ({
     return <main><header className="page-title"><h1>{title}</h1></header><p>{lead}</p>{children}</main>;
   }
 }));
-import { FACETA_TAXONOMIA, FacetaTaxonomia, nomFitxerExportacio, payloadDe } from './FacetaTaxonomia.jsx';
+import { FacetaTaxonomia } from './FacetaTaxonomia.jsx';
+import { FACETA_TAXONOMIA, nomFitxerExportacio, payloadDe } from './facetaTaxonomiaModel.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { CODI_PERSONALITZACIO, MISSATGE_PERSONALITZACIO, errorDePersonalitzacio } from '../../data/errorsBackend.js';

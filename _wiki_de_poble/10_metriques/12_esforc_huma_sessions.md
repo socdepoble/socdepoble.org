@@ -1,12 +1,15 @@
 ---
-type: document
+type: registre
 status: canonic
 description: Registre d'esforç humà i termodinàmic per a l'anàlisi de patrons d'eficiència i càrrega de treball.
+tags:
+  - log
+visibility: private
 ---
 
 # Registre d'Esforç Humà i Termodinàmic
 
-Aquesta fulla de càlcul serveix per a traçar el temps real que el Mestre inverteix davant de l'ordinador (sumant totes les sessions fragmentades de nanochats) i creuar-ho amb el consum de crèdits, el volum de peticions i el cost termodinàmic. L'objectiu és descobrir patrons de fatiga, pics de consum ineficient i millorar l'estratègia d'ús de l'Eixam.
+Aquesta fulla de càlcul serveix per a traçar el temps real que el Mestre inverteix davant de l'ordinador (sumant totes les sessions fragmentades de nanochats) i creuar-ho amb el consum de crèdits registrat a [[10_metriques/consum_ia.csv|consum_ia.csv]], el volum de peticions i el cost termodinàmic. L'objectiu és descobrir patrons de fatiga, pics de consum ineficient i millorar l'estratègia d'ús de l'Eixam.
 
 ## Taula de Seguiment (Setembre 2026)
 
@@ -23,3 +26,4 @@ Aquesta fulla de càlcul serveix per a traçar el temps real que el Mestre inver
 ## Vincles
 
 - [[00_index]]
+- [[11_grafica_consum]]

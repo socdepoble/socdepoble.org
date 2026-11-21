@@ -39,12 +39,16 @@ const snapshotServidor = () => false;
  *   · <button type="button" role="switch" aria-checked={actiu}> natiu amb etiqueta invariant;
  *   · estat visual explícit amb marca textual («✓ Actiu» / «Desactivat») mai confiat només al color;
  *   · sincronitzat amb storage.js i UIContext a través de config/theme.js.
+ *
+ * P0-ANDROID-PUSH (v1.2.16) · B11c · `etiquetaCurta`: l'etiqueta curta («Lletra gran», `xipCurt`) per a
+ * l'accés del Xat, on el xip comparteix fila amb «Descarrega l'App». La pastilla d'estat es queda.
  */
 export default function ControlModeSenior({
   llengua = null,
   ambDescripcio = false,
   variantFranja = '',
   testId = 'control-mode-senior',
+  etiquetaCurta = false,
 }) {
   const estatUI = lligEstatUISegur();
   const accionsUI = lligAccionsUISegures();
@@ -77,7 +81,7 @@ export default function ControlModeSenior({
       data-testid={testId}
       onClick={commuta}
     >
-      <span className="sdp-mode-senior-xip__etiqueta">{tx.xip}</span>
+      <span className="sdp-mode-senior-xip__etiqueta">{etiquetaCurta ? tx.xipCurt : tx.xip}</span>
       <span className="sdp-mode-senior-xip__estat" aria-hidden="true">
         {actiu ? `✓ ${tx.actiu}` : tx.inactiu}
       </span>

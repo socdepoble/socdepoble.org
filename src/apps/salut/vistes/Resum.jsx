@@ -8,7 +8,7 @@
  * /resum/mesures és el mateix; en un mòbil hi ensenya les mesures (rutesSalut.js).
  * Cap notificació: la persona ho veu quan entra.
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useLocation } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Fila, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
@@ -50,6 +50,7 @@ export function Alertes() {
   const estret = useEstret();
   const { des, fins } = usePeriodeTriat();
   const actius = useTipusActius();
+  const idBaseAlertes = useId();
   const [obertes, setObertes] = useState(() => new Set());
   const [error, setError] = useState(null);
   if (!salut.carregat) return null;
@@ -74,18 +75,27 @@ export function Alertes() {
         {alertes.length === 0 ? <p>{tx.capAvisPeriode}</p> : null}
         {alertes.map((alertaCrua) => {
           const alerta = alertaSalutTraduida(alertaCrua, idioma);
+          const esOberta = obertes.has(alerta.id);
+          const idPerQue = `${idBaseAlertes}-perque-${alerta.id}`;
           return (
             <Alerta key={alerta.id} to={TO_DE_NIVELL[alerta.nivell]} titol={etiquetaNivellSalut(alerta.nivell, idioma)} viva={false}
               accions={(
                 <Fila gap={2}>
                   {alerta.nivell === 'urgent' ? <Enllac112 /> : null}
-                  <Boto varietat="fantasma" aria-expanded={obertes.has(alerta.id)} onClick={() => commuta(alerta.id)}>{tx.perQueVeigAco}</Boto>
+                  <Boto
+                    varietat="fantasma"
+                    aria-expanded={esOberta}
+                    aria-controls={esOberta ? idPerQue : undefined}
+                    onClick={() => commuta(alerta.id)}
+                  >
+                    {tx.perQueVeigAco}
+                  </Boto>
                   <Boto varietat="fantasma" disabled={salut.nomesLectura} onClick={() => descarta(alerta.id)}>{tx.descartaEnPeriode}</Boto>
                 </Fila>
               )}>
               <p>{alerta.text}</p>
-              {obertes.has(alerta.id) ? (
-                <Pila gap={1}>
+              {esOberta ? (
+                <Pila id={idPerQue} gap={1}>
                   <p>{alerta.perQue}</p>
                   <p>{tx.criteriPrefix(alerta.criteri)}</p>
                   <p>{tx.lesTeuesDadesPrefix(textDades(alerta.dades, tx, idioma))}</p>

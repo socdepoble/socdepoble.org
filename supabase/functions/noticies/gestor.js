@@ -508,41 +508,53 @@ export function respostaDError(codi, extra = {}) {
 
 const ocupat = () => respostaDError('ocupat', { 'Retry-After': String(ESPERA_OCUPAT_S) });
 
-/* Llig un cos sencer, com a molt `maxim` bytes; null si en porta més. */
-async function llegixFitat(resposta, maxim) {
-  if (!resposta.body?.getReader) {
-    const tot = new Uint8Array(await resposta.arrayBuffer());
-    return tot.byteLength > maxim ? null : tot;
-  }
+/* Every await shares the same cumulative deadline, including readers which
+   ignore cancellation. The listener is removed when either side settles. */
+function ambSenyal(pending, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(new Error('avortada')); };
+    if (signal.aborted) { abort(); Promise.resolve(pending).catch(() => {}); return; }
+    signal.addEventListener('abort', abort, { once: true });
+    Promise.resolve(pending).then(value => { signal.removeEventListener('abort', abort); resolve(value); }, error => { signal.removeEventListener('abort', abort); reject(error); });
+  });
+}
+/* Cancellation is best-effort: a hostile origin's cancel promise is never
+   allowed to hold the request open or reveal its error. */
+const descarta = (resposta) => {
+  try { Promise.resolve(resposta?.body?.cancel?.()).catch(() => {}); } catch { /* closed body */ }
+};
+
+/* Byte and chunk limits bound allocation and microtask work independently.
+   Gauntlet v1.2.16 R2 (L5R2-01) · Una resposta sense cos (204, o 200 amb body
+   null) és un cos buit, com a la base: acaba en origen_format, mai en origen_mida.
+   El null es queda per a un cos que no es pot llegir. */
+async function llegixFitat(resposta, maxim, signal) {
+  if (resposta.body === null) return new Uint8Array(0);
+  if (!resposta.body?.getReader) return null;
   const lector = resposta.body.getReader();
+  const cancella = () => { try { Promise.resolve(lector.cancel()).catch(() => {}); } catch { /* closed */ } };
+  signal.addEventListener('abort', cancella, { once: true });
   const trossos = [];
-  let total = 0;
+  let total = 0, chunks = 0;
   try {
     while (true) {
-      const { done, value } = await lector.read();
+      if (signal.aborted) throw new Error('avortada');
+      const { done, value } = await ambSenyal(lector.read(), signal);
       if (done) break;
+      if (!(value instanceof Uint8Array) || ++chunks > 8192 || value.byteLength > maxim - total) return null;
       total += value.byteLength;
-      if (total > maxim) {
-        await lector.cancel().catch(() => {});
-        return null;
-      }
-      trossos.push(value);
+      if (value.byteLength) trossos.push(value.slice());
     }
+    const tot = new Uint8Array(total);
+    let posicio = 0;
+    for (const tros of trossos) { tot.set(tros, posicio); posicio += tros.byteLength; }
+    return tot;
   } finally {
-    lector.releaseLock();
+    signal.removeEventListener('abort', cancella);
+    cancella();
+    try { lector.releaseLock(); } catch { /* pending read cancelled best-effort */ }
   }
-  const tot = new Uint8Array(total);
-  let posicio = 0;
-  for (const tros of trossos) {
-    tot.set(tros, posicio);
-    posicio += tros.byteLength;
-  }
-  return tot;
 }
-
-const descarta = async (resposta) => {
-  try { await resposta.body?.cancel?.(); } catch { /* el cos ja no interessa */ }
-};
 
 /* ── El text dels feeds ───────────────────────────────────────────────────── */
 
@@ -1074,15 +1086,9 @@ function tipusPelsBytes(b) {
 
 /* ── El gestor ────────────────────────────────────────────────────────────── */
 
-/* Una promesa que es rebutja quan el senyal s'avorta (per a un resoledor que no l'escolta). */
-const finsQueSAvorte = (senyal) => new Promise((resol, rebutja) => {
-  if (senyal.aborted) rebutja(new Error('avortada'));
-  else senyal.addEventListener('abort', () => rebutja(new Error('avortada')), { once: true });
-});
-
 /* Llig un feed de l'origen: { xml } o { error }. */
-async function lligFeed(resposta, maxim) {
-  const bytes = await llegixFitat(resposta, maxim);
+async function lligFeed(resposta, maxim, signal) {
+  const bytes = await llegixFitat(resposta, maxim, signal);
   if (!bytes) return { error: 'origen_mida' };
   const xml = descodificaFeed(bytes, resposta.headers.get('content-type'));
   return esFeed(xml) ? { xml } : { error: 'origen_format' };
@@ -1090,13 +1096,13 @@ async function lligFeed(resposta, maxim) {
 
 /* Llig una imatge de l'origen: { bytes, tipus } o { error }. El tipus declarat ha de ser una
    imatge de TIPUS_IMATGE, i els bytes també (la signatura mana: és el que es diu al navegador). */
-async function lligImatge(resposta, maxim) {
+async function lligImatge(resposta, maxim, signal) {
   const declarat = String(resposta.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
   if (!TIPUS_IMATGE.includes(declarat)) {
     await descarta(resposta);
     return { error: 'origen_format' };
   }
-  const bytes = await llegixFitat(resposta, maxim);
+  const bytes = await llegixFitat(resposta, maxim, signal);
   if (!bytes) return { error: 'origen_mida' };
   const tipus = tipusPelsBytes(bytes);
   return tipus ? { bytes, tipus } : { error: 'origen_format' };
@@ -1171,7 +1177,7 @@ export function creaGestor({
      allSettled i no all, perquè una resposta privada d'una família no es perda si l'altra falla. */
   async function resolNom(host, senyal) {
     if (!teResoledor) return null;
-    const resol = (tipus) => Promise.race([Promise.resolve().then(() => resolDns(host, tipus, { signal: senyal })), finsQueSAvorte(senyal)]);
+    const resol = (tipus) => ambSenyal(Promise.resolve().then(() => resolDns(host, tipus, { signal: senyal })), senyal);
     const respostes = await Promise.allSettled([resol('A'), resol('AAAA')]);
     return {
       adreces: respostes.flatMap((resposta) => (resposta.status === 'fulfilled' && Array.isArray(resposta.value) ? resposta.value : [])),
@@ -1237,9 +1243,11 @@ export function creaGestor({
   /* Una baixada de l'origen: el que torna `llig` ({ xml }, { bytes, tipus }) o { error } (un codi
      d'ERRORS). Mai llança. Cada salt, també el primer, passa les regles: amb `regles`, les d'una
      adreça de fora; sense, les d'una font del sistema (redireccions només dins del seu host). */
-  async function baixa(adreca, { regles = null, maxim = MAXIM_BYTES, accepta = ACCEPTA, llig = lligFeed } = {}) {
+  async function baixa(adreca, { regles = null, maxim = MAXIM_BYTES, accepta = ACCEPTA, llig = lligFeed, tempsMs = TEMPS_ORIGEN_MS } = {}) {
+    if (!Number.isFinite(tempsMs) || tempsMs <= 0) return { error: 'origen_temps' };
     const controlador = new AbortController();
-    const rellotge = temporitzador.posa(() => controlador.abort(), TEMPS_ORIGEN_MS);
+    const rellotge = temporitzador.posa(() => controlador.abort(), Math.min(TEMPS_ORIGEN_MS, tempsMs));
+    let tancat = false;
     try {
       let actual = new URL(adreca);
       const valida = regleDelSalt(regles, actual.hostname);
@@ -1247,9 +1255,11 @@ export function creaGestor({
       if (controlador.signal.aborted) return { error: 'origen_temps' };
       if (primer) return { error: primer };
       for (let salts = 0; ; salts += 1) {
-        const resposta = await fetchImpl(actual.href, {
+        const pending = Promise.resolve().then(() => fetchImpl(actual.href, {
           method: 'GET', redirect: 'manual', headers: { 'User-Agent': AGENT_USUARI, Accept: accepta }, signal: controlador.signal
-        });
+        }));
+        pending.then(resposta => { if (tancat || controlador.signal.aborted) descarta(resposta); }, () => {});
+        const resposta = await ambSenyal(pending, controlador.signal);
         /* R6 L-06 · Un 304 sense haver-lo demanat (cap capçalera condicional ix d'ací): la memòria cau
            de la web no dona el feed. No és una redirecció ni una cosa que no es llig. */
         if (resposta.status === 304) {
@@ -1281,12 +1291,14 @@ export function creaGestor({
           await descarta(resposta);
           return { error: 'origen_mida' };
         }
-        return await llig(resposta, maxim);
+        return await ambSenyal(llig(resposta, maxim, controlador.signal), controlador.signal);
       }
     } catch {
       return { error: controlador.signal.aborted ? 'origen_temps' : 'origen_caigut' };
     } finally {
+      tancat = true;
       temporitzador.lleva(rellotge);
+      controlador.abort();
     }
   }
 
@@ -1510,9 +1522,10 @@ export function creaGestor({
     const clauDeVol = `imatge:${clau}`;
     if (!enVol.has(clauDeVol) && imatgesEnVol >= MAXIM_IMATGES_EN_VOL && cuaImatges.length >= MAXIM_IMATGES_EN_CUA) return ocupat();
     const resultat = await refresca(clauDeVol, async () => {
+      const iniciEspera = ara();
       if (!(await tornDImatge())) return { error: 'ocupat' };
       try {
-        return await baixa(url.href, { regles: reglesImatge(vetats), maxim: MAXIM_BYTES_IMATGE, accepta: ACCEPTA_IMATGE, llig: lligImatge });
+        return await baixa(url.href, { regles: reglesImatge(vetats), maxim: MAXIM_BYTES_IMATGE, accepta: ACCEPTA_IMATGE, llig: lligImatge, tempsMs: TEMPS_ORIGEN_MS - Math.max(0, ara() - iniciEspera) });
       } finally {
         alliberaImatge();
       }

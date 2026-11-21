@@ -57,7 +57,9 @@ describe('P0123-06 · publicadaDelManifest: el build de la plataforma del dispos
   test('cada plataforma, els seus canals; mai els de l\'altra ni un latestBuild escrit a mà', () => {
     const tots = { version: '1.2.7', androidBuild: 12, iosBuild: 12, testflightIosBuild: 14, apkDirectBuild: 13, apkSha256: SHA, latestBuild: 99, entries: [] };
     expect(publicadaDelManifest(tots, { plataforma: 'ios', ...local })).toEqual({ versio: '1.2.7', build: 14 });
-    expect(publicadaDelManifest(tots, { plataforma: 'android', ...local })).toEqual({ versio: '1.2.7', build: 13 });
+    /* v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · L'apkDirectBuild 13 heretat ja no es llig
+       (config/manifestVersio.js): a Android, el build de Google Play, 12. Fins a la v1.2.15 esta línia deia 13. */
+    expect(publicadaDelManifest(tots, { plataforma: 'android', ...local })).toEqual({ versio: '1.2.7', build: 12 });
     expect(publicadaDelManifest({ ...tots, testflightIosBuild: undefined }, { plataforma: 'ios', ...local })).toEqual({ versio: '1.2.7', build: 12 });
     // A la web, només la versió.
     expect(publicadaDelManifest(tots, { plataforma: 'web', ...local })).toEqual({ versio: '1.2.7' });
@@ -91,7 +93,9 @@ describe('P0123-06 · publicadaDelManifest: el build de la plataforma del dispos
 
 describe('el component', () => {
   test('dins de l\'App: el build instal·lat i el més alt publicat (latestBuild), del manifest de socdepoble.org', async () => {
-    const fetchImpl = vi.fn(async () => resposta(ambProves));
+    /* v1.2.16 (ZERO APK fora de botiga) · El build 12 d'Android és ara el de Google Play (androidBuild): fins a la
+       v1.2.15 venia de l'apkDirectBuild 12 d'ambProves, que config/manifestVersio.js ja no llig. */
+    const fetchImpl = vi.fn(async () => resposta({ ...ambProves, androidBuild: 12 }));
     render(<LiniaVersioInstallada plataforma="android" origen="https://localhost" fetchImpl={fetchImpl} />);
     expect(screen.getByTestId('linia-versio-installada').textContent).toMatch(/s’està comprovant/);
     await waitFor(() => expect(screen.getByTestId('linia-versio-installada').textContent)
@@ -141,7 +145,8 @@ describe('el component', () => {
   });
 
   test('cap pintat no torna a preguntar (la funció per defecte és estable)', async () => {
-    const fetchImpl = vi.fn(async () => resposta(ambProves));
+    // v1.2.16 · El build 12 d'Android, de Google Play (l'apkDirectBuild ja no es llig).
+    const fetchImpl = vi.fn(async () => resposta({ ...ambProves, androidBuild: 12 }));
     const { rerender } = render(<LiniaVersioInstallada plataforma="android" origen="https://localhost" fetchImpl={fetchImpl} />);
     await waitFor(() => expect(screen.getByTestId('linia-versio-installada').textContent).toMatch(/build 12\)$/));
     rerender(<LiniaVersioInstallada plataforma="android" origen="https://localhost" fetchImpl={fetchImpl} llengua="en" />);

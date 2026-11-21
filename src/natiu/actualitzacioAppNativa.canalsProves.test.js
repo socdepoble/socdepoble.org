@@ -3,7 +3,12 @@
    (Android), segons d'on ve l'App. Casos: TestFlight, App Store, iOS d'origen desconegut, APK directe,
    Google Play, Android d'origen desconegut, un manifest d'abans sense els camps nous i valors no
    vàlids; i el detector sencer (fetch simulat, l'origen injectat) publicant a la barra el canal i la
-   suma. Cap xarxa, cap Capacitor, la consola sempre neta. */
+   suma. Cap xarxa, cap Capacitor, la consola sempre neta.
+   Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · El canal de l'APK
+   directe es retira: fins a la v1.2.15, una App d'instal·lació directa (ORIGENS.DIRECTA) amb un
+   apkDirectBuild més alt rebia l'avís que baixava l'APK amb la seua suma (estes proves ho fixaven). Ara
+   cap origen no rep mai cap baixada d'APK: a Android, l'avís és sempre el de Google Play. Les proves
+   d'eixe canal passen a provar que no n'hi ha cap; les de TestFlight no canvien. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   CANALS_ACTUALITZACIO,
@@ -39,7 +44,8 @@ afterEach(() => {
 describe('llegixManifestVersio amb els canals de proves', () => {
   test('cada plataforma llig el seu canal de proves, només si és vàlid; un manifest d\'abans dona el mateix d\'abans', () => {
     expect(llegixManifestVersio(ambProves, 'ios')).toEqual({ versio: '1.2.7', build: 1, testflightBuild: 12 });
-    expect(llegixManifestVersio(ambProves, 'android')).toEqual({ versio: '1.2.7', build: 1, apkBuild: 12, apkSha256: SHA });
+    // v1.2.16 · A Android, cap canal de proves: l'anunci de l'APK d'ambProves no es llig (abans: apkBuild 12 i la suma).
+    expect(llegixManifestVersio(ambProves, 'android')).toEqual({ versio: '1.2.7', build: 1 });
     expect(llegixManifestVersio(manifest(), 'ios')).toEqual({ versio: '1.2.7', build: 1 });
     expect(llegixManifestVersio(manifest(), 'android')).toEqual({ versio: '1.2.7', build: 1 });
     expect(llegixManifestVersio(manifest({ testflightIosBuild: '12' }), 'ios')).toEqual({ versio: '1.2.7', build: 1 });
@@ -73,11 +79,29 @@ describe('novaVersioDisponible segons l\'origen', () => {
     });
   });
 
-  test('Android d\'instal·lació directa: l\'avís baixa l\'APK i porta la seua suma', () => {
-    expect(nova(ambProves, 'android', ORIGENS.DIRECTA)).toEqual({
-      plataforma: 'android', canal: CANALS_ACTUALITZACIO.APK, versioRecomanada: 12, versio: '1.2.7', enllac: ENLLAC_APK_DIRECTE, marketUrl: null, sha256: SHA
+  /* v1.2.16 · ZERO APK fora de botiga: una App d'instal·lació directa ja no rep cap baixada d'APK. Amb
+     androidBuild al sòl, cap avís (abans: l'APK 12 amb la suma); amb un build de Google Play més alt, el de
+     Google Play, com qualsevol altre Android. */
+  test('v1.2.16 · Android d\'instal·lació directa: mai l\'APK; l\'avís, si n\'hi ha, és el de Google Play', () => {
+    expect(nova(ambProves, 'android', ORIGENS.DIRECTA)).toBeNull();
+    expect(nova({ ...ambProves, androidBuild: 13 }, 'android', ORIGENS.DIRECTA)).toEqual({
+      plataforma: 'android', versioRecomanada: 13, versio: '1.2.7', enllac: ENLLAC_ANDROID_PLAY, marketUrl: ENLLAC_ANDROID_MARKET
     });
-    expect(ENLLAC_APK_DIRECTE).toBe('https://socdepoble.org/descarregues/socdepoble-android-latest.apk');
+  });
+
+  test('v1.2.16 · ZERO APK: cap origen ni cap manifest (tampoc un heretat amb l\'APK ben anunciat) dona un avís d\'APK', () => {
+    const heretats = [ambProves, manifest({ apkDirectBuild: 99, apkSha256: SHA }), manifest({ apkDirectBuild: 99, apkSha256: SHA, androidBuild: 13 }),
+      manifest({ apkDirectBuild: 99, apkSha256: SHA, latestBuild: 99 })];
+    for (const dades of heretats) {
+      for (const origen of Object.values(ORIGENS)) {
+        for (const local of [LOCAL, { versioLocal: '1.2.7', buildLocal: 1 }]) {
+          const avis = nova(dades, 'android', origen, local);
+          const text = JSON.stringify(avis);
+          expect([origen, avis?.canal ?? null, /apk|sha256/i.test(text), text.includes(ENLLAC_APK_DIRECTE)]).toEqual([origen, null, false, false]);
+          if (avis) expect([avis.enllac, avis.marketUrl, avis.versioRecomanada]).toEqual([ENLLAC_ANDROID_PLAY, ENLLAC_ANDROID_MARKET, dades.androidBuild]);
+        }
+      }
+    }
   });
 
   test('Android de Google Play, o d\'origen desconegut: el comportament de sempre (androidBuild i Google Play), mai l\'APK', () => {
@@ -142,18 +166,26 @@ describe('el detector sencer', () => {
     asa.tanca();
   });
 
-  test('una App d\'instal·lació directa publica l\'APK amb la seua suma; l\'origen sabut no es torna a preguntar', async () => {
+  /* v1.2.16 · ZERO APK: fins a la v1.2.15, esta App publicava a la barra l'APK amb la seua suma. Ara, amb
+     l'anunci heretat de l'APK al manifest, no publica res; amb un build de Google Play més alt, l'avís de
+     Google Play. L'origen sabut continua sense tornar-se a preguntar. */
+  test('v1.2.16 · una App d\'instal·lació directa no publica mai l\'APK (sí Google Play); l\'origen sabut no es torna a preguntar', async () => {
     let ara = 0;
     const consultaOrigen = vi.fn(async () => ORIGENS.DIRECTA);
-    const fetchImpl = vi.fn(async () => resposta(ambProves));
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(resposta(ambProves))
+      .mockResolvedValueOnce(resposta({ ...ambProves, androidBuild: 13 }));
     const asa = iniciaActualitzacioAppNativa({ plataforma: 'android', finestra: finestraAmb(), fetchImpl, consultaOrigen, ara: () => ara, ...LOCAL });
     await asa.comprova();
     await torns();
-    expect(llegixActualitzacioRecomanada()).toEqual({
-      plataforma: 'android', versioRecomanada: 12, enllac: ENLLAC_APK_DIRECTE, marketUrl: null, canal: CANALS_ACTUALITZACIO.APK, versio: '1.2.7', sha256: SHA
-    });
+    expect(llegixActualitzacioRecomanada()).toBeNull();
+    expect(llegixDiagnosiActualitzacio()).toMatchObject({ motiu: 'al-dia', origen: ORIGENS.DIRECTA });
     ara += 24 * 60 * 60 * 1000;
     await asa.comprova();
+    await torns();
+    expect(llegixActualitzacioRecomanada()).toEqual({
+      plataforma: 'android', versioRecomanada: 13, enllac: ENLLAC_ANDROID_PLAY, marketUrl: ENLLAC_ANDROID_MARKET
+    });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(consultaOrigen).toHaveBeenCalledTimes(1);
     asa.tanca();
@@ -183,7 +215,9 @@ describe('el detector sencer', () => {
     expect(llegixActualitzacioRecomanada()).toBeNull();
     ara += 24 * 60 * 60 * 1000;
     await asa.comprova();
-    expect(llegixActualitzacioRecomanada()?.canal).toBe(CANALS_ACTUALITZACIO.APK);
+    // v1.2.16 · L'origen ja se sap (DIRECTA), però no hi ha cap APK a publicar (abans: el canal APK).
+    expect(llegixActualitzacioRecomanada()).toBeNull();
+    expect(llegixDiagnosiActualitzacio()).toMatchObject({ motiu: 'al-dia', origen: ORIGENS.DIRECTA });
     expect(consultaOrigen).toHaveBeenCalledTimes(3);
     asa.tanca();
   });

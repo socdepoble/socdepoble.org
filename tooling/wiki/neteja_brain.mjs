@@ -39,6 +39,7 @@ import { pipeline } from 'node:stream/promises';
 import { createGzip } from 'node:zlib';
 import path from 'node:path';
 import os from 'node:os';
+import { CAMINS } from '../lib/arrel.mjs';
 
 /* ----------------------------- POLÍTICA ----------------------------- */
 const POLITICA = (agressiu) => ({
@@ -51,7 +52,8 @@ const POLITICA = (agressiu) => ({
 });
 
 const EXT_SAGRADES = new Set(['.md', '.markdown', '.canvas', '.json']);
-const DIRS_SAGRATS = /^(wiki|memoria|memòria|actes|knowledge|_wiki_de_poble)$/i;
+const DIRS_SAGRATS = /^(wiki|memoria|memòria|actes|knowledge)$/i;
+const esDirectoriSagrat = name => DIRS_SAGRATS.test(name) || name.toLowerCase() === CAMINS.wiki.toLowerCase();
 const DIR_QUARANTENA = '_quarantena_termodinamica';
 const NOM_DIR_LOGS = /^(logs?|sessions?|traces?)$/i;
 
@@ -74,7 +76,7 @@ async function inventaria(arrel) {
       if (it.name === DIR_QUARANTENA || it.name === '.git' || it.name === 'node_modules') continue;
       const ple = path.join(dir, it.name);
       if (it.isDirectory()) {
-        await camina(ple, dinsSagrat || DIRS_SAGRATS.test(it.name));
+        await camina(ple, dinsSagrat || esDirectoriSagrat(it.name));
       } else if (it.isFile()) {
         let st;
         try { st = await fs.stat(ple); } catch { continue; }

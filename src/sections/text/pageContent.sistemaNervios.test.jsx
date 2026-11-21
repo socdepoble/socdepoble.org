@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { auditaSkills } from '../../../tooling/brain/fronteres-skills.mjs';
+import { preparaCapitolsWiki } from '../../data/wikiAlMur.js';
+import { esVisibleAlMur } from '../../data/visibilitatMur.js';
+import { extreuEditorial } from '../wiki-de-poble/parseMarkdown.js';
 
 import { resolvePageSlugPath } from '../../config/navigation.js';
 
@@ -51,14 +54,19 @@ describe('R32.9 · sistema nerviós canònic a la Wiki', () => {
     expect(resolvePageSlugPath('sistema-nervios')).toBe('/wikidepoble?item=sistema_nervios_skills_i_repositoris');
     expect(existsSync(path.join(process.cwd(), 'src/sections/text/pageContent.sistemaNervios.js'))).toBe(false);
   });
-  it('conserva foto, dates, versió, opt-in del Mur i totes les fonts originals', () => {
+  /* P0-ANDROID-PUSH (v1.2.16) · B6 (prompt 261121_0216, T2.2; blueprint [VA2-4]) · Fora la
+     maquinària interna del Mur: el capítol passa a `mur: false` (versió 1.2.1, `updated` amb l'hora
+     de `date`) i ja no es projecta al Mur (wikiAlMur.js); el llibre i la foto es queden. */
+  it('conserva foto, dates i totes les fonts originals, i ja no es projecta al Mur (B6, v1.2.16)', () => {
     const item = wikiManifest.items.find((i) => i.id === 'sistema_nervios_skills_i_repositoris');
     expect(item.image).toBe('/assets/ui/plugins/sistema_nervios_vinyeta.jpg');
     expect(item.imageAlt.length).toBeGreaterThan(40);
     expect(item.attributes.date).toBe('2026-11-17T00:14:00+01:00');
-    expect(item.attributes.updated).toBe('2026-11-19T02:00:00+01:00');
-    expect(item.attributes.version).toBe('1.2.0');
-    expect(item.attributes.mur).toBe(true);
+    expect(item.attributes.updated).toBe('2026-11-21T03:48:00+01:00');
+    expect(item.attributes.version).toBe('1.2.1');
+    expect(item.attributes.mur).toBe(false);
+    expect(item.mur).toBe(false);
+    expect(wikiManifest.items.filter((i) => i.mur === true || i.attributes?.mur === true).map((i) => i.id)).toEqual([]);
     expect(item.content).not.toMatch(/^\| /m);
     for (const url of ['https://github.com/github/spec-kit',
       'https://github.com/google/elephant-goldfish-model',
@@ -74,6 +82,18 @@ describe('R32.9 · sistema nerviós canònic a la Wiki', () => {
     expect(item.content.replaceAll('**', '')).toContain('Al servidor de Sóc de Poble');
     expect(item.content).not.toContain('servidor del poble');
     expect(item.content).not.toContain('2506.13651');
+  });
+});
+
+describe('P0-ANDROID-PUSH (v1.2.16) · B6 · el Mur, sense la maquinària interna', () => {
+  it('la projecció de la Wiki al Mur (wikiAlMur.js) conserva el capítol com a candidat ocult i no en pinta cap', () => {
+    const files = preparaCapitolsWiki(wikiManifest.items, extreuEditorial);
+    const fila = files.find((f) => f.wikiId === 'sistema_nervios_skills_i_repositoris');
+    // Candidat ocult: el superadmin el pot tornar a activar des de la Wiki sense recàrrega.
+    expect(fila, 'el capítol continua al catàleg de candidats').toBeDefined();
+    expect(fila.mostrarAlMur).toBe(false);
+    expect(esVisibleAlMur(fila)).toBe(false);
+    expect(files.filter(esVisibleAlMur).map((f) => f.wikiId)).toEqual([]);
   });
 });
 

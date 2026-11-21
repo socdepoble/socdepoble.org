@@ -49,16 +49,20 @@ import { publicacioTraduible } from '../../components/universal/traduccio/planTr
 import { dataHoraDeBarra, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
-import { clauDeData, sumaDies } from '../../utils/periodes.js';
+import { clauDeData } from '../../utils/periodes.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import {
   TEXTOS_TARGETES, entradesDelDia, entradesDelMes, entradesDelRang, recompteTargetes, rutaDeLEntrada
 } from './calendariGlobal.js';
 import { SETMANES_DEL_MES, rangDeLaVista } from './estatCalendari.js';
-
-const LOCALE = 'ca-ES';
-
-const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+import {
+  DENSITAT_CALENDARI,
+  ETIQUETES_PERIODE,
+  LOCALE_CALENDARI,
+  capitalitzaPeriode,
+  textSenseDataCalendari,
+  textosDeLaVista,
+} from './calendariDelPobleModel.js';
 
 /* Un acte de l'agenda de Sollutia (o d'una font de fora): la targeta
    universal amb el títol, el lloc i la pastilla del seu inici (la regla de la
@@ -91,43 +95,6 @@ function TargetesDeDavall({ visibles, buit }) {
       </div>
     </>
   );
-}
-
-const MES_PER_PAS = Object.freeze({ anterior: 'Mes anterior', hui: 'Hui', seguent: 'Mes següent' });
-const ETIQUETES_PERIODE = Object.freeze({
-  setmana: Object.freeze({ anterior: 'Setmana anterior', hui: 'Hui', seguent: 'Setmana següent' }),
-  'dues-setmanes': Object.freeze({ anterior: 'Dues setmanes anteriors', hui: 'Hui', seguent: 'Dues setmanes següents' }),
-  mes: MES_PER_PAS,
-  any: Object.freeze({ anterior: 'Any anterior', hui: 'Hui', seguent: 'Any següent' }),
-  agenda: MES_PER_PAS
-});
-/* Fase visual · La densitat de Setmana, Dues setmanes i Mes: la responsiva
-   (decisió per defecte; la compacta només amb ratolí). */
-const DENSITAT = 'responsiva';
-const dataSenseDiaDeLaSetmana = (data) => data.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-/* Un rang semiobert [desde, fins) en text: «28 de setembre – 4 d’octubre de 2026». */
-const nomDelRang = ({ desde, fins }) => `${dataSenseDiaDeLaSetmana(desde)} – ${dataSenseDiaDeLaSetmana(sumaDies(fins, -1))}`;
-/* «de setembre de 2026», «d’octubre de 2026»: la preposició s'apostrofa davant de vocal. */
-const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
-
-/* Els textos de cada vista: el títol de la navegació, el nom de la regió i
-   el buit de la llista de davall (sense dia triat). */
-function textosDeLaVista(vista, cursor, rang) {
-  if (vista === 'setmana') {
-    const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de la setmana del ${periode}`, buit: 'Cap publicació esta setmana.' };
-  }
-  if (vista === 'dues-setmanes') {
-    const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de les dues setmanes del ${periode}`, buit: 'Cap publicació estes dues setmanes.' };
-  }
-  if (vista === 'any') {
-    const periode = String(cursor.any);
-    return { periode, regio: `Calendari de l’any ${periode}`, buit: 'Cap publicació este any.' };
-  }
-  const periode = nomDelMes(cursor);
-  if (vista === 'agenda') return { periode, regio: `Agenda ${ambDe(periode)}`, buit: 'Cap publicació en este període.' };
-  return { periode, regio: `Calendari ${ambDe(periode)}`, buit: 'Cap publicació este mes.' };
 }
 
 /* Onada 6 · On porta cada esdeveniment de les vistes: la ruta de la seua
@@ -188,11 +155,11 @@ export function CalendariDelPoble({
 
   const textos = textosDeLaVista(vista, cursor, rang);
   const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
-  const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE, titol: textos.regio };
+  const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE_CALENDARI, titol: textos.regio };
   // Onada 6 · Les vistes amb peces d'esdeveniment porten l'enllaç a la publicació.
   // R51 (troballa R12G-BH-02) · I el veredicte de traducció de cada esdeveniment.
   const enllacos = { rutaDeLEsdeveniment, LinkComponent, esTraduible };
-  const titolSuperior = textos.periode.charAt(0).toUpperCase() + textos.periode.slice(1);
+  const titolSuperior = capitalitzaPeriode(textos.periode);
 
   return (
     <>
@@ -205,12 +172,12 @@ export function CalendariDelPoble({
         onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
         vista={vista} onCanviaVista={canviaVista} accions={accions} />
       {vista === 'setmana' ? (
-        <VistaSetmana {...comunes} {...enllacos} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
+        <VistaSetmana {...comunes} {...enllacos} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT_CALENDARI} />
       ) : null}
       {/* Mes i Dues setmanes: la mateixa anatomia (VistaMes); Dues setmanes, dos files des del dilluns. */}
       {vista === 'mes' || vista === 'dues-setmanes' ? (
         <VistaMes {...comunes} {...enllacos} cursor={cursor} dilluns={vista === 'dues-setmanes' ? dilluns : null}
-          setmanes={vista === 'dues-setmanes' ? 2 : SETMANES_DEL_MES} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
+          setmanes={vista === 'dues-setmanes' ? 2 : SETMANES_DEL_MES} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT_CALENDARI} />
       ) : null}
       {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
       {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
@@ -220,13 +187,7 @@ export function CalendariDelPoble({
       {/* Revisió del carril A (ordre del Mestre, 261001) · Una targeta sense
           esdeveniment no ix ni a la graella ni a la llista, i l'avís diu la
           veritat: pot ser que no porte data o que no tinga identificador. */}
-      {senseData ? (
-        <p>
-          {senseData === 1
-            ? 'Una publicació no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.'
-            : `${senseData} publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.`}
-        </p>
-      ) : null}
+      {senseData ? <p>{textSenseDataCalendari(senseData)}</p> : null}
       <TargetesDeDavall visibles={visibles} buit={buit} />
     </>
   );

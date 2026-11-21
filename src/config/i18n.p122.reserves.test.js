@@ -21,7 +21,7 @@ const FITXERS = [
   'src/sections/xat/XatControlSection.jsx',
   'src/sections/xat/XatSection.jsx',
   'src/sections/xat/components/FullAjustos.jsx',
-  'src/sections/xat/components/VistaEnConstruccio.jsx'
+  'src/sections/xat/components/vistaEnConstruccioModel.js'
 ];
 const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
 function clausDe(font) {

@@ -28,30 +28,23 @@ import { fixaPrefixDelTitol } from '../../hooks/seoHead.js';
 import { useXat } from './XatContext.jsx';
 import PastillaNoLlegits from './components/PastillaNoLlegits.jsx';
 import { useFixaNoLlegitsGlobalsXat, useNoLlegitsGlobalsXat } from './noLlegitsGlobalsXat.js';
-
-const RUTA_XAT = /(^|\/)xat(\/|$)/;
-const traductor = (t) => (typeof t === 'function' ? t : (_, reserva) => reserva);
-const quants = (valor) => {
-  const n = Number(valor);
-  return Number.isSafeInteger(n) && n > 0 ? n : 0;
-};
-
-/** El text del comptador per al lector de pantalla (les claus de PastillaNoLlegits). */
-export function textNoLlegits(n, t) {
-  const tr = traductor(t);
-  return n === 1
-    ? tr('section.xat.noLlegit.un', 'Un missatge no llegit')
-    : tr('section.xat.noLlegit.molts', '{n} missatges no llegits').replace('{n}', String(n));
-}
+import {
+  RUTA_XAT,
+  actualitzaInsigniaApp,
+  esDocumentPropi,
+  quantsNoLlegits,
+  textNoLlegits,
+  traductorXat,
+} from './comptadorGlobalXatModel.js';
 
 /**
  * L'entrada «Xat» amb el comptador: `children(nomAccessible, insignia)` pinta
  * l'enllaç de sempre. Sense no llegits, el nom de sempre i cap insígnia.
  */
 export function AmbNoLlegitsDelXat({ etiqueta, t, children }) {
-  const n = quants(useNoLlegitsGlobalsXat());
+  const n = quantsNoLlegits(useNoLlegitsGlobalsXat());
   if (!n) return children(etiqueta, null);
-  const tr = traductor(t);
+  const tr = traductorXat(t);
   return children(`${etiqueta}, ${textNoLlegits(n, tr)}`, (
     <span className="nav-item__insignia" aria-hidden="true">
       <PastillaNoLlegits quants={n} t={tr} />
@@ -59,31 +52,12 @@ export function AmbNoLlegitsDelXat({ etiqueta, t, children }) {
   ));
 }
 
-/** Insígnia de l'app instal·lada: detectada i silenciosa. */
-export function actualitzaInsigniaApp(n, navegador = typeof navigator === 'undefined' ? null : navigator) {
-  if (!navegador) return;
-  const crida = n > 0 ? navegador.setAppBadge : navegador.clearAppBadge;
-  if (typeof crida !== 'function') return;
-  try {
-    const promesa = n > 0 ? crida.call(navegador, n) : crida.call(navegador);
-    if (promesa && typeof promesa.catch === 'function') promesa.catch(() => {});
-  } catch {
-    /* sense insígnia: cap avís */
-  }
-}
-
-/* Sense la prop d'App: cap marca d'incrustat i fora d'un iframe. */
-function esDocumentPropi() {
-  if (typeof window === 'undefined' || window.__SDP_EMBEDDED__) return false;
-  try { return window.self === window.top; } catch { return false; }
-}
-
 /** Muntat una sola vegada dins de XatProvider (App.jsx): el pont, el títol i la insígnia. */
 export function ComptadorGlobalXat({ amaDelDocument } = {}) {
   const { totalNoLlegits } = useXat();
   const { pathname } = useLocation();
   const fixa = useFixaNoLlegitsGlobalsXat();
-  const n = quants(totalNoLlegits);
+  const n = quantsNoLlegits(totalNoLlegits);
   const dinsDelXat = RUTA_XAT.test(pathname || '');
   useEffect(() => {
     fixa?.(n);

@@ -11,7 +11,8 @@ import { RegistrationStep } from './OnboardingSteps.jsx';
 import { ContrasenyaNovaStep, EnllacPerdutStep } from './RecuperacioSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { eleccioRemotaActiva, enterRemoteMode, enterTestMode, exitRemoteMode } from '../../config/dataMode.js';
-import { RUTA_COMPTE, RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, modeDEntrada } from '../../config/rutaEntrada.js';
+import { RUTA_COMPTE, RUTA_DESPRES_D_ENTRAR, modeDEntrada } from '../../config/rutaEntrada.js';
+import { aterratgeAmbLectura } from '../../config/tornadaDeLectura.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
@@ -28,7 +29,7 @@ import { entraAmbProveidorNatiu } from './fluxEntradaNativa.js';
 import { detectaWebViewInApp } from './detectaWebViewInApp.js';
 import { textosEscutWebview } from './textosEscutWebview.js';
 import { textosOnboardingExtra } from './i18nOnboardingExtra.js';
-import { copiaEnllacAmbReserva } from '../../utils/navegadorIncrustat.js';
+import { copiaEnllacAmbReserva, textosDeLEscut } from '../../utils/navegadorIncrustat.js';
 
 /* Fase D (261020, tasca 1) · Les proves que simulen useUIState sense `t`
    continuen pintant: el traductor de reserva és el valencià. */
@@ -208,6 +209,9 @@ export default function OnboardingSection() {
   const esNatiu = plataforma !== 'web';
   const webviewSocial = detectaWebViewInApp(undefined, { esNatiu });
   const txWebview = textosEscutWebview(llenguaDelText);
+  /* P0-ANDROID-PUSH (v1.2.16) · B7 · El WebView genèric d'Android (`; wv)`) no diu de quina app és:
+     l'avís i les instruccions sense cap «{app}» buit. Amb nom (Instagram, Facebook, WhatsApp…), els de sempre. */
+  const escutWebview = textosDeLEscut(txWebview, webviewSocial);
   const txExtra = textosOnboardingExtra(llenguaDelText);
   const adrecaWebview = (!esNatiu && webviewSocial.esWebViewSocial) ? urlPerAObrirFora() : null;
   const [estatCopiaWebview, setEstatCopiaWebview] = useState(null);
@@ -340,12 +344,18 @@ export default function OnboardingSection() {
      Perfil (RUTA_COMPTE): hi porten «Canvia la contrasenya des del teu compte»,
      «Demana un enllaç nou» (amb sessió no s'hi pot demanar cap correu: la
      redirecció ho tapava i acabava a la fitxa) i ?mode=recuperar. Una entrada
-     feta ací mateix aterra com sempre. */
+     feta ací mateix aterra com sempre.
+     P0-ANDROID-PUSH (v1.2.16) · B8b (doctrina del Foraster, ordre del Mestre 261121; prompt 0216,
+     T2.4; D-9) · Tercera excepció: una tornada a una fitxa pública de lectura (/events/<id>,
+     /mur/<id>, /mercat/<id>, /page/<slug> o /pobles/<slug>) també mana (aterratgeAmbLectura,
+     config/tornadaDeLectura.js, llista tancada i fora de l'arrencada de WordPress). Val per a la
+     contrasenya, el registre, Google per finestra i, quan la redirecció torna a /registre, també per
+     a Google per redirecció: la closca li deixa l'aterratge (App.jsx, atenTornada). */
   const tornar = new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('tornar');
   useEffect(() => {
     if (!currentUser || modeDades !== 'remote' || recuperacioEnCurs) return;
     const perLaContrasenya = volElCompte || (!entradaFeta.current && (obreRecuperacio || demanaRecuperar));
-    navigate(perLaContrasenya ? RUTA_COMPTE : aterratgeDespresDEntrar(tornar), { replace: true });
+    navigate(perLaContrasenya ? RUTA_COMPTE : aterratgeAmbLectura(tornar), { replace: true });
   }, [currentUser, modeDades, navigate, recuperacioEnCurs, tornar, volElCompte, obreRecuperacio, demanaRecuperar]);
 
   /* R · Les dues crides de la recuperació, pel port amb la configuració del node. */
@@ -471,7 +481,7 @@ export default function OnboardingSection() {
       return;
     }
     showToast(txExtra.toastPilot(PERSONA_PILOT.nom), 'success');
-    navigate(aterratgeDespresDEntrar(tornar), { replace: true });
+    navigate(aterratgeAmbLectura(tornar), { replace: true });
   };
 
   /* Encàrrec 261018_1220 · La càrrega que ve de «Entra com a Javi Llinares» en
@@ -793,17 +803,10 @@ export default function OnboardingSection() {
                     <Alerta to="avis" viva={false}>
                       <div data-escut-webview={webviewSocial.app} data-motiu-oauth="disallowed_useragent">
                         <p>
-                          <strong>{txWebview.avis.replace('{app}', () => webviewSocial.nomApp)}</strong>{' '}
+                          <strong>{escutWebview.avis}</strong>{' '}
                           {txWebview.explicacio}
                         </p>
-                        <p>
-                          {(webviewSocial.sistema === 'ios'
-                            ? txWebview.instruccionsIos
-                            : webviewSocial.sistema === 'android'
-                              ? txWebview.instruccionsAndroid
-                              : txWebview.instruccionsAltre
-                          ).replace('{app}', () => webviewSocial.nomApp)}
-                        </p>
+                        <p>{escutWebview.instruccions}</p>
                       </div>
                     </Alerta>
                     <div className="onboarding-entrada-nativa">

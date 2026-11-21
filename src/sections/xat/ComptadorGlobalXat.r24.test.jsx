@@ -10,7 +10,8 @@ import { sumaNoLlegits } from './missatges.js';
 const mock = vi.hoisted(() => ({ total: 0, pathname: '/mur' }));
 vi.mock('./XatContext.jsx', () => ({ useXat: () => ({ totalNoLlegits: mock.total }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: mock.pathname }) }));
-const { AmbNoLlegitsDelXat, ComptadorGlobalXat, actualitzaInsigniaApp, textNoLlegits } = await import('./ComptadorGlobalXat.jsx');
+const { AmbNoLlegitsDelXat, ComptadorGlobalXat } = await import('./ComptadorGlobalXat.jsx');
+const { actualitzaInsigniaApp, textNoLlegits } = await import('./comptadorGlobalXatModel.js');
 const { ProveidorNoLlegitsGlobalsXat } = await import('./noLlegitsGlobalsXat.js');
 
 const t = (_, reserva) => reserva;

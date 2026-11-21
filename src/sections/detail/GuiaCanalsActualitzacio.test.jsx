@@ -88,4 +88,38 @@ describe('GuiaCanalsActualitzacio', () => {
     rerender(<GuiaCanalsActualitzacio />);
     expect(avis().textContent).toBe(`${CA['descarregues.canals.signatura.titol']}${CA['descarregues.canals.signatura.text']}${CA['descarregues.canals.signatura.dadesLocals']}`);
   });
+
+  /* Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · Fins a la v1.2.15, la
+     guia deia que a Android hi havia «dos canals vàlids» i oferia el fitxer APK directe com a canal 2. Ara
+     cap llengua no l'oferix: el bloc 2 diu que no hi ha cap APK fora de botiga, l'avís parla només de passar
+     d'un APK de proves antic a Google Play (mai «o al revés»), i la reserva valenciana és la de ca.js. Els
+     tres blocs i el botó es queden al seu lloc. */
+  test('v1.2.16 · ZERO APK: cap llengua no oferix l’APK com a canal, i el bloc 2 diu que no n’hi ha cap', () => {
+    const CANAL_APK = {
+      ca: /dos canals vàlids|instal·lació manual independent|o al revés|canal triat/i,
+      es: /dos canales válidos|instalación manual independiente|o al revés|canal elegido/i,
+      en: /two valid channels|independent manual install|or vice versa|chosen channel/i,
+      eu: /bi kanal baliozko|eskuzko instalazio independentea|edo alderantziz|aukeratutako kanaletik/i,
+      gl: /dous canais válidos|instalación manual independente|ou ao revés|canal escollido/i
+    };
+    const CAP_APK = { ca: /Cap APK fora de botiga/, es: /Ningún APK fuera de la tienda/, en: /No APK outside the store/, eu: /Dendatik kanpoko APKrik ez/, gl: /Ningún APK fóra da tenda/ };
+    for (const [lang, dic] of [['ca', CA], ['es', ES], ['en', EN], ['eu', EU], ['gl', GL]]) {
+      ui.t = (clau, reserva) => dic[clau] ?? reserva;
+      const { container, unmount } = render(<GuiaCanalsActualitzacio />);
+      const blocs = [...container.querySelectorAll('.sdp-guia-canals__bloc')];
+      expect([lang, blocs.length, container.querySelectorAll('h4').length, container.querySelectorAll('button').length]).toEqual([lang, 3, 3, 1]);
+      expect([lang, blocs[1].querySelector('h4').textContent]).toEqual([lang, dic['descarregues.canals.apk.titol']]);
+      expect([lang, CAP_APK[lang].test(blocs[1].textContent)]).toEqual([lang, true]);
+      expect([lang, CANAL_APK[lang].test(container.textContent)]).toEqual([lang, false]);
+      // Cap enllaç ni baixada: la guia només explica.
+      expect([lang, container.querySelectorAll('a, [download]').length]).toEqual([lang, 0]);
+      unmount();
+    }
+    // La reserva de cada crida és el valor valencià de ca.js.
+    ui.t = (_clau, reserva) => reserva;
+    const { container } = render(<GuiaCanalsActualitzacio />);
+    for (const clau of ['descarregues.canals.intro', 'descarregues.canals.apk.titol', 'descarregues.canals.apk.text']) {
+      expect([clau, container.textContent.includes(CA[clau])]).toEqual([clau, true]);
+    }
+  });
 });

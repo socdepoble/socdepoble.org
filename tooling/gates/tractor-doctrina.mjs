@@ -73,7 +73,7 @@ const rel = (p) => path.relative(ARREL, p) || p;
 
 /* Auditoria 260830: aquesta ruta apuntava només a `.agents/`, on el fitxer
    mai va estar. `ignorats` quedava buit i `esIgnorat()` retornava sempre
-   false, així que l'exempció de `_wiki_de_poble` (repositori separat) no
+   false, així que l'exempció de la Wiki (repositori separat) no
    s'aplicava mai. Ara es busca als dos llocs i es diu quin s'ha usat. */
 const CANDIDATS_IGNORA = [R('.agents/doctrina-ignora.txt'), R('tooling/gates/doctrina-ignora.txt')];
 const FITXER_IGNORA = CANDIDATS_IGNORA.find((c) => fs.existsSync(c)) ?? CANDIDATS_IGNORA[0];

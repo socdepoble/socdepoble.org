@@ -41,6 +41,14 @@ function diaSeguent(clau) {
   return clauDia(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
+/* Una hora de paret (sense desplaçament) és anterior a l'altra? Es comparen les
+   xifres, sense cap fus: totes dues són de la mateixa zona. */
+function abansALaParet(a, b) {
+  const [x, y] = [llegixDataHora(a), llegixDataHora(b)];
+  if (!x || !y || x.ambDesfas || y.ambDesfas) return false;
+  return Date.UTC(x.any, x.mes, x.dia, x.hora, x.minut, x.segon) < Date.UTC(y.any, y.mes, y.dia, y.hora, y.minut, y.segon);
+}
+
 /** Si l'element és un acte o una publicació de l'àmbit Calendari (AH-04). */
 export function esActeDelCalendari(item) {
   return Boolean(item && typeof item === 'object' && (
@@ -65,7 +73,10 @@ export function momentDe(valor, zona) {
  * L'inici és el del payload o, si no en porta, el dia i l'hora de l'acte
  * (diaAmbHora): amb hora, un acte amb hora; sense, de tot el dia. Quan porta
  * data_fi (i hora_fi opcional), l'interval multi-dia cobreix tots els dies des
- * de data_inici fins a data_fi inclòs.
+ * de data_inici fins a data_fi inclòs. Sense data_fi, una hora_fi anterior a
+ * l'hora d'inici és de l'endemà: una revetla de 23:00 a 03:00 acaba a les 03:00
+ * del dia següent (Gauntlet R1 de la v1.2.16, L2-01); abans es descartava i
+ * l'acte quedava sense fi.
  */
 export function acteAEsdeveniment(item) {
   if (!item || typeof item !== 'object') return null;
@@ -84,6 +95,9 @@ export function acteAEsdeveniment(item) {
       if (exclusiu && exclusiu > inici.data) fi = { data: exclusiu };
     } else if (diaFinal) {
       fi = momentDe(diaAmbHora(diaFinal, horaFi ?? (dataFi ? '23:59' : null)), zona);
+      if (!dataFi && fi?.dataHora && abansALaParet(fi.dataHora, inici.dataHora)) {
+        fi = momentDe(diaAmbHora(diaSeguent(diaFinal), horaFi), zona);
+      }
     }
   }
   const llocDades = [textNet(dades?.lloc), textNet(dades?.municipi)].filter(Boolean).join(' · ') || null;
@@ -155,8 +169,21 @@ export function acteOcorreElDia(item, clau, esd = acteAEsdeveniment(item)) {
  * (hui compta com a futur), buscada amb ocorreElDia fins a dos anys: una
  * fira en curs o un mercat setmanal compten el dia que ocorren, no el dia que
  * van començar. Si cap no ocorre en eixe temps, el criteri d'abans: el de
- * l'acte que comença més prompte a partir de hui o, si cap no ha de vindre,
- * el del més recent. null sense actes.
+ * l'acte que comença més prompte a partir de hui. null sense actes.
+ *
+ * P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12; revisió [VA-1]) ·
+ * Mai un mes passat: si cap acte no ha de vindre, null, i qui crida obri el
+ * mes de hui (CalendariDelMur, cursorDe(avui)) o el seu mes d'obertura
+ * (CalendariSection, mesDObertura, que tampoc no en torna cap de passat).
+ * Abans tornava el mes del més recent, i /calendari s'obria a l'octubre el
+ * 20 de novembre perquè l'últim acte havia començat el 23 d'octubre. Amb un
+ * hui que no és cap data no se sap què és passat, i es conserva el criteri
+ * d'abans, el mes de l'acte més recent: és el que fixa la prova «amb un hui
+ * invàlid no es penja» (agendaMur.test.js), anterior a la v1.2.16. No és
+ * cap guarda contra un mes impossible: cursorDe ja cau a hui amb una data
+ * invàlida, i cap consumidor no hi arriba (CalendariDelMur i CalendariSection
+ * hi passen diaDeLaClau(diaIso(new Date())), que sempre és una data, i
+ * mesDObertura no la crida amb un hui invàlid).
  */
 export function mesDeLActeMesProper(esdeveniments, avui = new Date()) {
   const actes = (esdeveniments ?? []).filter(Boolean);
@@ -173,5 +200,7 @@ export function mesDeLActeMesProper(esdeveniments, avui = new Date()) {
     if (vigents.some((esd) => ocorreElDia(esd, d.getFullYear(), d.getMonth(), d.getDate()))) return cursorDe(d);
   }
   const dies = actes.map(diaDInici).sort();
-  return cursorDeClau(dies.find((d) => d >= hui) ?? dies[dies.length - 1]);
+  const proper = dies.find((d) => d >= hui);
+  if (proper) return cursorDeClau(proper);
+  return Number.isFinite(avui.getTime()) ? null : cursorDeClau(dies[dies.length - 1]);
 }

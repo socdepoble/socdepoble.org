@@ -13,7 +13,7 @@
  *     Cap selector de fitxers: CampFitxer escriu el seu estat només en valencià.
  * Els textos, en les cinc llengües de la interfície (useClosaAplicacio().idioma).
  */
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Download, Link2, Share2, Upload } from 'lucide-react';
 import { useLocation, useNavigate, useRouter } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Botonera, Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/index.js';
@@ -253,6 +253,7 @@ export function ComparticioLlistaCompra({ llista }) {
   const { pathname, search, hash } = useLocation();
   const { basename = '' } = useRouter();
   const navigate = useNavigate();
+  const idPanell = useId();
   const [obert, setObert] = useState(false);
   const [text, setText] = useState('');
   const [enllacManual, setEnllacManual] = useState(null);
@@ -305,7 +306,10 @@ export function ComparticioLlistaCompra({ llista }) {
     }
     setError(null);
     try {
-      await navigator.clipboard.writeText(enllac.url);
+      if (typeof globalThis.navigator?.clipboard?.writeText !== 'function') {
+        throw new Error('Clipboard no disponible');
+      }
+      await globalThis.navigator.clipboard.writeText(enllac.url);
       setAvis({ tipus: 'copiat' });
     } catch {
       setEnllacManual(enllac.url);
@@ -342,32 +346,39 @@ export function ComparticioLlistaCompra({ llista }) {
         />
       ) : null}
       <Botonera etiqueta={textos.botonera}>
-        <Boto icona={Share2} aria-expanded={obert} onClick={() => setObert((actual) => !actual)}>
+        <Boto
+          icona={Share2}
+          aria-expanded={obert}
+          aria-controls={obert ? idPanell : undefined}
+          onClick={() => setObert((actual) => !actual)}
+        >
           {obert ? textos.tanca : textos.obri}
         </Boto>
       </Botonera>
       {obert ? (
-        <GrupCamps llegenda={textos.llegenda(llista.nom)}>
-          <Botonera etiqueta={textos.envia}>
-            <Boto icona={Link2} disabled={buida} onClick={copiaEnllac}>{textos.copia}</Boto>
-            <Boto icona={Download} disabled={buida} onClick={descarregaFitxer}>{textos.descarrega}</Boto>
-          </Botonera>
-          {errorDe('envia') ? <Alerta to="avis">{errorDe('envia')}</Alerta> : null}
-          {enllacManual ? (
-            <Camp etiqueta={textos.enllac} ajuda={textos.ajudaEnllac}>
-              <CampText value={enllacManual} readOnly onFocus={(event) => event.target.select()} />
+        <div id={idPanell}>
+          <GrupCamps llegenda={textos.llegenda(llista.nom)}>
+            <Botonera etiqueta={textos.envia}>
+              <Boto icona={Link2} disabled={buida} onClick={copiaEnllac}>{textos.copia}</Boto>
+              <Boto icona={Download} disabled={buida} onClick={descarregaFitxer}>{textos.descarrega}</Boto>
+            </Botonera>
+            {errorDe('envia') ? <Alerta to="avis">{errorDe('envia')}</Alerta> : null}
+            {enllacManual ? (
+              <Camp etiqueta={textos.enllac} ajuda={textos.ajudaEnllac}>
+                <CampText value={enllacManual} readOnly onFocus={(event) => event.target.select()} />
+              </Camp>
+            ) : null}
+            <Camp etiqueta={textos.importa} ajuda={textos.ajudaImporta} error={errorDe('text')}>
+              <CampText value={text} autoComplete="off" onChange={(event) => {
+                setText(event.target.value);
+                if (error?.on === 'text') setError(null);
+              }} />
             </Camp>
-          ) : null}
-          <Camp etiqueta={textos.importa} ajuda={textos.ajudaImporta} error={errorDe('text')}>
-            <CampText value={text} autoComplete="off" onChange={(event) => {
-              setText(event.target.value);
-              if (error?.on === 'text') setError(null);
-            }} />
-          </Camp>
-          <Botonera etiqueta={textos.rep}>
-            <Boto icona={Upload} disabled={!text.trim()} onClick={revisaText}>{textos.revisa}</Boto>
-          </Botonera>
-        </GrupCamps>
+            <Botonera etiqueta={textos.rep}>
+              <Boto icona={Upload} disabled={!text.trim()} onClick={revisaText}>{textos.revisa}</Boto>
+            </Botonera>
+          </GrupCamps>
+        </div>
       ) : null}
       {textAvis ? <p role="status">{textAvis}</p> : null}
     </>

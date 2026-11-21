@@ -16,6 +16,14 @@
  *     viu al telèfon (allowBackup=false): el llibre de la Facturació i el cofre de
  *     la Gestoria. Que Play i l'APK porten signatures diferents no s'ha verificat a
  *     Play Console (RC-2): el text ho diu en condicional.
+ *   · Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de
+ *     botiga) · DEROGA el canal 2: ja no hi ha «dos canals vàlids» a Android.
+ *     La introducció diu el camí oficial de cada aparell (Google Play, l'App
+ *     Store i el navegador); el bloc 2 passa a «Cap APK fora de botiga» (per què:
+ *     la Protecció Avançada d'Android i l'actualització sola de Google Play; i el
+ *     navegador mentrestant), i l'avís d'UPDATE_INCOMPATIBLE parla només del pas
+ *     d'un APK de proves antic a Google Play, mai al revés. Els tres blocs, els
+ *     títols i el botó es queden al seu lloc (cap element nou).
  *   · Cap `<dl>` de dues columnes (Llei de Maquetació Editorial) i cap enllaç
  *     duplicat a les botigues oficials ni a `/versions`: un botó centrat puja
  *     suaument a les opcions oficials de descàrrega de la capçalera.
@@ -52,7 +60,7 @@ export default function GuiaCanalsActualitzacio() {
       <p className="sdp-guia-canals__intro">
         {t(
           'descarregues.canals.intro',
-          'A l’iPhone, l’iPad i la web l’aplicació s’actualitza per un sol camí. A Android tens dos canals vàlids, però convé no barrejar-los en el mateix telèfon.'
+          'Cada aparell s’actualitza per un sol camí oficial: Google Play a Android, l’App Store a l’iPhone i l’iPad, i el navegador a la web.'
         )}
       </p>
 
@@ -70,12 +78,12 @@ export default function GuiaCanalsActualitzacio() {
 
       <div className="sdp-guia-canals__bloc">
         <h4>
-          {t('descarregues.canals.apk.titol', '2. Fitxer APK directe: instal·lació manual independent')}
+          {t('descarregues.canals.apk.titol', '2. Cap APK fora de botiga')}
         </h4>
         <p>
           {t(
             'descarregues.canals.apk.text',
-            'El fitxer APK directe està pensat per a aparells sense Google Play. En este canal les actualitzacions no es baixen soles des de la botiga: cal descarregar i obrir el nou fitxer APK quan es publique.'
+            'Sóc de Poble no oferix cap fitxer APK per a instal·lar a mà: amb la Protecció Avançada d’Android activada, el telèfon no deixa instal·lar aplicacions de fora de botiga, i fora de Google Play l’aplicació no s’actualitzaria sola. Mentre no la tingues a Google Play, fes-la servir des del navegador.'
           )}
         </p>
       </div>
@@ -84,13 +92,13 @@ export default function GuiaCanalsActualitzacio() {
         <h4>
           {t(
             'descarregues.canals.signatura.titol',
-            'Per què Android pot dir «No s’ha instal·lat l’aplicació» (UPDATE_INCOMPATIBLE) en canviar de canal?'
+            'Per què Android pot dir «No s’ha instal·lat l’aplicació» (UPDATE_INCOMPATIBLE) en passar a Google Play?'
           )}
         </h4>
         <p>
           {t(
             'descarregues.canals.signatura.text',
-            'Si l’aplicació de Google Play i el fitxer APK directe no porten la mateixa signatura, Android no deixa instal·lar l’una damunt de l’altra: si tenies l’APK de proves i passes a Google Play (o al revés), primer cal desinstal·lar l’aplicació antiga i després instal·lar la nova des del canal triat. El teu compte, poble i publicacions continuen intactes al servidor.'
+            'Si tens un APK de proves antic i no porta la mateixa signatura que l’aplicació de Google Play, Android no deixa instal·lar l’una damunt de l’altra: primer cal desinstal·lar l’antiga i després instal·lar la de Google Play. El teu compte, poble i publicacions continuen intactes al servidor.'
           )}
         </p>
         <p>

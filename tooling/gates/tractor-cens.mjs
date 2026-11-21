@@ -42,6 +42,7 @@
 
 import { existsSync, readdirSync, lstatSync } from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 import { fontUTF8 } from '../lib/lexic-css.mjs';
 
 function principal() {
@@ -57,7 +58,7 @@ const CENS = '.agents/consell.json';
 // Un comentari HTML no compta, però conserva els seus salts de línia: el diagnòstic fitxer:línia no es desplaça.
 const visible = text => text.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
 const escapa = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-for (const rel of ['.agents', '_wiki_de_poble']) {
+for (const rel of ['.agents', CAMINS.wiki]) {
   const s = lstatSync(R(rel));
   if (s.isSymbolicLink() || !s.isDirectory()) throw new Error(`Font no certificable: ${rel} (directori o symlink)`);
 }
@@ -145,7 +146,7 @@ function arbre(rel, eixida = []) {
 
 const DOCS = [
   ...arbre('.agents'),
-  ...arbre('_wiki_de_poble')
+  ...arbre(CAMINS.wiki)
 ];
 
 /* Un document «parla del Consell com a conjunt» si menciona el Consell o les

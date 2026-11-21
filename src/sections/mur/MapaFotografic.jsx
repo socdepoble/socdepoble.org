@@ -59,9 +59,14 @@ import { puntsDelMapa } from './puntsDelMapa.js';
 const PANELL_POBLES = 'sdpMapaPobles';
 const PANELL_TARGETES = 'sdpMapaTargetes';
 const PANELL_PUNTS = 'sdpMapaPunts';
+/* Gauntlet v1.2.16 (L6R2-01) · Les dianes de 48 px per al dit (R32.24), en un
+   panell propi davall de tots els punts visibles: la diana d'una foto mai no tapa
+   el punt de la veïna, i només capta l'espai buit del voltant. No és bringToBack():
+   cada diana aniria a l'inici de l'SVG i l'ordre del teclat quedaria del revés. */
+const PANELL_DIANES = 'sdpMapaDianes';
 /* Damunt de les capes de Leaflet (400) i davall dels controls (800): els punts
    sempre per damunt de les targetes, que mai no amaguen un lloc. */
-const ORDRE_DELS_PANELLS = Object.freeze([[PANELL_POBLES, 450], [PANELL_TARGETES, 610], [PANELL_PUNTS, 620]]);
+const ORDRE_DELS_PANELLS = Object.freeze([[PANELL_POBLES, 450], [PANELL_TARGETES, 610], [PANELL_DIANES, 615], [PANELL_PUNTS, 620]]);
 const GESTOS_DEL_MAPA = Object.freeze(['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard']);
 /* Les mides de les targetes (les mateixes del CSS: cada botó, 48 px). */
 const MIDA_GRUP = Object.freeze({ w: 192, h: 168 });
@@ -243,6 +248,17 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
   // Els controls (+, − i l'atribució) abans de les targetes en l'ordre del teclat: van en posició absoluta, i a la vista no canvia res.
   const controls = element.querySelector('.leaflet-control-container');
   if (controls) element.insertBefore(controls, element.firstChild);
+  const botoZoomMes = element.querySelector('.leaflet-control-zoom-in');
+  const botoZoomMenys = element.querySelector('.leaflet-control-zoom-out');
+  for (const botoZoom of [botoZoomMes, botoZoomMenys]) {
+    if (!botoZoom) continue;
+    botoZoom.addEventListener('keydown', (event) => {
+      if (event.key === ' ') {
+        event.preventDefault();
+        botoZoom.click();
+      }
+    });
+  }
   for (const [nom, ordre] of ORDRE_DELS_PANELLS) mapa.createPane(nom).style.zIndex = String(ordre);
   const capa = L.layerGroup().addTo(mapa);
   const pobles = L.layerGroup(MOCK_TOWNS.filter((poble) => Number.isFinite(poble.lat) && Number.isFinite(poble.lng)).map((poble) => {
@@ -254,6 +270,19 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
   }));
 
   let tr = traductor;
+  function actualitzaControlsZoom() {
+    const apropa = tr('editor.enquadrament.apropa', 'Apropar');
+    const allunya = tr('editor.enquadrament.allunya', 'Allunyar');
+    if (botoZoomMes) {
+      botoZoomMes.title = apropa;
+      botoZoomMes.setAttribute('aria-label', apropa);
+    }
+    if (botoZoomMenys) {
+      botoZoomMenys.title = allunya;
+      botoZoomMenys.setAttribute('aria-label', allunya);
+    }
+  }
+  actualitzaControlsZoom();
   let dades = { fotos: [], parades: [], pendents: [] };
   let arbre = arbreDAgrupacio([]);
   let talls = new Map();
@@ -383,16 +412,65 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     return caixaLliure({ origen, mida, ocupades, punts, limits: { w, h } });
   }
 
+  /* Gauntlet v1.2.16 (L6-P1-01; Llei del Píxel) · La línia d'un grup (zoom baix)
+     i la d'una parada (targeta) tenen el seu color des de P1-64: sense estes dues
+     entrades queien en el verd del GPS real. */
+  const CLASSES_LINIA_MAPA = Object.freeze({
+    verd: 'sdp-mapa-linia sdp-mapa-linia--verd',
+    ocre: 'sdp-mapa-linia sdp-mapa-linia--ocre',
+    grup: 'sdp-mapa-linia sdp-mapa-linia--grup',
+    targeta: 'sdp-mapa-linia sdp-mapa-linia--targeta',
+  });
+  const CLASSES_PUNT_MAPA = Object.freeze({
+    verd: 'sdp-mapa-punt sdp-mapa-punt--verd',
+    ocre: 'sdp-mapa-punt sdp-mapa-punt--ocre',
+  });
+  const CLASSES_FOTO_MAPA = Object.freeze({
+    verd: 'sdp-mapa-foto sdp-mapa-foto--verd',
+    ocre: 'sdp-mapa-foto sdp-mapa-foto--ocre',
+  });
+
   const linia = (desde, ton) => L.polyline([desde, desde], {
-    weight: 1, dashArray: GUIONS, interactive: false, className: `sdp-mapa-linia sdp-mapa-linia--${ton}`
+    weight: 1, dashArray: GUIONS, interactive: false, className: CLASSES_LINIA_MAPA[ton] || CLASSES_LINIA_MAPA.verd
   }).addTo(capa);
 
-  const punt = (lloc, ton, { radi, grup = false, enClic = null }) => {
+  const punt = (lloc, ton, { radi, grup = false, enClic = null, etiqueta = '', clau = '', rol = 'punt' }) => {
+    const basePunt = CLASSES_PUNT_MAPA[ton] || CLASSES_PUNT_MAPA.verd;
+    // Com a ded51467c, el punt visible rep el toc quan té gestor (L6R2-01); el d'un grup, no.
     const cercle = L.circleMarker(lloc, {
       pane: PANELL_PUNTS, radius: radi, weight: 2, fillOpacity: 1, interactive: Boolean(enClic),
-      className: `sdp-mapa-punt sdp-mapa-punt--${ton}${grup ? ' sdp-mapa-punt--grup' : ''}`
+      className: grup ? `${basePunt} sdp-mapa-punt--grup` : basePunt
     }).addTo(capa);
-    if (enClic) cercle.on('click', enClic);
+    if (enClic) {
+      const diana = L.circleMarker(lloc, {
+        pane: PANELL_DIANES, radius: 24, weight: 3, opacity: 0, fillOpacity: 0, interactive: true,
+        className: 'sdp-mapa-diana'
+      }).addTo(capa);
+      const activa = (event) => {
+        const nodeDiana = diana.getElement?.();
+        nodeDiana?.focus?.({ preventScroll: true });
+        enClic(event);
+      };
+      diana.on('click', activa);
+      /* Un toc o un clic al punt visible obri la foto com a ded51467c, sense passar el focus a la diana per
+         script: si no, en tancar el visor quedaria pintat l'anell de :focus-visible del teclat (R2b, L6R2-01). */
+      cercle.on('click', (event) => enClic(event));
+      const nodeDiana = diana.getElement?.();
+      if (nodeDiana) {
+        nodeDiana.setAttribute('tabindex', '0');
+        nodeDiana.setAttribute('role', 'button');
+        if (etiqueta) nodeDiana.setAttribute('aria-label', etiqueta);
+        if (clau) nodeDiana.dataset.clau = clau;
+        if (rol) nodeDiana.dataset.rol = rol;
+        nodeDiana.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            activa(event);
+          }
+        });
+      }
+    }
     return cercle;
   };
 
@@ -404,7 +482,7 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
      (la publicació té 'none', la revisada o un error), translate="no" a tota
      la targeta: el títol no ix cap al motor ni el traduïx el navegador. */
   function targetaDeConjunt({ numero, nom, fotos, linies, ocre, etiquetaDelCap, enCap, enMiniatura, traduible = true }) {
-    const targeta = node('div', `sdp-mapa-targeta${ocre ? ' sdp-mapa-targeta--ocre' : ''}`);
+    const targeta = node('div', ocre ? 'sdp-mapa-targeta sdp-mapa-targeta--ocre' : 'sdp-mapa-targeta');
     if (!traduible) targeta.setAttribute('translate', 'no');
     targeta.setAttribute('role', 'group');
     targeta.setAttribute('aria-label', `${numero} · ${nom}`);
@@ -485,6 +563,16 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     return { nodes: grups.length, km, visibles: visibles.length, amagades: 0 };
   }
 
+  const etiquetaFotoSola = (foto) => {
+    const hora = formataHora(foto.dataCaptura);
+    const dia = formataDia(foto.dataCaptura);
+    const precisio = precisioDe(foto);
+    const frase = [FRASES_DE_L_ESTAT[foto.estat] ? tr(...FRASES_DE_L_ESTAT[foto.estat]) : '', precisio].filter(Boolean).map((part) => `, ${part}`).join('');
+    return tr('section.mur.mapa.obriFotoSola', 'Obri la foto {n}{quan}', {
+      n: foto.ordre, quan: `${dia ? `, ${dia}${hora ? ` ${hora}` : ''}` : ''}${frase}`
+    });
+  };
+
   function pintaParades(zoom) {
     const limits = mapa.getBounds().pad(0.25);
     const visibles = dades.parades.map((parada, index) => ({ parada, numero: index + 1 }))
@@ -492,10 +580,18 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     const origens = visibles.map(({ parada }) => enPantalla(parada));
     const ocupades = [];
     for (const { parada } of visibles) {
-      for (const index of parada.fotos) {
+      const nomParada = parada.lloc || parada.titol || senseLloc();
+      const clauParada = clauDeContingut(fotosDe(parada.fotos).map((f) => f.id));
+      parada.fotos.forEach((index, posicio) => {
         const foto = dades.fotos[index];
-        punt(L.latLng(foto.lat, foto.lng), tonDeLaUbicacio(foto.estat), { radi: 6, enClic: () => obri(parada.fotos, foto) });
-      }
+        punt(L.latLng(foto.lat, foto.lng), tonDeLaUbicacio(foto.estat), {
+          radi: 6,
+          clau: clauParada,
+          rol: `punt-${posicio}`,
+          etiqueta: tr('section.mur.mapa.obriFoto', 'Obri la foto {n} de {nom}', { n: foto.ordre, nom: nomParada }),
+          enClic: () => obri(parada.fotos, foto)
+        });
+      });
     }
     visibles.forEach(({ parada, numero }, k) => {
       const fotos = fotosDe(parada.fotos);
@@ -536,7 +632,13 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     const ocupades = [];
     for (const { foto } of visibles) {
       const parada = dades.parades[foto.parada];
-      punt(L.latLng(foto.lat, foto.lng), tonDeLaUbicacio(foto.estat), { radi: 7, enClic: () => obri(parada?.fotos || [], foto) });
+      punt(L.latLng(foto.lat, foto.lng), tonDeLaUbicacio(foto.estat), {
+        radi: 7,
+        clau: clauDeContingut([foto.id]),
+        rol: 'punt',
+        etiqueta: etiquetaFotoSola(foto),
+        enClic: () => obri(parada?.fotos || [], foto)
+      });
     }
     ambTargeta.forEach(({ foto }, k) => {
       const ton = tonDeLaUbicacio(foto.estat);
@@ -546,10 +648,7 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
       const hora = formataHora(foto.dataCaptura);
       const dia = formataDia(foto.dataCaptura);
       const precisio = precisioDe(foto);
-      const frase = [FRASES_DE_L_ESTAT[foto.estat] ? tr(...FRASES_DE_L_ESTAT[foto.estat]) : '', precisio].filter(Boolean).map((part) => `, ${part}`).join('');
-      const targeta = boto(`sdp-mapa-foto sdp-mapa-foto--${ton}`, tr('section.mur.mapa.obriFotoSola', 'Obri la foto {n}{quan}', {
-        n: foto.ordre, quan: `${dia ? `, ${dia}${hora ? ` ${hora}` : ''}` : ''}${frase}`
-      }));
+      const targeta = boto(CLASSES_FOTO_MAPA[ton] || CLASSES_FOTO_MAPA.verd, etiquetaFotoSola(foto));
       targeta.dataset.rol = 'foto';
       // R51 (troballa R12G-SB-02) · El títol d'una publicació protegida, tampoc al traductor del navegador.
       if (foto.traduible === false) targeta.setAttribute('translate', 'no');
@@ -587,25 +686,38 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
 
   function tornaFocus(record) {
     if (!record) return;
-    const targeta = [...element.querySelectorAll('[data-clau]')].find((candidata) => candidata.dataset.clau === record.clau);
-    const objectiu = targeta && record.rol && targeta.dataset.rol !== record.rol
-      ? [...targeta.querySelectorAll('[data-rol]')].find((candidat) => candidat.dataset.rol === record.rol)
-      : targeta;
-    const visible = objectiu && objectiu.tabIndex >= 0;
+    const candidats = [...element.querySelectorAll('[data-clau]')].filter((candidata) => candidata.dataset.clau === record.clau);
+    let objectiu = null;
+    if (record.rol) {
+      for (const candidat of candidats) {
+        if (candidat.dataset.rol === record.rol) { objectiu = candidat; break; }
+        const intern = [...candidat.querySelectorAll('[data-rol]')].find((fill) => fill.dataset.rol === record.rol);
+        if (intern) { objectiu = intern; break; }
+      }
+    }
+    if (!objectiu) objectiu = candidats[0] || null;
+    const attrTab = objectiu?.getAttribute?.('tabindex');
+    const visible = Boolean(objectiu) && attrTab !== '-1' && (objectiu.tabIndex >= 0 || attrTab === '0');
     (visible ? objectiu : element).focus?.({ preventScroll: true });
   }
 
   /* I, amb el disseny ja fet (el navegador; jsdom no en fa), cada botó d'una
-     targeta que la vora del mapa tapa sencer: una sola lectura per repintat. */
+     targeta o diana de punt que la vora del mapa tapa sencer: una sola lectura per repintat. */
   function apagaElsDeFora() {
     const vora = element.getBoundingClientRect();
     if (!vora.width || !vora.height) return;
-    const botons = [...mapa.getPane(PANELL_TARGETES).querySelectorAll('button')];
+    const botons = [
+      ...mapa.getPane(PANELL_TARGETES).querySelectorAll('button'),
+      ...mapa.getPane(PANELL_DIANES).querySelectorAll('[tabindex="0"]')
+    ];
     const fora = botons.filter((botoDeLaTargeta) => {
       const caixa = botoDeLaTargeta.getBoundingClientRect();
       return caixa.right <= vora.left || caixa.left >= vora.right || caixa.bottom <= vora.top || caixa.top >= vora.bottom;
     });
-    fora.forEach((botoDeFora) => { botoDeFora.tabIndex = -1; });
+    fora.forEach((botoDeFora) => {
+      botoDeFora.tabIndex = -1;
+      botoDeFora.setAttribute('tabindex', '-1');
+    });
   }
 
   function refresca() {
@@ -643,6 +755,13 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     pendent = typeof window.requestAnimationFrame === 'function' ? { raf: window.requestAnimationFrame(fes) } : { temps: setTimeout(fes, 0) };
   }
   mapa.on('zoomend moveend resize', programa);
+  const observadorMida = typeof ResizeObserver === 'function'
+    ? new ResizeObserver(() => {
+      if (destruit) return;
+      mapa.invalidateSize({ animate: false });
+    })
+    : null;
+  observadorMida?.observe(element);
 
   function vesATot() {
     const llocs = dades.parades.map((parada) => [parada.lat, parada.lng]);
@@ -674,8 +793,11 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     },
     posaTraductor(nou) {
       tr = nou;
+      actualitzaControlsZoom();
       refresca();
     },
+    recordaFocus,
+    tornaFocus,
     posaFons(actiu) {
       apagaElRellotgeDelFons();
       if (!actiu) {
@@ -714,6 +836,7 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     },
     destruix() {
       destruit = true;
+      observadorMida?.disconnect();
       apagaElRellotgeDelFons();
       if (pendent?.raf) window.cancelAnimationFrame?.(pendent.raf);
       if (pendent?.temps) clearTimeout(pendent.temps);
@@ -751,6 +874,8 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
   const arrelRef = useRef(null);
   const llencRef = useRef(null);
   const motorRef = useRef(null);
+  const disparadorVisorRef = useRef(null);
+  const visorObertPreviRef = useRef(false);
   const primeraVegada = useRef(true);
   const trInicial = useRef(tr);
   const onMapaInicial = useRef(onMapa);
@@ -774,7 +899,11 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
         L, element: llencRef.current, tr: trInicial.current,
         enVista: (nova) => { if (viu) setVista(nova); },
         enAvisDelFons: (avis) => { if (viu) setAvisDelFons(avis); },
-        enObriFotos: (ids, index) => { if (viu) setVisor({ ids, index }); },
+        enObriFotos: (ids, index) => {
+          if (!viu) return;
+          disparadorVisorRef.current = motorRef.current?.recordaFocus?.() || null;
+          setVisor({ ids, index });
+        },
         enError: (causa) => { if (viu) setError(causa); }
       });
       onMapaInicial.current?.(motorRef.current.mapa);
@@ -795,6 +924,19 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
   useEffect(() => { if (llest) motorRef.current?.posaLlindar(llindarManual); }, [llest, llindarManual]);
   useEffect(() => { if (llest) motorRef.current?.posaTraductor(tr); }, [llest, tr]);
   useEffect(() => { if (llest) motorRef.current?.posaFons(fons && !nativa); }, [llest, fons, nativa]);
+  useEffect(() => {
+    const obertAra = Boolean(visor);
+    if (visorObertPreviRef.current && !obertAra) {
+      const arrel = arrelRef.current?.getRootNode?.() || document;
+      const actiu = arrel.activeElement;
+      if (!actiu || !arrelRef.current?.contains(actiu)) {
+        if (disparadorVisorRef.current) motorRef.current?.tornaFocus?.(disparadorVisorRef.current);
+        else llencRef.current?.focus?.({ preventScroll: true });
+      }
+      disparadorVisorRef.current = null;
+    }
+    visorObertPreviRef.current = obertAra;
+  }, [visor]);
 
   if (error) throw error;
 

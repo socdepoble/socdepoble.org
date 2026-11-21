@@ -473,10 +473,17 @@ export async function horariBase(cripto, secretCompartit, info, { aead = HPKE.AE
   const pskIdHash = await labeledExtract(cripto, suite, BUIT, ETIQUETES_HPKE.PSK_ID_HASH, BUIT);
   const infoHash = await labeledExtract(cripto, suite, BUIT, ETIQUETES_HPKE.INFO_HASH, exigixBytes(info, 'La info'));
   const context = ajunta(Uint8Array.of(HPKE.MODE_BASE), pskIdHash, infoHash);
-  const secret = await labeledExtract(cripto, suite, exigixBytes(secretCompartit, 'El secret compartit'), ETIQUETES_HPKE.SECRET, BUIT);
-  const key = await labeledExpand(cripto, suite, secret, ETIQUETES_HPKE.KEY, context, nk);
-  const baseNonce = await labeledExpand(cripto, suite, secret, ETIQUETES_HPKE.BASE_NONCE, context, NN);
-  return { context, secret, key, baseNonce };
+  let secret, key, baseNonce;
+  try {
+    secret = await labeledExtract(cripto, suite, exigixBytes(secretCompartit, 'El secret compartit'), ETIQUETES_HPKE.SECRET, BUIT);
+    key = await labeledExpand(cripto, suite, secret, ETIQUETES_HPKE.KEY, context, nk);
+    baseNonce = await labeledExpand(cripto, suite, secret, ETIQUETES_HPKE.BASE_NONCE, context, NN);
+    return { context, secret, key, baseNonce };
+  } catch (error) {
+    /* Si no torna un horari, qui crida no pot netejar-ne els parcials. */
+    secret?.fill(0); key?.fill(0); baseNonce?.fill(0);
+    throw error;
+  }
 }
 
 function netejaHorari(horari) {

@@ -5,23 +5,22 @@ import { useMur } from '../mur/MurContext.jsx';
 import { ARTICLES_SIMULADOR_IA_425, FACETA_4_ETIQUETES_SKOS } from '../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
 import { construeixBrainTaxonomia, DIMENSIONS_BRAIN, EXEMPLE_MESTRE_BRAIN, filtraBrainTaxonomia, longitudNomBrain, PROPOSTES_MESTRE_BRAIN, PROPOSTES_NOMS_BRAIN, projectaBrainTaxonomia } from '../../data/taxonomia/brainTaxonomia.js';
 import { PrevisualitzacioCardTaxonomia } from './PrevisualitzacioCardTaxonomia.jsx';
+import {
+  AMPLARIES_PREVIEW_BRAIN,
+  ESTIL_BRAIN_TAXONOMIA,
+  FONT_NOMS_BRAIN,
+  SECCIONS_VIVES_BRAIN,
+  netaTextBrain,
+  nomRelacioBrain,
+} from './brainTaxonomiaModel.js';
 
 const BrainGraph = lazy(() => import('../../components/universal/graph/BrainGraph.jsx'));
-const ESTIL = Object.freeze({
-  radis: { category: 16, tema: 7, entitat: 8, format: 6 },
-  colors: { category: 'var(--sdp-accio)', tema: 'var(--sdp-exit)', entitat: 'var(--sdp-accent)', format: 'var(--sdp-text-suau)', proposta: 'var(--sdp-accent)' },
-  noms: { category: 'Categoria', tema: 'Tema', entitat: 'Entitat o lloc', format: 'Format' },
-  etiquetaAmbZoom: { category: 0.3, tema: 1, entitat: 1, format: 1 },
-});
-const FONT_NOMS = { wordpress: 'WordPress històric', mur: 'Mur carregat', mercat: 'Mercat carregat', events: 'Calendari carregat' };
-const neta = (valor) => valor.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca');
-const nomRelacio = (link) => link.tipus === 'coaparicio' ? `${link.weight} documents compartits` : link.tipus === 'skos' ? 'Jerarquia SKOS declarada' : 'Candidatura editorial';
 
 function ArticleFont({ article }) {
   const efectiva = article.observacioEfectiva;
   return <li>{article.href?.startsWith('/') ? <Link to={article.href}>{article.title}</Link> : /^https?:\/\//.test(article.href || '') ? <a href={article.href} target="_blank" rel="noopener noreferrer">{article.title}</a> : article.title}
-    <p><small>Prova efectiva: {FONT_NOMS[efectiva.origen] || efectiva.origen} · {efectiva.dataOriginal || 'data no indicada'}{efectiva.versio > 0 ? ` · versió ${efectiva.versio}` : ''}.</small></p>
-    <details><summary>Observacions de la font ({article.observacions.length})</summary><ul>{article.observacions.map((observacio) => <li key={observacio.ordre}>{FONT_NOMS[observacio.origen] || observacio.origen} · {observacio.dataOriginal || 'data no indicada'} · {observacio.ordre === efectiva.ordre ? 'efectiva per al recompte' : 'anterior o alternativa, no suma pes'}{observacio.versio > 0 ? ` · versió ${observacio.versio}` : ''}<p>Identitat de la font: <code>{observacio.identitatFont}</code>{observacio.referencia && <> · Referència: {observacio.referencia}</>}</p></li>)}</ul></details>
+    <p><small>Prova efectiva: {FONT_NOMS_BRAIN[efectiva.origen] || efectiva.origen} · {efectiva.dataOriginal || 'data no indicada'}{efectiva.versio > 0 ? ` · versió ${efectiva.versio}` : ''}.</small></p>
+    <details><summary>Observacions de la font ({article.observacions.length})</summary><ul>{article.observacions.map((observacio) => <li key={observacio.ordre}>{FONT_NOMS_BRAIN[observacio.origen] || observacio.origen} · {observacio.dataOriginal || 'data no indicada'} · {observacio.ordre === efectiva.ordre ? 'efectiva per al recompte' : 'anterior o alternativa, no suma pes'}{observacio.versio > 0 ? ` · versió ${observacio.versio}` : ''}<p>Identitat de la font: <code>{observacio.identitatFont}</code>{observacio.referencia && <> · Referència: {observacio.referencia}</>}</p></li>)}</ul></details>
   </li>;
 }
 
@@ -47,7 +46,7 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
   const proves = connexioTriada ? model.documents.filter((article) => connexioTriada.documents.includes(article.id)) : docs;
   const projeccio = useMemo(() => projectaBrainTaxonomia(model, { noms, fusio }), [model, noms, fusio]);
   const tria = (nodeId) => { setSeleccio(nodeId); setLimitArticles(10); setRelacio(''); };
-  const opcions = graf.nodes.filter((node) => neta(node.label).includes(neta(consulta)));
+  const opcions = graf.nodes.filter((node) => netaTextBrain(node.label).includes(netaTextBrain(consulta)));
   const etiquetes = model.nodes.filter((node) => node.type !== 'category');
   const afecta = (article) => projeccio.afectats.includes(article.id);
   const afectats = projeccio.afectats.length;
@@ -82,13 +81,13 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
       <Camp etiqueta="Cerca un concepte"><CampText tipus="search" value={consulta} onChange={(event) => setConsulta(event.target.value)}/></Camp>
       <Camp etiqueta="Inspecciona un node"><Selector value={seleccio} opcions={[{ valor: '', etiqueta: 'Tria un concepte…' }, ...opcions.map((node) => ({ valor: node.id, etiqueta: node.label }))]} onChange={(event) => tria(event.target.value)}/></Camp>
       <p className="sdp-taxonomia__llegenda"><span>Traç continu: coaparició observada; el gruix representa documents.</span><span>Traç puntuat: jerarquia SKOS declarada, sense pes documental.</span><span className="sdp-taxonomia__candidatura">Taronja discontinu: candidatura, no equivalència.</span></p>
-      <div className="sdp-taxonomia__xarxa"><div className="sdp-taxonomia__graf"><Suspense fallback={<p>Obrint el graf…</p>}><BrainGraph graf={graf} estil={ESTIL} seleccio={seleccio} onSeleccio={tria} inspector={false} enquadra vinclesPonderats/></Suspense></div>
+      <div className="sdp-taxonomia__xarxa"><div className="sdp-taxonomia__graf"><Suspense fallback={<p>Obrint el graf…</p>}><BrainGraph graf={graf} estil={ESTIL_BRAIN_TAXONOMIA} seleccio={seleccio} onSeleccio={tria} inspector={false} enquadra vinclesPonderats/></Suspense></div>
         <section className="sdp-taxonomia__inspector" aria-label="Fitxa MIT del node">
-          {seleccionat ? <><h4>{seleccionat.label}</h4><p>{seleccionat.documents.length} documents observats · {seleccionat.longitud} caràcters{seleccionat.longitud > 20 ? ' · nom llarg per revisar' : ''}.</p><p>Identitat canònica: <code>{seleccionat.clau}</code>. {seleccionat.subtipus || ESTIL.noms[seleccionat.type]}.</p>
+          {seleccionat ? <><h4>{seleccionat.label}</h4><p>{seleccionat.documents.length} documents observats · {seleccionat.longitud} caràcters{seleccionat.longitud > 20 ? ' · nom llarg per revisar' : ''}.</p><p>Identitat canònica: <code>{seleccionat.clau}</code>. {seleccionat.subtipus || ESTIL_BRAIN_TAXONOMIA.noms[seleccionat.type]}.</p>
             {seleccionat.type === 'category' && <p>La categoria té identitat pròpia encara que no tinga assignacions efectives en els documents observats. La jerarquia SKOS no li atribuïx articles.</p>}
             {aliases.length > 0 && <p>Àlies amb traça: {aliases.join(' · ')}</p>}
-            <details open><summary>Per què es connecta? ({connexions.length})</summary><ul>{connexions.map((link) => <li key={link.id}><button type="button" className="sdp-taxonomia__enllac" onClick={() => tria(link.source === seleccio ? link.target : link.source)}>{perId.get(link.source === seleccio ? link.target : link.source)?.label}</button> · {nomRelacio(link)}{link.motiu && <p>{link.motiu}</p>}<button type="button" className="sdp-taxonomia__enllac" onClick={() => { setRelacio(link.id); setLimitArticles(10); }}>Veure proves de la connexió</button></li>)}</ul></details>
-            <details open><summary>{connexioTriada ? 'Documents de la connexió' : 'Documents del node'} ({proves.length})</summary>{connexioTriada && <p>{nomRelacio(connexioTriada)}. {connexioTriada.motiu}</p>}{proves.length ? <><ul>{proves.slice(0, limitArticles).map((article) => <ArticleFont key={article.id} article={article}/>)}</ul>{proves.length > limitArticles && <Boto varietat="secundari" onClick={() => setLimitArticles((valor) => valor + 10)}>Mostra més documents</Boto>}</> : <p>No hi ha assignacions documentals observades per a aquesta selecció.</p>}</details>
+            <details open><summary>Per què es connecta? ({connexions.length})</summary><ul>{connexions.map((link) => <li key={link.id}><button type="button" className="sdp-taxonomia__enllac" onClick={() => tria(link.source === seleccio ? link.target : link.source)}>{perId.get(link.source === seleccio ? link.target : link.source)?.label}</button> · {nomRelacioBrain(link)}{link.motiu && <p>{link.motiu}</p>}<button type="button" className="sdp-taxonomia__enllac" onClick={() => { setRelacio(link.id); setLimitArticles(10); }}>Veure proves de la connexió</button></li>)}</ul></details>
+            <details open><summary>{connexioTriada ? 'Documents de la connexió' : 'Documents del node'} ({proves.length})</summary>{connexioTriada && <p>{nomRelacioBrain(connexioTriada)}. {connexioTriada.motiu}</p>}{proves.length ? <><ul>{proves.slice(0, limitArticles).map((article) => <ArticleFont key={article.id} article={article}/>)}</ul>{proves.length > limitArticles && <Boto varietat="secundari" onClick={() => setLimitArticles((valor) => valor + 10)}>Mostra més documents</Boto>}</> : <p>No hi ha assignacions documentals observades per a aquesta selecció.</p>}</details>
             <Boto varietat="secundari" onClick={() => setVista('laboratori')}>Prova un altre nom</Boto>
           </> : <p>Tria un node amb el selector o al graf. Ací veuràs el motiu de les connexions i els articles que les sostenen.</p>}
         </section>
@@ -114,7 +113,7 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
       <div className="sdp-taxonomia__accions"><Boto varietat="secundari" onClick={() => { setNoms({}); setFusio(null); }}>Descarta la simulació</Boto></div>
       <section aria-label="Lectura accessible de la simulació"><h5>Comparació dels noms, sense reducció</h5><p>{mostra.title}</p>{[['Abans', mostraAbans], ['Després', mostra]].map(([etapa, article]) => <section key={etapa} aria-label={`Noms: ${etapa}`}><h6>{etapa}</h6><ul>{article.labels.map((label, index) => <li key={index}>{label.className === 'sdp-badge-category' ? 'Categoria' : 'Etiqueta'}: {label.text}</li>)}</ul></section>)}</section>
       <p>Les targetes mantenen un viewport intern real de 375 o 1440 píxels. La representació exterior es reduïx per a cabre; la comparació escrita de dalt conserva la mida de lectura.</p>
-      {[375, 1440].map((amplaria) => <div key={amplaria}><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Abans" article={mostraAbans}/><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Després" article={mostra}/></div>)}
+      {AMPLARIES_PREVIEW_BRAIN.map((amplaria) => <div key={amplaria}><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Abans" article={mostraAbans}/><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Després" article={mostra}/></div>)}
     </section>}
   </section>;
 }
@@ -126,8 +125,8 @@ export default function BrainTaxonomia() {
     ...(font.sortedMarketItems || []).map((item) => ({ ...item, _brainColleccio: 'mercat' })),
     ...(font.sortedEvents || []).map((item) => ({ ...item, _brainColleccio: 'events' })),
   ], [font.sortedFeedPosts, font.sortedMarketItems, font.sortedEvents]);
-  const parcial = font.status !== 'ready' || ['mur', 'mercat', 'events'].some((seccio) => font.hiHaMes?.(seccio));
+  const parcial = font.status !== 'ready' || SECCIONS_VIVES_BRAIN.some((seccio) => font.hiHaMes?.(seccio));
   const model = useMemo(() => construeixBrainTaxonomia({ historics: ARTICLES_SIMULADOR_IA_425, publicacions, skos: FACETA_4_ETIQUETES_SKOS, coberturaViva: { parcial, estat: font.status } }), [publicacions, parcial, font.status]);
-  const paginacio = ['mur', 'mercat', 'events'].map((seccio) => ({ id: seccio, nom: FONT_NOMS[seccio], mes: font.hiHaMes?.(seccio), carregant: font.carregantMes?.(seccio), error: font.errorMes?.(seccio), carrega: () => font.carregaMes?.(seccio) }));
+  const paginacio = SECCIONS_VIVES_BRAIN.map((seccio) => ({ id: seccio, nom: FONT_NOMS_BRAIN[seccio], mes: font.hiHaMes?.(seccio), carregant: font.carregantMes?.(seccio), error: font.errorMes?.(seccio), carrega: () => font.carregaMes?.(seccio) }));
   return <BrainTaxonomiaVista model={model} paginacio={paginacio}/>;
 }

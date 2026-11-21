@@ -10,7 +10,7 @@ export const COMPTADORS_COMUNICATS = Object.freeze({
   fontPlay: 'Comunicació de Javi Llinares, P0-53',
   fontWeb: 'Encàrrec R55: xifra 14 en web mòbil, sense hora, unitat o finestra de mesura acreditades',
 });
-export const VERSIO_WORDPRESS_LOCAL = '1.1.23';
+export const VERSIO_WORDPRESS_LOCAL = '1.1.24';
 export const URL_OPT_IN_PLAY = 'https://play.google.com/apps/testing/org.socdepoble.app';
 
 /** El canal de proves és separat del canal públic de canalsDeBotiga. */
@@ -46,7 +46,7 @@ const DESCRIPCIONS = Object.freeze({
   'google-play': 'El canal públic és independent de l’enllaç de proves. La participació i la continuïtat s’han de comprovar en el programa de Google Play.',
   'app-store': `Projecte iOS ${FITXA_NATIVA.versio}, build ${FITXA_NATIVA.build}. Activació, signatura, pujada, revisió i disponibilitat no comprovades ací.`,
   'testflight': 'Un projecte iOS compilat no acredita un enllaç públic de TestFlight o una invitació vigent.',
-  'apk-directe': 'Només s’enllaça l’APK oficial quan el canal té una adreça vàlida configurada; una descàrrega no compta com a participació en Play.',
+  'apk-directe': 'Apagat per ordre del Mestre (261121): ZERO APK fora de botiga; cap adreça no obri este canal.',
   'wordpress-org': `El connector local declara la versió ${VERSIO_WORDPRESS_LOCAL}. L’enllaç del directori està configurat; la versió publicada no es consulta des d’esta pàgina.`,
 });
 

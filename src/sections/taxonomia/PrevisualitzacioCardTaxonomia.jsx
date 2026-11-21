@@ -5,11 +5,15 @@ import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
 import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-
-const fontsDePresentacio = (frame) => [...new Set([
-  frame.closest('.sdp-root'), frame.closest('[data-theme]'), frame.closest('[data-contrast]'),
-  frame.getRootNode().host, frame.ownerDocument.documentElement,
-].filter(Boolean))];
+import {
+  ALCARIA_INICIAL_PREVIEW,
+  ATRIBUTS_OBSERVATS_PREVIEW,
+  ATRIBUTS_PRESENTACIO_PREVIEW,
+  classeFramePreview,
+  etiquetaPreviewCard,
+  fontsDePresentacio,
+  titolIframePreviewCard,
+} from './previsualitzacioCardTaxonomiaModel.js';
 
 /** El viewport és real; el zoom CSS només reduïx la representació externa. */
 export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' }) {
@@ -19,7 +23,7 @@ export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' })
   const iframe = useRef(null);
   const contingut = useRef(null);
   const [doc, setDoc] = useState(null);
-  const [alcaria, setAlcaria] = useState(640);
+  const [alcaria, setAlcaria] = useState(ALCARIA_INICIAL_PREVIEW);
   const [creat] = useState(() => new Date().toISOString());
   const [fullsOpacs, setFullsOpacs] = useState(0);
   const prepara = useCallback(() => {
@@ -48,7 +52,7 @@ export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' })
     }
     setFullsOpacs(opacs);
     destination.documentElement.lang = 'ca';
-    for (const atribut of ['data-theme', 'data-contrast']) {
+    for (const atribut of ATRIBUTS_PRESENTACIO_PREVIEW) {
       const valor = fontsDePresentacio(frame).find((element) => element.hasAttribute(atribut))?.getAttribute(atribut);
       if (valor) destination.documentElement.setAttribute(atribut, valor);
       else destination.documentElement.removeAttribute(atribut);
@@ -69,7 +73,7 @@ export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' })
     const frame = iframe.current;
     if (!frame || typeof MutationObserver !== 'function') return;
     const observer = new MutationObserver(prepara);
-    fontsDePresentacio(frame).forEach((element) => observer.observe(element, { attributes: true, attributeFilter: ['data-theme', 'data-contrast', 'style'] }));
+    fontsDePresentacio(frame).forEach((element) => observer.observe(element, { attributes: true, attributeFilter: [...ATRIBUTS_OBSERVATS_PREVIEW] }));
     return () => { viu = false; observer.disconnect(); };
   }, [prepara, estilActiu]);
   useEffect(() => { if (doc) prepara(); }, [doc, prepara]);
@@ -85,11 +89,11 @@ export function PrevisualitzacioCardTaxonomia({ amplaria, article, etapa = '' })
     mesura();
     return () => observer.disconnect();
   }, [doc, article]);
-  return <section className="sdp-taxonomia__preview" aria-label={`Targeta real en viewport de ${amplaria} píxels${etapa ? ` · ${etapa}` : ''}`}>
+  return <section className="sdp-taxonomia__preview" aria-label={etiquetaPreviewCard(amplaria, etapa)}>
     <h4>{amplaria} px{etapa ? ` · ${etapa}` : ''}</h4>
     {fullsOpacs > 0 && <p role="alert">No es poden llegir {fullsOpacs} fulls d’estil de l’amfitrió; aquesta mostra no acredita la paritat visual.</p>}
-    <iframe ref={iframe} width={amplaria} height={alcaria} title={`UniversalCard a ${amplaria} px${etapa ? ` · ${etapa}` : ''}`} tabIndex={-1} aria-hidden="true"
-      className={amplaria === 375 ? 'sdp-taxonomia__frame sdp-taxonomia__frame--mobil' : 'sdp-taxonomia__frame sdp-taxonomia__frame--escriptori'} onLoad={prepara}/>
+    <iframe ref={iframe} width={amplaria} height={alcaria} title={titolIframePreviewCard(amplaria, etapa)} tabIndex={-1} aria-hidden="true"
+      className={classeFramePreview(amplaria)} onLoad={prepara}/>
     {doc && createPortal(<div ref={contingut} className="sdp-root sdp-taxonomia__preview-contingut" inert="">
       <UniversalCard title={article?.title || 'Proposta de classificació'} subtitle="Simulació del laboratori" labels={article?.labels || []}
         {...encapcalamentDeTargeta({ created_at: creat }, { author: DEFAULT_AUTHOR.name, location: DEFAULT_AUTHOR.location, t })}

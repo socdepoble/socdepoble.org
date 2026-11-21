@@ -37,44 +37,12 @@ import { Alerta, Boto, Camp, CampText, Carregant, EstatBuit, Selector, Taula } f
 import { adminDesaPersonalitzacio, adminHistorialPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
-import { PAGE_COPY } from '../text/pageContent.js';
 import {
-  CATEGORIES_BASE, CLASSES_ETIQUETA, ETIQUETES_BASE, MAX_TEXT, VERSIO_TAXONOMIA, validaTaxonomia
+  CATEGORIES_BASE, ETIQUETES_BASE, MAX_TEXT, validaTaxonomia
 } from '../../data/personalitzacio.js';
 import { CODI_PERSONALITZACIO, MISSATGE_PERSONALITZACIO } from '../../data/errorsBackend.js';
+import { CLASSE_PER_DEFECTE, CLAU_TAXONOMIA, FACETA_TAXONOMIA, LEAD_TAXONOMIA, OPCIONS_CLASSE, TEXT_CONFLICTE, TEXT_SENSE_CAPACITAT, dataLlegible, esborranyInicial, nomFitxerExportacio, payloadDe } from './facetaTaxonomiaModel.js';
 
-/** La faceta, per a qui la cableja al menú del Tauler. */
-export const FACETA_TAXONOMIA = Object.freeze({ id: 'taxonomia', titol: 'Etiquetes i categories', icona: Tags });
-
-const CLAU = 'taxonomia';
-const CLASSE_PER_DEFECTE = 'sdp-badge-tag';
-const LEAD = 'Les etiquetes de cada pàgina del sistema i les categories i etiquetes de sèrie del Bloc de notes, per a este poble. Cada «Desar» crea una versió nova; des de l’historial se’n pot restaurar una d’anterior.';
-const TEXT_SENSE_CAPACITAT = 'Este node no admet personalització';
-const TEXT_CONFLICTE = 'Algú ha desat una versió nova: recarrega';
-
-/* El nom llegible de cada classe del conjunt tancat (modules.css, «Sistema de Badges Universals»). */
-const NOM_DE_CLASSE = Object.freeze({
-  'sdp-badge-system': 'Sistema (blau fosc)',
-  'sdp-badge-category': 'Categoria (blau clar)',
-  'sdp-badge-tag': 'Etiqueta (taronja clar)',
-  'sdp-badge-accent': 'Accent (taronja)',
-  'sdp-badge-neutral': 'Neutra (gris)',
-  'sdp-badge-buit': 'Buida (només contorn)'
-});
-const OPCIONS_CLASSE = CLASSES_ETIQUETA.map((valor) => ({ valor, etiqueta: NOM_DE_CLASSE[valor] || valor }));
-const CLASSES = new Set(CLASSES_ETIQUETA);
-
-const netejaTextos = (valors) => [...new Set((Array.isArray(valors) ? valors : []).map((v) => (typeof v === 'string' ? v.trim() : '')).filter(Boolean))];
-
-/* Les etiquetes d'una pàgina en la forma de l'editor: { text, className } amb
-   la classe dins del conjunt (una de text, com pinta UniversalCard, és 'tag'). */
-function normalitza(labels) {
-  return (Array.isArray(labels) ? labels : []).map((label) => (typeof label === 'string'
-    ? { text: label, className: CLASSE_PER_DEFECTE }
-    : { text: String(label?.text ?? ''), className: CLASSES.has(label?.className) ? label.className : CLASSE_PER_DEFECTE }));
-}
-const iguals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const etiquetesDeSerie = (clau) => normalitza(PAGE_COPY[clau]?.labels);
 
 /* Higiene d'amfitrió (261004) · Un port que no és a punt i llança també val com a «sense». */
 function ambCapacitatPersonalitzacio() {
@@ -85,39 +53,8 @@ function ambCapacitatPersonalitzacio() {
   }
 }
 
-/**
- * L'esborrany de l'editor. Les etiquetes de cada pàgina: les de la taxonomia
- * si la nomena; si no, les actuals (el pageCopy del contingut core, que ja
- * porta la personalització aplicada) o les de sèrie (PAGE_COPY).
- */
-function esborranyInicial(pageCopy, taxonomia) {
-  const pagines = Object.fromEntries(SYSTEM_PAGES.map(({ key }) => {
-    const actual = pageCopy?.[key] || PAGE_COPY[key];
-    const labels = taxonomia?.pagines?.[key]?.labels ?? actual?.labels;
-    return [key, { titol: actual?.title || key, labels: normalitza(labels) }];
-  }));
-  return { pagines, categories: netejaTextos(taxonomia?.categories), etiquetes: netejaTextos(taxonomia?.etiquetes) };
-}
-
-/** El payload que es desa: només les pàgines que no són com les de sèrie. */
-export function payloadDe(esborrany) {
-  const pagines = {};
-  for (const [clau, pagina] of Object.entries(esborrany.pagines)) {
-    const labels = pagina.labels.map((label) => ({ text: label.text.trim(), className: label.className }));
-    if (!iguals(labels, etiquetesDeSerie(clau))) pagines[clau] = { labels };
-  }
-  return { v: VERSIO_TAXONOMIA, pagines, categories: netejaTextos(esborrany.categories), etiquetes: netejaTextos(esborrany.etiquetes) };
-}
-
 const textDError = (error, generic) => (typeof error?.message === 'string' && error.message.trim() ? error.message : generic);
 const esCancel = (error) => error?.name === 'AbortError';
-
-export function dataLlegible(iso) {
-  if (!iso) return '';
-  const data = new Date(iso);
-  if (Number.isNaN(data.getTime())) return '';
-  return data.toLocaleString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
 
 /** Descàrrega amb Blob i un enllaç temporal, com DetallPrivacitat: res passa per cap servidor. */
 function descarregaJson(dades, nom) {
@@ -130,7 +67,6 @@ function descarregaJson(dades, nom) {
   enllac.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export const nomFitxerExportacio = (ara = new Date()) => `taxonomia-${ara.toISOString().slice(0, 10)}.json`;
 
 /* Un bloc de la faceta: una secció amb el seu H2, que és també el seu nom accessible. */
 function Bloc({ titol, children }) {
@@ -235,7 +171,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
     setOcupat(clauOcupat);
     setMissatge(null);
     try {
-      const resultat = await adminDesaPersonalitzacio({ clau: CLAU, payload, versio: versio || 0 }, ...(ambit ? [ambit.configCrida] : []));
+      const resultat = await adminDesaPersonalitzacio({ clau: CLAU_TAXONOMIA, payload, versio: versio || 0 }, ...(ambit ? [ambit.configCrida] : []));
       if (!viu.current) return;
       setVersio(resultat.versio);
       setMissatge({ to: 'exit', text: `Desat com a versió ${resultat.versio}. Les etiquetes noves es veuen a tota l’app en tornar a llegir el contingut.` });
@@ -259,7 +195,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
   async function obriHistorial() {
     setHistorial({ carregant: true, files: [], error: null });
     try {
-      const files = await adminHistorialPersonalitzacio(CLAU, ...(ambit ? [ambit.configCrida] : []));
+      const files = await adminHistorialPersonalitzacio(CLAU_TAXONOMIA, ...(ambit ? [ambit.configCrida] : []));
       if (viu.current) setHistorial({ carregant: false, files: Array.isArray(files) ? files : [], error: null });
     } catch (error) {
       if (viu.current && !esCancel(error)) setHistorial({ carregant: false, files: [], error: textDError(error, 'No s’ha pogut llegir l’historial.') });
@@ -290,7 +226,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
      Traduir avisa; el botó no canvia (Llei del Píxel). */
   if (!ambCapacitat) {
     return (
-      <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}
+      <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD_TAXONOMIA} onBack={tornada}
         traduccio={false}>
         <EstatBuit icona={Tags} titol={TEXT_SENSE_CAPACITAT}
           accio={onBack ? <Boto varietat="secundari" onClick={onBack}>Tornar al Tauler</Boto> : null}>
@@ -303,7 +239,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
   const treballant = Boolean(ocupat);
   if (ambit && !ambit.preparada) return <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} onBack={tornada} traduccio={false}>{ambit.selector}</UniversalPage>;
   return (
-    <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD} onBack={tornada}
+    <UniversalPage chrome="context" layout="contained" title={FACETA_TAXONOMIA.titol} lead={LEAD_TAXONOMIA} onBack={tornada}
       traduccio={false}>
       <div className="sdp-superadmin-taxonomia">
         {ambit?.selector}

@@ -3,11 +3,17 @@
  * en les 5 llengües oficials (ca, es, en, eu, gl).
  *
  * Viu fora de src/config/idiomes/ perquè només l'importen les superfícies diferides
- * (/el-meu-perfil, /control i L'Avisador): 0 B d'augment al tros d'arrencada estàtica de WordPress.
+ * (/el-meu-perfil, /control, L'Avisador i l'accés del Xat): 0 B d'augment al tros d'arrencada
+ * estàtica de WordPress.
+ *
+ * P0-ANDROID-PUSH (v1.2.16) · B11c (ordre del Mestre 261121; prompt 0216, T2.5) · `xipCurt`, l'etiqueta
+ * curta del xip a l'accés del Xat (ControlModeSenior amb `etiquetaCurta`): «Lletra gran». El basc i el
+ * gallec necessiten revisió nadiua.
  */
 export const TEXTOS_MODE_SENIOR = Object.freeze({
   ca: Object.freeze({
     xip: 'Mode Sènior · Lectura Gran',
+    xipCurt: 'Lletra gran',
     descripcio: 'Lletra més gran, botons amples de 56 px i contrast reforçat (≥ 10:1) en tota l’aplicació.',
     actiu: 'Actiu',
     inactiu: 'Desactivat',
@@ -16,6 +22,7 @@ export const TEXTOS_MODE_SENIOR = Object.freeze({
   }),
   es: Object.freeze({
     xip: 'Modo Sénior · Lectura Grande',
+    xipCurt: 'Letra grande',
     descripcio: 'Letra más grande, botones amplios de 56 px y contraste reforzado (≥ 10:1) en toda la aplicación.',
     actiu: 'Activo',
     inactiu: 'Desactivado',
@@ -24,6 +31,7 @@ export const TEXTOS_MODE_SENIOR = Object.freeze({
   }),
   en: Object.freeze({
     xip: 'Senior Mode · Large Print',
+    xipCurt: 'Large text',
     descripcio: 'Larger text, wide 56 px buttons and enhanced contrast (≥ 10:1) across the entire app.',
     actiu: 'Active',
     inactiu: 'Off',
@@ -32,6 +40,7 @@ export const TEXTOS_MODE_SENIOR = Object.freeze({
   }),
   eu: Object.freeze({
     xip: 'Senior Modua · Letra Handia',
+    xipCurt: 'Letra handia',
     descripcio: 'Letra handiagoa, 56 px-ko botoi zabalak eta kontraste indartua (≥ 10:1) aplikazio osoan.',
     actiu: 'Aktibo',
     inactiu: 'Itzalita',
@@ -40,6 +49,7 @@ export const TEXTOS_MODE_SENIOR = Object.freeze({
   }),
   gl: Object.freeze({
     xip: 'Modo Sénior · Lectura Grande',
+    xipCurt: 'Letra grande',
     descripcio: 'Letra máis grande, botóns amplos de 56 px e contraste reforzado (≥ 10:1) en toda a aplicación.',
     actiu: 'Activo',
     inactiu: 'Desactivado',

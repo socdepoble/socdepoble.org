@@ -336,6 +336,61 @@ export function validaProducteUniversal(producte) {
  */
 export const TIPUS_ITEM_CATALEG = Object.freeze(['producte', 'recepta', 'llavor', 'planta', 'article']);
 
+/* Còpia immutable de dades de catàleg: cap descendent mutable queda compartit
+   amb qui l’ha creat o el consumix. Els subgrafs ja profundament immutables
+   conserven la identitat de la font canònica. El contracte és dades planes,
+   sense accessors ni instàncies amb mutabilitat interna (Date, Map, TypedArray). */
+function copiaCatalegImmutable(valor) {
+  const vistos = new WeakMap(), nodes = [], pendents = [], mutables = [];
+  const nodeDe = (entrada) => {
+    if (entrada === null || typeof entrada !== 'object') {
+      if (typeof entrada === 'function' || typeof entrada === 'symbol') throw new TypeError('Dada de catàleg no plana.');
+      return null;
+    }
+    if (vistos.has(entrada)) return vistos.get(entrada);
+    const array = Array.isArray(entrada);
+    if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(entrada))) throw new TypeError('Dada de catàleg no plana.');
+    const descriptors = Object.getOwnPropertyDescriptors(entrada);
+    const node = { entrada, array, descriptors, camps: [], pares: [], mutable: !Object.isFrozen(entrada) };
+    vistos.set(entrada, node); nodes.push(node); pendents.push(node);
+    if (node.mutable) mutables.push(node);
+    return node;
+  };
+  const arrel = nodeDe(valor);
+  /* Validar descriptors sense executar getters. Un node congelat només és
+     reutilitzable si tots els seus descendents també ho són, inclosos els
+     que es troben a través d’àlies o cicles. */
+  while (pendents.length) {
+    const node = pendents.pop();
+    for (const clau of Reflect.ownKeys(node.descriptors)) {
+      if (node.array && clau === 'length') continue;
+      const descriptor = node.descriptors[clau];
+      if (typeof clau !== 'string' || !descriptor || !Object.hasOwn(descriptor, 'value')) throw new TypeError('Dada de catàleg no plana.');
+      node.camps.push([clau, descriptor]);
+      const fill = nodeDe(descriptor.value);
+      if (fill) fill.pares.push(node);
+    }
+  }
+  /* Propagar una sola vegada la mutabilitat als antecessors: O(nodes +
+     referències), sense recursió ni congelació dels objectes del cridador. */
+  while (mutables.length) {
+    for (const pare of mutables.pop().pares) {
+      if (!pare.mutable) { pare.mutable = true; mutables.push(pare); }
+    }
+  }
+  for (const node of nodes) node.copia = node.mutable ? (node.array ? new Array(node.descriptors.length.value) : {}) : node.entrada;
+  for (const node of nodes) {
+    if (!node.mutable) continue;
+    for (const [clau, descriptor] of node.camps) {
+      const fill = descriptor.value;
+      const value = fill !== null && typeof fill === 'object' ? vistos.get(fill).copia : fill;
+      Object.defineProperty(node.copia, clau, { value, enumerable: descriptor.enumerable, configurable: false, writable: false });
+    }
+    Object.freeze(node.copia);
+  }
+  return arrel ? arrel.copia : valor;
+}
+
 export function universalItemCataleg({ id, tipus, nom, font, connexions = [], dades = {} }) {
   if (!esIdOpac(id) || !TIPUS_ITEM_CATALEG.includes(tipus) || typeof nom !== 'string' || !nom.trim()) throw new TypeError('Identitat del catàleg no vàlida.');
   if (!font || typeof font.document !== 'string' || !font.document.trim() || typeof font.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(font.sha256)) throw new TypeError('Cal document i SHA-256 de procedència.');
@@ -343,5 +398,5 @@ export function universalItemCataleg({ id, tipus, nom, font, connexions = [], da
     if (!esIdOpac(link.id) || !['candidat', 'confirmat'].includes(link.estat) || !TIPUS_ITEM_CATALEG.includes(link.tipus)) throw new TypeError('Connexió sense identitat o revisió.');
     return Object.freeze({ id: link.id, tipus: link.tipus, estat: link.estat, motiu: String(link.motiu || '') });
   });
-  return Object.freeze({ id, tipus, nom: nom.trim(), font: Object.freeze({ ...font }), connexions: Object.freeze(links), dades: Object.freeze({ ...dades }) });
+  return Object.freeze({ id, tipus, nom: nom.trim(), font: copiaCatalegImmutable(font), connexions: Object.freeze(links), dades: copiaCatalegImmutable(dades) });
 }

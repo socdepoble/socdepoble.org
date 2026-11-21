@@ -18,6 +18,11 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { SlotErrorBoundary } from '../../components/universal/workspace/SlotErrorBoundary.jsx';
 import { FalladaDeLHistoric, VistaPublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
 import { textosDelPoble, usePublicacionsDelPoble } from './usePublicacionsDelPoble.js';
+import {
+  PESTANYA_PER_DEFECTE_PUBLICACIONS_POBLE,
+  VARIETAT_PORTA_PUBLICACIONS_POBLE,
+  clauResetPublicacionsPoble,
+} from './publicacionsDelPobleModel.js';
 
 /* El traductor de l'App, o res fora d'ella (una prova, el catàleg). La forma
    `return useX()` dins d'un try és la que rules-of-hooks accepta. */
@@ -33,16 +38,25 @@ function useTraductor() {
    del SlotErrorBoundary, com una targeta que peta. */
 function PublicacionsDelPobleAmbDades({ poble, textos, pestanya }) {
   const { elements, estat, error, refresh } = usePublicacionsDelPoble(poble, pestanya);
-  return <VistaPublicacionsDeLActor elements={elements} estat={estat} error={error} refresh={refresh} textos={textos} varietatPorta="secundari" />;
+  return (
+    <VistaPublicacionsDeLActor
+      elements={elements}
+      estat={estat}
+      error={error}
+      refresh={refresh}
+      textos={textos}
+      varietatPorta={VARIETAT_PORTA_PUBLICACIONS_POBLE}
+    />
+  );
 }
 
 /** Les targetes de la vista triada; Gent per compatibilitat amb els consumidors anteriors. */
-export function PublicacionsDelPoble({ poble, pestanya = 'gent' }) {
+export function PublicacionsDelPoble({ poble, pestanya = PESTANYA_PER_DEFECTE_PUBLICACIONS_POBLE }) {
   const t = useTraductor();
   const textos = textosDelPoble(t, pestanya);
   return (
     <SlotErrorBoundary
-      resetKey={`${String(poble?.id ?? '')}:${pestanya}`}
+      resetKey={clauResetPublicacionsPoble(poble, pestanya)}
       fallback={({ reinicia }) => <FalladaDeLHistoric t={t} textos={textos} reinicia={reinicia} />}
     >
       <PublicacionsDelPobleAmbDades poble={poble} textos={textos} pestanya={pestanya} />

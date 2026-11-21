@@ -7,10 +7,41 @@
    vivia fora, no s'encongia i en un mòbil apaïsat deixava la llista a 0 px),
    i amb poc contingut el peu baixa al fons. En una pantalla baixa, compacte:
    la frase cau. XATR-2 · El peu no hi suma un segon coixí. XATR-7 · L'avís
-   d'un fil de només lectura s'encongix dins de la seua barra. */
+   d'un fil de només lectura s'encongix dins de la seua barra.
+   Gauntlet v1.2.16, ronda 2 (L1R2-02, L6R2-02) · Les proves 261026_2126 també munten l'accés viu
+   (XatSection sense sessió, com XatSection.avatars.test.jsx) per a saber a quins elements casen
+   de veres els selectors que fixen: un selector sense cap element no guarda cap píxel. */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test } from 'vitest';
+import { createElement } from 'react';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import XatSection from './XatSection';
+import { XatContext } from './XatContext';
+
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), params: new URLSearchParams() }));
+
+vi.mock('../../app/contexts/RouterContext', async () => {
+  const { createElement: crea } = await import('react');
+  return {
+    useNavigate: () => mocks.navigate,
+    useLocation: () => ({ pathname: '/xat' }),
+    useSearchParams: () => [mocks.params],
+    useParams: () => ({ threadId: null }),
+    useRouter: () => ({ navigate: mocks.navigate, currentPath: '/xat' }),
+    Link: ({ to, children, className, ...rest }) => crea('a', { href: to, className, ...rest }, children)
+  };
+});
+vi.mock('../../pages/NotFoundPage', () => ({ default: () => null }));
+vi.mock('../text/TextSection', () => ({ default: () => null }));
+vi.mock('./components/FitxaVivaDeComunitat.jsx', () => ({ default: () => null }));
+vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', pageCopy: {}, towns: [] }) }));
+vi.mock('../../app/contexts/UIContext', () => ({
+  useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (v) => v }),
+  useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: {} })
+}));
+vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ creaNota: vi.fn() }) }));
+vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 const modules = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const net = (text) => text.replace(/\s+/g, ' ').trim();
@@ -144,26 +175,129 @@ test('261026 · en una pantalla baixa ja cap regla de píndola: comparteixen fil
 });
 
 /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38 i P1-37) ·
-   «Descarrega l'App», damunt de la parella: la píndola de sèrie (alçada
-   tàctil i 100%) fins a l'amplària de la parella, amb el respir de davall de
-   la frase que abans portava la parella. Entre la píndola i la parella, només
-   el buit de l'alerta, el mateix que entre «Connectar-se» i «Registrar-se». */
-const DESCARREGA = '.sdp-xat-acces > .sdp-xat-acces__descarrega';
-const components = readFileSync(resolve(process.cwd(), 'src/css/components.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+   «Descarrega l'App», damunt de la parella, amb el respir de davall de la frase
+   que abans portava la parella. Entre la seua fila i la parella, només el buit
+   de l'alerta, el mateix que entre «Entrar» i «Registrar-se».
+   P0-ANDROID-PUSH (v1.2.16) · B11c · Gauntlet v1.2.16, ronda 2 (L1R2-02, L6R2-02) · Des de B11c
+   el botó viu DINS de la primera fila d'accions (.sdp-xat-acces > .sdp-alerta__accions), amb el
+   xip «Lletra gran» (XatSection.jsx, AccesAlXat), i ja no és fill directe de l'accés: hi pren la
+   geometria de les píndoles de la fila (flex 1 1 0, width auto). Les proves fixen el que es pinta
+   ara i són PROVISIONALS FINS A LA DECISIÓ C-2 DEL MESTRE, que és qui decidix la geometria.
+   Les regles de modules.css:6188-6199 (el comentari, `.sdp-xat-acces > .sdp-xat-acces__descarrega`
+   i el seu `+ .sdp-alerta__accions`) són MORTES fins a la decisió C-2: no casen amb cap element.
+   No es toquen ací (modules.css viatja a l'arrencada de WordPress i la geometria és la C-2): quan
+   el Mestre decidisca, o es retiren o es tornen a fer vives, i estes proves canvien amb elles.
+   Si tornen a casar amb algun element sense eixa decisió, la prova del DOM viu falla. */
+const DESCARREGA = `${ACCIONS} > .sdp-xat-acces__descarrega`;
+const PINDOLA_DE_LA_FILA = `${ACCIONS} > .sdp-xat-pindola`;
+const MORTES_FINS_A_C2 = Object.freeze([
+  '.sdp-xat-acces > .sdp-xat-acces__descarrega',
+  '.sdp-xat-acces > .sdp-xat-acces__descarrega + .sdp-alerta__accions'
+]);
+const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
+const components = senseComentaris(readFileSync(resolve(process.cwd(), 'src/css/components.css'), 'utf8'));
+const diferit = senseComentaris(readFileSync(resolve(process.cwd(), 'src/css/diferit-mode-senior.css'), 'utf8'));
 
-test('261026_2126 · «Descarrega l’App» és la píndola de sèrie: alçada tàctil i, com a molt, l’amplària de la parella', () => {
+test('261026_2126 · B11c · «Descarrega l’App» és una píndola de la fila (provisional fins a C-2): alçada tàctil de sèrie, flex 1 1 0 i width auto', () => {
   expect(valor('.sdp-xat-pindola', 'min-height')).toBe('var(--sdp-touch)');
   expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
-  expect(valor(DESCARREGA, 'max-inline-size')).toBe(valor(ACCIONS, 'max-inline-size'));
-  expect(valor(DESCARREGA, 'margin')).toBe('var(--sdp-boto-marge-block) auto 0');
+  /* Provisional fins a C-2: la fila li desfà el 100% de sèrie, com a «Entrar» i «Registrar-se». */
+  expect(valor(PINDOLA_DE_LA_FILA, 'flex')).toBe('1 1 0');
+  expect(valor(PINDOLA_DE_LA_FILA, 'width')).toBe('auto');
+  expect(valor(PINDOLA_DE_LA_FILA, 'min-inline-size')).toBe('max-content');
+  /* L'alçada tàctil de sèrie, la fila no la desfà. */
+  for (const propietat of ['min-height', 'height']) expect(valor(PINDOLA_DE_LA_FILA, propietat), propietat).toBeNull();
+  /* La fila porta el respir de davall de la frase i, com a molt, l'amplària de la targeta viva. */
   expect(valor(ACCIONS, 'margin')).toBe('var(--sdp-boto-marge-block) auto 0');
-  /* Cap regla no li desfà l'amplària ni l'alçada de sèrie. */
-  for (const propietat of ['width', 'min-height', 'height', 'flex']) expect(valor(DESCARREGA, propietat), propietat).toBeNull();
+  expect(valor(ACCIONS, 'max-inline-size')).toBe('var(--sdp-targeta-viva-ample)');
+  /* Cap regla pròpia del botó dins de la fila, ni al full d'arrencada ni al diferit. */
+  for (const propietat of ['width', 'min-height', 'height', 'flex', 'margin', 'max-inline-size']) {
+    expect(valor(DESCARREGA, propietat), propietat).toBeNull();
+    expect(valor(DESCARREGA, propietat, diferit), `${propietat} (diferit)`).toBeNull();
+  }
 });
 
-test('261026_2126 · P1-37 · entre «Descarrega l’App» i la parella, només el buit de l’alerta', () => {
-  expect(valor(`${DESCARREGA} + .sdp-alerta__accions`, 'margin-top')).toBe('0');
+test('261026_2126 · P1-37 · B11c · entre la fila de «Descarrega l’App» i la parella, només el buit de l’alerta', () => {
+  /* El margin-top: 0 és el de la regla diferida de B11c; modules.css no en porta cap de viu. */
+  expect(valor(`${ACCIONS} + .sdp-alerta__accions`, 'margin-top', diferit)).toBe('0');
+  expect(valor(`${ACCIONS} + .sdp-alerta__accions`, 'margin-top')).toBeNull();
   expect(valor('.sdp-alerta', 'gap', components)).toBe('var(--sdp-space-3)');
   expect(valor('.sdp-alerta.sdp-xat-acces', 'gap')).toBeNull();
   expect(valor(ACCIONS, 'gap')).toBe('var(--sdp-boto-separacio)');
+});
+
+/* L'accés viu: XatSection sense sessió a l'aterratge del Xat, amb el context de veres
+   (XatContext.Provider), com XatSection.avatars.test.jsx. */
+function contextSenseSessio() {
+  return {
+    scopeKey: 'A', ambitEstable: 'P', status: 'ready', avis: null, chatThreads: [],
+    getThreadMessages: () => [], sendChatMessage: vi.fn(async () => []), obriFil: () => {}, creaFil: vi.fn(),
+    cercaMembres: vi.fn(async () => []), totalNoLlegits: 0, hiHaMesAntics: () => false,
+    carregantAntics: () => false, carregaMesAntics: () => {}, reintenta: () => {}, descartaFallit: () => {},
+    marcaVist: () => {}, comunitats: [], contactesFrequents: [], marcaLlegides: () => 0,
+    obriFilDePagina: vi.fn(async () => null), joId: null, joNom: null, senseSessio: true,
+    modeDades: 'remote', consumixEntrada: undefined
+  };
+}
+
+function muntaAcces() {
+  render(createElement(XatContext.Provider, { value: contextSenseSessio() }, createElement(XatSection)));
+  const totes = document.querySelectorAll('.sdp-xat-acces');
+  expect(totes).toHaveLength(1);
+  return totes[0];
+}
+
+/** Els selectors de modules.css (sense comentaris) que nomenen una classe. */
+function selectorsAmb(classe) {
+  const trobats = new Set();
+  for (const m of modules.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    for (const selector of net(m[1].split(';').pop()).split(',').map(net)) if (selector.includes(classe)) trobats.add(selector);
+  }
+  return [...trobats];
+}
+
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  mocks.navigate.mockReset();
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+test('261026_2126 · B11c · al DOM viu, el botó casa amb el selector de la fila i les regles mortes fins a C-2 no casen amb cap element', () => {
+  const acces = muntaAcces();
+  const boto = screen.getByRole('button', { name: "Descarrega l'App" });
+  expect(boto.matches(DESCARREGA)).toBe(true);
+  expect(boto.matches(PINDOLA_DE_LA_FILA)).toBe(true);
+  /* Dues files: la del botó i del xip, i la parella, que és la que perd el marge de dalt. */
+  const files = acces.querySelectorAll(':scope > .sdp-alerta__accions');
+  expect(files).toHaveLength(2);
+  expect(files[0].contains(boto)).toBe(true);
+  expect([...document.querySelectorAll(`${ACCIONS} + .sdp-alerta__accions`)]).toEqual([files[1]]);
+  expect(within(files[1]).getAllByRole('button').map((b) => b.textContent)).toEqual(['Entrar', 'Registrar-se']);
+  for (const mort of MORTES_FINS_A_C2) expect(document.querySelectorAll(mort), mort).toHaveLength(0);
+});
+
+test('261026_2126 · B11c · dins de l’app nativa (sense botó), les regles mortes tampoc no casen', () => {
+  window.Capacitor = { isNativePlatform: () => true };
+  try {
+    muntaAcces();
+    expect(screen.queryByRole('button', { name: "Descarrega l'App" })).toBeNull();
+    for (const mort of MORTES_FINS_A_C2) expect(document.querySelectorAll(mort), mort).toHaveLength(0);
+    expect(document.querySelectorAll(`${ACCIONS} + .sdp-alerta__accions`)).toHaveLength(1);
+  } finally {
+    delete window.Capacitor;
+  }
+});
+
+test('261026_2126 · cap altra regla de modules.css per a «Descarrega l’App» sense un element viu que hi case', () => {
+  muntaAcces();
+  const selectors = selectorsAmb('.sdp-xat-acces__descarrega');
+  /* Avui només hi ha les dues mortes fins a C-2 (vegeu dalt); qualsevol altra ha de casar. La llista
+     blanca no pot quedar obsoleta: si la C-2 les retira de modules.css, esta prova obliga a buidar-la (R2b). */
+  for (const mort of MORTES_FINS_A_C2) expect(selectors, `${mort} (llista blanca de C-2)`).toContain(mort);
+  for (const selector of selectors.filter((s) => !MORTES_FINS_A_C2.includes(s))) {
+    expect(document.querySelectorAll(selector).length, selector).toBeGreaterThan(0);
+  }
 });

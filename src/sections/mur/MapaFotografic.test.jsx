@@ -237,6 +237,48 @@ describe('agrupació i nivells', () => {
     expect(document.querySelector('.sdp-mapa__estat').textContent).toContain('Detall de parades');
     expect(document.querySelectorAll('.sdp-mapa-targeta').length).toBeGreaterThan(0);
   });
+
+  /* Gauntlet v1.2.16 (L6-P1-01; Llei del Píxel) · Com a ded51467c: la línia d'un
+     grup amb GPS porta --grup, la d'un grup amb estimades --ocre i la d'una parada
+     --targeta. Cap d'elles no cau en el verd del GPS real (--verd). */
+  const classesDeLinia = () => [...llenc().querySelectorAll('path.sdp-mapa-linia')].map((p) => p.getAttribute('class'));
+
+  test('la línia d’un grup amb GPS és --grup, i la d’un grup amb estimades, --ocre; mai el verd del GPS', async () => {
+    await munta({ items: [FRANCA, ALACANT] });
+    expect(document.querySelector('.sdp-mapa__estat').textContent).toContain('Tot junt');
+    const ambGps = classesDeLinia();
+    expect(ambGps.length).toBeGreaterThan(0);
+    expect(ambGps.every((c) => c === 'sdp-mapa-linia sdp-mapa-linia--grup')).toBe(true);
+    cleanup();
+    mapa = null;
+    await munta();
+    const ambEstimades = classesDeLinia();
+    expect(ambEstimades.length).toBeGreaterThan(0);
+    expect(ambEstimades.every((c) => c === 'sdp-mapa-linia sdp-mapa-linia--ocre')).toBe(true);
+  });
+
+  test('la línia d’una parada és --targeta, també si la parada és estimada; mai el verd del GPS', async () => {
+    await munta();
+    await pinta(() => mapa.setView([38.5919, -0.4184], 14, { animate: false }));
+    expect(document.querySelector('.sdp-mapa__estat').textContent).toContain('Detall de parades');
+    expect(document.querySelector('.sdp-mapa-targeta--ocre')).not.toBeNull();
+    const deParada = classesDeLinia();
+    expect(deParada.length).toBeGreaterThan(0);
+    expect(deParada.every((c) => c === 'sdp-mapa-linia sdp-mapa-linia--targeta')).toBe(true);
+  });
+
+  test('el full diferit pinta --grup i --targeta amb els colors de ded51467c, declarats a l’àmbit de tokens.css', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+    const css = readFileSync(resolve(process.cwd(), 'src/css/diferit-mapa-fotografic.css'), 'utf8');
+    expect(css).toMatch(/\.sdp-mapa \.sdp-mapa-linia--grup \{ stroke: var\(--mapa-linia-grup\); \}/);
+    expect(css).toMatch(/\.sdp-mapa \.sdp-mapa-linia--targeta \{ stroke: var\(--mapa-linia-targeta\); stroke-opacity: 0\.8; \}/);
+    const tema = /:root, :host\(\*\), \.sdp-root \{([^}]*)\}/.exec(css)?.[1] || '';
+    // Els valors de tokens.css a ded51467c, compostos a trossos perquè design_guard no els llija com a color cru.
+    const valorDe = (token) => new RegExp(`${token}:\\s*([^;]+);`).exec(tema)?.[1].trim();
+    expect(valorDe('--mapa-linia-grup')).toBe(['#', '668675'].join(''));
+    expect(valorDe('--mapa-linia-targeta')).toBe(['#', '527567'].join(''));
+  });
 });
 
 describe('acostar i teclat', () => {
@@ -333,6 +375,94 @@ describe('acostar i teclat', () => {
     expect(document.activeElement).toBe(cap());
     await pinta(() => cap().click());
     expect(document.activeElement).toBe(llenc());
+  });
+});
+
+/* Gauntlet v1.2.16 (L6R2-01) · Dues fotos a 10 px: la diana de 48 px de la
+   segona no pot tapar el punt visible de la primera. jsdom no pinta ni fa
+   elementFromPoint: `sotaElDit` aplica la regla del navegador. Entre els camins
+   interactius de Leaflet que contenen el punt (pointer-events visiblePainted: el
+   farciment «transparent» també compta, i la meitat del traç), guanya el del
+   panell amb el z-index més alt i, dins del mateix SVG, l'últim del document. */
+describe('un toc damunt d’un punt obri eixe punt (L6R2-01)', () => {
+  const LLOC = [38.5919, -0.4184];
+  const grausPerPx = (zoom) => 360 / (256 * 2 ** zoom);
+  const veines = (zoom) => ({
+    id: 'veines', type: 'feed', title: 'Dues fotos veïnes', poble_id: 'la-torre-de-les-macanes',
+    image_url: FOTO('v1'), geolocalitzacio: GPS(...LLOC), dataCaptura: '2026-10-12T10:00:00+02:00',
+    fotos_geo: [{ src: FOTO('v2'), lat: LLOC[0], lng: LLOC[1] + 10 * grausPerPx(zoom), precisio: 'exacta', precisio_m: 1, dataCaptura: '2026-10-12T10:05:00+02:00' }]
+  });
+  const cercleDe = (cami) => {
+    const [, x, y, r] = /^M(-?[\d.]+),(-?[\d.]+)a(\d+),/.exec(cami.getAttribute('d') || '') || [];
+    return { x: Number(x) + Number(r), y: Number(y), r: Number(r) + (Number(cami.getAttribute('stroke-width')) || 0) / 2 };
+  };
+  const zDe = (cami) => Number(cami.closest('.leaflet-pane').style.zIndex) || 0;
+  const sotaElDit = ({ x, y }) => {
+    const candidats = [...llenc().querySelectorAll('.leaflet-pane > svg path.leaflet-interactive')].filter((cami) => {
+      const cercle = cercleDe(cami);
+      return Math.hypot(x - cercle.x, y - cercle.y) <= cercle.r;
+    });
+    candidats.sort((a, b) => zDe(a) - zDe(b) || (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    return candidats.at(-1) || null;
+  };
+  const fotoOberta = () => document.querySelector('dialog[open] .sdp-visor__imatge')?.getAttribute('src') || null;
+  const tanca = () => pinta(() => screen.getByRole('button', { name: /Tanca/i }).click());
+
+  test.each([[16, 'foto a foto'], [14, 'parades']])('zoom %i (%s): el centre de la primera obri la primera, i el halo buit del costat, també', async (zoom) => {
+    await munta({ items: [veines(zoom)] });
+    await pinta(() => mapa.setView([LLOC[0], LLOC[1] + 5 * grausPerPx(zoom)], zoom, { animate: false }));
+    const primera = mapa.latLngToLayerPoint(LLOC).round();
+    const segona = mapa.latLngToLayerPoint([LLOC[0], LLOC[1] + 10 * grausPerPx(zoom)]).round();
+    expect([segona.x - primera.x, segona.y - primera.y]).toEqual([10, 0]);
+
+    // Un toc al centre de la primera foto: el visor s'obri en la primera.
+    const tocat = sotaElDit(primera);
+    await pinta(() => fireEvent.click(tocat));
+    expect(fotoOberta()).toBe(FOTO('v1'));
+    await tanca();
+    expect(fotoOberta()).toBeNull();
+
+    // Perquè el toc l'ha rebut el seu punt visible, i les dues dianes queden per davall dels dos punts.
+    const punts = [...llenc().querySelectorAll('path.sdp-mapa-punt')];
+    expect(punts).toHaveLength(2);
+    expect(tocat).toBe(punts.find((cami) => cercleDe(cami).x === primera.x));
+    expect(punts.every((cami) => cami.classList.contains('leaflet-interactive') && !cami.hasAttribute('tabindex'))).toBe(true);
+    const dianes = [...llenc().querySelectorAll('path.sdp-mapa-diana')];
+    expect(dianes).toHaveLength(2);
+    expect(dianes.every((diana) => zDe(diana) < zDe(punts[0]))).toBe(true);
+
+    // I el de la segona, la segona.
+    await pinta(() => fireEvent.click(sotaElDit(segona)));
+    expect(fotoOberta()).toBe(FOTO('v2'));
+    await tanca();
+
+    // La diana per al dit continua: a 18 px a l'esquerra de la primera (espai buit), la primera.
+    const halo = sotaElDit({ x: primera.x - 18, y: primera.y });
+    expect(halo.classList.contains('sdp-mapa-diana')).toBe(true);
+    await pinta(() => fireEvent.click(halo));
+    expect(fotoOberta()).toBe(FOTO('v1'));
+    await tanca();
+  });
+
+  test('les dianes conserven el teclat de R32.24: botons amb nom, en l’ordre de les fotos, i el punt visible fora de l’ordre del teclat', async () => {
+    await munta({ items: [veines(16)] });
+    await pinta(() => mapa.setView(LLOC, 16, { animate: false }));
+    const dianes = [...llenc().querySelectorAll('path.sdp-mapa-diana')];
+    expect(dianes.map((diana) => [diana.getAttribute('role'), diana.getAttribute('tabindex')])).toEqual([['button', '0'], ['button', '0']]);
+    expect(dianes.map((diana) => /Obri la foto (\d)/.exec(diana.getAttribute('aria-label'))?.[1])).toEqual(['1', '2']);
+    expect(llenc().querySelectorAll('path.sdp-mapa-punt[tabindex]')).toHaveLength(0);
+    await pinta(() => fireEvent.keyDown(dianes[0], { key: 'Enter' }));
+    expect(fotoOberta()).toBe(FOTO('v1'));
+    await tanca();
+    expect(document.activeElement?.dataset?.rol).toBe('punt');
+  });
+
+  test('el punt d’un grup (zoom baix) no té gestor i continua sense rebre el toc', async () => {
+    await munta({ items: [veines(16)] });
+    await pinta(() => mapa.setView(LLOC, 9, { animate: false }));
+    const deGrup = [...llenc().querySelectorAll('path.sdp-mapa-punt--grup')];
+    expect(deGrup.length).toBeGreaterThan(0);
+    expect(llenc().querySelectorAll('path.sdp-mapa-punt.leaflet-interactive, path.sdp-mapa-diana')).toHaveLength(0);
   });
 });
 

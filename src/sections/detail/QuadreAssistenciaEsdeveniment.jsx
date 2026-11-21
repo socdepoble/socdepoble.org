@@ -11,6 +11,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import { rutaXatDePagina } from '../../config/objecteConnectable.js';
 import cssEsdeveniments from '../../css/diferit-esdeveniments.css?inline';
+import { esActePassat } from '../calendari/actePassat.js';
 import {
   normalitzaIdiomaCalendariRsvp,
   resolTextCalendariRsvp,
@@ -68,6 +69,9 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
   const idParticipant = participantRsvpActual(currentUser, identitat);
   const magatzemRsvp = useMagatzemRsvpEsdeveniments();
   const rsvp = llegeixRsvpEsdeveniment(item, idParticipant, magatzemRsvp);
+  /* P0-ANDROID-PUSH (v1.2.16) · B10b (D-12) · Un acte que ja s'ha fet no pregunta «Assistiràs?»:
+     ni la pregunta, ni els tres botons, ni la nota, ni «Desar resposta». Els xats es queden. */
+  const passat = esActePassat(item);
 
   const actesSolapats = useMemo(() => {
     const idActual = textNet(String(item?.id ?? ''));
@@ -96,7 +100,7 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
   const datesText = resumDatesDeLActe(item);
   const llocText = llocDeLActe(item);
   const titolActe = textNet(item?.title) || t('section.detail.events.itemTitle', 'Acte');
-  const teRespostaONota = Boolean(rsvp.intencio || notaEsborrany.trim());
+  const teRespostaONota = !passat && Boolean(rsvp.intencio || notaEsborrany.trim());
 
   const triaIntencio = (novaIntencio) => {
     const resultat = desaRsvpEsdeveniment(item, {
@@ -118,6 +122,11 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
   };
 
   const preparaEsborranyDelXat = () => {
+    /* B10b · En un acte passat, el xat no hereta cap resposta: ni es desa ni s'escriu. */
+    if (passat) {
+      recordaReferenciaPaginaXat(objecteXat, { esborrany: '' });
+      return;
+    }
     const intencioEfectiva = rsvp.intencio || (notaEsborrany.trim() ? 'potser' : null);
     if (intencioEfectiva) {
       desaRsvpEsdeveniment(item, {
@@ -158,7 +167,7 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
     <section
       ref={arrelRef}
       className="sdp-quadre-esdeveniment"
-      aria-label={tr('section.events.rsvp.titol', tx.titolPregunta)}
+      aria-label={passat ? tx.actePassat : tr('section.events.rsvp.titol', tx.titolPregunta)}
       data-testid="quadre-assistencia-esdeveniment"
     >
       <div className="sdp-quadre-esdeveniment__cap">
@@ -188,75 +197,81 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
       </div>
 
       <div className="sdp-quadre-esdeveniment__pregunta">
-        <p className="sdp-quadre-esdeveniment__llegenda">
-          {tr('section.events.rsvp.titol', tx.titolPregunta)}
-        </p>
-
-        <div
-          className="sdp-quadre-esdeveniment__opcions"
-          role="group"
-          aria-label={tr('section.events.rsvp.titol', tx.titolPregunta)}
-        >
-          <button
-            type="button"
-            aria-pressed={rsvp.intencio === 'si'}
-            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'si' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
-            onClick={() => triaIntencio('si')}
-          >
-            <Check size={16} aria-hidden="true" />
-            <span>{tr('section.events.rsvp.si', tx.assistireLlarg)}</span>
-          </button>
-
-          <button
-            type="button"
-            aria-pressed={rsvp.intencio === 'potser'}
-            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'potser' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
-            onClick={() => triaIntencio('potser')}
-          >
-            <CircleHelp size={16} aria-hidden="true" />
-            <span>{tr('section.events.rsvp.potser', tx.potser)}</span>
-          </button>
-
-          <button
-            type="button"
-            aria-pressed={rsvp.intencio === 'no'}
-            className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'no' ? 'sdp-boto--accent' : 'sdp-boto--secundari'}`}
-            onClick={() => triaIntencio('no')}
-          >
-            <X size={16} aria-hidden="true" />
-            <span>{tr('section.events.rsvp.no', tx.noAssistireLlarg)}</span>
-          </button>
-        </div>
-
-        {actesSolapats.length > 0 ? (
-          <div className="sdp-cal-rsvp-avis-solapament" role="status" data-testid="avis-solapament-detall">
-            <AlertTriangle size={18} aria-hidden="true" />
-            <p className="sdp-cal-rsvp-avis-solapament__text">
-              <strong>{`${tx.solapamentTitol}: `}</strong>
-              {teSolapamentHorari
-                ? tx.solapamentHorari(titolsSolapats)
-                : tx.solapamentMateixDia(titolsSolapats)}
+        {passat ? (
+          <p className="sdp-quadre-esdeveniment__llegenda">{tx.actePassat}</p>
+        ) : (
+          <>
+            <p className="sdp-quadre-esdeveniment__llegenda">
+              {tr('section.events.rsvp.titol', tx.titolPregunta)}
             </p>
-          </div>
-        ) : null}
 
-        <div className="sdp-quadre-esdeveniment__nota">
-          <label htmlFor={idNota} className="sdp-quadre-esdeveniment__etiqueta">
-            {tr('section.events.rsvp.notaLabel', tx.notaLabel)}
-          </label>
-          <input
-            id={idNota}
-            type="text"
-            className="sdp-control"
-            value={notaEsborrany}
-            maxLength={500}
-            onChange={(event) => {
-              setNotaEsborrany(event.target.value);
-              setConfirmacio(false);
-            }}
-            placeholder={tr('section.events.rsvp.notaPlaceholder', tx.notaPlaceholder)}
-          />
-        </div>
+            <div
+              className="sdp-quadre-esdeveniment__opcions"
+              role="group"
+              aria-label={tr('section.events.rsvp.titol', tx.titolPregunta)}
+            >
+              <button
+                type="button"
+                aria-pressed={rsvp.intencio === 'si'}
+                className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'si' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
+                onClick={() => triaIntencio('si')}
+              >
+                <Check size={16} aria-hidden="true" />
+                <span>{tr('section.events.rsvp.si', tx.assistireLlarg)}</span>
+              </button>
+
+              <button
+                type="button"
+                aria-pressed={rsvp.intencio === 'potser'}
+                className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'potser' ? 'sdp-boto--primari' : 'sdp-boto--secundari'}`}
+                onClick={() => triaIntencio('potser')}
+              >
+                <CircleHelp size={16} aria-hidden="true" />
+                <span>{tr('section.events.rsvp.potser', tx.potser)}</span>
+              </button>
+
+              <button
+                type="button"
+                aria-pressed={rsvp.intencio === 'no'}
+                className={`sdp-boto sdp-cal-rsvp-grup__boto ${rsvp.intencio === 'no' ? 'sdp-boto--accent' : 'sdp-boto--secundari'}`}
+                onClick={() => triaIntencio('no')}
+              >
+                <X size={16} aria-hidden="true" />
+                <span>{tr('section.events.rsvp.no', tx.noAssistireLlarg)}</span>
+              </button>
+            </div>
+
+            {actesSolapats.length > 0 ? (
+              <div className="sdp-cal-rsvp-avis-solapament" role="status" data-testid="avis-solapament-detall">
+                <AlertTriangle size={18} aria-hidden="true" />
+                <p className="sdp-cal-rsvp-avis-solapament__text">
+                  <strong>{`${tx.solapamentTitol}: `}</strong>
+                  {teSolapamentHorari
+                    ? tx.solapamentHorari(titolsSolapats)
+                    : tx.solapamentMateixDia(titolsSolapats)}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="sdp-quadre-esdeveniment__nota">
+              <label htmlFor={idNota} className="sdp-quadre-esdeveniment__etiqueta">
+                {tr('section.events.rsvp.notaLabel', tx.notaLabel)}
+              </label>
+              <input
+                id={idNota}
+                type="text"
+                className="sdp-control"
+                value={notaEsborrany}
+                maxLength={500}
+                onChange={(event) => {
+                  setNotaEsborrany(event.target.value);
+                  setConfirmacio(false);
+                }}
+                placeholder={tr('section.events.rsvp.notaPlaceholder', tx.notaPlaceholder)}
+              />
+            </div>
+          </>
+        )}
 
         <div className="sdp-quadre-esdeveniment__accions">
           {teRespostaONota ? (

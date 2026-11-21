@@ -29,10 +29,19 @@ const CROM_SELECCIO = [
   ['sw-crom-seleccio-vora', 'Vora de l’arrel', /* ALLOW_RAW_COLOR */ '#49a3fa', '--sdp-crom-seleccio-vora · Blau 400']
 ];
 const PEDRA = [
-  ['50', 'Blanc trencat', '#ffffff'], ['100', 'Núvol', '#ffffff'], ['200', 'Arena', /* ALLOW_RAW_COLOR */ '#efece7'],
-  ['300', 'Calç', /* ALLOW_RAW_COLOR */ '#dcd7cd'], ['400', 'Cendra', /* ALLOW_RAW_COLOR */ '#b7b1a5'], ['500', 'Pedra', /* ALLOW_RAW_COLOR */ '#8b857b'],
-  ['600', 'Pedra fosca', /* ALLOW_RAW_COLOR */ '#5b564e'], ['700', 'Grafit', /* ALLOW_RAW_COLOR */ '#3d3b35'], ['750', 'Pissarra', /* ALLOW_RAW_COLOR */ '#302e29'],
-  ['800', 'Carbó', /* ALLOW_RAW_COLOR */ '#22211e'], ['850', 'Sutja', /* ALLOW_RAW_COLOR */ '#181715'], ['900', 'Negre', /* ALLOW_RAW_COLOR */ '#0e0d0c']
+  ['sw-blanc-pur', 'Blanc trencat · 50', '#ffffff', '--sdp-pedra-50'],
+  ['sw-pedra-100', 'Núvol · 100', '#ffffff', '--sdp-pedra-100'],
+  ['sw-pedra-200', 'Arena · 200', /* ALLOW_RAW_COLOR */ '#efece7', '--sdp-pedra-200'],
+  ['sw-pedra-300', 'Calç · 300', /* ALLOW_RAW_COLOR */ '#dcd7cd', '--sdp-pedra-300'],
+  ['sw-pedra-400', 'Cendra · 400', /* ALLOW_RAW_COLOR */ '#b7b1a5', '--sdp-pedra-400'],
+  ['sw-pedra-500', 'Pedra · 500', /* ALLOW_RAW_COLOR */ '#8b857b', '--sdp-pedra-500'],
+  ['sw-pedra-600', 'Pedra fosca · 600', /* ALLOW_RAW_COLOR */ '#5b564e', '--sdp-pedra-600'],
+  ['sw-pedra-650', 'Terra fosca · 650', /* ALLOW_RAW_COLOR */ '#4c4841', '--sdp-pedra-650'],
+  ['sw-pedra-700', 'Grafit · 700', /* ALLOW_RAW_COLOR */ '#3d3b35', '--sdp-pedra-700'],
+  ['sw-pedra-750', 'Pissarra · 750', /* ALLOW_RAW_COLOR */ '#302e29', '--sdp-pedra-750'],
+  ['sw-pedra-800', 'Carbó · 800', /* ALLOW_RAW_COLOR */ '#22211e', '--sdp-pedra-800'],
+  ['sw-pedra-850', 'Sutja · 850', /* ALLOW_RAW_COLOR */ '#181715', '--sdp-pedra-850'],
+  ['sw-pedra-900', 'Negre · 900', /* ALLOW_RAW_COLOR */ '#0e0d0c', '--sdp-pedra-900']
 ];
 
 function Paleta({ mostres }) {
@@ -95,7 +104,7 @@ export default function EspecimenColor() {
 
       <h4>Escala Pedra</h4>
       <p>Neutre càlid, mai gris fred. El graó <strong>600</strong> és el sòl per a text secundari: és el primer que arriba a 7:1 sobre blanc.</p>
-      <Paleta mostres={PEDRA.map(([n, nom, hex]) => [`sw-pedra-${n}`, `${nom} · ${n}`, hex, `--sdp-pedra-${n}`])} />
+      <Paleta mostres={PEDRA} />
 
       <h4>Cànon d’il·lustració del Nano · Registre A (IDEA-250)</h4>
       <p>

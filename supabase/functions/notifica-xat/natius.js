@@ -301,6 +301,19 @@ export function classificaFcm(estat, codi = null) {
 
 /* ───────────────────────── Xarxa ───────────────────────── */
 
+function ambSenyal(pending, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(errorDe('reintenta')); };
+    if (signal.aborted) { abort(); Promise.resolve(pending).catch(() => {}); return; }
+    signal.addEventListener('abort', abort, { once: true });
+    Promise.resolve(pending).then(value => { signal.removeEventListener('abort', abort); resolve(value); }, error => { signal.removeEventListener('abort', abort); reject(error); });
+  });
+}
+function cancellaResposta(response) {
+  if (response?.body?.locked) return;
+  try { Promise.resolve(response?.body?.cancel?.()).catch(() => {}); } catch { /* best effort */ }
+}
+
 /* El JSON d'un cos, llegit com a molt fins a `maxim` bytes; null si passa, si
    el topall talla o si no és JSON. */
 async function llegixJsonFitat(r, maxim, senyal) {
@@ -312,18 +325,20 @@ async function llegixJsonFitat(r, maxim, senyal) {
   if (senyal.aborted) { talla(); return null; }
   senyal.addEventListener('abort', talla, { once: true });
   const parts = [];
-  let total = 0;
+  let total = 0, chunks = 0;
   try {
     for (;;) {
-      const { done, value } = await lector.read();
+      const { done, value } = await ambSenyal(lector.read(), senyal);
       if (done || senyal.aborted) break;
       const bytes = ArrayBuffer.isView(value) ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : new Uint8Array(0);
       total += bytes.byteLength;
-      if (total > maxim) { talla(); return null; }
-      parts.push(bytes);
+      if (++chunks > 8192 || total > maxim) { talla(); return null; }
+      if (bytes.byteLength) parts.push(bytes.slice());
     }
   } finally {
     senyal.removeEventListener('abort', talla);
+    talla();
+    try { lector.releaseLock(); } catch { /* cancelled pending read */ }
   }
   if (senyal.aborted) return null;
   const tot = new Uint8Array(total);
@@ -336,17 +351,24 @@ async function llegixJsonFitat(r, maxim, senyal) {
    estat 0. El cos només es llig si `llegix(estat)`; si no, es cancel·la. */
 async function peticioFitada(fetch, url, opcions, topallMs, maxim, llegix) {
   const control = new AbortController();
-  const rellotge = setTimeout(() => control.abort(), topallMs);
-  let r = null;
+  const ms = Number.isFinite(topallMs) ? Math.max(1, Math.min(8000, topallMs)) : 8000;
+  const rellotge = setTimeout(() => control.abort(), ms);
+  let r = null, closed = false;
   try {
-    try { r = await fetch(url, { ...opcions, signal: control.signal }); } catch { return { estat: 0, cos: null }; }
-    const estat = Number.isInteger(r?.status) ? r.status : 0;
+    const pending = Promise.resolve().then(() => fetch(url, { ...opcions, signal: control.signal }));
+    pending.then(response => { if (closed || control.signal.aborted) cancellaResposta(response); }, () => {});
+    r = await ambSenyal(pending, control.signal);
+    if (!r || r.redirected) return { estat: 0, cos: null };
+    const estat = Number.isInteger(r.status) ? r.status : 0;
     let cos = null;
-    if (llegix(estat)) { try { cos = await llegixJsonFitat(r, maxim, control.signal); } catch { cos = null; } }
-    return { estat, cos };
-  } finally {
+    if (llegix(estat)) cos = await ambSenyal(llegixJsonFitat(r, maxim, control.signal), control.signal);
+    return control.signal.aborted ? { estat: 0, cos: null } : { estat, cos };
+  } catch { return { estat: 0, cos: null }; }
+  finally {
+    closed = true;
     clearTimeout(rellotge);
-    if (r && r.body && !r.body.locked && typeof r.body.cancel === 'function') r.body.cancel().catch(() => {});
+    control.abort();
+    cancellaResposta(r);
   }
 }
 

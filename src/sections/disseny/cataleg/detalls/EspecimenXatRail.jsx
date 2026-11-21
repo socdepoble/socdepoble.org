@@ -27,7 +27,8 @@ import { useMemo, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import { ENTRADES_RAIL, RailXat, entradaDeVista } from '../../../xat/components/ClosCaXat.jsx';
-import VistaEnConstruccio, { textosDeVista } from '../../../xat/components/VistaEnConstruccio.jsx';
+import VistaEnConstruccio from '../../../xat/components/VistaEnConstruccio.jsx';
+import { textosDeVista } from '../../../xat/components/vistaEnConstruccioModel.js';
 import VistaMultimedia from '../../../xat/components/VistaMultimedia.jsx';
 import { mostraDelXat } from './EspecimenXatLlista.jsx';
 

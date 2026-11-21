@@ -42,6 +42,24 @@ import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { ENQUADRAMENTS_AVATAR } from './enquadramentsAvatar.js';
 
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
+const CLASSES_MIDA = Object.freeze({
+  xs: 'sdp-avatar--xs',
+  sm: 'sdp-avatar--sm',
+  md: 'sdp-avatar--md',
+  lg: 'sdp-avatar--lg',
+  xl: 'sdp-avatar--xl',
+});
+const CLASSES_TO = Object.freeze({
+  1: 'sdp-avatar--to-1',
+  2: 'sdp-avatar--to-2',
+  3: 'sdp-avatar--to-3',
+  4: 'sdp-avatar--to-4',
+  5: 'sdp-avatar--to-5',
+  6: 'sdp-avatar--to-6',
+});
+const CLASSES_ENQUADRAMENT = Object.freeze({
+  iaia: 'sdp-avatar--enquadrat-iaia',
+});
 const TONS = 6;
 
 /** Enter d'1 a 6 derivat de la llavor; sense llavor, cap to (classe base). */
@@ -72,8 +90,8 @@ export function Avatar({ nom, src = null, mida = 'md', className, llavor = null,
   return (
     <span
       className={[
-        'sdp-avatar', `sdp-avatar--${m}`, to ? `sdp-avatar--to-${to}` : null,
-        enquadrat ? 'sdp-avatar--enquadrat' : null, enquadrat ? `sdp-avatar--enquadrat-${enquadrat}` : null, className
+        'sdp-avatar', CLASSES_MIDA[m] || CLASSES_MIDA.md, to ? CLASSES_TO[to] : null,
+        enquadrat ? 'sdp-avatar--enquadrat' : null, enquadrat ? (CLASSES_ENQUADRAMENT[enquadrat] || `sdp-avatar--enquadrat-${enquadrat}`) : null, className
       ].filter(Boolean).join(' ')}
       title={(titol === undefined ? nom : titol) || undefined}
     >

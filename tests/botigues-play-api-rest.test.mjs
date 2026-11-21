@@ -1,8 +1,8 @@
 /* tests/botigues-play-api-rest.test.mjs — Onada R32.3 (P0, ordre del Mestre 261116 22:09:
    «les actualitzacions han de ser completament automàtiques i en tot el sistema»).
    El client REST de la Google Play Developer API v3 de scripts/botigues/puja-android.mjs (sense
-   fastlane), la clau del compte de servei de scripts/botigues/preflight.mjs, i l'APK públic i el
-   manifest de versió de scripts/botigues/publica-tot.mjs.
+   fastlane), la clau del compte de servei de scripts/botigues/preflight.mjs, i el manifest de versió
+   de scripts/botigues/publica-tot.mjs (v1.2.16: ZERO APK fora de botiga; l'APK públic ja no es publica).
    Cap crida a Google ni a cap xarxa de fora: un servidor HTTP local (127.0.0.1) fa de Google
    (token OAuth, edits.insert, bundles.upload, tracks.update, validate, commit i delete) i verifica
    de veres la signatura RS256 del JWT. La clau del compte de servei és RSA generada al vol; cap
@@ -628,7 +628,9 @@ test('Elefant R32.3 · consultaLlancament: on és un versionCode a Play, amb una
     sim.crides.length = 0;
     const consulta = (mes = {}) => android.consultaLlancament({ clau: CLAU.clau, paquet: PAQUET, build: '9', endpoints: sim.endpoints, espera: async () => {}, ...mes });
     assert.deepEqual(await consulta(), [{ pista: 'internal', status: 'completed' }, { pista: 'production', status: 'draft' }]);
-    assert.deepEqual(sim.ops(), ['token', 'insert', 'trackget', 'trackget', 'delete']);
+    // v1.2.16 · Per defecte, totes les pistes de PISTES: internal, production i alpha (la prova tancada).
+    assert.deepEqual(sim.ops(), ['token', 'insert', 'trackget', 'trackget', 'trackget', 'delete']);
+    assert.deepEqual(sim.crides.filter((c) => c.op === 'trackget').map((c) => c.url.split('/tracks/')[1]), ['internal', 'production', 'alpha']);
     assert.deepEqual(await consulta({ build: '10' }), []);
     assert.deepEqual(await consulta({ pistes: ['internal'] }), [{ pista: 'internal', status: 'completed' }]);
     assert.ok(!sim.ops().includes('commit'), 'cap commit');
@@ -813,124 +815,14 @@ test('R32.3 · main --comprova-play: entorn de fora del repositori, la clau per 
   assert.ok(!vist.includes('fuita-de-prova') && !vist.includes(PAQUET) && !vist.includes(fora), 'cap valor ni ruta del fitxer d\'entorn');
 });
 
-/* ───────────── publica-tot: l'APK públic i el manifest de versió ───────────── */
+/* ───────────── publica-tot: el manifest de versió (v1.2.16: cap APK públic) ───────────── */
 
-test('R32.3 · Elefant · publicaApkDirecte copia a dist/descarregues només l\'APK ÚNIC de la versió, amb el seu .sha256 i la signatura de la clau de pujada', async () => {
-  const arrel = fs.mkdtempSync(path.join(TEMPORAL, 'apk-'));
-  const builds = path.join(arrel, 'builds');
-  fs.mkdirSync(builds);
-  const octets = crypto.randomBytes(70 * 1024);
-  const nou = path.join(builds, '261116_socdepoble_1.2.5+10.apk');
-  fs.writeFileSync(nou, octets);
-  fs.writeFileSync(`${nou}.sha256`, `${sha256(octets)}  261116_socdepoble_1.2.5+10.apk\n`);
-  fs.writeFileSync(path.join(builds, '261117_socdepoble_1.2.4+9.apk'), 'una altra versió');
-  assert.deepEqual(publica.apksDeLaVersio(builds, '1.2.5', '10'), [nou]);
-  assert.deepEqual(publica.apksDeLaVersio(builds, '1.2.6', '11'), []);
-  assert.deepEqual(publica.apksDeLaVersio(path.join(arrel, 'no-hi-es'), '1.2.5', '10'), []);
-  assert.equal(publica.carpetaBuildsAndroid('/a/socdepoble.org'), '/a/_builds_de_poble/android');
-
-  /* La signatura la verifica apksigner (empremtaDeLApk, a la prova de baix); ací, un verificador fingit. */
-  const CERT = 'AB'.repeat(32);
-  const valors = { SDP_ANDROID_UPLOAD_CERT_SHA256: `${'ab:'.repeat(31)}ab` };
-  const signades = new Map([[nou, CERT]]);
-  const vistes = [];
-  const empremta = async (apk) => { vistes.push(path.basename(apk)); if (signades.get(apk) === 'llança') throw new Error('apksigner ha petat'); return signades.get(apk) ?? null; };
-  const publicaAra = (mes = {}) => publica.publicaApkDirecte({ arrel, versio: '1.2.5', build: '10', carpeta: builds, valors, empremta, ...mes });
-
-  const sense = await publicaAra();
-  assert.equal(sense.codi, e.EIXIDA.ARBRE);
-  assert.match(sense.error, /primer npm run build/);
-  fs.mkdirSync(path.join(arrel, 'dist'));
-  fs.writeFileSync(path.join(arrel, 'dist', 'index.html'), '<!doctype html>');
-  assert.equal((await publicaAra({ versio: '1.2' })).codi, e.EIXIDA.US);
-  const senseClau = await publicaAra({ valors: {} });
-  assert.equal(senseClau.codi, e.EIXIDA.FALTA);
-  assert.match(senseClau.error, /falta SDP_ANDROID_UPLOAD_CERT_SHA256/);
-
-  const fet = await publicaAra();
-  assert.equal(fet.codi, e.EIXIDA.BE, fet.error);
-  assert.deepEqual(vistes, ['261116_socdepoble_1.2.5+10.apk'], 'la signatura es verifica en publicar');
-  const desti = path.join(arrel, 'dist', 'descarregues');
-  const publicat = path.join(desti, 'socdepoble-android-latest.apk');
-  assert.deepEqual(fs.readdirSync(desti).sort(), ['socdepoble-android-latest.apk', 'socdepoble-android-latest.apk.sha256']);
-  assert.equal(Buffer.compare(fs.readFileSync(publicat), octets), 0);
-  assert.equal(fs.readFileSync(`${publicat}.sha256`, 'utf8'), `${sha256(octets)}  socdepoble-android-latest.apk\n`);
-  assert.deepEqual([fet.origen, fet.sha256, fet.octets], ['261116_socdepoble_1.2.5+10.apk', sha256(octets), octets.length]);
-  assert.deepEqual(publica.DESCARREGUES_DIST, ['dist', 'descarregues']);
-  /* Onada v1.2.6 (ordre del Mestre del 17-11-2026) · El que publicaApkDirecte deixa a dist/descarregues/ és
-     exactament el que firebase.json no puja (hosting.ignore) i redirigix (302) a la mateixa ruta del Node 0:
-     cap descàrrega de l'APK la servix Firebase. El contracte sencer és a src/config/firebaseHosting.test.js. */
-  const { hosting } = JSON.parse(fs.readFileSync(path.join(ARREL, 'firebase.json'), 'utf8'));
-  assert.deepEqual(hosting.redirects.map((r) => [r.source, r.destination, r.type]),
-    fs.readdirSync(desti).sort().map((nom) => [`/descarregues/${nom}`, `https://socdepoble.cat/descarregues/${nom}`, 302]));
-  for (const patro of ['**/*.apk', '**/*.apk.sha256']) assert.ok(hosting.ignore.includes(patro), `hosting.ignore porta ${patro}`);
-  for (const nom of fs.readdirSync(desti)) {
-    assert.ok(hosting.ignore.some((patro) => patro.startsWith('**/') && path.matchesGlob(`descarregues/${nom}`, patro)), `${nom} no es puja a Firebase`);
+test('v1.2.16 · ZERO APK fora de botiga: publica-tot ja no exporta cap publicador ni compilador d\'APK directe', () => {
+  for (const nom of ['publicaApkDirecte', 'compilaApkDirecte', 'empremtaDeLApk', 'apksDeLaVersio', 'ORDRE_PUBLICA_APK', 'DESCARREGUES_DIST', 'APK_RELEASE']) {
+    assert.equal(Object.hasOwn(publica, nom), false, `${nom} ja no hi és`);
   }
-  const intacte = () => assert.equal(Buffer.compare(fs.readFileSync(publicat), octets), 0, 'el que ja hi és no es toca');
-
-  /* El contraexemple del Peix security_reviewer: un APK qualsevol amb data posterior i el seu .sha256 fet a mà.
-     Abans guanyava per ordre alfabètic; ara dos candidats són ambigus i no es publica cap. */
-  const intrus = path.join(builds, '991231_socdepoble_1.2.5+10.apk');
-  const qualsevol = Buffer.from('APK de depuració, sense signar o de qualsevol altra eina');
-  fs.writeFileSync(intrus, qualsevol);
-  fs.writeFileSync(`${intrus}.sha256`, `${sha256(qualsevol)}\n`);
-  const ambigu = await publicaAra();
-  assert.equal(ambigu.codi, e.EIXIDA.ARBRE);
-  assert.match(ambigu.error, /hi ha 2 APK 1\.2\.5\+10 .*261116_socdepoble_1\.2\.5\+10\.apk, 991231_socdepoble_1\.2\.5\+10\.apk/);
-  intacte();
-  // Sol, l'intrús tampoc passa: la seua signatura no és la de la clau de pujada.
-  fs.renameSync(nou, path.join(arrel, 'apartat.apk'));
-  signades.set(intrus, 'CD'.repeat(32));
-  assert.match((await publicaAra()).error, /991231_socdepoble_1\.2\.5\+10\.apk està signat amb una clau diferent de SDP_ANDROID_UPLOAD_CERT_SHA256/);
-  signades.delete(intrus);
-  assert.match((await publicaAra()).error, /apksigner no ha pogut verificar la signatura de 991231/);
-  signades.set(intrus, 'llança');
-  assert.equal((await publicaAra()).codi, e.EIXIDA.VERIFICACIO);
-  intacte();
-  fs.rmSync(intrus);
-  fs.rmSync(`${intrus}.sha256`);
-  fs.renameSync(path.join(arrel, 'apartat.apk'), nou);
-
-  // Un APK que no és el verificat (o sense .sha256) no es publica, i el que ja hi és no es toca.
-  fs.writeFileSync(nou, 'un altre APK');
-  const canviat = await publicaAra();
-  assert.equal(canviat.codi, e.EIXIDA.VERIFICACIO);
-  assert.match(canviat.error, /no és l’APK verificat/);
-  intacte();
-  fs.rmSync(`${nou}.sha256`);
-  assert.match((await publicaAra()).error, /no té un \.sha256 vàlid/);
-
-  // dist/descarregues no pot ser un enllaç cap a fora de dist/.
-  const altre = fs.mkdtempSync(path.join(TEMPORAL, 'apk-fora-'));
-  fs.writeFileSync(nou, octets);
-  fs.writeFileSync(`${nou}.sha256`, `${sha256(octets)}\n`);
-  fs.rmSync(desti, { recursive: true });
-  fs.symlinkSync(altre, desti);
-  const enllac = await publicaAra();
-  assert.equal(enllac.codi, e.EIXIDA.ARBRE);
-  assert.deepEqual(fs.readdirSync(altre), [], 'res escrit fora de dist/');
-});
-
-test('Elefant · empremtaDeLApk: apksigner del build-tools més alt (ordre numèric), totes les empremtes iguals; estricte no cau a keytool', async () => {
-  const eines = fs.mkdtempSync(path.join(TEMPORAL, 'build-tools-'));
-  const apk = path.join(eines, 'prova.apk');
-  fs.writeFileSync(apk, 'no és un APK');
-  const posa = (versio, cos) => {
-    fs.mkdirSync(path.join(eines, versio), { recursive: true });
-    fs.writeFileSync(path.join(eines, versio, 'apksigner'), `#!/bin/sh\n${cos}\n`, { mode: 0o755 });
-    fs.chmodSync(path.join(eines, versio, 'apksigner'), 0o755);
-  };
-  const HEX = 'ab'.repeat(32);
-  posa('9.0.0', 'exit 1');
-  posa('35.0.0', `echo "Signer #1 certificate DN: CN=Prova"\necho "Signer #1 certificate SHA-256 digest: ${HEX}"\nexit 0`);
-  const empremta = (mes = {}) => publica.empremtaDeLApk({ apk, buildTools: eines, ...mes });
-  assert.equal(await empremta(), 'AB'.repeat(32), 'el 35.0.0 guanya el 9.0.0 (ordre numèric, no alfabètic)');
-  posa('36.1.0', `echo "Signer #1 certificate SHA-256 digest: ${HEX}"\necho "Signer #2 certificate SHA-256 digest: ${'cd'.repeat(32)}"\nexit 0`);
-  assert.equal(await empremta(), null, 'dos signants amb certificats diferents: no');
-  posa('36.1.0', `echo "Signer #1 certificate SHA-256 digest: ${HEX}"\necho "DOES NOT VERIFY" 1>&2\nexit 1`);
-  assert.equal(await empremta(), null, 'apksigner diu que no: estricte no prova keytool');
-  assert.equal(await publica.empremtaDeLApk({ apk, buildTools: path.join(eines, 'no-hi-es'), estricte: true }), null, 'sense apksigner, keytool (que no pot amb un fitxer qualsevol)');
+  assert.match(publica.MOTIU_APK_APAGAT, /ZERO APK fora de botiga/);
+  assert.match(publica.MOTIU_APK_APAGAT, /Google Play \(la prova tancada alpha o production\)/);
 });
 
 test('R32.3 · Elefant · sincronitzaManifestVersio: version i el build de cada botiga, sense passar de VERSIO_CLIENT_NATIU ni baixar (llevat de corregir)', () => {
@@ -1041,18 +933,23 @@ async function ambPantalla(fes) {
   }
 }
 
-test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junts, i amb versió explícita; --desplega només per a Android', { skip: SENSE_REPOSITORI }, async () => {
+test('R32.3 · publica-tot: --sincronitza-ard va sol i amb versió explícita; --desplega només per a Android; v1.2.16 · --publica-apk es refusa', { skip: SENSE_REPOSITORI }, async () => {
   const errada = process.stderr.write;
   let dit = '';
   process.stderr.write = (text) => { dit += text; return true; };
   try {
-    assert.equal(await publica.main(['--publica-apk', '--versio', '1.2.5', '--build', '10', '--plataforma', 'android']), e.EIXIDA.US);
+    assert.equal(await publica.main(['--sincronitza-ard', '--versio', '1.2.5', '--build', '10', '--plataforma', 'android']), e.EIXIDA.US);
     assert.match(dit, /sobren: --plataforma/);
     assert.equal(await publica.main(['--sincronitza-ard', '--versio', '1.2.5']), e.EIXIDA.US, 'sense cap build');
-    assert.equal(await publica.main(['--publica-apk', '--versio', '1.2.5']), e.EIXIDA.US, 'l\'APK necessita --build');
-    assert.equal(await publica.main(['--publica-apk', '--versio', '1.2.5', '--build', '10', '--build-ios', '10']), e.EIXIDA.US);
+    // v1.2.16 · ZERO APK fora de botiga: --publica-apk es refusa amb el motiu, amb qualsevol combinació.
+    for (const args of [['--publica-apk', '--versio', '1.2.5', '--build', '10'], ['--publica-apk', '--versio', '1.2.5'], ['--publica-apk', '--versio', '1.2.5', '--build', '10', '--build-ios', '10']]) {
+      dit = '';
+      assert.equal(await publica.main(args), e.EIXIDA.US, args.join(' '));
+      assert.match(dit, /--publica-apk: ZERO APK fora de botiga/, args.join(' '));
+    }
+    assert.equal(await publica.main(['--versio', '1.2.5', '--build', '10', '--build-ios', '10']), e.EIXIDA.US);
     assert.match(dit, /--build-ios només va amb --sincronitza-ard/);
-    assert.equal(await publica.main(['--publica-apk', '--versio', '1.2.5', '--build', '10', '--corregeix-ard']), e.EIXIDA.US);
+    assert.equal(await publica.main(['--versio', '1.2.5', '--build', '10', '--corregeix-ard']), e.EIXIDA.US);
     assert.match(dit, /--corregeix-ard només va amb --sincronitza-ard/);
     assert.equal(await publica.main(['--versio', '1.2.5', '--build', '10', '--plataforma', 'ios', '--desplega', '--compila']), e.EIXIDA.US);
     assert.match(dit, /--desplega només és d’Android/);
@@ -1060,23 +957,19 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
     process.stderr.write = errada;
   }
   const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'android', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  // v1.2.16 · ZERO APK fora de botiga: compilar l'AAB i pujar-lo a Google Play; cap pas d'APK directe.
   assert.deepEqual(resum.passos.map((pas) => pas.ordre.split(' --versio')[0]), [
-    'node scripts/botigues/publica-tot.mjs', 'node scripts/botigues/puja-android.mjs', 'node scripts/botigues/publica-tot.mjs --publica-apk',
-    // v1.2.7 · P0-123 · I l'anunci de l'APK publicat a les Apps d'instal·lació directa.
-    'node scripts/botigues/publica-tot.mjs --sincronitza-proves'
+    'node scripts/botigues/publica-tot.mjs', 'node scripts/botigues/puja-android.mjs'
   ]);
-  assert.match(resum.passos[3].ordre, /--sincronitza-proves --versio 1\.2\.5 --build-apk 10$/);
-  assert.match(resum.passos[3].accio, /ABANS de l'rsync de dist\/ al Node 0 i de firebase deploy/);
+  assert.ok(!resum.passos.some((pas) => /apk/i.test(pas.ordre)), 'cap ordre d\'APK');
+  assert.deepEqual(resum.apkDirecte, { actiu: false, motiu: publica.MOTIU_APK_APAGAT });
   assert.match(resum.passos[1].accio, /API REST v3 \(pista internal, esborrany/);
-  // Onada v1.2.6 · L'APK el servix el Node 0: l'ordre que el publica va abans de l'rsync de dist/, no de firebase deploy.
-  assert.match(resum.passos[2].accio, /entre «npm run build» \(que buida dist\/\) i l'rsync de dist\/ al Node 0 \(socdepoble\.cat\)/);
-  assert.match(resum.passos[2].accio, /Firebase no el puja i hi redirigix \(302\)/);
   assert.equal(resum.preflight.linies.some((l) => /fastlane/.test(l) && !/sense fastlane/.test(l)), false);
   // R32.3-PEIX-ARD · A la prova interna, el pla no anuncia res a ard.json (només ho fa production).
   assert.ok(!resum.passos.some((pas) => pas.ordre.includes('--sincronitza-ard')), 'cap --sincronitza-ard a la prova interna');
 
   /* R32.3-PEIX-ARD · A producció, el pla omnicanal encadena --sincronitza-ard (Android i iOS) després de
-     cada pujada i ABANS de «npm run build»; l'APK directe, que necessita el dist/ d'eixe build, després. */
+     cada pujada i ABANS de «npm run build». v1.2.16 · Cap APK directe darrere del build. */
   const totes = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'totes', canal: 'produccio', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
   const index = (re) => totes.passos.findIndex((pas) => re.test(pas.ordre));
   const iBuild = index(/^npm run build /);
@@ -1088,7 +981,7 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
   assert.ok(index(/puja-android\.mjs/) < iArdAndroid, 'després de la pujada a Google Play');
   assert.ok(index(/puja-ios\.mjs/) < iArdIos, 'després de la pujada a l\'App Store');
   assert.ok(iArdIos < index(/--build-testflight 10$/), 'abans de l\'anunci de TestFlight');
-  assert.ok(index(/--publica-apk --versio/) > iBuild && index(/--build-apk 10$/) > index(/--publica-apk --versio/), 'l\'APK directe, després del build');
+  assert.equal(totes.passos.filter((pas) => /--publica-apk|--build-apk/.test(pas.ordre)).length, 0, 'cap APK directe');
   assert.match(totes.passos[iArdAndroid].accio, /pista production/);
   /* Revisió adversarial · ard.json és versionat: escriure'l deixa l'arbre brut i el preflight de
      puja-ios.mjs (i de qualsevol compilació o pujada nativa) ja no deixaria seguir. Cap pas natiu
@@ -1101,18 +994,15 @@ test('R32.3 · publica-tot: --publica-apk i --sincronitza-ard van sols, mai junt
   assert.equal(totes.passos.filter((pas) => pas.ordre.includes('npm run build ')).length, 1, 'un sol build web');
 
   /* Elefant (contraexemple del Peix silent_failure_hunter) · Abans, «--sincronitza-ard --publica-apk» sense
-     dist/index.html escrivia ard.json i després eixia amb 7. Ara van en ordres a banda: res s'escriu. */
+     dist/index.html escrivia ard.json i després eixia amb 7. v1.2.16 · Ara --publica-apk es refusa abans
+     de res: res s'escriu i cap dist/descarregues/ es crea. */
   const manifest = path.join(TEMPORAL, 'ard-junts.json');
   fs.writeFileSync(manifest, '{"version":"1.0.0","androidBuild":1,"entries":[]}\n');
   const { env } = entornDeProves();
   const junts = await ambPantalla(() => publica.main(['--sincronitza-ard', '--publica-apk', '--versio', publica.versioDelPaquet(ARREL), '--build', '1'], { env, manifest }));
   assert.equal(junts.codi, e.EIXIDA.US);
-  assert.match(junts.vist, /van en ordres a banda: el manifest \(public\/\) abans de npm run build/);
+  assert.match(junts.vist, /--publica-apk: ZERO APK fora de botiga/);
   assert.equal(fs.readFileSync(manifest, 'utf8'), '{"version":"1.0.0","androidBuild":1,"entries":[]}\n');
-  // --publica-apk sense la clau de pujada al fitxer d'entorn: no verifica res, no publica res.
-  const senseCert = await ambPantalla(() => publica.main(['--publica-apk', '--versio', '1.2.5', '--build', '10'], { env }));
-  assert.equal(senseCert.codi, e.EIXIDA.FALTA);
-  assert.match(senseCert.vist, /falta SDP_ANDROID_UPLOAD_CERT_SHA256/);
 });
 
 test('R32.3 · Elefant · --sincronitza-ard només anuncia el build que la botiga ja DONA (Play per l\'API, iOS pel registre de producció)', { skip: SENSE_REPOSITORI }, async () => {

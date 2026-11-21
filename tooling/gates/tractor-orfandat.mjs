@@ -48,7 +48,7 @@ for (const f of allFiles) {
 for (const targetFile of allFiles) {
   // L'Escriptori i arrels no es conten com a orfes en aquest tractor
   const relPath = path.relative(ARREL, targetFile);
-  if (relPath.includes('04_escriptori') || relPath === 'AGENTS.md' || relPath === 'CLAUDE.md') {
+  if (relPath.includes(path.basename(CAMINS.escriptori)) || relPath === 'AGENTS.md' || relPath === 'CLAUDE.md') {
     continue; 
   }
 

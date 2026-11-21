@@ -190,10 +190,14 @@ export function recullConsola({ arrel = PROJECT_DIR, ara = Date.now() } = {}) {
    enllaç simbòlic es seguix, cap valor de l'entorn es llig ni s'envia: la
    carpeta viu al costat de les claus de pujada. Un valor fora de la regla
    (x.y.z amb sufix, build de xifres) no ix: el client no l'ha de posar en
-   cap ordre. Es llig en cada petició, com el Mapa: no es guarda res. */
+   cap ordre. Es llig en cada petició, com el Mapa: no es guarda res.
+   Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · L'inventari ja no
+   compta cap .apk (ni el seu .apk.sha256): els APK antics que encara queden a
+   ../_builds_de_poble/android/ no són cap artefacte que es puga publicar, i la Consola no els llista
+   al costat dels AAB. Android es publica només amb l'AAB, per Google Play. */
 const VERSIO = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/;
 const BUILD = /^\d{1,9}$/;
-const ARTEFACTE = /\.(?:aab|apk|ipa|xcarchive|zip)$/;
+const ARTEFACTE = /\.(?:aab|ipa|xcarchive|zip)$/;
 const MAX_NOM = 200;
 const PLATAFORMES_DE_BUILDS = Object.freeze(['android', 'ios', 'wordpress']);
 const FORA_DELS_PROJECTES = new Set(['Pods', 'node_modules', 'DerivedData', 'build']);
@@ -361,7 +365,8 @@ const MAX_LINIA_JARVIS = 4096;
 const MAX_TEXT_PAS = 300;
 const TEMPS_MAXIM_CORREDOR = 30 * 60 * 1000;
 const ESTATS_PAS = new Set(['pendent', 'en_curs', 'fet', 'error']);
-const TITOL_PAS = Object.freeze({ web: 'Web al dia', wordpress: 'WordPress al dia', android: 'Google Play i APK enviats', ios: 'Apple enviat' });
+/* v1.2.16 · ZERO APK fora de botiga: el pas d'Android és només Google Play (abans, «Google Play i APK enviats»). */
+const TITOL_PAS = Object.freeze({ web: 'Web al dia', wordpress: 'WordPress al dia', android: 'Google Play enviat', ios: 'Apple enviat' });
 const CAMI_ABSOLUT = /\/(?:Users|home|private|var|tmp|etc|opt|Volumes)\/[^\s"')]*/g;
 const SUFIX_PROGRES = /^\.json(?:\?|$)/;
 const SUFIX_ARRENCADA = /^\/?(?:\?|$)/;

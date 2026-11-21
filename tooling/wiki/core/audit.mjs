@@ -1,14 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { CAMINS } from '../../lib/arrel.mjs';
 import { auditWiki } from '../autoneteja_wiki.mjs';
 import { runSemanticAudit } from '../semantic_auditor.mjs';
 
 async function resolveWiki(rootOption) {
   const root = path.resolve(rootOption || '.');
-  if (path.basename(root) === '_wiki_de_poble') return root;
-  const nested = path.join(root, '_wiki_de_poble');
+  if (path.basename(root) === CAMINS.wiki) return root;
+  const nested = path.join(root, CAMINS.wiki);
   if (await fs.stat(nested).then((stat) => stat.isDirectory()).catch(() => false)) return nested;
-  throw new Error(`No s'ha trobat _wiki_de_poble dins de ${root}`);
+  throw new Error(`No s'ha trobat ${CAMINS.wiki} dins de ${root}`);
 }
 
 export async function run(options = {}) {

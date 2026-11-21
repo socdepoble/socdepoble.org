@@ -12,6 +12,8 @@
  *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7  verifica i PUJA (esborrany intern)
  *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --desplega --confirma=1.0.0+7
  *                                                                  verifica, PUJA i DESPLEGA a la prova interna
+ *   node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --canal alpha --desplega --confirma=alpha:1.0.0+7
+ *                                                                  verifica, PUJA i DESPLEGA a la prova tancada (alpha)
  *   node scripts/botigues/puja-android.mjs --comprova-play         prova la clau i els permisos sense publicar res
  *
  * Onada R32.3 (P0, ordre del Mestre 261116 22:09: «les actualitzacions han de ser completament
@@ -24,7 +26,7 @@
  *      scope https://www.googleapis.com/auth/androidpublisher);
  *   2. edits.insert → edits.bundles.upload (l'AAB en streaming, uploadType=media,
  *      application/octet-stream; el sha256 dels octets enviats i el que torna Google han de ser el
- *      de l'AAB verificat) → edits.tracks.update (pista internal o production, versionCodes i
+ *      de l'AAB verificat) → edits.tracks.update (pista internal, alpha o production, versionCodes i
  *      status) → edits.validate → edits.commit. Si res falla abans del commit, l'edició s'esborra
  *      (edits.delete) i a Google Play no canvia res.
  * Els errors HTTP ixen amb un missatge net (cap token, asserció, clau ni compte de servei), cada
@@ -33,15 +35,21 @@
  * i qualsevol altra resposta es contrasta amb Play (edits.get i una edició de lectura amb
  * edits.tracks.get); si Play no ho pot dir, l'estat és DESCONEGUT (eixida 11, EIXIDA_PLAY_DESCONEGUT),
  * l'edició no s'esborra i ningú ho ha de repetir sense mirar Play Console (Gauntlet R32.3, Elefant).
+ * Onada v1.2.16 (prompt 261121_0216, T3.1; ordres del Mestre 261121 01:32 i 01:55) · --canal alpha puja
+ * l'AAB a la pista TANCADA «alpha» de Google Play, la dels verificadors del grup socdepoble-testers
+ * (la prova tancada de 12 provadors × 14 dies, P0-23). Amb --desplega, el llançament queda «completed»
+ * i els verificadors el reben de Google Play sense cap clic; sense, és un esborrany. El «sí» va lligat
+ * al canal: --confirma=alpha:VERSIO+BUILD. ZERO APK fora de botiga: este script només puja AAB a Google
+ * Play, i cap camí d'eina no ofereix ni anuncia cap APK directe (publica-tot.mjs, MOTIU_APK_APAGAT).
  * Les adreces de Google són fixes: només una opció explícita de les proves
  * (main(argv, { play: { endpoints } })) les canvia, i només a https o a un http de
  * 127.0.0.1/localhost. Cap variable d'entorn les toca.
  *
  * El contracte de pista i estat és el de sempre (D-B9-3): el llançament és un ESBORRANY (draft); a
  * producció mai completed ni per fases, i «Envia a revisió» és del Mestre (P9). Única excepció,
- * opcional i explícita: --desplega a la prova interna (status completed), perquè els provadors de la
- * pista interna reben l'actualització de Google Play sense cap clic a Play Console. Si Play encara
- * té l'app en esborrany, només admet llançaments draft: Play ho diu i el script ho explica.
+ * opcional i explícita: --desplega a la prova interna o a la tancada (alpha) (status completed), perquè
+ * els provadors d'eixa pista reben l'actualització de Google Play sense cap clic a Play Console. Si
+ * Play encara té l'app en esborrany, només admet llançaments draft: Play ho diu i el script ho explica.
  *
  * GUIA DE 3 PASSOS PER AL MESTRE · SDP_PLAY_JSON_KEY_PATH [NO VERIFICATS els noms exactes dels menús]:
  *   1. Descarrega el JSON del compte de servei amb permisos de llançament. Al projecte de Google
@@ -84,9 +92,9 @@ import https from 'node:https';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, CANALS, EIXIDA, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apuntaPujada, avisDelRegistre, carregaEntorn,
+  BUILD, CANALS, EIXIDA, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apuntaPujada, avisDelRegistre, canalAdmes, carregaEntorn,
   comprovaVariables, confirmacioEsperada, emmascara, empremtaDeKeytool, guardaDelRegistre, REBUTS, executa, llegixDelZip, mostraCami,
-  mostraOrdre, normalitzaEmpremta, plega, problemaDelPaquet, rutaDe, sha256DeFitxer, versioDeGradle
+  mostraOrdre, normalitzaEmpremta, plega, problemaDelPaquet, rutaDe, sha256DeFitxer, usDelCanal, versioDeGradle
 } from './entorn.mjs';
 import { arrelComprovada, llegixClauPlay, preflight } from './preflight.mjs';
 
@@ -95,7 +103,7 @@ import { problemaDeVersioClient } from './versio-client.mjs';
 const ADMESOS = Object.freeze({
   versio: true, build: true, compila: false, confirma: true, canal: true, push: false, desplega: false, 'comprova-play': false, ajuda: false
 });
-const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--desplega] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>] · o --comprova-play';
+const US = 'Ús: --versio X.Y.Z --build N [--canal intern|alpha|produccio] [--push] [--desplega] [--compila] [--confirma=X.Y.Z+N | --confirma=alpha:X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>] · o --comprova-play';
 export const AAB = Object.freeze(['android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab']);
 
 /* ───────────────── R32.3 · Client REST de la Google Play Developer API v3 ───────────────── */
@@ -108,9 +116,9 @@ export const PLAY_API = Object.freeze({
 });
 export const ABAST_PLAY = 'https://www.googleapis.com/auth/androidpublisher';
 export const CONCESSIO_JWT = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
-/** La pista de Play de cada canal (CANALS d'entorn.mjs). */
-export const PISTES = Object.freeze({ [CANALS.INTERN]: 'internal', [CANALS.PRODUCCIO]: 'production' });
-/** L'status del llançament: draft sempre, completed només amb --desplega a la prova interna. */
+/** La pista de Play de cada canal (CANALS d'entorn.mjs). v1.2.16 · alpha és la prova tancada (PISTES.alpha = 'alpha'). */
+export const PISTES = Object.freeze({ [CANALS.INTERN]: 'internal', [CANALS.PRODUCCIO]: 'production', [CANALS.ALPHA]: 'alpha' });
+/** L'status del llançament: draft sempre, completed només amb --desplega a la prova interna o a la tancada (alpha). */
 export const ESTATS_PLAY = Object.freeze({ ESBORRANY: 'draft', DESPLEGAT: 'completed' });
 /** Temps màxim de cada petició (ms): les de JSON i la pujada de l'AAB (~107 MB el 261116). */
 export const TEMPS_PLAY = Object.freeze({ peticio: 60_000, pujada: 20 * 60_000 });
@@ -416,7 +424,8 @@ async function llancamentsDe(sessio, { paquet, build, pistes }) {
 }
 
 /**
- * On és el versionCode `build` a Google Play (per defecte, a les pistes internal i production):
+ * On és el versionCode `build` a Google Play (per defecte, a totes les pistes de PISTES: internal,
+ * production i alpha):
  * [{ pista, status }] amb l'status de cada llançament que el porta (draft, inProgress, halted o
  * completed), o una llista buida. Només lectura: token → edits.insert → edits.tracks.get →
  * edits.delete, mai cap commit. publica-tot.mjs --sincronitza-ard ho pregunta abans d'anunciar un
@@ -632,12 +641,14 @@ export async function pujaAPlay({
 /* ─────────────────────────────── El pla ─────────────────────────────── */
 
 /** El pla d'A4-A5 per a un canal (intern per defecte). Pur: no toca el disc. B9 · La pista és
-    production o internal segons el canal, i el llançament és un esborrany (D-B9-3); --desplega
-    (R32.3) només el desplega a la prova interna. */
+    la del canal (internal, alpha o production) i el llançament és un esborrany (D-B9-3); --desplega
+    (R32.3; v1.2.16, també alpha) el desplega a la prova interna o a la tancada, mai a producció.
+    Un canal que Android no admet llança (main el refusa abans). */
 export function planAndroid({ arrel, valors, canal = CANALS.INTERN, desplega = false }) {
+  if (!canalAdmes(canal, ['android'])) throw new Error(usDelCanal(['android']));
   const aab = path.join(arrel, ...AAB);
   const produccio = canal === CANALS.PRODUCCIO;
-  const pista = produccio ? PISTES[CANALS.PRODUCCIO] : PISTES[CANALS.INTERN];
+  const pista = PISTES[canal];
   const estat = desplega && !produccio ? ESTATS_PLAY.DESPLEGAT : ESTATS_PLAY.ESBORRANY;
   // Les quatre variables les llig la signingConfig de release d'android/app/build.gradle (LLEGIU.txt §4).
   const entornDeSignatura = () => ({
@@ -670,6 +681,15 @@ export const PASSOS_A_MA = Object.freeze([
   'Pujar android/app/build/outputs/bundle/release/app-release.aab (el mateix fitxer que diu el rebut, amb el mateix sha256).',
   'Nom de la versió: VERSIO (BUILD). Notes: les del laboratori, sense dades personals.',
   'Desar com a esborrany. Revisar-lo i desplegar-lo a la prova interna és del Mestre (RUNBOOK P9).',
+  'Si és el PRIMER AAB d\'esta app, l\'API no el pot crear: este pas a mà és obligatori (RUNBOOK H-G5).'
+]);
+
+/* v1.2.16 · La prova tancada (alpha) a mà, si l'API no pot: la mateixa pujada, a la pista dels verificadors. */
+export const PASSOS_A_MA_ALPHA = Object.freeze([
+  'Play Console › Sóc de Poble › Test and release › Testing › Closed testing › alpha › Create new release [NO VERIFICAT el camí].',
+  'Pujar android/app/build/outputs/bundle/release/app-release.aab (el mateix fitxer que diu el rebut, amb el mateix sha256).',
+  'Nom de la versió: VERSIO (BUILD). Notes: les del laboratori, sense dades personals.',
+  'Desar i desplegar a la prova tancada: els verificadors del grup socdepoble-testers el reben de Google Play (cap APK fora de botiga).',
   'Si és el PRIMER AAB d\'esta app, l\'API no el pot crear: este pas a mà és obligatori (RUNBOOK H-G5).'
 ]);
 
@@ -739,10 +759,11 @@ export function rebut({ segell, versio, build, aab, pujat, canal = CANALS.INTERN
   const empremta = sha256 ?? (fs.existsSync(aab) ? sha256DeFitxer(aab) : null);
   const produccio = canal === CANALS.PRODUCCIO;
   const comFa = estat === ESTATS_PLAY.DESPLEGAT && !produccio ? 'desplegat' : 'esborrany';
+  const lloc = { [CANALS.PRODUCCIO]: 'pista production', [CANALS.ALPHA]: 'pista alpha, la prova tancada' }[canal] ?? 'pista interna';
   return ['', `REBUT (per a ${REBUTS}/AAMMDD_HHMM_pujada_android.txt; cap secret, cap adreça):`,
     `  commit: ${segell?.commit ?? 'desconegut'} (el de ${SEGELL.join('/')}, que porta l'AAB)`, `  versio: ${versio}  build (versionCode): ${build}`,
     `  sha256 de l'AAB: ${empremta ?? 'sense AAB'}`, `  canal: ${canal}`, `  hora: ${new Date().toISOString()}`,
-    `  pujat a Google Play (${comFa}, ${produccio ? 'pista production' : 'pista interna'}): ${pujat ? 'sí' : 'no'}`,
+    `  pujat a Google Play (${comFa}, ${lloc}): ${pujat ? 'sí' : 'no'}`,
     ...(produccio && empremta && !pujat ? [`  «sí» per a pujar ESTE AAB: --canal produccio --confirma=${confirmacioEsperada(versio, build, { canal, sha256: empremta })}`] : []),
     '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
@@ -752,7 +773,7 @@ const opcionsDeProves = (play = {}) => ({ endpoints: play.endpoints ?? null, tem
 
 /* Un ErrorPlay (o qualsevol error del client) com a eixida del script: net i emmascarat. Si Play
    no coneix el paquet (primer AAB, H-G5), els passos a mà. */
-function plegaDePlay(error, { valors = {}, arrel = null, produccio = false, versio = null, build = null } = {}) {
+function plegaDePlay(error, { valors = {}, arrel = null, produccio = false, alpha = false, versio = null, build = null } = {}) {
   const neta = (text) => emmascara(netejaText(text), valors, arrel);
   if (!(error instanceof ErrorPlay)) return plega(EIXIDA.EXTERNA, `Google Play: error inesperat del client (${neta(error?.message ?? error)})`);
   const codi = { verificacio: EIXIDA.VERIFICACIO, clau: EIXIDA.FALTA, us: EIXIDA.US, endpoint: EIXIDA.US, desconegut: EIXIDA_PLAY_DESCONEGUT }[error.tipus] ?? EIXIDA.EXTERNA;
@@ -761,7 +782,7 @@ function plegaDePlay(error, { valors = {}, arrel = null, produccio = false, vers
     error.consell,
     produccio && error.tipus === 'http' && error.estat < 500 && passos.includes(error.operacio) ? CONSELL_PRODUCCIO : null,
     error.operacio === 'edits.insert' && error.estat === 404 && versio && build
-      ? `passos a mà:\n${enumera(produccio ? PASSOS_A_MA_PRODUCCIO : PASSOS_A_MA, versio, build)}` : null
+      ? `passos a mà:\n${enumera(produccio ? PASSOS_A_MA_PRODUCCIO : (alpha ? PASSOS_A_MA_ALPHA : PASSOS_A_MA), versio, build)}` : null
   ].filter(Boolean);
   return plega(codi, `Google Play: ${neta(error.message)}`, consells.map((consell) => emmascara(consell, valors, arrel)));
 }
@@ -812,10 +833,11 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
   /* B9 · Les guardes del canal, en este ordre i abans de tocar res: canal conegut, en producció el
      «sí» en una execució a banda de --compila, i un --confirma amb la forma d'este canal. */
   const canal = opcions.canal ?? CANALS.INTERN;
-  if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
+  if (!canalAdmes(canal, ['android'])) return plega(EIXIDA.US, usDelCanal(['android']));
   const produccio = canal === CANALS.PRODUCCIO;
+  const alpha = canal === CANALS.ALPHA;
   if (produccio && opcions.desplega) {
-    return plega(EIXIDA.US, '--desplega només val per a la prova interna: a producció el llançament és sempre un ESBORRANY i «Envia a revisió» és del Mestre (P9)');
+    return plega(EIXIDA.US, '--desplega només val per a la prova interna o la tancada (alpha): a producció el llançament és sempre un ESBORRANY i «Envia a revisió» és del Mestre (P9)');
   }
   if (produccio && opcions.compila && opcions.confirma !== undefined) {
     return plega(EIXIDA.US, 'en producció, primer el rebut amb el sha256 (en sec si signes tu a Android Studio, o --compila); el «sí» va en una altra execució');
@@ -823,7 +845,9 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
   const confirmacio = opcions.confirma === undefined ? null : analitzaConfirmacio(opcions.confirma, { versio, build, canal });
   if (confirmacio && !confirmacio.valida) {
     const pista = produccio ? ' i per a un sol AAB (els 12 primers caràcters del sha256 que diu el rebut); un «sí» intern no val per a producció'
-      : (String(opcions.confirma).startsWith('produccio:') ? ' (este és un «sí» de producció: va amb --canal produccio)' : '');
+      : (alpha ? ' i per a la prova tancada: un «sí» intern o de producció no val per a alpha'
+        : (String(opcions.confirma).startsWith('produccio:') ? ' (este és un «sí» de producció: va amb --canal produccio)'
+          : (String(opcions.confirma).startsWith('alpha:') ? ' (este és un «sí» de la prova tancada: va amb --canal alpha)' : '')));
     return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build, { canal })}: un «sí» val per a una sola pujada${pista}`);
   }
   // P0-23 · El build porta la versió del client que l'app dirà al node (versio-client.mjs).
@@ -854,7 +878,8 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
   const desplegat = pla.estat === ESTATS_PLAY.DESPLEGAT;
   process.stdout.write(['', 'PLA (cada valor del fitxer d\'entorn es mostra com a <NOM>):',
     produccio ? `  P  canal produccio: pista ${pla.pista}, sempre en esborrany (estat ${pla.estat}); «Envia a revisió» és del Mestre (P9)` : '',
-    desplegat ? `  D  --desplega: la pista ${pla.pista} queda DESPLEGADA (estat ${pla.estat}): els provadors interns reben l'actualització de Google Play sense cap clic` : '',
+    alpha ? `  T  canal alpha: pista ${pla.pista}, la prova tancada dels verificadors (socdepoble-testers), estat ${pla.estat}; cap APK fora de botiga` : '',
+    desplegat ? `  D  --desplega: la pista ${pla.pista} queda DESPLEGADA (estat ${pla.estat}): els ${alpha ? 'verificadors de la prova tancada' : 'provadors interns'} reben l'actualització de Google Play sense cap clic` : '',
     opcions.compila
       ? `  A4 JAVA_HOME=${mostraOrdre(mostraCami(arrel, pre.jdk.home), [], valors, arrel)} SDP_ANDROID_KEYSTORE_PATH SDP_ANDROID_KEY_ALIAS SDP_ANDROID_KEYSTORE_PASSWORD SDP_ANDROID_KEY_PASSWORD (només a l'entorn de Gradle) ${mostraOrdre(...pla.compila, valors, arrel)}`
       : '  A4 (el Mestre signa l\'AAB: Android Studio › Generate Signed Bundle, o el seu gradlew; o bé --compila)',
@@ -863,7 +888,7 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
 
   const enSec = !opcions.compila && opcions.confirma === undefined;
   if (enSec && !produccio) {
-    process.stdout.write(`En sec: no s'ha fet res. Per a compilar i signar amb les claus del fitxer: --compila. Per a pujar, amb el «sí» del Mestre per a ESTA pujada: --confirma=${confirmacioEsperada(versio, build)}\n`);
+    process.stdout.write(`En sec: no s'ha fet res. Per a compilar i signar amb les claus del fitxer: --compila. Per a pujar, amb el «sí» del Mestre per a ESTA pujada: ${alpha ? '--canal alpha ' : ''}--confirma=${confirmacioEsperada(versio, build, { canal })}\n`);
     return EIXIDA.BE;
   }
   /* ARB-B9-04 · En sec a producció no es compila ni es puja res, però si l'AAB ja hi és (signat pel
@@ -924,7 +949,7 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
       pista: pla.pista, estat: pla.estat, registra: (text) => process.stdout.write(`${emmascara(text, valors, arrel)}\n`)
     });
   } catch (error) {
-    return plegaDePlay(error, { valors, arrel, produccio, versio, build });
+    return plegaDePlay(error, { valors, arrel, produccio, alpha, versio, build });
   }
   if (!pujada?.pujat) return plega(EIXIDA.EXTERNA, 'Google Play: el client no confirma la pujada: cap rebut ni registre; el Mestre mira Play Console');
   // B9 · La pujada s'apunta al registre DESPRÉS de fer-se (mai abans).
@@ -938,11 +963,12 @@ export async function main(argv, { env = process.env, play = {} } = {}) {
   if (pujada.senseRevisio) {
     process.stdout.write('! Google Play ha demanat changesNotSentForReview: els canvis queden sense enviar a revisió; enviar-los és del Mestre a Play Console (P9).\n');
   }
+  const prova = alpha ? 'la prova tancada (alpha)' : 'la prova interna';
   process.stdout.write(produccio
     ? `✓ pujat com a ESBORRANY a la pista production. Enviar-lo a revisió és del Mestre (RUNBOOK P9):\n${enumera(PASSOS_DESPRES_PRODUCCIO, versio, build)}\n`
     : (desplegat
-      ? '✓ pujat i DESPLEGAT a la prova interna: els provadors interns reben l\'actualització de Google Play sense cap clic a Play Console.\n'
-      : '✓ pujat com a ESBORRANY a la prova interna. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9), o --desplega ho fa en la pujada.\n'));
+      ? `✓ pujat i DESPLEGAT a ${prova}: els ${alpha ? 'verificadors de la prova tancada' : 'provadors interns'} reben l'actualització de Google Play sense cap clic a Play Console.\n`
+      : `✓ pujat com a ESBORRANY a ${prova}. Revisar-lo i desplegar-lo és del Mestre (RUNBOOK P9), o --desplega ho fa en la pujada.\n`));
   process.stdout.write(rebut({ segell: pre.segell, versio, build, aab: pla.aab, pujat: true, canal, sha256, estat: pla.estat }));
   return EIXIDA.BE;
 }

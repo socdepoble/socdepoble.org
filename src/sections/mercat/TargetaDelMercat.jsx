@@ -33,19 +33,14 @@ import { objecteDe, rutaConnectarObjecte } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
-import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
-
-/* Decisió 3 (261007) · El filtre de sempre de la targeta (isSafeAsset, el
-   d'UniversalCard sense imatgePrivada) i, a més, el mode estricte: el que es
-   pinta és un subconjunt del d'abans, amb el mateix src. Només el mode
-   estricte no n'hi ha prou: amb imatgePrivada, UniversalCard admet un
-   sdp-media:// cru (esFontImatgeSegura), que abans no es pintava i ara
-   pintaria una imatge trencada (la mateixa raó que logoDeSrc a
-   detail/elementDeSeccio.js). */
-const imatgePropia = (font) => (isSafeAsset(font) ? fontImatgePropia(font) : null);
+import {
+  SECCIO_MERCAT,
+  esProducteTraduibleMercat,
+  modeTraduccioProducteMercat,
+  resolImatgePropiaMercat,
+} from './targetaDelMercatModel.js';
 
 /* Les accions de la interfície de l'App (el traductor i la llengua), o null
    fora d'ella. La forma `return useX()` dins d'un try és la que
@@ -61,18 +56,19 @@ function useInterficie() {
 export function TargetaDelMercat({ item }) {
   const interficie = useInterficie();
   const t = interficie?.t;
+  const imatgePropia = (font) => resolImatgePropiaMercat(font, fontImatgePropia);
   /* R51 (V2-01) · Un producte publicat des d'una nota amb fitxa del Mercat
      porta el translation_mode al payload (NotesContext · publishNote). Amb
      'none', la revisada o un mode invàlid (planTraduccioPublicacio.js), ni
      Traduir a la targeta ni cap text cap al Traduir de la pàgina (translate="no"
      a l'article). La revisada i l'avís de la targeta del Mur encara no es
      pinten ací. Sense mode, el DOM de sempre (Llei del Píxel). */
-  const traduible = ofereixTraduir(planTraduccioPublicacio(item, interficie?.language || 'ca'));
+  const traduible = esProducteTraduibleMercat(item, interficie?.language || 'ca');
   const navigate = useNavigate();
   /* T63.2 · el descriptor del producte: Connectar se l'emporta i
      Comentar obri el seu xat comú. Lògica d'Usuari (T4, T5):
      Connectar recorda d'on ve. */
-  const producte = objecteDe(item, 'mercat');
+  const producte = objecteDe(item, SECCIO_MERCAT);
   /* R22 · Les fitxes de /pobles, per a la pastilla del poble (la darrera).
      Fora del proveïdor, cap fitxa: cap pastilla de poble. */
   const { towns } = useCoreContent();
@@ -101,7 +97,7 @@ export function TargetaDelMercat({ item }) {
          UniversalCard, com a TargetaDelMur: el torna a comprovar i el passa al
          motor (tradueixTot), que refusa un mode protegit encara que esta
          vista deixara d'apagar el Traduir. */
-      modeTraduccio={propia(item, 'translation_mode')}
+      modeTraduccio={modeTraduccioProducteMercat(item)}
       showComment={true}
       showShare={true}
       showConnect={true}

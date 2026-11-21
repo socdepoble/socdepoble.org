@@ -22,14 +22,31 @@ export const Pila = ({ children, gap = 4, className = '', as: Component = 'div',
   );
 };
 
+const ALINEACIONS_FILA = Object.freeze({
+  center: 'sdp-align-center',
+  start: 'sdp-align-start',
+  end: 'sdp-align-end',
+  stretch: 'sdp-align-stretch',
+});
+
+const JUSTIFICACIONS_FILA = Object.freeze({
+  center: 'sdp-justify-center',
+  'flex-start': 'sdp-justify-flex-start',
+  'flex-end': 'sdp-justify-flex-end',
+  'space-between': 'sdp-justify-space-between',
+});
+
 /**
  * Fila (Row)
  * Un contenidor flexible horitzontal on tot es posa de costat amb un espaiat.
  */
 export const Fila = ({ children, gap = 4, wrap = true, align = 'center', justify = 'flex-start', className = '', as: Component = 'div', ...props }) => {
   const flexWrap = wrap ? 'sdp-wrap' : '';
-  const alignClass = `sdp-align-${align}`;
-  const justifyClass = `sdp-justify-${justify}`;
+  /* Gauntlet v1.2.16 (L5-01, L6-P1-02; Llei del Píxel) · Un valor fora del mapa
+     ('flex-end', 'flex-start'…) no porta cap classe i la fila queda en stretch,
+     com a ded51467c, on la classe composta amb el valor no tenia cap regla. */
+  const alignClass = ALINEACIONS_FILA[align] ?? '';
+  const justifyClass = JUSTIFICACIONS_FILA[justify] || 'sdp-justify-flex-start';
   return (
     <Component className={`sdp-fila ${ESPAIS.fila[gap] || ''} ${flexWrap} ${alignClass} ${justifyClass} ${className}`} {...props}>
       {children}

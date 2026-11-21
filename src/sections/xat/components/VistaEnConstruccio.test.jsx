@@ -7,7 +7,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ListChecks, Phone, Search } from 'lucide-react';
-import VistaEnConstruccio, { VISTES_EN_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
+import VistaEnConstruccio from './VistaEnConstruccio.jsx';
+import { VISTES_EN_CONSTRUCCIO, textosDeVista } from './vistaEnConstruccioModel.js';
 
 const t = (_, alternativa) => alternativa;
 afterEach(cleanup);

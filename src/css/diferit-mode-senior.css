@@ -105,7 +105,8 @@
     .sdp-accions > a:not([class]),
     a.sp-card-porta,
     button.sp-card-porta,
-    .sdp-mode-senior-xip
+    .sdp-mode-senior-xip,
+    .sdp-xat-acces .sdp-xat-pindola
   ) {
     min-height: 3.5rem;
     min-width: 3.5rem;
@@ -148,5 +149,36 @@
   ) {
     font-size: clamp(1.3125rem, 1.24rem + 0.4vw, 1.5625rem);
     line-height: 1.6;
+  }
+
+  /* P0-ANDROID-PUSH (v1.2.16) · B11b (ordre del Mestre 261121; prompt 0216, T2.5; D-13; [VA2-20]) ·
+     El Sènior escala l'ACCÉS del Xat, la porta del Foraster: les píndoles («Descarrega l'App»,
+     «Entrar», «Registrar-se») ja van a 56 px amb la llista de dalt (només dins de .sdp-xat-acces:
+     .sdp-xat-pindola també fa de botó en línia dins de text, on 56 px trencarien la línia), i la
+     benvinguda pren l'escala de la prosa Sènior. Les files i les bombolles del Xat no canvien
+     ([VA2-20]: només amb el sí del Mestre davant de les captures). Sense Sènior, cap píxel. */
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-xat-acces > p {
+    font-size: clamp(1.25rem, 1.18rem + 0.35vw, 1.4375rem);
+    line-height: 1.65;
+  }
+
+  /* P0-ANDROID-PUSH (v1.2.16) · B11c (ordre del Mestre 261121) · El xip «Lletra gran» comparteix
+     fila amb «Descarrega l'App» a l'accés del Xat (XatSection.jsx, AccesAlXat): la franja s'estira
+     com la píndola veïna, sense el seu marge de davall, i el xip n'ocupa l'amplària. La píndola, dins
+     de la fila, ja pren flex: 1 1 0 de modules.css (.sdp-xat-acces > .sdp-alerta__accions >
+     .sdp-xat-pindola). Entre la fila nova i la parella, només el buit de l'alerta, com abans entre
+     «Descarrega l'App» i la parella. Dins de l'app nativa el xip va sol a la fila. Regles només
+     d'este full diferit: modules.css viatja a l'arrencada de WordPress i no es toca. */
+  .sdp-xat-acces .sdp-mode-senior-franja {
+    flex: 1 1 0;
+    margin: 0;
+  }
+
+  .sdp-xat-acces .sdp-mode-senior-xip {
+    inline-size: 100%;
+  }
+
+  .sdp-xat-acces > .sdp-alerta__accions + .sdp-alerta__accions {
+    margin-top: 0;
   }
 }

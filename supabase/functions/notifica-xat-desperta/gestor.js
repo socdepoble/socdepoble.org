@@ -14,15 +14,15 @@ async function boundedJson(input, limit, signal) {
   if (!reader) throw Error('body');
   const abort = () => { void reader.cancel().catch(() => {}); };
   signal.addEventListener('abort', abort, { once: true });
-  let total = 0; const chunks = [];
+  let total = 0, count = 0; const chunks = [];
   try {
     while (true) {
       if (signal.aborted) throw Error('timeout');
       const { done, value } = await reader.read();
       if (done) break;
       total += value.byteLength;
-      if (total > limit) { abort(); throw Error('body'); }
-      chunks.push(value);
+      if (++count > 8192 || total > limit) { abort(); throw Error('body'); }
+      if (value.byteLength) chunks.push(value.slice());
     }
     if (signal.aborted) throw Error('timeout');
     const bytes = new Uint8Array(total); let offset = 0;
@@ -79,7 +79,7 @@ export function creaDespertador({ env = {}, fetch: request = globalThis.fetch, w
         headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: authorization }
       });
       if (auth.status === 401 || auth.status === 403) return reply(401, { ok: false, error: 'auth' });
-      if (!auth.ok) return reply(503, { ok: false, error: 'unavailable' });
+      if (!auth.ok || auth.redirected) return reply(503, { ok: false, error: 'unavailable' });
       const user = await withinDeadline(() => boundedJson(auth, 65536, control.signal));
       if (typeof user?.id !== 'string' || !UUID.test(user.id)) return reply(401, { ok: false, error: 'auth' });
       if (env.SDP_PUSH_ACTIU === 'si') {
@@ -88,7 +88,7 @@ export function creaDespertador({ env = {}, fetch: request = globalThis.fetch, w
           headers: { ...capcaleresDeServei(env.SUPABASE_SERVICE_ROLE_KEY), 'Content-Type': 'application/json' },
           body: JSON.stringify({ p_missatge_id: body.missatgeId, p_usuari_esperat: user.id })
         });
-        if (!claim.ok) return reply(503, { ok: false, error: 'unavailable' });
+        if (!claim.ok || claim.redirected) return reply(503, { ok: false, error: 'unavailable' });
         const shouldWake = await withinDeadline(() => boundedJson(claim, 128, control.signal));
         if (typeof shouldWake !== 'boolean') return reply(503, { ok: false, error: 'unavailable' });
         if (shouldWake) {

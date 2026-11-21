@@ -44,10 +44,10 @@
       "data": "2026-11-19"
     },
     "descarregues": {
-      "sha256": "eaabe17bdb30b847fb0414b8c3639a3b231a25670deb66e5511d9d3fd0f8732c",
-      "html": 9904,
-      "aprovat_per": "Claude R29 G11 261115 17:04 (DECISIÓ-R29-02.6, pla R29 aprovat pel Mestre): calcs del basc R29-02-6a/6b, només text eu; divergència verificada com a única",
-      "data": "2026-11-15"
+      "sha256": "c2a97b1f978a637cca5eaa82c4294307e0895241b87b60037a88ca7ac5a31769",
+      "html": 10055,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.16), per l'ordre del Mestre Javi del 21-11-2026 01:32 (ZERO APK fora de botiga, prompt 261121_0216): Descàrregues i la Guia de canals ja no ofereixen cap APK directe, en 5 llengües; revisada per dues rondes de Gauntlet; pendent de lectura humana",
+      "data": "2026-11-21"
     },
     "dispositius": {
       "sha256": "411a021fc0ae529c4f7683642fda52fc8d10e9cfef29f1e64bffdfff6f8e937f",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "c4647b47a62051d54cd1acb41256d1b24856353873a1b2db5c938051413c5ead",
-      "html": 146285,
-      "aprovat_per": "Claude v1.2.15 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026, vespre (encadenat a la v1.2.14: Codex R32.19 i Gemini R32.19 i R32.20, R796 del Node 0 i desplegament v1.2.15), crònica FITA_R32_20 contrastada amb el codi i corregida per tres passades de Gauntlet (R1, R2 i R2b); pendent de lectura humana, 2026-11-20",
-      "data": "2026-11-20"
+      "sha256": "fccba14451708a899abbb513e733c6a6d824b5acdcb5ff3f88b1312a6b39c2ce",
+      "html": 152583,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.16), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_0216; ordres de les 01:32 i les 01:55): crònica FITA_R32_24 de la v1.2.16 build 21, Onades R32.21–R32.24, WP 1.1.24, contrastada amb el codi i corregida per dues rondes de Gauntlet amb àrbitre escèptic i una verificació R2b; pendent de lectura humana",
+      "data": "2026-11-21"
     },
     "wikidepoble": {
       "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",

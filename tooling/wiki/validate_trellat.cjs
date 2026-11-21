@@ -6,7 +6,8 @@ const { pathToFileURL } = require('node:url');
 (async () => {
   const moduleUrl = pathToFileURL(path.join(__dirname, 'autoneteja_wiki.mjs')).href;
   const { auditWiki } = await import(moduleUrl);
-  const WIKI_DIR = process.env.SDP_WIKI_DIR || path.resolve(__dirname, '../../_wiki_de_poble');
+  const { CAMINS } = await import('../lib/arrel.mjs');
+  const WIKI_DIR = process.env.SDP_WIKI_DIR || path.resolve(__dirname, '../..', CAMINS.wiki);
   const wiki = WIKI_DIR;
   const audit = await auditWiki(wiki);
   if (!audit.operational.ok) {

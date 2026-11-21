@@ -170,13 +170,16 @@ export const filaDAportacio = (a, userId) => ({
     després de retallar, com char_length(btrim(…)) dels CHECK de l'SQL. */
 const llargaria = (valor) => [...valor.trim()].length;
 export function filaConsensDelServidor(f) {
+  const recompte = f?.total_vots;
+  const recompteValid = (typeof recompte === 'number' || typeof recompte === 'string' && /^[1-9][0-9]{0,15}$/.test(recompte))
+    && Number.isSafeInteger(Number(recompte)) && Number(recompte) >= 1;
   if (!f || typeof f !== 'object' || Array.isArray(f)
     || typeof f.pregunta_id !== 'string' || !RE_PREGUNTA.test(f.pregunta_id)
     || typeof f.variant_clau !== 'string' || !RE_CLAU.test(f.variant_clau)
     || typeof f.paraula_etiqueta !== 'string' || !f.paraula_etiqueta.trim() || llargaria(f.paraula_etiqueta) > 120
     || (f.poble_exemple !== null && (typeof f.poble_exemple !== 'string' || llargaria(f.poble_exemple) > 80))
     || (f.comarca_id !== null && (typeof f.comarca_id !== 'string' || !RE_COMARCA.test(f.comarca_id)))
-    || !Number.isSafeInteger(Number(f.total_vots)) || Number(f.total_vots) < 1 || (typeof f.total_vots !== 'number' && typeof f.total_vots !== 'string')) {
+    || !recompteValid) {
     throw invalid('Fila de consens d’isoglosses invàlida.');
   }
   const etiqueta = text(f.paraula_etiqueta);
@@ -197,7 +200,7 @@ export function resumConsensDelServidor(files) {
 export function votDelServidor(files, vot) {
   if (!Array.isArray(files) || files.length > 1) throw invalid('Resposta del vot invàlida.');
   const [f] = files;
-  if (f && (f.pregunta_id !== vot.preguntaId || f.variant_clau !== vot.variantClau)) throw invalid('Resposta del vot d’una altra variant.');
+  if (files.length && (!f || typeof f !== 'object' || Array.isArray(f) || f.pregunta_id !== vot.preguntaId || f.variant_clau !== vot.variantClau)) throw invalid('Resposta del vot d’una altra variant.');
   return Object.freeze({ preguntaId: vot.preguntaId, variantClau: vot.variantClau, nou: files.length === 1 });
 }
 /** La fila tornada per l'INSERT de l'aportació → { id, estatModeracio: 'pendent', creatA }. */

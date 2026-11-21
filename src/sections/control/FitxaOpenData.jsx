@@ -9,7 +9,8 @@ import { backendScope, normalizeBackendConfig } from '../../config/backendConfig
 import { normalitzaSlugMunicipi } from '../../data/activitypub.js';
 import { adminLlistaPobles, teCapacitat } from '../../data/backendPort.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-import RestauradorOpenData, { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
+import RestauradorOpenData from '../pobles/RestauradorOpenData.jsx';
+import { TEXTOS_RESTAURADOR } from '../pobles/restauradorOpenDataModel.js';
 import { textosOpenDataEstats } from '../pobles/i18nOpenDataEstats.js';
 
 const BUIDA = Object.freeze({});

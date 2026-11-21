@@ -43,11 +43,15 @@ import {
 import { CreditsDeViquipedia } from './CreditsDeViquipedia.jsx';
 import { LOCALE_PER_DEFECTE, traductorDeViquipedia } from './creditsDeViquipediaModel.js';
 import { textosFontsTerritorials } from './i18nFontsTerritorials.js';
-
-/** El temps màxim de tota una consulta (el client fa 8 s per intent i fins a 3 reintents). */
-export const TERMINI_MS = 20000;
-
-const DESA = Object.freeze(['complet', 'parcial']);
+import {
+  ESTATS_DESABLES_VIQUIPEDIA,
+  TERMINI_MS,
+  construeixModelFontsTerritorials,
+  enLinia,
+  focusPerdut,
+  subscriuConnexio,
+  urlDeFont,
+} from './panellDeViquipediaModel.js';
 
 /* Gauntlet 261030, cicle 3 (vq-data-credits-llengua-del-document) · La
    llengua de la interfície per a la data dels crèdits, amb el patró de TE-01
@@ -60,27 +64,6 @@ function useLocaleDeLaInterficie() {
     return LOCALE_PER_DEFECTE;
   }
 }
-
-/* Cert si el focus s'ha perdut: a <body>, enlloc o en un node que ja no hi
-   és. Dins d'un Shadow DOM, l'arrel no té actiu si el focus és fora; aleshores
-   mana el del document. Si la persona l'ha portat a un altre lloc, no es toca. */
-function focusPerdut(node) {
-  const arrel = node?.getRootNode?.();
-  if (!arrel) return false;
-  const actiu = arrel.activeElement ?? node.ownerDocument?.activeElement ?? null;
-  return !actiu || !actiu.isConnected || actiu.tagName === 'BODY';
-}
-
-function subscriuConnexio(avisa) {
-  if (typeof window === 'undefined') return () => {};
-  window.addEventListener('online', avisa);
-  window.addEventListener('offline', avisa);
-  return () => {
-    window.removeEventListener('online', avisa);
-    window.removeEventListener('offline', avisa);
-  };
-}
-const enLinia = () => typeof navigator === 'undefined' || navigator.onLine !== false;
 
 /**
  * El panell. `poble` és la fitxa que pinta la pàgina (potser ja hidratada:
@@ -152,10 +135,10 @@ function PanellManualDeViquipedia({ poble, t, llig, cau: cauDonada }) {
         ...(llig ? { llig } : null)
       });
       if (enCurs.current !== controlador) return;
-      const delPoble = DESA.includes(dto.estat) && esDelMateixPoble(crua, dto);
+      const delPoble = ESTATS_DESABLES_VIQUIPEDIA.includes(dto.estat) && esDelMateixPoble(crua, dto);
       if (!delPoble && dto.estat !== 'sense-article') {
         focusPendent.current = 'porta';
-        setFase(DESA.includes(dto.estat) ? 'senseArticle' : 'noDisponible');
+        setFase(ESTATS_DESABLES_VIQUIPEDIA.includes(dto.estat) ? 'senseArticle' : 'noDisponible');
         return;
       }
       /* Gauntlet 261030, cicle 3 (vq-autor-commons-llarg-…) · Wikimedia ha
@@ -255,13 +238,6 @@ function PanellManualDeViquipedia({ poble, t, llig, cau: cauDonada }) {
 }
 
 
-const FONT_PRIMARIA = new Set(['ca.wikipedia.org', 'es.wikipedia.org', 'www.wikidata.org', 'wikidata.org', 'commons.wikimedia.org', 'creativecommons.org', 'www.creativecommons.org']);
-const urlDeFont = valor => {
-  try {
-    const url = new URL(valor);
-    return url.protocol === 'https:' && !url.username && !url.password && FONT_PRIMARIA.has(url.hostname) ? url.href : null;
-  } catch { return null; }
-};
 function Font({ url, children }) {
   const href = urlDeFont(url);
   return href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : children;
@@ -279,23 +255,7 @@ function useIdiomaFontsTerritorials() {
  * amb la llavor. Obrir els crèdits no fa cap petició Wikimedia. */
 export function FontsTerritorials({ poble }) {
   const tx = textosFontsTerritorials(useIdiomaFontsTerritorials());
-  const dto = poble.wikipedia_provenance ? poble : poble.fontsDeViquipedia?.dto || poble;
-  const imatges = dto.imatges || poble.imatgesViquipedia || {};
-  const vistes = new Set();
-  const fotos = [imatges.hero, imatges.avatar, imatges.reserva]
-    .filter(foto => foto?.fitxer && !vistes.has(foto.fitxer) && vistes.add(foto.fitxer));
-  const article = poble.wikipedia_url || (dto.wikipedia_title ? `https://ca.wikipedia.org/wiki/${encodeURIComponent(dto.wikipedia_title.replace(/ /g, '_'))}` : null);
-  const qid = dto.wikidata_id || poble.wikidata_id;
-  const any = poble.population_year ?? (poble.population == null || poble.population === dto.population ? dto.population_year : null);
-  const dades = [
-    [tx.comarca, poble.comarca ?? dto.comarca], [tx.provincia, poble.provincia ?? dto.provincia],
-    [tx.poblacio, (poble.population ?? dto.population) ? `${poble.population ?? dto.population}${any ? ` (${any})` : ''}` : null],
-    [tx.altitud, Number.isFinite(poble.elevation ?? dto.elevation) ? `${poble.elevation ?? dto.elevation} m` : null],
-    [tx.superficie, Number.isFinite(poble.area ?? dto.area) ? `${poble.area ?? dto.area} km²` : null],
-    [tx.gentilici, poble.gentilici ?? dto.gentilici],
-    [tx.coordenades, Number.isFinite(poble.lat ?? dto.lat) && Number.isFinite(poble.lng ?? dto.lng) ? `${poble.lat ?? dto.lat}, ${poble.lng ?? dto.lng}` : null]
-  ].filter(([, valor]) => valor != null);
-  const absents = poble.wikipedia_hydration?.missing || [];
+  const { fotos, article, qid, dades, absents, excepcions } = construeixModelFontsTerritorials(poble, tx);
   return <details className="sdp-prose">
     <summary>{tx.sumari}</summary>
     <dl>{dades.map(([nom, valor]) => <div key={nom}><dt>{nom}</dt><dd>{valor}</dd></div>)}</dl>
@@ -307,7 +267,7 @@ export function FontsTerritorials({ poble }) {
       {foto.llicencia ? <> · <Font url={foto.llicenciaUrl}>{foto.llicencia}</Font></> : null}
     </li>)}</ul>
     {absents.length ? <p>{tx.absents}</p> : null}
-    {(poble.wikipedia_provenance?.exceptions || []).map((cas, i) => <p key={`${cas.field}-${i}`}>{cas.reason} {cas.source ? <Font url={cas.source}>{tx.font}</Font> : null}</p>)}
+    {excepcions.map((cas, i) => <p key={`${cas.field}-${i}`}>{cas.reason} {cas.source ? <Font url={cas.source}>{tx.font}</Font> : null}</p>)}
   </details>;
 }
 

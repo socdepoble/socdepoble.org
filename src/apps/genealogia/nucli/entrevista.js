@@ -33,7 +33,27 @@ function avanca(estat, respostes, ara) {
   return { ...estat, respostes, pas, completada: pas >= PASSOS_ENTREVISTA.length, modificada: ara ?? estat.modificada };
 }
 
-const esBuit = (valor) => valor === null || valor === undefined || (typeof valor === 'string' && valor.trim() === '');
+const CAMPS_TEXT_PERSONA = Object.freeze(['nom', 'cognom1', 'cognom2', 'naixement', 'lloc', 'ofici']);
+
+const esPersonaBuidaOpcional = (valor, pas) => (
+  Boolean(pas?.opcional)
+  && pas.tipus === 'persona'
+  && valor !== null
+  && typeof valor === 'object'
+  && !Array.isArray(valor)
+  && Object.getPrototypeOf(valor) === Object.prototype
+  && (valor.fillDe === undefined || valor.fillDe === '')
+  && CAMPS_TEXT_PERSONA.every((camp) => (
+    valor[camp] === undefined || (typeof valor[camp] === 'string' && valor[camp].trim() === '')
+  ))
+);
+
+const esBuit = (valor, pas) => (
+  valor === null
+  || valor === undefined
+  || (typeof valor === 'string' && valor.trim() === '')
+  || esPersonaBuidaOpcional(valor, pas)
+);
 
 /**
  * Respon el pas actual. No muta: torna { ok, errors: [{ camp, clau }], estat }.
@@ -47,7 +67,7 @@ export function respon(estat, valor, { anyActual, ara = null } = {}) {
   const pas = pasActual(estat);
   const ko = (camp, clau) => ({ ok: false, errors: [{ camp, clau }], estat });
   if (!pas) return ko('pas', 'acabada');
-  if (esBuit(valor)) {
+  if (esBuit(valor, pas)) {
     if (!pas.opcional) return ko('valor', 'obligatori');
     return { ok: true, errors: [], estat: avanca(estat, estat.respostes, ara) };
   }

@@ -34,6 +34,10 @@ export const PURGA = Object.freeze({
 
 const FORMA_BUCKET = /^[A-Za-z0-9_.-]{1,100}$/;
 const FORMA_URL = /^https?:\/\/[^\s/?#]+$/;
+// Local resource policy. One MiB comfortably fits the SQL maximum of 200
+// ordinary 1024-character Unicode object names; empty chunks count too.
+const MAXIM_JSON_BYTES = 1048576;
+const MAXIM_JSON_FRAGMENTS = 8192;
 
 const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 
@@ -73,6 +77,10 @@ const finsAlTopall = (promesa, senyal) => new Promise((resol, rebutja) => {
   promesa.then(resol, rebutja).finally(() => senyal.removeEventListener('abort', talla));
 });
 
+// Best effort and non-blocking: neither a locked body nor a hostile cancel()
+// may replace the transport result or extend the worker's deadline.
+const descarta = r => { try { Promise.resolve(r?.body?.cancel?.()).catch(() => {}); } catch { /* Already consumed/locked. */ } };
+
 /**
  * fetch amb topall: AbortController i setTimeout, que tenen els dos costats.
  * P1-18 (Codex C0545-WM2, el mateix patró que compte-apple) · El topall dura
@@ -84,21 +92,48 @@ const finsAlTopall = (promesa, senyal) => new Promise((resol, rebutja) => {
 async function ambTopall(fetch, url, opcions, topallMs, llig) {
   const control = new AbortController();
   const rellotge = setTimeout(() => control.abort(), topallMs);
-  let r = null;
+  let r = null, tancat = false;
+  const pendent = Promise.resolve().then(() => fetch(url, { ...opcions, redirect: 'error', signal: control.signal }));
+  pendent.then(tardana => { if (tancat || control.signal.aborted) descarta(tardana); }, () => {});
   try {
-    r = await fetch(url, { ...opcions, signal: control.signal });
-    return await finsAlTopall(Promise.resolve().then(() => llig(r)), control.signal);
+    r = await finsAlTopall(pendent, control.signal);
+    return await finsAlTopall(Promise.resolve().then(() => llig(r, control.signal)), control.signal);
   } catch (error) {
     if (control.signal.aborted) throw errorDe('temps');
     throw error?.codi ? error : errorDe('xarxa');
   } finally {
+    tancat = true;
     clearTimeout(rellotge);
-    r?.body?.cancel?.().catch(() => {});
+    descarta(r);
   }
 }
 
-async function llegixJson(r) {
-  try { return await r.json(); } catch { return null; }
+async function llegixJson(r, senyal) {
+  let lector = null, acabat = false;
+  const trossos = []; let mida = 0, fragments = 0;
+  try {
+    if (Number(r.headers?.get('content-length')) > MAXIM_JSON_BYTES) throw errorDe('mida');
+    if (r.body !== null) {
+      if (!r.body?.getReader) throw errorDe('format');
+      lector = r.body.getReader();
+      for (;;) {
+        const pendent = lector.read();
+        const { done, value } = await (senyal ? finsAlTopall(pendent, senyal) : pendent);
+        if (done) break;
+        if (!(value instanceof Uint8Array) || ++fragments > MAXIM_JSON_FRAGMENTS || value.byteLength > MAXIM_JSON_BYTES - mida) throw errorDe('mida');
+        mida += value.byteLength; trossos.push(value.slice());
+      }
+    }
+    acabat = true;
+  } finally {
+    if (lector) {
+      if (!acabat) { try { Promise.resolve(lector.cancel()).catch(() => {}); } catch { /* Already closed. */ } }
+      try { lector.releaseLock(); } catch { /* Best effort after an aborted read. */ }
+    } else if (!acabat) descarta(r);
+  }
+  const bytes = new Uint8Array(mida); let posicio = 0;
+  for (const tros of trossos) { bytes.set(tros, posicio); posicio += tros.byteLength; }
+  try { return JSON.parse(new TextDecoder().decode(bytes)); } catch { return null; }
 }
 
 /**
@@ -108,11 +143,11 @@ async function llegixJson(r) {
  * esborrar, i també és fet. La resta, fallit amb l'estat HTTP i prou.
  * purga_fitxers_fets ho torna a comprovar a storage.objects.
  */
-export async function classificaStorage(r) {
+export async function classificaStorage(r, senyal) {
   if (r.status >= 200 && r.status < 300) return { fet: true };
   if (r.status === 404) return { fet: true };
   if (r.status === 400) {
-    const cos = await llegixJson(r);
+    const cos = await llegixJson(r, senyal);
     if (cos && String(cos.statusCode) === '404') return { fet: true };
   }
   return { fet: false, error: `storage ${r.status}` };
@@ -169,9 +204,12 @@ export function creaGestor({
       method: 'POST',
       headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(cos)
-    }, o.TOPALL_MS, async (r) => {
+    }, o.TOPALL_MS, async (r, senyal) => {
       if (!r.ok) throw errorDe(`base ${r.status}`);
-      return llegixJson(r);
+      const valor = await llegixJson(r, senyal);
+      if (nom === 'purga_fitxers_reclama' ? !Array.isArray(valor)
+        : !Number.isSafeInteger(valor) || valor < 0 || valor > cos.p_ids.length) throw errorDe('base-format');
+      return valor;
     });
     const esborra = async (bucket, noms) => {
       try {
@@ -194,7 +232,7 @@ export function creaGestor({
       while (recompte.lots < o.MAX_LOTS) {
         if (queda() < 3 * o.TOPALL_MS) { esgotat = true; break; }
         const files = await rpc('purga_fitxers_reclama', { p_limit: o.LOT });
-        if (!Array.isArray(files) || !files.length) break;
+        if (!files.length) break;
         recompte.lots += 1;
         const grups = perBucket(files);
         let valides = 0;
@@ -207,7 +245,7 @@ export function creaGestor({
             const ids = tros.map((f) => f.id);
             const resultat = await esborra(bucket, tros.map((f) => f.nom));
             if (resultat.fet) {
-              const fets = Number(await rpc('purga_fitxers_fets', { p_ids: ids })) || 0;
+              const fets = await rpc('purga_fitxers_fets', { p_ids: ids });
               recompte.fets += fets;
               recompte.pendents += Math.max(0, ids.length - fets);
             } else {

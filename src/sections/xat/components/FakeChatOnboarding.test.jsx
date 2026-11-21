@@ -73,14 +73,17 @@ test('sense poble declarat, els quatre actors: la comunitat de Sóc de Poble, la
   /* Cap fil de Sóc de Poble que no siga de la seua comunitat. */
   expect(xat.chatThreads.filter((f) => f.name === 'Sóc de Poble').map((f) => f.tipus)).toEqual(['comunitat']);
   /* Onada 261030 (cicle 2) · El total del títol és la suma dels fils que
-     pinta la llista: Avisos de Sóc de Poble, Avisos del poble i la IAIA. */
+     pinta la llista. P0-ANDROID-PUSH (v1.2.16) · B5 (doctrina del Foraster,
+     ordre del Mestre 261121) · Cap fil de mostra porta cap no llegit: el
+     total és 0 i /xat no pinta cap «(N)». S'actualitza a posta (abans, 3). */
   expect(xat.totalNoLlegits).toBe(xat.chatThreads.reduce((suma, f) => suma + (f.noLlegits || 0), 0));
-  expect(xat.totalNoLlegits).toBe(3);
+  expect(xat.totalNoLlegits).toBe(0);
 });
 
 /* Revisió adversarial (Bloc 3.6.1) · El canal de proves porta el literal de
    l'ordre, «Beta Testers» (abans «Beta testers»): s'actualitza a posta. */
-test('la comunitat de Sóc de Poble de la mostra: Avisos (la benvinguda de sempre, sense llegir i de només lectura), General i Beta Testers', () => {
+/* P0-ANDROID-PUSH (v1.2.16) · B5 · Els Avisos ja es donen per llegits: cap insígnia falsa. */
+test('la comunitat de Sóc de Poble de la mostra: Avisos (la benvinguda de sempre, ja llegida i de només lectura), General i Beta Testers', () => {
   munta();
   const sdp = xat.comunitats.find((c) => c.fil.id === 'fake-sdp');
   expect(sdp.fil).toMatchObject({
@@ -91,7 +94,8 @@ test('la comunitat de Sóc de Poble de la mostra: Avisos (la benvinguda de sempr
     ['fake-sdp-avisos', 'canal', 'Avisos'], ['fake-sdp-general', 'grup', 'General'], ['fake-sdp-beta', 'grup', 'Beta Testers']
   ]);
   expect(sdp.fills[2].title).toBe('Beta Testers');
-  expect(sdp.noLlegits).toBe(1);
+  expect(sdp.noLlegits).toBe(0);
+  expect(sdp.fills[0]).toMatchObject({ noLlegits: 0, ultimSeq: 2, llegitFinsSeq: 2 });
   expect(sdp.fills[0].potEscriure).toBe(false);
   expect(xat.getThreadMessages('fake-sdp-avisos').map((m) => m.text)).toEqual([
     'Benvingut a Sóc de Poble. Som una xarxa de pobles connectats.', "Registra't per a descobrir tot el que oferim."
@@ -452,64 +456,59 @@ test('desmuntar cancel·la les respostes pendents', async () => {
   expect(vi.getTimerCount()).toBe(0);
 });
 
-/* Gauntlet 261030 (cicle 2, G2) · Llegir un fil de mostra (la conversa crida
-   marcaVist quan una bombolla entra en pantalla) en baixa els no llegits a 0,
-   i el títol (totalNoLlegits) baixa en el MATEIX valor del context que la
-   insígnia del fil i la de la seua comunitat. Només en este estat: muntar-lo
-   de nou torna a la mostra de sempre. */
+/* Gauntlet 261030 (cicle 2, G2) · La lectura de la mostra (marcaVist i
+   marcaLlegides) continua sent local i del mateix valor del context que la
+   insígnia del fil, la de la seua comunitat i el títol (totalNoLlegits).
+   P0-ANDROID-PUSH (v1.2.16) · B5 (doctrina del Foraster, ordre del Mestre
+   261121 01:55) · Cap fil de mostra naix amb cap no llegit: els quatre G2
+   d'abans (3 → 2 → 1 en llegir) se substituïxen a posta per estos, que fixen
+   que no hi ha res per llegir, que llegir no en crea cap i que «Marcar com a
+   llegides» en marca 0. */
 const noLlegitsDe = (valor, id) => valor.chatThreads.find((f) => f.id === id).noLlegits;
 const comunitatDe = (valor, id) => valor.comunitats.find((c) => c.fil.id === id).noLlegits;
+const FILS_AMB_MISSATGES = ['fake-sdp-avisos', 'fake-poble-avisos', 'fake-iaia'];
 
-test('G2 · llegir el fil de la IAIA de mostra en posa el no llegit a 0 i el títol baixa alhora', () => {
+test('P0-ANDROID-PUSH · B5 · cap fil de mostra porta cap no llegit: ni la insígnia, ni la comunitat, ni el títol', () => {
   munta();
-  expect(xat.totalNoLlegits).toBe(3);
-  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
-  /* Només la primera bombolla a la vista: encara en queda una per llegir. */
-  act(() => { xat.marcaVist('fake-iaia', 1); });
-  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
-  expect(xat.totalNoLlegits).toBe(3);
-  act(() => { xat.marcaVist('fake-iaia', 2); });
-  const despres = xat;
-  expect(noLlegitsDe(despres, 'fake-iaia')).toBe(0);
-  expect(despres.totalNoLlegits).toBe(2);
-  /* Una marca més vella no el torna a pujar. */
-  act(() => { xat.marcaVist('fake-iaia', 1); });
-  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(0);
-  expect(xat.totalNoLlegits).toBe(2);
-});
-
-test('G2 · llegir els Avisos d’una comunitat de mostra baixa el fil, la insígnia de la comunitat i el títol alhora', () => {
-  munta();
-  act(() => { xat.marcaVist('fake-sdp-avisos', 2); });
-  const valor = xat;
-  expect(noLlegitsDe(valor, 'fake-sdp-avisos')).toBe(0);
-  expect(comunitatDe(valor, 'fake-sdp')).toBe(0);
-  expect(comunitatDe(valor, 'fake-poble')).toBe(1);
-  expect(valor.totalNoLlegits).toBe(2);
-  act(() => { xat.marcaVist('fake-poble-avisos', 1); });
+  for (const fil of xat.chatThreads) expect(fil.noLlegits ?? 0, fil.id).toBe(0);
+  for (const id of FILS_AMB_MISSATGES) {
+    const fil = xat.chatThreads.find((f) => f.id === id);
+    /* Igualat: «Marcar com a llegides» i el separador de no llegits de la conversa no hi veuen res. */
+    expect(fil.llegitFinsSeq, id).toBe(fil.ultimSeq);
+    expect(fil.ultimSeq, id).toBeGreaterThan(0);
+  }
+  expect(comunitatDe(xat, 'fake-sdp')).toBe(0);
   expect(comunitatDe(xat, 'fake-poble')).toBe(0);
-  expect(xat.totalNoLlegits).toBe(1);
+  expect(xat.totalNoLlegits).toBe(0);
 });
 
-test('G2 · «Marcar com a llegides» de la selecció fa la mateixa marca local i diu quantes', () => {
+test('P0-ANDROID-PUSH · B5 · llegir els fils de mostra no en crea cap ni torna a pujar res', () => {
+  munta();
+  act(() => { xat.marcaVist('fake-iaia', 1); });
+  act(() => { xat.marcaVist('fake-iaia', 2); });
+  act(() => { xat.marcaVist('fake-sdp-avisos', 2); });
+  act(() => { xat.marcaVist('fake-poble-avisos', 1); });
+  for (const id of FILS_AMB_MISSATGES) expect(noLlegitsDe(xat, id), id).toBe(0);
+  expect(comunitatDe(xat, 'fake-sdp')).toBe(0);
+  expect(comunitatDe(xat, 'fake-poble')).toBe(0);
+  expect(xat.totalNoLlegits).toBe(0);
+});
+
+test('P0-ANDROID-PUSH · B5 · «Marcar com a llegides» de la selecció en marca 0', () => {
   munta();
   let marcades = null;
-  act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-sdp-general', 'fake-iaia']); });
-  expect(marcades).toBe(2);
-  expect(noLlegitsDe(xat, 'fake-sdp-avisos')).toBe(0);
-  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(0);
-  expect(xat.totalNoLlegits).toBe(1);
-  /* Ja llegides: cap més. */
-  act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-iaia']); });
+  act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-sdp-general', 'fake-poble-avisos', 'fake-iaia']); });
   expect(marcades).toBe(0);
+  expect(xat.totalNoLlegits).toBe(0);
 });
 
-test('G2 · la lectura de la mostra no es guarda: muntar-la de nou torna als tres no llegits', () => {
+test('G2 · la lectura de la mostra no es guarda: muntar-la de nou torna a la mostra de sempre, sense cap no llegit', () => {
   const { unmount } = munta();
   act(() => { xat.marcaVist('fake-iaia', 2); });
-  expect(xat.totalNoLlegits).toBe(2);
+  expect(xat.totalNoLlegits).toBe(0);
   unmount();
   munta();
-  expect(xat.totalNoLlegits).toBe(3);
-  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(1);
+  expect(xat.totalNoLlegits).toBe(0);
+  expect(noLlegitsDe(xat, 'fake-iaia')).toBe(0);
+  expect(xat.chatThreads.find((f) => f.id === 'fake-iaia').llegitFinsSeq).toBe(2);
 });

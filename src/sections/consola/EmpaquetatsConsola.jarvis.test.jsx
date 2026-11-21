@@ -114,7 +114,7 @@ describe('el panell a /consola/empaquetats', () => {
     expect(files.map((li) => li.querySelector('.sdp-insignia').textContent)).toEqual([
       'Web socdepoble.org · Font canònica',
       'Connector de WordPress (WordPress.org) · Alineat',
-      'Android · Google Play i APK directe · Alineat',
+      'Android · Google Play · Alineat',
       'Apple · App Store i TestFlight · Alineat'
     ]);
     expect(files.map((li) => li.querySelector('.sdp-insignia').className)).toEqual([
@@ -251,7 +251,7 @@ describe('el corredor en marxa (SeccioJarvis amb interval curt)', () => {
     expect(passos().tagName).toBe('OL');
     expect(passos().className).toBe('sdp-consola__evidencies sdp-consola__problemes');
     expect([...passos().querySelectorAll('li')].map((li) => li.textContent))
-      .toEqual(['En curs 1/4 Web al dia', 'Pendent 2/4 WordPress al dia', 'Pendent 3/4 Google Play i APK enviats', 'Pendent 4/4 Apple enviat']);
+      .toEqual(['En curs 1/4 Web al dia', 'Pendent 2/4 WordPress al dia', 'Pendent 3/4 Google Play enviat', 'Pendent 4/4 Apple enviat']);
     expect(seccio().querySelector('.sdp-alerta--info').textContent).toBe(MISSATGES_JARVIS.iniciat);
     expect(boto().disabled).toBe(true);
     expect(within(seccio()).getByLabelText(ETIQUETA_NOTES).disabled).toBe(true);
@@ -277,7 +277,7 @@ describe('el corredor en marxa (SeccioJarvis amb interval curt)', () => {
     await publica();
     await waitFor(() => expect(insignies(passos())).toEqual(['Fet', 'Fet', 'Error', 'Pendent']));
     expect(seccio().querySelector('.sdp-alerta--error').textContent).toBe(MISSATGES_JARVIS.aturada);
-    expect(passos().querySelectorAll('li')[2].textContent).toBe('Error 3/4 Google Play i APK enviats · Google Play ha dit que no');
+    expect(passos().querySelectorAll('li')[2].textContent).toBe('Error 3/4 Google Play enviat · Google Play ha dit que no');
     expect(urls(peticio)).toEqual([RUTA_PUBLICA_TOT, RUTA_PROGRES]);
   });
 

@@ -105,12 +105,16 @@ import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { esAppNativa } from '../../config/origenPublic.js';
+/* P0-ANDROID-PUSH (v1.2.16) · B11c · El xip de la lletra gran a l'accés del Foraster: el control
+   universal d'un toc (ja diferit; adopta el seu full, diferit-mode-senior.css, on es munta). */
+import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 /* Ordre del Mestre (261007) · La pàgina destacada de la columna dreta: es tria a paginaDestacada.js. */
 import { paginaDestacada, rutaDeLaPaginaDestacada } from './paginaDestacada.js';
 import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
-import VistaEnConstruccio, { textosDeVista } from './components/VistaEnConstruccio.jsx';
+import VistaEnConstruccio from './components/VistaEnConstruccio.jsx';
+import { textosDeVista } from './components/vistaEnConstruccioModel.js';
 import VistaMultimedia from './components/VistaMultimedia.jsx';
 import LlistaConverses, { esFilaTriable } from './components/LlistaConverses.jsx';
 import FiltreConverses from './components/FiltreConverses.jsx';
@@ -2411,19 +2415,31 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
    de la parella, «Descarrega l'App» porta a /descarregues, l'adreça curta de
    la pàgina «Descàrregues i Aplicacions» (App.jsx la redirigix a
    /page/descarregues). Dins de l'app nativa no hi és: ja s'hi és. Ho diu
-   esAppNativa (config/origenPublic.js), pur i sense cap import de src/natiu. */
+   esAppNativa (config/origenPublic.js), pur i sense cap import de src/natiu.
+   P0-ANDROID-PUSH (v1.2.16) · Doctrina del Foraster (ordre del Mestre 261121 01:55; prompt 0216,
+   T2.5) · És la porta del Foraster, que aterra sempre ací (/ → /xat):
+   · B9 · Un sol verb per a passar de Foraster a Conegut, «Entrar» (section.login.loginButton, el de
+     la barra negra i de /registre, en 5 llengües), mai «Connectar-se».
+   · B11c · El xip «Lletra gran» (ControlModeSenior) comparteix fila amb «Descarrega l'App»
+     (blueprint §2.2). En normal, el xip parteix en dues línies i la fila suma ~27 px d'alçada a
+     l'accés (Gauntlet v1.2.16, L1-02). Geometria provisional fins a la decisió C-2 del Mestre.
+     Dins de l'app nativa ocupa el seu lloc, sol. La fila i el xip es pinten amb regles del full
+     diferit (diferit-mode-senior.css), mai a modules.css. */
 function AccesAlXat({ t, tornar, navigate }) {
   return (
     <div className="sdp-alerta sdp-xat-acces">
       <p>{t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}</p>
-      {esAppNativa() ? null : (
-        <button type="button" className="sdp-xat-pindola sdp-xat-acces__descarrega" onClick={() => navigate('/descarregues')}>
-          {t('section.xat.sessio.descarregar', "Descarrega l'App")}
-        </button>
-      )}
+      <div className="sdp-alerta__accions">
+        {esAppNativa() ? null : (
+          <button type="button" className="sdp-xat-pindola sdp-xat-acces__descarrega" onClick={() => navigate('/descarregues')}>
+            {t('section.xat.sessio.descarregar', "Descarrega l'App")}
+          </button>
+        )}
+        <ControlModeSenior etiquetaCurta testId="xat-acces-lletra-gran" />
+      </div>
       <div className="sdp-alerta__accions">
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar }))}>
-          {t('section.xat.sessio.connectar', 'Connectar-se')}
+          {t('section.login.loginButton', 'Entrar')}
         </button>
         <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ mode: 'crear', tornar }))}>
           {t('section.xat.sessio.registrar', 'Registrar-se')}

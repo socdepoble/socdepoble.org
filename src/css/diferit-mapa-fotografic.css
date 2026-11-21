@@ -9,7 +9,21 @@
    de @layer legacy: les regles del mapa guanyen les de Leaflet per capa. El bloc
    final torna la precedència que tenia davant del Mode Sènior quan anava sense
    capa. Només tokens: els colors del mapa són el bloc P1-64 de
-   tokens.css. */
+   tokens.css, i els de les dues línies discontínues, el bloc de davall. */
+
+/* Gauntlet v1.2.16 (L6-P1-01; Llei del Píxel) · Els dos colors de línia que
+   només pinta el mapa viuen ací, en el seu full diferit (0 B a l'arrencada),
+   amb els valors de tokens.css de ded51467c. El mateix àmbit que tokens.css
+   (:root, :host, .sdp-root): també dins del shadow root del connector. El
+   :host nu s'escriu :host(*), la forma funcional que casa amb tot amfitrió i
+   que demana la guarda dels fulls diferits (cada :root amb el seu :host(),
+   tests/tractor-vocabulari-diferits.test.mjs). Sense el prefix --sdp-: eixe
+   vocabulari només es declara a tokens.css (porta tractor-tokens, T1 i T3).
+   Ràtios sobre --sdp-mapa-fons. */
+:root, :host(*), .sdp-root {
+  --mapa-linia-targeta: #527567;   /* 4,15:1 */
+  --mapa-linia-grup:    #668675;   /* 3,25:1 */
+}
 
 .sdp-mapa {
   display: grid;
@@ -68,7 +82,8 @@
 }
 .sdp-mapa .leaflet-container a { color: var(--sdp-accio-text); }
 .sdp-mapa .leaflet-container:focus-visible,
-.sdp-mapa .leaflet-container a:focus-visible {
+.sdp-mapa .leaflet-container a:focus-visible,
+.sdp-mapa .leaflet-interactive:focus-visible {
   outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
   outline-offset: var(--sdp-focus-separacio);
 }
@@ -98,10 +113,19 @@
 .sdp-mapa .sdp-mapa-punt--ocre { fill: var(--sdp-mapa-estimada); }
 .sdp-mapa .sdp-mapa-punt--grup.sdp-mapa-punt--verd { stroke: var(--sdp-mapa-gps); }
 .sdp-mapa .sdp-mapa-punt--grup.sdp-mapa-punt--ocre { stroke: var(--sdp-mapa-estimada); }
-.sdp-mapa .sdp-mapa-punt.leaflet-interactive { cursor: pointer; }
+.sdp-mapa .sdp-mapa-punt.leaflet-interactive,
+.sdp-mapa .sdp-mapa-diana.leaflet-interactive { cursor: pointer; }
+.sdp-mapa .sdp-mapa-diana {
+  fill: transparent;
+  stroke: transparent;
+}
+.sdp-mapa .sdp-mapa-diana:focus-visible {
+  stroke: var(--sdp-focus);
+  stroke-opacity: 1;
+}
 .sdp-mapa .sdp-mapa-linia { fill: none; }
-.sdp-mapa .sdp-mapa-linia--grup { stroke: var(--sdp-mapa-linia-grup); }
-.sdp-mapa .sdp-mapa-linia--targeta { stroke: var(--sdp-mapa-linia-targeta); stroke-opacity: 0.8; }
+.sdp-mapa .sdp-mapa-linia--grup { stroke: var(--mapa-linia-grup); }
+.sdp-mapa .sdp-mapa-linia--targeta { stroke: var(--mapa-linia-targeta); stroke-opacity: 0.8; }
 .sdp-mapa .sdp-mapa-linia--verd { stroke: var(--sdp-mapa-gps); }
 .sdp-mapa .sdp-mapa-linia--ocre { stroke: var(--sdp-mapa-estimada); }
 .sdp-mapa .sdp-mapa-recorregut { fill: none; stroke: var(--sdp-mapa-recorregut); }

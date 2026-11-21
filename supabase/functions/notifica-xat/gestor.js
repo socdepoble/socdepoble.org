@@ -77,10 +77,11 @@ const resposta = (estat, cos, capcaleres = {}) => new Response(JSON.stringify(co
 
 /** Comparació en temps constant: el resum SHA-256 de tots dos, que tampoc no filtra la llargària. (Còpia de purga-fitxers/gestor.js.) */
 export async function igualsEnTempsConstant(a, b, subtle = globalThis.crypto.subtle) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length > 16384 || b.length > 16384) return false;
   const codifica = new TextEncoder();
   const [x, y] = await Promise.all([
-    subtle.digest('SHA-256', codifica.encode(String(a))),
-    subtle.digest('SHA-256', codifica.encode(String(b)))
+    subtle.digest('SHA-256', codifica.encode(a)),
+    subtle.digest('SHA-256', codifica.encode(b))
   ]);
   const vx = new Uint8Array(x);
   const vy = new Uint8Array(y);
@@ -104,7 +105,7 @@ export function trossos(llista, mida) {
 export async function enviaAmbLimit(llista, n, fes) {
   const elements = Array.isArray(llista) ? llista : [];
   if (elements.length === 0) return;
-  const treballadors = Math.max(1, Math.min(Number.isInteger(n) ? n : 1, elements.length));
+  const treballadors = Math.max(1, Math.min(Number.isInteger(n) ? n : 1, NOTIFICA.CONCURRENCIA, elements.length));
   let seguent = 0;
   let primer = null;
   const treballa = async () => {
@@ -198,23 +199,26 @@ async function llegixJsonFitat(r, maxim, senyal) {
   const talla = () => { lector.cancel().catch(() => {}); };
   senyal?.addEventListener('abort', talla, { once: true });
   const parts = [];
-  let total = 0;
+  let total = 0, chunks = 0;
   try {
     for (;;) {
-      const { done, value } = await lector.read();
+      if (senyal?.aborted) throw errorDe('temps');
+      const { done, value } = await finsAlTopall(lector.read(), senyal);
       if (done) break;
       const bytes = value instanceof Uint8Array ? value : new Uint8Array(value ?? 0);
       total += bytes.byteLength;
-      if (total > maxim) { talla(); throw errorDe('cos'); }
-      parts.push(bytes);
+      if (++chunks > 8192 || total > maxim) { talla(); throw errorDe('cos'); }
+      if (bytes.byteLength) parts.push(bytes.slice());
     }
   } finally {
     senyal?.removeEventListener('abort', talla);
+    talla();
+    try { lector.releaseLock(); } catch { /* cancelled pending read */ }
   }
   const tot = new Uint8Array(total);
   let posicio = 0;
   for (const part of parts) { tot.set(part, posicio); posicio += part.byteLength; }
-  try { return JSON.parse(new TextDecoder().decode(tot)); } catch { return null; }
+  try { return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(tot)); } catch { return null; }
 }
 
 /* El resultat d'un enviador, reduït al vocabulari tancat (cap text de fora arriba al registre). */
@@ -240,6 +244,9 @@ export function creaGestor({
   ara = Date.now, registre = console, opcions = {}, creaEnviadorsNatius = null
 } = {}) {
   const o = { ...NOTIFICA, ...opcions };
+  for (const [name, maximum] of Object.entries(NOTIFICA)) if (typeof maximum === 'number') {
+    o[name] = Number.isFinite(o[name]) && o[name] >= 1 ? Math.min(maximum, Math.floor(o[name])) : maximum;
+  }
 
   return async function gestor(req) {
     if (req.method !== 'POST') return resposta(405, { ok: false, error: 'metode' }, { Allow: 'POST' });
@@ -247,7 +254,9 @@ export function creaGestor({
     const secret = textNet(env.SDP_CRON_SECRET);
     const base = textNet(env.SUPABASE_URL).replace(/\/+$/, '');
     const clau = textNet(env.SUPABASE_SERVICE_ROLE_KEY);
-    if (secret.length < o.SECRET_MINIM || !FORMA_URL.test(base) || !clau) {
+    let baseValida = false;
+    try { const url = new URL(base); baseValida = FORMA_URL.test(base) && !url.username && !url.password && url.pathname === '/' && !url.search && !url.hash; } catch { /* disabled */ }
+    if (secret.length < o.SECRET_MINIM || secret.length > 16384 || !baseValida || !clau) {
       registre.error('[notifica-xat] Falta la configuració de la funció.');
       return resposta(503, { ok: false, error: 'config' });
     }
@@ -285,7 +294,7 @@ export function creaGestor({
         headers: { ...servei, 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(cos)
       }, topall, async (r, senyal) => {
-        if (!r.ok) throw errorDe(`base ${r.status}`);
+        if (!r.ok || r.redirected) throw errorDe(`base ${r.status}`);
         return llegixJsonFitat(r, o.MAXIM_COS_BASE, senyal);
       });
     };
@@ -337,6 +346,7 @@ export function creaGestor({
     };
     const recompte = { missatges: 0, retallats: 0, dispositius: 0, enviats: 0, expulsats: 0, fallits: 0, sense_proveidor: 0, sense_provar: 0, lots: 0 };
     const classes = new Map();
+    const capacitatsVistes = new Set();
     let esgotat = false;
 
     let web = null;
@@ -425,9 +435,9 @@ export function creaGestor({
           const lliuraments = d ? formaDelsLliuraments(fila.lliuraments) : null;
           if (!d || vistos.has(d.id) || !lliuraments
             || claims.size + lliuraments.length > MAXIM_LLIURAMENTS
-            || lliuraments.some((claim) => claims.has(claim.id))) { recompte.sense_provar += 1; return; }
+            || lliuraments.some((claim) => claims.has(claim.id) || capacitatsVistes.has(claim.id + ' ' + claim.lease))) { recompte.sense_provar += 1; return; }
           vistos.add(d.id);
-          for (const claim of lliuraments) claims.add(claim.id);
+          for (const claim of lliuraments) { claims.add(claim.id); capacitatsVistes.add(claim.id + ' ' + claim.lease); }
           valids.push({ ...d, lliuraments });
         });
         if (natius === null && valids.some((d) => d.tipus !== 'web')) natius = await preparaNatius();
@@ -440,7 +450,9 @@ export function creaGestor({
         for (const tros of trossos(confirmacions, o.MAXIM_EXPULSA)) {
           if (queda() < o.TOPALL_MS) { esgotat = true; break; }
           const ack = await rpc('xat_push_confirma_v2', { p_resultats: tros });
-          if (!ack || typeof ack !== 'object' || Array.isArray(ack)) throw errorDe('ack');
+          if (!ack || typeof ack !== 'object' || Array.isArray(ack)
+            || !Number.isSafeInteger(ack.expulsats) || ack.expulsats < 0 || ack.expulsats > tros.length
+            || ['acceptats', 'reintentats', 'descartats', 'obsolets'].some(key => Object.hasOwn(ack, key) && (!Number.isSafeInteger(ack[key]) || ack[key] < 0 || ack[key] > tros.length))) throw errorDe('ack');
           recompte.expulsats += enter(ack.expulsats);
         }
         if (esgotat) break;

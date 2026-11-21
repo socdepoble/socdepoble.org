@@ -27,7 +27,19 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "981d4c97c5a6c153dd0fc194e5f378d1659a057a61adbf3cec3984bb9bf4d3d6"
+      "sha256": "0741f2e9c791581dbd2e4a4ee6af9c9e871fd195c83bf7f1fe35cdb85f2a797f"
+    },
+    {
+      "path": "src/data/contracteAvisos.js",
+      "sha256": "9d8ee9cc8af5f3cb811ecfa345828ee165375972f3a70f83a8617371301cf5b2"
+    },
+    {
+      "path": "src/data/contracteConnexions.js",
+      "sha256": "547b1f339dbedc867ba1d0989f3d0b6407b7bd1901d72d017c0c06a5eb82cc17"
+    },
+    {
+      "path": "src/data/contracteOrganitzacions.js",
+      "sha256": "c6ac84378a30ab0bb9a8771839f2fb5c305764e6e9bd743835653524000b8c3e"
     },
     {
       "path": "src/data/dadesObertesLot.js",

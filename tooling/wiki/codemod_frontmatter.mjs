@@ -23,6 +23,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 import { parteix, llig, escriu } from './lib/frontmatter_pla.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
@@ -32,7 +33,7 @@ const DIFF = process.argv.includes('--diff');
 const ESQUEMA = path.join(ARREL, 'tooling/wiki/esquema_frontmatter.json');
 const E = JSON.parse(fs.readFileSync(ESQUEMA, 'utf8'));
 
-const ARRELS = (ARG('arrels') ?? '_wiki_de_poble,.agents').split(',');
+const ARRELS = (ARG('arrels') ?? `${CAMINS.wiki},.agents`).split(',');
 const EXCLOU = /(^|\/)(node_modules|\.git|\.obsidian|dist|build|90_historic|\.sdp-paperera)(\/|$)/;
 function esPlantillaBuida(cru) { return /:\s*.*\{[^}]+\}/.test(cru); }
 

@@ -170,7 +170,10 @@ describe('peces de la pàgina', () => {
     expect(diaDeLaClau(null)).toBeNull();
   });
 
-  test('mesDObertura: el de hui si té targetes; si no, el de la més recent fins a hui; si totes són futures, el de la més pròxima', () => {
+  /* P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12) · Mai un mes passat: si hui no en
+     té cap, el de la pròxima futura i, si no n'hi ha cap de futura, el de hui. Abans, el cas
+     d'agost i desembre obria a l'agost (la més recent fins a hui). */
+  test('mesDObertura: el de hui si té targetes; si no, el de la pròxima futura; sense cap de futura, el de hui (mai un mes passat)', () => {
     const AVUI = new Date(2026, 9, 1, 12, 0);
     const setembre = entradaDeLaTargeta(publicacio({ created_at: '2026-09-29T10:00:00.000Z' }));
     /* R51 (P0-49 / IDEA-180) · L'ordre llig instants amb zona: un publish_date de dia sol
@@ -182,10 +185,36 @@ describe('peces de la pàgina', () => {
     const gener = entradaDeLaTargeta(acte({ id: 'a2', date: '2027-01-20' }));
     const senseData = entradaDeLaTargeta(publicacio({ id: 'p3' }));
     expect(mesDObertura([setembre, hui, desembre], AVUI)).toEqual({ any: 2026, mes: 9 });
-    expect(mesDObertura([agost, desembre, setembre, senseData], AVUI)).toEqual({ any: 2026, mes: 8 });
+    expect(mesDObertura([agost, desembre, setembre, senseData], AVUI)).toEqual({ any: 2026, mes: 11 });
+    expect(mesDObertura([agost, setembre], AVUI)).toEqual({ any: 2026, mes: 9 });
     expect(mesDObertura([gener, desembre], AVUI)).toEqual({ any: 2026, mes: 11 });
     expect(mesDObertura([senseData], AVUI)).toEqual({ any: 2026, mes: 9 });
     expect(mesDObertura([], AVUI)).toEqual({ any: 2026, mes: 9 });
+  });
+
+  /* Gauntlet R1 de la v1.2.16 (L2-03) · Amb la boina de publicació, el `moment` de l'entrada és el dia
+     que es va publicar: abans, un acte del 5-12 publicat el 10-10 no comptava com a futur el 21-11 i
+     /calendari?mostrar=tot s'obria al novembre buit, amb l'acte pintat al desembre. */
+  test('[L2-03] mesDObertura compta un acte pel seu dia, no pel moment editorial, i obri el mes del seu inici', () => {
+    const AVUI = new Date(2026, 10, 21, 12, 0);
+    const ambBoina = entradaDeLaTargeta(acte({ date: '2026-12-05', publish_date: '2026-10-10T08:00:00.000Z', boinaDataPublicacio: true }));
+    expect(ambBoina.moment).toBe(Date.parse('2026-10-10T08:00:00.000Z'));
+    expect(entradesDelMes([ambBoina], { any: 2026, mes: 11 })).toHaveLength(1);
+    expect(mesDObertura([ambBoina], AVUI)).toEqual({ any: 2026, mes: 11 });
+    // Sense boina, el mateix mes; i una publicació de gener no li guanya.
+    const gener = entradaDeLaTargeta(publicacio({ id: 'p9', publish_date: '2027-01-15T08:00:00.000Z' }));
+    expect(mesDObertura([gener, entradaDeLaTargeta(acte({ date: '2026-12-05' }))], AVUI)).toEqual({ any: 2026, mes: 11 });
+    // Una publicació futura més pròxima que l'acte sí que li guanya.
+    const desembre = entradaDeLaTargeta(publicacio({ id: 'p8', publish_date: '2026-12-01T08:00:00.000Z' }));
+    expect(mesDObertura([entradaDeLaTargeta(acte({ date: '2027-02-05' })), desembre], AVUI)).toEqual({ any: 2026, mes: 11 });
+    // Un acte que es repetix va pel mes de la seua pròxima ocurrència, mai pel del seu inici passat:
+    // els dies 31 d'un mes (el novembre no en té cap) obrin el desembre.
+    const dia31 = entradaDeLaTargeta(acte({ id: 'a31', date: '2026-01-31', recurrencia: ['RRULE:FREQ=MONTHLY;BYMONTHDAY=31'] }));
+    expect(mesDObertura([dia31], AVUI)).toEqual({ any: 2026, mes: 11 });
+    // Un acte amb boina que ja s'ha fet no compta com a futur encara que s'haja publicat hui.
+    const passat = entradaDeLaTargeta(acte({ id: 'a0', date: '2026-10-05', publish_date: '2026-11-21T08:00:00.000Z', boinaDataPublicacio: true }));
+    expect(mesDObertura([passat], AVUI)).toEqual({ any: 2026, mes: 10 });
+    expect(mesDObertura([passat], new Date(Number.NaN))).toEqual(mesDObertura([], new Date()));
   });
 
   /* Carril A (ordre del Mestre, 261001) · El ?mes= de /calendari, on porta la

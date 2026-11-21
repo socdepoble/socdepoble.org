@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../../lib/arrel.mjs';
 import { createHash } from 'node:crypto';
 
 // La primera font d'aquesta llista SEMPRE és la plantilla del consell.
 // S'inicialitza llegint del registre centralitzat per no tindre-la codificada al codi.
 export const SGQ_SOURCES = (() => {
-  let consellPlantilla = '_wiki_de_poble/03_actuar/plantilles/prompt_consell.md';
+  let consellPlantilla = path.posix.join(CAMINS.wiki, '03_actuar/plantilles/prompt_consell.md');
   try {
     const ARREL = process.env.SDP_ARREL || process.cwd();
     const registryPath = path.join(ARREL, '.agents/protocolledge.json');
@@ -20,11 +21,11 @@ export const SGQ_SOURCES = (() => {
 
   return [
     consellPlantilla,
-    '_wiki_de_poble/01_ser/00_bios.md',
-    '_wiki_de_poble/01_ser/02_genotip.md',
-    '_wiki_de_poble/02_saber/doc_governanca.md',
-    '_wiki_de_poble/02_saber/doc_logos_oficials.md',
-    '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
+    path.posix.join(CAMINS.wiki, '01_ser/00_bios.md'),
+    path.posix.join(CAMINS.wiki, '01_ser/02_genotip.md'),
+    path.posix.join(CAMINS.wiki, '02_saber/doc_governanca.md'),
+    path.posix.join(CAMINS.wiki, '02_saber/doc_logos_oficials.md'),
+    path.posix.join(CAMINS.wiki, '02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md'),
   ];
 })();
 

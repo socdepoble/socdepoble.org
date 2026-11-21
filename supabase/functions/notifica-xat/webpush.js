@@ -161,7 +161,16 @@ export function classificaWebPush(estat, motiu = null) {
 /* El cos de la resposta d'un servei de push no es llig (es cancel·la), amb
    una sola excepció: el 429 d'Apple, per saber si és d'un aparell. */
 function cancellaElCos(r) {
-  if (r && r.body && !r.body.locked && typeof r.body.cancel === 'function') r.body.cancel().catch(() => {});
+  if (r?.body?.locked) return;
+  try { Promise.resolve(r?.body?.cancel?.()).catch(() => {}); } catch { /* closed body */ }
+}
+function ambSenyal(pending, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(new Error('temps')); };
+    if (signal.aborted) { abort(); Promise.resolve(pending).catch(() => {}); return; }
+    signal.addEventListener('abort', abort, { once: true });
+    Promise.resolve(pending).then(value => { signal.removeEventListener('abort', abort); resolve(value); }, error => { signal.removeEventListener('abort', abort); reject(error); });
+  });
 }
 
 const esApple = (amfitrio) => amfitrio === 'push.apple.com' || amfitrio.endsWith('.push.apple.com');
@@ -177,21 +186,23 @@ async function motiuDApple(r, senyal) {
   const talla = () => { lector.cancel().catch(() => {}); };
   senyal.addEventListener('abort', talla, { once: true });
   const parts = [];
-  let total = 0;
+  let total = 0, chunks = 0;
   try {
     for (;;) {
-      const { done, value } = await lector.read();
+      const { done, value } = await ambSenyal(lector.read(), senyal);
       if (done || senyal.aborted) break;
       const bytes = ArrayBuffer.isView(value) ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : new Uint8Array(0);
       total += bytes.byteLength;
-      if (total > MAXIM_COS_ERROR) { talla(); return null; }
-      parts.push(bytes);
+      if (++chunks > 8192 || total > MAXIM_COS_ERROR) { talla(); return null; }
+      if (bytes.byteLength) parts.push(bytes.slice());
     }
   } catch {
     talla();
     return null;
   } finally {
     senyal.removeEventListener('abort', talla);
+    talla();
+    try { lector.releaseLock(); } catch { /* pending read cancelled */ }
   }
   if (senyal.aborted) return null;
   const tot = new Uint8Array(total);
@@ -232,23 +243,29 @@ export async function creaEnviadorWeb({ env = {}, fetch = globalThis.fetch, subt
   return async function enviaWeb(entrada) {
     const forma = formaDeLEndpoint(typeof entrada === 'string' ? entrada : entrada?.endpoint);
     if (!forma) return { resultat: 'invalid', amfitrio: null, estat: 0 };
-    let jwt;
-    /* La clau pròpia no signa: l'únic senyal global del web, que el pausa. */
-    try { jwt = await jwtDe(forma.audiencia); } catch { return { resultat: 'config', amfitrio: forma.amfitrio, estat: 0 }; }
-    const { url, opcions } = peticioWebPush({ endpoint: forma.endpoint, jwt, publica: vapid.publica });
     const control = new AbortController();
-    const rellotge = setTimeout(() => control.abort(), topallMs);
-    let r = null;
+    const ms = Number.isFinite(topallMs) ? Math.max(1, Math.min(8000, topallMs)) : 8000;
+    const rellotge = setTimeout(() => control.abort(), ms);
+    let r = null, closed = false;
     try {
-      r = await fetch(url, { ...opcions, signal: control.signal });
-      const estat = Number.isInteger(r?.status) ? r.status : 0;
-      const motiu = estat === 429 && esApple(forma.amfitrio) ? await motiuDApple(r, control.signal) : null;
+      let jwt;
+      try { jwt = await ambSenyal(jwtDe(forma.audiencia), control.signal); }
+      catch { return { resultat: control.signal.aborted ? 'reintenta' : 'config', amfitrio: forma.amfitrio, estat: 0 }; }
+      const { url, opcions } = peticioWebPush({ endpoint: forma.endpoint, jwt, publica: vapid.publica });
+      const pending = Promise.resolve().then(() => fetch(url, { ...opcions, signal: control.signal }));
+      pending.then(response => { if (closed || control.signal.aborted) cancellaElCos(response); }, () => {});
+      r = await ambSenyal(pending, control.signal);
+      if (!r || r.redirected) return { resultat: 'reintenta', amfitrio: forma.amfitrio, estat: 0 };
+      const estat = Number.isInteger(r.status) ? r.status : 0;
+      const motiu = estat === 429 && esApple(forma.amfitrio) ? await ambSenyal(motiuDApple(r, control.signal), control.signal).catch(() => null) : null;
       return { resultat: classificaWebPush(estat, motiu), amfitrio: forma.amfitrio, estat };
     } catch {
       /* La xarxa o el topall: es pot tornar a provar en una altra passada. */
       return { resultat: 'reintenta', amfitrio: forma.amfitrio, estat: 0 };
     } finally {
+      closed = true;
       clearTimeout(rellotge);
+      control.abort();
       cancellaElCos(r);
     }
   };

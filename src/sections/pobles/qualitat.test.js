@@ -78,6 +78,9 @@ const FITXERS = Object.freeze([
   'src/sections/pobles/aliesDePoblesSeed.js',
   'src/sections/pobles/aliesDePobles.test.js',
   'src/sections/pobles/nomenclatorIne.test.js',
+  'src/sections/pobles/RestauradorOpenData.jsx',
+  'src/sections/pobles/restauradorOpenDataModel.js',
+  'src/sections/pobles/RestauradorOpenData.test.jsx',
   'src/sections/pobles/puresaHmrPoblesWikiPlugins.r32_20.test.js'
 ]);
 

@@ -224,7 +224,9 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
     'A la web del teu poble, amb WordPress',
     'Com funciona per dins: hui i demà'
   ]);
-  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'APK directe', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
+  // v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · L'H4 de l'APK ja no diu «APK directe»: diu que no n'hi ha cap.
+  expect(text('h4')).toEqual(expect.arrayContaining(['Google Play', 'Cap APK fora de botiga', 'App Store', TITOL_INSTRUCCIONS, 'WordPress.org']));
+  expect(text('h4')).not.toContain('APK directe');
   // P0-62 · Amb l'App Store oberta, l'apartat de TestFlight se'n va (FRASES_DE_BOTIGA_TANCADA['app-store']).
   expect(text('h4')).not.toContain('Apple TestFlight');
   expect(text('h5')).toEqual(['Els tres passos a Google Play', "A l'ordinador", 'Al mòbil i a la tauleta']);
@@ -531,12 +533,13 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
     }
   });
 
-  /* IDEA-60 (T1, prompt 261102_1532) · L'APK directe obert (una línia de
-     canalsDeBotiga.js amb l'adreça del fitxer signat): dalt, l'enllaç amb
-     download i, davall dels botons, l'enllaç a la suma SHA-256 dins d'un
-     paràgraf; baix, cap enllaç; res de TestFlight ni de proves; la PWA
-     continua sent el primari. Hui la ranura és tancada i res d'açò es pinta. */
-  test('IDEA-60 · l’APK directe obert: un sol enllaç dalt, amb download i la suma; cap baix', async () => {
+  /* IDEA-60 (T1, prompt 261102_1532) · Fins a la v1.2.15, una línia de canalsDeBotiga.js amb l'adreça del
+     fitxer signat obria la ranura: dalt, l'enllaç amb download i la suma SHA-256 (esta prova ho fixava).
+     Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · La ranura té pany
+     (FORMES['apk-directe']): encara que algú hi pose l'adreça canònica d'abans, la pàgina no pinta cap
+     baixada ni cap suma; dalt, només les botigues obertes de veres (l'App Store i WordPress.org), i la PWA
+     continua sent el primari. */
+  test('v1.2.16 · ZERO APK: ni amb l’adreça canònica a la ranura apk-directe, cap baixada ni suma de l’APK', async () => {
     const indexApk = botigues.llista.findIndex((canal) => canal.id === 'apk-directe');
     const tancada = botigues.llista[indexApk];
     expect(tancada).toEqual({ id: 'apk-directe', nom: 'APK directe', url: null });
@@ -546,23 +549,13 @@ describe('P1-69 · res que no es puga complir, i cap div buit', () => {
       const pagina = entradaPropia();
       visita('/page/descarregues');
       await pagina.ofereix(oferta());
-      const enllacos = document.querySelectorAll(`a[href="${APK}"]`);
-      expect(enllacos).toHaveLength(1);
-      expect([dalt().contains(enllacos[0]), enllacos[0].getAttribute('download'), baix().querySelectorAll('a').length])
-        .toEqual([true, 'socdepoble-android-latest.apk', 0]);
-      expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent, a.hasAttribute('download')])).toEqual([
-        // P0-62 · L'App Store de veres va davant, en l'ordre de la llista.
-        [APP_STORE_DE_VERES, CLASSE_APP_STORE, BOTO_APP_STORE, false],
-        [APK, CLASSE_BOTIGA, "Descarregar l'APK d'Android", true],
-        [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org', false]
+      expect(document.querySelectorAll(`a[href="${APK}"], a[href="${APK}.sha256"], a[download]`)).toHaveLength(0);
+      expect([...dalt().querySelectorAll('.sdp-accions > a')].map((a) => [a.getAttribute('href'), a.className, a.textContent])).toEqual([
+        [APP_STORE_DE_VERES, CLASSE_APP_STORE, BOTO_APP_STORE],
+        [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
       ]);
-      const suma = document.querySelectorAll(`a[href="${APK}.sha256"]`);
-      expect([suma.length, dalt().contains(suma[0]), suma[0].closest('.sdp-accions'), suma[0].parentElement.tagName, suma[0].textContent])
-        .toEqual([1, true, null, 'P', 'Comprovar la suma SHA-256 del fitxer']);
-      expect(dalt().querySelector('.sdp-accions').nextElementSibling).toBe(suma[0].parentElement);
-      // Dalt, quatre enllaços en total (l'App Store, l'APK, la suma i WordPress.org) i cap guia.
-      expect([dalt().querySelectorAll('ol').length, dalt().querySelectorAll('a').length]).toEqual([0, 4]);
-      for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/TestFlight|\bbeta\b|prompte|aviat|pròximament/i);
+      expect(baix().querySelectorAll('a')).toHaveLength(0);
+      for (const zona of [dalt(), baix()]) expect(zona.textContent).not.toMatch(/APK|SHA-256|TestFlight|\bbeta\b|prompte|aviat|pròximament/i);
       expect(screen.getAllByRole('button', { name: INSTALAR })).toHaveLength(2);
       expect(dalt().querySelectorAll('.sdp-boto--primari')).toHaveLength(1);
       await pagina.instalada();

@@ -33,7 +33,8 @@
  */
 import { useId, useMemo, useState } from 'react';
 import { Construction, ListChecks, ListFilter, Search } from 'lucide-react';
-import { FilaDeTitolVista, FilaSegments, TEXTOS_CONSTRUCCIO } from './VistaEnConstruccio.jsx';
+import { FilaDeTitolVista, FilaSegments } from './VistaEnConstruccio.jsx';
+import { TEXTOS_CONSTRUCCIO } from './vistaEnConstruccioModel.js';
 import EnllacSegur from './EnllacSegur.jsx';
 import { AvatarFil } from './FilaConversa.jsx';
 import { IconaFiltre } from './FiltresCerca.jsx';

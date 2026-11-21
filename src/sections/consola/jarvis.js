@@ -45,7 +45,7 @@ export const ETIQUETA_PASSOS = 'Passos de la publicació';
 export const CANALS_JARVIS = Object.freeze([
   Object.freeze({ id: 'web', nom: 'Web socdepoble.org', plataforma: 'pwa' }),
   Object.freeze({ id: 'wordpress', nom: 'Connector de WordPress (WordPress.org)', plataforma: 'wordpress' }),
-  Object.freeze({ id: 'android', nom: 'Android · Google Play i APK directe', plataforma: 'android' }),
+  Object.freeze({ id: 'android', nom: 'Android · Google Play', plataforma: 'android' }),
   Object.freeze({ id: 'ios', nom: 'Apple · App Store i TestFlight', plataforma: 'ios' })
 ]);
 const IDS_CANALS = Object.freeze(CANALS_JARVIS.map((c) => c.id));
@@ -142,7 +142,7 @@ export function peticioPublicaTot({ notes, canals = [], sec = false } = {}) {
 export const TITOL_PAS = Object.freeze({
   web: 'Web al dia',
   wordpress: 'WordPress al dia',
-  android: 'Google Play i APK enviats',
+  android: 'Google Play enviat', // v1.2.16 · ZERO APK fora de botiga (mirall de consola-iaia.mjs)
   ios: 'Apple enviat'
 });
 

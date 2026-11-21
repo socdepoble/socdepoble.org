@@ -72,7 +72,12 @@ const ACTE_ADJACENT = {
   location: 'Llar Jove'
 };
 
+/* P0-ANDROID-PUSH (v1.2.16) · B10c (D-12) · Rellotge fix a l'1-10-2026: els tres actes (17-10-2026)
+   encara han de vindre. Sense, el desplegable deixa d'oferir el selector des del 18-10-2026 (un acte
+   que ja s'ha fet no pregunta «Assistiré») i la prova dependria del dia en què es passa. */
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 1, 12, 0));
   localStorage.clear();
   _reiniciaRsvpEsdeveniments();
   mocks.language = 'ca';
@@ -82,6 +87,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 describe('Onada R32.16 · T1 (IDEA-284) · Selector RSVP real + solapament horari en 5 llengües', () => {
@@ -183,6 +189,54 @@ describe('Onada R32.16 · T1 (IDEA-284) · Selector RSVP real + solapament horar
       expect(within(filaSolapat).getByRole('button', { name: tx.potser, pressed: true })).toBeTruthy();
       expect(screen.queryByTestId(`avis-solapament-${ACTE_MATI.id}`)).toBeNull();
     }
+  });
+
+  test('B10c · al desplegable, un acte del 2023 no pinta cap botó RSVP i un de demà, els tres (en les 5 llengües)', () => {
+    const aplec2023 = { id: 'aplec-2023', type: 'event', title: '2n Aplec pel Territori', date: '2023-01-29', location: 'Benillup' };
+    const dema = { id: 'ball-dema', type: 'event', title: 'Ball de plaça', date: '2026-10-02' };
+    const entrades = [aplec2023, dema].map(entradaDeLaTargeta);
+
+    for (const llengua of CODIS_IDIOMA_CALENDARI_RSVP) {
+      cleanup();
+      mocks.language = llengua;
+      const tx = textosCalendariRsvp(llengua);
+      expect(tx.actePassat.length, llengua).toBeGreaterThan(10);
+      render(
+        <MemoryRouter rutaInicial="/calendari">
+          <SelectorModeCalendari mode="events" onCanviMode={() => {}} entradesEsdeveniments={entrades} onSaltaAMes={() => {}} />
+        </MemoryRouter>
+      );
+      const desplegable = screen.getByTestId('desplegable-esdeveniments-calendari');
+      const filaAplec = within(desplegable).getByText(aplec2023.title).closest('li');
+      const filaDema = within(desplegable).getByText(dema.title).closest('li');
+
+      expect(filaAplec.querySelectorAll('.sdp-cal-rsvp-grup, button[aria-pressed]'), llengua).toHaveLength(0);
+      expect(within(filaAplec).queryByRole('group', { name: tx.grupAria(aplec2023.title) })).toBeNull();
+      // El recompte, «Veure al calendari» i l'enllaç a l'acte es queden.
+      expect(within(filaAplec).getByText(`${tx.confirmats}: 0`)).toBeTruthy();
+      expect(within(filaAplec).getByRole('button', { name: tx.desplegableMes })).toBeTruthy();
+      expect(within(filaAplec).getByRole('link', { name: tx.desplegableVeure })).toBeTruthy();
+
+      expect(filaDema.querySelectorAll('button[aria-pressed]'), llengua).toHaveLength(3);
+      expect(within(filaDema).getByRole('group', { name: tx.grupAria(dema.title) })).toBeTruthy();
+    }
+  });
+
+  /* Gauntlet R1 de la v1.2.16 (L2-01 i L2-04) · Hui és l'1-10-2026 a les 12:00: l'acte de les 10:00 sense
+     fi no s'ha acabat (abans, a les 11:00 ja no oferia el selector) i el mercat amb UNTIL passat, sí. */
+  test('[L2-01 i L2-04] al desplegable, un acte de hui a les 10:00 oferix els tres botons i un mercat acabat, cap', () => {
+    const mati = { id: 'ball-mati', type: 'event', title: 'Ball del matí', date: '2026-10-01', time: '10:00' };
+    const mercat = { id: 'mercat-vell', type: 'event', title: 'Mercat d’hivern', date: '2026-01-10', recurrencia: ['RRULE:FREQ=WEEKLY;UNTIL=20260301'] };
+    render(
+      <MemoryRouter rutaInicial="/calendari">
+        <SelectorModeCalendari mode="events" onCanviMode={() => {}} entradesEsdeveniments={[mati, mercat].map(entradaDeLaTargeta)} onSaltaAMes={() => {}} />
+      </MemoryRouter>
+    );
+    const desplegable = screen.getByTestId('desplegable-esdeveniments-calendari');
+    const filaMati = within(desplegable).getByText(mati.title).closest('li');
+    const filaMercat = within(desplegable).getByText(mercat.title).closest('li');
+    expect(filaMati.querySelectorAll('button[aria-pressed]')).toHaveLength(3);
+    expect(filaMercat.querySelectorAll('.sdp-cal-rsvp-grup, button[aria-pressed]')).toHaveLength(0);
   });
 
   test('diferit-esdeveniments.css garantix dianes >= 48 px (3rem), >= 56 px (3.5rem) en Mode Sènior i 0 selectors :has()', () => {

@@ -4,9 +4,9 @@ async function readWake(response,signal){
   if(!response.ok||response.redirected)throw Error('wake_unavailable');
   const reader=response.body?.getReader();if(!reader)throw Error('wake_body');
   const cancel=()=>{void reader.cancel().catch(()=>{});};signal.addEventListener('abort',cancel,{once:true});
-  let size=0;const parts=[];
+  let size=0,count=0;const parts=[];
   try{
-    while(true){if(signal.aborted)throw Error('wake_timeout');const {done,value}=await reader.read();if(done)break;if((size+=value.byteLength)>128)throw Error('wake_body');parts.push(value);}
+    while(true){if(signal.aborted)throw Error('wake_timeout');const {done,value}=await reader.read();if(done)break;if(++count>8192||(size+=value.byteLength)>128)throw Error('wake_body');if(value.byteLength)parts.push(value.slice());}
     if(signal.aborted)throw Error('wake_timeout');
     const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
     const value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
@@ -19,12 +19,12 @@ export function creaWakePostcommit({env={},fetch:request=globalThis.fetch,worker
   let base='';try{const u=new URL(env.SUPABASE_URL);if(u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&u.pathname==='/')base=u.origin;}catch{/* disabled */}
   const enabled=env.SDP_PUSH_ACTIU==='si'&&base&&env.SUPABASE_SERVICE_ROLE_KEY&&String(env.SDP_CRON_SECRET||'').length>=32&&typeof worker==='function'&&typeof background==='function';
   return (commit)=>{
-    if(!enabled||!commit||!UUID.test(commit.messageId)||!UUID.test(commit.authorId))return;
+    if(!enabled||!commit||typeof commit.messageId!=='string'||typeof commit.authorId!=='string'||!UUID.test(commit.messageId)||!UUID.test(commit.authorId))return;
     const {messageId,authorId}=commit;
     let begin;
     const task=new Promise(resolve=>{begin=resolve;}).then(async registered=>{
       if(!registered)return;
-      const control=new AbortController();const timer=setTimeout(()=>control.abort(),Math.max(10,Math.min(4000,timeoutMs)));
+      const control=new AbortController();const timer=setTimeout(()=>control.abort(),Number.isFinite(timeoutMs)?Math.max(10,Math.min(4000,timeoutMs)):4000);
       let onAbort;
       const interrupted=new Promise((_,reject)=>{onAbort=()=>reject(Error('wake_timeout'));control.signal.addEventListener('abort',onAbort,{once:true});});
       const within=fn=>control.signal.aborted?Promise.reject(Error('wake_timeout')):Promise.race([Promise.resolve().then(fn),interrupted]);

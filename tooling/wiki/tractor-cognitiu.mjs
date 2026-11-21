@@ -29,6 +29,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 import { fileURLToPath } from 'node:url';
 
 /* ───────────────────────────── CLI ───────────────────────────── */
@@ -249,10 +250,11 @@ if (!ragPath) {
   const paths = path.join(ARREL, 'tooling/wiki/lib/project_paths.mjs');
   if (fs.existsSync(paths)) {
     const src = fs.readFileSync(paths, 'utf8');
-    const arrelWiki = /WIKI_DIR\s*=\s*path\.join\(PROJECT_DIR,\s*['"]_wiki_de_poble['"]\)/.test(src);
+    const literalWiki = CAMINS.wiki.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const arrelWiki = new RegExp(`WIKI_DIR\\s*=\\s*path\\.join\\(PROJECT_DIR,\\s*['"]${literalWiki}['"]\\)`).test(src);
     if (arrelWiki && !excepcioSkills) {
       registra('P5', 'BLOQUEJANT', rel(paths),
-        "L'arrel del RAG és _wiki_de_poble; .agents/skills en queda fora. Cap skill és recuperable per cerca.");
+        `L'arrel del RAG és ${CAMINS.wiki}; .agents/skills en queda fora. Cap skill és recuperable per cerca.`);
     }
   }
 }

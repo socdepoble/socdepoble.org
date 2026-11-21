@@ -51,3 +51,8 @@ test('R1: un literal real de la Wiki o de l’Escriptori encara cau, també darr
   assert.match(r.eixida, new RegExp(`tooling/eina\\.mjs:3  Literal «${ESCRIPTORI}»`));
   assert.doesNotMatch(r.eixida, /poda\.mjs/);
 });
+
+// Casos R32.21 carregats pel primari existent, també a NodeALL estricte.
+import './helpers/r3221-rutes-cases.mjs';
+import './helpers/r3221-frontissa-cases.mjs';
+import './helpers/r3221-skills-cases.mjs';

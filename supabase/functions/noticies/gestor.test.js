@@ -239,6 +239,22 @@ describe('l’origen', () => {
       expect((await errorDe(await demana('/feed?font=ayudawp'))).code, cos).toBe('sdp_noticies_origen_format');
     }
   });
+
+  /* Gauntlet v1.2.16 R2 (L5R2-01) · Una resposta 2xx sense cos és un cos buit, com a la base: no és «massa gran». */
+  test('una resposta sense cos (204, o 200 amb body null) → 502 origen_format, mai origen_mida', async () => {
+    const tipus = { 'content-type': 'application/rss+xml; charset=utf-8' };
+    for (const [nom, fes] of [
+      ['204', () => new Response(null, { status: 204, headers: tipus })],
+      ['200 amb body null', () => new Response(null, { status: 200, headers: tipus })],
+      ['200 amb un cos buit', () => origen('')]
+    ]) {
+      if (nom !== '200 amb un cos buit') expect(fes().body, nom).toBeNull();
+      const { demana } = prepara({ fetchImpl: vi.fn(async () => fes()) });
+      expect(await errorDe(await demana('/feed?font=ayudawp')), nom).toEqual({
+        status: 502, code: 'sdp_noticies_origen_format', message: 'La font no ha enviat el que s’esperava.', data: { status: 502 }
+      });
+    }
+  });
 });
 
 describe('la codificació i l’arrel', () => {
@@ -341,7 +357,7 @@ describe('el codi', () => {
     expect([...codi.matchAll(/fetchImpl\(([^,]+),/g)].map((m) => m[1])).toEqual(['actual.href']);
     expect(codi).toContain('baixa(font.feed)');
     expect(codi).toContain('baixa(url.href, { regles: reglesPersonals(vetats), maxim: MAXIM_BYTES_PERSONAL })');
-    expect(codi).toContain('baixa(url.href, { regles: reglesImatge(vetats), maxim: MAXIM_BYTES_IMATGE, accepta: ACCEPTA_IMATGE, llig: lligImatge })');
+    expect(codi).toContain('baixa(url.href, { regles: reglesImatge(vetats), maxim: MAXIM_BYTES_IMATGE, accepta: ACCEPTA_IMATGE, llig: lligImatge, tempsMs: TEMPS_ORIGEN_MS - Math.max(0, ara() - iniciEspera) })');
     /* Cap «sense resoledor, és pública» (D-08), i cap empremta sense clau (R5-04). */
     expect(codi).not.toMatch(/return 'publica';|0x811c9dc5|Math\.imul/);
     expect(codi).toContain("if (!teResoledor) return 'sense-dns';");
@@ -1035,6 +1051,15 @@ describe('les imatges (/imatge?u=)', () => {
     const entorn = preparaImatges({ mapa: { [DEL_CATALEG]: imatge(PNG, 'image/jpeg') } });
     await entorn.demana('/feed?font=ayudawp');
     expect((await entorn.demana(ambU(DEL_CATALEG))).headers.get('content-type')).toBe('image/png');
+  });
+
+  /* Gauntlet v1.2.16 R2 (L5R2-01) · El mateix llegidor fitat: una imatge sense cos tampoc és «massa gran». */
+  test('una imatge sense cos (204, o 200 amb body null) → 502 origen_format, mai origen_mida', async () => {
+    for (const status of [204, 200]) {
+      const entorn = preparaImatges({ mapa: { [DEL_CATALEG]: () => new Response(null, { status, headers: { 'content-type': 'image/png' } }) } });
+      await entorn.demana('/feed?font=ayudawp');
+      expect(await errorDe(await entorn.demana(ambU(DEL_CATALEG))), String(status)).toMatchObject({ status: 502, code: 'sdp_noticies_origen_format' });
+    }
   });
 
   test(`${MAXIM_BYTES_IMATGE / 1024 / 1024} MiB com a molt (declarat o en arribar) i ${TEMPS_ORIGEN_MS} ms`, async () => {

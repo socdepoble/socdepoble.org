@@ -11,26 +11,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createTranslator } from '../../config/i18n.js';
 import { XatContext, useXat } from './XatContext.jsx';
 import { AJUDA_PER_CLAU } from '../../data/xatsPerDefecte.js';
-import { IAIA_ID, BENVINGUDA_IAIA, RESPOSTA_IAIA } from '../../data/identitatsSeed.js';
+import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { respostaDeLaIAIA } from '../../data/iaiaLocal.js';
 import { ID_FIL_LOCAL_IAIA } from './useObriXatPerDefecte.js';
 import { esContacteDeLaIAIA } from './contactesAjuda.js';
 import { generaId } from './missatges.js';
 import { creaRegistreSessionsIAIA, titolDeLaPrimeraPregunta } from './sessionsIAIALocals.js';
-
-export const MAXIM_MISSATGES_IAIA_LOCAL = 100;
-const PREFIX_SESSIO = `${ID_FIL_LOCAL_IAIA}-`;
-const esLocal = (id) => id === ID_FIL_LOCAL_IAIA || typeof id === 'string' && id.startsWith(PREFIX_SESSIO);
-const CAP = Object.freeze([]);
-const noFaRes = () => {};
-/* xat-flux-05 (T7a, 261104) · La IAIA al padró de «Nova conversa»: el remot
-   (membres_del_poble) no porta cap contacte de tipus 'ia', i contactesDAjuda
-   la pintava «No disponible» mentre el seu xat local era a la llista. Amb el
-   fil local, obriConversaAmb hi navega sense crear res al servidor; el
-   precedent és el padró del xat de mostra (FakeChatOnboarding). */
-const CONTACTE_IAIA_LOCAL = Object.freeze({
-  usuari_id: IAIA_ID, nom: AJUDA_PER_CLAU.iaia.nom, tipus: 'ia', avatar_url: AJUDA_PER_CLAU.iaia.avatar, fil_id: ID_FIL_LOCAL_IAIA
-});
+import {
+  CAP_ELEMENT,
+  CONTACTE_IAIA_LOCAL,
+  MAXIM_MISSATGES_IAIA_LOCAL,
+  MAXIM_SESSIONS_NOVES_IAIA,
+  PREFIX_SESSIO_IAIA_LOCAL,
+  creaMissatgeBenvingudaIAIA,
+  esFilLocalIAIA,
+  noFaRes,
+  textRespostaIAIALocal,
+} from './iaiaLocalProviderModel.js';
 
 export default function IAIALocalProvider(props) {
   const original = useXat();
@@ -43,16 +40,13 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
   const [registre] = useState(creaRegistreSessionsIAIA);
   const escriptures = useRef(new Map());
   const subscripcio = useRef(null);
-  const [sessionsDesades, posaSessionsDesades] = useState(CAP);
+  const [sessionsDesades, posaSessionsDesades] = useState(CAP_ELEMENT);
   const [ambitLlegit, posaAmbitLlegit] = useState(null);
-  const [sessionsNoves, posaSessionsNoves] = useState(CAP);
+  const [sessionsNoves, posaSessionsNoves] = useState(CAP_ELEMENT);
   const esborrany = useRef(null);
   const primersTitols = useRef(new Map());
   const [historial, posaHistorial] = useState({});
-  const [benvinguda] = useState(() => [{
-    id: 'iaia-local:benvinguda', sender: 'other', author: AJUDA_PER_CLAU.iaia.nom,
-    usuariId: IAIA_ID, is_ai: true, text: BENVINGUDA_IAIA, creatAl: new Date().toISOString()
-  }]);
+  const [benvinguda] = useState(creaMissatgeBenvingudaIAIA);
   const seguent = useRef(0);
   const epoch = useRef(0), controls = useRef(new Map());
   const muntat = useRef(true);
@@ -139,9 +133,9 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
   const novaSessioIAIA = useCallback(() => {
     if (!muntat.current || originalRef.current.iaiaApagada) return null;
     if (esborrany.current) return esborrany.current;
-    const id = PREFIX_SESSIO + generaId();
+    const id = PREFIX_SESSIO_IAIA_LOCAL + generaId();
     esborrany.current = id;
-    posaSessionsNoves((previs) => [id, ...previs].slice(0, 50));
+    posaSessionsNoves((previs) => [id, ...previs].slice(0, MAXIM_SESSIONS_NOVES_IAIA));
     return id;
   }, []);
   const fils = useMemo(() => {
@@ -162,7 +156,7 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
 
   const sendChatMessage = useCallback(async (desti, text, opcions) => {
     const filId = desti?.id;
-    if (!esLocal(filId)) return originalRef.current.sendChatMessage(desti, text, opcions);
+    if (!esFilLocalIAIA(filId)) return originalRef.current.sendChatMessage(desti, text, opcions);
     if (!muntat.current || originalRef.current.iaiaApagada || !idsLocals.current.has(filId)) return [];
     const valor = String(text ?? '').trim();
     if (!valor) return [];
@@ -210,10 +204,10 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
       controls.current.delete(control);
       if (control.signal.aborted || ticket !== epoch.current || !muntat.current || originalRef.current.iaiaApagada || oblitsEnCurs.current.has(filId)) return;
       const resposta = { id: `${id}:resposta`, sender: 'other', author: AJUDA_PER_CLAU.iaia.nom,
-        usuariId: IAIA_ID, is_ai: true, text: typeof trobada === 'string' && trobada.trim() ? trobada : RESPOSTA_IAIA,
+        usuariId: IAIA_ID, is_ai: true, text: textRespostaIAIALocal(trobada),
         creatAl: new Date().toISOString() };
       posaHistorial((previ) => {
-        const missatges = previ[filId] ?? CAP;
+        const missatges = previ[filId] ?? CAP_ELEMENT;
         const posicio = missatges.findIndex((m) => m.id === id);
         if (posicio < 0) return previ;
         const ambResposta = [...missatges.slice(0, posicio + 1), resposta, ...missatges.slice(posicio + 1)];
@@ -244,27 +238,27 @@ function IAIALocalProviderAmbit({ children, original, respostaIAIA = respostaDeL
         : original.chatThreads || []),
       ...(original.iaiaApagada ? [] : fils)
     ],
-    getThreadMessages: (id) => esLocal(id)
-      ? (muntat.current && !original.iaiaApagada && idsLocals.current.has(id) ? historial[id] ?? benvinguda : CAP)
+    getThreadMessages: (id) => esFilLocalIAIA(id)
+      ? (muntat.current && !original.iaiaApagada && idsLocals.current.has(id) ? historial[id] ?? benvinguda : CAP_ELEMENT)
       : original.getThreadMessages(id),
     novaSessioIAIA,
     oblidaSessioIAIA,
     sessioIAIAOblidada: (id) => oblidades.current.has(id),
-    esperaSessioIAIA: (id) => esLocal(id) && Boolean(ambit) && ambitLlegit !== ambit,
+    esperaSessioIAIA: (id) => esFilLocalIAIA(id) && Boolean(ambit) && ambitLlegit !== ambit,
     sendChatMessage,
     cercaMembres: filPerDefecte && typeof cercaOriginal === 'function' ? cercaMembres : cercaOriginal,
-    obriFil: (id) => original.obriFil?.(esLocal(id) ? null : id),
-    filCarregat: (id) => esLocal(id) || (original.filCarregat?.(id) ?? true),
-    avisFil: (id) => esLocal(id) ? null : original.avisFil?.(id),
-    llegintFil: (id) => esLocal(id) ? false : original.llegintFil?.(id),
-    hiHaMesAntics: (id) => esLocal(id) ? false : original.hiHaMesAntics?.(id),
-    carregantAntics: (id) => esLocal(id) ? false : original.carregantAntics?.(id),
-    esperaAntics: (id) => esLocal(id) ? null : original.esperaAntics?.(id),
-    marcaVist: (id, seq) => esLocal(id) ? undefined : original.marcaVist?.(id, seq),
-    marcaLlegides: (ids) => original.marcaLlegides?.(ids.filter((id) => !esLocal(id))) ?? [],
-    potSilenciarFil: (f) => esLocal(f?.id ?? f) ? false : original.potSilenciarFil?.(f),
-    esFilAmagat: (id) => esLocal(id) ? Boolean(original.iaiaApagada) : original.esFilAmagat?.(id),
-    recarregaFil: (id) => esLocal(id) ? noFaRes() : original.recarregaFil?.(id)
+    obriFil: (id) => original.obriFil?.(esFilLocalIAIA(id) ? null : id),
+    filCarregat: (id) => esFilLocalIAIA(id) || (original.filCarregat?.(id) ?? true),
+    avisFil: (id) => esFilLocalIAIA(id) ? null : original.avisFil?.(id),
+    llegintFil: (id) => esFilLocalIAIA(id) ? false : original.llegintFil?.(id),
+    hiHaMesAntics: (id) => esFilLocalIAIA(id) ? false : original.hiHaMesAntics?.(id),
+    carregantAntics: (id) => esFilLocalIAIA(id) ? false : original.carregantAntics?.(id),
+    esperaAntics: (id) => esFilLocalIAIA(id) ? null : original.esperaAntics?.(id),
+    marcaVist: (id, seq) => esFilLocalIAIA(id) ? undefined : original.marcaVist?.(id, seq),
+    marcaLlegides: (ids) => original.marcaLlegides?.(ids.filter((id) => !esFilLocalIAIA(id))) ?? [],
+    potSilenciarFil: (f) => esFilLocalIAIA(f?.id ?? f) ? false : original.potSilenciarFil?.(f),
+    esFilAmagat: (id) => esFilLocalIAIA(id) ? Boolean(original.iaiaApagada) : original.esFilAmagat?.(id),
+    recarregaFil: (id) => esFilLocalIAIA(id) ? noFaRes() : original.recarregaFil?.(id)
   }), [original, fils, historial, benvinguda, filPerDefecte, novaSessioIAIA, oblidaSessioIAIA, ambit, ambitLlegit, sendChatMessage, nomPublic, cercaOriginal, cercaMembres]);
   return <XatContext.Provider value={value}>{children}</XatContext.Provider>;
 }

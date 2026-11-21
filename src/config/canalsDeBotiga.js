@@ -45,6 +45,16 @@
  * (itunes.apple.com/lookup?bundleId=org.socdepoble.app&country=es) i la fitxa
  * responen 200, comprovat el 08-11-2026. Google Play, l'APK directe i
  * TestFlight continuen tancats.
+ *
+ * Onada v1.2.16 (ordres del Mestre del 21-11-2026, 01:32 i 01:55; prompt
+ * 261121_0216, T3.1) · ZERO APK fora de botiga: la Protecció Avançada
+ * d'Android bloqueja els APK de fora de botiga, i tota distribució va per les
+ * quatre botigues oficials (Google Play, Apple TestFlight, WordPress.org i la
+ * Web). La ranura 'apk-directe' es queda a la llista, apagada (url: null), i
+ * ara cap adreça no l'obri: FORMES['apk-directe'] rebutja totes, també la
+ * canònica d'abans. Obrir-la ja no és canviar una línia: és una ordre nova del
+ * Mestre que canvia esta regla, la seua prova i el cos de /page/descarregues,
+ * que diu que no n'hi ha cap (FRASES_DE_BOTIGA_TANCADA['apk-directe']).
  */
 
 /* L'identificador de l'app d'Android (capacitor.config.json, appId). */
@@ -52,15 +62,12 @@ const APP_ANDROID = 'org.socdepoble.app';
 /* L'slug del connector al directori de WordPress.org (api.wordpress.org,
    plugins/info 1.2: slug «socdepoble», 01-11-2026). */
 const CONNECTOR_WORDPRESS = 'socdepoble';
-/* IDEA-60 (T1, prompt 261102_1532) · L'únic camí de l'APK signat oficialment
-   (carril T8: public/descarregues/), al domini propi i sense cap paràmetre. */
-const FITXER_APK = '/descarregues/socdepoble-android-latest.apk';
-
 export const CANALS_DE_BOTIGA = Object.freeze([
   Object.freeze({ id: 'google-play', nom: 'Google Play', url: null }),
   // P0-62 · La fitxa pública d'Apple (trackId 6826441844), oberta el 08-11-2026.
   Object.freeze({ id: 'app-store', nom: 'App Store', url: 'https://apps.apple.com/es/app/soc-de-poble/id6826441844' }),
   // IDEA-60 (T1, prompt 261102_1532) · Tancades fins que el Mestre done l'adreça (una línia cada una).
+  // v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121): l'APK directe, apagat per sempre (FORMES, ací davall).
   Object.freeze({ id: 'apk-directe', nom: 'APK directe', url: null }),
   Object.freeze({ id: 'testflight', nom: 'TestFlight', url: null }),
   Object.freeze({ id: 'wordpress-org', nom: 'WordPress.org', url: 'https://wordpress.org/plugins/socdepoble/' })
@@ -79,8 +86,9 @@ const FORMES = Object.freeze({
     && url.searchParams.get('id') === APP_ANDROID,
   'app-store': (url) => url.hostname === 'apps.apple.com'
     && /^\/(?:[a-z]{2}(?:-[a-z]{2,4})?\/)?app\/(?:[\w%-]+\/)?id\d+\/?$/i.test(url.pathname),
-  // IDEA-60 (T1, prompt 261102_1532) · El fitxer signat al domini propi, sense query ni fragment.
-  'apk-directe': (url) => url.hostname === 'socdepoble.org' && url.pathname === FITXER_APK && !url.search && !url.hash,
+  /* v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121, 01:32): cap adreça, tampoc la canònica d'abans
+     (/descarregues/socdepoble-android-latest.apk, que firebase.json ja no redirigix), no obri esta ranura. */
+  'apk-directe': () => false,
   // IDEA-60 (T1, prompt 261102_1532) · L'enllaç públic de TestFlight: /join/ i un codi de 4 a 32 caràcters,
   // sense query ni fragment (esta ranura salta ADRECA_DE_PROVES: la forma és l'única guarda que hi queda).
   'testflight': (url) => url.hostname === 'testflight.apple.com' && !url.search && !url.hash
@@ -131,8 +139,10 @@ export function canalsOberts(canals = CANALS_DE_BOTIGA) {
 export const FRASES_DE_BOTIGA_TANCADA = Object.freeze({
   'google-play': Object.freeze([/proves internes/i, /no està publicada per a tothom/i, /equip de proves/i]),
   'app-store': Object.freeze([/TestFlight/i, /encara no és a l[’']App Store/i, /enllaç públic de proves/i, /grup de treball intern/i]),
-  // IDEA-60 (T1, prompt 261102_1532) · Quan s'òbriguen, el cos deixa de poder dir que no hi ha APK ni enllaç públic.
-  'apk-directe': Object.freeze([/no hi ha APK públic/i, /Quan n[’']hi haja un/i]),
+  /* IDEA-60 (T1, prompt 261102_1532) · Quan s'òbriguen, el cos deixa de poder dir que no hi ha APK ni enllaç públic.
+     v1.2.16 · ZERO APK fora de botiga: el cos ja no promet cap APK, diu que no n'hi ha cap ni n'hi haurà fora de
+     botiga. Les dues frases són les d'ara: si mai algú traguera el pany de FORMES['apk-directe'], caurien. */
+  'apk-directe': Object.freeze([/no oferix cap fitxer d[’']instal·lació/i, /no et demanarà mai que instal·les un APK/i]),
   'testflight': Object.freeze([/hem demanat a Apple un enllaç públic/i, /Mentre Apple no el revise/i])
 });
 /* Per a qualsevol botiga d'apps oberta (Google Play o App Store). */

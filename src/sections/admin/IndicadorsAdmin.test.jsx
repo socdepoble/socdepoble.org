@@ -11,7 +11,8 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListUsers: (...args) => m.usuaris(...args),
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
-import { APARELLS, IndicadorsAdmin, LIMIT_PERSONES, SENSE_XIFRA, TAULA_APARELLS, TEXT_APARELLS_SENSE_FONT, TITOL_APARELLS } from './IndicadorsAdmin.jsx';
+import { IndicadorsAdmin } from './IndicadorsAdmin.jsx';
+import { APARELLS, LIMIT_PERSONES, SENSE_XIFRA, TAULA_APARELLS, TEXT_APARELLS_SENSE_FONT, TITOL_APARELLS } from './indicadorsAdminModel.js';
 
 const ARA = new Date('2026-10-15T10:00:00Z');
 const DIA = 24 * 60 * 60 * 1000;

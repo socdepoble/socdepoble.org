@@ -211,14 +211,17 @@ const NOMS_CLOSCA = Object.freeze({
 function RouteFallback() {
   /* La Suspense pot pintar-lo abans que hi haja traductor: la reserva.
      R28 (Llei del Píxel) · Cap full ha declarat mai .sdp-app-loading ni
-     .sdp-spinner(--large): el gir no ha pintat cap píxel des que va entrar
-     (271d4a64e, 260918). Queda la regió viva amb el text per al lector, que
-     és el que es veu (res) i el que s'anuncia. Un indicador visible és un
-     redisseny: demana ordre del Mestre. */
+     .sdp-spinner(--large): el gir no havia pintat cap píxel des que va entrar
+     (271d4a64e, 260918).
+     P0-ANDROID-PUSH (v1.2.16) · B11a (ordre del Mestre 261121; prompt 0216, T2.5; D-13) · El text
+     es veu: el Foraster que obri un enllaç ja no mira un buit color crema mentre arriba el tros
+     de la ruta. Les classes de l'estat buit (.sdp-buit, components.css) i la clau nav.carregaRuta,
+     en 5 llengües, ja hi eren: 0 B de CSS i 0 claus noves. És a l'arrencada de WordPress (App.jsx):
+     el cost es mesura a l'informe del carril. */
   const t = useTraductorOpcional();
   return (
-    <div role="status" aria-live="polite">
-      <span className="sr-only">{tradueix(t, NOMS_CLOSCA.carregaRuta)}</span>
+    <div role="status" aria-live="polite" className="sdp-buit">
+      <p className="sdp-buit__titol">{tradueix(t, NOMS_CLOSCA.carregaRuta)}</p>
     </div>
   );
 }
@@ -578,6 +581,11 @@ function AppShell({ children, mobileNav }) {
         }
         if (!shellMuntat.current) return;
         showToast(t('section.login.success.login'), 'success');
+        /* P0-ANDROID-PUSH (v1.2.16) · B8b · Si la redirecció ha tornat a /registre (el cas de
+           sempre: urlDeTornada és la pàgina del botó), l'entrada ja hi és muntada i decidix ella
+           (OnboardingSection, aterratgeAmbLectura): un sol navegador, i la tornada a la fitxa de
+           lectura sense cap import nou a l'arrencada de WordPress. Fora de /registre, la closca. */
+        if (esRutaDEntrada(location.pathname)) return;
         const tornar = new URLSearchParams(consultaDeLaTornada.current).get('tornar');
         navigate(aterratgeDespresDEntrar(tornar), { replace: true });
       })
@@ -587,7 +595,7 @@ function AppShell({ children, mobileNav }) {
         /* R · Un enllaç de recuperació que ja no val: a l'entrada, on se'n pot demanar un altre. */
         if (e?.recuperacio === true) navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
       });
-  }, [externalConfig, t, showToast, navigate]);
+  }, [externalConfig, t, showToast, navigate, location.pathname]);
   useEffect(() => {
     if (tornadaFeta.current || !modeRemot) return;
     tornadaFeta.current = true;

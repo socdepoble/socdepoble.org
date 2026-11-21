@@ -10,6 +10,9 @@
  * 7.0–7.2 i l'exportació en JSON verificable, que el valencià no afirma), i
  * Google Play, igual que en valencià, promet «l'enllaç a la botiga», no un botó.
  * canalsDeBotiga.test.js passa la guarda B9 de botiga tancada sobre cada llengua.
+ * Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) ·
+ * L'H4 de l'APK diu en cada llengua el mateix que el valencià: cap APK fora de Google
+ * Play, per què, i que ningú de Sóc de Poble no demanarà mai instal·lar-ne cap.
  */
 /* Onada R29 · R29-02-6b · En basc, el connector de WordPress és «konektorea», com a la resta de pàgines. */
 export const TRADUCCIONS_DESCARREGUES = Object.freeze({
@@ -41,8 +44,8 @@ export const TRADUCCIONS_DESCARREGUES = Object.freeze({
         </ol>
       </div>
       <p>Si no formas parte del grupo, en Android puedes usarla directamente desde el <strong>navegador</strong> e instalarla como una <strong>aplicación web</strong> (te lo explicamos más abajo).</p>
-      <h4>APK directo</h4>
-      <p>Está <strong>previsto</strong> ofrecer también el archivo de instalación de Android (<strong>APK</strong>), para quien prefiere no pasar por ninguna <strong>tienda</strong>. Hoy todavía <strong>no hay APK</strong> público de Sóc de Poble. Cuando esté disponible, el enlace <strong>oficial</strong> saldrá en esta página.</p>
+      <h4>Ningún APK fuera de la tienda</h4>
+      <p>Sóc de Poble <strong>no ofrece</strong> ningún archivo de instalación de Android (<strong>APK</strong>) fuera de <strong>Google Play</strong>: con la <strong>Protección Avanzada</strong> de Android activada, el teléfono no deja instalar aplicaciones de fuera de la tienda, y desde Google Play la aplicación se <strong>actualiza sola</strong>. <strong>Nadie</strong> de Sóc de Poble te pedirá nunca que instales un APK ni que desactives esa protección.</p>
 
       <h3>iPhone e iPad</h3>
       <h4>App Store</h4>
@@ -115,8 +118,8 @@ export const TRADUCCIONS_DESCARREGUES = Object.freeze({
         </ol>
       </div>
       <p>If you are not in the tester group, on Android you can use Sóc de Poble straight from your <strong>browser</strong> and install it as a <strong>web app</strong> (explained below).</p>
-      <h4>Direct APK</h4>
-      <p>We also <strong>plan</strong> to provide the Android installation package (<strong>APK</strong>) for people who prefer not to use an app <strong>store</strong>. Today there is still <strong>no public APK</strong> for Sóc de Poble. When one is released, the <strong>official</strong> link will appear on this page.</p>
+      <h4>No APK outside the store</h4>
+      <p>Sóc de Poble <strong>offers no</strong> Android installation package (<strong>APK</strong>) outside <strong>Google Play</strong>: with Android's <strong>Advanced Protection</strong> turned on, the phone won't install apps from outside the store, and from Google Play the app <strong>updates itself</strong>. <strong>No one</strong> from Sóc de Poble will ever ask you to install an APK or to turn that protection off.</p>
 
       <h3>iPhone and iPad</h3>
       <h4>App Store</h4>
@@ -189,8 +192,8 @@ export const TRADUCCIONS_DESCARREGUES = Object.freeze({
         </ol>
       </div>
       <p>Talde horretan ez bazaude, Androiden <strong>nabigatzailetik</strong> erabil dezakezu zuzenean eta <strong>web-aplikazio</strong> gisa instalatu (behean azaltzen dizugu nola).</p>
-      <h4>APK zuzena</h4>
-      <p>Androiderako instalazio-fitxategia (<strong>APK</strong>) ere eskaintzea <strong>aurreikusita</strong> dago, inongo <strong>dendatatik</strong> igaro nahi ez dutenentzat. Gaur egun oraindik <strong>ez dago APK</strong> publikorik Sóc de Poblerentzat. Prest dagoenean, lotura <strong>ofiziala</strong> orri honetan agertuko da.</p>
+      <h4>Dendatik kanpoko APKrik ez</h4>
+      <p>Sóc de Poblek <strong>ez du eskaintzen</strong> Androiderako instalazio-fitxategirik (<strong>APK</strong>) <strong>Google Play</strong>-tik kanpo: Androiden <strong>Babes Aurreratua</strong> aktibatuta dagoenean, telefonoak ez du uzten dendatik kanpoko aplikaziorik instalatzen, eta Google Play-tik aplikazioa <strong>bere kabuz eguneratzen da</strong>. Sóc de Pobleko <strong>inork</strong> ez dizu inoiz eskatuko APK bat instalatzeko edo babes hori desaktibatzeko.</p>
 
       <h3>iPhone eta iPad</h3>
       <h4>App Store</h4>
@@ -263,8 +266,8 @@ export const TRADUCCIONS_DESCARREGUES = Object.freeze({
         </ol>
       </div>
       <p>Se non formas parte do grupo, en Android pódela empregar desde o <strong>navegador</strong> e instalala como unha <strong>aplicación web</strong> (explicámoscho embaixo).</p>
-      <h4>APK directo</h4>
-      <p>Está <strong>previsto</strong> ofrecer tamén o ficheiro de instalación de Android (<strong>APK</strong>), para quen prefire non pasar por ningunha <strong>tenda</strong>. Hoxe aínda <strong>non hai APK</strong> público de Sóc de Poble. Cando o haxa, a ligazón <strong>oficial</strong> sairá nesta páxina.</p>
+      <h4>Ningún APK fóra da tenda</h4>
+      <p>Sóc de Poble <strong>non ofrece</strong> ningún ficheiro de instalación de Android (<strong>APK</strong>) fóra de <strong>Google Play</strong>: coa <strong>Protección Avanzada</strong> de Android activada, o teléfono non deixa instalar aplicacións de fóra da tenda, e desde Google Play a aplicación <strong>actualízase soa</strong>. <strong>Ninguén</strong> de Sóc de Poble che pedirá nunca que instales un APK nin que desactives esa protección.</p>
 
       <h3>iPhone e iPad</h3>
       <h4>App Store</h4>

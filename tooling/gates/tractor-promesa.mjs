@@ -36,6 +36,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -45,7 +46,8 @@ const DEUTE = path.join(ARREL, '.agents/deute/.promesa-deute.json');
 
 const DIRS = ['tooling', 'scripts', '.agents'];
 const EXT = new Set(['.mjs', '.js', '.cjs', '.sh', '.py']);
-const EXCLOU = /(^|\/)(node_modules|\.git|dist|build|coverage|90_historic|90_arxiu_historic|_wiki_de_poble)(\/|$)/i;
+const EXCLOU = /(^|\/)(node_modules|\.git|dist|build|coverage|90_historic|90_arxiu_historic)(\/|$)/i;
+const exclou = rel => EXCLOU.test(rel) || rel.split('/').some(part => part.toLowerCase() === CAMINS.wiki.toLowerCase());
 
 /* ─────────────────────────── Recollida de fonts ─────────────────────────── */
 
@@ -54,7 +56,7 @@ function fonts(dir, acc = []) {
   if (!fs.existsSync(abs)) return acc;
   for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
     const rel = path.posix.join(dir, e.name);
-    if (EXCLOU.test(rel)) continue;
+    if (exclou(rel)) continue;
     if (e.isDirectory()) fonts(rel, acc);
     else if (EXT.has(path.extname(e.name))) acc.push(rel);
   }
@@ -126,14 +128,14 @@ for (const f of FONTS) {
 
 /* ── P3 · AVIS-ETERN ── promeses escrites a documents sense porta que les cobrisca */
 const PROMESA = /\b(cal fer que|mentre això dure|mentre açò dure|pendent de|TODO|FIXME|caldria|s'hauria de fer)\b/i;
-const DOCS = ['.agents', '_wiki_de_poble'].flatMap((d) => {
+const DOCS = ['.agents', CAMINS.wiki].flatMap((d) => {
   const acc = [];
   (function rec(dir) {
     const abs = path.join(ARREL, dir);
     if (!fs.existsSync(abs)) return;
     for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
       const rel = path.posix.join(dir, e.name);
-      if (EXCLOU.test(rel)) continue;
+      if (exclou(rel)) continue;
       if (e.isDirectory()) rec(rel);
       else if (e.name.endsWith('.md')) acc.push(rel);
     }

@@ -22,9 +22,12 @@ import { useLayoutEffect, useState } from 'react';
 
 const EM_PER_DEFECTE = 16;
 
+const finestraDe = (node) => node?.ownerDocument?.defaultView || window;
+
 function mesura(node) {
+  const win = finestraDe(node);
   const amplada = node.getBoundingClientRect().width || node.clientWidth || 0;
-  const em = parseFloat(window.getComputedStyle(node).fontSize) || EM_PER_DEFECTE;
+  const em = parseFloat(win.getComputedStyle(node).fontSize) || EM_PER_DEFECTE;
   return { amplada: amplada > 0 ? amplada : null, em };
 }
 
@@ -33,18 +36,20 @@ export function useAmpladaContenidor(ref) {
   useLayoutEffect(() => {
     const node = ref.current;
     if (!node) return undefined;
+    const win = finestraDe(node);
     const actualitza = () => {
       const nova = mesura(node);
       setMida((abans) => (abans.amplada === nova.amplada && abans.em === nova.em ? abans : nova));
     };
     actualitza();
-    if (typeof ResizeObserver === 'function') {
-      const observador = new ResizeObserver(actualitza);
+    const CtorResize = win.ResizeObserver || (typeof ResizeObserver === 'function' ? ResizeObserver : null);
+    if (typeof CtorResize === 'function') {
+      const observador = new CtorResize(actualitza);
       observador.observe(node);
       return () => observador.disconnect();
     }
-    window.addEventListener('resize', actualitza);
-    return () => window.removeEventListener('resize', actualitza);
+    win.addEventListener('resize', actualitza);
+    return () => win.removeEventListener('resize', actualitza);
   }, [ref]);
   return mida;
 }

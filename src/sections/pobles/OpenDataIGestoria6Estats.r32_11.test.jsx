@@ -15,7 +15,8 @@ import { exportaMunicipiOpenData } from '../../data/exportaMunicipiOpenData.js';
 import { preparaSnapshotOpenDataPublic } from '../../../tooling/seo/snapshot-opendata-public.mjs';
 import { creaAdaptadorLocal } from '../../data/local/adaptadorLocal.js';
 import { CAPACITATS } from '../../data/contracte.js';
-import RestauradorOpenData, { TEXTOS_RESTAURADOR } from './RestauradorOpenData.jsx';
+import RestauradorOpenData from './RestauradorOpenData.jsx';
+import { TEXTOS_RESTAURADOR } from './restauradorOpenDataModel.js';
 import { TEXTOS_OPENDATA_ESTATS } from './i18nOpenDataEstats.js';
 import {
   LimitErrorPontGestoria,

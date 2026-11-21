@@ -68,7 +68,7 @@ import {
   ARREL_AJUSTOS, ESPECIALS_COPIA, OPCIONS_TEMA, RUTES_AJUSTOS, cercaAjustos, etiquetaDeFila, paginaAjustos, pilaDeResultat, textDe
 } from '../ajustosXat.js';
 import { PRESETS_AMPLARIA, presetDeMides } from '../amplariaColumnes.js';
-import { TEXTOS_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
+import { TEXTOS_CONSTRUCCIO, textosDeVista } from './vistaEnConstruccioModel.js';
 import PaginaNotificacions from './PaginaNotificacions.jsx';
 import { useControlAvisosPush } from '../useAvisosPushXat.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';

@@ -339,7 +339,14 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     expect(passos[2]).toMatch(/^Pas 3 · Pantalla 3, Google Play\. Prem «Instal·lar» i deixa l'app instal·lada al mòbil\..*12 verificadors.*14 dies\.$/);
     expect(text).toContain("L'adreça del primer pas no és la fitxa de la botiga");
     expect(html).not.toContain('la fa servir el grup');
-    expect(text).toContain("Hui encara no hi ha APK públic de Sóc de Poble. Quan n'hi haja un, l'enllaç oficial eixirà en esta pàgina.");
+    /* Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · De l'APK, el fet nou:
+       no n'hi ha cap fora de Google Play, per què, i la promesa que ningú no en demanarà mai cap. Fins a la
+       v1.2.15 esta prova fixava «Hui encara no hi ha APK públic… Quan n'hi haja un, l'enllaç oficial eixirà en
+       esta pàgina», que prometia un APK que no vindrà. */
+    expect(text).toContain("Sóc de Poble no oferix cap fitxer d'instal·lació d'Android (APK) fora de Google Play: amb la Protecció Avançada d'Android activada, el telèfon no deixa instal·lar aplicacions de fora de botiga, i des de Google Play l'aplicació s'actualitza sola. Ningú de Sóc de Poble no et demanarà mai que instal·les un APK ni que desactives eixa protecció.");
+    expect([...doc.querySelectorAll('h4')].map((h4) => h4.textContent)).toContain('Cap APK fora de botiga');
+    expect(text).not.toMatch(/no hi ha APK públic|Quan n'hi haja un|Està previst oferir/);
+    expect(html).not.toMatch(/\.apk\b/i);
     expect(html).not.toContain('no instal·les');
   });
 

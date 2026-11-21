@@ -48,6 +48,7 @@ import { documentCorpus, documentLinkTargets, operationalDocumentText } from '..
 import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
 import { markdownProse } from '../lib/markdown-prose.mjs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -58,8 +59,8 @@ const JSON_OUT = process.argv.includes('--json');
 /* L'àncora ha de ser l'ARREL del coneixement, no l'escriptori de sessió.
  * Mesura 260901: des de `00_INDEX_ESCRIPTORI` només s'abasten 4 de 96
  * documents. Des de `00_INDEX`, 81. L'escriptori és una fulla, no una arrel. */
-const ANCORES = (ARG('ancores') ?? '_wiki_de_poble/00_index.md').split(',');
-const ARRELS = (ARG('arrels') ?? '_wiki_de_poble,.agents').split(',');
+const ANCORES = (ARG('ancores') ?? path.posix.join(CAMINS.wiki, '00_index.md')).split(',');
+const ARRELS = (ARG('arrels') ?? `${CAMINS.wiki},.agents`).split(',');
 
 
 const INICI = '<!-- LLAURADOR:ADOPCIONS:INICI -->';
@@ -245,7 +246,7 @@ function blocPer(ix) {
       const r = retol(n);
       const nom = path.posix.basename(n, '.md');
       let obsPath = n.replace(/\.md$/, '');
-      if (obsPath.startsWith('_wiki_de_poble/')) obsPath = obsPath.slice(15);
+      if (obsPath.startsWith(`${CAMINS.wiki}/`)) obsPath = obsPath.slice(CAMINS.wiki.length + 1);
       return `- [[${obsPath}|${nom}]]${r ? ` — ${r}` : ''}`;
     }),
     '',

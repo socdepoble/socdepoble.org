@@ -17,10 +17,14 @@
 import { useId } from 'react';
 import { useUIStateOpcional } from '../../../app/contexts/UIContext';
 import { Boto } from '../../../components/PedraSeca/index.js';
-import { ERRORS_DE_FONT } from './contracteFonts.js';
 import { textosCalendariExtra } from '../i18nCalendariExtra.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitCalendari from '../../../css/diferit-calendari.css?inline';
+import {
+  classeCasellaFont,
+  esErrorFontReintentable,
+} from './panellFontsCalendariModel.js';
+
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
 function useIdiomaPanellFonts() {
@@ -31,26 +35,13 @@ function useIdiomaPanellFonts() {
   }
 }
 
-/* La classe de cada token de color: un mapa explícit de literals
-   (tractor-vocabulari, V2), mai una classe construïda. */
-const CLASSE_CASELLA = Object.freeze({
-  accio: 'sdp-calendari-fonts-panell__casella sdp-calendari-fonts-panell__casella--accio',
-  accent: 'sdp-calendari-fonts-panell__casella sdp-calendari-fonts-panell__casella--accent',
-  exit: 'sdp-calendari-fonts-panell__casella sdp-calendari-fonts-panell__casella--exit',
-  avis: 'sdp-calendari-fonts-panell__casella sdp-calendari-fonts-panell__casella--avis',
-  error: 'sdp-calendari-fonts-panell__casella sdp-calendari-fonts-panell__casella--error'
-});
-
-/* Els errors d'una font que val la pena tornar a provar. */
-const REINTENTABLES = new Set([ERRORS_DE_FONT.XARXA, ERRORS_DE_FONT.RESPOSTA_INVALIDA]);
-
 function EstatDeLaFont({ font, onReintenta, tx }) {
   if (font.fase === 'carregant') return <span ref={adoptaEstilsDiferits} role="status" className="sdp-calendari-fonts-panell__avis">{tx.carregant}</span>;
   if (font.fase !== 'error' || !font.error) return <span ref={adoptaEstilsDiferits} role="status" className="sdp-calendari-fonts-panell__avis" />;
   return (
     <span ref={adoptaEstilsDiferits} role="status" className="sdp-calendari-fonts-panell__avis sdp-calendari-fonts-panell__avis--error">
       {font.error.missatge}
-      {REINTENTABLES.has(font.error.tipus) ? (
+      {esErrorFontReintentable(font.error.tipus) ? (
         <>
           {' '}
           <Boto varietat="fantasma" onClick={() => onReintenta(font.id)}>{tx.tornaAProvar}</Boto>
@@ -69,7 +60,7 @@ function CompteDeFonts({ compte, onCommuta, onConnecta, onCancella, onDesconnect
       <ul className="sdp-calendari-fonts-panell__llista" aria-labelledby={idNom}>
         {compte.fonts.map((font) => (
           <li ref={adoptaEstilsDiferits} key={font.id} className="sdp-calendari-fonts-panell__font">
-            <label className={CLASSE_CASELLA[font.colorToken] ?? CLASSE_CASELLA.accio}>
+            <label className={classeCasellaFont(font.colorToken)}>
               <input type="checkbox" checked={font.activa} onChange={() => onCommuta(font.id)} />
               <span>{font.nom}</span>
             </label>

@@ -48,6 +48,20 @@ describe('acteAEsdeveniment', () => {
     expect(acteAEsdeveniment(null)).toBeNull();
   });
 
+  /* Gauntlet R1 de la v1.2.16 (L2-01) · Abans, una hora_fi anterior a l'hora d'inici sense data_fi es
+     descartava (creaEsdeveniment rebutja una fi anterior a l'inici) i la revetla quedava sense fi. */
+  test('[L2-01] sense data_fi, una hora_fi anterior a l’hora d’inici és de l’endemà', () => {
+    const revetla = { id: 'revetla', ambit: 'calendari', title: 'Revetla', dades: { data_inici: '2026-11-21', hora_inici: '23:00', hora_fi: '03:00' } };
+    const esd = acteAEsdeveniment(revetla);
+    expect(esd).toMatchObject({ inici: { dataHora: '2026-11-21T23:00' }, fi: { dataHora: '2026-11-22T03:00', zona: 'Europe/Madrid' } });
+    expect(['2026-11-21', '2026-11-22', '2026-11-23'].map((clau) => acteOcorreElDia(revetla, clau, esd))).toEqual([true, true, false]);
+    // Amb data_fi, la que diu l'autor; amb la mateixa hora, de durada zero; sense hora d'inici, de tot el
+    // dia (un sol dia: la fi és exclusiva, com abans).
+    expect(acteAEsdeveniment({ ...revetla, dades: { ...revetla.dades, data_fi: '2026-11-23' } }).fi).toEqual({ dataHora: '2026-11-23T03:00', zona: 'Europe/Madrid' });
+    expect(acteAEsdeveniment({ ...revetla, dades: { ...revetla.dades, hora_fi: '23:00' } }).fi).toEqual({ dataHora: '2026-11-21T23:00', zona: 'Europe/Madrid' });
+    expect(acteAEsdeveniment(acte({ date: '2026-11-21', endTime: '03:00' }))).toMatchObject({ totElDia: true, fi: { data: '2026-11-22' } });
+  });
+
   test('T5 · la publicació no fa de dia de l’acte: sense date, created_at ni publish_date no el salven', () => {
     expect(acteAEsdeveniment(acte({ date: undefined, created_at: '2026-09-30T10:00:00Z', publish_date: '2026-09-30T10:00:00Z' }))).toBeNull();
   });
@@ -62,9 +76,19 @@ describe('el mes on s’obri l’Agenda', () => {
     expect(mesDeLActeMesProper([esd('2023-01-29'), esd('2026-09-30')], AVUI)).toEqual({ any: 2026, mes: 8 });
   });
 
-  test('si cap no ha de vindre, el del més recent; sense actes, null', () => {
-    expect(mesDeLActeMesProper([esd('2023-01-29'), null, esd('2024-06-01')], AVUI)).toEqual({ any: 2024, mes: 5 });
+  /* P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12; revisió [VA-1]) · Mai un mes passat:
+     abans tornava el del més recent (juny del 2024) i /calendari s'obria en un mes que ja havia
+     passat. Ara null, i qui crida obri el de hui o el seu mes d'obertura. */
+  test('si cap no ha de vindre, null (mai el mes d’un acte passat); sense actes, null', () => {
+    expect(mesDeLActeMesProper([esd('2023-01-29'), null, esd('2024-06-01')], AVUI)).toBeNull();
+    expect(mesDeLActeMesProper([esd('2026-09-02'), esd('2026-09-29', '19:00')], AVUI)).toBeNull();
     expect(mesDeLActeMesProper([], AVUI)).toBeNull();
+  });
+
+  test('un mercat setmanal que ja ha acabat (UNTIL passat) no obri el seu mes: null', () => {
+    const acabat = acteAEsdeveniment(acte({ id: 'mercat-vell', date: '2026-01-10', recurrencia: ['RRULE:FREQ=WEEKLY;UNTIL=20260301T000000Z'] }));
+    expect(acabat?.recurrencia).toBeTruthy();
+    expect(mesDeLActeMesProper([acabat], AVUI)).toBeNull();
   });
 
   /* calendari-3 · La primera OCURRÈNCIA a partir de hui (ocorreElDia), no el

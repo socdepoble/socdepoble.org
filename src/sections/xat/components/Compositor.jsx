@@ -183,7 +183,7 @@ export default function Compositor({
        línia i la mateixa classe, amb la icona de persona.
        Ordre del Mestre (261020, 23:30) · L'accés directe a la pàgina de
        registre des del peu del xat. Gauntlet 261022_0225 (XAT-4) · El fa la
-       parella «Connectar-se» / «Registrar-se» (AccesAlXat, XatSection: pel
+       parella «Entrar» / «Registrar-se» (v1.2.16, B9; abans «Connectar-se») (AccesAlXat, XatSection: pel
        router, cada una amb el seu mode i la tornada). L'enllaç cru «Registra't»
        d'ací obria «Entrar», recarregava la pàgina i repetia el nom del botó
        que crea el compte: ja no hi és.

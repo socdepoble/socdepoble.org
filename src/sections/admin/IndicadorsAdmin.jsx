@@ -49,34 +49,9 @@ import { ShieldCheck } from 'lucide-react';
 import AppGridColumn from '../../components/layout/AppGridColumn';
 import { Alerta, Boto, Carregant, EstatBuit, Histograma, MarcColumna, Pila, Taula } from '../../components/PedraSeca/index.js';
 import { adminListOrganizations, adminListUsers, teCapacitat } from '../../data/backendPort.js';
-import { LLINDAR_GRUP_PETIT, altesPerMes, barresHistograma, darrerAcces, entitatsPerTipus } from './indicadors.js';
+import { altesPerMes, barresHistograma, darrerAcces, entitatsPerTipus } from './indicadors.js';
 import { TEXT_CAL_SEGON_FACTOR, esRebuigDeSegonFactor } from './rebuigSegonFactor.js';
-
-/* El sostre de public.admin_list_users (2609150000_seguretat_profunda_deepseek.sql):
-   no en torna més, i les torna de l'alta més recent a la més antiga. */
-export const LIMIT_PERSONES = 500;
-
-/* [singular, plural]: el text per al lector concorda amb la xifra. */
-const UNITAT_ALTES = Object.freeze(['alta', 'altes']);
-const UNITAT_PERSONES = Object.freeze(['persona', 'persones']);
-const UNITAT_ENTITATS = Object.freeze(['entitat', 'entitats']);
-
-const TEXT_SERIE_PROTEGIDA = `No es mostra: amb tan poques persones, restant es podria saber la xifra d’un grup de menys de ${LLINDAR_GRUP_PETIT}.`;
-const TEXT_XIFRES_PROTEGIDES = `Algunes xifres es protegixen: sense això, restant del total es podria saber la d’un grup de menys de ${LLINDAR_GRUP_PETIT}.`;
-
-/* P0-42 i P0-53 · Els quatre camins que el Mestre vol seguir i on es pot llegir hui cadascun. Cap té font
-   al servidor: el valor és un estat, mai una xifra (vegeu la capçalera). */
-export const SENSE_XIFRA = 'sense xifra';
-export const APARELLS = Object.freeze([
-  Object.freeze({ clau: 'android-app', nom: '📱 App Android (Google Play)', on: 'Google Play Console › Proves › Prova tancada: Google en demana 12 verificadors amb l’app instal·lada durant 14 dies seguits.' }),
-  Object.freeze({ clau: 'ios-app', nom: '🍎 App iPhone i iPad (App Store oberta, id6826441844)', on: 'App Store Connect › Analítica (instal·lacions de la 1.0, publicada el 6-11-2026).' }),
-  Object.freeze({ clau: 'android-web', nom: '🌐 Android web', on: 'Cap font.' }),
-  Object.freeze({ clau: 'escriptori', nom: '💻 Escriptori', on: 'Cap font.' })
-]);
-export const TEXT_APARELLS_SENSE_FONT = 'Cap consulta del servidor no compta encara els aparells per camí, i ací no es mostra cap xifra que no vinga d’una font real. Comptar-los des d’este Tauler demana una consulta agregada nova al servidor (P0-42): és una decisió del Mestre.';
-
-export const TITOL_APARELLS = 'Aparells amb l’app instal·lada i connectada';
-export const TAULA_APARELLS = 'Aparells amb l’app, per camí';
+import { APARELLS, LIMIT_PERSONES, SENSE_XIFRA, TAULA_APARELLS, TEXT_APARELLS_SENSE_FONT, TEXT_SERIE_PROTEGIDA, TEXT_XIFRES_PROTEGIDES, TITOL_APARELLS, UNITAT_ALTES, UNITAT_ENTITATS, UNITAT_PERSONES, dadesDEntitat, dadesDePersona, filesValides } from './indicadorsAdminModel.js';
 
 /* Sempre a la vista i sense cap crida: no hi ha res a baixar. Un títol, la Taula de Pedra Seca (una fila
    per camí: el nom, l'estat i on es llig hui) i l'avís informatiu. Només peces que este tros ja porta: el
@@ -100,10 +75,6 @@ function AparellsAmbLApp() {
   );
 }
 
-const files = (valor) => (Array.isArray(valor) ? valor.filter((f) => f && typeof f === 'object') : []);
-/* Només el que es compta: ni el correu, ni l'identificador, ni el nom. */
-const dadesDePersona = (fila) => ({ created_at: fila.created_at, last_sign_in_at: fila.last_sign_in_at });
-const dadesDEntitat = (fila) => ({ kind: fila.kind });
 const estatInicial = () => (teCapacitat('admin') ? { fase: 'en-espera' } : { fase: 'sense-capacitat' });
 
 function TaulaRecomptes({ titol, capcalera, grups, total }) {
@@ -221,8 +192,8 @@ export function IndicadorsAdmin({ ara = null }) {
     ]).then(([persones, entitats]) => setEstat({
       fase: 'llest',
       parcial: Array.isArray(persones) && persones.length >= LIMIT_PERSONES,
-      persones: files(persones).map(dadesDePersona),
-      entitats: files(entitats).map(dadesDEntitat)
+      persones: filesValides(persones).map(dadesDePersona),
+      entitats: filesValides(entitats).map(dadesDEntitat)
     }), (error) => setEstat({ fase: 'error', segonFactor: esRebuigDeSegonFactor(error) }));
   };
 

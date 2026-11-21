@@ -28,6 +28,11 @@ const FORMA_JWT = /^[\w-]+\.[\w-]+\.[\w-]+$/;
    servix fins que el Mestre corregix els secrets. */
 const ERRORS_DE_CONFIGURACIO = new Set(['invalid_client', 'invalid_request', 'unauthorized_client', 'unsupported_grant_type', 'invalid_scope']);
 const FORMA_ERROR = /^[a-z_]{1,40}$/;
+// Local resource policy, not an Apple protocol limit. Token/revoke JSON needs
+// far less; include empty chunks in the fragment cap to bound hostile streams.
+const MAXIM_RESPOSTA_APPLE = 65536;
+const MAXIM_FRAGMENTS_APPLE = 4096;
+const descartaResposta = resposta => { try { Promise.resolve(resposta?.body?.cancel?.()).catch(() => {}); } catch { /* Locked/consumed. */ } };
 
 const errorDeConfiguracio = (missatge) => Object.assign(new Error(missatge), { codi: 'config' });
 const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
@@ -124,23 +129,53 @@ export const cosDeRevocacio = ({ clientId, secret, testimoni, tipus = 'refresh_t
 export async function postApple(url, cos, { fetch = globalThis.fetch, topallMs = 10000 } = {}) {
   if (!URLS_D_APPLE.has(url)) throw new TypeError('SDP-APPLE: només es parla amb /auth/token i /auth/revoke d’Apple.');
   const controlador = new AbortController();
-  let temps = false;
-  const id = setTimeout(() => { temps = true; controlador.abort(); }, topallMs);
+  let temps = false, tancat = false, resposta = null, lector = null, acabat = false, id;
+  const topall = new Promise((_, rebutja) => { id = setTimeout(() => {
+    temps = true; controlador.abort(); rebutja(new Error('SDP-APPLE-TEMPS'));
+  }, topallMs); });
+  const espera = pendent => Promise.race([pendent, topall]);
+  const pendent = Promise.resolve().then(() => fetch(url, {
+    method: 'POST',
+    redirect: 'error',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    body: cos.toString(),
+    signal: controlador.signal
+  }));
+  pendent.then(tardana => { if (tancat || controlador.signal.aborted) descartaResposta(tardana); }, () => {});
   try {
-    const resposta = await fetch(url, {
-      method: 'POST',
-      redirect: 'error',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-      body: cos.toString(),
-      signal: controlador.signal
-    });
-    const text = await resposta.text();
+    resposta = await espera(pendent);
+    if (Number(resposta.headers?.get('content-length')) > MAXIM_RESPOSTA_APPLE) throw new Error('SDP-APPLE-MIDA');
+    let text = '';
+    if (resposta.body?.getReader) {
+      lector = resposta.body.getReader();
+      const trossos = []; let mida = 0, fragments = 0;
+      for (;;) {
+        const { done, value } = await espera(lector.read());
+        if (done) { acabat = true; break; }
+        if (!(value instanceof Uint8Array) || ++fragments > MAXIM_FRAGMENTS_APPLE || value.byteLength > MAXIM_RESPOSTA_APPLE - mida) throw new Error('SDP-APPLE-MIDA');
+        mida += value.byteLength; trossos.push(value.slice());
+      }
+      const bytes = new Uint8Array(mida); let posicio = 0;
+      for (const tros of trossos) { bytes.set(tros, posicio); posicio += tros.byteLength; }
+      text = new TextDecoder().decode(bytes);
+    } else if (resposta.body !== null) {
+      // Compatibility with injected non-stream response doubles. Native fetch
+      // responses always use the bounded reader above (or a null, empty body).
+      text = await espera(Promise.resolve().then(() => resposta.text()));
+      if (typeof text !== 'string' || new TextEncoder().encode(text).byteLength > MAXIM_RESPOSTA_APPLE) throw new Error('SDP-APPLE-MIDA');
+    }
     let json = null;
     if (text) { try { json = JSON.parse(text); } catch { json = null; } }
     return { estat: resposta.status, cos: json && typeof json === 'object' ? json : null, fallada: null };
   } catch {
     return { estat: 0, cos: null, fallada: temps ? 'temps' : 'xarxa' };
-  } finally { clearTimeout(id); }
+  } finally {
+    tancat = true; clearTimeout(id);
+    if (lector) {
+      if (!acabat) { try { Promise.resolve(lector.cancel()).catch(() => {}); } catch { /* Already closed. */ } }
+      try { lector.releaseLock(); } catch { /* Best effort after an aborted read. */ }
+    } else descartaResposta(resposta);
+  }
 }
 
 /**

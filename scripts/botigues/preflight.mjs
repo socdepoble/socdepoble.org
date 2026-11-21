@@ -5,7 +5,7 @@
  * 261003_1330_empaquetat_mobil_claude. Proves: tests/botigues.test.mjs i, per al canal de producció
  * i els avisos push (B9, marató 261101_2143), tests/botigues.produccio.test.js.
  *
- *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push]
+ *   node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa] [--canal intern|produccio|alpha] [--push]
  *   node scripts/botigues/preflight.mjs --estat     (Onada R9: l'estat honest, fora de línia; scripts/botigues/estat.mjs)
  *
  * Només llig: el fitxer d'entorn (mai n'imprimix cap valor), les rutes que nomena, les eines i
@@ -22,6 +22,8 @@
  * R24 botigues (A2, RC-1) · «Entrada social del paquet» (també codi 7): els clients de Google que porta
  * dist-natiu/assets/*.js; amb --canal produccio, el que falta és un ✗ (en intern, un avís).
  * --canal produccio exigix SDP_BUILDS_DIR (el registre de pujades) i afig avisos de botiga.
+ * Onada v1.2.16 · --canal alpha (la prova tancada de Google Play, només amb --plataforma android) es
+ * comprova com el canal intern: els avisos són avisos i SDP_BUILDS_DIR és opcional.
  * Onada R30 · NAT-04 · Dins de «Fortificació de seguretat (R26)» (codi 7): cap permís d'identitat ni de
  * biometria (PERMISOS_D_IDENTITAT) declarat a l'app o als connectors sense llevar, i l'app els lleva tots.
  * Onada R32.3 (P0, ordre del Mestre 261116 22:09) · Android ja no busca fastlane: la pujada a Google Play
@@ -34,8 +36,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  CANALS, EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, carregaEntorn, commitDeHead,
-  comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell, rutaDe
+  CANALS, EIXIDA, JDK_MAXIM, JDK_MINIM, SEGELL, analitzaArguments, arbreNet, arrelDelRepositori, canalAdmes, carregaEntorn, commitDeHead,
+  comprovaVariables, gitIgnora, jdkPerAGradle, llegixAjuda, llegixSegell, mateixContingut, mostraCami, plega, problemesDelSegell, rutaDe, usDelCanal
 } from './entorn.mjs';
 import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
 import { esquemaInvertitDeGoogleIos } from '../../src/config/publicCredentials.js';
@@ -838,7 +840,7 @@ const CONSULTES = Object.freeze({ llegixAjuda, jdkPerAGradle });
 /**
  * Totes les comprovacions d'una o dues plataformes. No llança i no imprimix valors.
  * @param {{ arrel: string, plataformes: ('ios'|'android')[], signa?: boolean, env?: object, consultes?: object,
- *   canal?: 'intern'|'produccio', push?: boolean }} opcions
+ *   canal?: 'intern'|'produccio'|'alpha', push?: boolean }} opcions
  * @returns {{ codi:number, linies:string[], valors:Record<string,string>, play:{clau:'valida'|'invalida'}|null, jdk:{home:string, major:number}|null,
  *   segell:{commit:string, arbreNet:boolean, data:string}|null, push:{anuncia:boolean, estat:object} }} `segell`, el de
  *   dist-natiu/ tal com es llig (val per al rebut només si `codi` és EIXIDA.BE); `push.anuncia`, si l'app anuncia avisos
@@ -972,10 +974,11 @@ export function arrelComprovada() {
 
 function main(argv) {
   const { opcions, errors } = analitzaArguments(argv, { plataforma: true, signa: false, canal: true, push: false, ajuda: false, estat: false });
-  const us = 'Ús: --plataforma ios|android|totes [--signa] [--canal intern|produccio] [--push] · o --estat';
+  const us = 'Ús: --plataforma ios|android|totes [--signa] [--canal intern|produccio|alpha] [--push] · o --estat';
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/preflight.mjs ${us.slice(4)}\n`
       + '  --canal intern (per defecte) o produccio: producció exigix SDP_BUILDS_DIR (registre de pujades) i afig avisos de botiga.\n'
+      + '  --canal alpha: la prova tancada de Google Play (només amb --plataforma android); es comprova com intern.\n'
       + '  --push: l\'app anunciarà avisos remots (també sense --push si .env.natiu o .env.natiu.local declaren VITE_SDP_PUSH_NATIU=1); sense el connector @capacitor/push-notifications, falla.\n'
       + '  --estat: només l\'estat honest de les botigues (scripts/botigues/estat.mjs), fora de línia, sense eines ni git; llig els .env de build només per saber si VITE_PUSH_VAPID_PUBLICA hi té valor; no en guarda ni n\'imprimix cap.\n');
     return EIXIDA.BE;
@@ -990,7 +993,7 @@ function main(argv) {
   if (errors.length || !plataformes) return plega(EIXIDA.US, us, errors);
   if (opcions.signa && !plataformes.includes('android')) return plega(EIXIDA.US, '--signa només té sentit amb Android');
   const canal = opcions.canal ?? CANALS.INTERN;
-  if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
+  if (!canalAdmes(canal, plataformes)) return plega(EIXIDA.US, usDelCanal(plataformes));
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
   const resultat = preflight({ arrel, plataformes, signa: Boolean(opcions.signa), canal, push: Boolean(opcions.push) });

@@ -8,7 +8,7 @@ visibility: private
 ---
 # Panell Visual de Consum IA
 
-Aquest document reflecteix visualment l'estat de les nostres capacitats cognitives (quotes) basant-se en les dades recollides a `consum_ia.csv`.
+Aquest document reflecteix visualment l'estat de les nostres capacitats cognitives (quotes) basant-se en les dades recollides a [[10_metriques/consum_ia.csv|consum_ia.csv]].
 
 ## Estat de Claude (Darrera Captura: 25-09-2026 15:34)
 
@@ -54,3 +54,4 @@ xychart-beta
 ## Vincles
 
 - [[00_index]]
+- [[12_esforc_huma_sessions]]

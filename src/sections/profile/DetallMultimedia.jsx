@@ -7,6 +7,7 @@ import { Alerta, Boto, Carregant, DialegConfirmacio, Insignia } from '../../comp
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { esborraElMeuMitja, getRuntimeDataMode, llistaElsMeusMitjans, teCapacitat } from '../../data/backendPort.js';
+import { classificaCamiMitja, prefixMitjansPublics } from '../../data/backendProtocolPublic.js';
 import { AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, esComptePersonaPilot } from '../../data/identitatsSeed.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
@@ -105,16 +106,53 @@ const TITOL = Object.freeze({
   arxiu: 'Foto de l’Arxiu visual',
 });
 
-/* La ruta pública d'un objecte del bucket `mitjans` al Storage del node. */
-const RUTA_PUBLICA_MITJANS = /^\/storage\/v1\/object\/public\/mitjans\/(.+)$/;
+const REF_MITJANS_PREFIX = 'sdp-media://mitjans/';
+const SEGMENT_MITJA_SEGUR = /^[A-Za-z0-9_.~-]+$/;
 
-/* La referència opaca d'una URL pública del Storage de `mitjans`, si l'origen
-   és dels nostres (esFontImatgePropia); si no, ''. */
+function esRefMitjansSegura(ref) {
+  if (typeof ref !== 'string' || !ref.toLowerCase().startsWith(REF_MITJANS_PREFIX)) return false;
+  const sufix = ref.slice(REF_MITJANS_PREFIX.length);
+  if (!sufix || /[?#]/.test(sufix)) return false;
+  const segments = sufix.split('/');
+  return segments.every((part) => SEGMENT_MITJA_SEGUR.test(part) && part !== '.' && part !== '..');
+}
+
+function extreuRefMitjaPublic(parsedUrl) {
+  const classificat = classificaCamiMitja(parsedUrl.pathname);
+  if (classificat !== null) {
+    const ref = classificat?.ref;
+    return esRefMitjansSegura(ref) ? ref.toLowerCase() : '';
+  }
+  const prefix = prefixMitjansPublics(parsedUrl.origin);
+  if (typeof prefix !== 'string' || !prefix.startsWith(`${parsedUrl.origin}/`) || /[?#]/.test(prefix)) {
+    return '';
+  }
+  const prefixNormalitzat = prefix.endsWith('/') ? prefix : `${prefix}/`;
+  const sencera = `${parsedUrl.origin}${parsedUrl.pathname}`;
+  if (!sencera.startsWith(prefixNormalitzat)) return '';
+  const candidata = `${REF_MITJANS_PREFIX}${sencera.slice(prefixNormalitzat.length)}`;
+  return esRefMitjansSegura(candidata) ? candidata.toLowerCase() : '';
+}
+
+function teCamiCruInsegur(rawUrl) {
+  const senseEsquema = String(rawUrl || '').replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
+  const camiCru = senseEsquema.split('#')[0].split('?')[0];
+  if (!camiCru || camiCru.includes('//') || camiCru.includes('\\') || /%2e|%2f|%5c/i.test(camiCru)) {
+    return true;
+  }
+  const segments = camiCru.split('/').filter(Boolean);
+  return segments.some((part) => part === '.' || part === '..');
+}
+
+/* La referència opaca d'una URL pública del bucket `mitjans` reconeguda pel
+   protocol públic del port, si l'origen és dels nostres (esFontImatgePropia);
+   si no, ''. */
 function refDeLaUrlPublica(url) {
-  if (!/^https?:\/\//i.test(url) || !esFontImatgePropia(url)) return '';
+  if (!/^https?:\/\//i.test(url) || teCamiCruInsegur(url) || !esFontImatgePropia(url)) return '';
   try {
-    const ruta = new URL(url).pathname.match(RUTA_PUBLICA_MITJANS);
-    return ruta ? `sdp-media://mitjans/${decodeURIComponent(ruta[1])}`.toLowerCase() : '';
+    const parsed = new URL(url);
+    if (parsed.username || parsed.password) return '';
+    return extreuRefMitjaPublic(parsed);
   } catch {
     return '';
   }
@@ -124,7 +162,7 @@ function refDeLaUrlPublica(url) {
  * La clau d'una font per a reconéixer la mateixa foto: sense espais, sense
  * consulta ni fragment i sense barres al final; una referència opaca, en
  * minúscules (les rutes del servidor de fitxers ho són). La URL pública del
- * mateix objecte (el Storage del node, bucket `mitjans`) és la mateixa foto
+ * mateix objecte (reconeguda pel protocol públic del port) és la mateixa foto
  * que la seua referència opaca. Un data URL, tal qual. Pura.
  */
 export function clauDeFont(font) {
@@ -138,13 +176,28 @@ export function clauDeFont(font) {
 
 /* Pla 261018_1605 (Tasca 4; revisió adversarial, 18-10-2026) · Les fotos
    que la presentació de la fitxa (presentacio_html) fa servir: la referència
-   opaca o la URL pública del bucket `mitjans`. Esborrar-ne una deixaria un
-   forat a la fitxa que veu el veïnat. Pura. */
-const PATRO_FOTO_DEL_TEXT = /(?:sdp-media:\/\/mitjans\/|https:\/\/[^\s"'<>()]+\/storage\/v1\/object\/public\/mitjans\/)[^\s"'<>()]+/gi;
+   opaca o la URL pública del bucket `mitjans` delegada al protocol públic del
+   port. Esborrar-ne una deixaria un forat a la fitxa que veu el veïnat. Pura. */
+const CANDIDATS_FOTO_DEL_TEXT = /(?:sdp-media:\/\/mitjans\/|https:\/\/)[^\s"'<>()]+/gi;
+
+function esUrlPublicaMitjansDelText(candidat) {
+  if (teCamiCruInsegur(candidat)) return false;
+  try {
+    const parsed = new URL(candidat);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return false;
+    return Boolean(extreuRefMitjaPublic(parsed));
+  } catch {
+    return false;
+  }
+}
 
 export function fotesDelText(html) {
   if (typeof html !== 'string' || !html) return [];
-  return html.match(PATRO_FOTO_DEL_TEXT) || [];
+  const trobats = html.match(CANDIDATS_FOTO_DEL_TEXT);
+  if (!trobats) return [];
+  return trobats.filter((candidat) => (
+    candidat.toLowerCase().startsWith(REF_MITJANS_PREFIX) || esUrlPublicaMitjansDelText(candidat)
+  ));
 }
 
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 3) · El src de cada

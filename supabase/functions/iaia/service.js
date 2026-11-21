@@ -18,7 +18,7 @@ export function creaServeiIAIA({authorize,store,infer=null,now=Date.now,wakeAfte
   return async(raw,credential,signal)=>{
     const input=capturaConsultaIAIA(raw),scope=await authorize(credential);idIAIA(scope.userId);idIAIA(scope.tenantId);
     const valid=()=>{if(signal?.aborted)throw signal.reason??new DOMException('Cancelled','AbortError');};valid();
-    if(input.mode==='discover'){const group=await store.discover(scope);valid();const again=await authorize(credential);if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);return {source:'configuration',inference:false,available:typeof infer==='function',group};}
+    if(input.mode==='discover'){const group=await store.discover(scope);valid();const again=await authorize(credential);valid();if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);return {source:'configuration',inference:false,available:typeof infer==='function',group};}
     if(typeof infer!=='function')return {source:'unavailable',inference:false,requestId:input.requestId};
     if(input.mode==='group'){
       const claim=await store.claim(scope,input);if(signal?.aborted){if(claim?.state==='claimed')await store.cancel(scope,input,claim).catch(()=>{});valid();}if(!claim)throw errorIAIA('IAIA_GROUP_UNAVAILABLE',409);
@@ -26,7 +26,7 @@ export function creaServeiIAIA({authorize,store,infer=null,now=Date.now,wakeAfte
       if(claim.state!=='claimed')return {source:'pending',inference:false,requestId:input.requestId};
       try{
         const text=await runInfer({question:claim.question,context:claim.context,language:input.language},signal);valid();
-        const again=await authorize(credential);if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);
+        const again=await authorize(credential);valid();if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);
         const saved=await store.finish(scope,input,claim,text);notifyPersisted(saved);valid();
         return {source:'model',inference:true,requestId:input.requestId,threadId:input.threadId,replyId:saved.replyId,text:saved.text};
       }catch(error){await store.cancel(scope,input,claim).catch(()=>{});throw error;}
@@ -37,7 +37,7 @@ export function creaServeiIAIA({authorize,store,infer=null,now=Date.now,wakeAfte
     // A retry never silently starts another inference. Keep only a bounded request marker, never the answer.
     if(recent.size>=512||[...recent.keys()].filter(k=>k.startsWith(JSON.stringify([scope.tenantId,scope.userId]).slice(0,-1)+',')).length>=6)throw errorIAIA('IAIA_BUSY',429);
     recent.set(key,{expires:now()+60000});
-    try{const text=await runInfer({question:input.question,context:[],language:input.language},signal);valid();const again=await authorize(credential);if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);return {source:'model',inference:true,requestId:input.requestId,text};}
+    try{const text=await runInfer({question:input.question,context:[],language:input.language},signal);valid();const again=await authorize(credential);valid();if(again.userId!==scope.userId||again.tenantId!==scope.tenantId)throw errorIAIA('IAIA_SCOPE',409);return {source:'model',inference:true,requestId:input.requestId,text};}
     finally{/* Only the bounded replay marker remains; no question or answer is retained. */}
   };
 }

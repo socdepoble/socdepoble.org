@@ -12,7 +12,7 @@
  *     o copia i obri `/xat` per enganxar-lo al comerç veí.
  *   · 5 llengües del sistema (`ca`, `es`, `en`, `eu`, `gl`) via `useClosaAplicacio().idioma`.
  */
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { ClipboardCopy, Download, MessageSquare, Share2, Store } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Alerta, AreaText, Boto, Botonera, Camp, CampText, GrupCamps } from '../../../components/PedraSeca/index.js';
@@ -160,6 +160,7 @@ export function EncarrecBotigaPoble({ llista }) {
   const llengua = Object.hasOwn(TEXTOS, idioma) ? idioma : 'ca';
   const textos = TEXTOS[llengua];
 
+  const idPanell = useId();
   const [obert, setObert] = useState(false);
   const [comerc, setComerc] = useState('');
   const [recollida, setRecollida] = useState('');
@@ -237,16 +238,22 @@ export function EncarrecBotigaPoble({ llista }) {
   return (
     <>
       <Botonera etiqueta={textos.botonera}>
-        <Boto icona={Store} aria-expanded={obert} onClick={() => {
-          setObert((actual) => !actual);
-          setAvis(null);
-          setErrorAvis(null);
-        }}>
+        <Boto
+          icona={Store}
+          aria-expanded={obert}
+          aria-controls={obert ? idPanell : undefined}
+          onClick={() => {
+            setObert((actual) => !actual);
+            setAvis(null);
+            setErrorAvis(null);
+          }}
+        >
           {obert ? textos.tanca : textos.obri}
         </Boto>
       </Botonera>
       {obert ? (
-        <GrupCamps llegenda={textos.llegenda(nomVisible)}>
+        <div id={idPanell}>
+          <GrupCamps llegenda={textos.llegenda(nomVisible)}>
           {buida ? (
             <p>{textos.buit}</p>
           ) : (
@@ -308,7 +315,8 @@ export function EncarrecBotigaPoble({ llista }) {
             </>
           )}
           {errorAvis ? <Alerta to="avis">{errorAvis}</Alerta> : null}
-        </GrupCamps>
+          </GrupCamps>
+        </div>
       ) : null}
       {avis ? <p role="status">{avis}</p> : null}
     </>

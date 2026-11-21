@@ -1,40 +1,15 @@
 {
   "literal-orfe": {
-    "max": 72,
+    "max": 23,
     "identitats": [
       "literal-orfe|tooling/gates/antigravity-hook.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/gates/antigravity-hook.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/neteja-enllacos-trencats.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/gates/neteja-enllacos-trencats.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/tractor-cens.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/tractor-doctrina.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/tractor-orfandat.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/gates/tractor-promesa.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/tractor-rutes.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/gates/tractor-rutes.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/verificador-scc.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/gates/verificador-scc.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/lib/arrel.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/lib/arrel.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/autoritat-preimatges-r8.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/autoritat-preimatges-r9.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/empaqueta-kit-node0-r8.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/node0/empaqueta-kit-node0-r9.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/codemod_frontmatter.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/core/audit.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/core/safety.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/wiki/entropia_zero_router.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/wiki/generar_genoma_v2.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/wiki/generar_genoma_v2.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/generar_petorreta_inversa.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/wiki/generar_petorreta_inversa.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/lib/prompt_sgq.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/llaurador_indexs.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/neteja_brain.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/teixidor.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/tractor-cognitiu.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/validate-wiki-compliance.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/validate_trellat.cjs|Literal «_wiki_de_poble» sense importar "
+      "literal-orfe|tooling/node0/empaqueta-kit-node0-r9.mjs|Literal «_wiki_de_poble» sense importar "
     ]
   }
 }

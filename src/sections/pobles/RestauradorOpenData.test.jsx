@@ -1,7 +1,8 @@
 import { webcrypto } from 'node:crypto';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import RestauradorOpenData, { TEXTOS_RESTAURADOR } from './RestauradorOpenData.jsx';
+import RestauradorOpenData from './RestauradorOpenData.jsx';
+import { TEXTOS_RESTAURADOR } from './restauradorOpenDataModel.js';
 import { exportaMunicipiOpenData } from '../../data/exportaMunicipiOpenData.js';
 import { preparaSnapshotOpenDataPublic } from '../../../tooling/seo/snapshot-opendata-public.mjs';
 import { creaAdaptadorLocal } from '../../data/local/adaptadorLocal.js';

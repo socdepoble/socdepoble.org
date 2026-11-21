@@ -12,6 +12,21 @@ const DB = 'sdp-copublicacio-mur-r21';
 const STORE = 'revocacions';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const error = text => Object.assign(new Error(text), { codi: 'MUR_REVOCACIO_PERSISTENCIA' });
+const detallRebuig = (cause, key) => { try { return cause?.[key]; } catch { return undefined; } };
+function normalitzaRebuig(cause) {
+  const message = detallRebuig(cause, 'message');
+  const failure = new Error(typeof message === 'string' ? message : 'La revocació continua pendent.', { cause });
+  // Provider errors may be frozen or have throwing accessors. Only copy safe
+  // primitive metadata once, before opening the durable ACK transaction.
+  for (const key of ['name', 'codi', 'code']) {
+    const value = detallRebuig(cause, key); if (typeof value === 'string') failure[key] = value;
+  }
+  for (const key of ['status', 'statusCode']) {
+    const value = detallRebuig(cause, key);
+    if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number' && Number.isFinite(value)) failure[key] = value;
+  }
+  return failure;
+}
 const canvi = () => new DOMException('La identitat o el backend han canviat.', 'AbortError');
 /* Els codis estructurats (runtime.request els llig del missatge) que, per a una nota sense acte, volen dir «res a retirar». */
 const SENSE_ACTE = new Set(['SDP-MUR-REVISION', 'SDP-MUR-OWNER']);
@@ -105,33 +120,37 @@ export function creaCuaRevocacionsMur({ indexedDB = globalThis.indexedDB, obteAb
         } catch(e) { abort(e); } };
       });
       if (!row) continue;
-      let failure;
+      let failure, failed = false;
       try { check(scope); await envia(row.id, { tipus: row.tipus, revision: row.revision, publicacioId: row.publicacioId ?? null }); }
-      catch(e) { failure = e; }
+      catch(e) { failed = true; failure = normalitzaRebuig(e); }
       check(scope);
       const accepted = await transaccio('readwrite', (store, done, abort) => {
         const req = store.get(row.key); req.onsuccess = () => { try {
           check(scope); const current = req.result;
           if (!current || current.scope !== row.scope || current.id !== row.id || current.tipus !== row.tipus || current.revision !== row.revision
             || current.publicacioId !== row.publicacioId || current.attempt !== row.attempt || current.lease !== row.lease) return done(false);
-          if (failure && current.tipus === 'nota' && current.publicacioId == null && SENSE_ACTE.has(failure.codi)) {
+          if (failed && current.tipus === 'nota' && current.publicacioId == null && SENSE_ACTE.has(failure?.codi)) {
             store.delete(row.key); done(true); return;
           }
-          const next = { ...current, pending: Boolean(failure), rejected: false, lease: null, leaseUntil: 0,
-            nextRetryAt: failure ? ara() + Math.min(300000, 1000 * 2 ** Math.min(row.attempt - 1, 9)) : 0 };
+          const next = { ...current, pending: failed, rejected: false, lease: null, leaseUntil: 0,
+            nextRetryAt: failed ? ara() + Math.min(300000, 1000 * 2 ** Math.min(row.attempt - 1, 9)) : 0 };
           // Persist structured status only, never a provider message/body.
-          if (failure) next.lastStatus = Number.isInteger(failure.status) ? failure.status : null;
+          if (failed) next.lastStatus = Number.isInteger(failure?.status) ? failure.status : null;
           // Onada R29 · PF-04: l'hora de l'ACK ordena la purga (primer els més vells).
           else { delete next.lastStatus; next.confirmadaAl = ara(); }
           store.put(next); done(true);
         } catch(e) { abort(e); } };
       });
       check(scope); if (!accepted) throw canvi();
-      if (failure && !(row.tipus === 'nota' && row.publicacioId == null && SENSE_ACTE.has(failure.codi))) errors.push(failure);
+      if (failed && !(row.tipus === 'nota' && row.publicacioId == null && SENSE_ACTE.has(failure?.codi))) errors.push(failure);
     }
     const pending = (await files(scope)).filter(r => r.pending || r.rejected);
     const result = { pendents: pending.length, seguentIntent: pending.length ? Math.min(...pending.map(r => Math.max(r.nextRetryAt ?? 0, r.leaseUntil ?? 0))) : null };
-    if (errors.length) { errors[0].revocacioPendent = true; errors[0].seguentIntent = result.seguentIntent; throw errors[0]; }
+    if (errors.length) {
+      // A rejection may be falsy or immutable. Never turn it into an ACK or
+      // mutate a provider-owned error while attaching the durable retry state.
+      throw Object.assign(errors[0], { revocacioPendent: true, seguentIntent: result.seguentIntent });
+    }
     return result;
   }
   return Object.freeze({ encua, drena, estaRetirada, estat });

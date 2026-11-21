@@ -12,3 +12,32 @@ test('loop4 real HTTP route handles private IAIA before CORS, passes abort, refu
  assert.equal((await call(server,{headers:{origin:'https://evil.example'}})).status,403);assert.equal((await call(server,{url:'/api/v1/node0/iaia?question=secret'})).status,405);assert.equal((await call(server,{headers:{'content-type':'text/plain'}})).status,415);assert.equal((await call(server,{method:'GET'})).status,405);assert.equal(calls,1);
  const absent=creaServidor({db:{},claus:{}});assert.equal((await call(absent)).status,503);server.close();absent.close();
 });
+
+
+// R32.21: cancellation can arrive while the final authorization awaits I/O.
+import {creaServeiIAIA} from '../../supabase/functions/iaia/service.js';
+const latch=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};};
+for(const abortDuringAuthorization of [true,false])test(`IAIA final authorization ${abortDuringAuthorization?'abort forbids commit':'live request commits once'}`,async()=>{
+ const finalAuthorization=latch(),entered=latch(),control=new AbortController();
+ const scope={userId:'20000000-0000-4000-8000-000000000001',tenantId:'30000000-0000-4000-8000-000000000001'};
+ let authorizations=0,finishes=0,cancellations=0;
+ const service=creaServeiIAIA({authorize:async()=>{if(++authorizations===2){entered.resolve();await finalAuthorization.promise;}return scope;},infer:async()=> 'resposta sintètica',store:{
+  claim:async()=>({state:'claimed',question:'pregunta sintètica',context:[]}),cancel:async()=>{cancellations++;},
+  finish:async()=>{finishes++;return {replyId:'40000000-0000-4000-8000-000000000001',text:'resposta sintètica'};}
+ }});
+ const pending=service({mode:'group',requestId,threadId:'50000000-0000-4000-8000-000000000001',messageId:'60000000-0000-4000-8000-000000000001'},'synthetic',control.signal);
+ await entered.promise;if(abortDuringAuthorization)control.abort();finalAuthorization.resolve();
+ if(abortDuringAuthorization){await assert.rejects(pending,{name:'AbortError'});assert.equal(finishes,0);assert.equal(cancellations,1);}
+ else{assert.equal((await pending).inference,true);assert.equal(finishes,1);assert.equal(cancellations,0);}
+});
+
+
+for(const mode of ['direct','discover'])for(const abortDuringAuthorization of [true,false])test(`IAIA ${mode} final authorization ${abortDuringAuthorization?'abort forbids response':'live request returns'}`,async()=>{
+ const finalAuthorization=latch(),entered=latch(),control=new AbortController();let authorizations=0;
+ const scope={userId:'20000000-0000-4000-8000-000000000001',tenantId:'30000000-0000-4000-8000-000000000001'};
+ const service=creaServeiIAIA({authorize:async()=>{if(++authorizations===2){entered.resolve();await finalAuthorization.promise;}return scope;},infer:async()=> 'resposta sintètica',store:{discover:async()=>null}});
+ const pending=service(mode==='direct'?{mode,requestId,question:'pregunta sintètica'}:{mode},'synthetic',control.signal);
+ await entered.promise;if(abortDuringAuthorization)control.abort();finalAuthorization.resolve();
+ if(abortDuringAuthorization)await assert.rejects(pending,{name:'AbortError'});
+ else assert.equal((await pending).source,mode==='direct'?'model':'configuration');
+});

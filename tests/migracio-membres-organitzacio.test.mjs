@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MISSATGES_MEMBRES_ORGANITZACIO as missatgesPublics } from '../src/data/contracte.js';
+import { MISSATGES_MEMBRES_ORGANITZACIO as missatgesFulla } from '../src/data/contracteOrganitzacions.js';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NOM = '2610081402_membres_organitzacio.sql';
@@ -305,8 +307,9 @@ test('el client crida les tres RPC amb els mateixos paràmetres i llig columnes 
   const llegides = new Set([...mapatge.matchAll(/fila\.(\w+)/g)].map((m) => m[1]));
   const tornades = new Set(COLUMNES_MEMBRE.map((c) => c.split(' ')[0]));
   assert.deepEqual([...llegides].filter((c) => !tornades.has(c)), []);
-  // Els codis que el client tradueix (una sola taula, contracte.js) són els del servidor, ni un més.
-  const contracte = fs.readFileSync(path.join(ARREL, 'src/data/contracte.js'), 'utf8');
+  // Una sola taula a la fulla R32.25, reexportada amb identitat pel contracte públic.
+  assert.strictEqual(missatgesPublics, missatgesFulla);
+  const contracte = fs.readFileSync(path.join(ARREL, 'src/data/contracteOrganitzacions.js'), 'utf8');
   const taula = /export const MISSATGES_MEMBRES_ORGANITZACIO = Object\.freeze\(\{([\s\S]*?)\}\);/.exec(contracte)?.[1] ?? '';
   assert.deepEqual([...taula.matchAll(/'(SDP-ORGMEM-\d{3})'/g)].map((m) => m[1]),
     Array.from({ length: 9 }, (_, i) => `SDP-ORGMEM-00${i}`));

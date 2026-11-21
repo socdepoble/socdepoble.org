@@ -913,8 +913,14 @@ export const LIMIT_DADES_OBERTES = 5000;
    unificada 1.2.15 amb el build 20: integra Codex R32.19 (zero cicles d'imports, protocol públic i transport OAuth
    separats, controls LSSI i AP pinnat, sense aplicar) i Gemini R32.19 i R32.20 (El Bar sense franja, zero controls
    sense nom en 78 rutes, crèdits de /legal §23 i puresa HMR), el sostre d'arrencada a 1.594.100 B (D-v1215-1: el
-   1.591.000 B de D-v1214-1 demana partir el port públic), la R796 del Node 0 i el connector WordPress 1.1.23. */
-export const VERSIO_CLIENT_NATIU = 20;
+   1.591.000 B de D-v1214-1 demana partir el port públic), la R796 del Node 0 i el connector WordPress 1.1.23.
+   Onada v1.2.16 · Onades R32.21–R32.24 (ordres del Mestre 261121 01:32 i 01:55; prompt 261121_0216) · Versió
+   unificada 1.2.16 amb el build 21: integra Codex R32.21 (rutes i govern, i les quatre causes Edge i fora de línia; el
+   motor 301 provisional no hi és) i R32.23 (Edge hostil, esborranys, isoglosses i xifrat del xat, apagat), Gemini R32.22
+   (menú Traduir a 320 px i puresa HMR) i R32.24 (mapa fotogràfic amb teclat, Enxufe a zero i rondes del Node 0), la
+   doctrina del Foraster (cap no llegit fals, un sol «Entrar», tornada a la fitxa de lectura), el calendari sense mesos
+   passats, ZERO APK fora de botiga i el connector WordPress 1.1.24. */
+export const VERSIO_CLIENT_NATIU = 21;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,
@@ -1028,64 +1034,6 @@ export function subjecteDeXat(objecte) {
   return { tipus, id, ruta, titol, classe };
 }
 
-/* ── Ordre del Mestre (261008, grup C) · Els membres d'una organització ──
-   Una sola taula de codis i una sola regla d'entrada per a tots els
-   adaptadors de 'membresOrganitzacio' (Supabase, la llavor i qualsevol node
-   federat), com TIPUS_SUBJECTE_XAT: la interfície decidix pel `code`, mai
-   pel text. Els codis són els de les RPC de
-   supabase/migrations/2610081402_membres_organitzacio.sql, i
-   tests/migracio-membres-organitzacio.test.mjs els contrasta. */
-export const MISSATGES_MEMBRES_ORGANITZACIO = Object.freeze({
-  'SDP-ORGMEM-000': 'Cal iniciar sessió.',
-  'SDP-ORGMEM-001': 'El tipus de membre o el rol no és vàlid.',
-  'SDP-ORGMEM-002': 'Només qui administra l’organització en veu i en gestiona els membres.',
-  'SDP-ORGMEM-003': 'Esta persona no és del municipi de l’organització o ha demanat la baixa.',
-  'SDP-ORGMEM-004': 'No pots canviar el teu propi rol.',
-  'SDP-ORGMEM-005': 'La propietària no es canvia ni es lleva.',
-  'SDP-ORGMEM-006': 'Només la propietària nomena, degrada o lleva administradores.',
-  'SDP-ORGMEM-007': 'Una organització no pot ser membre d’ella mateixa ni d’una d’un altre poble.',
-  'SDP-ORGMEM-008': 'Per a afegir una organització com a membre, cal que també l’administres.'
-});
-
-/** Un Error amb el `code` i el missatge de MISSATGES_MEMBRES_ORGANITZACIO. Pura. */
-export function errorDeMembre(codi, cause) {
-  return Object.assign(new Error(MISSATGES_MEMBRES_ORGANITZACIO[codi] || 'No s’han pogut desar els membres.'),
-    { code: codi, ...(cause ? { cause } : {}) });
-}
-
-/**
- * El membre que es vol desar ({ tipus, id, rol }) o llevar ({ tipus, id },
- * amb `ambRol: false`), normalitzat; si no és vàlid, llança SDP-ORGMEM-001.
- * El rol per defecte és 'member'; una persona pot ser 'member' o 'admin' (mai
- * 'owner': la propietària no es nomena ací) i una organització, només 'member'.
- * No valida la forma de l'id: cada adaptador sap quins ids són seus. Pura.
- */
-export function membreDOrganitzacio(dades, { ambRol = true } = {}) {
-  const tipus = String(dades?.tipus ?? '').trim();
-  const id = String(dades?.id ?? '').trim();
-  const rol = String(dades?.rol ?? '').trim() || 'member';
-  const rolValid = !ambRol || (tipus === 'persona' ? rol === 'member' || rol === 'admin' : rol === 'member');
-  if ((tipus !== 'persona' && tipus !== 'organitzacio') || !id || !rolValid) throw errorDeMembre('SDP-ORGMEM-001');
-  return ambRol ? { tipus, id, rol } : { tipus, id };
-}
-
-/* IDEA-24 (marató 261101_2143, B4) · Els tipus d'organització que canvien de
-   propietària per transferència (capacitat 'transferenciaPropietat'), els
-   mateixos que la RPC transfereix_propietat_organitzacio (2610311500, R3
-   SQL-01). Una sola font per als adaptadors i per a la interfície. */
-export const TIPUS_TRANSFERIBLES = Object.freeze(['group', 'company']);
-
-/**
- * La destinatària d'una transferència de propietat ({ tipus: 'persona', id }),
- * normalitzada amb la regla de membreDOrganitzacio; si no és una persona amb
- * id, llança SDP-ORGMEM-001. No valida la forma de l'id. Pura.
- */
-export function destinatariaDeTransferencia(dades) {
-  const membre = membreDOrganitzacio(dades, { ambRol: false });
-  if (membre.tipus !== 'persona') throw errorDeMembre('SDP-ORGMEM-001');
-  return membre;
-}
-
 /* ── Fase D (261020, tasca 2; pla 261020_1300) · La moderació ────────────
    Una sola llista blanca i una sola regla d'entrada per a tots els
    adaptadors de 'moderacio' i 'normesConvivencia' (Supabase, la llavor i
@@ -1174,176 +1122,37 @@ export function autorDelContracte(dades, { ambNom = true } = {}) {
   return { tipus, id, nom: nom || null };
 }
 
-/* ── T6b (IDEA-14; decisió del Mestre, 261024) · Els seguiments ──────────
-   Una sola llista blanca, una sola taula de codis i una sola regla d'entrada
-   per a tots els adaptadors de 'seguiments' (Supabase, la llavor i qualsevol
-   node federat), com MISSATGES_MEMBRES_ORGANITZACIO: la interfície decidix
-   pel `code`, mai pel text. Són el CHECK i els codis de
-   supabase/migrations/2610241430_seguiments.sql, i
-   src/data/supabase/seguiments.migracio.test.js els contrasta. SDP-SEG-007
-   és d'IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025):
-   2610250100_seguiments_des_d_entitat.sql, que contrasta
-   src/data/supabase/seguimentsEntitat.migracio.test.js. */
-export const TIPUS_SEGUIT = Object.freeze(['persona', 'entitat']);
-export const MISSATGES_SEGUIMENTS = Object.freeze({
-  'SDP-SEG-000': 'Cal entrar al compte per a seguir algú.',
-  'SDP-SEG-001': 'La persona o l’entitat no són vàlides.',
-  'SDP-SEG-002': 'No trobem esta persona o esta entitat, o no la pots seguir.',
-  'SDP-SEG-003': 'No et pots seguir a tu mateix ni seguir una entitat que administres.',
-  'SDP-SEG-004': 'L’has bloquejada: desbloqueja-la abans de seguir-la.',
-  'SDP-SEG-005': 'Només qui administra l’entitat veu qui la seguix.',
-  'SDP-SEG-006': 'Massa seguiments en poc de temps. Torna-ho a provar d’ací a una estona.',
-  'SDP-SEG-007': 'No administres l’entitat amb què vols connectar.',
-  'NO-DISPONIBLE': 'El servidor encara no té els seguiments. Cal aplicar la migració pendent.',
-  DESCONEGUT: 'No s’ha pogut completar. Torna-ho a provar.'
-});
-const RE_ID_SEGUIT = /^[A-Za-z0-9._:~-]{1,200}$/;
+/* R32.25 · Les formes de consum diferit viuen en fulles pures.
+   El camí públic i els objectes exportats són els mateixos. Organitzacions
+   i connexions queden diferides; el silenci que usa el Xat continua síncron. */
+export {
+  MISSATGES_MEMBRES_ORGANITZACIO,
+  errorDeMembre,
+  membreDOrganitzacio,
+  TIPUS_TRANSFERIBLES,
+  destinatariaDeTransferencia,
+  MISSATGES_TITULAR,
+  errorDeTitular,
+  titularDelContracte
+} from './contracteOrganitzacions.js';
 
-/** Un Error amb el `code` de MISSATGES_SEGUIMENTS (un codi desconegut és DESCONEGUT) i, si n'hi ha, la causa. Pura. */
-export function errorDeSeguiment(codi, cause) {
-  const code = Object.hasOwn(MISSATGES_SEGUIMENTS, codi) ? codi : 'DESCONEGUT';
-  return Object.assign(new Error(MISSATGES_SEGUIMENTS[code], cause ? { cause } : undefined), { code });
-}
+export {
+  TIPUS_SEGUIT,
+  MISSATGES_SEGUIMENTS,
+  errorDeSeguiment,
+  seguitDelContracte,
+  comDelContracte,
+  MISSATGES_CONNEXIONS,
+  errorDeConnexions,
+  subjecteConnexionsDelContracte,
+  visibilitatConnexionsDelContracte,
+  inclusioPersonaDelContracte,
+  sollicitudEntitatDelContracte
+} from './contracteConnexions.js';
 
-/**
- * El seguit ({ tipus, id }) normalitzat; si el tipus no és de TIPUS_SEGUIT o
- * l'id no és cap identificador, llança SDP-SEG-001. No valida si l'id és un
- * UUID: cada adaptador sap quins ids són seus. Pura.
- */
-export function seguitDelContracte(dades) {
-  const tipus = String(dades?.tipus ?? '').trim();
-  const id = String(dades?.id ?? '').trim();
-  if (!TIPUS_SEGUIT.includes(tipus) || !RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
-  return { tipus, id };
-}
-
-/**
- * IDEA-22 (pla 261025_0045, T5; Directiva del Mestre 261025) · L'entitat amb
- * què es connecta (`com` de { tipus, id, com }), normalitzada: null si no n'hi
- * ha (absent, null o ''), i si no és cap identificador, SDP-SEG-001, com l'id.
- * Si l'administres ho diu cada adaptador (SDP-SEG-007). Pura.
- */
-export function comDelContracte(dades) {
-  const com = dades?.com;
-  if (com === undefined || com === null) return null;
-  const id = String(com).trim();
-  if (!id) return null;
-  if (!RE_ID_SEGUIT.test(id)) throw errorDeSeguiment('SDP-SEG-001');
-  return id;
-}
-
-/* IDEA-22, punt 2 (pla 261025_0200) · Els codis de la tria de la titular
-   (capacitat 'consentimentTitular'), els mateixos que
-   supabase/migrations/2610250300_titular_public.sql, que contrasta
-   src/data/supabase/titularPublic.migracio.test.js. La lectura
-   (loadTitularPublic) no en té cap: torna null sense dir per què. */
-export const MISSATGES_TITULAR = Object.freeze({
-  'SDP-TIT-000': 'Cal entrar al compte per a triar si et mostrem com a titular.',
-  'SDP-TIT-001': 'Només la propietària de l’organització pot triar si es mostra com a titular.',
-  'SDP-TIT-002': 'La tria no és vàlida.',
-  'NO-DISPONIBLE': 'El servidor encara no sap mostrar la titular. Cal aplicar la migració pendent.',
-  DESCONEGUT: 'No s’ha pogut completar. Torna-ho a provar.'
-});
-
-/** Un Error amb el `code` de MISSATGES_TITULAR (un codi desconegut és DESCONEGUT) i, si n'hi ha, la causa. Pura. */
-export function errorDeTitular(codi, cause) {
-  const code = Object.hasOwn(MISSATGES_TITULAR, codi) ? codi : 'DESCONEGUT';
-  return Object.assign(new Error(MISSATGES_TITULAR[code], cause ? { cause } : undefined), { code });
-}
-
-/**
- * La titular de loadTitularPublic amb la forma del contracte, i res més (cap
- * correu ni cap rol encara que l'adaptador en porte): { tipus: 'persona', id,
- * nom, avatar } o null. Pura.
- */
-export function titularDelContracte(valor) {
-  if (!valor || typeof valor !== 'object' || valor.tipus !== 'persona') return null;
-  const id = typeof valor.id === 'string' || typeof valor.id === 'number' ? String(valor.id).trim() : '';
-  const nom = typeof valor.nom === 'string' ? valor.nom.trim() : '';
-  if (!id || !nom) return null;
-  return { tipus: 'persona', id, nom, avatar: typeof valor.avatar === 'string' ? valor.avatar : '' };
-}
-
-/* ── B8C-2 (marató 261101_2143; Bloc B8) · Avisos push i silenci del Xat ──
-   Les plataformes d'un aparell d'avisos (capacitat 'avisosPush') i les
-   durades del silenci (capacitat 'silenciXat'): les mateixes que B8-SERVIDOR
-   §2.9 (xat_push_desa passa 'ios' a APNs i 'android' a FCM; xat_silencia
-   només admet estes quatre durades). */
-export const PLATAFORMES_AVISOS = Object.freeze(['web', 'ios', 'android']);
-export const DURADES_SILENCI = Object.freeze(['8h', '1setmana', 'sempre', 'cap']);
-/* «Sempre»: 9999-12-31 00:00:00 UTC, el mateix instant que torna el servidor.
-   Una data finita a posta: new Date('infinity') és NaN i esSilenciat
-   (src/sections/xat/missatges.js) la llegiria com a «no silenciada»; i les
-   23:59:59 UTC ja serien l'any 10000 en una sessió de Europe/Madrid. */
-export const SILENCI_SEMPRE = '9999-12-31T00:00:00.000Z';
-const MS_DEL_SILENCI = Object.freeze({ '8h': 8 * 3600000, '1setmana': 7 * 24 * 3600000 });
-const errorDeSilenci = (missatge) => Object.assign(new TypeError(missatge), { code: 'SILENCI_INVALID', codi: 'SILENCI_INVALID', retriable: false });
-
-/**
- * La data de fi (ISO) d'un silenci que comença `ara` (ms o Date): '8h' i
- * '1setmana' sumen al rellotge de l'aparell, 'sempre' és SILENCI_SEMPRE i
- * 'cap' és null. Una durada desconeguda, o un rellotge que no dona una data
- * entre la del rellotge i SILENCI_SEMPRE: TypeError amb code
- * 'SILENCI_INVALID'. Pura. En remot no es desa: la data la posa el servidor
- * (xat_silencia); la usen la llavor, el node local i el silenci en memòria.
- */
-export function finsAlDelSilenci(durada, ara = Date.now()) {
-  if (typeof durada !== 'string' || !DURADES_SILENCI.includes(durada)) throw errorDeSilenci('La durada del silenci no és vàlida.');
-  if (durada === 'cap') return null;
-  if (durada === 'sempre') return SILENCI_SEMPRE;
-  const inici = ara instanceof Date ? ara.getTime() : ara;
-  const fi = typeof inici === 'number' ? inici + MS_DEL_SILENCI[durada] : Number.NaN;
-  if (!Number.isFinite(fi) || fi < -8.64e15 || fi > Date.parse(SILENCI_SEMPRE)) throw errorDeSilenci('El rellotge de l’aparell no dona una data de fi vàlida.');
-  return new Date(fi).toISOString();
-}
-
-/* FEDI23 · Entrades primitives compartides; cap conversió d'objectes ni getter. */
-export const MISSATGES_CONNEXIONS = Object.freeze({
-  'SDP-CONN-000': 'Cal iniciar sessió.',
-  'SDP-CONN-001': 'Les dades de connexió no són vàlides.',
-  'SDP-CONN-002': 'No pots gestionar les connexions d’este perfil.',
-  'SDP-CONN-003': 'Este perfil no està disponible.',
-  'NO-DISPONIBLE': 'El servidor encara no té esta capacitat.',
-  DESCONEGUT: 'No s’ha pogut completar la connexió.'
-});
-export function errorDeConnexions(code, cause) {
-  const clau = Object.hasOwn(MISSATGES_CONNEXIONS, code) ? code : 'DESCONEGUT';
-  return Object.assign(new Error(MISSATGES_CONNEXIONS[clau]), { code: clau, ...(cause ? { cause } : {}) });
-}
-function campsConnexions(dades, admesos) {
-  if (!dades || typeof dades !== 'object' || Array.isArray(dades)
-    || ![Object.prototype, null].includes(Object.getPrototypeOf(dades))) throw errorDeConnexions('SDP-CONN-001');
-  const resultat = {};
-  for (const clau of Reflect.ownKeys(dades)) {
-    const descriptor = Object.getOwnPropertyDescriptor(dades, clau);
-    if (typeof clau !== 'string' || !admesos.includes(clau) || !descriptor || !Object.hasOwn(descriptor, 'value') || !descriptor.enumerable) throw errorDeConnexions('SDP-CONN-001');
-    resultat[clau] = descriptor.value;
-  }
-  return resultat;
-}
-function idConnexions(valor) {
-  if (typeof valor !== 'string' || !RE_ID_SEGUIT.test(valor.trim())) throw errorDeConnexions('SDP-CONN-001');
-  return valor.trim();
-}
-export function subjecteConnexionsDelContracte(dades, { ambPoble = true } = {}) {
-  const { tipus, id } = campsConnexions(dades, ['tipus', 'id']);
-  if (!['persona', 'entitat', ...(ambPoble ? ['poble'] : [])].includes(tipus)) throw errorDeConnexions('SDP-CONN-001');
-  return { tipus, id: idConnexions(id) };
-}
-export function visibilitatConnexionsDelContracte(dades) {
-  const entrada = campsConnexions(dades, ['tipus', 'id', 'visibilitatConnexions', 'connexio']);
-  const subjecte = subjecteConnexionsDelContracte({ tipus: entrada.tipus, id: entrada.id });
-  if (!['publica', 'privada'].includes(entrada.visibilitatConnexions)) throw errorDeConnexions('SDP-CONN-001');
-  return { ...subjecte, visibilitatConnexions: entrada.visibilitatConnexions,
-    ...(entrada.connexio !== undefined ? { connexio: subjecteConnexionsDelContracte(entrada.connexio) } : {}) };
-}
-export function inclusioPersonaDelContracte(dades) {
-  const { orgId, personaId, rol } = campsConnexions(dades, ['orgId', 'personaId', 'rol']);
-  if (!['administrador', 'treballador', 'usuari'].includes(rol)) throw errorDeConnexions('SDP-CONN-001');
-  return { orgId: idConnexions(orgId), personaId: idConnexions(personaId), rol };
-}
-export function sollicitudEntitatDelContracte(dades) {
-  const { orgId, rol } = campsConnexions(dades, ['orgId', 'rol']);
-  if (!['administrador', 'treballador', 'usuari'].includes(rol)) throw errorDeConnexions('SDP-CONN-001');
-  return { orgId: idConnexions(orgId), rol };
-}
+export {
+  PLATAFORMES_AVISOS,
+  DURADES_SILENCI,
+  SILENCI_SEMPRE,
+  finsAlDelSilenci
+} from './contracteAvisos.js';

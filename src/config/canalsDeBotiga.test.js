@@ -83,9 +83,9 @@ describe('urlDeCanal', () => {
       .toBe('https://apps.apple.com/es/app/s%C3%B3c-de-poble/id1234567890');
     expect(urlDeCanal({ id: 'app-store', url: 'https://apps.apple.com/es/app/soc-de-poble/id6826441844' }))
       .toBe('https://apps.apple.com/es/app/soc-de-poble/id6826441844');
-    // IDEA-60 · L'APK signat (el camí exacte) i l'enllaç públic de TestFlight (/join/ i un codi de 4 a 32 caràcters), normalitzats.
-    expect(urlDeCanal({ id: 'apk-directe', url: APK })).toBe(APK);
-    expect(urlDeCanal({ id: 'apk-directe', url: 'HTTPS://SOCDEPOBLE.ORG/descarregues/socdepoble-android-latest.apk' })).toBe(APK);
+    /* IDEA-60 · L'enllaç públic de TestFlight (/join/ i un codi de 4 a 32 caràcters), normalitzat.
+       v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121): l'APK, ni amb el camí canònic d'abans
+       (abans, «toBe(APK)»), ara és a la prova del pany, ací davall. */
     // El host «testflight» no tanca la seua pròpia ranura: és el canal públic de proves que es vol enllaçar.
     expect(urlDeCanal({ id: 'testflight', url: TESTFLIGHT })).toBe(TESTFLIGHT);
     expect(urlDeCanal({ id: 'testflight', url: 'HTTPS://TESTFLIGHT.APPLE.COM/join/AbCd1234' })).toBe(TESTFLIGHT);
@@ -184,6 +184,18 @@ describe('urlDeCanal', () => {
     expect(urlDeCanal()).toBeNull();
     expect(urlDeCanal(null)).toBeNull();
   });
+
+  /* Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga; prompt 261121_0216,
+     T3.1) · La ranura apk-directe té pany: cap adreça l'obri, tampoc l'adreça canònica d'abans (que fins a la
+     v1.2.15 passava i esta prova fixava amb «toBe(APK)»), en majúscules o en qualsevol altre host. Les altres
+     quatre ranures continuen igual. */
+  test('v1.2.16 · ZERO APK: cap adreça obri la ranura apk-directe, ni la canònica d’abans', () => {
+    for (const url of [APK, 'HTTPS://SOCDEPOBLE.ORG/descarregues/socdepoble-android-latest.apk', 'https://socdepoble.cat/descarregues/socdepoble-android-latest.apk',
+      PLAY, APP_STORE, WORDPRESS, TESTFLIGHT]) {
+      expect([url, urlDeCanal({ id: 'apk-directe', url })]).toEqual([url, null]);
+    }
+    expect(CANALS_DE_BOTIGA.find((canal) => canal.id === 'apk-directe')).toEqual({ id: 'apk-directe', nom: 'APK directe', url: null });
+  });
 });
 
 describe('canalsOberts', () => {
@@ -201,7 +213,8 @@ describe('canalsOberts', () => {
       { id: 'google-play', nom: 'Google Play', url: PLAY },
       { id: 'testflight', nom: 'TestFlight', url: TESTFLIGHT }
     ]);
-    expect(canalsOberts([{ id: 'apk-directe', nom: 'APK directe', url: APK }])).toEqual([{ id: 'apk-directe', nom: 'APK directe', url: APK }]);
+    // v1.2.16 · ZERO APK: ni amb l'adreça canònica d'abans (fins a la v1.2.15 l'obria).
+    expect(canalsOberts([{ id: 'apk-directe', nom: 'APK directe', url: APK }])).toEqual([]);
     expect(canalsOberts('no és llista')).toEqual([]);
   });
 });
@@ -317,23 +330,31 @@ describe('frasesCaducades', () => {
      TestFlight (FRASES_DE_BOTIGA_TANCADA['app-store']): les frases de la
      ranura testflight ja no hi són i, sobre el cos real, no en troba cap. Les
      frases continuen a la llista i mosseguen el paràgraf vell de TestFlight
-     (el de HEAD bcb067a27, vellTestflight, ací baix). */
-  test('IDEA-60 · apk-directe obert sobre el cos real troba les seues frases; testflight, cap (P0-62); tancats, cap', () => {
+     (el de HEAD bcb067a27, vellTestflight, ací baix).
+     Onada v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · El cos ja no diu «Hui encara no hi
+     ha APK públic. Quan n'hi haja un…» (era una promesa d'un APK que no vindrà): diu que Sóc de Poble no
+     oferix cap APK fora de Google Play i que ningú no et demanarà mai instal·lar-ne cap. Les frases de la
+     ranura són eixes dues, i la ranura té pany: per la cadena de veres (canalsOberts) ja no s'obri. */
+  test('IDEA-60 · apk-directe sobre el cos real troba les seues frases (v1.2.16: el «cap APK»), i el pany no deixa obrir-lo; testflight, cap (P0-62)', () => {
     const { lead, subtitle, html } = PAGE_COPY.descarregues;
-    expect(frases(frasesCaducades(html, APK_OBERT))).toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
+    const FRASES_APK = ["apk-directe: no oferix cap fitxer d[’']instal·lació", 'apk-directe: no et demanarà mai que instal·les un APK'];
+    expect(frases(frasesCaducades(html, APK_OBERT))).toEqual(FRASES_APK);
+    // El cos ja no promet cap APK: ni «no hi ha APK públic» ni «Quan n'hi haja un».
+    expect(html).not.toMatch(/no hi ha APK públic|Quan n[’']hi haja un|Està <strong>previst<\/strong> oferir/i);
     expect(frasesCaducades([lead, subtitle, html], TESTFLIGHT_OBERT)).toEqual([]);
     expect(html).not.toMatch(/TestFlight/i);
     expect(frasesCaducades('Versió beta, en proves. En quin punt estan les proves.', [...APK_OBERT, ...TESTFLIGHT_OBERT])).toEqual([]);
     // Les frases de cada ranura són seues: amb l'altra oberta, o amb WordPress.org, cap.
-    expect(frasesCaducades("Hui encara no hi ha APK públic. Quan n'hi haja un, l'enllaç eixirà ací.", TESTFLIGHT_OBERT)).toEqual([]);
+    expect(frasesCaducades("Sóc de Poble no oferix cap fitxer d'instal·lació. Ningú no et demanarà mai que instal·les un APK.", TESTFLIGHT_OBERT)).toEqual([]);
     expect(frasesCaducades('Hem demanat a Apple un enllaç públic. Mentre Apple no el revise, res.', APK_OBERT)).toEqual([]);
     expect(frasesCaducades([lead, subtitle, html], [{ id: 'wordpress-org' }])).toEqual([]);
     // Amb l'apòstrof tipogràfic i les etiquetes del cos, igual.
-    expect(frases(frasesCaducades('<strong>Hui encara no hi ha APK públic</strong>. Quan n’hi haja un…', APK_OBERT)))
-      .toEqual(['apk-directe: no hi ha APK públic', "apk-directe: Quan n[’']hi haja un"]);
-    // Per la cadena de veres: la ranura oberta en una còpia de CANALS_DE_BOTIGA (canalsOberts → frasesCaducades) fa caure la guarda.
+    expect(frases(frasesCaducades('<strong>no oferix</strong> cap fitxer d’instal·lació; ningú no et demanarà mai que instal·les un <em>APK</em>', APK_OBERT)))
+      .toEqual(FRASES_APK);
+    // Per la cadena de veres: ni amb l'adreça canònica d'abans en una còpia de CANALS_DE_BOTIGA la ranura s'obri (pany v1.2.16).
     const ambApk = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'apk-directe' ? { ...canal, url: APK } : canal));
-    expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambApk)).map((trobada) => trobada.id)).toEqual(['apk-directe', 'apk-directe']);
+    expect(canalsOberts(ambApk).map((canal) => canal.id)).toEqual(['app-store', 'wordpress-org']);
+    expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambApk))).toEqual([]);
     // P0-62 · TestFlight obert al costat de l'App Store oberta: el cos real ja no en diu res.
     const ambTestflight = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'testflight' ? { ...canal, url: TESTFLIGHT } : canal));
     expect(frasesCaducades([lead, subtitle, html], canalsOberts(ambTestflight))).toEqual([]);
@@ -374,31 +395,32 @@ describe('frasesCaducades', () => {
      en una altra llengua només hi mosseguen les frases neutres (TestFlight, beta). Per això cada llengua
      porta ací les seues frases de botiga tancada i de proves, amb la mateixa forma que les del mòdul
      (regex sense quantificadors). Hui cada traducció diu, com el valencià, que Google Play encara no és
-     publicada i que no hi ha APK públic: el dia que el Mestre òbriga eixos canals, la prova cau en cada
-     llengua i diu quina frase sobra. */
+     publicada: el dia que el Mestre l'òbriga, la prova cau en cada llengua i diu quina frase sobra.
+     v1.2.16 (ZERO APK fora de botiga) · I, de l'APK, que no n'hi ha cap fora de Google Play ni ningú no en
+     demanarà mai cap (abans: «no hi ha APK públic… quan n'hi haja un»); la ranura té pany i no s'obri. */
   const FRASES_TRADUIDES = Object.freeze({
     es: Object.freeze({
       'google-play': [/pruebas internas/i, /no está publicada/i, /equipo de pruebas/i],
       'app-store': [/TestFlight/i, /todavía no está en el App Store/i, /enlace público de pruebas/i, /grupo de trabajo interno/i],
-      'apk-directe': [/no hay APK público/i, /Cuando esté disponible/i],
+      'apk-directe': [/no ofrece ningún archivo de instalación/i, /te pedirá nunca que instales un APK/i],
       proves: [/\bbeta\b/i, /\ben pruebas\b/i, /en qué punto están las pruebas/i]
     }),
     en: Object.freeze({
       'google-play': [/internal testing/i, /not yet published/i, /testing team/i],
       'app-store': [/TestFlight/i, /not yet on the App Store/i, /public testing link/i, /internal working group/i],
-      'apk-directe': [/no public APK/i, /When one is released/i],
+      'apk-directe': [/offers no Android installation package/i, /will ever ask you to install an APK/i],
       proves: [/\bbeta\b/i, /\bin testing\b/i, /where testing stands/i]
     }),
     eu: Object.freeze({
       'google-play': [/barne-prob/i, /ez dago guztiontzat argitaratuta/i, /proba-talde/i],
       'app-store': [/TestFlight/i, /oraindik ez dago App Store-n/i, /proba-lotura publiko/i, /barne-lan talde/i],
-      'apk-directe': [/ez dago APK publikorik/i, /Prest dagoenean, lotura ofiziala/i],
+      'apk-directe': [/ez du eskaintzen Androiderako instalazio-fitxategirik/i, /ez dizu inoiz eskatuko APK bat instalatzeko/i],
       proves: [/\bbeta\b/i, /\bprobetan\b/i, /proben egoera/i]
     }),
     gl: Object.freeze({
       'google-play': [/probas internas/i, /non está publicada/i, /equipo de probas/i],
       'app-store': [/TestFlight/i, /aínda non está na App Store/i, /ligazón pública de probas/i, /grupo de traballo interno/i],
-      'apk-directe': [/non hai APK público/i, /Cando o haxa, a ligazón/i],
+      'apk-directe': [/non ofrece ningún ficheiro de instalación/i, /che pedirá nunca que instales un APK/i],
       proves: [/\bbeta\b/i, /\ben probas\b/i, /en que punto están as probas/i]
     })
   });
@@ -429,7 +451,7 @@ describe('frasesCaducades', () => {
     }
   });
 
-  test.each(['es', 'en', 'eu', 'gl'])('R28 · %s · /page/descarregues traduïda no diu res caducat per als canals oberts i encara diu que Google Play i l’APK són tancats', (lang) => {
+  test.each(['es', 'en', 'eu', 'gl'])('R28 · %s · /page/descarregues traduïda no diu res caducat per als canals oberts, diu que Google Play és tancat i (v1.2.16) que no hi ha cap APK fora de botiga', (lang) => {
     const pagina = localitzaPagina(PAGE_COPY.descarregues, lang);
     // La traducció de veres, no el valencià de reserva.
     expect(pagina.contentLanguage).toBe(lang);
@@ -444,9 +466,11 @@ describe('frasesCaducades', () => {
     // Google Play obert en una còpia de CANALS_DE_BOTIGA: cau per la frase de «encara no publicada», i només per eixa.
     const ambPlay = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'google-play' ? { ...canal, url: PLAY } : canal));
     expect(frasesTraduides(lang, textos, canalsOberts(ambPlay))).toEqual([`google-play: ${FRASES_TRADUIDES[lang]['google-play'][1].source}`]);
-    // L'APK obert en una còpia: cau per les dues frases de «no hi ha APK públic».
-    const ambApk = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'apk-directe' ? { ...canal, url: APK } : canal));
-    expect(frasesTraduides(lang, textos, canalsOberts(ambApk)))
+    // v1.2.16 · La traducció diu les dues frases del «cap APK» (la llista explícita salta el pany)…
+    expect(frasesTraduides(lang, textos, [{ id: 'apk-directe' }]))
       .toEqual(FRASES_TRADUIDES[lang]['apk-directe'].map((frase) => `apk-directe: ${frase.source}`));
+    // …i, per la cadena de veres, l'APK no s'obri ni amb l'adreça canònica d'abans: cap frase cau.
+    const ambApk = CANALS_DE_BOTIGA.map((canal) => (canal.id === 'apk-directe' ? { ...canal, url: APK } : canal));
+    expect(frasesTraduides(lang, textos, canalsOberts(ambApk))).toEqual([]);
   });
 });

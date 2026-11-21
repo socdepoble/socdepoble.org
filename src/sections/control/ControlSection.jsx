@@ -209,7 +209,7 @@ import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portes
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, etiquetesAmbEstat, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
-import { TEXTOS_RESTAURADOR } from '../pobles/RestauradorOpenData.jsx';
+import { TEXTOS_RESTAURADOR } from '../pobles/restauradorOpenDataModel.js';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada v1.2.7 · P0-123 · «Instal·lada al dispositiu · Última publicada» (cinc llengües, fora dels diccionaris). */

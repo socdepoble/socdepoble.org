@@ -27,9 +27,28 @@ const MAGATZEM = 'registres';
 /* La mateixa versió d'un camp (la còpia del disc és un clon: es compara per valor). */
 const mateixaEntrada = (a, b) => a != null && b != null && a.versio === b.versio && a.valor === b.valor;
 
+/* Només el contracte de la cua pot tornar del disc. Una fila truncada o una
+   identitat que no quadra amb la clau mai no s’envia amb una altra sessió. */
+function registreDelDisc(clau, registre) {
+  if (!registre || typeof registre !== 'object' || Array.isArray(registre) || registre.v !== 1
+    || typeof registre.ambit !== 'string' || typeof registre.entitat !== 'string' || typeof registre.id !== 'string'
+    || clau !== JSON.stringify([registre.ambit, registre.entitat, registre.id])
+    || !Number.isSafeInteger(registre.seq) || registre.seq < 0 || !registre.camps
+    || typeof registre.camps !== 'object' || Array.isArray(registre.camps)) return false;
+  for (const entrada of Object.values(registre.camps)) {
+    if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada) || !Object.hasOwn(entrada, 'valor')
+      || !Number.isSafeInteger(entrada.versio) || entrada.versio < 1 || entrada.versio > registre.seq
+      || entrada.error != null && (typeof entrada.error !== 'object' || Array.isArray(entrada.error))) return false;
+  }
+  return true;
+}
+
 export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}) {
   const cau = new Map();
   let disponible = Boolean(idb);
+  /* No confondre suport d’IndexedDB amb una còpia realment durable: una
+     transacció que falla (quota, avortament) deixa el registre només en RAM. */
+  const fallades = new Set();
   let connexio = null;
   let cadena = Promise.resolve();
   let hidratacio = null;
@@ -110,9 +129,13 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
 
   /* En fila: l'escriptura d'una tecla vella mai no aterra damunt d'una
      de més nova. Una fallada no talla la fila ni llança: torna false. */
-  function enFila(accio) {
+  function enFila(accio, clau = null) {
     if (!disponible) return Promise.resolve(false);
-    const pas = cadena.then(() => transaccio('readwrite', accio)).then(() => true, (error) => {
+    const pas = cadena.then(() => transaccio('readwrite', accio)).then(() => {
+      fallades.delete(clau);
+      return true;
+    }, (error) => {
+      fallades.add(clau);
       if (disponible) console.warn('[autodesament] No s’ha pogut guardar l’esborrany en este dispositiu.', error?.message || error);
       return false;
     });
@@ -122,7 +145,7 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
 
   function encua(clau, anterior, nou, accio) {
     anotaTocats(clau, anterior, nou);
-    return enFila(accio);
+    return enFila(accio, clau);
   }
 
   /* T47 (correcció de la revisió C03, 260928) · Una escriptura d'esta pestanya
@@ -165,7 +188,7 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
 
   return {
     /** Hi ha IndexedDB: el que es guarda sobreviu a tancar la pestanya. */
-    get persistent() { return disponible; },
+    get persistent() { return disponible && fallades.size === 0; },
     llig: (clau) => cau.get(clau),
     llista: () => [...cau.values()],
     /** Síncron a la cau; la promesa diu quan (i si) ha aterrat a IndexedDB. */
@@ -199,6 +222,11 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
           if (actual.value?.ambit === objectiu) actual.delete();
           actual.continue();
         };
+      }, `\u0000ambit:${objectiu}`).then((fet) => {
+        if (fet) for (const clau of fallades) {
+          try { if (JSON.parse(clau)[0] === objectiu) fallades.delete(clau); } catch { /* no és una clau de registre */ }
+        }
+        return fet;
       });
     },
     /** Porta a la cau el que quedava d'una sessió anterior. Una vegada; mai rebutja. */
@@ -221,6 +249,11 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
         };
       }).then((trobats = []) => {
         for (const [clau, registre] of trobats) {
+          if (!registreDelDisc(clau, registre)) {
+            fallades.add(clau);
+            console.warn('[autodesament] S’ha ignorat un esborrany malmés del dispositiu.');
+            continue;
+          }
           if (ambitsOblidats.has(registre?.ambit)) continue;
           const tocats = tocades.get(clau);
           if (!tocats) {
@@ -231,7 +264,7 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
           if (!fusionat) continue;
           /* El `put` d'esta pestanya ha trepitjat el disc: el fusionat hi torna. */
           cau.set(clau, fusionat);
-          void enFila((magatzem) => magatzem.put(fusionat, clau));
+          void enFila((magatzem) => magatzem.put(fusionat, clau), clau);
         }
       }).catch((error) => {
         console.warn('[autodesament] No s’han pogut llegir els esborranys d’este dispositiu.', error?.message || error);
@@ -243,7 +276,7 @@ export function creaMagatzem({ idb = globalThis.indexedDB, nomBD = NOM_BD } = {}
       cau.clear();
       hidratacio = null;
       if (!disponible) return Promise.resolve(false);
-      const pas = cadena.then(() => transaccio('readwrite', (magatzem) => magatzem.clear())).then(() => true, () => false);
+      const pas = cadena.then(() => transaccio('readwrite', (magatzem) => magatzem.clear())).then(() => { fallades.clear(); return true; }, () => { fallades.add(null); return false; });
       cadena = pas;
       return pas;
     },

@@ -33,6 +33,9 @@ import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
+import { TEXTOS_MODE_SENIOR } from '../../config/textosModeSenior.js';
+import { delVal } from '../../config/storage.js';
+import { ATRIBUT_SENIOR, SENIOR_KEY, reiniciaMemoriaSenior } from '../../config/theme.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -424,13 +427,13 @@ test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: ini
    comunitat, vista ni conversa demanada). Revertix XATR-1. */
 test('sense sessió, a l’aterratge, una sola parella d’accés al peu del cos de la llista', () => {
   munta(senseSessio());
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
   fireEvent.click(screen.getByRole('button', { name: 'Registrar-se' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar: '/xat' }));
   /* Gauntlet 261022_0225 (XAT-4) · Una sola parella a la pantalla: cap
      «Registra't» del compositor ni cap enllaç cru a /registre. */
-  expect(screen.getAllByRole('button', { name: /^(Connectar-se|Registrar-se)$/ })).toHaveLength(2);
+  expect(screen.getAllByRole('button', { name: /^(Entrar|Registrar-se)$/ })).toHaveLength(2);
   expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
   expect(document.querySelector('a[href^="/registre"]')).toBeNull();
   /* XAT-1 · Al DOM: l'accés és l'últim fill del cos amb scroll, darrere de
@@ -452,7 +455,7 @@ function capAcces({ invitacioDeLaIAIA = false } = {}) {
   expect(document.querySelectorAll('.sdp-xat-acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-llista__peu--acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-cos--amb-peu')).toHaveLength(0);
-  expect(screen.queryAllByRole('button', { name: /^(Connectar-se|Registrar-se|Descarrega l'App)$/ })).toEqual([]);
+  expect(screen.queryAllByRole('button', { name: /^(Entrar|Registrar-se|Descarrega l'App)$/ })).toEqual([]);
   expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
   const aRegistre = [...document.querySelectorAll('a[href^="/registre"]')];
   expect(aRegistre.filter((a) => !a.closest('.sdp-xat-bombolla'))).toEqual([]);
@@ -491,8 +494,10 @@ test.each([
 test('sense sessió, /xat?context= continua sent l’aterratge i porta l’accés', () => {
   mocks.params = new URLSearchParams('context=Hola');
   munta(senseSessio());
-  peuDAccesAlCos();
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  const peu = peuDAccesAlCos();
+  /* P0-ANDROID-PUSH (v1.2.16) · B9 · Amb ?context= el diàleg «Nova conversa» també oferix el seu
+     «Entrar»: el de l'accés es busca dins del peu. */
+  fireEvent.click(within(peu).getByRole('button', { name: 'Entrar' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat?context=Hola' }));
 });
 
@@ -513,8 +518,8 @@ test.each([
   rerender(<XatContext.Provider value={xat}><XatSection /></XatContext.Provider>);
   const peu = peuDAccesAlCos();
   expect(peu.previousElementSibling).toBe(llista());
-  expect(screen.getAllByRole('button', { name: /^(Descarrega l'App|Connectar-se|Registrar-se)$/ })).toHaveLength(3);
-  fireEvent.click(screen.getByRole('button', { name: 'Connectar-se' }));
+  expect(screen.getAllByRole('button', { name: /^(Descarrega l'App|Entrar|Registrar-se)$/ })).toHaveLength(3);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
 });
 
@@ -537,17 +542,23 @@ test.each([
    parella, una sola a la pantalla, porta a /descarregues, l'adreça curta de
    la pàgina (App.jsx). P1-54 · Només a l'aterratge: dins d'un fil, cap
    (capAcces, damunt). */
-test('sense sessió, a l’aterratge «Descarrega l’App» va damunt de la parella i porta a /descarregues', () => {
+/* P0-ANDROID-PUSH (v1.2.16) · B11c (ordre del Mestre 261121) · «Descarrega l'App» comparteix ara la
+   fila (.sdp-alerta__accions) amb el xip «Lletra gran», damunt de la parella: s'actualitza a posta
+   (abans era filla directa de l'accés). B9 · La parella diu «Entrar» i «Registrar-se». */
+test('sense sessió, a l’aterratge «Descarrega l’App» va damunt de la parella, en la fila del xip, i porta a /descarregues', () => {
   munta(senseSessio());
   expect(screen.getAllByRole('button', { name: "Descarrega l'App" })).toHaveLength(1);
   const boto = screen.getByRole('button', { name: "Descarrega l'App" });
   expect([...boto.classList]).toEqual(['sdp-xat-pindola', 'sdp-xat-acces__descarrega']);
   expect(boto.getAttribute('type')).toBe('button');
   const acces = document.querySelector('.sdp-xat-acces');
-  expect(boto.parentElement).toBe(acces);
-  expect(boto.previousElementSibling.tagName).toBe('P');
-  expect(boto.nextElementSibling.classList.contains('sdp-alerta__accions')).toBe(true);
-  expect([...acces.querySelectorAll('button')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Connectar-se', 'Registrar-se']);
+  const fila = boto.parentElement;
+  expect([...fila.classList]).toEqual(['sdp-alerta__accions']);
+  expect(fila.parentElement).toBe(acces);
+  expect(fila.previousElementSibling.tagName).toBe('P');
+  expect(fila.nextElementSibling.classList.contains('sdp-alerta__accions')).toBe(true);
+  expect(boto.nextElementSibling.querySelector('[role="switch"]')).toBeTruthy();
+  expect([...acces.querySelectorAll('button.sdp-xat-pindola')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Entrar', 'Registrar-se']);
   fireEvent.click(boto);
   expect(mocks.navigate).toHaveBeenCalledTimes(1);
   expect(mocks.navigate).toHaveBeenLastCalledWith('/descarregues');
@@ -562,7 +573,11 @@ test('dins de l’app nativa, l’accés no oferix «Descarrega l’App»: nomé
     expect(screen.queryByRole('button', { name: "Descarrega l'App" })).toBeNull();
     expect(document.querySelector('.sdp-xat-acces__descarrega')).toBeNull();
     const acces = document.querySelector('.sdp-xat-acces');
-    expect([...acces.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Connectar-se', 'Registrar-se']);
+    expect([...acces.querySelectorAll('button.sdp-xat-pindola')].map((b) => b.textContent)).toEqual(['Entrar', 'Registrar-se']);
+    /* B11c · Dins de l'app nativa el xip «Lletra gran» ocupa sol la fila de «Descarrega l'App». */
+    const xip = acces.querySelector('[role="switch"]');
+    expect(xip).toBeTruthy();
+    expect(xip.closest('.sdp-alerta__accions').querySelectorAll('button')).toHaveLength(1);
   } finally {
     delete window.Capacitor;
   }
@@ -647,7 +662,7 @@ test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   // Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · La benvinguda substituïx la crida a entrar.
   expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(1);
   // Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · «Descarrega l'App», damunt de la parella.
-  expect([...cos.querySelectorAll('button')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Connectar-se', 'Registrar-se']);
+  expect([...cos.querySelectorAll('button.sdp-xat-pindola')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Entrar', 'Registrar-se']);
 });
 
 test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatges al servidor', () => {
@@ -659,4 +674,61 @@ test('el fil remot de la IAIA porta la benvinguda oficial, sense afegir missatge
   expect(screen.getByText(/Benvinguda automàtica/)).toBeTruthy();
   expect(xat.sendChatMessage).not.toHaveBeenCalled();
   expect(screen.queryByRole('button', { name: 'Registrar-se' })).toBeNull();
+});
+
+/* P0-ANDROID-PUSH (v1.2.16) · B11c (doctrina del Foraster, ordre del Mestre 261121; prompt 0216, T2.5) ·
+   El xip «Lletra gran» és a l'accés del Xat, a la fila de «Descarrega l'App»: l'ordre dels controls de
+   l'accés és «Descarrega l'App», el xip, «Entrar» i «Registrar-se». És el ControlModeSenior de sempre
+   (role="switch", la pastilla d'estat amb text) i un toc encén el Mode Sènior. */
+const ETIQUETA_CURTA = TEXTOS_MODE_SENIOR.ca.xipCurt;
+const controlsDeLAcces = () => [...document.querySelectorAll('.sdp-xat-acces button')]
+  .map((b) => (b.getAttribute('role') === 'switch' ? 'xip' : b.textContent));
+
+test('B11c · sense sessió, a l’aterratge, el xip va a la fila de «Descarrega l’App», damunt d’«Entrar» i «Registrar-se»', () => {
+  try {
+    munta(senseSessio());
+    expect(controlsDeLAcces()).toEqual(["Descarrega l'App", 'xip', 'Entrar', 'Registrar-se']);
+    const xip = screen.getByTestId('xat-acces-lletra-gran');
+    expect(xip.getAttribute('role')).toBe('switch');
+    expect(xip.getAttribute('aria-checked')).toBe('false');
+    /* La marca textual de l'estat, mai només el color (ControlModeSenior). */
+    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(TEXTOS_MODE_SENIOR.ca.inactiu);
+    expect(xip.closest('.sdp-alerta__accions')).toBe(screen.getByRole('button', { name: "Descarrega l'App" }).parentElement);
+    fireEvent.click(xip);
+    expect(xip.getAttribute('aria-checked')).toBe('true');
+    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(`✓ ${TEXTOS_MODE_SENIOR.ca.actiu}`);
+  } finally {
+    delVal(SENIOR_KEY);
+    reiniciaMemoriaSenior();
+    document.documentElement.removeAttribute(ATRIBUT_SENIOR);
+  }
+});
+
+/* Costura C-1 de l'informe del carril A: l'etiqueta curta (`xipCurt`, textosModeSenior.js) i la prop
+   `etiquetaCurta` de ControlModeSenior.jsx són de fitxers fora del carril. Fins que l'integrador
+   aplique la costura, esta prova queda en espera (i el xip diu l'etiqueta llarga de sempre). */
+test.runIf(Boolean(ETIQUETA_CURTA))('B11c · el xip de l’accés diu «Lletra gran» (etiqueta curta), amb la pastilla d’estat', () => {
+  munta(senseSessio());
+  const xip = screen.getByRole('switch', { name: ETIQUETA_CURTA });
+  expect(ETIQUETA_CURTA).toBe('Lletra gran');
+  expect(xip.querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe('Lletra gran');
+});
+
+test('B11c · amb sessió, l’accés no hi és i el xip tampoc', () => {
+  munta(ambSessio());
+  expect(screen.queryByTestId('xat-acces-lletra-gran')).toBeNull();
+});
+
+/* P0-ANDROID-PUSH (v1.2.16) · B5 (doctrina del Foraster, ordre del Mestre 261121; CA-P2) · Qui aterra a
+   /xat sense sessió (/ → /xat, sense canvis) no hi llig cap no llegit fals: ni «(N)» al títol del
+   document ni cap insígnia «Un missatge no llegit» a les files de mostra. */
+test('B5 · sense sessió, el títol de /xat no porta cap «(N)» i cap fila de mostra porta insígnia de no llegits', () => {
+  document.title = 'Sóc de Poble';
+  /* Com socdepoble.org (main.jsx): la pàgina governa el <head> i useSEO hi escriu el títol. */
+  mocks.externalConfig = { ...mocks.externalConfig, manageDocumentHead: true };
+  munta(senseSessio());
+  expect(llista()).toBeTruthy();
+  expect(document.title).toBe('Xat | Sóc de Poble');
+  expect(screen.queryAllByText(/no llegit/)).toEqual([]);
+  expect(document.querySelectorAll('.sdp-xat-llista .sdp-xat-fila__noLlegits, .sdp-xat-llista [class*="no-llegits"]')).toHaveLength(0);
 });

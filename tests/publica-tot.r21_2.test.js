@@ -7,7 +7,12 @@ const fixture = vi.hoisted(() => ({
   android: vi.fn(), ios: vi.fn(), preflight: vi.fn(), external: vi.fn(),
   hygiene: { valid: true, fitxers: 0, examinades: [], incidencies: [] }
 }));
-vi.mock('../scripts/botigues/puja-android.mjs', () => ({ main: fixture.android }));
+/* v1.2.16: resumOmnicanal llig la pista de Play (PISTES) de puja-android.mjs; el mock en dona les
+   constants reals i deixa fora consultaLlancament, que parla amb la xarxa. */
+vi.mock('../scripts/botigues/puja-android.mjs', async importOriginal => {
+  const real = await importOriginal();
+  return { PISTES: real.PISTES, ESTATS_PLAY: real.ESTATS_PLAY, netejaText: real.netejaText, main: fixture.android };
+});
 vi.mock('../scripts/botigues/puja-ios.mjs', () => ({ main: fixture.ios }));
 vi.mock('../scripts/botigues/preflight.mjs', () => ({ arrelComprovada: () => '/synthetic-r21-2', preflight: fixture.preflight }));
 vi.mock('../scripts/botigues/entorn.mjs', async importOriginal => ({ ...(await importOriginal()), executa: fixture.external }));
@@ -58,11 +63,12 @@ describe('R21.2 publica-tot native delegation', () => {
     expect(fixture.android).toHaveBeenCalledExactlyOnceWith([...base, '--canal', 'produccio', '--push', `--confirma=${confirmation}`]);
     expect(fixture.external).not.toHaveBeenCalled();
   });
-  test('Android compiles the AAB via the existing entry point before the direct APK and propagates APK failure', async () => {
-    expect(await main([...base, '--plataforma', 'android', '--compila'])).toBe(EIXIDA.EXTERNA);
+  /* v1.2.16 · ZERO APK fora de botiga (ordre del Mestre 261121 01:32): fins a la v1.2.15 esta prova
+     exigia un assembleRelease de l'APK directe després de l'AAB. Ara Android compila NOMÉS l'AAB. */
+  test('Android compiles only the AAB via the existing entry point and never assembles a direct APK', async () => {
+    expect(await main([...base, '--plataforma', 'android', '--compila'])).toBe(EIXIDA.BE);
     expect(fixture.android).toHaveBeenCalledExactlyOnceWith([...base, '--canal', 'intern', '--compila']);
-    expect(fixture.external.mock.calls[0][1]).toEqual(['--no-daemon', 'assembleRelease']);
-    expect(fixture.android.mock.invocationCallOrder[0]).toBeLessThan(fixture.external.mock.invocationCallOrder[0]);
+    expect(fixture.external.mock.calls.some(([, args]) => Array.isArray(args) && args.includes('assembleRelease'))).toBe(false);
   });
   test.each(['--compila', '--confirma=invalid'])('all-platform %s is refused before any native action', async action => {
     expect(await main([...base, '--plataforma', 'totes', action])).toBe(EIXIDA.US);

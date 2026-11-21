@@ -1444,6 +1444,13 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
     assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R30)`);
   }
   assert.ok(modulsDArrencada.has('src/data/revisionsEditorialsDelNavegador.js'), 'la fulla del navegador viatja a l\'arrencada (R30)');
+  /* R32.25 · El port manté el mateix contracte públic. Les formes que només
+     consumixen les pantalles i els adaptadors diferits viuen en fulles:
+     canviar el nom d'un tros no reduïx esta clausura estàtica completa. */
+  for (const rel of ['src/data/contracteOrganitzacions.js', 'src/data/contracteConnexions.js']) {
+    assert.ok(!modulsDArrencada.has(rel), `${rel}: només es carrega amb el seu consumidor diferit (R32.25)`);
+  }
+  assert.ok(modulsDArrencada.has('src/data/contracteAvisos.js'), 'la forma de silenci que usa el Xat continua síncrona (R32.25)');
   /* Gauntlet v1.2.14 R2b · La crònica FITA_R32_18 diu que els estils del Perfil ixen de l'arrencada i que els de les
      aplicacions només «s'apliquen» quan s'hi entra (BarraApp.jsx els importa dins del graf estàtic d'App.jsx). Si el
      fet canvia en qualsevol sentit, el text de /versions ha de canviar amb ell. */
@@ -1476,6 +1483,7 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   assert.ok(midaEntrada < MIDA_IIFE_DE_LA_DECISIO * 0.5, `entrada ${midaEntrada} B: ha de pesar menys del 50 % de ${MIDA_IIFE_DE_LA_DECISIO} B`);
   assert.ok(midaEntrada <= SOSTRE_DE_L_ENTRADA, `entrada ${midaEntrada} B: el trinquet és ${SOSTRE_DE_L_ENTRADA} B`);
   assert.ok(midaArrencada <= SOSTRE_DE_L_ARRENCADA, `arrencada estàtica ${midaArrencada} B: el trinquet és ${SOSTRE_DE_L_ARRENCADA} B`);
+  assert.ok(midaArrencada < 1590000, `arrencada estàtica ${midaArrencada} B: R32.25 exigix menys de 1.590.000 B`);
   assert.ok(midaEntrada < referencia, 'l\'entrada pesa menys que el monolític');
   if (midaMonolitica) t.diagnostic(`ABANS · monolític ${midaMonolitica} B · l'entrada és el ${Math.round((midaEntrada / midaMonolitica) * 1000) / 10} %`);
   const pesants = Object.entries(entrada.modules)

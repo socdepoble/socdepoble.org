@@ -33,6 +33,7 @@ import fs from 'node:fs';
 import { documentCorpus, documentLinkTargets, operationalDocumentText } from '../lib/document-corpus.mjs';
 import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -43,7 +44,7 @@ const DEUTE = path.join(ARREL, '.agents/deute/.teixit-deute.json');
 
 const ANCORA = ARG('ancora') ?? '00_index_escriptori';
 /* Arrels del graf. `.agents` hi entra a posta: el cervell també és wiki. */
-const ARRELS = (ARG('arrels') ?? '_wiki_de_poble,.agents').split(',');
+const ARRELS = (ARG('arrels') ?? `${CAMINS.wiki},.agents`).split(',');
 
 
 

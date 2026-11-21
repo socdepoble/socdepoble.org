@@ -47,7 +47,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  BUILD, CANALS, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apsDeCodesign, apuntaPujada, avisDelRegistre,
+  BUILD, CANALS, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apsDeCodesign, apuntaPujada, avisDelRegistre, canalAdmes, usDelCanal,
   confirmacioEsperada, equipDeCodesign, executa, exportOptionsPlist, guardaDelRegistre, llegixAjuda, mostraOrdre, opcionsQueFalten, plega,
   problemaDelPaquet, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
@@ -222,7 +222,8 @@ export async function main(argv) {
   /* B9 · Les guardes del canal, en este ordre i abans de tocar res: canal conegut, en producció el
      «sí» en una execució a banda de --compila, i un --confirma amb la forma d'este canal. */
   const canal = opcions.canal ?? CANALS.INTERN;
-  if (!Object.values(CANALS).includes(canal)) return plega(EIXIDA.US, `--canal ha de ser ${Object.values(CANALS).join(' o ')}`);
+  /* v1.2.16 · alpha és una pista de Google Play: a iOS la prova tancada és TestFlight (canal intern). */
+  if (!canalAdmes(canal, ['ios'])) return plega(EIXIDA.US, usDelCanal(['ios']));
   const produccio = canal === CANALS.PRODUCCIO;
   if (produccio && opcions.compila && opcions.confirma !== undefined) {
     return plega(EIXIDA.US, 'en producció, primer --compila (el rebut porta el sha256 de l\'IPA); el «sí» va en una altra execució');

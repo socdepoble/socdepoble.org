@@ -46,10 +46,12 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
   const fitxer = () => exporta({ model, format, des, dies });
 
   const descarrega = () => {
+    if (!model) return;
     setMissatge(descarregaFitxer(fitxer()) ? tx.fetBuscaDescarregues : tx.navegadorNoDescarrega);
   };
 
   const compartix = async () => {
+    if (!model) return;
     const { nom: nomFitxer, tipus, dades } = fitxer();
     const arxiu = new File([dades], nomFitxer, { type: tipus });
     if (!navigator.canShare({ files: [arxiu] })) {
@@ -58,8 +60,9 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
     }
     try {
       await navigator.share({ files: [arxiu] });
-    } catch {
-      /* La persona ha tancat el menú de compartir: no passa res. */
+    } catch (error) {
+      /* Si la persona tanca el menú (AbortError), no passa res; qualsevol altre error del sistema s'informa. */
+      if (error?.name !== 'AbortError') setMissatge(tx.sistemaNoCompartix);
     }
   };
 

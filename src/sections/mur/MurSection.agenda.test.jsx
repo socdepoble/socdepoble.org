@@ -171,22 +171,26 @@ test('clicar un dia (fora de l’enllaç) posa ?date=; amb el dia a la URL, s’
   expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ mes: '2023-01' }));
 });
 
-test('sense cap acte per vindre, el mes del més recent; les fletxes escriuen ?mes= i un mes sense actes ho diu', () => {
+/* P0-ANDROID-PUSH (v1.2.16) · B10a (decisió del Mestre D-12: «Calendari mai en un mes passat») · La
+   pestanya és el mateix calendari que /calendari i obeïx la mateixa ordre: abans s'obria al gener del
+   2023 (el mes de l'acte més recent, mesDeLActeMesProper); ara, sense cap acte per vindre, al mes de
+   hui, que ho diu. El mes de l'acte continua a l'abast de la URL (la pastilla, les fletxes). */
+test('B10a · sense cap acte per vindre, el mes de hui (mai un mes passat), que ho diu; les fletxes escriuen ?mes= i el mes de l’acte s’obri per la URL', () => {
   mocks.mur.sortedEvents = [ACTES[0]];
+  render(<MurSection />);
+  agenda();
+  expect(regioMes(2026, 8)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual([]);
+  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
+  act(() => screen.getByRole('button', { name: 'Mes següent' }).click());
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ mes: '2026-10' }));
+  cleanup();
+
+  mocks.params = new URLSearchParams('vista=mes&mes=2023-01');
   render(<MurSection />);
   agenda();
   expect(regioMes(2023, 0)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['2n Aplec pel Territori']);
-  act(() => screen.getByRole('button', { name: 'Mes següent' }).click());
-  expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ mes: '2023-02' }));
-  cleanup();
-
-  mocks.params = new URLSearchParams('vista=mes&mes=2023-02');
-  render(<MurSection />);
-  agenda();
-  expect(regioMes(2023, 1)).toBeTruthy();
-  expect(titolsDeTargetes()).toEqual([]);
-  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
 });
 
 test('un calendari buit ho diu, al mes de hui', () => {

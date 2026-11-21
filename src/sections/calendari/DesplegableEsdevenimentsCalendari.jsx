@@ -7,7 +7,8 @@ import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import cssEsdeveniments from '../../css/diferit-esdeveniments.css?inline';
-import { diaDeLaClau, rutaDeLEntrada } from './calendariGlobal.js';
+import { esActePassat } from './actePassat.js';
+import { rutaDeLEntrada } from './calendariGlobal.js';
 import { resolTextCalendariRsvp, textosCalendariRsvp } from './i18nCalendariRsvp.js';
 import {
   desaRsvpEsdeveniment,
@@ -16,44 +17,12 @@ import {
   participantRsvpActual,
   useMagatzemRsvpEsdeveniments
 } from './rsvpEsdeveniments.js';
-
-function textNet(valor) {
-  return typeof valor === 'string' ? valor.trim() : '';
-}
-
-function formataDataCurtaIso(clau, locale) {
-  const data = diaDeLaClau(clau);
-  if (!data) return clau;
-  try {
-    return data.toLocaleDateString(locale || 'ca-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  } catch {
-    return clau;
-  }
-}
-
-function resumDataEntrada(entrada, locale) {
-  const item = entrada?.item;
-  const poble = textNet(item?.location) || textNet(item?.town_name) || textNet(entrada?.acte?.lloc);
-  const etiqueta = textNet(item?.date_label) || textNet(item?.calendar_badge?.label);
-  if (etiqueta) {
-    if (poble && !etiqueta.toLowerCase().includes(poble.toLowerCase())) return `${etiqueta} · ${poble}`;
-    return etiqueta;
-  }
-  const iniciCru = textNet(entrada?.acte?.inici?.data)
-    || textNet(entrada?.acte?.inici?.dataHora)?.slice(0, 10)
-    || textNet(item?.date);
-  const inici = /^\d{4}-\d{2}-\d{2}$/.test(iniciCru) ? formataDataCurtaIso(iniciCru, locale) : iniciCru;
-  if (inici && poble) return `${inici} · ${poble}`;
-  return inici || poble;
-}
-
-function mesDeLEntrada(entrada) {
-  const inici = textNet(entrada?.acte?.inici?.data)
-    || textNet(entrada?.acte?.inici?.dataHora)?.slice(0, 10)
-    || textNet(entrada?.item?.inici)
-    || textNet(entrada?.item?.date);
-  return /^\d{4}-\d{2}/.test(inici) ? inici.slice(0, 7) : null;
-}
+import {
+  localeCalendariDe,
+  mesDeLEntrada,
+  resumDataEntrada,
+  textNet,
+} from './desplegableEsdevenimentsCalendariModel.js';
 
 export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments, onSaltaAMes = null }) {
   const arrelRef = useRef(null);
@@ -63,7 +32,7 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
   const { t, language = 'ca' } = useUIActions();
   const tx = textosCalendariRsvp(language);
   const tr = (clau, valor) => resolTextCalendariRsvp(t, language, clau, valor);
-  const locale = language === 'en' ? 'en-GB' : `${language}-ES`;
+  const locale = localeCalendariDe(language);
   const [desplegat, setDesplegat] = useState(true);
 
   const currentUser = useSessioOpcional()?.currentUser || null;
@@ -150,6 +119,9 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
                 const actesSolapats = idActe ? (solapaments.perActe[idActe] ?? []) : [];
                 const titolsSolapats = actesSolapats.map((c) => c.titol).join(', ');
                 const teSolapamentHorari = actesSolapats.some((c) => c.tipus === 'horari');
+                /* P0-ANDROID-PUSH (v1.2.16) · B10c (D-12) · Un acte que ja s'ha fet no oferix
+                   «Assistiré / Potser / No assistiré»; el recompte i els enllaços es queden. */
+                const ambRsvp = Boolean(entrada.item) && !esActePassat(entrada);
 
                 return (
                   <li key={entrada.clau} className="sdp-cal-desplegable__item">
@@ -168,7 +140,7 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
                     </div>
 
                     <div className="sdp-cal-desplegable__accions">
-                      {entrada.item ? (
+                      {ambRsvp ? (
                         <div
                           className="sdp-cal-rsvp-grup"
                           role="group"

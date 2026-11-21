@@ -127,9 +127,10 @@ function firebaseEstatic({ hosting, dist, descodifica }) {
   const casa = (regla, cami) => (regla.regex ? new RegExp(regla.regex, 'u').test(cami) : glob(regla.source, cami));
   const perExtensio = (fitxer) => (fitxer.endsWith('.json') ? 'application/json' : fitxer.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream');
   /* Onada v1.2.6 (ordre del Mestre del 17-11-2026) · Firebase avalua les redireccions ABANS del
-     contingut estàtic. Les úniques són les de l'APK públic cap al mirall del Node 0
-     (firebaseHosting.test.js): noms literals de /descarregues/. La simulació només sap casar noms
-     literals, i els aplica primer; cap camí de WebFinger no hi casa. */
+     contingut estàtic. La simulació només sap casar noms literals de /descarregues/, i els aplica
+     primer; cap camí de WebFinger no hi casa. Onada v1.2.16 (ZERO APK fora de botiga, ordre del
+     Mestre 261121) · Les dues de l'APK s'han retirat i firebase.json ja no en té cap
+     (firebaseHosting.test.js): la llista és buida i la simulació no en aplica cap. */
   const redireccions = hosting.redirects ?? [];
   for (const r of redireccions) assert.match(r.source, /^\/descarregues\/[a-z0-9.-]+$/);
   return (url) => {

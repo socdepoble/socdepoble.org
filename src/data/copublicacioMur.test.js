@@ -158,3 +158,36 @@ describe('R29 · PF-04 · el diari de retirades no es tapona amb ACK', () => {
     expect(rows(s.indexedDB).some(r => r.id === ID)).toBe(false);
   });
 });
+
+
+describe('R32.21 · tot rebuig conserva la voluntat durable', () => {
+  it.each([undefined, null, false, 0, ''])('un rebuig falsy (%s) no és un ACK', async failure => {
+    const s = setup(async () => { throw failure; });
+    await s.q.encua(ID);
+    await expect(s.q.drena()).rejects.toMatchObject({ revocacioPendent: true, seguentIntent: 11000 });
+    expect(rows(s.indexedDB)[0]).toMatchObject({ pending: true, nextRetryAt: 11000, lastStatus: null });
+    expect(rows(s.indexedDB)[0]).not.toHaveProperty('confirmadaAl');
+    expect(await creaCuaRevocacionsMur(s.options).estat(ID)).toEqual({ pendent: true, seguentIntent: 11000 });
+  });
+  it.each([
+    Object.freeze(Object.assign(new Error('proveïdor indisponible'), { status: 503, codi: 'REINTENTA' })),
+    Object.freeze({ status: 503, codi: 'REINTENTA' })
+  ])('un error immutable conserva el codi i les dades del reintent sense mutar-lo', async failure => {
+    const s = setup(async () => { throw failure; }); await s.q.encua(ID);
+    await expect(s.q.drena()).rejects.toMatchObject({ status: 503, codi: 'REINTENTA', revocacioPendent: true, seguentIntent: 11000 });
+    expect(failure).not.toHaveProperty('revocacioPendent');
+    expect(rows(s.indexedDB)[0]).toMatchObject({ pending: true, nextRetryAt: 11000, lastStatus: 503 });
+  });
+});
+
+
+it('R32.21 · un rebuig amb accessors que llancen conserva el context durable del reintent', async () => {
+  const failure = Object.freeze(Object.defineProperties({}, Object.fromEntries(
+    ['message', 'name', 'codi', 'status'].map(key => [key, { get() { throw new Error(`accessor ${key}`); } }])
+  )));
+  const s = setup(async () => { throw failure; }); await s.q.encua(ID);
+  const caught = await s.q.drena().then(() => null, e => e);
+  expect(caught).toMatchObject({ revocacioPendent: true, seguentIntent: 11000 });
+  expect(caught.cause).toBe(failure);
+  expect(rows(s.indexedDB)[0]).toMatchObject({ pending: true, nextRetryAt: 11000, lastStatus: null });
+});

@@ -24,7 +24,15 @@ const VISTES = [
   `${DIR}/AdminSection.jsx`, `${DIR}/IndicadorsAdmin.jsx`, `${DIR}/SegonFactor.jsx`,
   `${DIR}/FacetaTaxonomia.jsx`, `${DIR}/FacetaEstil.jsx`
 ];
-const PRODUCCIO = [...VISTES, ...PURS, `${DIR}/rebuigSegonFactor.js`];
+const PRODUCCIO = [
+  ...VISTES,
+  ...PURS,
+  `${DIR}/rebuigSegonFactor.js`,
+  `${DIR}/facetaTaxonomiaModel.js`,
+  `${DIR}/segonFactorModel.js`,
+  `${DIR}/panellTraspasPublicacioModel.js`,
+  `${DIR}/indicadorsAdminModel.js`,
+];
 const PROVES = [
   `${DIR}/AdminSection.test.jsx`,
   `${DIR}/IndicadorsAdmin.test.jsx`,
@@ -33,10 +41,11 @@ const PROVES = [
   `${DIR}/rebuigSegonFactor.test.js`,
   `${DIR}/FacetaTaxonomia.test.jsx`,
   `${DIR}/FacetaEstil.test.jsx`,
+  `${DIR}/puresaHmrAdminXatPobles.r32_22.test.js`,
   `${DIR}/qualitat.test.js`
 ];
 const TOTS = [...PRODUCCIO, ...PROVES];
-const NOUS = [`${DIR}/IndicadorsAdmin.jsx`, ...PURS];
+const NOUS = [`${DIR}/IndicadorsAdmin.jsx`, `${DIR}/indicadorsAdminModel.js`, ...PURS];
 
 describe('ESLint', () => {
   test('zero missatges, avisos inclosos, a tots els fitxers de la secció', async () => {
@@ -93,7 +102,7 @@ describe('per text', () => {
     /* Onada 11 (261010) · i la lectura del rebuig per falta del segon factor. */
     expect(imports).toEqual([
       'react', 'lucide-react', '../../components/layout/AppGridColumn', '../../components/PedraSeca/index.js',
-      '../../data/backendPort.js', './indicadors.js', './rebuigSegonFactor.js'
+      '../../data/backendPort.js', './indicadors.js', './rebuigSegonFactor.js', './indicadorsAdminModel.js'
     ]);
   });
 

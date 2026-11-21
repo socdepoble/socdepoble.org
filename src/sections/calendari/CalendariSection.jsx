@@ -18,9 +18,11 @@
  * sense cap estat propi (estatCalendari.js · estatDeLaUrl): el del ?date=;
  * si no, el del ?mes=AAAA-MM, on porta la pastilla de les targetes («el
  * Calendari ubicat exactament en el mes i l’any […] en què es va publicar
- * eixa targeta»); si no, el de hui o, si hui no en té cap, el de la targeta
- * més recent (mesDObertura): mai en un mes buit havent-hi targetes. Les
- * fletxes i «Hui» escriuen el període i lleven el ?date=: la graella i la
+ * eixa targeta»); si no, el de hui o, si hui no en té cap, el de la pròxima
+ * targeta futura (mesDObertura). P0-ANDROID-PUSH (v1.2.16) · B10a (decisió
+ * del Mestre D-12) · Mai un mes passat: sense cap targeta futura, el de hui,
+ * encara que estiga buit (esmena en part el «mai en un mes buit» del 261001).
+ * Les fletxes i «Hui» escriuen el període i lleven el ?date=: la graella i la
  * llista de davall mostren sempre el mateix període.
  *
  * Model B i Directiva Suprema (AGENTS.md §8) · L'agenda de Sollutia no
@@ -261,6 +263,9 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError, idioma = 'ca' }) 
   );
   const targetesActives = mode === 'events' ? targetesActes : targetes;
 
+  /* B10a (v1.2.16, D-12; revisió [VA-1]) · Cap dels dos camins obri un mes passat:
+     mesDeLActeMesProper torna null si cap acte no ha de vindre, i mesDObertura cau al
+     de la pròxima targeta futura o al de hui. */
   const obertura = useMemo(() => {
     if (mode === 'events') {
       const pintables = targetesActes.map((entrada) => entrada.acte).filter((esd) => esd && recurrenciaSuportada(esd));

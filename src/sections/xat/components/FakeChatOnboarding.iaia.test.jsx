@@ -34,25 +34,27 @@ afterEach(cleanup);
 const esDeComunitat = (id) => id.startsWith('fake-poble') || id.startsWith('fake-sdp');
 const directes = () => valor.chatThreads.map((f) => f.id).filter((id) => !esDeComunitat(id));
 
-/* Onada 261030 (cicle 2) · El total és la suma dels fils pintats (Avisos de
-   Sóc de Poble, Avisos del poble i, encesa, la IAIA), el mateix que la llista. */
+/* Onada 261030 (cicle 2) · El total és la suma dels fils pintats, el mateix
+   que la llista. P0-ANDROID-PUSH (v1.2.16) · B5 (doctrina del Foraster, ordre
+   del Mestre 261121) · Cap fil de mostra porta cap no llegit: encesa o apagada,
+   el total és 0. S'actualitza a posta (abans, 3 i 2). */
 const sumaDelsFils = () => valor.chatThreads.reduce((suma, f) => suma + (f.noLlegits || 0), 0);
 
-test('encesa: les dues entrades d’ajuda i tres no llegits', async () => {
+test('encesa: les dues entrades d’ajuda i cap no llegit', async () => {
   munta(false);
   expect(directes()).toEqual(['fake-iaia', 'fake-javi']);
   expect(valor.totalNoLlegits).toBe(sumaDelsFils());
-  expect(valor.totalNoLlegits).toBe(3);
+  expect(valor.totalNoLlegits).toBe(0);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble', 'IAIA MarIA']);
   expect(valor.esFilAmagat('fake-iaia')).toBe(false);
 });
 
-test('apagada: només Sóc de Poble, dos no llegits (els Avisos), i la IAIA no es pot obrir', async () => {
+test('apagada: només Sóc de Poble, cap no llegit, i la IAIA no es pot obrir', async () => {
   munta(true);
   expect(directes()).toEqual(['fake-javi']);
   expect(valor.chatThreads.some((f) => f.id === 'fake-sdp' && f.tipus === 'comunitat')).toBe(true);
   expect(valor.totalNoLlegits).toBe(sumaDelsFils());
-  expect(valor.totalNoLlegits).toBe(2);
+  expect(valor.totalNoLlegits).toBe(0);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble']);
   /* Teler: un destinatari no disponible no es convertix en Sóc de Poble. */
   await expect(valor.creaFil('ajuda:ia')).rejects.toMatchObject({ code: 'DESTINATARI_INVALID' });

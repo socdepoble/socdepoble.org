@@ -3,8 +3,9 @@
  * per a navegadors socials incrustats (P0-114 Escut 1 · Onada R32.13).
  *
  * Detecta els WebViews interns d'aplicacions socials (Facebook iOS FBAN/FBIOS,
- * Facebook Android FB_IAB/FB4A/FBAV/FBMessenger, Instagram, TikTok i LINE) on
- * Google OAuth bloqueja l'autorització amb `403 disallowed_useragent`.
+ * Facebook Android FB_IAB/FB4A/FBAV/FBMessenger, Instagram, TikTok, LINE i
+ * WhatsApp `WhatsApp/…`) i el WebView genèric d'Android (`; wv)`), on Google
+ * OAuth bloqueja l'autorització amb `403 disallowed_useragent`.
  *
  * SEGURETAT I RENDIMENT:
  *  · Escàner d'una sola passada lineal O(n) sobre codis ASCII, amb 0 expressions
@@ -86,6 +87,8 @@ export function esNavegadorSocialIncrustat(userAgent, opcions = {}) {
   let teFacebook = false;
   let teTiktok = false;
   let teLine = false;
+  let teWhatsapp = false;
+  let teWebviewAndroid = false;
   let teIos = false;
   let teAndroid = false;
 
@@ -112,6 +115,10 @@ export function esNavegadorSocialIncrustat(userAgent, opcions = {}) {
         else if (TOKENS_FACEBOOK.has(token)) teFacebook = true;
         else if (TOKENS_TIKTOK.has(token) || token.startsWith('musical_ly_')) teTiktok = true;
         else if (token === 'line' && codi === 47) teLine = true;
+        /* P0-ANDROID-PUSH (v1.2.16) · B7 · «WhatsApp/…»: el token tancat per «/» (codi 47). */
+        else if (token === 'whatsapp' && codi === 47) teWhatsapp = true;
+        /* «; wv)»: el token «wv» tancat per «)» (codi 41), la marca de tot WebView d'Android. */
+        else if (token === 'wv' && codi === 41) teWebviewAndroid = true;
         else if (token === 'iphone' || token === 'ipad' || token === 'ipod') teIos = true;
         else if (token === 'android') teAndroid = true;
       }
@@ -135,6 +142,15 @@ export function esNavegadorSocialIncrustat(userAgent, opcions = {}) {
   }
   if (teLine) {
     return Object.freeze({ esWebViewSocial: true, app: 'line', nomApp: 'LINE', sistema });
+  }
+  if (teWhatsapp) {
+    return Object.freeze({ esWebViewSocial: true, app: 'whatsapp', nomApp: 'WhatsApp', sistema });
+  }
+  /* P0-ANDROID-PUSH (v1.2.16) · B7 · Tot WebView d'Android porta «; wv)»; Chrome i les seues
+     pestanyes personalitzades, no. Sense nom d'app: l'avís és el «SenseApp» (textosDeLEscut).
+     L'App pròpia (Capacitor) ja ha eixit al principi (esEntornCapacitorNatiu). */
+  if (teWebviewAndroid && teAndroid) {
+    return Object.freeze({ esWebViewSocial: true, app: 'webview', nomApp: null, sistema: 'android' });
   }
 
   return NO_NAVEGADOR_INCRUSTAT;
@@ -189,13 +205,17 @@ export async function copiaEnllacAmbReserva(adreca, entorn = {}) {
  * l'orientació OAuth dins de navegadors socials incrustats.
  * Viu fora del diccionari valencià de config per mantindre 0 B d'impacte en
  * l'arrencada estàtica del connector de WordPress.
+ * P0-ANDROID-PUSH (v1.2.16) · B7 · `avisSenseApp` i `instruccionsAndroidSenseApp`:
+ * el WebView genèric d'Android no diu de quina app és (textosDeLEscut).
  */
 export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   ca: Object.freeze({
     avis: 'Dins del navegador intern de l’app {app}, Google bloqueja l’entrada per seguretat (403 disallowed_useragent).',
+    avisSenseApp: 'Dins del navegador intern d’una altra app, Google bloqueja l’entrada per seguretat (403 disallowed_useragent).',
     explicacio: 'Pots entrar ara mateix amb el correu i una contrasenya al servidor de Sóc de Poble, o obrir la pàgina al navegador del telèfon.',
     instruccionsIos: 'A l’iPhone o l’iPad: toca el menú «⋯» de l’app {app} i tria «Obri en Safari».',
     instruccionsAndroid: 'A Android: toca el menú «⋮» de l’app {app} i tria «Obri en Chrome» o «Obri al navegador».',
+    instruccionsAndroidSenseApp: 'A Android: toca el menú «⋮» de l’app on has obert l’enllaç i tria «Obri en Chrome» o «Obri al navegador».',
     instruccionsAltre: 'Toca el menú «⋯» de l’app {app} i tria «Obri al navegador extern» per a continuar amb Google.',
     botoEnllacMagic: 'Entraves amb Google o has oblidat la contrasenya? Rep un enllaç per a crear-ne una',
     botoCorreu: 'Entra o crea un compte amb el correu',
@@ -205,9 +225,11 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   }),
   es: Object.freeze({
     avis: 'Dentro del navegador interno de {app}, Google bloquea la entrada por seguridad (403 disallowed_useragent).',
+    avisSenseApp: 'Dentro del navegador interno de otra aplicación, Google bloquea la entrada por seguridad (403 disallowed_useragent).',
     explicacio: 'Puedes entrar ahora mismo con tu correo y una contraseña en el servidor de Sóc de Poble, o abrir la página en el navegador del teléfono.',
     instruccionsIos: 'En iPhone o iPad: toca el menú «⋯» de {app} y elige «Abrir en Safari».',
     instruccionsAndroid: 'En Android: toca el menú «⋮» de {app} y elige «Abrir en Chrome» o «Abrir en el navegador».',
+    instruccionsAndroidSenseApp: 'En Android: toca el menú «⋮» de la aplicación donde has abierto el enlace y elige «Abrir en Chrome» o «Abrir en el navegador».',
     instruccionsAltre: 'Toca el menú «⋯» de {app} y elige «Abrir en el navegador externo» para continuar con Google.',
     botoEnllacMagic: '¿Entrabas con Google o has olvidado la contraseña? Recibe un enlace para crear una',
     botoCorreu: 'Entrar o crear cuenta con correo',
@@ -217,9 +239,11 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   }),
   en: Object.freeze({
     avis: 'Inside {app}’s built-in browser, Google blocks sign-in for security (403 disallowed_useragent).',
+    avisSenseApp: 'Inside another app’s built-in browser, Google blocks sign-in for security (403 disallowed_useragent).',
     explicacio: 'You can sign in right now with your email and a password on the Sóc de Poble server, or open this page in your phone’s browser.',
     instruccionsIos: 'On iPhone or iPad: tap the “⋯” menu in {app} and choose “Open in Safari”.',
     instruccionsAndroid: 'On Android: tap the “⋮” menu in {app} and choose “Open in Chrome” or “Open in browser”.',
+    instruccionsAndroidSenseApp: 'On Android: tap the “⋮” menu in the app where you opened the link and choose “Open in Chrome” or “Open in browser”.',
     instruccionsAltre: 'Tap the “⋯” menu in {app} and choose “Open in external browser” to continue with Google.',
     botoEnllacMagic: 'Used Google to sign in, or forgot your password? Get a link to create one',
     botoCorreu: 'Sign in or create account with email',
@@ -229,9 +253,11 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   }),
   eu: Object.freeze({
     avis: '{app} aplikazioaren barneko nabigatzailean, Google-k sarrera blokeatzen du segurtasunagatik (403 disallowed_useragent).',
+    avisSenseApp: 'Beste aplikazio baten barneko nabigatzailean, Google-k sarrera blokeatzen du segurtasunagatik (403 disallowed_useragent).',
     explicacio: 'Oraintxe bertan sar zaitezke posta elektronikoarekin eta pasahitz batekin Sóc de Pobleren zerbitzarian, edo ireki orria telefonoko nabigatzailean.',
     instruccionsIos: 'iPhone edo iPad gailuetan: sakatu {app}-ko «⋯» menua eta aukeratu «Ireki Safarin».',
     instruccionsAndroid: 'Androiden: sakatu {app}-ko «⋮» menua eta aukeratu «Ireki Chromen» edo «Ireki nabigatzailean».',
+    instruccionsAndroidSenseApp: 'Androiden: sakatu esteka ireki duzun aplikazioaren «⋮» menua eta aukeratu «Ireki Chromen» edo «Ireki nabigatzailean».',
     instruccionsAltre: 'Sakatu {app}-ko «⋯» menua eta aukeratu «Ireki kanpoko nabigatzailean» Google-rekin jarraitzeko.',
     botoEnllacMagic: 'Google-rekin sartzen zinen edo pasahitza ahaztu duzu? Jaso esteka bat pasahitz berri bat sortzeko',
     botoCorreu: 'Sartu edo sortu kontua posta elektronikoarekin',
@@ -241,9 +267,11 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   }),
   gl: Object.freeze({
     avis: 'Dentro do navegador interno de {app}, Google bloquea a entrada por seguridade (403 disallowed_useragent).',
+    avisSenseApp: 'Dentro do navegador interno doutra aplicación, Google bloquea a entrada por seguridade (403 disallowed_useragent).',
     explicacio: 'Podes entrar agora mesmo co correo e un contrasinal no servidor de Sóc de Poble, ou abrir a páxina no navegador do teléfono.',
     instruccionsIos: 'No iPhone ou no iPad: toca o menú «⋯» de {app} e escolle «Abrir en Safari».',
     instruccionsAndroid: 'En Android: toca o menú «⋮» de {app} e escolle «Abrir en Chrome» ou «Abrir no navegador».',
+    instruccionsAndroidSenseApp: 'En Android: toca o menú «⋮» da aplicación onde abriches a ligazón e escolle «Abrir en Chrome» ou «Abrir no navegador».',
     instruccionsAltre: 'Toca o menú «⋯» de {app} e escolle «Abrir no navegador externo» para continuar con Google.',
     botoEnllacMagic: 'Entrabas con Google ou esqueciches o contrasinal? Recibe unha ligazón para crear un',
     botoCorreu: 'Entrar ou crear conta co correo',
@@ -258,4 +286,23 @@ export function textosNavegadorIncrustat(idioma) {
   return Object.hasOwn(TEXTOS_NAVEGADOR_INCRUSTAT, codi)
     ? TEXTOS_NAVEGADOR_INCRUSTAT[codi]
     : TEXTOS_NAVEGADOR_INCRUSTAT.ca;
+}
+
+/**
+ * P0-ANDROID-PUSH (v1.2.16) · B7 · L'avís i les instruccions de l'escut per a la
+ * detecció `webview`, sense cap «{app}» sense omplir: amb nom d'app, els textos
+ * de sempre; sense (el WebView genèric d'Android), els «SenseApp». Pura.
+ *
+ * @param {Readonly<Record<string, string>>} tx textos d'una llengua (textosNavegadorIncrustat)
+ * @param {{ nomApp?: string|null, sistema?: string }|null} webview la detecció
+ * @returns {Readonly<{ avis: string, instruccions: string }>}
+ */
+export function textosDeLEscut(tx, webview) {
+  const nom = webview?.nomApp || null;
+  const omple = (text) => text.replace('{app}', () => nom || '');
+  const avis = nom ? omple(tx.avis) : tx.avisSenseApp;
+  let instruccions;
+  if (webview?.sistema === 'android') instruccions = nom ? omple(tx.instruccionsAndroid) : tx.instruccionsAndroidSenseApp;
+  else instruccions = omple(webview?.sistema === 'ios' ? tx.instruccionsIos : tx.instruccionsAltre);
+  return Object.freeze({ avis, instruccions });
 }

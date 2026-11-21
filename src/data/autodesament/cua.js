@@ -71,6 +71,11 @@ export function creaCua({
      encara hi arribe (el buidatge en desmuntar d'un editor obert) no torna al
      disc. Una entrada nova de sessió (recordaContext, repren) els allibera. */
   const oblidats = new Set();
+  /* Una resposta en vol no pertany mai a una entrada posterior de sessió,
+     encara que l'àmbit i les seqüències del camp tornen a coincidir. */
+  const generacions = new Map();
+  let generacioGlobal = 0;
+  const generacioDe = (ambit) => `${generacioGlobal}:${generacions.get(ambit) || 0}`;
   /* T47 (correcció de la revisió C04, 260928) · Un camp amb `baseValor` (el valor
      del servidor que la persona tenia davant quan el va començar a escriure)
      només ix sol si s'ha escrit EN esta càrrega de pàgina. El que ve del disc
@@ -133,7 +138,11 @@ export function creaCua({
   function desaRegistre(clau, registre) {
     const promesa = registre ? magatzem.desa(clau, registre) : magatzem.esborra(clau);
     persistencies.set(clau, promesa);
-    promesa.then(() => { if (persistencies.get(clau) === promesa) persistencies.delete(clau); });
+    promesa.then(() => {
+      if (persistencies.get(clau) === promesa) persistencies.delete(clau);
+      /* Una fallada de quota canvia persistent després de l'escriptura. */
+      avisa(clau);
+    });
     avisa(clau);
     return promesa;
   }
@@ -211,6 +220,8 @@ export function creaCua({
   async function executa(c) {
     const registre = magatzem.llig(c.clau);
     const camps = campsDelCarril(c, registre);
+    const generacio = registre ? generacioDe(registre.ambit) : null;
+    const vigent = () => registre && generacio === generacioDe(registre.ambit) && !oblidats.has(registre.ambit);
     if (!camps.length) { c.problema = null; return; }
     const escriptor = escriptors.get(registre.entitat);
     if (!escriptor) { c.problema = { tipus: 'escriptor' }; return; }
@@ -243,7 +254,7 @@ export function creaCua({
     /* ABANS de cap xarxa: la còpia durable ha d'haver aterrat (o fallat). */
     await persistencies.get(c.clau);
     /* L'espera pot haver durat: oblidat (eixida) o sessió canviada, no ix res. */
-    if (!magatzem.llig(c.clau)) return;
+    if (!vigent() || !magatzem.llig(c.clau)) return;
     if (actorSegur(context) !== registre.ambit) { c.problema = { tipus: 'sessio' }; return; }
 
     c.enviant = true;
@@ -255,11 +266,11 @@ export function creaCua({
       });
     } catch (error) {
       c.enviant = false;
-      tractaFallada(c, error, enviats);
+      if (vigent()) tractaFallada(c, error, enviats);
       return;
     }
     c.enviant = false;
-    confirma(c, registre, enviats, canvis, resultat);
+    if (vigent()) confirma(c, registre, enviats, canvis, resultat, vigent);
   }
 
   function tractaFallada(c, error, enviats) {
@@ -295,7 +306,7 @@ export function creaCua({
     marcaErrors(c.clau, perCamp(classificat.tipus));
   }
 
-  function confirma(c, registre, enviats, canvis, resultat) {
+  function confirma(c, registre, enviats, canvis, resultat, vigent) {
     const actual = magatzem.llig(c.clau);
     if (actual) {
       const camps = { ...actual.camps };
@@ -307,11 +318,13 @@ export function creaCua({
     }
     c.intents = 0;
     c.problema = null;
+    if (!vigent()) return;
     const avis = congela({
       ambit: registre.ambit, entitat: registre.entitat, id: registre.id,
       canvis: congela({ ...canvis }), fila: resultat?.fila ?? null, revisio: resultat?.revisio ?? null,
     });
     for (const oient of [...oientsConfirmacio]) {
+      if (!vigent()) break;
       try { oient(avis); } catch (error) { console.warn('[autodesament] Oient de confirmació:', error); }
     }
   }
@@ -544,6 +557,7 @@ export function creaCua({
   function oblida(ambit) {
     const objectiu = String(ambit ?? '');
     oblidats.add(objectiu);
+    generacions.set(objectiu, (generacions.get(objectiu) || 0) + 1);
     const claus = new Set(magatzem.llista().filter((registre) => registre.ambit === objectiu).map(clauDe));
     for (const c of carrils.values()) {
       let delAmbit = claus.has(c.clau);
@@ -568,6 +582,7 @@ export function creaCua({
     if (typeof magatzem.esborraAmbit === 'function') esborrat = magatzem.esborraAmbit(objectiu);
     else esborrat = Promise.all([...claus].map((clau) => magatzem.esborra(clau))).then((fets) => fets.every(Boolean));
     for (const clau of claus) {
+      instantanies.delete(clau);
       persistencies.set(clau, esborrat);
       avisa(clau);
     }
@@ -664,6 +679,8 @@ export function creaCua({
     get persistent() { return magatzem.persistent; },
     /** Per a les proves: oblida-ho tot (els escriptors i els oients es queden). */
     reinicia() {
+      generacioGlobal += 1;
+      generacions.clear();
       for (const c of carrils.values()) {
         if (c.temporitzador) anulaTemps(c.temporitzador);
         for (const resol of c.esperes.splice(0)) resol(false);

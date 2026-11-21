@@ -18,7 +18,8 @@ import { VERSIO_CLIENT_NATIU } from '../data/contracte.js';
 import { LANGUAGE_STORAGE_KEY, desaIdiomaTriat } from '../config/i18n.js';
 import { delVal } from '../config/storage.js';
 import CalActualitzarDeDalt from './CalActualitzar.jsx';
-import { bloqueigDeVersio, enllacSegur } from './versioMinima.js';
+import { ENLLAC_APK_DIRECTE } from '../config/actualitzacioRecomanada.js';
+import { ENLLAC_ANDROID_MARKET, ENLLAC_IOS_APP_STORE, bloqueigDeVersio, enllacSegur, estatDeVersio } from './versioMinima.js';
 
 vi.hoisted(() => {
   for (const [variable, valor] of Object.entries({
@@ -232,6 +233,30 @@ describe('P0-23 · la porta, pura', () => {
       avis.mockRestore();
     }
     expect(await bloqueigDeVersio()).toBeNull();
+  });
+
+  /* v1.2.16 · ZERO APK fora de botiga (Gauntlet v1.2.16, ronda 2, L3R2-03) · L'enllaç del node (versio_minima_client)
+     o del manifest: a Android només l'https de play.google.com; un .apk, o qualsevol altre host, és la fitxa de Play. */
+  test('v1.2.16 · ZERO APK: a Android, un enllaç del node o del manifest que no és de Google Play és la fitxa de Google Play', async () => {
+    const PLAY_CA = `${PLAY}&hl=ca`;
+    for (const enllac of [ENLLAC_APK_DIRECTE, 'https://atacant.example/app.apk', 'https://play.google.com.atacant.example/app.apk',
+      'https://play.google.com@atacant.example/app.apk', 'https://play.google.com:8443/app.apk']) {
+      expect(await bloqueigDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 3, enllac }) }), enllac)
+        .toEqual({ versioMinima: 3, enllac: PLAY });
+      expect(await estatDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 2, versioRecomanada: 3, enllac }) }), enllac)
+        .toEqual({ estat: 'recomanada', plataforma: 'android', versioRecomanada: 3, enllac: PLAY, marketUrl: ENLLAC_ANDROID_MARKET });
+      const fontViva = vi.fn(async () => ({ versioRecomanada: 3, canals: { android: { enllac } } }));
+      expect((await estatDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 2, enllac: null }), fontViva }))?.enllac, enllac)
+        .toBe(PLAY);
+    }
+    // La fitxa de Google Play del node es conserva (amb la llengua), i sense enllaç https la pantalla continua sense botó.
+    expect(await bloqueigDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 3, enllac: PLAY_CA }) }))
+      .toEqual({ versioMinima: 3, enllac: PLAY_CA });
+    expect(await bloqueigDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 3, enllac: 'javascript:alert(1)' }) }))
+      .toEqual({ versioMinima: 3, enllac: null });
+    // iOS no canvia: l'App Store del node.
+    expect(await bloqueigDeVersio({ plataforma: 'ios', config: {}, versio: 2, port: port({ versioMinima: 3, enllac: ENLLAC_IOS_APP_STORE }) }))
+      .toEqual({ versioMinima: 3, enllac: ENLLAC_IOS_APP_STORE });
   });
 
   test('l’enllaç: només una adreça https; la resta, null', () => {

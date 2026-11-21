@@ -26,7 +26,8 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, basename } from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 const ARREL = process.cwd();
 const DETALL = process.argv.includes('--detall');
@@ -44,8 +45,8 @@ const SSOT = 'tooling/wiki/lib/project_paths.mjs';
 
 /** Directoris canònics: literal prohibit -> export que l'ha de substituir. */
 const CANONICS = {
-  '04_escriptori': 'ESCRIPTORI_DIR',
-  '_wiki_de_poble': 'WIKI_DIR'
+  [basename(CAMINS.escriptori)]: 'ESCRIPTORI_DIR',
+  [CAMINS.wiki]: 'WIKI_DIR'
 };
 
 /** Fitxers exempts: la SSOT mateixa i la documentació. */

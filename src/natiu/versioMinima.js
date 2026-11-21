@@ -10,12 +10,18 @@
  * FAIL-OPEN: sense la capacitat, sense resposta, amb un error o amb una
  * resposta que no s'entén, l'app entra com sempre. Mai a la web ni al connector
  * de WordPress: només ho crida l'entrada nativa, i només a iOS i Android.
+ *
+ * v1.2.16 · ZERO APK fora de botiga (Gauntlet v1.2.16, ronda 2, L3R2-03) · Els enllaços del
+ * node (versio_minima_client) i del manifest passen per enllacDeLaPlataforma: a Android només
+ * l'https de play.google.com; qualsevol altre, també un .apk, és ENLLAC_ANDROID_PLAY, i ni
+ * «Cal actualitzar l'app» ni la barra no obrin mai un APK.
  */
 import {
   ENLLAC_ANDROID_MARKET,
   ENLLAC_ANDROID_PLAY,
   ENLLAC_IOS_APP_STORE,
   enllacBotigaPerDefecte,
+  enllacDeLaPlataforma,
   enllacSegur,
   obriBotigaActualitzacio
 } from '../config/actualitzacioRecomanada.js';
@@ -57,18 +63,18 @@ export async function estatDeVersio({
       return {
         estat: 'bloquejada',
         versioMinima,
-        enllac: enllacSegur(minima.enllac)
+        enllac: enllacDeLaPlataforma(plataforma, minima.enllac)
       };
     }
     let versioRecomanada = Number.isSafeInteger(minima?.versioRecomanada) ? minima.versioRecomanada : null;
-    let enllacViva = enllacSegur(minima?.enllac);
+    let enllacViva = enllacDeLaPlataforma(plataforma, minima?.enllac);
     if (versioRecomanada === null && typeof fontViva === 'function') {
       try {
         const viva = await fontViva(plataforma);
         if (Number.isSafeInteger(viva?.versioRecomanada) && viva.versioRecomanada >= 1) {
           versioRecomanada = viva.versioRecomanada;
         }
-        const canalEnllac = enllacSegur(viva?.canals?.[plataforma]?.enllac ?? viva?.enllac);
+        const canalEnllac = enllacDeLaPlataforma(plataforma, viva?.canals?.[plataforma]?.enllac ?? viva?.enllac);
         if (!enllacViva && canalEnllac) enllacViva = canalEnllac;
       } catch {
         // Silenciós: el manifest estàtic auxiliar mai bloqueja ni embruta l'arrencada.

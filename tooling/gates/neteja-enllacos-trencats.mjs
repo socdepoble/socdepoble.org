@@ -2,16 +2,17 @@
 import { pathToFileURL } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const ARREL = path.resolve(process.cwd());
-const WIKI_DIR = path.join(ARREL, '_wiki_de_poble');
+const WIKI_DIR = path.join(ARREL, CAMINS.wiki);
 
 function getAllMdFiles(dir, fileList = []) {
   if (!fs.existsSync(dir)) return fileList;
   const files = fs.readdirSync(dir);
   for (const file of files) {
-    if (file.startsWith('.') || file === '90_arxiu_historic' || file === '04_escriptori') continue;
+    if (file.startsWith('.') || file === '90_arxiu_historic' || file === path.basename(CAMINS.escriptori)) continue;
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
       getAllMdFiles(filePath, fileList);

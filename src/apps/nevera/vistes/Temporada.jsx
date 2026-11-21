@@ -126,10 +126,10 @@ export function ColumnaLlistaPerTemporada({ params }) {
   ];
   const textosMig = { 'en-colleccio': tx.perComprar };
   const startActions = useAccioEstreta({
-    id: 'de-temporada', icona: CalendarDays, etiqueta: titolDeTemporada(vista.mes), onAcciona: vistes.cataleg.vesA
+    id: 'de-temporada', icona: CalendarDays, etiqueta: titolDeTemporada(vista.mes, idioma), onAcciona: vistes.cataleg.vesA
   });
   const articles = liniesPerTemporada(estat, llista.id, vista.mes);
-  const grups = grupsDeTemporada(vista.nomesDeTemporada).map(ambIcona);
+  const grups = grupsDeTemporada(vista.nomesDeTemporada, idioma).map(ambIcona);
   const nomDelGrup = new Map(grups.map((grup) => [grup.id, grup.nom]));
   const buit = articles.length === 0
     ? <EstatBuit titol={txBuit.temporadaLlistaBuida}>{txBuit.temporadaLlistaBuidaText}</EstatBuit>
@@ -138,7 +138,7 @@ export function ColumnaLlistaPerTemporada({ params }) {
     <MarcColumna
       capcalera={<AppGridColumn titol={titol} startActions={startActions} />}
       eines={(
-        <NavegacioPeriode titol={nomDelMes(vista.mes)} etiquetes={tx.etiquetesMes}
+        <NavegacioPeriode titol={nomDelMes(vista.mes, idioma)} etiquetes={tx.etiquetesMes}
           onAnterior={vista.anterior} onHui={vista.esteMes} onSeguent={vista.seguent}
           vista={vista.filtre} onCanviaVista={vista.triaFiltre} vistes={filtres} etiquetaVistes={tx.filtreLabel} />
       )}
@@ -168,8 +168,8 @@ export function ColumnaLlistaPerTemporada({ params }) {
               title={article.nom}
               /* Integració final (261004, F04) · Subtítol i entradeta reals, com a l'esquelet
                  (vestits.js): la secció de l'article i, sense especificació, d'on ix. */
-              subtitle={subtitolDe(delCataleg)}
-              body={article.secundari || entradetaDe(delCataleg)}
+              subtitle={subtitolDe(delCataleg, idioma)}
+              body={article.secundari || entradetaDe(delCataleg, idioma)}
               squareBadge={{ type: 'custom', label: nomDelGrup.get(article.categoriaId) || article.nom, content: <QuadratDeTemporada grup={article.categoriaId} /> }}
               labels={[textosMig[article.estat]]}
               onMainClick={() => accions.marcaComprat(llista.id, article.id)}
@@ -203,16 +203,16 @@ export function ColumnaDeTemporada({ params }) {
       autoria: autoriaDArticle(delCataleg),
       /* Integració final (261004, F04) · Subtítol i entradeta reals: la secció i d'on ix l'article
          o, si encara no n'és cap, que és un suggeriment del calendari de temporada. */
-      subtitol: subtitolDe(delCataleg),
-      entradeta: delCataleg ? entradetaDe(delCataleg) : tx.suggerimentTemporada
+      subtitol: subtitolDe(delCataleg, idioma),
+      entradeta: delCataleg ? entradetaDe(delCataleg, idioma) : tx.suggerimentTemporada
     };
   });
   return (
     <ColumnaCataleg
       forma="targetes"
       ometDataNoIndicada
-      titol={titolDeTemporada(mes)}
-      categories={seccionsDeTemporada().map(ambIcona)}
+      titol={titolDeTemporada(mes, idioma)}
+      categories={seccionsDeTemporada(idioma).map(ambIcona)}
       articles={suggeriments}
       selector={false}
       ambVistes={false}

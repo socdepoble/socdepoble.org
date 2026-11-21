@@ -252,7 +252,9 @@ describe('les ranures de botiga', () => {
    immediata, obertes en una llista de prova: l'APK és un enllaç amb download
    i, davall, l'enllaç a la suma SHA-256 (un <a> de prosa dins d'un <p>);
    TestFlight, un enllaç i, davall, la guia de dos passos (Alerta sense regió
-   viva). Tancades (hui, amb les ranures de veres): res. */
+   viva). Tancades (hui, amb les ranures de veres): res.
+   Onada v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · L'APK ja no s'obri amb cap
+   adreça (pany de canalsDeBotiga.js): les proves de l'APK obert passen a provar que no es pinta. */
 describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () => {
   const RANURES = (obertes = {}) => [
     { id: 'google-play', nom: 'Google Play', url: null },
@@ -264,20 +266,17 @@ describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () =>
   const botons = () => [...ranura().querySelectorAll('.sdp-accions > a')]
     .map((a) => [a.getAttribute('href'), a.className, a.textContent, a.getAttribute('download')]);
 
-  test('l’APK obert: l’enllaç amb download i, davall, el de la suma SHA-256; cap guia', () => {
+  /* Fins a la v1.2.15, l'APK amb l'adreça canònica s'obria: l'enllaç amb download i, davall, el de la suma
+     (esta prova ho fixava). Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) ·
+     La ranura té pany (canalsDeBotiga.js, FORMES['apk-directe']): el ganxo (canalsOberts) no la deixa passar,
+     i no es pinta cap baixada, cap download ni cap suma; només WordPress.org. */
+  test('v1.2.16 · ZERO APK: l’APK amb l’adreça canònica d’abans no s’obri; cap download ni suma', () => {
     render(<Ranures canals={RANURES({ apk: APK })} />);
-    expect(botons()).toEqual([
-      [APK, CLASSE_BOTIGA, "Descarregar l'APK d'Android", 'socdepoble-android-latest.apk'],
-      [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org', null]
-    ]);
-    const suma = ranura().querySelectorAll(`a[href="${APK}.sha256"]`);
-    expect(suma).toHaveLength(1);
-    expect([suma[0].parentElement.tagName, suma[0].closest('.sdp-accions'), suma[0].textContent, suma[0].hasAttribute('download'), suma[0].hasAttribute('target')])
-      .toEqual(['P', null, 'Comprovar la suma SHA-256 del fitxer', false, false]);
-    // La suma va just davall dels botons; cap guia de TestFlight i cap altre enllaç.
-    expect(ranura().querySelector('.sdp-accions').nextElementSibling).toBe(suma[0].parentElement);
-    expect([ranura().querySelectorAll('ol').length, ranura().querySelectorAll('.sdp-alerta').length, ranura().querySelectorAll('a').length]).toEqual([0, 0, 3]);
-    expect(ranura().textContent).not.toMatch(/TestFlight|Google Play|App Store|prompte|aviat|pròximament/i);
+    expect(botons()).toEqual([[WORDPRESS, CLASSE_BOTIGA, 'WordPress.org', null]]);
+    expect([ranura().querySelectorAll('a[download]').length, ranura().querySelectorAll('a[href$=".sha256"]').length, ranura().querySelectorAll('p').length])
+      .toEqual([0, 0, 0]);
+    expect([ranura().querySelectorAll('ol').length, ranura().querySelectorAll('.sdp-alerta').length, ranura().querySelectorAll('a').length]).toEqual([0, 0, 1]);
+    expect(ranura().textContent).not.toMatch(/APK|SHA-256|TestFlight|Google Play|App Store|prompte|aviat|pròximament/i);
   });
 
   test('TestFlight obert: l’enllaç i, davall, la guia de dos passos sense regió viva; cap suma ni download', () => {
@@ -296,11 +295,13 @@ describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () =>
     expect(ranura().textContent).not.toMatch(/\bbeta\b|APK|Google Play|prompte|aviat|pròximament/i);
   });
 
-  test('les dues obertes: l’ordre de la llista, i la suma i la guia darrere dels botons', () => {
+  /* v1.2.16 · Amb l'APK i TestFlight alhora, només TestFlight s'obri (abans, l'APK anava davant i la suma darrere
+     dels botons): l'ordre de la llista, i la guia darrere dels botons. */
+  test('les dues alhora: l’APK no s’obri (v1.2.16), TestFlight sí, i la guia darrere dels botons', () => {
     render(<Ranures canals={RANURES({ apk: APK, testflight: TESTFLIGHT })} />);
-    expect(botons().map((boto) => boto[0])).toEqual([APK, TESTFLIGHT, WORDPRESS]);
+    expect(botons().map((boto) => boto[0])).toEqual([TESTFLIGHT, WORDPRESS]);
     const fills = [...ranura().children].map((fill) => fill.tagName + (fill.className ? `.${fill.className.split(' ')[0]}` : ''));
-    expect(fills).toEqual(['DIV.sdp-accions', 'P', 'DIV.sdp-alerta']);
+    expect(fills).toEqual(['DIV.sdp-accions', 'DIV.sdp-alerta']);
   });
 
   test('la mateixa adreça de TestFlight obri la seua ranura i no la de l’App Store; l’APK amb query, tancat', () => {
@@ -313,13 +314,14 @@ describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () =>
     expect(ranura().querySelectorAll('a')).toHaveLength(1);
   });
 
-  test('el text ve del t() de la interfície (anglés): els botons, la suma i la guia', () => {
+  // v1.2.16 · Sense l'APK (pany de la ranura), ni el seu botó ni la seua suma: abans, «Download the Android APK» i la suma.
+  test('el text ve del t() de la interfície (anglés): els botons i la guia', () => {
     const reserva = ui.t;
     ui.t = (clau, text) => EN[clau] || text;
     try {
       render(<Ranures canals={RANURES({ apk: APK, testflight: TESTFLIGHT })} />);
-      expect(botons().map((boto) => boto[2])).toEqual(['Download the Android APK', 'Try it on iPhone and iPad with TestFlight', 'WordPress.org']);
-      expect(ranura().querySelector(`a[href="${APK}.sha256"]`).textContent).toBe("Check the file's SHA-256 checksum");
+      expect(botons().map((boto) => boto[2])).toEqual(['Try it on iPhone and iPad with TestFlight', 'WordPress.org']);
+      expect(ranura().querySelector(`a[href="${APK}.sha256"]`)).toBeNull();
       expect([...ranura().querySelectorAll('ol > li')].map((pas) => pas.textContent)).toEqual([
         "Install Apple's TestFlight app from the App Store.",
         'Open the TestFlight link and tap “Accept” to install Sóc de Poble.'

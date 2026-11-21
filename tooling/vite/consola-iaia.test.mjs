@@ -12,9 +12,9 @@ import { EventEmitter } from 'node:events';
 import { PassThrough, Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import consolaIaia, {
-  ERROR_GOVERN_INTERN, ERROR_JARVIS, ESQUEMA_GOVERN, ESQUEMA_JARVIS, RUTA_GOVERN,
+  CANALS_JARVIS, ERROR_GOVERN_INTERN, ERROR_JARVIS, ESQUEMA_GOVERN, ESQUEMA_JARVIS, RUTA_GOVERN,
   RUTA_PROGRES_JARVIS, RUTA_PUBLICA_TOT, carregaAmbMarca, compiladorGovern,
-  oblidaCorredorJarvis, servixGovern, vocabulariGovern
+  nomsDArtefactes, oblidaCorredorJarvis, passosJarvis, servixGovern, vocabulariGovern
 } from './consola-iaia.mjs';
 import { RUTA_LLIBRE } from '../brain/fonts-govern.mjs';
 import { PROJECT_DIR } from '../wiki/lib/project_paths.mjs';
@@ -463,4 +463,24 @@ test('fronteres i CSRF (T1a-ARB-01): mètodes, IP externa, Origin/Host/Sec-Fetch
   assert.equal(res202.statusCode, 202);
   assert.equal(crides.length, 1);
   assert.equal(crides[0].args.at(-1), '--sec');
+});
+
+/* Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) · El pas d'Android del
+   corredor és només Google Play (fins a la v1.2.15, «Google Play i APK enviats»), i l'inventari dels
+   empaquetats no compta cap .apk: els APK antics de ../_builds_de_poble/android/ no són artefactes que es
+   puguen publicar. Els AAB, els IPA, els .xcarchive i els ZIP, com sempre. Carpeta de mkdtemp, cap xarxa. */
+test('v1.2.16 · ZERO APK: el títol del pas d’Android i l’inventari dels empaquetats no nomenen cap APK', () => {
+  const passos = passosJarvis([...CANALS_JARVIS]);
+  assert.deepEqual(passos.map((pas) => pas.titol), ['1/4 Web al dia', '2/4 WordPress al dia', '3/4 Google Play enviat', '4/4 Apple enviat']);
+  assert.equal(passos.some((pas) => /APK/i.test(pas.titol)), false);
+  const carpeta = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-empaquetats-')));
+  try {
+    for (const nom of ['261121_socdepoble_1.2.16+21.aab', '261121_socdepoble_1.2.16+21.apk', '261121_socdepoble_1.2.16+21.apk.sha256',
+      'app-release.APK', '261121_socdepoble_1.2.16+21.ipa', 'connector.zip', 'nota.txt']) fs.writeFileSync(path.join(carpeta, nom), 'x');
+    fs.mkdirSync(path.join(carpeta, '261121_socdepoble_1.2.16+21.xcarchive'));
+    assert.deepEqual(nomsDArtefactes(carpeta), ['261121_socdepoble_1.2.16+21.aab', '261121_socdepoble_1.2.16+21.ipa',
+      '261121_socdepoble_1.2.16+21.xcarchive', 'connector.zip']);
+  } finally {
+    fs.rmSync(carpeta, { recursive: true, force: true });
+  }
 });

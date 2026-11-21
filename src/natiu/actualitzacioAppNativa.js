@@ -53,14 +53,18 @@
  *     pot saber (P0123-02: una App de l'App Store amb el pont mut no ha de vore mai TestFlight), el de
  *     l'App Store, com sempre. L'App en App Review també porta el rebut de proves: la guarda és de
  *     publica-tot.mjs --sincronitza-proves, que no anuncia TestFlight per damunt d'un build en revisió.
- *   · Android · si l'App NO ve de Google Play (instal·lació directa) i `apkDirectBuild` > el build
- *     instal·lat: l'avís obri la baixada de l'APK signat i diu la seua SHA-256 (canal 'apk'). Si no, o
- *     si ve de Google Play, o si no es pot saber, el de Google Play, com sempre.
+ *   · Android · Onada v1.2.16 (ordres del Mestre 261121 01:32 i 01:55: ZERO APK fora de botiga) ·
+ *     DEROGA el canal de l'APK directe (fins a la v1.2.15: una App que no venia de Google Play i un
+ *     `apkDirectBuild` més alt obrien la baixada de l'APK signat, canal 'apk'). Ara cap origen, tampoc
+ *     el d'instal·lació directa (ORIGENS.DIRECTA), no rep mai un avís que baixe un APK: l'avís d'Android
+ *     és sempre el de Google Play (androidBuild, market:// i la fitxa https), com el de l'App de Google
+ *     Play o el d'origen desconegut. Un APK antic no s'actualitza damunt del de Google Play si la
+ *     signatura no és la mateixa (UPDATE_INCOMPATIBLE): la guia de /page/descarregues ho explica.
  *   · El veto de la versió semàntica val igual per a tots els canals, i un manifest d'abans (sense els
- *     camps nous) o amb un camp nou mal format dona exactament el comportament d'abans.
- * Els camps nous només els escriu scripts/botigues/publica-tot.mjs --sincronitza-proves, quan la
- * pujada a App Store Connect (puja-ios.mjs, registre de pujades) o l'APK publicat (--publica-apk) ho
- * acrediten.
+ *     camps nous) o amb un camp nou mal format dona exactament el comportament d'abans. Un manifest
+ *     heretat amb apkDirectBuild i apkSha256 no anuncia res: config/manifestVersio.js ja no els llig.
+ * El camp nou (testflightIosBuild) només l'escriu scripts/botigues/publica-tot.mjs --sincronitza-proves,
+ * quan la pujada a App Store Connect (puja-ios.mjs, registre de pujades) ho acredita.
  *
  * PORTES · Només a 'android' i 'ios' (la web, la PWA i el connector de WordPress no hi arriben:
  * src/natiu/ és un pou, frontera.test.js). I només si la CSP de la closca nativa (la meta que
@@ -73,7 +77,6 @@
 import {
   CANALS_ACTUALITZACIO,
   ENLLAC_ANDROID_MARKET,
-  ENLLAC_APK_DIRECTE,
   ENLLAC_TESTFLIGHT,
   FONT_MANIFEST,
   anotaDiagnosiActualitzacio,
@@ -107,8 +110,8 @@ export const CAMP_BUILD = Object.freeze({ android: 'androidBuild', ios: 'iosBuil
 
 /**
  * { versio, build } de la plataforma (la botiga pública), o null si el manifest no porta les dues
- * coses ben formades. v1.2.7 · I, només quan hi són i són vàlids, el canal de proves de la
- * plataforma: `testflightBuild` a iOS; `apkBuild` i `apkSha256` (sempre junts) a Android.
+ * coses ben formades. v1.2.7 · I, només quan hi és i és vàlid, el canal de proves d'iOS:
+ * `testflightBuild`. v1.2.16 · A Android, mai cap canal de l'APK directe (ZERO APK fora de botiga).
  */
 export function llegixManifestVersio(manifest, plataforma) {
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return null;
@@ -119,9 +122,6 @@ export function llegixManifestVersio(manifest, plataforma) {
   const build = canals?.[camp] ?? null;
   if (versio === null || build === null) return null;
   if (plataforma === 'ios' && canals.testflightIosBuild !== null) return { versio, build, testflightBuild: canals.testflightIosBuild };
-  if (plataforma === 'android' && canals.apkDirectBuild !== null) {
-    return { versio, build, apkBuild: canals.apkDirectBuild, apkSha256: canals.apkSha256 };
-  }
   return { versio, build };
 }
 
@@ -129,9 +129,9 @@ export function llegixManifestVersio(manifest, plataforma) {
  * L'avís per al registre de la barra si el servidor té una versió més nova; si no, null.
  * El build mana; la versió semàntica només veta un servidor més vell.
  * v1.2.7 · `origen` (natiu/origenInstallacio.js; per defecte, desconegut) tria el canal: TestFlight
- * només per a una App de TestFlight a iOS (P0123-02: l'origen desconegut va a l'App Store), l'APK
- * directe per a una App que no ve de Google Play a Android; si el canal de proves no té res de nou, la
- * botiga pública, com sempre.
+ * només per a una App de TestFlight a iOS (P0123-02: l'origen desconegut va a l'App Store); si el canal
+ * de proves no té res de nou, la botiga pública, com sempre. v1.2.16 · A Android, per a tot origen
+ * (també ORIGENS.DIRECTA), Google Play: mai cap baixada d'APK (ZERO APK fora de botiga).
  */
 export function novaVersioDisponible(manifest, {
   plataforma, versioLocal, buildLocal = VERSIO_CLIENT_NATIU, origen = ORIGENS.DESCONEGUT
@@ -149,17 +149,6 @@ export function novaVersioDisponible(manifest, {
       versio: manifest.versio,
       enllac: ENLLAC_TESTFLIGHT,
       marketUrl: null
-    };
-  }
-  if (plataforma === 'android' && origen === ORIGENS.DIRECTA && mesNou(manifest.apkBuild) && typeof manifest.apkSha256 === 'string') {
-    return {
-      plataforma,
-      canal: CANALS_ACTUALITZACIO.APK,
-      versioRecomanada: manifest.apkBuild,
-      versio: manifest.versio,
-      enllac: ENLLAC_APK_DIRECTE,
-      marketUrl: null,
-      sha256: manifest.apkSha256
     };
   }
   if (!mesNou(manifest.build)) return null;

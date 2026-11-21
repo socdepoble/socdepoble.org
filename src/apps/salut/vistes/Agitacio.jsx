@@ -22,7 +22,7 @@ import {
   accionsQueCalmen, antecedentsFrequents, associacioMiccio, episodis, episodisPerHora, nitsDolentes, perFranja
 } from '../nucli/agitacio.js';
 import { INSTRUMENTS_OFICIALS } from '../nucli/diccionari.js';
-import { dataCurta, dillunsDe, horaDe, sumaDies } from '../nucli/hores.js';
+import { dillunsDe, horaDe, sumaDies } from '../nucli/hores.js';
 import { useSalut } from '../useSalut.jsx';
 import { EnllacBoto, EnllacDetall, MarcSalut, useInterruptorsSalut, useNavegaSalut, useTextosSalut } from './comunes.jsx';
 
@@ -223,6 +223,7 @@ function FormulariValoracio({ setmana }) {
   const inicial = useMemo(() => existent || { conductesFreq: {}, dominis: {} }, [existent]);
   const [esborrany, setEsborrany] = useState(null);
   const [missatge, setMissatge] = useState(null);
+  const [desant, setDesant] = useState(false);
   if (!salut.carregat) return null;
   const valors = esborrany || inicial;
   const posaFreq = (grup, valor) => setEsborrany({ ...valors, conductesFreq: { ...valors.conductesFreq, [grup]: valor === '' ? undefined : Number(valor) } });
@@ -232,20 +233,24 @@ function FormulariValoracio({ setmana }) {
   const posaOficial = (clau, valor) => setEsborrany({ ...valors, oficial: { instrument: 'CMAI', total: '', data: salut.avui, ...valors.oficial, [clau]: valor } });
   const desa = async (event) => {
     event.preventDefault();
+    if (desant) return;
     const oficial = valors.oficial && String(valors.oficial.total).trim() !== ''
       ? { ...valors.oficial, total: Number(valors.oficial.total), perProfessional: true } : undefined;
     const conductesFreq = Object.fromEntries(Object.entries(valors.conductesFreq || {}).filter(([, v]) => v !== undefined));
+    setDesant(true);
     try {
       await salut.desaValoracio({ id: existent?.id, setmanaInici: setmana, conductesFreq, dominis: valors.dominis || {}, ...(oficial ? { oficial } : {}) });
       setEsborrany(null);
       setMissatge({ to: 'exit', text: tx.valoracioDesada });
     } catch (error) {
       setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
+    } finally {
+      setDesant(false);
     }
   };
   return (
-    <MarcSalut titol={tx.setmanaDel(dataCurta(setmana))}>
-      <form onSubmit={desa} noValidate aria-label={tx.valoracioSetmanal}>
+    <MarcSalut titol={tx.setmanaDel(etiquetaDataSalut(setmana, idioma))}>
+      <form onSubmit={desa} noValidate aria-label={tx.valoracioSetmanal} aria-busy={desant || undefined}>
         <Pila gap={4}>
           <Alerta to="info" viva={false}>{vTr.avis}</Alerta>
           <GrupCamps llegenda={tx.quantesVegadesSetmana}>
@@ -284,7 +289,7 @@ function FormulariValoracio({ setmana }) {
             </Camp>
           </GrupCamps>
           {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-          <Boto varietat="primari" mida="gran" tipus="submit" disabled={salut.nomesLectura}>{tx.desa}</Boto>
+          <Boto varietat="primari" mida="gran" tipus="submit" disabled={salut.nomesLectura || desant}>{tx.desa}</Boto>
         </Pila>
       </form>
     </MarcSalut>
