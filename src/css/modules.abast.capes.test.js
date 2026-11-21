@@ -45,7 +45,9 @@ const declaracions = (cos) => cos.split(';')
   .filter((d) => d.includes(':'))
   .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()]);
 
-const MODULS = [...regles(llig('src/css/modules.css')), ...regles(llig('src/css/diferit-connectar.css'))];
+/* v1.2.18 · Gauntlet R1 (L5-05) · Els contenidors d'Administració viuen al full diferit diferit-admin-taxonomia.css: la
+   guarda R16A-03 (cap word-break ni anywhere) els continua veient. */
+const MODULS = [...regles(llig('src/css/modules.css')), ...regles(llig('src/css/diferit-connectar.css')), ...regles(llig('src/css/diferit-admin-taxonomia.css'))];
 const DECLS = MODULS.flatMap((r) => declaracions(r.cos).map(([propietat, valor]) => ({ ...r, propietat, valor })));
 const on = (d) => `${d.prelud} { ${d.propietat}: ${d.valor} }`;
 

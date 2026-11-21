@@ -253,7 +253,7 @@ test('estructura: ol/ul, enllaços de l’arbre original i negretes; cap nom pro
   /* Gauntlet 261030 (cicle 4, traduccio-enllacos-sense-rel-noreferrer) · El
      rel de sanitize.js per a tot enllaç del contingut, també a la traducció. */
   expect([extern.getAttribute('href'), extern.getAttribute('target'), extern.getAttribute('rel')])
-    .toEqual(['https://gentdelatorre.net', '_blank', 'noopener noreferrer nofollow']);
+    .toEqual(['https://gentdelatorre.net', '_blank', 'noopener noreferrer']);
   expect(p.querySelector('a').getAttribute('rel')).toBe('noopener noreferrer nofollow');
   expect(cos.querySelector('ul > li').textContent).toBe('eng:Sóc de Poble');
 });

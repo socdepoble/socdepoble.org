@@ -162,15 +162,42 @@
     line-height: 1.65;
   }
 
-  /* P0-ANDROID-PUSH (v1.2.16) · B11c (ordre del Mestre 261121) · El xip «Lletra gran» comparteix
-     fila amb «Descarrega l'App» a l'accés del Xat (XatSection.jsx, AccesAlXat): la franja s'estira
-     com la píndola veïna, sense el seu marge de davall, i el xip n'ocupa l'amplària. La píndola, dins
-     de la fila, ja pren flex: 1 1 0 de modules.css (.sdp-xat-acces > .sdp-alerta__accions >
-     .sdp-xat-pindola). Entre la fila nova i la parella, només el buit de l'alerta, com abans entre
-     «Descarrega l'App» i la parella. Dins de l'app nativa el xip va sol a la fila. Regles només
-     d'este full diferit: modules.css viatja a l'arrencada de WordPress i no es toca. */
+  .sdp-mode-senior-xip--curt {
+    flex-wrap: nowrap;
+    gap: var(--sdp-space-1);
+    padding: 0 var(--sdp-space-3);
+    white-space: nowrap;
+  }
+
+  .sdp-mode-senior-xip__estat--curt {
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-small);
+    line-height: 1;
+  }
+
+  /* Onada R32.28 · C-2 · El xip «Lletra gran» a l'accés del Xat comparteix la primera fila amb
+     «Descarrega l'App» quan les dues amplàries naturals hi caben; si no hi caben, flex-wrap el baixa
+     centrat a la seua fila, al 100%.
+     v1.2.18 · Gauntlet R1 (L1-02) · min-inline-size: auto amb max-inline-size: 100%. El valor
+     d'abans, min(100%, max-content), era CSS invàlid (una paraula clau intrínseca no va dins de
+     min()) i el navegador el descartava. En un element flex el mínim automàtic queda limitat pel
+     màxim: la franja no és mai més ampla que la fila. Si la fila té lloc, cap píxel no canvia.
+     v1.2.18 · Gauntlet R1 (L1-04) · No és una fila de 48 px per a tothom. Mesurat a Chrome 158, a
+     360 px: en normal hi caben ca, en i gl (es i eu baixen a dues files, 108 px); en Sènior (56 px),
+     ca i gl (es, en i eu, 124 px); a 320 px el xip baixa en totes les llengües. La geometria per
+     llengua queda pendent de la decisió C-2 del Mestre (L1-03).
+     v1.2.18 · Gauntlet R2 (L1R2-03) · Eixa llista és una mesura de Chrome 158 d'escriptori (macOS),
+     no una propietat del CSS: el glif ○/✓ (U+25CB, U+2713) cau fora de l'unicode-range de Noto Sans
+     (public/fonts/noto-sans.css) i el pinta la lletra del sistema, que canvia amb la plataforma. En
+     i gl hi caben per menys de 3 px (en normal, en per 0,4 px; en Sènior li'n falta 0,1). En normal,
+     eu baixa també a 375 i 390 px (hi cap des d'uns 412 px); en Sènior baixa a totes les amplàries:
+     la fila es topa a 384 px (--sdp-targeta-viva-ample) i la lletra Sènior, fluida (clamp amb vw),
+     en demana com a mínim 3 px més. */
   .sdp-xat-acces .sdp-mode-senior-franja {
-    flex: 1 1 0;
+    flex: 1 1 auto;
+    min-inline-size: auto;
+    max-inline-size: 100%;
     margin: 0;
   }
 
@@ -180,5 +207,12 @@
 
   .sdp-xat-acces > .sdp-alerta__accions + .sdp-alerta__accions {
     margin-top: 0;
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(
+    .sdp-xat-acces .sdp-mode-senior-xip--curt,
+    .sdp-xat-acces > .sdp-alerta__accions:first-of-type > .sdp-xat-pindola
+  ) {
+    padding-inline: var(--sdp-space-3);
   }
 }

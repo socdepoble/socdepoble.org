@@ -96,17 +96,17 @@ function TargetaDeLectura({ attrs }) {
    (opcional): la llengua del text de la pàgina, que porta cada tros de text
    (.sdp-cos-tros). Les targetes no: hi ha botons de la interfície. Sense la
    prop, cap atribut. */
-export function CosAmbTargetes({ segments = [], className = null, lang = undefined }) {
+export function CosAmbTargetes({ segments = [], className = null, lang = undefined, enllacosEditorials = false }) {
   const trossos = segments.map((segment, index) => {
     if (segment.tipus === 'targetes') return (
       <div key={`g${index}`} className="sdp-targetes" data-forma={segment.forma} data-alineacio={segment.alineacio}>
         {segment.targetes.map((attrs, posicio) => <TargetaDeLectura key={`${attrs.clau}#${posicio}`} attrs={attrs} />)}
       </div>
     );
-    const editorial = renderHtmlEditorial(segment.html);
+    const editorial = renderHtmlEditorial(segment.html, { enllacosEditorials });
     return editorial ? (
       <div key={`h${index}`} className="sdp-cos-tros" lang={lang}>{editorial}</div>
-    ) : <div key={`h${index}`} className="sdp-cos-tros" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html) }} />;
+    ) : <div key={`h${index}`} className="sdp-cos-tros" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(segment.html, { enllacosEditorials }) }} />;
   });
   if (typeof className === 'string' && className.trim()) {
     return <article className={[className.trim(), 'sdp-amb-targetes'].join(' ')}>{trossos}</article>;

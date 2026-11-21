@@ -131,6 +131,11 @@ function invisibleDinsDe(element, arrel) {
 /* C4 · Les marques en línia que es conserven. */
 const EN_LINIA = new Set(['a', 'strong', 'b', 'em', 'i', 'code']);
 
+/** Només qualificacions canòniques del DOM original, mai del traductor. */
+export function relOriginalSegur(rel) {
+  return typeof rel === 'string' && /^(?:ugc nofollow (?:sponsored )?|sponsored )?noopener noreferrer$/.test(rel) ? rel : undefined;
+}
+
 /* C5 (Codex 261030) · Les etiquetes de bloc de dins d'un bloc: on comença o
    acaba una, el text de fora i el de dins no s'ajunten («<p>Primer</p><p>
    Segon</p>» dins d'un <li> és «Primer Segon», no «PrimerSegon»). */
@@ -183,6 +188,8 @@ function arbreDe(element, arrel) {
       const node = { etiqueta, fills: interiors };
       if (href) {
         node.href = href;
+        const rel = relOriginalSegur(fill.getAttribute('rel'));
+        if (rel) node.rel = rel;
         if (fill.getAttribute('target') === '_blank') node.novaFinestra = true;
       }
       const inici = etiqueta === 'ol' && fill.hasAttribute('start') ? Number(fill.getAttribute('start')) : NaN;
@@ -260,7 +267,9 @@ function pecesVisibles(bloc, arrel, estat = {}) {
     if (etiqueta !== 'a') marca = { id: marques.size, etiqueta };
     else {
       const href = hrefSegur(element.getAttribute('href'));
-      if (href) marca = { id: marques.size, etiqueta, href, ...(element.getAttribute('target') === '_blank' ? { novaFinestra: true } : {}) };
+      if (href) marca = { id: marques.size, etiqueta, href,
+        ...(relOriginalSegur(element.getAttribute('rel')) ? { rel: relOriginalSegur(element.getAttribute('rel')) } : {}),
+        ...(element.getAttribute('target') === '_blank' ? { novaFinestra: true } : {}) };
     }
     marques.set(element, marca);
     return marca;

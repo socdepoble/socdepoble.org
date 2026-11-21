@@ -250,9 +250,9 @@ test('/page/descarregues: un apartat per a cada camí i un per a la visió, amb 
      verificadors: un enllaç d'instruccions, no la fitxa (systemPages.test.js en guarda l'adreça). */
   expect([...cos().querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel'), a.textContent]))
     .toEqual([
-      [VERIFICADORS, '_blank', 'noopener noreferrer nofollow', 'play.google.com/apps/testing/org.socdepoble.app'],
-      [APP_STORE_DE_VERES, '_blank', 'noopener noreferrer nofollow', BOTO_APP_STORE],
-      [WORDPRESS, '_blank', 'noopener noreferrer nofollow', 'wordpress.org/plugins/socdepoble']
+      [VERIFICADORS, '_blank', 'noopener noreferrer', 'play.google.com/apps/testing/org.socdepoble.app'],
+      [APP_STORE_DE_VERES, '_blank', 'noopener noreferrer', BOTO_APP_STORE],
+      [WORDPRESS, '_blank', 'noopener noreferrer', 'wordpress.org/plugins/socdepoble']
     ]);
   const botoGran = cos().querySelector(`a[href="${APP_STORE_DE_VERES}"]`);
   expect([botoGran.className, botoGran.parentElement.className]).toEqual(['sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran', 'sdp-accions']);

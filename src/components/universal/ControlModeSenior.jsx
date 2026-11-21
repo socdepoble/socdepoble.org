@@ -41,7 +41,17 @@ const snapshotServidor = () => false;
  *   · sincronitzat amb storage.js i UIContext a través de config/theme.js.
  *
  * P0-ANDROID-PUSH (v1.2.16) · B11c · `etiquetaCurta`: l'etiqueta curta («Lletra gran», `xipCurt`) per a
- * l'accés del Xat, on el xip comparteix fila amb «Descarrega l'App». La pastilla d'estat es queda.
+ * l'accés del Xat, on el xip comparteix fila amb «Descarrega l'App».
+ *
+ * v1.2.18 · Gauntlet R1 (L1-04) · Amb `etiquetaCurta`, la marca textual («✓ Actiu» / «Desactivat»)
+ * només és de la variant per defecte. La curta pinta el glif compacte ○ / ✓, amb aria-hidden (l'estat
+ * el diu aria-checked) i sense pastilla: `__estat--curt` (diferit-mode-senior.css) en lleva el
+ * padding i la vora. La seua geometria per llengua a l'accés del Xat queda pendent de la decisió C-2
+ * del Mestre (L1-03).
+ *
+ * v1.2.18 · Gauntlet R2 (L1R2-02) · El xip curt és d'una sola línia en mode normal (`--curt`,
+ * nowrap); en Sènior la regla de les dianes (diferit-mode-senior.css) torna `white-space: normal`
+ * i, amb el text molt gran, l'etiqueta pot partir.
  */
 export default function ControlModeSenior({
   llengua = null,
@@ -72,18 +82,31 @@ export default function ControlModeSenior({
     aplicaSenior(arrel, seg);
   }, [accionsUI]);
 
+  const classesXip = [
+    'sdp-mode-senior-xip',
+    etiquetaCurta ? 'sdp-mode-senior-xip--curt' : '',
+    actiu ? 'sdp-mode-senior-xip--actiu' : '',
+  ].filter(Boolean).join(' ');
+
+  const textEstat = etiquetaCurta
+    ? (actiu ? '✓' : '○')
+    : (actiu ? `✓ ${tx.actiu}` : tx.inactiu);
+
   const boto = (
     <button
       type="button"
       role="switch"
       aria-checked={actiu ? 'true' : 'false'}
-      className={actiu ? 'sdp-mode-senior-xip sdp-mode-senior-xip--actiu' : 'sdp-mode-senior-xip'}
+      className={classesXip}
       data-testid={testId}
       onClick={commuta}
     >
       <span className="sdp-mode-senior-xip__etiqueta">{etiquetaCurta ? tx.xipCurt : tx.xip}</span>
-      <span className="sdp-mode-senior-xip__estat" aria-hidden="true">
-        {actiu ? `✓ ${tx.actiu}` : tx.inactiu}
+      <span
+        className={etiquetaCurta ? 'sdp-mode-senior-xip__estat sdp-mode-senior-xip__estat--curt' : 'sdp-mode-senior-xip__estat'}
+        aria-hidden="true"
+      >
+        {textEstat}
       </span>
     </button>
   );

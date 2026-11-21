@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import { normalitzaUnicodeSegura } from './normalitzaUnicodeSegura.js';
+import { esEnllacExtern, relEnllacExtern } from './enllacosExterns.js';
 
 /**
  * Sanejador d'HTML. ÚNIC punt d'entrada d'HTML a l'arbre.
@@ -28,6 +29,8 @@ let imatgesNomesPropies = false;
    crida. Sense l'opció, start cau com sempre: Notes, el Mur, el Perfil,
    l'editor i els panells de la Maquinària pinten el mateix, byte a byte. */
 let llistesNumerades = false;
+let enllacosEditorials = false;
+let enllacosPatrocinats = false;
 
 /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
    PROHIBIDES (PRIVACITAT). Per a evitar el rastreig d'IPs dels usuaris per
@@ -179,7 +182,10 @@ function posaGanxos() {
 
     // 2. Cap segrest de pestanya, i cap fuita de referent.
     if (node.tagName === 'A' && node.hasAttribute('href')) {
-      node.setAttribute('rel', 'noopener noreferrer nofollow');
+      const sponsored = enllacosPatrocinats || /(?:^|\s)sponsored(?:\s|$)/i.test(node.getAttribute('rel') || '');
+      node.setAttribute('rel', esEnllacExtern(node.getAttribute('href'))
+        ? relEnllacExtern({ editorial: enllacosEditorials, sponsored })
+        : 'noopener noreferrer nofollow');
       if (node.getAttribute('target') === '_blank') {
         node.setAttribute('target', '_blank');
       }
@@ -213,6 +219,8 @@ export function sanitizeHtml(html, opcions) {
   if (!html) return '';
   imatgesNomesPropies = opcions?.imatgesPropies === true;
   llistesNumerades = opcions?.llistesNumerades === true;
+  enllacosEditorials = opcions?.enllacosEditorials === true;
+  enllacosPatrocinats = opcions?.sponsored === true;
   try {
     try {
       return purifica(html);
@@ -221,6 +229,8 @@ export function sanitizeHtml(html, opcions) {
     }
   } finally {
     llistesNumerades = false;
+    enllacosEditorials = false;
+    enllacosPatrocinats = false;
   }
 }
 

@@ -1,7 +1,7 @@
 /* P0-ANDROID-PUSH (v1.2.16) · B11c (costura C-1 del carril A) · L'etiqueta curta del xip del Mode Sènior,
    «Lletra gran», per a l'accés del Xat (XatSection.jsx, AccesAlXat), en les 5 llengües. Sense la prop,
    l'etiqueta de sempre (/el-meu-perfil, /control i L'Avisador no canvien). */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import '../../../tests/helpers/diccionaris.js';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
@@ -19,20 +19,27 @@ afterEach(() => {
   reiniciaMemoriaSenior();
 });
 
-test.each(Object.entries(CURTES))('%s: amb etiquetaCurta, el xip diu «%s» i conserva la pastilla d’estat', (codi, curta) => {
+test.each(Object.entries(CURTES))('%s: amb etiquetaCurta (C-2), el xip diu «%s», usa glif compacte no-cromàtic i commuta ○ → ✓', (codi, curta) => {
   vi.stubGlobal('matchMedia', vi.fn((consulta) => ({ matches: false, media: consulta, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn() })));
   expect(TEXTOS_MODE_SENIOR[codi].xipCurt).toBe(curta);
   render(<UIProvider externalConfig={{ language: codi }}><ControlModeSenior etiquetaCurta testId="curt" /></UIProvider>);
   const xip = screen.getByTestId('curt');
+  expect(xip.classList.contains('sdp-mode-senior-xip--curt')).toBe(true);
   expect(xip.querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe(curta);
   expect(screen.getByRole('switch', { name: curta })).toBe(xip);
-  expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(TEXTOS_MODE_SENIOR[codi].inactiu);
+  expect(xip.querySelector('.sdp-mode-senior-xip__estat--curt').textContent).toBe('○');
+  fireEvent.click(xip);
+  expect(xip.getAttribute('aria-checked')).toBe('true');
+  expect(xip.querySelector('.sdp-mode-senior-xip__estat--curt').textContent).toBe('✓');
 });
 
-test('sense etiquetaCurta, l’etiqueta llarga de sempre', () => {
+test('sense etiquetaCurta, conserva l’etiqueta llarga i la pastilla textual de sempre', () => {
   vi.stubGlobal('matchMedia', vi.fn((consulta) => ({ matches: false, media: consulta, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn() })));
   render(<UIProvider externalConfig={{ language: 'ca' }}><ControlModeSenior /></UIProvider>);
-  expect(screen.getByTestId('control-mode-senior').querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe(TEXTOS_MODE_SENIOR.ca.xip);
+  const xip = screen.getByTestId('control-mode-senior');
+  expect(xip.classList.contains('sdp-mode-senior-xip--curt')).toBe(false);
+  expect(xip.querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe(TEXTOS_MODE_SENIOR.ca.xip);
+  expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(TEXTOS_MODE_SENIOR.ca.inactiu);
 });
 
 test('cada llengua té una etiqueta curta no buida, més curta que la llarga', () => {

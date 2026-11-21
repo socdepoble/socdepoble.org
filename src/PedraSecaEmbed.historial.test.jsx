@@ -104,6 +104,22 @@ afterEach(async () => {
 });
 
 describe('«Arrere» del navegador dins de l’element (ruta-a-url)', () => {
+  for (const [mode, url] of [
+    ['fragment', '/pagina#sdp=/pobles/sella'],
+    ['parametre', '/pagina?sdp=%2Fpobles%2Fsella']
+  ]) test(`R32.27 · anti Back-Button Hijacking: resolució ${mode} només replaceState`, async () => {
+    arriba(url);
+    const llargaria = window.history.length;
+    const { push, replace } = espies();
+    const element = await munta({ 'ruta-a-url': mode, 'ruta-inicial': '/xat' });
+    expect(on(element)).toBe('/pobles/sella');
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(window.history.length).toBe(llargaria);
+    await enrere();
+    expect(onEs()).toBe('/portada-de-l-amfitrio');
+    expect(push).not.toHaveBeenCalled();
+  });
   test('A → B → C: «Arrere» dues vegades torna a B i a A sense eixir, «Avant» torna, i la tercera ix del portal', async () => {
     arriba('/pagina');
     const { push } = espies();

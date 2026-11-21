@@ -101,7 +101,7 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
     const article = pinta();
     const trossos = [...article.querySelectorAll(':scope > .sdp-cos-tros')].map((tros) => tros.innerHTML).join('');
     const senseGrup = document.createElement('div');
-    senseGrup.innerHTML = sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.legal.html));
+    senseGrup.innerHTML = sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.legal.html), { enllacosEditorials: true });
     senseGrup.querySelector(`[${MARCA_GRUP}]`).remove();
     expect(trossos.replace(/\s+/g, ' ').trim()).toBe(senseGrup.innerHTML.replace(/\s+/g, ' ').trim());
   });
@@ -163,7 +163,7 @@ describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de s
 
   test.each(senseTargetes)('%s: el mateix <article class="cms-preview"> d’abans', (clau, pagina) => {
     const { container } = render(<TextSection page={pagina} pageKey={clau} />);
-    const abans = render(<article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(pagina.html)) }} />).container;
+    const abans = render(<article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(pagina.html), { enllacosEditorials: true }) }} />).container;
     expect(cosDe(container).outerHTML).toBe(abans.firstElementChild.outerHTML);
   });
 
@@ -171,6 +171,6 @@ describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de s
     const html = '<p>data-sdp-targetes és el nom de la marca</p>';
     const article = cosDe(render(<TextSection page={{ title: 'Marca', html }} pageKey="marca" />).container);
     expect(article.className).toBe('cms-preview');
-    expect(article.innerHTML).toBe(sanitizeHtml(html));
+    expect(article.innerHTML).toBe(sanitizeHtml(html, { enllacosEditorials: true }));
   });
 });

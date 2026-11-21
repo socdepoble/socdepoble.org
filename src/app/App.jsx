@@ -919,13 +919,14 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
             /anima. */}
         <button
           type="button"
-          className={['icon', 'sdp-top-bar-btn', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
+          className={['sdp-top-bar-btn', 'sdp-top-bar-btn--iaia', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
           data-iaia-activa={esIaiaActiva(nivellIaia) ? 'true' : 'false'}
           onClick={() => navigateWithTransition(RUTA_FITXA_IAIA)}
           aria-label={t('nav.iaiaFitxa', 'IAIA MarIA')}
-          title={t('nav.iaiaFitxa', 'IAIA MarIA')}
+          title={t('nav.iaiaFitxaTitol', 'IAIA MarIA · Assistent digital de Sóc de Poble')}
         >
           <IaiaIcon aria-hidden="true" focusable="false" />
+          <span className="sdp-top-bar-btn__rotul" aria-hidden="true">{t('nav.iaiaCurt', 'IAIA')}</span>
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />

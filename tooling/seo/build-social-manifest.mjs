@@ -562,7 +562,9 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
       const meta=metadadesDeDetall(section,item,imageOptions);
       if(!meta)throw new Error(`Llavor sense regla de detall: ${section}.`);
       blocked(route,meta.imatge);
-      add(route,{title:meta.title,description:meta.description,image:meta.image,type:TIPUS_DE_LLAVOR[section]||'website',own:true});
+      // Un OpenGraph compartible no autoritza indexar una fitxa de poble
+      // de plantilla: la mateixa política del manifest SEO i del navegador.
+      add(route,{title:meta.title,description:meta.description,image:meta.image,type:TIPUS_DE_LLAVOR[section]||'website',own:true,index:publicSeoRoute(route,item)});
       const key=normalizedKey(route,origin);deLlavor.set(key.toLowerCase(),key);
     }
   }

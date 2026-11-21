@@ -191,6 +191,27 @@ export function readPublicWikiFile(root, file) {
 const PRIVATE_ROUTES = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca',
   'dispositius', 'traduccions', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats', 'gestoria', 'tractors']);
 export function publicSeoRoute(route, attributes = {}) {
-  const section = String(route).replace(/^\/+/, '').split(/[/?#]/)[0];
-  return publicMetadata(attributes) && !PRIVATE_ROUTES.has(section);
+  const [section] = tramsDeRuta(route);
+  return publicMetadata(attributes) && !PRIVATE_ROUTES.has(section) && pobleAllowsIndex(route, attributes);
+}
+
+/* v1.2.18 · Gauntlet R1 (L3-01) · Els trams del camí, cadascun descodificat
+   com fa el router del navegador: una sola capa i, si la seqüència no és
+   vàlida, el tram cru. Primer es parteix i després es descodifica: un %2F no
+   obri cap tram nou. Així /pob%6Ces/<poble> i /%70obles/<poble> són
+   /pobles/<poble>, com per al router. Còpia de src/config/publicationPolicy.js;
+   paritat provada (publicationPolicy.test.js). */
+export function tramsDeRuta(route) {
+  return String(route).replace(/^\/+/, '').split(/[/?#]/).map((tram) => {
+    try { return decodeURIComponent(tram); } catch { return tram; }
+  });
+}
+
+/** Còpia pura per al navegador a publicationPolicy.js; paritat provada.
+ * Nom, imatge i plantilla no acrediten una verificació editorial local. */
+export function pobleAllowsIndex(route, attributes = {}) {
+  const [section, detail] = tramsDeRuta(route);
+  if (!['pobles', 'poblacio'].includes(section) || !detail) return true;
+  return attributes?.contingut_local_verificat === true
+    && typeof attributes.content === 'string' && Boolean(attributes.content.replace(/<[^>]*>/g, '').trim());
 }

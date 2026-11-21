@@ -213,8 +213,11 @@ describe('VideoEditorial · l’únic iframe', () => {
 });
 
 describe('node videoEditorial · marcador inert al cos', () => {
-  test('el marcador fa el viatge editor → sanejador → editor sense pèrdua i sense cap iframe', () => {
-    const primera = editor(MARCADOR).getHTML();
+  test.each([
+    ['', 'ugc nofollow noopener noreferrer'],
+    ['sponsored', 'ugc nofollow sponsored noopener noreferrer'],
+  ])('el marcador fa el viatge editor → sanejador → editor sense pèrdua i sense cap iframe (%s)', (qualificacio, relEsperat) => {
+    const primera = editor(MARCADOR.replace('<a href=', `<a rel="${qualificacio}" href=`)).getHTML();
     const net = sanitizeHtml(primera);
     const segona = editor(net).getHTML();
     for (const html of [primera, net, segona]) {
@@ -223,8 +226,8 @@ describe('node videoEditorial · marcador inert al cos', () => {
       expect(marcadors[0].getAttribute('data-sdp-youtube')).toBe(ID);
       expect(marcadors[0].getAttribute('data-titol')).toBe('2n Aplec pel Territori');
       expect(marcadors[0].querySelector('a').getAttribute('href')).toBe(`https://www.youtube.com/watch?v=${ID}`);
-      /* El sanejador hi afig nofollow als enllaços externs; l'editor el torna a escriure. */
-      expect(marcadors[0].querySelector('a').getAttribute('rel')).toMatch(/^noopener noreferrer(?: nofollow)?$/);
+      /* El node i el sanejador compartixen la qualificació UGC; sponsored sobreviu al parser. */
+      expect(marcadors[0].querySelector('a').getAttribute('rel')).toBe(relEsperat);
       expect(html).not.toMatch(/<iframe/i);
     }
     expect(segona).toBe(primera);

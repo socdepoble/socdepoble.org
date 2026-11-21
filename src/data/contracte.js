@@ -926,8 +926,14 @@ export const LIMIT_DADES_OBERTES = 5000;
    (lot 2: l'assistència només es dona per guardada quan s'ha guardat, i el resumidor net del Node 0; lot 3: límits dels
    avisos directes i dels bàndols, preparats i apagats), la benvinguda del Foraster amb el literal del Mestre, la
    renovació de la sessió abans de cada petició amb el JWT caducat, la retirada del codi mort de l'APK i el connector
-   WordPress 1.1.25. */
-export const VERSIO_CLIENT_NATIU = 22;
+   WordPress 1.1.25.
+   Onada v1.2.18 · R32.27 i R32.28 (ordre del Mestre 261121 18:53; prompt 261121_1855) · Versió unificada 1.2.18 amb el
+   build 23: integra Codex R32.27 (lot 1: el connector WordPress amb la caixa de secrets condicional, l'esborrat de les
+   claus i la regla VIG-07; lot 2: enllaços ugc i sponsored, pàgines de poble sense contingut verificat fora dels
+   cercadors i la Sentinella) i Gemini R32.28 (una «Lletra gran» més compacta i la IAIA amb el seu nom), el full diferit
+   dels panells d'administració per al sostre d'arrencada i el connector WordPress 1.1.26. El lot 3 de R32.27 (huit
+   skills) espera el segell del Mestre. */
+export const VERSIO_CLIENT_NATIU = 23;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

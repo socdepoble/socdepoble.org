@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import https from 'node:https';
+import http from 'node:http';
 import tls from 'node:tls';
 import { Resolver } from 'node:dns/promises';
 import { BlockList, isIP } from 'node:net';
@@ -18,6 +19,10 @@ export const LIMITS = Object.freeze({ requestsPerCycle: 16, bytesPerCycle: 2 * 1
   configBytes: 16384, localFileBytes: 2 * 1024 * 1024, localBytes: 8 * 1024 * 1024,
   localEntries: 4096, localFiles: 512, findings: 64, outputBytes: 131072 });
 const OWN = ['https://socdepoble.org', 'https://socdepoble.cat'];
+const SEO_BROWSER_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const SEO_PROFILES = Object.freeze({ normal: SEO_BROWSER_UA, googlebot: 'Googlebot/2.1', google: SEO_BROWSER_UA });
+const SEO_DOMAINS = Object.freeze({ org: 'socdepoble.org', cat: 'socdepoble.cat' });
+const SEO_LIMITS = Object.freeze({ nodes: 2048, links: 128, rules: 128, depth: 32 });
 const TABLES = Object.freeze({ xat_fils: 'id', xat_participants: 'fil_id', xat_missatges: 'id', xat_adjunts: 'id',
   xat_reaccions: 'missatge_id', xat_missatges_destacats: 'missatge_id', xat_missatges_fixats: 'missatge_id', xat_missatges_amagats: 'missatge_id' });
 const CODES = new Set(['INVALID_ARGUMENT', 'INVALID_CONFIG', 'UNSAFE_SOURCE', 'LOCAL_LIMIT', 'ORIGIN_REJECTED',
@@ -42,12 +47,15 @@ export function parseArgs(argv) {
     if (seen.has(key)) fail('INVALID_ARGUMENT'); seen.add(key);
     if (key === '--json' && !parts.length) options.json = true;
     else if (key === '--remot' && !parts.length) options.remote = true;
+    else if (key === '--seo' && !parts.length) options.seo = true;
+    else if (key === '--domini' && Object.hasOwn(SEO_DOMAINS, value)) options.domain = value;
     else if (key === '--config' && value) options.configPath = value;
     else if (key === '--iterations') options.iterations = int(value, 1, LIMITS.iterations);
     else if (key === '--interval-ms') options.intervalMs = int(value, LIMITS.intervalMin, LIMITS.intervalMax);
     else fail('INVALID_ARGUMENT');
   }
   if ((!options.remote && (options.iterations !== 1 || options.configPath)) || (seen.has('--interval-ms') && options.iterations === 1)) fail('INVALID_ARGUMENT');
+  if (options.seo && (!options.remote || options.configPath) || options.domain && !options.seo) fail('INVALID_ARGUMENT');
   return options;
 }
 
@@ -167,10 +175,13 @@ export function auditaAnonim(response) {
   return { status: 'unknown', code: response.status === 404 ? 'RESOURCE_NOT_VERIFIED' : [401, 403].includes(response.status) ? 'GATEWAY_OR_AUTH_UNKNOWN' : 'RESPONSE_NOT_VERIFIED', policyVerified: false };
 }
 
-function targetValidated(value, backendOrigin) {
+function targetValidated(value, backendOrigin, seo = false) {
   let url; try { url = new URL(value); } catch { fail('ORIGIN_REJECTED'); }
-  if (url.protocol !== 'https:' || url.username || url.password || url.hash || url.port
-    || ![...OWN, ...(backendOrigin && /^https:\/\/[a-z0-9-]{1,63}\.supabase\.co$/.test(backendOrigin) ? [backendOrigin] : [])].includes(url.origin)) fail('ORIGIN_REJECTED');
+  const seoOrigin = seo && ['http:', 'https:'].includes(url.protocol)
+    && Object.values(SEO_DOMAINS).some(domain => [domain, 'www.' + domain].includes(url.hostname))
+    && url.pathname === '/' && !url.search;
+  if ((!seoOrigin && (url.protocol !== 'https:' || ![...OWN, ...(backendOrigin && /^https:\/\/[a-z0-9-]{1,63}\.supabase\.co$/.test(backendOrigin) ? [backendOrigin] : [])].includes(url.origin))) || url.username || url.password || url.hash || url.port
+    || seo && !seoOrigin) fail('ORIGIN_REJECTED');
   return url;
 }
 function newBudget(iterations, intervalMs, now) {
@@ -213,11 +224,13 @@ async function resolveHost(host, { budget, signal, timeoutMs, resolverFactory })
   try { return await promise; } catch (error) { budget.dns.delete(host); throw error; }
 }
 
-/** GET HTTPS sense redireccions. El DNS validat és el del socket, no una presonda. */
+/** GET amb DNS fixat al socket. HTTP i redirects observats només per a les quatre variants SEO pròpies. */
 export async function requestGet(value, options = {}, deps = {}) {
   const now = deps.now || Date.now;
   const budget = options.budget || newBudget(1, 0, now), cycle = options.cycle || { requests: 0, bytes: 0, deadline: now() + LIMITS.cycleMs };
-  const target = targetValidated(value, options.backendOrigin);
+  const seo = options.kind === 'seo-html';
+  const target = targetValidated(value, options.backendOrigin, seo);
+  if (seo && (!Object.hasOwn(SEO_PROFILES, options.profile) || Object.keys(options.headers || {}).length || options.backendOrigin)) fail('INVALID_ARGUMENT');
   if (options.method && options.method !== 'GET' || options.body !== undefined || Object.hasOwn(options, 'claimed')) fail('INVALID_ARGUMENT');
   if (Object.keys(options.headers || {}).some(key => key !== 'apikey')) fail('INVALID_ARGUMENT');
   if (options.headers?.apikey && (!options.backendOrigin || target.origin !== options.backendOrigin
@@ -248,10 +261,11 @@ export async function requestGet(value, options = {}, deps = {}) {
       control.signal.addEventListener('abort', onAbort, { once: true });
       if (control.signal.aborted) { onAbort(); return; }
       try {
-        req = (deps.requestImpl || https.request)(target, { method: 'GET', agent: false, rejectUnauthorized: true,
+        req = (deps.requestImpl || (target.protocol === 'http:' ? http.request : https.request))(target, { method: 'GET', agent: false, rejectUnauthorized: true,
           minVersion: 'TLSv1.2', servername: target.hostname, checkServerIdentity: tls.checkServerIdentity,
-          maxHeaderSize: LIMITS.headerBytes, headers: { Accept: options.kind === 'html' ? 'text/html' : 'application/json',
-            'Accept-Encoding': 'identity', 'User-Agent': 'sdp-sentinella-blindatge/1', ...(options.headers || {}) },
+          maxHeaderSize: LIMITS.headerBytes, headers: { Accept: ['html', 'seo-html'].includes(options.kind) ? 'text/html' : 'application/json',
+            'Accept-Encoding': 'identity', 'User-Agent': seo ? SEO_PROFILES[options.profile] : 'sdp-sentinella-blindatge/1',
+            ...(seo && options.profile === 'google' ? { Referer: 'https://www.google.com/' } : {}), ...(options.headers || {}) },
           lookup: (_host, lookupOptions, callback) => {
             const selected = addresses.find(a => !lookupOptions.family || a.family === lookupOptions.family) || addresses[0];
             if (lookupOptions.all) callback(null, [selected]); else callback(null, selected.address, selected.family);
@@ -260,15 +274,15 @@ export async function requestGet(value, options = {}, deps = {}) {
           response.on('error', () => rejectOnce(Object.assign(new Error('BODY_INCOMPLETE'), { code: 'BODY_INCOMPLETE' })));
           if (settled) { response.destroy(); return; }
           const status = response.statusCode, headers = headersOf(response.headers);
-          if (status >= 300 && status < 400) { rejectOnce(Object.assign(new Error('REDIRECT_REJECTED'), { code: 'REDIRECT_REJECTED' })); return; }
-          const cert = response.socket?.getPeerCertificate();
+          if (!seo && status >= 300 && status < 400) { rejectOnce(Object.assign(new Error('REDIRECT_REJECTED'), { code: 'REDIRECT_REJECTED' })); return; }
+          const cert = response.socket?.getPeerCertificate?.();
           const validTo = Date.parse(cert?.valid_to), validFrom = Date.parse(cert?.valid_from);
-          if (response.socket?.authorized !== true || !cert || tls.checkServerIdentity(target.hostname, cert)
-            || !Number.isFinite(validTo) || !Number.isFinite(validFrom) || validTo <= now() || validFrom > now()) {
+          if (target.protocol === 'https:' && (response.socket?.authorized !== true || !cert || tls.checkServerIdentity(target.hostname, cert)
+            || !Number.isFinite(validTo) || !Number.isFinite(validFrom) || validTo <= now() || validFrom > now())) {
             rejectOnce(Object.assign(new Error('TLS_REJECTED'), { code: 'TLS_REJECTED' })); return;
           }
           if (headers['content-encoding'] && headers['content-encoding'] !== 'identity') { rejectOnce(Object.assign(new Error('ENCODING_REJECTED'), { code: 'ENCODING_REJECTED' })); return; }
-          const hardMaximum = options.kind === 'html' ? LIMITS.htmlBytes : options.kind === 'anonymous' ? LIMITS.privateBytes : LIMITS.jsonBytes;
+          const hardMaximum = ['html', 'seo-html'].includes(options.kind) ? LIMITS.htmlBytes : options.kind === 'anonymous' ? LIMITS.privateBytes : LIMITS.jsonBytes;
           const maximum = Math.min(options.maxBytes ?? hardMaximum, hardMaximum), chunks = []; let size = 0;
           if (Number(headers['content-length']) > maximum) { rejectOnce(Object.assign(new Error('BYTE_LIMIT'), { code: 'BYTE_LIMIT' })); return; }
           response.on('data', chunk => {
@@ -284,7 +298,7 @@ export async function requestGet(value, options = {}, deps = {}) {
             if (settled) return;
             settled = true; cleanup();
             resolve({ status, headers, text: Buffer.concat(chunks).toString('utf8'), bytes: size, accounted: true,
-              tls: { authorized: true, validFrom: new Date(validFrom).toISOString(), validTo: new Date(validTo).toISOString(),
+              tls: target.protocol === 'http:' ? null : { authorized: true, validFrom: new Date(validFrom).toISOString(), validTo: new Date(validTo).toISOString(),
                 daysRemaining: Math.floor((validTo - now()) / DAY), fingerprint256: cert.fingerprint256 || null } });
           });
         });
@@ -298,6 +312,118 @@ export async function requestGet(value, options = {}, deps = {}) {
       } catch { rejectOnce(Object.assign(new Error('TRANSPORT_FAILED'), { code: 'TRANSPORT_FAILED' })); }
     });
   } finally { clearTimeout(timer); options.signal?.removeEventListener('abort', abort); }
+}
+
+/** Anàlisi estàtica: no executa scripts ni carrega CSS, imatges o iframes remots. */
+async function seoHtml(text, baseUrl) {
+  if (Buffer.byteLength(text) > LIMITS.htmlBytes) fail('BYTE_LIMIT');
+  const { JSDOM, VirtualConsole } = await import('jsdom');
+  const dom = new JSDOM(text, { url: baseUrl, virtualConsole: new VirtualConsole() });
+  try {
+    const document = dom.window.document;
+    const nodes = document.querySelectorAll('*'), links = document.querySelectorAll('a[href]');
+    if (nodes.length > SEO_LIMITS.nodes || links.length > SEO_LIMITS.links) fail('LOCAL_LIMIT');
+    let rules = 0;
+    for (const sheet of document.styleSheets) {
+      const visit = entries => { for (const rule of entries || []) { if (++rules > SEO_LIMITS.rules) fail('LOCAL_LIMIT'); if (rule.cssRules) visit(rule.cssRules); } };
+      visit(sheet.cssRules);
+    }
+    const cache = new Map(), findings = [];
+    const hidden = element => {
+      if (cache.has(element)) return cache.get(element);
+      const style = dom.window.getComputedStyle(element), reasons = [];
+      if (element.hasAttribute('hidden') || style.display === 'none') reasons.push('display:none');
+      if (style.visibility === 'hidden') reasons.push('visibility:hidden');
+      if (style.opacity && Number.parseFloat(style.opacity) === 0) reasons.push('opacity:0');
+      if (style.fontSize && Number.parseFloat(style.fontSize) === 0) reasons.push('font-size:0');
+      if (/px$/i.test(style.textIndent) && Number.parseFloat(style.textIndent) <= -9999) reasons.push('text-indent:-9999px');
+      if (/px$/i.test(style.left) && Number.parseFloat(style.left) <= -9999) reasons.push('left:-9999px');
+      cache.set(element, reasons); return reasons;
+    };
+    for (const [index, link] of [...links].entries()) {
+      const reasons = new Set(); let depth = 0;
+      for (let element = link; element; element = element.parentElement) {
+        if (++depth > SEO_LIMITS.depth) fail('LOCAL_LIMIT');
+        hidden(element).forEach(reason => reasons.add(reason));
+      }
+      if (reasons.size && findings.length < LIMITS.findings) findings.push({ ruleId: 'hidden-link-css', link: index + 1, reasons: [...reasons] });
+    }
+    const externalStylesheets = document.querySelectorAll('link[rel~="stylesheet"][href]').length;
+    const title = document.title.replace(/\s+/g, ' ').trim();
+    const description = document.querySelector('meta[name="description"]')?.content || '';
+    const canonical = document.querySelector('link[rel~="canonical"]')?.getAttribute('href') || '';
+    const hrefs = [...links].map(link => link.getAttribute('href'));
+    document.querySelectorAll('script,style,noscript,template').forEach(element => element.remove());
+    /* v1.2.18 · Gauntlet R1 (L3-03) · jsdom no executa scripts i analitza el
+       <noscript> com a DOM: l'enllaç mailto de la closca (index.html) feia
+       passar el #root buit per HTML observat, i la comparació eixia «ok» en
+       compte d'inconclusiva. Els enllaços que diuen si hi ha contingut estàtic
+       es compten després d'esborrar noscript i template, com el text del cos.
+       Els hrefs de la projecció i el detector CSS continuen veient-los tots:
+       un noscript diferent per a Googlebot continua sent cloaking observat. */
+    const visibles = document.querySelectorAll('a[href]').length;
+    const textNodes = [], walker = document.createTreeWalker(document.body, dom.window.NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const content = node.textContent.replace(/\s+/g, ' ').trim(); if (content) textNodes.push(content);
+    }
+    const body = textNodes.join(' ');
+    return { projection: JSON.stringify({ title, description, canonical, hrefs, body }),
+      observation: { status: findings.length ? 'fail' : !body && !visibles ? 'unknown' : 'ok',
+        code: findings.length ? 'HIDDEN_LINK_CSS' : !body && !visibles ? 'SPA_SHELL_ONLY' : 'STATIC_HTML_OBSERVED',
+        links: visibles, findings, externalStylesheets, staticOnly: true } };
+  } finally { dom.window.close(); }
+}
+function seoTargets(domain = 'org') {
+  const host = SEO_DOMAINS[domain];
+  if (!host) fail('INVALID_ARGUMENT');
+  return ['http:', 'https:'].flatMap(protocol => ['', 'www.'].flatMap(prefix => Object.keys(SEO_PROFILES).map(profile => ({
+    id: `${domain}-${protocol.slice(0, -1)}-${prefix ? 'www' : 'apex'}-${profile}`,
+    url: `${protocol}//${prefix}${host}/`, kind: 'seo-html', profile, maxBytes: LIMITS.htmlBytes,
+  }))));
+}
+function seoRedirect(response, item) {
+  let target;
+  try { target = new URL(headersOf(response.headers).location, item.url); } catch { return null; }
+  const host = SEO_DOMAINS[new URL(item.url).hostname.endsWith('.cat') ? 'cat' : 'org'];
+  if (target.protocol !== 'https:' || target.hostname !== host || target.username || target.password
+    || target.port || target.pathname !== '/' || target.search || target.hash || target.href === item.url) return null;
+  return target.origin;
+}
+async function seoObservation(response, item) {
+  if (new URL(item.url).protocol === 'https:' && response.tls?.authorized !== true) return {
+    projection: null, observation: { status: 'fail', code: 'TLS_NOT_VERIFIED' } };
+  if ([301, 302, 303, 307, 308].includes(response.status)) {
+    const redirect = seoRedirect(response, item);
+    return { projection: redirect ? `redirect:${response.status}:${redirect}` : null,
+      observation: { status: redirect ? 'ok' : 'fail', code: redirect ? 'CANONICAL_REDIRECT_OBSERVED' : 'REDIRECT_TARGET_REJECTED',
+        ...(redirect ? { redirectOrigin: redirect } : {}), followed: false, staticOnly: true } };
+  }
+  const headers = headersOf(response.headers);
+  if (response.status !== 200 || !/^text\/html\b/i.test(headers['content-type'] || '')) return {
+    projection: null, observation: { status: 'unknown', code: 'SEO_HTML_NOT_OBSERVED' } };
+  const result = await seoHtml(response.text || '', item.url);
+  /* v1.2.18 · Gauntlet R2 (L2R2-01) · Una closca servida amb 200 per http
+     perdia el SPA_SHELL_ONLY en passar a INSECURE_HTTP_CONTENT, i compareSeo,
+     que només mirava 'unknown', donava el triple per STATIC_VARIANTS_MATCH.
+     La fila conserva spaShell perquè la comparació continue inconclusiva.
+     La segona sobreescriptura (TLS_NOT_VERIFIED en https) era inabastable:
+     la mateixa condició ja torna abans, a l'inici de la funció. */
+  if (new URL(item.url).protocol === 'http:') result.observation = { ...result.observation, status: 'fail', code: 'INSECURE_HTTP_CONTENT',
+    ...(result.observation.code === 'SPA_SHELL_ONLY' ? { spaShell: true } : {}) };
+  return result;
+}
+function compareSeo(work, output, projections, cycle) {
+  const result = [];
+  for (let at = 0; at < work.length; at += 3) {
+    const values = projections.slice(at, at + 3);
+    const different = values.every(value => value !== null && value !== undefined) && new Set(values).size > 1;
+    const comparable = values.every(value => value !== null && value !== undefined) && output.slice(at, at + 3).every(row => row.status !== 'unknown' && !row.spaShell);
+    result.push({ id: work[at].id.replace(/-normal$/, ''), cycle, kind: 'seo-comparison',
+      status: different ? 'fail' : comparable ? 'ok' : 'unknown',
+      code: different ? 'CLOAKING_VARIANT_OBSERVED' : comparable ? 'STATIC_VARIANTS_MATCH' : 'STATIC_COMPARISON_INCONCLUSIVE',
+      profiles: Object.keys(SEO_PROFILES), staticOnly: true });
+  }
+  return result;
 }
 
 function targets(config) {
@@ -329,6 +455,7 @@ export async function auditaBlindatge(options = {}, deps = {}) {
   const iterations = options.iterations ?? 1, intervalMs = options.intervalMs ?? LIMITS.intervalMin;
   if (!Number.isInteger(iterations) || iterations < 1 || iterations > LIMITS.iterations || !Number.isInteger(intervalMs)
     || intervalMs < LIMITS.intervalMin || intervalMs > LIMITS.intervalMax || !options.remote && iterations !== 1) fail('INVALID_ARGUMENT');
+  if (options.seo && (!options.remote || options.configPath || options.config) || options.domain && (!options.seo || !Object.hasOwn(SEO_DOMAINS, options.domain))) fail('INVALID_ARGUMENT');
   const config = configValidated(options.config || (options.configPath ? readConfig(root, options.configPath) : {}));
   const budget = newBudget(iterations, intervalMs, now), localSecrets = scanPublic(root), cycles = [], results = [];
   let interrupted = false;
@@ -342,7 +469,7 @@ export async function auditaBlindatge(options = {}, deps = {}) {
     const control = new AbortController(), abort = () => control.abort(Object.assign(new Error('ABORTED'), { code: 'ABORTED' }));
     options.signal?.addEventListener('abort', abort, { once: true });
     const timeout = (deps.setTimer || setTimeout)(() => control.abort(Object.assign(new Error('TIMEOUT'), { code: 'TIMEOUT' })), Math.max(1, cycle.deadline - now()));
-    const work = targets(config), output = new Array(work.length); let index = 0;
+    const work = options.seo ? seoTargets(options.domain) : targets(config), output = new Array(work.length), projections = new Array(work.length).fill(null); let index = 0;
     try {
       await Promise.all(Array.from({ length: 2 }, async () => {
         for (let at = index++; at < work.length; at = index++) {
@@ -360,7 +487,11 @@ export async function auditaBlindatge(options = {}, deps = {}) {
             if (!response.accounted) acceptBytes(budget, cycle, size);
             const secrets = escanejaLiterals(response.text || '', item.id).slice(0, LIMITS.findings);
             let observation;
-            if (item.kind === 'anonymous') observation = auditaAnonim(response);
+            if (item.kind === 'seo-html') {
+              const seo = await seoObservation(response, item);
+              observation = seo.observation; projections[at] = secrets.length ? null : seo.projection;
+            }
+            else if (item.kind === 'anonymous') observation = auditaAnonim(response);
             else {
               const headers = headersOf(response.headers), errors = auditaCapcaleres(headers, item.kind, new URL(item.url).origin);
               if (response.status !== 200) errors.push('HTTP_STATUS');
@@ -378,22 +509,27 @@ export async function auditaBlindatge(options = {}, deps = {}) {
       }));
     } finally { (deps.clearTimer || clearTimeout)(timeout); options.signal?.removeEventListener('abort', abort); }
     cycles.push({ cycle: i + 1, requests: cycle.requests, acceptedBytes: cycle.bytes }); results.push(...output);
+    if (options.seo) results.push(...compareSeo(work, output, projections, i + 1));
     if (control.signal.aborted) { interrupted = true; break; }
   }
-  const states = [localSecrets.status, ...results.map(r => r.status), ...(!options.remote || !config || interrupted ? ['unknown'] : [])];
+  const states = [localSecrets.status, ...results.map(r => r.status), ...(!options.remote || !options.seo && !config || interrupted ? ['unknown'] : [])];
   const status = states.includes('fail') ? 'fail' : states.includes('unknown') ? 'unknown' : 'ok';
-  return { schema: 'sdp.sentinella-blindatge.v1', checkedAt: new Date(now()).toISOString(), status, scope: 'bounded-observations',
+  return { schema: 'sdp.sentinella-blindatge.v1', checkedAt: new Date(now()).toISOString(), status, scope: options.seo ? 'bounded-static-seo-observations' : 'bounded-observations',
     realNetwork: Boolean(options.remote && !deps.requestGet), localSecrets, cycles, results,
     usage: { requests: budget.requests, acceptedBytes: budget.acceptedBytes, receivedBytes: budget.receivedBytes, dnsQueries: budget.dnsQueries },
     budget: { maxRequests: budget.maxRequests, maxAcceptedBytes: budget.maxBytes, maxCycleMs: LIMITS.cycleMs,
       maxRunMs: LIMITS.cycleMs * iterations + intervalMs * (iterations - 1), requestMs: LIMITS.requestMs, concurrency: 2, retries: 0, redirects: 0 },
     billing: { status: 'unknown', code: 'NO_CLOUD_BILLING_TELEMETRY' },
-    coverage: { rlsPolicyVerified: false, secretAbsenceProven: false, anonymousProbeConfigured: Boolean(config), globalAvailabilityProven: false },
+    coverage: { rlsPolicyVerified: false, secretAbsenceProven: false, anonymousProbeConfigured: Boolean(config), globalAvailabilityProven: false,
+      ...(options.seo ? { seoDomain: SEO_DOMAINS[options.domain || 'org'], seoVariants: 4, seoProfiles: 3, cloakingAbsenceProven: false, externalCssFetched: false } : {}) },
     notification: { prepared: Boolean(options.remote && status !== 'ok'), sent: false, transport: null },
     limits: ['Observacions de lectura, no certificació completa de RLS ni de disponibilitat.',
       '200 buit i 404 són inconclusius; 401/403 només acredita denegació si el protocol identifica permisos.',
       'El pressupost limita el robot; facturació i resistència global a DDoS no mesurades.',
-      'El chunk que activa el límit pot haver arribat abans de destruir el socket. Cap avís WhatsApp enviat.'] };
+      'El chunk que activa el límit pot haver arribat abans de destruir el socket. Cap avís WhatsApp enviat.',
+      ...(options.seo ? ['SEO inspecciona HTML estàtic d’un domini per ronda; no executa JS ni carrega CSS extern o destinacions de redirecció.',
+        'Una closca SPA buida deixa la comparació inconclusiva; la coincidència estàtica no prova absència de cloaking dinàmic.',
+        'Useu --domini=cat en una ronda separada per comprovar el segon domini propi.'] : [])] };
 }
 
 export async function main(argv = process.argv.slice(2), deps = {}) {

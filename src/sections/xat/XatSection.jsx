@@ -2428,11 +2428,25 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
    T2.5) · És la porta del Foraster, que aterra sempre ací (/ → /xat):
    · B9 · Un sol verb per a passar de Foraster a Conegut, «Entrar» (section.login.loginButton, el de
      la barra negra i de /registre, en 5 llengües), mai «Connectar-se».
-   · B11c · El xip «Lletra gran» (ControlModeSenior) comparteix fila amb «Descarrega l'App»
-     (blueprint §2.2). En normal, el xip parteix en dues línies i la fila suma ~27 px d'alçada a
-     l'accés (Gauntlet v1.2.16, L1-02). Geometria provisional fins a la decisió C-2 del Mestre.
-     Dins de l'app nativa ocupa el seu lloc, sol. La fila i el xip es pinten amb regles del full
-     diferit (diferit-mode-senior.css), mai a modules.css. */
+   · B11c · El xip «Lletra gran» (ControlModeSenior amb etiquetaCurta) comparteix fila amb
+     «Descarrega l'App» (blueprint §2.2). Dins de l'app nativa ocupa el seu lloc, sol.
+   v1.2.18 · Gauntlet R1 (L1-04) · Des de l'Onada R32.28 (C-2) la marca d'estat del xip és el glif
+     ○/✓ amb aria-hidden, sense pastilla. Quan les dues amplàries naturals hi caben, la fila fa 48 px
+     (56 px en Sènior); quan no, el xip baixa centrat a la seua fila: a 360 px, en castellà i en basc
+     (en Sènior, també en anglés), i a 320 px, en totes les llengües. La geometria per llengua queda
+     pendent de la decisió C-2 del Mestre (L1-03). La franja i el xip es pinten al full diferit
+     (diferit-mode-senior.css); a modules.css només hi ha la regla de «Descarrega l'App» dins de la
+     fila.
+   v1.2.18 · Gauntlet R2 (L1R2-02) · El xip és d'una sola línia en mode normal
+     (.sdp-mode-senior-xip--curt, nowrap); en Sènior la regla de les dianes torna white-space: normal
+     i, amb el text molt gran, l'etiqueta pot partir.
+   v1.2.18 · Gauntlet R2 (L1R2-03) · Eixa llista és una mesura de Chrome 158 d'escriptori (macOS),
+     no una propietat del CSS: el glif ○/✓ cau fora de l'unicode-range de Noto Sans i el pinta la
+     lletra del sistema, que canvia amb la plataforma. A 360 px, l'anglés i el gallec hi caben per
+     menys de 3 px (en Sènior, a l'anglés li'n falta 0,1). Per damunt de 360 px tampoc no hi cap tot:
+     en normal, el basc baixa també a 375 i 390 px (hi cap des d'uns 412 px), i en Sènior baixa a
+     totes les amplàries, perquè la fila es topa a 384 px (--sdp-targeta-viva-ample) i la lletra
+     Sènior, fluida, en demana com a mínim 3 px més. */
 function AccesAlXat({ t, tornar, navigate }) {
   return (
     <div className="sdp-alerta sdp-xat-acces">

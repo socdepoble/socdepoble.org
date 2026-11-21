@@ -226,20 +226,26 @@ test('R16a · la taula d’Artefactes va dins del table-wrap sense marc i cap re
   // La regla de l'àrbitre ja no tenia cap taula filla directa del panell: ni ella ni cap anywhere a la taula.
   expect(css).not.toContain('.sdp-admin-taxonomia__panel > .sdp-admin-table');
   expect(css).not.toMatch(/\.sdp-admin-table[^{}]*\{[^}]*overflow-wrap: anywhere/);
-  const inici = css.indexOf('.sdp-admin-taxonomia__table-wrap--sense-marc {');
+  /* v1.2.18 · Gauntlet R1 (L5-02) · La capsa de la taula viu ara al full diferit dels panells d'administració
+     (diferit-admin-taxonomia.css, fora de l'arrencada); modules.css ja no en porta cap regla. */
+  expect(css).not.toContain('.sdp-admin-taxonomia__table-wrap');
+  const diferit = readFileSync(path.join(process.cwd(), 'src/css/diferit-admin-taxonomia.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  expect(diferit).not.toMatch(/\.sdp-admin-table[^{}]*\{[^}]*overflow-wrap: anywhere/);
+  const inici = diferit.indexOf('.sdp-admin-taxonomia__table-wrap--sense-marc {');
   expect(inici).toBeGreaterThan(-1);
-  expect(css.slice(inici, css.indexOf('}', inici) + 1))
+  expect(diferit.slice(inici, diferit.indexOf('}', inici) + 1))
     .toBe('.sdp-admin-taxonomia__table-wrap--sense-marc { border: 0; border-radius: 0; background: none; }');
   // Dins de @layer components, després de la capsa de sempre (que conserva l'overflow-x: auto).
-  const capa = css.lastIndexOf('@layer components {', inici);
+  const capa = diferit.lastIndexOf('@layer components {', inici);
   let fons = 0;
-  for (let i = css.indexOf('{', capa); i < inici; i += 1) {
-    if (css[i] === '{') fons += 1;
-    else if (css[i] === '}') fons -= 1;
+  for (let i = diferit.indexOf('{', capa); i < inici; i += 1) {
+    if (diferit[i] === '{') fons += 1;
+    else if (diferit[i] === '}') fons -= 1;
   }
   expect(fons).toBe(1);
-  const base = css.indexOf('.sdp-admin-taxonomia__table-wrap {');
+  const base = diferit.indexOf('.sdp-admin-taxonomia__table-wrap {');
   expect(base).toBeGreaterThan(capa);
   expect(base).toBeLessThan(inici);
-  expect(css.slice(base, css.indexOf('}', base))).toContain('overflow-x: auto;');
+  expect(diferit.slice(base, diferit.indexOf('}', base))).toContain('overflow-x: auto;');
 });

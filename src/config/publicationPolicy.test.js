@@ -10,8 +10,9 @@
      publicMetadata. */
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { esPublicada, publicMetadata } from './publicationPolicy.js';
-import { publicMetadata as publicMetadataTooling } from '../../tooling/wiki/lib/publication-policy.mjs';
+import { esPublicada, publicMetadata, pobleAllowsIndex, tramsDeRuta } from './publicationPolicy.js';
+import { publicMetadata as publicMetadataTooling, publicSeoRoute, pobleAllowsIndex as pobleAllowsIndexTooling,
+  tramsDeRuta as tramsDeRutaTooling } from '../../tooling/wiki/lib/publication-policy.mjs';
 
 const VISIBILITATS = [undefined, 'public', 'private', 'interna', '', null];
 const ESTATS = [undefined, 'published', 'publicat', 'publicada', 'Published', 'draft', 'esborrany', 'pendent',
@@ -25,6 +26,60 @@ const casos = [
   }))),
   { visibility: undefined }, { status: undefined }, { visibility: 'public', status: undefined }
 ];
+// v1.2.18 · Gauntlet R1 (L3-01) · Àlies que el router obri com a /pobles/sella o /poblacio/sella.
+const RUTES_CODIFICADES = ['/pob%6Ces/sella', '/%70obles/sella', '/poblaci%6F/sella', '/%70%6F%62%6C%65%73/sella?lang=ca'];
+
+test('R32.27 · el navegador i el productor compartixen la mateixa matriu anti-doorway', () => {
+  const rutes = ['/pobles', '/poblacio', '/pobles/sella', 'poblacio/sella', '/pobles/sella/', '/pobles/sella?lang=ca', '/pobles/sella#seccio', '/mercat/oli',
+    // v1.2.18 · Gauntlet R1 (L3-01) · Els àlies codificats i les seqüències invàlides també entren a la matriu de paritat.
+    ...RUTES_CODIFICADES, '/pobles%2Fsella', '/pob%E0%A4%A/sella', '/pobles/%'];
+  const metadades = [undefined, null, {}, [], 'text',
+    ...[undefined, true, false, 'true', 1].flatMap(contingut_local_verificat =>
+      [undefined, null, '', ' ', '<p> </p>', 'Crònica local', '<p>Memòria del poble</p>'].map(content => ({ contingut_local_verificat, content })))];
+  const decisions = [];
+  for (const ruta of rutes) for (const metadata of metadades) {
+    const actual = pobleAllowsIndex(ruta, metadata);
+    expect(actual, `${ruta}: ${JSON.stringify(metadata)}`).toBe(pobleAllowsIndexTooling(ruta, metadata));
+    decisions.push(actual);
+  }
+  expect(decisions).toContain(true);
+  expect(decisions).toContain(false);
+});
+
+test('R32.27 · la política SEO de pobles falla tancada sense contingut local verificat', () => {
+  for (const route of ['/pobles/sella', 'poblacio/sella', '/pobles/sella?lang=ca']) {
+    for (const meta of [{}, { content: 'Plantilla' }, { content: 'Crònica', contingut_local_verificat: 'true' }, { content: ' ', contingut_local_verificat: true }]) {
+      expect(publicSeoRoute(route, meta)).toBe(false);
+    }
+    expect(publicSeoRoute(route, { content: 'Crònica local', contingut_local_verificat: true })).toBe(true);
+    expect(publicSeoRoute(route, { content: 'Crònica local', contingut_local_verificat: true, visibility: 'private' })).toBe(false);
+  }
+  expect(publicSeoRoute('/pobles')).toBe(true);
+  expect(publicSeoRoute('/mercat/oli')).toBe(true);
+});
+
+test('v1.2.18 · Gauntlet R1 (L3-01) · un tram codificat no salta la regla anti-doorway ni la llista privada', () => {
+  const plantilla = { content: 'Plantilla genèrica del poble' };
+  const contrastat = { content: 'Crònica local', contingut_local_verificat: true };
+  for (const ruta of RUTES_CODIFICADES) {
+    expect(pobleAllowsIndex(ruta, plantilla), ruta).toBe(false);
+    expect(pobleAllowsIndexTooling(ruta, plantilla), ruta).toBe(false);
+    expect(publicSeoRoute(ruta, plantilla), ruta).toBe(false);
+    expect(pobleAllowsIndex(ruta, contrastat), ruta).toBe(true);
+    expect(publicSeoRoute(ruta, contrastat), ruta).toBe(true);
+  }
+  // La llista privada del productor també decidix amb el tram descodificat.
+  for (const ruta of ['/%6Eotes', '/x%61t/1', '/gestori%61?x=1']) expect(publicSeoRoute(ruta), ruta).toBe(false);
+  // Una capa, com el router: %2F no obri cap tram, un doble codificat no és /pobles, i una seqüència invàlida es queda crua sense llançar.
+  const rutes = [...RUTES_CODIFICADES, '/pobles%2Fsella', '/pob%256Ces/sella', '/pob%E0%A4%A/sella', '/pobles/%', '//pobles/sella#a', '', 'pobles'];
+  for (const ruta of rutes) expect(tramsDeRuta(ruta), ruta).toEqual(tramsDeRutaTooling(ruta));
+  expect(tramsDeRuta('/pob%6Ces/sella')).toEqual(['pobles', 'sella']);
+  expect(tramsDeRuta('/pobles%2Fsella')).toEqual(['pobles/sella']);
+  expect(tramsDeRuta('/pob%256Ces/sella')).toEqual(['pob%6Ces', 'sella']);
+  expect(tramsDeRuta('/pob%E0%A4%A/sella')).toEqual(['pob%E0%A4%A', 'sella']);
+  expect(pobleAllowsIndex('/pobles%2Fsella', plantilla)).toBe(true);
+  expect(pobleAllowsIndex('/pobles/%', plantilla)).toBe(false);
+});
 
 const llig = (relatiu) => readFileSync(new URL(relatiu, import.meta.url), 'utf8');
 const ESTATS_SRC = /const ESTATS_PUBLICATS = new Set\(\[[^\]]*\]\);/;

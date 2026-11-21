@@ -10,6 +10,7 @@ import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { ambClassesDelMarc, proporcioVisible, useEnquadramentDeImatge } from '../../hooks/useEnquadramentDeImatge.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
+import { relEnllacExtern } from '../../utils/enllacosExterns.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, seccioDelFragment, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
@@ -1273,7 +1274,7 @@ export function PageFrame({
                       </button>
                     ) : safeHref ? (
                       safeHref.startsWith('http') ? (
-                        <a href={safeHref} target="_blank" rel="noopener noreferrer" className="sp-card-label">{text}</a>
+                        <a href={safeHref} target="_blank" rel={relEnllacExtern(label)} className="sp-card-label">{text}</a>
                       ) : LinkComponent === 'a' ? (
                         <a href={safeHref} className="sp-card-label">{text}</a>
                       ) : (

@@ -178,43 +178,97 @@ test('261026 · en una pantalla baixa ja cap regla de píndola: comparteixen fil
    «Descarrega l'App», damunt de la parella, amb el respir de davall de la frase
    que abans portava la parella. Entre la seua fila i la parella, només el buit
    de l'alerta, el mateix que entre «Entrar» i «Registrar-se».
-   P0-ANDROID-PUSH (v1.2.16) · B11c · Gauntlet v1.2.16, ronda 2 (L1R2-02, L6R2-02) · Des de B11c
-   el botó viu DINS de la primera fila d'accions (.sdp-xat-acces > .sdp-alerta__accions), amb el
-   xip «Lletra gran» (XatSection.jsx, AccesAlXat), i ja no és fill directe de l'accés: hi pren la
-   geometria de les píndoles de la fila (flex 1 1 0, width auto). Les proves fixen el que es pinta
-   ara i són PROVISIONALS FINS A LA DECISIÓ C-2 DEL MESTRE, que és qui decidix la geometria.
-   Les regles de modules.css:6188-6199 (el comentari, `.sdp-xat-acces > .sdp-xat-acces__descarrega`
-   i el seu `+ .sdp-alerta__accions`) són MORTES fins a la decisió C-2: no casen amb cap element.
-   No es toquen ací (modules.css viatja a l'arrencada de WordPress i la geometria és la C-2): quan
-   el Mestre decidisca, o es retiren o es tornen a fer vives, i estes proves canvien amb elles.
-   Si tornen a casar amb algun element sense eixa decisió, la prova del DOM viu falla. */
+   Onada R32.28 · C-2 · El xip «Lletra gran» (ControlModeSenior amb etiquetaCurta)
+   comparteix la primera fila d'accions (.sdp-xat-acces > .sdp-alerta__accions) i
+   baixa centrat quan no hi cap; s'hi retiren les dues regles CSS mortes que
+   quedaven a modules.css:6188-6199.
+   v1.2.18 · Gauntlet R1 (L1-02) · El mínim és min-inline-size: auto, amb
+   max-inline-size: 100%, a la franja i a «Descarrega l'App». El d'abans,
+   min(100%, max-content), era CSS invàlid i el navegador el descartava: la prova
+   comparava una cadena que no s'aplicava. Expectatives actualitzades a propòsit, i
+   una guarda perquè cap paraula clau intrínseca torne dins de min()/max()/clamp().
+   v1.2.18 · Gauntlet R1 (L1-04) · La fila única de 48 px no és per a totes les
+   llengües (es i eu baixen a 360 px): és la decisió C-2 del Mestre pendent (L1-03).
+   v1.2.18 · Gauntlet R2 (L1R2-04) · Per això la frase de l'Onada R32.28 ja no diu
+   «resolta definitivament»: descriu el comportament, no tanca la decisió C-2. */
 const DESCARREGA = `${ACCIONS} > .sdp-xat-acces__descarrega`;
 const PINDOLA_DE_LA_FILA = `${ACCIONS} > .sdp-xat-pindola`;
-const MORTES_FINS_A_C2 = Object.freeze([
-  '.sdp-xat-acces > .sdp-xat-acces__descarrega',
-  '.sdp-xat-acces > .sdp-xat-acces__descarrega + .sdp-alerta__accions'
-]);
 const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const components = senseComentaris(readFileSync(resolve(process.cwd(), 'src/css/components.css'), 'utf8'));
 const diferit = senseComentaris(readFileSync(resolve(process.cwd(), 'src/css/diferit-mode-senior.css'), 'utf8'));
 
-test('261026_2126 · B11c · «Descarrega l’App» és una píndola de la fila (provisional fins a C-2): alçada tàctil de sèrie, flex 1 1 0 i width auto', () => {
+test('261026_2126 · C-2 · «Descarrega l’App» i el xip «Lletra gran» tenen geometria neta i min-inline-size sense regles mortes', () => {
   expect(valor('.sdp-xat-pindola', 'min-height')).toBe('var(--sdp-touch)');
   expect(valor('.sdp-xat-pindola', 'width')).toBe('100%');
-  /* Provisional fins a C-2: la fila li desfà el 100% de sèrie, com a «Entrar» i «Registrar-se». */
   expect(valor(PINDOLA_DE_LA_FILA, 'flex')).toBe('1 1 0');
   expect(valor(PINDOLA_DE_LA_FILA, 'width')).toBe('auto');
   expect(valor(PINDOLA_DE_LA_FILA, 'min-inline-size')).toBe('max-content');
-  /* L'alçada tàctil de sèrie, la fila no la desfà. */
   for (const propietat of ['min-height', 'height']) expect(valor(PINDOLA_DE_LA_FILA, propietat), propietat).toBeNull();
-  /* La fila porta el respir de davall de la frase i, com a molt, l'amplària de la targeta viva. */
   expect(valor(ACCIONS, 'margin')).toBe('var(--sdp-boto-marge-block) auto 0');
   expect(valor(ACCIONS, 'max-inline-size')).toBe('var(--sdp-targeta-viva-ample)');
-  /* Cap regla pròpia del botó dins de la fila, ni al full d'arrencada ni al diferit. */
-  for (const propietat of ['width', 'min-height', 'height', 'flex', 'margin', 'max-inline-size']) {
+  expect(valor('.sdp-xat-acces .sdp-mode-senior-franja', 'flex', diferit)).toBe('1 1 auto');
+  expect(valor('.sdp-xat-acces .sdp-mode-senior-franja', 'min-inline-size', diferit)).toBe('auto');
+  expect(valor('.sdp-xat-acces .sdp-mode-senior-franja', 'max-inline-size', diferit)).toBe('100%');
+  expect(valor(DESCARREGA, 'flex')).toBe('1 1 auto');
+  expect(valor(DESCARREGA, 'min-inline-size')).toBe('auto');
+  expect(valor(DESCARREGA, 'max-inline-size')).toBe('100%');
+  expect(valor('.sdp-mode-senior-xip--curt', 'white-space', diferit)).toBe('nowrap');
+  for (const propietat of ['width', 'min-height', 'height', 'margin']) {
     expect(valor(DESCARREGA, propietat), propietat).toBeNull();
+  }
+  for (const propietat of ['width', 'min-height', 'height', 'flex', 'margin', 'max-inline-size']) {
     expect(valor(DESCARREGA, propietat, diferit), `${propietat} (diferit)`).toBeNull();
   }
+});
+
+/* v1.2.18 · Gauntlet R1 (L1-02) · Una paraula clau intrínseca (min-content, max-content,
+   fit-content) dins de min(), max() o clamp() fa invàlida la declaració sencera:
+   CSS.supports('min-inline-size', 'min(100%, max-content)') torna false a Chrome 158.
+   v1.2.18 · Gauntlet R2 (L1R2-01) · La guarda mira només dins de cada funció, amb els
+   parèntesis aparellats: la regex d'abans seguia fins al final de la declaració i feia caure
+   graelles vàlides (min(100%, 12rem) max-content 1fr). També hi entren calc(), round(), mod()
+   i rem(), igual d'invàlides amb una paraula clau intrínseca, i els noms en majúscules. */
+const FUNCIO_MATEMATICA = /\b(?:min|max|clamp|calc|round|mod|rem)\(/gi;
+function intrinsequesEnFuncio(css) {
+  const trobades = [];
+  for (const m of css.matchAll(FUNCIO_MATEMATICA)) {
+    let fondaria = 1;
+    let i = m.index + m[0].length;
+    for (; i < css.length && fondaria; i += 1) {
+      if (css[i] === '(') fondaria += 1;
+      else if (css[i] === ')') fondaria -= 1;
+    }
+    if (/\b(?:min|max|fit)-content\b/i.test(css.slice(m.index + m[0].length, i - 1))) trobades.push(css.slice(m.index, i));
+  }
+  return trobades;
+}
+
+test('v1.2.18 · L1-02 · cap paraula clau intrínseca dins d’una funció matemàtica a modules.css ni al full diferit', () => {
+  /* La guarda mateixa: caça els invàlids i deixa passar els valors vàlids. */
+  for (const invalid of ['min(100%, max-content)', 'calc(100% - max-content)', 'MIN(100%, MAX-CONTENT)']) {
+    expect(intrinsequesEnFuncio(`a { min-inline-size: ${invalid}; }`), invalid).toEqual([invalid]);
+  }
+  for (const valid of [
+    'min(100%, 12rem) max-content 1fr',
+    'minmax(min(100%, 16rem), max-content)',
+    'calc-size(max-content, min(size, 100%))',
+    'minmax(min-content, max-content) 1fr'
+  ]) {
+    expect(intrinsequesEnFuncio(`a { grid-template-columns: ${valid}; }`), valid).toEqual([]);
+  }
+  expect(intrinsequesEnFuncio(modules)).toEqual([]);
+  expect(intrinsequesEnFuncio(diferit)).toEqual([]);
+});
+
+/* v1.2.18 · Gauntlet R2 (L1R2-01) · «Descarrega l'App» porta les dues classes (el DOM viu ho
+   comprova més avall), i les dues regles de modules.css tenen especificitat 0,3,0: el
+   min-inline-size: auto i el flex: 1 1 auto de DESCARREGA només guanyen al max-content i al
+   flex: 1 1 0 de PINDOLA_DE_LA_FILA perquè van després. valor() compara cadenes per selector i no
+   veu l'ordre: si s'intercanviaren, tornaria el desbordament de L1-02 amb totes les cadenes bé. */
+test('v1.2.18 · L1R2-01 · la regla de «Descarrega l’App» va després de la de la píndola de la fila', () => {
+  const pindola = modules.indexOf(`${PINDOLA_DE_LA_FILA} {`);
+  expect(pindola).toBeGreaterThanOrEqual(0);
+  expect(modules.indexOf(`${DESCARREGA} {`)).toBeGreaterThan(pindola);
 });
 
 test('261026_2126 · P1-37 · B11c · entre la fila de «Descarrega l’App» i la parella, només el buit de l’alerta', () => {
@@ -265,39 +319,39 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('261026_2126 · B11c · al DOM viu, el botó casa amb el selector de la fila i les regles mortes fins a C-2 no casen amb cap element', () => {
+test('261026_2126 · C-2 · al DOM viu, el botó i el xip conviuen a la primera fila i no queden regles mortes a modules.css', () => {
   const acces = muntaAcces();
   const boto = screen.getByRole('button', { name: "Descarrega l'App" });
+  const xip = screen.getByRole('switch', { name: 'Lletra gran' });
   expect(boto.matches(DESCARREGA)).toBe(true);
   expect(boto.matches(PINDOLA_DE_LA_FILA)).toBe(true);
-  /* Dues files: la del botó i del xip, i la parella, que és la que perd el marge de dalt. */
+  expect(xip.classList.contains('sdp-mode-senior-xip--curt')).toBe(true);
   const files = acces.querySelectorAll(':scope > .sdp-alerta__accions');
   expect(files).toHaveLength(2);
   expect(files[0].contains(boto)).toBe(true);
+  expect(files[0].contains(xip)).toBe(true);
   expect([...document.querySelectorAll(`${ACCIONS} + .sdp-alerta__accions`)]).toEqual([files[1]]);
   expect(within(files[1]).getAllByRole('button').map((b) => b.textContent)).toEqual(['Entrar', 'Registrar-se']);
-  for (const mort of MORTES_FINS_A_C2) expect(document.querySelectorAll(mort), mort).toHaveLength(0);
+  expect(selectorsAmb('.sdp-xat-acces__descarrega')).toEqual([DESCARREGA]);
 });
 
-test('261026_2126 · B11c · dins de l’app nativa (sense botó), les regles mortes tampoc no casen', () => {
+test('261026_2126 · C-2 · dins de l’app nativa (sense botó de descàrrega), el xip ocupa la primera fila netament', () => {
   window.Capacitor = { isNativePlatform: () => true };
   try {
     muntaAcces();
     expect(screen.queryByRole('button', { name: "Descarrega l'App" })).toBeNull();
-    for (const mort of MORTES_FINS_A_C2) expect(document.querySelectorAll(mort), mort).toHaveLength(0);
+    expect(screen.getByRole('switch', { name: 'Lletra gran' })).toBeTruthy();
     expect(document.querySelectorAll(`${ACCIONS} + .sdp-alerta__accions`)).toHaveLength(1);
   } finally {
     delete window.Capacitor;
   }
 });
 
-test('261026_2126 · cap altra regla de modules.css per a «Descarrega l’App» sense un element viu que hi case', () => {
+test('261026_2126 · C-2 · zero regles mortes de .sdp-xat-acces__descarrega a modules.css: tota regla casa amb un element viu', () => {
   muntaAcces();
   const selectors = selectorsAmb('.sdp-xat-acces__descarrega');
-  /* Avui només hi ha les dues mortes fins a C-2 (vegeu dalt); qualsevol altra ha de casar. La llista
-     blanca no pot quedar obsoleta: si la C-2 les retira de modules.css, esta prova obliga a buidar-la (R2b). */
-  for (const mort of MORTES_FINS_A_C2) expect(selectors, `${mort} (llista blanca de C-2)`).toContain(mort);
-  for (const selector of selectors.filter((s) => !MORTES_FINS_A_C2.includes(s))) {
+  expect(selectors).toEqual([DESCARREGA]);
+  for (const selector of selectors) {
     expect(document.querySelectorAll(selector).length, selector).toBeGreaterThan(0);
   }
 });

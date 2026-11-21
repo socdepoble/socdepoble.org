@@ -12,6 +12,13 @@ import { useSuperadminEstable } from '../../../hooks/useSuperadminEstable.js';
 import { aplica, base, CANON_BLAU, deltaDe, previsualitza, restaura } from '../../../config/crom.js';
 import { AVISOS_PUSH_XAT_ACTIUS, escoltaAvisosPush, instantaniaAvisosPush } from '../../../config/avisosPushXat.js';
 import { CANALS_BOTIGUES, ESTAT_SERVIDOR_PUSH, FITXA_NATIVA, PASSOS_SERVIDOR_PUSH, QR_GUIA_DESCARREGUES, URL_GUIA_DESCARREGUES, frasePushDelNavegador } from './assistentBotigues.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 const BotiguesSistema = lazy(() => import('../../botigues/BotiguesSistema.jsx'));
 
@@ -121,8 +128,8 @@ export function PanellCromIntegrat() {
 
   return (
     <article ref={setNode} className="sdp-admin-taxonomia" aria-label="Colors i disseny (Crom del sistema)">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Pedra Seca · OKLCH / Contrastos AAA</Insignia>
           <Insignia to="neutre">Gir actual: {delta.toFixed(1)}°</Insignia>
         </div>
@@ -133,7 +140,7 @@ export function PanellCromIntegrat() {
         </p>
       </header>
 
-      <section className="sdp-admin-taxonomia__panel">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
         <div className="sdp-crom-panell">
           <Camp
             etiqueta="Color principal"
@@ -215,8 +222,8 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
 
   return (
     <article className="sdp-admin-taxonomia" aria-label="Ajustos de vistes i columnes">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">AppGridShell · 3 Columnes</Insignia>
           <Insignia to="neutre">
             Navegació {columnWidths.left}px · Llistat {columnWidths.middle}px
@@ -228,7 +235,7 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
         </p>
       </header>
 
-      <section className="sdp-admin-taxonomia__panel" aria-labelledby={`${id}-amplada`}>
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={`${id}-amplada`}>
         <h3 id={`${id}-amplada`}>Amplada de les columnes</h3>
         <p className="sdp-muted">
           Ara: navegació <strong>{columnWidths.left}px</strong> · llistat <strong>{columnWidths.middle}px</strong>
@@ -250,7 +257,7 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
       </section>
 
       {opcionsArrel.length > 0 && (
-        <section className="sdp-admin-taxonomia__panel" aria-labelledby={`${id}-carpetes`}>
+        <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={`${id}-carpetes`}>
           <h3 id={`${id}-carpetes`}>Carpetes a la vista</h3>
           <p className="sdp-muted">
             Amagar una carpeta la lleva de la navegació, però no l’esborra: els seus documents continuen a «Tot» i a la
@@ -342,8 +349,8 @@ export function PanellNodesFediversResiliencia() {
 
   return (
     <article className="sdp-admin-taxonomia" aria-label="Nodes, Fedivers i Resiliència 3-2-1">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="exit">PostgreSQL 17.11 · 40 taules</Insignia>
           <Insignia to="primari">@depoble@mastodont.cat · POSSE</Insignia>
           <Insignia to="neutre">Mirall 3-2-1 Xifrat (age)</Insignia>
@@ -356,7 +363,7 @@ export function PanellNodesFediversResiliencia() {
         </p>
       </header>
 
-      <section className="sdp-admin-taxonomia__kpis" aria-label="Mètriques del Node 0 i Fedivers">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label="Mètriques del Node 0 i Fedivers">
         <div className="sdp-admin-kpi">
           <strong>17.11</strong>
           <span>PostgreSQL Node 0</span>
@@ -375,8 +382,8 @@ export function PanellNodesFediversResiliencia() {
         </div>
       </section>
 
-      <section className="sdp-admin-taxonomia__panel">
-        <div className="sdp-admin-taxonomia__toolbar">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <div>
             <h3>📡 Telemetria de <code>GET /api/v1/node0/status</code></h3>
             <p className="sdp-muted">
@@ -439,12 +446,12 @@ export function PanellNodesFediversResiliencia() {
         </div>
       </section>
 
-      <section
+      <section ref={adoptaEstilsAdminTaxonomia}
         className="sdp-admin-taxonomia__panel"
         aria-label="Funcionament del Node 0, la IAIA, el Revisor Editorial i la Consola Incrustada"
         data-testid="admin-node0-explicatiu-consola"
       >
-        <div className="sdp-admin-taxonomia__toolbar">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <div>
             <h3>🧠 Com funciona el Node 0 (Mac mini M4), la IAIA, les Revisores i la Consola Incrustada</h3>
             <p className="sdp-muted">
@@ -535,7 +542,7 @@ function AssistentBotigues() {
   const [canalActiuId, setCanalActiuId] = useState('pwa');
   const canalActiu = CANALS_BOTIGUES.find((c) => c.id === canalActiuId) || CANALS_BOTIGUES[0];
   return (
-    <section className="sdp-admin-taxonomia__panel" aria-label="Botigues, guia de descàrregues i avisos push" data-testid="assistent-botigues-qr-admin">
+    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Botigues, guia de descàrregues i avisos push" data-testid="assistent-botigues-qr-admin">
       <h3>📲 Botigues i guia de descàrregues</h3>
       <p className="sdp-muted">
         El QR porta a la guia pública de descàrregues, que ja porta el botó de l’App Store i els tres passos de
@@ -635,8 +642,8 @@ function AssistentBotigues() {
 export function PanellEmpaquetatsDesplegament() {
   return (
     <article className="sdp-admin-taxonomia" aria-label="Empaquetats i Desplegament (Mode Jarvis)">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Model B · Port Neutral</Insignia>
           <Insignia to="primari">{`Web ${FITXA_NATIVA.versioWeb} · apps ${FITXA_NATIVA.versio} (build ${FITXA_NATIVA.build})`}</Insignia>
         </div>
@@ -649,14 +656,14 @@ export function PanellEmpaquetatsDesplegament() {
 
       <AssistentBotigues />
 
-      <section className="sdp-admin-taxonomia__panel">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
         <h3>📦 Artefactes i Portes de Seguretat</h3>
         {/* Revisió final R16a (troballa 2, P0-74 residual) · Com les taules
             d'Importació: en una columna estreta, la taula fa scroll dins del
             panell i no trossija cap paraula (directriu del Mestre del 261025).
             --sense-marc: en ample, la taula de sempre, sense la vora de la
             capsa (Llei del Píxel). */}
-        <div className="sdp-admin-taxonomia__table-wrap sdp-admin-taxonomia__table-wrap--sense-marc">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap sdp-admin-taxonomia__table-wrap--sense-marc">
           <table className="sdp-admin-table">
             <thead>
               <tr>

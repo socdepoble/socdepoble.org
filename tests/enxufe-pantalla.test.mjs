@@ -299,7 +299,9 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
      d'enxufe-plugin.test.mjs), i la 1.1.23 continua darrere, íntegra. */
   /* Onada v1.2.17 · La 1.1.25 obri ara el registre (el sostre passa a 44 KB, enxufe-plugin.test.mjs), i la 1.1.24
      continua darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.25</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.17 de Sóc de Poble'), 'v1.2.17: la 1.1.25 obri el registre');
+  /* Onada v1.2.18 · La 1.1.26 obri ara el registre (Gauntlet R1, L5-04), i la 1.1.25 continua darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.26</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.18 de Sóc de Poble'), 'v1.2.18: la 1.1.26 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.25</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.17 de Sóc de Poble'), 'v1.2.18: la 1.1.25 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.24</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.16 de Sóc de Poble'), 'v1.2.17: la 1.1.24 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.23</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.15 de Sóc de Poble'), 'v1.2.16: la 1.1.23 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.22</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.14 de Sóc de Poble'), 'v1.2.15: la 1.1.22 es queda al registre');
@@ -710,16 +712,25 @@ test('ca_valencia («Català (Valencià)») fa servir els fitxers de ca, si no e
 
 /* ─────────────── Desinstal·lació amb una altra còpia del plugin ─────────────── */
 
-function desinstalla(t, cas, carpetes = [NOVA]) {
+/* v1.2.18 · Gauntlet R1 (L4-03) · L'eixida sencera (esborrats, lloc final i pila de switch_to_blog);
+   desinstalla() en continua tornant només els esborrats. */
+function executaDesinstallacio(t, cas, carpetes = [NOVA], antics = []) {
   const arrel = temporal(t);
   // Només el que WordPress inclou: uninstall.php i, des d'ell, includes/copies.php.
   const plugins = carpetes.map((nom) => {
     const plugin = path.join(arrel, nom);
     fs.mkdirSync(path.join(plugin, 'includes'), { recursive: true });
-    for (const rel of ['uninstall.php', 'includes/copies.php']) fs.copyFileSync(path.join(PLUGIN, rel), path.join(plugin, rel));
+    for (const rel of ['uninstall.php', 'includes/copies.php']) {
+      const font = rel === 'uninstall.php' && antics.includes(nom) ? path.join(ARREL, 'tests/fixtures/enxufe-uninstall-r32-27-antic.php') : path.join(PLUGIN, rel);
+      fs.copyFileSync(font, path.join(plugin, rel));
+    }
     return plugin;
   });
-  return php(FIXTURE_DESINSTALLA, plugins, { plugin: `${carpetes[0]}/socdepoble-enxufe.php`, ...cas }).esborrats;
+  return php(FIXTURE_DESINSTALLA, plugins, { plugin: `${carpetes[0]}/socdepoble-enxufe.php`, ...cas });
+}
+
+function desinstalla(t, cas, carpetes = [NOVA], antics = []) {
+  return executaDesinstallacio(t, cas, carpetes, antics).esborrats;
 }
 
 test('desinstal·lació: sense cap altra còpia activa esborra les opcions del plugin i res més', OPCIONS, t => {
@@ -739,4 +750,51 @@ test('desinstal·lació: una altra còpia activa (lloc, un altre lloc de la xarx
 test('desinstal·lació: esborrar dues còpies en la mateixa petició no acaba en «Cannot redeclare»', OPCIONS, t => {
   const esborrats = desinstalla(t, { actius: { 1: [] } }, [NOVA, 'socdepoble-enxufe']);
   assert.equal(esborrats.filter((e) => e === '1:socdepoble_enxufe').length, 2);
+});
+
+/* IDEA-306 · La desinstal·lació esborra només secrets propis i només de l'última còpia. */
+test('R32.27 · Secrets API opcional: últim connector simple/multisite i conservació amb altra còpia activa', OPCIONS, t => {
+  const secrets = (lloc) => [`${lloc}:secret:socdepoble/deepl-api-key`, `${lloc}:secret:socdepoble/traduccio-url-clau`];
+  const simple = desinstalla(t, { actius: { 1: [] }, secrets_api: true });
+  assert.deepEqual(simple.filter(e => e.includes(':secret:')), secrets(1));
+  const multi = desinstalla(t, { multisite: true, actius: { 1: [], 2: [] }, secrets_api: true });
+  assert.deepEqual(multi.filter(e => e.includes(':secret:')), [...secrets(1), ...secrets(2)]);
+  for (const cas of [
+    { actius: { 1: ['socdepoble-enxufe/socdepoble-enxufe.php'] } },
+    { multisite: true, actius: { 1: [], 2: ['socdepoble-enxufe/socdepoble-enxufe.php'] } },
+    { multisite: true, actius: { 1: [] }, xarxa: { 'socdepoble-enxufe/socdepoble-enxufe.php': 1790000000 } },
+  ]) assert.deepEqual(desinstalla(t, { ...cas, secrets_api: true }), []);
+  assert.deepEqual(desinstalla(t, { actius: { 1: [] } }).filter(e => e.includes(':secret:')), [], 'sense API no hi ha fatal ni esborrat');
+});
+
+/* Arbitratge adversarial: el helper antic pot estar vinculat abans d'incloure la versió nova. */
+test('R32.27 · desinstal·lar versió antiga i nova en la mateixa petició també elimina els secrets propis', OPCIONS, t => {
+  for (const multisite of [false, true]) {
+    const actius = multisite ? { 1: [], 2: [] } : { 1: [] };
+    const resultat = desinstalla(t, { multisite, actius, secrets_api: true }, ['sdp-antic', NOVA], ['sdp-antic']);
+    const secrets = resultat.filter(e => e.includes(':secret:'));
+    assert.deepEqual(secrets, Object.keys(actius).flatMap(lloc => [`${lloc}:secret:socdepoble/deepl-api-key`, `${lloc}:secret:socdepoble/traduccio-url-clau`]));
+  }
+});
+
+/* v1.2.18 · Gauntlet R1 (L4-03) · Un proveïdor (beta 7.2, drop-in o connector extern) que llança en
+   wp_delete_secret no talla la desinstal·lació: l'altre secret, les opcions dels altres llocs,
+   restore_current_blog i el canal s'esborren igualment. */
+test('v1.2.18 · desinstal·lació: un wp_delete_secret que llança no deixa llocs, canal ni restore_current_blog a mitges', OPCIONS, t => {
+  const deepl = 'socdepoble/deepl-api-key';
+  const url = 'socdepoble/traduccio-url-clau';
+  const opcions = (lloc) => [`${lloc}:socdepoble_enxufe`, `${lloc}:sdp_traduccio_pressupost`, `${lloc}:sdp_traduccio_lock`, `${lloc}:SQL`];
+
+  const simple = executaDesinstallacio(t, { actius: { 1: [] }, secrets_api: true, secrets_llancen: [deepl] });
+  assert.deepEqual(simple.esborrats, [...opcions(1), `1:llança:${deepl}`, `1:secret:${url}`, '1:socdepoble_enxufe_canal'], 'un sol lloc: el segon secret i el canal');
+
+  const xarxa = executaDesinstallacio(t, { multisite: true, actius: { 1: [], 2: [], 3: [] }, secrets_api: true, secrets_llancen: [deepl] });
+  assert.deepEqual(xarxa.esborrats, [1, 2, 3].flatMap(lloc => [...opcions(lloc), `${lloc}:llança:${deepl}`, `${lloc}:secret:${url}`]).concat('xarxa:socdepoble_enxufe_canal'), 'xarxa: els tres llocs i el canal de xarxa');
+  assert.equal(xarxa.lloc, 1, 'restore_current_blog torna al lloc de partida');
+  assert.deepEqual(xarxa.pila, []);
+
+  const tots = executaDesinstallacio(t, { multisite: true, actius: { 1: [], 2: [] }, secrets_api: true, secrets_llancen: [deepl, url] });
+  assert.deepEqual(tots.esborrats, [1, 2].flatMap(lloc => [...opcions(lloc), `${lloc}:llança:${deepl}`, `${lloc}:llança:${url}`]).concat('xarxa:socdepoble_enxufe_canal'), 'els dos secrets llancen a cada lloc');
+  assert.equal(tots.lloc, 1);
+  assert.deepEqual(tots.pila, []);
 });

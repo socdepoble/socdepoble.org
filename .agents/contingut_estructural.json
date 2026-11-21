@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "99e7cbe4c572d307f4053a69ffcd4039941923571a44d7f3ceb8d2ccb92f09fa",
-      "html": 157573,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.17), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1606; ordre de les 16:03, IDEA-313): crònica FITA_R32_26 de la v1.2.17 build 22 (Onades R32.25 i R32.26, WP 1.1.25) i capçalera amb el connector que serveix WordPress.org (1.1.24); portada de la Wiki amb la vinyeta de Gemini R32.26 (lot_03) i la seua variant social. Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics; pendent de lectura humana",
+      "sha256": "bdbae54ad632f29a6d236fa3c934bdfe317a363b092d55fddcc10406335e327e",
+      "html": 160850,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.18), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1855; ordre de les 18:53): crònica FITA_R32_28 de la v1.2.18 build 23 (Onades R32.27 i R32.28, WP 1.1.26) i capçalera amb el connector que serveix WordPress.org (1.1.25). Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics (veïns simulats, botó més compacte, textos publicats); pendent de lectura humana, 2026-11-21",
       "data": "2026-11-21"
     },
     "wikidepoble": {

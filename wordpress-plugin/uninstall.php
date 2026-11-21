@@ -42,6 +42,24 @@ if ( ! function_exists( 'socdepoble_enxufe_neteja_traduccio' ) ) {
 	}
 }
 
+// Helper independent: una còpia antiga pot haver definit neteja_traduccio en esta petició.
+if ( ! function_exists( 'socdepoble_enxufe_neteja_secrets_wp72' ) ) {
+	/** Elimina només els dos secrets propis del lloc actual, si l'API existix. */
+	function socdepoble_enxufe_neteja_secrets_wp72() {
+		if ( function_exists( 'wp_delete_secret' ) ) {
+			/* v1.2.18 · Gauntlet R1 (L4-03) · Un proveïdor pot llançar, com preveu secrets-wp72.php:
+			   cada secret pel seu compte, i l'excepció no talla l'altre secret, les opcions dels altres
+			   llocs, restore_current_blog ni el canal. */
+			try {
+				wp_delete_secret( 'socdepoble/deepl-api-key' );
+			} catch ( Throwable $e ) {}
+			try {
+				wp_delete_secret( 'socdepoble/traduccio-url-clau' );
+			} catch ( Throwable $e ) {}
+		}
+	}
+}
+
 // WP_UNINSTALL_PLUGIN és la ruta relativa de la còpia que s'esborra.
 if ( array() !== socdepoble_enxufe_altres_copies_actives( WP_UNINSTALL_PLUGIN ) ) {
 	return;
@@ -57,11 +75,13 @@ if ( is_multisite() ) {
 		switch_to_blog( $socdepoble_enxufe_lloc );
 		delete_option( 'socdepoble_enxufe' );
 		socdepoble_enxufe_neteja_traduccio();
+		socdepoble_enxufe_neteja_secrets_wp72();
 		restore_current_blog();
 	}
 	delete_site_option( 'socdepoble_enxufe_canal' );
 } else {
 	delete_option( 'socdepoble_enxufe' );
 	socdepoble_enxufe_neteja_traduccio();
+	socdepoble_enxufe_neteja_secrets_wp72();
 	delete_option( 'socdepoble_enxufe_canal' );
 }

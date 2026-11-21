@@ -133,7 +133,8 @@
          --sdp-text-meta (14px), no en 0.8125rem (13px).
      El pes 500 va literal: tokens.css no en té cap per davall de
      --sdp-pes-semi (600). */
-  .sdp-top-bar-btn.sdp-top-bar-btn--instal {
+  .sdp-top-bar-btn.sdp-top-bar-btn--instal,
+  .sdp-top-bar-btn.sdp-top-bar-btn--iaia {
     position: relative;
     isolation: isolate;
     display: inline-flex;
@@ -154,7 +155,11 @@
     line-height: var(--sdp-leading-titol);
     white-space: nowrap;
   }
-  .sdp-top-bar-btn.sdp-top-bar-btn--instal::before {
+  .sdp-top-bar-btn.sdp-top-bar-btn--iaia {
+    margin-inline: 0 var(--sdp-space-1);
+    font-weight: 700;
+  }
+  .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia)::before {
     content: '';
     position: absolute;
     inset: var(--sdp-space-2) 0;
@@ -163,31 +168,32 @@
     background: var(--sdp-crom-control-fons);
     transition: background-color var(--sdp-t);
   }
+  .sdp-top-bar-btn--iaia.sdp-top-bar-btn--iaia-activa { animation: none; }
+  .sdp-top-bar-btn--iaia-activa::before { animation: sdp-iaia-resplendor 8s ease-in-out infinite; }
   @media (hover: hover) and (pointer: fine) {
-    /* La caixa tàctil no s'encén (el hover de .sdp-top-bar-btn ompliria els
-       48px): només la pastilla. */
-    .sdp-top-bar-btn.sdp-top-bar-btn--instal:hover {
+    .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia):hover {
       background-color: transparent;
     }
-    .sdp-top-bar-btn.sdp-top-bar-btn--instal:hover::before {
+    .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia):hover::before {
       background-color: var(--sdp-crom-control-hover);
     }
   }
-  .sdp-top-bar-btn.sdp-top-bar-btn--instal:focus-visible {
+  .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia):focus-visible {
     outline: none;
   }
-  .sdp-top-bar-btn.sdp-top-bar-btn--instal:focus-visible::before {
+  .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia):focus-visible::before {
     outline: 2px solid var(--sdp-crom-focus);
     outline-offset: 2px;
   }
-  /* El glif, de 16px al costat del rètol (la barra en posa 30px a les icones soles). */
   .bar-black .right-icons .sdp-top-bar-btn--instal svg {
     width: 16px;
     height: 16px;
     stroke-width: 2;
   }
-  /* Compacte: només la icona, dins d'un cercle de 32px al mig de la cel·la
-     de --sdp-touch, i sense el marge lateral: la barra mòbil no en té, de lloc. */
+  .bar-black .right-icons .sdp-top-bar-btn--iaia svg {
+    width: 18px;
+    height: 18px;
+  }
   :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--instal {
     margin-inline: 0;
     padding: 0;
@@ -197,6 +203,11 @@
   }
   :where(.sdp-root.is-compact) .sdp-top-bar-btn--instal .sdp-top-bar-btn__rotul {
     display: none;
+  }
+  :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--iaia {
+    gap: var(--sdp-space-1);
+    margin-inline: 0 var(--sdp-space-1);
+    padding: 0 var(--sdp-space-2);
   }
 
   .sdp-bloc .sdp-editor-document > .sdp-universal-page-container--contained > .bar-blue,

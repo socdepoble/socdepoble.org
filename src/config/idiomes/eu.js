@@ -512,6 +512,8 @@ export default {
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': 'iaia-ren arima',
   'nav.iaiaFitxa': 'IAIA MarIA',
+  'nav.iaiaCurt': 'IAIA',
+  'nav.iaiaFitxaTitol': 'IAIA MarIA · Sóc de Pobleren laguntzaile digitala',
   'nav.roadmap': 'Bide-orria',
   'nav.roadmapShort': 'Bidea',
   'nav.versions': 'Bertsioak',

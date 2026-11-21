@@ -10,6 +10,13 @@ import { creaPublicadorPaginaWp, potRevisarPaginesWp } from '../../data/importac
 import { useNotes, ValorDeNotes } from './NotesContext.jsx';
 import { nouIdDeNota } from './notaPreparada.js';
 import NotesEditor from './NotesEditor.jsx';
+import cssAdminTaxonomia from '../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
   const [nota, setNota] = useState(() => ({
@@ -74,7 +81,7 @@ function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
     catch (error) { setMessage(`No es pot aprovar: ${error.code || error.message}`); }
   };
   return <>
-    <div className="sdp-admin-taxonomia__panel" aria-label="Revisió editorial privada">
+    <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Revisió editorial privada">
       <p>{createdId ? 'L’intent continua al Bloc de notes amb el seu UUID estable.' : 'Esborrany en memòria: no s’ha creat cap nota.'} <Link to="/notes">Torna al Bloc de notes</Link></p>
       <p role="status">{approved && publisher.estaAprovat() ? 'Estat de revisió: aprovat.' : 'Estat de revisió: pendent_admin.'} {pagina.imatgesPendents.length} imatges pendents de còpia pròpia verificada.</p>
       <p>Revisa l’autoria, els drets, les dates originals i tot el contingut abans d’aprovar. Les imatges pendents impedixen aprovar i publicar.</p>

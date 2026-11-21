@@ -1,0 +1,164 @@
+/* ==========================================================================
+   PEDRA SECA · PANELLS D'ADMINISTRACIÓ (FULL DIFERIT · v1.2.18, sostre d'arrencada)
+   Els fills .sdp-admin-taxonomia__* (capçalera, panells, insígnies, graella, taules...) només
+   viuen a pantalles que es carreguen a demanda (Administració del Sistema, Banc d'Importació,
+   Laboratori de Taxonomia, Safata LSSI, Sessions, Trilogia WP, Importació de Notes i els Ajustos
+   del Workspace): cadascuna l'adopta amb adoptaEstilsAdminTaxonomia abans de pintar.
+   L'arrel .sdp-admin-taxonomia i :where(.sdp-admin-taxonomia) .sdp-admin-dl es queden a
+   modules.css: comparteixen element amb sdp-workspace-settings-inline i sdp-safata-lssi, i
+   l'ordre de la cascada no ha de canviar (Llei del Píxel). Mateix contingut i mateix ordre que
+   a modules.css v1.2.17.
+   ========================================================================== */
+@layer components {
+  .sdp-admin-taxonomia__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding-block-end: var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-admin-taxonomia__header h2 {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-taxonomia__header p,
+  .sdp-admin-taxonomia__lead {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-body);
+  }
+
+  .sdp-admin-taxonomia__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    justify-content: center;
+  }
+
+  .sdp-admin-taxonomia__diagnostic {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-forta);
+    border-left: 4px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-admin-taxonomia__diagnostic h3,
+  .sdp-admin-taxonomia__diagnostic p,
+  .sdp-admin-taxonomia__diagnostic ul {
+    margin: 0;
+  }
+
+  .sdp-admin-taxonomia__diagnostic ul {
+    padding-inline-start: var(--sdp-space-5);
+  }
+
+  .sdp-admin-taxonomia__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    justify-content: center;
+  }
+
+  .sdp-admin-taxonomia__section,
+  .sdp-admin-taxonomia__panel,
+  .sdp-admin-taxonomia__simulador {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+    min-width: 0;
+  }
+
+  .sdp-admin-taxonomia__section h3,
+  .sdp-admin-taxonomia__panel h3,
+  .sdp-admin-taxonomia__simulador h3 {
+    margin: 0;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-admin-taxonomia__controls,
+  .sdp-admin-taxonomia__toolbar,
+  .sdp-admin-taxonomia__filters,
+  .sdp-admin-taxonomia__selects {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-taxonomia__status {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+  }
+
+  .sdp-admin-taxonomia__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-taxonomia__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-admin-taxonomia__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-admin-taxonomia__card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-taxonomia__table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-admin-taxonomia__table-wrap--sense-marc {
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .sdp-admin-taxonomia__pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    justify-content: center;
+  }
+}

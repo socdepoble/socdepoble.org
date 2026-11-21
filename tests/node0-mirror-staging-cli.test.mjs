@@ -18,7 +18,7 @@ test('canonical CLI is dry-run by default and rejects unreviewed apply before na
 test('canonical source manifest pins all current files and contains no hidden LAB dependency or self recursion',async()=>{
   const manifest=JSON.parse(await fs.readFile(path.join(ROOT,'tooling/node0/manifest-mirall-staging.json')));assert.equal(manifest.schema,'sdp.node0.mirror.deployment.v1');assert.equal(manifest.files.length,38);
   for(const [source,pin] of Object.entries({
-    'src/data/contracte.js':'fff8f5f4199a16a7be8877b72664fa9b8bfd1ef096e197bd0fee818db1a1d079',
+    'src/data/contracte.js':'28c431d243d450f427365b7fbce55fd06ded236cacb0b19b04f942b484c4f1c7',
     'src/data/contracteAvisos.js':'9d8ee9cc8af5f3cb811ecfa345828ee165375972f3a70f83a8617371301cf5b2',
     'src/data/contracteConnexions.js':'547b1f339dbedc867ba1d0989f3d0b6407b7bd1901d72d017c0c06a5eb82cc17',
     'src/data/contracteOrganitzacions.js':'c6ac84378a30ab0bb9a8771839f2fb5c305764e6e9bd743835653524000b8c3e',

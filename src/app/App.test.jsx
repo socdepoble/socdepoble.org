@@ -376,6 +376,16 @@ async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }, b
 
 const tornar = () => new URLSearchParams(window.location.search).get('tornar');
 
+test('R32.27 · anti Back-Button Hijacking: aterratge / → /xat sense cap pushState', async () => {
+  const push = vi.spyOn(window.history, 'pushState');
+  const replace = vi.spyOn(window.history, 'replaceState');
+  await muntaSenseSessio('/', async () => {
+    await waitFor(() => expect(window.location.pathname).toBe('/xat'));
+    expect(push).not.toHaveBeenCalled();
+    expect(replace.mock.calls.some(([, , url]) => url === '/xat')).toBe(true);
+  });
+});
+
 /* Acta 261004_1027 §3 · Sense sessió, el Foraster de sempre a la barra negra:
    la icona de persona amb «Entrar», cap avatar. */
 test('acta 261004_1027 · sense sessió, la barra negra porta el Foraster de sempre i cap avatar', async () => {

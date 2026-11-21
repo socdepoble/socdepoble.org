@@ -11,10 +11,10 @@ import { VideoEditorial, esIdVideoEditorial } from '../VideoEditorial.jsx';
 const MARCA_VIDEO = 'data-sdp-youtube';
 const NOMS_REACT = Object.freeze({ 'class': 'className', referrerpolicy: 'referrerPolicy', colspan: 'colSpan', rowspan: 'rowSpan' });
 const BUITS = new Set(['br', 'hr', 'img']);
-function prepara(html) {
+function prepara(html, opcions) {
   if (typeof html !== 'string' || !html.includes(MARCA_VIDEO) || typeof DOMParser === 'undefined') return null;
   /* Gauntlet v1.2.15 · El mateix ordre que detailRichText i TextSection: s'etiqueta l'HTML cru i el sanejador és l'últim pas. */
-  const net = sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(html)));
+  const net = sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(html)), opcions);
   // Un template inert evita iniciar càrregues de recursos mentre s'analitza.
   const arrel = new DOMParser().parseFromString(`<template>${net}</template>`, 'text/html').querySelector('template')?.content;
   if (!arrel) return null;
@@ -29,8 +29,8 @@ export function hiHaVideoEditorial(html) { return prepara(html) !== null; }
  * Amb vídeo, només els atributs que ha conservat sanitizeHtml arriben a React;
  * mai es copien src, allow, sandbox ni handlers del marcador cap a l'iframe.
  */
-export function renderHtmlEditorial(html) {
-  const contingut = prepara(html);
+export function renderHtmlEditorial(html, opcions) {
+  const contingut = prepara(html, opcions);
   if (!contingut) return null;
   const pinta = (node, key) => {
     if (node.nodeType === 3) return node.textContent;

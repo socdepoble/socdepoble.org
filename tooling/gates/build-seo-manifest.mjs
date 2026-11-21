@@ -158,6 +158,7 @@ async function carregaDetalls() {
         descripcio: retalla(item.description || item.content || item.subtitle || ''),
         imatge: item.image_url || item.avatar_url || null,
         tipus: seed.tipus,
+        index: publicSeoRoute(`${seed.prefix}/${encodeURIComponent(String(item.id))}`, item),
       });
     }
   }
@@ -254,7 +255,7 @@ const detalls = await carregaDetalls();
 for (const d of detalls) {
   manifest.routes[d.ruta] = {
     status: 200,
-    index: publicSeoRoute(d.ruta),
+    index: d.index,
     title: d.titol,
     description: d.descripcio || retalla('Sóc de Poble, la xarxa dels pobles valencians.'),
     image: d.imatge || IMATGE_DEFECTE,

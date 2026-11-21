@@ -25,7 +25,12 @@ function socdepoble_enxufe_deepl_clau() {
 
 /** Nom públic del motor actiu per a diagnòstic MCP i Salut, sense cap clau. */
 function socdepoble_enxufe_traduccio_proveidor_actiu() {
-	if ( '' !== socdepoble_enxufe_deepl_clau() ) {
+	$clau = socdepoble_enxufe_deepl_clau();
+	$te_deepl = '' !== $clau;
+	if ( function_exists( 'wp_secrets_memzero' ) ) {
+		wp_secrets_memzero( $clau );
+	}
+	if ( $te_deepl ) {
 		return 'deepl';
 	}
 	if ( '' !== socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' ) ) {
@@ -122,35 +127,44 @@ function socdepoble_enxufe_traduccio_apertium_motors() {
  * L'empremta separa cache i pausa per proveïdor; cap URL ni clau en clar.
  */
 function socdepoble_enxufe_traduccio_proveidor( $desti ) {
-	$clau = socdepoble_enxufe_deepl_clau();
-	if ( '' !== $clau ) {
-		return array( 'nom' => 'deepl', 'clau' => $clau, 'empremta' => hash_hmac( 'sha256', $clau, wp_salt( 'auth' ) ) );
-	}
-	$motors = socdepoble_enxufe_traduccio_apertium_motors();
-	if ( isset( $motors[ $desti ] ) ) {
-		$propi = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_APERTIUM_URL' );
+	try {
+		$clau = socdepoble_enxufe_deepl_clau();
+		if ( '' !== $clau ) {
+			return array( 'nom' => 'deepl', 'clau' => $clau, 'empremta' => hash_hmac( 'sha256', $clau, wp_salt( 'auth' ) ) );
+		}
+		$motors = socdepoble_enxufe_traduccio_apertium_motors();
+		if ( isset( $motors[ $desti ] ) ) {
+			$propi = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_APERTIUM_URL' );
+			return array(
+				'nom' => 'apertium',
+				'parell' => $motors[ $desti ][0],
+				'extrems' => '' !== $propi ? array( $propi ) : $motors[ $desti ][1],
+				'empremta' => hash_hmac( 'sha256', 'sdp-apertium-v1' . ( '' !== $propi ? '|' . $propi : '' ), wp_salt( 'auth' ) ),
+			);
+		}
+		$url = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' );
+		if ( '' === $url ) {
+			return socdepoble_enxufe_traduccio_error( 'sense_clau', 503 );
+		}
+		$clau_neta = socdepoble_enxufe_llig_clau( 'traduccio_url' );
 		return array(
-			'nom' => 'apertium',
-			'parell' => $motors[ $desti ][0],
-			'extrems' => '' !== $propi ? array( $propi ) : $motors[ $desti ][1],
-			'empremta' => hash_hmac( 'sha256', 'sdp-apertium-v1' . ( '' !== $propi ? '|' . $propi : '' ), wp_salt( 'auth' ) ),
+			'nom' => 'lliure',
+			'url' => $url,
+			'clau' => $clau_neta,
+			'empremta' => hash_hmac(
+				'sha256',
+				'sdp-lliure-v1|' . $url . ( '' !== $clau_neta ? '|' . hash_hmac( 'sha256', $clau_neta, 'sdp-lliure-cred-v1' ) : '' ),
+				wp_salt( 'auth' )
+			),
 		);
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) ) {
+			wp_secrets_memzero( $clau );
+			if ( isset( $clau_neta ) ) {
+				wp_secrets_memzero( $clau_neta );
+			}
+		}
 	}
-	$url = socdepoble_enxufe_traduccio_url( 'SDP_TRADUCCIO_URL' );
-	if ( '' === $url ) {
-		return socdepoble_enxufe_traduccio_error( 'sense_clau', 503 );
-	}
-	$clau_neta = socdepoble_enxufe_llig_clau( 'traduccio_url' );
-	return array(
-		'nom' => 'lliure',
-		'url' => $url,
-		'clau' => $clau_neta,
-		'empremta' => hash_hmac(
-			'sha256',
-			'sdp-lliure-v1|' . $url . ( '' !== $clau_neta ? '|' . hash_hmac( 'sha256', $clau_neta, 'sdp-lliure-cred-v1' ) : '' ),
-			wp_salt( 'auth' )
-		),
-	);
 }
 
 /**
@@ -166,7 +180,12 @@ function socdepoble_enxufe_traduccio_proveidor( $desti ) {
  */
 function socdepoble_enxufe_traduccio_destins() {
 	$ordre = array( 'ES', 'GL', 'EU', 'EN-GB', 'FR', 'DE' );
-	if ( '' !== socdepoble_enxufe_deepl_clau() ) {
+	$clau = socdepoble_enxufe_deepl_clau();
+	$te_deepl = '' !== $clau;
+	if ( function_exists( 'wp_secrets_memzero' ) ) {
+		wp_secrets_memzero( $clau );
+	}
+	if ( $te_deepl ) {
 		return $ordre;
 	}
 	$motors  = socdepoble_enxufe_traduccio_apertium_motors();
@@ -234,14 +253,22 @@ function socdepoble_enxufe_traduccio_deepl( $clau, $pendents, $desti, $format, $
 	if ( 'html' === $format ) {
 		$cos['tag_handling'] = 'html';
 	}
-	$resposta = wp_remote_post( $url, array(
+	$peticio = array(
 		'timeout' => 15,
 		'redirection' => 0,
 		'limit_response_size' => 131072,
 		'user-agent' => 'SocDePoble-Translation/1.0',
 		'headers' => array( 'Authorization' => 'DeepL-Auth-Key ' . $clau, 'Content-Type' => 'application/json' ),
 		'body' => wp_json_encode( $cos ),
-	) );
+	);
+	try {
+		$resposta = wp_remote_post( $url, $peticio );
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) ) {
+			wp_secrets_memzero( $clau );
+			wp_secrets_memzero( $peticio['headers']['Authorization'] );
+		}
+	}
 	$fallada = socdepoble_enxufe_traduccio_fallada( $resposta, $pausa );
 	if ( $fallada ) {
 		return $fallada;
@@ -323,7 +350,18 @@ function socdepoble_enxufe_traduccio_lliure( $proveidor, $pendents, $desti, $for
 	if ( '' !== $proveidor['clau'] ) {
 		$cos['api_key'] = $proveidor['clau'];
 	}
-	$resposta = wp_remote_post( $proveidor['url'], socdepoble_enxufe_traduccio_peticio( $queda, 'application/json', wp_json_encode( $cos ) ) );
+	$peticio = socdepoble_enxufe_traduccio_peticio( $queda, 'application/json', wp_json_encode( $cos ) );
+	try {
+		$resposta = wp_remote_post( $proveidor['url'], $peticio );
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) ) {
+			wp_secrets_memzero( $proveidor['clau'] );
+			if ( isset( $cos['api_key'] ) ) {
+				wp_secrets_memzero( $cos['api_key'] );
+			}
+			wp_secrets_memzero( $peticio['body'] );
+		}
+	}
 	$fallada = socdepoble_enxufe_traduccio_fallada( $resposta, $pausa );
 	if ( $fallada ) {
 		return $fallada;
@@ -443,125 +481,131 @@ function socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $emprem
 }
 
 function socdepoble_enxufe_traduir( $request ) {
-	$permis = socdepoble_enxufe_traduccio_permis( $request );
-	if ( is_wp_error( $permis ) ) {
-		return $permis;
-	}
-	$dades = $request->get_json_params();
-	$cru = json_decode( $request->get_body() );
-	if ( is_wp_error( $dades ) || ! is_array( $dades ) || ! is_object( $cru ) || ! isset( $cru->textos ) || ! is_array( $cru->textos ) || array_diff( array_keys( $dades ), array( 'textos', 'desti', 'origen', 'format' ) ) ) {
-		return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
-	}
-	$textos = $dades['textos'];
-	$desti = $dades['desti'] ?? null;
-	$format = $dades['format'] ?? null;
-	if ( count( $textos ) < 1 || count( $textos ) > 50 || ! in_array( $desti, array( 'ES', 'EN-GB', 'FR', 'DE', 'GL', 'EU' ), true ) || 'CA' !== ( $dades['origen'] ?? null ) || ! in_array( $format, array( 'text', 'html' ), true ) ) {
-		return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
-	}
-	$caracters = 0;
-	$bytes = 0;
-	$te_text = false;
-	foreach ( $textos as $text ) {
-		if ( ! is_string( $text ) || 1 !== preg_match( '//u', $text ) ) {
+	try {
+		$permis = socdepoble_enxufe_traduccio_permis( $request );
+		if ( is_wp_error( $permis ) ) {
+			return $permis;
+		}
+		$dades = $request->get_json_params();
+		$cru = json_decode( $request->get_body() );
+		if ( is_wp_error( $dades ) || ! is_array( $dades ) || ! is_object( $cru ) || ! isset( $cru->textos ) || ! is_array( $cru->textos ) || array_diff( array_keys( $dades ), array( 'textos', 'desti', 'origen', 'format' ) ) ) {
 			return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
 		}
-		$caracters += preg_match_all( '/./us', $text );
-		$bytes += strlen( $text );
-		$te_text = $te_text || '' !== trim( $text );
-	}
-	if ( $bytes > 20000 || $caracters > 5000 ) {
-		return socdepoble_enxufe_traduccio_error( 'mida', 413 );
-	}
-	if ( ! $te_text ) {
-		return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
-	}
-	$proveidor = socdepoble_enxufe_traduccio_proveidor( $desti );
-	if ( is_wp_error( $proveidor ) ) {
-		return $proveidor;
-	}
-	$empremta = $proveidor['empremta'];
-	list( $resultats, $pendents ) = socdepoble_enxufe_traduccio_lot( $textos, $desti, $format, $empremta );
-	if ( ! $pendents ) {
-		return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, true );
-	}
-	$pausa = 'sdp_tr_pause_' . $empremta;
-	$estat_pausa = get_transient( $pausa );
-	if ( $estat_pausa ) {
-		return in_array( (int) $estat_pausa, array( 403, 502 ), true ) ? socdepoble_enxufe_traduccio_error( 'proveidor', 502 ) : socdepoble_enxufe_traduccio_error( 'limit', 429 );
-	}
-	$locks = array();
-	$pressupost = false;
-	try {
-		// Pany per text (sdp_tr_lock_<hash>): lots diferents poden traduir en
-		// paral·lel mentre els textos encavalcats no es facturen dues vegades;
-		// el pany global de pressupost ($pressupost) s'allibera abans de les
-		// crides HTTP al proveïdor. Mai esperem amb panys presos.
-		ksort( $pendents );
-		foreach ( array_keys( $pendents ) as $id ) {
-			$nom = 'sdp_tr_lock_' . substr( $id, 7 );
-			$valor = socdepoble_enxufe_traduccio_bloqueja( $nom );
-			if ( false === $valor ) {
-				return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
-			}
-			$locks[ $nom ] = $valor;
+		$textos = $dades['textos'];
+		$desti = $dades['desti'] ?? null;
+		$format = $dades['format'] ?? null;
+		if ( count( $textos ) < 1 || count( $textos ) > 50 || ! in_array( $desti, array( 'ES', 'EN-GB', 'FR', 'DE', 'GL', 'EU' ), true ) || 'CA' !== ( $dades['origen'] ?? null ) || ! in_array( $format, array( 'text', 'html' ), true ) ) {
+			return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
 		}
-		// Relectura després d'adquirir el lock: un altre procés pot haver traduït.
+		$caracters = 0;
+		$bytes = 0;
+		$te_text = false;
+		foreach ( $textos as $text ) {
+			if ( ! is_string( $text ) || 1 !== preg_match( '//u', $text ) ) {
+				return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
+			}
+			$caracters += preg_match_all( '/./us', $text );
+			$bytes += strlen( $text );
+			$te_text = $te_text || '' !== trim( $text );
+		}
+		if ( $bytes > 20000 || $caracters > 5000 ) {
+			return socdepoble_enxufe_traduccio_error( 'mida', 413 );
+		}
+		if ( ! $te_text ) {
+			return socdepoble_enxufe_traduccio_error( 'invalida', 400 );
+		}
+		$proveidor = socdepoble_enxufe_traduccio_proveidor( $desti );
+		if ( is_wp_error( $proveidor ) ) {
+			return $proveidor;
+		}
+		$empremta = $proveidor['empremta'];
 		list( $resultats, $pendents ) = socdepoble_enxufe_traduccio_lot( $textos, $desti, $format, $empremta );
 		if ( ! $pendents ) {
 			return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, true );
 		}
-		$pressupost = socdepoble_enxufe_traduccio_bloqueja();
-		if ( false === $pressupost ) {
-			return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
+		$pausa = 'sdp_tr_pause_' . $empremta;
+		$estat_pausa = get_transient( $pausa );
+		if ( $estat_pausa ) {
+			return in_array( (int) $estat_pausa, array( 403, 502 ), true ) ? socdepoble_enxufe_traduccio_error( 'proveidor', 502 ) : socdepoble_enxufe_traduccio_error( 'limit', 429 );
 		}
-		$facturables = 0;
-		foreach ( $pendents as $text ) {
-			$facturables += preg_match_all( '/./us', $text );
-		}
-		// REMOTE_ADDR; no confiar en X-Forwarded-For enviat pel visitant.
-		$adreca = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] )
-			? filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP ) : false;
-		// Una adreça absent o invàlida compartix el límit; mai obri comptadors arbitraris.
-		$client = 'sdp_tr_ip_' . hash_hmac( 'sha256', false === $adreca ? 'unknown' : $adreca, wp_salt( 'auth' ) );
-		$ritme = get_transient( $client );
-		if ( ! is_array( $ritme ) || ( $ritme['fins'] ?? 0 ) <= time() ) {
-			$ritme = array( 'fins' => time() + 600, 'peticions' => 0, 'caracters' => 0 );
-		}
-		$caracters_ip = (int) ( $ritme['caracters'] ?? 0 );
-		if ( $ritme['peticions'] >= 30 || $caracters_ip + $facturables > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_IP_CARACTERS', 10000 ) ) {
-			return socdepoble_enxufe_traduccio_error( 'limit', 429 );
-		}
-		++$ritme['peticions'];
-		$ritme['caracters'] = $caracters_ip + $facturables;
-		if ( ! set_transient( $client, $ritme, max( 1, $ritme['fins'] - time() ) ) ) {
-			return socdepoble_enxufe_traduccio_error( 'pressupost', 503 );
-		}
-		$reserva = socdepoble_enxufe_traduccio_reserva( $facturables );
-		socdepoble_enxufe_traduccio_allibera( $pressupost );
+		$locks = array();
 		$pressupost = false;
-		if ( is_wp_error( $reserva ) ) {
-			return $reserva;
-		}
-		if ( 'apertium' === $proveidor['nom'] ) {
-			$traduits = socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $pausa );
-		} elseif ( 'lliure' === $proveidor['nom'] ) {
-			$traduits = socdepoble_enxufe_traduccio_lliure( $proveidor, $pendents, $desti, $format, $pausa );
-		} else {
-			$traduits = socdepoble_enxufe_traduccio_deepl( $proveidor['clau'], $pendents, $desti, $format, $pausa );
-		}
-		if ( is_wp_error( $traduits ) ) {
-			return $traduits;
-		}
-		foreach ( $traduits as $id => $traduccio ) {
-			$resultats[ $id ] = $traduccio;
-		}
-		return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, false );
-	} finally {
-		if ( false !== $pressupost ) {
+		try {
+			// Pany per text (sdp_tr_lock_<hash>): lots diferents poden traduir en
+			// paral·lel mentre els textos encavalcats no es facturen dues vegades;
+			// el pany global de pressupost ($pressupost) s'allibera abans de les
+			// crides HTTP al proveïdor. Mai esperem amb panys presos.
+			ksort( $pendents );
+			foreach ( array_keys( $pendents ) as $id ) {
+				$nom = 'sdp_tr_lock_' . substr( $id, 7 );
+				$valor = socdepoble_enxufe_traduccio_bloqueja( $nom );
+				if ( false === $valor ) {
+					return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
+				}
+				$locks[ $nom ] = $valor;
+			}
+			// Relectura després d'adquirir el lock: un altre procés pot haver traduït.
+			list( $resultats, $pendents ) = socdepoble_enxufe_traduccio_lot( $textos, $desti, $format, $empremta );
+			if ( ! $pendents ) {
+				return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, true );
+			}
+			$pressupost = socdepoble_enxufe_traduccio_bloqueja();
+			if ( false === $pressupost ) {
+				return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
+			}
+			$facturables = 0;
+			foreach ( $pendents as $text ) {
+				$facturables += preg_match_all( '/./us', $text );
+			}
+			// REMOTE_ADDR; no confiar en X-Forwarded-For enviat pel visitant.
+			$adreca = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] )
+				? filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP ) : false;
+			// Una adreça absent o invàlida compartix el límit; mai obri comptadors arbitraris.
+			$client = 'sdp_tr_ip_' . hash_hmac( 'sha256', false === $adreca ? 'unknown' : $adreca, wp_salt( 'auth' ) );
+			$ritme = get_transient( $client );
+			if ( ! is_array( $ritme ) || ( $ritme['fins'] ?? 0 ) <= time() ) {
+				$ritme = array( 'fins' => time() + 600, 'peticions' => 0, 'caracters' => 0 );
+			}
+			$caracters_ip = (int) ( $ritme['caracters'] ?? 0 );
+			if ( $ritme['peticions'] >= 30 || $caracters_ip + $facturables > socdepoble_enxufe_traduccio_limit( 'SDP_TRADUCCIO_LIMIT_IP_CARACTERS', 10000 ) ) {
+				return socdepoble_enxufe_traduccio_error( 'limit', 429 );
+			}
+			++$ritme['peticions'];
+			$ritme['caracters'] = $caracters_ip + $facturables;
+			if ( ! set_transient( $client, $ritme, max( 1, $ritme['fins'] - time() ) ) ) {
+				return socdepoble_enxufe_traduccio_error( 'pressupost', 503 );
+			}
+			$reserva = socdepoble_enxufe_traduccio_reserva( $facturables );
 			socdepoble_enxufe_traduccio_allibera( $pressupost );
+			$pressupost = false;
+			if ( is_wp_error( $reserva ) ) {
+				return $reserva;
+			}
+			if ( 'apertium' === $proveidor['nom'] ) {
+				$traduits = socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $pausa );
+			} elseif ( 'lliure' === $proveidor['nom'] ) {
+				$traduits = socdepoble_enxufe_traduccio_lliure( $proveidor, $pendents, $desti, $format, $pausa );
+			} else {
+				$traduits = socdepoble_enxufe_traduccio_deepl( $proveidor['clau'], $pendents, $desti, $format, $pausa );
+			}
+			if ( is_wp_error( $traduits ) ) {
+				return $traduits;
+			}
+			foreach ( $traduits as $id => $traduccio ) {
+				$resultats[ $id ] = $traduccio;
+			}
+			return socdepoble_enxufe_traduccio_resposta( $textos, $desti, $format, $empremta, $resultats, false );
+		} finally {
+			if ( false !== $pressupost ) {
+				socdepoble_enxufe_traduccio_allibera( $pressupost );
+			}
+			foreach ( $locks as $nom => $valor ) {
+				socdepoble_enxufe_traduccio_allibera( $valor, $nom );
+			}
 		}
-		foreach ( $locks as $nom => $valor ) {
-			socdepoble_enxufe_traduccio_allibera( $valor, $nom );
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) && isset( $proveidor ) && is_array( $proveidor ) && isset( $proveidor['clau'] ) ) {
+			wp_secrets_memzero( $proveidor['clau'] );
 		}
 	}
 }

@@ -25,6 +25,13 @@ import {
   parsejaWordPressWxrXml,
   sincronitzaRevisionsEditorialsWpAmbServidor
 } from '../../../utils/transformadorEditorialWpBlogger.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 const ETIQUETA_ESTAT = ETIQUETES_ESTAT_REVISIO_WP;
 /* Gauntlet v1.2.13 · lazyRoute i la barrera del tros accessori: si el tros no carrega, el banc continua. */
@@ -263,8 +270,8 @@ export function BancImportacioEditorial() {
           />
         </Suspense></BarreraDelTrosAccessori>
       ) : null}
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Motor Universal WordPress + Blogger</Insignia>
           <Insignia to="avis">{stats.pendent_admin} pendents de revisió</Insignia>
           <Insignia to="exit">{stats.aprovat} aprovats</Insignia>
@@ -278,7 +285,7 @@ export function BancImportacioEditorial() {
         </p>
       </header>
 
-      <section className="sdp-admin-taxonomia__kpis" aria-label="Resum d'importació i casos d'ús">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label="Resum d'importació i casos d'ús">
         <div className="sdp-admin-kpi">
           <strong>{stats.total}</strong>
           <span>Articles WordPress</span>
@@ -297,8 +304,8 @@ export function BancImportacioEditorial() {
         </div>
       </section>
 
-      <section className="sdp-admin-taxonomia__panel" aria-label="Importador d'arxius XML WXR i Blogger">
-        <div className="sdp-admin-taxonomia__toolbar">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Importador d'arxius XML WXR i Blogger">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <div>
             <h3>📂 Ingesta d’arxius d’exportació (WP REST API · WordPress WXR .xml · Blogger Atom .xml)</h3>
             <p className="sdp-muted">
@@ -327,12 +334,12 @@ export function BancImportacioEditorial() {
         {errorXml && <p role="alert">{errorXml}</p>}
       </section>
 
-      <section className="sdp-admin-taxonomia__panel" aria-label="Filtres del banc d'importació">
-        <div className="sdp-admin-taxonomia__toolbar">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Filtres del banc d'importació">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <Camp etiqueta="Cerca per títol, slug, ID de WordPress, poble o etiqueta">
             <CampText value={cerca} onChange={(e) => { setCerca(e.target.value); setPagina(1); }} />
           </Camp>
-          <div className="sdp-admin-taxonomia__selects">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__selects">
             <label>
               <span>Estat de revisió</span>
               <select
@@ -393,7 +400,7 @@ export function BancImportacioEditorial() {
                 (.sdp-admin-taxonomia__grid) fa una columna a 375 px. Tota la targeta tria l'article;
                 les accions ràpides van a la ranura `accio`, germana del vel i damunt seu: el seu clic
                 no arriba al botó de la targeta i no canvia la tria. */}
-            <ul className="sdp-admin-taxonomia__grid sdp-admin-importacio__llista" aria-label="Articles importats">
+            <ul ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid sdp-admin-importacio__llista" aria-label="Articles importats">
               {visibles.map((art) => {
                 const badgeEstat = ETIQUETA_ESTAT[art.estat_revisio] || ETIQUETA_ESTAT.pendent_admin;
                 const actiu = seleccionat?.wp_id === art.wp_id;

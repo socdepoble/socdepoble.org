@@ -47,6 +47,18 @@ function delete_site_option( $nom ) {
 	return true;
 }
 
+if ( ! empty( $cas['secrets_api'] ) ) {
+	function wp_delete_secret( $nom ) {
+		// v1.2.18 · Gauntlet R1 (L4-03) · Un proveïdor que llança en esborrar: $cas['secrets_llancen'] diu quins noms.
+		if ( in_array( $nom, $GLOBALS['cas']['secrets_llancen'] ?? array(), true ) ) {
+			$GLOBALS['esborrats'][] = $GLOBALS['lloc'] . ':llança:' . $nom;
+			throw new RuntimeException( 'proveïdor de secrets' );
+		}
+		$GLOBALS['esborrats'][] = $GLOBALS['lloc'] . ':secret:' . $nom;
+		return true;
+	}
+}
+
 final class FixtureWpdb {
 	public $options = 'wp_options';
 	public function esc_like( $text ) { return addcslashes( $text, '_%\\' ); }
@@ -61,4 +73,5 @@ $wpdb = new FixtureWpdb();
 foreach ( array_slice( $argv, 1 ) as $carpeta ) {
 	require $carpeta . '/uninstall.php';
 }
-echo json_encode( array( 'esborrats' => $esborrats ), JSON_THROW_ON_ERROR );
+// v1.2.18 · Gauntlet R1 (L4-03) · El lloc final i la pila diuen si restore_current_blog s'ha executat sempre.
+echo json_encode( array( 'esborrats' => $esborrats, 'lloc' => $lloc, 'pila' => $pila ), JSON_THROW_ON_ERROR );

@@ -26,7 +26,7 @@ import { Fragment } from 'react';
 import { Alerta } from '../../PedraSeca/molecules/Alerta.jsx';
 import { Boto } from '../../PedraSeca/atoms/Boto.jsx';
 import { llenguaDeTraduccio } from '../../../data/traductor.js';
-import { hrefSegur } from './blocsTraduibles.js';
+import { hrefSegur, relOriginalSegur } from './blocsTraduibles.js';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 
 export const AVIS_TRADUIT = 'Traduït automàticament del valencià';
@@ -85,20 +85,20 @@ function arbreDePeces(peces) {
   return arrel;
 }
 
-function pintaEnllac(href, novaFinestra, fills, clau) {
+function pintaEnllac(href, novaFinestra, fills, clau, rel) {
   // Segona porta: només un href segur (blocsTraduibles ja l'ha triat de l'original).
   const segur = hrefSegur(href);
   if (!segur) return <Fragment key={clau}>{fills}</Fragment>;
   return (
-    <a key={clau} href={segur} {...(novaFinestra ? { target: '_blank' } : {})} rel={REL_ENLLAC}>{fills}</a>
+    <a key={clau} href={segur} {...(novaFinestra ? { target: '_blank' } : {})} rel={relOriginalSegur(rel) || REL_ENLLAC}>{fills}</a>
   );
 }
 
 function pintaNode(node, clau) {
   if (typeof node === 'string') return node;
   const fills = node.fills.map(pintaNode);
-  const { etiqueta, href, novaFinestra } = node.marca;
-  if (etiqueta === 'a') return pintaEnllac(href, novaFinestra, fills, clau);
+  const { etiqueta, href, novaFinestra, rel } = node.marca;
+  if (etiqueta === 'a') return pintaEnllac(href, novaFinestra, fills, clau, rel);
   const Etiqueta = EN_LINIA.has(etiqueta) ? etiqueta : 'span';
   return <Etiqueta key={clau}>{fills}</Etiqueta>;
 }
@@ -110,7 +110,7 @@ function pintaArbre(node, clau) {
   if (!node || typeof node !== 'object') return null;
   if (node.etiqueta === 'br') return <br key={clau} />;
   const fills = Array.isArray(node.fills) ? node.fills.map(pintaArbre) : [];
-  if (node.etiqueta === 'a') return pintaEnllac(node.href, node.novaFinestra, fills, clau);
+  if (node.etiqueta === 'a') return pintaEnllac(node.href, node.novaFinestra, fills, clau, node.rel);
   if (!ARBRE.has(node.etiqueta)) return <Fragment key={clau}>{fills}</Fragment>;
   const Etiqueta = node.etiqueta;
   const inici = Etiqueta === 'ol' && Number.isInteger(node.inici) ? node.inici : undefined;

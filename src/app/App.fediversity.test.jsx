@@ -136,11 +136,14 @@ test('/fediversity porta a /page/fediversity, amb l’anatomia de la UniversalPa
       expect(a.getAttribute('rel')).toBe('noopener noreferrer nofollow');
     }
     expect(cos.querySelector('blockquote').textContent).toContain('Total sol·licitat: 1.000 hores · 50.000 €');
-    // Després del sanejador, els enllaços de fora conserven target i rel (amb el nofollow de sempre).
+    // Els enllaços editorials externs porten noopener noreferrer; els del mateix origen conserven nofollow.
     const logotip = cos.querySelector('a[href="https://nlnet.nl/fediversity/"] img[src*="ngi-fediversity-tag.svg"]');
     expect(logotip).not.toBeNull();
     for (const a of cos.querySelectorAll('a[href^="https://"]')) {
-      expect([a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]).toEqual([a.getAttribute('href'), '_blank', 'noopener noreferrer nofollow']);
+      expect([a.getAttribute('href'), a.getAttribute('target'), a.getAttribute('rel')]).toEqual([
+        a.getAttribute('href'), '_blank',
+        new URL(a.getAttribute('href')).origin === window.location.origin ? 'noopener noreferrer nofollow' : 'noopener noreferrer'
+      ]);
     }
     // La portada no es repetix dins del cos; la panoràmica, sí que hi és.
     expect(cos.querySelector('img[src*="fediversity-hero"]')).toBeNull();

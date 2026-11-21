@@ -6,6 +6,7 @@ import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
 import { origenPublic } from '../config/origenPublic.js';
 import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
 import { clauSocialDeRuta } from '../config/rutaSocial.js';
+import { pobleAllowsIndex, tramsDeRuta } from '../config/publicationPolicy.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
@@ -15,8 +16,12 @@ import { clauSocialDeRuta } from '../config/rutaSocial.js';
 const PRIVATE = new Set(['notes', 'xat', 'chat', 'chats', 'control-xat', 'login', 'entrar', 'registre', 'accedir',
   'crear-compte', 'perfil', 'el-meu-perfil', 'admin', 'control', 'utilitats', 'connectar', 'cerca',
   'dispositius', 'traduccions', 'skills', 'ia', 'realitat', 'gestoria', 'tractors']);
-export function routeAllowsIndex(pathname) {
-  return !PRIVATE.has(String(pathname).replace(/^\/+/, '').split(/[/?#]/)[0]);
+/* v1.2.18 · Gauntlet R1 (L3-01) · El pathname és el cru del navegador
+   (/pob%6Ces/<poble>, /%6Eotes), però el router en descodifica els
+   paràmetres. Les dues regles decidixen amb el tram descodificat
+   (tramsDeRuta), no amb el text de la URL. */
+export function routeAllowsIndex(pathname, metadata) {
+  return !PRIVATE.has(tramsDeRuta(pathname)[0]) && pobleAllowsIndex(pathname, metadata);
 }
 
 /* Pla 261027_1154 (P1-61) · S3. És CAP_SOCIAL_BASE.image.url (useSEO.test.jsx
@@ -73,7 +78,7 @@ function imatgeSocial(image, urlBase, origin) {
 /* Pla 261027_1154 (P1-61) · S3. `ogType` (opcional) és l'og:type de la vista
    ('product', 'article'...); sense ell, 'website'. `type` continua sent el
    @type del JSON-LD. */
-export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', ogType = null, jsonLd = null, index = true, fallback = false }) {
+export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', ogType = null, jsonLd = null, index = true, fallback = false, metadata }) {
   const { resolveAsset } = useUIActions();
   const { externalConfig } = useUIState();
   const { pathname, search } = useLocation();
@@ -87,6 +92,7 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
   const jsonLdString = useMemo(() => jsonLd ? JSON.stringify(jsonLd) : null, [jsonLd]);
   // Clau primitiva: un objecte d'imatge literal nou a cada render no torna a registrar.
   const imatgeClau = JSON.stringify(image || null);
+  const rutaIndexable = routeAllowsIndex(pathname, metadata);
 
   useLayoutEffect(() => {
     // El <head> és de qui l'amfitrió declara: només s'hi escriu amb manageDocumentHead === true
@@ -99,7 +105,7 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
        (origenPublic.js), no capacitor://localhost. */
     const origin = origenPublic();
     const imatge = imatgeSocial(JSON.parse(imatgeClau), resolveAsset(IMATGE_BASE), origin);
-    const canIndex = index !== false && routeAllowsIndex(pathname);
+    const canIndex = index !== false && rutaIndexable;
     const canonical = canonicalExplicit || `${String(origin).replace(/\/$/, '')}${basename || ''}${clau}`;
     const structuredData = jsonLdString ? JSON.stringify({
       '@context': 'https://schema.org', '@type': type, image: imatge.url, ...JSON.parse(jsonLdString)
@@ -107,6 +113,6 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
     const tipusOg = typeof ogType === 'string' && ogType.trim() ? ogType.trim() : null;
     return registerSeo(owner.current, { path: clau, priority: fallback ? 0 : 1,
       title, description, image: imatge, ogType: tipusOg, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: true });
-  }, [pathname, clau, basename, title, description, canonicalExplicit, index, imatgeClau, type, ogType, jsonLdString, fallback,
+  }, [pathname, clau, basename, title, description, canonicalExplicit, index, rutaIndexable, imatgeClau, type, ogType, jsonLdString, fallback,
     externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

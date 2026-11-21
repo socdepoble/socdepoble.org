@@ -8,7 +8,7 @@ export default function CreditsComunitatS23({ language = 'ca' }) {
       className="cms-preview"
       lang={codiIdioma}
       data-testid="legal-credits-s23"
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlCreditsComunitatS23(codiIdioma)) }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlCreditsComunitatS23(codiIdioma), { enllacosEditorials: true }) }}
     />
   );
 }

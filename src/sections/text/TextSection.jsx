@@ -71,16 +71,16 @@ export function CosDeLaPagina({ html }) {
   const lang = useLlenguaDelContingut();
   const cos = esAppNativa() ? htmlPerAppNativa(html) : html;
   if (String(cos || '').includes(MARCA_GRUP)) {
-    const segments = segmentsAmbTargetes(sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos))));
+    const segments = segmentsAmbTargetes(sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos)), { enllacosEditorials: true }));
     if (segments.some((segment) => segment.tipus === 'targetes')) {
       return (
         <ProveidorSincronitzacioTargetes>
-          <CosAmbTargetes segments={segments} className="cms-preview" lang={lang} />
+          <CosAmbTargetes segments={segments} className="cms-preview" lang={lang} enllacosEditorials />
         </ProveidorSincronitzacioTargetes>
       );
     }
   }
-  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos))) }} />;
+  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos)), { enllacosEditorials: true }) }} />;
 }
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a

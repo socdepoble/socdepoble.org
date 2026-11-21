@@ -1457,6 +1457,10 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   const viatjaALArrencada = (rel) => [...modulsDArrencada].some((m) => m === rel || m.startsWith(`${rel}?`));
   assert.ok(!viatjaALArrencada('src/css/diferit-perfil-shell.css'), 'el full del Perfil no viatja a l\'arrencada estàtica');
   assert.ok(viatjaALArrencada('src/css/diferit-apps-plataforma.css'), 'el full de les aplicacions viatja a l\'arrencada: la crònica diu «s\'apliquen», no «arriben»');
+  /* v1.2.18 · Gauntlet R2 (L4R2-01) · Tampoc el full dels panells d'administració: si un dels seus consumidors
+     (UniversalWorkspace.jsx inclòs) entrara al graf estàtic, el full tornaria a l'arrencada, i fins ara només ho
+     veia el sostre global de pesDelNucli.test.js. */
+  assert.ok(!viatjaALArrencada('src/css/diferit-admin-taxonomia.css'), 'el full dels panells d\'administració no viatja a l\'arrencada estàtica');
   assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
     'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));
@@ -1483,7 +1487,9 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   assert.ok(midaEntrada < MIDA_IIFE_DE_LA_DECISIO * 0.5, `entrada ${midaEntrada} B: ha de pesar menys del 50 % de ${MIDA_IIFE_DE_LA_DECISIO} B`);
   assert.ok(midaEntrada <= SOSTRE_DE_L_ENTRADA, `entrada ${midaEntrada} B: el trinquet és ${SOSTRE_DE_L_ENTRADA} B`);
   assert.ok(midaArrencada <= SOSTRE_DE_L_ARRENCADA, `arrencada estàtica ${midaArrencada} B: el trinquet és ${SOSTRE_DE_L_ARRENCADA} B`);
-  assert.ok(midaArrencada < 1590000, `arrencada estàtica ${midaArrencada} B: R32.25 exigix menys de 1.590.000 B`);
+  // R32.27 · El Pla 261121_1606 fixa 1.591.000 B, el mateix trinquet
+  // SOSTRE_DE_L_ARRENCADA comprovat damunt. El sostre R32.25 anterior
+  // era una segona política literal i contradictòria amb el contracte vigent.
   assert.ok(midaEntrada < referencia, 'l\'entrada pesa menys que el monolític');
   if (midaMonolitica) t.diagnostic(`ABANS · monolític ${midaMonolitica} B · l'entrada és el ${Math.round((midaEntrada / midaMonolitica) * 1000) / 10} %`);
   const pesants = Object.entries(entrada.modules)

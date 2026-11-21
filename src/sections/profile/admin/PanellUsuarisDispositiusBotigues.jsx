@@ -28,6 +28,13 @@ import {
   APP_STORE, MISSATGE_WHATSAPP_VERIFICADORS, NOTA_PAS_1_GOOGLE_PLAY, NOTA_RECOMPTES, NOTA_VERIFICADORS, TEXT_BOTO_CONSULTA,
   TEXT_ESTAT_INICIAL, copiaAlPortaretalls, filesDelResum, textErrorResum
 } from './usuarisDispositiusBotigues.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 const consultaDelPort = (config) => consultaResumSessionsDispositius(port, config);
 
@@ -109,7 +116,7 @@ function UsuarisIDispositius({ consulta, nativaIos }) {
 
   const carregant = estat.fase === 'carregant';
   return (
-    <section className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="usuaris-dispositius-connectats">
+    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="usuaris-dispositius-connectats">
       <h3 id={idTitol}>👥 Usuaris i dispositius connectats</h3>
       <p className="sdp-muted">
         {nativaIos
@@ -140,7 +147,7 @@ function GuiaVerificadorsAndroid({ navegador }) {
     copiaAlPortaretalls(MISSATGE_WHATSAPP_VERIFICADORS, navegador).then((fet) => setCopia(fet ? 'fet' : 'a-ma'));
   }, [navegador]);
   return (
-    <section className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="guia-verificadors-android">
+    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="guia-verificadors-android">
       <h3 id={idTitol}>Guia visual de 3 passos per als verificadors d’Android</h3>
       <ol className="sdp-admin-botiga-detall__passos">
         {PASSOS_VERIFICADOR_GOOGLE_PLAY.map((pas) => <li key={pas}>{pas}</li>)}
@@ -172,8 +179,8 @@ export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDe
   const nativaIos = typeof nativaIosProp === 'boolean' ? nativaIosProp : nativaIosDetectada;
   return (
     <article className="sdp-admin-taxonomia" aria-label="Usuaris, dispositius i botigues" data-testid="panell-usuaris-dispositius-botigues">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="info">{`🍎 App Store v${APP_STORE.versio} · ${APP_STORE.id}`}</Insignia>
           {nativaIos ? null : <Insignia to="neutre">🤖 Google Play: prova tancada amb verificadors</Insignia>}
         </div>
@@ -182,7 +189,7 @@ export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDe
       <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} />
       <PanellSessionsDetall nativaIos={nativaIos} />
 
-      <section className="sdp-admin-taxonomia__panel" aria-label="Descàrregues oficials" data-testid="botons-oficials-botigues">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Descàrregues oficials" data-testid="botons-oficials-botigues">
         <h3>📲 Descàrregues oficials</h3>
         <div className="sdp-admin-actions-inline">
           <a className="sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran" href={URL_FITXA_APP_STORE}

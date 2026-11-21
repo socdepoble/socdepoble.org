@@ -254,6 +254,7 @@ function DetallDElement() {
     title: bloquejat ? null : item ? section?.getTitle?.(item) : (esperant ? null : 'No trobat'),
     description: !bloquejat && item ? (pagina?.lead || section?.getSubtitle?.(item)) : '',
     image: imatgeDelHead,
+    ...(!bloquejat && item && ['pobles', 'poblacio'].includes(sectionId) ? { metadata: item } : {}),
     index: !(bloquejat || (!item && !esperant))
   });
 

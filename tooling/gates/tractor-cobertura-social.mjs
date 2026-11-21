@@ -80,6 +80,13 @@ function idsDePlugins(root, parse) {
   return ids;
 }
 
+/** S3 tracta el primer tram privat; la verificació del contingut local
+ * correspon al productor amb les dades de cada fitxa, no a una URL sola. */
+export function indexablePrimerTram(cami, publicSeoRoute, client) {
+  const tram = String(cami).replace(/^\/+/, '').split(/[/?#]/)[0];
+  return publicSeoRoute(`/${tram}`) && !client.has(tram);
+}
+
 /** La Porta sobre un arbre: { resultat, router, manifest } (resultat és el de coberturaDelRouter). */
 export async function cobertura({root, exempcions = EXEMPCIONS_SOCIALS} = {}) {
   root = fs.realpathSync(root);
@@ -96,7 +103,7 @@ export async function cobertura({root, exempcions = EXEMPCIONS_SOCIALS} = {}) {
   const sintetic = await buildSocialManifest({root, origin: ORIGEN, estricte: true, publicSnapshot: FITXES_SINTETIQUES.map(f => ({...f}))});
   const client = new Set(router.privades);
   const servidor = literalsDelSet(root, POLITICA, 'PRIVATE_ROUTES', parse);
-  const indexable = cami => publicSeoRoute(cami) && !client.has(String(cami).replace(/^\/+/, '').split(/[/?#]/)[0]);
+  const indexable = cami => indexablePrimerTram(cami, publicSeoRoute, client);
   /* Els universos d'instàncies que viuen al repositori (S8). */
   const instancies = [];
   const redireccionsDePagina = {};

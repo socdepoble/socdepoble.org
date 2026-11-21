@@ -20,9 +20,29 @@ function fixture(t) {
   write('src/sections/wiki-de-poble/seoWiki.js',`export function metadadesDeDocumentPublic(item){return {title:'Regla compartida '+item.title,description:'Descripció compartida',image:item.image?{url:'https://socdepoble.org'+item.image,alt:item.imageAlt}:null,...(item.bloquejada?{imatge:{estat:'bloquejada'}}:{})};}`);
   const source = items => write('src/data/wikiManifest.js', `export const wikiManifest=${JSON.stringify({items})};`);
   const run = (...args) => spawnSync(process.execPath,['tooling/gates/build-seo-manifest.mjs',...args],{cwd:root,encoding:'utf8',env:{...process.env,SDP_ARREL:root}});
-  return { root, source, run };
+  return { root, source, run, write };
 }
 const article = {id:'un_capitol',title:'Un capítol',image:'/assets/ui/foto.jpg',imageAlt:'Foto de prova',date:'2020-05-06T12:13:14+01:00',updated:'2026-11-17T20:15:00+01:00',version:'2.0',revisions:3,attributes:{visibility:'public'}};
+
+test('anti-doorway: les fitxes de poble naixen noindex fins a verificar contingut local', t => {
+  const { source, run, write } = fixture(t);
+  source([]);
+  write('src/sections/pobles/townsSeed.js', `export const MOCK_TOWNS=${JSON.stringify([
+    { id: 'sense-cos', title: 'Poble', contingut_local_verificat: true },
+    { id: 'plantilla', content: 'Benvinguts al poble' },
+    { id: 'boolea-fals', content: 'Crònica', contingut_local_verificat: 'true' },
+    { id: 'cos-buit', content: '<p> </p>', contingut_local_verificat: true },
+    { id: 'contrastat', content: 'Crònica local contrastada per la redacció.', contingut_local_verificat: true },
+    { id: 'privat', content: 'Crònica local', contingut_local_verificat: true, visibility: 'private' }
+  ])};`);
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const routes = JSON.parse(result.stdout).routes;
+  for (const id of ['sense-cos', 'plantilla', 'boolea-fals', 'cos-buit']) assert.equal(routes[`pobles/${id}`].index, false);
+  assert.equal(routes['pobles/contrastat'].index, true);
+  assert.equal(routes['pobles/privat'], undefined);
+  assert.equal(routes.public0.index, true);
+});
 
 test('CLI publica la ruta de compartir Wiki, portada pròpia, dates editorials i verifica lastmod', t => {
   const {root,source,run}=fixture(t);

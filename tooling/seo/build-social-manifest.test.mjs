@@ -5,8 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI,LLISTES,normalizedKey,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
-import {sniffImage} from './prerender-social.mjs';
+import {sniffImage,camisServits} from './prerender-social.mjs';
 import {selectMetadata} from './social-edge.mjs';
+import {cobertura, indexablePrimerTram} from '../gates/tractor-cobertura-social.mjs';
+import {coberturaDelRouter} from './cobertura-router.mjs';
+import {publicSeoRoute} from '../wiki/lib/publication-policy.mjs';
+import {EXEMPCIONS_SOCIALS} from './exempcions-socials.mjs';
 const policyRoot=process.env.SDP_PROJECT_ROOT || process.cwd();
 const origin='https://socdepoble.org';
 /* Pla 261028_1526 (P1-61, Fase 2) · Els documents de la Wiki ixen de
@@ -184,6 +188,46 @@ test('els detalls de llavor: la primera imatge de la galeria; un id invàlid és
   assert.ok(!JSON.stringify(manifest).includes('NO_EXPORTAR'));
   put('src/sections/mur/eventsSeed.js',`export const CALENDAR_EVENTS=[{id:'../x',title:'Acte'}];`);
   await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/ID de llavor invàlid/);
+});
+test('R32.27 · el productor social conserva OpenGraph compartible sense indexar pobles no verificats',async t=>{
+  const {root,put}=fixture(t);
+  const pobles=[
+    {id:'plantilla',title:'Plantilla',content:'Benvinguts al poble.'},
+    {id:'marcat-amb-text',title:'Marcat amb text',content:'Crònica local.',contingut_local_verificat:'true'},
+    {id:'cos-buit',title:'Cos buit',content:'<p> </p>',contingut_local_verificat:true},
+    {id:'sense-cos',title:'Sense cos',contingut_local_verificat:true},
+    {id:'contrastat',title:'Contrastat',content:'Crònica local revisada per la redacció.',contingut_local_verificat:true},
+    {id:'privat',title:'NO_EXPORTAR_PRIVAT',content:'Crònica local.',contingut_local_verificat:true,visibility:'private'}
+  ];
+  put('src/sections/pobles/townsSeed.js',`export const MOCK_TOWNS=${JSON.stringify(pobles)};`);
+  const {manifest}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  for(const id of ['plantilla','marcat-amb-text','cos-buit','sense-cos']){
+    const entrada=manifest.routes[`/pobles/${id}`];
+    assert.equal(entrada.index,false,id);
+    assert.equal(entrada.compartible,true,id);
+    assert.equal(entrada.canonical,`${origin}/pobles/${id}`);
+    assert.ok(entrada.title.length>0&&entrada.description.length>0,id);
+    assert.ok(selectMetadata(manifest,new URL(`/pobles/${id}`,origin)),`OpenGraph servible per a ${id}`);
+  }
+  assert.equal(manifest.routes['/pobles/contrastat'].index,true);
+  assert.equal(manifest.routes['/pobles/contrastat'].compartible,undefined);
+  assert.equal(manifest.routes['/pobles/privat'],undefined);
+
+  // La mateixa entrada del productor passa S3 tant si està verificada com
+  // si és compartible sense indexar. S3 continua rebutjant un tram privat.
+  const arbre=await cobertura({root:policyRoot});
+  const integrat=structuredClone(arbre.manifest);
+  Object.assign(integrat.routes,manifest.routes);
+  const client=new Set(arbre.router.privades);
+  const comprova=()=>coberturaDelRouter({router:arbre.router,manifest:integrat,camins:camisServits(integrat),
+    exempcions:EXEMPCIONS_SOCIALS,indexable:cami=>indexablePrimerTram(cami,publicSeoRoute,client)});
+  assert.deepEqual(comprova().infraccions.filter(row=>row.llei==='S3'),[]);
+  integrat.routes['/notes']={...manifest.routes['/pobles/contrastat'],canonical:`${origin}/notes`};
+  assert.ok(comprova().infraccions.some(row=>row.llei==='S3'&&row.detall.startsWith('/notes:')));
+  for(const entrada of Object.values(manifest.routes)){
+    assert.equal(Object.hasOwn(entrada,'contingut_local_verificat'),false);
+    assert.equal(Object.hasOwn(entrada,'content'),false);
+  }
 });
 test('les llistes: el diccionari valencià i, sense, la reserva de la secció',async t=>{
   const {root,put}=fixture(t);

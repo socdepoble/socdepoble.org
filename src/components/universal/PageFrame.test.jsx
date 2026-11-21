@@ -4,6 +4,18 @@ vi.mock('../../config/assetResolver',()=>({resolveAsset:uri=>uri}));
 vi.mock('../PedraSeca/hooks/useAccions.js',()=>({useAccions:()=>({})}));
 import {PageFrame,selectorIndex} from './PageFrame.jsx';
 afterEach(cleanup);
+test('R32.27 · enllaços de comerç UGC, sponsored i editorial explícit', () => {
+  const { container } = render(<PageFrame title="Enllaços" labels={[
+    { text: 'Comerç', href: 'https://comerc.example/' },
+    { text: 'Patrocini', href: 'https://patrocini.example/', sponsored: true },
+    { text: 'Sistema', href: 'https://sistema.example/', editorial: true },
+    { text: 'Intern', href: '/mur' }
+  ]} />);
+  const links = container.querySelectorAll('.page-title-labels a');
+  expect([...links].map(a => a.getAttribute('rel'))).toEqual([
+    'ugc nofollow noopener noreferrer', 'ugc nofollow sponsored noopener noreferrer', 'noopener noreferrer', null
+  ]);
+});
 for(const avatar of ['javascript:alert(1)','//tracker.test/avatar',{},null])test(`avatar no segur ${String(avatar)} usa fallback`,()=>{
   const {container}=render(<PageFrame chrome="context" authorAvatar={avatar} title="Perfil"/>);
   expect(container.querySelector('img.sp-card-avatar')).toBeNull();

@@ -405,6 +405,8 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
    Una crida que no és a cap taula ni és de PHP fa fallar la prova: la taula no
    pot quedar arrere, i el sòl no pot tornar a pujar sense que ningú ho veja. */
 
+// Secrets: @since 7.2 de la BETA retirada en r65538; mai s'inferix disponibilitat per versió.
+// Cada ús es manté darrere function_exists també en WP 7.2 RC1/final sense l'API.
 const FUNCIONS_WP = {
   __: '2.1', add_action: '1.2', add_filter: '0.71', add_options_page: '1.5', add_query_arg: '1.5',
   add_settings_field: '2.7', add_settings_section: '2.7', add_shortcode: '2.5', admin_url: '2.6',
@@ -429,13 +431,13 @@ const FUNCIONS_WP = {
   set_transient: '2.8', settings_fields: '2.7', shortcode_atts: '2.5', status_header: '2.0', submit_button: '3.1', switch_to_blog: '3.0',
   the_content: '0.71', the_post: '1.5', trailingslashit: '1.2', untrailingslashit: '2.2', update_option: '1.0',
   update_site_option: '2.8', wp_add_inline_script: '4.5', wp_add_inline_style: '3.3', wp_body_open: '5.2',
-  wp_cache_delete: '2.0', wp_date: '5.3', wp_delete_file: '4.2', wp_die: '2.0.4', wp_enqueue_script: '2.1',
+  wp_cache_delete: '2.0', wp_date: '5.3', wp_delete_file: '4.2', wp_delete_secret: '7.2', wp_die: '2.0.4', wp_enqueue_script: '2.1',
   wp_enqueue_style: '2.6', wp_footer: '1.5.1', wp_generate_uuid4: '4.7', wp_get_environment_type: '5.5', wp_get_nocache_headers: '2.8', wp_get_secret: '7.2',
   wp_head: '1.2', wp_is_secrets_api_available: '7.2', wp_print_inline_script_tag: '5.7', wp_json_encode: '4.1', wp_kses: '1.0', wp_kses_post: '2.9', wp_nonce_field: '2.0.4',
   wp_parse_url: '4.7', // 4.4; amb el paràmetre $component (PHP_URL_HOST), 4.7
   wp_register_ability: '6.9', wp_register_ability_category: '6.9',
   wp_register_script: '2.1', wp_register_style: '2.6', wp_remote_post: '2.7', wp_remote_retrieve_body: '2.7',
-  wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5', wp_secrets_provider_is_writable: '7.2',
+  wp_remote_retrieve_response_code: '2.7', wp_safe_redirect: '2.3', wp_safe_remote_get: '3.6', wp_salt: '2.5', wp_secrets_memzero: '7.2', wp_secrets_provider_is_writable: '7.2',
   wp_set_script_translations: '5.0', wp_set_secret: '7.2', wp_tempnam: '2.6', wp_unslash: '3.6'
 };
 const CLASSES_WP = { WP_Error: '2.1', WP_Filesystem_Base: '2.5', WP_REST_Response: '4.4', WP_Secret: '7.2' };
@@ -910,6 +912,10 @@ test('readme 1.1.10: el text valencià publicat a WordPress.org, sense cap afirm
     const desinstal = seccio('Frequently Asked Questions').split('= Què passa si desinstal·le el connector? =')[1]?.split(/^= /m)[0] ?? '';
     assert.match(desinstal, /Si una altra còpia del connector continua activa, la desinstal·lació no esborra res/);
     assert.doesNotMatch(readme, /sense deixar rastre/);
+    // v1.2.18 · Gauntlet R2 (L3R2-02) · Cada secret que esborra uninstall.php el nomena la PMF.
+    for (const [, secret] of llig('uninstall.php').matchAll(/\bwp_delete_secret\(\s*'([^']+)'/g)) {
+      assert.ok(desinstal.includes(`\`${secret}\``), `PMF de desinstal·lació: ${secret}`);
+    }
   }
   // Cada «npm run» és un script de package.json, i cada versió nomenada és la del plugin.
   const scripts = JSON.parse(fs.readFileSync(path.join(ARREL, 'package.json'), 'utf8')).scripts;

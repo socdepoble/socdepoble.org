@@ -5,6 +5,13 @@ import * as port from '../../../data/backendPort.js';
 import { codiDErrorResumSessions } from '../../../data/resumSessionsDispositius.js';
 import { MIGRACIO_DETALL_SESSIONS } from '../../../data/sessionsDispositius.js';
 import { CAMINS_PANELL, textErrorResum } from './usuarisDispositiusBotigues.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 const consultaDelPort = (entrada, config) => port.adminLlistaSessionsDispositius(entrada, config);
 export default function PanellSessionsDetall({ consulta = consultaDelPort, nativaIos = false }) {
   const sessio = useSessioOpcional();
@@ -33,7 +40,7 @@ export default function PanellSessionsDetall({ consulta = consultaDelPort, nativ
   const camins = CAMINS_PANELL.filter(c => !(nativaIos && c.nomenaAltres));
   const dadesVisibles = estat.actor === usuariId ? estat.dades : null;
   const files = dadesVisibles?.files.filter(f => !(nativaIos && ['app_android','web_android'].includes(f.cami))) ?? [];
-  return <section className="sdp-admin-taxonomia__panel" aria-label="Directori d’usuaris i dispositius">
+  return <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Directori d’usuaris i dispositius">
     <h3>Directori d’usuaris i dispositius</h3>
     <p>Persones i dispositius amb activitat en els últims 14 dies. Consulta restringida a superadmin amb segon factor; cada consulta queda registrada al servidor. Només hi apareixen comptes amb consentiment vigent i sense baixa demanada, amb el correu emmascarat. El canal és una estimació del navegador; no es mostra cap token, adreça IP, agent complet ni identificador de sessió o de persona.</p>
     <form onSubmit={consultaAra}>

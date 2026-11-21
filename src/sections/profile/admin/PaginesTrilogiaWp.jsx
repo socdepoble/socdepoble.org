@@ -4,6 +4,13 @@ import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import { carregaPaginesTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliWp.js';
 import { transformaPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliEditorial.js';
 import { renderRichText } from '../../detail/detailRichText.jsx';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 export default function PaginesTrilogiaWp() {
   const sessio = useSessioOpcional();
@@ -23,7 +30,7 @@ export default function PaginesTrilogiaWp() {
   if (error?.scope === scope) return <p role="alert">No s’ha pogut verificar el corpus: {error.code}</p>;
   if (!pages || pages.scope !== scope) return <p role="status">Verificant les deu pàgines originals…</p>;
   const item = transformaPaginaTrilogiaIMoliWp(pages.values[selected]);
-  return <section className="sdp-admin-taxonomia__section" aria-label="Pàgines originals en revisió privada">
+  return <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-label="Pàgines originals en revisió privada">
     <h2>Trilogia Mediterrània i patrimoni de La Torre · 10 pàgines</h2>
     <p>Esborranys privats per revisar. Obrir-los no crea notes ni publica contingut.</p>
     <label>Pàgina original <select value={selected} onChange={event => setSelected(Number(event.target.value))}>

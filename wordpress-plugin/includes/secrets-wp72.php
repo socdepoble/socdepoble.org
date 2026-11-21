@@ -1,6 +1,8 @@
 <?php
 /**
- * Pont cap a la Secrets API de WordPress 7.2+ (IDEA-264).
+ * Pont condicional cap a la Secrets API (IDEA-264, IDEA-306).
+ * L’API de la beta 7.2 es va retirar abans de RC1 (r65538, 17-11-2026).
+ * La presència real de les funcions mana, mai la versió de WordPress.
  *
  * Contracte del nucli (dev note de Make WordPress Core, 11-11-2026):
  *   · wp_get_secret( 'connector/nom' ) torna un WP_Secret, null si mai s'ha
@@ -99,7 +101,7 @@ function socdepoble_enxufe_secrets_wp72_disponible() {
  * @return bool
  */
 function socdepoble_enxufe_secret_wp72_nom_valid( $nom ) {
-	return is_string( $nom ) && 1 === preg_match( '/^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/D', $nom );
+	return is_string( $nom ) && strlen( $nom ) <= 172 && 1 === preg_match( '/^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/D', $nom );
 }
 
 /**
@@ -135,50 +137,63 @@ function socdepoble_enxufe_secret_wp72_valor_net( $valor ) {
  * @return array{estat: string, valor: string} estat: ok, absent, invalida, error o no_disponible.
  */
 function socdepoble_enxufe_secret_wp72_resol( $nom_secret ) {
-	$error = array(
-		'estat' => 'error',
-		'valor' => '',
-	);
-	if ( ! socdepoble_enxufe_secret_wp72_nom_valid( $nom_secret ) ) {
-		return $error;
-	}
-	if ( ! socdepoble_enxufe_secrets_wp72_disponible() ) {
-		return array(
-			'estat' => 'no_disponible',
+	try {
+		$error = array(
+			'estat' => 'error',
 			'valor' => '',
 		);
-	}
-	try {
-		$secret = wp_get_secret( $nom_secret );
-		if ( null === $secret ) {
+		if ( ! socdepoble_enxufe_secret_wp72_nom_valid( $nom_secret ) ) {
+			return $error;
+		}
+		if ( ! socdepoble_enxufe_secrets_wp72_disponible() ) {
 			return array(
-				'estat' => 'absent',
+				'estat' => 'no_disponible',
 				'valor' => '',
 			);
 		}
-		// Un WP_Error, una cadena (el marcador d'un drop-in mal fet) o qualsevol altre objecte: error.
-		if ( ! class_exists( 'WP_Secret' ) || ! $secret instanceof WP_Secret ) {
+		try {
+			$secret = wp_get_secret( $nom_secret );
+			if ( null === $secret ) {
+				return array(
+					'estat' => 'absent',
+					'valor' => '',
+				);
+			}
+			// Un WP_Error, una cadena (el marcador d'un drop-in mal fet) o qualsevol altre objecte: error.
+			if ( ! class_exists( 'WP_Secret' ) || ! $secret instanceof WP_Secret ) {
+				return $error;
+			}
+			$revelat = $secret->reveal();
+		} catch ( Throwable $excepcio ) {
 			return $error;
 		}
-		$revelat = $secret->reveal();
-	} catch ( Throwable $excepcio ) {
-		return $error;
-	}
-	// Un reveal() que no dona una cadena o que dona el marcador emmascarat: el proveïdor falla.
-	if ( ! is_string( $revelat ) || 1 === preg_match( '/^\s*\[secret:[^\]]*\]\s*$/D', $revelat ) ) {
-		return $error;
-	}
-	$valor = socdepoble_enxufe_secret_wp72_valor_net( $revelat );
-	if ( '' === $valor ) {
+		// Un reveal() que no dona una cadena o que dona el marcador emmascarat: el proveïdor falla.
+		if ( ! is_string( $revelat ) || 1 === preg_match( '/^\s*\[secret:[^\]]*\]\s*$/D', $revelat ) ) {
+			return $error;
+		}
+		$valor = socdepoble_enxufe_secret_wp72_valor_net( $revelat );
+		if ( '' === $valor ) {
+			return array(
+				'estat' => 'invalida',
+				'valor' => '',
+			);
+		}
 		return array(
-			'estat' => 'invalida',
-			'valor' => '',
+			'estat' => 'ok',
+			'valor' => $valor,
 		);
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) ) {
+			/* v1.2.18 · Gauntlet R1 (L4-04) · Només cadenes: un reveal() que no en dona cap ja torna «error»,
+			   i un memzero estil sodium llançaria des del finally i taparia eixe return. */
+			if ( isset( $revelat ) && is_string( $revelat ) ) {
+				wp_secrets_memzero( $revelat );
+			}
+			if ( isset( $valor ) && is_string( $valor ) ) {
+				wp_secrets_memzero( $valor );
+			}
+		}
 	}
-	return array(
-		'estat' => 'ok',
-		'valor' => $valor,
-	);
 }
 
 /**
@@ -245,11 +260,17 @@ function socdepoble_enxufe_llig_secret( $nom_constant, $nom_secret ) {
  * @return array{origen: string, estat: string}
  */
 function socdepoble_enxufe_estat_secret( $nom_constant, $nom_secret ) {
-	$resultat = socdepoble_enxufe_resol_secret( $nom_constant, $nom_secret );
-	return array(
-		'origen' => $resultat['origen'],
-		'estat'  => $resultat['estat'],
-	);
+	try {
+		$resultat = socdepoble_enxufe_resol_secret( $nom_constant, $nom_secret );
+		return array(
+			'origen' => $resultat['origen'],
+			'estat'  => $resultat['estat'],
+		);
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) && isset( $resultat['valor'] ) ) {
+			wp_secrets_memzero( $resultat['valor'] );
+		}
+	}
 }
 
 /**
@@ -269,7 +290,7 @@ function socdepoble_enxufe_llig_clau( $id ) {
 /**
  * Desa un secret únicament a través de la Secrets API xifrada de WP 7.2+.
  *
- * El nucli no comprova capacitats: ho fa esta funció (manage_options). Refusa
+ * El nucli no comprova capacitats: ho fa esta funció (manage_secrets si existix wp_set_secret; manage_options si no). Refusa
  * sense escriure res si l'amfitrió no té l'API disponible o el proveïdor és
  * de només lectura, i no reemplaça mai un secret que existix però ara no es
  * pot llegir (podria ser una credencial bona amb la WP_SECRETS_KEY de sempre).
@@ -281,53 +302,69 @@ function socdepoble_enxufe_llig_clau( $id ) {
  * @return true|WP_Error
  */
 function socdepoble_enxufe_desa_secret_wp72( $nom_secret_wp72, $valor ) {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return new WP_Error(
-			'socdepoble_enxufe_secret_permis',
-			__( 'You do not have permission to manage Sóc de Poble secrets.', 'socdepoble' )
-		);
-	}
-
-	$net = socdepoble_enxufe_secret_wp72_valor_net( $valor );
-	if ( ! socdepoble_enxufe_secret_wp72_nom_valid( $nom_secret_wp72 ) || '' === $net ) {
-		return new WP_Error(
-			'socdepoble_enxufe_secret_invalid',
-			__( 'The secret identifier and value must be non-empty strings.', 'socdepoble' )
-		);
-	}
-
-	if (
-		! socdepoble_enxufe_secrets_wp72_disponible()
-		|| ! function_exists( 'wp_set_secret' )
-		|| ( function_exists( 'wp_secrets_provider_is_writable' ) && true !== wp_secrets_provider_is_writable() )
-	) {
-		return new WP_Error(
-			'socdepoble_enxufe_secret_no_disponible',
-			__( 'Cannot save encrypted secret: WordPress 7.2 Secrets API and WP_SECRETS_KEY in wp-config.php are required. Sóc de Poble never stores API keys in plain text in the database.', 'socdepoble' )
-		);
-	}
-
-	$actual = socdepoble_enxufe_secret_wp72_resol( $nom_secret_wp72 );
-	if ( 'error' === $actual['estat'] ) {
-		return new WP_Error(
-			'socdepoble_enxufe_secret_illegible',
-			__( 'A secret with this name exists but cannot be read now. Restore the WP_SECRETS_KEY that encrypted it before saving a new value.', 'socdepoble' )
-		);
-	}
-
 	try {
-		$resultat = wp_set_secret( $nom_secret_wp72, $net );
-	} catch ( Throwable $error ) {
-		$resultat = false;
-	}
-	/* El nucli només documenta el WP_Error de la fallada (i que llavors no desa res).
-	   Cap missatge cru del nucli ni del proveïdor: el codi estable i un text propi. */
-	if ( is_wp_error( $resultat ) || false === $resultat ) {
-		return new WP_Error(
-			'socdepoble_enxufe_secret_error',
-			__( 'WordPress could not encrypt the secret with the current WP_SECRETS_KEY.', 'socdepoble' )
-		);
-	}
+		$capacitat = function_exists( 'wp_set_secret' ) ? 'manage_secrets' : 'manage_options';
+		if ( ! current_user_can( $capacitat ) ) {
+			return new WP_Error(
+				'socdepoble_enxufe_secret_permis',
+				__( 'You do not have permission to manage Sóc de Poble secrets.', 'socdepoble' )
+			);
+		}
 
-	return true;
+		$net = socdepoble_enxufe_secret_wp72_valor_net( $valor );
+		if ( ! socdepoble_enxufe_secret_wp72_nom_valid( $nom_secret_wp72 ) || '' === $net ) {
+			return new WP_Error(
+				'socdepoble_enxufe_secret_invalid',
+				__( 'The secret identifier and value must be non-empty strings.', 'socdepoble' )
+			);
+		}
+
+		if (
+			! socdepoble_enxufe_secrets_wp72_disponible()
+			|| ! function_exists( 'wp_set_secret' )
+			|| ( function_exists( 'wp_secrets_provider_is_writable' ) && true !== wp_secrets_provider_is_writable() )
+		) {
+			return new WP_Error(
+				'socdepoble_enxufe_secret_no_disponible',
+				__( 'Cannot save encrypted secret: WordPress 7.2 Secrets API and WP_SECRETS_KEY in wp-config.php are required. Sóc de Poble never stores API keys in plain text in the database.', 'socdepoble' )
+			);
+		}
+
+		$actual = socdepoble_enxufe_secret_wp72_resol( $nom_secret_wp72 );
+		if ( 'error' === $actual['estat'] ) {
+			return new WP_Error(
+				'socdepoble_enxufe_secret_illegible',
+				__( 'A secret with this name exists but cannot be read now. Restore the WP_SECRETS_KEY that encrypted it before saving a new value.', 'socdepoble' )
+			);
+		}
+
+		try {
+			$resultat = wp_set_secret( $nom_secret_wp72, $net );
+		} catch ( Throwable $error ) {
+			$resultat = false;
+		}
+		/* El nucli només documenta el WP_Error de la fallada (i que llavors no desa res).
+		   Cap missatge cru del nucli ni del proveïdor: el codi estable i un text propi. */
+		if ( is_wp_error( $resultat ) || false === $resultat ) {
+			return new WP_Error(
+				'socdepoble_enxufe_secret_error',
+				__( 'WordPress could not encrypt the secret with the current WP_SECRETS_KEY.', 'socdepoble' )
+			);
+		}
+
+		return true;
+	} finally {
+		if ( function_exists( 'wp_secrets_memzero' ) ) {
+			// v1.2.18 · Gauntlet R1 (L4-04) · Només cadenes: un $valor que no ho és ja torna WP_Error i no pot llançar ací.
+			if ( is_string( $valor ) ) {
+				wp_secrets_memzero( $valor );
+			}
+			if ( isset( $net ) && is_string( $net ) ) {
+				wp_secrets_memzero( $net );
+			}
+			if ( isset( $actual['valor'] ) && is_string( $actual['valor'] ) ) {
+				wp_secrets_memzero( $actual['valor'] );
+			}
+		}
+	}
 }

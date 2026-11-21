@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.25
+Stable tag: 1.1.26
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -171,7 +171,7 @@ Un zip que no porta la carpeta `socdepoble` a l'arrel s'instal·la al costat de 
 
 = Què passa si desinstal·le el connector? =
 
-Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els ajustos (`socdepoble_enxufe`), l'estat del canal d'actualitzacions i les dades temporals del traductor (pressupost, panys i traduccions en memòria cau). El connector no crea cap taula pròpia a la base de dades. Si una altra còpia del connector continua activa, la desinstal·lació no esborra res: els ajustos són de la còpia que queda. Les entrades d'una memòria cau d'objectes externa normalment caduquen en set dies.
+Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els ajustos (`socdepoble_enxufe`), l'estat del canal d'actualitzacions i les dades temporals del traductor (pressupost, panys i traduccions en memòria cau). Si el WordPress té la caixa de secrets, també hi esborra les dues claus del connector (`socdepoble/deepl-api-key` i `socdepoble/traduccio-url-clau`); si el proveïdor de secrets no ho accepta, s'hi queden i cal esborrar-les amb les eines de l'amfitrió. El connector no crea cap taula pròpia a la base de dades. Si una altra còpia del connector continua activa, la desinstal·lació no esborra res: els ajustos són de la còpia que queda. Les entrades d'una memòria cau d'objectes externa normalment caduquen en set dies.
 
 == Screenshots ==
 
@@ -187,6 +187,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 10. **Exemple real de configuració en 1 minut a WordPress (`gentdelatorre.net`):** Un sol bloc de *Codi de substitució* amb `[socdepoble_app poble="la-torre-de-les-macanes"]` al centre i la plantilla **«Sóc de Poble · full screen»** triada a la columna dreta.
 
 == Changelog ==
+
+= 1.1.26 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.18 de Sóc de Poble, la que explica la seua pàgina «Versions»: la IAIA amb el seu nom a la barra de dalt, una «Lletra gran» més compacta i els enllaços dels textos publicats marcats com a contingut d'usuari.
+* **Desinstal·lació més neta:** si el WordPress té la caixa de secrets, el connector també hi esborra les dues claus de Sóc de Poble en desinstal·lar-se, i esborra de la memòria les claus de traducció després d'usar-les quan WordPress ho permet.
 
 = 1.1.25 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.17 de Sóc de Poble, la que explica la seua pàgina «Versions»: una benvinguda de dues línies per a qui arriba sense entrar, el Rebost en rajoles, la demostració local del Bar i la Wiki amb portada pròpia.
@@ -259,6 +263,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.26 =
+Visor al dia amb la versió 1.2.18 de Sóc de Poble i una desinstal·lació més neta de les claus.
 
 = 1.1.25 =
 Visor al dia amb la versió 1.2.17 de Sóc de Poble: la benvinguda de qui arriba sense entrar, el Rebost en rajoles, la demostració local del Bar i la Wiki amb portada pròpia.

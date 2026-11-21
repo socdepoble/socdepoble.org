@@ -6185,18 +6185,13 @@ details[open] summary.accordion-header svg:last-child {
     max-inline-size: var(--sdp-targeta-viva-ample);
   }
   .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-pindola { flex: 1 1 0; width: auto; min-inline-size: max-content; }
-  /* Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1; P1-38 i P1-37) ·
-     «Descarrega l'App», damunt de la parella: la píndola de sèrie (alçada
-     tàctil i 100%), com a molt l'amplària de la parella i amb el respir de
-     davall del text que abans portava la parella. Entre la píndola i la
-     parella, només el buit de l'alerta (gap: var(--sdp-space-3), el mateix que
-     entre «Connectar-se» i «Registrar-se»): la parella hi perd el seu marge de
-     dalt. Dins de l'app nativa no hi ha píndola i la parella el conserva. */
-  .sdp-xat-acces > .sdp-xat-acces__descarrega {
-    margin: var(--sdp-boto-marge-block) auto 0;
-    max-inline-size: var(--sdp-targeta-viva-ample);
-  }
-  .sdp-xat-acces > .sdp-xat-acces__descarrega + .sdp-alerta__accions { margin-top: 0; }
+  /* Onada R32.28 · C-2 · «Descarrega l'App» comparteix la primera fila amb el xip «Lletra gran»
+     (AccesAlXat) i com a molt fa l'amplària de la fila.
+     v1.2.18 · Gauntlet R1 (L1-02) · min-inline-size: auto, i no min(100%, max-content), que és CSS
+     invàlid: el navegador el descartava i hi guanyava el max-content de la regla de damunt, i el text
+     llarg («Deskargatu aplikazioa») eixia de la fila estreta. Amb auto, el mínim queda limitat pel
+     max-inline-size: 100% i el text parteix en dues línies abans de desbordar. */
+  .sdp-xat-acces > .sdp-alerta__accions > .sdp-xat-acces__descarrega { flex: 1 1 auto; min-inline-size: auto; max-inline-size: 100%; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu { display: flex; flex-direction: column; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > * { flex-shrink: 0; }
   .sdp-workspace-column__body.sdp-xat-cos--amb-peu > .sdp-xat-fitxa-comunitat { flex-grow: 1; min-height: 0; }
@@ -11795,28 +11790,6 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
   }
 
-  .sdp-admin-taxonomia__header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-3);
-    padding-block-end: var(--sdp-space-4);
-    border-bottom: 1px solid var(--sdp-vora);
-  }
-
-  .sdp-admin-taxonomia__header h2 {
-    margin: 0;
-    color: var(--sdp-text-titol);
-  }
-
-  .sdp-admin-taxonomia__header p,
-  .sdp-admin-taxonomia__lead {
-    margin: 0;
-    color: var(--sdp-text-cos);
-    font-size: var(--sdp-text-base);
-    line-height: var(--sdp-leading-body);
-  }
-
-  .sdp-admin-taxonomia__badges,
   .sdp-admin-pills {
     display: flex;
     flex-wrap: wrap;
@@ -11838,47 +11811,6 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 600;
   }
 
-  .sdp-admin-taxonomia__diagnostic {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-3);
-    padding: var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora-forta);
-    border-left: 4px solid var(--sdp-accio);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-superficie);
-  }
-
-  .sdp-admin-taxonomia__diagnostic h3,
-  .sdp-admin-taxonomia__diagnostic p,
-  .sdp-admin-taxonomia__diagnostic ul {
-    margin: 0;
-  }
-
-  .sdp-admin-taxonomia__diagnostic ul {
-    padding-inline-start: var(--sdp-space-5);
-  }
-
-  .sdp-admin-taxonomia__tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sdp-space-2);
-    justify-content: center;
-  }
-
-  .sdp-admin-taxonomia__section,
-  .sdp-admin-taxonomia__panel,
-  .sdp-admin-taxonomia__simulador {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-4);
-    padding: var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-superficie);
-    min-width: 0;
-  }
-
   /* P0-74 (ordre del Mestre, captura del 09/11 a les 20:00; R16-I) · Amb la columna de la pàgina a
      ~520-560 px (les tres columnes de l'esquerra i les DevTools obertes), «📦 Empaquetats i
      Desplegament» ixia per la dreta. Revisió final R16a (troballa 2) · La taula d'Artefactes ja va
@@ -11887,25 +11819,6 @@ details[open] summary.accordion-header svg:last-child {
      anywhere). La @container que partia el <code> i les capçaleres d'esta taula ja no tenia res a
      casar i s'ha llevat. */
 
-  .sdp-admin-taxonomia__section h3,
-  .sdp-admin-taxonomia__panel h3,
-  .sdp-admin-taxonomia__simulador h3 {
-    margin: 0;
-    color: var(--sdp-text-titol);
-  }
-
-  .sdp-admin-taxonomia__controls,
-  .sdp-admin-taxonomia__toolbar,
-  .sdp-admin-taxonomia__filters,
-  .sdp-admin-taxonomia__selects {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: center;
-    gap: var(--sdp-space-3);
-  }
-
-  .sdp-admin-taxonomia__status,
   .sdp-admin-status-ok {
     margin: 0;
     padding: var(--sdp-space-3) var(--sdp-space-4);
@@ -11915,12 +11828,6 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-titol);
     font-size: var(--sdp-text-small);
     font-weight: 600;
-  }
-
-  .sdp-admin-taxonomia__kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-    gap: var(--sdp-space-3);
   }
 
   .sdp-admin-kpi {
@@ -11944,12 +11851,6 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
   }
 
-  .sdp-admin-taxonomia__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-    gap: var(--sdp-space-3);
-  }
-
   /* IDEA-125 · La graella del Banc d'Importació és una llista (<ul>) de UniversalCard: sense pics
      ni sagnat de llista. */
   .sdp-admin-importacio__llista {
@@ -11958,7 +11859,6 @@ details[open] summary.accordion-header svg:last-child {
     list-style: none;
   }
 
-  .sdp-admin-taxonomia__card,
   .sdp-admin-importacio__card,
   .sdp-card {
     display: flex;
@@ -11971,7 +11871,6 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
   }
 
-  .sdp-admin-taxonomia__card-top,
   .sdp-admin-importacio__card-cap {
     display: flex;
     flex-wrap: wrap;
@@ -11988,22 +11887,9 @@ details[open] summary.accordion-header svg:last-child {
     justify-content: center;
   }
 
-  .sdp-admin-taxonomia__table-wrap {
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-targeta);
-  }
-
   /* Revisió final R16a (troballa 2) · La taula d'Artefactes (PanellsAdministracioSistema) fa scroll
      com les d'Importació, però sense la capsa: la vora d'1px i els cantons de la capsa la movien i
      la retallaven també en ample, on hi cap (Llei del Píxel). */
-  .sdp-admin-taxonomia__table-wrap--sense-marc {
-    border: 0;
-    border-radius: 0;
-    background: none;
-  }
 
   .sdp-admin-table,
   .sdp-table {
@@ -12177,8 +12063,7 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   .sdp-admin-actions-inline,
-  .sdp-admin-pagination,
-  .sdp-admin-taxonomia__pagination {
+  .sdp-admin-pagination {
     display: flex;
     flex-wrap: wrap;
     align-items: center;

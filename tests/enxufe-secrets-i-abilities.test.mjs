@@ -169,7 +169,7 @@ test('R26 · empremta de cache: separa credencials de la Secrets API i mai usa e
   assert.notEqual(res.empremta_rotada, res.empremta_mascara);
 });
 
-test('R26 · desar secrets: manage_options, cap reemplaçament d\'un secret il·legible, proveïdor de només lectura i valors injectables refusats', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
+test('R26 · desar secrets: manage_secrets, cap reemplaçament d\'un secret il·legible, proveïdor de només lectura i valors injectables refusats', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
   const res = executaCasPhp('wp72_secrets_i_abilities');
   assert.equal(res.desa_anonim_codi, 'socdepoble_enxufe_secret_permis', 'el nucli no comprova capacitats: ho fa el connector');
   assert.equal(res.set_crides_anon, 0);
@@ -350,8 +350,36 @@ test('R26.2 · Salut: cada causa amb el seu text (abans de la 7.2, valor invàli
   const antic = executaCasPhp('wp_antic_amb_clau');
   assert.deepEqual(antic.proves, ['socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets']);
   assert.equal(antic.salut.status, 'good');
-  assert.equal(antic.salut.label, 'Encrypted secrets arrive with WordPress 7.2');
-  assert.doesNotMatch(antic.salut.description, /Restore|cannot use it/, 'abans de la 7.2 no hi ha cap clau a restaurar');
+  // v1.2.18 · Gauntlet R2 (L3R2-01) · sense l'API, el text no la promet per a cap versió.
+  assert.equal(antic.salut.label, 'This WordPress does not have the secrets API');
+  assert.doesNotMatch(JSON.stringify(antic.salut), /7\.2|\byet\b|arrive/, 'sense l\'API, cap promesa lligada a una versió');
+  assert.doesNotMatch(antic.salut.description, /Restore|cannot use it/, 'sense l\'API no hi ha cap clau a restaurar');
+});
+
+/* v1.2.18 · Gauntlet R2 (L3R2-01) · Un WordPress 7.2 (RC1 o final) sense wp_get_secret ni WP_SECRETS_KEY.
+   Només salut.php amb els mínims del nucli, i is_wp_version_compatible() sempre cert: la versió no hi pinta res. */
+function salutSenseApi({ ambClau }) {
+  const codi = [
+    "define( 'ABSPATH', '/' ); define( 'SOCDEPOBLE_ENXUFE_SLUG', 'socdepoble' );",
+    ambClau ? "define( 'WP_SECRETS_KEY', 'clau-preparada-sense-api' );" : '',
+    'function __( $t, $d = null ) { return $t; } function esc_html__( $t, $d = null ) { return $t; } function esc_html( $t ) { return $t; }',
+    "function esc_url( $u ) { return $u; } function admin_url( $p = '' ) { return '/wp-admin/' . $p; } function add_filter( ...$a ) {}",
+    'function is_wp_version_compatible( $r ) { return true; }',
+    'require $argv[1];',
+    '$r = socdepoble_enxufe_prova_secrets_wp72();',
+    "echo json_encode( array( 'te_wp_get_secret' => function_exists( 'wp_get_secret' ), 'proves' => array_keys( socdepoble_enxufe_proves_salut( array( 'direct' => array() ) )['direct'] ), 'status' => $r['status'], 'label' => $r['label'] ), JSON_UNESCAPED_UNICODE );"
+  ].join('\n');
+  return JSON.parse(execFileSync(PHP_BIN, ['-r', codi, '--', path.join(PLUGIN, 'includes/salut.php')], { encoding: 'utf8' }));
+}
+
+test('v1.2.18 · Gauntlet R2 (L3R2-01) · Salut: la prova de secrets es registra per presència, mai per la versió 7.2', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
+  const sense = salutSenseApi({ ambClau: false });
+  assert.equal(sense.te_wp_get_secret, false);
+  assert.deepEqual(sense.proves, ['socdepoble_enxufe_paquet'], 'un 7.2 sense l\'API ni WP_SECRETS_KEY no rep cap prova de secrets');
+  const ambClau = salutSenseApi({ ambClau: true });
+  assert.deepEqual(ambClau.proves, ['socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets'], 'WP_SECRETS_KEY sí que la registra');
+  assert.deepEqual({ status: ambClau.status, label: ambClau.label }, { status: 'good', label: 'This WordPress does not have the secrets API' });
+  assert.doesNotMatch(nomesCodiPhp(llig('includes/salut.php')), /\bis_wp_version_compatible\s*\(|\$wp_version\b|get_bloginfo\(\s*'version'/, 'salut.php no inferix l\'API per la versió');
 });
 
 test('R26.2 · preimportació: encapçalaments en temps lineal sense PCRE JIT i amb la mateixa semàntica que els patrons d\'abans', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
@@ -464,10 +492,14 @@ test('R26 · fitxer principal: els includes nous amb guarda ABSPATH i en ordre (
     assert.doesNotMatch(codi, /\b(?:error_log|var_dump|var_export|print_r|debug_print_backtrace)\s*\(/, `${rel}: cap registre`);
   }
   // La custòdia de WP_SECRETS_KEY és de l'amfitrió: el connector no la definix, no la deriva de les SALTs ni la rota.
-  const totPhp = ['socdepoble-enxufe.php', 'uninstall.php', ...fitxersAdaptador(PLUGIN).map((f) => f.rel).filter((r) => r.startsWith('includes/') && r.endsWith('.php'))]
-    .map((rel) => llig(rel)).join('\n');
+  const relsPhp = ['socdepoble-enxufe.php', 'uninstall.php', ...fitxersAdaptador(PLUGIN).map((f) => f.rel).filter((r) => r.startsWith('includes/') && r.endsWith('.php'))];
+  const totPhp = relsPhp.map((rel) => llig(rel)).join('\n');
   assert.doesNotMatch(totPhp, /define\(\s*'WP_SECRETS_KEY'/, 'cap WP_SECRETS_KEY definida pel connector');
-  assert.doesNotMatch(totPhp, /\b(?:rotate_site_key|wp_retire_secret_version|wp_delete_secret|wp_import_option_as_secret|random_bytes|sodium_crypto_\w*keygen)\s*\(/, 'cap rotació, esborrat, importació ni clau nova');
+  assert.doesNotMatch(totPhp, /\b(?:rotate_site_key|wp_retire_secret_version|wp_import_option_as_secret|random_bytes|sodium_crypto_\w*keygen)\s*\(/, 'cap rotació, importació ni clau nova (l’esborrat propi només viu a uninstall.php)');
+  /* v1.2.18 · Gauntlet R2 (L3R2-03) · La prohibició només llegia 2 dels 15 PHP que no són
+     uninstall.php: un esborrat a Salut, als Ajustos o a les abilities passava. Ara cobrix
+     la mateixa llista que el patró global d'abans, menys la desinstal·lació. */
+  for (const rel of relsPhp.filter((r) => r !== 'uninstall.php')) assert.doesNotMatch(llig(rel), /\bwp_delete_secret\s*\(/, `${rel}: cap esborrat fora de la desinstal·lació`);
   assert.doesNotMatch(llig('includes/secrets-wp72.php'), /\bwp_salt\s*\(/, 'les SALTs no deriven cap secret');
   assert.doesNotMatch(llig('includes/secrets-wp72.php'), /\b(?:get|update|add)_option\s*\(/, 'cap reserva en text pla a wp_options');
 });

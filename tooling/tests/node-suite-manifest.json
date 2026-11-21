@@ -2553,6 +2553,16 @@
       "path": "tooling/placa/resumDomNode0.test.mjs",
       "suite": "primary",
       "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.seo.test.mjs",
+      "suite": "primary",
+      "reason": "R32.27: sonda bounded de quatre variants, anti-cloaking i enllaços ocults sense xarxa."
+    },
+    {
+      "path": "tests/enxufe-wp72-r32-27.test.mjs",
+      "suite": "primary",
+      "reason": "R32.27: permisos Secrets API condicionals, límit de noms, memzero i desinstal·lació simple/multisite."
     }
   ]
 }

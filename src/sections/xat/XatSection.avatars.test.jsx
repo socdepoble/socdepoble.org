@@ -782,12 +782,12 @@ test('B11c · sense sessió, a l’aterratge, el xip va a la fila de «Descarreg
     const xip = screen.getByTestId('xat-acces-lletra-gran');
     expect(xip.getAttribute('role')).toBe('switch');
     expect(xip.getAttribute('aria-checked')).toBe('false');
-    /* La marca textual de l'estat, mai només el color (ControlModeSenior). */
-    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(TEXTOS_MODE_SENIOR.ca.inactiu);
+    /* La marca simbòlica no cromàtica de l'estat compacte (C-2, Onada R32.28), mai només el color. */
+    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe('○');
     expect(xip.closest('.sdp-alerta__accions')).toBe(screen.getByRole('button', { name: "Descarrega l'App" }).parentElement);
     fireEvent.click(xip);
     expect(xip.getAttribute('aria-checked')).toBe('true');
-    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe(`✓ ${TEXTOS_MODE_SENIOR.ca.actiu}`);
+    expect(xip.querySelector('.sdp-mode-senior-xip__estat').textContent).toBe('✓');
   } finally {
     delVal(SENIOR_KEY);
     reiniciaMemoriaSenior();

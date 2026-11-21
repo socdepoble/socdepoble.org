@@ -28,7 +28,9 @@ function socdepoble_enxufe_proves_salut( $proves ) {
 			'test'  => 'socdepoble_enxufe_prova_canal',
 		);
 	}
-	if ( is_wp_version_compatible( '7.2' ) || function_exists( 'wp_get_secret' ) || defined( 'WP_SECRETS_KEY' ) ) {
+	// v1.2.18 · Gauntlet R2 (L3R2-01) · Mana la presència, mai la versió: l'API de la beta 7.2 es
+	// va retirar abans de RC1 (r65538), i un 7.2 sense wp_get_secret no rep cap prova de secrets.
+	if ( function_exists( 'wp_get_secret' ) || defined( 'WP_SECRETS_KEY' ) ) {
 		$proves['direct']['socdepoble_enxufe_secrets'] = array(
 			'label' => __( 'Sóc de Poble encrypted secrets (WP 7.2+)', 'socdepoble' ),
 			'test'  => 'socdepoble_enxufe_prova_secrets_wp72',
@@ -160,8 +162,8 @@ function socdepoble_enxufe_prova_paquet() {
  * secret ni genera cap clau: un secret il·legible es recupera restaurant la
  * WP_SECRETS_KEY d'abans, no desant-ne un altre damunt.
  *
- * Cada causa té el seu text: sense la Secrets API al nucli (abans de la 7.2)
- * la constant encara no té cap ús; una WP_SECRETS_KEY definida que l'API no
+ * Cada causa té el seu text: sense la Secrets API al nucli, siga quina siga
+ * la versió, la constant no té cap ús; una WP_SECRETS_KEY definida que l'API no
  * pot fer servir; un secret que no es pot desxifrar; un secret llegible amb
  * un valor invàlid (la clau no n'és la causa); l'API desactivada, dient el
  * motor que de veres tradueix; i l'API disponible amb la constant o amb el
@@ -171,12 +173,13 @@ function socdepoble_enxufe_prova_paquet() {
  */
 function socdepoble_enxufe_prova_secrets_wp72() {
 	$prova = 'socdepoble_enxufe_secrets';
+	// v1.2.18 · Gauntlet R2 (L3R2-01) · Ni «arriben amb WordPress 7.2» ni «encara»: el text no lliga l'API a cap versió.
 	if ( ! function_exists( 'wp_get_secret' ) ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
 			'good',
-			__( 'Encrypted secrets arrive with WordPress 7.2', 'socdepoble' ),
-			__( 'This WordPress version does not have the secrets API yet. Sóc de Poble reads its optional keys from wp-config.php constants or environment variables and never stores them in plain text in the database.', 'socdepoble' )
+			__( 'This WordPress does not have the secrets API', 'socdepoble' ),
+			__( 'Sóc de Poble reads its optional keys from wp-config.php constants or environment variables and never stores them in plain text in the database.', 'socdepoble' )
 		);
 	}
 	$disponible = socdepoble_enxufe_secrets_wp72_disponible();

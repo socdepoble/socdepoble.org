@@ -6,7 +6,11 @@
      «Connectar-se» ja no és a cap diccionari (també resta bytes del tros `ca` d'arrencada, [VA2-19]).
    · B11b · El Sènior escala només l'accés ([VA2-20]): les píndoles a 56 px i la benvinguda amb
      l'escala de la prosa Sènior; cap regla per a les files ni per a les bombolles.
-   · B11c · La fila del xip «Lletra gran», al full diferit; modules.css (arrencada de WordPress), intacte. */
+   · B11c · La fila del xip «Lletra gran», al full diferit; modules.css (arrencada de WordPress) no hi
+     porta cap regla .sdp-mode-senior-.
+   v1.2.18 · Gauntlet R1 (L1-01) · modules.css ja no és intacte: l'Onada R32.28 (C-2) hi deixa la regla
+     de «Descarrega l'App» dins de la fila (.sdp-xat-acces > .sdp-alerta__accions >
+     .sdp-xat-acces__descarrega), que fixa XatSection.acces.capes.test.js. Sense cap regla del xip. */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -104,8 +108,13 @@ describe('B11c · la fila del xip «Lletra gran», al full diferit', () => {
   const totes = regles(llig('src/css/diferit-mode-senior.css'));
   const de = (selector) => totes.find((r) => r.selector === selector)?.decl ?? null;
 
+  /* v1.2.18 · Gauntlet R1 (L1-01, L1-02) · Les declaracions finals de la franja de l'Onada R32.28
+     (C-2): flex: 1 1 auto, com «Descarrega l'App», i com a molt el 100% de la fila amb un mínim vàlid
+     (auto). Expectativa actualitzada a propòsit. */
   test('la franja s’estira com la píndola veïna, sense marge, i el xip n’ocupa l’amplària', () => {
-    expect(de('.sdp-xat-acces .sdp-mode-senior-franja')).toEqual({ flex: '1 1 0', margin: '0' });
+    expect(de('.sdp-xat-acces .sdp-mode-senior-franja')).toEqual({
+      flex: '1 1 auto', 'min-inline-size': 'auto', 'max-inline-size': '100%', margin: '0',
+    });
     expect(de('.sdp-xat-acces .sdp-mode-senior-xip')).toEqual({ 'inline-size': '100%' });
   });
 

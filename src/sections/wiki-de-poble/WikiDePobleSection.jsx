@@ -199,7 +199,7 @@ function ProsaDeLaWiki({ encoixinada = false, html }) {
     event.preventDefault();
     navigate(desti);
   };
-  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} onClick={alClicarProsa} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html), { llistesNumerades: true }) }} />;
+  return <div className={encoixinada ? 'sdp-prose sdp-prose--encoixinada' : 'sdp-prose'} lang={lang} onClick={alClicarProsa} dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(html), { llistesNumerades: true, enllacosEditorials: true }) }} />;
 }
 
 /* El Quadre ISO d'un document: etiquetes i valors en valencià, escrits ací. */
@@ -362,7 +362,7 @@ function WikiDetail({ item }) {
       title={editorial.titol || item.title}
       subtitle={item.subtitle}
       {...(compartirDocument ? { onShare: compartirDocument } : null)}
-      lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla))) }} /> : null}
+      lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla)), { enllacosEditorials: true }) }} /> : null}
       {...data}
       labels={labels}
       heroImage={item.image || item.attributes?.image}

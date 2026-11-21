@@ -576,16 +576,16 @@ test('C5 · un bloc que no es pot reconstruir no s’envia i es pinta tal qual, 
 
 /* traduccio-enllacos-sense-rel-noreferrer · La vista traduïda torna a pintar
    l'enllaç amb el mateix rel que el sanejador posa a l'original. */
-test('CosTraduit: l’enllaç traduït porta el rel de l’original (noopener noreferrer nofollow), també dins d’un bloc no fidel', () => {
+test('CosTraduit: l’enllaç traduït conserva ugc nofollow de l’original, també dins d’un bloc no fidel', () => {
   const arrel = arrelHtml(sanitizeHtml('<p>Mira <a href="https://exemple.org/pagina">esta pàgina</a> ara.</p><p><a href="https://exemple.org/nova" target="_blank">nova</a></p>'));
   const originals = [...arrel.querySelectorAll('a')].map((node) => [node.getAttribute('rel'), node.getAttribute('target')]);
-  expect(originals).toEqual([['noopener noreferrer nofollow', null], ['noopener noreferrer nofollow', '_blank']]);
+  expect(originals).toEqual([['ugc nofollow noopener noreferrer', null], ['ugc nofollow noopener noreferrer', '_blank']]);
   const { munta } = preparaTraduccio(blocsTraduibles(arrel), { html: true });
   const { container } = render(createElement(CosTraduit, {
     blocs: munta(['Look at <a data-sdp="0">this page</a> now.', '<a data-sdp="0">new</a>']), llengua: 'en-GB',
   }));
   expect([...container.querySelectorAll('a')].map((node) => [node.getAttribute('href'), node.getAttribute('rel'), node.getAttribute('target')])).toEqual([
-    ['https://exemple.org/pagina', 'noopener noreferrer nofollow', null], ['https://exemple.org/nova', 'noopener noreferrer nofollow', '_blank'],
+    ['https://exemple.org/pagina', 'ugc nofollow noopener noreferrer', null], ['https://exemple.org/nova', 'ugc nofollow noopener noreferrer', '_blank'],
   ]);
 });
 

@@ -44,7 +44,8 @@ describe('R32.19 Lot 3 · IDEA-295 · CreditsComunitatS23 dins de /legal en 5 ll
       expect(bloc.textContent).toContain('Jorge Marfil');
       expect(bloc.textContent).toContain('MecheTech');
       expect(bloc.textContent).toContain('REA');
-      expect(bloc.querySelectorAll('a[target="_blank"][rel="noopener noreferrer nofollow"]').length).toBe(9);
+      expect(bloc.querySelectorAll('a[target="_blank"][rel="noopener noreferrer"]').length).toBe(9);
+      expect(bloc.querySelector('[rel~="ugc"]')).toBeNull();
     }
   );
 });

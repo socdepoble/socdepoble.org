@@ -315,7 +315,7 @@ if ( 'wp72_secrets_i_abilities' === $cas ) {
 	// Desar: el nucli no comprova capacitats, el connector sí.
 	$desa_anonim     = socdepoble_enxufe_desa_secret_wp72( $deepl, 'deepl-xifrat-wp72-secret-999' );
 	$set_crides_anon = $GLOBALS['sdp_test_set_crides'];
-	$GLOBALS['sdp_test_caps'] = array( 'manage_options' => true );
+	$GLOBALS['sdp_test_caps'] = array( 'manage_options' => true, 'manage_secrets' => true );
 	$desat           = socdepoble_enxufe_desa_secret_wp72( $deepl, 'deepl-xifrat-wp72-secret-999' );
 	$desa_illegible  = socdepoble_enxufe_desa_secret_wp72( 'socdepoble/error-desxifrat', 'clau-nova-damunt' );
 	$desa_nom_dolent = socdepoble_enxufe_desa_secret_wp72( 'socdepoble_deepl_api_key', 'clau' );
@@ -740,7 +740,7 @@ if ( 'wp72_keyring_sense_constant' === $cas ) {
 	}
 	$GLOBALS['sdp_test_secrets'][ $deepl ] = "deepl-bona\r\nX-Injectada: 1";
 	$salut_invalida = $salut();
-	$GLOBALS['sdp_test_caps'] = array( 'manage_options' => true );
+	$GLOBALS['sdp_test_caps'] = array( 'manage_options' => true, 'manage_secrets' => true );
 	$desa_damunt_invalida     = socdepoble_enxufe_desa_secret_wp72( $deepl, 'deepl-nova-777' );
 	$GLOBALS['sdp_test_caps'] = array();
 	$llegit_despres           = socdepoble_enxufe_deepl_clau();

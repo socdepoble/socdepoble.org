@@ -16,6 +16,7 @@ import { Node } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import VideoEditorialNodeView from './VideoEditorialNodeView.jsx';
 import { esIdVideoEditorial, titolDeVideoEditorial } from '../../VideoEditorial.jsx';
+import { relEnllacExtern } from '../../../../utils/enllacosExterns.js';
 
 export const ATRIBUT_VIDEO_EDITORIAL = 'data-sdp-youtube';
 
@@ -27,8 +28,15 @@ export const VideoEditorialNode = Node.create({
   /* Abans que el contenidor de maquetació, que també llig div. */
   priority: 110,
 
+  addOptions() { return { editorial: false }; },
+
   addAttributes() {
     return {
+      sponsored: {
+        default: false,
+        parseHTML: (element) => /(?:^|\s)sponsored(?:\s|$)/i.test(element.querySelector('a')?.getAttribute('rel') || ''),
+        renderHTML: () => ({}),
+      },
       id: {
         default: null,
         parseHTML: (element) => {
@@ -58,7 +66,7 @@ export const VideoEditorialNode = Node.create({
     const titol = titolDeVideoEditorial(node.attrs.title);
     const enllac = `https://www.youtube.com/watch?v=${id}`;
     return ['div', { [ATRIBUT_VIDEO_EDITORIAL]: id, ...(titol ? { 'data-titol': titol } : {}) },
-      ['a', { href: enllac, target: '_blank', rel: 'noopener noreferrer' }, titol || enllac]];
+      ['a', { href: enllac, target: '_blank', rel: relEnllacExtern({ editorial: this.options.editorial, sponsored: node.attrs.sponsored }) }, titol || enllac]];
   },
 
   addNodeView() {

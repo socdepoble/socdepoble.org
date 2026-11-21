@@ -13,6 +13,18 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 const ID='TlZWYbnGuCE';
 const marcador=`<div data-sdp-youtube="${ID}" data-titol="Reportatge del poble"><a href="https://www.youtube.com/watch?v=${ID}">Reserva</a></div>`;
+test('R32.27 · el vídeo aportat conserva UGC i sponsored després de desar i reobrir', () => {
+ const inicial = marcador.replace('href=', 'rel="sponsored" href=');
+ const crea = content => new Editor({ element: document.createElement('div'), extensions: [StarterKit.configure({underline:false}), SenseSubratllat, ...extensionsRiques()], content });
+ const editor = crea(inicial);
+ try {
+  const html = editor.getHTML();
+  expect(html).toContain('rel="ugc nofollow sponsored noopener noreferrer"');
+  expect(sanitizeHtml(html)).toBe(html);
+  const reobert = crea(html);
+  try { expect(reobert.getHTML()).toBe(html); } finally { reobert.destroy(); }
+ } finally { editor.destroy(); }
+});
 afterEach(()=>{cleanup();fixaBaseRecursos('');});
 /* Gauntlet R9 · G2-04 · Façana de clic: abans del gest no hi ha cap iframe; el clic obri el de cada vídeo. */
 /* Gauntlet R10 · VFC-09 · El nom del botó és el text visible i, darrere, el títol del vídeo. */

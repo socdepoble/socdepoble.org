@@ -5,9 +5,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { analitzaVigilant, codiVigilant, readOnly } from '../tooling/gates/tractor-vigilant.mjs';
+import { analitzaVigilant, codiVigilant, readOnly, defectesWp72, defectesSvgWp72 } from '../tooling/gates/tractor-vigilant.mjs';
 function fixture(t) {const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-vigilant-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return {root,write:(p,s)=>{fs.mkdirSync(path.dirname(path.join(root,p)),{recursive:true});fs.writeFileSync(path.join(root,p),s);}};}
 const regla=(r,id)=>r.comprovacions.find(c=>c.id===id);
+test('R32.27 VIG-07 bloqueja secrets.php no autoritzat sense llegir ni revelar valors',t=>{
+ const {root,write}=fixture(t);write('public/secrets.php','VALOR_SINTETIC_QUE_NO_HA_DE_IXIR');
+ const result=analitzaVigilant(root);assert.equal(regla(result,'VIG-07').estat,'falla');
+ assert.equal(codiVigilant(result),1);assert.equal(JSON.stringify(result).includes('VALOR_SINTETIC_QUE_NO_HA_DE_IXIR'),false);
+});
 test('sense fonts no acredita verd; import és només lectura',t=>{const {root}=fixture(t);assert.equal(readOnly,true);const r=analitzaVigilant(root);assert.equal(regla(r,'VA1').estat,'no-mesurat');assert.ok(r.recompte['no-mesurat']>0);});
 test('VIG01/02: fitxers sensibles i executables només s’anomenen, no es revelen ni es modifiquen',t=>{
  const {root,write}=fixture(t);write('public/.env','NO_REVELAR_EL_VALOR');write('public/assets/a.php','<?php');
@@ -138,4 +143,50 @@ test('VIG-04: un hash canviat o un orfe posterior a l\'inventari és manipulaci�
  write('dist/a.txt','abd');let c=regla(analitzaVigilant(root),'VIG-04');assert.equal(c.estat,'falla');assert.deepEqual(c.evidencia,[{fitxer:'dist/a.txt'}]);
  write('dist/a.txt','abc');const nou=new Date(Date.now()+3600_000);write('dist/injectat.js','x');fs.utimesSync(path.join(root,'dist/injectat.js'),nou,nou);
  c=regla(analitzaVigilant(root),'VIG-04');assert.equal(c.estat,'falla');assert.deepEqual(c.evidencia,[{fitxer:'dist/injectat.js'}]);
+});
+
+/* IDEA-306 · Les regles noves tenen autorització explícita de bloqueig, sense desplegar res. */
+const apis72 = ['wp_get_secret', 'wp_set_secret', 'wp_delete_secret', 'wp_is_secrets_api_available', 'wp_secrets_memzero', 'wp_is_valid_icon_name'];
+test('R32.27 VIG-07: cada API necessita guarda real al mateix fitxer; una cadena/comentari no compta', t => {
+ const {root,write}=fixture(t);
+ for(const api of apis72) {
+  const base = `<?php\ndefined( 'ABSPATH' ) || exit;\n`;
+  write('wordpress-plugin/api.php',base+`${api}($valor);`);
+  let r=analitzaVigilant(root);assert.equal(regla(r,'VIG-07').estat,'falla',api);assert.equal(regla(r,'VIG-07').avis,false);assert.equal(codiVigilant(r),1);
+  write('wordpress-plugin/api.php',base+`// function_exists('${api}')\n$x="function_exists('${api}')"; ${api}($valor);`);
+  assert.equal(regla(analitzaVigilant(root),'VIG-07').estat,'falla',api);
+  write('wordpress-plugin/veina.php',base+`if(function_exists('${api}')) {}`);
+  assert.equal(regla(analitzaVigilant(root),'VIG-07').estat,'falla','la veïna no compta');
+  write('wordpress-plugin/api.php',base+`if(function_exists('${api}')) { ${api}($valor); }`);
+  assert.equal(regla(analitzaVigilant(root),'VIG-07').estat,'ok',api);
+ }
+ assert.deepEqual(defectesWp72(`<?php // wp_get_secret('x')\n$x="wp_set_secret('x','y')"; function wp_delete_secret($x) {}`),[]);
+ assert.equal(defectesWp72(`<?php if(\\function_exists('WP_GET_SECRET')) { \\WP_GET_SECRET('x'); }`).length,0,'noms PHP sense distinció de caixa i namespace global');
+});
+test('R32.27 VIG-07: clau literal bloquejada i cap valor de credencial en l’informe', t => {
+ const {root,write}=fixture(t); const secret='VALOR_FICTICI_NO_REVELAR_3227';
+ for(const codi of [`define('WP_SECRETS_KEY','${secret}');`,`const WP_SECRETS_KEY = "${secret}";`, `define('WP_SECRETS_KEY', ('${secret}'));`, `const WP_SECRETS_KEY=('${secret}');`, `define(('WP_SECRETS_KEY'), ('${secret}'));`, `define('WP_SECRETS_KEY', <<<CLAU\n${secret}\nCLAU\n);`, `define('WP_SECRETS_KEY_PREVIOUS', '${secret}');`, `const WP_SECRETS_KEY_PREVIOUS=('${secret}');`]) {
+  write('wordpress-plugin/a.php',`<?php defined('ABSPATH') || exit; ${codi}`);
+  const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-07').estat,'falla');assert.equal(codiVigilant(r),1);assert.ok(!JSON.stringify(r).includes(secret));
+ }
+ assert.deepEqual(defectesWp72(`<?php /* define('WP_SECRETS_KEY','x'); */ $x="define('WP_SECRETS_KEY','y')"; $activa=defined('WP_SECRETS_KEY');`),[]);
+});
+test('R32.27 VIG-07: els nou hooks/funcions obsolets bloquegen en codi actiu, sense fals verd per comentaris', t => {
+ const {root,write}=fixture(t);
+ for(const nom of ['print_head_scripts','print_footer_scripts','print_admin_styles','print_late_styles','script_concat_settings','_print_scripts','_print_styles','in_default_dir','WP_Dependencies::get_etag']) {
+  write('wordpress-plugin/a.php',`<?php defined('ABSPATH') || exit; add_filter('${nom}', 'sdp_filtre');`);
+  const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-07').estat,'falla',nom);assert.equal(codiVigilant(r),1);
+  assert.equal(defectesWp72(`<?php ${nom}();`).some(d=>d.regla==='obsolet-wp72'),true,nom);
+  assert.deepEqual(defectesWp72(`<?php // ${nom}();\n$x="comentari sobre '${nom}'";`),[],nom);
+ }
+});
+test('R32.27 VIG-07: SVG actius en fitxer o PHP incrustat bloquegen, incloent entitats HTML', t => {
+ const {root,write}=fixture(t);const hostils=['<svg><script>alert(1)</script></svg>','<svg onload="alert(1)"></svg>','<svg><a href="javascript:alert(1)"></a></svg>','<svg><use href="#icona"/></svg>','<svg><a href="java&#x73;cript:alert(1)"></a></svg>','<svg><a href="java&#10;script:alert(1)"></a></svg>','<svg><a href="java\tscript:alert(1)"></a></svg>'];
+ for(const svg of hostils) {
+  write('public/f.svg',svg);let r=analitzaVigilant(root);assert.equal(regla(r,'VIG-07').estat,'falla',svg);assert.equal(codiVigilant(r),1);
+  write('public/f.svg','<svg><path d="M0 0h1"/></svg>');write('wordpress-plugin/a.php',`<?php defined('ABSPATH') || exit; echo '${svg}';`);
+  assert.equal(regla(analitzaVigilant(root),'VIG-07').estat,'falla',svg);
+ }
+ assert.equal(defectesSvgWp72('<svg><!-- <script>test</script> --><path d="M0 0h1"/></svg>',{fitxerSvg:true}),false);
+ assert.equal(defectesSvgWp72('<script>recurs habitual fora d’SVG</script>'),false);
 });

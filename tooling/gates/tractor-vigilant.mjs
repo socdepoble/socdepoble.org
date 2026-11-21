@@ -9,9 +9,9 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 // Un sol lexer i unes mateixes regles que la porta Tellado (R25.2-P01/P03, IDEA-266).
-import { avaluaPerimetreTellado, defectesPermisosWp, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
+import { avaluaPerimetreTellado, defectesPermisosWp, descodificaEntitatsHtml, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
 export const readOnly = true;
-const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\.php|wp-config[^/]*\.php)$|\.(?:sql(?:\.gz)?|bak|old|orig|swp)$/i;
+const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\.php|secrets\.php|wp-config[^/]*\.php)$|\.(?:sql(?:\.gz)?|bak|old|orig|swp)$/i;
 const EXECUTABLE = /\.(php[0-9]?|phtml|phar|sh|py|pl|cgi)$/i;
 const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VIG-11','VB1','VB2','VB3','VB9','VB10','VC2']);
 const ORIGEN = 'Vigilant Tellado: perímetre estàtic adaptat a Sóc de Poble';
@@ -95,6 +95,51 @@ function fitxers(root, rel, incidencies) {
   }
   return out;
 }
+// IDEA-306 · Compatibilitat per presència: l'API Secrets es va retirar de WP 7.2 RC1.
+const API_WP_CONDICIONAL = ['wp_get_secret', 'wp_set_secret', 'wp_delete_secret', 'wp_is_secrets_api_available', 'wp_secrets_memzero', 'wp_is_valid_icon_name'];
+const OBSOLETS_WP72 = ['print_head_scripts', 'print_footer_scripts', 'print_admin_styles', 'print_late_styles', 'script_concat_settings', '_print_scripts', '_print_styles', 'in_default_dir', 'WP_Dependencies::get_etag'];
+/** Comprovació lèxica per fitxer; una guarda no acredita domini del flux de control. Mai retorna valors. */
+export function defectesWp72(text) {
+  const net=netejaComentarisLineal(text,'.php');
+  const codi=netejaComentarisLineal(text,'.php',{buidaCadenes:true});
+  const troballes=[];
+  const anota=(regla,index,api)=>troballes.push({regla,linia:net.slice(0,index).split('\n').length,...(api?{api}:{})});
+  const guardes=new Set();
+  for(const m of codi.matchAll(/(?<![\w>$:])\\?function_exists\s*\(/gi)) {
+    const nom=/^\\?function_exists\s*\(\s*(['"])\\?([a-z_][a-z0-9_]*)\1\s*\)/i.exec(net.slice(m.index));
+    if(nom) guardes.add(nom[2].toLowerCase());
+  }
+  const reApi=new RegExp(String.raw`(?<![\w>$:])\\?(${API_WP_CONDICIONAL.join('|')})\s*\(`,'gi');
+  for(const m of codi.matchAll(reApi)) {
+    if(/\bfunction\s*$/i.test(codi.slice(Math.max(0,m.index-30),m.index))) continue;
+    if(!guardes.has(m[1].toLowerCase())) anota('api-sense-guarda',m.index,m[1].toLowerCase());
+  }
+  // La clau és de l'amfitrió: cap definició al connector, siga literal, concatenada,
+  // parentitzada, heredoc o variable. La resta de lectures/defined() no es bloquegen.
+  for(const m of codi.matchAll(/(?<![\w>$:])\\?define\s*\(/gi)) {
+    const literal=/^\\?define\s*\(\s*(?:\(\s*)*(['"])WP_SECRETS_KEY(?:_PREVIOUS)?\1(?:\s*\))*\s*,/i.exec(net.slice(m.index));
+    if(literal) anota('clau-literal',m.index);
+  }
+  for(const m of codi.matchAll(/\bconst\s+WP_SECRETS_KEY(?:_PREVIOUS)?\s*=/gi)) {
+    anota('clau-literal',m.index);
+  }
+  for(const nom of OBSOLETS_WP72) {
+    const esc=nom.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    // Referències de codi i noms literals exactes de hooks, sense comentaris ni text que els imita.
+    const re=new RegExp(String.raw`\b${esc}\s*\(|(['"])${esc}\1`,'g');
+    for(const m of net.matchAll(re)) {
+      if(codi[m.index]===net[m.index]) anota('obsolet-wp72',m.index,nom);
+    }
+  }
+  return troballes;
+}
+/** SVG de fitxer o regions SVG incrustades; no executa PHP ni cap script. */
+export function defectesSvgWp72(text,{fitxerSvg=false}={}) {
+  const net=descodificaEntitatsHtml(String(text).replace(/<!--[^]*?(?:-->|$)/g,''));
+  const regions=fitxerSvg?[net]:[...net.matchAll(/<svg\b[^]*?(?:<\/svg\s*>|$)/gi)].map(m=>m[0]);
+  return regions.some(svg=>/<(?:[\w-]+:)?(?:script|use)\b|\bonload\s*=/i.test(svg)
+    || /javascript:/i.test(svg.replace(/[\u0000-\u0020\u007f]/g,'')));
+}
 export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const root=fs.realpathSync(arrel);if(!fs.statSync(root).isDirectory()) throw new TypeError('Arrel invàlida.');
   const comprovacions=[],enllacos=[];
@@ -150,7 +195,18 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   anota('VIG-06','alta',externs.length?'falla':html!==null?'ok':'no-mesurat',externs,'Comprovar declaració External services abans d’autoritzar el recurs.');
   const mantFitxers=[...php,...(['wp-content/maintenance.php','public/maintenance.php'].filter(p=>llig(p)!==null))].filter(p=>/(?:^|\/)(?:maintenance\.php|[^/]*manteniment[^/]*503[^/]*\.php)$/i.test(p));
   const mantMales=mantFitxers.filter(p=>mancancesManteniment503(net(p)).length>0);
-  anota('VIG-07','alta',mantMales.length?'falla':mantFitxers.length?'ok':'no-mesurat',mantMales.length?mantMales:mantFitxers,' Tot manteniment PHP ha d’emetre 503, Retry-After, no-store/nocache_headers i respectar robots.txt.');
+  const wp72=php.flatMap(p=>defectesWp72(llig(p)||'').map(d=>({fitxer:p,...d})));
+  const svg=[...new Set([...tots,...(fitxers(root,'src',enllacos)||[]),...(fitxers(root,'wordpress-plugin',enllacos)||[])])].filter(p=>/\.svg$/i.test(p));
+  const svgMals=svg.filter(p=>defectesSvgWp72(llig(p)||'',{fitxerSvg:true}));
+  const svgIncrustats=php.filter(p=>defectesSvgWp72(net(p)));
+  const secretsNoAutoritzats=[...new Set([...tots,...php])].filter(p=>path.posix.basename(p).toLowerCase()==='secrets.php');
+  const wp72Mals=[...wp72,...[...new Set([...svgMals,...svgIncrustats])].map(fitxer=>({fitxer,regla:'svg-actiu'})),
+    ...secretsNoAutoritzats.map(fitxer=>({fitxer,regla:'fitxer-secrets-no-autoritzat'}))];
+  anota('VIG-07','alta',mantMales.length||wp72Mals.length?'falla':mantFitxers.length||php.length||svg.length?'ok':'no-mesurat',
+    [...mantMales,...wp72Mals],
+    'Manteniment: 503, Retry-After, no-store i robots. WP: APIs opcionals amb function_exists al mateix fitxer, cap clau literal ni hook obsolet; SVG sense script/onload/javascript/use. Comprovació lèxica, no prova de flux ni de sanejament integral.');
+  // El Mestre ha encarregat explícitament el bloqueig d'IDEA-306. El 503 preexistent continua sent avís.
+  if(wp72Mals.length) comprovacions.at(-1).avis=false;
   const secretsPla=php.filter(p=>trobaSecretsWp(net(p)).length>0);
   anota('VIG-08','critica',secretsPla.length?'falla':php.length?'ok':'no-mesurat',secretsPla,'Prohibit persistir secrets en clar a wp_options o exposar WP_SECRETS_KEY / _wp_secret_.');
   const senseGuarda=php.filter(p=>!teGuardaAbspathAmbEixida(p,net(p)));

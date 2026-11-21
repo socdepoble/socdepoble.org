@@ -191,7 +191,7 @@ describe('una nota buida: es reparteix', () => {
     enganxaAlTitol({ html: `<${H1}>Prova tancada</${H1}><p>Per a Android</p><p>Entradilla.</p>${PORTARETALLS.captura.html}<${H1}>Més</${H1}><p>Fi</p>` });
     expect(camps()).toEqual({ title: 'Prova tancada', subtitle: 'Per a Android', lead: 'Entradilla.' });
     const cos = m.editor.getHTML();
-    expect(cos).toContain(`<a target="_blank" rel="noopener noreferrer nofollow" href="${URL_PROVA_TANCADA}">${URL_PROVA_TANCADA}</a>`);
+    expect(cos).toContain(`<a target="_blank" rel="ugc nofollow noopener noreferrer" href="${URL_PROVA_TANCADA}">${URL_PROVA_TANCADA}</a>`);
     expect(cos).not.toContain('<code>');
     expect(new DOMParser().parseFromString(cos, 'text/html').querySelector(H1)).toBeNull();
     expect(cos).toContain('<h2>Més</h2>');
@@ -214,12 +214,32 @@ describe('una nota buida: es reparteix', () => {
     munta();
     enganxaAlTitol({ text: 'Fira de Sant Martí\nDissabte a les 10\nPorteu cadires i taules.\nhttps://socdepoble.org/agenda' });
     expect(camps()).toEqual({ title: 'Fira de Sant Martí', subtitle: 'Dissabte a les 10', lead: 'Porteu cadires i taules.' });
-    expect(m.editor.getHTML()).toBe('<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://socdepoble.org/agenda">https://socdepoble.org/agenda</a></p>');
+    expect(m.editor.getHTML()).toBe('<p><a target="_blank" rel="ugc nofollow noopener noreferrer" href="https://socdepoble.org/agenda">https://socdepoble.org/agenda</a></p>');
     cleanup();
     oblidaLlavorsConsumides();
     munta();
     enganxaAlTitol({ html: '<p>Títol<br>Subtítol<br>La resta del paràgraf.</p>' });
     expect(camps()).toEqual({ title: 'Títol', subtitle: 'Subtítol', lead: 'La resta del paràgraf.' });
+  });
+
+  test.each([
+    [undefined, 'ugc nofollow sponsored noopener noreferrer'],
+    [{ enllacosEditorials: true }, 'sponsored noopener noreferrer'],
+  ])('un cos desat conserva rel patrocinat en editor → sanejador → editor (%j)', (opcions, relExtern) => {
+    const extern = '<a href="https://comerc.example/" target="_blank" rel="sponsored">Comerç</a>';
+    const intern = '<a href="/agenda">Agenda</a>';
+    const content = sanitizeHtml(`<p>${extern} ${intern}</p>`, opcions);
+    munta({ inicial: { ...NOTA_BUIDA, content } });
+    const primera = m.editor.getHTML();
+    const net = sanitizeHtml(primera, opcions);
+    act(() => { m.editor.commands.setContent(net); });
+    const segona = m.editor.getHTML();
+    for (const html of [content, primera, net, segona]) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      expect(doc.querySelector('a[href="https://comerc.example/"]').getAttribute('rel')).toBe(relExtern);
+      expect(doc.querySelector('a[href="/agenda"]').getAttribute('rel')).toBe('noopener noreferrer nofollow');
+    }
+    expect(segona).toBe(primera);
   });
 
   test('tot pujat als camps: el cos es queda buit i sense cap pas de més a l’historial', () => {

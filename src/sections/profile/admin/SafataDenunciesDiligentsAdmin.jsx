@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Alerta, Boto, Insignia } from '../../../components/PedraSeca/index.js';
 import { useUIStateOpcional } from '../../../app/contexts/UIContext.jsx';
-import { useFullDiferit } from '../../../config/fullDiferit.js';
+import { adoptaFullDiferit, useFullDiferit } from '../../../config/fullDiferit.js';
 import cssDenunciesLssi from '../../../css/diferit-denuncies-lssi.css?inline';
 import {
   FILTRES_SAFATA_LSSI,
@@ -23,6 +23,12 @@ import {
   etiquetaMotiuDenuncia,
   textosSafataLssi
 } from './i18nSafataDenunciesDiligents.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 function etiquetaFiltre(filtre, tx) {
   if (filtre === 'pendent') return tx.filtrePendent;
@@ -157,8 +163,8 @@ export function SafataDenunciesDiligentsAdmin({
       aria-label={tx.titolPanell}
       data-testid="safata-denuncies-diligents-admin"
     >
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">{tx.insigniaProtocol}</Insignia>
           <Insignia to="neutre">{tx.insigniaAppendOnly}</Insignia>
         </div>
@@ -168,7 +174,7 @@ export function SafataDenunciesDiligentsAdmin({
         </p>
       </header>
 
-      <section className="sdp-admin-taxonomia__panel">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
         <div className="sdp-safata-lssi__barra">
           <div className="sdp-safata-lssi__filtres" role="group" aria-label={tx.grupFiltresAria}>
             {FILTRES_SAFATA_LSSI.map((f) => (

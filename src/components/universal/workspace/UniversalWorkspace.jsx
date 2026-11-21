@@ -24,6 +24,13 @@ import { useCapaEnrere } from '../../PedraSeca/hooks/useCapaEnrere.js';
    valencià. La còpia única de Pedra Seca (revisió del 261007). */
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { TEXTOS_LLAVOR } from '../textosLlavor.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 /**
  * UniversalWorkspace — esquelet genèric de tres columnes (navegació · llistat · detall).
@@ -565,10 +572,10 @@ function WorkspaceSettingsInlinePanel({ onTanca, labels, grupsDeCarpetes = CAP, 
           {etiquetaTornar}
         </Boto>
       </div>
-      <section className="sdp-admin-taxonomia__panel">
-        <header className="sdp-admin-taxonomia__header">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
+        <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
           <h2 ref={titolRef} tabIndex={-1}>{labels.settings}</h2>
-          <p className="sdp-admin-taxonomia__lead">{text(TEXTOS_AJUSTOS.descripcio)}</p>
+          <p ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__lead">{text(TEXTOS_AJUSTOS.descripcio)}</p>
         </header>
         <WorkspaceSettingsContent
           id={id}

@@ -508,6 +508,8 @@ export default {
   'nav.wikidepobleShort': 'Wiki',
   'nav.ia': "L'ànima de la iaia",
   'nav.iaiaFitxa': 'IAIA MarIA',
+  'nav.iaiaCurt': 'IAIA',
+  'nav.iaiaFitxaTitol': 'IAIA MarIA · Assistent digital de Sóc de Poble',
   'nav.roadmap': 'Full de ruta',
   'nav.roadmapShort': 'Ruta',
   'nav.versions': 'Versions',

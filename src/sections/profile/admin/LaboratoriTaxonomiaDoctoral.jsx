@@ -12,6 +12,13 @@ import {
   llegeixEstatTaxonomiaAdmin,
   desaEstatTaxonomiaAdmin,
 } from '../../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
+import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+
+/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
+   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
+   Porta Vocabulari i el tractor de fulls diferits). */
+const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 const PaginesTrilogiaWp = lazy(() => import('./PaginesTrilogiaWp.jsx'));
 const BrainTaxonomia = lazy(() => import('../../taxonomia/BrainTaxonomia.jsx'));
@@ -142,26 +149,26 @@ export function LaboratoriTaxonomiaDoctoral() {
 
   return (
     <article className="sdp-admin-taxonomia" aria-label="Laboratori Doctoral de Biblioteconomia i Classificació">
-      <header className="sdp-admin-taxonomia__header">
-        <div className="sdp-admin-taxonomia__badges">
+      <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
+        <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">PMEST · S. R. Ranganathan</Insignia>
           <Insignia to="neutre">Tesaurus ISO 25964 / W3C SKOS</Insignia>
           <Insignia to="exit">{`${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalCategoriesWp} categories · ${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalEtiquetesWp} etiquetes · ${RESUM_AUDITORIA_BIBLIOTECONOMIA.totalArticlesWp} articles`}</Insignia>
         </div>
-        <p className="sdp-admin-taxonomia__lead">
+        <p ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__lead">
           <strong>Explicat de forma clara i humana:</strong> En la web antiga (<code>socdepoble.net</code>), les <strong>114 categories</strong> s’havien usat per a posar el nom del poble o de la comarca (113 geogràfiques), i les <strong>105 etiquetes</strong> barrejaven temes, formats i sinònims duplicats (amb 53 etiquetes buides). Ací separem cada cosa al seu lloc amb quatre facetes netes perquè qualsevol veí o veïna trobe al moment el que busca.
         </p>
-        <blockquote className="sdp-admin-taxonomia__diagnostic">
+        <blockquote ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__diagnostic">
           <strong>Diagnòstic Doctoral (Ranganathan PMEST):</strong> {RESUM_AUDITORIA_BIBLIOTECONOMIA.diagnosticRanganathan}
         </blockquote>
       </header>
 
-      <section className="sdp-admin-taxonomia__section" aria-label="Corpus editorial WordPress">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-label="Corpus editorial WordPress">
         <button type="button" className="sdp-boto sdp-boto--secundari" aria-expanded={mostraPaginesWp} onClick={() => setMostraPaginesWp(value => !value)}>Revisa les 10 pàgines de Trilogia Mediterrània i La Torre</button>
         {mostraPaginesWp && <Suspense fallback={<p role="status">Obrint la revisió privada…</p>}><PaginesTrilogiaWp /></Suspense>}
       </section>
 
-      <nav className="sdp-admin-taxonomia__tabs" aria-label="Facetes de la classificació">
+      <nav ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__tabs" aria-label="Facetes de la classificació">
         {[
           ['brain', '🧠 Brain i laboratori de decisions'],
           ['totes', '📚 Vista Integral (4 Facetes)'],
@@ -186,12 +193,12 @@ export function LaboratoriTaxonomiaDoctoral() {
 
       {/* FACETA 1 · GEOGRÀFICA */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta1') && (
-        <section className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-1">
+        <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-1">
           <h2 id="titol-faceta-1">Faceta 1 · Geogràfica (<code>On</code> — Pobles, Pedanies, Comarques i Paratges Naturals)</h2>
           <p>
             Les <strong>113 categories geogràfiques</strong> de <code>socdepoble.net</code> estaven estructurades en un arbre de 4-5 nivells (<code>Xarxa de Pobles → Província/Demarcació → Comarca → Poble → Pedania</code>). En <strong>Sóc de Poble</strong> passen a ser camps natius (<code>poble_id</code> des d’on es publica i <code>pobles_etiquetats</code> de quins pobles es parla), alliberant les categories temàtiques.
           </p>
-          <div className="sdp-admin-taxonomia__controls">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__controls">
             <label htmlFor="cerca-geo">
               <strong>Filtrar arbre geogràfic (114 categories):</strong>
             </label>
@@ -204,7 +211,7 @@ export function LaboratoriTaxonomiaDoctoral() {
               onChange={(e) => setCercaGeografica(e.target.value)}
             />
           </div>
-          <div className="sdp-admin-taxonomia__table-wrap">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap">
             <table className="sdp-table">
               <thead>
                 <tr>
@@ -241,14 +248,14 @@ export function LaboratoriTaxonomiaDoctoral() {
 
       {/* FACETA 2 · FUNCIONAL DEL SISTEMA */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta2') && (
-        <section className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-2">
+        <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-2">
           <h2 id="titol-faceta-2">Faceta 2 · Funcional del Sistema (<code>Què és</code> — Les 8 Verticals)</h2>
           <p>
             Separa la forma i la funció de cada publicació (crònica del Mur, producte del Mercat, esdeveniment del Calendari, punt del Mapa, cotxe compartit, animalets, oferta de treball o habitatge rural).
           </p>
-          <div className="sdp-admin-taxonomia__grid">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid">
             {FACETA_2_VERTICALS_SISTEMA.map((v) => (
-              <div key={v.id} className="sdp-card sdp-admin-taxonomia__card">
+              <div ref={adoptaEstilsAdminTaxonomia} key={v.id} className="sdp-card sdp-admin-taxonomia__card">
                 <h3>
                   <span>{v.icona}</span> {v.nom}
                 </h3>
@@ -264,20 +271,20 @@ export function LaboratoriTaxonomiaDoctoral() {
 
       {/* FACETA 3 · CATEGORIES TEMÀTIQUES I SOCIALS TRONCALS */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta3') && (
-        <section className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-3">
+        <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-3">
           <h2 id="titol-faceta-3">Faceta 3 · Categories Temàtiques i Socials Troncals (<code>De què tracta</code> — 6 Categories Mares IA)</h2>
           <p>
             Un cop alliberades les categories de la geografia, la IA bibliotecària proposa aquestes <strong>6 Categories Mares Troncals</strong>. Pots activar-les o desactivar-les amb l’interruptor; l’estat queda guardat.
           </p>
-          <div className="sdp-admin-taxonomia__grid">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid">
             {FACETA_3_CATEGORIES_MARES_IA.map((cat) => {
               const activa = Boolean(estat.categoriesActives[cat.id]);
               const recompteArticles = ARTICLES_SIMULADOR_IA_425.filter(
                 (a) => a.categoriaTematicaProposadaId === cat.id
               ).length;
               return (
-                <div key={cat.id} className="sdp-card sdp-admin-taxonomia__card" data-activa={String(activa)}>
-                  <div className="sdp-admin-taxonomia__card-top">
+                <div ref={adoptaEstilsAdminTaxonomia} key={cat.id} className="sdp-card sdp-admin-taxonomia__card" data-activa={String(activa)}>
+                  <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__card-top">
                     <h3>{cat.label}</h3>
                     <Interruptor
                       actiu={activa}
@@ -300,13 +307,13 @@ export function LaboratoriTaxonomiaDoctoral() {
 
       {/* FACETA 4 · TESAURUS D'ETIQUETES SKOS + SIMULADOR IA DELS 425 ARTICLES */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta4') && (
-        <section className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-4">
+        <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-4">
           <h2 id="titol-faceta-4">Faceta 4 · Tesaurus d’Etiquetes (<code>Tags</code> SKOS) i Simulador IA dels 425 Articles</h2>
           <p>
             Ací tens les <strong>105 etiquetes reals de <code>socdepoble.net</code></strong> amb la seua Categoria Temàtica mare (<code>Broader Term</code>), les etiquetes relacionades (<code>Related Terms</code>) i els sinònims absorbits (<code>Use For</code>: <code>Aplec pel Territori</code> absorbeix <code>aplec-pel-territori-2</code> i <code>Aplecs</code>; <code>Posant en Valor els Recursos Locals</code> absorbeix <code>Recursos Locals</code>; <code>Reivindicant</code> absorbeix <code>Reivin</code>; <code>Arbres Monumentals</code> absorbeix <code>Arbres</code> i <code>Monumentals</code>).
           </p>
 
-          <div className="sdp-admin-taxonomia__toolbar">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
             <Boto varietat="primari" onClick={podaEtiquetesBuides}>
               ✂️ Podar les 53 etiquetes buides (0 articles)
             </Boto>
@@ -327,12 +334,12 @@ export function LaboratoriTaxonomiaDoctoral() {
           </div>
 
           {estat.etiquetesBuidesPodades ? (
-            <p role="status" className="sdp-admin-taxonomia__status">
+            <p ref={adoptaEstilsAdminTaxonomia} role="status" className="sdp-admin-taxonomia__status">
               ✅ S’han desactivat i podat les 53 etiquetes buides (0 articles) i els sinònims duplicats absorbits per SKOS <code>Use For</code>.
             </p>
           ) : null}
 
-          <div className="sdp-admin-taxonomia__table-wrap">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap">
             <table className="sdp-table" aria-label={`Tesaurus SKOS de ${FACETA_4_ETIQUETES_SKOS.length} termes, 49 canònics`}>
               <thead>
                 <tr>
@@ -382,13 +389,13 @@ export function LaboratoriTaxonomiaDoctoral() {
 
           <hr className="sdp-divider" />
 
-          <div className="sdp-admin-taxonomia__simulador" aria-labelledby="titol-simulador-425">
+          <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__simulador" aria-labelledby="titol-simulador-425">
             <h3 id="titol-simulador-425">🤖 Simulador IA dels 425 Articles Reals de <code>socdepoble.net</code></h3>
             <p>
               Comprova com queden classificats cadascun dels <strong>425 articles reals</strong> amb la separació entre pobles detectats (Faceta 1), la Categoria Temàtica proposada per la IA (Faceta 3) i les etiquetes netes sense duplicats (Faceta 4).
             </p>
 
-            <div className="sdp-admin-taxonomia__filters">
+            <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__filters">
               <input
                 type="search"
                 className="sdp-input"
@@ -451,7 +458,7 @@ export function LaboratoriTaxonomiaDoctoral() {
               Mostrant <strong>{articlesFiltrats.length}</strong> de <strong>{ARTICLES_SIMULADOR_IA_425.length}</strong> articles reals (Pàgina {paginaSegura} de {totalPagines}).
             </p>
 
-            <div className="sdp-admin-taxonomia__table-wrap">
+            <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap">
               <table className="sdp-table" aria-label="Simulador IA dels 425 articles">
                 <thead>
                   <tr>
@@ -502,7 +509,7 @@ export function LaboratoriTaxonomiaDoctoral() {
             </div>
 
             {totalPagines > 1 ? (
-              <div className="sdp-admin-taxonomia__pagination">
+              <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__pagination">
                 <Boto
                   varietat="secundari"
                   disabled={paginaSegura <= 1}

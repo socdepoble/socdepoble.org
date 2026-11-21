@@ -222,7 +222,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.15 · La crònica de les Onades R32.19 i R32.20 obri /versions, davant de la crònica R32.17 i R32.18.
     // Onada v1.2.16 · La crònica de les Onades R32.21–R32.24 obri /versions, davant de la crònica R32.19 i R32.20.
     // Onada v1.2.17 · La crònica de les Onades R32.25 i R32.26 obri /versions, davant de la crònica R32.21–R32.24.
-    expect([...versions.querySelectorAll('h3')].slice(0, 29).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.18 · La crònica de les Onades R32.27 i R32.28 obri /versions, davant de la crònica R32.25 i R32.26.
+    expect([...versions.querySelectorAll('h3')].slice(0, 30).map((h3) => h3.textContent)).toEqual([
+      '21 de novembre de 2026, nit · Onades R32.27 i R32.28 · La IAIA amb el seu nom, una «Lletra gran» més compacta i enllaços honestos',
       '21 de novembre de 2026, vesprada · Onades R32.25 i R32.26 · La benvinguda del Foraster, el Rebost en rajoles i un TPV del Bar per a provar',
       '21 de novembre de 2026, matinada · Onades R32.21–R32.24 · El Xat sense missatges falsos, un sol «Entrar» i un calendari que no s’obri en el passat',
       '20 de novembre de 2026, vespre · Onades R32.19 i R32.20 · El Bar sense columna buida i l’Arbre Genealògic amb arbres grans',
