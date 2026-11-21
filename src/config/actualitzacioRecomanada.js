@@ -23,6 +23,8 @@
  *     market:// de sempre; qualsevol altre, també un .apk servit per https, cau a ENLLAC_ANDROID_PLAY.
  *     Així el botó no obri mai cap APK (obriBotigaActualitzacio), porte el canal que porte l'avís.
  *     Tota actualització viatja per les botigues oficials.
+ *   · v1.2.17 · T-04 · Retirat el codi mort de l'APK directe: la constant de l'adreça, la clau APK de
+ *     CANALS_ACTUALITZACIO i la suma SHA-256 de l'avís. Un avís amb el canal 'apk' continua fora.
  */
 import { useSyncExternalStore } from 'react';
 import { delVal, getVal, setVal } from './storage.js';
@@ -39,20 +41,19 @@ export const ENLLAC_IOS_APP_STORE = 'https://apps.apple.com/es/app/soc-de-poble/
      apps per a obrir TestFlight; l'App ve de TestFlight i, per tant, TestFlight hi és.]
    · APK directe · apagat des de la v1.2.16 (ordre del Mestre 261121: ZERO APK fora de botiga). Cap
      plataforma no admet el canal 'apk', i a Android un enllaç que no és de play.google.com cau a
-     ENLLAC_ANDROID_PLAY (enllacDeLaPlataforma): el botó no obri mai ENLLAC_APK_DIRECTE, tampoc si un
-     avís sense canal, o amb el canal 'play', el porta. La constant només espera la neteja de la v1.2.17.
+     ENLLAC_ANDROID_PLAY (enllacDeLaPlataforma): el botó no obri mai l'adreça d'un APK, tampoc si un
+     avís sense canal, o amb el canal 'play', la porta. v1.2.17 · T-04 · La neteja ja és feta: ni la
+     constant de l'APK directe, ni la clau APK de CANALS_ACTUALITZACIO, ni la suma SHA-256 de l'avís.
    · Web · recarregar la pàgina amb la versió nova (src/pwa/actualitzacioWeb.js n'és l'amo). */
 export const ID_APPLE = '6826441844';
 export const ENLLAC_TESTFLIGHT = `https://beta.itunes.apple.com/v1/app/${ID_APPLE}`;
 export const ESQUEMA_TESTFLIGHT = `itms-beta://beta.itunes.apple.com/v1/app/${ID_APPLE}`;
-export const ENLLAC_APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 
 /** El canal que obri el botó de la barra. Un avís sense canal és el de la botiga de sempre. */
 export const CANALS_ACTUALITZACIO = Object.freeze({
   PLAY: 'play',
   APP_STORE: 'app-store',
   TESTFLIGHT: 'testflight',
-  APK: 'apk',
   WEB: 'web'
 });
 const CANALS_PER_PLATAFORMA = Object.freeze({
@@ -64,7 +65,6 @@ const CANALS_PER_PLATAFORMA = Object.freeze({
 
 const PLATAFORMES_VALIDES = new Set(['android', 'ios', 'web']);
 const SEMVER = /^\d{1,6}\.\d{1,6}\.\d{1,6}$/;
-const SHA256 = /^[0-9a-f]{64}$/;
 
 /** L'enllaç d'actualitzar, només si és una adreça https; si no, null. Mai llança. */
 export function enllacSegur(valor) {
@@ -259,11 +259,12 @@ export function versioRecomanadaDescartada() {
   return Number.isSafeInteger(enter) && enter >= 1 ? enter : 0;
 }
 
-/* v1.2.7 · P0-123 · Els camps nous (canal, versio i sha256) només hi són quan l'avís els porta: l'avís
-   de la botiga de sempre té la forma de sempre. Un canal que no és de la plataforma, o un APK sense
-   una SHA-256 vàlida (la barra l'ha de dir), no és cap avís. La web sempre porta el seu canal.
+/* v1.2.7 · P0-123 · Els camps nous (canal i versio) només hi són quan l'avís els porta: l'avís de la
+   botiga de sempre té la forma de sempre. Un canal que no és de la plataforma no és cap avís. La web
+   sempre porta el seu canal.
    v1.2.16 · ZERO APK fora de botiga: l'APK ja no és canal de cap plataforma (CANALS_PER_PLATAFORMA), i
-   cap avís APK, tampoc amb la suma bona, no hi entra; les dues línies de la suma esperen la neteja de la v1.2.17. */
+   cap avís APK, tampoc amb la suma bona, no hi entra. v1.2.17 · T-04 · Les dues línies de la suma
+   SHA-256 ja s'han retirat: l'avís no porta mai cap `sha256`. */
 function normalitzaAvis(dades) {
   if (!dades || typeof dades !== 'object') return null;
   const plataforma = PLATAFORMES_VALIDES.has(dades.plataforma) ? dades.plataforma : null;
@@ -274,8 +275,6 @@ function normalitzaAvis(dades) {
     : dades.canal;
   if (canal !== null && !CANALS_PER_PLATAFORMA[plataforma].includes(canal)) return null;
   if (plataforma === 'web' && canal !== CANALS_ACTUALITZACIO.WEB) return null;
-  const sha256 = typeof dades.sha256 === 'string' && SHA256.test(dades.sha256) ? dades.sha256 : null;
-  if (canal === CANALS_ACTUALITZACIO.APK && !sha256) return null;
   const versio = typeof dades.versio === 'string' && SEMVER.test(dades.versio) ? dades.versio : null;
   if (plataforma === 'web' && !versio) return null;
   // v1.2.16 · L3R2-03 · A Android, un enllaç que no és de Google Play entra com ENLLAC_ANDROID_PLAY.
@@ -291,8 +290,7 @@ function normalitzaAvis(dades) {
     enllac,
     marketUrl,
     ...(canal !== null ? { canal } : null),
-    ...(canal !== null && versio ? { versio } : null),
-    ...(canal === CANALS_ACTUALITZACIO.APK ? { sha256 } : null)
+    ...(canal !== null && versio ? { versio } : null)
   });
 }
 
@@ -316,7 +314,6 @@ function recalculaInstantania() {
     && nova.marketUrl === instantaniaVisible.marketUrl
     && nova.canal === instantaniaVisible.canal
     && nova.versio === instantaniaVisible.versio
-    && nova.sha256 === instantaniaVisible.sha256
   );
   if (igual) return false;
   instantaniaVisible = nova;

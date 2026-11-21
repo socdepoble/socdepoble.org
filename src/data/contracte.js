@@ -919,8 +919,15 @@ export const LIMIT_DADES_OBERTES = 5000;
    motor 301 provisional no hi és) i R32.23 (Edge hostil, esborranys, isoglosses i xifrat del xat, apagat), Gemini R32.22
    (menú Traduir a 320 px i puresa HMR) i R32.24 (mapa fotogràfic amb teclat, Enxufe a zero i rondes del Node 0), la
    doctrina del Foraster (cap no llegit fals, un sol «Entrar», tornada a la fitxa de lectura), el calendari sense mesos
-   passats, ZERO APK fora de botiga i el connector WordPress 1.1.24. */
-export const VERSIO_CLIENT_NATIU = 21;
+   passats, ZERO APK fora de botiga i el connector WordPress 1.1.24.
+   Onada v1.2.17 · R32.26 i R32.25, lots 02 i 03 (ordre del Mestre 261121 16:03, IDEA-313; prompt 261121_1606) · Versió
+   unificada 1.2.17 amb el build 22: integra Gemini R32.26 (el Rebost en rajoles, el Bar amb demostració local i icones
+   per família, la Wiki amb portada pròpia i el mode de taulell per al Mur, el Mercat i el Calendari) i Codex R32.25
+   (lot 2: l'assistència només es dona per guardada quan s'ha guardat, i el resumidor net del Node 0; lot 3: límits dels
+   avisos directes i dels bàndols, preparats i apagats), la benvinguda del Foraster amb el literal del Mestre, la
+   renovació de la sessió abans de cada petició amb el JWT caducat, la retirada del codi mort de l'APK i el connector
+   WordPress 1.1.25. */
+export const VERSIO_CLIENT_NATIU = 22;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

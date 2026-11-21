@@ -37,7 +37,7 @@ vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await imp
    una marca perquè la prova veja quan ha arribat. */
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => <p>Doble de la Consola</p> }));
 import WikiDePobleSection from './WikiDePobleSection';
-import { dataDeDocumentWiki } from './wikiDePobleModel.js';
+import { dataDeDocumentWiki, PORTADA_WIKI_BRUGUERA } from './wikiDePobleModel.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataHoraDeBarra, formatDate, formatTime } from '../../components/universal/editorial.js';
 afterEach(() => { cleanup(); fixture.search = '?item=00_index'; fixture.itemId = '00_index'; document.head.querySelectorAll('style[data-test]').forEach(node => node.remove()); });
@@ -186,8 +186,14 @@ test('portada: logo, píndoles pròpies, copyright, entradilla i la data de PAGE
   expect(pindoles(arrel)).toEqual([['WIKI DE POBLE', 'sdp-badge-system'], ['Portada', 'sdp-badge-category']]);
   expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
   expect(arrel.querySelector('.page-intro p.lead').textContent).toBe(page.lead);
-  expect(arrel.querySelector('.hero-image img').getAttribute('alt')).toBe(page.imageAlt);
+  expect(arrel.querySelector('.hero-image img').getAttribute('src')).toBe(PORTADA_WIKI_BRUGUERA.image);
+  expect(arrel.querySelector('.hero-image img').getAttribute('alt')).toBe(PORTADA_WIKI_BRUGUERA.imageAlt);
+  /* v1.2.17 · Gauntlet R1 (L3-14) · La mida i la prioritat de la portada arriben al hero. */
+  const hero = arrel.querySelector('.hero-image img');
+  expect([hero.getAttribute('width'), hero.getAttribute('height'), hero.getAttribute('fetchpriority')]).toEqual(['1024', '1024', 'high']);
+  expect(hero.getAttribute('loading')).not.toBe('lazy');
   expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(page.date)} ${formatDate(page.date)}`);
+  expect(fixture.props.mestreDetall).toEqual({ clau: 'wiki', element: null, inicial: null });
 });
 
 /* T43 (ordre del Mestre, 260928) · la portada es connecta com a pàgina (abans

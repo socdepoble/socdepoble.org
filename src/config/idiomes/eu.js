@@ -3415,9 +3415,7 @@ export default {
   'section.descarregues.botiga.googlePlay': "Eskuragarri Google Play-n",
   'section.descarregues.botiga.appStore': "Eskuragarri App Store-n",
   /* IDEA-60 · T1b (prompt 261102_1532) */
-  'section.descarregues.botiga.apk': "Deskargatu Androiderako APKa",
   'section.descarregues.botiga.testflight': "Probatu iPhonean eta iPadean TestFlight-ekin",
-  'section.descarregues.botiga.apkSuma': "Egiaztatu fitxategiaren SHA-256 batura",
   'section.descarregues.guia.testflight.pas1': "Instalatu Appleren TestFlight aplikazioa App Store-tik.",
   'section.descarregues.guia.testflight.pas2': "Ireki TestFlight-eko esteka eta sakatu «Onartu» Sóc de Poble instalatzeko.",
   // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell. Traducció pendent de revisió nadiua.

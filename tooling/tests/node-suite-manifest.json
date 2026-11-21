@@ -2528,6 +2528,31 @@
       "path": "tests/botigues-wordpress-svn.v1216.test.mjs",
       "suite": "primary",
       "reason": "Onada v1.2.16 (prompt 261121_0216, T3.3) · El publicador de WordPress.org per SVN amb Docker (scripts/botigues/puja-wordpress-svn.mjs): zip --directori verificat en local (CRC32, rutes, 10 MiB, Stable tag i Version), la contrasenya només per stdin (mai a argv, entorn ni eixida, filtrada fins i tot si svn l'escriu), el sec que no escriu res i les refuses (tag amb un altre contingut, versió més vella, «sí» d'un altre zip, contrasenya oberta o enllaçada). Docker fals injectat i mkdtemp; cap xarxa ni cap docker de veres."
+    },
+    {
+      "path": "tests/avisos-push-bandols-paritat.r32_25.test.mjs",
+      "suite": "primary",
+      "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
+    },
+    {
+      "path": "tests/node/pushBandolsWorker.r32_25.test.mjs",
+      "suite": "primary",
+      "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
+    },
+    {
+      "path": "tests/r32_25-push-bandols-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
+    },
+    {
+      "path": "tests/r32_25-push-directes-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
+    },
+    {
+      "path": "tooling/placa/resumDomNode0.test.mjs",
+      "suite": "primary",
+      "reason": "R32.25 i prerequisits R21/R23: regressió reproduïble de contractes, persistència, worker, paritat i SQL local; sense serveis remots."
     }
   ]
 }

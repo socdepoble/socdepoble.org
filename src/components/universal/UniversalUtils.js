@@ -207,4 +207,4 @@ export function autorDeSessio(currentUser) {
   };
 }
 
-export const PAGE_CHROME_MODES = new Set(['none', 'page', 'context', 'full', 'system']);
+export const PAGE_CHROME_MODES = new Set(['none', 'page', 'context', 'full', 'system', 'feed']);

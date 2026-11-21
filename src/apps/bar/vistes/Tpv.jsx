@@ -48,13 +48,24 @@
  *   · ELS AVISOS van en una llista per ordre d'importància (sessió, per
  *     emportar, l'última operació i la base): en el mòbil la peça només posa
  *     el primer fora de les pestanyes. Un avís que no té res a dir no hi entra.
+ *   · LA DEMO (Gemini R32.26, IDEA-304; v1.2.17 · Gauntlet R1 (L3-15)):
+ *     sense torn obert i sense sessió (motiu 'sense-sessio', mai 'comprovant'),
+ *     l'avís de la sessió porta també «Prova el TPV en local (Demo)»: obri
+ *     TpvDemoLocal.jsx, una caixa de prova en memòria amb la carta i el bar
+ *     d'exemple (llavor.js), que no desa res i la nota de la qual diu que és
+ *     de mostra i que no és factura. Amb un torn obert, o amb qualsevol altre
+ *     motiu, l'avís i la pantalla són els de la v1.2.16.
+ *     v1.2.17 · Gauntlet R2 (L3R2-05) · El focus no cau mai a <body> (WCAG
+ *     2.4.3): en entrar, la Demo el porta a «Ix de la Demo»; en eixir, torna a
+ *     «Prova el TPV en local (Demo)».
  *
  * Onada R32.5 · Internacionalització en les 5 llengües oficials (ca, es, en, eu, gl)
  * via useApp().idioma, preservant byte a byte el valencià per defecte.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { LockKeyhole } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
-import { UniversalTPV } from '../../../components/PedraSeca/index.js';
+import { Alerta, Boto, EstatBuit, Fila, UniversalTPV } from '../../../components/PedraSeca/index.js';
 import { esIdOpac, esSlug, useApp, useParametresConsulta, useSessioApp } from '../../plataforma/index.js';
 import { resolModificadors } from '../nucli/cataleg.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
@@ -62,8 +73,9 @@ import { avisDeSessio } from '../estat/textos.js';
 import { textosUiBar } from '../i18nBar.js';
 import { DialegPreuObert } from './Caixa.jsx';
 import { EditorLinia } from './EditorLinia.jsx';
-import { AvisBase, AvisOperacio, AvisSessio, NoTrobat, Preparat } from './comu.jsx';
+import { AvisBase, AvisOperacio, AvisSessio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { useFixaComanda, usePunt, useVes } from './punt.js';
+import { TpvDemoLocal } from './TpvDemoLocal.jsx';
 import {
   articlesDelTpv, categoriesVestides, descripcioTria, llegixOpcio, necessitaTria, nomOrigen, opcionsDetall,
   preuObertDeConsulta, textLinies, textosLiniesBar, tiquetDeComanda, tiquetsOberts, triaLaVariant
@@ -96,9 +108,66 @@ function etiquetaDe(nom, idioma = 'ca') {
   return `TPV de ${nom}`;
 }
 
+/* v1.2.17 · Gauntlet R1 (L3-11) · L'avís sense torn i sense sessió: el d'AvisSessio («Entra») i, al costat, la Demo.
+   v1.2.17 · Gauntlet R2 (L3R2-05) · `textDemo`, la ref de TpvBar per a tornar-hi el focus en eixir de la Demo:
+   Boto no reenvia cap ref (React 18, sense forwardRef), i per això és del text i no del <button>. */
+function AvisSessioAmbDemo({ idioma = 'ca', onObriDemo, textDemo = null }) {
+  const { permis } = useBar();
+  const tx = textosUiBar(idioma);
+  const navigate = useNavigate();
+  const avis = avisDeSessio(permis, idioma);
+  if (!avis) return null;
+  const accions = (
+    <Fila justify="center">
+      {avis.entra ? <Boto varietat="primari" onClick={() => navigate(permis.rutaEntrada)}>{tx.entra}</Boto> : null}
+      <Boto onClick={onObriDemo}><span ref={textDemo}>{tx.provaTpvDemo}</span></Boto>
+    </Fila>
+  );
+  return <Alerta to={avis.to} accions={accions}>{avis.text}</Alerta>;
+}
+
 export function TpvBar({ params }) {
   const { idioma = 'ca' } = useApp();
   const tx = textosUiBar(idioma);
+  const bar = useBar();
+  const [demoLocal, setDemoLocal] = useState(false);
+  /* v1.2.17 · Gauntlet R2 (L3R2-05) · La marca de tornada: «Ix de la Demo» l'encén i el primer efecte de després
+     la consumix, tant si l'avís de la Demo hi és com si no (una sessió que ha entrat entretant): mai no queda
+     encesa per a robar el focus més avant. Amb l'avís, el focus torna a «Prova el TPV en local (Demo)». */
+  const tornaDeLaDemo = useRef(false);
+  const textDemo = useRef(null);
+  useEffect(() => {
+    if (demoLocal || !tornaDeLaDemo.current) return;
+    tornaDeLaDemo.current = false;
+    textDemo.current?.closest('button')?.focus();
+  }, [demoLocal]);
+  if (demoLocal) {
+    return (
+      <TpvDemoLocal
+        idioma={idioma}
+        onIx={() => {
+          tornaDeLaDemo.current = true;
+          setDemoLocal(false);
+        }}
+      />
+    );
+  }
+  /* v1.2.17 · Gauntlet R1 (L3-11) · La Demo només s'oferix sense torn i sense sessió ('sense-sessio'):
+     ni amb el torn obert ni mentre es comprova la sessió. La resta, el Preparat de la v1.2.16.
+     v1.2.17 · Gauntlet R1 (L3-13) · «Obri el torn», primari i desactivat, com el del Preparat. */
+  if (bar.carregat && !bar.tornActual && bar.permis.motiu === 'sense-sessio') {
+    return (
+      <Columna titol={tx.tpvTitol} avis={<AvisSessioAmbDemo idioma={idioma} onObriDemo={() => setDemoLocal(true)} textDemo={textDemo} />}>
+        <EstatBuit
+          icona={LockKeyhole}
+          titol={tx.tornTancatTitol}
+          accio={<Boto varietat="primari" disabled>{tx.obriTorn}</Boto>}
+        >
+          {tx.tornTancatText}
+        </EstatBuit>
+      </Columna>
+    );
+  }
   return (
     <Preparat titol={tx.tpvTitol} avis="propi">
       <TpvDelPunt params={params} idioma={idioma} />

@@ -11,6 +11,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: var(--sdp-space-2);
     flex: none;
     box-sizing: border-box;
     inline-size: 100%;
@@ -18,6 +19,9 @@
     border-block-end: 1px solid var(--sdp-vora);
     background: var(--sdp-avis-fons);
     color: var(--sdp-avis-text);
+  }
+  .sdp-banda-beta--plegada {
+    padding-block: 0;
   }
   .sdp-banda-beta__text {
     margin: 0;
@@ -28,6 +32,48 @@
     text-align: center;
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+  .sdp-banda-beta__plega {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-banda-beta__plega:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-banda-beta__mostra {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-banda-beta__mostra:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
   }
   /* v1.2.7 · R325-03 · En estret la banda feia 101 px a 320 px i 80 px a 375 px en cada vista de les
      apps, i escurçava les llistes. Es compacta sense amagar ni retallar cap paraula (WCAG 1.4.10): coixí

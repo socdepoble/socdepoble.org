@@ -158,7 +158,8 @@ function objecteDe(init) {
 }
 
 /* Cens 1 · La barra blava. */
-const CHROMES_AMB_BLAVA = new Set(['full', 'context', 'system']);
+/* v1.2.17 · El mode de taulell (chrome 'feed', R32.26 · IDEA-305) també porta la barra blava (PageFrame, showBlueBar). */
+const CHROMES_AMB_BLAVA = new Set(['full', 'context', 'system', 'feed']);
 const PAGINES = new Set(['UniversalPage', 'PageFrame']);
 
 /* El valor de `chrome` pot acabar sent un literal sense barra blava? */
@@ -282,6 +283,9 @@ describe('IDEA-23 · barra sencera amb CONNECTAR', () => {
       ['<UniversalPage chrome={obert ? "context" : "inventat"} />', 1],
       ['<UniversalPage chrome={undefined} />', 1],
       ['<UniversalPage chrome="system" />', 0],
+      /* v1.2.17 · El mode de taulell (R32.26 · IDEA-305) porta la barra blava. */
+      ['<UniversalPage chrome="feed" />', 0],
+      ['const config = { chrome: "feed" }; const A = () => <ContentProvider initialConfig={config}><UniversalPage /></ContentProvider>;', 0],
       ['<UniversalPage chrome={pagina.chrome || "full"} />', 0],
       ['<UniversalPage {...pagina} />', 0],
       ['const config = { chrome: "system" }; const A = () => <ContentProvider initialConfig={config}><UniversalPage /></ContentProvider>;', 0],

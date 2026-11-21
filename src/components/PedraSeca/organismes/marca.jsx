@@ -42,14 +42,24 @@ export function fontSegura(imatge) {
   return font && !esMitjaOpac(font) && esFontImatgeSegura(font) ? font : null;
 }
 
-/** Inicials i icona de categoria. `renderMedia(article)` pot posar-hi un node propi. */
+/** Inicials i icona de categoria (o pictograma d'aliment estil Bring!). `renderMedia(article)` pot posar-hi un node propi. */
 export function pintaMarca(article, categoria, renderMedia) {
   const propi = typeof renderMedia === 'function' ? renderMedia(article) : null;
   if (propi) return propi;
+  const icona = article?.icona ?? categoria?.icona;
+  const pictograma = typeof article?.pictograma === 'string' && article.pictograma.trim() !== ''
+    ? article.pictograma.trim()
+    : null;
   return (
     <span ref={adoptaEstilsDiferits} className="sdp-marca-article">
-      {pintaIcona(categoria?.icona)}
-      <span className="sdp-marca-article__inicials">{inicialsDe(article?.nom)}</span>
+      {pictograma ? (
+        <span className="sdp-marca-article__pictograma" aria-hidden="true">{pictograma}</span>
+      ) : (
+        <>
+          {pintaIcona(icona)}
+          <span className="sdp-marca-article__inicials">{inicialsDe(article?.nom)}</span>
+        </>
+      )}
     </span>
   );
 }

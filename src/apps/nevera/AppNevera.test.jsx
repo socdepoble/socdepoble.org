@@ -4,6 +4,8 @@
    Totes les dades són sintètiques; els productes de botiga es prenen
    d'ARTICLES_PRODUCTES, mai escrits a mà, perquè una reexportació del full
    no trenque estes proves. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
@@ -50,11 +52,23 @@ const detall = () => columna('app-grid-main');
 /* El catàleg real té centenars de botons (targeta i peu). Acotem l'article
    pel seu id estable abans de comprovar el mateix rol i nom accessible:
    no es lleva cap guarda d'accessibilitat ni es consulten nodes amagats. */
+const rajolesDetall = (id) => [...document.querySelectorAll('#app-grid-main button.sdp-rajola')]
+  .filter((rajola) => rajola.dataset.element === id);
 const targetesDetall = (id) => [...document.querySelectorAll('#app-grid-main article.sp-card')]
   .filter((targeta) => [...targeta.querySelectorAll('[data-element]')].some((node) => node.dataset.element === id));
-const botonsDetall = (id, nom) => targetesDetall(id)
-  .flatMap((targeta) => within(targeta).queryAllByRole('button', { name: nom }));
+const botonsDetall = (id, nom) => {
+  const rajoles = rajolesDetall(id);
+  if (rajoles.length) {
+    return rajoles.filter((r) => within(r.parentElement).queryAllByRole('button', { name: nom }).includes(r));
+  }
+  return targetesDetall(id).flatMap((targeta) => within(targeta).queryAllByRole('button', { name: nom }));
+};
 const botoDetall = (id, nom) => {
+  const rajoles = rajolesDetall(id);
+  if (rajoles.length) {
+    expect(rajoles).toHaveLength(1);
+    return within(rajoles[0].parentElement).getByRole('button', { name: nom });
+  }
   const targetes = targetesDetall(id);
   expect(targetes).toHaveLength(1);
   return within(targetes[0]).getByRole('button', { name: nom });
@@ -85,8 +99,12 @@ const titolDeSeccio = (categoriaId, mes = 0) => {
   return `${CATEGORIES.find((categoria) => categoria.id === categoriaId).nom} ${n} ${n === 1 ? 'article' : 'articles'}`;
 };
 const comencaPer = (text) => (nom) => nom.startsWith(text);
-/* La línia de davall de la targeta d'un element principal (l'especificació o l'estat), o null. */
-const davallDe = (boto) => boto.closest('article.sp-card')?.querySelector('.sp-card-text')?.textContent ?? null;
+/* La línia de davall de la rajola o targeta d'un element principal (l'especificació o l'estat), o null. */
+const davallDe = (boto) => (
+  boto.classList.contains('sdp-rajola')
+    ? (boto.querySelector('.sdp-rajola__secundari')?.textContent ?? null)
+    : (boto.closest('article.sp-card')?.querySelector('.sp-card-text')?.textContent ?? null)
+);
 const titolsDeSeccio = () => detall().getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent);
 
 describe('P0-66 · catàleg complet orientatiu de botiga de poble a la seua llista (zero marca de gran superfície)', () => {
@@ -102,7 +120,7 @@ describe('P0-66 · catàleg complet orientatiu de botiga de poble a la seua llis
     expect(document.querySelectorAll('#app-grid-main [data-element^="mer-"]')).toHaveLength(592);
     expect(desat(entorn.idb).casa).toEqual([]);
     expect(llista.linies).toEqual([]);
-    fireEvent.click(botoDetall(PRODUCTE.id, PRODUCTE.nom));
+    fireEvent.click(botoDetall(PRODUCTE.id, comencaPer(PRODUCTE.nom)));
     await waitFor(() => expect(liniesDesades(entorn.idb, llista.id)).toEqual([{ articleId: PRODUCTE.id, especificacio: '' }]));
     expect(liniesDesades(entorn.idb, 'casa')).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'Catàleg de botiga' }));
@@ -218,7 +236,9 @@ describe('el contracte amb la plataforma', () => {
 });
 
 /* Gauntlet v1.2.15 · Llei del Píxel · La retirada de la columna esquerra buida (Gemini R32.19) només
-   l'ha aprovada el Mestre per al Bar (ClosaAplicacio amagaEsquerraBuida). La Nevera conserva la seua. */
+   l'ha aprovada el Mestre per al Bar (ClosaAplicacio amagaEsquerraBuida). La Nevera conserva la seua.
+   v1.2.17 · Gauntlet R2 (L3R2-01) · Torna la guarda de la v1.2.16 (el kit R32.26 la girava) i la
+   recorre a les sis entrades sense Esquerra, a més de la sonda de font sobre AppNevera.jsx. */
 describe('Llei del Píxel: la Nevera conserva la columna esquerra de sempre', () => {
   test('el catàleg, sense Esquerra, no marca has-left-empty i manté #app-grid-sidebar', async () => {
     munta('/app/nevera/cataleg');
@@ -229,14 +249,30 @@ describe('Llei del Píxel: la Nevera conserva la columna esquerra de sempre', ()
     expect(document.getElementById('app-grid-sidebar')).not.toBeNull();
     expect(document.querySelector('.app-grid-resizer--left')).not.toBeNull();
   });
+
+  test.each([
+    ['A casa', '/app/nevera/casa'],
+    ['Receptes', '/app/nevera/receptes'],
+    ['Temporada', '/app/nevera/temporada'],
+    ['Ajustos', '/app/nevera/ajustos'],
+    ['Llistes', '/app/nevera/llistes']
+  ])('v1.2.17 · Gauntlet R2 (L3R2-01) · %s, sense Esquerra, tampoc retira la columna esquerra', async (_nom, cami) => {
+    munta(cami);
+    await waitFor(() => expect(closca()?.dataset.layout).toBe('ample'));
+    expect(closca().querySelector('.app-grid-content').classList.contains('has-left-empty')).toBe(false);
+    expect(document.getElementById('app-grid-sidebar')).not.toBeNull();
+    expect(document.querySelector('.app-grid-resizer--left')).not.toBeNull();
+  });
+
+  test('v1.2.17 · Gauntlet R2 (L3R2-01) · AppNevera no declara amagaEsquerraBuida (sonda de font)', () => {
+    const font = readFileSync(path.join(process.cwd(), 'src/apps/nevera/AppNevera.jsx'), 'utf8');
+    expect(font).toContain('<ClosaAplicacio rutes={RUTES} titols={titolsDe(entrada, idioma)} />');
+    expect(font).not.toMatch(/amagaEsquerraBuida/);
+  });
 });
 
 describe('La compra en ample: llistes, la llista i el catàleg de costat', () => {
-  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, «no inventar targetes») · Les
-     rajoles de la Nevera ja són UniversalCard (forma="targetes" de l'esquelet): el nom accessible de
-     l'element principal és el nom de l'article, l'especificació o l'estat van a la línia de davall
-     (.sp-card-text) i l'id, a data-element. */
-  test('tocar un article del catàleg el posa a la llista (targeta) i es desa', async () => {
+  test('tocar un article del catàleg el posa a la llista (rajola Bring!) i es desa', async () => {
     const { idb } = munta('/app/nevera/llista');
     await screen.findByRole('region', { name: 'Catàleg' });
     expect(closca().dataset.layout).toBe('ample');
@@ -256,73 +292,38 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
     await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: 'llet', especificacio: '' }]));
   });
 
-  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · L'anatomia de sempre i
-     el peu per defecte, sense Compartir (una llista privada no té res a compartir) i amb el Connectar
-     fora de la telemetria. Cap imatge: sense foto, la icona de la secció va al quadrat. */
-  test('cada article és una UniversalCard: el quadrat amb la icona de la secció, l’estat en etiqueta, el peu sense Compartir i el Connectar sense telemetria', async () => {
-    const vistos = [];
-    const escolta = (event) => vistos.push(event.detail);
-    window.addEventListener('sdp:telemetria', escolta);
-    try {
-      munta('/app/nevera/llista/casa');
-      await screen.findByRole('region', { name: 'Catàleg' });
-      fireEvent.click(botoDetall('llet', 'Llet'));
-      const targeta = botoDetall('llet', 'Llet').closest('article.sp-card');
-      /* REGLA D'OR 1 (ordre del Mestre, 261004) · Boina dalt (abans no n'hi havia), l'element
-         principal, el cos i el peu: l'anatomia de tota UniversalCard. */
-      expect([...targeta.children].map((e) => e.className)).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body has-calendar-badge has-aside', 'sp-card-footer']);
-      /* Derogat per l'ordre del Mestre, 261004 (integració final, F04 de Codex) · La targeta porta
-         també el subtítol (h4 d'UniversalCard): la secció de l'article. */
-      expect(within(targeta).getAllByRole('heading').map((h) => `${h.tagName} ${h.textContent}`)).toEqual(['H4 Llet', 'H4 Llet i formatge']);
-      const quadrat = targeta.querySelector('.sp-card-calendar-badge');
-      expect(quadrat.getAttribute('aria-label')).toBe('Llet i formatge');
-      expect(quadrat.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
-      /* Ordre del Mestre, 261004 (regressió de la Nevera) · L'estat va en l'etiqueta i, per al
-         lector, a la descripció de l'element principal (un span .sdp-nomes-lector amb el mateix
-         text): la consulta de text demana l'etiqueta. */
-      expect(within(targeta).getByText('A la llista', { selector: '.sp-card-label' }).className).toBe('sp-card-label sdp-badge-tag');
-      const descripcio = (boto) => document.getElementById(boto.getAttribute('aria-describedby'))?.textContent;
-      expect(descripcio(botoDetall('llet', 'Llet'))).toBe('A la llista');
-      /* A la llista, la mateixa targeta: «Per comprar» en etiqueta i aria-pressed. */
-      const enLlista = mig().getByRole('button', { name: 'Llet' }).closest('article.sp-card');
-      expect(within(enLlista).getByText('Per comprar', { selector: '.sp-card-label' })).toBeTruthy();
-      expect(descripcio(mig().getByRole('button', { name: 'Llet' }))).toBe('Per comprar');
-      expect(enLlista.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBeTruthy();
-      /* Cap foto: les úniques imatges són el logo de Sóc de Poble a l'avatar de la boina (un recurs
-         propi, sense referent). Onada 8 (261009) · El logo és el PNG (abans, l'SVG). */
-      const imatges = [...document.querySelectorAll('#app-grid-main img, #app-grid-list img')];
-      expect(imatges.length).toBeGreaterThan(0);
-      for (const img of imatges) {
-        expect(img.className).toBe('sp-card-avatar');
-        expect(img.getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
-        expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
-      }
-      const peu = targeta.querySelector('footer.sp-card-footer');
-      expect([...peu.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'))).toEqual(['Traduir Llet', 'Comentar Llet', 'Connectar amb Llet']);
-      fireEvent.click(within(peu).getByRole('button', { name: 'Connectar amb Llet' }));
-      /* El clic s'ha fet (porta on sempre) i cap intent «connectar» ha eixit. */
-      expect(ubicacio()).toMatch(/^\/connectar\?/);
-      expect(vistos.filter((intent) => intent?.nom === 'connectar')).toEqual([]);
-    } finally {
-      window.removeEventListener('sdp:telemetria', escolta);
-    }
+  /* Onada R32.26 · IDEA-303 · A La compra (llista activa i catàleg), cada article és una Rajola
+     quadrada 1:1 (forma="rajoles") a l'estil de Bring!, amb pictograma d'aliment/família, estat
+     cromàtic i textual binari (aria-pressed + 'A la llista' / 'Per comprar') i zero imatges externes. */
+  test('cada article de La compra és una Rajola quadrada amb pictograma propi, estat binari per al lector i zero imatges externes', async () => {
+    munta('/app/nevera/llista/casa');
+    await screen.findByRole('region', { name: 'Catàleg' });
+    const abans = botoDetall('llet', 'Llet');
+    expect(abans.classList.contains('sdp-rajola')).toBe(true);
+    expect(abans.getAttribute('aria-pressed')).toBe('false');
+    expect(abans.closest('li').classList.contains('sdp-graella-articles__element--en-colleccio')).toBe(false);
+    expect(abans.querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥛');
+
+    fireEvent.click(abans);
+    const despres = botoDetall('llet', 'Llet');
+    expect(despres.getAttribute('aria-pressed')).toBe('true');
+    expect(despres.closest('li').classList.contains('sdp-graella-articles__element--en-colleccio')).toBe(true);
+    expect(despres.closest('li').querySelector('.sdp-graella-articles__marca-colleccio')).not.toBeNull();
+    const descripcio = (boto) => boto.getAttribute('aria-describedby')
+      ?.split(' ')
+      .map((id) => document.getElementById(id)?.textContent)
+      .filter(Boolean) || [];
+    expect(descripcio(despres)).toContain('A la llista');
+
+    const enLlista = mig().getByRole('button', { name: 'Llet' });
+    expect(enLlista.classList.contains('sdp-rajola')).toBe(true);
+    expect(enLlista.getAttribute('aria-pressed')).toBe('true');
+    expect(enLlista.querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥛');
+    expect(descripcio(enLlista)).toContain('Per comprar');
+    expect(document.querySelectorAll('#app-grid-main img, #app-grid-list img')).toHaveLength(0);
   });
 
-  /* REGLA D'OR 1 (ordre del Mestre, 261004) · Tota targeta porta la boina taronja amb l'autor real,
-     enllaçat a la seua pàgina. El catàleg de la Nevera (els articles de base, els productes de botiga
-     i els «Recents») és de l'entitat Sóc de Poble, que porta al seu perfil (Onada 8, 261009; abans,
-     a la pàgina del projecte; resolt per identificador a la plataforma). Un article propi és de la
-     persona, que la plataforma no dona a les apps: «Tu», sense enllaç ni perfil inventat (Onada 8,
-     261009: l'enllaç a la pàgina de qui mira és pendent de MarIA, vistes/autoria.js). Munta el
-     catàleg sencer i el recorre targeta a targeta: més temps que els 5 s per defecte. */
-  test('REGLA D’OR 1: tota targeta porta la boina; el catàleg signa Sóc de Poble (porta al seu perfil) i un article propi, «Tu»', async () => {
-    const boinaDe = (boto) => boto.closest('article.sp-card').querySelector('header.sp-card-header');
-    const delProjecte = (boto) => {
-      const boina = boinaDe(boto);
-      expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
-      expect(boina.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
-      expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
-    };
+  test('els articles de base, de botiga, propis i «Recents» conserven pictograma nítid tant a la llista com al catàleg', async () => {
     const entorn = prepara();
     await entorn.magatzem.desa(afig(afig(estatInicial(), 'casa', 'pa'), 'casa', PRODUCTE.id));
     munta('/app/nevera/llista/casa', entorn);
@@ -330,26 +331,15 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
     const camp = screen.getByRole('combobox', { name: 'Necessite…' });
     fireEvent.change(camp, { target: { value: 'Kombutxa' } });
     fireEvent.click(within(camp.closest('form')).getByRole('button', { name: 'Afig' }));
-    /* Cap targeta sense boina, ni a la llista ni al catàleg. */
-    const targetes = [...document.querySelectorAll('#app-grid-main article.sp-card, #app-grid-list article.sp-card')];
-    expect(targetes.length).toBeGreaterThan(10);
-    for (const targeta of targetes) {
-      expect(targeta.querySelector('header.sp-card-header .sp-card-author-name'), targeta.textContent).not.toBeNull();
-    }
-    /* Un article de base i un producte de botiga, a la llista i al catàleg: Sóc de Poble. */
-    delProjecte(botoDetall('llet', 'Llet'));
-    delProjecte(mig().getByRole('button', { name: 'Pa' }));
-    delProjecte(mig().getByRole('button', { name: PRODUCTE.nom }));
-    delProjecte(botoDetall(PRODUCTE.id, PRODUCTE.nom));
-    /* L'article propi: «Tu», sense enllaç ni foto (el cercle de reserva). */
-    const propia = boinaDe(mig().getByRole('button', { name: 'Kombutxa' }));
-    expect(propia.querySelector('.sp-card-author-name').textContent).toBe('Tu');
-    expect(propia.querySelector('span.sp-card-author-block')).not.toBeNull();
-    expect(within(propia).queryByRole('link')).toBeNull();
-    expect(propia.querySelector('img')).toBeNull();
-    /* «Recents» (Compra.jsx els vestix a part): també la boina. */
+
+    expect(botoDetall('pa', 'Pa').querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥖');
+    expect(mig().getByRole('button', { name: 'Pa' }).querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥖');
+    expect(botoDetall(PRODUCTE.id, comencaPer(PRODUCTE.nom)).querySelector('.sdp-marca-article__pictograma')?.textContent).toBeTruthy();
+    expect(mig().getByRole('button', { name: 'Kombutxa' }).querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🏷️');
+
     fireEvent.click(mig().getByRole('button', { name: 'Pa' }));
-    delProjecte(within(detall().getByRole('region', { name: /^Recents/ })).getByRole('button', { name: 'Pa' }));
+    const recentPa = within(detall().getByRole('region', { name: /^Recents/ })).getByRole('button', { name: 'Pa' });
+    expect(recentPa.querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥖');
   }, 30000);
 
   test('marcar comprat: la rajola ix de la llista i l’article passa a «Recents» del catàleg', async () => {
@@ -372,8 +362,8 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
     fireEvent.click(within(dialeg).getByRole('button', { name: 'Posa-ho a la llista' }));
     expect(ubicacio()).toBe('/app/nevera/llista/casa');
     expect(screen.queryByRole('dialog', { name: 'Llet' })).toBeNull();
-    expect(davallDe(mig().getByRole('button', { name: 'Llet' }))).toBe('sense lactosa');
-    const alCataleg = botoDetall('llet', 'Llet');
+    expect(davallDe(mig().getByRole('button', { name: comencaPer('Llet') }))).toBe('sense lactosa');
+    const alCataleg = botoDetall('llet', comencaPer('Llet'));
     expect(alCataleg.getAttribute('aria-pressed')).toBe('true');
     expect(davallDe(alCataleg)).toBe('sense lactosa');
     await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: 'llet', especificacio: 'sense lactosa' }]));
@@ -384,7 +374,7 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
     await entorn.magatzem.desa(afig(estatInicial(), 'casa', 'pa', { especificacio: 'de llenya' }));
     munta('/app/nevera/llista/casa', entorn);
     await screen.findByRole('region', { name: 'Catàleg' });
-    const rajola = mig().getByRole('button', { name: 'Pa' });
+    const rajola = mig().getByRole('button', { name: comencaPer('Pa') });
     expect(davallDe(rajola)).toBe('de llenya');
     expect(rajola.getAttribute('aria-keyshortcuts')).toBe('Shift+F10');
     fireEvent.contextMenu(rajola);
@@ -485,6 +475,32 @@ describe('La compra en estret', () => {
     expect(ubicacio()).toBe('/app/nevera/llista/casa/cataleg?article=ous');
     await waitFor(() => expect(closca().dataset.panell).toBe(''));
     expect(screen.getByRole('dialog', { name: 'Ous' })).toBeTruthy();
+  });
+});
+
+/* v1.2.17 · Gauntlet R2 (L3R2-02) · El diàleg de detall (DetallArticle) del Catàleg i d'A casa torna a
+   pintar la icona de la secció i les inicials, com a la v1.2.16; el pictograma d'aliment (IDEA-303) és
+   només de La compra (i del Rebost, que el pren a part). */
+describe('el pictograma, només a La compra', () => {
+  const quadratDe = (dialeg) => dialeg.querySelector('.sdp-detall-article__quadrat');
+
+  test.each([
+    ['del Catàleg', '/app/nevera/cataleg/casa?article=llet'],
+    ['d’A casa', '/app/nevera/casa/casa?article=llet']
+  ])('el detall %s: icona de la secció i inicials, cap pictograma', async (_nom, cami) => {
+    munta(cami);
+    const quadrat = quadratDe(await screen.findByRole('dialog', { name: 'Llet' }));
+    expect(quadrat.querySelector('.sdp-marca-article__pictograma')).toBeNull();
+    expect(quadrat.querySelector('.sdp-marca-article__inicials')?.textContent).toBeTruthy();
+    expect(quadrat.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(quadrat.textContent).not.toContain('🥛');
+  });
+
+  test('el detall de La compra: el pictograma de l’article', async () => {
+    munta('/app/nevera/llista/casa?article=llet');
+    const quadrat = quadratDe(await screen.findByRole('dialog', { name: 'Llet' }));
+    expect(quadrat.querySelector('.sdp-marca-article__pictograma')?.textContent).toBe('🥛');
+    expect(quadrat.querySelector('.sdp-marca-article__inicials')).toBeNull();
   });
 });
 
@@ -679,8 +695,8 @@ describe('el disc', () => {
     fireEvent.contextMenu(mig().getByRole('button', { name: 'Tomaques' }));
     fireEvent.change(within(screen.getByRole('dialog', { name: 'Tomaques' })).getByRole('textbox', { name: 'Especificació' }), { target: { value: '1 kg' } });
     fireEvent.click(screen.getByRole('button', { name: 'Posa-ho a la llista' }));
-    expect(davallDe(mig().getByRole('button', { name: 'Tomaques' }))).toBe('1 kg');
-    fireEvent.click(mig().getByRole('button', { name: 'Tomaques' }));
+    expect(davallDe(mig().getByRole('button', { name: comencaPer('Tomaques') }))).toBe('1 kg');
+    fireEvent.click(mig().getByRole('button', { name: comencaPer('Tomaques') }));
     await waitFor(() => expect(desat(idb)?.llistes[0].recents).toEqual([{ articleId: 'tomaques', especificacio: '1 kg' }]));
     expect(xarxa).not.toHaveBeenCalled();
     expect(obri).not.toHaveBeenCalled();

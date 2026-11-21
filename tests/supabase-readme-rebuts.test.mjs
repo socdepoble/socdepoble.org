@@ -44,16 +44,21 @@ const DESCONEGUDES = [
 ];
 
 test('la taula canònica es llig sencera i cada estat és reconegut', () => {
-  // R32.14 adds only 20261119143000. Onada v1.2.13 · Les files 122–124 giren a «Aplicada» amb el rebut del Super-Bundle
+  // R32.14 adds 20261119143000; R32.25 afig 20261121090000, encara NO aplicada.
+  // Onada v1.2.13 · Les files 122–124 giren a «Aplicada» amb el rebut del Super-Bundle
   // R32.14 (19-11-2026); la resta de rebuts històrics es queden com eren, i l'empremta es torna a fixar.
-  assert.equal(taula.length, 125);
-  const historic = taula.filter(f => f.versio !== '20261119143000');
+  assert.equal(taula.length, 126);
+  const historic = taula.filter(f => !['20261119143000', '20261121090000'].includes(f.versio));
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
     'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
   assert.equal(fila('20261119143000').ordre, 125);
   assert.equal(fila('20261119143000').fitxer, '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql');
   assert.equal(declarat.get('20261119143000'), 'declarada_aplicada');
+  assert.equal(fila('20261121090000').ordre, 126);
+  assert.equal(fila('20261121090000').fitxer, '20261121090000_r32_25_push_directes_i_bandols.sql');
+  assert.equal(declarat.get('20261121090000'), 'declarada_no_aplicada');
+  assert.match(fila('20261121090000').estat, /NO aplicada/);
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
 });

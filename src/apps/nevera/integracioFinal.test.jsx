@@ -50,7 +50,7 @@ afterEach(() => {
 
 describe('F04 · l’anatomia sencera de les targetes de la Nevera', () => {
   test('cada targeta del catàleg porta subtítol (la secció) i entradeta (d’on ix l’article)', async () => {
-    munta('/app/nevera/llista/casa');
+    munta('/app/nevera/cataleg');
     await screen.findByRole('region', { name: 'Catàleg' });
     const llet = targetaDe(detall().getByRole('button', { name: 'Llet' }));
     expect(llet.querySelector('.sp-card-subtitle').textContent).toBe('Llet i formatge');
@@ -180,7 +180,7 @@ describe('T3 · un sol espaiat entre targetes de la Nevera (modules.css)', () =>
     const bloc = MODULES.slice(MODULES.indexOf('@layer components {', inici), MODULES.indexOf('\n}\n', inici) + 2);
     const SELECTOR = '.sdp-card-grid > .sp-card';
     expect(bloc).toMatch(/\n {2}\.sdp-card-grid > \.sp-card \{\s*margin-block-end: 0;\s*\}/);
-    munta('/app/nevera/llista/casa');
+    munta('/app/nevera/cataleg');
     await screen.findByRole('region', { name: 'Catàleg' });
     expect(document.querySelectorAll(`[data-sdp-app="nevera"] ${SELECTOR}`).length).toBeGreaterThan(50);
   });

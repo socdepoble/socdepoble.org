@@ -37,7 +37,7 @@ const MODES = [...PAGE_CHROME_MODES, 'inventat'];
 
 describe('261004 · la barra taronja es pinta en tots els modes de chrome', () => {
   test('els modes que es proven són tots els de PAGE_CHROME_MODES', () => {
-    expect([...PAGE_CHROME_MODES].sort()).toEqual(['context', 'full', 'none', 'page', 'system']);
+    expect([...PAGE_CHROME_MODES].sort()).toEqual(['context', 'feed', 'full', 'none', 'page', 'system']);
   });
 
   /* Onada 8 (261009) · Enllaçada al perfil de Sóc de Poble, ja no a /projecte. */

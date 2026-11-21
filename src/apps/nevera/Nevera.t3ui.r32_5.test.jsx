@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { muntaPlataforma, ENTORN_OBERT } from '../plataforma/__fixtures__/munta.jsx';
 import { LLENGUES_APP } from '../plataforma/manifestApp.js';
@@ -39,8 +39,7 @@ describe('R32.5 / R32.10 · Lot 01 · T3-UI-01/02/03 (Nevera sense «Data no ind
     });
 
     if (amplada === 320) {
-      const botoTot = await screen.findByRole('button', { name: /Tot el catàleg/i });
-      fireEvent.click(botoTot);
+      expect(document.querySelector('.app-grid-shell')?.dataset.panell).toBe('middle');
     }
 
     const llista = document.getElementById('app-grid-list');
@@ -53,7 +52,7 @@ describe('R32.5 / R32.10 · Lot 01 · T3-UI-01/02/03 (Nevera sense «Data no ind
 
     const commutadors = subcapcaleraEines.querySelectorAll('.sdp-cataleg-workspace__commutador');
     expect(commutadors).toHaveLength(3);
-    expect(subcapcaleraEines.querySelector('[aria-label="Canònica"]')?.getAttribute('aria-pressed')).toBe('true');
+    expect(subcapcaleraEines.querySelector('[aria-label="Quadrícula 2×2"]')?.getAttribute('aria-pressed')).toBe('true');
   });
 
   test('T3-UI-02: a /app/nevera/casa, /app/nevera/receptes i /app/nevera/temporada les targetes no cronològiques ometen «Data no indicada»', async () => {

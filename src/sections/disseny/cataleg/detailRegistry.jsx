@@ -83,6 +83,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'retroalimentacio/barra-actualitzacio-app': lazyRoute(() => import('./detalls/EspecimenBarraActualitzacioApp.jsx')),
   /* Onada R32.5 · P0-112 / T3-UI-03 · Banda superior serena de fase beta i avís No Verifactu en 5 llengües. */
   'retroalimentacio/banda-beta-micro-app': lazyRoute(() => import('./detalls/EspecimenBandaBetaMicroApp.jsx')),
+  /* v1.2.17 · Gauntlet R1 (L1-09) · IDEA-313 · La benvinguda del Foraster dins de /xat: el literal del Mestre en 5 llengües, la ✕ i un sol «Entrar». */
+  'retroalimentacio/acollida-foraster-xat': lazyRoute(() => import('./detalls/EspecimenAcollidaForasterXat.jsx')),
   /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
   'fonaments/identitat': lazyRoute(() => import('./detalls/EspecimenIdentitat.jsx')),
   'superposicions/dialeg': lazyRoute(() => import('./detalls/EspecimenDialeg.jsx')),

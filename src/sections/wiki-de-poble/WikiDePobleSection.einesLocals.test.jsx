@@ -65,7 +65,7 @@ vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble dâ
 
 import WikiDePobleSection from './WikiDePobleSection.jsx';
 import {
-  AVIS_EINA_LOCAL_SENSE_TRADUCCIO, DATA_DOCUMENTACIO, TIPUS_DOCUMENTACIO, documentacioMaquinariaActiva, modulsLocalsActius
+  AVIS_EINA_LOCAL_SENSE_TRADUCCIO, DATA_DOCUMENTACIO, TIPUS_DOCUMENTACIO, copyDePortada, documentacioMaquinariaActiva, modulsLocalsActius
 } from './wikiDePobleModel.js';
 import * as modulWiki from './WikiDePobleSection.jsx';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
@@ -245,8 +245,9 @@ describe('en desenvolupament', () => {
     const portada = fixture.props.model.items.find((i) => i.id === '__intro');
     expect(portada.icon).toBe(ICONA_PORTADA);
     expect(portada.image).toBeUndefined();
-    const page = PAGE_COPY.wikidepoble;
+    const page = copyDePortada(null, 'wikidepoble');
     expect(page.image).toEqual(expect.any(String));
+    expect(PAGE_COPY.wikidepoble.title).toBe(page.title);
     const hero = arrel.querySelector('.hero-image img');
     expect(hero).not.toBeNull();
     expect(hero.getAttribute('alt')).toBe(page.imageAlt);

@@ -8,13 +8,14 @@
    directe es retira: fins a la v1.2.15, una App d'instal·lació directa (ORIGENS.DIRECTA) amb un
    apkDirectBuild més alt rebia l'avís que baixava l'APK amb la seua suma (estes proves ho fixaven). Ara
    cap origen no rep mai cap baixada d'APK: a Android, l'avís és sempre el de Google Play. Les proves
-   d'eixe canal passen a provar que no n'hi ha cap; les de TestFlight no canvien. */
+   d'eixe canal passen a provar que no n'hi ha cap; les de TestFlight no canvien.
+   v1.2.17 · T-04 · config/actualitzacioRecomanada.js ja no exporta l'adreça de l'APK directe: la prova en
+   guarda el literal en una constant local (APK_DIRECTE) per a continuar comprovant que cap avís no la porta. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   CANALS_ACTUALITZACIO,
   ENLLAC_ANDROID_MARKET,
   ENLLAC_ANDROID_PLAY,
-  ENLLAC_APK_DIRECTE,
   ENLLAC_IOS_APP_STORE,
   ENLLAC_TESTFLIGHT,
   llegixActualitzacioRecomanada,
@@ -24,6 +25,8 @@ import {
 import { iniciaActualitzacioAppNativa, llegixManifestVersio, novaVersioDisponible } from './actualitzacioAppNativa.js';
 import { ORIGENS } from './origenInstallacio.js';
 
+// v1.2.17 · T-04 · L'adreça de l'APK que la v1.2.16 publicava: cap avís no l'ha de portar mai.
+const APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const SHA = 'c'.repeat(64);
 const LOCAL = Object.freeze({ versioLocal: '1.2.6', buildLocal: 11 });
 const manifest = (camps = {}) => ({ version: '1.2.7', androidBuild: 1, iosBuild: 1, entries: [], ...camps });
@@ -97,7 +100,7 @@ describe('novaVersioDisponible segons l\'origen', () => {
         for (const local of [LOCAL, { versioLocal: '1.2.7', buildLocal: 1 }]) {
           const avis = nova(dades, 'android', origen, local);
           const text = JSON.stringify(avis);
-          expect([origen, avis?.canal ?? null, /apk|sha256/i.test(text), text.includes(ENLLAC_APK_DIRECTE)]).toEqual([origen, null, false, false]);
+          expect([origen, avis?.canal ?? null, /apk|sha256/i.test(text), text.includes(APK_DIRECTE)]).toEqual([origen, null, false, false]);
           if (avis) expect([avis.enllac, avis.marketUrl, avis.versioRecomanada]).toEqual([ENLLAC_ANDROID_PLAY, ENLLAC_ANDROID_MARKET, dades.androidBuild]);
         }
       }

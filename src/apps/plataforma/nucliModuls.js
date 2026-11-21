@@ -60,7 +60,10 @@ import { TeclatNumeric } from '../../components/PedraSeca/organismes/TeclatNumer
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { UniversalTPV } from '../../components/PedraSeca/organismes/UniversalTPV.jsx';
 /* Nucli 1.2.0 (261016): l'espai de treball, per la seua façana (la font única de la porta). */
-import { CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace } from '../../components/universal/workspace/index.js';
+/* Nucli 1.8.0 (v1.2.17): i les dues declaracions d'espai del Rebost (IDEA-303). */
+import {
+  CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace, declaraNivellInicialEspai, declaraVistaPerDefecteEspai
+} from '../../components/universal/workspace/index.js';
 import * as plataformaDelNucli from './index.js';
 import { VERSIO_NUCLI } from './contracteNucli.js';
 
@@ -84,5 +87,5 @@ export const NUCLI = Object.freeze({
     Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
     UniversalTPV, encapcalamentDeTargeta, estatLinia, mouCategoria, nivellHistograma
   }),
-  workspace: Object.freeze({ CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace })
+  workspace: Object.freeze({ CatalegWorkspace, DefaultItemCard, DetallCataleg, UniversalWorkspace, declaraNivellInicialEspai, declaraVistaPerDefecteEspai })
 });

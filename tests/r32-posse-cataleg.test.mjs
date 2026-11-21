@@ -29,7 +29,8 @@ const rows121=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.ver
 const rows123=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261117193000')<=0);
 // P1-74 (A-03): el complet real és el 123 més 20261118230000 (la caché de credencials natives per configuració).
 const rows124=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261118230000')<=0);
-const rows125=creaPlaMigracions().migrations;
+const rows125=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261119143000')<=0);
+const rows126=creaPlaMigracions().migrations;
 // El 120 del kit R32.5 de Codex: els 119 d'R32.2 més 20261117140000, sense 20261117150000.
 const kitR325=rows121.filter(row=>row.version!=='20261117150000');
 const r32=new Set(['20261116170000','20261116170100','20261116170200']);
@@ -72,6 +73,7 @@ const PIN123='123:1de4ff25c313f242b463d00445377f5692f87b762927a13e1ed20464ab1f0b
 // 124 calculat des dels bytes reals del catàleg (el 123 de la v1.2.8 més 20261118230000, P1-74 A-03).
 const PIN124='124:8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a961277';
 const PIN125='125:f09f94686782ea28b4ae500ce21567994670f53d1b91782246a0b4d841e56dc7';
+const PIN126='126:595c69b52d28713884c9af3d802dc1f1a3a47853e2d8eb180e65f53b51be3e51';
 // Perfil 120 del kit R32.5 de Codex, calculat sobre la v1.2.5 (sense 20261117150000): no és canònic.
 const PIN_EXPERIMENTAL_120='120:3e45e1da922cb8a51c43ae23504b4e279eae11f0db7f1046b1f31156800edb85';
 // Perfil experimental del kit R32 de Codex, calculat amb la versió anterior de 20261116170000: no és canònic.
@@ -141,11 +143,20 @@ test('R32.14 adds only the private-preview migration and pins exact125 while pre
  const added=rows125.filter(row=>!rows124.some(previous=>previous.version===row.version));
  assert.deepEqual(added.map(({version,file})=>[version,file]),[['20261119143000','20261119143000_r32_14_xat_fils_previa_sense_amagats.sql']]);
  assert.equal(rows125.length,125);assert.equal(`125:${ledgerHash(rows125)}`,PIN125);
- assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125]);
+ assert.deepEqual(pins.slice(0,oldPins.length+6),[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125]);
 });
 
-test('the real installer accepts 114,116,119,120,121,123,124,125 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
- for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+test('R32.25 adds only its disabled urgent and D24 migration, preserves exact125 and pins exact126',()=>{
+ const added=rows126.filter(row=>!rows125.some(previous=>previous.version===row.version));
+ assert.deepEqual(added.map(({version,file,sha256})=>[version,file,sha256]),[['20261121090000','20261121090000_r32_25_push_directes_i_bandols.sql','2122eceeef44039f60c9cf6931043a5d7dcc1bfd4c1ae834d651743119315b36']]);
+ assert.equal(rows126.length,126);assert.equal(`126:${ledgerHash(rows126)}`,PIN126);
+ assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126]);
+});
+
+test('the real installer accepts 114,116,119,120,121,123,124,125,126 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
+ for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+ const corrupt126=structuredClone(rows126);corrupt126.find(row=>row.version==='20261121090000').sha256='0'.repeat(64);
+ for(const state of[ready(corrupt126),{...ready(rows126),migrations:125},{...ready(rows125),migrations:126}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  const corrupt125=structuredClone(rows125);corrupt125.find(row=>row.version==='20261119143000').sha256='0'.repeat(64);
  for(const state of[ready(corrupt125),{...ready(rows125),migrations:124},{...ready(rows124),migrations:125}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  const corrupt120=structuredClone(rows120);corrupt120.at(-1).sha256='0'.repeat(64);
@@ -167,7 +178,7 @@ test('PostgreSQL evaluates the actual install guard for both preserved and full 
     await db.exec('truncate node0.schema_migrations');
     for(const {version,file,sha256} of entries)await db.query('insert into node0.schema_migrations values($1,$2,$3)',[version,file,sha256]);
   };
-  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125]){
+  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126]){
     await carrega(entries);
     await db.exec(guard);
     assert.equal((await db.query('select count(*)::int n from node0.schema_migrations')).rows[0].n,entries.length);

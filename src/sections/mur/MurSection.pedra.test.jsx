@@ -76,8 +76,10 @@ test('amb dades, la pàgina del Mur porta sdp-pagina-mur al contenidor, al costa
   expect(document.querySelectorAll('.sdp-universal-page-container').length).toBe(1);
   expect(contenidor().classList.contains('sdp-pagina-mur')).toBe(true);
   expect(contenidor().classList.contains('sdp-universal-page-container--contained')).toBe(true);
-  // L'entradeta continua al DOM: la regla de mòbil la deixa de pintar, no la lleva.
-  expect(entradeta()).toBeTruthy();
+  /* v1.2.17 · Mode de taulell (chrome 'feed', R32.26 · IDEA-305): el Mur ja no pinta l'entradeta, ni en ample ni
+     en estret, i el seu text tampoc no és al DOM. */
+  expect(entradeta()).toBeUndefined();
+  expect(document.querySelector('.page-intro .lead')).toBeNull();
 });
 
 test('mentre carrega i quan falla, també: la capçalera no salta en arribar les dades', () => {
@@ -93,15 +95,18 @@ test('mentre carrega i quan falla, també: la capçalera no salta en arribar les
   expect(screen.getByText("No s'ha pogut carregar el Mur")).toBeTruthy();
 });
 
-test('els selectors de PS-10 del full casen amb els filtres del Mur, les seues cinc opcions i l’entradeta, i amb res més', () => {
+/* v1.2.17 · Mode de taulell (chrome 'feed', R32.26 · IDEA-305): el Mur ja no pinta l'entradeta, i la regla de PS-10
+   que l'amaga en estret no casa cap element (es queda: la prova de capes de ritmeEntreBlocs la fixa; retirar-la és
+   una neteja a part, D-v1217 a l'informe). */
+test('els selectors de PS-10 del full casen amb els filtres del Mur i les seues cinc opcions, i amb res més', () => {
   expect(SELECTORS_MUR.length).toBe(3);
   render(<MurSection />);
   const grup = grupFiltres();
   const opcions = within(grup).getAllByRole('button');
   expect(opcions.map((b) => b.textContent)).toEqual(FILTRES);
   const llistes = casats();
-  expect(llistes.map((l) => l.length).sort((a, b) => a - b)).toEqual([1, 1, 5]);
-  expect(new Set(llistes.flat())).toEqual(new Set([grup, ...opcions, entradeta()]));
+  expect(llistes.map((l) => l.length).sort((a, b) => a - b)).toEqual([0, 1, 5]);
+  expect(new Set(llistes.flat())).toEqual(new Set([grup, ...opcions]));
 });
 
 test('a la pestanya Esdeveniments, el selector de vistes del calendari no hi entra; els filtres del Mur, sí', () => {

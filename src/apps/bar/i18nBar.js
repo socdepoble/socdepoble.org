@@ -667,7 +667,19 @@ export const TEXTOS_UI_BAR = Object.freeze({
     llavorNomExemple: 'Carta d’exemple',
     llavorAccioExemple: 'Torna a la carta d’exemple',
     llavorAccioParroquia: 'Carrega la carta de La Parròquia',
-    llavorNomPropia: 'Carta pròpia'
+    llavorNomPropia: 'Carta pròpia',
+    /* R32.26 · IDEA-304 · Mode Demo local honest del TPV */
+    provaTpvDemo: 'Prova el TPV en local (Demo)',
+    demoLocalTitol: 'Mode Demo en este dispositiu',
+    demoLocalText: 'Pots provar com funciona la caixa amb la carta de mostra sense iniciar sessió. Res no es desa al servidor ni genera factures.',
+    ixDeLaDemo: 'Ix de la Demo',
+    demoMostraNota: 'Mostra nota de consum',
+    demoNotaTitol: 'Nota de consum de mostra · no és factura',
+    demoNotaAvis: 'Mode Demo en este dispositiu: esta nota és una mostra local i no es desa al servidor ni té validesa fiscal.',
+    demoBuidaTiquet: 'Buida el tiquet de prova',
+    demoNomTiquet: 'Barra · Demo local',
+    /* v1.2.17 · Gauntlet R1 (L3-12) */
+    demoErrorTitol: 'No s’ha pogut afegir al tiquet de prova'
   }),
   es: Object.freeze({
     colEsquerra: 'Tiques abiertos',
@@ -1132,7 +1144,19 @@ export const TEXTOS_UI_BAR = Object.freeze({
     llavorNomExemple: 'Carta de ejemplo',
     llavorAccioExemple: 'Volver a la carta de ejemplo',
     llavorAccioParroquia: 'Cargar la carta de La Parròquia',
-    llavorNomPropia: 'Carta propia'
+    llavorNomPropia: 'Carta propia',
+    /* R32.26 · IDEA-304 · Modo Demo local honesto del TPV */
+    provaTpvDemo: 'Probar el TPV en local (Demo)',
+    demoLocalTitol: 'Modo Demo en este dispositivo',
+    demoLocalText: 'Puedes probar cómo funciona la caja con la carta de muestra sin iniciar sesión. Nada se guarda en el servidor ni genera facturas.',
+    ixDeLaDemo: 'Salir de la Demo',
+    demoMostraNota: 'Mostrar nota de consumo',
+    demoNotaTitol: 'Nota de consumo de muestra · no es factura',
+    demoNotaAvis: 'Modo Demo en este dispositivo: esta nota es una muestra local y no se guarda en el servidor ni tiene validez fiscal.',
+    demoBuidaTiquet: 'Vaciar el tique de prueba',
+    demoNomTiquet: 'Barra · Demo local',
+    /* v1.2.17 · Gauntlet R1 (L3-12) */
+    demoErrorTitol: 'No se ha podido añadir al tique de prueba'
   }),
   en: Object.freeze({
     colEsquerra: 'Open tabs',
@@ -1597,7 +1621,19 @@ export const TEXTOS_UI_BAR = Object.freeze({
     llavorNomExemple: 'Sample menu',
     llavorAccioExemple: 'Reset to sample menu',
     llavorAccioParroquia: 'Load La Parròquia menu',
-    llavorNomPropia: 'Custom menu'
+    llavorNomPropia: 'Custom menu',
+    /* R32.26 · IDEA-304 · Honest local Demo POS mode */
+    provaTpvDemo: 'Try local POS (Demo)',
+    demoLocalTitol: 'Demo mode on this device',
+    demoLocalText: 'Try how the register works with the sample menu without signing in. Nothing is saved to the server or issued as an invoice.',
+    ixDeLaDemo: 'Exit Demo',
+    demoMostraNota: 'Show sample tab note',
+    demoNotaTitol: 'Sample consumption note · not an invoice',
+    demoNotaAvis: 'Demo mode on this device: this note is a local preview and is neither saved to the server nor fiscally valid.',
+    demoBuidaTiquet: 'Clear demo tab',
+    demoNomTiquet: 'Bar · Local demo',
+    /* v1.2.17 · Gauntlet R1 (L3-12) */
+    demoErrorTitol: 'Could not add to the demo tab'
   }),
   eu: Object.freeze({
     colEsquerra: 'Tiket irekiak',
@@ -2062,7 +2098,19 @@ export const TEXTOS_UI_BAR = Object.freeze({
     llavorNomExemple: 'Adibideko karta',
     llavorAccioExemple: 'Itzuli adibideko kartara',
     llavorAccioParroquia: 'Kargatu La Parròquiaren karta',
-    llavorNomPropia: 'Karta propioa'
+    llavorNomPropia: 'Karta propioa',
+    /* R32.26 · IDEA-304 · TPVaren tokiko Demo modu zintzoa */
+    provaTpvDemo: 'Probatu TPVa lokalean (Demo)',
+    demoLocalTitol: 'Demo modua gailu honetan',
+    demoLocalText: 'Kutxa nola dabilen proba dezakezu erakusgarri-kartarekin saioa hasi gabe. Ez da ezer zerbitzarian gordetzen, ezta fakturarik sortzen ere.',
+    ixDeLaDemo: 'Irten Demotik',
+    demoMostraNota: 'Erakutsi kontsumo-oharra',
+    demoNotaTitol: 'Erakusgarriko kontsumo-oharra · ez da faktura',
+    demoNotaAvis: 'Demo modua gailu honetan: ohar hau tokiko erakusgarria da, ez da zerbitzarian gordetzen eta ez du balio fiskalik.',
+    demoBuidaTiquet: 'Hustu probako tiketa',
+    demoNomTiquet: 'Barra · Tokiko demoa',
+    /* v1.2.17 · Gauntlet R1 (L3-12) */
+    demoErrorTitol: 'Ezin izan da probako tiketera gehitu'
   }),
   gl: Object.freeze({
     colEsquerra: 'Tíckets abertos',
@@ -2527,7 +2575,19 @@ export const TEXTOS_UI_BAR = Object.freeze({
     llavorNomExemple: 'Carta de exemplo',
     llavorAccioExemple: 'Volver á carta de exemplo',
     llavorAccioParroquia: 'Cargar a carta de La Parròquia',
-    llavorNomPropia: 'Carta propia'
+    llavorNomPropia: 'Carta propia',
+    /* R32.26 · IDEA-304 · Modo Demo local honesto do TPV */
+    provaTpvDemo: 'Probar o TPV en local (Demo)',
+    demoLocalTitol: 'Modo Demo neste dispositivo',
+    demoLocalText: 'Podes probar como funciona a caixa coa carta de mostra sen iniciar sesión. Nada se garda no servidor nin xera facturas.',
+    ixDeLaDemo: 'Saír da Demo',
+    demoMostraNota: 'Amosar nota de consumo',
+    demoNotaTitol: 'Nota de consumo de mostra · non é factura',
+    demoNotaAvis: 'Modo Demo neste dispositivo: esta nota é unha mostra local e non se garda no servidor nin ten validez fiscal.',
+    demoBuidaTiquet: 'Baleirar o tícket de proba',
+    demoNomTiquet: 'Barra · Demo local',
+    /* v1.2.17 · Gauntlet R1 (L3-12) */
+    demoErrorTitol: 'Non se puido engadir ao tícket de proba'
   })
 });
 

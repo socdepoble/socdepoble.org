@@ -1,0 +1,142 @@
+/* ==========================================================================
+   PEDRA SECA · BENVINGUDA DEL FORASTER AL XAT (FULL DIFERIT · v1.2.17, IDEA-313)
+   Una sola targeta: títol, dues línies, la ✕ i un sol «Entrar». 0 B a l'arrencada.
+   Text a l'inici i botó sempre centrat (sdp-pedra-seca, 261114).
+   v1.2.17 · Gauntlet R1 (L1-08) · Cap ombra (la vora ja separa), títol a 1.2 i línies a 1.6.
+   ========================================================================== */
+@layer components {
+  .sdp-foraster-xat {
+    margin: var(--sdp-space-3) var(--sdp-space-4);
+    padding: var(--sdp-space-3) var(--sdp-space-4) var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: 4px solid var(--sdp-accio-control);
+    border-radius: var(--sdp-radi-g);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-foraster-xat__cap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+
+  /* v1.2.17 · Gauntlet R2 (L1R2-01) · En la columna mínima (240 px) el títol s'encongix i parteix els mots (el lang
+     de la targeta tria les regles de partició), i la ✕ no ix de la vora. */
+  .sdp-foraster-xat__titol {
+    min-inline-size: 0;
+    margin: var(--sdp-space-2) 0 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: start;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .sdp-foraster-xat__tanca {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+  }
+
+  .sdp-foraster-xat__text {
+    margin: var(--sdp-space-2) 0 0;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+    text-align: start;
+  }
+
+  .sdp-foraster-xat__emfasi {
+    color: var(--sdp-text-titol);
+    font-weight: 800;
+  }
+
+  .sdp-foraster-xat__accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-block-start: var(--sdp-space-3);
+  }
+
+  .sdp-foraster-xat__entrar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-6);
+    border: 2px solid transparent;
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-foraster-xat__tanca:hover {
+      background: var(--sdp-fons-subtil);
+      color: var(--sdp-text-titol);
+    }
+
+    .sdp-foraster-xat__entrar:hover {
+      background: var(--sdp-accio-control-hover);
+    }
+  }
+
+  .sdp-foraster-xat__tanca:focus-visible,
+  .sdp-foraster-xat__entrar:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  /* v1.2.17 · Gauntlet R1 (L1-03) · Mode Sènior, com l'accés del Xat (B11b de diferit-mode-senior.css):
+     l'«Entrar» a 56 px amb la lletra dels botons Sènior i les dues línies amb l'escala de la prosa
+     Sènior. Sense Sènior, cap píxel. */
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-foraster-xat__entrar {
+    min-height: 3.5rem;
+    font-size: clamp(1.0625rem, 1.02rem + 0.25vw, 1.1875rem);
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-foraster-xat__text {
+    font-size: clamp(1.25rem, 1.18rem + 0.35vw, 1.4375rem);
+    line-height: 1.65;
+  }
+
+  /* v1.2.17 · Gauntlet R2 (L1R2-02) · Un mòbil apaïsat (500 px d'alt o menys): la targeta es compacta, com el peu
+     d'accés (modules.css), sense tocar el literal, perquè la primera conversa no quede davall del plec. */
+  @media (max-height: 500px) {
+    .sdp-foraster-xat {
+      margin: var(--sdp-space-2);
+      padding: var(--sdp-space-2) var(--sdp-space-3);
+    }
+
+    .sdp-foraster-xat__titol {
+      margin-block-start: var(--sdp-space-1);
+      font-size: 1.25rem;
+    }
+
+    .sdp-foraster-xat__text {
+      margin-block-start: var(--sdp-space-1);
+    }
+
+    .sdp-foraster-xat__accions {
+      margin-block-start: var(--sdp-space-2);
+    }
+  }
+}

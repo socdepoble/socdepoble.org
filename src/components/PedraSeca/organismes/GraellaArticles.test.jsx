@@ -135,6 +135,30 @@ describe('la variant panoramica (16:9, només el Lector)', () => {
   });
 });
 
+/* v1.2.17 · Gauntlet R1 (L3-07) · L'estil de la llista de la compra (IDEA-303) només amb estilCompra
+   (La compra de la Nevera): sense, la reixa de sempre, com la pinten el Bar, Salut i /disseny. */
+describe('estilCompra (la llista de la compra de la Nevera)', () => {
+  test('amb true, cada reixa porta el modificador, també dins de les seccions i amb la variant', () => {
+    const { container, rerender } = render(<GraellaArticles estilCompra commutable articles={ARTICLES.slice(0, 3)} etiqueta="Llista" />);
+    expect(screen.getByRole('list', { name: 'Llista' }).className).toBe('sdp-graella-articles sdp-graella-articles--compra');
+    expect(container.querySelector('[aria-pressed="true"]').closest('li').className)
+      .toBe('sdp-graella-articles__element sdp-graella-articles__element--en-colleccio');
+    rerender(<GraellaArticles estilCompra articles={ARTICLES} categories={CATEGORIES} />);
+    expect(container.firstElementChild.className).toBe('sdp-graella-articles__seccions');
+    expect([...container.querySelectorAll('ul')].map((ul) => ul.className))
+      .toEqual(['sdp-graella-articles sdp-graella-articles--compra', 'sdp-graella-articles sdp-graella-articles--compra']);
+    rerender(<GraellaArticles estilCompra panoramica articles={ARTICLES.slice(0, 1)} etiqueta="Notícies" />);
+    expect(screen.getByRole('list', { name: 'Notícies' }).className).toBe('sdp-graella-articles sdp-graella-articles--compra sdp-panoramica');
+  });
+
+  test('sense la prop, o amb un valor que no és true, cap rastre (Llei del Píxel)', () => {
+    const { container, rerender } = render(<GraellaArticles articles={ARTICLES} categories={CATEGORIES} />);
+    expect(container.querySelector('.sdp-graella-articles--compra')).toBeNull();
+    rerender(<GraellaArticles estilCompra="si" articles={ARTICLES.slice(0, 3)} etiqueta="Productes" />);
+    expect(screen.getByRole('list', { name: 'Productes' }).className).toBe('sdp-graella-articles');
+  });
+});
+
 describe('acció secundària', () => {
   const munta = () => {
     const onTria = vi.fn();

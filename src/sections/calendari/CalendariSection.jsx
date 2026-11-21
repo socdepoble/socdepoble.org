@@ -90,6 +90,7 @@
  * (auditoria Codex, punt 23).
  */
 import { useEffect, useMemo, useState } from 'react';
+import { adoptaEstilsTaulellFeed } from '../../components/universal/estilsTaulellFeed.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -340,8 +341,10 @@ export default function CalendariSection() {
     title: t('section.events.calendarMeta', 'Calendari'),
     subtitle: t('section.calendari.title', 'Totes les targetes de poble'),
     lead: t('section.calendari.subtitle', 'Cada publicació, acte i producte, el dia de la seua data.'),
-    chrome: 'system',
-    showLogos: true
+    chrome: 'feed',
+    showLogos: false,
+    /* v1.2.17 · El full del mode de taulell viatja amb esta secció, no amb l'arrencada (estilsTaulellFeed.js). */
+    adoptaEstilsChrome: adoptaEstilsTaulellFeed
   };
   /* El xat comú i el Connectar de la pàgina, els de la seua ruta canònica: ni
      el ?date= ni el ?mes= en fan cap altra. */

@@ -5,15 +5,19 @@
  * TPV del bar, amb una altra intel·ligència de dades. Ací no hi ha cap
  * graella, llista ni targeta pròpia: només es vestixen les dades del nucli.
  *   ColumnaLlistes      «Les meues llistes» (ColumnaColleccions: targetes)
- *   ColumnaLaCompra     el que falta, en targetes a l'estil de Bring: un toc
+ *   ColumnaLaCompra     el que falta, en rajoles a l'estil de Bring: un toc
  *                       ho marca com a comprat (ix i passa a «Recents»)
  *   ColumnaLlistaActiva la mateixa llista, al costat de «Llistes»
  *   ColumnaCatalegCompra els articles per seccions de la llista, «Recents»
  *                       davant, «Necessite…» (amb els productes de botiga)
  *                       i l'especificació (DetallArticle)
  * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · El
- * catàleg i la llista porten forma="targetes": cada article és una
- * UniversalCard de l'esquelet (les rajoles pròpies ja no). La resta, igual.
+ * catàleg i la llista portaven forma="targetes": cada article era una
+ * UniversalCard de l'esquelet (les rajoles pròpies ja no).
+ * Onada R32.26 · IDEA-303 + v1.2.17 · Gauntlet R1 (L3-15) · Ara el catàleg i
+ * la llista porten forma="rajoles" de l'esquelet (GraellaArticles, 3×3 amb el
+ * pictograma de vestits.js) i estilCompra (L3-07), que acota l'estil de la
+ * llista de la compra a esta pantalla. Cap rajola pròpia: la resta, igual.
  */
 import { Clock, Trash2 } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
@@ -33,7 +37,7 @@ import { ComparticioLlistaCompra } from './ComparticioLlistaCompra.jsx';
 import { EncarrecBotigaPoble } from './EncarrecBotigaPoble.jsx';
 import { RecepcioRecepta } from './RecepcioRecepta.jsx';
 import {
-  articlesVestits, entradetaDe, liniesVestides, nomArticleVisible, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
+  articlesVestits, entradetaDe, liniesVestides, nomArticleVisible, perArticle, pictogramaDe, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
 } from './vestits.js';
 
 function textosLlistaDe(idioma) {
@@ -95,10 +99,12 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
     return <ColumnaColleccio titol={tx.llistaDesconegudaTitol} linies={[]} textos={textosLlistaDesconegudaDe(idioma)} primer={COMPRA.primer} tram={COMPRA.tram} />;
   }
   /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
-  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle, idioma });
+  /* v1.2.17 · Gauntlet R2 (L3R2-02) · La compra és una de les vistes aprovades per al pictograma (IDEA-303). */
+  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle, idioma, ambPictograma: true });
   return (
     <ColumnaColleccio
-      forma="targetes"
+      forma="rajoles"
+      estilCompra
       ometDataNoIndicada
       titol={nomLlistaVisible(llista.nom)}
       linies={linies}
@@ -146,7 +152,8 @@ export function ColumnaCatalegCompra({ params }) {
   const linies = perArticle(llista);
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio, idioma };
   const productes = deMercadona ? ARTICLES_PRODUCTES : productesALaGraella(estat, llista?.id, obert || fitxa);
-  const vestits = articlesVestits(estat, { ...vestit, productes, autoria: autoriaDArticle })
+  /* v1.2.17 · Gauntlet R2 (L3R2-02) · El pictograma, només ací (i al Rebost): el Catàleg i A casa no el demanen. */
+  const vestits = articlesVestits(estat, { ...vestit, productes, autoria: autoriaDArticle, ambPictograma: true })
     .filter((article) => !deMercadona || article.id.startsWith('mer-') || linies.has(article.id));
   const articles = ambPreusMercadona(vestits, catalegMercadona?.productes);
   const recents = llista ? recentsDisponibles(estat, llista.id) : [];
@@ -157,8 +164,10 @@ export function ColumnaCatalegCompra({ params }) {
     articles: recents.map((recent) => {
       const article = articlePerId(estat, recent.articleId);
       return {
-        id: article.id, nom: nomArticleVisible(article), categoriaId: article.categoriaId, secundari: recent.especificacio || undefined,
-        /* REGLA D'OR 1 (261004) · La boina de la targeta, com les de la graella (vestits.js). */
+        id: article.id, nom: nomArticleVisible(article), categoriaId: article.categoriaId,
+        pictograma: pictogramaDe(article),
+        secundari: recent.especificacio || undefined,
+        /* REGLA D'OR 1 (261004) · La boina de la fitxa, com les de la graella (vestits.js). */
         autoria: autoriaDArticle(article),
         /* Integració final (261004, F04) · El subtítol i l'entradeta, com les de la graella. */
         subtitol: subtitolDe(article, idioma),
@@ -170,7 +179,8 @@ export function ColumnaCatalegCompra({ params }) {
 
   return (
     <ColumnaCataleg
-      forma="targetes"
+      forma="rajoles"
+      estilCompra
       ometDataNoIndicada
       titol={tx.cataleg}
       avis={deMercadona ? <AvisCatalegMercadona dades={catalegMercadona} error={errorMercadona} /> : null}

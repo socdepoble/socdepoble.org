@@ -1,0 +1,39 @@
+/* ==========================================================================
+   PEDRA SECA · MODE DE TAULELL chrome="feed" (FULL DIFERIT · v1.2.17)
+   Les regles de R32.26 (IDEA-305), fora de modules.css: només les fan servir el Mur, el Mercat i el
+   Calendari, que són trossos diferits. Viatgen amb ells (estilsTaulellFeed.js) i PageFrame les adopta
+   abans del primer pintat (useFullDiferit), de manera que l'arrencada del connector no les paga.
+   ========================================================================== */
+@layer components {
+  /* R32.26 (IDEA-305) · Mode opt-in chrome="feed" per a taulells (/mur, /mercat,
+     /calendari): capçalera compacta centrada que conserva BarraBlava, BarraTaronja,
+     H1 i accioPrincipal (+ Publicar), ometent el 3r logotip redundant i el .lead
+     de prosa perquè les targetes i píndoles es vegen en <3 s al primer plànol. */
+  .sdp-universal-page-container--feed > header.page-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3) var(--sdp-space-4);
+    padding: var(--sdp-space-3) var(--sdp-space-6);
+    margin-block-end: var(--sdp-space-3);
+    border-radius: 0 0 var(--sdp-radi-g) var(--sdp-radi-g);
+  }
+  .sdp-universal-page-container--feed > header.page-title h1 {
+    font-size: var(--sdp-text-h3);
+    margin-block: 0;
+  }
+  .sdp-universal-page-container--feed > header.page-title .page-title-labels,
+  .sdp-universal-page-container--feed > header.page-title .page-title-accio {
+    margin-block: 0;
+    justify-content: center;
+  }
+  .sdp-universal-page-container--feed > .content-wrapper > .page-intro {
+    margin-block-end: var(--sdp-space-3);
+    text-align: center;
+  }
+  .sdp-universal-page-container--feed > .content-wrapper > .page-intro h2 {
+    font-size: var(--sdp-text-h5);
+    margin-block: 0;
+  }
+}

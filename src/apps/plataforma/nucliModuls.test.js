@@ -20,7 +20,7 @@ import {
 import { NUCLI } from './nucliModuls.js';
 import {
   NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
-  NOMS_DEL_NUCLI_1_7
+  NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8
 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
@@ -202,9 +202,11 @@ describe('el contracte (contracteNucli.js)', () => {
      R21.6 afig la capçalera de lectura de la targeta en l'1.6: el primer
      rang futur rebutjat és ara '^1.7'.
      Actualitzada a posta (R32.11, v1.2.9): l'1.7 afig Accions (lots 05 i 06 de Gemini); el primer rang
-     futur rebutjat és ara '^1.8'. */
-  test('el rang 1.7 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
-    expect(VERSIO_NUCLI).toBe('1.7.0');
+     futur rebutjat és ara '^1.8'.
+     Actualitzada a posta (v1.2.17): l'1.8 afig les dues declaracions d'espai del Rebost (IDEA-303); el primer rang
+     futur rebutjat és ara '^1.9'. */
+  test('el rang 1.8 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.8.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
@@ -213,7 +215,8 @@ describe('el contracte (contracteNucli.js)', () => {
     expect(nucliSatisfa('^1.5')).toBe(true);
     expect(nucliSatisfa('^1.6')).toBe(true);
     expect(nucliSatisfa('^1.7')).toBe(true);
-    expect(nucliSatisfa('^1.8')).toBe(false);
+    expect(nucliSatisfa('^1.8')).toBe(true);
+    expect(nucliSatisfa('^1.9')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -228,8 +231,9 @@ describe('el contracte (contracteNucli.js)', () => {
      R14: NOMS_DEL_NUCLI_1_4 fixa els serveis de domini i Botonera.
      R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent.
      R21.6: NOMS_DEL_NUCLI_1_6 fixa la capçalera de lectura de la targeta.
-     R32.11 (v1.2.9): NOMS_DEL_NUCLI_1_7 fixa el bloc d'accions (Accions). */
-  test('el nucli 1.7 conserva tots els noms publicats i només afig els declarats per versió', () => {
+     R32.11 (v1.2.9): NOMS_DEL_NUCLI_1_7 fixa el bloc d'accions (Accions).
+     v1.2.17: NOMS_DEL_NUCLI_1_8 fixa les dues declaracions d'espai del Rebost. */
+  test('el nucli 1.8 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -250,7 +254,7 @@ describe('el contracte (contracteNucli.js)', () => {
     }
     expect(afegits).toEqual(fusiona(
       NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
-      NOMS_DEL_NUCLI_1_7
+      NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8
     ));
   });
 });

@@ -29,6 +29,53 @@ import { brutLinia, totalLinia } from '../nucli/linia.js';
 /* Les icones de categoria que coneix el Bar (noms de lucide de la carta). GlassWater: els combinats de La Parròquia. */
 const ICONES = Object.freeze({ Beer, Coffee, CupSoda, GlassWater, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine });
 
+/* Onada R32.26 · IDEA-304 · Pictogrames diferenciats per família gastronòmica (estil Loyverse)
+   per evitar que tota la carta per defecte mostre el mateix plat cobert genèric.
+   v1.2.17 · Gauntlet R1 (L3-08) · Només és el glyph de la Carta (modelCartaWorkspace, sense foto):
+   la Caixa, el TPV i la llista de la Carta pinten com a la v1.2.16 (articlesDeCarta no el porta). */
+const PICTOGRAMES_FAMILIA_BAR = Object.freeze({
+  cafeteria: '☕',
+  torrades: '🥖',
+  entrepans: '🥪',
+  tapes: '🫒',
+  racions: '🍲',
+  'plats-combinats': '🍽️',
+  postres: '🍰',
+  refrescs: '🥤',
+  cerveseria: '🍺',
+  'vins-i-caves': '🍷',
+  licoreria: '🍸'
+});
+
+/* v1.2.17 · Gauntlet R1 (L3-08) · La icona pròpia de la categoria (la de ICONES) mana abans de cap endevinalla. */
+const PICTOGRAMES_ICONA_BAR = Object.freeze({
+  Beer: '🍺', Coffee: '☕', CupSoda: '🥤', GlassWater: '🍸', IceCreamCone: '🍦', Martini: '🍸',
+  Sandwich: '🥪', Soup: '🍲', Utensils: '🍴', UtensilsCrossed: '🍽️', Wheat: '🥖', Wine: '🍷'
+});
+
+export function pictogramaFamiliaBar(categoriaId, nomCategoria = '', iconaCategoria = '') {
+  if (typeof categoriaId === 'string' && Object.hasOwn(PICTOGRAMES_FAMILIA_BAR, categoriaId)) {
+    return PICTOGRAMES_FAMILIA_BAR[categoriaId];
+  }
+  if (typeof iconaCategoria === 'string' && Object.hasOwn(PICTOGRAMES_ICONA_BAR, iconaCategoria)) {
+    return PICTOGRAMES_ICONA_BAR[iconaCategoria];
+  }
+  const clau = `${categoriaId || ''} ${nomCategoria || ''}`.toLocaleLowerCase('ca');
+  /* v1.2.17 · Gauntlet R1 (L3-08) · «Plats combinats» és un plat (no un combinat de licor) i «Pasta» o «Pastes» no són postres. */
+  if (/\bplats?\b/.test(clau)) return '🍽️';
+  if (/caf|infusi|xocolat/.test(clau)) return '☕';
+  if (/torrad|esmorz|forn|\bpa\b/.test(clau)) return '🥖';
+  if (/entrep|bocad|hamburg|sandw/.test(clau)) return '🥪';
+  if (/tap|pica|oliv|aperit/.test(clau)) return '🫒';
+  if (/raci|cassol|arros|arr\u00f2s|guis/.test(clau)) return '🍲';
+  if (/postr|dol\u00e7|dolc|gelat|pastis|past\u00eds/.test(clau)) return '🍰';
+  if (/refresc|aigua|suc/.test(clau)) return '🥤';
+  if (/cerves|canya|birr/.test(clau)) return '🍺';
+  if (/\bvi\b|vins|cav|vermut/.test(clau)) return '🍷';
+  if (/licor|combin|copa|ginebr|coctel|c\u00f2ctel/.test(clau)) return '🍸';
+  return '🍽️';
+}
+
 export const euros = (cents) => formatEuros(cents);
 
 /** «3 línies», «1 línia». */

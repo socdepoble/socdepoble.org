@@ -157,15 +157,22 @@ export function desaRsvpEsdeveniment(item, { idParticipant = 'navegador-local', 
     estat = pas.estat;
   }
 
-  memoriaRsvp = normalitzaMagatzem({
+  const candidat = normalitzaMagatzem({
     actes: {
       ...actual.actes,
       [idEsdeveniment]: { participants: candidats }
     }
   });
-  setVal(CLAU_RSVP_ESDEVENIMENTS, memoriaRsvp);
+  /* R32.25 · El consumidor només confirma el gest amb ok:true. No publiquem
+   * una candidatura en memòria abans de saber si storage l'ha acceptada:
+   * una retirada fallida tampoc no desfà la confirmació anterior. setVal és
+   * síncron: ni un valor truthy ni una Promise acrediten persistència. */
+  let persistit = false;
+  try { persistit = setVal(CLAU_RSVP_ESDEVENIMENTS, candidat) === true; } catch { persistit = false; }
+  if (!persistit) return { ok: false, codi: 'PERSISTENCIA_NO_CONFIRMADA', persistit: false, ambit: 'navegador-local' };
+  memoriaRsvp = candidat;
   for (const oient of [...oientsRsvp]) oient();
-  return { ok: true, resum: resumAforamentRsvp(estat) };
+  return { ok: true, persistit: true, ambit: 'navegador-local', resum: resumAforamentRsvp(estat) };
 }
 
 /**

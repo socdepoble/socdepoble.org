@@ -3,13 +3,16 @@
    l'ajornament, i el botó d'un toc de cada canal (TestFlight amb l'esquema i la reserva https, la web
    recarregant).
    Onada v1.2.16 · ZERO APK fora de botiga (ordre del Mestre, 21-11-2026) · L'APK directe ja no és canal de
-   cap plataforma: un avís APK, tampoc amb la suma bona, no entra al registre, i el botó no obri mai cap APK. */
+   cap plataforma: un avís APK, tampoc amb la suma bona, no entra al registre, i el botó no obri mai cap APK.
+   v1.2.17 · T-04 · El mòdul ja no exporta l'adreça de l'APK directe ni té la clau APK del canal: les proves en
+   guarden l'adreça en una constant local (APK_DIRECTE), perquè la defensa (un .apk per https cau a Google Play)
+   s'ha de continuar provant, i el canal 'apk' és el literal que podria portar un avís vell o hostil. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import * as moduldActualitzacio from './actualitzacioRecomanada.js';
 import {
   CANALS_ACTUALITZACIO,
   ENLLAC_ANDROID_MARKET,
   ENLLAC_ANDROID_PLAY,
-  ENLLAC_APK_DIRECTE,
   ENLLAC_TESTFLIGHT,
   ESQUEMA_TESTFLIGHT,
   FONT_MANIFEST,
@@ -25,9 +28,11 @@ import {
   subscriuActualitzacioRecomanada
 } from './actualitzacioRecomanada.js';
 
+// v1.2.17 · T-04 · L'adreça de l'APK que la v1.2.16 publicava, ara només com a adreça d'atacant de les proves.
+const APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const SHA = 'd'.repeat(64);
 const tf = { plataforma: 'ios', canal: 'testflight', versioRecomanada: 12, versio: '1.2.7', enllac: ENLLAC_TESTFLIGHT };
-const apk = { plataforma: 'android', canal: 'apk', versioRecomanada: 12, versio: '1.2.7', enllac: ENLLAC_APK_DIRECTE, sha256: SHA };
+const apk = { plataforma: 'android', canal: 'apk', versioRecomanada: 12, versio: '1.2.7', enllac: APK_DIRECTE, sha256: SHA };
 const play = { plataforma: 'android', canal: 'play', versioRecomanada: 12, versio: '1.2.7', enllac: ENLLAC_ANDROID_PLAY, marketUrl: ENLLAC_ANDROID_MARKET };
 const web = { plataforma: 'web', canal: 'web', versioRecomanada: 1_002_007, versio: '1.2.7' };
 
@@ -59,6 +64,7 @@ describe('el que entra al registre', () => {
       ['l\'APK a Android des de la font per defecte', apk, null],
       ['l\'APK a iOS', { ...apk, plataforma: 'ios' }, FONT_MANIFEST],
       ['un canal inventat', { ...tf, canal: 'beta' }, FONT_MANIFEST],
+      // v1.2.17 · T-04 · La suma ja no es mira: sense suma o amb una de dolenta, l'APK continua fora.
       ['l\'APK sense suma', { ...apk, sha256: undefined }, FONT_MANIFEST],
       ['l\'APK amb una suma en majúscules', { ...apk, sha256: SHA.toUpperCase() }, FONT_MANIFEST],
       ['la web sense versió', { ...web, versio: '1.2' }, FONT_WEB],
@@ -97,12 +103,21 @@ describe('el que entra al registre', () => {
     }
   });
 
+  test('v1.2.17 · T-04: ni l\'adreça de l\'APK directe, ni la clau APK del canal, ni cap suma a l\'avís', () => {
+    expect(Object.keys(moduldActualitzacio).filter((nom) => /APK/i.test(nom))).toEqual([]);
+    expect(Object.keys(CANALS_ACTUALITZACIO)).toEqual(['PLAY', 'APP_STORE', 'TESTFLIGHT', 'WEB']);
+    expect(Object.values(CANALS_ACTUALITZACIO)).not.toContain('apk');
+    // Un avís de Google Play que porte una suma hi entra sense: el registre ja no en guarda cap.
+    publicaActualitzacioRecomanada({ ...play, sha256: SHA }, FONT_MANIFEST);
+    expect(llegixActualitzacioRecomanada()).toEqual({ plataforma: 'android', versioRecomanada: 12, enllac: ENLLAC_ANDROID_PLAY, marketUrl: ENLLAC_ANDROID_MARKET, canal: 'play', versio: '1.2.7' });
+  });
+
   /* Gauntlet v1.2.16, ronda 2 (L3R2-03) · A Android, el registre només guarda l'https de play.google.com: un avís
      sense canal, o amb el canal 'play', que porte un APK (o un altre host) hi entra amb la fitxa de Google Play. */
   test('v1.2.16 · ZERO APK: a Android, l\'enllaç d\'un avís que no és de Google Play entra com la fitxa de Google Play', () => {
     for (const [cas, dades, font] of [
-      ['sense canal, des del node', { plataforma: 'android', versioRecomanada: 99, enllac: ENLLAC_APK_DIRECTE, marketUrl: null }, FONT_NODE],
-      ['amb el canal play, des del manifest', { ...play, enllac: ENLLAC_APK_DIRECTE }, FONT_MANIFEST],
+      ['sense canal, des del node', { plataforma: 'android', versioRecomanada: 99, enllac: APK_DIRECTE, marketUrl: null }, FONT_NODE],
+      ['amb el canal play, des del manifest', { ...play, enllac: APK_DIRECTE }, FONT_MANIFEST],
       ['un host que comença per play.google.com', { ...play, enllac: 'https://play.google.com.atacant.example/app.apk' }, FONT_MANIFEST],
       ['play.google.com com a usuari', { ...play, enllac: 'https://play.google.com@atacant.example/app.apk' }, FONT_MANIFEST],
       ['play.google.com amb un altre port', { ...play, enllac: 'https://play.google.com:8443/app.apk' }, FONT_MANIFEST]
@@ -120,7 +135,7 @@ describe('el que entra al registre', () => {
     publicaActualitzacioRecomanada({ ...play, enllac: 'http://play.google.com/' }, FONT_MANIFEST);
     expect(llegixActualitzacioRecomanada()?.enllac).toBeNull();
     expect(enllacDeLaPlataforma('android', null)).toBeNull();
-    expect(enllacDeLaPlataforma('ios', ENLLAC_APK_DIRECTE)).toBe(ENLLAC_APK_DIRECTE);
+    expect(enllacDeLaPlataforma('ios', APK_DIRECTE)).toBe(APK_DIRECTE);
   });
 });
 
@@ -186,7 +201,7 @@ describe('el botó d\'un toc', () => {
   test('v1.2.16 · ZERO APK: a Android, un avís sense canal o amb el canal \'play\' que porte un APK obri Google Play', () => {
     vi.useFakeTimers();
     const finestra = finestraAmb();
-    const senseCanal = { plataforma: 'android', versioRecomanada: 99, enllac: ENLLAC_APK_DIRECTE, marketUrl: null };
+    const senseCanal = { plataforma: 'android', versioRecomanada: 99, enllac: APK_DIRECTE, marketUrl: null };
     expect(obriBotigaActualitzacio(senseCanal, { finestra, espera: 1500 })).toBe(ENLLAC_ANDROID_PLAY);
     expect(obriBotigaActualitzacio({ ...senseCanal, enllac: 'https://play.google.com.atacant.example/app.apk' }, { finestra, espera: 1500 }))
       .toBe(ENLLAC_ANDROID_PLAY);

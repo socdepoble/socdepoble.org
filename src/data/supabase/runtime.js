@@ -1,7 +1,7 @@
 import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend } from '../identitat.js';
+import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
@@ -61,19 +61,75 @@ const buildHeaders = (config, anonKey, extra = {}, { anonim = false } = {}) => {
    motiu del 401) usuariDeSessio() ja torna null i el reintent legítim no passaria. */
 const actorDesat = () => getEfimer(CLAU_USUARI, null)?.id ?? null;
 const sessioCanviada = () => new DOMException('La sessió ha canviat durant la renovació.', 'AbortError');
+/* v1.2.17 · Gauntlet R1 (L2-03) · El mateix que donava el camí post-401 quan la renovació fallava. */
+const sessioCaducada = () => new ErrorSupabase('Supabase 401: la sessió ha caducat i no s\'ha pogut renovar.', 401);
+
+/* v1.2.17 · Gauntlet R1 (L2-01) · L'últim JWT que ja naix dins del marge en renovar-lo: amb el
+   rellotge del client avançat 59 min o més, cada token nou hi naix, i cada petició en tornaria a
+   demanar un altre (emetCanvi → sincronitza → recàrregues → preflight → renovació…). Una sola
+   renovació preventiva per token: per a este, decidix el servidor, com abans del preflight.
+   `ultimaRenovacio` és l'època i l'hora de l'última renovació que ha demanat request(): els oients
+   de sdp:auth-change (emetCanvi, dins de renova) ja hi tornen abans que la petició que l'ha
+   demanada, i sense ella llançaven una segona renovació que avortava la primera petició (C14). */
+let jwtNascutACaducar = null;
+let ultimaRenovacio = null;
+
+/* v1.2.17 · Gauntlet R2 (L2R2-02) · Només un JWT que JA ha caducat: un de vàlid, encara que li falte menys del
+   marge, ix tal qual (com a la v1.2.16). Renovar-lo abans pujava l'època, i els qui comparen versioSessio abans i
+   després de request() (l'escriptura editorial, la multipoble, el ritme del xat) rebien AbortError amb l'escriptura
+   ja aplicada. Si caduca pel camí, el reintent post-401 de sempre ho cobrix. */
+const jaCaducat = (jwt) => {
+  const exp = caducitatJwt(jwt);
+  return exp !== null && exp <= Date.now();
+};
+/* Una renovació que torna false o llança no ha fet cap token: l'època + 1 serà d'una altra entrada. */
+const acabatDeRenovar = () => ultimaRenovacio !== null && !ultimaRenovacio.fallida
+  && versioSessio === ultimaRenovacio.epoca + 1 && Date.now() - ultimaRenovacio.hora <= MARGE_RENOVACIO_MS;
+const renovaDesDe = (config, epoca) => {
+  const renovacio = { epoca, hora: Date.now(), fallida: false };
+  ultimaRenovacio = renovacio;
+  return Promise.resolve(refresca(config)).then((ok) => { if (!ok) renovacio.fallida = true; return ok; },
+    (error) => { renovacio.fallida = true; throw error; });
+};
+const recordaSiNaixACaducar = (config) => {
+  const jwt = jwtPerBackend(config);
+  if (jwt && jaCaducat(jwt)) jwtNascutACaducar = jwt;
+};
+
+/* P0-ZERO-401-PREFLIGHT (v1.2.17, captura del Mestre 261121 16:09) · El JWT d'esta sessió ja ha
+   caducat o li falta menys del marge (el mateix de jwtEnviable a auth.js). Sense JWT, amb el
+   testimoni pilot o amb un token opac (exp desconegut), no: decidix el servidor, com sempre. */
+const jwtACaducar = (config) => {
+  const jwt = jwtPerBackend(config);
+  if (!jwt || jwt === jwtNascutACaducar || !jaCaducat(jwt)) return false;
+  /* L2-01 · Acabat d'eixir de la renovació de request() i ja dins del marge: ha nascut així. */
+  if (!acabatDeRenovar()) return true;
+  jwtNascutACaducar = jwt;
+  return false;
+};
+
+/* v1.2.17 · Gauntlet R1 (S-02) · Una Authorization de qui crida (compte.js, la revocació d'Apple)
+   guanya a la del JWT viu: la petició no el fa servir i no hi ha res a renovar abans. */
+const autoritzacioPropia = (headers) => !!headers && Object.keys(headers).some((k) => k.toLowerCase() === 'authorization');
+
+/* v1.2.17 · Gauntlet R1 (L2-04) · El signal de qui crida també talla l'espera de la renovació
+   preventiva. La renovació compartida continua per a la resta de peticions. */
+const ambSenyal = (promesa, signal) => (!signal ? promesa : new Promise((resolve, reject) => {
+  const talla = () => reject(new DOMException('Abortat durant la renovació preventiva.', 'AbortError'));
+  if (signal.aborted) { talla(); return; }
+  signal.addEventListener('abort', talla, { once: true });
+  promesa.then(resolve, reject).finally(() => signal.removeEventListener('abort', talla));
+}));
 
 export async function request(path, config = {}, options = {}) {
-  const epoch = versioSessio;
+  let epoch = versioSessio;
   const actor = actorDesat();
   const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false, anonim = false } = options;
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
   const controller = new AbortController();
   let timedOut = false;
-  const timeoutId = setTimeout(() => {
-    timedOut = true;
-    controller.abort();
-  }, timeoutMs);
+  let timeoutId;
   const avorta = () => controller.abort();
   signal?.addEventListener('abort', avorta);
   try {
@@ -82,17 +138,43 @@ export async function request(path, config = {}, options = {}) {
       err.name = 'AbortError';
       throw err;
     }
+    /* P0-ZERO-401-PREFLIGHT · Una pestanya que torna després d'una hora llançava les seues
+       peticions amb el JWT caducat: N × 401 rojos a la consola abans que el reintent renovara la
+       sessió. Ara es renova ABANS del fetch, amb la promesa compartida de refreshSession (una sola
+       renovació per a totes les peticions concurrents), i s'aplica la guarda C14 a la renovació
+       preventiva: només val la que ha fet esta sessió (època + 1 i el mateix actor), i l'època
+       passa a ser la nova. Si no s'ha pogut renovar i la sessió no ha canviat, la petició ix com
+       abans i el reintent post-401 continua cobrint la deriva de rellotge i la revocació remota. */
+    if (!anonim && !_isRetry && !path.startsWith('/auth/') && !autoritzacioPropia(headers) && jwtACaducar(config)) {
+      const renovada = await ambSenyal(renovaDesDe(config, epoch).catch(() => false), signal);
+      if (renovada && versioSessio === epoch + 1 && actorDesat() === actor) {
+        epoch = versioSessio;
+        recordaSiNaixACaducar(config);
+      }
+      /* v1.2.17 · Gauntlet R1 (L2-03) · La renovació ha fallat i ha buidat la pestanya: el 401
+         de sempre (sessió caducada, no reintentable), sense enviar res. Un altre actor o una
+         entrada nova: AbortError (C14). */
+      else if (versioSessio !== epoch) throw !renovada && actorDesat() === null ? sessioCaducada() : sessioCanviada();
+    }
+    /* v1.2.17 · Gauntlet R1 (L2-02) · El temporitzador s'arma després de la renovació preventiva
+       (fins a 12 s pròpies a auth.js): timeoutMs és per al fetch, com en el reintent post-401. */
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
     /* Anònima: tampoc cap galeta, encara que el servidor de dades compartira l'origen (idea del kit de Codex, 261101). */
     const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers, { anonim }),
       ...(anonim ? { credentials: 'omit' } : {}), signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
       /* Una lectura anònima (T2) no renova mai la sessió: no l'ha feta servir. */
-      if (response.status === 401 && !anonim && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
+      if (response.status === 401 && !anonim && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await renovaDesDe(config, epoch)) {
         /* C14: el reintent només val per a la sessió que ha produït ESTA renovació.
            desaSessio() de la renovació incrementa la versió exactament una vegada i
            conserva l'actor; qualsevol altre salt (logout, canvi d'usuari, nova entrada
            del mateix usuari) vol dir que l'acció pertany a una sessió que ja no existix. */
         if (versioSessio !== epoch + 1 || actorDesat() !== actor) throw sessioCanviada();
+        /* v1.2.17 · Gauntlet R1 (L2-01) · Un token que ja naix dins del marge tampoc no es torna a renovar abans. */
+        recordaSiNaixACaducar(config);
         return request(path, config, { ...options, _isRetry: true });
       }
       const text = await response.text();

@@ -1,4 +1,5 @@
 import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
+import { adoptaEstilsTaulellFeed } from '../../components/universal/estilsTaulellFeed.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 
@@ -61,8 +62,10 @@ export default function MercatSection() {
     title: t('section.mercat.kicker', 'Mercat'),
     subtitle: t('section.mercat.title', 'Productes i intercanvis'),
     lead: t('section.mercat.subtitle', 'Explora els productes i les ofertes disponibles.'),
-    chrome: "system",
-    showLogos: true
+    chrome: "feed",
+    showLogos: false,
+    /* v1.2.17 · El full del mode de taulell viatja amb esta secció, no amb l'arrencada (estilsTaulellFeed.js). */
+    adoptaEstilsChrome: adoptaEstilsTaulellFeed
   };
   /* IDEA-61 (T0, prompt 261102_1532) · «Publicar un producte»: verb i nom
      iguals (el nom accessible conté el text visible, WCAG 2.5.3). */

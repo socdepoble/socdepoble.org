@@ -7,6 +7,8 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { startLocalPostgres } from './fixtures/postgres-local.mjs';
 import { generateVapid, stage } from '../tooling/push/aprovisiona-push.mjs';
+import { upgrade as instalaR3225AmbElMur } from './fixtures/r32_25-s2-upgrade.mjs';
+import { migrate as reaplicaR3225 } from './fixtures/r32_25-push.mjs';
 
 // RPC SQL reals; auth/storage són primitives de plataforma de la fixture.
 // No prova GoTrue/PostgREST, WebSocket Realtime ni recepció física APNs/FCM/Web Push.
@@ -282,15 +284,34 @@ test('R21.2 · missatgeria i rebuts sobre PostgreSQL 18.6 real, sense xarxa exte
             select jsonb_build_object('sub',auth.uid(),'role',auth.role(),'aal','aal1',
               'session_id',nullif(current_setting('request.jwt.claim.session_id',true),''));
           $$;`);
+        /* v1.2.17 · Gauntlet R2 (L4R2-03) · Des de la v1.2.17, R32.25 (20261121090000) NO entra a staged/schema.sql
+           (MIGRACIONS d'aprovisiona-push.mjs, decisió del Mestre), i el stage no la necessita. La instal·lem ací, amb
+           les dependències reals del Mur, per a fixar el perill que documenta el README: passar schema.sql damunt d'una
+           base que ja té R32.25 reaplica 2611020417 i 2611080431 i torna xat_push_encua, xat_push_candidats_v2 i
+           xat_push_reclama_v2 sense D-24 ni Bàndols; només tornar a aplicar 20261121090000 ho restaura
+           (reaplicacio d'ordre_desplegament.json). */
+        await instalaR3225AmbElMur(db,MIGRATIONS);
+        const r3225=async()=>(await db.query(`select
+          pg_get_functiondef('public.xat_push_reclama_v2(integer)'::regprocedure) like '%a.avis%' as reclama_urgent,
+          pg_get_functiondef('private.xat_push_candidats_v2(bigint)'::regprocedure) like '%v_canal%' as candidats_urgent,
+          pg_get_functiondef('private.xat_push_encua()'::regprocedure) like '%xat_push_directes_nous%' as encua_d24`)).rows[0];
+        assert.deepEqual(await r3225(),{reclama_urgent:true,candidats_urgent:true,encua_d24:true},'R32.25 instal·lada abans del stage');
         generateVapid(dir,'mailto:postgres-fixture@example.invalid');
         writeFileSync(inputs,`SDP_CRON_SECRET=${'x'.repeat(48)}\n`,{mode:0o600});
         const prepared=stage({root:fileURLToPath(new URL('..',import.meta.url)),dir,inputs,channels:['web']});
         assert.equal(prepared.ok,true); assert.equal(prepared.staged,true);
+        const schemaSql=readFileSync(join(dir,'staged/schema.sql'),'utf8');
+        assert.doesNotMatch(schemaSql,/push_poble_actiu|xat_push_directes_nous/,'schema.sql no porta R32.25');
         const count=(await db.query('select count(*)::int as n from public.xat_missatges')).rows[0].n;
         // Executem els bytes que rebria l’operador, sense corregir ni copiar la
         // signatura del productor dins del test. La primera versió fallava ací.
-        await db.query(readFileSync(join(dir,'staged/schema.sql'),'utf8'));
+        await db.query(schemaSql);
         assert.equal((await db.query('select count(*)::int as n from public.xat_missatges')).rows[0].n,count);
+        // El perill: schema.sql desfà R32.25 sense cap error...
+        assert.deepEqual(await r3225(),{reclama_urgent:false,candidats_urgent:false,encua_d24:false},'schema.sql torna els cossos d’abans de R32.25');
+        // ...i tornar a aplicar 20261121090000 després ho restaura.
+        await reaplicaR3225({exec:q=>db.query(q)});
+        assert.deepEqual(await r3225(),{reclama_urgent:true,candidats_urgent:true,encua_d24:true},'reaplicar 20261121090000 restaura R32.25');
         await db.query("update private.ajustos set valor='no' where clau='push_xat_actiu'");
         await db.query(readFileSync(join(dir,'staged/activa.sql'),'utf8'));
         assert.equal((await db.query("select valor from private.ajustos where clau='push_xat_actiu'")).rows[0].valor,'si');
@@ -320,6 +341,9 @@ test('R21.2 · missatgeria i rebuts sobre PostgreSQL 18.6 real, sense xarxa exte
         await db.query('delete from auth.sessions where id=$1',[session]);
         assert.equal((await db.query('select count(*)::int as n from public.xat_dispositius_push')).rows[0].n,0);
         await assert.rejects(register(),sdpError('SDP-PUSH-013'));
+      } catch(error) {
+        await db.query('rollback'); // La neteja no ha d'ocultar la causa amb25P02.
+        throw error;
       } finally {
         if(prior===undefined) await db.query("delete from private.ajustos where clau='push_xat_actiu'");
         else await db.query("update private.ajustos set valor=$1 where clau='push_xat_actiu'",[prior]);

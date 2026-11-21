@@ -63,7 +63,8 @@ export const ICONES_ESPECIMENS = Object.freeze({
   retroalimentacio: Object.freeze({
     alerta: '⚠️', insignia: '📛', buit: '📭', carrega: '⏳', progres: '🔋',
     'estat-desament': '☁️', 'resum-connexio': '👀', connexio: '🟢',
-    'barra-actualitzacio-app': '🔄', 'banda-beta-micro-app': '🧪'
+    'barra-actualitzacio-app': '🔄', 'banda-beta-micro-app': '🧪',
+    'acollida-foraster-xat': '👋'
   }),
   superposicions: Object.freeze({
     dialeg: '🪟', confirmacio: '❓', calaix: '🗄️', 'pantalla-completa': '📺', pista: '💡',
@@ -670,3 +671,5 @@ CATALOG_ITEMS.push(especimen('formularis', 'selector-opcions-desplegable', 'Opci
 CATALOG_ITEMS.push(especimen('fonaments', 'respiracio-botons', 'Respiració lateral dels botons', 'Coixí lateral i files centrades', ['atom', 'botons'], 'Etiquetes completes, amplària conservada i grups que baixen centrats quan falta espai.', 'padding lateral app store wordpress wrap'));
 
 CATALOG_ITEMS.push(especimen('retroalimentacio', 'banda-beta-micro-app', 'Banda de fase beta (micro-apps)', 'BandaBetaMicroApp', ['molecula', 'avis', 'beta'], 'Franja superior serena i contextual en 5 llengües per a les micro-apps en proves: avís beta net per defecte i clàusula sobre Verifactu / AEAT només en eines amb avisBeta fiscal al manifest.', 'beta proves verifactu aeat gestoria bar nevera salut genealogia lector microapp'));
+
+CATALOG_ITEMS.push(especimen('retroalimentacio', 'acollida-foraster-xat', 'Benvinguda del Foraster al Xat', 'AcollidaForasterXat', ['molecula', 'avis', 'xat'], 'La targeta de qui aterra sense sessió a /xat: el títol i les dues línies del Mestre (IDEA-313) en 5 llengües, un sol «Entrar» i una ✕ que la tanca i ho recorda.', 'foraster xat acollida benvinguda onboarding'));

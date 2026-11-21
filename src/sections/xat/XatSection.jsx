@@ -121,6 +121,7 @@ import FiltreConverses from './components/FiltreConverses.jsx';
 import Conversa from './components/Conversa.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import PindolaAvisosPushXat from './components/PindolaAvisosPushXat.jsx';
+import AcollidaForasterXat from './components/AcollidaForasterXat.jsx';
 import BarraSeleccio from './components/BarraSeleccio.jsx';
 import FiltresCerca, { IconaFiltre } from './components/FiltresCerca.jsx';
 import ResultatsCercaXat from './components/ResultatsCercaXat.jsx';
@@ -383,7 +384,9 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { showToast } = useToast();
   const { t } = useUIActions();
-  const { locale, externalConfig } = useUIState();
+  /* v1.2.17 · Gauntlet R1 (L1-02) · `llenguaDelText`, la llengua carregada (la del lang del document):
+     la benvinguda del Foraster no canvia de llengua abans que el diccionari arribe. */
+  const { locale, externalConfig, language = 'ca', llenguaDelText } = useUIState();
   const { creaNota } = useNotesData();
 
   const { threadId } = useParams();
@@ -1914,9 +1917,14 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
        torna a anunciar, a propòsit: seria soroll cada pocs segons. */
     const ambAvisLlista = Boolean(avisLlista) && !avis;
     const mostraSafataArxivats = filesArxivades.length > 0 && !modeSeleccio;
+    /* v1.2.17 · IDEA-313 (literal del Mestre, 261121 16:03) · La benvinguda del Foraster: a dalt
+       de la llista, a l'aterratge estricte de P1-54 (`esAterratge`) i només sense sessió. Un títol,
+       dues línies, un sol «Entrar» (rutaDEntrada amb la tornada de sempre) i la ✕, que la tanca i
+       ho recorda en aquest dispositiu sense deixar cap pastilla. */
     cos = (
       <>
         <p className={ambAvisLlista ? 'sdp-xat-avis' : 'sdp-nomes-lector'} role="status">{ambAvisLlista ? avisLlista : ''}</p>
+        {senseSessio && esAterratge ? <AcollidaForasterXat idioma={llenguaDelText ?? language} tornar={rutaActual} onNavega={navigate} /> : null}
         {mostraSafataArxivats ? (
           <button
             ref={botoArxivatsRef}

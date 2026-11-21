@@ -24,9 +24,17 @@ const PREFIX = 'mestre-detall:';
 const CLAU_VALIDA = /^[a-z][a-z0-9-]{0,39}$/;
 /* Els nivells d'«estret»: la navegació, la llista o (null) el detall. */
 const NIVELLS = Object.freeze(['left', 'middle', null]);
+const INICIALS_ESPAI = new Map();
 
 const elementDe = (valor) => (valor == null || valor === '' ? null : String(valor));
 const clauValida = (clau) => typeof clau === 'string' && CLAU_VALIDA.test(clau);
+
+/** Declara quin nivell obri un espai en pantalla estreta quan no hi ha cap element a la URL. */
+export function declaraNivellInicialEspai(clau, nivell) {
+  if (!clauValida(clau) || !NIVELLS.includes(nivell)) return false;
+  INICIALS_ESPAI.set(clau, nivell);
+  return true;
+}
 
 /** El nivell recordat per al mòdul `clau` si la URL porta el mateix element
  *  que quan es va deixar; si no, undefined. */
@@ -44,13 +52,21 @@ export function recordaNivell(clau, element, nivell) {
 }
 
 /** La primera vista en estret: 'left', 'middle' o null (el detall).
- *  `mestreDetall` és la prop d'UniversalWorkspace: { clau, element } (la
- *  secció diu qui és i l'element de la URL crua), o la forma curta
- *  'navegacio' | 'detall' | true, sense memòria. */
+ *  `mestreDetall` és la prop d'UniversalWorkspace: { clau, element, inicial? }
+ *  (la secció diu qui és, l'element de la URL crua i, opcionalment, quin nivell
+ *  obri quan no hi ha cap element), o la forma curta 'navegacio' | 'detall' | true. */
 export function entradaMestreDetall(mestreDetall) {
   if (mestreDetall && typeof mestreDetall === 'object') {
     const element = elementDe(mestreDetall.element);
-    if (element === null) return 'left';
+    if (element === null) {
+      if (Object.hasOwn(mestreDetall, 'inicial') && NIVELLS.includes(mestreDetall.inicial)) {
+        return mestreDetall.inicial;
+      }
+      if (INICIALS_ESPAI.has(mestreDetall.clau)) {
+        return INICIALS_ESPAI.get(mestreDetall.clau);
+      }
+      return 'left';
+    }
     const recordat = nivellRecordat(mestreDetall.clau, element);
     return recordat === undefined ? null : recordat;
   }

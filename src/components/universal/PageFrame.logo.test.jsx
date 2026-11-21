@@ -72,7 +72,7 @@ const marcatgeDAbans = () => {
 };
 
 describe('d) qui signa Sóc de Poble porta el seu logotip, també les pàgines de sistema', () => {
-  test.each([...PAGE_CHROME_MODES].filter((mode) => mode !== 'none').concat('inventat'))(
+  test.each([...PAGE_CHROME_MODES].filter((mode) => mode !== 'none' && mode !== 'feed').concat('inventat'))(
     'chrome="%s", sense autor: dos logotips (negre per al clar, blanc per al fosc) davant de l’H1', (chrome) => {
       const { container } = render(<PageFrame chrome={chrome} title="Consola" />);
       expect(fills(capcalera(container))).toEqual([...DOS_LOGOS_SDP, 'H1.']);
@@ -134,6 +134,14 @@ describe('d) qui signa Sóc de Poble porta el seu logotip, també les pàgines d
     const { container } = render(<PageFrame chrome="none" title="T" />);
     expect(capcalera(container)).toBeNull();
     expect(container.querySelector('img.page-title-logo')).toBeNull();
+  });
+
+  test('chrome="feed" (taulell compacte opt-in) omet el 3r logotip automàtic però conserva l’H1 i les barres', () => {
+    const { container } = render(<PageFrame chrome="feed" title="Mur" />);
+    expect(fills(capcalera(container))).toEqual(['H1.']);
+    expect(container.querySelector('img.page-title-logo')).toBeNull();
+    expect(container.querySelector('header.bar-blue')).not.toBeNull();
+    expect(container.querySelector('section.bar-orange')).not.toBeNull();
   });
 
   test('amb la base del paquet (WordPress, Sollutia), els src pengen d’ella', () => {

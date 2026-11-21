@@ -74,10 +74,8 @@ describe('Onada R32.14 · T3-UI-01 i T3-UI-02 · Rebost a 320 px sense truncamen
     const tx = TEXTOS_VISTA_NEVERA[lang];
     const txCasa = TEXTOS_CASA_NEVERA[lang];
 
-    const botoTot = await screen.findByRole('button', { name: tx.totElCataleg }, { timeout: 5000 });
-    fireEvent.click(botoTot);
-
     const botoTomaques = (await screen.findAllByRole('button', { name: 'Tomaques', exact: true }, { timeout: 5000 })).at(-1);
+    expect(document.querySelector('.app-grid-shell')?.dataset.panell).toBe('middle');
     fireEvent.click(botoTomaques);
 
     const detall = within(document.getElementById('app-grid-main'));

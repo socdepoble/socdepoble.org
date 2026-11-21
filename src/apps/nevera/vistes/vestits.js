@@ -74,6 +74,68 @@ const ICONES = Object.freeze({
 /** La icona d'una secció (un component de lucide-react), o undefined si no en té. */
 export const iconaDeSeccio = (categoriaId) => (Object.hasOwn(ICONES, categoriaId) ? ICONES[categoriaId] : undefined);
 
+/* Onada R32.26 · IDEA-303 · Pictogrames nítids d'aliment i de família a l'estil de Bring!
+   per a les rajoles quadrades 3×3 del Rebost i de La compra (sense color de fons per categoria).
+   v1.2.17 · Gauntlet R1 (L3-09) · Només emojis d'Unicode 13 o anteriors (baseline Safari 16):
+   el vinagre, els pèsols, els llegums i el sabó de plats ja no porten glifs d'Emoji 14 o 15. */
+const PICTOGRAMES_SECCIO = Object.freeze({
+  'fruita-verdura': '🍎',
+  'pa-pastissos': '🥖',
+  'llet-formatge': '🥛',
+  'carn-peix': '🥩',
+  'ingredients-especies': '🫒',
+  congelats: '❄️',
+  'cereals-pasta': '🌾',
+  'picar-dolcos': '🍪',
+  begudes: '🥤',
+  llar: '🏠',
+  'higiene-salut': '🧴',
+  mascotes: '🐾',
+  jardi: '🌱',
+  propis: '🏷️'
+});
+
+const PICTOGRAMES_ARTICLE = Object.freeze({
+  tomaques: '🍅', creilles: '🥔', cebes: '🧅', alls: '🧄', pomes: '🍎',
+  taronges: '🍊', platans: '🍌', encisam: '🥬', safanories: '🥕', pebrots: '🫑',
+  carabasso: '🥒', llimes: '🍋', maduixes: '🍓',
+  pa: '🥖', 'pa-de-motle': '🍞', 'pa-integral': '🍞', magdalenes: '🧁',
+  rosquilletes: '🥨', 'coca-de-llanda': '🥧', ensaimades: '🥐',
+  llet: '🥛', iogurts: '🥣', ous: '🥚', 'formatge-fresc': '🧀',
+  'formatge-curat': '🧀', mantega: '🧈', nata: '🥛',
+  pollastre: '🍗', 'carn-picada': '🥩', llom: '🥩', pernil: '🥓',
+  salsitxes: '🌭', lluc: '🐟', salmo: '🍣', sepia: '🦑', tonyina: '🥫',
+  'oli-oliva': '🫒', sal: '🧂', sucre: '🍯', farina: '🌾', vinagre: '🍶',
+  pebre: '🌶️', safra: '🌼', 'tomaca-fregida': '🥫', llevat: '🌾',
+  gelat: '🍦', 'pesols-congelats': '🥬', 'verdura-congelada': '🥦',
+  pizza: '🍕', croquetes: '🥟', gel: '🧊',
+  arros: '🍚', macarrons: '🍝', espaguetis: '🍝', fideus: '🍜',
+  cigrons: '🥜', llentilles: '🥜', fesols: '🥜', cereals: '🥣',
+  xocolate: '🍫', galetes: '🍪', 'creilles-bossa': '🥔', olives: '🫒',
+  ametles: '🌰', cacaus: '🥜', caramels: '🍬',
+  aigua: '💧', 'suc-taronja': '🧃', cervesa: '🍺', vi: '🍷',
+  refrescos: '🥤', cafe: '☕', infusions: '🍵', orxata: '🥛',
+  'paper-higienic': '🧻', 'paper-cuina': '🧻', detergent: '🧺',
+  'sabo-plats': '🧼', lleixiu: '🧴', 'bosses-fem': '🗑️',
+  'paper-alumini': '📦', esponges: '🧽', tovallons: '🧻',
+  'gel-dutxa': '🧴', xampu: '🧴', 'pasta-dents': '🪥', desodorant: '🧴',
+  compreses: '🩹', tiretes: '🩹', mocadors: '🧻',
+  'pinso-gos': '🐕', 'pinso-gat': '🐈', 'llaminadures-gat': '🐾', 'arena-gat': '🐈',
+  adob: '🌱', 'terra-testos': '🪴', llavors: '🌻', cordell: '🧶'
+});
+
+export const pictogramaDeSeccio = (categoriaId) => (
+  Object.hasOwn(PICTOGRAMES_SECCIO, categoriaId) ? PICTOGRAMES_SECCIO[categoriaId] : '🏷️'
+);
+
+export function pictogramaDe(article) {
+  if (!article) return '🏷️';
+  if (typeof article.id === 'string' && Object.hasOwn(PICTOGRAMES_ARTICLE, article.id)) {
+    return PICTOGRAMES_ARTICLE[article.id];
+  }
+  return pictogramaDeSeccio(article.categoriaId);
+}
+
 /** El que hi ha a casa, dit amb paraules (mai només amb color). */
 export const TEXTOS_CASA = textosCasaNevera('ca');
 export const textosCasa = (idioma = 'ca') => (idioma && idioma !== 'ca' ? textosCasaNevera(idioma) : TEXTOS_CASA);
@@ -113,12 +175,19 @@ export const nomArticleVisible = (article) => (
  * REGLA D'OR 1 (ordre del Mestre, 261004) · `autoria(article)`: la boina de
  * la targeta, qui signa l'article; la passa la vista (autoriaDArticle,
  * autoria.js), que és qui entra a la plataforma. Sense, cap boina.
+ * v1.2.17 · Gauntlet R2 (L3R2-02) · `ambPictograma` (OPCIONAL, només `true`):
+ * el pictograma d'aliment (pictogramaDe) només el demanen les vistes aprovades
+ * per a l'estil Bring! (IDEA-303): La compra (Compra.jsx). El Rebost el pren a
+ * part (modelRebostWorkspace.js). Sense, cap camp `pictograma`: el Catàleg i A
+ * casa (la graella, la llista i el diàleg DetallArticle) tornen a pintar la
+ * icona de la secció i les inicials, com a la v1.2.16 (Llei del Píxel).
  */
-export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA, idioma = 'ca' } = {}) {
+export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA, idioma = 'ca', ambPictograma = false } = {}) {
   return [...articlesDe(estat), ...productes].map((article) => ({
     id: article.id,
     nom: nomArticleVisible(article),
     categoriaId: article.categoriaId,
+    ...(ambPictograma === true ? { pictograma: pictogramaDe(article) } : null),
     secundari: secundari(article) || undefined,
     estat: aLaLlista.has(article.id) ? 'en-colleccio' : 'normal',
     autoria: autoria(article),
@@ -184,16 +253,20 @@ export function suggerimentsVestits(estat, { aLaLlista = new Set(), secundari } 
  * REGLA D'OR 1 (ordre del Mestre, 261004) · `autoria(article)`: la boina de la
  * targeta, qui signa l'article de la línia; la passa la vista (autoria.js).
  * Les línies de sempre tampoc la llegixen.
+ * v1.2.17 · Gauntlet R2 (L3R2-02) · `ambPictograma`, com a articlesVestits:
+ * només La compra (Compra.jsx) el demana.
  */
-export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio, autoria = SENSE_AUTORIA, idioma = 'ca' } = {}) {
+export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio, autoria = SENSE_AUTORIA, idioma = 'ca', ambPictograma = false } = {}) {
   return files.map((fila) => {
     const article = articlePerId(estat, fila.articleId);
     return {
       id: fila.articleId,
       articleId: fila.articleId,
+      categoriaId: article?.categoriaId ?? null,
       nom: article ? nomArticleVisible(article) : fila.articleId,
       detall: detall(fila) || undefined,
       icona: iconaDeSeccio(article?.categoriaId),
+      ...(ambPictograma === true ? { pictograma: pictogramaDe(article) } : null),
       autoria: autoria(article),
       subtitol: subtitolDe(article, idioma),
       entradeta: entradetaDe(article, idioma)

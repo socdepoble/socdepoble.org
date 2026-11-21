@@ -1,4 +1,5 @@
 import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
+import { adoptaEstilsTaulellFeed } from '../../components/universal/estilsTaulellFeed.js';
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
@@ -305,8 +306,10 @@ export default function MurSection() {
     title: t('section.mur.kicker', 'Mur'),
     subtitle: t('section.mur.title', 'Publicacions recents'),
     lead: t('section.mur.subtitle', 'Explora el mur públic a través de les diferents vistes: llista, calendari i mapa.'),
-    chrome: "system",
-    showLogos: true
+    chrome: "feed",
+    showLogos: false,
+    /* v1.2.17 · El full del mode de taulell viatja amb esta secció, no amb l'arrencada (estilsTaulellFeed.js). */
+    adoptaEstilsChrome: adoptaEstilsTaulellFeed
   };
   /* T63.2 (doctrina del Mestre, 260928) · el xat comú del Mur és el de la seua
      ruta canònica: els filtres (?date=, ?category=) no en fan un altre. */

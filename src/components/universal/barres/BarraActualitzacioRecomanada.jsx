@@ -12,9 +12,12 @@
  *     o connectat al registre reactiu `useActualitzacioRecomanada` dins d'`App.jsx`.
  *   · Sense avís (l'app o la web ja estan al dia), retorna `null` (zero node al DOM).
  *   · Onada v1.2.7 · P0-123 (ordre directa del Mestre, 17-11-2026) · Els canals de proves i la web:
- *     `canal` 'testflight' (iOS) obri TestFlight; 'apk' (Android, instal·lació directa) baixa l'APK
- *     signat i diu la seua SHA-256 sencera; 'web' (la PWA) carrega la versió nova. Els textos
+ *     `canal` 'testflight' (iOS) obri TestFlight; 'web' (la PWA) carrega la versió nova. Els textos
  *     d'estos canals, a textosActualitzacio.js (cinc llengües, fora de l'arrencada).
+ *   · v1.2.17 · T-04 · ZERO APK fora de botiga (ordre del Mestre 261121) · Retirada la branca del canal
+ *     'apk' (el text de l'APK signat i la seua SHA-256 sencera): des de la v1.2.16 cap avís APK no entra
+ *     al registre (normalitzaAvis), i el botó d'un avís amb el canal 'apk' no obri res
+ *     (obriBotigaActualitzacio).
  */
 import { ArrowUpRight, RefreshCw, X } from 'lucide-react';
 import { useUIActionsOpcional } from '../../../app/contexts/UIContext';
@@ -56,9 +59,6 @@ export default function BarraActualitzacioRecomanada({
   if (canal === CANALS_ACTUALITZACIO.TESTFLIGHT) {
     detall = textos.detallTestflight;
     etiquetaBoto = textos.accioTestflight;
-  } else if (canal === CANALS_ACTUALITZACIO.APK) {
-    detall = textos.detallApk;
-    etiquetaBoto = textos.accioApk;
   } else if (canal === CANALS_ACTUALITZACIO.WEB) {
     detall = textos.detallWeb.replace('{versio}', String(avis.versio ?? ''));
     etiquetaBoto = textos.accioWeb;
@@ -75,8 +75,6 @@ export default function BarraActualitzacioRecomanada({
     );
     etiquetaBoto = t('natiu.actualitzacioRecomanada.accioAndroid', 'Actualitza a Google Play');
   }
-  /* L'APK porta la seua suma, sencera: una de retallada no es pot comprovar. */
-  const suma = canal === CANALS_ACTUALITZACIO.APK && typeof avis.sha256 === 'string' ? avis.sha256 : null;
   const etiquetaMesTard = t('natiu.actualitzacioRecomanada.mesTard', 'Més tard');
   /* Auditoria del kit de Gemini R22 · WCAG 2.5.3: el nom accessible comença
      pel text visible («Més tard») i després diu què amaga. */
@@ -114,12 +112,6 @@ export default function BarraActualitzacioRecomanada({
           <strong className="sdp-barra-actualitzacio__titol">{titol}</strong>
           {' '}
           <span className="sdp-barra-actualitzacio__detall">{detall}</span>
-          {suma ? (
-            <>
-              {' '}
-              <code className="sdp-barra-actualitzacio__detall" translate="no">{suma}</code>
-            </>
-          ) : null}
         </p>
       </div>
       <div className="sdp-barra-actualitzacio__accions">

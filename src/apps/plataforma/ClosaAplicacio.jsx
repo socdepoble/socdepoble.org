@@ -112,7 +112,8 @@ function PanellEstret({ columna }) {
  */
 /* `amagaEsquerraBuida` (Gauntlet v1.2.15) · Una ruta sense Esquerra retira la columna buida (leftColumn null
    a AppGridShell) només en les apps que ho declaren: el Mestre ho va aprovar per al Bar (Gemini R32.19).
-   La resta, com la Nevera, conserva la columna de sempre (leftColumn undefined, Llei del Píxel). */
+   La resta, com la Nevera, conserva la columna de sempre (leftColumn undefined, Llei del Píxel).
+   v1.2.17 · Gauntlet R2 (L3R2-01) · La Nevera no el declara: el Rebost i La compra no en depenen. */
 export function ClosaAplicacio({ rutes, titols = {}, amagaEsquerraBuida = false }) {
   const unicaAppsRef = useRef(null);
   useFullDiferit(unicaAppsRef, 'apps-plataforma', cssAppsPlataforma);

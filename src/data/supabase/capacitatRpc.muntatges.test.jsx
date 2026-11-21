@@ -7,7 +7,9 @@ vi.mock('../../utils/sanitize.js', () => ({ permetOrigenMitjans: () => {} }));
 vi.mock('../appSeed.js', () => ({ APP_SEED: {}, APP_SEED_VERSION: 'synthetic', getDefaultUserId: () => 'A' }));
 vi.mock('../../config/storage.js', () => ({ getEfimer: (_key, fallback = null) => fallback }));
 vi.mock('../identitat.js', () => ({ CLAU_USUARI: 'user', versioSessio: 0,
-  usuariDeSessio: () => null, jwtPerBackend: () => null, capturaSessio: () => () => {} }));
+  usuariDeSessio: () => null, jwtPerBackend: () => null, capturaSessio: () => () => {},
+  /* P0-ZERO-401-PREFLIGHT (v1.2.17) · runtime.js mira la caducitat abans del fetch. */
+  caducitatJwt: () => null, MARGE_RENOVACIO_MS: 60_000 }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => null }));
 vi.mock('../../app/contexts/UIContext.jsx', () => ({ useUIStateOpcional: () => null }));
 vi.mock('../backendPort.js', async () => ({ teCapacitat: () => true,

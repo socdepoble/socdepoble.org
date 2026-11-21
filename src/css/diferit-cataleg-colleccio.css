@@ -116,6 +116,7 @@
     aspect-ratio: 1 / 1;
   }
   .sdp-marca-article__inicials { font-size: var(--sdp-text-h5); font-weight: 800; line-height: 1.2; }
+  .sdp-marca-article__pictograma { font-size: var(--sdp-text-h4); line-height: 1; }
   .sdp-marca-article__imatge { display: block; inline-size: 100%; block-size: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 
   /* ── SECCIONS DE CATEGORIA · plegables, en l'ordre de la persona ──── */
@@ -190,6 +191,14 @@
   .sdp-graella-articles__element { position: relative; display: grid; min-inline-size: 0; }
   .sdp-graella-articles__element > .sdp-rajola { touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   .sdp-graella-articles__element--en-colleccio > .sdp-rajola { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
+  /* v1.2.17 · Gauntlet R1 (L3-07) · L'estil de la llista de la compra (IDEA-303), només amb el
+     modificador que hi posa GraellaArticles amb estilCompra (La compra de la Nevera): 3×3 rajoles en
+     360 px, la no triada sobre la targeta i la pendent en accent, amb el quadre ple. El TPV del Bar,
+     Salut i /disseny pinten com a la v1.2.16. */
+  .sdp-graella-articles.sdp-graella-articles--compra { grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); }
+  .sdp-graella-articles--compra .sdp-graella-articles__element > .sdp-rajola[aria-pressed="false"] { border-color: var(--sdp-vora); background: var(--sdp-fons-targeta); }
+  .sdp-graella-articles--compra .sdp-graella-articles__element--en-colleccio > .sdp-rajola { border-color: var(--sdp-accent-control); background: var(--sdp-accent-subtil); color: var(--sdp-text-titol); }
+  .sdp-graella-articles--compra .sdp-graella-articles__element--en-colleccio > .sdp-rajola .sdp-rajola__media { background: var(--sdp-accent); color: var(--sdp-sobre-accent); }
   .sdp-graella-articles__marca-colleccio,
   .sdp-llista-articles__marca-colleccio {
     position: absolute;
@@ -549,6 +558,10 @@
     }
     .sdp-barra-resum__obri > .sdp-barra-resum__etiqueta {
       flex: 1 1 7rem;
+    }
+    /* v1.2.17 · Gauntlet R1 (L3-07) · El títol en lletra meta, només a la llista de la compra. */
+    .sdp-graella-articles--compra .sdp-rajola__titol {
+      font-size: var(--sdp-text-meta);
     }
   }
 

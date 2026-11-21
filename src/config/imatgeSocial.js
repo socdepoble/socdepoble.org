@@ -336,7 +336,12 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   /* P0-SEO-UNIVERSAL (13-11-2026) · La portada de la fitxa de la IAIA MarIA (/iaia): 1024x1024 i
      1,3 MB (la bessona .webp, 412 KB, hi arriba per ambVariantSocial). Retall de cobertura amb
      posicioY 0,35 (la cara i les mans senceres), JPEG baseline, ≤300 000 B, sense APP1. */
-  '/assets/uploads/brain/iaia_maria_avatar.jpg'
+  '/assets/uploads/brain/iaia_maria_avatar.jpg',
+  /* v1.2.17 · Gauntlet R2 (L3R2-04) · La portada de la Wiki (PAGE_COPY.wikidepoble) és la vinyeta de
+     1024x1024 i 536 KB (lot_03 de Gemini R32.26; la bessona .webp hi arriba per ambVariantSocial).
+     Mateixa convenció (tria-imatge-seo.mjs · generaVariantSocial1200x630) amb posicioY 0,55 (les quatre
+     cares, el gat i els llibres sencers): JPEG baseline, 272 474 B, sense APP1. */
+  '/assets/ui/plugins/wikidepoble_vinyeta.jpg'
 ].map((original) => [original, variantSocialDe(original)])));
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o

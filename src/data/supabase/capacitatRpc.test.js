@@ -8,6 +8,8 @@ vi.mock('../../config/storage.js', () => ({ getEfimer: (key, fallback = null) =>
 vi.mock('../identitat.js', () => ({
   CLAU_USUARI: 'user', usuariDeSessio: () => m.store.get('user') ?? null,
   jwtPerBackend: () => m.store.get('jwt') ?? null,
+  /* P0-ZERO-401-PREFLIGHT (v1.2.17) · runtime.js mira la caducitat abans del fetch: tokens opacs. */
+  caducitatJwt: () => null, MARGE_RENOVACIO_MS: 60_000,
   get versioSessio() { return m.epoch; },
   capturaSessio: () => {
     const entrada = m.entrada, actor = m.store.get('user')?.id;

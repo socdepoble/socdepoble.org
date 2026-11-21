@@ -325,3 +325,7 @@ REGISTRE.push({ nom: 'SelectorOpcionsDesplegable', fitxer: 'PedraSeca/molecules/
 /* Onada R32.5 (P0-112 / T3-UI-03) · La banda de fase beta de les micro-apps en proves, en les 5 llengües.
    Espècimen: EspecimenBandaBetaMicroApp (retroalimentacio/banda-beta-micro-app). */
 REGISTRE.push({ nom: 'BandaBetaMicroApp', fitxer: 'PedraSeca/molecules/BandaBetaMicroApp.jsx', pagina: 'retroalimentacio', estat: 'viu' });
+/* Onada R32.26 → v1.2.17 (IDEA-313) · La benvinguda del Foraster dins de /xat: el literal del Mestre de dues
+   línies en 5 llengües, una ✕ que la tanca i la recorda i un sol «Entrar».
+   Espècimen: EspecimenAcollidaForasterXat (retroalimentacio/acollida-foraster-xat). */
+REGISTRE.push({ nom: 'AcollidaForasterXat', fitxer: 'sections/xat/components/AcollidaForasterXat.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });

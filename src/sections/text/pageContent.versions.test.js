@@ -34,6 +34,8 @@ import { VIGENCIA_ALERTA_MS } from '../mur/alertesMunicipals.js';
 import { PAGE_COPY } from './pageContent.js';
 import { localitzaPagina } from './pageContent.r10.js';
 import { textosCalendariRsvp } from '../calendari/i18nCalendariRsvp.js';
+import { TEXTOS_BENVINGUDA_FORASTER } from '../xat/components/acollidaForasterXatModel.js';
+import { PAGE_CHROME_MODES } from '../../components/universal/UniversalUtils.js';
 import { CAPACITATS_NO_DECLARADES } from '../../data/local/adaptadorLocal.js';
 import { PLATAFORMA_ALIENA } from './perAppNativa.js';
 import { AMBITS, RESERVES_I18N } from '../../utils/publicacioUniversal.js';
@@ -94,6 +96,10 @@ const CONNECTOR = llegix('wordpress-plugin/socdepoble-enxufe.php').match(/^ \* V
    literal: la capçalera del connector del repositori (CONNECTOR) ja pot ser més nova (la 1.1.13 de la v1.2.0), i
    l'entrada vella no es reescriu quan el repositori puja de versió. */
 const CONNECTOR_PUBLICAT = '1.1.12';
+/* Onada v1.2.17 (Gauntlet R1, L5-04) · La capçalera de /versions diu el connector que serveix WordPress.org quan s'escriu
+   la crònica més nova: la 1.1.24 (SVN r3815297, v1.2.16), la mateixa que diu la crònica R32.26. Abans repetia la 1.1.12
+   de l'entrada de la 1.1.0 i la pàgina es contradeia. CONNECTOR_PUBLICAT continua sent la història d'eixa entrada. */
+const CONNECTOR_A_WPORG = '1.1.24';
 const RUTES = llegix('src/app/App.jsx');
 
 /* Un bloc d'entrega: del seu <h3> fins al <h3> següent (o fins al final). */
@@ -402,8 +408,25 @@ const INICIS_R32_24 = {
   eu: '2026ko azaroaren 21a, goizaldea · R32.21–R32.24 olatuak',
   gl: '21 de novembro de 2026, madrugada · Ondas R32.21–R32.24'
 };
-const desDeR32_20 = (cos) => (Object.values(INICIS_R32_24).some((inici) => cos.startsWith(`<h3>${inici}`))
+/* Onada v1.2.17 · La crònica de les Onades R32.25 i R32.26 (versió 1.2.17, build 22) obri /versions, davant de la de
+   R32.21–R32.24. desDeR32_24 lleva el seu bloc quan obri la pàgina (en qualsevol de les cinc llengües); les proves de la
+   R32.24 lligen /versions des d'ací. */
+const TITOL_FITA_R32_26 = '21 de novembre de 2026, vesprada · Onades R32.25 i R32.26 · La benvinguda del Foraster, el Rebost en rajoles i un TPV del Bar per a provar';
+const fitaR32_26Bloc = blocDe(TITOL_FITA_R32_26);
+const INICIS_R32_26 = {
+  ca: '21 de novembre de 2026, vesprada · Onades R32.25 i R32.26',
+  es: '21 de noviembre de 2026, tarde · Oleadas R32.25 y R32.26',
+  en: '21 November 2026, afternoon · Waves R32.25 and R32.26',
+  eu: '2026ko azaroaren 21a, arratsaldea · R32.25 eta R32.26 olatuak',
+  gl: '21 de novembro de 2026, tarde · Ondas R32.25 e R32.26'
+};
+const desDeR32_24 = (cos) => (Object.values(INICIS_R32_26).some((inici) => cos.startsWith(`<h3>${inici}`))
   ? cos.slice(cos.indexOf('<h3>', 4)) : cos);
+/* Onada v1.2.17 · Abans lleva també el bloc de la R32.26 (desDeR32_24), que ara obri la pàgina davant de la R32.24. */
+const desDeR32_20 = (cos) => {
+  const resta = desDeR32_24(cos);
+  return Object.values(INICIS_R32_24).some((inici) => resta.startsWith(`<h3>${inici}`)) ? resta.slice(resta.indexOf('<h3>', 4)) : resta;
+};
 /* Onada v1.2.16 · Abans lleva també el bloc de la R32.24 (desDeR32_20), que ara obri la pàgina davant de la R32.20. */
 const desDeR32_18 = (cos) => {
   const resta = desDeR32_20(cos);
@@ -518,6 +541,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
       // Onada v1.2.14 · La crònica de les Onades R32.17 i R32.18 obri la pàgina, davant de R32.15, R32.16 i R32.17, sense cap número vX.Y.Z al títol.
       // Onada v1.2.15 · La crònica de les Onades R32.19 i R32.20 obri la pàgina, davant de R32.17 i R32.18, sense cap número vX.Y.Z al títol.
       // Onada v1.2.16 · La crònica de les Onades R32.21–R32.24 obri la pàgina, davant de R32.19 i R32.20, sense cap número vX.Y.Z al títol.
+      // Onada v1.2.17 · La crònica de les Onades R32.25 i R32.26 obri la pàgina, davant de R32.21–R32.24, sense cap número vX.Y.Z al títol.
+      TITOL_FITA_R32_26,
       TITOL_FITA_R32_24,
       TITOL_FITA_R32_20,
       TITOL_FITA_R32_18,
@@ -606,7 +631,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
     // Onada v1.2.13 · I la crònica R32.17: trenta-dues en total.
     // Onada v1.2.15 · I la crònica R32.20: trenta-quatre en total.
     // Onada v1.2.16 · I la crònica R32.24: trenta-cinc en total.
-    expect(entregues).toHaveLength(35);
+    // Onada v1.2.17 · I la crònica R32.26: trenta-sis en total.
+    expect(entregues).toHaveLength(36);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -695,7 +721,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     /* Onada v1.2.14 · I de la 1.2.13 a la 1.2.14: la crònica de les Onades R32.17 i R32.18 ho explica. */
     /* Onada v1.2.15 · I de la 1.2.14 a la 1.2.15: la crònica de les Onades R32.19 i R32.20 ho explica. */
     /* Onada v1.2.16 · I de la 1.2.15 a la 1.2.16: la crònica de les Onades R32.21–R32.24 ho explica. */
-    expect(PAQUET.version).toBe('1.2.16');
+    /* Onada v1.2.17 · I de la 1.2.16 a la 1.2.17: la crònica de les Onades R32.25 i R32.26 ho explica. */
+    expect(PAQUET.version).toBe('1.2.17');
     expect(TITOL_110).toContain('· v1.1.0 (');
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el publicat a WordPress.org, que no pot ser més nou
        que el del repositori (la capçalera del connector). Onada R21 · El repositori ja porta la 1.1.13 i el títol
@@ -729,15 +756,16 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   /* Onada v1.2.14 · I a la 1.2.14 amb el build 19 (la crònica R32.18), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.15 · I a la 1.2.15 amb el build 20 (la crònica R32.20), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.16 · I a la 1.2.16 amb el build 21 (la crònica R32.24), el mateix número que VERSIO_CLIENT_NATIU. */
-  test('la versió de les apps d’ara és la 1.2.16, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
+  /* Onada v1.2.17 · I a la 1.2.17 amb el build 22 (la crònica R32.26), el mateix número que VERSIO_CLIENT_NATIU. */
+  test('la versió de les apps d’ara és la 1.2.17, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
     const gradle = llegix('android/app/build.gradle');
     const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
-    expect(gradle).toMatch(/versionName "1\.2\.16"/);
-    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.16']));
-    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.16']));
+    expect(gradle).toMatch(/versionName "1\.2\.17"/);
+    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.17']));
+    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.17']));
     const build = gradle.match(/versionCode (\d+)/)[1];
     expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
-    expect(build).toBe('21');
+    expect(build).toBe('22');
     expect(String(VERSIO_CLIENT_NATIU)).toBe(build);
     expect(pla).toContain('el número de build de les apps, el 2, no canvia');
   });
@@ -826,8 +854,9 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     const cos = text(apartat(entrega110, 'Millora · Actualitzacions automàtiques').cos);
     /* Onada R21 · La 1.1.12 és la publicada (CONNECTOR_PUBLICAT); el repositori ja porta la 1.1.13, pendent de l'SVN. */
     expect(cos).toContain(`El connector ${CONNECTOR_PUBLICAT} ja està publicat a WordPress.org`);
-    expect(publicada).toBe('1.1.12');
-    expect(publicada).toBe(CONNECTOR_PUBLICAT);
+    /* Onada v1.2.17 · La capçalera ja no repetix la 1.1.12 de l'entrada: diu la que serveix WordPress.org (CONNECTOR_A_WPORG). */
+    expect(publicada).toBe(CONNECTOR_A_WPORG);
+    expect(noMesNova(CONNECTOR_PUBLICAT, publicada)).toBe(true);
     expect(noMesNova(publicada, CONNECTOR), `${publicada} ≤ ${CONNECTOR}`).toBe(true);
     /* La capçalera llig la versió publicada d'una altra entrada (T8 · D-12). */
     expect(entrega110).not.toContain('en la versió');
@@ -893,7 +922,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
     // Onada v1.2.14 · La crònica R32.18, una posició més.
     // Onada v1.2.15 · La crònica R32.20, una posició més.
     // Onada v1.2.16 · La crònica R32.24, una posició més.
-    expect(titols[31]).toMatch(/^1 de novembre de 2026 · v/);
+    // Onada v1.2.17 · La crònica R32.26, una posició més.
+    expect(titols[32]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -966,10 +996,10 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
        «Registre de canvis»: la mare i l'etiqueta canònica. */
     expect(labels.map((l) => l.text)).toEqual([`v${PAQUET.version} · WP v${publicada}`, 'Sistema', '💻 Tecnologia i Disseny', 'Documentació']);
     for (const t of [subtitle, ...labels.map((l) => l.text)]) expect(t).not.toMatch(/build|\b\d{6}\b/i);
-    /* La publicada és la que diu l'entrada més recent que nomena una versió a WordPress.org (el
-       registre va de la més nova a la més vella): les entrades velles són història i no es
-       reescriuen quan es publica una versió nova. No pot ser més nova que la del connector. */
-    const darreraPublicada = entrega110.match(/Connector WordPress v(\d+\.\d+\.\d+) a WordPress\.org<\/h3>/)?.[1];
+    /* La publicada és la que diu la crònica més recent (el registre va de la més nova a la més vella): les
+       entrades velles són història i no es reescriuen quan es publica una versió nova. No pot ser més nova que
+       la del connector. Onada v1.2.17 · Els títols nous no porten número: es llig del cos de la crònica R32.26. */
+    const darreraPublicada = text(fitaR32_26Bloc).match(/publicat a WordPress\.org és la (\d+\.\d+\.\d+)/)?.[1];
     expect(publicada).toBe(darreraPublicada);
     expect(noMesNova(publicada, CONNECTOR), `${publicada} ≤ ${CONNECTOR}`).toBe(true);
   });
@@ -1056,7 +1086,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
     // Onada v1.2.14 · La crònica R32.18, una posició més.
     // Onada v1.2.15 · La crònica R32.20, una posició més.
     // Onada v1.2.16 · La crònica R32.24, una posició més.
-    expect(titols[30]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // Onada v1.2.17 · La crònica R32.26, una posició més.
+    expect(titols[31]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -1971,15 +2002,15 @@ describe('R21 · /versions porta la fita R21, la de la versió 1.2.0, darrere de
     // El repositori no pot anar per darrere del que conta la fita, i la capçalera no diu cap connector sense publicar.
     expect(noMesNova(VERSIO_R21, PAQUET.version), `${VERSIO_R21} ≤ ${PAQUET.version}`).toBe(true);
     expect(noMesNova(CONNECTOR_R21, CONNECTOR), `${CONNECTOR_R21} ≤ ${CONNECTOR}`).toBe(true);
-    expect(PAGE_COPY.versions.subtitle).toBe(`Versió actual: v${PAQUET.version} · Connector WordPress v${CONNECTOR_PUBLICAT} a WordPress.org`);
+    expect(PAGE_COPY.versions.subtitle).toBe(`Versió actual: v${PAQUET.version} · Connector WordPress v${CONNECTOR_A_WPORG} a WordPress.org`);
   });
 
   test('el subtítol de les altres quatre llengües diu la mateixa versió actual i el mateix connector publicat que el valencià', () => {
     const SUBTITOLS = {
-      es: `Versión actual: v${PAQUET.version} · Conector WordPress v${CONNECTOR_PUBLICAT} en WordPress.org`,
-      en: `Current version: v${PAQUET.version} · WordPress plugin v${CONNECTOR_PUBLICAT} on WordPress.org`,
-      eu: `Uneko bertsioa: v${PAQUET.version} · WordPress konektorea v${CONNECTOR_PUBLICAT} WordPress.org-en`,
-      gl: `Versión actual: v${PAQUET.version} · Conector WordPress v${CONNECTOR_PUBLICAT} en WordPress.org`
+      es: `Versión actual: v${PAQUET.version} · Conector WordPress v${CONNECTOR_A_WPORG} en WordPress.org`,
+      en: `Current version: v${PAQUET.version} · WordPress plugin v${CONNECTOR_A_WPORG} on WordPress.org`,
+      eu: `Uneko bertsioa: v${PAQUET.version} · WordPress konektorea v${CONNECTOR_A_WPORG} WordPress.org-en`,
+      gl: `Versión actual: v${PAQUET.version} · Conector WordPress v${CONNECTOR_A_WPORG} en WordPress.org`
     };
     for (const [llengua, esperat] of Object.entries(SUBTITOLS)) {
       const { subtitle } = localitzaPagina(PAGE_COPY.versions, llengua);
@@ -2234,7 +2265,7 @@ describe('R21 C5 · /versions s’obri amb la fita R21 C5, la del build 5, en le
     expect(noMesNova(CONNECTOR_C5, CONNECTOR), `${CONNECTOR_C5} ≤ ${CONNECTOR}`).toBe(true);
     expect(VERSIO_CLIENT_NATIU).toBeGreaterThanOrEqual(BUILD_C5);
     expect(Number(llegix('android/app/build.gradle').match(/versionCode (\d+)/)[1])).toBeGreaterThanOrEqual(BUILD_C5);
-    expect(PAGE_COPY.versions.subtitle).toBe(`Versió actual: v${PAQUET.version} · Connector WordPress v${CONNECTOR_PUBLICAT} a WordPress.org`);
+    expect(PAGE_COPY.versions.subtitle).toBe(`Versió actual: v${PAQUET.version} · Connector WordPress v${CONNECTOR_A_WPORG} a WordPress.org`);
   });
 
   test('els kits que reunix, i cap promesa per damunt del que hi ha: migracions sense aplicar, co-publicació apagada i cap tasca programada', () => {
@@ -3713,7 +3744,12 @@ describe('Onades R32.5 i R32.6 · Crònica d’obertura en les cinc llengües am
     expect(detector).not.toMatch(/CANALS_ACTUALITZACIO\.APK|ENLLAC_APK_DIRECTE|apkBuild/);
     expect(detector).toContain('ZERO APK fora de botiga');
     expect(llegix('scripts/botigues/publica-tot.mjs')).toContain('--sincronitza-proves --versio X.Y.Z [--build-testflight M] [--build-apk N]');
-    for (const [llengua, textos] of Object.entries(TEXTOS_ACTUALITZACIO)) expect(textos.detallApk, llengua).toContain('SHA-256');
+    /* v1.2.17 · T-04 · Els textos de l'APK directe s'han retirat de la barra: cap llengua no en porta cap, ni la suma. */
+    for (const [llengua, textos] of Object.entries(TEXTOS_ACTUALITZACIO)) {
+      expect(Object.keys(textos), llengua).toEqual(['detallTestflight', 'accioTestflight', 'detallWeb', 'accioWeb']);
+      expect(Object.values(textos).join(' '), llengua).not.toMatch(/APK|SHA-256/);
+    }
+    expect(llegix('src/config/actualitzacioRecomanada.js')).not.toMatch(/ENLLAC_APK_DIRECTE|APK: 'apk'|const SHA256/);
     expect(llegix('src/pwa/actualitzacioWeb.js')).toContain("export const URL_VERSIO_VIVA = '/versio-viva.json';");
     expect(llegix('src/pwa/registre.js')).toContain("importa = () => import('./actualitzacioWeb.js')");
     expect(llegix('src/data/contracte.js')).toContain('els mòbils amb el build 11 o anterior l\'instal·len a mà');
@@ -4751,7 +4787,9 @@ describe('Onades R32.14 i R32.15 · Crònica d’obertura en les cinc llengües 
     // Onada v1.2.13 · La R32.17 obri la pàgina i la R32.15 la seguix. Onada v1.2.14 · Davant de totes dues, la R32.18.
     // Onada v1.2.15 · I davant de la R32.18, la R32.20 (desDeR32_18 la lleva).
     // Onada v1.2.16 · I davant de la R32.20, la R32.24 (desDeR32_20 la lleva).
-    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_24}</h3>`)).toBe(true);
+    // Onada v1.2.17 · I davant de la R32.24, la R32.26 (desDeR32_24 la lleva).
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_26}</h3>`)).toBe(true);
+    expect(desDeR32_24(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_24}</h3>`)).toBe(true);
     expect(desDeR32_20(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_20}</h3>`)).toBe(true);
     expect(desDeR32_18(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_18}</h3>`)).toBe(true);
     expect(desDeR32_17(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_17}</h3>`)).toBe(true);
@@ -5391,6 +5429,8 @@ describe('Onades R32.19 i R32.20 · Crònica d’obertura en les cinc llengües:
     // Només al Bar (Gauntlet v1.2.15): ClosaAplicacio retira la columna buida si l'app ho declara, i només ho declara el Bar.
     expect(llegix('src/apps/plataforma/ClosaAplicacio.jsx')).toContain('(amagaEsquerraBuida ? null : undefined)');
     expect(llegix('src/apps/bar/AppBar.jsx')).toContain('titols={titolsBar(idioma)} amagaEsquerraBuida />');
+    /* v1.2.17 · Gauntlet R2 (L3R2-01) · El Rebost i La compra no depenen d'amagaEsquerraBuida: la Nevera continua sense
+       declarar-lo (Llei del Píxel per al Catàleg, A casa, Receptes, Temporada, Ajustos i Llistes). */
     expect(llegix('src/apps/nevera/AppNevera.jsx')).not.toContain('amagaEsquerraBuida');
     // L'avís de torn tancat una sola vegada (columna lateral) i cap tiquet buit acumulat.
     expect(llegix('src/apps/bar/vistes/comu.jsx')).toContain('<EstatBuit breu titol={tx.senseTornLateral} />');
@@ -5427,16 +5467,15 @@ describe('Onades R32.21–R32.24 · Crònica d’obertura en les cinc llengües:
     gl: [...Array(2).fill('Novidade'), ...Array(6).fill('Mellora'), ...Array(2).fill('Corrección')]
   };
   const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
-  /* La versió i el build d'ara, els del codi (package.json i VERSIO_CLIENT_NATIU). */
+  /* La versió i el build d'aquella entrega. Onada v1.2.17 · Es fixen literals: la d'ara la diu la crònica R32.26. */
   const VERSIO_R32_24 = {
-    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
-    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
-    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+    ca: 'versió 1.2.16 (build 21)', es: 'versión 1.2.16 (build 21)', en: 'version 1.2.16 (build 21)', eu: '1.2.16 bertsiora (21. builda)',
+    gl: 'versión 1.2.16 (build 21)'
   };
   const NO_BOTIGUES_R32_24 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
     eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
-  const CONNECTOR_NO_PUBLICAT_R32_24 = { ca: `la ${CONNECTOR} del repositori`, es: `la ${CONNECTOR} del repositorio`,
-    en: `${CONNECTOR} in the repository`, eu: `biltegiko ${CONNECTOR}`, gl: `a ${CONNECTOR} do repositorio` };
+  const CONNECTOR_NO_PUBLICAT_R32_24 = { ca: 'la 1.1.24 del repositori', es: 'la 1.1.24 del repositorio',
+    en: '1.1.24 in the repository', eu: 'biltegiko 1.1.24', gl: 'a 1.1.24 do repositorio' };
   const NO_PUBLICAT_R32_24 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
     eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
   const SERVIDOR_R32_24 = { ca: 'servidor de Sóc de Poble', es: 'servidor de Sóc de Poble', en: 'Sóc de Poble server',
@@ -5457,19 +5496,20 @@ describe('Onades R32.21–R32.24 · Crònica d’obertura en les cinc llengües:
      d'extrem a extrem (apagat) ni la política 2.6 (sense aplicar). */
   const PROMESES_FALSES_R32_24 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|ja és a la botiga|is already in|homolog|certified|garantit|garantizado|guaranteed|bermatu|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%|xifrat|cifrad|encrypt|zifra|\b2\.6\b|10 MB/i;
   const blocR32_24 = (llengua) => {
-    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    const cos = desDeR32_24(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
     return cos.slice(0, cos.indexOf('<h3>', 4));
   };
 
   test('obri /versions en ca, es, en, eu i gl, davant de la R32.20, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R32_24).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(fitaR32_24Bloc.startsWith(`<h3>${TITOL_FITA_R32_24}</h3>`)).toBe(true);
-    expect(html.trimStart().startsWith(fitaR32_24Bloc)).toBe(true);
+    // Onada v1.2.17 · La R32.26 obri la pàgina i la R32.24 la seguix (desDeR32_24).
+    expect(desDeR32_24(html.trimStart()).startsWith(fitaR32_24Bloc)).toBe(true);
     expect(interns(fitaR32_24Bloc)).toEqual(['/xat', '/calendari', '/xat', '/xat', '/page/descarregues', '/mur', '/app/nevera',
       '/app/genealogia', '/xat', '/mur', '/calendari']);
     expect(interns(fitaR32_24Bloc).every(rutaExistix)).toBe(true);
     for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_24)) {
-      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      const cos = desDeR32_24(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
       expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
       const bloc = blocR32_24(llengua);
       // L'ordre de /versions: R32.24 → R32.20 → R32.18 (la resta la proven les cròniques d'abans).
@@ -5558,14 +5598,14 @@ describe('Onades R32.21–R32.24 · Crònica d’obertura en les cinc llengües:
   });
 
   test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, Foraster, WhatsApp, botigues, calendari, kits i cap canvi al servidor', () => {
-    expect(PAQUET.version).toBe('1.2.16');
-    expect(VERSIO_CLIENT_NATIU).toBe(21);
+    /* Onada v1.2.17 · És història: la versió d'ara (1.2.17, build 22) és més nova, i la diu la crònica R32.26. */
+    expect(noMesNova('1.2.16', PAQUET.version)).toBe(true);
+    expect(VERSIO_CLIENT_NATIU).toBeGreaterThan(20);
     expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
     expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
     expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
     expect(llegix('src/data/contracte.js')).toContain('Versió\n   unificada 1.2.16 amb el build 21: integra Codex R32.21');
-    expect(CONNECTOR).toBe('1.1.24');
-    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.24$/m);
+    expect(noMesNova('1.1.24', CONNECTOR)).toBe(true);
     expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.24 =$/m);
     expect(noMesNova(CONNECTOR_PUBLICAT, CONNECTOR), `${CONNECTOR_PUBLICAT} ≤ ${CONNECTOR}`).toBe(true);
     // Tornar a l'enllaç després d'entrar: una llista tancada que només fa servir l'entrada.
@@ -5611,6 +5651,178 @@ describe('Onades R32.21–R32.24 · Crònica d’obertura en les cinc llengües:
     expect(llegix('src/config/politicaPrivacitat.js')).toContain("export const VERSIO_POLITICA_PRIVACITAT = '2.5';");
     expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
     // Els avisos de les apps només amb la bandera de build (que no s'encén sense la 2.6).
+    expect(llegix('src/natiu/avisosPushNatius.js')).toContain("const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';");
+  });
+});
+
+/* Onada v1.2.17 (21-11-2026, vesprada; ordre del Mestre de les 16:03, IDEA-313; prompt 261121_1606) · La crònica de les
+   Onades R32.25 i R32.26 obri /versions: la benvinguda del Foraster, el Rebost en rajoles, la caixa de prova del Bar, la
+   Wiki amb portada pròpia, el mode de taulell, l'assistència guardada de veres i la sessió renovada abans de demanar. */
+describe('Onades R32.25 i R32.26 · Crònica d’obertura en les cinc llengües: la benvinguda del Foraster, el Rebost, el Bar i la sessió, amb Llei 0', () => {
+  const PREFIXOS_R32_26 = {
+    ca: [...Array(3).fill('Novetat'), ...Array(3).fill('Millora'), ...Array(2).fill('Correcció')],
+    es: [...Array(3).fill('Novedad'), ...Array(3).fill('Mejora'), ...Array(2).fill('Corrección')],
+    en: [...Array(3).fill('New'), ...Array(3).fill('Improvement'), ...Array(2).fill('Fix')],
+    eu: [...Array(3).fill('Berritasuna'), ...Array(3).fill('Hobekuntza'), ...Array(2).fill('Zuzenketa')],
+    gl: [...Array(3).fill('Novidade'), ...Array(3).fill('Mellora'), ...Array(2).fill('Corrección')]
+  };
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  /* La versió i el build d'ara, els del codi (package.json i VERSIO_CLIENT_NATIU). */
+  const VERSIO_R32_26 = {
+    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
+    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
+    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+  };
+  /* El connector publicat a WordPress.org quan s'escriu (SVN r3815297, v1.2.16): història, literal. */
+  const CONNECTOR_PUBLICAT_R32_26 = '1.1.24';
+  const NO_BOTIGUES_R32_26 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
+    eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
+  const CONNECTOR_NO_PUBLICAT_R32_26 = { ca: `la ${CONNECTOR} del repositori`, es: `la ${CONNECTOR} del repositorio`,
+    en: `${CONNECTOR} in the repository`, eu: `biltegiko ${CONNECTOR}`, gl: `a ${CONNECTOR} do repositorio` };
+  const NO_PUBLICAT_R32_26 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
+    eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
+  const SERVIDOR_R32_26 = { ca: 'servidor de Sóc de Poble', es: 'servidor de Sóc de Poble', en: 'Sóc de Poble server',
+    eu: 'Sóc de Pobleren zerbitzari', gl: 'servidor de Sóc de Poble' };
+  const SENSE_CANVI_SERVIDOR_R32_26 = { ca: 'no canvia res', es: 'no cambia nada', en: 'changes nothing', eu: 'ez du ezer aldatzen',
+    gl: 'non cambia nada' };
+  const NO_APLICAT_R32_26 = { ca: 'no s’hi han aplicat', es: 'no se han aplicado', en: 'have not been applied', eu: 'ez dira aplikatu',
+    gl: 'non se aplicaron' };
+  const DECISIO_MESTRE_R32_26 = { ca: 'decisió del Mestre', es: 'decisión del Mestre', en: 'the Mestre’s decision', eu: 'Mestreren erabaki',
+    gl: 'decisión do Mestre' };
+  const AVISOS_APAGATS_R32_26 = { ca: 'no estan encesos', es: 'no están encendidos', en: 'not switched on', eu: 'ez daude piztuta',
+    gl: 'non están acesos' };
+  const POLITICA_R32_26 = { ca: 'versió 2.5', es: 'versión 2.5', en: 'version 2.5', eu: '2.5 bertsioan', gl: 'versión 2.5' };
+  const FORASTER_R32_26 = { ca: 'Foraster', es: 'Forastero', en: 'Outsider', eu: 'Arrotz', gl: 'Forasteiro' };
+  /* Les tres paraules de la benvinguda (IDEA-313): passejar, la informació pública i connectar amb la seua gent. */
+  const BENVINGUDA_R32_26 = {
+    ca: ['passejar', 'informació pública', 'connectar'], es: ['pasear', 'información pública', 'conectar'],
+    en: ['stroll around', 'public information', 'connect'], eu: ['ibili', 'informazio publiko', 'konektatu'],
+    gl: ['pasear', 'información pública', 'conectar']
+  };
+  const cometes = (llengua, text) => (llengua === 'en' ? `“${text}”` : `«${text}»`);
+  /* Cap promesa de termini, de velocitat, de sincronització ni d'homologació; ni el xifrat (apagat) ni la política 2.6;
+     ni cap nom de producte de referència (Apple 2.3.10 i Llei 0: no són nostres). */
+  const PROMESES_FALSES_R32_26 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|homolog|certified|garantit|garantizado|guaranteed|bermatu|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%|xifrat|cifrad|encrypt|zifra|\b2\.6\b|10 MB|Bring!|Loyverse|Verifactu|\bJWT\b|token|\b401\b/i;
+  const blocR32_26 = (llengua) => {
+    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    return cos.slice(0, cos.indexOf('<h3>', 4));
+  };
+
+  test('obri /versions en ca, es, en, eu i gl, davant de la R32.24, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
+    expect(TITOL_FITA_R32_26).not.toMatch(/ · v\d+\.\d+\.\d+/);
+    expect(fitaR32_26Bloc.startsWith(`<h3>${TITOL_FITA_R32_26}</h3>`)).toBe(true);
+    expect(html.trimStart().startsWith(fitaR32_26Bloc)).toBe(true);
+    /* Gauntlet R2 (L5R2-03) · La demostració és el TPV del Bar (/app/bar/tpv), no la Caixa. */
+    expect(interns(fitaR32_26Bloc)).toEqual(['/xat', '/app/rebost', '/app/bar', '/mur', '/mercat', '/calendari', '/xat', '/app/rebost',
+      '/app/bar/tpv', '/app/bar', '/wikidepoble', '/mur', '/mercat', '/calendari', '/calendari']);
+    expect(interns(fitaR32_26Bloc).every(rutaExistix)).toBe(true);
+    for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_26)) {
+      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
+      const bloc = blocR32_26(llengua);
+      // L'ordre de /versions: R32.26 → R32.24 → R32.20 (la resta la proven les cròniques d'abans).
+      expect(cos.startsWith(`<h3>${INICIS_R32_24[llengua]}`, bloc.length), llengua).toBe(true);
+      expect(desDeR32_24(cos), llengua).toBe(cos.slice(bloc.length));
+      expect(desDeR32_20(cos).startsWith(`<h3>${INICIS_R32_20[llengua]}`), llengua).toBe(true);
+      expect(interns(bloc), llengua).toEqual(interns(fitaR32_26Bloc));
+      expect(titolsH4(bloc).map((t) => t.split(' · ')[0])).toEqual(PREFIXOS_R32_26[llengua]);
+      expect(apartats(bloc), llengua).toHaveLength(8);
+      expect(bloc.match(/[^\s>]<a |<\/a>[^\s,.:]/g), llengua).toBeNull();
+      const pla = text(bloc);
+      // Apple 2.3.10 · Cap altra plataforma mòbil, cap botiga ni canal de proves pel seu nom, cap navegador ni xarxa social.
+      expect(PLATAFORMA_ALIENA.test(pla), llengua).toBe(false);
+      expect(/Google|Apple|App Store|iPhone|iPad|TestFlight|Android|\bPlay\b|\bAPK\b|\bAAB\b|F-Droid|Safari|Chrome|Firefox|TikTok|\bLINE\b|Twitter|\bX\.com\b|YouTube|GitHub|WhatsApp|Facebook|Instagram/i.test(pla), llengua).toBe(false);
+      expect(/\bdesplegad[ae]s?\b|\bdesplegat|en producció|en producción|in production|\bactivad[ao]\b|\bactivat\b|aviat|pròximament|properament|IDEA-\d|P\d-\d|D-R\d|D-v\d|\bB\d{1,2}[abc]?\b|torn_|mas[i]a|sobir/i.test(pla), llengua).toBe(false);
+      expect(/\bdel poble\b|\bdel pueblo\b|\bdo pobo\b|La Torre/i.test(pla), llengua).toBe(false);
+      // Llei 0 · Cap jerga tècnica ni cap proveïdor.
+      expect(/\bCSS\b|\bJS\b|\bHTML\b|\bHMR\b|Tarjan|\bCAS\b|\bRPC\b|\bSQL\b|\bLSSI\b|\bOAuth\b|Supabase|PostgreSQL|\bCDP\b|frontmatter|aria-|\bWCAG\b|bytes?\b|WebView|\bE2EE\b|VAPID|\bpush\b|IndexedDB|localStorage|Enxufe|Frontissa|\b301\b|Node 0|feed|chrome/i.test(pla), llengua).toBe(false);
+      expect(PROMESES_FALSES_R32_26.test(pla), llengua).toBe(false);
+      expect(pla, llengua).toContain(VERSIO_R32_26[llengua]);
+      expect(pla).not.toContain('1.2.16');
+      expect(pla, llengua).toContain(NO_BOTIGUES_R32_26[llengua]);
+      expect(pla).toContain(CONNECTOR_PUBLICAT_R32_26);
+      expect(pla, llengua).toContain(CONNECTOR_NO_PUBLICAT_R32_26[llengua]);
+      expect(pla, llengua).toContain(NO_PUBLICAT_R32_26[llengua]);
+      expect(pla).toContain('WordPress.org');
+      expect(pla, llengua).toContain(SERVIDOR_R32_26[llengua]);
+      expect(pla, llengua).toContain(SENSE_CANVI_SERVIDOR_R32_26[llengua]);
+      expect(pla, llengua).toContain(NO_APLICAT_R32_26[llengua]);
+      expect(pla, llengua).toContain(DECISIO_MESTRE_R32_26[llengua]);
+      expect(pla, llengua).toContain(AVISOS_APAGATS_R32_26[llengua]);
+      expect(pla, llengua).toContain(POLITICA_R32_26[llengua]);
+      expect(pla, llengua).toContain(FORASTER_R32_26[llengua]);
+      // El nom canònic de l'estudi, el mateix en les cinc llengües.
+      expect(pla, llengua).toContain('Assaig a la Plaça');
+      // L'«Entrar» de la benvinguda és el de la pantalla (B9): el dels diccionaris i el del model d'IDEA-313.
+      const entrar = DICCIONARIS[llengua]['section.login.loginButton'];
+      expect(TEXTOS_BENVINGUDA_FORASTER[llengua].entrar, llengua).toBe(entrar);
+      expect(pla, llengua).toContain(cometes(llengua, entrar));
+      for (const paraula of BENVINGUDA_R32_26[llengua]) expect(pla.toLowerCase(), `${llengua} · ${paraula}`).toContain(paraula);
+      const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
+      const paragrafsDelBloc = [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect(paragrafsDelBloc).toHaveLength(11);
+      for (const p of paragrafsDelBloc) {
+        const w = [...segmentador.segment(p.replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        const n = (p.match(/<strong>/g) ?? []).length;
+        const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+        expect(n >= min && n <= max, `${llengua}: ${n} negretes per a ${w} paraules (${min}–${max}): «${p.replace(/<[^>]+>/g, '').slice(0, 60)}…»`).toBe(true);
+      }
+      for (const m of bloc.matchAll(/<strong>([\s\S]*?)<\/strong>/g)) {
+        const w = [...segmentador.segment(m[1].replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        expect(w >= 1 && w <= 6, `${llengua} · negreta de ${w} paraules: «${m[1]}»`).toBe(true);
+      }
+      expect(bloc, llengua).not.toMatch(/<h([34])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+    }
+  });
+
+  test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, benvinguda, Rebost, Bar, Wiki, taulells, assistència, sessió i cap canvi al servidor', () => {
+    expect(PAQUET.version).toBe('1.2.17');
+    expect(VERSIO_CLIENT_NATIU).toBe(22);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
+    expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
+    expect(llegix('src/data/contracte.js')).toContain('Versió\n   unificada 1.2.17 amb el build 22: integra Gemini R32.26');
+    expect(CONNECTOR).toBe('1.1.25');
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.25$/m);
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.25 =$/m);
+    expect(noMesNova(CONNECTOR_PUBLICAT_R32_26, CONNECTOR), `${CONNECTOR_PUBLICAT_R32_26} ≤ ${CONNECTOR}`).toBe(true);
+    // La benvinguda del Foraster: el literal del Mestre, a dalt de la llista del Xat, només sense sessió i a l'aterratge.
+    expect(TEXTOS_BENVINGUDA_FORASTER.ca.titol).toBe('Benvinguda al Projecte Sóc de Poble');
+    expect(TEXTOS_BENVINGUDA_FORASTER.ca.linia2).toBe('Entra quan vulgues CONNECTAR amb la teua gent, o treballar en privat.');
+    const xat = llegix('src/sections/xat/XatSection.jsx');
+    // Gauntlet R1 (L1-02) · La llengua carregada (llenguaDelText), la mateixa del traductor i del lang del document.
+    expect(xat).toContain("{senseSessio && esAterratge ? <AcollidaForasterXat idioma={llenguaDelText ?? language} tornar={rutaActual} onNavega={navigate} /> : null}");
+    expect(llegix('src/sections/xat/components/acollidaForasterXatModel.js')).toContain('export function desaBenvingudaForasterTancada(tancada = true)');
+    // El Rebost en rajoles, amb l'àlies curt.
+    expect(llegix('src/apps/plataforma/RutaApps.jsx')).toContain("rebost: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' })");
+    expect(llegix('src/apps/nevera/vistes/Compra.jsx')).toContain('forma="rajoles"');
+    // La caixa de prova del Bar i la banda de proves plegable.
+    expect(llegix('src/apps/bar/vistes/TpvDemoLocal.jsx')).toContain("export function TpvDemoLocal({ idioma = 'ca', onIx })");
+    expect(llegix('src/components/PedraSeca/molecules/BandaBetaMicroApp.jsx')).toContain('bandaBetaPlegada(tipusNormalitzat)');
+    // La Wiki amb portada pròpia i el mode de taulell als tres taulells.
+    expect(existsSync(resolve(process.cwd(), 'public/assets/ui/plugins/wikidepoble_vinyeta.webp'))).toBe(true);
+    expect(llegix('src/sections/wiki-de-poble/wikiDePobleModel.js')).toContain('export function copyDePortada(pageCopy, clau)');
+    expect(PAGE_CHROME_MODES.has('feed')).toBe(true);
+    // Gauntlet R1 (L3-01) · El mode de taulell conserva el botó d'escoltar la pàgina: enEdicioVeu no mira 'feed'.
+    expect(llegix('src/components/universal/PageFrame.jsx')).toContain("chrome === 'none' || veuLectura === false;");
+    expect(llegix('src/components/universal/PageFrame.jsx')).not.toContain("chrome === 'feed' || veuLectura === false");
+    expect(llegix('src/sections/mur/MurSection.jsx')).toContain('chrome: "feed",');
+    expect(llegix('src/sections/mercat/MercatSection.jsx')).toContain('chrome: "feed",');
+    expect(llegix('src/sections/calendari/CalendariSection.jsx')).toContain("chrome: 'feed',");
+    // L'assistència només es confirma quan s'ha guardat.
+    expect(llegix('src/sections/calendari/rsvpEsdeveniments.js')).toContain("codi: 'PERSISTENCIA_NO_CONFIRMADA'");
+    // Gauntlet R1 (L4-03) · I el quadre no deixa visible cap «desat» d'abans quan el gest nou no s'ha pogut guardar.
+    expect(llegix('src/sections/detail/QuadreAssistenciaEsdeveniment.jsx')).toContain('setConfirmacio(resultat.ok === true);');
+    // La sessió renovada abans de demanar.
+    const runtime = llegix('src/data/supabase/runtime.js');
+    expect(runtime).toContain('const jwtACaducar = (config) => {');
+    expect(runtime).toContain("if (!anonim && !_isRetry && !path.startsWith('/auth/') && !autoritzacioPropia(headers) && jwtACaducar(config)) {");
+    // Gauntlet R1 (L2-01) · Una sola renovació preventiva per token (el rellotge del client avançat no fa cap bucle).
+    expect(runtime).toContain('let jwtNascutACaducar = null;');
+    // El servidor: la migració de Codex R32.25 és al repositori amb la bandera apagada; la política, la 2.5; el xifrat, apagat.
+    expect(llegix('supabase/migrations/20261121090000_r32_25_push_directes_i_bandols.sql')).toContain("('push_poble_actiu','no')");
+    expect(llegix('src/config/politicaPrivacitat.js')).toContain("export const VERSIO_POLITICA_PRIVACITAT = '2.5';");
+    expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
     expect(llegix('src/natiu/avisosPushNatius.js')).toContain("const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';");
   });
 });

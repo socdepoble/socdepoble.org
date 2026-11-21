@@ -88,3 +88,10 @@ export const NOMS_DEL_NUCLI_1_6 = congela({
 export const NOMS_DEL_NUCLI_1_7 = congela({
   pedraSeca: ['Accions']
 });
+
+/* El que l'1.8.0 (v1.2.17, Gemini R32.26 lot_01 · IDEA-303) afig a l'1.7.0: dos noms a la porta 'workspace',
+   les declaracions d'espai amb què el Rebost de la Nevera obri directament la graella en rajoles en estret.
+   guardesDelModul.test.js comprova que la Nevera les pren per la façana que el nucli exposa. */
+export const NOMS_DEL_NUCLI_1_8 = congela({
+  workspace: ['declaraNivellInicialEspai', 'declaraVistaPerDefecteEspai']
+});

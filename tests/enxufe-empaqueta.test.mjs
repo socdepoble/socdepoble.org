@@ -907,8 +907,10 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
      damunt dels 36 KB). Passar la història antiga a un changelog.txt no és cap retall senzill: el
      «Mostra els detalls» de l'administració llig només readme.txt i enxufe-pantalla.test.mjs hi
      fixa la història publicada des de la 1.1.10. El límit de WordPress.org continua sent el de
-     paraules per secció. */
-  assert.ok(Buffer.byteLength(amb) < 40960, 'el readme del directori continua dins del límit');
+     paraules per secció.
+     Onada v1.2.17 (WP 1.1.25): de 40 a 44 KB, com enxufe-plugin.test.mjs (41.423 B amb les notes de la
+     1.1.25 a la font). */
+  assert.ok(Buffer.byteLength(amb) < 45056, 'el readme del directori continua dins del límit');
 });
 
 /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell

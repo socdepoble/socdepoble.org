@@ -51,9 +51,10 @@ const APPS_BETA = appsEnProves();
    de pàgina inexistent de sempre. */
 const ENTRADES_RETIRADES = Object.freeze({ lector: Object.freeze({ fonts: 'noticies' }) });
 
-/* Onada R32.13 · Àlies canònics d'apps unificades amb el Rebost / Nevera (sdp-clon-loiverse). */
+/* Onada R32.13 + R32.26 (IDEA-303) · Àlies canònics d'apps unificades amb el Rebost / Nevera. */
 const APPS_UNIFICADES = Object.freeze({
-  mercaderies: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' })
+  mercaderies: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' }),
+  rebost: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' })
 });
 
 /* La nova entrada d'una retirada, o null. Només d'una app interna i amb claus pròpies. */

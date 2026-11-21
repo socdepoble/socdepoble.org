@@ -209,3 +209,61 @@ test('[L2-04] un mercat amb UNTIL passat no oferix l’RSVP; el setmanal sense f
   expect(screen.queryByText('Este acte ja s’ha fet.')).toBeNull();
 });
 
+
+/* v1.2.17 · Gauntlet R1 (L4-03) · Codex R32.25 (lot 2): l'RSVP només torna ok quan el navegador l'ha guardat de veres.
+   Si el segon gest no es pot guardar (quota plena o galetes bloquejades), el quadre no deixa visible el «S'ha desat»
+   del gest anterior, el botó premut continua sent el que consta desat, i el xat no anuncia la resposta nova. */
+test('[L4-03] una resposta que el navegador no pot guardar no es confirma ni s’anuncia al xat', () => {
+  render(
+    <QuadreAssistenciaEsdeveniment
+      item={CURSOS_PEDRA_EN_SEC_2026_EVENT}
+      badge={CURSOS_PEDRA_EN_SEC_2026_EVENT.calendar_badge}
+      objecteXat={OBJECTE_XAT}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: /Sí, compta amb mi/ }));
+  expect(screen.getByRole('status').textContent).toMatch(/S’ha desat la teua resposta/);
+  const plena = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('plena', 'QuotaExceededError'); });
+  try {
+    fireEvent.click(screen.getByRole('button', { name: /No podré anar-hi/ }));
+    expect(screen.queryByText(/S’ha desat la teua resposta/)).toBeNull();
+    expect(screen.getByRole('button', { name: /Sí, compta amb mi/, pressed: true })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /No podré anar-hi/, pressed: false })).toBeTruthy();
+  } finally {
+    plena.mockRestore();
+  }
+});
+
+/* v1.2.17 · Gauntlet R2 (L4R2-05) · El camí del xat de [L4-03]: sense cap resposta desada, una nota fa que el xat
+   intente desar «Potser». Si el navegador no ho pot guardar, l'esborrany del xat públic és només la nota: cap
+   resposta que no consta s'anuncia. Control: amb el navegador sa, el mateix gest sí que porta «Potser». */
+test('[L4R2-05] sense resposta desada, una nota que el navegador no pot guardar arriba al xat públic sense resposta', () => {
+  render(
+    <QuadreAssistenciaEsdeveniment
+      item={CURSOS_PEDRA_EN_SEC_2026_EVENT}
+      badge={CURSOS_PEDRA_EN_SEC_2026_EVENT.calendar_badge}
+      objecteXat={OBJECTE_XAT}
+    />
+  );
+  expect(screen.getByText('Compta amb mi: 0')).toBeTruthy();
+  fireEvent.change(screen.getByLabelText(/Vols afegir un comentari o motiu/), {
+    target: { value: 'Pujaré si no plou' }
+  });
+  const plena = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('plena', 'QuotaExceededError'); });
+  try {
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /Comentar al xat públic/ }));
+    });
+    expect(plena).toHaveBeenCalled();
+  } finally {
+    plena.mockRestore();
+  }
+  expect(mocks.navigate).toHaveBeenCalledWith(expect.stringContaining('/xat?sobre=esdeveniment:cursos-pedra-en-sec-fageca-alcosser-2026'));
+  expect(prenEsborranyReferenciaXat()).toBe('Pujaré si no plou');
+  expect(screen.queryByRole('button', { pressed: true })).toBeNull();
+
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: /Comentar al xat públic/ }));
+  });
+  expect(prenEsborranyReferenciaXat()).toBe('🤔 Potser — Pujaré si no plou');
+});

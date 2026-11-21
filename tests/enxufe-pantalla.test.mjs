@@ -297,7 +297,10 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   /* Onada v1.2.15 · La 1.1.23 obri ara el registre, i la 1.1.22 continua darrere, íntegra. */
   /* Onada v1.2.16 · La 1.1.24 obri ara el registre amb una sola línia (el readme fa 40.926 B dels 40.960 B del sostre
      d'enxufe-plugin.test.mjs), i la 1.1.23 continua darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.24</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.16 de Sóc de Poble'), 'v1.2.16: la 1.1.24 obri el registre');
+  /* Onada v1.2.17 · La 1.1.25 obri ara el registre (el sostre passa a 44 KB, enxufe-plugin.test.mjs), i la 1.1.24
+     continua darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.25</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.17 de Sóc de Poble'), 'v1.2.17: la 1.1.25 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.24</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.16 de Sóc de Poble'), 'v1.2.17: la 1.1.24 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.23</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.15 de Sóc de Poble'), 'v1.2.16: la 1.1.23 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.22</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.14 de Sóc de Poble'), 'v1.2.15: la 1.1.22 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.21</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.13 de Sóc de Poble'), 'v1.2.14: la 1.1.21 es queda al registre');

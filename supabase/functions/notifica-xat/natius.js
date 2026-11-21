@@ -50,6 +50,31 @@ export const TEXTOS_AVIS = Object.freeze({
    vida, com el Web Push. */
 export const AVIS_NATIU = Object.freeze({ DESTI: '/xat', ETIQUETA: 'sdp-xat', TTL_S: 86400 });
 
+/* Urgent municipal notices contain fixed text only. Publication, municipality,
+   author and lease identities never enter the provider payload. SQL gates this
+   channel with push_poble_actiu='no' by default; web remains chat-only. */
+export const TEXTOS_AVIS_URGENT = Object.freeze({
+  ca: Object.freeze({ titol: 'Sóc de Poble', cos: 'Avís urgent del teu ajuntament' }),
+  es: Object.freeze({ titol: 'Sóc de Poble', cos: 'Aviso urgente de tu ayuntamiento' }),
+  en: Object.freeze({ titol: 'Sóc de Poble', cos: 'Urgent notice from your town hall' }),
+  eu: Object.freeze({ titol: 'Sóc de Poble', cos: 'Zure udalaren abisu larria' }),
+  gl: Object.freeze({ titol: 'Sóc de Poble', cos: 'Aviso urxente do teu concello' })
+});
+export const AVIS_NATIU_URGENT = Object.freeze({ DESTI: '/mur', ETIQUETA: 'sdp-poble-urgent', CANAL: 'poble_urgent', TTL_S: 21600, TTL_MINIM_S: 300 });
+const tipusAvisValid = avis => avis === undefined || avis === 'xat' || avis === 'urgent';
+const horaMadrid = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+/** Conservative delivery lifetime, recomputed after awaiting credentials.
+ * This controls requests/storage lifetime, not physical receipt or reading. */
+export function segonsFinsAlSilenci(araMs) {
+  if (typeof araMs !== 'number' || !Number.isFinite(araMs) || Math.abs(araMs) > 8.64e15) return 0;
+  const parts = Object.fromEntries(horaMadrid.formatToParts(new Date(araMs)).map(p => [p.type, Number(p.value)]));
+  const segons = parts.hour * 3600 + parts.minute * 60 + parts.second;
+  return segons >= 8 * 3600 && segons < 22 * 3600 ? Math.floor(22 * 3600 - segons - ((araMs % 1000 + 1000) % 1000) / 1000) : 0;
+}
+export const ttlUrgent = araMs => Math.min(AVIS_NATIU_URGENT.TTL_S, segonsFinsAlSilenci(araMs));
+const avisEnviable = (avis, instant) => tipusAvisValid(avis) && (avis !== 'urgent' || ttlUrgent(instant) >= AVIS_NATIU_URGENT.TTL_MINIM_S);
+
+
 export const APNS = Object.freeze({
   PRODUCCIO: 'https://api.push.apple.com',
   SANDBOX: 'https://api.sandbox.push.apple.com',
@@ -106,8 +131,9 @@ const errorDe = (codi) => Object.assign(new Error(`SDP-PUSH-NATIU: ${codi}`), { 
 const jsonEnBase64url = (objecte) => aBase64url(new TextEncoder().encode(JSON.stringify(objecte)));
 
 /** El text de l'avís en la llengua de la fila; ca si no és una de les cinc. */
-export function textDeLAvis(llengua) {
-  return typeof llengua === 'string' && Object.prototype.hasOwnProperty.call(TEXTOS_AVIS, llengua) ? TEXTOS_AVIS[llengua] : TEXTOS_AVIS.ca;
+export function textDeLAvis(llengua, avis = 'xat') {
+  const taula = avis === 'urgent' ? TEXTOS_AVIS_URGENT : TEXTOS_AVIS;
+  return typeof llengua === 'string' && Object.prototype.hasOwnProperty.call(taula, llengua) ? taula[llengua] : taula.ca;
 }
 
 /** Una credencial que la base pot desar (20-4096 caràcters de [A-Za-z0-9._-]). */
@@ -196,9 +222,12 @@ export const cosOAuth = (jwt) => new URLSearchParams({ grant_type: 'urn:ietf:par
  * (entra al camí de l'URL). Cos: només `aps` (el text literal) i `sdp`
  * (versió i destí). Cap fil, remitent ni text del missatge.
  */
-export function peticioApns({ entorn = 'produccio', topic = APNS.TOPIC_PER_DEFECTE, testimoni, jwt, llengua, ara = Date.now() } = {}) {
-  if (!esTestimoniApns(testimoni)) return null;
-  const { titol, cos } = textDeLAvis(llengua);
+export function peticioApns({ entorn = 'produccio', topic = APNS.TOPIC_PER_DEFECTE, testimoni, jwt, llengua, avis = 'xat', ara = Date.now() } = {}) {
+  if (!esTestimoniApns(testimoni) || !avisEnviable(avis, ara)) return null;
+  const urgent = avis === 'urgent';
+  const forma = urgent ? AVIS_NATIU_URGENT : AVIS_NATIU;
+  const ttl = urgent ? ttlUrgent(ara) : AVIS_NATIU.TTL_S;
+  const { titol, cos } = textDeLAvis(llengua, avis);
   return {
     url: `${entorn === 'sandbox' ? APNS.SANDBOX : APNS.PRODUCCIO}/3/device/${testimoni}`,
     opcions: {
@@ -209,22 +238,25 @@ export function peticioApns({ entorn = 'produccio', topic = APNS.TOPIC_PER_DEFEC
         'apns-topic': topic,
         'apns-push-type': 'alert',
         'apns-priority': '10',
-        'apns-expiration': String(Math.floor(ara / 1000) + AVIS_NATIU.TTL_S),
-        'apns-collapse-id': AVIS_NATIU.ETIQUETA,
+        'apns-expiration': String(Math.floor(ara / 1000) + ttl),
+        'apns-collapse-id': forma.ETIQUETA,
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        aps: { alert: { title: titol, body: cos }, badge: 1, sound: 'default', 'thread-id': AVIS_NATIU.ETIQUETA },
-        sdp: { v: 1, desti: AVIS_NATIU.DESTI }
+        aps: { alert: { title: titol, body: cos }, ...(urgent ? {} : { badge: 1 }), sound: 'default', 'thread-id': forma.ETIQUETA },
+        sdp: urgent ? { v: 1, desti: forma.DESTI, avis: 'urgent' } : { v: 1, desti: AVIS_NATIU.DESTI }
       })
     }
   };
 }
 
 /** La petició de FCM HTTP v1, o null si el projecte o el testimoni no tenen forma. */
-export function peticioFcm({ projecte, testimoni, accessToken, llengua } = {}) {
-  if (typeof projecte !== 'string' || !FORMA_PROJECTE.test(projecte) || !esTestimoniFcm(testimoni)) return null;
-  const { titol, cos } = textDeLAvis(llengua);
+export function peticioFcm({ projecte, testimoni, accessToken, llengua, avis = 'xat', ara = Date.now() } = {}) {
+  if (typeof projecte !== 'string' || !FORMA_PROJECTE.test(projecte) || !esTestimoniFcm(testimoni) || !avisEnviable(avis, ara)) return null;
+  const urgent = avis === 'urgent';
+  const forma = urgent ? AVIS_NATIU_URGENT : AVIS_NATIU;
+  const ttl = urgent ? ttlUrgent(ara) : AVIS_NATIU.TTL_S;
+  const { titol, cos } = textDeLAvis(llengua, avis);
   return {
     url: `${FCM.MISSATGES}/${projecte}/messages:send`,
     opcions: {
@@ -235,8 +267,8 @@ export function peticioFcm({ projecte, testimoni, accessToken, llengua } = {}) {
         message: {
           token: testimoni,
           notification: { title: titol, body: cos },
-          android: { priority: 'HIGH', ttl: `${AVIS_NATIU.TTL_S}s`, collapse_key: AVIS_NATIU.ETIQUETA, notification: { tag: AVIS_NATIU.ETIQUETA, channel_id: FCM.CANAL } },
-          data: { desti: AVIS_NATIU.DESTI }
+          android: { priority: 'HIGH', ttl: `${ttl}s`, collapse_key: forma.ETIQUETA, notification: { tag: forma.ETIQUETA, channel_id: urgent ? AVIS_NATIU_URGENT.CANAL : FCM.CANAL } },
+          data: urgent ? { desti: forma.DESTI, avis: 'urgent' } : { desti: AVIS_NATIU.DESTI }
         }
       })
     }
@@ -572,10 +604,12 @@ async function preparaApns({ env, fetch, subtle, ara, rpc, topallMs, avisa }) {
 
   return async function enviaApns(entrada) {
     const testimoni = entrada && typeof entrada === 'object' ? entrada.adreca : null;
-    if (!esTestimoniApns(testimoni)) return { resultat: 'invalid', estat: 0 };
+    if (!esTestimoniApns(testimoni) || !avisEnviable(entrada.avis, ara())) return { resultat: 'invalid', estat: 0 };
     let jwt;
     try { jwt = await credencial(); } catch (error) { return resultatSenseCredencial(error); }
-    const { url, opcions } = peticioApns({ entorn, topic, testimoni, jwt, llengua: entrada.llengua, ara: ara() });
+    const peticio = peticioApns({ entorn, topic, testimoni, jwt, llengua: entrada.llengua, avis: entrada.avis, ara: ara() });
+    if (!peticio) return { resultat: 'invalid', estat: 0 };
+    const { url, opcions } = peticio;
     const { estat, cos } = await peticioFitada(fetch, url, opcions, topallMs, MAXIM_COS_ERROR, (e) => e !== 200);
     return { resultat: classificaApns(estat, motiuApns(cos)), estat };
   };
@@ -619,10 +653,12 @@ async function preparaFcm({ env, fetch, subtle, ara, rpc, topallMs, avisa }) {
 
   return async function enviaFcm(entrada) {
     const testimoni = entrada && typeof entrada === 'object' ? entrada.adreca : null;
-    if (!esTestimoniFcm(testimoni)) return { resultat: 'invalid', estat: 0 };
+    if (!esTestimoniFcm(testimoni) || !avisEnviable(entrada.avis, ara())) return { resultat: 'invalid', estat: 0 };
     let accessToken;
     try { accessToken = await credencial(); } catch (error) { return resultatSenseCredencial(error); }
-    const { url, opcions } = peticioFcm({ projecte, testimoni, accessToken, llengua: entrada.llengua });
+    const peticio = peticioFcm({ projecte, testimoni, accessToken, llengua: entrada.llengua, avis: entrada.avis, ara: ara() });
+    if (!peticio) return { resultat: 'invalid', estat: 0 };
+    const { url, opcions } = peticio;
     const { estat, cos } = await peticioFitada(fetch, url, opcions, topallMs, MAXIM_COS_ERROR, (e) => e !== 200);
     return { resultat: classificaFcm(estat, codiFcm(cos)), estat };
   };

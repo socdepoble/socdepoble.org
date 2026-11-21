@@ -113,7 +113,8 @@ describe('P1-71 · paritat de les tres closques (Disseny, Wiki de Poble, Multim�
       cleanup();
       const p = munta();
       expect(p.collapsibleNavigation).toBe(false);
-      expect(Object.keys(p.mestreDetall).sort()).toEqual(['clau', 'element']);
+      /* v1.2.17 · Gemini R32.26 (lot_03) · La Wiki diu també el nivell d'entrada en estret (inicial: null, el detall). */
+      expect(Object.keys(p.mestreDetall).sort()).toEqual(nom === 'wiki' ? ['clau', 'element', 'inicial'] : ['clau', 'element']);
       claus[nom] = p.mestreDetall.clau;
     }
     expect(claus).toEqual({ disseny: 'disseny', wiki: 'wiki', multimedia: 'multimedia' });

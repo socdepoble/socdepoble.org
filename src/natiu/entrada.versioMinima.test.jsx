@@ -18,7 +18,6 @@ import { VERSIO_CLIENT_NATIU } from '../data/contracte.js';
 import { LANGUAGE_STORAGE_KEY, desaIdiomaTriat } from '../config/i18n.js';
 import { delVal } from '../config/storage.js';
 import CalActualitzarDeDalt from './CalActualitzar.jsx';
-import { ENLLAC_APK_DIRECTE } from '../config/actualitzacioRecomanada.js';
 import { ENLLAC_ANDROID_MARKET, ENLLAC_IOS_APP_STORE, bloqueigDeVersio, enllacSegur, estatDeVersio } from './versioMinima.js';
 
 vi.hoisted(() => {
@@ -53,6 +52,9 @@ vi.mock('../data/backendPort.js', async (importOriginal) => {
 });
 
 const PLAY = 'https://play.google.com/store/apps/details?id=org.socdepoble.app';
+/* v1.2.17 · T-04 · config/actualitzacioRecomanada.js ja no exporta l'adreça de l'APK directe: el literal, ací,
+   només com a adreça d'atacant (un .apk per https ha de continuar caient a la fitxa de Google Play). */
+const APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const CAPA_NATIVA = Object.freeze({
   supabaseUrl: 'https://paquet.supabase.test',
   supabaseAnonKey: 'sb_publishable_del_paquet',
@@ -239,7 +241,7 @@ describe('P0-23 · la porta, pura', () => {
      o del manifest: a Android només l'https de play.google.com; un .apk, o qualsevol altre host, és la fitxa de Play. */
   test('v1.2.16 · ZERO APK: a Android, un enllaç del node o del manifest que no és de Google Play és la fitxa de Google Play', async () => {
     const PLAY_CA = `${PLAY}&hl=ca`;
-    for (const enllac of [ENLLAC_APK_DIRECTE, 'https://atacant.example/app.apk', 'https://play.google.com.atacant.example/app.apk',
+    for (const enllac of [APK_DIRECTE, 'https://atacant.example/app.apk', 'https://play.google.com.atacant.example/app.apk',
       'https://play.google.com@atacant.example/app.apk', 'https://play.google.com:8443/app.apk']) {
       expect(await bloqueigDeVersio({ plataforma: 'android', config: {}, versio: 2, port: port({ versioMinima: 3, enllac }) }), enllac)
         .toEqual({ versioMinima: 3, enllac: PLAY });

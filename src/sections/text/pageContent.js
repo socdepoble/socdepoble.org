@@ -155,12 +155,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.16 · Connector WordPress v1.1.12 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.17 · Connector WordPress v1.1.24 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.16 · WP v1.1.12", "className": "sdp-badge-system" },
+      { "text": "v1.2.17 · WP v1.1.24", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],
@@ -205,13 +205,21 @@ export const PAGE_COPY = {
     ],
     "html": "\n      <h3>Un espai de reflexió (Properament)</h3>\n      <p>Aquest mòdul està actualment en <strong>fase de proves</strong> tècniques per integrar-se en l'<strong>arquitectura local</strong>. <strong>En el futur</strong> et permetrà redactar <strong>articles de fons</strong> i <strong>publicar-los automàticament</strong> al <strong>Mur</strong>.</p>\n    "
   },
+  /* v1.2.17 · Gauntlet R2 (L3R2-04) · La portada de la Wiki porta la vinyeta que pinta (lot_03 de Gemini
+     R32.26, costura opcional 01): la vista, el <head> i el prerender lligen este mateix copy
+     (copyDePortada, seoWiki.js · portadaSocialDeLaWiki i build-social-manifest.mjs), i per això diuen el
+     mateix (contracte T1.3). Mida, prioritat i alt fidel, com les altres portades de 1024×1024; el <head>
+     en servix la variant social wikidepoble_vinyeta-social-1200x630.jpg (VARIANTS_SOCIALS). */
   "wikidepoble": {
     "date": "2026-09-24T13:37:58+02:00",
     "title": "Wiki de Poble",
     "subtitle": "Documentació tècnica, procediments i memòria del projecte",
     "lead": "La Wiki de Poble reuneix l'arquitectura tècnica, els procediments operatius (skills), les decisions de disseny i la documentació històrica de Sóc de Poble.",
-    "image": "/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png",
-    "imageAlt": "Fotografia associada a les Skills",
+    "image": "/assets/ui/plugins/wikidepoble_vinyeta.jpg",
+    "imageWidth": 1024,
+    "imageHeight": 1024,
+    "imageFetchPriority": "high",
+    "imageAlt": "Il·lustració de còmic d’estil Bruguera amb traç de plumilla: davant d’un marge de pedra seca i d’una olivera centenària, la IAIA MarIA, amb mocador groc i ulleres redones, i tres veïns lligen i escriuen en llibres oberts sobre una taula de fusta amb el rètol «WIKI DE POBLE»; un gat dorm damunt d’un llibre i una gallina picoteja a terra",
     "html": "\n      <h3>Estructura del Coneixement Tècnic i Documental</h3>\n      <p>La <strong>Wiki de Poble</strong> centralitza tota la <strong>documentació viva</strong> del projecte en una <strong>estructura enllaçada</strong> i verificable. Reuneix les <strong>especificacions tècniques</strong>, els procediments automatitzats (<em>skills</em>), les <strong>decisions d'arquitectura</strong> i els <strong>registres d'auditoria</strong> perquè qualsevol persona o agent d'intel·ligència artificial treballe sobre una <strong>única font documental</strong>.</p>\n      <h4>Consulta prèvia abans d'implementar</h4>\n      <p>Aquesta organització assegura que <strong>cap canvi</strong> de codi o d'interfície es faça <strong>sense context</strong>. Abans de <strong>modificar un component</strong>, es consulten les <strong>especificacions del sistema</strong> per garantir la <strong>sobirania de les dades</strong>, l'<strong>accessibilitat universal</strong> per a totes les edats i la coherència amb el sistema de disseny de <a href=\"/disseny\"><strong>pedra seca</strong></a>.</p>\n      <h4>Què hi trobaràs</h4>\n      <p>Dins de la Wiki trobaràs classificades les <strong>normes de governança</strong>, els <strong>procediments de verificació</strong> que <strong>validen el codi</strong> abans de cada desplegament, els <strong>criteris d'accessibilitat WCAG AAA</strong> d'<strong>alta llegibilitat</strong> i el <strong>catàleg de patrimoni i memòria</strong> dels pobles participants.</p>\n      <h4>Transparència i codi obert</h4>\n      <p>Sóc de Poble es construeix com una <strong>infraestructura pública i oberta</strong>. Aquesta <strong>Wiki de Poble</strong> n'és el <strong>manual operatiu</strong> públic: permet <strong>auditar com funciona</strong> cada peça, entendre <strong>per què s'ha pres cada decisió</strong> i consultar com es pot <strong>replicar el model</strong> en qualsevol altre municipi.</p>\n"
   },
   /* Ordre del Mestre (30-10-2026, ~00:50 CET; candidatura NLnet NGI

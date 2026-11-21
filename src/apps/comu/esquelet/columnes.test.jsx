@@ -414,6 +414,33 @@ describe('forma="targetes" (UniversalCard)', () => {
     const colleccio = munta(<ColumnaColleccio titol="Llista" linies={LINIES} forma="rajoles" />).container;
     expect(colleccio.querySelector('.sdp-graella-articles')).not.toBeNull();
     expect(colleccio.querySelector('.sp-card')).toBeNull();
+    /* v1.2.17 · Gauntlet R1 (L3-07) · Sense estilCompra, cap rastre de l'estil de la compra. */
+    expect(colleccio.querySelector('.sdp-graella-articles--compra')).toBeNull();
+  });
+
+  /* v1.2.17 · Gauntlet R1 (L3-07) · estilCompra (La compra de la Nevera) només amb forma="rajoles" i
+     només a la graella de rajoles: ni la llista de files, ni les targetes, ni el cos de sempre. */
+  test('estilCompra: el modificador de la compra només a les rajoles de forma="rajoles"', () => {
+    const cataleg = munta(<ColumnaCataleg forma="rajoles" estilCompra titol="Productes" categories={CATEGORIES} articles={ARTICLES} />);
+    expect([...cataleg.container.querySelectorAll('.sdp-graella-articles')].map((ul) => ul.className))
+      .toEqual(['sdp-graella-articles sdp-graella-articles--compra', 'sdp-graella-articles sdp-graella-articles--compra']);
+    cataleg.unmount();
+    const enLlista = munta(<ColumnaCataleg forma="rajoles" estilCompra titol="Productes" categories={CATEGORIES} articles={ARTICLES} />,
+      { ruta: '/app/bar/caixa?vista=llista' });
+    expect(enLlista.container.querySelector('.sdp-llista-articles')).not.toBeNull();
+    expect(enLlista.container.querySelector('.sdp-graella-articles--compra')).toBeNull();
+    enLlista.unmount();
+    for (const sense of [
+      <ColumnaCataleg key="cos" estilCompra titol="Productes" categories={CATEGORIES} articles={ARTICLES} />,
+      <ColumnaCataleg key="targetes" forma="targetes" estilCompra titol="Productes" categories={CATEGORIES} articles={ARTICLES} />,
+      <ColumnaColleccio key="linies" estilCompra titol="Llista" linies={LINIES} />
+    ]) {
+      const { container, unmount } = munta(sense);
+      expect(container.querySelector('.sdp-graella-articles--compra'), sense.key).toBeNull();
+      unmount();
+    }
+    munta(<ColumnaColleccio forma="rajoles" estilCompra titol="Llista" linies={LINIES} />);
+    expect(screen.getByRole('list', { name: 'Llista' }).className).toBe('sdp-graella-articles sdp-graella-articles--compra');
   });
 
   test('ColumnaColleccio: pendent premuda amb l’etiqueta, fet i anul·lat amb el text a la línia de davall; la icona de la línia; h4 sota el resum', () => {

@@ -348,7 +348,8 @@ describe('les 18 il·lustracions de les ordres', () => {
      Sabuda (R16-W1; IMATGE_NODRIR_IAIA de pageContent.nodrirIaia.js) i
      l'Avisador (R17), nascut només en WebP. v1.2.6 · La portada pròpia de /page/sistema-nervios
      (P0-117; IMATGE_SISTEMA_NERVIOS de pageContent.sistemaNervios.js), en JPEG i WebP. */
-  const ALTRES_VINYETES = ['avisador', 'fedivers', 'genealogia', 'nodrir_la_iaia', 'sistema_nervios'];
+  /* v1.2.17 · Gemini R32.26 (lot_03) · i la vinyeta de la portada de la Wiki de Poble. */
+  const ALTRES_VINYETES = ['avisador', 'fedivers', 'genealogia', 'nodrir_la_iaia', 'sistema_nervios', 'wikidepoble'];
   /* La nano card del Mercat només viu com a bessona .webp: l'original .jpg es
      va retirar a 1d45fb1a, i censImatges, legacyMedia, pageContent i la prova
      del Panell de Control ja la nomenen així. */

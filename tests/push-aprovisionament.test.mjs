@@ -137,6 +137,11 @@ test('staging inclou la revocació R31 amb bytes exactes, activació separada i 
   // P1-74 (A-03): les RPC _v2 que crida natius.js entren al mateix schema.sql, després de la v1 (2611020417).
   assert.ok(MIGRACIONS.includes('20261118230000_a03_xat_push_credencials_per_configuracio.sql'));
   assert.ok(MIGRACIONS.indexOf('2611020417_xat_avisos_push.sql') < MIGRACIONS.indexOf('20261118230000_a03_xat_push_credencials_per_configuracio.sql'));
+  /* v1.2.17 · Gauntlet R1 (L4-02) · R32.25 (D-24 i bàndols) no entra a schema.sql fins que el Mestre l'aplique: el pas 1
+     de T-03 no la pot aplicar implícitament. Quan hi entre, ha d'anar l'última (cossos vigents de la cua i del canal). */
+  assert.equal(MIGRACIONS.includes('20261121090000_r32_25_push_directes_i_bandols.sql'), false);
+  assert.equal(MIGRACIONS.at(-1), '20261118230000_a03_xat_push_credencials_per_configuracio.sql');
+  assert.doesNotMatch(fs.readFileSync(p, 'utf8'), /push_poble_actiu/);
   assert.equal(fs.readFileSync(p, 'utf8'), MIGRACIONS.map(n => fs.readFileSync(path.join(root, 'supabase/migrations', n), 'utf8')).join('\n'));
   assert.match(fs.readFileSync(path.join(f.dir, 'staged/activa.sql'), 'utf8'), /push_schema_incomplete/);
   fs.appendFileSync(p, '-- drift');

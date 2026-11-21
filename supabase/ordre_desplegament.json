@@ -128,6 +128,30 @@
       "despres": "20261117140000",
       "motiu": "R32.5 (NO aplicada; l’aplica el Mestre): la safata i la revisió LSSI reutilitzen public.denuncia_publicacio_mur (2611122200), public.denuncies amb la seua quota (2610201500) i van darrere dels definers amb search_path buit de 20261116040000. Per ordre alfabètic cru, 20261117140000 aniria abans de tot el catàleg de deu dígits.",
       "font": "README, vinyeta de 20261117140000 i pas 20 de la seqüència; capçalera de 20261117140000"
+    },
+    {
+      "abans": "2611080431",
+      "despres": "20261121090000",
+      "motiu": "R32.25 amplia la cua lease-v2 sobre Mur, sessions i credencials; worker compatible abans.",
+      "font": "README R32.25; precondicions de 20261121090000"
+    },
+    {
+      "abans": "2611122200",
+      "despres": "20261121090000",
+      "motiu": "R32.25 amplia la cua lease-v2 sobre Mur, sessions i credencials; worker compatible abans.",
+      "font": "README R32.25; precondicions de 20261121090000"
+    },
+    {
+      "abans": "20261116031000",
+      "despres": "20261121090000",
+      "motiu": "R32.25 amplia la cua lease-v2 sobre Mur, sessions i credencials; worker compatible abans.",
+      "font": "README R32.25; precondicions de 20261121090000"
+    },
+    {
+      "abans": "20261118230000",
+      "despres": "20261121090000",
+      "motiu": "R32.25 amplia la cua lease-v2 sobre Mur, sessions i credencials; worker compatible abans.",
+      "font": "README R32.25; precondicions de 20261121090000"
     }
   ],
   "portes": [
@@ -308,6 +332,22 @@
       ],
       "abans": [],
       "font": "README Nota d'auditoria §16 i vinyetes de 2611121430 i 2611122200; Gauntlet R22 dades-01, dades-05 i honestedat-03; T2 del 13-11-2026 (2611110100, requisit dur de 2611122200:6-14)"
+    },
+    {
+      "id": "funcio-notifica-xat-r32-25",
+      "tipus": "funcio",
+      "descripcio": "Fer l'activació T-03 del Canal 1 sencera amb el worker notifica-xat de la v1.2.17: staged/schema.sql (sense R32.25), secrets, desplegament de notifica-xat i notifica-xat-desperta d'esta versió, cron i staged/activa.sql. Només després s'aplica 20261121090000, a part: la provisió push no la porta i deixa push_poble_actiu = no.",
+      "despres": [
+        "2611020417",
+        "2611080431",
+        "2611080432",
+        "20261116031000",
+        "20261118230000"
+      ],
+      "abans": [
+        "20261121090000"
+      ],
+      "font": "README R32.25 (vinyeta i secció final; v1.2.17 · Gauntlet R2, L4R2-02); MIGRACIONS de tooling/push/aprovisiona-push.mjs (decisió del Mestre, informe v1.2.17)"
     }
   ],
   "fantasmes": [
@@ -409,6 +449,20 @@
         "20261115230000"
       ],
       "font": "README R30: 2611110455 restaura la signatura antiga amb upsert cec; reaplicar la guarda CAS."
+    },
+    {
+      "si": "2611020417",
+      "llavors": [
+        "20261121090000"
+      ],
+      "font": "README R32.25 (v1.2.17 · Gauntlet R2, L4R2-02): 2611020417, també dins de staged/schema.sql de la provisió push, torna a crear private.xat_push_encua sense D-24."
+    },
+    {
+      "si": "2611080431",
+      "llavors": [
+        "20261121090000"
+      ],
+      "font": "README R32.25 (v1.2.17 · Gauntlet R2, L4R2-02): 2611080431, també dins de staged/schema.sql de la provisió push, torna a crear private.xat_push_candidats_v2 i public.xat_push_reclama_v2 sense els Bàndols."
     }
   ]
 }

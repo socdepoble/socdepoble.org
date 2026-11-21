@@ -4,7 +4,10 @@
  * canal, la barra és la d'abans.
  * Onada v1.2.16 · ZERO APK fora de botiga (ordre del Mestre, 21-11-2026) · L'APK directe ja no és cap
  * canal: l'avís no entra al registre, la barra no es pinta i cap botó no obri l'APK, tampoc amb una
- * `mostra` que no passa pel registre. Els textos de l'APK esperen la neteja de la v1.2.17.
+ * `mostra` que no passa pel registre.
+ * v1.2.17 · T-04 · La neteja ja és feta: la barra no té cap branca ni cap text de l'APK (ni la suma SHA-256),
+ * i una `mostra` amb el canal 'apk' cau al text de Google Play de sempre amb un botó que no obri res. El
+ * mòdul de configuració ja no exporta l'adreça de l'APK: la prova en guarda el literal (APK_DIRECTE).
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,7 +18,6 @@ vi.mock('../../../app/contexts/UIContext', () => ({
 }));
 
 import {
-  ENLLAC_APK_DIRECTE,
   ESQUEMA_TESTFLIGHT,
   FONT_MANIFEST,
   FONT_WEB,
@@ -27,6 +29,8 @@ import {
 import BarraActualitzacioRecomanada from './BarraActualitzacioRecomanada.jsx';
 import { TEXTOS_ACTUALITZACIO, textosActualitzacio } from './textosActualitzacio.js';
 
+// v1.2.17 · T-04 · L'adreça de l'APK que la v1.2.16 publicava: el botó no l'ha d'obrir mai.
+const APK_DIRECTE = 'https://socdepoble.org/descarregues/socdepoble-android-latest.apk';
 const SHA = '0123456789abcdef'.repeat(4);
 const tf = { plataforma: 'ios', canal: 'testflight', versioRecomanada: 12, versio: '1.2.7' };
 const apk = { plataforma: 'android', canal: 'apk', versioRecomanada: 12, versio: '1.2.7', sha256: SHA };
@@ -50,14 +54,17 @@ describe('els textos', () => {
       expect(Object.keys(textos), llengua).toEqual(claus);
       for (const text of Object.values(textos)) expect(text.trim().length, llengua).toBeGreaterThan(5);
       expect(textos.detallWeb, llengua).toContain('{versio}');
-      expect(textos.detallApk, llengua).toContain('SHA-256');
-      if (llengua !== 'ca') expect(textos.detallApk, llengua).not.toBe(TEXTOS_ACTUALITZACIO.ca.detallApk);
+      // v1.2.17 · T-04 · Cap text de l'APK directe ni de la seua suma, en cap llengua.
+      expect(Object.values(textos).join(' '), llengua).not.toMatch(/APK|SHA-256/);
+      if (llengua !== 'ca') expect(textos.detallTestflight, llengua).not.toBe(TEXTOS_ACTUALITZACIO.ca.detallTestflight);
     }
+    // v1.2.17 · T-04 · Només els canals vius: TestFlight i la web.
+    expect(claus).toEqual(['detallTestflight', 'accioTestflight', 'detallWeb', 'accioWeb']);
     expect(textosActualitzacio('es-ES')).toBe(TEXTOS_ACTUALITZACIO.es);
     expect(textosActualitzacio('fr')).toBe(TEXTOS_ACTUALITZACIO.ca);
     expect(textosActualitzacio(null)).toBe(TEXTOS_ACTUALITZACIO.ca);
-    // Valencià AVL: «este», «esta».
-    expect(TEXTOS_ACTUALITZACIO.ca.detallApk).toMatch(/és esta:$/);
+    // Valencià AVL: «vinga» (v1.2.17 · T-04: el text de l'APK, amb «esta», ja no hi és).
+    expect(TEXTOS_ACTUALITZACIO.ca.detallTestflight).toMatch(/quan et vinga bé\.$/);
   });
 });
 
@@ -81,9 +88,14 @@ describe('la barra', () => {
     expect(container.innerHTML).toBe('');
     // Ni amb una mostra que no passa pel registre: el botó no obri res.
     rerender(<BarraActualitzacioRecomanada mostra={apk} />);
-    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ACTUALITZACIO.ca.accioApk }));
+    /* v1.2.17 · T-04 · La barra ja no té cap text de l'APK: la mostra cau al text de Google Play de sempre, sense
+       cap suma (ni <code>), i el seu botó continua sense obrir res (obriBotigaActualitzacio). */
+    expect(container.textContent).not.toMatch(/APK|SHA-256/);
+    expect(container.textContent).not.toContain(SHA);
+    expect(container.querySelector('code')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Actualitza a Google Play/ }));
     expect(finestraOpen).not.toHaveBeenCalled();
-    expect(finestraOpen.mock.calls.flat()).not.toContain(ENLLAC_APK_DIRECTE);
+    expect(finestraOpen.mock.calls.flat()).not.toContain(APK_DIRECTE);
   });
 
   test('la web: la versió nova al text i el botó que la carrega', () => {

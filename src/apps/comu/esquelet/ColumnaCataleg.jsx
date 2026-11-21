@@ -29,6 +29,11 @@
  * columna. Sense la prop, el cos de sempre, byte a byte: el TPV del Bar i la
  * Salut no canvien (Llei del Píxel). Ho pinta TargetesArticles, de baix, que
  * també fa servir ColumnaColleccio.
+ *
+ * v1.2.17 · Gauntlet R1 (L3-07) · forma="rajoles" amb estilCompra (OPCIONAL,
+ * només `true`): les rajoles de sempre amb l'estil de la llista de la compra
+ * (IDEA-303, GraellaArticles estilCompra), que només demana La compra de la
+ * Nevera. Sense, el cos de sempre: el Bar i /disseny no canvien.
  */
 import { isValidElement, useEffect, useLayoutEffect, useRef } from 'react';
 import { FileText, LayoutGrid, List } from 'lucide-react';
@@ -222,7 +227,9 @@ export function ColumnaCataleg({
   forma,
   /* Correcció F3 (261006) · L'avís de l'app, dins del marc (MarcColumna). Sense, el de sempre. */
   avis = null,
-  ometDataNoIndicada = false
+  ometDataNoIndicada = false,
+  /* v1.2.17 · Gauntlet R1 (L3-07) · L'estil de la llista de la compra, només amb forma="rajoles". */
+  estilCompra = false
 }) {
   const { mida, idioma } = useClosaAplicacio();
   const baseCataleg = textosCatalegEsquelet(idioma);
@@ -257,15 +264,18 @@ export function ColumnaCataleg({
     ...filtrats
   ];
   const Peca = vista.vista === 'llista' ? LlistaArticles : GraellaArticles;
+  /* v1.2.17 · Gauntlet R1 (L3-07) · Només la graella de rajoles; la llista de files no en té. */
+  const ambEstilCompra = forma === 'rajoles' && estilCompra === true && Peca === GraellaArticles;
   /* Les targetes: la mateixa llista del cos, cada article amb la seua secció pròpia (la icona del
      quadrat), també els destacats, que al cos porten la secció «Recents». */
   const ambTargetes = forma === 'targetes';
   const propis = ambTargetes ? [...grupsDestacats.flatMap((d) => d.articles), ...filtrats] : [];
 
-  /* Ordre del Mestre, 261004 (integració final) · La fitxa (FitxaArticle): només amb les
-     targetes, amb detall (qui la munta en té les accions) i amb la boina vestida per l'app. */
-  const teFitxa = (article) => ambTargetes && Boolean(detall) && Boolean(boinaDe(article).nom);
-  const candidata = ambTargetes && vista.fitxa ? llista.find((article) => article.id === vista.fitxa) || null : null;
+  /* Ordre del Mestre, 261004 + Onada R32.26 · La fitxa (FitxaArticle): en targetes o rajoles de
+     compra amb detall (qui la munta en té les accions) i amb la boina vestida per l'app. */
+  const permetFitxa = ambTargetes || forma === 'rajoles';
+  const teFitxa = (article) => permetFitxa && Boolean(detall) && Boolean(boinaDe(article).nom);
+  const candidata = permetFitxa && vista.fitxa ? llista.find((article) => article.id === vista.fitxa) || null : null;
   const articleFitxa = candidata && teFitxa(candidata) ? candidata : null;
   const textosFitxa = { ...TEXTOS_TARGETES, ...textosTargetesEsquelet(idioma), ...textosEstat };
   const textAccioFitxa = detall?.textAccepta || (typeof detall?.etiquetaVariants === 'string' ? detall.etiquetaVariants : null) || baseCataleg.opcions;
@@ -371,6 +381,7 @@ export function ColumnaCataleg({
           onPlega={onPlega}
           textArticles={textArticles}
           buit={<EstatBuit titol={t.buit}>{t.buitText}</EstatBuit>}
+          {...(ambEstilCompra ? { estilCompra: true } : null)}
         />
       )}
       {detall ? (

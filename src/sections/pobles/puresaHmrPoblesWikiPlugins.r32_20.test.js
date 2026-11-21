@@ -66,6 +66,8 @@ describe('Onada R32.20 · Lot 2 · Puresa HMR / Fast Refresh en pobles/, wiki-de
       'AVIS_EINA_LOCAL_SENSE_TRADUCCIO',
       'CATEGORIA_INICIAL_WIKI',
       'DATA_DOCUMENTACIO',
+      /* v1.2.17 · Gemini R32.26 (lot_03) · La portada pròpia de la Wiki (vinyeta), una constant pura del model. */
+      'PORTADA_WIKI_BRUGUERA',
       'TEXTOS_ESPAI_WIKI',
       'TIPUS_DOCUMENTACIO',
       'copyDePortada',

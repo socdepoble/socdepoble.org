@@ -11,7 +11,7 @@ import {creaPostgres} from '../postgres-node0.mjs';
 const schema=fs.readFileSync(new URL('./posse-ledger.sql',import.meta.url),'utf8');
 // Single pin source shared with direct SQL installation; never accept just a count.
 const migrationPins=schema.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)?.[1];
-const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
+const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125|126),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
 // Two reviewed85 compositions exist (R54 and R15-A3). Preserve exact pair
 // identity instead of silently overwriting one hash in a count-keyed object.
 const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${count}:${hash}`));
@@ -31,7 +31,8 @@ const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${cou
 // P1-74 (A-03): es conserva el 123 de la v1.2.8 i s'afig el 124 amb 20261118230000 (la caché de credencials natives per
 // configuració, NO aplicada); setze parells exactes i quinze recomptes distints.
 // R32.14: es conserva el 124 i s'afig el 125 exacte amb la vista prèvia sense amagats.
-if(migrationPairs.length!==17||expectedMigrationLedgers.size!==17||new Set(migrationPairs.map(([count])=>count)).size!==16)throw Error('posse_migration_pins_missing');
+// R32.25: conserva125 i afig126 exacte amb la migració preparada, municipalapagat per defecte.
+if(migrationPairs.length!==18||expectedMigrationLedgers.size!==18||new Set(migrationPairs.map(([count])=>count)).size!==17)throw Error('posse_migration_pins_missing');
 const FUNCTION_NAMES=['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'];
 const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{
   const start=schema.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=schema.indexOf('AS $f$',start),end=schema.indexOf('$f$;',body+6);

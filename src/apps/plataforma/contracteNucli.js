@@ -49,6 +49,13 @@
  *           Gestoria (el pont) i la Nevera (el Rebost). Una peça de pintar,
  *           sense backend ni context. Només s'afig un nom: un mòdul de '^1.0'
  *           a '^1.6' continua valent, i els mòduls nous demanen ^1.7.
+ *   1.8.0 · v1.2.17 (Gemini R32.26, lot_01 · IDEA-303): declaraNivellInicialEspai i
+ *           declaraVistaPerDefecteEspai a la porta 'workspace', perquè el Rebost de
+ *           la Nevera obriga directament la graella en rajoles en pantalla estreta.
+ *           Dues funcions de registre (estat de mòdul, sense backend ni context; Gauntlet
+ *           R2 L3R2-06: un mòdul les pot cridar per a qualsevol espai). Només s'afigen
+ *           noms: un mòdul de '^1.0' a '^1.7' continua valent, i els mòduls nous
+ *           demanen ^1.8.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -56,7 +63,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.7.0';
+export const VERSIO_NUCLI = '1.8.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -180,7 +187,8 @@ export const PORTES_DEL_NUCLI = congela([
   {
     clau: 'workspace',
     fonts: ['src/components/universal/workspace/index.js'],
-    noms: ['CatalegWorkspace', 'DefaultItemCard', 'DetallCataleg', 'UniversalWorkspace']
+    /* Nucli 1.8.0 (v1.2.17): les dues declaracions d'espai del Rebost (IDEA-303). */
+    noms: ['CatalegWorkspace', 'DefaultItemCard', 'DetallCataleg', 'UniversalWorkspace', 'declaraNivellInicialEspai', 'declaraVistaPerDefecteEspai']
   }
 ]);
 

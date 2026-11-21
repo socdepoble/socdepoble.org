@@ -1828,6 +1828,10 @@ description: "Documentació canònica de Sóc de Poble."
 
   R32.14 · Vista prèvia privada abans de carregar el fil. Depén de `20261117173000` i `20261114061000`. Redefinix `public.xat_fils_meus(uuid)` amb el mateix OID, signatura i rebuts: `ultim_text`, `ultim_al`, `ultim_autor_id` i `ultim_tipus` provenen de la mateixa darrera fila visible i no amagada per `auth.uid()`. Exclou també missatges esborrats, caducats i història buidada. La data canònica continua sent `ultim_al`; cap canvi de seq/cursors/comptadors ni cap concessió de SELECT a la taula d'amagats. Idempotent, transaccional i amb pins del cos anterior/final; la deriva desconeguda avorta. **NO aplicada: l'aplica el Mestre.** Prova executable: `tests/r3214-bundle-xat-postgres.test.mjs`, PostgreSQL 18.6 natiu amb dues sessions i PGlite. El perfil Node 0 passa a 125 fonts amb pin exacte, preservant els 16 perfils històrics. Estat vigent: aplicada a producció el 19-11-2026 a les 18:02 CET (Super-Bundle R32.14, `REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE.json`).
 
+- `migrations/20261121090000_r32_25_push_directes_i_bandols.sql`
+
+  R32.25. Preparada i provada localment en PostgreSQL 18.6 natiu i PGlite; **NO aplicada a Producció**. Depén de `2611080431`, `2611122200`, `20261116031000` i `20261118230000`. Worker compatible primer; després la migració, que deixa `push_poble_actiu = no`. La provisió push (`tooling/push/aprovisiona-push.mjs`) **no** la porta: el seu `staged/schema.sql`, pas 1 de l'activació T-03 del Canal 1, acaba en `20261118230000`. Cal fer T-03 sencer amb el worker `notifica-xat` de la v1.2.17 (porta `funcio-notifica-xat-r32-25` d'`ordre_desplegament.json`) i només després aplicar esta migració, a part. Si mai es torna a passar `staged/schema.sql`, que reaplica `2611020417` i `2611080431`, cal tornar a aplicar `20261121090000` després (`reaplicacio` d'`ordre_desplegament.json`). D-24: deu directes nous per remitent en 24 hores. Bàndols city_hall del mateix poble amb consentiment, màxim dos en 24 hores, separació de deu minuts i silenci 22:00–08:00 Europe/Madrid. Detall i límits al final d’este document.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -2070,6 +2074,7 @@ Rebuts de l'«Estat declarat» (`P0-05` / `P2-10`): «bolcat del 13-11-2026» i 
 | 123 | `20261117193000` | `20261117193000_r32_8_xat_quota_250mb_video_60s_i_ubicacio.sql` | Aplicada a producció el 19-11-2026 a les 18:02 CET pel Mestre, dins del Super-Bundle R32.14 (una transacció, postverificació 10/10 TRUE, `REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE.json`) | Quota acumulada de 250 MB, vídeo fins a 60 s i ubicació explícita als adjunts del xat, additiva i sense canvis de RLS/ACL |
 | 124 | `20261118230000` | `20261118230000_a03_xat_push_credencials_per_configuracio.sql` | Aplicada a producció el 19-11-2026 a les 18:02 CET pel Mestre, dins del Super-Bundle R32.14 (una transacció, postverificació 10/10 TRUE, `REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE.json`) | Caché de credencials natives per proveïdor i configuració: rotació de `SDP_APNS_*` o `SDP_FCM_COMPTE_SERVEI` sense apagar el cron; v1 intacta |
 | 125 | `20261119143000` | `20261119143000_r32_14_xat_fils_previa_sense_amagats.sql` | Aplicada a producció el 19-11-2026 a les 18:02 CET pel Mestre, dins del Super-Bundle R32.14 (una transacció, postverificació 10/10 TRUE, `REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE.json`) | Vista prèvia del xat sense missatges amagats per a auth.uid(); text, data, autor i tipus coherents; sense canviar rebuts ni cursors |
+| 126 | `20261121090000` | `20261121090000_r32_25_push_directes_i_bandols.sql` | NO aplicada a Producció; preparada localment, bandera municipal apagada | Sostre D-24 de directes, consentiment i Bàndols urgents per poble, revalidació i NFD Unicode 16 |
 
 | Artefacte complementari | Ruta dins de `supabase/` | Rol operatiu |
 | :--- | :--- | :--- |
@@ -3524,3 +3529,15 @@ Proves: `tests/r3219-lssi-control-postgres.test.mjs` (26/26 locals),
 rep un transport HTTPS pinnat amb Host/SNI i certificat originals, IP pública
 congelada i proxy ambiental desactivat. `SDP_AP_ACTIVA` continua apagada per
 defecte; no s’ha executat Deno/Edge ni desplegat federació remota.
+
+
+## R32.25 · Directes limitats i Bàndols preparats, apagats
+
+- `migrations/20261121090000_r32_25_push_directes_i_bandols.sql`
+  Preparació local, **no aplicada a Producció**. D-24 limita els directes nous d’un remitent a 10 en 24 hores; el missatge continua enviant-se quan es talla el push. Bàndols només de `city_hall` del mateix poble, amb consentiment, dos en 24 hores, deu minuts de separació i silenci 22:00–08:00 Europe/Madrid. `push_poble_actiu` naix a `no`.
+
+  Ha d’anar després de `2611080431`, `2611122200`, `20261116031000` i `20261118230000`. Worker compatible abans de migració.
+
+  Provisió (v1.2.17 · Gauntlet R2, L4R2-01). La provisió push **no** porta esta migració: `MIGRACIONS` de `tooling/push/aprovisiona-push.mjs`, i per tant `staged/schema.sql` (el pas 1 de l’activació T-03 del Canal 1), acaba en `20261118230000`. És decisió del Mestre (informe v1.2.17): dins del pas 1, R32.25 arribaria a Producció abans del worker, i el `schema.sql` que el Mestre ja té preparat deixaria de casar (`stage_drift`). L’ordre és: primer T-03 sencer amb el worker `notifica-xat` de la v1.2.17 (porta `funcio-notifica-xat-r32-25` d’`ordre_desplegament.json`) i, després, esta migració, a part. Si mai es torna a passar `staged/schema.sql`, que reaplica `2611020417` i `2611080431`, tornen `private.xat_push_encua`, `private.xat_push_candidats_v2` i `public.xat_push_reclama_v2` sense D-24 ni Bàndols: cal tornar a aplicar `20261121090000` després (`reaplicacio` d’`ordre_desplegament.json`). Ho fixa `tests/missatgeria-r21-2-postgres.test.mjs` sobre PostgreSQL 18.6 natiu.
+
+  Activació municipal, client/canal Android, text legal i prova física tenen lliurament propi: este kit no els acredita.

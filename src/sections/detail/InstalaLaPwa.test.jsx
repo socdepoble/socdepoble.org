@@ -254,7 +254,9 @@ describe('les ranures de botiga', () => {
    TestFlight, un enllaç i, davall, la guia de dos passos (Alerta sense regió
    viva). Tancades (hui, amb les ranures de veres): res.
    Onada v1.2.16 (ZERO APK fora de botiga, ordre del Mestre 261121) · L'APK ja no s'obri amb cap
-   adreça (pany de canalsDeBotiga.js): les proves de l'APK obert passen a provar que no es pinta. */
+   adreça (pany de canalsDeBotiga.js): les proves de l'APK obert passen a provar que no es pinta.
+   v1.2.17 · T-04 · El component ja no té ni l'atribut `download` ni l'enllaç a la suma: les asserts que en
+   proven l'absència es queden, com a guarda per si mai algú els tornara a posar. */
 describe('IDEA-60 · instal·lació immediata (APK directe i TestFlight)', () => {
   const RANURES = (obertes = {}) => [
     { id: 'google-play', nom: 'Google Play', url: null },
@@ -419,27 +421,36 @@ describe('etiquetaDeBotiga (pura)', () => {
       .toEqual(['APK', '', '']);
   });
 
-  /* IDEA-60 (T1, prompt 261102_1532) · Les dues ranures d'instal·lació
-     immediata, en les cinc llengües (amb els diccionaris de veres), i la
-     reserva és el valor valencià, caràcter a caràcter. Les tres claus més del
-     bloc (la suma i els dos passos) són als cinc diccionaris, traduïdes. */
-  test('cinc llengües per a l’APK directe i TestFlight; la reserva és el valor valencià', () => {
+  /* IDEA-60 (T1, prompt 261102_1532) · La ranura de TestFlight en les cinc
+     llengües (amb els diccionaris de veres), i la reserva és el valor valencià,
+     caràcter a caràcter. Les dues claus més del bloc (els dos passos) són als
+     cinc diccionaris, traduïdes.
+     v1.2.17 · T-04 · ZERO APK fora de botiga (ordre del Mestre 261121): la
+     ranura 'apk-directe' ja no té cap etiqueta pròpia (cau al seu nom, com
+     qualsevol ranura sense etiqueta, i no crida el t()) ni cap clau als cinc
+     diccionaris (ni la del botó ni la de la suma SHA-256). */
+  test('cinc llengües per a TestFlight; la reserva és el valor valencià; l’APK directe, cap etiqueta ni cap clau', () => {
     const esperats = [
-      ['ca', CA, "Descarregar l'APK d'Android", "Provar-la a l'iPhone i a l'iPad amb TestFlight"],
-      ['es', ES, 'Descargar el APK de Android', 'Probarla en el iPhone y el iPad con TestFlight'],
-      ['en', EN, 'Download the Android APK', 'Try it on iPhone and iPad with TestFlight'],
-      ['eu', EU, 'Deskargatu Androiderako APKa', 'Probatu iPhonean eta iPadean TestFlight-ekin'],
-      ['gl', GL, 'Descargar o APK de Android', 'Probala no iPhone e no iPad con TestFlight']
+      ['ca', CA, "Provar-la a l'iPhone i a l'iPad amb TestFlight"],
+      ['es', ES, 'Probarla en el iPhone y el iPad con TestFlight'],
+      ['en', EN, 'Try it on iPhone and iPad with TestFlight'],
+      ['eu', EU, 'Probatu iPhonean eta iPadean TestFlight-ekin'],
+      ['gl', GL, 'Probala no iPhone e no iPad con TestFlight']
     ];
-    for (const [codi, dicc, apk, testflight] of esperats) {
+    for (const [codi, dicc, testflight] of esperats) {
       const t = (clau, reserva) => dicc[clau] || reserva;
-      expect([codi, etiquetaDeBotiga({ id: 'apk-directe', nom: 'APK directe' }, t), etiquetaDeBotiga({ id: 'testflight', nom: 'TestFlight' }, t)])
-        .toEqual([codi, apk, testflight]);
+      expect([codi, etiquetaDeBotiga({ id: 'testflight', nom: 'TestFlight' }, t)]).toEqual([codi, testflight]);
+      // v1.2.17 · T-04 · L'APK directe: el nom de la ranura, cap etiqueta, i cap clau seua al diccionari.
+      expect([codi, etiquetaDeBotiga({ id: 'apk-directe', nom: 'APK directe' }, t)]).toEqual([codi, 'APK directe']);
+      expect([codi, Object.keys(dicc).filter((clau) => /^section\.descarregues\.botiga\.apk/i.test(clau))]).toEqual([codi, []]);
     }
     const reserva = (_, text) => text;
-    expect([etiquetaDeBotiga({ id: 'apk-directe' }, reserva), etiquetaDeBotiga({ id: 'testflight' }, reserva)])
-      .toEqual([CA['section.descarregues.botiga.apk'], CA['section.descarregues.botiga.testflight']]);
-    for (const clau of ['section.descarregues.botiga.apkSuma', 'section.descarregues.guia.testflight.pas1', 'section.descarregues.guia.testflight.pas2']) {
+    expect(etiquetaDeBotiga({ id: 'testflight' }, reserva)).toBe(CA['section.descarregues.botiga.testflight']);
+    // v1.2.17 · T-04 · Sense nom, la ranura de l'APK no diu res i no demana cap traducció.
+    const tEspia = vi.fn(reserva);
+    expect(etiquetaDeBotiga({ id: 'apk-directe' }, tEspia)).toBe('');
+    expect(tEspia).not.toHaveBeenCalled();
+    for (const clau of ['section.descarregues.guia.testflight.pas1', 'section.descarregues.guia.testflight.pas2']) {
       expect([clau, typeof CA[clau]]).toEqual([clau, 'string']);
       for (const [codi, dicc] of [['es', ES], ['en', EN], ['eu', EU], ['gl', GL]]) {
         expect([clau, codi, typeof dicc[clau], dicc[clau] === CA[clau]]).toEqual([clau, codi, 'string', false]);

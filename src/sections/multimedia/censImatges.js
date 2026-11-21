@@ -75,7 +75,10 @@ const VINYETES = [
   ['gestoria', 'Vinyeta de la Gestoria'], ['habitatge', 'Vinyeta d’Habitatge', 'webp'], ['mapa', 'Vinyeta del Mapa', 'webp'],
   ['nodrir_la_iaia', 'Vinyeta de La IAIA Sabuda', 'webp'], ['rebost', 'Vinyeta del Rebost', 'webp'], ['rss', 'Vinyeta de Notícies'], ['salut', 'Vinyeta de Salut', 'webp'],
   ['sistema_nervios', 'Vinyeta del Sistema Nerviós'],
-  ['treball', 'Vinyeta de Treball', 'webp'], ['vehicle', 'Vinyeta de Vehicles', 'webp']
+  ['treball', 'Vinyeta de Treball', 'webp'], ['vehicle', 'Vinyeta de Vehicles', 'webp'],
+  /* v1.2.17 · Gauntlet R1 (L3-14) · La portada de la Wiki (lot_03 de Gemini R32.26), il·lustració
+     d'IA: l'original .jpg, amb la bessona .webp al costat (mapaBessonesPublic.js). */
+  ['wikidepoble', 'Vinyeta de la Wiki de Poble']
 ];
 
 export const CENS_IMATGES = Object.freeze([
@@ -378,6 +381,11 @@ export const EXCLOSES = Object.freeze({
   "/assets/mur/manifest-de-poble/Manifest_de_Poble_1.webp": "primera pàgina documental del Manifest de Poble, reproduïda íntegra a l’article; no és una fotografia",
   "/assets/mur/manifest-de-poble/logo-manifest-de-poble-retallat.webp": "logotip del Manifest de Poble; no és una fotografia",
   '/assets/uploads/brain/oli_de_la_torre_logo.webp': 'logotip públic d’Oli de La Torre (còpia portable del perfil, Teler 2026-11-03)',
+  /* v1.2.17 · Gauntlet R2 (L3R2-04) · La variant social de la portada de la Wiki (1200×630, JPEG
+     baseline, 272 474 B, sense APP1), feta amb la recepta de tria-imatge-seo.mjs (posicioY 0,55: les
+     quatre cares, el gat i els llibres sencers). Va davant del mapa: quan VARIANTS_SOCIALS
+     (config/imatgeSocial.js) la registre, la línia del mapa la reescriu amb el motiu canònic. */
+  '/assets/ui/plugins/wikidepoble_vinyeta-social-1200x630.jpg': 'targeta social dedicada de /assets/ui/plugins/wikidepoble_vinyeta.jpg: no és cap foto nova de l’Arxiu',
   /* R-01: derivades socials explícites del mapa canònic, una sola foto a l’Arxiu. */
   ...Object.fromEntries(Object.entries(VARIANTS_SOCIALS).map(([original, social]) => [social, `targeta social dedicada de ${original}: no és cap foto nova de l’Arxiu`])),
   '/assets/ui/plugins/tpv_vinyeta.jpg': 'la mateixa vinyeta en JPEG; el codi només nomena la WebP (registrePlugins.js)',
@@ -654,12 +662,14 @@ export const TRAZABILITAT_RONDA1_CENS = Object.freeze({
     '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211-social-1200x630.jpg',
     ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
   ),
+  /* v1.2.17 · Gauntlet R2 (L3R2-04) · La portada de la Wiki ja és la vinyeta (PAGE_COPY.wikidepoble):
+     pageContent.js no cita el Genotip. Es queda a l'Arxiu i al mapa de variants socials (imatgeSocial.js). */
   '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png': tracaRonda1(
     '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png',
     'dbc5a1c14',
     '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.webp',
     '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
-    ['src/sections/text/pageContent.js', 'src/sections/multimedia/censImatges.js']
+    ['src/config/imatgeSocial.js', 'src/sections/multimedia/censImatges.js']
   )
 });
 

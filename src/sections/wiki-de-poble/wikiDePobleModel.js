@@ -14,7 +14,27 @@ export const TEXTOS_ESPAI_WIKI = Object.freeze({
   tria: pWiki('tria', 'Tria un document.'),
 });
 
-export const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
+/* v1.2.17 · Gauntlet R2 (L3R2-04) · La portada de la Wiki ja viu al seu copy (PAGE_COPY.wikidepoble:
+   la vinyeta, la mida, la prioritat i l'alt fidel), que és el que lligen la vista (copyDePortada), el
+   head (seoWiki.js · portadaSocialDeLaWiki) i el prerender (build-social-manifest.mjs): els tres diuen
+   el mateix (contracte T1.3). PORTADA_WIKI_BRUGUERA en deriva, amb una sola font per a l'alt, i hi
+   afig el camí de la bessona .webp (mapaBessonesPublic.js). */
+const PORTADA_DEL_COPY = PAGE_COPY.wikidepoble || {};
+export const PORTADA_WIKI_BRUGUERA = Object.freeze({
+  image: PORTADA_DEL_COPY.image,
+  imageWebp: typeof PORTADA_DEL_COPY.image === 'string' ? PORTADA_DEL_COPY.image.replace(/\.jpg$/, '.webp') : undefined,
+  imageWidth: PORTADA_DEL_COPY.imageWidth,
+  imageHeight: PORTADA_DEL_COPY.imageHeight,
+  imageFetchPriority: PORTADA_DEL_COPY.imageFetchPriority,
+  imageAlt: PORTADA_DEL_COPY.imageAlt,
+});
+
+/* 261001 · El copy d'una portada: el del contingut (pageCopy) o, sense, el de PAGE_COPY.
+   v1.2.17 · Gauntlet R2 (L3R2-04) · Torna a ser la de la v1.2.16: amb la vinyeta al copy, ja no cal
+   substituir portada_genotip.png a la vista (la substitució feia que el head en diguera una altra). */
+export function copyDePortada(pageCopy, clau) {
+  return pageCopy?.[clau] || PAGE_COPY[clau];
+}
 
 const einaLocal = (id, title, subtitle, categoryId, tags, lead, type = 'Eina local') => ({
   id,

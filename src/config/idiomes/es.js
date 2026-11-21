@@ -3398,9 +3398,7 @@ export default {
   'section.descarregues.botiga.googlePlay': "Disponible en Google Play",
   'section.descarregues.botiga.appStore': "Disponible en el App Store",
   /* IDEA-60 · T1b (prompt 261102_1532) */
-  'section.descarregues.botiga.apk': "Descargar el APK de Android",
   'section.descarregues.botiga.testflight': "Probarla en el iPhone y el iPad con TestFlight",
-  'section.descarregues.botiga.apkSuma': "Comprobar la suma SHA-256 del archivo",
   'section.descarregues.guia.testflight.pas1': "Instala la app TestFlight de Apple desde el App Store.",
   'section.descarregues.guia.testflight.pas2': "Abre el enlace de TestFlight y pulsa «Aceptar» para instalar Sóc de Poble.",
   // P1-43 (pla 261029_0216; Llibre Mestre, fita 7) · El visor: fixar la informació del panell.

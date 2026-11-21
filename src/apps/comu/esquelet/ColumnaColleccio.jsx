@@ -26,6 +26,10 @@
  * de la línia (linia.icona, si l'app la vestix). Sota el resum (un h3), el
  * nom de cada targeta és un h4. Sense la prop, les línies o les rajoles de
  * sempre, byte a byte (Llei del Píxel).
+ * v1.2.17 · Gauntlet R1 (L3-07) · forma="rajoles" amb estilCompra (OPCIONAL,
+ * només `true`): les rajoles amb l'estil de la llista de la compra (IDEA-303,
+ * GraellaArticles estilCompra), que només demana La compra de la Nevera.
+ * Sense, les rajoles de sempre: la Compra de /disseny no canvia.
  * REGLA D'OR 1 (ordre del Mestre, 261004) · La boina de cada targeta és
  * linia.autoria ({ nom, href, avatar, poble }), si l'app la vestix
  * (TargetesArticles). Les línies i les rajoles no la llegixen.
@@ -58,7 +62,9 @@ const comArticle = (linia, textosEstat) => {
   return {
     id: linia.id,
     nom: linia.nom,
-    categoriaId: null,
+    categoriaId: linia.categoriaId ?? null,
+    icona: linia.icona,
+    pictograma: linia.pictograma,
     secundari: [linia.detall, textEstat].filter((text) => typeof text === 'string' && text !== '').join(' · ') || undefined,
     valor: linia.valor,
     estat: estat === 'normal' ? 'en-colleccio' : 'normal',
@@ -69,7 +75,9 @@ const comArticle = (linia, textosEstat) => {
 export function ColumnaColleccio({
   titol, linies = [], forma = 'linies', resum = null,
   onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null,
-  ometDataNoIndicada = false
+  ometDataNoIndicada = false,
+  /* v1.2.17 · Gauntlet R1 (L3-07) · L'estil de la llista de la compra, només amb forma="rajoles". */
+  estilCompra = false
 }) {
   const { mida, idioma } = useClosaAplicacio();
   const baseColleccio = textosColleccioEsquelet(idioma);
@@ -125,6 +133,7 @@ export function ColumnaColleccio({
           onTria={onTria ? (article) => onTria(perId.get(article.id)) : undefined}
           onAccioSecundaria={onEdita ? (article) => onEdita(perId.get(article.id)) : undefined}
           buit={buit}
+          {...(estilCompra === true ? { estilCompra: true } : null)}
         />
       ) : (
         <LiniesColleccio linies={llista} etiqueta={titolResolt} onTria={onTria} onEdita={onEdita} onResta={onResta}

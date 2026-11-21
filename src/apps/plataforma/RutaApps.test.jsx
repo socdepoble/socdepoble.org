@@ -319,3 +319,38 @@ describe('Onada R21 · títol de primer nivell del Lector', () => {
     expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
   });
 });
+
+describe('Onada R32.26 · IDEA-303 · àlies canònic /app/rebost cap a /app/nevera/rebost', () => {
+  test('/app/rebost i /app/rebost/<subruta> redirigixen amb replace cap a nevera conservant l’historial', async () => {
+    const registre = creaRegistre({
+      internes: [manifestDeProva({
+        id: 'nevera',
+        titol: { ca: 'La Nevera de Casa', es: 'La Nevera de Casa' },
+        entradaPerDefecte: 'llista',
+        entrades: [
+          { slug: 'llista', titol: { ca: 'La compra', es: 'La compra' }, icona: 'ClipboardList' },
+          { slug: 'rebost', titol: { ca: 'Rebost', es: 'Despensa' }, icona: 'Boxes' }
+        ],
+        carrega: () => Promise.resolve({
+          default: () => (
+            <Routes>
+              <Route path="rebost" element={<p>Vista rebost oberta</p>} />
+              <Route path="llista" element={<p>Vista llista oberta</p>} />
+            </Routes>
+          )
+        })
+      })]
+    });
+    window.history.replaceState(null, '', '/');
+    const llarg = window.history.length;
+    muntaPlataforma('/app/rebost', { registre });
+    expect(await screen.findByText('Vista rebost oberta')).toBeTruthy();
+    expect(ubicacio()).toBe('/app/nevera/rebost');
+    expect(window.history.length).toBe(llarg);
+
+    cleanup();
+    muntaPlataforma('/app/rebost/llista', { registre });
+    expect(await screen.findByText('Vista llista oberta')).toBeTruthy();
+    expect(ubicacio()).toBe('/app/nevera/llista');
+  });
+});

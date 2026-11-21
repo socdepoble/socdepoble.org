@@ -5,6 +5,12 @@ export const VISTES_CATALEG = Object.freeze(['canonica', 'gran', 'rajola']);
 export const ESPAIS_MAXIMS = 32;
 const PATRO_ESPAI = /^[a-z][a-z0-9-]{0,39}$/;
 const esEspaiValid = espai => typeof espai === 'string' && PATRO_ESPAI.test(espai);
+const VISTES_PER_DEFECTE = new Map();
+export function declaraVistaPerDefecteEspai(espai, vista) {
+  if (!esEspaiValid(espai) || !VISTES_CATALEG.includes(vista)) return false;
+  VISTES_PER_DEFECTE.set(espai, vista);
+  return true;
+}
 function vistesDesades() {
   const net = Object.create(null);
   let cru;
@@ -13,18 +19,22 @@ function vistesDesades() {
   for (const [espai, original] of Object.entries(cru.espais)) {
     if (Object.keys(net).length >= ESPAIS_MAXIMS) break;
     const vista = cru.v === 1 && original === 'llista' ? 'gran' : original;
-    if (esEspaiValid(espai) && ['gran', 'rajola'].includes(vista)) net[espai] = vista;
+    if (esEspaiValid(espai) && VISTES_CATALEG.includes(vista)) net[espai] = vista;
   }
   return net;
 }
 export function vistaDesada(espai) {
-  return esEspaiValid(espai) ? vistesDesades()[espai] || 'canonica' : 'canonica';
+  if (!esEspaiValid(espai)) return 'canonica';
+  const desada = vistesDesades()[espai];
+  if (desada) return desada;
+  return VISTES_PER_DEFECTE.get(espai) || 'canonica';
 }
 export function desaVista(espai, vista) {
   if (!esEspaiValid(espai) || !VISTES_CATALEG.includes(vista)) return false;
   const espais = vistesDesades();
   delete espais[espai];
-  if (vista !== 'canonica') {
+  const perDefecte = VISTES_PER_DEFECTE.get(espai) || 'canonica';
+  if (vista !== perDefecte) {
     const claus = Object.keys(espais);
     if (claus.length >= ESPAIS_MAXIMS) delete espais[claus[0]];
     espais[espai] = vista;

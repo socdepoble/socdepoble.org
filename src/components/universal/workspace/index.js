@@ -13,3 +13,5 @@ export {
    (src/components/universal/CatalegWorkspace.jsx); la façana el continua exportant. */
 export { default as CatalegWorkspace } from '../CatalegWorkspace.jsx';
 export { default as DetallCataleg } from './DetallCataleg.jsx';
+export { declaraNivellInicialEspai } from './nivellMestreDetall.js';
+export { declaraVistaPerDefecteEspai } from './vistaCataleg.js';

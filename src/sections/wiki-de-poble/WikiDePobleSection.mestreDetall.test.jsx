@@ -26,11 +26,23 @@ vi.mock('../../data/wikiManifest.js', () => ({
     ]
   }
 }));
-/* El doble pinta el títol com la UniversalPage de veres: l'H1 dins de la
-   capçalera de pàgina. */
-vi.mock('../../components/universal/UniversalPage.jsx', () => ({
-  UniversalPage: ({ title }) => <header className="page-title"><h1>{title}</h1></header>
-}));
+/* El doble pinta el títol i la fletxa mestre-detall (graella.tornaDelDetall)
+   com la UniversalPage de veres. */
+vi.mock('../../components/universal/UniversalPage.jsx', async () => {
+  const { useContext } = await import('react');
+  const { AppGridContext } = await import('../../components/layout/AppGridShell.jsx');
+  return {
+    UniversalPage: ({ title }) => {
+      const graella = useContext(AppGridContext);
+      return (
+        <header className="page-title">
+          {graella?.tornaDelDetall ? <button type="button" onClick={graella.tornaDelDetall}>Tornar arrere</button> : null}
+          <h1>{title}</h1>
+        </header>
+      );
+    }
+  };
+});
 vi.mock('../../components/universal/graph/BrainGraph', () => ({ default: () => null }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
@@ -82,9 +94,19 @@ const llista = (c) => c.querySelector('#app-grid-list');
 const carpeta = (c, nom) => within(navegacio(c)).getByRole('button', { name: nom });
 const app = (nom) => within(screen.getByRole('navigation', { name: 'App' })).getByRole('button', { name: nom });
 
-test('MD · /wikidepoble a 375 px: primer l’arbre, sola', () => {
+const detal = (c) => c.querySelector('#app-grid-main');
+const obriArbreDesDePortada = (c) => {
+  fireEvent.click(within(detal(c)).getByRole('button', { name: 'Tornar arrere' }));
+  fireEvent.click(within(llista(c)).getByRole('button', { name: 'WIKI DE POBLE' }));
+};
+
+test('R32.26 (IDEA-302) · /wikidepoble a 375 px: primer la portada neta a pantalla, i es pot obrir l’arbre a demanda', () => {
   const { container } = munta('/wikidepoble');
-  expect([container.querySelector('.app-grid-shell').dataset.layout, panell(container)]).toEqual(['estret', 'left']);
+  expect([container.querySelector('.app-grid-shell').dataset.layout, panell(container)]).toEqual(['estret', '']);
+  expect(obertes(container)).toEqual(['#app-grid-main']);
+  expect(within(detal(container)).getByRole('heading', { level: 1 }).textContent).toBe('Wiki de Poble');
+  obriArbreDesDePortada(container);
+  expect(panell(container)).toBe('left');
   expect(obertes(container)).toEqual(['#app-grid-sidebar']);
 });
 
@@ -97,6 +119,7 @@ test('MD · un enllaç amb document (/wikidepoble?item=…) l’obri directament
 
 test('MD · triar SABER escriu la primera fitxa a la URL; eixir i tornar amb l’Arrere torna a la llista, no al document', () => {
   const { container } = munta('/wikidepoble');
+  obriArbreDesDePortada(container);
   fireEvent.click(carpeta(container, 'SABER'));
   expect(panell(container)).toBe('middle');
   const enLaLlista = url();
@@ -112,6 +135,7 @@ test('MD · triar SABER escriu la primera fitxa a la URL; eixir i tornar amb l�
 
 test('MD · el nom de SABER, carpeta activa amb filles, porta a la seua llista; abans era un carreró', () => {
   const { container } = munta('/wikidepoble');
+  obriArbreDesDePortada(container);
   fireEvent.click(carpeta(container, 'SABER'));
   expect(panell(container)).toBe('middle');
   fireEvent.click(within(llista(container)).getByRole('button', { name: 'WIKI DE POBLE' }));

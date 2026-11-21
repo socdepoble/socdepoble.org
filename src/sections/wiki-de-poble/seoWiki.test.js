@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { DESCRIPCIO_WIKI, TITOL_WIKI, metadadesDeDocumentPublic, metadadesDeDocumentWiki, portadaSocialDeLaWiki, titolHumaDeId } from './seoWiki.js';
 import { LIMIT_TITOL, textPla } from '../../config/metadadesSocials.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { copyDePortada } from './wikiDePobleModel.js';
 
 /* Les 13 plantilles del manifest del 261029 (pla.md es retira: una que ja no
    hi siga no compta, però almenys una hi ha de ser). */
@@ -94,14 +95,17 @@ describe('els documents reals de la Wiki (src/data/wikiManifest.js)', () => {
 /* Ordre del Mestre (30-10-2026, prompt 2208, T1.3; QA-VES-02 de Codex) · La
    portada de la Wiki (/wikidepoble sense ?item=) porta al head la imatge que
    pinta (PAGE_COPY.wikidepoble), per la seua variant social de 1200x630, la
-   mateixa que prerenderitza el build. Els documents i els desconeguts, com abans. */
+   mateixa que prerenderitza el build. Els documents i els desconeguts, com abans.
+   v1.2.17 · Gauntlet R2 (L3R2-04) · La portada pinta la vinyeta de la Wiki (lot_03 de Gemini R32.26)
+   i el <head> en porta la variant social, wikidepoble_vinyeta-social-1200x630.jpg, amb l'alt fidel.
+   Abans la vista pintava la vinyeta (copyDePortada la substituïa) i el head, portada_genotip. */
 describe('la portada de la Wiki porta la seua imatge al head', () => {
   it('sense ?item=: la portada per la variant social, amb el seu alt; sense portada o amb una que no es pot servir, la genèrica', () => {
     const portada = PAGE_COPY.wikidepoble;
     expect(metadadesDeDocumentWiki(null, '', [])).toEqual({
       title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true,
       image: {
-        url: 'https://socdepoble.org/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip-social-1200x630.jpg',
+        url: 'https://socdepoble.org/assets/ui/plugins/wikidepoble_vinyeta-social-1200x630.jpg',
         alt: textPla(portada.imageAlt || portada.title, LIMIT_TITOL)
       }
     });
@@ -110,6 +114,20 @@ describe('la portada de la Wiki porta la seua imatge al head', () => {
     expect(portadaSocialDeLaWiki(svg).imatge).toMatchObject({ estat: 'bloquejada', motiu: 'svg' });
     expect(metadadesDeDocumentWiki(null, '', [], { portada: svg })).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true });
     expect(metadadesDeDocumentWiki({ id: 'cap' }, '?item=cap', [])).toEqual({ title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: false });
+  });
+
+  /* v1.2.17 · Gauntlet R2 (L3R2-04) · Vista, head i prerender diuen el mateix: la imatge que tria el
+     selector del head és la que pinta la portada (copyDePortada), amb la mida i l'alt del copy. */
+  it('v1.2.17 · Gauntlet R2 (L3R2-04) · el head tria la imatge que pinta la vista, i cap rastre de portada_genotip', () => {
+    const vista = copyDePortada(null, 'wikidepoble');
+    expect(vista).toBe(PAGE_COPY.wikidepoble);
+    expect(vista.image).toBe('/assets/ui/plugins/wikidepoble_vinyeta.jpg');
+    expect([vista.imageWidth, vista.imageHeight, vista.imageFetchPriority]).toEqual([1024, 1024, 'high']);
+    expect(vista.imageAlt).toMatch(/^Il·lustració de còmic d’estil Bruguera .*«WIKI DE POBLE».*gallina picoteja a terra$/);
+    const { imatge, image } = portadaSocialDeLaWiki();
+    expect(imatge).toMatchObject({ estat: 'triada', ref: vista.image });
+    expect(image).toEqual({ url: 'https://socdepoble.org/assets/ui/plugins/wikidepoble_vinyeta-social-1200x630.jpg', alt: textPla(vista.imageAlt, LIMIT_TITOL) });
+    expect(JSON.stringify(metadadesDeDocumentWiki(null, '', []))).not.toContain('portada_genotip');
   });
 });
 

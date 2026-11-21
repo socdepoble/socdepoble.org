@@ -35,6 +35,7 @@ import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { TEXTOS_MODE_SENIOR } from '../../config/textosModeSenior.js';
 import { delVal } from '../../config/storage.js';
+import { TEXTOS_BENVINGUDA_FORASTER, desaBenvingudaForasterTancada } from './components/acollidaForasterXatModel.js';
 import { ATRIBUT_SENIOR, SENIOR_KEY, reiniciaMemoriaSenior } from '../../config/theme.js';
 
 const mocks = vi.hoisted(() => ({
@@ -44,7 +45,9 @@ const mocks = vi.hoisted(() => ({
   externalConfig: {},
   towns: [],
   mitjans: true,
-  resol: vi.fn()
+  resol: vi.fn(),
+  /* v1.2.17 · Gauntlet R1 (L1-02) · Camps de més de useUIState (la llengua demanada i la carregada). */
+  ui: {}
 }));
 
 vi.mock('../../app/contexts/RouterContext', async () => {
@@ -74,7 +77,7 @@ vi.mock('./components/FitxaVivaDeComunitat.jsx', async () => {
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', pageCopy: {}, towns: mocks.towns }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, alternativa) => alternativa, resolveAsset: (v) => v }),
-  useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: mocks.externalConfig })
+  useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: mocks.externalConfig, ...mocks.ui })
 }));
 vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ creaNota: vi.fn() }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
@@ -215,13 +218,16 @@ beforeEach(() => {
   mocks.externalConfig = { poble: POBLE.id, nomPoble: POBLE.nom };
   mocks.towns = [TORRE];
   mocks.mitjans = true;
+  mocks.ui = {};
   mocks.resol.mockReset();
   mocks.resol.mockImplementation(async (ref) => `${NODE}/storage/v1/object/public/${ref.slice('sdp-media://'.length)}`);
   buidaEsborranys();
+  desaBenvingudaForasterTancada(false);
 });
 afterEach(() => {
   cleanup();
   fixaBaseRecursos('/');
+  desaBenvingudaForasterTancada(false);
 });
 
 /* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares, amb la
@@ -424,16 +430,32 @@ test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: ini
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-54 · Desempapussament: sense sessió,
    els tres botons d'accés viuen NOMÉS a l'aterratge genèric (/xat sense fil,
-   comunitat, vista ni conversa demanada). Revertix XATR-1. */
-test('sense sessió, a l’aterratge, una sola parella d’accés al peu del cos de la llista', () => {
+   comunitat, vista ni conversa demanada). Revertix XATR-1.
+   v1.2.17 · Gauntlet R1 (L1-07) · Contracte nou de la pantalla: la parella del peu («Entrar» i
+   «Registrar-se») més l'«Entrar» de la benvinguda del Foraster (IDEA-313), a dalt de la llista. En
+   total, exactament dos «Entrar» (un a la targeta i un al peu) i un sol «Registrar-se», al peu. */
+test('sense sessió, a l’aterratge, la parella del peu (Entrar i Registrar-se) més l’Entrar de la benvinguda del Foraster (IDEA-313): 2 «Entrar» i 1 «Registrar-se»', () => {
   munta(senseSessio());
-  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  /* Totes dues «Entrar» porten a la mateixa ruta. */
+  const peu = peuDAccesAlCos();
+  const benvinguda = document.querySelector('[data-sdp-foraster="benvinguda"]');
+  fireEvent.click(within(peu).getByRole('button', { name: 'Entrar' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
+  fireEvent.click(within(benvinguda).getByRole('button', { name: 'Entrar' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
   fireEvent.click(screen.getByRole('button', { name: 'Registrar-se' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ mode: 'crear', tornar: '/xat' }));
-  /* Gauntlet 261022_0225 (XAT-4) · Una sola parella a la pantalla: cap
-     «Registra't» del compositor ni cap enllaç cru a /registre. */
-  expect(screen.getAllByRole('button', { name: /^(Entrar|Registrar-se)$/ })).toHaveLength(2);
+  /* Gauntlet 261022_0225 (XAT-4) · Cap «Registra't» del compositor ni cap enllaç cru a /registre.
+     Dins de XatSection: dos «Entrar», un a la targeta i un al peu, i un «Registrar-se», al peu. A la pantalla real
+     n'hi ha un tercer, la icona d'entrar de la barra negra (Gauntlet R2, L1R2-04; decisió del Mestre L1-01). */
+  const entrars = screen.getAllByRole('button', { name: 'Entrar' });
+  expect(entrars).toHaveLength(2);
+  expect(entrars.filter((b) => benvinguda.contains(b))).toHaveLength(1);
+  expect(entrars.filter((b) => peu.contains(b))).toHaveLength(1);
+  const registres = screen.getAllByRole('button', { name: 'Registrar-se' });
+  expect(registres).toHaveLength(1);
+  expect(peu.contains(registres[0])).toBe(true);
+  expect(within(peu).getAllByRole('button', { name: /^(Entrar|Registrar-se)$/ })).toHaveLength(2);
   expect(screen.queryByRole('link', { name: "Registra't" })).toBeNull();
   expect(document.querySelector('a[href^="/registre"]')).toBeNull();
   /* XAT-1 · Al DOM: l'accés és l'últim fill del cos amb scroll, darrere de
@@ -452,6 +474,8 @@ test('sense sessió, a l’aterratge, una sola parella d’accés al peu del cos
    (m2), dins de la seua bombolla (EnllacARegistre de Bombolla): no és cap
    botó d'accés ni és al compositor ni al peu. */
 function capAcces({ invitacioDeLaIAIA = false } = {}) {
+  /* v1.2.17 · IDEA-313 · La benvinguda del Foraster viu al mateix aterratge estricte: fora, tampoc. */
+  expect(document.querySelector('[data-sdp-foraster]')).toBeNull();
   expect(document.querySelectorAll('.sdp-xat-acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-llista__peu--acces')).toHaveLength(0);
   expect(document.querySelectorAll('.sdp-xat-cos--amb-peu')).toHaveLength(0);
@@ -518,9 +542,76 @@ test.each([
   rerender(<XatContext.Provider value={xat}><XatSection /></XatContext.Provider>);
   const peu = peuDAccesAlCos();
   expect(peu.previousElementSibling).toBe(llista());
-  expect(screen.getAllByRole('button', { name: /^(Descarrega l'App|Entrar|Registrar-se)$/ })).toHaveLength(3);
-  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(within(peu).getAllByRole('button', { name: /^(Descarrega l'App|Entrar|Registrar-se)$/ })).toHaveLength(3);
+  /* v1.2.17 · IDEA-313 · I la benvinguda hi torna, a dalt. */
+  expect(document.querySelector('[data-sdp-foraster="benvinguda"]')).toBeTruthy();
+  fireEvent.click(within(peu).getByRole('button', { name: 'Entrar' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
+});
+
+/* v1.2.17 · IDEA-313 (literal del Mestre, 261121 16:03) · La benvinguda del Foraster: a l'aterratge
+   sense sessió, a dalt del cos de la llista (abans de la llista), amb el títol, les dues línies i
+   un sol «Entrar» cap a /registre amb la tornada al Xat. La ✕ la tanca sense pastilla, deixa el
+   peu d'accés com estava i ho recorda: tornar a aterrar no la torna a mostrar. */
+test('sense sessió, a l’aterratge, la benvinguda del Foraster va a dalt de la llista i porta a entrar', () => {
+  munta(senseSessio());
+  const regio = screen.getByRole('region', { name: 'Benvinguda al Projecte Sóc de Poble' });
+  expect(regio.getAttribute('data-sdp-foraster')).toBe('benvinguda');
+  expect(regio.parentElement).toBe(llista().closest('.sdp-workspace-column__body'));
+  expect(regio.compareDocumentPosition(llista()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect([...regio.querySelectorAll('p')].map((p) => p.textContent)).toEqual([
+    'Passeja al teu ritme, com a foraster pots veure qualsevol informació pública.',
+    'Entra quan vulgues CONNECTAR amb la teua gent, o treballar en privat.'
+  ]);
+  fireEvent.click(within(regio).getByRole('button', { name: 'Entrar' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(rutaDEntrada({ tornar: '/xat' }));
+});
+
+test('sense sessió, la ✕ tanca la benvinguda sense pastilla, conserva el peu d’accés i ho recorda', () => {
+  const { unmount } = munta(senseSessio());
+  fireEvent.click(screen.getByRole('button', { name: 'Tanca la benvinguda' }));
+  expect(document.querySelector('[data-sdp-foraster]')).toBeNull();
+  expect(screen.queryByRole('region', { name: 'Benvinguda al Projecte Sóc de Poble' })).toBeNull();
+  const peu = peuDAccesAlCos();
+  expect(within(peu).getAllByRole('button', { name: /^(Descarrega l'App|Entrar|Registrar-se)$/ })).toHaveLength(3);
+  unmount();
+  munta(senseSessio());
+  expect(document.querySelector('[data-sdp-foraster]')).toBeNull();
+  peuDAccesAlCos();
+});
+
+/* v1.2.17 · Gauntlet R1 (L1-07) · Dins del Xat de veres, la ✕ deixa el focus al control següent del
+   cos de la llista (el teclat i el lector de pantalla no tornen al començament de la pàgina). */
+test('sense sessió, després de la ✕ de la benvinguda el focus va al control següent, no a body', () => {
+  munta(senseSessio());
+  const benvinguda = document.querySelector('[data-sdp-foraster="benvinguda"]');
+  const cos = benvinguda.parentElement;
+  const seguent = [...cos.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .find((el) => !benvinguda.contains(el) && (benvinguda.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING));
+  expect(seguent).toBeTruthy();
+  const tanca = screen.getByRole('button', { name: 'Tanca la benvinguda' });
+  tanca.focus();
+  fireEvent.click(tanca);
+  expect(document.querySelector('[data-sdp-foraster]')).toBeNull();
+  expect(document.activeElement).not.toBe(document.body);
+  expect(document.activeElement).toBe(seguent);
+  /* Avui, la primera fila de la llista de converses. */
+  expect(llista().contains(document.activeElement)).toBe(true);
+});
+
+/* v1.2.17 · Gauntlet R1 (L1-02) · La benvinguda va amb la llengua carregada (llenguaDelText), la del
+   lang del document, i no amb la demanada mentre el seu diccionari encara no ha arribat. Sense
+   llenguaDelText (un amfitrió vell), la demanada. */
+test.each([
+  ['la castellana demanada i encara no carregada', { language: 'es', llenguaDelText: 'ca' }, 'ca'],
+  ['la castellana ja carregada', { language: 'es', llenguaDelText: 'es' }, 'es'],
+  ['la gallega sense llenguaDelText', { language: 'gl' }, 'gl']
+])('sense sessió, amb %s, la benvinguda del Foraster pinta els textos i el lang de la llengua del text', (_, ui, codi) => {
+  mocks.ui = ui;
+  munta(senseSessio());
+  const regio = screen.getByRole('region', { name: TEXTOS_BENVINGUDA_FORASTER[codi].titol });
+  expect(regio.getAttribute('lang')).toBe(codi);
+  expect(within(regio).getByRole('button', { name: TEXTOS_BENVINGUDA_FORASTER[codi].entrar })).toBeTruthy();
 });
 
 /* P1-54 · Amb sessió, l'accés no ix mai: ni a l'aterratge, ni en una

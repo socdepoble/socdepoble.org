@@ -532,6 +532,9 @@ export function nomDelBotoDeDrets(copyright, t = null) {
 export function PageFrame({
   title, subtitle, lead, labels = [], copyright, showLogos = false,
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
+  /* v1.2.17 · El full diferit del mode de taulell (chrome="feed"): la funció que l'adopta arriba amb la
+     config del Mur, del Mercat i del Calendari (estilsTaulellFeed.js), mai amb l'arrencada. */
+  adoptaEstilsChrome = null,
   heroWidth, heroHeight, heroFetchPriority,
   portadaSencera = false,
   authorName, authorLocation = DEFAULT_AUTHOR.location,
@@ -735,11 +738,17 @@ export function PageFrame({
      d'onClose i no s'han de tornar a subscriure a cada pintada. */
   const tancaIndex = useCallback(() => setIsTocOpen(false), []);
   const containerRef = useRef(null);
+  /* v1.2.17 · Abans del primer pintat, el full del mode de taulell a l'arrel de la pàgina (idempotent). */
+  useLayoutEffect(() => {
+    if (chrome === 'feed' && typeof adoptaEstilsChrome === 'function' && containerRef.current) adoptaEstilsChrome(containerRef.current);
+  });
   const traduccioRef = useRef(null);
   /* §5 (261026_2126) · La capçalera, perquè l'Índex hi trobe l'H1. */
   const capcaleraRef = useRef(null);
   const botoVeuLecturaRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
+  /* v1.2.17 · Gauntlet R1 (L3-01) · El mode de taulell (chrome 'feed') conserva el botó d'escoltar la pàgina: IDEA-305
+     només hi lleva el tercer logotip i l'entradeta, i retirar la veu dels taulells és una decisió del Mestre. */
   const enEdicioVeu = Boolean(onCanviaCopyright) || Boolean(accionsInoperatives) || chrome === 'none' || veuLectura === false;
   const [teLecturaVeu, setTeLecturaVeu] = useState(false);
   const [reproductorVeuObert, setReproductorVeuObert] = useState(false);
@@ -1052,7 +1061,8 @@ export function PageFrame({
   };
 
   const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
-  const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system';
+  const isFeedChrome = resolvedChrome === 'feed';
+  const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system' || isFeedChrome;
   /* Ordre del Mestre, 261004 · La barra taronja ja no depén del `chrome`:
      abans només la portaven 'full' i 'context', i les pàgines de sistema (la
      Consola, el Mur, el Control…) en quedaven sense. Signa qui passa la pàgina
@@ -1068,12 +1078,14 @@ export function PageFrame({
      modificador la deixa enganxar-se a dalt de tot (modules.css) en lloc de
      deixar el forat de la blava que no hi és. Amb la blava, cap classe nova. */
   const senseBlava = showOrangeBar && !showBlueBar ? 'sdp-universal-page-container--sense-blava' : '';
+  const classeFeed = isFeedChrome ? 'sdp-universal-page-container--feed' : '';
   const showPageHeader = resolvedChrome !== 'none';
   const pageLabels = Array.isArray(labels) ? labels.filter(Boolean) : [];
   // L'H1 i l'H2 no porten punt final (poliment editorial 260925). Només es
   // toca el text: un node de React passa tal qual.
   const titol = llevaPuntFinal(title);
   const subtitol = llevaPuntFinal(subtitle);
+  const leadEfectiu = isFeedChrome ? null : lead;
   /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Tota pàgina
      creada per una entitat, també les de sistema, porta dalt de l'H1 el
      logotip de l'entitat, gran (fins a 600px) i responsiu. Qui decidix és qui
@@ -1095,12 +1107,14 @@ export function PageFrame({
        f) avatarAutor: una persona o la IA no porten logotip, porten el seu
           avatar redó (ordre del Mestre, 261004, prompt 261004_1108 T2);
        g) altrament, res: una font de fora no en porta.
+       v1.2.17 (R32.26 · IDEA-305) · Excepció: el mode de taulell (chrome 'feed') no en pinta cap, ni la boina
+       de Sóc de Poble, perquè les targetes es vegen abans (Mur, Mercat i Calendari).
      Derogat per l'ordre del Mestre, 261004: showLogos ja no decidix sol, i
      showLogos={false} no lleva el logotip a una pàgina que signa Sóc de
      Poble. El logotip, o l'avatar, compta per a fer aparéixer el bloc del
      títol. */
   const logoDeLaRanura = topBarData?.logoComponent || null;
-  const logoAutomatic = senseLogo === true ? null
+  const logoAutomatic = senseLogo === true || isFeedChrome ? null
     : (logoDescrit(logoEntitat) ?? (esRutaDelProjecte(barAuthorHref) || showLogos === true ? DEFAULT_AUTHOR.logo : null));
   const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor, tAvis);
   /* Correcció de la revisió (261008, CONTRACTE-1) · Una referència que no es
@@ -1130,7 +1144,7 @@ export function PageFrame({
           l'alçada de la barra (diferit-barra-veu.css): el final de la pàgina es pot desplaçar a la
           vista per damunt d'ella, faça scroll el visor o el contenidor mateix. Tancada, el DOM és el de sempre. */}
       <div
-        className={['sdp-universal-page-container', `sdp-universal-page-container--${layout}`, senseBlava, className].filter(Boolean).join(' ')}
+        className={['sdp-universal-page-container', `sdp-universal-page-container--${layout}`, senseBlava, classeFeed, className].filter(Boolean).join(' ')}
         data-sdp-veu-reserva={reproductorVeuObert && teLecturaVeu ? 'true' : undefined}
       >
       {/* T51 · Les dues barres de color són components propis (barres/): el
@@ -1319,10 +1333,10 @@ export function PageFrame({
           pinta cap node i sempre és ací: el cos que s'escriu no es remunta. */}
       <article className="content-wrapper" ref={containerRef} hidden={traduida ? true : undefined}>
         {abansIntro}
-        {(subtitol || lead) && (
+        {(subtitol || leadEfectiu) && (
           <div className="page-intro" lang={langDelContingut}>
             {subtitol && <h2>{subtitol}</h2>}
-            {lead && <p className="lead">{lead}</p>}
+            {leadEfectiu && <p className="lead">{leadEfectiu}</p>}
           </div>
         )}
         {filaInsignia}

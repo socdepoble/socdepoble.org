@@ -152,16 +152,16 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "fccba14451708a899abbb513e733c6a6d824b5acdcb5ff3f88b1312a6b39c2ce",
-      "html": 152583,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.16), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_0216; ordres de les 01:32 i les 01:55): crònica FITA_R32_24 de la v1.2.16 build 21, Onades R32.21–R32.24, WP 1.1.24, contrastada amb el codi i corregida per dues rondes de Gauntlet amb àrbitre escèptic i una verificació R2b; pendent de lectura humana",
+      "sha256": "99e7cbe4c572d307f4053a69ffcd4039941923571a44d7f3ceb8d2ccb92f09fa",
+      "html": 157573,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.17), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1606; ordre de les 16:03, IDEA-313): crònica FITA_R32_26 de la v1.2.17 build 22 (Onades R32.25 i R32.26, WP 1.1.25) i capçalera amb el connector que serveix WordPress.org (1.1.24); portada de la Wiki amb la vinyeta de Gemini R32.26 (lot_03) i la seua variant social. Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics; pendent de lectura humana",
       "data": "2026-11-21"
     },
     "wikidepoble": {
-      "sha256": "173f180d9f83ee98232cb6a6df7c65673763a5f761a757521bb33a0b3fbcb1e4",
+      "sha256": "c7892d0e58181409d5fa8338d5c9cf22c96467346ea77e52c54971558f08ab33",
       "html": 1916,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.17), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1606; ordre de les 16:03, IDEA-313): crònica FITA_R32_26 de la v1.2.17 build 22 (Onades R32.25 i R32.26, WP 1.1.25) i capçalera amb el connector que serveix WordPress.org (1.1.24); portada de la Wiki amb la vinyeta de Gemini R32.26 (lot_03) i la seua variant social. Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics; pendent de lectura humana",
+      "data": "2026-11-21"
     },
     "xat": {
       "sha256": "820cc41446c09c7952becc0400fc1b1136e6fc3eccf4aa95527d032a90e8aab1",

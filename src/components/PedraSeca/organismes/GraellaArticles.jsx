@@ -22,6 +22,12 @@
  *                                autoritzada pel Mestre el 261003 i només per
  *                                al Lector de notícies: imatge i marcador en
  *                                16:9 (agrupacio.jsx). LlistaArticles igual.
+ *   estilCompra                  v1.2.17 · Gauntlet R1 (L3-07) · Només amb
+ *                                `true`: cada reixa porta el modificador
+ *                                .sdp-graella-articles--compra, l'estil de la
+ *                                llista de la compra (IDEA-303, La compra de
+ *                                la Nevera). Sense, la reixa de sempre, byte a
+ *                                byte (el TPV del Bar, Salut i /disseny).
  */
 import { useId } from 'react';
 import { Check } from 'lucide-react';
@@ -65,6 +71,7 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
               aria-describedby={descrit || undefined}
               aria-keyshortcuts={onAccioSecundaria ? 'Shift+F10' : undefined}
               data-article={article.id}
+              data-element={article.id}
               {...handlers}
               onClick={() => {
                 if (consumeix()) return;
@@ -85,13 +92,20 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
   );
 }
 
+/* v1.2.17 · Gauntlet R1 (L3-07) · La mateixa reixa amb el modificador de la llista de la compra, a
+   cada reixa (també dins de les seccions, on pintaArticles no passa className). */
+const CLASSE_COMPRA = 'sdp-graella-articles--compra';
+function ReixaCompra({ className, ...props }) {
+  return <Reixa {...props} className={[CLASSE_COMPRA, className].filter(Boolean).join(' ')} />;
+}
+
 /**
  * @deprecated Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar
  *   targetes»): obsoleta per a codi nou. Una graella de continguts va amb
  *   UniversalCard dins de GraellaTargetes. Salut i el Bar encara la fan
  *   servir: no s'esborra.
  */
-export function GraellaArticles(props) {
+export function GraellaArticles({ estilCompra = false, ...props }) {
   const idPista = useId();
-  return pintaArticles(Reixa, props, idPista, 'sdp-graella-articles__seccions');
+  return pintaArticles(estilCompra === true ? ReixaCompra : Reixa, props, idPista, 'sdp-graella-articles__seccions');
 }

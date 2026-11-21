@@ -70,6 +70,7 @@ export const MAPA_BESSONES_PUBLIC = Object.freeze({
   "assets/ui/plugins/rss_vinyeta.webp": ".jpg",
   "assets/ui/plugins/sistema_nervios_vinyeta.webp": ".jpg",
   "assets/ui/plugins/tpv_vinyeta.webp": ".jpg",
+  "assets/ui/plugins/wikidepoble_vinyeta.webp": ".jpg",
   "assets/uploads/ajuntament/la-torre-de-les-macanes/avatar/IMG_20200904_143451.webp": ".jpg",
   "assets/uploads/avatars/andreu-soler-comic.webp": ".png",
   "assets/uploads/avatars/avatar-marc-comic.webp": ".png",

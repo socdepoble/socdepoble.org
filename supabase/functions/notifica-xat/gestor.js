@@ -57,6 +57,9 @@ export const RPC_DEL_WORKER = Object.freeze(['xat_push_neteja', 'xat_push_reclam
 
 /* La llengua de l'avís natiu (la de la fila; el web la tria el navegador). */
 export const LLENGUES_AVIS = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
+export const AVISOS = Object.freeze(['xat', 'urgent']);
+// Preserve the historical chat DTO and key; only urgent uses a second key.
+const clauDelDispositiu = d => d.avis === 'urgent' ? `${d.id} urgent` : d.id;
 
 const RESULTATS = new Set(['enviat', 'expulsa', 'config', 'rebutjat', 'ritme', 'reintenta', 'fallit', 'invalid']);
 const FORMA_URL = /^https?:\/\/[^\s/?#]+$/;
@@ -127,17 +130,21 @@ export async function enviaAmbLimit(llista, n, fes) {
  */
 export function formaDelDispositiu(d) {
   if (!d || typeof d !== 'object' || typeof d.id !== 'string' || !FORMA_UUID.test(d.id)) return null;
+  const avis = d.avis === undefined || d.avis === 'xat' ? 'xat' : d.avis === 'urgent' ? 'urgent' : null;
+  if (avis === null) return null;
+  const extra = avis === 'urgent' ? { avis } : {};
   const adreca = typeof d.adreca === 'string' ? d.adreca : '';
   const llengua = LLENGUES_AVIS.includes(d.llengua) ? d.llengua : 'ca';
   if (d.tipus === 'web') {
+    if (avis !== 'xat') return null;
     const forma = formaDeLEndpoint(adreca);
     return forma ? { id: d.id, tipus: 'web', adreca: forma.endpoint, llengua, clauDePausa: `web ${forma.amfitrio}` } : null;
   }
   if (d.tipus === 'apns') {
-    return adreca.length >= 64 && adreca.length <= 200 && FORMA_HEX.test(adreca) ? { id: d.id, tipus: 'apns', adreca, llengua, clauDePausa: 'apns' } : null;
+    return adreca.length >= 64 && adreca.length <= 200 && FORMA_HEX.test(adreca) ? { id: d.id, tipus: 'apns', adreca, llengua, clauDePausa: 'apns', ...extra } : null;
   }
   if (d.tipus === 'fcm') {
-    return adreca.length >= 32 && adreca.length <= 1024 && FORMA_FCM.test(adreca) ? { id: d.id, tipus: 'fcm', adreca, llengua, clauDePausa: 'fcm' } : null;
+    return adreca.length >= 32 && adreca.length <= 1024 && FORMA_FCM.test(adreca) ? { id: d.id, tipus: 'fcm', adreca, llengua, clauDePausa: 'fcm', ...extra } : null;
   }
   return null;
 }
@@ -398,18 +405,20 @@ export function creaGestor({
     };
 
     const envia = (resultats) => async (d) => {
-      resultats.set(d.id, 'reintenta');
+      resultats.set(clauDelDispositiu(d), 'reintenta');
       const enviador = enviadorDe(d.tipus);
       if (!enviador) { recompte.sense_proveidor += 1; return; }
       if (pausat(d)) { recompte.sense_provar += 1; return; }
       if (queda() < o.TOPALL_MS) { esgotat = true; recompte.sense_provar += 1; return; }
       const crida = d.tipus === 'web'
         ? () => enviador({ endpoint: d.adreca })
-        : () => enviador({ tipus: d.tipus, adreca: d.adreca, llengua: d.llengua });
+        : () => enviador(d.avis === 'urgent'
+          ? { tipus: d.tipus, adreca: d.adreca, llengua: d.llengua, avis: 'urgent' }
+          : { tipus: d.tipus, adreca: d.adreca, llengua: d.llengua });
       const r = await ambSostre(Promise.resolve().then(crida), Math.max(1, Math.min(2 * o.TOPALL_MS, queda())))
         .then(resultatDe, () => ({ resultat: 'reintenta', estat: null }));
       compta(d, r);
-      resultats.set(d.id, resultatPerConfirmar(r.resultat));
+      resultats.set(clauDelDispositiu(d), resultatPerConfirmar(r.resultat));
     };
 
     try {
@@ -433,10 +442,10 @@ export function creaGestor({
         files.forEach((fila, index) => {
           const d = index < o.MAXIM_DISPOSITIUS ? formaDelDispositiu(fila) : null;
           const lliuraments = d ? formaDelsLliuraments(fila.lliuraments) : null;
-          if (!d || vistos.has(d.id) || !lliuraments
+          if (!d || vistos.has(clauDelDispositiu(d)) || !lliuraments
             || claims.size + lliuraments.length > MAXIM_LLIURAMENTS
             || lliuraments.some((claim) => claims.has(claim.id) || capacitatsVistes.has(claim.id + ' ' + claim.lease))) { recompte.sense_provar += 1; return; }
-          vistos.add(d.id);
+          vistos.add(clauDelDispositiu(d));
           for (const claim of lliuraments) { claims.add(claim.id); capacitatsVistes.add(claim.id + ' ' + claim.lease); }
           valids.push({ ...d, lliuraments });
         });
@@ -445,7 +454,7 @@ export function creaGestor({
         const resultats = new Map();
         await enviaAmbLimit(valids, o.CONCURRENCIA, envia(resultats));
         const confirmacions = valids.flatMap((d) => d.lliuraments.map((claim) => ({
-          ...claim, resultat: resultats.get(d.id) || 'reintenta'
+          ...claim, resultat: resultats.get(clauDelDispositiu(d)) || 'reintenta'
         })));
         for (const tros of trossos(confirmacions, o.MAXIM_EXPULSA)) {
           if (queda() < o.TOPALL_MS) { esgotat = true; break; }

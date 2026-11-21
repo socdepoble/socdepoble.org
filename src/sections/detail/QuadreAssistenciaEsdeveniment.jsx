@@ -108,7 +108,9 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
       intencio: novaIntencio,
       nota: notaEsborrany
     });
-    if (resultat.ok) setConfirmacio(true);
+    /* v1.2.17 · Gauntlet R1 (L4-03) · Si el navegador no l'ha guardat (R32.25: ok només amb persistència real),
+       el «S'ha desat» d'una resposta anterior no pot quedar visible com si confirmara esta. */
+    setConfirmacio(resultat.ok === true);
   };
 
   const desaNota = () => {
@@ -118,7 +120,7 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
       intencio: intencioEfectiva,
       nota: notaEsborrany
     });
-    if (resultat.ok) setConfirmacio(true);
+    setConfirmacio(resultat.ok === true);
   };
 
   const preparaEsborranyDelXat = () => {
@@ -127,13 +129,16 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
       recordaReferenciaPaginaXat(objecteXat, { esborrany: '' });
       return;
     }
-    const intencioEfectiva = rsvp.intencio || (notaEsborrany.trim() ? 'potser' : null);
+    let intencioEfectiva = rsvp.intencio || (notaEsborrany.trim() ? 'potser' : null);
     if (intencioEfectiva) {
-      desaRsvpEsdeveniment(item, {
+      const resultat = desaRsvpEsdeveniment(item, {
         idParticipant,
         intencio: intencioEfectiva,
         nota: notaEsborrany
       });
+      /* v1.2.17 · Gauntlet R1 (L4-03) · Una resposta que no s'ha pogut guardar no s'anuncia al xat: només la nota,
+         si n'hi ha, i la resposta que ja constava desada. */
+      if (resultat?.ok !== true) intencioEfectiva = rsvp.intencio || null;
     }
     const capcalera = etiquetaRespostaXat(intencioEfectiva, tr, tx);
     const cosNota = notaEsborrany.trim();

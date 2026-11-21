@@ -128,6 +128,9 @@ export default function AppNevera({ magatzem: magatzemPropi = null, descarrega =
 
   return (
     <ContextNevera.Provider value={valor}>
+      {/* v1.2.17 · Gauntlet R2 (L3R2-01) · La Nevera no retira la columna esquerra buida: ni el Rebost (àrea
+          única) ni La compra (porta Esquerra) en depenen, i el Catàleg, A casa, Receptes, Temporada, Ajustos i
+          Llistes la conserven com sempre (guarda de la v1.2.15: només el Bar; Llei del Píxel). */}
       <ClosaAplicacio rutes={RUTES} titols={titolsDe(entrada, idioma)} />
       <DialegNovaLlista
         obert={novaLlista}

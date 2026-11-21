@@ -266,6 +266,11 @@ function WikiDetail({ item }) {
         lead={page.lead}
         heroImage={page.image}
         heroAlt={page.imageAlt || ''}
+        /* v1.2.17 · Gauntlet R1 (L3-14) · La mida i la prioritat que porta la portada (copyDePortada)
+           arriben al hero, com a les pàgines de text (paginaDeText.js); sense, el de sempre. */
+        {...(page.image && page.imageWidth != null && page.imageHeight != null
+          ? { heroWidth: page.imageWidth, heroHeight: page.imageHeight } : null)}
+        {...(page.imageFetchPriority === 'high' ? { heroFetchPriority: 'high' } : null)}
         {...data}
         showLogos={true}
         labels={[
@@ -641,12 +646,11 @@ export default function WikiDePobleSection() {
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
-      /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?item=
-         a l'entrada (el cru, no itemEfectiu, que val '__intro'), el document,
-         tret que siga el que hi havia quan la persona va deixar la Wiki (triar
-         una carpeta escriu la primera fitxa sola): llavors, el nivell on era
-         (nivellMestreDetall.js). */
-      mestreDetall={{ clau: 'wiki', element: activeItemId }}
+      /* R32.26 (IDEA-302) · En mòbil, entrar a /wikidepoble obri directament la
+         portada o l'article net (inicial: null, detall a pantalla) sense cobrir el
+         visor amb el calaix fosc de l'arbre; el botó «← Documents» permet obrir
+         l'arbre quan la persona vol canviar de carpeta o fitxa. */
+      mestreDetall={{ clau: 'wiki', element: activeItemId, inicial: null }}
       model={model}
       initialSelection={initialSelection}
       selection={selection}

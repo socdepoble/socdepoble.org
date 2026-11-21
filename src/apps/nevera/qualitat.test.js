@@ -128,18 +128,19 @@ describe('un sol esquelet visual (ordre del Mestre, sinergies T4/T8)', () => {
     }
   });
 
-  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Cap rajola ni fila
-     pròpia: cada catàleg de la Nevera porta la forma de targetes de l'esquelet (UniversalCard), i cap
-     col·lecció torna a les rajoles. La prop va la primera, perquè la guarda la puga llegir. */
-  test('no inventar targetes: cada ColumnaCataleg porta forma="targetes" i cap ColumnaColleccio va en rajoles', () => {
-    const catalegs = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
+  /* Onada R32.26 · IDEA-303 · Cap rajola ni fila feta a mà: La compra (Compra.jsx) munta forma="rajoles"
+     de l'esquelet comú (estil Bring! 3×3) tant al catàleg com a la col·lecció, mentre que la resta de
+     catàlegs (Catàleg, A casa, Receptes i Temporada) porten forma="targetes" (UniversalCard). */
+  test('esquelet unificat: Compra.jsx porta forma="rajoles" (Bring!) i la resta de catàlegs conserven forma="targetes"', () => {
+    const catalegs = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(?:\s+forma="(targetes|rajoles)")?/g)].map((m) => [f, m[1] || null]));
     expect(catalegs.length).toBeGreaterThanOrEqual(4);
-    expect(catalegs.filter(([, ambTargetes]) => !ambTargetes).map(([f]) => f)).toEqual([]);
-    const colleccions = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaColleccio\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
-    expect(colleccions.filter(([, ambTargetes]) => ambTargetes).map(([f]) => f)).toEqual([`${APP}/vistes/Compra.jsx`]);
-    for (const f of JSX) expect(llig(f), f).not.toMatch(/forma="rajoles"/);
-    /* Sonda: la guarda distingix les dues formes. */
-    expect([...'<ColumnaCataleg\n      forma="targetes"\n<ColumnaCataleg titol="x"'.matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => Boolean(m[1]))).toEqual([true, false]);
+    expect(catalegs.filter(([, forma]) => !forma).map(([f]) => f)).toEqual([]);
+    expect(catalegs.filter(([, forma]) => forma === 'rajoles').map(([f]) => f)).toEqual([`${APP}/vistes/Compra.jsx`]);
+    const colleccions = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaColleccio\b(?:\s+forma="(targetes|rajoles)")?/g)].map((m) => [f, m[1] || null]));
+    expect(colleccions.filter(([, forma]) => forma === 'rajoles').map(([f]) => f)).toEqual([`${APP}/vistes/Compra.jsx`]);
+    expect(colleccions.filter(([, forma]) => forma === 'targetes').map(([f]) => f)).toEqual([]);
+    /* Sonda: la guarda distingix targetes, rajoles i l'absència de forma. */
+    expect([...'<ColumnaCataleg\n      forma="targetes"\n<ColumnaCataleg\n      forma="rajoles"\n<ColumnaCataleg titol="x"'.matchAll(/<ColumnaCataleg\b(?:\s+forma="(targetes|rajoles)")?/g)].map((m) => m[1] || null)).toEqual(['targetes', 'rajoles', null]);
   });
 
   test('cap AppGridShell a mà: l’única closca és ClosaAplicacio, i una sola, a AppNevera', () => {

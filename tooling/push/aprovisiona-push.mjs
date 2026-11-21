@@ -12,6 +12,12 @@ export const MIGRACIONS = Object.freeze([
   '20261116031000_r31_push_sessio_i_revocacio.sql',
   // P1-74 (A-03): natius.js només crida les RPC _v2 de credencials; sense ella, APNs i FCM responen «reintenta».
   '20261118230000_a03_xat_push_credencials_per_configuracio.sql'
+  /* v1.2.17 · Gauntlet R1 (L4-02) · 20261121090000_r32_25_push_directes_i_bandols.sql (Codex R32.25: D-24 i bàndols)
+     NO entra encara a staged/schema.sql: el pas 1 de l'activació del Canal 1 (T-03) l'aplicaria implícitament a
+     Producció abans del worker, i el schema.sql que el Mestre ja té preparat deixaria de casar (stage_drift). Entra
+     en el mateix canvi que registre la seua aplicació, i ha d'anar l'ÚLTIMA (com deia el kit): un schema.sql sense
+     ella, passat després d'aplicar-la, tornaria a escriure xat_push_encua, xat_push_candidats_v2 i
+     xat_push_reclama_v2 amb els cossos d'abans. Decisió del Mestre (informe v1.2.17). */
 ]);
 const fail = code => { throw Object.assign(new Error(code), { safeCode: code }); };
 const hash = text => crypto.createHash('sha256').update(text).digest('hex');
