@@ -2629,7 +2629,7 @@ export const wikiManifest = {
       "date": "2026-11-17T00:14:00+01:00",
       "updated": "2026-11-21T03:48:00+01:00",
       "version": "1.2.1",
-      "revisions": 3,
+      "revisions": 4,
       "mur": false,
       "origenEditorial": {
         "date": "frontmatter",
@@ -2651,7 +2651,7 @@ export const wikiManifest = {
           "skills",
           "tractors"
         ],
-        "revisions": 3,
+        "revisions": 4,
         "origenEditorial": {
           "date": "frontmatter",
           "updated": "frontmatter",

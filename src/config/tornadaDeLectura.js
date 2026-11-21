@@ -20,8 +20,8 @@
  * /control, /consola…). La Gestoria i «El compte» (RUTA_COMPTE) continuen manant com sempre
  * (aterratgeDespresDEntrar); la resta, al perfil.
  *
- * FORA de l'arrencada del connector de WordPress a posta ([VA-2]: el sostre és de 1.594.100 B amb
- * ~92 B de marge): només l'importa OnboardingSection.jsx, que és un tros diferit. rutaEntrada.js
+ * FORA de l'arrencada del connector de WordPress a posta ([VA-2]: el sostre és de 1.591.000 B, i la
+ * release de la v1.2.16 en fa 1.589.999): només l'importa OnboardingSection.jsx, que és un tros diferit. rutaEntrada.js
  * no canvia de codi. Funcions pures, sense cap expressió amb retrocés ambigu.
  */
 import { aterratgeDespresDEntrar, tornadaSegura } from './rutaEntrada.js';

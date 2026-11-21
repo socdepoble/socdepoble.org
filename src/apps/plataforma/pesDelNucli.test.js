@@ -88,8 +88,12 @@ const SOSTRE_DEL_TROS_D_ENTRADA = 1690000;
    Release real de la v1.2.15 (deploy_v1215 sobre 84df563ac, build:wp amb l'entorn de producció, 20-11-2026 22:26):
    1.594.008 B. L'entorn real afig a l'arrencada els emissors (VITE_APP_ISSUER, VITE_SOLLUTIA_ISSUER) i el comptador
    (VITE_UMAMI_HOST, VITE_UMAMI_SHARE_URL, VITE_UMAMI_WEBSITE_ID), uns 160 B que la mesura amb credencials fictícies no
-   portava. El sostre queda a 1.594.100 B (D-v1215-1). Només pot baixar. */
-const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1594100;
+   portava. El sostre queda a 1.594.100 B (D-v1215-1). Només pot baixar.
+   D-v1216-1 · Release real de la v1.2.16 (deploy_v1216 sobre 083f98372, build:wp amb l'entorn de producció,
+   21-11-2026 14:09): 1.589.999 B, després de la partició de contracte.js del lot_01 de Codex R32.25 (1.589.434 B
+   amb les credencials de prova). El sostre torna a 1.591.000 B, el que havia aprovat el Mestre (D-v1214-1).
+   Només pot baixar. */
+const SOSTRE_DE_L_ARRENCADA_ESTATICA = 1591000;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */
 const CARPETES_DE_LES_APPS = Object.freeze([

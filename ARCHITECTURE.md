@@ -23,7 +23,7 @@ Els pressupostos físics del paquet integrable estan protegits per trinquets aut
 
 - **Carregador inicial (`LIMIT_DEL_CARREGADOR`):** màxim **4.096 B** (`vite.standalone.config.js`).
 - **Tros d'entrada (`SOSTRE_DEL_TROS_D_ENTRADA`):** màxim **1.690.000 B** (`src/apps/plataforma/pesDelNucli.test.js`).
-- **Arrencada estàtica (`SOSTRE_DE_L_ARRENCADA_ESTATICA`):** màxim **1.594.100 B** per a la suma de l'entrada i tots els seus imports estàtics (`src/apps/plataforma/pesDelNucli.test.js` i `tests/standalone-build.test.mjs`).
+- **Arrencada estàtica (`SOSTRE_DE_L_ARRENCADA_ESTATICA`):** màxim **1.591.000 B** (D-v1214-1, recuperat a la v1.2.16) per a la suma de l'entrada i tots els seus imports estàtics (`src/apps/plataforma/pesDelNucli.test.js` i `tests/standalone-build.test.mjs`).
 - **Arxiu ZIP per al directori oficial de WordPress.org (`LIMIT_DIRECTORI`):** màxim **10 MiB** (`10.485.760 B`, `wordpress-plugin/eines/empaqueta.mjs`).
 
 ### 1.3 Aplicació mòbil nativa (iOS i Android)
