@@ -23,7 +23,12 @@
    sempre darrere de lazyRoute(() => import(...)) a detailRegistry.jsx. Mai manifest.js ni res de l'arrencada:
    +0 B al pesDelNucli del connector.
    POSAR-LO AL DIA: quan un lot tanque un dolor, canvia ací el seu «estat» (obert → resolt, etc.) i la seua
-   «versio_o_kit»; les pàgines recompten soles totes les xifres. */
+   «versio_o_kit»; les pàgines recompten soles totes les xifres. Afig també el dolor a meta.posat_al_dia, que
+   l'avís de datació de les pàgines diu a la vista (la resta de la fotografia continua sent del 21-11-2026).
+   · v1.2.21 (22-11-2026): repassats els huit dolors que toquen els kits R32.35b, R32.37 i R32.38. Només DOL-29 es
+     tanca sencer (mesurat amb Chrome sobre el codi integrat); DOL-51 queda en la decisió del Mestre (l'entrada per
+     defecte del Bar) i els altres sis continuen oberts amb la part feta i la que queda a la nota (Gauntlet R1, L1-01,
+     L1-02 i L1-10). */
 
 export const ORIGEN_ATLES = Object.freeze({
   fitxer: '_investigacio_ia_de_poble/261121_estudi_mercat_2d_i_entitats/atles_2d_dades.js',
@@ -45,6 +50,11 @@ export const ATLES = {
       "IDEA-314",
       "IDEA-312"
     ],
+    "posat_al_dia": {
+      "data": "2026-11-22",
+      "versio": "v1.2.21 (build 26)",
+      "dolors": ["DOL-04", "DOL-13", "DOL-29", "DOL-31", "DOL-38", "DOL-51", "DOL-56", "DOL-59"]
+    },
     "orkut_congelat": true,
     "fonts": {
       "placa": "compilació de Claude a partir de 43 fonts (rondes #01–#04, Fase 5, arnés v2 i auditories de l'Escriptori)",
@@ -387,8 +397,8 @@ export const ATLES = {
       },
       {
         "id": "DOL-04",
-        "titol": "«+ Connectar» porta a un formulari i diu «Mode Foraster actiu» com si fora un error",
-        "descripcio": "El botó blau gran «+» de Mur i Mercat és «Connectar» (vincular), obri «On vols connectar-ho?» del Bloc de notes i mostra «Mode Foraster actiu» com un fre, no com un estat amable.",
+        "titol": "«+ Connectar» porta a un formulari, i l'avís deia «Mode Foraster actiu» com si fora un error",
+        "descripcio": "Abans de la v1.2.21: El botó blau gran «+» de Mur i Mercat és «Connectar» (vincular), obri «On vols connectar-ho?» del Bloc de notes i mostra «Mode Foraster actiu» com un fre, no com un estat amable.",
         "perfils": [
           "carme",
           "llorenc",
@@ -399,9 +409,9 @@ export const ATLES = {
         "severitat": "P2",
         "superficie": "/connectar i botó + de Mur i Mercat",
         "estat": "obert",
-        "versio_o_kit": "",
-        "evidencia": "src/config/idiomes/ca.js:1484 ('section.connectar.foraster.titol': 'Mode Foraster actiu'); socdepoble.org/_wiki_de_poble/04_escriptori/261121_0229_auditoria_codex_fase5_foraster_i_r32_25.md (B14)",
-        "nota": "Codex i Gemini demanen dignificar la paraula Foraster, no esborrar-la; cap kit lliurat no toca este text."
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 02 (només el to de l’avís)",
+        "evidencia": "src/sections/connectar/ConnectarSection.jsx:1172 i :1303 (<Alerta to=\"info\">); src/config/idiomes/ca.js:1486 ('section.connectar.foraster.titol': 'Benvinguda en Mode Foraster'); el «+» continua a src/sections/connectar/ConnectarSection.jsx:1152 i :1297 («On vols connectar-ho?»)",
+        "nota": "La v1.2.21 canvia el to: /connectar i la previsualització d'un enllaç de fora al Bloc de notes donen la benvinguda en Mode Foraster amb un avís informatiu, no d'error, en les cinc llengües. Codex i Gemini demanaven dignificar la paraula Foraster, no esborrar-la, i així s'ha fet. Queda el camí: el «+» de Mur i Mercat continua portant al formulari «On vols connectar-ho?»."
       },
       {
         "id": "DOL-05",
@@ -551,7 +561,7 @@ export const ATLES = {
       {
         "id": "DOL-13",
         "titol": "Vocabulari intern i textos en anglés al camí d'entrada",
-        "descripcio": "«Mas Electrònic», «Mode Foraster», «padró», «PWA», «Node principal», «403 disallowed_useragent», «Become a tester», /versions amb Onades i builds i una imatge en anglés.",
+        "descripcio": "Abans de la v1.2.21: «Mas Electrònic», «Mode Foraster», «padró», «PWA», «Node principal», «403 disallowed_useragent», «Become a tester», /versions amb Onades i builds i una imatge en anglés.",
         "perfils": [
           "toni",
           "pepa",
@@ -563,9 +573,9 @@ export const ATLES = {
         "severitat": "P3",
         "superficie": "entrada, /descarregues, /versions",
         "estat": "obert",
-        "versio_o_kit": "",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 02 (només una part)",
         "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/toni.json; _investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/rosa.json",
-        "nota": "La portada en anglés de la Wiki sí que està resolta (DOL-44)."
+        "nota": "La v1.2.21 lleva «403 disallowed_useragent» de l'avís d'OAuth dins d'una app i l'explica en paraules planeres, en les cinc llengües (`src/utils/navegadorIncrustat.js`). Queda la resta del vocabulari intern del camí d'entrada. La portada en anglés de la Wiki ja estava resolta (DOL-44)."
       },
       {
         "id": "DOL-14",
@@ -858,16 +868,16 @@ export const ATLES = {
       },
       {
         "id": "DOL-29",
-        "titol": "A 320 px «Entrar» i «Registrar-se» continuen tapats per la barra inferior",
-        "descripcio": "Amb el kit R32.28 aplicat, a 320×800 la primera fila creix de 94,8 a 108 px i la segona fila continua tallada per nav.mobile-nav en les 5 llengües.",
+        "titol": "A 320 px la barra inferior tapava «Entrar» i «Registrar-se»",
+        "descripcio": "Amb el kit R32.28 aplicat, a 320×800 la primera fila creixia de 94,8 a 108 px i la segona fila quedava tallada per nav.mobile-nav en les 5 llengües.",
         "perfils": [],
         "ronda": "V2",
         "severitat": "P2",
         "superficie": "/xat › accés (320×800)",
-        "estat": "obert",
-        "versio_o_kit": "",
-        "evidencia": "_investigacio_ia_de_poble/261121_r32_28_gemini_senior_c2_iaia_i_assaig_placa_v2/evidencies/comparativa_subpixel_abans_vs_despres_5llengues.json (xat_320_clar_*: fila2ClippedByMobileNav true → true; anyFila2ClippedDespres: true)",
-        "nota": "Troballa d'esta compilació sobre l'evidència del kit: l'auditoria 1801 diu «sense desbordar mai», però només mesura el desbordament horitzontal."
+        "estat": "resolt",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 01 i costura de R32.41",
+        "evidencia": "_investigacio_ia_de_poble/261122_claude_integracio_v1_2_21/evidencies/cdp_v1221_prova.json (Chrome sobre el codi integrat de la v1.2.21, /xat a 320×800 al final de l'scroll: «Entrar» i «Registrar-se» acaben a 712 px i nav.mobile-nav comença a 731 px, en les cinc llengües, amb la Lletra gran i sense); abans: _investigacio_ia_de_poble/261121_r32_28_gemini_senior_c2_iaia_i_assaig_placa_v2/evidencies/comparativa_subpixel_abans_vs_despres_5llengues.json (anyFila2ClippedDespres: true)",
+        "nota": "Des de la v1.2.21, a 320×800 l'accés del Xat compacta l'alerta per davall de 360 px (`src/css/diferit-mode-senior.css`) i la barra inferior ja no tapa «Entrar» ni «Registrar-se», tampoc amb la Lletra gran. Mesurat amb Chrome sobre el codi integrat de la v1.2.21, a 320×800, en les cinc llengües i amb la Lletra gran i sense."
       },
       {
         "id": "DOL-30",
@@ -887,7 +897,7 @@ export const ATLES = {
       {
         "id": "DOL-31",
         "titol": "El Mode Bancal quasi no es nota i està amagat",
-        "descripcio": "Canvia entre el 0,49 i l'1,22 % dels píxels i viu a Xat › Ajustos › Aparença; la lluna de la capçalera posa mode fosc.",
+        "descripcio": "Abans de la v1.2.21: Canvia entre el 0,49 i l'1,22 % dels píxels i viu a Xat › Ajustos › Aparença; la lluna de la capçalera posa mode fosc.",
         "perfils": [
           "vicent"
         ],
@@ -895,9 +905,9 @@ export const ATLES = {
         "severitat": "P2",
         "superficie": "Mode Bancal",
         "estat": "obert",
-        "versio_o_kit": "",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 01 (només el contrast)",
         "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/vicent.json; src/css/tokens.css:810-817",
-        "nota": ""
+        "nota": "La v1.2.21 calibra el contrast AAA del Mode Bancal en clar i en fosc (src/css/tokens.css). El kit R32.35b va mesurar a /pobles que passava de canviar entre el 0,49 i l'1,22 % dels píxels a canviar-ne el 39 % en clar i el 64 % en fosc, abans que la costura de R32.41 ajustara quatre valors. Continua amagat a Xat › Ajustos › Aparença, i la lluna de la capçalera continua posant el mode fosc."
       },
       {
         "id": "DOL-32",
@@ -1005,8 +1015,8 @@ export const ATLES = {
       },
       {
         "id": "DOL-38",
-        "titol": "El Calendari Agrícola no té porta ni l'olivera en plena collita",
-        "descripcio": "/app/calendari-agricola dona «No coneixem esta app»; només s'hi arriba per la setena targeta del Mur (Banc de llavors) i no hi ha olivera entre 45 varietats hortícoles.",
+        "titol": "El Calendari Agrícola no tenia porta, i l'olivera no hi és en plena collita",
+        "descripcio": "Abans de la v1.2.21: /app/calendari-agricola dona «No coneixem esta app»; només s'hi arriba per la setena targeta del Mur (Banc de llavors) i no hi ha olivera entre 45 varietats hortícoles.",
         "perfils": [
           "vicent"
         ],
@@ -1014,9 +1024,9 @@ export const ATLES = {
         "severitat": "P2",
         "superficie": "/app/calendari-agricola i Banc de llavors",
         "estat": "obert",
-        "versio_o_kit": "",
-        "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/vicent.json; src/apps/plataforma/RutaApps.jsx (cap àlies calendari-agricola)",
-        "nota": "Proposta no arbitrada de la #02 (D-M12)."
+        "versio_o_kit": "v1.2.21 (build 26) · R32.37 lot 01 i R32.38 lot 02 (la porta i la interfície)",
+        "evidencia": "src/apps/plataforma/RutaApps.jsx:62 ('calendari-agricola' → /page/banc-de-llavors?llibre=calendari; a la v1.2.20 no hi havia cap àlies); src/sections/patrimoni/i18nBibliotecaAgricola.js (rètols dels tres llibres en cinc llengües); src/data/patrimoni/bancLlavors.js (cap olivera entre les varietats)",
+        "nota": "La v1.2.21 dona porta al Calendari Agrícola: /app/calendari-agricola porta a /page/banc-de-llavors?llibre=calendari, i els rètols dels tres llibres es lligen en cinc llengües; el contingut de les fitxes de les varietats continua en valencià. L'olivera encara no és entre les varietats. Proposta no arbitrada de la #02 (D-M12)."
       },
       {
         "id": "DOL-39",
@@ -1220,18 +1230,18 @@ export const ATLES = {
       },
       {
         "id": "DOL-51",
-        "titol": "/app/bar obri l'editor de carta i el TPV queda davall del calaix",
-        "descripcio": "L'entrada per defecte del Bar és el catàleg; a 360 px «Obri el TPV» queda davall del calaix del catàleg.",
+        "titol": "/app/bar obri el catàleg, i el TPV quedava davall del calaix",
+        "descripcio": "Abans de la v1.2.21: L'entrada per defecte del Bar és el catàleg; a 360 px «Obri el TPV» queda davall del calaix del catàleg.",
         "perfils": [
           "carme"
         ],
         "ronda": "R02",
         "severitat": "P2",
         "superficie": "/app/bar",
-        "estat": "obert",
-        "versio_o_kit": "",
+        "estat": "decisio_mestre",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.38 lot 01 (el calaix)",
         "evidencia": "src/apps/bar/manifest.js:74 (entradaPerDefecte: 'cataleg'); _investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/evidencia/carme/c07_app_bar_tpv.json",
-        "nota": "Gemini ho marca requires_human_decision (F-UX-03)."
+        "nota": "La v1.2.21 resol la part del calaix: a 320 i 360 px «Obri el TPV» i «Obri la caixa» es poden tocar sense el calaix del catàleg damunt (src/apps/bar/vistes/modelCartaWorkspace.js, declaraNivellInicialEspai). Queda per decidir si l'entrada per defecte del Bar ha de ser el catàleg (src/apps/bar/manifest.js, entradaPerDefecte: 'cataleg'): Gemini ho marca requires_human_decision (F-UX-03)."
       },
       {
         "id": "DOL-52",
@@ -1294,7 +1304,7 @@ export const ATLES = {
       {
         "id": "DOL-56",
         "titol": "Converses de mostra que no porten enlloc",
-        "descripcio": "/xat?comunitat=fake-poble a la URL, «Grups als quals pertanys», «Afegir grup» i «Nova comunitat» per a qui no té compte; el xat de Javi és un carreró i «Comentar» obri un xat, no comentaris.",
+        "descripcio": "Abans de la v1.2.21: /xat?comunitat=fake-poble a la URL, «Grups als quals pertanys», «Afegir grup» i «Nova comunitat» per a qui no té compte; el xat de Javi és un carreró i «Comentar» obri un xat, no comentaris.",
         "perfils": [
           "toni",
           "jordi",
@@ -1304,9 +1314,9 @@ export const ATLES = {
         "severitat": "P3",
         "superficie": "/xat sense sessió, targetes del Mur",
         "estat": "obert",
-        "versio_o_kit": "",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 02 (només una part)",
         "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/toni.json; _investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/jordi.json",
-        "nota": "No reverificat després de la targeta del Foraster de la v1.2.17."
+        "nota": "La v1.2.21 lleva a qui no té compte el fals «Grups als quals pertanys» i el botó mort «Afegir grup» de la fitxa de la comunitat, i hi posa «Entrar o registrar-se» (`src/sections/xat/components/FitxaComunitat.jsx`). Queden la comunitat de mostra a la URL, «Nova comunitat», el xat de Javi sense eixida i «Comentar»."
       },
       {
         "id": "DOL-57",
@@ -1341,7 +1351,7 @@ export const ATLES = {
       {
         "id": "DOL-59",
         "titol": "Fitxa del poble amb dades sense sentit",
-        "descripcio": "H1 «Gent de La Torre» en lloc del nom del poble, dates com «12:00 15/05/25» o «Data no indicada» i empreses sense descripció.",
+        "descripcio": "Abans de la v1.2.21: H1 «Gent de La Torre» en lloc del nom del poble, dates com «12:00 15/05/25» o «Data no indicada» i empreses sense descripció.",
         "perfils": [
           "jordi"
         ],
@@ -1349,9 +1359,9 @@ export const ATLES = {
         "severitat": "P3",
         "superficie": "/pobles/:slug",
         "estat": "obert",
-        "versio_o_kit": "",
+        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 02 (dades veïnes, cap símptoma descrit)",
         "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/evidencia/jordi/01_fitxa_la_torre.json",
-        "nota": ""
+        "nota": "La v1.2.21 sanega dades veïnes de la fitxa (cap any «NaN», cap «-0» ni cap any repetit a les dades de l'enciclopèdia, src/sections/pobles/panellDeViquipediaModel.js), però no toca cap dels tres símptomes descrits: queden el títol «Gent de La Torre», les dates de les publicacions i les empreses sense descripció."
       },
       {
         "id": "DOL-60",

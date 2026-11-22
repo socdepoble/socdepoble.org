@@ -6,7 +6,7 @@ import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { useNotes } from '../notes/NotesContext';
 import { paramsDeLaNota } from '../notes/modeDesa.js';
 import FitxaDadesDoctoralsArbre from './FitxaDadesDoctoralsArbre.jsx';
-import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
+import { formataAltArbreA11y, textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import {
   AUTORIA_RENTONAR,
   obteCoordenadesArbreSingular
@@ -67,6 +67,14 @@ export default function FitxaArbreMonumental(props) {
   return <FitxaArbreArxiuLaTorre {...props} />;
 }
 
+function useEstatInterficieArbre() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
+
 function FitxaArbreArxiuLaTorre({
   arbre,
   fontDoctoral,
@@ -78,7 +86,8 @@ function FitxaArbreArxiuLaTorre({
   const baseId = useId();
   const navigate = useNavigate();
   const notesCtx = useNotes();
-  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
+  const estatUI = useEstatInterficieArbre();
+  const txPat = textosPatrimoniA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca');
   const [pestanya, setPestanya] = useState('viva');
   const [intervalAnys, setIntervalAnys] = useState(() => (
     INTERVALS_REVISIO_ANYS.includes(Number(intervalInicial))
@@ -241,18 +250,34 @@ function FitxaArbreArxiuLaTorre({
         role="tablist"
         aria-label={txPat.seccionsFitxaArbreAria}
       >
-        {PESTANYES_FITXA.map((item) => {
+        {PESTANYES_FITXA.map((item, idx) => {
           const activa = pestanya === item.id;
+          const gestionaTeclatPestanya = (e) => {
+            let seguentIdx = -1;
+            if (e.key === 'ArrowRight') seguentIdx = (idx + 1) % PESTANYES_FITXA.length;
+            else if (e.key === 'ArrowLeft') seguentIdx = (idx - 1 + PESTANYES_FITXA.length) % PESTANYES_FITXA.length;
+            else if (e.key === 'Home') seguentIdx = 0;
+            else if (e.key === 'End') seguentIdx = PESTANYES_FITXA.length - 1;
+            if (seguentIdx >= 0) {
+              e.preventDefault();
+              const seguent = PESTANYES_FITXA[seguentIdx];
+              setPestanya(seguent.id);
+              const tabs = e.currentTarget.parentElement?.querySelectorAll('[role="tab"]');
+              tabs?.[seguentIdx]?.focus();
+            }
+          };
           return (
             <button
               key={item.id}
               id={`${baseId}-tab-${item.id}`}
               type="button"
               role="tab"
+              tabIndex={activa ? 0 : -1}
               aria-selected={activa}
               aria-controls={`${baseId}-panel-${item.id}`}
               className="sdp-workspace-llibres__tab"
               onClick={() => setPestanya(item.id)}
+              onKeyDown={gestionaTeclatPestanya}
             >
               <span className="sdp-fitxa-emoji-xl" aria-hidden="true">{item.emoji}</span>
               <span>{item.etiqueta}</span>
@@ -273,7 +298,7 @@ function FitxaArbreArxiuLaTorre({
             <figure className="sdp-arbre-comparador__marc">
               <img
                 src={arbre.fotos.foto2007}
-                alt={`${arbre.nom} — catalogació base 19/05/2007`}
+                alt={formataAltArbreA11y(txPat.altFotoBase2007Plantilla, { nom: arbre.nom })}
                 className="sdp-arbre-comparador__imatge"
                 loading="lazy"
               />
@@ -286,7 +311,7 @@ function FitxaArbreArxiuLaTorre({
               <figure className="sdp-arbre-comparador__marc">
                 <img
                   src={arbre.fotos.foto2020}
-                  alt={`${arbre.nom} — seguiment de camp ${arbre.fotos.dataFoto2020}`}
+                  alt={formataAltArbreA11y(txPat.altFotoSeguiment2020Plantilla, { nom: arbre.nom, data: arbre.fotos.dataFoto2020 })}
                   className="sdp-arbre-comparador__imatge"
                   loading="lazy"
                 />
@@ -298,7 +323,7 @@ function FitxaArbreArxiuLaTorre({
               <figure className="sdp-arbre-comparador__marc">
                 <img
                   src={arbre.fotos.fotoDetall2007}
-                  alt={`Detall estructural de soca i brancatge de ${arbre.nom} (2007)`}
+                  alt={formataAltArbreA11y(txPat.altFotoDetall2007Plantilla, { nom: arbre.nom })}
                   className="sdp-arbre-comparador__imatge"
                   loading="lazy"
                 />
@@ -312,7 +337,7 @@ function FitxaArbreArxiuLaTorre({
               <figure className="sdp-arbre-comparador__marc">
                 <img
                   src={arbre.fotos.mapa}
-                  alt={`Mapa topogràfic de localització de ${arbre.nom}`}
+                  alt={formataAltArbreA11y(txPat.altMapaTopograficPlantilla, { nom: arbre.nom })}
                   className="sdp-arbre-comparador__imatge"
                   loading="lazy"
                 />

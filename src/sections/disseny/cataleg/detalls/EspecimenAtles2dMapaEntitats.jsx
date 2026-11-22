@@ -86,7 +86,7 @@ export default function EspecimenAtles2dMapaEntitats() {
   return (
     <div ref={arrel} className="sdp-atles">
       <section className="sdp-atles__bloc">
-        <h2 id="atles-mapa-resum">Les cinc pàgines d’entitat, en dues dimensions</h2>
+        <h3 id="atles-mapa-resum">Les cinc pàgines d’entitat, en dues dimensions</h3>
         <p>
           Files: {mapa.files.length} dimensions (rutes, alta, anatomia, aparador, xat, governança, federació, micro-apps,
           bàndols, confiança, privacitat i requisits legals). Columnes: les {mapa.entitats.length} entitats. Cada cel·la diu què
@@ -106,7 +106,7 @@ export default function EspecimenAtles2dMapaEntitats() {
             const seues = mapa.files.map((f) => f.cel_les?.[e.id]).filter(Boolean);
             return (
               <li key={e.id} className="sdp-atles__fitxa">
-                <h3>{e.titol}</h3>
+                <h4>{e.titol}</h4>
                 {subtitols[e.id]?.subtitol ? <p className="sdp-atles__suau"><TextFont text={subtitols[e.id].subtitol} /></p> : null}
                 <div><PindolaEstat estat={e.estat_global} /></div>
                 <BarraApilada recompte={compta(seues, 'estat')} ordre={ORDRE_MAPA} etiqueta={e.titol} />
@@ -119,7 +119,7 @@ export default function EspecimenAtles2dMapaEntitats() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-mapa-graella">La graella {mapa.files.length} × {mapa.entitats.length}</h2>
+        <h3 id="atles-mapa-graella">La graella {mapa.files.length} × {mapa.entitats.length}</h3>
         <p>
           Toca una cel·la per a llegir-ne la nota i l’evidència al visor de davall. Els filtres només ressalten: no amaguen
           cap cel·la. En una pantalla estreta, la vista «Per entitat» posa les {mapa.files.length} cel·les d’una entitat en llista.
@@ -178,7 +178,7 @@ export default function EspecimenAtles2dMapaEntitats() {
               <PillToggle etiqueta="Entitat" valor={triada.e} onCanvi={(id) => setTriada((previ) => ({ f: previ.f, e: id }))}
                 opcions={mapa.entitats.map((e) => ({ valor: e.id, text: nomCurt(e.titol) }))} />
             </Pila>
-            <h3 id="atles-mapa-per-entitat">Les {mapa.files.length} cel·les de {entitat?.titol}</h3>
+            <h4 id="atles-mapa-per-entitat">Les {mapa.files.length} cel·les de {entitat?.titol}</h4>
             <ul className="sdp-atles__graella" aria-labelledby="atles-mapa-per-entitat">
               {mapa.files.map((f, indexFila) => {
                 const c = f.cel_les?.[triada.e] || { estat: 'no_aplica' };
@@ -201,9 +201,9 @@ export default function EspecimenAtles2dMapaEntitats() {
           <div className="sdp-atles__fitxa sdp-atles__detall" aria-live="polite">
             <p className="sdp-atles__etiqueta">Cel·la triada</p>
             <Fila gap={2}>
-              <h3>{fila.titol} · {entitat.titol}</h3>
+              <h4>{fila.titol} · {entitat.titol}</h4>
               <PindolaEstat estat={cella.estat} />
-              {esCorregida(cella) ? <span className="sdp-atles__suau">Gemini deia: {NOMS_ESTAT[cella.estat_gemini] || cella.estat_gemini}</span> : null}
+              {esCorregida(cella) ? <span className="sdp-atles__meta">Gemini deia: {NOMS_ESTAT[cella.estat_gemini] || cella.estat_gemini}</span> : null}
             </Fila>
             <p><TextFont text={cella.nota} /></p>
             {cella.canvi ? <p><strong>Per què canvia:</strong> <TextFont text={cella.canvi} /></p> : null}
@@ -220,7 +220,7 @@ export default function EspecimenAtles2dMapaEntitats() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-mapa-ajuntament">Per què l’Ajuntament necessita un estatut propi</h2>
+        <h3 id="atles-mapa-ajuntament">Per què l’Ajuntament necessita un estatut propi</h3>
         <p>
           És la pàgina amb més requisits que no té cap altra entitat. El tipus <code>city_hall</code> ja existix a la base de
           dades i el servidor no deixa crear-lo ni transferir-lo: es reclama. Però no hi ha cap pàgina d’Ajuntament, cap
@@ -228,7 +228,7 @@ export default function EspecimenAtles2dMapaEntitats() {
         </p>
         <ul className="sdp-atles__graella sdp-atles__graella--ampla">
           <li className="sdp-atles__fitxa">
-            <h3>Què hi ha ja al codi</h3>
+            <h4>Què hi ha ja al codi</h4>
             <ul>
               {ajuntament.filter(({ cella: c }) => c.estat !== 'falta').map(({ fila: f, cella: c }) => (
                 <li key={f.dimensio_id}><strong>{senseNumero(f.titol)}:</strong> <TextFont text={c.nota} /></li>
@@ -236,11 +236,11 @@ export default function EspecimenAtles2dMapaEntitats() {
             </ul>
           </li>
           <li className="sdp-atles__fitxa">
-            <h3>Què cal planificar abans de picar codi</h3>
+            <h4>Què cal planificar abans de picar codi</h4>
             <ul>{PLANIFICAR_AJUNTAMENT.map((text) => <li key={text}><TextFont text={text} /></li>)}</ul>
           </li>
           <li className="sdp-atles__fitxa">
-            <h3>Què falta del tot</h3>
+            <h4>Què falta del tot</h4>
             <ul>
               {ajuntament.filter(({ cella: c }) => c.estat === 'falta').map(({ fila: f, cella: c }) => (
                 <li key={f.dimensio_id}><strong>{senseNumero(f.titol)}:</strong> <TextFont text={c.nota} /></li>
@@ -251,7 +251,7 @@ export default function EspecimenAtles2dMapaEntitats() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-mapa-rutes">Les {(mapa.rutes_reals || []).length} rutes reals de cada entitat</h2>
+        <h3 id="atles-mapa-rutes">Les {(mapa.rutes_reals || []).length} rutes reals de cada entitat</h3>
         <Taula titol="Les rutes reals de cada entitat">
           <thead><tr><th scope="col">Ruta</th><th scope="col">Component</th><th scope="col">Entitat</th></tr></thead>
           <tbody>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useId, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react';
 import CatalegWorkspace from '../../components/universal/CatalegWorkspace.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
@@ -10,16 +10,17 @@ import { useRouter } from '../../app/contexts/RouterContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
 import TextSection from '../text/TextSection';
 import { Fitxa, FitxaDeLaFont } from './BancLlavorsSection.jsx';
+import { textosBibliotecaAgricola } from './i18nBibliotecaAgricola.js';
 import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 
 const CalendariAgricolaLlavorsView = lazy(() => import('./CalendariAgricolaLlavorsView.jsx'));
 const PouDeLaNeuAnatomiaCard = lazy(() => import('../../components/patrimoni/PouDeLaNeuAnatomiaCard.jsx'));
 
-const LLIBRES_BIBLIOTECA_AGRICOLA = Object.freeze([
-  { id: 'llavors', emoji: '🌱', etiqueta: 'Catàleg del Banc de Llavors (125 varietats)' },
-  { id: 'calendari', emoji: '🍅', etiqueta: 'Calendari Agrícola i Tomaques' },
-  { id: 'anatomia', emoji: '🧊', etiqueta: 'Anatomia Rural · Pou de la Neu 3D' }
+const LLIBRES_IDS = Object.freeze([
+  { id: 'llavors', emoji: '🌱', clauText: 'llibreLlavors' },
+  { id: 'calendari', emoji: '🍅', clauText: 'llibreCalendari' },
+  { id: 'anatomia', emoji: '🧊', clauText: 'llibreAnatomia' }
 ]);
 
 /* C3 (UniversalPage) · El llibre inicial es llig de la consulta del router, no de la barra d'adreces, que dins
@@ -39,7 +40,7 @@ function useConsultaDelRouter() {
 
 function llibreDeConsulta(search, defecte = 'llavors') {
   const valor = new URLSearchParams(search || '').get('llibre');
-  return LLIBRES_BIBLIOTECA_AGRICOLA.some((l) => l.id === valor) ? valor : defecte;
+  return LLIBRES_IDS.some((l) => l.id === valor) ? valor : defecte;
 }
 
 function PontSeleccioVarietat({ varietatId, itemActualId, onTriaItem, onConsumit }) {
@@ -98,16 +99,44 @@ function PaginaVarietatLlavorsAmbRouter({ item, onClose, children }) {
 export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, children, llibreInicial, itemSlug = null, sincronitzaRuta = false }) {
   const baseId = useId();
   const search = useConsultaDelRouter();
-  const { t } = useUIActions();
-  const language = useUIStateOpcional()?.language || 'ca';
+  const uiActions = useUIActions();
+  const t = uiActions?.t;
+  const language = useUIStateOpcional()?.language || uiActions?.language || 'ca';
   const txPat = textosPatrimoniA11y(language);
+  const txBib = textosBibliotecaAgricola(language);
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const [llibreActiu, setLlibreActiu] = useState(() => (
-    llibreInicial && LLIBRES_BIBLIOTECA_AGRICOLA.some((l) => l.id === llibreInicial)
+    llibreInicial && LLIBRES_IDS.some((l) => l.id === llibreInicial)
       ? llibreInicial
       : llibreDeConsulta(search, 'llavors')
   ));
+  const [tabFocusId, setTabFocusId] = useState(llibreActiu);
   const [varietatPendent, setVarietatPendent] = useState(null);
+  const tablistRef = useRef(null);
+
+  useEffect(() => {
+    setTabFocusId(llibreActiu);
+  }, [llibreActiu]);
+
+  /* WAI-ARIA Tabs (selecció per activació, modern-web-guidance `tabs` + `accessibility`):
+     els llibres 2 i 3 carreguen trossos diferits amb lazy() (incloent WebGL 3D),
+     així que les fletxes mouen el focus amb roving tabindex sense disparar la descàrrega
+     fins que la persona activa el botó amb Enter/Espai o clic. */
+  const gestionaTeclesTablist = (event) => {
+    const idxActual = LLIBRES_IDS.findIndex((l) => l.id === tabFocusId);
+    if (idxActual < 0) return;
+    let nouIdx = -1;
+    if (event.key === 'ArrowRight') nouIdx = (idxActual + 1) % LLIBRES_IDS.length;
+    else if (event.key === 'ArrowLeft') nouIdx = (idxActual - 1 + LLIBRES_IDS.length) % LLIBRES_IDS.length;
+    else if (event.key === 'Home') nouIdx = 0;
+    else if (event.key === 'End') nouIdx = LLIBRES_IDS.length - 1;
+    if (nouIdx < 0) return;
+    event.preventDefault();
+    const destiId = LLIBRES_IDS[nouIdx].id;
+    setTabFocusId(destiId);
+    const botons = tablistRef.current?.querySelectorAll('[role="tab"]');
+    botons?.[nouIdx]?.focus();
+  };
 
   const cataleg = useLaminesBotaniquesNode0(llibreActiu === 'llavors');
   const model = useMemo(() => ({
@@ -131,7 +160,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
         glyph: '🌱',
         ...(lamina?.imatgePrincipal ? {
           imageUrl: lamina.imatgePrincipal,
-          imageAlt: `${entrada.nom} (${entrada.nomCientific}) · làmina botànica Node 0`
+          imageAlt: `${entrada.nom} (${entrada.nomCientific}) · ${txBib.laminaBotanicaNode0}`
         } : null),
         lead: font.autoria,
         entrada,
@@ -139,17 +168,20 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
         searchText: [entrada.nom, entrada.nomCientific, font.autoria].join(' ')
       };
     }))
-  }), [cataleg]);
+  }), [cataleg, txBib.laminaBotanicaNode0]);
 
   return (
     <div className="sdp-workspace-llibres">
       <div
+        ref={tablistRef}
         className="sdp-workspace-llibres__barra"
         role="tablist"
         aria-label={txPat.llibresBibliotecaAgricolaAria}
+        onKeyDown={gestionaTeclesTablist}
       >
-        {LLIBRES_BIBLIOTECA_AGRICOLA.map((llibre) => {
+        {LLIBRES_IDS.map((llibre) => {
           const actiu = llibreActiu === llibre.id;
+          const ambStop = tabFocusId === llibre.id;
           return (
             <button
               key={llibre.id}
@@ -157,12 +189,13 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
               type="button"
               role="tab"
               aria-selected={actiu}
-              aria-controls={`${baseId}-panel-${llibre.id}`}
+              tabIndex={ambStop ? 0 : -1}
               className="sdp-workspace-llibres__tab"
+              onFocus={() => setTabFocusId(llibre.id)}
               onClick={() => setLlibreActiu(llibre.id)}
             >
               <span className="sdp-fitxa-emoji-xl" aria-hidden="true">{llibre.emoji}</span>
-              <span>{llibre.etiqueta}</span>
+              <span>{txBib[llibre.clauText]}</span>
             </button>
           );
         })}
@@ -245,7 +278,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
             accioPrincipal={accioPrincipal}
             amagaCos={true}
           >
-            <Suspense fallback={<p role="status">Carregant el calendari agrícola…</p>}>
+            <Suspense fallback={<p role="status">{txBib.carregantCalendari}</p>}>
               <CalendariAgricolaLlavorsView
                 onObrirVarietat={(idVarietat) => {
                   setVarietatPendent(idVarietat);
@@ -264,7 +297,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
             accioPrincipal={accioPrincipal}
             amagaCos={true}
           >
-            <Suspense fallback={<p role="status">Carregant el visor 3D del Pou de la Neu…</p>}>
+            <Suspense fallback={<p role="status">{txBib.carregantPouNeu}</p>}>
               <PouDeLaNeuAnatomiaCard />
             </Suspense>
             {children}

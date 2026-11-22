@@ -38,15 +38,44 @@ export function motiuPortModeracio(motiuLssi) {
     : 'altre';
 }
 
-/** Construeix el detall auditat amb prefix LSSI-16; amb el detall dins del límit, mai passa dels 1.000 dels ports. */
+const RE_CONTROL_LSSI = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/gu;
+const RE_SURROGAT_SOLT = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+/**
+ * Saneja en O(n) un text per al flux LSSI Art. 16 sense estavellar-se quan
+ * `normalitzaNfcSeguraUi` retorna `null` (títol maliciós amb >64 marques Zalgo,
+ * surrogat solt o cadena >1.024 caràcters). Evita que un anunci hostil puga
+ * boicotejar el botó de denúncia provocant `null.trim()`.
+ */
+function textSanejatUiLssi(valor, maxLongitudNfc = 2304) {
+  const cru = String(valor ?? '');
+  const nfc = normalitzaNfcSeguraUi(cru, { maxLongitud: maxLongitudNfc });
+  if (nfc !== null) {
+    return nfc.replace(RE_CONTROL_LSSI, '').trim();
+  }
+  const benFormat = typeof cru.toWellFormed === 'function'
+    ? cru.toWellFormed()
+    : cru.replace(RE_SURROGAT_SOLT, '\uFFFD');
+  return benFormat.replace(RE_CONTROL_LSSI, '').trim();
+}
+
+function retallaUtf16BenFormat(text, maxUnitats) {
+  if (text.length <= maxUnitats) return text;
+  let tall = text.slice(0, maxUnitats);
+  const darrerCodi = tall.charCodeAt(tall.length - 1);
+  if (darrerCodi >= 0xd800 && darrerCodi <= 0xdbff) {
+    tall = tall.slice(0, -1);
+  }
+  return tall;
+}
+
+/** Construeix el detall auditat amb prefix LSSI-16; amb el detall dins del límit, mai passa dels 1.000 dels ports ni trenca emojis UTF-16. */
 export function detallPerAlPortModeracio(motiuLssi, detallCru) {
-  const net = normalitzaNfcSeguraUi(String(detallCru ?? '')).trim();
+  const net = textSanejatUiLssi(detallCru, 2304);
   const prefix = `[LSSI-16:${motiuLssi}]`;
   if (!net) return prefix;
   const combinat = `${prefix} ${net}`;
-  return combinat.length <= MAXIM_DETALL_PORTS
-    ? combinat
-    : combinat.slice(0, MAXIM_DETALL_PORTS);
+  return retallaUtf16BenFormat(combinat, MAXIM_DETALL_PORTS);
 }
 
 function esEntradaCuaValida(item) {
@@ -87,7 +116,7 @@ export function desaDenunciaEnCuaLocal({
     err.code = 'objectiu-invalid';
     throw err;
   }
-  const detallNet = normalitzaNfcSeguraUi(String(detall ?? '')).trim();
+  const detallNet = textSanejatUiLssi(detall, 2304);
   if (detallNet.length > MAXIM_DETALL_DENUNCIA_LSSI) {
     const err = new Error('Detall massa llarg');
     err.code = 'detall-massa-llarg';
@@ -120,12 +149,13 @@ export function desaDenunciaEnCuaLocal({
     return { entrada: actualitzat, repetida: true, desada };
   }
 
+  const titolNet = Array.from(textSanejatUiLssi(titol, 2304)).slice(0, 160).join('');
   const entrada = Object.freeze({
     denunciaId: `lssi16-${Date.now().toString(36)}-${actuals.length + 1}`,
     norma: 'LSSI-art-16',
     tipus: tipusNet,
     recursId: idNet,
-    titol: normalitzaNfcSeguraUi(String(titol ?? '')).trim().slice(0, 160),
+    titol: titolNet,
     motiu,
     detall: detallNet,
     operacioId: operacioId || null,

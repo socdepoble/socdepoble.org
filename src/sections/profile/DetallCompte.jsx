@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { useLlenguaDeLaUI } from './useLlenguaDeLaUI.js';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { ajustosPersona, ajustosOrganitzacio, usePerfilOpcional } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
@@ -11,6 +12,7 @@ import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, deNom, pobleDeFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { textosEntitatsCompte } from './i18nEntitatsCompte.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
@@ -74,9 +76,9 @@ function rutaDeLaFitxa(identitat) {
    (perfilModel.js · itemsDePerfil). La mateixa peça per a totes dues (les
    accions de membres, la barra taronja, la data): cap còpia. «Eixir» es queda
    al compte i continua usant les accions de membres. */
-const TITOLS = Object.freeze({ compte: 'El compte', membres: 'Membres i connexions' });
-
 export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = null, ambMembres = false, lloc = 'compte' }) {
+  const llenguaUI = useLlenguaDeLaUI();
+  const tx = textosEntitatsCompte(llenguaUI);
   const persona = identitat?.mena === 'persona';
   /* Una persona no té vista de membres: sempre el seu compte. */
   const llocDelDetall = !persona && lloc === 'membres' ? 'membres' : 'compte';
@@ -137,12 +139,12 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       traduccio={false}
       chrome="context"
       layout="contained"
-      title={TITOLS[llocDelDetall]}
+      title={llocDelDetall === 'membres' ? tx.titolMembres : tx.titolCompte}
       lead={persona
-        ? 'Les dades d’accés (correu, contrasenya, sessió i estat del perfil) i els drets de sèrie de les teues notes.'
+        ? tx.leadPersona
         : llocDelDetall === 'membres'
-          ? `Qui forma part ${deNom(identitat.nom)} i el veïnat connectat amb l’entitat.`
-          : `Poble, correu, identificador i eixida de ${identitat.nom}.`}
+          ? tx.leadMembres(identitat.nom, deNom)
+          : tx.leadOrganitzacio(identitat.nom)}
       /* T51 · la data real del compte: creació o última modificació de la
          fila (profiles o l'organització). */
       {...dataDeFila(dades)}

@@ -47,7 +47,7 @@ export default function EspecimenAtles2dPresentacio() {
   return (
     <div ref={arrel} className="sdp-atles">
       <section className="sdp-atles__bloc">
-        <h2 id="atles-presentacio-obertura">Quatre vistes per a decidir abans de picar codi</h2>
+        <h3 id="atles-presentacio-obertura">Quatre vistes per a decidir abans de picar codi</h3>
         {/* v1.2.19 · Gauntlet R2 (L4R2-04): la data i la versió de les dades, a la vista i en passat. */}
         <NotaDatacio meta={meta} />
         <p>
@@ -69,7 +69,7 @@ export default function EspecimenAtles2dPresentacio() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-presentacio-pagines">Les quatre pàgines d’estudi</h2>
+        <h3 id="atles-presentacio-pagines">Les quatre pàgines d’estudi</h3>
         <p>Cada targeta obri la seua pàgina dins de Disseny. L’enllaç és de veres: també s’obri en una pestanya nova.</p>
         <ul className="sdp-atles__graella sdp-atles__graella--ampla">
           {IDS_PAGINES_ATLES.slice(1).map((id) => <li key={id}><TargetaPagina id={id} detall={detalls[id]} /></li>)}
@@ -77,16 +77,16 @@ export default function EspecimenAtles2dPresentacio() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-presentacio-estats">Com es lligen els estats</h2>
+        <h3 id="atles-presentacio-estats">Com es lligen els estats</h3>
         <p>Cada estat porta un glif i un nom, a més del color: es llig igual en clar, en fosc, al sol i en blanc i negre.</p>
-        <h3>Els dolors del poble virtual</h3>
+        <h4>Els dolors del poble virtual</h4>
         <Llegenda recompte={perEstat} ordre={ORDRE_DOLORS} />
         <ul className="sdp-atles__llegenda" aria-label="Dolors per gravetat">
           {GRAVETATS.map((sev) => (
             <li key={sev}><span className={sev === 'P0' ? 'sdp-atles__sev sdp-atles__sev--p0' : 'sdp-atles__sev'}>{sev}</span><b>{gravetats[sev] || 0}</b></li>
           ))}
         </ul>
-        <h3>Les cel·les del mapa de les entitats</h3>
+        <h4>Les cel·les del mapa de les entitats</h4>
         <Llegenda recompte={perCella} ordre={ORDRE_MAPA} />
         <p className="sdp-atles__suau">
           Una cel·la <PindolaEstat estat="a_mitges" /> té una part feta al codi i una part que falta; la nota de cada cel·la
@@ -95,7 +95,7 @@ export default function EspecimenAtles2dPresentacio() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-presentacio-fonts">D’on ixen les dades</h2>
+        <h3 id="atles-presentacio-fonts">D’on ixen les dades</h3>
         <ul className="sdp-atles__peu">
           {Object.entries(meta.fonts || {}).map(([clau, text]) => (
             <li key={clau}><strong>{NOMS_FONT[clau] || clau}:</strong> <TextFont text={text} /></li>

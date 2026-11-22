@@ -111,11 +111,11 @@ describe('el selector: píndoles amb role="radiogroup"', () => {
   test('triar una variant actualitza la fitxa: foto, preu, descripció i estat', () => {
     const { container } = pinta(samarreta([GRIS, VERDA]));
     expect(fotoActiva(container)).toBe('/assets/mercat/gris.png');
-    expect(container.querySelector('.sp-card-price').textContent).toBe('15.00€');
+    expect(container.querySelector('.sp-card-price').textContent).toBe('15,00\u00a0€');
     fireEvent.click(within(container).getByRole('radio', { name: /Edició Verda/ }));
     expect(triat(container).value).toBe('verda-pi');
     expect(fotoActiva(container)).toBe('/assets/mercat/verda.jpg');
-    expect(container.querySelector('.sp-card-price').textContent).toBe('16.00€');
+    expect(container.querySelector('.sp-card-price').textContent).toBe('16,00\u00a0€');
     expect(container.querySelector('.sdp-compra__nom').textContent).toBe('Edició Verda');
     expect(container.textContent).toContain('Verd pi.');
     expect(container.textContent).not.toContain('Cotó Roly Gris.');
@@ -126,10 +126,10 @@ describe('el selector: píndoles amb role="radiogroup"', () => {
        descripció. Buida a l'entrada, perquè no es llija dues vegades. */
     const viva = container.querySelector('.sdp-compra [aria-live="polite"]');
     expect(viva.classList.contains('sdp-sr-only')).toBe(true);
-    expect(viva.textContent).toBe('Edició Verda, 16.00€, Esgotat. Verd pi.');
+    expect(viva.textContent).toBe('Edició Verda, 16,00\u00a0€, Esgotat. Verd pi.');
     expect(container.querySelector('.sdp-compra__text').hasAttribute('aria-live')).toBe(false);
     fireEvent.click(within(container).getByRole('radio', { name: 'Edició Gris Plom' }));
-    expect(viva.textContent).toBe('Edició Gris Plom, 15.00€. Cotó Roly Gris.');
+    expect(viva.textContent).toBe('Edició Gris Plom, 15,00\u00a0€. Cotó Roly Gris.');
   });
 
   test('a l’entrada, la regió viva és buida: res no es llig dues vegades', () => {
@@ -139,7 +139,7 @@ describe('el selector: píndoles amb role="radiogroup"', () => {
 
   test('sense preu a la variant, el preu del producte', () => {
     const { container } = pinta(samarreta([{ id: 'blanca', name: 'Blanca' }]));
-    expect(container.querySelector('.sp-card-price').textContent).toBe('15.00€');
+    expect(container.querySelector('.sp-card-price').textContent).toBe('15,00\u00a0€');
   });
 
   test('reordenar i reanomenar les variacions no canvia la triada: va per l’id', () => {

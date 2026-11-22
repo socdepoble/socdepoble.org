@@ -57,6 +57,13 @@ const APPS_UNIFICADES = Object.freeze({
   rebost: Object.freeze({ app: 'nevera', entradaPerDefecte: 'rebost' })
 });
 
+/* Onada R32.37 (DOL-38) · Àlies canònics cap a pàgines vives per al Calendari Agrícola i el Banc de Llavors. */
+const APPS_PAGINA_CANONICA = Object.freeze({
+  'calendari-agricola': '/page/banc-de-llavors?llibre=calendari',
+  'banc-de-llavors': '/page/banc-de-llavors',
+  llavors: '/page/banc-de-llavors'
+});
+
 /* La nova entrada d'una retirada, o null. Només d'una app interna i amb claus pròpies. */
 function entradaQueLaSubstituix(manifest, slug) {
   if (manifest.origen !== 'interna' || !Object.hasOwn(ENTRADES_RETIRADES, manifest.id)) return null;
@@ -64,12 +71,6 @@ function entradaQueLaSubstituix(manifest, slug) {
   const nova = Object.hasOwn(retirades, slug) ? retirades[slug] : null;
   return nova && manifest.entrades.some((entrada) => entrada.slug === nova) ? nova : null;
 }
-
-/* P0-113 (ordre del Mestre, 261111) · Tot és gratuït i lliure: cap títol de pagament. */
-const TITOL_ESTAT = Object.freeze({
-  disabled: 'Esta app no està activada',
-  unavailable: 'Esta app no es pot obrir ací'
-});
 
 function GuardaPermis({ permis, children }) {
   if (!permis || permis === 'public') return children;
@@ -156,6 +157,9 @@ export default function RutaApps() {
     return <AvisApp titol={tx.adrecaInvalidaTitol}>{tx.adrecaInvalidaText}</AvisApp>;
   }
   if (!id) return <PortalDeLaRuta />;
+  if (!app && Object.hasOwn(APPS_PAGINA_CANONICA, id)) {
+    return <Navigate to={APPS_PAGINA_CANONICA[id]} replace />;
+  }
   if (unificada && destiUnificat) {
     const subruta = trams.length ? trams : [unificada.entradaPerDefecte];
     return <Navigate to={rutaDeApp(unificada.app, ...subruta)} replace />;
@@ -164,7 +168,7 @@ export default function RutaApps() {
 
   const { manifest, estat, motiu } = app;
   if (estat !== 'available') {
-    const titolEstat = estat === 'disabled' ? tx.appNoActivada : (estat === 'unavailable' ? tx.appNoPotObrirAci : TITOL_ESTAT[estat]);
+    const titolEstat = estat === 'disabled' ? tx.appNoActivada : (estat === 'unavailable' ? tx.appNoPotObrirAci : tx.appNoPotObrir);
     return <AvisApp titol={titolEstat}>{textDelMotiu(motiu, t)}</AvisApp>;
   }
   if (!trams.length) return <Navigate to={rutaDeApp(manifest.id, manifest.entradaPerDefecte)} replace />;

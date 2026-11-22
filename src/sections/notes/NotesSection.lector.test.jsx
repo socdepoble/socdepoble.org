@@ -392,7 +392,8 @@ describe('afegir al Lector', () => {
     await triaLlesta();
     fireEvent.click(opcio('Lector de notícies'));
     await nomFont();
-    expect(screen.getByText('Sense sessió, l’enllaç es queda només en este dispositiu.')).toBeTruthy();
+    // v1.2.21 · R32.35b (DOL-04) · La benvinguda del Mode Foraster, la mateixa que /connectar?url=.
+    expect(screen.getByText('Pots guardar l’enllaç lliurement: sense sessió, es queda en este dispositiu.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Afegir al Lector' }).disabled).toBe(false);
   });
 

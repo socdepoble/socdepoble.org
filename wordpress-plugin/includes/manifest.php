@@ -41,8 +41,13 @@ function socdepoble_enxufe_manifest_local() {
 	/* Lectura i json_decode directes: el descodificador de fitxers JSON de
 	   WordPress llança un avís a cada petició amb un JSON trencat, i un
 	   manifest invàlid ha de passar en silenci. */
-	$text     = file_get_contents( $fitxer );
-	$manifest = socdepoble_enxufe_valida_manifest( false === $text ? null : json_decode( $text, true ) );
+	// El límit afecta els bytes llegits, encara que el fitxer cresca després d'is_readable.
+	$sostre = 64 * 1024;
+	$text   = file_get_contents( $fitxer, false, null, 0, $sostre + 1 );
+	if ( false === $text || strlen( $text ) > $sostre ) {
+		return null;
+	}
+	$manifest = socdepoble_enxufe_valida_manifest( json_decode( $text, true ) );
 	return $manifest;
 }
 

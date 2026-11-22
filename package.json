@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.20",
+  "version": "1.2.21",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [

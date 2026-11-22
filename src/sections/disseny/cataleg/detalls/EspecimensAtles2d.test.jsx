@@ -24,7 +24,7 @@ const CELLES = entitats.files.flatMap((fila) => entitats.entitats.map((e) => fil
 const munta = (Pagina) => render(<MemoryRouter rutaInicial="/disseny"><Pagina /></MemoryRouter>);
 const ATLES_TITOL = Object.freeze({
   'atles-2d-poble-virtual': '1. El poble virtual (Assaig a la Plaça)',
-  'atles-2d-xarxes-mon': '2. Xarxes del món (Orkut i 11 referents rurals)',
+  'atles-2d-xarxes-mon': '2. Xarxes del món (Orkut, 10 referents i Nextdoor com a antimodel)',
   'atles-2d-mapa-entitats': '3. Mapa 2D de les 5 entitats (60 cel·les)',
   'atles-2d-motor-estudis': '4. Motor d’estudis de mercat (Proposta funcional)'
 });
@@ -103,7 +103,7 @@ describe('Presentació i marc comú', () => {
     const { container } = munta(EspecimenAtles2dPresentacio);
     const nota = datacio(container);
     expect(nota).not.toBeNull();
-    expect(nota.closest('section').querySelector('h2').id).toBe('atles-presentacio-obertura');
+    expect(nota.closest('section').querySelector('h3').id).toBe('atles-presentacio-obertura');
     expect(nota.textContent).toContain(`Fotografia del ${DATA_DADES}, contra el codi ${ATLES.meta.versio_codi}.`);
     expect(nota.textContent).toContain('no es veu ací fins que algú pose al dia les dades');
   });
@@ -113,8 +113,8 @@ describe('1. El poble virtual', () => {
   test('pinta les rondes, els veïns i tots els dolors, i els filtres filtren', () => {
     const { container } = munta(EspecimenAtles2dPobleVirtual);
     expect(container.querySelector('h1')).toBeNull();
-    expect(screen.getByRole('heading', { level: 2, name: `Les ${placa.rondes.length} rondes, en ordre` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: `Els ${placa.perfils.length} veïns` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `Les ${placa.rondes.length} rondes, en ordre` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `Els ${placa.perfils.length} veïns` })).toBeTruthy();
     expect(recompte(container)).toBe(`${placa.dolors.length} de ${placa.dolors.length} dolors`);
     expect(screen.getByRole('img', { name: /^Dolors per estat: / }).getAttribute('aria-label'))
       .toContain(`${compta(placa.dolors, 'estat').resolt} Resolt`);
@@ -132,17 +132,17 @@ describe('1. El poble virtual', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Lleva els filtres' }));
     fireEvent.change(screen.getByRole('searchbox', { name: 'Busca' }), { target: { value: 'DOL-14' } });
     expect(recompte(container)).toBe(`1 de ${placa.dolors.length} dolors`);
-    expect(screen.getByRole('heading', { level: 3, name: placa.dolors.find((d) => d.id === 'DOL-14').titol })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: placa.dolors.find((d) => d.id === 'DOL-14').titol })).toBeTruthy();
   });
 
   test('«Vore els seus dolors» tria el veí al selector i deixa només els seus', () => {
     const { container } = munta(EspecimenAtles2dPobleVirtual);
     const pepa = placa.dolors.filter((d) => d.perfils.includes('pepa'));
-    const fitxaPepa = screen.getByRole('heading', { level: 3, name: /^Pepa,/ }).closest('li');
+    const fitxaPepa = screen.getByRole('heading', { level: 4, name: /^Pepa,/ }).closest('li');
     fireEvent.click(within(fitxaPepa).getByRole('button', { name: `Vore els seus dolors (${pepa.length})` }));
     expect(screen.getByRole('combobox', { name: 'Veí' }).value).toBe('pepa');
     expect(recompte(container)).toBe(`${pepa.length} de ${placa.dolors.length} dolors`);
-    expect(screen.getByRole('heading', { level: 3, name: /^Pepa,/ }).closest('li').getAttribute('aria-current')).toBe('true');
+    expect(screen.getByRole('heading', { level: 4, name: /^Pepa,/ }).closest('li').getAttribute('aria-current')).toBe('true');
   });
 
   test('el número del botó és el que es veu: «Vore els seus dolors» lleva la resta de filtres', () => {
@@ -151,7 +151,7 @@ describe('1. El poble virtual', () => {
     fireEvent.click(within(screen.getByRole('group', { name: 'Estat' })).getByRole('button', { name: /Obert/ }));
     fireEvent.change(screen.getByRole('searchbox', { name: 'Busca' }), { target: { value: 'DOL-14' } });
     expect(recompte(container)).not.toBe(`${llorenc.length} de ${placa.dolors.length} dolors`);
-    const fitxa = screen.getByRole('heading', { level: 3, name: /^Llorenç,/ }).closest('li');
+    const fitxa = screen.getByRole('heading', { level: 4, name: /^Llorenç,/ }).closest('li');
     fireEvent.click(within(fitxa).getByRole('button', { name: `Vore els seus dolors (${llorenc.length})` }));
     expect(recompte(container)).toBe(`${llorenc.length} de ${placa.dolors.length} dolors`);
     expect(screen.getByRole('combobox', { name: 'Veí' }).value).toBe('llorenc');
@@ -178,7 +178,7 @@ describe('1. El poble virtual', () => {
   /* v1.2.19 · Gauntlet R2 (L4R2-04) · L'estat dels dolors és el del dia de les dades: res de «avui». */
   test('l’obertura diu de quin dia és l’estat dels dolors, no en parla en present', () => {
     const { container } = munta(EspecimenAtles2dPobleVirtual);
-    const obertura = screen.getByRole('heading', { level: 2, name: 'Què va dir el poble virtual' }).closest('section');
+    const obertura = screen.getByRole('heading', { level: 3, name: 'Què va dir el poble virtual' }).closest('section');
     expect(obertura.textContent).not.toMatch(/\bavui\b/);
     expect(obertura.textContent).toContain(`com estava cada dolor el ${DATA_DADES}`);
     expect(datacio(container)?.textContent).toContain(ATLES.meta.versio_codi);
@@ -209,7 +209,7 @@ describe('2. Xarxes del món', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Busca' }), { target: { value: '' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'Ordena' }), { target: { value: 'nom' } });
     const perNom = [...xarxes].sort((a, b) => a.nom.localeCompare(b.nom, 'ca')).map((x) => x.nom);
-    expect([...container.querySelectorAll('.sdp-atles__graella article h3')].map((h) => h.textContent)).toEqual(perNom);
+    expect([...container.querySelectorAll('.sdp-atles__graella article h4')].map((h) => h.textContent)).toEqual(perNom);
 
     const hylo = files.find((b) => b.textContent.startsWith('Hylo'));
     fireEvent.click(hylo);
@@ -310,7 +310,7 @@ describe('3. Mapa 2D de les 5 entitats', () => {
     const cella = entitats.files[fila].cel_les.usuari_vei;
     fireEvent.click(botons[fila * entitats.entitats.length]);
     const visor = container.querySelector('.sdp-atles__detall');
-    expect(within(visor).getByRole('heading', { level: 3 }).textContent).toBe(`${entitats.files[fila].titol} · ${entitats.entitats[0].titol}`);
+    expect(within(visor).getByRole('heading', { level: 4 }).textContent).toBe(`${entitats.files[fila].titol} · ${entitats.entitats[0].titol}`);
     for (const cami of cella.evidencia) expect(within(visor).getByText(cami)).toBeTruthy();
     /* v1.2.19 · Gauntlet R2 (L4R2-04): l'evidència és la del codi d'una versió concreta. */
     expect(within(visor).getByText(`Evidència al codi de la ${VERSIO_CURTA}`)).toBeTruthy();
@@ -332,7 +332,7 @@ describe('3. Mapa 2D de les 5 entitats', () => {
   /* v1.2.19 · Gauntlet R2 (L4R2-04) · El mapa diu de quin dia i de quina versió és, i la verificació en valencià. */
   test('la graella diu què hi havia al codi d’una versió i un dia, i la data de verificació és en valencià', () => {
     const { container } = munta(EspecimenAtles2dMapaEntitats);
-    const resum = screen.getByRole('heading', { level: 2, name: 'Les cinc pàgines d’entitat, en dues dimensions' }).closest('section');
+    const resum = screen.getByRole('heading', { level: 3, name: 'Les cinc pàgines d’entitat, en dues dimensions' }).closest('section');
     expect(resum.textContent).toContain(`Cada cel·la diu què hi havia al codi de la ${VERSIO_CURTA} el ${DATA_DADES}`);
     expect(datacio(container)?.textContent).toContain(ATLES.meta.versio_codi);
     const verificat = [...container.querySelectorAll('.sdp-atles__recompte')].find((p) => p.textContent.startsWith('Verificat el'));
@@ -348,11 +348,11 @@ describe('3. Mapa 2D de les 5 entitats', () => {
     munta(EspecimenAtles2dMapaEntitats);
     for (const e of entitats.entitats) expect(screen.getAllByText(e.titol).length).toBeGreaterThan(0);
     const aj = entitats.files.map((f) => f.cel_les.ajuntament_entitat_oficial);
-    const llista = (titol) => within(screen.getByRole('heading', { level: 3, name: titol }).closest('li')).getAllByRole('listitem');
+    const llista = (titol) => within(screen.getByRole('heading', { level: 4, name: titol }).closest('li')).getAllByRole('listitem');
     expect(llista('Què hi ha ja al codi')).toHaveLength(aj.filter((c) => c.estat !== 'falta').length);
     expect(llista('Què falta del tot')).toHaveLength(aj.filter((c) => c.estat === 'falta').length);
     expect(llista('Què cal planificar abans de picar codi')).toHaveLength(7);
-    expect(screen.getByRole('heading', { level: 2, name: `Les ${entitats.rutes_reals.length} rutes reals de cada entitat` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `Les ${entitats.rutes_reals.length} rutes reals de cada entitat` })).toBeTruthy();
     expect(within(screen.getByRole('region', { name: 'Les rutes reals de cada entitat' })).getAllByRole('row')).toHaveLength(entitats.rutes_reals.length + 1);
   });
 
@@ -385,7 +385,7 @@ describe('3. Mapa 2D de les 5 entitats', () => {
     expect(botons.filter((b) => b.className.includes('sdp-atles__cel--apagada'))).toHaveLength(cellesAj.filter((c) => c.estat !== 'falta').length);
     fireEvent.click(botons[entitats.files.length - 1]);
     expect(botons[entitats.files.length - 1].getAttribute('aria-pressed')).toBe('true');
-    expect(within(container.querySelector('.sdp-atles__detall')).getByRole('heading', { level: 3 }).textContent)
+    expect(within(container.querySelector('.sdp-atles__detall')).getByRole('heading', { level: 4 }).textContent)
       .toBe(`${entitats.files[entitats.files.length - 1].titol} · ${aj.titol}`);
     fireEvent.click(within(screen.getByRole('group', { name: 'Vista' })).getByRole('button', { name: 'Graella 12 × 5' }));
     expect(screen.getByRole('region', { name: 'Mapa 2D: dimensions per entitat' })).toBeTruthy();
@@ -397,12 +397,12 @@ describe('4. Motor d’estudis de mercat', () => {
     const { container } = munta(EspecimenAtles2dMotorEstudis);
     expect(container.querySelector('h1')).toBeNull();
     expect(screen.getByRole('note').textContent).toContain('Proposta per a decidir.');
-    expect(screen.getByRole('heading', { level: 3, name: ATLES.mercat_subtitols[0] })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 3, name: ATLES.mercat_subtitols[1] })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: ATLES.mercat_subtitols[0] })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: ATLES.mercat_subtitols[1] })).toBeTruthy();
     expect(container.querySelectorAll('.sdp-atles__passos > li')).toHaveLength(ATLES.mercat.flux_ux_en_4_passos.length);
-    const principis = within(screen.getByRole('heading', { level: 2, name: 'Principis que no es negocien' }).closest('section')).getAllByRole('listitem');
+    const principis = within(screen.getByRole('heading', { level: 3, name: 'Principis que no es negocien' }).closest('section')).getAllByRole('listitem');
     expect(principis).toHaveLength(ATLES.mercat.principis_etics_innegociables.length);
-    expect(within(screen.getByRole('heading', { level: 2, name: 'Preguntes per al Mestre' }).closest('section')).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(screen.getByRole('heading', { level: 3, name: 'Preguntes per al Mestre' }).closest('section')).getAllByRole('listitem')).toHaveLength(5);
     expect(screen.getByRole('img', { name: /^Maqueta d’un informe d’estudi de mercat/ }).textContent).toContain('no són dades reals');
     expect(container.querySelectorAll('button')).toHaveLength(0);
   });
@@ -410,7 +410,7 @@ describe('4. Motor d’estudis de mercat', () => {
   /* v1.2.19 · Gauntlet R2 (L4R2-08) · El rètol i la xifra parlen del mateix conjunt: les rondes que diu la dada. */
   test('«Què tenim ja com a fonament» compta les rondes igual que les nomena: les que tenen veus i les que no', () => {
     const { container } = munta(EspecimenAtles2dMotorEstudis);
-    const fonament = screen.getByRole('heading', { level: 2, name: 'Què tenim ja com a fonament' }).closest('section');
+    const fonament = screen.getByRole('heading', { level: 3, name: 'Què tenim ja com a fonament' }).closest('section');
     const entrada = [...fonament.querySelectorAll('dt')].find((dt) => dt.textContent.startsWith('Les rondes'))?.parentElement;
     expect(entrada, container.textContent.slice(0, 80)).toBeTruthy();
     const text = entrada.textContent;

@@ -596,7 +596,9 @@ test('3B · el segment premut porta una vora de ≥ 3:1 i el títol «En constru
   assert.match(cos('.sdp-xat-segments__opcio[aria-pressed="true"]'), /border-color\s*:\s*var\(--sdp-vora-control\)\s*;/);
 
   // Onada v1.2.13 · Els blocs del Mode Sènior (Gemini R32.15) redefinixen la vora; ací es compten els de la paleta base.
-  const tokens = llig('src/css/tokens.css').replace(/[^{}]*data-sdp-senior[^{}]*\{[^}]*\}/g, '');
+  // Onada v1.2.21 · El Mode Bancal (R32.35b DOL-31) també la redefinix, en clar i en fosc: fora igual; el guarda modeBancalWcagAAA.r32_35b.test.js.
+  const tokens = llig('src/css/tokens.css')
+    .replace(/[^{}]*(?:data-sdp-senior|data-contrast="bancal")[^{}]*\{[^}]*\}/g, '');
   const vora = declaracions(tokens, '--sdp-vora-control');
   const subtil = declaracions(tokens, '--sdp-fons-subtil');
   const targeta = declaracions(tokens, '--sdp-fons-targeta');

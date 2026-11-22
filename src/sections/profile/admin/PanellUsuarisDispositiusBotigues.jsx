@@ -17,6 +17,7 @@
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Alerta, AreaText, Boto, Camp, Carregant, Insignia } from '../../../components/PedraSeca/index.js';
+import { useLlenguaDeLaUI } from '../useLlenguaDeLaUI.js';
 /* El port sencer com a valor (com RestauradorOpenData): l'entrada ja n'exporta l'espai de noms i el mètode es
    busca en temps d'execució. Importar-ne una funció a part obligaria l'entrada a exportar-la (+9 B). */
 import * as port from '../../../data/backendPort.js';
@@ -30,6 +31,7 @@ import {
 } from './usuarisDispositiusBotigues.js';
 import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import { textosAdminEntitats } from './i18nAdminEntitats.js';
 
 /* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
    cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
@@ -38,23 +40,23 @@ const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node,
 
 const consultaDelPort = (config) => consultaResumSessionsDispositius(port, config);
 
-const horaDeLaConsulta = (iso) => {
+const horaDeLaConsulta = (iso, locale = 'ca-ES') => {
   try {
-    return new Date(iso).toLocaleString('ca-ES', { dateStyle: 'short', timeStyle: 'short' });
+    return new Date(iso).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
   } catch {
     return iso;
   }
 };
 
 /* La taula del resum: una fila per camí i la dels totals; cap xifra que no vinga del servidor. */
-function TaulaDelResum({ resum, nativaIos }) {
+function TaulaDelResum({ resum, nativaIos, locale = 'ca-ES' }) {
   const files = filesDelResum(resum, { nativaIos });
   const androidApp = files.find((f) => f.cami === 'app_android');
   return (
     <>
       <table className="sdp-admin-table" data-testid="taula-usuaris-dispositius">
         <caption>
-          Persones distintes amb sessió activa · consulta de les <time dateTime={resum.consultatA}>{horaDeLaConsulta(resum.consultatA)}</time>
+          Persones distintes amb sessió activa · consulta de les <time dateTime={resum.consultatA}>{horaDeLaConsulta(resum.consultatA, locale)}</time>
         </caption>
         <thead>
           <tr>
@@ -88,7 +90,7 @@ function TaulaDelResum({ resum, nativaIos }) {
 }
 
 /* 1 · Els usuaris i els dispositius connectats, a demanda. */
-function UsuarisIDispositius({ consulta, nativaIos }) {
+function UsuarisIDispositius({ consulta, nativaIos, locale = 'ca-ES' }) {
   const idTitol = useId();
   const [estat, setEstat] = useState({ fase: 'inicial' });
   const peticio = useRef(0);
@@ -132,7 +134,7 @@ function UsuarisIDispositius({ consulta, nativaIos }) {
         {estat.fase === 'inicial' ? <p className="sdp-muted sdp-paragraf-centrat">{TEXT_ESTAT_INICIAL}</p> : null}
         {carregant ? <Carregant /> : null}
         {estat.fase === 'error' ? <Alerta to="avis" viva={false}>{textErrorResum(estat.codi)}</Alerta> : null}
-        {estat.fase === 'dades' ? <TaulaDelResum resum={estat.resum} nativaIos={nativaIos} /> : null}
+        {estat.fase === 'dades' ? <TaulaDelResum resum={estat.resum} nativaIos={nativaIos} locale={locale} /> : null}
       </div>
     </section>
   );
@@ -175,10 +177,12 @@ function GuiaVerificadorsAndroid({ navegador }) {
  *   esAppNativaIos()); navegador: on es llig navigator.clipboard (per defecte, el global).
  */
 export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDelPort, nativaIos: nativaIosProp, navegador } = {}) {
+  const llenguaUI = useLlenguaDeLaUI();
+  const tx = textosAdminEntitats(llenguaUI);
   const [nativaIosDetectada] = useState(() => esAppNativaIos());
   const nativaIos = typeof nativaIosProp === 'boolean' ? nativaIosProp : nativaIosDetectada;
   return (
-    <article className="sdp-admin-taxonomia" aria-label="Usuaris, dispositius i botigues" data-testid="panell-usuaris-dispositius-botigues">
+    <article className="sdp-admin-taxonomia" aria-label={tx.usuarisBotiguesRegio} data-testid="panell-usuaris-dispositius-botigues">
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="info">{`🍎 App Store v${APP_STORE.versio} · ${APP_STORE.id}`}</Insignia>
@@ -186,10 +190,10 @@ export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDe
         </div>
       </header>
 
-      <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} />
+      <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} locale={tx.locale} />
       <PanellSessionsDetall nativaIos={nativaIos} />
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Descàrregues oficials" data-testid="botons-oficials-botigues">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={tx.descarreguesOficialsRegio} data-testid="botons-oficials-botigues">
         <h3>📲 Descàrregues oficials</h3>
         <div className="sdp-admin-actions-inline">
           <a className="sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran" href={URL_FITXA_APP_STORE}

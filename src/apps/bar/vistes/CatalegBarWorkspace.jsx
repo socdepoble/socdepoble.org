@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from '../../../app/contexts/RouterContext';
-import { Alerta, Boto, Camp, CandidatsAlergens, Fila, Selector } from '../../../components/PedraSeca/index.js';
+import { Accions, Alerta, Boto, Camp, CandidatsAlergens, Fila, Selector } from '../../../components/PedraSeca/index.js';
 import { CatalegWorkspace, DetallCataleg } from '../../../components/universal/workspace/index.js';
 import { candidatsVariantParroquia, useApp } from '../../plataforma/index.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
@@ -8,19 +8,25 @@ import { textosUiBar } from '../i18nBar.js';
 import { LLAVORS, obteLlavor } from '../llavors/index.js';
 import { AvisOperacio, AvisSessio } from './comu.jsx';
 import { euros } from './vestits.js';
-import { modelCartaWorkspace } from './modelCartaWorkspace.js';
+import { ID_CATALEG_BAR, modelCartaWorkspace } from './modelCartaWorkspace.js';
 
 function DetallProducte({ item, ruta, historic, tx }) {
   const producte = item.dades;
   const [variantId, setVariantId] = useState(producte.variants[0]?.id || '');
   const variant = producte.variants.find((v) => v.id === variantId) || producte.variants[0];
   const proposta = useMemo(() => (producte.handle && variant?.ref ? candidatsVariantParroquia(producte, variant) : null), [producte, variant]);
+  const accionsOperatives = (
+    <Accions role="group" aria-label={tx.catalegTitol}>
+      <Link to={ruta('tpv')}>{tx.obriTpv}</Link>
+      <Link to={ruta('caixa')}>{tx.obriCaixa}</Link>
+      {!historic && <Link to={ruta('productes', producte.id)}>{tx.editaCarta}</Link>}
+    </Accions>
+  );
   return (
     <DetallCataleg title={item.title} subtitle={item.subtitle} lead={item.lead} rellotgeViu
+      accioPrincipal={accionsOperatives}
       heroImage={item.imageUrl} heroAlt={item.title} showShare={false} showConnect={false} showComment={false}>
       <AvisSessio /><AvisOperacio />
-      <p><Link to={ruta('tpv')}>{tx.obriTpv}</Link>{' · '}<Link to={ruta('caixa')}>{tx.obriCaixa}</Link>{' · '}
-        {!historic && <Link to={ruta('productes', producte.id)}>{tx.editaCarta}</Link>}</p>
       {historic && <Alerta to="avis">{tx.avisConsultaHistorica}</Alerta>}
       <h3>{tx.variantsTitol}</h3>
       <Camp etiqueta={tx.variantProducte}><Selector value={variantId} onChange={(event) => setVariantId(event.target.value)}
@@ -83,13 +89,20 @@ export function CatalegBarWorkspace() {
       {errorFont && <Alerta to="avis">{tx.errorFontHistorica}</Alerta>}
     </>
   );
+  const accionsPortada = (
+    <Accions role="group" aria-label={tx.catalegTitol}>
+      <Link to={ruta('tpv')}>{tx.obriTpv}</Link>
+      <Link to={ruta('caixa')}>{tx.obriCaixa}</Link>
+      <Link to={ruta('ajustos', 'carta')}>{tx.gestionaCarta}</Link>
+    </Accions>
+  );
   return (
-    <CatalegWorkspace font="bar" destiPublicacio="bar" id="bar-cataleg-p069" model={model} ruta={ruta('cataleg')} privateItems
+    <CatalegWorkspace font="bar" destiPublicacio="bar" id={ID_CATALEG_BAR} model={model} ruta={ruta('cataleg')} privateItems
       labels={{ categories: tx.catalegCategories, items: tx.catalegTitol, all: tx.catalegTota, search: tx.catalegCerca, empty: tx.catalegBuit, noResults: tx.catalegSenseCoincidencies }}
       renderDetail={({ item }) => (item ? <>{eines}<DetallProducte key={item.id} item={item} ruta={ruta} historic={font === 'historica'} tx={tx} /></>
-        : <DetallCataleg title={tx.catalegTitol} subtitle={actual.establiment?.nom || tx.cartaDispositiu} lead={tx.catalegLead} rellotgeViu showShare={false} showConnect={false} showComment={false}>
+        : <DetallCataleg title={tx.catalegTitol} subtitle={actual.establiment?.nom || tx.cartaDispositiu} lead={tx.catalegLead}
+          accioPrincipal={accionsPortada} rellotgeViu showShare={false} showConnect={false} showComment={false}>
           <AvisSessio /><AvisOperacio />{eines}
-          <p><Link to={ruta('tpv')}>{tx.obriTpv}</Link>{' · '}<Link to={ruta('caixa')}>{tx.obriCaixa}</Link>{' · '}<Link to={ruta('ajustos', 'carta')}>{tx.gestionaCarta}</Link></p>
           <h3>{tx.triaProducteTitol}</h3><p>{tx.triaProducteText}</p>
         </DetallCataleg>)} />
   );

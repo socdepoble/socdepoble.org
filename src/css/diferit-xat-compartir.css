@@ -1,0 +1,70 @@
+/* Onada R32.41 · Dieta de sostre d'arrencada WP (v1.2.21) · Estils exclusius de DialegCompartir.jsx. */
+@layer components {
+  .sdp-xat-compartir__nou-grup {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    margin-block-end: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-compartir__nou-grup:hover { background: var(--sdp-fons-elevat); }
+  }
+  .sdp-xat-compartir__nou-grup:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-xat-compartir__nou-grup-icona {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-space-8);
+    block-size: var(--sdp-space-8);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-xat-compartir__cerca {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    margin-block-end: var(--sdp-space-2);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-xat-compartir__cerca > input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+  .sdp-xat-compartir__cerca > input:focus-visible { outline: none; }
+  .sdp-xat-compartir__cerca:focus-within {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-xat-compartir__fila-multiple {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-xat-compartir__casella {
+    flex: none;
+    color: var(--sdp-accio-text);
+  }
+}

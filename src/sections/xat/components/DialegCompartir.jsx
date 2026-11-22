@@ -7,7 +7,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Circle, Search, Users } from 'lucide-react';
 import { Dialeg } from '../../../components/PedraSeca/index.js';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
 import { rutaDEntrada } from '../../../config/rutaEntrada.js';
+import cssXatCompartir from '../../../css/diferit-xat-compartir.css?inline';
 import FilaConversa from './FilaConversa.jsx';
 
 /** El resum del lot: quantes imatges, el text, o el missatge a reenviar. */
@@ -42,6 +44,8 @@ export default function DialegCompartir({
   /* Revisió 261026 · Descartat el lot, el diàleg encara es pinta amb l'últim
      mentre es tanca per la seua via: així el focus torna on era. */
   const darrer = useRef(lotViu);
+  const cosRef = useRef(null);
+  useFullDiferit(cosRef, 'xat-compartir', cssXatCompartir);
   if (lotViu) darrer.current = lotViu;
   const lot = lotViu || darrer.current;
 
@@ -108,7 +112,7 @@ export default function DialegCompartir({
       mida="s"
       className="sdp-xat-dialeg"
     >
-      <div className="sdp-xat-dialeg__cos">
+      <div ref={cosRef} className="sdp-xat-dialeg__cos">
         {resum ? <p>{resum}</p> : null}
         {lot.rebutjats > 0 ? (
           <p className="sdp-xat-avis" role="status">

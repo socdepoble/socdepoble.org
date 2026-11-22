@@ -940,8 +940,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.20 · R32.34 (Marató Nocturna, pla 261121_2335) · Versió unificada 1.2.20 amb
    el build 25: les fotos del Xat sense el GPS, el Bloc de notes honest, la lectura pública sense cobertura, les
    repeticions del Calendari, el preu canònic de la llista del Mercat i la Consola Zero dels trossos (Codex R32.34), i el
-   connector WordPress 1.1.28. El kit R32.35b de Gemini no hi és: encara no està llest. */
-export const VERSIO_CLIENT_NATIU = 25;
+   connector WordPress 1.1.28. El kit R32.35b de Gemini no hi és: encara no està llest.
+   Onada v1.2.21 · R32.41 i IDEA-319 (pla 261122_1502) · Versió unificada 1.2.21 amb
+   el build 26: els sis kits de la recepta R32.41 (Codex R32.36 i Gemini R32.35b, R32.37, R32.38, R32.39 i R32.40, amb
+   les seues costures i la dieta del full del Xat), el preu del Mur amb el formatador del Mercat (L3-05), la maquetació
+   canònica de l'Atles 2D i el connector WordPress 1.1.29. */
+export const VERSIO_CLIENT_NATIU = 26;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

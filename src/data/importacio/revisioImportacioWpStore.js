@@ -17,6 +17,7 @@
  * Mur) no avisa fins que la vista es torna a pintar.
  */
 import { useMemo, useSyncExternalStore } from 'react';
+import { capturaSessio } from '../identitat.js';
 import {
   CLAU_STORAGE_REVISIO_WP,
   desaRevisioArticleImportatAmbServidor,
@@ -101,16 +102,19 @@ async function autoriaIDestiDeLArticle(wpId, storage) {
  * la capacitat, el servidor amb CAS) i avisa les vistes. L'autoria i el destí que
  * el cridador no passa (la fitxa del Bloc de notes) es completen amb els de
  * l'article, els mateixos que envia el Banc. Torna el resultat de
- * desaRevisioArticleImportatAmbServidor sense tocar-lo: { remot, conflicte, … }.
+ * desaRevisioArticleImportatAmbServidor sense tocar-lo: { remot, desatLocal, conflicte, … }.
+ * `remot: false` no implica que el navegador haja acceptat la còpia.
  */
 export async function desaRevisio(wpId, { estat, nota = '', autoria, desti } = {}, opcions = {}) {
+  const vigilaSessio = capturaSessio();
   const article = autoria === undefined || desti === undefined
     ? await autoriaIDestiDeLArticle(wpId, opcions?.storage)
     : {};
+  vigilaSessio();
   const resultat = desaRevisioArticleImportatAmbServidor(wpId, {
     estat, nota, autoria: autoria ?? article.autoria, desti: desti ?? article.desti
   }, opcions);
-  /* La còpia local s'escriu abans de l'espera del servidor: les vistes la veuen ja. */
+  /* L'intent local precedix l'espera del servidor; només desatLocal acredita la còpia. */
   notificaRevisio();
   try {
     return await resultat;

@@ -210,8 +210,8 @@ export async function copiaEnllacAmbReserva(adreca, entorn = {}) {
  */
 export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
   ca: Object.freeze({
-    avis: 'Dins del navegador intern de l’app {app}, Google bloqueja l’entrada per seguretat (403 disallowed_useragent).',
-    avisSenseApp: 'Dins del navegador intern d’una altra app, Google bloqueja l’entrada per seguretat (403 disallowed_useragent).',
+    avis: 'Dins del navegador intern de l’app {app}, Google no permet obrir la sessió per a protegir el teu compte.',
+    avisSenseApp: 'Dins del navegador intern d’una altra app, Google no permet obrir la sessió per a protegir el teu compte.',
     explicacio: 'Pots entrar ara mateix amb el correu i una contrasenya al servidor de Sóc de Poble, o obrir la pàgina al navegador del telèfon.',
     instruccionsIos: 'A l’iPhone o l’iPad: toca el menú «⋯» de l’app {app} i tria «Obri en Safari».',
     instruccionsAndroid: 'A Android: toca el menú «⋮» de l’app {app} i tria «Obri en Chrome» o «Obri al navegador».',
@@ -224,8 +224,8 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
     errorCopia: 'No s’ha pogut copiar automàticament. Copia l’adreça de baix.'
   }),
   es: Object.freeze({
-    avis: 'Dentro del navegador interno de {app}, Google bloquea la entrada por seguridad (403 disallowed_useragent).',
-    avisSenseApp: 'Dentro del navegador interno de otra aplicación, Google bloquea la entrada por seguridad (403 disallowed_useragent).',
+    avis: 'Dentro del navegador interno de {app}, Google no permite iniciar sesión para proteger tu cuenta.',
+    avisSenseApp: 'Dentro del navegador interno de otra aplicación, Google no permite iniciar sesión para proteger tu cuenta.',
     explicacio: 'Puedes entrar ahora mismo con tu correo y una contraseña en el servidor de Sóc de Poble, o abrir la página en el navegador del teléfono.',
     instruccionsIos: 'En iPhone o iPad: toca el menú «⋯» de {app} y elige «Abrir en Safari».',
     instruccionsAndroid: 'En Android: toca el menú «⋮» de {app} y elige «Abrir en Chrome» o «Abrir en el navegador».',
@@ -238,8 +238,8 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
     errorCopia: 'No se ha podido copiar automáticamente. Copia el enlace de abajo.'
   }),
   en: Object.freeze({
-    avis: 'Inside {app}’s built-in browser, Google blocks sign-in for security (403 disallowed_useragent).',
-    avisSenseApp: 'Inside another app’s built-in browser, Google blocks sign-in for security (403 disallowed_useragent).',
+    avis: 'Inside {app}’s built-in browser, Google does not allow signing in, to keep your account safe.',
+    avisSenseApp: 'Inside another app’s built-in browser, Google does not allow signing in, to keep your account safe.',
     explicacio: 'You can sign in right now with your email and a password on the Sóc de Poble server, or open this page in your phone’s browser.',
     instruccionsIos: 'On iPhone or iPad: tap the “⋯” menu in {app} and choose “Open in Safari”.',
     instruccionsAndroid: 'On Android: tap the “⋮” menu in {app} and choose “Open in Chrome” or “Open in browser”.',
@@ -252,8 +252,8 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
     errorCopia: 'Could not copy automatically. Copy the address below.'
   }),
   eu: Object.freeze({
-    avis: '{app} aplikazioaren barneko nabigatzailean, Google-k sarrera blokeatzen du segurtasunagatik (403 disallowed_useragent).',
-    avisSenseApp: 'Beste aplikazio baten barneko nabigatzailean, Google-k sarrera blokeatzen du segurtasunagatik (403 disallowed_useragent).',
+    avis: '{app} aplikazioaren barneko nabigatzailean, Google-k saio-hasiera gelditzen du zure kontua babesteko.',
+    avisSenseApp: 'Beste aplikazio baten barneko nabigatzailean, Google-k saio-hasiera gelditzen du zure kontua babesteko.',
     explicacio: 'Oraintxe bertan sar zaitezke posta elektronikoarekin eta pasahitz batekin Sóc de Pobleren zerbitzarian, edo ireki orria telefonoko nabigatzailean.',
     instruccionsIos: 'iPhone edo iPad gailuetan: sakatu {app}-ko «⋯» menua eta aukeratu «Ireki Safarin».',
     instruccionsAndroid: 'Androiden: sakatu {app}-ko «⋮» menua eta aukeratu «Ireki Chromen» edo «Ireki nabigatzailean».',
@@ -266,8 +266,8 @@ export const TEXTOS_NAVEGADOR_INCRUSTAT = Object.freeze({
     errorCopia: 'Ezin izan da automatikoki kopiatu. Kopiatu beheko helbidea.'
   }),
   gl: Object.freeze({
-    avis: 'Dentro do navegador interno de {app}, Google bloquea a entrada por seguridade (403 disallowed_useragent).',
-    avisSenseApp: 'Dentro do navegador interno doutra aplicación, Google bloquea a entrada por seguridade (403 disallowed_useragent).',
+    avis: 'Dentro do navegador interno de {app}, Google non permite iniciar sesión para protexer a túa conta.',
+    avisSenseApp: 'Dentro do navegador interno doutra aplicación, Google non permite iniciar sesión para protexer a túa conta.',
     explicacio: 'Podes entrar agora mesmo co correo e un contrasinal no servidor de Sóc de Poble, ou abrir a páxina no navegador do teléfono.',
     instruccionsIos: 'No iPhone ou no iPad: toca o menú «⋯» de {app} e escolle «Abrir en Safari».',
     instruccionsAndroid: 'En Android: toca o menú «⋮» de {app} e escolle «Abrir en Chrome» ou «Abrir no navegador».',

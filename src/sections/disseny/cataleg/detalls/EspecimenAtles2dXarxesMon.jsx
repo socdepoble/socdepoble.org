@@ -1,5 +1,5 @@
 /**
- * EspecimenAtles2dXarxesMon.jsx — 2. Xarxes del món (Orkut i 11 referents rurals).
+ * EspecimenAtles2dXarxesMon.jsx — 2. Xarxes del món (Orkut, 10 referents i Nextdoor com a antimodel).
  *
  * Atles 2D (ordre del Mestre del 21-11-2026 a les 23:28; pla 261121_2335, Carril 1, Tram 1, punt b),
  * integrat el 22-11-2026 a /disseny?categoria=atles-2d&item=atles-2d-xarxes-mon. És la pestanya
@@ -95,13 +95,13 @@ function FitxaXarxa({ xarxa, triada, refFitxa }) {
         <div className="sdp-atles__cap">
           <div>
             {esAnti(xarxa) ? <span className="sdp-atles__anti">Anti-model</span> : null}
-            <h3 id={`atles-xarxa-${xarxa.id}`}>{xarxa.nom}</h3>
+            <h4 id={`atles-xarxa-${xarxa.id}`}>{xarxa.nom}</h4>
             <p className="sdp-atles__suau">{String(xarxa.pais_origen || '').trim()} · {xarxa.categoria}</p>
           </div>
-          <span className="sdp-atles__nota">{nota(xarxa.afinitat_sdp_sobre_10)}<span className="sdp-atles__suau"> / 10</span></span>
+          <span className="sdp-atles__nota">{nota(xarxa.afinitat_sdp_sobre_10)}<span className="sdp-atles__meta"> / 10</span></span>
         </div>
         {xarxa.eslogan_posicionament ? <Eslogan xarxa={xarxa} /> : null}
-        <dl className="sdp-atles__dl sdp-atles__dl--apilada">
+        <dl className="sdp-atles__dl">
           {camps.map(([etiqueta, text]) => <div key={etiqueta}><dt>{etiqueta}</dt><dd><TextFont text={text} /></dd></div>)}
         </dl>
         <p className="sdp-atles__etiqueta">Adoptem en sala neta</p>
@@ -165,7 +165,7 @@ export default function EspecimenAtles2dXarxesMon() {
   return (
     <div ref={arrel} className="sdp-atles">
       <section className="sdp-atles__bloc">
-        <h2 id="atles-xarxes-grafic">Què ens ensenyen les xarxes per a pobles</h2>
+        <h3 id="atles-xarxes-grafic">Què ens ensenyen les xarxes per a pobles</h3>
         <p>
           {xarxes.length} plataformes estudiades per Gemini, puntuades per la seua afinitat amb Sóc de Poble (sobre 10). Cada
           fitxa diu què adoptem en sala neta i què rebutgem de pla. Nextdoor hi és com a anti-model.
@@ -182,7 +182,7 @@ export default function EspecimenAtles2dXarxesMon() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-xarxes-fitxes">Les {xarxes.length} fitxes</h2>
+        <h3 id="atles-xarxes-fitxes">Les {xarxes.length} fitxes</h3>
         <div className="sdp-atles__filtres">
           <Camp etiqueta="Busca">
             <CampText tipus="search" value={cerca} onChange={(event) => setCerca(event.target.value)} placeholder="moderació, butlletí, cooperativa…" />
@@ -202,7 +202,7 @@ export default function EspecimenAtles2dXarxesMon() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-xarxes-orkut">Orkut, peça per peça</h2>
+        <h3 id="atles-xarxes-orkut">Orkut, peça per peça</h3>
         <p><TextFont text={orkut.resum} /></p>
         <Taula titol="Orkut, peça per peça" className="sdp-atles__taula-ampla">
           <thead>

@@ -16,6 +16,7 @@
  */
 
 import { destinacioWorkspaceWp } from '../data/importacio/destinacionsWorkspaceWp.js';
+import { capturaSessio } from '../data/identitat.js';
 export { DESTINACIONS_WORKSPACE_WP, destinacioWorkspaceWp } from '../data/importacio/destinacionsWorkspaceWp.js';
 
 export const CLAU_STORAGE_REVISIO_WP = 'sdp_revisio_editorial_wp_v1';
@@ -86,8 +87,13 @@ export function desaEstatRevisioEditorial(nouEstat, storage) {
   }
 }
 
-export function desaRevisioArticleImportat(wpId, { estat, nota } = {}, storage) {
+/* Identitat d'intenció d'esta instància, no una versió del servidor ni un altre registre. */
+const generacionsRevisioLocal = new Map();
+
+function desaRevisioLocalAmbRebut(wpId, { estat, nota } = {}, storage) {
   const clau = String(wpId ?? '').trim();
+  const generacio = (generacionsRevisioLocal.get(clau) ?? 0) + 1;
+  generacionsRevisioLocal.set(clau, generacio);
   const actual = llegeixEstatRevisioEditorial(storage);
   const nouEstat = {
     estats: { ...actual.estats, ...(estat ? { [clau]: estat } : {}) },
@@ -96,8 +102,12 @@ export function desaRevisioArticleImportat(wpId, { estat, nota } = {}, storage) 
     versions: actual.versions || {},
     pendents: { ...actual.pendents, [clau]: true },
   };
-  desaEstatRevisioEditorial(nouEstat, storage);
-  return nouEstat;
+  return { estat: nouEstat, generacio, desatLocal: desaEstatRevisioEditorial(nouEstat, storage) };
+}
+
+/** Compatibilitat dels callers síncrons: continuen rebent el registre, no un rebut. */
+export function desaRevisioArticleImportat(wpId, canvi = {}, storage) {
+  return desaRevisioLocalAmbRebut(wpId, canvi, storage).estat;
 }
 
 /** La tria editorial és del navegador; l’ACK de la publicació ve del port. */
@@ -169,13 +179,20 @@ export async function desaRevisioArticleImportatAmbServidor(
   { estat, nota = '', autoria = null, desti = null } = {},
   { storage, config = {}, actualitzatEsperat } = {}
 ) {
+  const vigilaSessio = capturaSessio();
   const abans = llegeixEstatRevisioEditorial(storage);
   const esperat = actualitzatEsperat === undefined ? abans.versions?.[String(wpId)] ?? null : actualitzatEsperat;
-  const local = desaRevisioArticleImportat(wpId, { estat, nota }, storage);
+  let local = abans, desatLocal = false;
   try {
+    vigilaSessio();
+    const escrit = desaRevisioLocalAmbRebut(wpId, { estat, nota }, storage);
+    local = escrit.estat;
+    desatLocal = escrit.desatLocal;
+    const generacio = escrit.generacio;
     const port = await import('../data/backendPort.js');
+    vigilaSessio();
     if (typeof port.teCapacitat !== 'function' || !port.teCapacitat('revisionsEditorialsWp')) {
-      return { remot: false, estat: local };
+      return { remot: false, desatLocal, estat: local };
     }
     const desada = await port.desaRevisioEditorialWp(
       {
@@ -188,15 +205,33 @@ export async function desaRevisioArticleImportatAmbServidor(
       },
       config
     );
-    const actual = llegeixEstatRevisioEditorial(storage);
+    vigilaSessio();
+    let actual = llegeixEstatRevisioEditorial(storage);
     const id = String(wpId);
+    /* Una intenció posterior invalida l'escriptura de l'ACK antic, també si torna
+       als mateixos valors (ABA) o si el seu intent de persistència ha fallat. */
+    if (generacionsRevisioLocal.get(id) !== generacio) {
+      return { remot: true, desatLocal: false, fila: desada, estat: actual };
+    }
+    /* Si la primera còpia ha fallat, el rebut remot permet tornar-la a intentar.
+       Només es completa la fila que no ha canviat mentrestant: mai una nota més nova. */
+    if (!desatLocal && actual.estats[id] === abans.estats[id]
+      && actual.anotacions[id] === abans.anotacions[id] && actual.versions?.[id] === abans.versions?.[id]) {
+      actual = { ...actual, estats: { ...actual.estats, [id]: estat }, anotacions: { ...actual.anotacions, [id]: nota } };
+    }
     const pendents = { ...actual.pendents };
     if (actual.estats[id] === estat && actual.anotacions[id] === nota) delete pendents[id];
     const confirmat = { ...actual, versions: { ...actual.versions, [id]: desada.actualitzatA }, pendents };
-    desaEstatRevisioEditorial(confirmat, storage);
-    return { remot: true, fila: desada, estat: confirmat };
+    const copiaConfirmada = desaEstatRevisioEditorial(confirmat, storage);
+    return { remot: true, desatLocal: copiaConfirmada && actual.estats[id] === estat && actual.anotacions[id] === nota,
+      fila: desada, estat: confirmat };
   } catch (error) {
-    return { remot: false, estat: local, conflicte: error?.code === 'conflicte-versio', motiu: error?.code || 'no-disponible' };
+    /* El detall històric també crida este export amb void: la cancel·lació
+       continua sent un rebut resolt, mai un rebuig que aquell caller no captura. */
+    try { vigilaSessio(); } catch {
+      return { remot: false, desatLocal, estat: local, cancelada: true, motiu: 'sessio-canviada' };
+    }
+    return { remot: false, desatLocal, estat: local, conflicte: error?.code === 'conflicte-versio', motiu: error?.code || 'no-disponible' };
   }
 }
 

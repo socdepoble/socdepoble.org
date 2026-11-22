@@ -8,6 +8,11 @@
    Les amplades que només sap el JavaScript (la barra apilada i la d'afinitat) arriben com a
    propietats locals (--atles-columnes, --atles-fraccio) escrites per usePropietatsCss: cap style=.
    Cap taula ni graella no eixampla la pàgina: les amples es desplacen dins de la seua caixa.
+   v1.2.21 · IDEA-319 (ordre del Mestre del 22-11-2026 a les 14:12, captura 261122_1412): dins del cos d'una
+   UniversalPage, el h1 i l'únic h2 són de la capçalera. Les seccions de l'Atles comencen amb h3 (a l'esquerra,
+   amb el filet editorial) i les fitxes i targetes porten h4. Paràgrafs, llistes i avisos ocupen tota l'amplada
+   útil (cap --sdp-measure ni dues columnes), i la prosa, les cites i les llistes de definició van amb la mida
+   de cos: --sdp-text-meta queda per a xips, codis, comptadors i el peu tècnic.
    ========================================================================== */
 @layer components {
   /* ── Arrel i blocs ── */
@@ -20,7 +25,7 @@
     color: var(--sdp-text-cos);
   }
 
-  .sdp-atles :where(p, li, dd, td, th, h2, h3, h4) {
+  .sdp-atles :where(p, li, dd, td, th, h3, h4, h5) {
     overflow-wrap: break-word;
   }
 
@@ -35,16 +40,17 @@
     min-inline-size: 0;
   }
 
-  .sdp-atles__bloc > :where(h2, h3, p, ul, ol) {
+  .sdp-atles__bloc > :where(h3, h4, p, ul, ol, dl) {
     margin: 0;
   }
 
-  .sdp-atles__bloc > :where(p) {
-    max-inline-size: var(--sdp-measure);
+  /* La prosa en to suau va amb la mida de cos; el peu tècnic (__meta) i els comptadors (__recompte), menuts. */
+  .sdp-atles__suau {
+    margin: 0;
+    color: var(--sdp-text-suau);
   }
 
   .sdp-atles__meta,
-  .sdp-atles__suau,
   .sdp-atles__recompte {
     margin: 0;
     color: var(--sdp-text-suau);
@@ -79,7 +85,6 @@
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-s);
     background: var(--sdp-fons-targeta);
-    max-inline-size: var(--sdp-measure);
   }
 
   .sdp-atles__avis {
@@ -94,7 +99,6 @@
   /* v1.2.19 · Gauntlet R2 (L4R2-04): la data i la versió de les dades, a la vista i no només al peu. */
   .sdp-atles__datacio {
     border-inline-start: 4px solid var(--sdp-info-text);
-    font-size: var(--sdp-text-meta);
   }
 
   /* ── Xifres ── */
@@ -158,7 +162,7 @@
     min-inline-size: 0;
   }
 
-  .sdp-atles :where(h2, h3) {
+  .sdp-atles :where(h3, h4) {
     overflow-wrap: anywhere;
   }
 
@@ -177,17 +181,15 @@
     background: var(--sdp-fons-targeta);
   }
 
-  .sdp-atles__fitxa > :where(h3, h4, p, ul, ol, dl, blockquote) {
+  .sdp-atles__fitxa > :where(h4, h5, p, ul, ol, dl, blockquote) {
     margin: 0;
   }
 
-  /* Dins d'una fitxa o d'una targeta, el títol és el d'una peça, no el d'una secció de la pàgina:
-     més menut i sense el filet del h3 editorial (la vora ja és la de la fitxa). */
-  .sdp-atles__fitxa :where(h3),
-  .sdp-atles__targeta :where(h3) {
+  /* Dins d'una fitxa o d'una targeta, el títol és el d'una peça (h4), no el d'una secció de la pàgina (h3), que és
+     l'únic que porta el filet editorial: a l'escala de h5 perquè la graella respire. */
+  .sdp-atles__fitxa :where(h4),
+  .sdp-atles__targeta :where(h4) {
     margin: 0;
-    padding-block-end: 0;
-    border-block-end: 0;
     font-size: var(--sdp-fluid-h5);
   }
 
@@ -220,7 +222,7 @@
     }
   }
 
-  .sdp-atles__targeta > :where(h3, p) {
+  .sdp-atles__targeta > :where(h4, p) {
     margin: 0;
   }
 
@@ -328,7 +330,7 @@
     padding-inline-start: var(--sdp-space-3);
     border-inline-start: 3px solid var(--sdp-vora-control);
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-fluid-cos);
   }
 
   .sdp-atles__xips {
@@ -366,13 +368,17 @@
     grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-1);
     margin: 0;
-    font-size: var(--sdp-text-meta);
+    /* v1.2.21 · Gauntlet R2 (Latles-03) · base.css només dona la mida de cos a p, ul i ol: una <dl> fora d'una llista
+       heretava els 16 px del body. La mida de cos, explícita. */
+    font-size: var(--sdp-fluid-cos);
   }
 
+  /* v1.2.21 · IDEA-319 (Gauntlet R1, L1-05) · Amb la prosa a la mida de cos, el terme va damunt de la seua definició:
+     dues columnes deixaven la nota d'un dolor en unes 17 lletres per línia a 360 px (llei 261110 de sdp-pedra-seca). */
   .sdp-atles__dl > div {
     display: grid;
-    grid-template-columns: minmax(6.5rem, max-content) minmax(0, 1fr);
-    gap: var(--sdp-space-3);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
     min-inline-size: 0;
   }
 
@@ -384,11 +390,6 @@
   .sdp-atles__dl :where(dd) {
     margin: 0;
     min-inline-size: 0;
-  }
-
-  .sdp-atles__dl--apilada > div {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
   }
 
   /* ── Gràfic d'afinitat ── */
@@ -520,7 +521,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: var(--sdp-text-meta);
   }
 
   .sdp-atles__llista-si > li::before {
@@ -730,13 +730,6 @@
     text-transform: uppercase;
   }
 
-  .sdp-atles__dos-col {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-    gap: var(--sdp-space-6);
-    align-items: start;
-  }
-
   .sdp-atles__mobil {
     inline-size: min(100%, 21rem);
     margin-inline: auto;
@@ -782,10 +775,13 @@
     background: var(--sdp-fons-targeta);
   }
 
-  .sdp-atles__mobil-targeta > :where(h4) {
+  /* v1.2.21 · Gauntlet R1 (L1-08) · El títol d'una targeta de la maqueta és un paràgraf, no un h4: la maqueta és
+     aria-hidden i l'Índex de la Barra Blava no l'ha de llistar com una fitxa de la pàgina. */
+  .sdp-atles__mobil-titol {
     margin: 0;
     color: var(--sdp-text-titol);
     font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-negreta);
   }
 
   .sdp-atles__mobil-targeta--sint {

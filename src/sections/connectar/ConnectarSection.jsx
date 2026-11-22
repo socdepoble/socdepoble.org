@@ -1169,10 +1169,10 @@ function ConnectarElementIntern() {
         {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
             entrar, i les carpetes no es poden crear. */}
         {isGuest && (
-          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
+          <Alerta to="info" titol={t('section.connectar.foraster.titol', 'Benvinguda en Mode Foraster')}>
             {calEntrar
-              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
-              : t('section.connectar.foraster.local', 'Sense sessió, el que connectes es queda només en este dispositiu.')}
+              ? t('section.connectar.foraster.calEntrar', 'Pots explorar tot el poble lliurement; per a guardar esta connexió al teu compte, entra o registra’t.')
+              : t('section.connectar.foraster.local', 'Pots connectar lliurement: sense sessió, el que guardes es queda en este dispositiu.')}
           </Alerta>
         )}
 
@@ -1300,10 +1300,10 @@ function ConnectarContingutExtern({ params }) {
     >
       <div ref={adoptaEstilsDiferits} className="sdp-connectar">
         {!currentUser ? (
-          <Alerta to="avis" titol={t('section.connectar.foraster.titol', 'Mode Foraster actiu')}>
+          <Alerta to="info" titol={t('section.connectar.foraster.titol', 'Benvinguda en Mode Foraster')}>
             {calEntrar
-              ? t('section.connectar.foraster.calEntrar', 'Per a connectar cal entrar al teu compte.')
-              : t('section.connectar.foraster.localEnllac', 'Sense sessió, l’enllaç es queda només en este dispositiu.')}
+              ? t('section.connectar.foraster.calEntrar', 'Pots explorar tot el poble lliurement; per a guardar esta connexió al teu compte, entra o registra’t.')
+              : t('section.connectar.foraster.localEnllac', 'Pots guardar l’enllaç lliurement: sense sessió, es queda en este dispositiu.')}
           </Alerta>
         ) : null}
 

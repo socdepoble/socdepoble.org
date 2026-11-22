@@ -218,7 +218,7 @@ test('D1 · sense sessió en remot, «Entra per a connectar» porta a /registre?
   try {
     render(<ConnectarSection />);
     expect(screen.queryByRole('button', { name: /Simular/ })).toBeNull();
-    expect(screen.getByText('Per a connectar cal entrar al teu compte.')).toBeTruthy();
+    expect(screen.getByText('Pots explorar tot el poble lliurement; per a guardar esta connexió al teu compte, entra o registra’t.')).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/crea carpetes|Quan et registres/);
     fireEvent.click(screen.getByRole('button', { name: 'Entra per a connectar' }));
     vi.runAllTimers();
@@ -237,7 +237,7 @@ test('D1 · en seed sense sessió es connecta al dispositiu, sense prometre cap 
   mocks.user = null;
   mocks.config = { dataMode: 'seed' };
   render(<ConnectarSection />);
-  expect(screen.getByText('Sense sessió, el que connectes es queda només en este dispositiu.')).toBeTruthy();
+  expect(screen.getByText('Pots connectar lliurement: sense sessió, el que guardes es queda en este dispositiu.')).toBeTruthy();
   expect(document.body.textContent).not.toMatch(/Quan et registres|de debò|crea carpetes/);
   fireEvent.click(screen.getByRole('button', { name: CONNECTA }));
   await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
@@ -253,7 +253,7 @@ test('D1 · amb sessió i el Bloc carregant, el botó espera desactivat: ni simu
   expect(mocks.crea).not.toHaveBeenCalled();
   expect(mocks.toast).not.toHaveBeenCalled();
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(screen.queryByText('Mode Foraster actiu')).toBeNull();
+  expect(screen.queryByText('Benvinguda en Mode Foraster')).toBeNull();
 });
 
 test('l’origen i el cos es calculen sense inventar res: escapen el text i enllacen només si hi ha ruta', () => {
@@ -708,7 +708,7 @@ test('Revisió · amb el Bloc en error no queda «Obrint el teu Bloc…»: l’A
   expect(mocks.crea).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Torna-ho a provar' }));
   expect(mocks.refresh).toHaveBeenCalledTimes(1);
-  expect(screen.queryByText('Mode Foraster actiu')).toBeNull();
+  expect(screen.queryByText('Benvinguda en Mode Foraster')).toBeNull();
 });
 
 test('Revisió · el text del Bloc fallat el tria el codi: servidor inabastable, error del servidor o la resta', () => {
@@ -763,15 +763,15 @@ test('Revisió · un paquet seed amb l’elecció remota desada: sense sessió c
     mocks.user = null;
     mocks.config = NODE_REMOT;
     const intern = render(<ConnectarSection />);
-    expect(screen.getByText('Per a connectar cal entrar al teu compte.')).toBeTruthy();
-    expect(screen.queryByText('Sense sessió, el que connectes es queda només en este dispositiu.')).toBeNull();
+    expect(screen.getByText('Pots explorar tot el poble lliurement; per a guardar esta connexió al teu compte, entra o registra’t.')).toBeTruthy();
+    expect(screen.queryByText('Pots connectar lliurement: sense sessió, el que guardes es queda en este dispositiu.')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Entra per a connectar' }));
     expect(anadaAEntrar(mocks.navigate.mock.calls[0][0])).toMatchObject({ ruta: '/registre', mode: 'entrar' });
     expect(mocks.crea).not.toHaveBeenCalled();
     intern.unmount();
     mocks.params = new URLSearchParams(EXTERN);
     render(<ConnectarSection />);
-    expect(screen.getByText('Per a connectar cal entrar al teu compte.')).toBeTruthy();
+    expect(screen.getByText('Pots explorar tot el poble lliurement; per a guardar esta connexió al teu compte, entra o registra’t.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Entra per a connectar' })).toBeTruthy();
   } finally {
     delVal(CLAU_ELECCIO);
@@ -1179,13 +1179,13 @@ describe('P1-22 · Connectar en cinc llengües', () => {
     expect(avis.textContent).not.toContain('PGRST204');
   });
 
-  test('gl · sense sessió en remot: el Mode Foraster i el botó d’entrar, del diccionari', () => {
+  test('gl · sense sessió en remot: el Mode Foraster hospitalari i el botó d’entrar, del diccionari', () => {
     mocks.t = createTranslator('gl');
     mocks.user = null;
     mocks.canCreate = false;
     render(<ConnectarSection />);
-    expect(screen.getByText('Modo Forasteiro activo', { selector: '.sdp-alerta__titol' })).toBeTruthy();
-    expect(screen.getByText('Para conectar tes que entrar na túa conta.')).toBeTruthy();
+    expect(screen.getByText('Benvida en Modo Forasteiro', { selector: '.sdp-alerta__titol' })).toBeTruthy();
+    expect(screen.getByText('Podes explorar todo o pobo libremente; para gardar esta conexión na túa conta, entra ou rexístrate.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Entra para conectar' })).toBeTruthy();
   });
 

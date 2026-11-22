@@ -1,0 +1,80 @@
+/* Onada R32.41 · Dieta de sostre d'arrencada WP (v1.2.21) · Estils exclusius de SelectorEmoticones.jsx. */
+@layer components {
+  .sdp-xat-emojis {
+    position: absolute;
+    inset-block-end: calc(100% + var(--sdp-space-1));
+    inset-inline-start: var(--sdp-space-2);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(22.5rem, calc(100% - var(--sdp-space-2) * 2));
+    max-block-size: min(20rem, 60vh);
+    max-block-size: min(20rem, 60dvh);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    box-shadow: var(--sdp-ombra-flotant);
+    overflow: hidden;
+  }
+  .sdp-xat-emojis--estret {
+    max-block-size: min(17.5rem, 50vh);
+    max-block-size: min(17.5rem, 50dvh);
+  }
+  .sdp-xat-emojis__pestanyes {
+    display: flex;
+    flex: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-emojis__pestanya {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: max(var(--sdp-touch), calc(100% / 6.5));
+    block-size: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-block-end: 3px solid transparent;
+    background: transparent;
+    color: var(--sdp-text-suau);
+    cursor: pointer;
+    scroll-snap-align: start;
+  }
+  .sdp-xat-emojis__pestanya[aria-selected="true"] { color: var(--sdp-accio-text); border-block-end-color: var(--sdp-accio); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-emojis__pestanya:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-xat-emojis__pestanya:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-emojis__panell {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-xat-emojis__panell { scroll-behavior: auto; }
+  }
+  .sdp-xat-emojis__titol {
+    margin: 0 0 var(--sdp-space-1);
+    padding: 0;
+    border: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+  .sdp-xat-emojis__estat {
+    display: grid;
+    justify-items: start;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding-block: var(--sdp-space-3);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+}

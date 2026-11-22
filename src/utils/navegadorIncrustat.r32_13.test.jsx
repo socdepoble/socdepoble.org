@@ -165,12 +165,14 @@ describe('Onada R32.13 · Lot 02 (P0-114 Escut 1) · esNavegadorSocialIncrustat 
     expect(durada).toBeLessThan(40);
   });
 
-  test('diccionari modular 5 llengües (ca, es, en, eu, gl): 403 disallowed_useragent, Llei 32 = 0 i reserva ca', () => {
+  test('diccionari modular 5 llengües (ca, es, en, eu, gl): llenguatge humà sense codi cru 403 disallowed_useragent, Llei 32 = 0 i reserva ca', () => {
     const llengues = ['ca', 'es', 'en', 'eu', 'gl'];
     expect(Object.keys(TEXTOS_NAVEGADOR_INCRUSTAT).sort()).toEqual([...llengues].sort());
     for (const lang of llengues) {
       const tx = textosNavegadorIncrustat(lang);
-      expect(tx.avis).toContain('403 disallowed_useragent');
+      expect(tx.avis).toContain('Google');
+      expect(tx.avis).not.toContain('403 disallowed_useragent');
+      expect(tx.avisSenseApp).not.toContain('403 disallowed_useragent');
       for (const valor of Object.values(tx)) {
         expect(valor.toLowerCase()).not.toContain('servidor del poble');
         expect(valor.toLowerCase()).not.toMatch(/\busar\b/);
@@ -266,7 +268,8 @@ describe('P0-ANDROID-PUSH (v1.2.16) · B7 · WebView genèric d’Android i What
       .map((ua) => esNavegadorSocialIncrustat(ua));
     for (const lang of ['ca', 'es', 'en', 'eu', 'gl']) {
       const tx = textosNavegadorIncrustat(lang);
-      expect(tx.avisSenseApp, lang).toContain('403 disallowed_useragent');
+      expect(tx.avisSenseApp, lang).toContain('Google');
+      expect(tx.avisSenseApp, lang).not.toContain('403 disallowed_useragent');
       expect(tx.instruccionsAndroidSenseApp, lang).toContain('Chrome');
       for (const deteccio of deteccions) {
         const { avis, instruccions } = textosDeLEscut(tx, deteccio);

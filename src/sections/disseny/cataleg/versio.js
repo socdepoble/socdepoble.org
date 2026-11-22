@@ -15,7 +15,15 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/atles2dComu.jsx, detalls/EspecimenAtles2dPresentacio.jsx,
+ * Darrera posada al dia: manifest.js, dades/atles2dDades.js, detalls/atles2dComu.jsx,
+ * detalls/EspecimenAtles2dPresentacio.jsx, detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx,
+ * detalls/EspecimenAtles2dMapaEntitats.jsx, detalls/EspecimenAtles2dMotorEstudis.jsx i detalls/EspecimenInventariGlobal.jsx,
+ * 2026-11-22T17:10:02+01:00, v1.2.21 · IDEA-319 (ordre del Mestre del 22-11-2026, captura 261122_1412): seccions en h3 i
+ * fitxes en h4, cap h2 al cos, la prosa a tota l'amplada i a mida de cos (sense .sdp-atles__dos-col ni --sdp-measure),
+ * els títols de la maqueta mòbil fora de l'Índex, l'avís de datació que diu els huit dolors repassats contra la v1.2.21
+ * (Llei 0: només DOL-29 resolt, DOL-51 en la decisió del Mestre i sis oberts) i el títol de les Xarxes (Orkut, 10
+ * referents i Nextdoor com a antimodel), amb dues rondes de Gauntlet.
+ * Versió anterior: detalls/atles2dComu.jsx, detalls/EspecimenAtles2dPresentacio.jsx,
  * detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx, detalls/EspecimenAtles2dMapaEntitats.jsx
  * i detalls/EspecimenAtles2dMotorEstudis.jsx, 2026-11-22T03:09:53+01:00, v1.2.19 · Gauntlet R2 de l'Atles 2D (troballes
  * L4R2-01 a L4R2-08): les cerques de les Xarxes i del Poble virtual no distingixen accents (normalizeSearchText);
@@ -429,4 +437,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-22T03:09:53+01:00';
+export const VERSIO_CATALEG = '2026-11-22T17:10:02+01:00';

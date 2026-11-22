@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.28
+Stable tag: 1.1.29
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.29 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.21 de Sóc de Poble, la que explica la seua pàgina «Versions»: l'accés del Xat cap en pantalles molt estretes, el Mode Bancal es nota al sol, qui encara no té compte rep una benvinguda més amable i el preu d'un producte és el mateix al Mur i al Mercat.
+* **Lectures amb límit:** el connector llig els seus fitxers locals amb un sostre de mida, deixa de projectar el SEO d'una pàgina quan la consulta és massa llarga, i la Salut del lloc comprova l'empremta dels mateixos bytes que llig.
+
 = 1.1.28 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.20 de Sóc de Poble, la que explica la seua pàgina «Versions»: les fotos del Xat ixen sense les dades de GPS dins del fitxer, el Bloc de notes diu on és cada text i els preus de la llista del Mercat porten coma decimal.
 
@@ -270,6 +274,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.29 =
+Visor al dia amb la versió 1.2.21 de Sóc de Poble: l'accés del Xat en pantalles estretes, un Mode Bancal que es nota, una benvinguda més amable i el mateix preu al Mur i al Mercat.
 
 = 1.1.28 =
 Visor al dia amb la versió 1.2.20 de Sóc de Poble: fotos del Xat sense GPS dins del fitxer, un Bloc de notes que diu on és cada text i preus de la llista del Mercat amb coma decimal.

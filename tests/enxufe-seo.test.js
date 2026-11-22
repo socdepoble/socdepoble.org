@@ -149,7 +149,7 @@ describe('seo.php · esborrany inert de l’OpenGraph de la ruta', () => {
     expect(CODI).not.toMatch(/wp_remote_|wp_safe_remote_|curl_|fsockopen|stream_socket|fopen\(/);
     expect(CODI).not.toMatch(/supabase|anon|api_key|apikey|secret|token|getenv\(|\$_ENV|DEEPL/i);
     expect(CODI).not.toMatch(/get_option\(|update_option\(|set_transient\(|get_transient\(/);
-    expect([...CODI.matchAll(/file_get_contents\(\s*([^)]+?)\s*\)/g)].map((m) => m[1])).toEqual(['$fitxer']);
+    expect([...CODI.matchAll(/file_get_contents\(\s*([^)]+?)\s*\)/g)].map((m) => m[1])).toEqual(['$fitxer, false, null, 0, $sostre + 1']);
     // El mateix patró d'atributs de backend que vigila tests/enxufe-plugin.test.mjs, sobre el text sencer.
     expect(SEO).not.toMatch(/\b(supabase-url|supabase-anon-key|backend-url|tenant-id|data-mode|bot-api-url|oauth-relay-url|sollutia-issuer|config-id)\b/);
     expect(CODI).not.toMatch(/tenant/i);

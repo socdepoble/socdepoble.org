@@ -695,7 +695,7 @@ CATALOG_ITEMS.push(
   especimen('atles-2d', 'poble-virtual', '1. El poble virtual (Assaig a la Plaça)', 'Rondes, veïns sintètics i dolors amb filtres', ['atles', 'estudi', 'veïns'],
     'Les rondes d’«Assaig a la Plaça», els veïns sintètics amb selector, tots els dolors amb filtres d’estat, gravetat (P0–P3), ronda, veí i cerca lliure, les mètriques i les discrepàncies entre fonts (Llei 0).',
     'assaig placa poble virtual rondes veins sintetics dolors gravetat p0 p1 p2 p3 metriques discrepancies llei 0'),
-  especimen('atles-2d', 'xarxes-mon', '2. Xarxes del món (Orkut i 11 referents rurals)', 'Gràfic d’afinitat, fitxes completes i Orkut peça per peça', ['atles', 'estudi', 'xarxes'],
+  especimen('atles-2d', 'xarxes-mon', '2. Xarxes del món (Orkut, 10 referents i Nextdoor com a antimodel)', 'Gràfic d’afinitat, fitxes completes i Orkut peça per peça', ['atles', 'estudi', 'xarxes'],
     'Les xarxes per a pobles que ha estudiat Gemini, puntuades de 0 a 10 per la seua afinitat amb Sóc de Poble: el gràfic, el cercador i l’ordenació, cada fitxa amb el que adoptem en sala neta i el que rebutgem (Nextdoor com a anti-model), i la taula d’Orkut peça per peça.',
     'xarxes mon orkut nextdoor front porch forum panneaupocket intramuros nebenan karrot hylo fedivers afinitat sala neta'),
   especimen('atles-2d', 'mapa-entitats', '3. Mapa 2D de les 5 entitats (60 cel·les)', 'Usuari, Empresa, Grup, Poble i Ajuntament en una graella 12 × 5', ['atles', 'estudi', 'entitats'],

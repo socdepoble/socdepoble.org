@@ -1,7 +1,7 @@
 /**
- * Onada R32.30b · Lot 02 · Diccionari diferit d'accessibilitat (aria-label) per a
- * Patrimoni (Banc de Llavors, Calendari Agrícola, Arbres Singulars i Receptes)
- * en les 5 llengües oficials (ca, es, en, eu, gl).
+ * Onada R32.30b · Lot 02 + R32.39 · Lot 02 · Diccionari diferit d'accessibilitat
+ * (aria-label i plantilles d'alt) per a Patrimoni (Banc de Llavors, Calendari Agrícola,
+ * Arbres Singulars i Receptes) en les 5 llengües oficials (ca, es, en, eu, gl).
  * Conserva byte a byte el valencià (ca) i no toca src/config/idiomes/*.js (0 B al nucli).
  */
 const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
@@ -23,6 +23,10 @@ const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
     escandallConnexionsReceptaAria: 'Escandall i connexions de la recepta',
     preparaCompraReceptaAria: 'Prepara una compra amb esta recepta',
     calculaIPreparaCompra: 'Calcula i prepara la compra',
+    altFotoBase2007Plantilla: '{nom} — catalogació base 19/05/2007',
+    altFotoSeguiment2020Plantilla: '{nom} — seguiment de camp {data}',
+    altFotoDetall2007Plantilla: 'Detall estructural de soca i brancatge de {nom} (2007)',
+    altMapaTopograficPlantilla: 'Mapa topogràfic de localització de {nom}',
   }),
   es: Object.freeze({
     llibresBibliotecaAgricolaAria: 'Libros de la Biblioteca Agrícola y Banco de Semillas',
@@ -42,6 +46,10 @@ const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
     escandallConnexionsReceptaAria: 'Escandallo y conexiones de la receta',
     preparaCompraReceptaAria: 'Prepara una compra con esta receta',
     calculaIPreparaCompra: 'Calcula y prepara la compra',
+    altFotoBase2007Plantilla: '{nom} — catalogación base 19/05/2007',
+    altFotoSeguiment2020Plantilla: '{nom} — seguimiento de campo {data}',
+    altFotoDetall2007Plantilla: 'Detalle estructural de tronco y ramaje de {nom} (2007)',
+    altMapaTopograficPlantilla: 'Mapa topográfico de localización de {nom}',
   }),
   en: Object.freeze({
     llibresBibliotecaAgricolaAria: 'Agricultural Library and Seed Bank books',
@@ -61,6 +69,10 @@ const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
     escandallConnexionsReceptaAria: 'Recipe costing and heritage links',
     preparaCompraReceptaAria: 'Prepare a shopping list from this recipe',
     calculaIPreparaCompra: 'Calculate and prepare shopping list',
+    altFotoBase2007Plantilla: '{nom} — baseline survey 19/05/2007',
+    altFotoSeguiment2020Plantilla: '{nom} — field follow-up {data}',
+    altFotoDetall2007Plantilla: 'Structural trunk and canopy detail of {nom} (2007)',
+    altMapaTopograficPlantilla: 'Topographic location map of {nom}',
   }),
   eu: Object.freeze({
     llibresBibliotecaAgricolaAria: 'Nekazaritza Liburutegiko eta Hazi Bankuko liburuak',
@@ -80,6 +92,10 @@ const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
     escandallConnexionsReceptaAria: 'Errezetaren kostu-kalkulua eta loturak',
     preparaCompraReceptaAria: 'Prestatu erosketa bat errezeta honekin',
     calculaIPreparaCompra: 'Kalkulatu eta prestatu erosketa',
+    altFotoBase2007Plantilla: '{nom} — oinarrizko katalogazioa 19/05/2007',
+    altFotoSeguiment2020Plantilla: '{nom} — landa-jarraipena {data}',
+    altFotoDetall2007Plantilla: '{nom} zuhaitzaren enbor eta adaburuaren egitura-xehetasuna (2007)',
+    altMapaTopograficPlantilla: '{nom} zuhaitzaren kokapen-mapa topografikoa',
   }),
   gl: Object.freeze({
     llibresBibliotecaAgricolaAria: 'Libros da Biblioteca Agrícola e Banco de Sementes',
@@ -99,6 +115,10 @@ const DICCIONARI_PATRIMONI_A11Y = Object.freeze({
     escandallConnexionsReceptaAria: 'Escandallo e conexións da receita',
     preparaCompraReceptaAria: 'Prepara unha compra con esta receita',
     calculaIPreparaCompra: 'Calcula e prepara a compra',
+    altFotoBase2007Plantilla: '{nom} — catalogación base 19/05/2007',
+    altFotoSeguiment2020Plantilla: '{nom} — seguimento de campo {data}',
+    altFotoDetall2007Plantilla: 'Detalle estrutural de tronco e ramaxe de {nom} (2007)',
+    altMapaTopograficPlantilla: 'Mapa topográfico de localización de {nom}',
   }),
 });
 
@@ -109,4 +129,10 @@ export function codiLlenguaPatrimoni(language = 'ca') {
 
 export function textosPatrimoniA11y(language = 'ca') {
   return DICCIONARI_PATRIMONI_A11Y[codiLlenguaPatrimoni(language)];
+}
+
+export function formataAltArbreA11y(plantilla, { nom = '', data = '' } = {}) {
+  return String(plantilla || '')
+    .replace('{nom}', String(nom ?? ''))
+    .replace('{data}', String(data ?? ''));
 }

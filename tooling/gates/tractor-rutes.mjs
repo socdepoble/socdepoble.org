@@ -27,6 +27,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
+import { parse } from '@babel/parser';
 import { CAMINS } from '../lib/arrel.mjs';
 
 const ARREL = process.cwd();
@@ -70,6 +71,56 @@ function camina(dir, acc = []) {
   return acc;
 }
 
+/** El custodi declara rutes; només aquests literals són definicions, no consumidors.
+ * S'emmascara cada token, mai el fitxer o la línia sencera. Si no es pot analitzar,
+ * la comprovació ordinària continua intacta. */
+function senseDefinicionsCanoniques(fitxer, text) {
+  if (fitxer.replaceAll('\\', '/') !== 'tooling/lib/arrel.mjs') return text;
+  let ast;
+  try {
+    ast = parse(text, { sourceType: 'module', plugins: ['estree'] }).program;
+  } catch {
+    return text;
+  }
+  const rangs = [];
+  const nomPropietat = (p) => p.type === 'Property' && !p.computed && !p.method && p.kind === 'init'
+    ? (p.key.type === 'Identifier' ? p.key.name : p.key.value) : null;
+  const esCadena = (n) => n?.type === 'Literal' && typeof n.value === 'string';
+  for (const node of ast.body) {
+    const declaracio = node.type === 'ExportNamedDeclaration' ? node.declaration : null;
+    if (declaracio?.type !== 'VariableDeclaration' || declaracio.kind !== 'const') continue;
+    for (const d of declaracio.declarations) {
+      if (d.id.type !== 'Identifier') continue;
+      const init = d.init;
+      if (d.id.name === 'CAMINS' && init?.type === 'CallExpression'
+        && init.callee.type === 'MemberExpression' && !init.callee.computed
+        && init.callee.object.type === 'Identifier' && init.callee.object.name === 'Object'
+        && init.callee.property.name === 'freeze' && init.arguments.length === 1
+        && init.arguments[0].type === 'ObjectExpression') {
+        for (const p of init.arguments[0].properties) {
+          const nom = nomPropietat(p);
+          if (nom !== null && Object.hasOwn(CAMINS, nom) && esCadena(p.value) && p.value.value === CAMINS[nom]) {
+            rangs.push([p.value.start, p.value.end]);
+          }
+        }
+      } else if (d.id.name === 'CORROBORADORS' && init?.type === 'ArrayExpression') {
+        for (const entrada of init.elements) {
+          if (entrada?.type !== 'ObjectExpression') continue;
+          for (const p of entrada.properties) {
+            if (nomPropietat(p) === 'cami' && esCadena(p.value) && Object.values(CAMINS).includes(p.value.value)) {
+              rangs.push([p.value.start, p.value.end]);
+            }
+          }
+        }
+      }
+    }
+  }
+  for (const [inici, fi] of rangs.sort((a, b) => b[0] - a[0])) {
+    text = text.slice(0, inici) + text.slice(inici, fi).replace(/[^\r\n]/g, ' ') + text.slice(fi);
+  }
+  return text;
+}
+
 /* ─── R2: la SSOT ha de ser completa ─── */
 const ssotAbs = join(ARREL, SSOT);
 if (!existsSync(ssotAbs)) {
@@ -96,7 +147,7 @@ for (const dir of ABAST) {
     const importa = /from\s+['"][^'"]*project_paths\.mjs['"]/.test(text);
     if (importa) continue;
 
-    const linies = text.split('\n');
+    const linies = senseDefinicionsCanoniques(fitxer, text).split('\n');
     for (let i = 0; i < linies.length; i++) {
       const net = linies[i].replace(/\/\/.*$/, '');
       if (/^\s*\*/.test(linies[i])) continue; // comentari de bloc

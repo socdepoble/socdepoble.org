@@ -117,7 +117,8 @@ describe('PrevisualitzacioExtern', () => {
 
   test('sense sessió: on es queda l’enllaç, o que cal entrar (amb l’avís propi de la porta si en porta)', () => {
     pinta({ contingut: contingutDe(CONSULTA), teSessio: false, calEntrar: false });
-    expect(screen.getByText('Sense sessió, l’enllaç es queda només en este dispositiu.')).toBeTruthy();
+    // v1.2.21 · R32.35b (DOL-04) · La benvinguda del Mode Foraster, la mateixa que /connectar?url=.
+    expect(screen.getByText('Pots guardar l’enllaç lliurement: sense sessió, es queda en este dispositiu.')).toBeTruthy();
     cleanup();
     pinta({ contingut: contingutDe(CONSULTA), teSessio: false, calEntrar: true });
     expect(screen.getByText('Per a desar cal entrar al teu compte.')).toBeTruthy();
@@ -172,14 +173,17 @@ describe('paritat amb /connectar?url= (la còpia que queda a ConnectarContingutE
     for (const tros of ['sdp-connectar__previsualitzacio', 'Un article', 'Un resum', 'De exemple.org', 'sdp-boto--gran', 'sdp-connectar__nota']) {
       expect(html).toContain(tros);
     }
-    expect(html).not.toContain('Mode Foraster actiu');
+    // v1.2.21 · R32.35b (DOL-04) · L'avís sense sessió és ara «Benvinguda en Mode Foraster»: amb sessió, cap dels dos.
+    expect(html).not.toContain('Mode Foraster');
     expect(compartida(true)).toBe(html);
   });
 
   test('sense sessió en llavor, el mateix DOM (amb l’avís del Mode Foraster)', () => {
     dades.usuari = null;
     const html = connectar();
-    expect(html).toContain('Mode Foraster actiu');
+    // v1.2.21 · R32.35b (DOL-04) · El títol de l'avís dignifica el Mode Foraster: una benvinguda, no un fre.
+    expect(html).toContain('Benvinguda en Mode Foraster');
+    expect(html).not.toContain('Mode Foraster actiu');
     expect(compartida(false)).toBe(html);
   });
 });

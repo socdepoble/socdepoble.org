@@ -1,10 +1,12 @@
 import { lazy, Suspense, useId, useMemo, useState } from 'react';
 import { Link } from '../../app/contexts/RouterContext';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { Boto, Camp, CampText, Selector } from '../../components/PedraSeca/index.js';
 import { useMur } from '../mur/MurContext.jsx';
 import { ARTICLES_SIMULADOR_IA_425, FACETA_4_ETIQUETES_SKOS } from '../../data/taxonomia/tesaurusDoctoralSocDePoble.js';
 import { construeixBrainTaxonomia, DIMENSIONS_BRAIN, EXEMPLE_MESTRE_BRAIN, filtraBrainTaxonomia, longitudNomBrain, PROPOSTES_MESTRE_BRAIN, PROPOSTES_NOMS_BRAIN, projectaBrainTaxonomia } from '../../data/taxonomia/brainTaxonomia.js';
 import { PrevisualitzacioCardTaxonomia } from './PrevisualitzacioCardTaxonomia.jsx';
+import { textosBrainTaxonomiaA11y } from './i18nBrainTaxonomia.js';
 import {
   AMPLARIES_PREVIEW_BRAIN,
   ESTIL_BRAIN_TAXONOMIA,
@@ -13,6 +15,14 @@ import {
   netaTextBrain,
   nomRelacioBrain,
 } from './brainTaxonomiaModel.js';
+
+function useEstatInterficieBrain() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
 
 const BrainGraph = lazy(() => import('../../components/universal/graph/BrainGraph.jsx'));
 
@@ -27,6 +37,8 @@ function ArticleFont({ article }) {
 /** Una vista de lectura i simulació compartida; cap capacitat d'escriptura. */
 export function BrainTaxonomiaVista({ model, paginacio = [] }) {
   const id = useId();
+  const estatUI = useEstatInterficieBrain();
+  const tx = textosBrainTaxonomiaA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca');
   const [dimensio, setDimensio] = useState('totes');
   const [consulta, setConsulta] = useState('');
   const [seleccio, setSeleccio] = useState('');
@@ -56,10 +68,10 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
   const mostraAbans = projectaBrainTaxonomia(modelMostra).documents[0];
   const mostra = projectaBrainTaxonomia(modelMostra, { noms, fusio }).documents[0];
   const aliases = [...new Set(docs.flatMap((article) => article.assignacions.filter((valor) => valor.node === seleccio && valor.metode === 'alias-declarat').map((valor) => `${valor.original} → ${valor.canonic}`)))];
-  return <section className="sdp-taxonomia-brain" aria-label="Segon Brain de categories i etiquetes">
+  return <section className="sdp-taxonomia-brain" aria-label={tx.segonBrainAria}>
     <h3>El Brain de categories i etiquetes</h3>
     <p>{model.nodes.filter((node) => node.type === 'category').length} categories i {etiquetes.length} etiquetes canòniques. Cada connexió explica d’on ix; les propostes encara no són decisions.</p>
-    <section aria-label="Procedència i cobertura del Brain">
+    <section aria-label={tx.procedenciaAria}>
       <p>{model.cobertura.historicsRebuts} files històriques · {model.cobertura.vivesRebudes} publicacions vives carregades · {model.cobertura.documentsUnics} documents únics observats.</p>
       {model.cobertura.estatViu === 'loading' && <p>La font viva encara s’està carregant.</p>}
       {model.cobertura.estatViu === 'error' && <p role="alert">No s’ha pogut llegir la font viva; els històrics es mantenen separats d’aquesta lectura fallida.</p>}
@@ -72,17 +84,17 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
       {model.cobertura.nomsNoCanonics.length > 0 && <details><summary>Noms fora del vocabulari ({model.cobertura.nomsNoCanonics.length})</summary><p>{model.cobertura.nomsNoCanonics.join(' · ')}</p></details>}
       {paginacio.map((font) => <div className="sdp-taxonomia__accions" key={font.id}>{font.error && <p role="alert">No s’ha pogut continuar la lectura de {font.nom}.</p>}{font.mes && <Boto varietat="secundari" disabled={font.carregant} onClick={font.carrega}>{font.carregant ? 'Llegint…' : `Carrega més: ${font.nom}`}</Boto>}</div>)}
     </section>
-    <nav className="sdp-taxonomia__accions" aria-label="Vistes del Brain">
+    <nav className="sdp-taxonomia__accions" aria-label={tx.vistesAria}>
       <Boto varietat={vista === 'brain' ? 'primari' : 'secundari'} aria-pressed={vista === 'brain'} onClick={() => setVista('brain')}>Brain semàntic</Boto>
       <Boto varietat={vista === 'laboratori' ? 'primari' : 'secundari'} aria-pressed={vista === 'laboratori'} onClick={() => setVista('laboratori')}>Laboratori de decisions</Boto>
     </nav>
     {vista === 'brain' ? <>
-      <nav className="sdp-taxonomia__accions" aria-label="Dimensions del Brain">{DIMENSIONS_BRAIN.map((dim) => <Boto key={dim.id} varietat={dimensio === dim.id ? 'primari' : 'secundari'} aria-pressed={dimensio === dim.id} onClick={() => { setDimensio(dim.id); tria(''); }}>{dim.nom}</Boto>)}</nav>
+      <nav className="sdp-taxonomia__accions" aria-label={tx.dimensionsAria}>{DIMENSIONS_BRAIN.map((dim) => <Boto key={dim.id} varietat={dimensio === dim.id ? 'primari' : 'secundari'} aria-pressed={dimensio === dim.id} onClick={() => { setDimensio(dim.id); tria(''); }}>{dim.nom}</Boto>)}</nav>
       <Camp etiqueta="Cerca un concepte"><CampText tipus="search" value={consulta} onChange={(event) => setConsulta(event.target.value)}/></Camp>
       <Camp etiqueta="Inspecciona un node"><Selector value={seleccio} opcions={[{ valor: '', etiqueta: 'Tria un concepte…' }, ...opcions.map((node) => ({ valor: node.id, etiqueta: node.label }))]} onChange={(event) => tria(event.target.value)}/></Camp>
       <p className="sdp-taxonomia__llegenda"><span>Traç continu: coaparició observada; el gruix representa documents.</span><span>Traç puntuat: jerarquia SKOS declarada, sense pes documental.</span><span className="sdp-taxonomia__candidatura">Taronja discontinu: candidatura, no equivalència.</span></p>
       <div className="sdp-taxonomia__xarxa"><div className="sdp-taxonomia__graf"><Suspense fallback={<p>Obrint el graf…</p>}><BrainGraph graf={graf} estil={ESTIL_BRAIN_TAXONOMIA} seleccio={seleccio} onSeleccio={tria} inspector={false} enquadra vinclesPonderats/></Suspense></div>
-        <section className="sdp-taxonomia__inspector" aria-label="Fitxa MIT del node">
+        <section className="sdp-taxonomia__inspector" aria-label={tx.fitxaMitAria}>
           {seleccionat ? <><h4>{seleccionat.label}</h4><p>{seleccionat.documents.length} documents observats · {seleccionat.longitud} caràcters{seleccionat.longitud > 20 ? ' · nom llarg per revisar' : ''}.</p><p>Identitat canònica: <code>{seleccionat.clau}</code>. {seleccionat.subtipus || ESTIL_BRAIN_TAXONOMIA.noms[seleccionat.type]}.</p>
             {seleccionat.type === 'category' && <p>La categoria té identitat pròpia encara que no tinga assignacions efectives en els documents observats. La jerarquia SKOS no li atribuïx articles.</p>}
             {aliases.length > 0 && <p>Àlies amb traça: {aliases.join(' · ')}</p>}
@@ -99,7 +111,7 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
         <div className="sdp-admin-editorial-bloc"><h5><code>patrimoni-cultura</code></h5><p>{perId.get('category:patrimoni-cultura').label}: l’identificador inclou Patrimoni i el nom actual no.</p></div>
       </div><p>Són identitats heretades diferents. Provar un nom no canvia cap identificador ni reclassifica articles.</p></details>
       <Camp etiqueta="Concepte per a escurçar"><Selector value={seleccio} opcions={[{ valor: '', etiqueta: 'Tria un concepte…' }, ...model.nodes.map((node) => ({ valor: node.id, etiqueta: node.label }))]} onChange={(event) => tria(event.target.value)}/></Camp>
-      <section aria-label="Sis noms proposats pel Mestre"><h5>Propostes del Mestre</h5><p>Tria primer un concepte. Cada botó prova un nom sobre eixa identitat; no crea cap categoria ni reclassifica articles.</p><div className="sdp-taxonomia__accions">{PROPOSTES_MESTRE_BRAIN.map((nom) => <Boto key={nom} varietat="secundari" disabled={!seleccionat} onClick={() => setNoms((valors) => ({ ...valors, [seleccio]: nom }))}>Prova el nom: {nom}</Boto>)}</div><p>L’exemple proporcionat «{EXEMPLE_MESTRE_BRAIN}» té {longitudNomBrain(EXEMPLE_MESTRE_BRAIN)} caràcters i no és una de les sis categories d’aquest vocabulari. Les propostes es conserven separades dels noms canònics.</p></section>
+      <section aria-label={tx.propostesMestreAria}><h5>Propostes del Mestre</h5><p>Tria primer un concepte. Cada botó prova un nom sobre eixa identitat; no crea cap categoria ni reclassifica articles.</p><div className="sdp-taxonomia__accions">{PROPOSTES_MESTRE_BRAIN.map((nom) => <Boto key={nom} varietat="secundari" disabled={!seleccionat} onClick={() => setNoms((valors) => ({ ...valors, [seleccio]: nom }))}>Prova el nom: {nom}</Boto>)}</div><p>L’exemple proporcionat «{EXEMPLE_MESTRE_BRAIN}» té {longitudNomBrain(EXEMPLE_MESTRE_BRAIN)} caràcters i no és una de les sis categories d’aquest vocabulari. Les propostes es conserven separades dels noms canònics.</p></section>
       <details><summary>Exemples demanats i vocabulari disponible</summary><p>Podcast, Documental i Govern no són etiquetes canòniques d’aquesta instantània. Ajuntament de La Torre és la identitat concreta disponible; La Torre és també un lloc, i Associacionisme és el concepte canònic relacionat amb l’exemple genèric «Associació». Aquests exemples no afegixen etiquetes ni assignacions als documents.</p></details>
       {seleccionat && <><Camp etiqueta="Nom de prova"><CampText value={noms[seleccio] ?? seleccionat.label} maxLength={120} onChange={(event) => setNoms((valors) => ({ ...valors, [seleccio]: event.target.value }))}/></Camp>{PROPOSTES_NOMS_BRAIN[seleccionat.clau] && <Boto varietat="secundari" onClick={() => setNoms((valors) => ({ ...valors, [seleccio]: PROPOSTES_NOMS_BRAIN[seleccionat.clau] }))}>Prova: {PROPOSTES_NOMS_BRAIN[seleccionat.clau]}</Boto>}</>}
       <details><summary>Simula una fusió d’etiquetes</summary>
@@ -109,11 +121,11 @@ export function BrainTaxonomiaVista({ model, paginacio = [] }) {
       </details>
       <details><summary>Candidatures a comparar ({model.candidatures.length})</summary><ul>{model.candidatures.map((candidate) => <li key={`${candidate.source}:${candidate.target}`}><strong>{perId.get(candidate.source)?.label} ↔ {perId.get(candidate.target)?.label}</strong><p>{candidate.motiu}</p>{perId.get(candidate.target)?.type !== 'category' && <Boto varietat="secundari" onClick={() => { setFusio({ origen: candidate.source, desti: candidate.target }); tria(candidate.source); }}>Prova aquesta fusió</Boto>}</li>)}</ul></details>
       <p role="status">{afectats} documents observats afectats per la simulació.{!fontMostra && ' La targeta és una mostra de composició, no una assignació observada.'}</p>
-      {projeccio.collisions.length > 0 && <section aria-label="Col·lisions de noms de prova"><h5>Noms iguals, identitats diferents</h5><p>Una coincidència de nom no fusiona conceptes. Revisa les identitats abans de decidir.</p><ul>{projeccio.collisions.map((collision) => <li key={collision.nom}>{collision.nom}: {collision.ids.map((nodeId) => <span key={nodeId}><code>{nodeId}</code> ({perId.get(nodeId).label}) </span>)}</li>)}</ul></section>}
+      {projeccio.collisions.length > 0 && <section aria-label={tx.collisionsAria}><h5>Noms iguals, identitats diferents</h5><p>Una coincidència de nom no fusiona conceptes. Revisa les identitats abans de decidir.</p><ul>{projeccio.collisions.map((collision) => <li key={collision.nom}>{collision.nom}: {collision.ids.map((nodeId) => <span key={nodeId}><code>{nodeId}</code> ({perId.get(nodeId).label}) </span>)}</li>)}</ul></section>}
       <div className="sdp-taxonomia__accions"><Boto varietat="secundari" onClick={() => { setNoms({}); setFusio(null); }}>Descarta la simulació</Boto></div>
-      <section aria-label="Lectura accessible de la simulació"><h5>Comparació dels noms, sense reducció</h5><p>{mostra.title}</p>{[['Abans', mostraAbans], ['Després', mostra]].map(([etapa, article]) => <section key={etapa} aria-label={`Noms: ${etapa}`}><h6>{etapa}</h6><ul>{article.labels.map((label, index) => <li key={index}>{label.className === 'sdp-badge-category' ? 'Categoria' : 'Etiqueta'}: {label.text}</li>)}</ul></section>)}</section>
+      <section aria-label={tx.lecturaSimulacioAria}><h5>Comparació dels noms, sense reducció</h5><p>{mostra.title}</p>{[[tx.etapaAbans, mostraAbans], [tx.etapaDespres, mostra]].map(([etapa, article]) => <section key={etapa} aria-label={tx.nomsEtapaAria(etapa)}><h6>{etapa}</h6><ul>{article.labels.map((label, index) => <li key={index}>{label.className === 'sdp-badge-category' ? 'Categoria' : 'Etiqueta'}: {label.text}</li>)}</ul></section>)}</section>
       <p>Les targetes mantenen un viewport intern real de 375 o 1440 píxels. La representació exterior es reduïx per a cabre; la comparació escrita de dalt conserva la mida de lectura.</p>
-      {AMPLARIES_PREVIEW_BRAIN.map((amplaria) => <div key={amplaria}><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Abans" article={mostraAbans}/><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa="Després" article={mostra}/></div>)}
+      {AMPLARIES_PREVIEW_BRAIN.map((amplaria) => <div key={amplaria}><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa={tx.etapaAbans} article={mostraAbans}/><PrevisualitzacioCardTaxonomia amplaria={amplaria} etapa={tx.etapaDespres} article={mostra}/></div>)}
     </section>}
   </section>;
 }

@@ -51,9 +51,9 @@ function FitxaDolor({ dolor, nomsDe }) {
       <Fila gap={2}>
         <span className={CLASSE_SEV[dolor.severitat] || 'sdp-atles__sev'}>{dolor.severitat}</span>
         <PindolaEstat estat={dolor.estat} />
-        <span className="sdp-atles__suau">{dolor.id} · {dolor.ronda}</span>
+        <span className="sdp-atles__meta">{dolor.id} · {dolor.ronda}</span>
       </Fila>
-      <h3><TextFont text={dolor.titol} /></h3>
+      <h4><TextFont text={dolor.titol} /></h4>
       <p><TextFont text={dolor.descripcio} /></p>
       <dl className="sdp-atles__dl">
         {dolor.superficie ? <div><dt>On</dt><dd><code>{dolor.superficie}</code></dd></div> : null}
@@ -93,7 +93,7 @@ export default function EspecimenAtles2dPobleVirtual() {
   return (
     <div ref={arrel} className="sdp-atles">
       <section className="sdp-atles__bloc">
-        <h2 id="atles-placa-resum">Què va dir el poble virtual</h2>
+        <h3 id="atles-placa-resum">Què va dir el poble virtual</h3>
         <p>
           «Assaig a la Plaça» és el nostre mètode d’estudi: primer un <strong>estudi sintètic d’ús i viabilitat</strong> amb
           veïns simulats per les IA, després el <strong>contrast humà</strong> amb veïns reals. Ací hi ha totes les veus de les
@@ -118,15 +118,15 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-placa-rondes">Les {placa.rondes.length} rondes, en ordre</h2>
+        <h3 id="atles-placa-rondes">Les {placa.rondes.length} rondes, en ordre</h3>
         <ol className="sdp-atles__graella">
           {placa.rondes.map((ronda) => (
             <li key={ronda.id} className="sdp-atles__fitxa">
               <div className="sdp-atles__cap">
                 <span className="sdp-atles__id">{ronda.id}</span>
-                <span className="sdp-atles__suau">{ronda.data}</span>
+                <span className="sdp-atles__meta">{ronda.data}</span>
               </div>
-              <h3><TextFont text={ronda.titol} /></h3>
+              <h4><TextFont text={ronda.titol} /></h4>
               <p><strong>{ronda.autor_ia}</strong> · {ronda.num_perfils ? `${ronda.num_perfils} perfils` : 'sense veus'}</p>
               <p><TextFont text={ronda.conclusio} /></p>
               <details>
@@ -140,7 +140,7 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-placa-veins">Els {placa.perfils.length} veïns</h2>
+        <h3 id="atles-placa-veins">Els {placa.perfils.length} veïns</h3>
         <p>
           Tria un veí per a vore només els dolors que va trobar. Les entrades «(Fase 5)» són els mateixos noms amb una altra
           edat o un altre rol: la Fase 5 els va redefinir.
@@ -153,7 +153,7 @@ export default function EspecimenAtles2dPobleVirtual() {
                 <div className="sdp-atles__perfil-cap">
                   <span className="sdp-atles__inicial" aria-hidden="true">{(perfil.nom || '?').charAt(0)}</span>
                   <div>
-                    <h3>{perfil.nom}{perfil.edat ? `, ${perfil.edat} anys` : ''}</h3>
+                    <h4>{perfil.nom}{perfil.edat ? `, ${perfil.edat} anys` : ''}</h4>
                     <p className="sdp-atles__suau">{perfil.rol} · {perfil.poble}</p>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section ref={blocDolors} className="sdp-atles__bloc">
-        <h2 id="atles-placa-dolors">Tots els dolors</h2>
+        <h3 id="atles-placa-dolors">Tots els dolors</h3>
         <div className="sdp-atles__filtres">
           <Pila gap={1}>
             <span className="sdp-atles__etiqueta" aria-hidden="true">Estat</span>
@@ -210,7 +210,7 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-placa-metriques">Mètriques de les rondes</h2>
+        <h3 id="atles-placa-metriques">Mètriques de les rondes</h3>
         <Taula titol="Mètriques de les rondes">
           <thead><tr><th scope="col">Mesura</th><th scope="col">Valor</th><th scope="col">Font</th></tr></thead>
           <tbody>
@@ -226,12 +226,12 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h2 id="atles-placa-discrepancies">On no quadren les fonts</h2>
+        <h3 id="atles-placa-discrepancies">On no quadren les fonts</h3>
         <p>Llei 0: quan dos informes diuen coses diferents, ho deixem a la vista en lloc de triar-ne un en silenci. Són {contradiccions.length}.</p>
         <ul className="sdp-atles__graella sdp-atles__graella--ampla">
           {contradiccions.map((discrepancia, index) => (
             <li key={`${index}-${discrepancia.titol}`} className="sdp-atles__fitxa">
-              <h3><TextFont text={discrepancia.titol} /></h3>
+              <h4><TextFont text={discrepancia.titol} /></h4>
               <p><TextFont text={discrepancia.text} /></p>
             </li>
           ))}

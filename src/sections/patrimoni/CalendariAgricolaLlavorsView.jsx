@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
-import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
+import { useUIActionsOpcional, useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
+import { codiLlenguaBibliotecaAgricola, textosBibliotecaAgricola } from './i18nBibliotecaAgricola.js';
 import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import {
   FONTS_BANC_LLAVORS,
@@ -9,7 +10,6 @@ import {
 import { desplacaDinsApp, enfocaSenseSalt } from '../../utils/desplacamentProxim.js';
 import {
   FASES_CALENDARI,
-  NOMS_MESOS_CA,
   barra12MesosDe,
   binomiDe
 } from './fitxaDidactica.js';
@@ -17,19 +17,7 @@ import { adoptaFullDiferit } from '../../config/fullDiferit.js';
 import cssDiferitCalendari from '../../css/diferit-calendari.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'calendari', cssDiferitCalendari); };
 
-const GRUPS_CULTIU = Object.freeze([
-  { id: 'tots', etiqueta: '🌾 Tots els cultius amb calendari' },
-  { id: 'tomaques', etiqueta: '🍅 Tomaques tradicionals' },
-  { id: 'fruit-estiu', etiqueta: '🍆 Solanàcies, cucurbitàcies i fruit' },
-  { id: 'horta-fulla-bulb', etiqueta: '🥬 Fulles, bulbs, arrels i llegums' }
-]);
-
-const ETIQUETA_FASE = Object.freeze({
-  sembra: '🌱 Sembra / Sembra directa',
-  plantacio: '🌿 Trasplantament',
-  collita: '🧺 Recol·lecció',
-  maduracioLlavors: '🌾 Maduració llavors'
-});
+const GRUPS_CULTIU_IDS = Object.freeze(['tots', 'tomaques', 'fruit-estiu', 'horta-fulla-bulb']);
 
 const BINOMIS_TOMACA = new Set(['solanum lycopersicum', 'lycopersicon esculentum']);
 const BINOMIS_FRUIT_ESTIU = new Set([
@@ -51,7 +39,12 @@ function grupDeVarietat(entrada) {
 }
 
 export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null }) {
-  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
+  const uiState = useUIStateOpcional();
+  const uiActions = useUIActionsOpcional();
+  const language = uiState?.language || uiActions?.language || 'ca';
+  const codiLlengua = codiLlenguaBibliotecaAgricola(language);
+  const txPat = textosPatrimoniA11y(codiLlengua);
+  const txBib = textosBibliotecaAgricola(codiLlengua);
   const [grupActiu, setGrupActiu] = useState('tots');
   const [faseActiva, setFaseActiva] = useState('totes');
   const [mesActiu, setMesActiu] = useState(0);
@@ -59,9 +52,9 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
   const accionsResumRef = useRef(null);
 
   const hiHaFiltresActius = grupActiu !== 'tots' || faseActiva !== 'totes' || mesActiu !== 0;
-  const etiquetaGrupActiu = GRUPS_CULTIU.find((g) => g.id === grupActiu)?.etiqueta || GRUPS_CULTIU[0].etiqueta;
-  const etiquetaFaseActiva = faseActiva === 'totes' ? 'Totes les fases' : ETIQUETA_FASE[faseActiva];
-  const etiquetaMesActiu = mesActiu >= 1 && mesActiu <= 12 ? NOMS_MESOS_CA[mesActiu - 1] : 'Tot l’any';
+  const etiquetaGrupActiu = txBib.grups[grupActiu] || txBib.grups.tots;
+  const etiquetaFaseActiva = faseActiva === 'totes' ? txBib.totesLesFases : txBib.fases[faseActiva];
+  const etiquetaMesActiu = mesActiu >= 1 && mesActiu <= 12 ? txBib.mesos[mesActiu - 1] : txBib.totLAnyCurta;
 
   const saltaAVarietats = () => {
     desplacaDinsApp(llistaResultatsRef.current);
@@ -113,26 +106,27 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
       aria-label={txPat.calendariAgricolaAria}
     >
       <div>
-        <h3>Calendari agrícola de cultius i tomaques tradicionals</h3>
+        <h3>{txBib.titolCalendari}</h3>
         <p>
-          Planificació mensual extreta literalment dels gràfics vectorials de 12 mesos del{' '}
-          <strong>{fontValenciana?.titol}</strong> ({varietatsAmbCalendari.length} varietats amb cicle verificat: sembra, trasplantament, recol·lecció i maduració de llavors).
+          {txBib.introAbansFont}
+          <strong lang={codiLlengua !== 'ca' ? 'ca' : undefined}>{fontValenciana?.titol}</strong>
+          {txBib.introDespresFont(varietatsAmbCalendari.length)}
         </p>
       </div>
 
-      <Alerta to="info" viva={false} titol="Traçabilitat agronòmica sense invenció">
-        Només s’hi mostren els mesos documentats oficialment al Catàleg valencià de varietats tradicionals d’interés agrari. Les entrades d’AVL Mallorca i de l’Atles català no inclouen diagrama mensual a la font i es consulten al llibre principal del catàleg.
+      <Alerta to="info" viva={false} titol={txBib.alertaTitol}>
+        {txBib.alertaCos}
       </Alerta>
 
       <div className="sdp-calendari-agricola__filtres" role="group" aria-label={txPat.filtreFamiliaCultiuAria}>
-        {GRUPS_CULTIU.map((grup) => (
+        {GRUPS_CULTIU_IDS.map((grupId) => (
           <Boto
-            key={grup.id}
-            varietat={grupActiu === grup.id ? 'primari' : 'secundari'}
-            aria-pressed={grupActiu === grup.id}
-            onClick={() => setGrupActiu(grup.id)}
+            key={grupId}
+            varietat={grupActiu === grupId ? 'primari' : 'secundari'}
+            aria-pressed={grupActiu === grupId}
+            onClick={() => setGrupActiu(grupId)}
           >
-            {grup.etiqueta}
+            {txBib.grups[grupId]}
           </Boto>
         ))}
       </div>
@@ -143,7 +137,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
           aria-pressed={faseActiva === 'totes'}
           onClick={() => setFaseActiva('totes')}
         >
-          Totes les fases
+          {txBib.totesLesFases}
         </Boto>
         {FASES_CALENDARI.map((fase) => (
           <Boto
@@ -152,7 +146,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
             aria-pressed={faseActiva === fase.id}
             onClick={() => setFaseActiva(fase.id)}
           >
-            {ETIQUETA_FASE[fase.id]}
+            {txBib.fases[fase.id]}
           </Boto>
         ))}
       </div>
@@ -163,20 +157,20 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
       >
         <div className="sdp-calendari-agricola__resum-viu-text">
           <p role="status">
-            <strong>{`${filtrades.length} de ${varietatsAmbCalendari.length}`}</strong>
-            {' varietats tradicionals actives amb els filtres seleccionats.'}
+            <strong>{txBib.recompteDe(filtrades.length, varietatsAmbCalendari.length)}</strong>
+            {txBib.recompteSufix}
           </p>
           <p className="sdp-calendari-agricola__filtres-actius">
-            {`Filtre actiu: ${etiquetaGrupActiu} · ${etiquetaFaseActiva} · ${etiquetaMesActiu}`}
+            {txBib.filtreActiu(etiquetaGrupActiu, etiquetaFaseActiva, etiquetaMesActiu)}
           </p>
         </div>
         <div ref={accionsResumRef} className="sdp-calendari-agricola__resum-viu-accions">
           <Boto varietat="secundari" onClick={saltaAVarietats}>
-            {`Veure varietats (${filtrades.length}) ↓`}
+            {txBib.veureVarietats(filtrades.length)}
           </Boto>
           {hiHaFiltresActius ? (
             <Boto varietat="fantasma" onClick={netejaFiltres}>
-              Restablir filtres
+              {txBib.restablirFiltres}
             </Boto>
           ) : null}
         </div>
@@ -188,13 +182,13 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
           aria-pressed={mesActiu === 0}
           onClick={() => setMesActiu(0)}
         >
-          Tot l’any (12 mesos)
+          {txBib.totLAny12Mesos}
         </Boto>
-        {NOMS_MESOS_CA.map((nomMes, idx) => {
+        {txBib.mesos.map((nomMes, idx) => {
           const numeroMes = idx + 1;
           return (
             <Boto
-              key={nomMes}
+              key={numeroMes}
               varietat={mesActiu === numeroMes ? 'primari' : 'secundari'}
               aria-pressed={mesActiu === numeroMes}
               onClick={() => setMesActiu(numeroMes)}
@@ -212,18 +206,18 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         data-testid="calendari-agricola-resultats"
       >
         {filtrades.length === 0 ? (
-          <p ref={adoptaEstilsDiferits}>Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.</p>
+          <p ref={adoptaEstilsDiferits}>{txBib.buitCombinacio}</p>
         ) : (
           <div ref={adoptaEstilsDiferits} className="sdp-calendari-agricola__llista">
           {filtrades.map(({ entrada, calendari, barra }) => {
             const mesosResum = FASES_CALENDARI.map((fase) => {
               const mesosFase = barra
                 .filter((m) => m.fases.includes(fase.id))
-                .map((m) => m.nomMes);
+                .map((m) => txBib.mesos[m.mes - 1]);
               if (!mesosFase.length) return null;
               const nomFase = fase.id === 'sembra' && calendari?.sembraDirecta
-                ? '🌱 Sembra directa'
-                : ETIQUETA_FASE[fase.id];
+                ? txBib.fases.sembraDirecta
+                : txBib.fases[fase.id];
               return { id: fase.id, nomFase, text: mesosFase.join(', ') };
             }).filter(Boolean);
 
@@ -234,12 +228,12 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
                     <h4 lang="ca">{entrada.nom}</h4>
                     <p>
                       <em lang="la">{entrada.nomCientific}</em>
-                      {` · Pàgina ${entrada.pagina} del PDF`}
+                      {txBib.paginaPdf(entrada.pagina)}
                     </p>
                   </div>
                   {typeof onObrirVarietat === 'function' ? (
                     <Boto varietat="secundari" onClick={() => onObrirVarietat(entrada.id)}>
-                      Obrir fitxa de varietat
+                      {txBib.obrirFitxaVarietat}
                     </Boto>
                   ) : null}
                 </div>

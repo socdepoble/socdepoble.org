@@ -1,9 +1,7 @@
 {
   "literal-orfe": {
-    "max": 19,
+    "max": 10,
     "identitats": [
-      "literal-orfe|tooling/lib/arrel.mjs|Literal «04_escriptori» sense importar l",
-      "literal-orfe|tooling/lib/arrel.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/autoritat-preimatges-r8.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/autoritat-preimatges-r9.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/node0/empaqueta-kit-node0-r8.mjs|Literal «_wiki_de_poble» sense importar ",

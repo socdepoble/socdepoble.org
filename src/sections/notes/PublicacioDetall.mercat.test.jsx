@@ -120,7 +120,7 @@ describe('Esmena 3 · la Samarreta al lector del MAS, com la seua pàgina', () =
     expect(radios.map((radio) => radio.value)).toEqual(['gris-plom', 'verda-pi']);
     expect(radios.map((radio) => radio.labels[0].textContent)).toEqual(['Edició Gris Plom', 'Edició Verda Esgotat']);
     expect(container.querySelectorAll('.sdp-compra .sp-card-price')).toHaveLength(1);
-    expect(container.querySelector('.sdp-compra .sp-card-price').textContent).toBe('15.00€');
+    expect(container.querySelector('.sdp-compra .sp-card-price').textContent).toBe('15,00\u00a0€');
     expect(vegades(container.textContent, element.description)).toBe(1);
     // El cos va darrere del botó que porta a la publicació.
     const boto = screen.getByRole('button', { name: 'Obri al Mercat' });

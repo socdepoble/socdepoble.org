@@ -810,22 +810,52 @@
 .sdp-root[data-contrast="bancal"],
 :root[data-contrast="bancal"], :host([data-contrast="bancal"]),
 :root[data-contrast="bancal"] .sdp-root, :host([data-contrast="bancal"]) .sdp-root {
-  --sdp-text-cos:  var(--sdp-pedra-800);   /* 16,10:1 · 14,17 sobre l'app · 13,66 sobre el fons subtil */
-  --sdp-text-suau: var(--sdp-pedra-700);   /* 11,20:1 · 9,86 sobre l'app · 9,50 sobre el fons subtil */
-  --sdp-accent-text:       var(--sdp-primary-800);  /* P1-22 · ≥7:1 també sobre fons subtil */
-  --sdp-accent-titol:      var(--sdp-primary-800);  /* P1-22 · enllaços i títols menuts AAA */
-  --sdp-accent-text-hover: var(--sdp-primary-900);  /* 11,74:1 · el hover enfosquix, mai aclarix */
+  --sdp-fons-app:              var(--sdp-pedra-100);
+  --sdp-fons-targeta:          var(--sdp-blanc-pur);
+  --sdp-fons-elevat:           var(--sdp-blanc-pur);
+  --sdp-fons-superficie:       var(--sdp-blanc-pur);
+  --sdp-fons-subtil:           var(--sdp-pedra-150);
+  --sdp-text-titol:            var(--sdp-negre-pur);      /* 21,00:1 targeta · 17,92:1 app/subtil */
+  --sdp-text-cos:              var(--sdp-pedra-900);      /* 19,42:1 targeta · 16,57:1 app/subtil */
+  --sdp-text-suau:             var(--sdp-pedra-750);      /* 13,54:1 targeta · 11,56:1 app/subtil */
+  --sdp-vora:                  var(--sdp-pedra-700);      /* 11,20:1 targeta ·  9,50:1 app/subtil */
+  --sdp-vora-control:          var(--sdp-pedra-900);      /* 19,42:1 targeta · 16,57:1 app/subtil */
+  --sdp-vora-forta:            var(--sdp-negre-pur);      /* 21,00:1 targeta · 17,92:1 app/subtil */
+  --sdp-accent-text:           var(--sdp-primary-900);    /* 11,74:1 targeta ·  9,97:1 app/subtil */
+  --sdp-accent-titol:          var(--sdp-primary-900);    /* 11,74:1 targeta ·  9,97:1 app/subtil */
+  --sdp-accent-text-hover:     var(--sdp-negre-pur);      /* 21,00:1 · el hover enfosquix sempre */
+  --sdp-accent-control:        var(--sdp-primary-900);
+  --sdp-accent-control-hover:  var(--sdp-negre-pur);
+  --sdp-accio-text:            var(--sdp-secondary-800);  /* 12,63:1 targeta · 10,72:1 app/subtil */
+  --sdp-accio-control:         var(--sdp-secondary-800);  /* 12,30:1 amb --sdp-sobre-accio */
+  --sdp-accio-control-hover:   var(--sdp-secondary-900);  /* 15,52:1 amb --sdp-sobre-accio */
+  --sdp-focus:                 var(--sdp-negre-pur);
   --sdp-escala-premut: 1;
 }
 
 :root[data-theme="dark"] .sdp-root[data-contrast="bancal"],
 :root[data-theme="dark"][data-contrast="bancal"], :host([data-theme="dark"][data-contrast="bancal"]),
 :root[data-theme="dark"][data-contrast="bancal"] .sdp-root, :host([data-theme="dark"][data-contrast="bancal"]) .sdp-root {
-  --sdp-text-cos:  var(--sdp-pedra-100);   /* 16,62:1 sobre la targeta fosca */
-  --sdp-text-suau: var(--sdp-pedra-200);   /* 15,20:1 · 11,51 sobre el fons subtil fosc */
-  --sdp-accent-text:       var(--sdp-primary-200);  /* P1-22 · no rebaixa el tema fosc */
-  --sdp-accent-titol:      var(--sdp-primary-200);  /* P1-22 · no rebaixa el tema fosc */
-  --sdp-accent-text-hover: var(--sdp-primary-100);  /* P1-22 · el hover augmenta el contrast */
+  --sdp-fons-app:              var(--sdp-negre-pur);
+  --sdp-fons-targeta:          var(--sdp-pedra-900);
+  --sdp-fons-elevat:           var(--sdp-pedra-850);
+  --sdp-fons-superficie:       var(--sdp-pedra-900);
+  --sdp-fons-subtil:           var(--sdp-pedra-800);
+  --sdp-text-titol:            var(--sdp-blanc-pur);      /* 19,42:1 targeta · 21,00:1 app */
+  --sdp-text-cos:              var(--sdp-pedra-50);       /* 19,42:1 targeta · 16,10:1 subtil */
+  --sdp-text-suau:             var(--sdp-pedra-200);      /* 16,57:1 targeta · 13,66:1 subtil */
+  --sdp-vora:                  var(--sdp-pedra-200);      /* 16,57:1 targeta · 13,66:1 subtil */
+  --sdp-vora-control:          var(--sdp-blanc-pur);      /* 19,42:1 targeta · 21,00:1 app */
+  --sdp-vora-forta:            var(--sdp-blanc-pur);      /* 19,42:1 targeta · 21,00:1 app */
+  --sdp-accent-text:           var(--sdp-primary-100);    /* 16,38:1 targeta · 13,58:1 subtil */
+  --sdp-accent-titol:          var(--sdp-primary-100);    /* 16,38:1 targeta · 13,58:1 subtil */
+  --sdp-accent-text-hover:     var(--sdp-blanc-pur);      /* 19,42:1 · el hover augmenta el contrast */
+  --sdp-accent-control:        var(--sdp-primary-900);    /* 11,74:1 amb --sdp-sobre-color blanc */
+  --sdp-accent-control-hover:  var(--sdp-negre-pur);      /* 21,00:1 amb --sdp-sobre-color blanc */
+  --sdp-accio-text:            var(--sdp-secondary-200);  /* 14,26:1 targeta · 11,83:1 subtil */
+  --sdp-accio-control:         var(--sdp-secondary-800);  /* 12,30:1 amb --sdp-sobre-accio */
+  --sdp-accio-control-hover:   var(--sdp-secondary-900);  /* 15,52:1 amb --sdp-sobre-accio */
+  --sdp-focus:                 var(--sdp-blanc-pur);
 }
 
 /* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · ≥ 10:1 AAA) ═════════

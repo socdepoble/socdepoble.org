@@ -33,8 +33,10 @@ const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDif
 const CAP = Object.freeze([]);
 const p = (nom, reserva) => Object.freeze([`section.notes.extern.${nom}`, reserva]);
 const TEXTOS_EXTERN = Object.freeze({
-  forasterTitol: p('foraster.titol', 'Mode Foraster actiu'),
-  forasterDispositiu: p('foraster.dispositiu', 'Sense sessió, l’enllaç es queda només en este dispositiu.'),
+  /* v1.2.21 · R32.35b (DOL-04) · La mateixa benvinguda que /connectar?url= (ConnectarSection.jsx): la paritat d'esta
+     còpia (PrevisualitzacioExtern.test.jsx) exigix el mateix DOM. */
+  forasterTitol: p('foraster.titol', 'Benvinguda en Mode Foraster'),
+  forasterDispositiu: p('foraster.dispositiu', 'Pots guardar l’enllaç lliurement: sense sessió, es queda en este dispositiu.'),
   calEntrarDesar: p('calEntrar.desar', 'Per a {verb} cal entrar al teu compte.'),
   calEntrarAfegir: p('calEntrar.afegir', 'Per a afegir cal entrar al teu compte.'),
   tipus: p('tipus', 'Enllaç de fora de Sóc de Poble'),
@@ -84,7 +86,7 @@ export function PrevisualitzacioExtern({
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-connectar">
       {!teSessio ? (
-        <Alerta to="avis" titol={tradueix(t, TEXTOS_EXTERN.forasterTitol)}>
+        <Alerta to="info" titol={tradueix(t, TEXTOS_EXTERN.forasterTitol)}>
           {calEntrar
             ? (avisEntrar || textCalEntrar)
             : tradueix(t, TEXTOS_EXTERN.forasterDispositiu)}

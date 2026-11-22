@@ -2,14 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import { Dialeg, Boto, Camp, CampText, GrupOpcions, Selector } from '../../components/PedraSeca';
 import { normalizeSlug, validateOrganization, readableBackendError } from '../onboarding/onboardingModel.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { useLlenguaDeLaUI } from './useLlenguaDeLaUI.js';
 import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
 import { opcionsDePoble, usePerfilOpcional } from './PerfilContext.jsx';
 import { poblePrincipal } from './fitxaDePerfil.js';
-
-const TIPUS = Object.freeze([
-  { valor: 'company', etiqueta: 'Empresa o negoci', ajuda: 'Una botiga, un taller, una cooperativa…' },
-  { valor: 'group', etiqueta: 'Grup', ajuda: 'Una colla, una associació, un col·lectiu…' },
-]);
+import { normalitzaCodiIdiomaEntitats, textosEntitatsCompte } from './i18nEntitatsCompte.js';
 
 /**
  * Crear una organització des del Perfil (I10). Abans el botó «NOVA ORG»
@@ -38,6 +35,9 @@ const TIPUS = Object.freeze([
  * `onCrea(dades)` és una promesa: si falla, el diàleg continua obert.
  */
 export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
+  const llenguaUI = useLlenguaDeLaUI();
+  const codiIdioma = normalitzaCodiIdiomaEntitats(llenguaUI);
+  const tx = textosEntitatsCompte(codiIdioma);
   const { towns } = useCoreContent();
   const pobleDeLaPersona = usePerfilOpcional()?.identitats?.find((identitat) => identitat.mena === 'persona')?.dades?.town_name;
   const [nom, setNom] = useState('');
@@ -49,7 +49,15 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
   const enviant = useRef(false);
 
   const slugVisible = slug ?? normalizeSlug(nom);
-  const opcionsPoble = useMemo(() => opcionsDePoble(towns, poble), [towns, poble]);
+  const tipusOpcions = useMemo(() => ([
+    { valor: 'company', etiqueta: tx.companyEtiqueta, ajuda: tx.companyAjuda },
+    { valor: 'group', etiqueta: tx.groupEtiqueta, ajuda: tx.groupAjuda },
+  ]), [tx]);
+  const opcionsPoble = useMemo(() => {
+    const base = opcionsDePoble(towns, poble);
+    if (codiIdioma === 'ca' || base[0]?.valor !== '') return base;
+    return [{ valor: '', etiqueta: tx.triaPoble }, ...base.slice(1)];
+  }, [towns, poble, codiIdioma, tx]);
 
   const envia = async (e) => {
     e?.preventDefault?.();
@@ -85,13 +93,13 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
     <Dialeg
       obert={obert}
       onTanca={tanca}
-      titol="Nova organització"
+      titol={tx.novaOrgTitol}
       mida="s"
-      descripcio="Crea una empresa o un grup. Tu en seràs la persona propietària."
+      descripcio={tx.novaOrgDescripcio}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
-          <Boto varietat="primari" onClick={envia} carregant={desant}>Crear</Boto>
+          <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>{tx.cancellar}</Boto>
+          <Boto varietat="primari" onClick={envia} carregant={desant}>{tx.crear}</Boto>
         </>
       )}
     >
@@ -99,7 +107,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
           els Camp de Pedra Seca ja porten el seu espaiat. */}
       <form onSubmit={envia} noValidate aria-busy={desant}>
         {errors.general ? <p role="alert" className="sdp-camp__error">{errors.general}</p> : null}
-        <Camp etiqueta="Nom" error={errors.name} obligatori>
+        <Camp etiqueta={tx.nom} error={errors.name} obligatori>
           <CampText
             value={nom}
             onChange={(e) => setNom(e.target.value)}
@@ -109,13 +117,13 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
           />
         </Camp>
         <GrupOpcions
-          llegenda="Tipus"
-          opcions={TIPUS}
+          llegenda={tx.tipus}
+          opcions={tipusOpcions}
           valor={kind}
           onCanvi={setKind}
           disabled={desant}
         />
-        <Camp etiqueta="Poble" error={errors.town_name} obligatori>
+        <Camp etiqueta={tx.poble} error={errors.town_name} obligatori>
           <Selector
             value={poble}
             onChange={(e) => setPoble(e.target.value)}
@@ -124,9 +132,9 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
           />
         </Camp>
         <Camp
-          etiqueta="Identificador"
+          etiqueta={tx.identificador}
           error={errors.slug}
-          ajuda={`Adreça pública: ${adreca}. No es podrà canviar.`}
+          ajuda={tx.ajudaAdreca(adreca)}
         >
           <CampText
             value={slugVisible}

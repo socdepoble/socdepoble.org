@@ -56,7 +56,7 @@ import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { SelectorDeVariacions } from '../mercat/SelectorDeVariacions.jsx';
-import { variacioActiva, variacionsDelProducte } from '../mercat/variacionsDeProducte.js';
+import { preuDeLaVariacio, variacioActiva, variacionsDelProducte } from '../mercat/variacionsDeProducte.js';
 /* IDEA-61 (T0, prompt 261102_1532) · El contracte del Flux Universal de
    Publicació: els camps de cada àmbit i la seua pintura (buildVerticalDetailSectionMeta). */
 import {
@@ -467,7 +467,7 @@ function CompraDelProducte({ item, t, onAfegeixAlCabas }) {
   if (!activa) return null;
   const textEsgotat = t('section.mercat.esgotat', 'Esgotat');
   const etiquetaDe = (variacio) => variacio.nom || t('section.mercat.variant', 'Variant');
-  const preu = activa.preu || textNetDe(item.price);
+  const preu = preuDeLaVariacio(item, activa);
   /* Auditoria de seguretat 261019 (F14) · Qui ven és primer l'author_name, el
      que el servidor força (trg_force_submission_author), com la targeta
      (targetaDeProducte.js) i autorDe (navigation.js). `seller` l'escriu qui

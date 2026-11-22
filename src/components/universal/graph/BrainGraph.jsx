@@ -2,6 +2,16 @@ import { useRef, useEffect, useState, useMemo, useId } from 'react';
 import useForceLayout from './useForceLayout';
 import { Play, Pause, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext';
+import { textosBrainGraphA11y } from './i18nBrainGraph.js';
+
+function useEstatInterficieGraf() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
 
 export const TEXTOS_TECLAT_GRAF = Object.freeze({
   ajuda: Object.freeze(['graf.teclat.ajuda', 'Amb el focus al graf, usa les fletxes per desplaçar la vista. Els botons permeten apropar, allunyar, centrar i pausar. Tab continua al control següent.'])
@@ -37,15 +47,6 @@ const ESTIL_WIKI = Object.freeze({
   colors: { document: COLORS.document, category: COLORS.category, tag: COLORS.tag },
   noms: { document: 'Document', category: 'Categoria', tag: 'Etiqueta' },
   etiquetaAmbZoom: { category: 0.6 },
-});
-
-const TEXTOS_WIKI = Object.freeze({
-  titol: 'Explorador del coneixement',
-  selector: 'Document, etiqueta o categoria',
-  obrir: 'Obrir document',
-  buit: 'Fes clic en un node per explorar les seues connexions.',
-  canvas: 'Graf de coneixement. Utilitza l’explorador per seleccionar nodes amb el teclat.',
-  inspector: 'Consola del graf',
 });
 
 /* Zoom com al graf d'Obsidian: la rodeta apropa i allunya sense cap tecla,
@@ -275,10 +276,17 @@ export function grafDeLaWiki(manifest) {
 const GRAF_BUIT = Object.freeze({ nodes: [], links: [] });
 
 export default function BrainGraph({
-  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI,
+  onNodeClick, className = '', graf, estil, forces, fletxes = false, textos,
   enquadra = false, seleccio, onSeleccio, inspector = true, vinclesPonderats = false
 }) {
   const t = useTraductorOpcional();
+  const estatUI = useEstatInterficieGraf();
+  const tx = textosBrainGraphA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca');
+  const estilEfectiu = useMemo(
+    () => estil ?? (tx.nomsEstilWiki === ESTIL_WIKI.noms ? ESTIL_WIKI : { ...ESTIL_WIKI, noms: tx.nomsEstilWiki }),
+    [estil, tx]
+  );
+  const textosEfectius = textos ?? tx.textosWiki;
   const nodeSelectId = useId();
   const ajudaTeclatId = useId();
   const canvasRef = useRef(null);
@@ -300,8 +308,8 @@ export default function BrainGraph({
 
   // 1. Extract Data
   const { nodes, links } = useMemo(() => graf ?? GRAF_BUIT, [graf]);
-  const paleta = useMemo(() => ({ ...estil.colors, link: COLORS.link, text: COLORS.text, bg: COLORS.bg }), [estil]);
-  const radiDe = (type) => estil.radis[type] || 5;
+  const paleta = useMemo(() => ({ ...estilEfectiu.colors, link: COLORS.link, text: COLORS.text, bg: COLORS.bg }), [estilEfectiu]);
+  const radiDe = (type) => estilEfectiu.radis[type] || 5;
 
   useEffect(() => {
     setIsSimulationActive(true);
@@ -374,8 +382,8 @@ export default function BrainGraph({
     canvas.width = Math.round(dimensions.width * dpr);
     canvas.height = Math.round(dimensions.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const radis = estil.radis;
-    const zoomEtiqueta = estil.etiquetaAmbZoom || {};
+    const radis = estilEfectiu.radis;
+    const zoomEtiqueta = estilEfectiu.etiquetaAmbZoom || {};
     const continus = links.filter(link => !link.discontinu);
     const discontinus = links.filter(link => link.discontinu);
 
@@ -478,7 +486,7 @@ export default function BrainGraph({
     vista.pinta = render;
     vista.ara();
     return () => { vista.pinta = null; };
-  }, [vista, dimensions, links, selectedId, nodesRef, paleta, estil, fletxes, tema, vinclesPonderats]);
+  }, [vista, dimensions, links, selectedId, nodesRef, paleta, estilEfectiu, fletxes, tema, vinclesPonderats]);
 
   useEffect(() => () => vista.cancela(), [vista]);
 
@@ -656,7 +664,7 @@ export default function BrainGraph({
     <div ref={containerRef} className={`sdp-brain-graph-wrapper ${className}`}>
       <canvas
         ref={canvasRef}
-        aria-label={textos.canvas}
+        aria-label={textosEfectius.canvas}
         aria-describedby={ajudaTeclatId}
         aria-keyshortcuts={nodes.length ? 'ArrowLeft ArrowRight ArrowUp ArrowDown' : undefined}
         tabIndex={nodes.length ? 0 : -1}
@@ -670,74 +678,74 @@ export default function BrainGraph({
         onKeyDown={handleKeyDown}
       />
       <p id={ajudaTeclatId} className="sr-only">{tradueix(t, TEXTOS_TECLAT_GRAF.ajuda)}</p>
-      {inspector && <aside className="sdp-brain-graph-inspector" aria-label={textos.inspector}>
-        <h3>{textos.titol}</h3>
-        <label htmlFor={nodeSelectId}>{textos.selector}</label>
+      {inspector && <aside className="sdp-brain-graph-inspector" aria-label={textosEfectius.inspector}>
+        <h3>{textosEfectius.titol}</h3>
+        <label htmlFor={nodeSelectId}>{textosEfectius.selector}</label>
         <select id={nodeSelectId} value={selectedId} onChange={event => {
           setSelectedId(event.target.value);
           const node = nodes.find(candidate => candidate.id === event.target.value);
           if (node) onNodeClick?.(node);
         }}>
-          <option value="">Selecciona un node…</option>
+          <option value="">{tx.seleccionaNode}</option>
           {opcions}
         </select>
         {selected ? <>
-          <button type="button" onClick={() => setSelectedId('')} aria-label="Netejar selecció"><X size={16} /></button>
+          <button type="button" onClick={() => setSelectedId('')} aria-label={tx.netejarSeleccio}><X size={16} aria-hidden="true" focusable="false" /></button>
           <h4>{selected.label}</h4>
           {selected.attributes?.summary && <p>{selected.attributes.summary}</p>}
-          {textos.obrir && <button type="button" className="sdp-boto sdp-boto--secundari sdp-brain-graph-open-btn" onClick={() => onNodeClick?.(selected)}>{textos.obrir}</button>}
+          {textosEfectius.obrir && <button type="button" className="sdp-boto sdp-boto--secundari sdp-brain-graph-open-btn" onClick={() => onNodeClick?.(selected)}>{textosEfectius.obrir}</button>}
           <dl>
-            <dt>Tipus</dt><dd>{estil.noms[selected.type]}</dd>
-            <dt>Identificador</dt><dd>{selected.id}</dd>
-            {selected.categoryId && <><dt>Categoria</dt><dd>{nodes.find(node => node.id === selected.categoryId)?.label}</dd></>}
-            {selected.tags?.length > 0 && <><dt>Etiquetes</dt><dd>{selected.tags.join(', ')}</dd></>}
-            <dt>Connexions</dt><dd>{neighbours.length}</dd>
+            <dt>{tx.tipus}</dt><dd>{estilEfectiu.noms[selected.type]}</dd>
+            <dt>{tx.identificador}</dt><dd>{selected.id}</dd>
+            {selected.categoryId && <><dt>{tx.categoria}</dt><dd>{nodes.find(node => node.id === selected.categoryId)?.label}</dd></>}
+            {selected.tags?.length > 0 && <><dt>{tx.etiquetes}</dt><dd>{selected.tags.join(', ')}</dd></>}
+            <dt>{tx.connexions}</dt><dd>{neighbours.length}</dd>
           </dl>
           <ul>{neighbours.map(node => <li key={node.id}><button type="button" onClick={() => setSelectedId(node.id)}>{node.label}</button></li>)}</ul>
-        </> : <p>{textos.buit}</p>}
-        <p>{nodes.length} nodes · {links.length} vincles</p>
+        </> : <p>{textosEfectius.buit}</p>}
+        <p>{tx.nodesVincles(nodes.length, links.length)}</p>
       </aside>}
-      <div className="sdp-brain-graph-controls" role="group" aria-label="Controls del graf">
+      <div className="sdp-brain-graph-controls" role="group" aria-label={tx.controlsGraf}>
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari btn-icon"
           disabled={nodes.length === 0}
           onClick={() => setIsSimulationActive(!isSimulationActive)}
-          title={isSimulationActive ? 'Pausar simulació' : 'Reprendre simulació'}
-          aria-label={isSimulationActive ? 'Pausar simulació del graf' : 'Reprendre simulació del graf'}
+          title={isSimulationActive ? tx.pausarSimulacio : tx.reprendreSimulacio}
+          aria-label={isSimulationActive ? tx.pausarSimulacioAria : tx.reprendreSimulacioAria}
           aria-pressed={isSimulationActive}
         >
-          {isSimulationActive ? <Pause size={18} /> : <Play size={18} />}
+          {isSimulationActive ? <Pause size={18} aria-hidden="true" focusable="false" /> : <Play size={18} aria-hidden="true" focusable="false" />}
         </button>
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari btn-icon"
           disabled={nodes.length === 0}
           onClick={handleZoomIn}
-          title="Apropar"
-          aria-label="Apropar el graf"
+          title={tx.apropar}
+          aria-label={tx.aproparAria}
         >
-          <ZoomIn size={18} />
+          <ZoomIn size={18} aria-hidden="true" focusable="false" />
         </button>
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari btn-icon"
           disabled={nodes.length === 0}
           onClick={handleZoomOut}
-          title="Allunyar"
-          aria-label="Allunyar el graf"
+          title={tx.allunyar}
+          aria-label={tx.allunyarAria}
         >
-          <ZoomOut size={18} />
+          <ZoomOut size={18} aria-hidden="true" focusable="false" />
         </button>
         <button
           type="button"
           className="sdp-boto sdp-boto--secundari btn-icon"
           disabled={nodes.length === 0}
           onClick={handleReset}
-          title="Centrar"
-          aria-label="Centrar el graf"
+          title={tx.centrar}
+          aria-label={tx.centrarAria}
         >
-          <Maximize size={18} />
+          <Maximize size={18} aria-hidden="true" focusable="false" />
         </button>
       </div>
     </div>

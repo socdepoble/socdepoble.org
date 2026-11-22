@@ -63,7 +63,10 @@ describe('la mida gran (36-40px, diana ≥48px)', () => {
   });
 
   test('el calaix i les pestanyes: popover acotat a la columna, alçada màxima i pestanyes de --sdp-touch', () => {
-    const moduls = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const moduls = [
+      readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8'),
+      readFileSync(path.join(process.cwd(), 'src/css/diferit-xat-emojis.css'), 'utf8'),
+    ].join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
     const de = (selector) => moduls.slice(moduls.indexOf(`${selector} {`), moduls.indexOf('}', moduls.indexOf(`${selector} {`)));
     expect(de('.sdp-xat-emojis')).toMatch(/inline-size: min\(22\.5rem, calc\(100% - var\(--sdp-space-2\) \* 2\)\)/);
     // Primer vh (Chrome 100-107 i Firefox 100 no tenen dvh) i després dvh.

@@ -97,12 +97,17 @@ function socdepoble_enxufe_trossos_sencers() {
 	if ( ! isset( $manifest['inventari']['sha256'] ) || ! is_readable( $inventari ) ) {
 		return false;
 	}
-	$empremta = hash_file( 'sha256', $inventari );
-	if ( ! is_string( $empremta ) || ! hash_equals( $manifest['inventari']['sha256'], $empremta ) ) {
+	$sostre = 1024 * 1024;
+	$text   = file_get_contents( $inventari, false, null, 0, $sostre + 1 );
+	if ( false === $text || strlen( $text ) > $sostre ) {
 		return false;
 	}
-	$text  = file_get_contents( $inventari );
-	$dades = false === $text ? null : json_decode( $text, true );
+	// Es valida l'empremta dels mateixos bytes que es descodificaran: cap segon open.
+	$empremta = hash( 'sha256', $text );
+	if ( ! hash_equals( $manifest['inventari']['sha256'], $empremta ) ) {
+		return false;
+	}
+	$dades = json_decode( $text, true );
 	if ( ! is_array( $dades ) || ! is_array( $dades['fitxers'] ?? null ) ) {
 		return false;
 	}

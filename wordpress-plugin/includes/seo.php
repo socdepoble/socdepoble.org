@@ -142,8 +142,14 @@ function socdepoble_enxufe_seo_parametre_unic() {
 	if ( ! isset( $_SERVER['QUERY_STRING'] ) || ! is_string( $_SERVER['QUERY_STRING'] ) ) {
 		return false;
 	}
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- consulta crua per a aplicar el pressupost abans de descapar-la o dividir-la.
+	$consulta = $_SERVER['QUERY_STRING'];
+	// Només es declina la projecció SEO: la pàgina de l'amfitrió continua intacta.
+	if ( strlen( $consulta ) > 8192 || substr_count( $consulta, '&' ) >= 64 ) {
+		return false;
+	}
 	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- només es compten noms de paràmetre; res d'ací s'imprimix ni es desa.
-	$consulta = wp_unslash( $_SERVER['QUERY_STRING'] );
+	$consulta = wp_unslash( $consulta );
 	$exactes  = 0;
 	foreach ( explode( '&', $consulta ) as $tros ) {
 		$nom = explode( '=', $tros, 2 )[0];
@@ -237,8 +243,12 @@ function socdepoble_enxufe_seo_taula() {
 	if ( false === $mida || $mida > $sostre ) {
 		return null;
 	}
-	$text  = file_get_contents( $fitxer );
-	$taula = socdepoble_enxufe_seo_valida_taula( false === $text ? null : json_decode( $text, true ) );
+	// filesize és només un descart ràpid: el fitxer pot canviar abans de l'open.
+	$text = file_get_contents( $fitxer, false, null, 0, $sostre + 1 );
+	if ( false === $text || strlen( $text ) > $sostre ) {
+		return null;
+	}
+	$taula = socdepoble_enxufe_seo_valida_taula( json_decode( $text, true ) );
 	return $taula;
 }
 

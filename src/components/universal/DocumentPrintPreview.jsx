@@ -4,6 +4,7 @@ import { Casella, Dialeg } from '../PedraSeca/index.js';
 import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { textosUniversalControlsA11y } from './i18nUniversalControlsA11y.js';
 
 /* El document de l'iframe és autònom (CSP pròpia, sense el full de l'app):
    els tokens --sdp-* no hi arriben, i els colors del paper van escrits ací.
@@ -81,6 +82,7 @@ export default function DocumentPrintPreview({ document: doc, author = '', titol
   const t = useTraductorOpcional();
   const estatUI = useEstatDeLaInterficie();
   const llengua = estatUI?.llenguaDelText ?? estatUI?.language ?? 'ca';
+  const txImp = textosUniversalControlsA11y(llengua).impressio;
   const reserva = titolReserva || tradueix(t, ['editor.impressio.senseTitol', TITOL_RESERVA_IMPRESSIO]);
   const rotolPortada = tradueix(t, ['editor.impressio.portada', ROTOL_PORTADA]);
   const html = useMemo(() => open ? buildPrintDocument(doc, cover, author, reserva, { llengua, rotolPortada }) : '',
@@ -97,10 +99,10 @@ export default function DocumentPrintPreview({ document: doc, author = '', titol
         vista i anunciat en obrir); el cos només porta la casella i el
         document, que és l'únic que fa scroll (en pantalla curta, el diàleg
         sencer fa de reserva). */}
-    <Dialeg obert={open} onTanca={() => setOpen(false)} titol="Vista prèvia d'impressió" descripcio={AVIS_IMPRESSIO} mida="g" className="sdp-print-dialog"
-      accions={<button type="button" className="sdp-boto" disabled={!ready} onClick={() => { frame.current?.contentWindow?.focus(); frame.current?.contentWindow?.print(); }}>Imprimir / Desar PDF</button>}>
-      <Casella etiqueta="Incloure portada" checked={cover} onChange={event => { setReady(false); setCover(event.target.checked); }} />
-      {open && <iframe ref={frame} title="Document A4" className="sdp-print-preview" sandbox="allow-same-origin allow-modals" srcDoc={html} onLoad={() => setReady(true)} />}
+    <Dialeg obert={open} onTanca={() => setOpen(false)} titol={txImp.titolDialeg} descripcio={txImp.avisImpressio || AVIS_IMPRESSIO} mida="g" className="sdp-print-dialog"
+      accions={<button type="button" className="sdp-boto" disabled={!ready} onClick={() => { frame.current?.contentWindow?.focus(); frame.current?.contentWindow?.print(); }}>{txImp.imprimirDesarPdf}</button>}>
+      <Casella etiqueta={txImp.inclourePortada} checked={cover} onChange={event => { setReady(false); setCover(event.target.checked); }} />
+      {open && <iframe ref={frame} title={txImp.titolIframeA4} className="sdp-print-preview" sandbox="allow-same-origin allow-modals" srcDoc={html} onLoad={() => setReady(true)} />}
     </Dialeg>
   </>;
 }

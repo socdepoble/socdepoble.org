@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-11-18T14:54:05.770Z",
-  "hash": "14b821b5ff695d34d11afc087f1a8e2fb800362ecdd2ffa79e7609323677dc18",
+  "timestamp": "2026-11-22T15:47:26.368Z",
+  "hash": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c",
   "filesCount": 45,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "a7a458a04613e2d5096b432b0381ec984276fde2ee05a97e9baabe320dcfdc0a",
@@ -41,7 +41,7 @@
     ".agents/skills/sdp-importacio-editorial/SKILL.md": "ea44ed0a497019ea15f3d1bf18faf996b76bafbf6f45273861503d4d8c570c1f",
     ".agents/skills/sdp-pedra-seca/SKILL.md": "9677128f859bfc0d801da1541e51af9e2d2b88eeacadfefd1515085a55d2ea9f",
     ".agents/skills/sdp-universal-editor/SKILL.md": "3dae8d96a06039b8c96c2dc9d2e7e3a787e277608867b8856b37e10694d7d436",
-    ".agents/skills/sdp-universal-page/SKILL.md": "c804e3f348b985e90994a79c456bf316e8c75376d1fc111ec6dde84a1da77f20",
+    ".agents/skills/sdp-universal-page/SKILL.md": "a03e4dc4409d7560fa7895d2bcf37375eed072123ce95c56ebfc6c88ea420429",
     ".agents/skills/sdp-vigilant-tellado/SKILL.md": "5cec8d8bb691da3aa1bca8976fe8a006fbf4681b46d3dd9d7d2ea94f97dd3ec9",
     ".agents/skills/sdp-workflow/SKILL.md": "5f6f89ec291d468bb3ea7bb1ba29d0859726684e364ac70dd7630a43e0256a21",
     ".agents/skills/wiki-busca-skills/SKILL.md": "febab0f0c38b97a7c887e8fd6121d7344f49884f969e00ea7fe487badff0c983",
@@ -49,5 +49,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d394e96ea749330bc5472e5a84e3420c1986f5894752807e68c60d84d8eff42e",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "983c3e56a5e450934b4f804385f25a2ef28431fe39a726257d890fb38a943ca3"
   },
-  "transaction": "d3146362-6d11-4eed-9017-03a98144c800"
+  "transaction": "1004ef66-fa44-460b-b04c-f5692ac17815"
 }

@@ -15,7 +15,7 @@ export default function EspecimenInventariGlobal() {
 
   return (
     <div className="sdp-article sdp-inventari-global">
-      <h2>Inventari de Components</h2>
+      <h3>Inventari de Components</h3>
       <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/PedraSeca/</code> no apareix ací, si una entrada «viu» de PedraSeca no la pinta cap espècimen o si una entrada apunta a un export que ja no existix.</p>
       <p>
         {Object.entries(compte).map(([estat, n]) => (

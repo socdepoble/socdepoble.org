@@ -1,0 +1,37 @@
+{
+  "id": "1004ef66-fa44-460b-b04c-f5692ac17815",
+  "session": "9d2cd5db-6d4f-4d50-aba0-21fef41c8b85",
+  "operationId": "v1221-governanca-1795362444532",
+  "claim": "9d2cd5db-6d4f-4d50-aba0-21fef41c8b85:governance-write",
+  "planHash": "bf6015df45b6533063f4bc57285460727f6515160b101ee2b2bcd53c4bcb6575",
+  "beforeSeal": "4f66224e879f8d8edf41e16898f047caf449b64e003b151d49871bb3229f8d76",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "e1f968f560c350e0b8d829dc67f4a937dcedb089cf9ff65231c7a57b18e3a51a",
+      "after": "2b25f02981192f990548e544049d477095e929f244212d015a6c172ba150eec2"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "a7ccdd8ae0f3b0b5c74b93ee2bf49008fc4c8b80b2495faaf53041d9880d7b8b",
+      "after": "214aa2323abad8d816a416b14175950871a2e65a654a655421b9cb7d721c2726"
+    },
+    {
+      "path": "tooling/gates/tractor-cromatic.mjs",
+      "before": "27efa93a5626f67a8f2e3596791678b518374f2742f96b812c9ea504b41e78d1",
+      "after": "91e42e09ac26569fbe769c8bc2b7173bba46ac817de0cf12b08a854835b21a68"
+    },
+    {
+      "path": "tooling/node0/manifest-mirall-staging.json",
+      "before": "54ab463882c097f25a620cc45a59565c36cf8bcff50f04c323bfdb39900cb3d4",
+      "after": "34f662ed12f3bd535b461b51c589518fda7b77c6e8838791cd7e898c25e6c9a5"
+    },
+    {
+      "path": ".agents/skills/sdp-universal-page/SKILL.md",
+      "before": "2d1bb1b9c5c42964093b0cbc81c16ab5915b347c725aa70444a4b47320334f2c",
+      "after": "a03e4dc4409d7560fa7895d2bcf37375eed072123ce95c56ebfc6c88ea420429"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c"
+}

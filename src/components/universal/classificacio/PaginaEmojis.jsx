@@ -8,9 +8,19 @@
  */
 import { useEffect, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext';
 import { useCapaEnrere } from '../../PedraSeca/hooks/useCapaEnrere.js';
 import { Boto } from '../../PedraSeca/index.js';
+import { textosUniversalControlsA11y } from '../i18nUniversalControlsA11y.js';
 import { GraellaEmojis } from './GraellaEmojis.jsx';
+
+function useEstatInterficieEmojis() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
 
 const AJUDA_INSERIR = 'Toca un emoji i s’escriurà on tenies el cursor, a la nota oberta.';
 const AJUDA_COPIAR = 'Toca un emoji per copiar-lo al porta-retalls: ara no hi ha cap nota oberta on escriure’l.';
@@ -23,11 +33,14 @@ export function PaginaEmojis({
   emojiAlCursor = false,
   modePerfil = false,
   textNoReconegut = null,
-  titol = 'Emojis',
+  titol,
   descripcio = null,
   accioSecundaria = null
 }) {
   const arrel = useRef(null);
+  const estatUI = useEstatInterficieEmojis();
+  const txEmojis = textosUniversalControlsA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca').emojis;
+  const titolEfectiu = titol ?? txEmojis.titolPerDefecte;
 
   /* P0-24b (T2, prompt 261102_1532) · La pàgina es munta només oberta: mentre
      viu és a la pila de l'Arrere d'Android, amb el camí de l'Escape (onTornar). */
@@ -59,8 +72,8 @@ export function PaginaEmojis({
 
   const descripcioCalculada = descripcio ?? (
     modePerfil
-      ? AJUDA_PERFIL
-      : (emojiAlCursor ? AJUDA_INSERIR : AJUDA_COPIAR)
+      ? (txEmojis.ajudaPerfil || AJUDA_PERFIL)
+      : (emojiAlCursor ? (txEmojis.ajudaInserir || AJUDA_INSERIR) : (txEmojis.ajudaCopiar || AJUDA_COPIAR))
   );
 
   return (
@@ -69,7 +82,7 @@ export function PaginaEmojis({
       className="sdp-pagina-emojis"
       role="dialog"
       aria-modal="false"
-      aria-label={titol}
+      aria-label={titolEfectiu}
     >
       <header className="sdp-pagina-emojis__capcalera">
         <div className="sdp-pagina-emojis__nav">
@@ -77,21 +90,21 @@ export function PaginaEmojis({
             type="button"
             className="sdp-boto sdp-boto--secundari sdp-pagina-emojis__boto-tornar"
             onClick={onTornar}
-            aria-label="Tornar"
+            aria-label={txEmojis.tornar}
           >
             <ArrowLeft size={18} aria-hidden="true" />
-            <span>Tornar</span>
+            <span>{txEmojis.tornar}</span>
           </button>
           <Boto
             varietat="fantasma"
             onClick={onTornar}
           >
-            Tancar
+            {txEmojis.tancar}
           </Boto>
         </div>
 
         <div className="sdp-pagina-emojis__titols">
-          <h2 className="sdp-pagina-emojis__titol">{titol}</h2>
+          <h2 className="sdp-pagina-emojis__titol">{titolEfectiu}</h2>
           <p className="sdp-pagina-emojis__descripcio">{descripcioCalculada}</p>
         </div>
 

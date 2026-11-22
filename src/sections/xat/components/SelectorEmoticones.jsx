@@ -40,6 +40,8 @@ import { Apple, Car, Flag, Heart, Lightbulb, PawPrint, Smile, Tractor, Users, Vo
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { LlistaEmojis } from '../../../components/universal/classificacio/GraellaEmojis.jsx';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+import cssXatEmojis from '../../../css/diferit-xat-emojis.css?inline';
 import { detectorDePintat, emojisPintables } from '../../../utils/emojiPintable.js';
 import { carregaCatalegEmojis } from '../../notes/canalEmojis.js';
 import { EMOTICONES_DEL_POBLE, llegixRecents, recordaRecent } from '../emoticonesXat.js';
@@ -130,6 +132,7 @@ export default function SelectorEmoticones({
   );
   const barra = useRef(null);
   const panell = useRef(null);
+  useFullDiferit(barra, 'xat-emojis', cssXatEmojis);
   /* P0-24b (T2, prompt 261102_1532) · El calaix es munta només obert: mentre
      viu és a la pila de l'Arrere d'Android, amb el camí de l'Escape (alTeclat). */
   useCapaEnrere(true, () => onTanca?.());

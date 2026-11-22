@@ -495,8 +495,9 @@ add_filter( 'plugin_row_meta', 'socdepoble_enxufe_fila_detalls', 10, 3 );
  */
 function socdepoble_enxufe_llig_readme() {
 	$fitxer = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'readme.txt';
-	$text   = is_readable( $fitxer ) ? file_get_contents( $fitxer ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- fitxer local del mateix plugin.
-	if ( ! is_string( $text ) || '' === $text ) {
+	$sostre = 256 * 1024;
+	$text   = is_readable( $fitxer ) ? file_get_contents( $fitxer, false, null, 0, $sostre + 1 ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- fitxer local del mateix plugin.
+	if ( ! is_string( $text ) || '' === $text || strlen( $text ) > $sostre ) {
 		return null;
 	}
 	$alies  = array(

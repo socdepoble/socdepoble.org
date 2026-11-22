@@ -8,7 +8,9 @@
  * administrar l'organització són dues accions separades.
  */
 import { useId, useRef } from 'react';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext';
 import { TargetaAdministrar } from './TargetaAdministrar.jsx';
+import { textosAdministrarOrg } from './i18nAdministrarOrganitzacio.js';
 import { useAdministrarOrganitzacio } from './useAdministrarOrganitzacio.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
@@ -18,6 +20,8 @@ const MODES_SENSE_REVISIO = new Set(['seed', 'local']);
 
 export function BlocAdministrarOrganitzacio({ orgId, config = {} }) {
   const id = useId();
+  const idioma = useUIStateOpcional()?.language || 'ca';
+  const tx = textosAdministrarOrg(idioma);
   /* En seed i local no hi ha revisió: l'alta és immediata i no es demana justificació. */
   const ambRevisio = !MODES_SENSE_REVISIO.has(config?.dataMode);
   const admin = useAdministrarOrganitzacio(orgId, { config, ambRevisio });
@@ -40,8 +44,9 @@ export function BlocAdministrarOrganitzacio({ orgId, config = {} }) {
 
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-connectar__seccio" aria-labelledby={`${id}-administrar`}>
-      <h3 ref={titolRef} tabIndex={-1} id={`${id}-administrar`} className="sdp-connectar__titol-seccio">Administrar l’organització</h3>
+      <h3 ref={titolRef} tabIndex={-1} id={`${id}-administrar`} className="sdp-connectar__titol-seccio">{tx.titolSeccio}</h3>
       <TargetaAdministrar
+        idioma={idioma}
         estat={admin.estat}
         nom={admin.nom /* T43b-3 · només de confiança (pertinença o directori); si no, «esta organització» */}
         rol={admin.rol}

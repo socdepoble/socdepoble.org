@@ -15,6 +15,7 @@
  * Mòdul pur: cap React, cap global.
  */
 import { idDeVariacio } from '../../data/mapejadorSeccions.js';
+import { formataPreuMercat } from './preuMercat.js';
 
 const text = (valor) => {
   if (typeof valor === 'number' && Number.isFinite(valor)) return String(valor === 0 ? 0 : valor);
@@ -93,4 +94,16 @@ export function variacioActiva(variacions, clau) {
   if (!Array.isArray(variacions) || variacions.length === 0) return null;
   const inicial = clauInicial(variacions);
   return variacions.find((v) => v.clau === clau) || variacions.find((v) => v.clau === inicial) || null;
+}
+
+/** Presentació del preu triat: els camps crus del producte i del model es
+ * conserven. Sense preu de variant, el declarat pel producte; zero és preu. */
+export function preuDeLaVariacio(item, variacio) {
+  return formataPreuMercat(variacio?.preu || item?.price);
+}
+
+/** La targeta mostra el mateix preu que la variant que obri el detall:
+ * primera disponible (o primera si totes estan esgotades), mai el mínim. */
+export function preuInicialDelProducte(item) {
+  return preuDeLaVariacio(item, variacioActiva(variacionsDelProducte(item), null));
 }

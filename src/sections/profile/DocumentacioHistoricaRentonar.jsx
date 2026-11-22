@@ -14,7 +14,7 @@
  *   · El model d'acta és un model: ho diu davall del text i no porta
  *     l'atribució de Pedro Ferrer, que només signa els continguts seus.
  */
-import { Fragment, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { Link } from '../../app/contexts/RouterContext.jsx';
 import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { normalizeLanguage } from '../../config/i18n.js';
@@ -30,6 +30,7 @@ import { textosPerfilPublicPerIdioma } from './textosPerfilPublic.js';
 
 export default function DocumentacioHistoricaRentonar() {
   const [pestanya, setPestanya] = useState('historia');
+  const tabsRefs = useRef([]);
   const ui = useUIStateOpcional();
   const codiIdioma = normalizeLanguage(ui?.llenguaDelText || ui?.language);
   const textos = textosPerfilPublicPerIdioma(codiIdioma);
@@ -39,6 +40,33 @@ export default function DocumentacioHistoricaRentonar() {
     { id: 'estatuts', titol: textos.rentonarTabEstatuts, emoji: '📜' },
     { id: 'acta', titol: textos.rentonarTabActa, emoji: '🖨️' }
   ];
+
+  const mouFocusISeleccionaPestanya = (nouIndex) => {
+    const total = pestanyesRentonar.length;
+    const desti = ((nouIndex % total) + total) % total;
+    const item = pestanyesRentonar[desti];
+    if (!item) return;
+    setPestanya(item.id);
+    const btn = tabsRefs.current[desti];
+    btn?.focus();
+    btn?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  };
+
+  const gestionaTeclatPestanyes = (event, indexActual) => {
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      mouFocusISeleccionaPestanya(indexActual + 1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      mouFocusISeleccionaPestanya(indexActual - 1);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      mouFocusISeleccionaPestanya(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      mouFocusISeleccionaPestanya(pestanyesRentonar.length - 1);
+    }
+  };
 
   const imprimeixModelActa = () => {
     if (typeof window !== 'undefined' && typeof window.print === 'function') {
@@ -70,19 +98,22 @@ export default function DocumentacioHistoricaRentonar() {
         role="tablist"
         aria-label={textos.rentonarPestanyesAria}
       >
-        {pestanyesRentonar.map((item) => {
+        {pestanyesRentonar.map((item, idx) => {
           const activa = pestanya === item.id;
           return (
             <button
               key={item.id}
+              ref={(el) => { tabsRefs.current[idx] = el; }}
               type="button"
               id={`tab-rentonar-${item.id}`}
               role="tab"
               aria-selected={activa}
+              tabIndex={activa ? 0 : -1}
               /* Només el panell de la pestanya activa és al document. */
               aria-controls={activa ? `panel-rentonar-${item.id}` : undefined}
               className="sdp-workspace-llibres__tab"
               onClick={() => setPestanya(item.id)}
+              onKeyDown={(e) => gestionaTeclatPestanyes(e, idx)}
             >
               <span aria-hidden="true">{item.emoji}</span>
               <span>{item.titol}</span>
@@ -134,7 +165,13 @@ export default function DocumentacioHistoricaRentonar() {
       ) : null}
 
       {pestanya === 'estatuts' ? (
-        <div id="panel-rentonar-estatuts" role="tabpanel" aria-labelledby="tab-rentonar-estatuts" lang={langDoc}>
+        <div
+          id="panel-rentonar-estatuts"
+          role="tabpanel"
+          aria-labelledby="tab-rentonar-estatuts"
+          tabIndex={0}
+          lang={langDoc}
+        >
           <p className="sdp-muted">{ESTATUTS_VIGENTS_RENTONAR.marcLegal}</p>
 
           <div className="sdp-subtargeta">

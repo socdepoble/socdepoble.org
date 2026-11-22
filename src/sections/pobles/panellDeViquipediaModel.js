@@ -48,41 +48,66 @@ export function subscriuConnexio(avisa) {
 
 export const enLinia = () => typeof navigator === 'undefined' || navigator.onLine !== false;
 
-export function construeixModelFontsTerritorials(poble, tx) {
-  const dto = poble.wikipedia_provenance ? poble : poble.fontsDeViquipedia?.dto || poble;
-  const imatges = dto.imatges || poble.imatgesViquipedia || {};
+const textNoBuit = (valor) => {
+  if (typeof valor !== 'string') return valor != null && Number.isFinite(valor) ? String(Object.is(valor, -0) ? 0 : valor) : null;
+  const net = valor.trim();
+  return net ? net : null;
+};
+
+const numNet = (valor) => (Object.is(valor, -0) ? 0 : valor);
+
+export function anyCensNet(valor) {
+  if (typeof valor === 'number') {
+    const enter = Math.trunc(valor);
+    return Number.isFinite(valor) && enter === valor && enter >= 1000 && enter <= 9999 ? String(enter) : null;
+  }
+  if (typeof valor === 'string') {
+    const net = valor.trim();
+    return /^\d{4}$/.test(net) ? net : null;
+  }
+  return null;
+}
+
+export function construeixModelFontsTerritorials(poble, tx = {}) {
+  const f = poble && typeof poble === 'object' ? poble : {};
+  const dto = f.wikipedia_provenance ? f : f.fontsDeViquipedia?.dto || f;
+  const imatges = dto.imatges || f.imatgesViquipedia || {};
   const vistes = new Set();
   const fotos = [imatges.hero, imatges.avatar, imatges.reserva]
     .filter((foto) => foto?.fitxer && !vistes.has(foto.fitxer) && vistes.add(foto.fitxer));
-  const article = poble.wikipedia_url || (
+  const article = f.wikipedia_url || (
     dto.wikipedia_title
       ? `https://ca.wikipedia.org/wiki/${encodeURIComponent(dto.wikipedia_title.replace(/ /g, '_'))}`
       : null
   );
-  const qid = dto.wikidata_id || poble.wikidata_id;
-  const any = poble.population_year ?? (
-    poble.population == null || poble.population === dto.population ? dto.population_year : null
+  const qid = dto.wikidata_id || f.wikidata_id || null;
+  const anyCru = f.population_year ?? (
+    f.population == null || f.population === dto.population ? dto.population_year : null
   );
+  const any = anyCensNet(anyCru);
+  const poblacioBase = textNoBuit(f.population ?? dto.population);
+  const poblacioAmbAny = poblacioBase
+    ? (any && !poblacioBase.includes(`(${any})`) ? `${poblacioBase} (${any})` : poblacioBase)
+    : null;
+  const elevacio = f.elevation ?? dto.elevation;
+  const superficie = f.area ?? dto.area;
+  const lat = f.lat ?? dto.lat;
+  const lng = f.lng ?? dto.lng;
   const dades = [
-    [tx.comarca, poble.comarca ?? dto.comarca],
-    [tx.provincia, poble.provincia ?? dto.provincia],
-    [
-      tx.poblacio,
-      (poble.population ?? dto.population)
-        ? `${poble.population ?? dto.population}${any ? ` (${any})` : ''}`
-        : null,
-    ],
-    [tx.altitud, Number.isFinite(poble.elevation ?? dto.elevation) ? `${poble.elevation ?? dto.elevation} m` : null],
-    [tx.superficie, Number.isFinite(poble.area ?? dto.area) ? `${poble.area ?? dto.area} km²` : null],
-    [tx.gentilici, poble.gentilici ?? dto.gentilici],
+    [tx.comarca, textNoBuit(f.comarca ?? dto.comarca)],
+    [tx.provincia, textNoBuit(f.provincia ?? dto.provincia)],
+    [tx.poblacio, poblacioAmbAny],
+    [tx.altitud, Number.isFinite(elevacio) ? `${numNet(elevacio)} m` : null],
+    [tx.superficie, Number.isFinite(superficie) ? `${numNet(superficie)} km²` : null],
+    [tx.gentilici, textNoBuit(f.gentilici ?? dto.gentilici)],
     [
       tx.coordenades,
-      Number.isFinite(poble.lat ?? dto.lat) && Number.isFinite(poble.lng ?? dto.lng)
-        ? `${poble.lat ?? dto.lat}, ${poble.lng ?? dto.lng}`
+      Number.isFinite(lat) && Number.isFinite(lng)
+        ? `${numNet(lat)}, ${numNet(lng)}`
         : null,
     ],
   ].filter(([, valor]) => valor != null);
-  const absents = poble.wikipedia_hydration?.missing || [];
-  const excepcions = poble.wikipedia_provenance?.exceptions || [];
+  const absents = f.wikipedia_hydration?.missing || [];
+  const excepcions = f.wikipedia_provenance?.exceptions || [];
   return { fotos, article, qid, dades, absents, excepcions };
 }

@@ -25,7 +25,12 @@
  *        contra la superfície del seu tema.
  *   C3 · MANDAT PEDRA SECA — el text de cos i de títol han d'arribar a
  *        7:1 (AAA). L'usuari objectiu té 55–80 anys i llig a sol de
- *        migdia sobre un iPad A10. AA no és suficient ací.
+ *        migdia sobre un iPad A10. AA no és suficient ací. I la polaritat
+ *        es conserva: en fosc i en bancal fosc el text és més clar que la
+ *        superfície; en clar i en bancal clar, més fosc. Un Bancal clar que
+ *        porta les seues superfícies passa el contrast encara que xafe el
+ *        fosc: per això el niat fosc ha de redefinir cada token que el
+ *        Bancal clar i el tema fosc redefinixen alhora.
  *   C4 · DOCUMENTACIÓ VIVA — cada etiqueta hexadecimal de
  *        `DesignSection.jsx` ha de coincidir amb el valor resolt del
  *        token que diu que representa.
@@ -279,10 +284,10 @@ if (actiu('C3')) {
   let net = true;
   const blocs = extreuBlocsTematics(cssFont);
   const contextos = [
-    { id: 'clar', etiqueta: 'tema clar', mapa: DEF, bancal: false },
-    { id: 'dark', etiqueta: 'tema fosc', mapa: new Map([...DEF, ...blocs.dark]), bancal: false },
-    { id: 'bancal', etiqueta: 'mode bancal clar', mapa: new Map([...DEF, ...blocs.bancal]), bancal: true },
-    { id: 'darkBancal', etiqueta: 'mode bancal fosc', mapa: new Map([...DEF, ...blocs.dark, ...blocs.bancal, ...blocs.darkBancal]), bancal: true },
+    { id: 'clar', etiqueta: 'tema clar', mapa: DEF, bancal: false, fosc: false },
+    { id: 'dark', etiqueta: 'tema fosc', mapa: new Map([...DEF, ...blocs.dark]), bancal: false, fosc: true },
+    { id: 'bancal', etiqueta: 'mode bancal clar', mapa: new Map([...DEF, ...blocs.bancal]), bancal: true, fosc: false },
+    { id: 'darkBancal', etiqueta: 'mode bancal fosc', mapa: new Map([...DEF, ...blocs.dark, ...blocs.bancal, ...blocs.darkBancal]), bancal: true, fosc: true },
   ];
   const superficies = ['--sdp-fons-targeta', '--sdp-fons-app'];
   for (const ctx of contextos) {
@@ -304,11 +309,19 @@ if (actiu('C3')) {
           continue;
         }
         const r = contrast(c, supRgb);
+        const on = blocs.linia.get(`${ctx.id}:${tok}`)
+          || (ctx.id === 'darkBancal' ? blocs.linia.get(`bancal:${tok}`) || blocs.linia.get(`dark:${tok}`) : null)
+          || LINIA.get(tok) || { fitxer: FONT, linia: '?' };
+        if ((lum(c) > lum(supRgb)) !== ctx.fosc) {
+          net = false;
+          falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
+            `\`${tok}\` = ${valResolt} en ${ctx.etiqueta} és més ${ctx.fosc ? 'fosc' : 'clar'} ` +
+            `que \`${supTok}\` (${supHex}): la polaritat del tema s'ha invertit. ` +
+            `Si falta el bloc niat [data-theme="dark"][data-contrast="bancal"], ` +
+            `el Bancal clar xafa el fosc encara que el contrast passe.`);
+        }
         if (r < min - 1e-9) {
           net = false;
-          const on = blocs.linia.get(`${ctx.id}:${tok}`)
-            || (ctx.id === 'darkBancal' ? blocs.linia.get(`bancal:${tok}`) || blocs.linia.get(`dark:${tok}`) : null)
-            || LINIA.get(tok) || { fitxer: FONT, linia: '?' };
           falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
             `\`${tok}\` = ${valResolt} en ${ctx.etiqueta} dona ${r.toFixed(2)}:1 sobre \`${supTok}\` (${supHex}); ` +
             `el mandat n'exigix ${min}:1. Usuari de 55–80 anys, cataractes, ` +
@@ -316,6 +329,16 @@ if (actiu('C3')) {
         }
       }
     }
+  }
+  /* El Bancal clar empata en especificitat amb el tema fosc i va darrere:
+     tot token que redefinixen tots dos l'ha de redefinir també el niat. */
+  for (const tok of blocs.bancal.keys()) {
+    if (!blocs.dark.has(tok) || blocs.darkBancal.has(tok)) continue;
+    net = false;
+    const on = blocs.linia.get(`bancal:${tok}`);
+    falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
+      `\`${tok}\` el redefinixen el Bancal clar i el tema fosc, però no el bloc niat ` +
+      `[data-theme="dark"][data-contrast="bancal"]: en mode bancal fosc guanyaria el valor clar.`);
   }
   if (net) OK.push('C3 · Mandat Pedra Seca (text AAA en 4 temes × 2 superfícies)');
 }

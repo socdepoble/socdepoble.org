@@ -7,44 +7,48 @@
  * que passa de veres en cada estat: què vol dir administrar, que les
  * converses de l'organització també es veuran, qui llegirà la justificació i
  * que canviar d'identitat és sempre una tria a part.
- * IDEA-14 (Directiva del Mestre, 261024; G-04) · Administrar no és connectar:
- * el botó diu «Demanar administrar-la» (amb revisió) o «Administrar-la ara»
- * (poble de proves), i l'explicació, «Si l'administres…». Formar-ne part és
- * el bloc germà (BlocFormarPart). Cap botó d'ací és primari («una per
- * vista» de Pedra Seca): demanar l'administració és una acció secundària
- * (G-04). FEDI-22 (ordre del Mestre, 261103) · DEROGAT «a Connectar, l'únic
- * primari és el del MAS» (D1): el primari és el de connectar-hi en un perfil
- * i el de guardar-ho a les notes en un element. Esta targeta no es munta a
- * /connectar.
+ * Onada R32.35b · Lot 03 · Internacionalitzada en les 5 llengües (ca, es, en,
+ * eu, gl) via diccionari modular diferit amb valencià idèntic byte a byte.
  */
 import { useState } from 'react';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext';
 import { Alerta, AreaText, Boto, Camp, Carregant } from '../../../components/PedraSeca/index.js';
-import { etiquetaDeRol } from '../../../components/universal/identitat/rols.js';
 import { dataCurta, textDeLaLectura, textDeLError } from './estatAdministracio.js';
+import { etiquetaRolAdministrarOrg, textosAdministrarOrg } from './i18nAdministrarOrganitzacio.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitConnectar from '../../../css/diferit-connectar.css?inline';
+
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'connectar', cssDiferitConnectar); };
 
 export const LIMIT_JUSTIFICACIO = 1000;
 
+function useIdiomaOpcional(idiomaProp) {
+  const ui = useUIStateOpcional();
+  return idiomaProp || ui?.language || 'ca';
+}
+
 export function TargetaAdministrar({
   estat, nom, rol = null, data = null, carregant = false, error = null, errorLectura = null, actiu = false, ambRevisio = true,
-  onConnecta, onActua, onEditaFitxa, onEntra
+  idioma = null, onConnecta, onActua, onEditaFitxa, onEntra
 }) {
   const [justificacio, setJustificacio] = useState('');
-  /* T43b-3 · Sense un nom de confiança, un text neutre (i ben apostrofat). */
-  const org = nom || 'esta organització';
-  const Org = nom || 'Esta organització';
-  const deOrg = nom ? `de ${nom}` : 'd’esta organització';
-  const textError = textDeLError(error);
-  const textLectura = textDeLaLectura(errorLectura);
+  const lang = useIdiomaOpcional(idioma);
+  const tx = textosAdministrarOrg(lang);
+  /* T43b-3 · Sense un nom de confiança, un text neutre (i ben apostrofat en ca). */
+  const org = nom || tx.orgNeutra;
+  const Org = nom || tx.OrgNeutra;
+  const deOrg = tx.deOrg(nom);
+  const textError = textDeLError(error, lang);
+  const textLectura = textDeLaLectura(errorLectura, lang);
+  const etiquetaRol = rol ? etiquetaRolAdministrarOrg(rol, lang) : null;
+  const dataFormada = dataCurta(data, lang);
 
   const formulari = (etiquetaBoto) => (
-    <form ref={adoptaEstilsDiferits} aria-label={`Administrar ${org}`} onSubmit={(e) => { e.preventDefault(); onConnecta?.(justificacio.trim()); }}>
+    <form ref={adoptaEstilsDiferits} aria-label={tx.formAria(org)} onSubmit={(e) => { e.preventDefault(); onConnecta?.(justificacio.trim()); }}>
       {ambRevisio ? (
         <Camp
-          etiqueta="Explica breument qui eres (opcional)"
-          ajuda={`La teua explicació la llegirà l’equip de Sóc de Poble. Fins a ${LIMIT_JUSTIFICACIO.toLocaleString('ca-ES')} caràcters.`}
+          etiqueta={tx.campEtiqueta}
+          ajuda={tx.campAjuda(LIMIT_JUSTIFICACIO)}
         >
           <AreaText value={justificacio} maxLength={LIMIT_JUSTIFICACIO} files={3} onChange={(e) => setJustificacio(e.target.value)} />
         </Camp>
@@ -57,12 +61,12 @@ export function TargetaAdministrar({
 
   const explicacio = (
     <>
-      <p ref={adoptaEstilsDiferits}>{`Si l’administres, podràs editar la seua fitxa i publicar en el seu nom. El que publiques com a ${org} anirà signat per ${org}, no per tu.`}</p>
-      <p>{`Com a administradora veuràs també les converses ${deOrg} amb la gent del poble.`}</p>
-      <p>Actuar com a l’organització no és automàtic: ho tries tu, i pots tornar a ser tu quan vullgues des de l’avatar de la barra de dalt.</p>
+      <p ref={adoptaEstilsDiferits}>{tx.explicacio1(org)}</p>
+      <p>{tx.explicacio2(deOrg)}</p>
+      <p>{tx.explicacio3}</p>
       {ambRevisio
-        ? <p ref={adoptaEstilsDiferits}>La petició la revisarà l’equip de Sóc de Poble abans de donar-te l’alta.</p>
-        : <p ref={adoptaEstilsDiferits}>En este poble de proves l’alta és immediata.</p>}
+        ? <p ref={adoptaEstilsDiferits}>{tx.explicacioRevisio}</p>
+        : <p ref={adoptaEstilsDiferits}>{tx.explicacioProves}</p>}
     </>
   );
 
@@ -70,82 +74,80 @@ export function TargetaAdministrar({
   switch (estat) {
     case 'sense-sessio':
       cos = (
-        <Alerta to="info" titol={`Vols administrar ${org}?`}
-          accions={<Boto varietat="secundari" onClick={onEntra}>Entrar</Boto>}>
-          <p ref={adoptaEstilsDiferits}>Per a administrar una organització has d’entrar amb el teu compte.</p>
+        <Alerta to="info" titol={tx.volsAdministrar(org)}
+          accions={<Boto varietat="secundari" onClick={onEntra}>{tx.entrar}</Boto>}>
+          <p ref={adoptaEstilsDiferits}>{tx.senseSessioText}</p>
         </Alerta>
       );
       break;
     case 'no-disponible':
       cos = (
-        <Alerta to="info" titol={`Administrar ${org}`}>
-          <p ref={adoptaEstilsDiferits}>Este poble encara no permet demanar l’administració d’una organització des de l’app.</p>
+        <Alerta to="info" titol={tx.formAria(org)}>
+          <p ref={adoptaEstilsDiferits}>{tx.noDisponibleText}</p>
         </Alerta>
       );
       break;
     case 'administres':
       cos = (
-        <Alerta to="exit" titol="Ja l’administres"
+        <Alerta to="exit" titol={tx.jaLAdministres}
           accions={(
             <>
-              {actiu ? null : <Boto varietat="secundari" onClick={onActua}>{`Actua com a ${org}`}</Boto>}
-              <Boto varietat="secundari" onClick={onEditaFitxa}>{`Edita la fitxa ${deOrg}`}</Boto>
+              {actiu ? null : <Boto varietat="secundari" onClick={onActua}>{tx.actuaComA(org)}</Boto>}
+              <Boto varietat="secundari" onClick={onEditaFitxa}>{tx.editaFitxa(deOrg)}</Boto>
             </>
           )}>
-          <p ref={adoptaEstilsDiferits}>{rol && etiquetaDeRol(rol) ? `Ja administres ${org} · ${etiquetaDeRol(rol)}.` : `Ja administres ${org}.`}</p>
-          <p>{actiu
-            ? `Ara actues com a ${org}: el que publiques anirà signat per ${org}.`
-            : 'Editar la fitxa no canvia amb qui actues. Per a publicar en el seu nom, tria «Actua com a».'}</p>
+          <p ref={adoptaEstilsDiferits}>{etiquetaRol ? tx.jaAdministresAmbRol(org, etiquetaRol) : tx.jaAdministresSenseRol(org)}</p>
+          <p>{actiu ? tx.araActues(org) : tx.editarNoCanvia}</p>
         </Alerta>
       );
       break;
     case 'activant':
       cos = (
-        <Alerta to="exit" titol="Ja l’administres">
-          <p ref={adoptaEstilsDiferits} aria-busy="true">{`Estem afegint ${org} a les teues identitats…`}</p>
+        <Alerta to="exit" titol={tx.jaLAdministres}>
+          <p ref={adoptaEstilsDiferits} aria-busy="true">{tx.activantText(org)}</p>
         </Alerta>
       );
       break;
     case 'comprovant':
       /* T43b-2 · Encara no se sap si ja hi ha una petició: cap formulari. */
-      cos = <Carregant etiqueta={`Comprovant si ja has demanat administrar ${org}…`} />;
+      cos = <Carregant etiqueta={tx.comprovantEtiqueta(org)} />;
       break;
     case 'pendent':
       cos = (
-        <Alerta to="info" titol="Petició enviada">
-          <p ref={adoptaEstilsDiferits}>{dataCurta(data)
-            ? `Petició enviada el ${dataCurta(data)}. Quan l’aprove l’equip de Sóc de Poble, ${org} apareixerà a l’avatar de la barra de dalt.`
-            : `Ja tens una petició pendent per a ${org}. Quan l’aprove l’equip de Sóc de Poble, apareixerà a l’avatar de la barra de dalt.`}</p>
+        <Alerta to="info" titol={tx.peticioEnviada}>
+          <p ref={adoptaEstilsDiferits}>{dataFormada
+            ? tx.pendentAmbData(dataFormada, org)
+            : tx.pendentSenseData(org)}</p>
         </Alerta>
       );
       break;
     case 'rebutjada':
       /* Correcció C17 (260928) · Porta un formulari: fora de la regió viva (viva={false}). */
       cos = (
-        <Alerta to="avis" titol="La teua última petició no s’ha aprovat" viva={false}>
-          <p ref={adoptaEstilsDiferits}>Pots tornar-ho a demanar explicant qui eres.</p>
-          {formulari('Tornar a demanar-ho')}
+        <Alerta to="avis" titol={tx.rebutjadaTitol} viva={false}>
+          <p ref={adoptaEstilsDiferits}>{tx.rebutjadaText}</p>
+          {formulari(tx.tornarADemanar)}
         </Alerta>
       );
       break;
     case 'te-propietaria':
       cos = (
-        <Alerta to="avis" titol={`${Org} ja té qui l’administra`}>
-          <p ref={adoptaEstilsDiferits}>Encara no es pot demanar entrar com a administradora des de l’app: parla amb qui la porta.</p>
+        <Alerta to="avis" titol={tx.tePropietariaTitol(Org)}>
+          <p ref={adoptaEstilsDiferits}>{tx.tePropietariaText}</p>
         </Alerta>
       );
       break;
     case 'no-del-poble':
       cos = (
-        <Alerta to="avis" titol="Només la gent d’este poble">
-          <p ref={adoptaEstilsDiferits}>{`Per a administrar ${org} has de ser del poble on està registrada.`}</p>
+        <Alerta to="avis" titol={tx.noDelPobleTitol}>
+          <p ref={adoptaEstilsDiferits}>{tx.noDelPobleText(org)}</p>
         </Alerta>
       );
       break;
     case 'membre':
       cos = (
-        <Alerta to="info" titol={`Eres membre ${deOrg}`}>
-          <p ref={adoptaEstilsDiferits}>{`Eres membre ${deOrg}, però no l’administres. Si has d’editar la fitxa, parla amb qui l’administra.`}</p>
+        <Alerta to="info" titol={tx.eresMembreTitol(deOrg)}>
+          <p ref={adoptaEstilsDiferits}>{tx.eresMembreText(deOrg)}</p>
         </Alerta>
       );
       break;
@@ -153,9 +155,9 @@ export function TargetaAdministrar({
       /* Correcció C17 (260928) · Quatre paràgrafs i un formulari: no es
          llegixen de colp en aparéixer després de 'comprovant' (viva={false}). */
       cos = (
-        <Alerta to="info" titol={`Vols administrar ${org}?`} viva={false}>
+        <Alerta to="info" titol={tx.volsAdministrar(org)} viva={false}>
           {explicacio}
-          {formulari(ambRevisio ? 'Demanar administrar-la' : 'Administrar-la ara')}
+          {formulari(ambRevisio ? tx.demanarAdministrar : tx.administrarAra)}
         </Alerta>
       );
   }
@@ -163,8 +165,8 @@ export function TargetaAdministrar({
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-connectar__seccio">
       {cos}
-      {textLectura ? <Alerta to="avis" titol="No s’ha pogut comprovar">{textLectura}</Alerta> : null}
-      {textError ? <Alerta to="error" titol="No s’ha pogut enviar">{textError}</Alerta> : null}
+      {textLectura ? <Alerta to="avis" titol={tx.noComprovatTitol}>{textLectura}</Alerta> : null}
+      {textError ? <Alerta to="error" titol={tx.noEnviatTitol}>{textError}</Alerta> : null}
     </div>
   );
 }

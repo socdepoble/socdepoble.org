@@ -93,10 +93,25 @@ test('L1-03 · en Sènior, l’«Entrar» va a 56 px amb la lletra dels botons S
   expect(valor(TEXT_SENIOR, 'line-height')).toBe('1.65');
 });
 
+/* v1.2.21 · R32.35b (DOL-29) · Per davall de 360 px, diferit-mode-senior.css compacta l'accés del Xat dins d'un
+   @media (max-width: 359px) que repetix el selector de la benvinguda. B11b parla de l'escala base: es llig el full
+   sense eixe bloc (la mida estreta la fixa XatAcces320px.r32_35b.test.jsx). */
+function senseBlocEstret(text) {
+  const inici = text.indexOf('@media (max-width: 359px)');
+  if (inici < 0) return text;
+  let fondaria = 0;
+  for (let i = text.indexOf('{', inici); i < text.length; i += 1) {
+    if (text[i] === '{') fondaria += 1;
+    if (text[i] === '}') { fondaria -= 1; if (fondaria === 0) return text.slice(0, inici) + text.slice(i + 1); }
+  }
+  return text;
+}
+
 test('L1-03 · coherent amb B11b: els mateixos valors que l’accés del Xat a diferit-mode-senior.css', () => {
   /* B11b · La benvinguda de l'accés pren l'escala de la prosa Sènior. */
-  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'font-size', senior)).toBe(valor(TEXT_SENIOR, 'font-size'));
-  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'line-height', senior)).toBe(valor(TEXT_SENIOR, 'line-height'));
+  const base = senseBlocEstret(senior);
+  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'font-size', base)).toBe(valor(TEXT_SENIOR, 'font-size'));
+  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'line-height', base)).toBe(valor(TEXT_SENIOR, 'line-height'));
   /* Les píndoles de l'accés («Entrar», «Registrar-se») dins de la regla de les dianes Sènior. */
   const pindoles = regles(senior).find((regla) => regla.selectors.some((s) => s.startsWith(SENIOR) && s.includes('.sdp-xat-acces .sdp-xat-pindola')));
   expect(pindoles).toBeTruthy();

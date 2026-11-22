@@ -43,8 +43,18 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { CloudCheck, CloudUpload, TriangleAlert } from 'lucide-react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
 import { Dialeg } from '../PedraSeca/organismes/Dialeg.jsx';
+import { textosUniversalControlsA11y } from './i18nUniversalControlsA11y.js';
+
+function useEstatInterficieDesament() {
+  try {
+    return useUIStateOpcional();
+  } catch {
+    return null;
+  }
+}
 
 export const TEXTOS_ESTAT_DESAMENT = Object.freeze({
   net: 'Tots els canvis estan desats.',
@@ -78,11 +88,13 @@ export function teCanvisSenseConfirmar(estatDesament) {
 }
 
 const estatConegut = (estat) => (Object.hasOwn(TEXTOS_ESTAT_DESAMENT, estat) ? estat : 'pendent');
-const textDe = (estat, detall) => detall || TEXTOS_ESTAT_DESAMENT[estatConegut(estat)];
+const textDe = (estat, detall, txDes = TEXTOS_ESTAT_DESAMENT) => detall || txDes[estatConegut(estat)];
 
 /** La regió viva, invisible: el lector anuncia cada canvi d'estat. */
 export function RegioEstatDesament({ estat = 'net', detall = '' }) {
-  return <span className="sdp-nomes-lector" role="status" aria-live="polite">{textDe(estat, detall)}</span>;
+  const estatUI = useEstatInterficieDesament();
+  const txDes = textosUniversalControlsA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca').desament;
+  return <span className="sdp-nomes-lector" role="status" aria-live="polite">{textDe(estat, detall, txDes)}</span>;
 }
 
 /** El primer control que es pot enfocar després de `boto` dins del seu pare (la barra). */
@@ -94,8 +106,10 @@ function controlSeguent(boto) {
 
 /** El que es veu a la barra taronja: el núvol dels canvis pendents, l'avís, el check de desat o res. */
 export function IconaEstatDesament({ estat = 'net', detall = '', accions = null, reintentant = false }) {
+  const estatUI = useEstatInterficieDesament();
+  const txDes = textosUniversalControlsA11y(estatUI?.language || estatUI?.llenguaDelText || 'ca').desament;
   const clau = estatConegut(estat);
-  const text = textDe(clau, detall);
+  const text = textDe(clau, detall, txDes);
   const ambDetall = AMB_DETALL.includes(clau);
   /* Ordre del Mestre (261008) · La fase anterior i si ja s'ha confirmat un
      desat. Es deriven en el render (el patró de React per a «l'estat
@@ -146,7 +160,7 @@ export function IconaEstatDesament({ estat = 'net', detall = '', accions = null,
      Mentre la classe --desat no tinga regla pròpia, la base el pinta com les
      altres icones (mateix cercle i mateix blanc). */
   if (clau === 'net' && !esBoto && desat) {
-    const textDesat = TEXTOS_ESTAT_DESAMENT.net;
+    const textDesat = txDes.net;
     return (
       <span className="sdp-estat-desament sdp-estat-desament--desat" role="img" aria-label={textDesat} title={textDesat} data-estat={clau}>
         <CloudCheck className="icon" aria-hidden="true" focusable="false" />
@@ -169,17 +183,17 @@ export function IconaEstatDesament({ estat = 'net', detall = '', accions = null,
   return (
     <>
       <button ref={botoRef} type="button" className={`sdp-estat-desament sdp-estat-desament--boto ${to}`}
-        aria-haspopup="dialog" aria-expanded={obert} aria-label={`${TEXTOS_ESTAT_DESAMENT[clau]} Vore el detall`}
+        aria-haspopup="dialog" aria-expanded={obert} aria-label={txDes.voreDetall(txDes[clau])}
         title={text} data-estat={clau} onClick={() => { setRetingut(true); setObert(true); }}>
         <Icona className="icon" aria-hidden="true" focusable="false" />
       </button>
-      <Dialeg obert={obert} onTanca={tanca} titol={TITOL_DETALL_DESAMENT} descripcio={text} mida="s" lloc="barra"
+      <Dialeg obert={obert} onTanca={tanca} titol={txDes.titolDetall || TITOL_DETALL_DESAMENT} descripcio={text} mida="s" lloc="barra"
         accions={(
           <>
             {(accions || []).map((accio) => (
               <Boto key={accio.text} varietat="secundari" onClick={() => { tanca(); accio.onClick?.(); }}>{accio.text}</Boto>
             ))}
-            <Boto varietat="primari" onClick={tanca}>Entesos</Boto>
+            <Boto varietat="primari" onClick={tanca}>{txDes.entesos}</Boto>
           </>
         )} />
     </>

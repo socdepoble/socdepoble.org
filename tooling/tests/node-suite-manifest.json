@@ -2583,6 +2583,16 @@
       "path": "tooling/seo/favicon-seo.test.mjs",
       "suite": "primary",
       "reason": "R32.29: formats i dimensions reals de favicon, política local de 48 i comprovacions HTTP explícites."
+    },
+    {
+      "path": "tests/enxufe-r3236-limits.test.mjs",
+      "suite": "primary",
+      "reason": "R32.36: límits de lectura PHP i consulta SEO amb runtime real i canaris de regressió."
+    },
+    {
+      "path": "tests/tractor-rutes.proveidors.r3236.test.mjs",
+      "suite": "primary",
+      "reason": "R32.36: definicions canòniques i literals orfes amb proves positives i adversàries."
     }
   ]
 }

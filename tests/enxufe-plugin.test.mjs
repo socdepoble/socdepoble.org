@@ -518,10 +518,10 @@ const PHP_INTERN = new Set([
   'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
   'array_values', 'array_search', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
   'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
-  'hash_equals', 'hash_file', 'hash_hmac', 'header', 'headers_sent', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'intval', 'is_array', 'is_int',
+  'hash', 'hash_equals', 'hash_file', 'hash_hmac', 'header', 'headers_sent', 'hex2bin', 'html_entity_decode', 'implode', 'in_array', 'intval', 'is_array', 'is_int',
   'is_link', 'is_numeric', 'is_object', 'is_readable', 'is_scalar', 'is_string', 'json_decode', 'ksort', 'ltrim', 'max', 'method_exists', 'min', 'ob_get_clean',
   'ob_start', 'preg_match', 'preg_match_all', 'preg_replace', 'preg_replace_callback', 'preg_split', 'printf', 'range', 'rawurlencode',
-  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strip_tags', 'strlen', 'strpos', 'strtolower', 'strtotime', 'strtr', 'substr', 'time', 'trim',
+  'sodium_crypto_sign_verify_detached', 'sprintf', 'str_replace', 'strip_tags', 'strlen', 'strpos', 'strtolower', 'strtotime', 'strtr', 'substr', 'substr_count', 'time', 'trim',
   'urldecode', 'version_compare'
 ]);
 const CLASSES_PHP = new Set(['ZipArchive', 'stdClass']);

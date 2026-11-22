@@ -324,7 +324,9 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   let stream;
   try { stream = await mediaDevices.getUserMedia({ audio: true }); }
   catch (error) { throw errorDelMicro(error, { delSistema: true }); }
-  const tancaTracks = () => stream.getTracks().forEach((track) => track.stop());
+  const tancaTracks = () => stream.getTracks().forEach((track) => {
+    try { track.stop(); } catch { /* WebView/SO ja havia tancat el track */ }
+  });
   if (signal?.aborted) { tancaTracks(); throw abortat(); }
   let recorder;
   try { recorder = new Recorder(stream, { mimeType, audioBitsPerSecond: 64_000 }); }
@@ -333,19 +335,45 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   const chunks = [];
   let inici = Date.now();
   const resultat = new Promise((resol, rebutja) => { resolve = resol; reject = rebutja; });
+  const aturaRecorderSegur = () => {
+    if (recorder.state === 'inactive') return { aturat: false, error: null };
+    try {
+      recorder.stop();
+      return { aturat: true, error: null };
+    } catch (error) {
+      return { aturat: false, error };
+    }
+  };
   const neteja = () => {
     clearTimeout(timer);
     signal?.removeEventListener('abort', cancella);
     recorder.onstart = recorder.ondataavailable = recorder.onstop = recorder.onerror = null;
-    if (recorder.state !== 'inactive') recorder.stop();
+    aturaRecorderSegur();
     tancaTracks();
   };
   const falla = (error) => { if (acabat) return; acabat = true; neteja(); reject(error); };
+  const resolAmbChunksAcumulatsOError = (errorFallback) => {
+    if (acabat) return;
+    const fitxer = new Blob(chunks, { type: mimeType.split(';')[0] });
+    if (!fitxer.size) { falla(errorFallback); return; }
+    acabat = true;
+    neteja();
+    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: Math.max(1, Date.now() - inici), ...(aturada ? { aturada } : {}) });
+  };
   const cancella = () => falla(abortat());
-  const atura = () => { if (!acabat && recorder.state !== 'inactive') recorder.stop(); };
+  const atura = () => {
+    if (acabat || recorder.state === 'inactive') return;
+    const { error } = aturaRecorderSegur();
+    if (error && !acabat) resolAmbChunksAcumulatsOError(errorDelMicro(error));
+  };
   /* XAT-07 · Abans s'aturava sense dir res: ara el resultat porta el motiu i
      la interfície ho avisa. */
-  const aturaSola = (motiu) => { if (!acabat && recorder.state !== 'inactive') { aturada = motiu; recorder.stop(); } };
+  const aturaSola = (motiu) => {
+    if (acabat || recorder.state === 'inactive') return;
+    aturada = motiu;
+    const { error } = aturaRecorderSegur();
+    if (error && !acabat) resolAmbChunksAcumulatsOError(errorDelMicro(error));
+  };
   // Cinc minuts eviten mantindre el micròfon o la memòria indefinidament.
   const timer = setTimeout(() => aturaSola('temps'), MAX_VEU_MS);
   /* MEDIA-7 · La durada és la del rellotge de la gravació, des que el

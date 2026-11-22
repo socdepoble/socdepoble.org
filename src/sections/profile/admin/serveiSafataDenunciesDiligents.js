@@ -35,9 +35,10 @@ const MAPA_FILTRE_A_ESTATS_PORT = Object.freeze({
 });
 
 const RE_CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/gu;
-const RE_PREFIX_LSSI16 = /^\[LSSI-16:([a-z0-9_]+)\]\s*/i;
+const RE_PREFIX_LSSI16 = /^\[LSSI-16:([a-z0-9_]{1,40})\]\s*/i;
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_AMPLIACIONS_LSSI = 5;
+const MARGE_PREFIX_DETALL_LSSI = 1064;
 
 function textSanejat(valor, max = 2000) {
   if (typeof valor !== 'string') return '';
@@ -94,10 +95,11 @@ export function coaccionaFilaSafataRemota(cru) {
   const motiuBase = textSanejat(cru.motiu, 64);
   if (!id || !publicacioId || !estat || versio === null || !motiuBase) return null;
 
-  const detallComplet = textSanejat(cru.detall ?? '', 1000);
+  const detallComplet = textSanejat(cru.detall ?? '', MARGE_PREFIX_DETALL_LSSI);
   const mPrefix = RE_PREFIX_LSSI16.exec(detallComplet);
   const submotiuLssi = mPrefix ? mPrefix[1].toLowerCase() : null;
-  const detallVisible = mPrefix ? detallComplet.slice(mPrefix[0].length).trim() : detallComplet;
+  const detallSensePrefix = mPrefix ? detallComplet.slice(mPrefix[0].length).trim() : detallComplet;
+  const detallVisible = Array.from(detallSensePrefix).slice(0, 1000).join('');
 
   const recompte = enterPositiuSegur(cru.recompte ?? cru.recompteRebuts ?? null);
   const creatAl = dataIsoSegura(cru.creatAl ?? cru.created_at ?? cru.updatedAt ?? cru.updated_at ?? null);
@@ -298,14 +300,27 @@ export async function aplicaRevisioDenunciaDiligent(
     config || {}
   );
 
+  const rebutId = typeof rebut?.id === 'string' && RE_UUID.test(rebut.id.trim())
+    ? rebut.id.trim().toLowerCase()
+    : '';
+  const rebutEstat = typeof rebut?.estat === 'string' && ESTATS_DENUNCIA_DILIGENT.includes(rebut.estat)
+    ? rebut.estat
+    : '';
+  const rebutVersio = enterPositiuSegur(rebut?.versio);
+  if (!rebutId || !rebutEstat || rebutVersio === null) {
+    throw Object.assign(new Error('El servidor remot ha tornat un rebut de revisió invàlid.'), {
+      code: 'REBUT_REVISIO_INVALID'
+    });
+  }
+
   if (registreOperacions instanceof Map) {
     registreOperacions.delete(clauIntent);
   }
 
   return Object.freeze({
-    id: String(rebut.id).toLowerCase(),
-    estat: String(rebut.estat),
-    versio: Number(rebut.versio),
+    id: rebutId,
+    estat: rebutEstat,
+    versio: rebutVersio,
     repetida: rebut.repetida === true,
     operacioId: opUuid
   });

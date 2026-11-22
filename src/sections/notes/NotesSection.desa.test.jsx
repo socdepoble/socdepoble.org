@@ -324,7 +324,8 @@ describe('desar', () => {
   test('sense sessió en seed es desa al dispositiu, i es diu', async () => {
     dades.usuari = null;
     munta(DESA);
-    expect(screen.getByText('Sense sessió, l’enllaç es queda només en este dispositiu.')).toBeTruthy();
+    // v1.2.21 · R32.35b (DOL-04) · La benvinguda del Mode Foraster, la mateixa que /connectar?url=.
+    expect(screen.getByText('Pots guardar l’enllaç lliurement: sense sessió, es queda en este dispositiu.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Desar a «Safata d’Entrada»' }));
     await waitFor(() => expect(url()).toBe('/notes?carpeta=f-connectats&nota=nova'));
     expect(dades.creades[0].folderId).toBe('f-connectats');

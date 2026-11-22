@@ -14,6 +14,7 @@
  * `error`, el d'enviar-la: no es diuen igual.
  */
 import { esRolQueMana } from '../../../components/universal/identitat/rols.js';
+import { localeDataAdministrarOrg, textosAdministrarOrg } from './i18nAdministrarOrganitzacio.js';
 
 export const ESTATS_ADMINISTRACIO = Object.freeze([
   'sense-sessio', 'no-disponible', 'administres', 'activant', 'comprovant', 'membre', 'pendent', 'rebutjada',
@@ -55,13 +56,14 @@ export function esErrorDeXarxa(error) {
  * El text d'un error en ENVIAR la petició, o null si l'error ja es diu com a
  * estat (o no n'hi ha). Mai el missatge cru del servidor.
  */
-export function textDeLError(error) {
+export function textDeLError(error, idioma = 'ca') {
   if (!error || CODIS_QUE_SON_ESTAT.has(error.code)) return null;
-  if (esErrorDeXarxa(error)) return 'El servidor no ha respost. Comprova la connexió i torna-ho a provar.';
+  const tx = textosAdministrarOrg(idioma);
+  if (esErrorDeXarxa(error)) return tx.errXarxaEnviar;
   switch (error.code) {
-    case 'SDP-CLAIM-000': return 'La sessió ha caducat. Torna a entrar per a demanar-ho.';
-    case 'SDP-CLAIM-001': return 'Esta organització no existix en este poble.';
-    default: return 'No s’ha pogut enviar la petició. Torna-ho a provar d’ací a una estona.';
+    case 'SDP-CLAIM-000': return tx.errSessioCaducada;
+    case 'SDP-CLAIM-001': return tx.errOrgInexistent;
+    default: return tx.errGenericEnviar;
   }
 }
 
@@ -69,17 +71,18 @@ export function textDeLError(error) {
  * El text d'un error en LLEGIR les peticions pròpies, o null. No s'ha enviat
  * res: el que no se sap és si ja n'hi havia una.
  */
-export function textDeLaLectura(error) {
+export function textDeLaLectura(error, idioma = 'ca') {
   if (!error || CODIS_QUE_SON_ESTAT.has(error.code)) return null;
+  const tx = textosAdministrarOrg(idioma);
   return esErrorDeXarxa(error)
-    ? 'El servidor no ha respost i no hem pogut comprovar si ja havies demanat administrar-la. Comprova la connexió.'
-    : 'No hem pogut comprovar si ja havies demanat administrar-la. Si la tornes a demanar i ja n’hi havia una, ací ho voràs.';
+    ? tx.errXarxaLectura
+    : tx.errGenericLectura;
 }
 
-/** Una data ISO en format curt valencià, o null. */
-export function dataCurta(iso) {
+/** Una data ISO en format curt de la llengua activa (per defecte valencià), o null. */
+export function dataCurta(iso, idioma = 'ca') {
   if (!iso) return null;
   const data = new Date(iso);
   if (Number.isNaN(data.getTime())) return null;
-  return data.toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  return data.toLocaleDateString(localeDataAdministrarOrg(idioma), { day: 'numeric', month: 'long', year: 'numeric' });
 }

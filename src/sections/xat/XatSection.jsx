@@ -1834,6 +1834,8 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
         filActiuId={filActiuId}
         onObriFil={handleSelectThread}
         onAfegirGrup={() => showToast(t('section.xat.nou.pagina', "Els grups i les comunitats naixen d'una Pàgina Universal. Obri la pàgina d'un element, d'una entitat o d'un poble i prem «Comentar»."), 'info')}
+        onEntrar={senseSessio ? () => navigate(rutaDEntrada({ tornar: rutaActual })) : null}
+        senseSessio={senseSessio}
         locale={locale}
         t={t}
         joId={joId}

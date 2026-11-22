@@ -12,6 +12,8 @@ import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
 import { esPaginaTrilogiaIMoliWp } from '../../../data/importacio/paginesTrilogiaIMoliWp.js';
 import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceWp.js';
 import { ETIQUETES_ESTAT_REVISIO_WP, desaRevisio, notificaRevisio, subscriu } from '../../../data/importacio/revisioImportacioWpStore.js';
+import { avisDeRevisioEditorial } from '../../../data/importacio/textosRevisioEditorialWp.js';
+import { capturaSessio } from '../../../data/identitat.js';
 import { desplacaDinsApp, enfocaSenseSalt } from '../../../utils/desplacamentProxim.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../../apps/plataforma/lazyRoute.js';
 /* v1.2.19 · fusió · R32.30b (lot 03) porta els aria-label i placeholder d'este panell al diccionari diferit
@@ -56,6 +58,7 @@ export function BancImportacioEditorial() {
   const ui = useUIActionsOpcional();
   const t = ui?.t;
   const txPerfil = textosPerfilA11y({ language: ui?.language, t });
+  const validaSessio = capturaSessio();
   const potPublicar = Boolean(sessio?.currentUser?.id && sessio?.estat === 'dins');
   const publicacio = useProjeccionsCataleg({ enabled: potPublicar });
   const [versio, setVersio] = useState(0);
@@ -74,6 +77,7 @@ export function BancImportacioEditorial() {
   const [publicant, setPublicant] = useState(false);
   const [missatgeDestinacio, setMissatgeDestinacio] = useState('');
   const seleccioViva = useRef(null);
+  const tornRevisioVista = useRef(0);
   const revisioEnVol = useRef(false);
   const muntat = useRef(true);
   const baseEdicio = useRef(null);
@@ -128,46 +132,66 @@ export function BancImportacioEditorial() {
     () => articles.find((a) => a.wp_id === articleSeleccionatId) || visibles[0] || null,
     [articles, articleSeleccionatId, visibles]
   );
-  seleccioViva.current = seleccionat ? `${seleccionat.wp_id}:${seleccionat.destinacio_workspace}` : null;
+  const clauSeleccionada = seleccionat ? `${seleccionat.wp_id}:${seleccionat.destinacio_workspace}` : null;
+  if (seleccioViva.current !== clauSeleccionada) tornRevisioVista.current += 1;
+  seleccioViva.current = clauSeleccionada;
 
   const canviaEstatArticle = async (wpId, estat, nota = undefined, actualitzatEsperat = undefined) => {
     if (revisioEnVol.current) return;
+    try { validaSessio(); } catch { return; }
     revisioEnVol.current = true;
     const clauPendent = seleccioViva.current;
+    const tornPendent = tornRevisioVista.current;
     const item = articles.find((a) => a.wp_id === wpId);
     setRevisant(true); setAvisRevisio('');
     const token = actualitzatEsperat === undefined && baseEdicio.current?.id === wpId
       ? baseEdicio.current.token : actualitzatEsperat;
-    const resultat = await desaRevisio(wpId, {
-      estat, nota: nota ?? item?.nota_revisio ?? '',
-      autoria: item?.author || undefined,
-      desti: item?.destinacio_workspace || item?.verticalProposada || undefined
-    }, { actualitzatEsperat: token });
-    revisioEnVol.current = false;
-    if (muntat.current) setRevisant(false);
-    if (muntat.current && seleccioViva.current === clauPendent) {
-      setVersio(v => v + 1);
-      if (resultat.conflicte) {
-        setConflicteRevisio({ wpId, estat, nota: nota ?? item?.nota_revisio ?? '', llegida: false });
-        setAvisRevisio('Una altra revisió ha canviat al servidor. La teua nota continua desada en este navegador.');
-      } else {
-        setConflicteRevisio(null);
-        if (resultat.remot) baseEdicio.current = { id: wpId, token: resultat.fila?.actualitzatA };
-        setAvisRevisio(resultat.remot ? 'Revisió confirmada pel servidor.' : 'Revisió desada només en este navegador.');
+    try {
+      const resultat = await desaRevisio(wpId, {
+        estat, nota: nota ?? item?.nota_revisio ?? '',
+        autoria: item?.author || undefined,
+        desti: item?.destinacio_workspace || item?.verticalProposada || undefined
+      }, { actualitzatEsperat: token });
+      validaSessio();
+      /* El token confirmat continua sent útil per al nou text d'esta mateixa fila,
+         però no és un ACK d'eixe text ni pot substituir una base més nova. */
+      if (muntat.current && resultat.remot === true && baseEdicio.current?.id === wpId
+        && baseEdicio.current.token === token) {
+        baseEdicio.current = { id: wpId, token: resultat.fila?.actualitzatA };
       }
+      if (muntat.current && seleccioViva.current === clauPendent && tornRevisioVista.current === tornPendent) {
+        setVersio(v => v + 1);
+        if (resultat.conflicte) {
+          setConflicteRevisio({ wpId, estat, nota: nota ?? item?.nota_revisio ?? '', llegida: false });
+        } else if (resultat.remot === true || resultat.desatLocal === true) {
+          setConflicteRevisio(null);
+          if (resultat.remot) baseEdicio.current = { id: wpId, token: resultat.fila?.actualitzatA };
+        }
+        setAvisRevisio(avisDeRevisioEditorial(resultat, { language: ui?.language, t }));
+      }
+    } catch (error) {
+      if (muntat.current && seleccioViva.current === clauPendent && tornRevisioVista.current === tornPendent && error?.name !== 'AbortError') {
+        setAvisRevisio(avisDeRevisioEditorial(null, { language: ui?.language, t }));
+      }
+    } finally {
+      revisioEnVol.current = false;
+      if (muntat.current) setRevisant(false);
     }
   };
 
   const revisaConflicte = async () => {
     if (!conflicteRevisio || revisioEnVol.current) return;
+    try { validaSessio(); } catch { return; }
     revisioEnVol.current = true;
     const clauPendent = seleccioViva.current;
+    const tornPendent = tornRevisioVista.current;
     const pendent = conflicteRevisio;
     setRevisant(true);
     try {
       const remota = await consultaRevisioEditorialWp(pendent.wpId);
-      if (muntat.current && seleccioViva.current === clauPendent) setConflicteRevisio({ ...pendent, llegida: true, remota });
-    } catch { if (muntat.current && seleccioViva.current === clauPendent) setAvisRevisio('No s’ha pogut llegir la revisió del servidor. La teua nota es conserva.'); }
+      validaSessio();
+      if (muntat.current && seleccioViva.current === clauPendent && tornRevisioVista.current === tornPendent) setConflicteRevisio({ ...pendent, llegida: true, remota });
+    } catch (error) { if (muntat.current && seleccioViva.current === clauPendent && tornRevisioVista.current === tornPendent && error?.name !== 'AbortError') setAvisRevisio('No s’ha pogut llegir la revisió del servidor. La teua nota es conserva.'); }
     finally { revisioEnVol.current = false; if (muntat.current) setRevisant(false); }
   };
 
@@ -194,6 +218,7 @@ export function BancImportacioEditorial() {
   }, [seleccionat]);
 
   const seleccionaArticle = (art, { salta = false } = {}) => {
+    tornRevisioVista.current += 1;
     const deuSaltar = salta || esColumnaUnicaMobil();
     const mateixArticle = seleccionat?.wp_id === art.wp_id;
     baseEdicio.current = { id: art.wp_id, token: llegeixEstatRevisioEditorial().versions?.[String(art.wp_id)] ?? null };
@@ -212,6 +237,8 @@ export function BancImportacioEditorial() {
   };
 
   const canviaDestinacio = (destinacio) => {
+    tornRevisioVista.current += 1;
+    setAvisRevisio('');
     setConfirmacioPublica(false);
     try {
       desaDestinacioArticleImportat(seleccionat.wp_id, destinacio);
@@ -559,6 +586,8 @@ export function BancImportacioEditorial() {
                   rows={3}
                   value={notaEdicio}
                   onChange={(e) => {
+                    tornRevisioVista.current += 1;
+                    setAvisRevisio('');
                     if (baseEdicio.current?.id !== seleccionat.wp_id) baseEdicio.current = { id: seleccionat.wp_id, token: llegeixEstatRevisioEditorial().versions?.[String(seleccionat.wp_id)] ?? null };
                     setNotaEdicio(e.target.value);
                   }}

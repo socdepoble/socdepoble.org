@@ -16,6 +16,9 @@ import { Link } from '../../app/contexts/RouterContext.jsx';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import { rutaFitxaOrganitzacio } from '../../config/navigation.js';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext.jsx';
+import { avisDeRevisioEditorial } from '../../data/importacio/textosRevisioEditorialWp.js';
+import { capturaSessio } from '../../data/identitat.js';
 import {
   ETIQUETES_ESTAT_REVISIO_WP,
   desaRevisio,
@@ -28,7 +31,9 @@ export const RUTA_BANC_IMPORTACIO = `${rutaFitxaOrganitzacio('administracio-sist
 
 export const TITOL_FITXA_REVISIO_IMPORTACIO = '🔍 Fitxa de Revisió d’Importació';
 
-export default function FitxaRevisioImportacioWp({ wpId, disabled = false }) {
+function FitxaRevisioImportacioWpInterna({ wpId, disabled = false }) {
+  const ui = useUIActionsOpcional();
+  const validaSessio = capturaSessio();
   const revisio = useRevisioImportacioWp(wpId);
   const idNota = useId();
   /* null: la nota segueix el registre (i, per tant, el Banc). Amb text: l'esborrany d'ací. */
@@ -36,6 +41,7 @@ export default function FitxaRevisioImportacioWp({ wpId, disabled = false }) {
   const [desant, setDesant] = useState(false);
   const [avis, setAvis] = useState('');
   const base = useRef(undefined);
+  const desamentEnVol = useRef(false);
   const muntat = useRef(true);
   useEffect(() => { muntat.current = true; return () => { muntat.current = false; }; }, []);
 
@@ -50,19 +56,30 @@ export default function FitxaRevisioImportacioWp({ wpId, disabled = false }) {
   };
 
   const canviaEstat = async (estat) => {
-    if (inactiu) return;
+    if (inactiu || desamentEnVol.current) return;
+    try { validaSessio(); } catch { return; }
+    desamentEnVol.current = true;
     setDesant(true);
     setAvis('');
-    const resultat = await desaRevisio(wpId, { estat, nota }, { actualitzatEsperat: base.current });
-    if (!muntat.current) return;
-    setDesant(false);
-    if (resultat?.conflicte) {
-      setAvis('Una altra revisió ha canviat al servidor. La teua nota continua desada en este navegador.');
-      return;
+    try {
+      const resultat = await desaRevisio(wpId, { estat, nota }, { actualitzatEsperat: base.current });
+      validaSessio();
+      if (!muntat.current) return;
+      setAvis(avisDeRevisioEditorial(resultat, { language: ui?.language, t: ui?.t }));
+      if (resultat?.conflicte) return;
+      if (resultat?.remot === true) base.current = resultat.fila?.actualitzatA;
+      if (resultat?.desatLocal === true) {
+        base.current = undefined;
+        setEsborrany(null);
+      }
+    } catch (error) {
+      if (muntat.current && error?.name !== 'AbortError') {
+        setAvis(avisDeRevisioEditorial(null, { language: ui?.language, t: ui?.t }));
+      }
+    } finally {
+      desamentEnVol.current = false;
+      if (muntat.current) setDesant(false);
     }
-    base.current = undefined;
-    setEsborrany(null);
-    setAvis(resultat?.remot ? 'Revisió confirmada pel servidor.' : 'Revisió desada només en este navegador.');
   };
 
   return (
@@ -90,4 +107,9 @@ export default function FitxaRevisioImportacioWp({ wpId, disabled = false }) {
       {avis && <p role="status">{avis}</p>}
     </section>
   );
+}
+
+/* Cada document conserva la seua base i esborrany; una resposta d'A no pot netejar el de B. */
+export default function FitxaRevisioImportacioWp(props) {
+  return <FitxaRevisioImportacioWpInterna key={String(props.wpId)} {...props} />;
 }

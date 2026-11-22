@@ -12,14 +12,27 @@
  * «Afegir grup» no promet res que no es puga fer: els grups naixen d'una
  * Pàgina Universal («Comentar»), i el botó ho diu (`onAfegirGrup`).
  */
-import { Plus } from 'lucide-react';
+import { LogIn, Plus } from 'lucide-react';
 import FilaConversa, { AvatarComunitat } from './FilaConversa.jsx';
+import { textosFitxaComunitatForaster } from './i18nFitxaComunitatForaster.js';
 
-export default function FitxaComunitat({ comunitat, filActiuId = null, onObriFil, onAfegirGrup, locale, t, joId = null }) {
+export default function FitxaComunitat({
+  comunitat,
+  filActiuId = null,
+  onObriFil,
+  onAfegirGrup,
+  onEntrar = null,
+  senseSessio = false,
+  locale,
+  t,
+  joId = null
+}) {
   const { fil, fills = [] } = comunitat;
   const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const canals = fills.filter((f) => f.tipus === 'canal');
   const grups = fills.filter((f) => f.tipus !== 'canal');
+  const esForaster = Boolean(senseSessio) && !joId;
+  const txForaster = esForaster ? textosFitxaComunitatForaster(locale) : null;
   const fila = (f) => (
     <li key={f.id}>
       <FilaConversa
@@ -44,17 +57,28 @@ export default function FitxaComunitat({ comunitat, filActiuId = null, onObriFil
       </header>
       <div className="sdp-xat-fitxa-comunitat__cos">
         {canals.length ? <ul className="sdp-xat-llista">{canals.map(fila)}</ul> : null}
-        <h3 className="sdp-xat-seccio__titol">{t('section.xat.comunitat.grups', 'Grups als quals pertanys')}</h3>
+        <h3 className="sdp-xat-seccio__titol">
+          {txForaster ? txForaster.grupsComunitat : t('section.xat.comunitat.grups', 'Grups als quals pertanys')}
+        </h3>
         {grups.length ? <ul className="sdp-xat-llista">{grups.map(fila)}</ul> : null}
         <p className="sdp-xat-fitxa-comunitat__buit">
-          {t('section.xat.comunitat.buit', "Els grups que s'afegisquen a la comunitat apareixeran ací. Els membres de la comunitat s'hi podran unir.")}
+          {txForaster
+            ? txForaster.buitForaster
+            : t('section.xat.comunitat.buit', "Els grups que s'afegisquen a la comunitat apareixeran ací. Els membres de la comunitat s'hi podran unir.")}
         </p>
       </div>
       <div className="sdp-xat-fitxa-comunitat__peu">
-        <button type="button" className="sdp-xat-pindola" onClick={onAfegirGrup}>
-          <Plus size={20} aria-hidden="true" focusable="false" />
-          <span>{t('section.xat.comunitat.afegirGrup', 'Afegir grup')}</span>
-        </button>
+        {txForaster && typeof onEntrar === 'function' ? (
+          <button type="button" className="sdp-xat-pindola" onClick={onEntrar}>
+            <LogIn size={20} aria-hidden="true" focusable="false" />
+            <span>{txForaster.entrarParticipar}</span>
+          </button>
+        ) : (
+          <button type="button" className="sdp-xat-pindola" onClick={onAfegirGrup}>
+            <Plus size={20} aria-hidden="true" focusable="false" />
+            <span>{t('section.xat.comunitat.afegirGrup', 'Afegir grup')}</span>
+          </button>
+        )}
       </div>
     </section>
   );

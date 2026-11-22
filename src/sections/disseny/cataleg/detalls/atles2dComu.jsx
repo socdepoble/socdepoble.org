@@ -92,15 +92,25 @@ export function dataDeVerificacio(text) {
   return `${dia.padStart(2, '0')}-${MESOS_EN[mes]}-${any} a les ${hora} (${zona})`;
 }
 
-/** L'avís de datació: de quin dia i de quina versió del codi són les dades, a dalt de la pàgina. */
+/** Els dolors repassats després de la fotografia (meta.posat_al_dia), en una frase: «DOL-04, DOL-13 i DOL-29». */
+export function dolorsPosatsAlDia(meta = ATLES.meta) {
+  const ids = Array.isArray(meta?.posat_al_dia?.dolors) ? meta.posat_al_dia.dolors : [];
+  return ids.length ? new Intl.ListFormat('ca', { type: 'conjunction' }).format(ids) : '';
+}
+
+/** L'avís de datació: de quin dia i de quina versió del codi són les dades, a dalt de la pàgina.
+    v1.2.21 · Si algú ha posat al dia uns dolors després (meta.posat_al_dia), l'avís diu quins, quan i contra quina versió. */
 export function NotaDatacio({ meta = ATLES.meta }) {
+  const posat = meta?.posat_al_dia;
+  const repassats = dolorsPosatsAlDia(meta);
   return (
     <p className="sdp-atles__datacio">
       <span aria-hidden="true">◷</span>
       <span>
         <strong>Fotografia del {dataLlegible(meta?.generat)}</strong>, contra el codi {meta?.versio_codi}. Els estats, les
-        xifres i les evidències <code>fitxer:línia</code> són els d’eixe dia: el que haja canviat després no es veu ací
-        fins que algú pose al dia les dades.
+        xifres i les evidències <code>fitxer:línia</code> són els d’eixe dia{repassats ? ', llevat dels dolors que es diuen tot seguit' : ''}: el
+        que haja canviat després no es veu ací fins que algú pose al dia les dades.
+        {repassats ? <> Els dolors {repassats} es van repassar el {dataLlegible(posat.data)} contra la {posat.versio}.</> : null}
       </span>
     </p>
   );
@@ -240,7 +250,7 @@ export function TargetaPagina({ id, detall = null, compacta = false }) {
   return (
     <Link className="sdp-atles__targeta" to={rutaEspecimen(id)}>
       <span className="sdp-atles__targeta-icona" aria-hidden="true">{pagina.icon}</span>
-      <h3>{pagina.title}</h3>
+      <h4>{pagina.title}</h4>
       <p>{compacta ? pagina.subtitle : pagina.lead}</p>
       {detall ? <p className="sdp-atles__suau">{detall}</p> : null}
     </Link>
@@ -257,7 +267,7 @@ export function PeuAtles({ actual }) {
   const altres = IDS_PAGINES_ATLES.filter((id) => id !== actual);
   return (
     <nav ref={arrel} className="sdp-atles__bloc" aria-labelledby={`${actual}-peu`}>
-      <h2 id={`${actual}-peu`}>Les altres pàgines de l’Atles</h2>
+      <h3 id={`${actual}-peu`}>Les altres pàgines de l’Atles</h3>
       <ul className="sdp-atles__graella">
         {altres.map((id) => <li key={id}><TargetaPagina id={id} compacta /></li>)}
       </ul>

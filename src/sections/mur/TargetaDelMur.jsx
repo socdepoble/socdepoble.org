@@ -52,6 +52,7 @@ import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editoria
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
+import { preuInicialDelProducte } from '../mercat/variacionsDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
@@ -356,7 +357,10 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
          text de sèrie, només per a la llavor i les d'abans de T39. */
       copyright={item.copyright || (item._murPublic ? undefined : COPYRIGHT_SDP)}
       calendarBadge={null}
-      price={item.price}
+      /* v1.2.21 · L3-05 (Gauntlet R1 de la v1.2.20) · Un producte del Mercat porta al Mur el mateix
+         preu que la seua targeta de /mercat i que la variant que obri el detall (preuInicialDelProducte,
+         R32.36 lot 03): «15,00 €» en els dos llocs. Qualsevol altra publicació, el preu tal com ve. */
+      price={seccio === 'mercat' ? preuInicialDelProducte(item) : item.price}
       labels={etiquetes}
       /* Auditoria 261007 (B) · Defensa en profunditat: només una ruta de l'app
          (esRutaInterna). Un mainHref de fora en un payload escrit per PostgREST

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alerta, Boto, Camp, CampText, Selector } from '../../../components/PedraSeca/index.js';
+import { useLlenguaDeLaUI } from '../useLlenguaDeLaUI.js';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import * as port from '../../../data/backendPort.js';
 import { codiDErrorResumSessions } from '../../../data/resumSessionsDispositius.js';
@@ -7,6 +8,7 @@ import { MIGRACIO_DETALL_SESSIONS } from '../../../data/sessionsDispositius.js';
 import { CAMINS_PANELL, textErrorResum } from './usuarisDispositiusBotigues.js';
 import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import { textosAdminEntitats } from './i18nAdminEntitats.js';
 
 /* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
    cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
@@ -14,6 +16,8 @@ import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 const consultaDelPort = (entrada, config) => port.adminLlistaSessionsDispositius(entrada, config);
 export default function PanellSessionsDetall({ consulta = consultaDelPort, nativaIos = false }) {
+  const llenguaUI = useLlenguaDeLaUI();
+  const tx = textosAdminEntitats(llenguaUI);
   const sessio = useSessioOpcional();
   const usuariId = sessio?.currentUser?.id;
   const [cerca, setCerca] = useState('');
@@ -40,7 +44,7 @@ export default function PanellSessionsDetall({ consulta = consultaDelPort, nativ
   const camins = CAMINS_PANELL.filter(c => !(nativaIos && c.nomenaAltres));
   const dadesVisibles = estat.actor === usuariId ? estat.dades : null;
   const files = dadesVisibles?.files.filter(f => !(nativaIos && ['app_android','web_android'].includes(f.cami))) ?? [];
-  return <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Directori d’usuaris i dispositius">
+  return <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={tx.directoriSessionsRegio}>
     <h3>Directori d’usuaris i dispositius</h3>
     <p>Persones i dispositius amb activitat en els últims 14 dies. Consulta restringida a superadmin amb segon factor; cada consulta queda registrada al servidor. Només hi apareixen comptes amb consentiment vigent i sense baixa demanada, amb el correu emmascarat. El canal és una estimació del navegador; no es mostra cap token, adreça IP, agent complet ni identificador de sessió o de persona.</p>
     <form onSubmit={consultaAra}>
@@ -52,8 +56,8 @@ export default function PanellSessionsDetall({ consulta = consultaDelPort, nativ
       {estat.fase === 'inicial' ? <p>Encara no s’ha consultat el directori.</p> : null}
       {estat.fase === 'error' ? <Alerta to="avis">{estat.codi === 'sense-migracio' ? `El directori requerix la migració ${MIGRACIO_DETALL_SESSIONS}, encara pendent de verificació al servidor.` : textErrorResum(estat.codi)}</Alerta> : null}
       {estat.fase === 'dades' && dadesVisibles ? <>
-        <p>{nativaIos ? `${files.length} combinacions de persona i dispositiu visibles en esta consulta.` : `${files.length} de ${estat.dades.total} combinacions de persona i dispositiu coincidents.`} Es mostren com a màxim 200 combinacions per consulta; concreta els filtres per buscar-ne més. Hora: <time dateTime={estat.dades.consultatA}>{new Date(estat.dades.consultatA).toLocaleString('ca-ES')}</time>.</p>
-        {files.length ? <div className="sdp-admin-sessions"><table className="sdp-admin-table"><caption>Usuaris i dispositius amb activitat recent</caption><thead><tr><th scope="col">Usuari</th><th scope="col">Dispositiu</th><th scope="col">Última activitat</th></tr></thead><tbody>{files.map(f => <tr key={f.clau}><td>{f.nom || 'Nom no informat'}<br />{f.correuMascarat ?? 'Correu no disponible'}</td><td>{camins.find(c => c.cami === f.cami)?.titol}<br /><small>{f.sessions === 1 ? '1 sessió' : `${f.sessions} sessions`}</small></td><td><time dateTime={f.activitat}>{new Date(f.activitat).toLocaleString('ca-ES')}</time></td></tr>)}</tbody></table></div> : <p>No hi ha sessions que coincidisquen amb estos filtres.</p>}
+        <p>{nativaIos ? `${files.length} combinacions de persona i dispositiu visibles en esta consulta.` : `${files.length} de ${estat.dades.total} combinacions de persona i dispositiu coincidents.`} Es mostren com a màxim 200 combinacions per consulta; concreta els filtres per buscar-ne més. Hora: <time dateTime={estat.dades.consultatA}>{new Date(estat.dades.consultatA).toLocaleString(tx.locale)}</time>.</p>
+        {files.length ? <div className="sdp-admin-sessions"><table className="sdp-admin-table"><caption>Usuaris i dispositius amb activitat recent</caption><thead><tr><th scope="col">Usuari</th><th scope="col">Dispositiu</th><th scope="col">Última activitat</th></tr></thead><tbody>{files.map(f => <tr key={f.clau}><td>{f.nom || 'Nom no informat'}<br />{f.correuMascarat ?? 'Correu no disponible'}</td><td>{camins.find(c => c.cami === f.cami)?.titol}<br /><small>{f.sessions === 1 ? '1 sessió' : `${f.sessions} sessions`}</small></td><td><time dateTime={f.activitat}>{new Date(f.activitat).toLocaleString(tx.locale)}</time></td></tr>)}</tbody></table></div> : <p>No hi ha sessions que coincidisquen amb estos filtres.</p>}
       </> : null}
     </div>
   </section>;
