@@ -86,7 +86,11 @@ async function comprovaImatgeSenseUbicacio(fitxer, comprova, signal) {
   const bytes = new Uint8Array(buffer);
   const net = imatgeSenseUbicacio(bytes);
   if (!net || net.format !== fitxer.type) throw errorAdjuntXat('foto-codificacio');
-  if (net.bytes.length !== bytes.length || net.bytes.some((b, i) => b !== bytes[i])) throw errorAdjuntXat('SDP-XAT-008');
+  /* v1.2.20 · Gauntlet R1 (L1-01) · Uns bytes que no són el punt fix del
+     netejador són un problema de codificació, no un enviament repetit:
+     SDP-XAT-008 deia «Este enviament ja s’ha fet servir», i tornar a triar
+     la foto no hi feia res. preparaAdjunt ja puja el punt fix (adjuntLocal.js). */
+  if (net.bytes.length !== bytes.length || net.bytes.some((b, i) => b !== bytes[i])) throw errorAdjuntXat('foto-codificacio');
 }
 
 /* El fallback antic no pot dir «sense la ubicació» d'un vídeo que només
@@ -348,7 +352,10 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   if (m?.id !== id || m.encuat === true || !Number.isSafeInteger(seq) || seq <= 0 || m.tipus !== tipus
     || (m.fil_id != null && m.fil_id !== filId)) throw errorAdjuntXat('sense-confirmacio');
   const llocConfirmat = normalitzaUbicacioXat(m.metadades?.ubicacio);
-  if ((ubicacio && !ubicacioNoAdmesa && (!llocConfirmat || llocConfirmat.lat !== ubicacio.lat || llocConfirmat.lng !== ubicacio.lng))
+  // Normalitzar una resposta antiga no acredita que el servidor haja desat
+  // només el lloc aproximat: comprovem també els decimals de l'ACK cru.
+  if ((llocConfirmat && (m.metadades.ubicacio.lat !== llocConfirmat.lat || m.metadades.ubicacio.lng !== llocConfirmat.lng))
+    || (ubicacio && !ubicacioNoAdmesa && (!llocConfirmat || llocConfirmat.lat !== ubicacio.lat || llocConfirmat.lng !== ubicacio.lng))
     || ((!ubicacio || ubicacioNoAdmesa || entrada.conservaUbicacio === false) && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
   return { id: m.id, filId, seq, usuariId: m.usuari_id, autorNom: m.autor_nom,
     text: m.cos, tipus: m.tipus, respostaA: m.resposta_a, metadades: m.metadades,

@@ -6,6 +6,33 @@
 import { describe, expect, test, vi } from 'vitest';
 import { COSTATS_CAPTURA, COSTAT_FOTO, esCapturaDePantalla, preparaAdjunt } from './adjuntLocal.js';
 import { MAXIM_ADJUNT_XAT } from '../../data/xatMultimedia.js';
+import { imatgeSenseUbicacio } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { JPEG_NET, unix } from '../../../tests/helpers/mitjansPublicsNets.js';
+
+/* v1.2.20 · Gauntlet R1 (L1-01) · La capçalera real del JPEG de canvas de
+   WebKit (WKWebView, AppleWebKit/605.1.15: toDataURL('image/jpeg', 0.8) d'un
+   canvas de 1200×900), byte a byte: SOI, APP0 JFIF (16), APP1 «Exif\0\0MM»
+   (76: l'IFD0 només porta el punter a l'Exif IFD, amb ColorSpace,
+   PixelXDimension i PixelYDimension) i APP13 «Photoshop 3.0» (56). Darrere
+   va el raster d'1 píxel de JPEG_NET, sense el seu SOI ni el seu APP0. */
+const CAPCALERA_WEBKIT = Uint8Array.from(('ffd8ffe000104a46494600010100004800480000'
+  + 'ffe1004c4578696600004d4d002a00000008000187690004000000010000001a000000000003a001000300000001'
+  + '00010000a002000400000001000004b0a0030004000000010000038400000000'
+  + 'ffed003850686f746f73686f7020332e30003842494d04040000000000003842494d0425000000000010'
+  + 'd41d8cd98f00b204e9800998ecf8427e').match(/../g), (h) => parseInt(h, 16));
+const JPEG_WEBKIT = unix(CAPCALERA_WEBKIT, JPEG_NET.subarray(20));
+const enBase64 = (b) => btoa(String.fromCharCode(...b));
+/* comprimeix de WebKit: el WebP torna PNG, i el JPEG porta els segments propis. */
+const compressorWebKit = () => vi.fn(async (_f, { format }) => (
+  format === 'image/webp' ? dataUrl('image/png', PETITA) : `data:image/jpeg;base64,${enBase64(JPEG_WEBKIT)}`
+));
+const bytesDe = (blob) => new Promise((resolve, reject) => {
+  const lector = new FileReader();
+  lector.onload = () => resolve(new Uint8Array(lector.result));
+  lector.onerror = () => reject(lector.error);
+  lector.readAsArrayBuffer(blob);
+});
+const conte = (bytes, text) => Buffer.from(bytes).includes(Buffer.from(text, 'latin1'));
 
 /* Una data URL de `bytes` bytes descodificats, del format que es demana. */
 const dataUrl = (format, bytes) => `data:${format};base64,${btoa('a'.repeat(bytes))}`;
@@ -75,6 +102,23 @@ describe('una captura (PNG)', () => {
     expect(crides(comprimeix)).toEqual([[2048, 'image/webp'], [2048, 'image/jpeg'], [1600, 'image/jpeg']]);
     expect(a.fitxer.type).toBe('image/jpeg');
     for (const [, opcions] of comprimeix.mock.calls) expect(opcions).toMatchObject({ quality: 0.8, conservaExif: false });
+  });
+
+  test('v1.2.20 · L1-01: amb la capçalera real de WebKit, el JPEG preparat és un punt fix de la comprovació del transport', async () => {
+    expect(CAPCALERA_WEBKIT.length).toBe(2 + 18 + 78 + 58);
+    expect(Array.from(JPEG_NET.subarray(20, 22))).toEqual([0xff, 0xdb]);
+    // Sense canonicalitzar, el transport en llevava l'APP1 i l'APP13: 136 B menys.
+    expect(imatgeSenseUbicacio(JPEG_WEBKIT).bytes.length).toBe(JPEG_WEBKIT.length - 136);
+    const comprimeix = compressorWebKit();
+    const a = await preparaAdjunt(captura(), { comprimeix });
+    expect(crides(comprimeix)).toEqual([[2048, 'image/webp'], [2048, 'image/jpeg']]);
+    expect(a.fitxer.type).toBe('image/jpeg');
+    const pujat = await bytesDe(a.fitxer);
+    expect(conte(pujat, 'Photoshop 3.0')).toBe(false);
+    expect(conte(pujat, 'Exif\0\0')).toBe(false);
+    const net = imatgeSenseUbicacio(pujat);
+    expect(net.format).toBe('image/jpeg');
+    expect(Array.from(net.bytes)).toEqual(Array.from(pujat));
   });
 
   test('un resultat només en PNG és error humà de codificació, sense provar cap altre costat', async () => {

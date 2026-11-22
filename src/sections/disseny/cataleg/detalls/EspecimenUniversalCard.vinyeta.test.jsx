@@ -98,8 +98,10 @@ test('les mostres del Mercat porten el preu al quadrat, també el llarg, i el co
   /* Revisió del 261007 (M3-12) · La Samarreta és la de la llavor
      (MARKET_ITEMS), pel camí de la llista del Mercat: el seu preu de veres
      («15.00€», sis caràcters) i, de foto principal, la xica, com a la seua
-     pàgina. Abans, una mostra inventada amb «15 €» i una foto vella. */
-  expect([quadrat('Samarreta Sóc de Poble').textContent, quadrat('Samarreta Sóc de Poble').dataset.mida]).toEqual(['15.00€', 'menuda']);
+     pàgina. Abans, una mostra inventada amb «15 €» i una foto vella.
+     v1.2.20 · Codex R32.34 (DOL-40, costura del propietari de /disseny) · El preu de la llista ix amb el formatador
+     canònic del Mercat: «15,00 €», amb coma decimal i espai irrompible. */
+  expect([quadrat('Samarreta Sóc de Poble').textContent, quadrat('Samarreta Sóc de Poble').dataset.mida]).toEqual(['15,00\u00a0€', 'menuda']);
   const samarreta = [...arrel.querySelectorAll('article.sp-card')]
     .find((targeta) => targeta.querySelector('.sp-card-title')?.textContent === 'Samarreta Sóc de Poble');
   expect(samarreta.querySelector('img.sp-card-media').getAttribute('src'))

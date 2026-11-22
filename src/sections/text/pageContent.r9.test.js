@@ -224,7 +224,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.17 · La crònica de les Onades R32.25 i R32.26 obri /versions, davant de la crònica R32.21–R32.24.
     // Onada v1.2.18 · La crònica de les Onades R32.27 i R32.28 obri /versions, davant de la crònica R32.25 i R32.26.
     // Onada v1.2.19 · La crònica de les Onades R32.29 a R32.33 obri /versions, davant de la crònica R32.27 i R32.28.
-    expect([...versions.querySelectorAll('h3')].slice(0, 31).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.20 · La crònica de l'Onada R32.34 obri /versions, davant de la crònica R32.29 a R32.33.
+    expect([...versions.querySelectorAll('h3')].slice(0, 32).map((h3) => h3.textContent)).toEqual([
+      '22 de novembre de 2026, matinada · Onada R32.34 · Lectura sense cobertura, fotos sense la posició amagada i notes que diuen on és cada text',
       '21 de novembre de 2026, nit · Onades R32.29 a R32.33 · L’Atles 2D a Disseny, cada sessió amb les seues dades i el lector de pantalla en la teua llengua',
       '21 de novembre de 2026, nit · Onades R32.27 i R32.28 · La IAIA amb el seu nom, una «Lletra gran» més compacta i enllaços honestos',
       '21 de novembre de 2026, vesprada · Onades R32.25 i R32.26 · La benvinguda del Foraster, el Rebost en rajoles i un TPV del Bar per a provar',

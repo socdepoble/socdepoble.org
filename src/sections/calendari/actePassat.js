@@ -104,10 +104,13 @@ function graciaDeLaNit(acte, regla, zona) {
   return x ? Math.max(0, ((x.hora * 60 + x.minut) * 60 + x.segon) * 1000 + HORA_MS - DIA_MS) : 0;
 }
 
-/* Gauntlet R2 de la v1.2.16 (L2R2-02) · El motor (ocurrenciesEnRang) fa l'hora de paret de cada
-   ocurrència amb el fus de qui mira i la compara amb l'instant de l'UNTIL (utils/esdeveniment.js,
-   iniciaElDia). Només en fa bé el tall si, a l'instant de l'UNTIL, el fus de qui mira i la zona de
-   l'acte marquen la mateixa hora. */
+/* v1.2.20 · Gauntlet R1 (L3-04) · Les regles per dies ja comparen l'UNTIL en la zona de l'acte
+   (utils/esdeveniment.js, dinsDelLimit), però la xarxa de passos (HOURLY, MINUTELY o SECONDLY:
+   xarxaCobreix i xarxaEnRang) encara fa l'hora de paret amb el fus de qui mira i la compara amb
+   l'instant de l'UNTIL. Només en fa bé el tall si, a l'instant de l'UNTIL, el fus de qui mira i la
+   zona de l'acte marquen la mateixa hora (la guarda de la v1.2.19, L2R2-02, ara només per a la
+   xarxa). Si no, mana la drecera del dia de l'UNTIL: tard, però mai abans d'hora. */
+const PER_PASSOS = /(?:^RRULE:|;)FREQ=(?:HOURLY|MINUTELY|SECONDLY)(?:;|$)/i;
 function motorALaZona(ms, zona) {
   const x = xifresEnZona(ms, zona);
   const l = new Date(ms);
@@ -123,8 +126,9 @@ function motorALaZona(ms, zona) {
  * pintar la regla: cap ocurrència no comença després de l'UNTIL, i passat el seu dia (en la zona de
  * l'acte) i el que dura l'acte, s'ha fet. Una RDATE o una EXRULE, que el calendari no sap pintar,
  * no passa per la drecera: una RDATE afig dates que l'UNTIL no limita (RFC 5545). La resta, només
- * si el calendari sap pintar la regla (recurrenciaSuportada) i, amb un UNTIL en UTC, si el motor en
- * fa bé el tall (motorALaZona). Una regla que no sap pintar, o un tall que no sap fer, no s'amaga.
+ * si el calendari sap pintar la regla (recurrenciaSuportada). El límit UTC es compara en la zona
+ * declarada de l'acte; en una xarxa de passos, només si el motor en fa bé el tall (motorALaZona).
+ * Una regla que no sap pintar, o un tall que no sap fer, no s'amaga.
  */
 function repeticioAcabada(acte, instant) {
   const regles = acte.recurrencia.filter((linia) => /^RRULE:/i.test(linia));
@@ -146,10 +150,8 @@ function repeticioAcabada(acte, instant) {
   const nomesReglaIExdate = acte.recurrencia.every((linia) => /^(?:RRULE:|EXDATE[;:])/i.test(linia));
   if (diaUntil !== null && nomesReglaIExdate && hui > diaUntil + marge) return true;
   if (!recurrenciaSuportada(acte)) return false;
-  // El motor no fa bé el tall (qui mira és en un altre fus: a Canàries o a Lisboa, l'última
-  // ocurrència «ja s'havia fet» abans de començar): mana la drecera, i encara no ha passat.
-  if (instantUntil !== null && !motorALaZona(instantUntil, zona)) return false;
-  const diaInici = numDeClau(acte.totElDia ? acte.inici.data : acte.inici.dataHora);
+  if (instantUntil !== null && PER_PASSOS.test(regla) && !motorALaZona(instantUntil, zona)) return false;
+  const diaInici =numDeClau(acte.totElDia ? acte.inici.data : acte.inici.dataHora);
   if (count && Number(count[1]) <= MAX_COUNT_COMPTAT) {
     // COUNT ocurrències com a molt: si totes s'han acabat abans de hui, la regla s'ha esgotat. Una
     // EXDATE no descompta COUNT (RFC 5545) i en deixa menys de visibles: llavors es busca.

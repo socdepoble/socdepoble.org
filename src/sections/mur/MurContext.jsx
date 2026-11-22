@@ -150,7 +150,7 @@ export function MurProvider({ children, config }) {
   const versioBloquejos = moderacio?.versioBloquejos || 0;
   const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey]);
-  const data = useScopedResource(loadMur, actorId, scopeKey, config);
+  const data = useScopedResource(loadMur, actorId, scopeKey, config, 'mur');
   /* Decisió 2 · Pendent del relleu, aplicat amb la peça de paginació: el
      valor es memoritza sobre camps i no sobre `data`, com a Core i
      Multimèdia. La marca `revalidant` fa un `data` nou en cada renovació i

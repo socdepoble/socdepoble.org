@@ -118,17 +118,40 @@ export function duradaLocal(fitxer, { signal, creaElement = () => document.creat
   });
 }
 
-function blobDeDataUrl(data) {
+function bytesDeDataUrl(data) {
   const [cap, contingut] = data.split(',');
   const mime = /^data:(image\/(?:webp|jpeg));base64$/.exec(cap)?.[1];
   if (!mime || !contingut) throw errorAdjuntXat('foto-codificacio');
   try {
     const bytes = Uint8Array.from(atob(contingut), (c) => c.charCodeAt(0));
     if (!bytes.length) throw errorAdjuntXat('foto-codificacio');
-    return new Blob([bytes], { type: mime });
+    return { mime, bytes };
   } catch (cause) {
     throw errorAdjuntXat('foto-codificacio', { cause });
   }
+}
+
+/* v1.2.20 · Gauntlet R1 (L1-01) · El JPEG del canvas de WebKit (Safari i
+   l'app iOS) ja porta un APP1 Exif propi (MM, 76 B: ColorSpace,
+   PixelXDimension i PixelYDimension) i un APP13 «Photoshop 3.0» (56 B).
+   incrustaEnJpeg no hi posava el TIFF blanc (el JPEG ja tenia EXIF) i el
+   transport, que torna a passar els bytes per imatgeSenseUbicacio, en
+   llevava 136 B: cap foto ni captura no s'enviava. Ara es puja el punt fix
+   d'imatgeSenseUbicacio: primer es lleven les metadades del codificador,
+   després s'hi incrusta el TIFF blanc de l'original (data i càmera, mai el
+   GPS) i una passada més no ha de canviar cap byte, la mateixa comparació
+   que fa el transport; si en canvia, és un error de codificació ací, abans
+   de cap xarxa. Uns bytes que el netejador no entén continuen com abans: el
+   transport els veta amb el mateix codi. */
+function blobCanonic(data, tiff, { imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp }) {
+  const { mime, bytes } = bytesDeDataUrl(data);
+  const net = imatgeSenseUbicacio(bytes);
+  if (!net) return new Blob([bytes], { type: mime });
+  if (net.format !== mime) throw errorAdjuntXat('foto-codificacio');
+  const amb = (tiff && (mime === 'image/jpeg' ? incrustaEnJpeg : incrustaEnWebp)(net.bytes, tiff)) || net.bytes;
+  const fix = imatgeSenseUbicacio(amb);
+  if (fix?.format !== mime || fix.bytes.length !== amb.length || fix.bytes.some((b, i) => b !== amb[i])) throw errorAdjuntXat('foto-codificacio');
+  return new Blob([amb], { type: mime });
 }
 
 /** Neteja acotada del contenidor; la implementació compartida no recodifica. */
@@ -167,7 +190,8 @@ function ambMimeLocal(fitxer) {
    cerca finita (màxim 15 recodificacions, inclòs el canvi WebP → JPEG).
    Si no hi cap o no es pot codificar, no es retorna mai l'original. */
 async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio = true }) {
-  const { exifPublicable, preparaTiffSenseUbicacio, incrustaEnDataUrl } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+  const { exifPublicable, preparaTiffSenseUbicacio, imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+  const exifCanonic = { imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp };
   const tiff = conservaUbicacio !== false ? preparaTiffSenseUbicacio((await exifPublicable(fitxer))?.tiff) : null;
   if (signal?.aborted) throw abortat();
   const primers = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
@@ -205,7 +229,7 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio
       data = await codifica(opcions);
     }
     if (signal?.aborted) throw abortat();
-    const imatge = blobDeDataUrl((tiff && incrustaEnDataUrl(String(data), tiff)) || String(data));
+    const imatge = blobCanonic(String(data), tiff, exifCanonic);
     if (imatge.size < MAXIM_ADJUNT_XAT.imatge) return imatge;
   }
   throw errorAdjuntXat('foto-mida');

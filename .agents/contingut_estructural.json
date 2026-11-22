@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "2ec4f0fb741ddbd37f621a76ac7ada1eccd791baa78fe1d04ebaa532953937a6",
-      "html": 165576,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.19), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1855, T3; ordre de les 18:53) i la Marató Nocturna (pla 261121_2335; ordres de les 23:28 i de les 00:02): crònica FITA_R32_33 de la v1.2.19 build 24 (Onades R32.29 a R32.33, l'Atles 2D a Disseny, els vídeos en repòs i WP 1.1.27) i capçalera amb el connector que serveix WordPress.org (1.1.26). Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics (sessions, adreces, Salut, connector, Atles i llengua de les pàgines); pendent de lectura humana",
+      "sha256": "ed426100ce9dd3f6e76951dd5894e429ae59588886a54b30ecedb7f8d2efa3d7",
+      "html": 168514,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.20), per la Marató Nocturna del Mestre Javi (pla 261121_2335; 22-11-2026): crònica FITA_R32_34 de la v1.2.20 build 25 (Onada R32.34 de Codex: lectura sense cobertura a la web, fotos del Xat sense GPS dins del fitxer, Bloc de notes honest, repeticions del Calendari i preus de la llista del Mercat; WP 1.1.28) i capçalera amb el connector que serveix WordPress.org (1.1.27). Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics; pendent de lectura humana",
       "data": "2026-11-22"
     },
     "wikidepoble": {

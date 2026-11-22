@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSandbox } from './useLocalSandbox.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
+import { ajudaPreferenciaMur, estatHonestNota, textosHonestedatDesat } from './honestedatDesat.js';
+import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
@@ -27,7 +29,7 @@ import {
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio, esExtern, netejaDrets, teDretsReservats } from '../../data/origenNota.js';
 import {
-  PARELL_CONNEXIO_EDITABLE, PARELL_TEXT_DRETS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textRetirada, textosAmbDrets, textosDeNota, textosEnLiniaDeNota,
+  ErrorPublicacio, PARELL_CONNEXIO_EDITABLE, PARELL_TEXT_DRETS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textRetirada, textosAmbDrets, textosDeNota, textosEnLiniaDeNota,
   textosExtern
 } from './visibilitatNota.js';
 import { llistaDePobles, slugDelPoble } from '../pobles/nomsDelPoble.js';
@@ -61,6 +63,11 @@ import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosMo
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
 const CAP = Object.freeze([]);
+/* v1.2.20 · Gauntlet R1 (L2-03) · Les identitats de publicació amb algun NotesEditor muntat ara mateix
+   (clau → quants). Un torn que ha quedat orfe perquè l'editor s'ha desmuntat amb la publicació en marxa
+   (PublicacioEditable adopta la fila i la selecció passa a la nota) només continua el reintent de les
+   normes si la mateixa identitat continua oberta en un altre editor. */
+const IDENTITATS_MUNTADES = new Map();
 
 /* Revisió del Gauntlet 261017 (ID4) · El text de càrrega de l'espai de
    treball (UniversalWorkspace · DEFAULT_LABELS.loading; NotesSection ·
@@ -199,12 +206,37 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     nomesLectura = false, motiuModeTraduccio = null, modeTraduccioNomesLocal = false, versioAlMur = null,
     destiPublicatDeNota = null, desaDestiPublicatNota = null,
     /* F03-UI (Onada R21) · Retirar del Mur (NotesContext; capacitat 'revocacioPublicacions', en remot). */
-    retiraDelMur = null, potRetirarDelMur = false, retiradaPendentDeNota = null
+    retiraDelMur = null, potRetirarDelMur = false, retiradaPendentDeNota = null,
+    /* v1.2.20 · Gauntlet R1 (L2-01) · Un embolcall que escriu només en memòria (PublicacioEditable, la
+       revisió d'una pàgina WP) ho declara: l'estat visible no hi pot anunciar cap desat. */
+    desatEnMemoria = false
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
   const { agents, towns, pages, personalitzacio } = useCoreContent();
   const { currentUser, estat: estatSessio, esSuperadmin = false } = useSession();
+  /* DOL-54 · Una confirmació diferida (p. ex. normes) no travessa un canvi
+     d'identitat, de backend o de sessió. El desat conserva les seues guardes. */
+  const identitatDePublicacio = JSON.stringify([scopeKey, workspaceKey, actorId, actor?.tipus, currentUser?.id, entradaSessio()]);
+  const identitatVigent = useRef({ identitat: identitatDePublicacio, torn: { identitat: identitatDePublicacio, comprovaSessio: capturaSessio(), publicant: 0 } });
+  if (identitatVigent.current.identitat !== identitatDePublicacio) {
+    identitatVigent.current = { identitat: identitatDePublicacio, torn: { identitat: identitatDePublicacio, comprovaSessio: capturaSessio(), publicant: 0 } };
+  }
+  const tornDePublicacio = identitatVigent.current.torn;
+  useEffect(() => {
+    const { identitat } = tornDePublicacio;
+    identitatVigent.current.torn = tornDePublicacio;
+    tornDePublicacio.orfe = false;
+    IDENTITATS_MUNTADES.set(identitat, (IDENTITATS_MUNTADES.get(identitat) || 0) + 1);
+    return () => {
+      const resten = (IDENTITATS_MUNTADES.get(identitat) || 1) - 1;
+      if (resten > 0) IDENTITATS_MUNTADES.set(identitat, resten); else IDENTITATS_MUNTADES.delete(identitat);
+      if (identitatVigent.current.torn !== tornDePublicacio) return;
+      /* v1.2.20 · Gauntlet R1 (L2-03) · Desmuntat amb una publicació en marxa: orfe, no vigent. */
+      if (tornDePublicacio.publicant > 0) tornDePublicacio.orfe = true;
+      identitatVigent.current.torn = null;
+    };
+  }, [tornDePublicacio]);
   /* P1-20 · D15 (T4a) · El tros de la geo de publishNote (NotesContext) es demana en obrir
      l'editor: en publicar ja hi és i no depén d'una baixada nova. És un import(), no estàtic. */
   useEffect(() => { import('./geoDeLesFotos.js').catch(() => {}); }, []);
@@ -853,6 +885,16 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          servidor…), que no es tapa amb «torna-ho a provar». La traducció és
          la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
       onTria: async (publica, doc, opcions) => {
+        const comprovaIdentitat = () => {
+          const vigent = identitatVigent.current.torn;
+          /* v1.2.20 · Gauntlet R1 (L2-03) · Un editor desmuntat per la mateixa publicació no trenca la
+             identitat si continua oberta en un altre editor; tancar-lo o canviar-la sí. ErrorPublicacio:
+             publicaAmbMotiu en deixa passar el motiu en lloc del genèric «Torna-ho a provar». */
+          const continuaOberta = vigent === null && tornDePublicacio.orfe && IDENTITATS_MUNTADES.has(tornDePublicacio.identitat);
+          if (vigent !== tornDePublicacio && !continuaOberta) throw new ErrorPublicacio(textosHonestedatDesat(idiomaRevisor).cancelada);
+          tornDePublicacio.comprovaSessio();
+        };
+        comprovaIdentitat();
         /* F03-UI · «Privada» d'una nota publicada, ja confirmada al panell en
            línia: la retirada de veres (true, false o un ErrorRetirada amb el
            motiu; el panell el diu en línia). Sense `retirable`, com sempre. */
@@ -881,6 +923,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            selector obert i diu per què, en línia (crítica 261020, 10). Ací
            s'hi podrà endollar el filtre previ que demana Apple 1.2. */
         if (asseguraNormes && !(await asseguraNormes())) throw new Error(tradueix(t, TEXTOS_MODERACIO.calAcceptar));
+        comprovaIdentitat();
         /* Integració 261024 (Codex C-02) · Si el servidor la rebutja igualment
            per les normes (SDP-MOD-428), la porta es torna a obrir i, si les
            accepta, es publica una sola vegada més (publicaAmbMotiu).
@@ -888,15 +931,30 @@ export default function NotesEditor({ activeNote, onToast = null }) {
            (ambModeTraduccio): publishNote el posa al payload. Compartir (obra
            d'altri), mai. */
         const opcionsPoble = opcions?.poble ? { poble: opcions.poble } : undefined;
-        return publicaAmbMotiu(() => (
-          citaOrigen && compartirNota
-            ? (opcionsPoble ? compartirNota(doc, opcionsPoble) : compartirNota(doc))
-            : (opcionsPoble ? publishNote(ambModeTraduccio(doc), opcionsPoble) : publishNote(ambModeTraduccio(doc)))
-        ), {
-          tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
-          /* P1-22 · amb `t`, el motiu de les normes i el de la xarxa ixen traduïts. */
-          t
-        });
+        /* v1.2.20 · Gauntlet R1 (L2-03) · Mentre dura la publicació (també el reintent de les normes),
+           un desmuntatge deixa el torn orfe en lloc d'anul·lar-lo (vegeu IDENTITATS_MUNTADES). */
+        tornDePublicacio.publicant += 1;
+        try {
+          return await publicaAmbMotiu(() => {
+            try {
+              comprovaIdentitat();
+            } catch (error) {
+              /* v1.2.20 · Gauntlet R1 (L2-03) · També una sessió nova: el motiu, no «Torna-ho a provar». */
+              throw error?.name === 'AbortError' ? new ErrorPublicacio(textosHonestedatDesat(idiomaRevisor).cancelada) : error;
+            }
+            return (
+            citaOrigen && compartirNota
+              ? (opcionsPoble ? compartirNota(doc, opcionsPoble) : compartirNota(doc))
+              : (opcionsPoble ? publishNote(ambModeTraduccio(doc), opcionsPoble) : publishNote(ambModeTraduccio(doc)))
+            );
+          }, {
+            tornaAPreguntar: asseguraNormes ? () => asseguraNormes({ rebutjades: true }) : null,
+            /* P1-22 · amb `t`, el motiu de les normes i el de la xarxa ixen traduïts. */
+            t
+          });
+        } finally {
+          tornDePublicacio.publicant -= 1;
+        }
       },
     };
 
@@ -947,18 +1005,23 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       posicioEdicioAvancada: 'despres-autoria',
       titolEdicioAvancada: t('section.notes.editor.edicioAvancada.titol', 'Edició avançada de la nota'),
       resumEdicioAvancada: t('section.notes.editor.edicioAvancada.resum', 'Afig la foto de capçalera, el logotip, l’àmbit de publicació, etiquetes i drets'),
+      /* v1.2.20 · Gauntlet R1 (L2-02) · Sense cap decisió desada, el que farà «Publicar»: publishNote
+         captura la mateixa parella (capturaVisibilitatMur) i, sense cap, la publicació ix a l'aparador. */
       mostrarAlMur: notaEnEdicio
-        ? (typeof notaEnEdicio.mostrarAlMur === 'boolean' ? notaEnEdicio.mostrarAlMur : Boolean(notaEnEdicio.isPublished))
+        ? (typeof notaEnEdicio.mostrarAlMur === 'boolean' ? notaEnEdicio.mostrarAlMur
+          : typeof notaEnEdicio.ocultarDelMur === 'boolean' ? !notaEnEdicio.ocultarDelMur : true)
         : false,
+      /* v1.2.20 · Gauntlet R1 (L2-05) · L'ajuda nomena el botó de confirmar del panell (o diu que ara no
+         es pot publicar) i només parla de retirar quan el panell oferix la retirada d'esta publicació. */
+      ajudaMostrarAlMur: ajudaPreferenciaMur({
+        publicar: bloqueig?.opcio === 'publica' ? null
+          : (notaEnEdicio?.isPublished ? visibilitat.textosEnLinia.publica.accioIgual : visibilitat.textosEnLinia.publica.accio),
+        retirar: notaEnEdicio?.isPublished ? visibilitat.textosEnLinia.retirada?.accio ?? null : null,
+      }, idiomaRevisor),
       desactivatMostrarAlMur: Boolean(!notaEnEdicio || retiradaPendent || nomesLectura),
       onCanviaMostrarAlMur: notaEnEdicio ? (actiu) => {
         const volMur = Boolean(actiu);
         escriu([{ doc: notaEnEdicio, canvis: { mostrarAlMur: volMur, ocultarDelMur: !volMur } }]);
-        if (!volMur && retirable && notaEnEdicio.isPublished) {
-          Promise.resolve(retiraDelMur(notaEnEdicio)).catch(() => {});
-        } else if (volMur && !notaEnEdicio.isPublished && !bloqueig && (!teMultiPoble || pobleIdPublicat)) {
-          Promise.resolve(visibilitat.onTria(true, { ...notaEnEdicio, mostrarAlMur: true, ocultarDelMur: false })).catch(() => {});
-        }
       } : null,
       showDarkLogoUpload: true,
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
@@ -1082,6 +1145,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         )
       } : {}),
       ...(estatDesament ? { estatDesament } : {}),
+      textEstatDesament: notaEnEdicio ? estatHonestNota({ memoria: Boolean(desatEnMemoria), local: esSandbox || dataMode === 'seed' || dataMode === 'local', preparada: esPreparada,
+        creacio: creacioPreparada, publicada: Boolean(notaEnEdicio.isPublished),
+        desament: { ...desament, ...(estatDesament ? { estat: estatDesament.estat } : {}) } }, idiomaRevisor) : null,
       /* Revisió final R16a (carril FA) · Només per a una nota publicada: el
          verd «Publicat» demana que el Mur tinga esta versió (DocumentEditor). */
       ...(publicacioAlDia !== undefined ? { publicacioAlDia } : {}),
@@ -1089,7 +1155,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent, escriu, nomesLectura, teMultiPoble]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, desament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent, escriu, nomesLectura, tornDePublicacio, idiomaRevisor, dataMode, desatEnMemoria]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

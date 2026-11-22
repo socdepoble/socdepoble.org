@@ -187,6 +187,9 @@ export function PublicacioEditable({ item }) {
       escriu(id, camp, nou);
       return Promise.resolve(true);
     },
+    /* v1.2.20 · Gauntlet R1 (L2-01) · Esta nota viu només en memòria fins a «Actualitzar al Mur»:
+       NotesEditor no hi pot dir «desat com a esborrany privat» ni «Còpia local». */
+    desatEnMemoria: true,
     publishNote: publicaIMarca,
     /* Revisió final R16a (carril FA) · La nota en memòria no passa per la cua
        de desat: si el Mur la té ho diu esta peça, no el gestor (NotesEditor). */

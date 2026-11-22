@@ -1,6 +1,9 @@
 /** Aïlla cada càrrega per àmbit i descarta respostes de generacions anteriors. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from './SessionContext.jsx';
+import { estatSessioIntern } from './sessionContextIntern.js';
+import { registraLecturaPublica } from '../../pwa/lecturesPubliques.js';
+import { capturaSessio, usuariDeSessio, jwtPerBackend } from '../../data/identitat.js';
 
 let hostPromise;
 function hostReady(signal) {
@@ -35,7 +38,7 @@ function hostReady(signal) {
    canvi de persona, actor o backend mai no arriba ací: purga abans. */
 const BUIT = Object.freeze({ status: 'loading', payload: null, error: null, revalidant: false, errorRevalidacio: null });
 
-export function useScopedResource(loader, actorId, scopeKey, config) {
+export function useScopedResource(loader, actorId, scopeKey, config, fontPublica = null) {
   /* Auditoria 261007 (B) · La generació 0 és el primer pintat, abans que
      l'efecte del SessionProvider configure la sessió (sessionService la puja
      sempre en eixa primera configuració). Els efectes dels fills corren abans
@@ -66,7 +69,19 @@ export function useScopedResource(loader, actorId, scopeKey, config) {
       try {
         await hostReady(controller.signal);
         if (!current()) return;
+        // Captura l'autoritat abans del FETCH: eixir després d'una lectura
+        // autenticada no la convertix mai en una lectura pública.
+        const sessio = estatSessioIntern.estatActual;
+        const generacioPublica = fontPublica && config?.manageDocumentHead === true && sessio.estat === 'fora' && !sessio.usuari && !usuariDeSessio() && !jwtPerBackend(config) ? sessio.generacio : null;
+        const validaPublica = generacioPublica !== null ? capturaSessio() : null;
         const payload = await loader(actorId, { ...config, signal: controller.signal });
+        const ara = estatSessioIntern.estatActual;
+        try {
+          validaPublica?.();
+          if (generacioPublica !== null && current() && ara.estat === 'fora' && !ara.usuari && ara.generacio === generacioPublica && !usuariDeSessio() && !jwtPerBackend(config)) {
+            registraLecturaPublica(fontPublica, payload, ara.generacio);
+          }
+        } catch { /* cap còpia si la identitat crua canvia; la lectura de la vista continua */ }
         if (current()) setState({ token, status: 'ready', payload, error: null, revalidant: false, errorRevalidacio: null });
       } catch (error) {
         if (!current()) return;
@@ -76,7 +91,7 @@ export function useScopedResource(loader, actorId, scopeKey, config) {
       }
     })();
     return () => controller.abort();
-  }, [token, loader, actorId, config, tick, generacio, actiu]);
+  }, [token, loader, actorId, config, tick, generacio, actiu, fontPublica]);
   const refresh = useCallback(() => setTick(value => value + 1), []);
   return useMemo(() => (state.token === token ? { ...state, refresh }
     : { token, ...BUIT, refresh }), [state, token, refresh]);

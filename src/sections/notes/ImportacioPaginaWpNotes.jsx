@@ -68,6 +68,8 @@ function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
     ...base, notes: [nota], notesComplete: true, scopeKey: null, workspaceKey: `wp-revisio:${ambit}`,
     setLocalNoteField: escriu,
     saveNoteField: (id, field, next) => { escriu(id, field, next); return Promise.resolve(true); },
+    /* v1.2.20 · Gauntlet R1 (L2-01) · L'esborrany de la revisió és en memòria: l'editor no hi anuncia cap desat. */
+    desatEnMemoria: true,
     publishNote: publica, compartirNota: null, canviaEstatPublicacio: undefined,
     creaNota: undefined, updateNote: undefined, mouNota: undefined, esborraNota: undefined, potEsborrar: false
   }), [base, nota, ambit, escriu, publica]);

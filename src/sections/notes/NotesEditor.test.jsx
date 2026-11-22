@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => {
     mou: vi.fn(), esborra: vi.fn(), potEsborrar: false, publish: vi.fn(), compartir: vi.fn(),
     scopeKey: undefined, NET, desament: vi.fn(() => NET), identitat: { actorId: 'user' },
     /* El mode resolt de config/dataMode.js (null: el de veres). */
-    modeResolt: null
+    modeResolt: null, normes: null, retira: vi.fn(), potRetirar: false
   };
 });
 /* Correcció de la revisió (261016) · L'elecció remota desada, sense recarregar:
@@ -27,10 +27,12 @@ vi.mock('./NotesContext', () => ({
     noteFolders: mocks.noteFolders, t: mocks.t, config: mocks.config, workspaceKey: mocks.config.tenantId,
     notes: mocks.notes, setLocalNoteField: mocks.setLocal, notesComplete: true,
     mouNota: mocks.mou, esborraNota: mocks.esborra, potEsborrar: mocks.potEsborrar,
-    publishNote: mocks.publish, compartirNota: mocks.compartir, scopeKey: mocks.scopeKey
+    publishNote: mocks.publish, compartirNota: mocks.compartir, scopeKey: mocks.scopeKey,
+    retiraDelMur: mocks.retira, potRetirarDelMur: mocks.potRetirar
   }),
   etiquetesDeNota: () => []
 }));
+vi.mock('../../components/PedraSeca/hooks/moderacioDePoble.js', () => ({ useModeracio: () => ({ asseguraNormes: mocks.normes }) }));
 /* T47b · L'estat de la cua es controla des de la prova; la traducció és la de veres. */
 vi.mock('./useEstatDesamentNota.js', async importOriginal => ({
   ...await importOriginal(),
@@ -62,6 +64,7 @@ import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { proposaCard } from './proposaCard.js';
+import { capturaVisibilitatMur, esVisibleAlMur } from '../../data/visibilitatMur.js';
 
 beforeEach(() => {
   mocks.t = (_key, fallback) => fallback;
@@ -76,6 +79,10 @@ beforeEach(() => {
   mocks.scopeKey = undefined;
   mocks.identitat = { actorId: 'user' };
   mocks.desament.mockReset().mockReturnValue(mocks.NET);
+  mocks.normes = null;
+  mocks.potRetirar = false;
+  mocks.retira.mockReset().mockResolvedValue(true);
+  mocks.publish.mockReset().mockResolvedValue(true);
   mocks.setLocal.mockReset();
   mocks.mou.mockReset().mockResolvedValue(true);
   mocks.esborra.mockReset().mockResolvedValue(true);
@@ -1266,4 +1273,187 @@ test.each(['ca', 'es', 'en', 'eu', 'gl'])('%s: la portada i la classificació de
   expect(mocks.adapter.classificacio.props.etiquetaEmoticona).toBe(mocks.t('section.notes.editor.emojis'));
   expect(document.title).toBe('Títol de la persona');
   expect(document.content).toBe('<p>Text privat</p>');
+});
+
+/* DOL-54 · La preferència de l'aparador no és un acte de publicació. */
+test('DOL-54 · Mostrar al Mur només desa la preferència: ni publica ni retira', async () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
+  mocks.potRetirar = true;
+  const privada = { id: 'n-honesta', title: 'Privat', revision: 1, isPublished: false };
+  const vista = render(<NotesEditor activeNote={privada} />);
+  act(() => mocks.adapter.onCanviaMostrarAlMur(true));
+  expect(mocks.setLocal).toHaveBeenCalledWith(privada.id, 'mostrarAlMur', true);
+  expect(mocks.publish).not.toHaveBeenCalled();
+  expect(mocks.retira).not.toHaveBeenCalled();
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('pròxima publicació');
+  expect(mocks.adapter.textEstatDesament).toBe('Esborrany privat desat al servidor. No està publicat.');
+
+  const publicada = { ...privada, isPublished: true, publishedSubmissionId: 'p-honesta' };
+  vista.rerender(<NotesEditor activeNote={publicada} />);
+  act(() => mocks.adapter.onCanviaMostrarAlMur(false));
+  expect(mocks.retira).not.toHaveBeenCalled();
+  expect(mocks.publish).not.toHaveBeenCalled();
+  await mocks.adapter.visibilitat.onTria(false, publicada);
+  expect(mocks.retira).toHaveBeenCalledWith(publicada);
+});
+
+test('DOL-54 · l’estat visible distingix local, privat confirmat i canvis pendents', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.scopeKey = 'ambit-honest';
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
+  const nota = { id: 'n-estat', title: 'Text', revision: 2, isPublished: false };
+  const vista = render(<NotesEditor activeNote={nota} />);
+  expect(mocks.adapter.textEstatDesament).toBe('Esborrany privat desat al servidor. No està publicat.');
+  mocks.desament.mockReturnValue({ estat: 'pendent', problema: null, quarantena: [], pestanya: true });
+  vista.rerender(<NotesEditor activeNote={nota} />);
+  expect(mocks.adapter.textEstatDesament).toContain('només en esta pestanya');
+  expect(mocks.adapter.textEstatDesament).not.toContain('privat desat al servidor');
+  vista.rerender(<NotesEditor activeNote={{ ...nota, isPublished: true }} />);
+  expect(mocks.adapter.textEstatDesament).toContain('Hi ha una versió publicada');
+  expect(mocks.adapter.textEstatDesament).toContain('només en esta pestanya');
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'local' };
+  vista.rerender(<NotesEditor activeNote={nota} />);
+  expect(mocks.adapter.textEstatDesament).toContain('Còpia local');
+});
+
+const decisioDiferida = () => {
+  let resol;
+  const promesa = new Promise((resolve) => { resol = resolve; });
+  return { promesa, resol };
+};
+
+test('DOL-54 · canviar identitat i tornar a l’anterior cancel·la una confirmació vella', async () => {
+  const porta = decisioDiferida();
+  mocks.normes = () => porta.promesa;
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.scopeKey = 'A';
+  const nota = { id: 'n-pendent', title: 'Privat', isPublished: false };
+  const vista = render(<NotesEditor activeNote={nota} />);
+  const decisio = mocks.adapter.visibilitat.onTria(true, nota);
+  mocks.scopeKey = 'B';
+  vista.rerender(<NotesEditor activeNote={nota} />);
+  mocks.scopeKey = 'A';
+  vista.rerender(<NotesEditor activeNote={nota} />);
+  porta.resol(true);
+  await expect(decisio).rejects.toThrow('La identitat ha canviat');
+  expect(mocks.publish).not.toHaveBeenCalled();
+});
+
+test('DOL-54 · tancar l’editor cancel·la una confirmació abans de publicar', async () => {
+  const porta = decisioDiferida();
+  mocks.normes = () => porta.promesa;
+  mocks.session = { currentUser: { id: 'U' } };
+  const nota = { id: 'n-tancada', title: 'Privat', isPublished: false };
+  const vista = render(<NotesEditor activeNote={nota} />);
+  const decisio = mocks.adapter.visibilitat.onTria(true, nota);
+  vista.unmount();
+  porta.resol(true);
+  await expect(decisio).rejects.toThrow('La identitat ha canviat');
+  expect(mocks.publish).not.toHaveBeenCalled();
+});
+
+test('DOL-54 · logout i reentrada canònica del mateix UUID invaliden la confirmació sense cap render nou', async () => {
+  const { desaSessio, esborraSessio } = await import('../../data/identitat.js');
+  const id = '00000000-0000-4000-8000-000000000054';
+  const sessio = { access_token: 'notes-test-session', user: { id } };
+  desaSessio(sessio);
+  const porta = decisioDiferida();
+  mocks.normes = () => porta.promesa;
+  mocks.session = { currentUser: { id } };
+  const nota = { id: 'n-epoch', title: 'Privat', isPublished: false };
+  const vista = render(<NotesEditor activeNote={nota} />);
+  const decisio = mocks.adapter.visibilitat.onTria(true, nota);
+  esborraSessio({ abast: 'pestanya' });
+  desaSessio(sessio);
+  porta.resol(true);
+  try {
+    await expect(decisio).rejects.toMatchObject({ name: 'AbortError' });
+    expect(mocks.publish).not.toHaveBeenCalled();
+  } finally { vista.unmount(); esborraSessio({ abast: 'pestanya' }); }
+});
+
+test('DOL-54 · un callback vell no adopta una nova sessió i renovar JWT conserva la decisió vàlida', async () => {
+  const { desaSessio, esborraSessio } = await import('../../data/identitat.js');
+  const id = '00000000-0000-4000-8000-000000000054';
+  const sessio = { access_token: 'notes-test-session', user: { id } };
+  desaSessio(sessio);
+  mocks.session = { currentUser: { id } };
+  const nota = { id: 'n-callback', title: 'Privat', isPublished: false };
+  const vista = render(<NotesEditor activeNote={nota} />);
+  const antiga = mocks.adapter.visibilitat.onTria;
+  esborraSessio({ abast: 'pestanya' });
+  desaSessio(sessio);
+  try {
+    await expect(antiga(true, nota)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(mocks.publish).not.toHaveBeenCalled();
+    vista.rerender(<NotesEditor activeNote={nota} />);
+    desaSessio({ ...sessio, access_token: 'notes-test-renewed' }, { renovacio: true });
+    await expect(mocks.adapter.visibilitat.onTria(true, nota)).resolves.toBe(true);
+    expect(mocks.publish).toHaveBeenCalledExactlyOnceWith(nota);
+  } finally { vista.unmount(); esborraSessio({ abast: 'pestanya' }); }
+});
+
+test.each([
+  ['seed', 'remote', 'Esborrany privat desat al servidor. No està publicat.'],
+  ['remote', 'seed', 'Còpia local: no s’envia al servidor. Si el navegador no permet desar-la, només queda en esta pestanya.'],
+])('DOL-54 · el lloc del desat reflectix el mode efectiu %s -> %s', (demanat, resolt, esperat) => {
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: demanat };
+  mocks.modeResolt = resolt;
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.scopeKey = 'scope-mode';
+  render(<NotesEditor activeNote={{ id: 'n-mode', title: 'Privat', revision: 2, isPublished: false }} />);
+  expect(mocks.adapter.textEstatDesament).toBe(esperat);
+});
+
+/* v1.2.20 · Gauntlet R1 (L2-02) · Sense cap decisió desada, l'interruptor pinta el que farà «Publicar»: el
+   mateix aparador que publishNote captura del document (NotesContext · capturaVisibilitatMur). */
+test.each([
+  [{}, true],
+  [{ mostrarAlMur: false }, false],
+  [{ ocultarDelMur: true }, false],
+  [{ mostrarAlMur: true, ocultarDelMur: false }, true],
+  [{ isPublished: true, publishedSubmissionId: 'p-aparador', ocultarDelMur: true }, false],
+])('L2-02 · l’interruptor de la nota %j coincidix amb l’aparador que publica', async (decisio, visible) => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
+  const nota = { id: 'n-aparador', title: 'Privat', revision: 1, isPublished: false, ...decisio };
+  render(<NotesEditor activeNote={nota} />);
+  expect(mocks.adapter.mostrarAlMur).toBe(visible);
+  await expect(mocks.adapter.visibilitat.onTria(true, nota)).resolves.toBe(true);
+  const enviat = mocks.publish.mock.calls.at(-1)[0];
+  expect(esVisibleAlMur(capturaVisibilitatMur(enviat))).toBe(mocks.adapter.mostrarAlMur);
+});
+
+/* v1.2.20 · Gauntlet R1 (L2-05) · L'ajuda de l'aparador només remet als botons que el panell pinta de veres. */
+test('L2-05 · l’ajuda nomena el botó del panell i només parla de retirar quan es pot retirar', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'remote' };
+  const publicada = { id: 'n-ajuda', title: 'Publicat', revision: 1, isPublished: true, publishedSubmissionId: 'p-ajuda' };
+  const vista = render(<NotesEditor activeNote={publicada} />);
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('confirma «Actualitzar al Mur»');
+  expect(mocks.adapter.ajudaMostrarAlMur).not.toContain('Retirar');
+  mocks.potRetirar = true;
+  vista.rerender(<NotesEditor activeNote={{ ...publicada }} />);
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('usa «Retirar del Mur»');
+  vista.rerender(<NotesEditor activeNote={{ id: 'n-ajuda-2', title: 'Privat', revision: 1, isPublished: false }} />);
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('confirma «Publicar al Mur»');
+  expect(mocks.adapter.ajudaMostrarAlMur).not.toContain('Retirar');
+  vista.rerender(<NotesEditor activeNote={{ id: 'c-ajuda', folderId: 'f-connectats', categories: ['Sistema'], tags: [], origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa' } }} />);
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('confirma «Compartir al Mur»');
+});
+
+test('L2-05 · amb la publicació bloquejada (Foraster, mode local) l’ajuda no demana confirmar cap botó', () => {
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBeTruthy();
+  expect(mocks.adapter.visibilitat.bloqueig?.opcio).toBe('publica');
+  expect(mocks.adapter.ajudaMostrarAlMur).not.toContain('confirma');
+  expect(mocks.adapter.ajudaMostrarAlMur).toContain('Ara no es pot publicar des d’ací');
+  cleanup();
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'local' };
+  render(<NotesEditor activeNote={{ id: 'n-local', title: 'Local', revision: 1, isPublished: false }} />);
+  expect(mocks.adapter.visibilitat.bloqueig?.opcio).toBe('publica');
+  expect(mocks.adapter.ajudaMostrarAlMur).not.toContain('confirma');
+  expect(mocks.adapter.ajudaMostrarAlMur).not.toContain('Retirar');
 });

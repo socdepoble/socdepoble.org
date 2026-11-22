@@ -14,6 +14,7 @@ import { resolRecursPropi } from '../../config/assetResolver.js';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
 import { FORASTER } from '../../components/universal/UniversalUtils.js';
 import { fotoDeLaTargeta } from './imatgesDeProducte.js';
+import { formataPreuMercat } from './preuMercat.js';
 import { formataEtiquetaHumana, senseHtmlCru } from './etiquetesMercat.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { fontVideoPropia } from '../../utils/sanitize.js';
@@ -96,6 +97,6 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns } = {
     mainHref: getSectionItemPath('mercat', item.id),
     subtitle: item.subtitle || '',
     title: item.title,
-    price: item.price
+    price: formataPreuMercat(item.price)
   };
 }

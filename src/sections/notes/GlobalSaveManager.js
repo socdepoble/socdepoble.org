@@ -141,8 +141,11 @@ async function llegeixDelDisc(scopeKey) {
   } finally { db.close(); }
 }
 
+/* DOL-54 · La publicació necessita el seu acte explícit i rebut atòmic.
+   Ni una tecla ni un esborrany antic del disc poden fingir-ne el resultat. */
+const CAMPS_DE_PUBLICACIO = new Set(['isPublished', 'publishedSubmissionId', 'publicadaRevision']);
 export function draftFields(draft = {}) {
-  return Object.fromEntries(Object.entries(draft).filter(([key]) => !key.startsWith('_')));
+  return Object.fromEntries(Object.entries(draft).filter(([key]) => !key.startsWith('_') && !CAMPS_DE_PUBLICACIO.has(key)));
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -349,6 +352,7 @@ export class GlobalSaveManager {
   }
 
   enqueue(scope, id, field, value, getBase, update, clear, toast) {
+    if (CAMPS_DE_PUBLICACIO.has(field)) return Promise.resolve(false);
     const key = `${scope}:${id}`;
     let item = this.queues.get(key);
     if (!item) {

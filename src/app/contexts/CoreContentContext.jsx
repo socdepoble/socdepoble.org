@@ -56,7 +56,7 @@ export function CoreContentProvider({ children, config }) {
      la porta useScopedResource. */
   const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey]);
-  const data = useScopedResource(loadCoreContent, actorId, scopeKey, config);
+  const data = useScopedResource(loadCoreContent, actorId, scopeKey, config, 'core');
   const { status, payload, error, errorRevalidacio, refresh } = data;
   /* Decisió 2 del Mestre (261007) · L'estat global és l'entrada de la franja
      del node i del pilot del Perfil (T7 i T9, estatConnexio.js): «l'estat de

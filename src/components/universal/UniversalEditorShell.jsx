@@ -537,6 +537,9 @@ export function UniversalEditorShell({
      pinta els avisos en línia davall de l'entradilla. Sense elles, el DOM
      és el de sempre. */
   estatDesament = null,
+  /* DOL-54 · Text visible dins del document, sense afegir un germà a la
+     closca ni confondre l'autodesat privat amb la versió publicada. */
+  textEstatDesament = null,
   avisosCamps = null,
   /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja.
      `emoticona` és el camp CRU del document; amb `onObriEmoticona`, el botó
@@ -610,6 +613,7 @@ export function UniversalEditorShell({
   previsualitzacioTargeta = null,
   visibilitatEnLinia = null,
   mostrarAlMur = undefined,
+  ajudaMostrarAlMur = null,
   onCanviaMostrarAlMur = null,
   desactivatMostrarAlMur = false,
   popupVisibilitat = 'dialog',
@@ -881,9 +885,9 @@ export function UniversalEditorShell({
         onCanvi={onCanviaMostrarAlMur}
       />
       <p className="sdp-edicio-avancada__mur-ajuda">
-        {mostrarAlMur
+        {ajudaMostrarAlMur ?? (mostrarAlMur
           ? tradueix(t, TEXTOS_CLOSCA.mostrarAlMurAjudaActiu)
-          : tradueix(t, TEXTOS_CLOSCA.mostrarAlMurAjudaInactiu)}
+          : tradueix(t, TEXTOS_CLOSCA.mostrarAlMurAjudaInactiu))}
       </p>
     </div>
   ) : null;
@@ -1048,6 +1052,9 @@ export function UniversalEditorShell({
                nova), cap píndola: el flux bàsic queda net. */
             labels={labels}
           >
+            {/* v1.2.20 · Gauntlet R1 (L2-07) · Visible i sense regió viva: l'autodesament ja l'anuncia
+                RegioEstatDesament, i este paràgraf llarg canviaria a cada pausa d'escriptura. */}
+            {textEstatDesament ? <p className="sdp-edicio-avancada__mur-ajuda" data-sdp-notes-desament="true">{textEstatDesament}</p> : null}
             {/* T47 · Sempre en esta posició (null sense avisos): el cos no es remunta. */}
             {avisosCamps ? <AvisosCamps avisos={avisosCamps} onAccio={executaAccioDeCamp} /> : null}
             {/* Bloc 3.9 (261016) · «Edició avançada», just damunt de les eines.

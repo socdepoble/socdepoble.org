@@ -301,10 +301,17 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
      continua darrere, íntegra. */
   /* Onada v1.2.18 · La 1.1.26 obri ara el registre (Gauntlet R1, L5-04), i la 1.1.25 continua darrere, íntegra. */
   /* Onada v1.2.19 · La 1.1.27 obri ara el registre, i la 1.1.26 continua darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.27</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.19 de Sóc de Poble'), 'v1.2.19: la 1.1.27 obri el registre');
+  /* Onada v1.2.20 · La 1.1.28 obri ara el registre, i la 1.1.27 continua darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.28</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.20 de Sóc de Poble'), 'v1.2.20: la 1.1.28 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.27</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.19 de Sóc de Poble'), 'v1.2.20: la 1.1.27 es queda al registre');
+  /* v1.2.20 · Gauntlet R2 (L3R2-05) · La 1.1.28, amb els límits de la crònica: els preus són els de la llista del Mercat i
+     el GPS és el de dins del fitxer. */
+  const reg1128 = changelog.slice(0, changelog.indexOf('</ul><h4>1.1.27</h4>'));
+  assert.ok(reg1128.includes('els preus de la llista del Mercat porten coma decimal'), 'v1.2.20: els preus, acotats a la llista');
+  assert.ok(reg1128.includes('sense les dades de GPS dins del fitxer'), 'v1.2.20: el GPS, el de dins del fitxer');
   /* v1.2.19 · Gauntlet R1 (L4-04, L5-01 i L2-06) · Les dues línies senceres de la 1.1.27, amb els mateixos límits que la
      crònica de /versions: res d'absoluts («cap pantalla», «ja no es barregen») ni de promeses que el codi no fa. */
-  const reg1127 = changelog.slice(0, changelog.indexOf('</ul><h4>1.1.26</h4>'));
+  const reg1127 = changelog.slice(changelog.indexOf('<h4>1.1.27</h4>'), changelog.indexOf('</ul><h4>1.1.26</h4>'));
   assert.match(reg1127, /el perfil i la IAIA ja no mostren respostes d(?:'|&#0?39;|&#8217;|’)una sessió tancada/, 'v1.2.19: la sessió, acotada al perfil i a la IAIA');
   assert.ok(reg1127.includes('algunes pantalles aguanten millor les dates i els imports que no quadren'), 'v1.2.19: les pantalles, sense absoluts');
   assert.ok(reg1127.includes('si el connector ja hi era, des que un administrador obri el tauler'), 'v1.2.19: els ajustos, amb la seua condició');

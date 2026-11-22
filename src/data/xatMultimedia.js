@@ -91,14 +91,16 @@ export const tempsLimitPujada = (bytes) => 30_000 + Math.ceil(Math.max(0, Number
 /** Un Error amb el `code` i el text valencià d'ERRORS_ADJUNT_XAT. */
 export const errorAdjuntXat = (code, extra = {}) => Object.assign(new Error(ERRORS_ADJUNT_XAT[code]), { code, ...extra });
 
-/** Només coordenades explícites del DTO: sense coacció, altitud ni autoritat. */
+/** Coordenades explícites a la precisió de la prèvia: 0,01°, sense altitud. */
 export function normalitzaUbicacioXat(valor) {
   if (valor === null || valor === undefined) return null;
   if (typeof valor !== 'object' || Array.isArray(valor) || Object.keys(valor).length !== 2
     || !Object.keys(valor).every(clau => clau === 'lat' || clau === 'lng')
     || !Number.isFinite(valor.lat) || !Number.isFinite(valor.lng)
     || valor.lat < -90 || valor.lat > 90 || valor.lng < -180 || valor.lng > 180) throw errorAdjuntXat('ubicacio-invalida');
-  return { lat: valor.lat, lng: valor.lng };
+  // DOL-55: el DTO consentit mai no conserva decimals amagats per la UI.
+  // `|| 0` evita un -0 que podria reaparéixer com a signe en la prèvia.
+  return { lat: Number(valor.lat.toFixed(2)) || 0, lng: Number(valor.lng.toFixed(2)) || 0 };
 }
 
 export function validaAdjuntXat({ fitxer, tipus, duradaMs, ubicacio, conservaUbicacio }) {

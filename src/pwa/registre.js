@@ -359,6 +359,22 @@ export function registraServiceWorker({
     /* sense el toc dels avisos, el registre continua */
   }
 
+  // Reserva pública en text pla, fora del paquet dels amfitrions.
+  void import('./lecturaPublicaOffline.js')
+    .then(modul => modul.iniciaLecturaPublicaOffline({ finestra,
+      publica: dades => {
+        const controlador = navegador.serviceWorker.controller;
+        if (!controlador?.postMessage) return false;
+        controlador.postMessage(dades);
+        return true;
+      },
+      escoltaControlador: fn => {
+        navegador.serviceWorker.addEventListener?.('controllerchange', fn);
+        return () => navegador.serviceWorker.removeEventListener?.('controllerchange', fn);
+      }
+    }))
+    .catch(() => {});
+
   const registra = () => Promise.resolve()
     .then(() => navegador.serviceWorker.register(RUTA_DEL_SW, { scope: ABAST_DEL_SW }))
     .then((registre) => ({ registrat: true, registre }))

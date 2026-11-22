@@ -25,7 +25,18 @@
  * d'«Informa d'un error»). L'historial de la IAIA (IAIALocalProvider) encara
  * no s'hi marca: una pregunta suggerida de la IAIA es pot perdre. Cap clic no
  * marca res. La fita R21 C5 de /versions descriu el comportament d'aquella
- * versió. */
+ * versió.
+ * v1.2.20 · Gauntlet R1 (L4-01) · La prova té dues parts, i cal tindre-les
+ * totes dues: un /index.html propi d'un altre build i un hash fallit que ja no
+ * hi és. El desplegament reté els trossos dels tres builds anteriors
+ * (tooling/scripts/retencio-assets.mjs): en una pestanya d'eixos builds el tros
+ * encara es servix, i la seua fallada és de transport (la xarxa, un 5xx): ni
+ * recarrega ni purga la closca. Que el tros no hi és ho diu el mateix
+ * navegador, sense tornar-lo a demanar (testimoniDeRecursos: el 404 de la
+ * càrrega original). Si el navegador no ho sap, el torna a preguntar el HEAD de
+ * la v1.2.19 abans de cap purga.
+ * WebKit (missatge sense URL) continua com en la v1.2.19: sense hash no hi ha
+ * res a preguntar, i n'hi ha prou amb l'HTML. */
 export const CLAU_RECUPERACIO_CHUNK = 'sdp:chunk-deploy:v1';
 export const FINESTRA_ANTI_BUCLE_MS = 60000;
 export const MAXIM_HTML_DEPLOY = 131072;
@@ -204,12 +215,52 @@ async function ambTopall(task, ms, controller) {
   } finally { clearTimeout(timer); }
 }
 
+/* v1.2.20 · Gauntlet R1 (L4-01) · El que el navegador ja sap del tros fallit,
+ * sense tornar-lo a demanar: l'estat HTTP de la seua última càrrega (Resource
+ * Timing, responseStatus). Només un 404/410, o un HTML 200 sota el hash, prova
+ * que el tros ja no hi és, i eixa prova estalvia el HEAD i el segon 404 roig. Un
+ * 0 (xarxa), un 5xx, un JS 200 o cap dada no proven res. L'observador naix en
+ * arrencar: en una pestanya llarga el buffer de Resource Timing (250 entrades)
+ * s'omple i deixa fora la càrrega fallida, però l'observador la rep igualment.
+ * Guarda com a molt 64 camins propis, sense consulta, i mai llança. */
+export function testimoniDeRecursos(finestra, origin = finestra?.location?.origin) {
+  const vistos = new Map();
+  let observador = null;
+  const anota = llista => {
+    for (const e of Array.from(llista || []).slice(-256)) {
+      const path = recursPropi(e?.name, origin), s = e?.responseStatus;
+      if (!path || !Number.isInteger(s)) continue;
+      vistos.delete(path);
+      vistos.set(path, s === 404 || s === 410 || s === 200 && MIME(e.contentType) === 'text/html');
+      if (vistos.size > 64) vistos.delete(vistos.keys().next().value);
+    }
+  };
+  try {
+    const o = new finestra.PerformanceObserver(l => { try { anota(l.getEntries()); } catch { /* sense prova */ } });
+    o.observe({ type: 'resource', buffered: true });
+    observador = o;
+  } catch { /* sense observador, encara queda el buffer */ }
+  return Object.freeze({
+    retirat(recurs) {
+      try {
+        anota(observador?.takeRecords?.());
+        if (!vistos.has(recurs)) anota(finestra.performance?.getEntriesByName?.(origin + recurs, 'resource'));
+        return vistos.get(recurs) === true;
+      } catch { return false; }
+    },
+    atura() { try { observador?.disconnect(); } catch { /* ja desconnectat */ } observador = null; }
+  });
+}
+
 /** Les dependències s'injecten per provar la mateixa màquina que usa la web.
  * `tePendents()` és el veto de l'estat en memòria que el DOM no veu (pwa-01):
- * cert, una resposta que no és funció o una excepció impedixen recarregar. */
+ * cert, una resposta que no és funció o una excepció impedixen recarregar.
+ * v1.2.20 · Gauntlet R1 (L4-01) · `retiratSenseSonda(recurs)` és la prova del
+ * navegador (testimoniDeRecursos): només un `true` estalvia el HEAD. */
 export function creaRecuperacioChunkDeploy({
   finestra = globalThis.window, navegador = globalThis.navigator, fetchFn = globalThis.fetch,
-  magatzem, ara = Date.now, topallMs = 3000, preparaWorker = async () => {}, tePendents = () => false
+  magatzem, ara = Date.now, topallMs = 3000, preparaWorker = async () => {}, tePendents = () => false,
+  retiratSenseSonda = () => false
 } = {}) {
   let vigent = true, pendent = null, ultimaSonda = null, controlador = null;
   const origin = finestra?.location?.origin;
@@ -259,7 +310,18 @@ export function creaRecuperacioChunkDeploy({
         return entradesHtmlDeploy(await textAcotat(response), origin);
       })(), topall, controller);
       if (!fresh.length || empremta(fresh) === fingerprint || !contextValid(href)) return false;
-      if (failure.recurs) {
+      // R32.34 · Un recurs que encara és una entrada del build fresc no és
+      // prova de skew: conservem el fallback de l'error.
+      if (failure.recurs && fresh.includes(failure.recurs)) return false;
+      // v1.2.20 · Gauntlet R1 (L4-01) · L'HTML acredita un build distint, però
+      // no que el hash fallit s'haja retirat: la retenció servix els trossos dels
+      // tres builds anteriors. Si el navegador ja ha vist el 404 del tros, no el
+      // tornem a demanar (cap segon 404 roig, com volia R32.34). Si no, el HEAD
+      // de la v1.2.19 el torna a preguntar abans de cap purga, i només un 404/410
+      // o un HTML 200 deixen recarregar.
+      let vist = false;
+      try { vist = Boolean(failure.recurs) && retiratSenseSonda(failure.recurs) === true; } catch { vist = false; }
+      if (failure.recurs && !vist) {
         const response = await ambTopall(fetchFn(origin + failure.recurs, { method: 'HEAD', cache: 'no-store',
           credentials: 'same-origin', redirect: 'error', signal: controller.signal }), topall, controller);
         if (response.redirected || response.url && new URL(response.url).origin !== origin) return false;
@@ -312,7 +374,10 @@ export function instalLaRecuperacioChunkDeploy(opcions = {}) {
   let entrada = false;
   const marca = () => { entrada = true; };
   const altres = opcions.tePendents === undefined ? () => false : opcions.tePendents;
-  const motor = creaRecuperacioChunkDeploy({ ...opcions, finestra,
+  // v1.2.20 · Gauntlet R1 (L4-01) · El testimoni naix amb l'entrada, abans de
+  // cap càrrega diferida, i mor amb ella.
+  const testimoni = testimoniDeRecursos(finestra);
+  const motor = creaRecuperacioChunkDeploy({ ...opcions, finestra, retiratSenseSonda: testimoni.retirat,
     tePendents: () => entrada || typeof altres !== 'function' || Boolean(altres()) });
   const rep = event => { void motor.recupera(event?.payload || event?.reason || event?.error); };
   for (const tipus of ENTRADES_AMB_ESTAT_EN_MEMORIA) finestra.addEventListener(tipus, marca, CAPTURA);
@@ -320,6 +385,7 @@ export function instalLaRecuperacioChunkDeploy(opcions = {}) {
   finestra.addEventListener('unhandledrejection', rep);
   const entry = { finestra, motor, atura() {
     motor.atura();
+    testimoni.atura();
     for (const tipus of ENTRADES_AMB_ESTAT_EN_MEMORIA) finestra.removeEventListener?.(tipus, marca, CAPTURA);
     finestra.removeEventListener?.('vite:preloadError', rep);
     finestra.removeEventListener?.('unhandledrejection', rep);

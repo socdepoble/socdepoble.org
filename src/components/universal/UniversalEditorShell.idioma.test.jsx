@@ -381,3 +381,19 @@ describe('sense traductor, el valencià de sempre; en valencià, el mateix DOM',
     expect(fora).toContain('Esborrar');
   });
 });
+
+test('DOL-54 · Notes pot explicar la preferència sense afirmar una publicació', () => {
+  const ajuda = 'Preferència per a la pròxima publicació; confirma Publicar.';
+  const vista = closca({ edicioAvancada: true, mostrarAlMur: true, onCanviaMostrarAlMur: vi.fn(), ajudaMostrarAlMur: ajuda, textEstatDesament: 'Esborrany privat confirmat.' });
+  expect(vista.getByText(ajuda)).toBeTruthy();
+  /* v1.2.20 · Gauntlet R1 (L2-07) · El lloc del desat es veu dins del document, però no és una segona
+     regió viva: la de l'autodesament (RegioEstatDesament) ja anuncia cada pas, i este paràgraf llarg
+     canviaria a cada pausa d'escriptura. */
+  const paragraf = vista.container.querySelector('[data-sdp-notes-desament="true"]');
+  expect(paragraf.textContent).toBe('Esborrany privat confirmat.');
+  expect(paragraf.hasAttribute('role')).toBe(false);
+  expect(paragraf.hasAttribute('aria-live')).toBe(false);
+  expect(paragraf.closest('[aria-live], [role="status"], [role="alert"], [role="log"]')).toBeNull();
+  expect(vista.queryAllByRole('status').some((regio) => regio.textContent.includes('Esborrany privat confirmat.'))).toBe(false);
+  expect(vista.queryByText(TEXTOS_CLOSCA.mostrarAlMurAjudaActiu[1])).toBeNull();
+});

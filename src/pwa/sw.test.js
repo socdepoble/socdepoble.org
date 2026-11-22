@@ -113,9 +113,9 @@ async function demana(worker, req, { preloadResponse } = {}) {
 }
 
 /** Dispara un missatge d'una pàgina i espera la feina; torna quants waitUntil hi ha hagut. */
-async function missatge(worker, data, { origin = ORIGEN } = {}) {
+async function missatge(worker, data, { origin = ORIGEN, source } = {}) {
   const pendents = [];
-  for (const escolta of worker.escoltes.get('message')) escolta({ data, origin, waitUntil: (p) => { pendents.push(p); } });
+  for (const escolta of worker.escoltes.get('message')) escolta({ data, origin, source, waitUntil: (p) => { pendents.push(p); } });
   await Promise.all(pendents);
   return pendents.length;
 }
@@ -194,7 +194,7 @@ async function comprovaPaginaHonesta(r, worker) {
   return html;
 }
 
-const TEXT_DE_SEMPRE = 'Sóc de Poble necessita la xarxa per a mostrar-te el poble: les dades viuen al servidor i este dispositiu no en guarda cap còpia.';
+const TEXT_DE_SEMPRE = 'Sóc de Poble necessita la xarxa per a mostrar-te el poble: les dades viuen al servidor i només hi ha reserva de lectura de les pàgines públiques visitades sense sessió en este dispositiu.';
 const TEXT_DE_LES_APPS = 'Esta app encara no està guardada en este dispositiu per a obrir-se sense connexió.';
 const senseXarxa = () => vi.fn(async () => { throw new TypeError('Failed to fetch'); });
 
@@ -311,7 +311,7 @@ describe('memòries: neteja i poda (pures)', () => {
 
   test('amb la closca, les dos memòries vives es queden i les versions velles de totes dos ixen', () => {
     expect(api.MEMORIA_CLOSCA).toBe('sdp-pwa-closca-v1');
-    expect(Array.from(api.MEMORIES_VIVES)).toEqual(['sdp-pwa-recursos-v1', 'sdp-pwa-closca-v1']);
+    expect(Array.from(api.MEMORIES_VIVES)).toEqual(['sdp-pwa-recursos-v1', 'sdp-pwa-closca-v1', 'sdp-pwa-lectures-v1']);
     const noms = ['sdp-pwa-recursos-v1', 'sdp-pwa-closca-v1', 'sdp-pwa-closca-v0', 'sdp-pwa-recursos-v0', 'workbox-x', 'sdp-bar'];
     expect(Array.from(api.cachesAEsborrar(noms, api.MEMORIES_VIVES))).toEqual(['sdp-pwa-closca-v0', 'sdp-pwa-recursos-v0', 'workbox-x']);
   });
@@ -1703,4 +1703,99 @@ describe('R21.9b · cache de desplegament', () => {
     await demana(worker, req);
     expect(worker.fetch).toHaveBeenCalledWith(req, { cache: 'no-store' });
   });
+});
+
+
+describe('DOL-32 · reserva de lectura pública en tallar la xarxa real del worker', () => {
+  const dades = cami => ({ tipus: 'sdp-lectura-publica', cami, capturadaEl: new Date().toISOString(), titol: 'Mercat <script>alert(1)</script>',
+    text: 'Mel del poble, collita de novembre. <img src=x onerror=alert(1)>' });
+  const client = cami => ({ id: 'anon', url: ORIGEN + cami });
+  const source = { id: 'anon' };
+  test('visita, captura, xarxa tallada: lectura sense JS amb data real i estat 503 honest', async () => {
+    const { caches } = memoriesFalses();
+    const fetch = vi.fn().mockRejectedValue(new TypeError('Sense xarxa'));
+    const worker = carregaWorker({ caches, fetch, clients: { get: vi.fn(async () => client('/mercat/oli')) } });
+    await missatge(worker, { ...dades('/mercat/oli'), captura: '2000-01-01T00:00:00Z' }, { source });
+    const resultat = await demana(worker, peticio('/mercat/oli', { mode: 'navigate' }));
+    expect(resultat.resposta.status).toBe(503);
+    const html = await resultat.resposta.text();
+    expect(html).toContain('Còpia de lectura');
+    expect(html).toContain('Mel del poble');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('2000-01-01');
+    expect(resultat.resposta.headers.get('x-sdp-capturada')).toMatch(/^20\d\d-/);
+    expect(resultat.resposta.headers.get('content-security-policy')).toContain("default-src 'none'");
+    expect(resultat.resposta.headers.get('cache-control')).toBe('no-store');
+  });
+  test.each(['/notes', '/mercat/editar', '/mur/a?token=secret', '/mercat#secret'])('mai desa una ruta privada o amb paràmetres %s', async cami => {
+    const { caches, memories } = memoriesFalses();
+    const worker = carregaWorker({ caches, clients: { get: vi.fn(async () => client(cami)) } });
+    await missatge(worker, dades(cami), { source });
+    expect(memories.size).toBe(0);
+  });
+  test('una ruta diferent de la del client i un missatge sense client no es desen', async () => {
+    const { caches, memories } = memoriesFalses();
+    const worker = carregaWorker({ caches, clients: { get: vi.fn(async () => client('/mercat/a')) } });
+    await missatge(worker, dades('/mercat/b'), { source });
+    await missatge(worker, dades('/mercat/a'));
+    expect(memories.size).toBe(0);
+  });
+  test('el servidor continua manant: un HTTP 404 no es tapa amb la còpia', async () => {
+    const { caches } = memoriesFalses();
+    const servidor = resposta({ status: 404, cos: 'Retirat' });
+    const worker = carregaWorker({ caches, fetch: vi.fn(async () => servidor), clients: { get: vi.fn(async () => client('/mercat/oli')) } });
+    await missatge(worker, dades('/mercat/oli'), { source });
+    expect((await demana(worker, peticio('/mercat/oli', { mode: 'navigate' }))).resposta).toBe(servidor);
+  });
+  test('data de la font: una reserva caducada o del futur mai es persistix', async () => {
+    const { caches, memories } = memoriesFalses();
+    const worker = carregaWorker({ caches, clients: { get: vi.fn(async () => client('/mercat/oli')) } });
+    for (const capturadaEl of ['2000-01-01T00:00:00.000Z', '9999-01-01T00:00:00.000Z', 'invalida']) {
+      await missatge(worker, { ...dades('/mercat/oli'), capturadaEl }, { source });
+    }
+    expect(memories.size).toBe(0);
+  });
+  test('sostre de 24 reserves: la més antiga ix i no es torna a presentar com a viva', async () => {
+    const { caches, memories } = memoriesFalses();
+    let cami;
+    const worker = carregaWorker({ caches, fetch: vi.fn().mockRejectedValue(new TypeError('Sense xarxa')),
+      clients: { get: vi.fn(async () => client(cami)) } });
+    for (let i = 0; i < 25; i++) {
+      cami = `/mercat/producte-${i}`;
+      await missatge(worker, dades(cami), { source });
+    }
+    const memoria = memories.get('sdp-pwa-lectures-v1');
+    expect(memoria.size).toBe(24);
+    expect(memoria.has(ORIGEN + '/mercat/producte-0')).toBe(false);
+    expect(memoria.has(ORIGEN + '/mercat/producte-24')).toBe(true);
+  });
+
+  /* v1.2.20 · Gauntlet R1 (L3-06) · La data visible és llegible, en valencià (el document és
+     lang="ca") i a l'hora del poble; l'ISO UTC només a l'atribut datetime. El cas és el de prop de
+     mitjanit: les 0:30 de Madrid són les 23:30Z (o les 22:30Z a l'estiu) del dia d'abans, i el
+     lector no pot llegir un altre dia. El worker comprova la data amb el seu rellotge real, i per
+     això es busca l'últim 0:30 de Madrid de les darreres 48 hores. */
+  test('la data de la còpia es llig en valencià i a l’hora de Madrid, amb el datetime intacte', async () => {
+    const madrid = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+    const parts = (ms) => Object.fromEntries(madrid.formatToParts(ms).map(({ type, value }) => [type, Number(value)]));
+    const hora = Math.floor(Date.now() / 3600000) * 3600000;
+    const captura = Array.from({ length: 48 }, (_, k) => hora - (k + 1) * 3600000 + 30 * 60000)
+      .find((ms) => parts(ms).hour === 0 && parts(ms).minute === 30);
+    const iso = new Date(captura).toISOString();
+    const { caches } = memoriesFalses();
+    const worker = carregaWorker({ caches, fetch: vi.fn().mockRejectedValue(new TypeError('Sense xarxa')), clients: { get: vi.fn(async () => client('/mercat/oli')) } });
+    await missatge(worker, { ...dades('/mercat/oli'), capturadaEl: iso }, { source });
+    const html = await (await demana(worker, peticio('/mercat/oli', { mode: 'navigate' }))).resposta.text();
+    const [, datetime, visible] = /<time datetime="([^"]+)">([^<]+)<\/time>/.exec(html);
+    expect(datetime).toBe(iso);
+    expect(visible).not.toContain(iso);
+    expect(visible).not.toMatch(/\d{4}-\d{2}-\d{2}T|Z\b/);
+    const { day, month, year } = parts(captura);
+    const mesos = ['gener', 'febrer', 'març', 'abril', 'maig', 'juny', 'juliol', 'agost', 'setembre', 'octubre', 'novembre', 'desembre'];
+    expect(visible).toMatch(new RegExp(`^${day} d(?:e |’|&#39;)${mesos[month - 1]} del? ${year}, a les 0:30$`));
+    expect(html).toMatch(/^<!doctype html><html lang="ca">/);
+  });
+
 });

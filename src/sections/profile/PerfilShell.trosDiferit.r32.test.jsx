@@ -38,10 +38,8 @@ describe('Onada R32 · T1 · Panells diferits de PerfilShell i vite:preloadError
 
     _reiniciaTransicioDeDocument();
     window.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
-    expect(spy).toHaveBeenCalledWith(
-      '[host] Error de xarxa en la càrrega diferida de mòduls Vite:',
-      expect.any(Event),
-    );
+    expect(spy).not.toHaveBeenCalled();
+    expect(incidents()).toEqual([expect.objectContaining({ tipus: 'tros', on: 'host', accio: 'preload-error' })]);
   });
 
   test('PanellDiferitDelPerfil aïlla una fallada de xarxa i permet un reintent real sense tombar el Perfil', async () => {

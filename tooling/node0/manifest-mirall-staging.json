@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "49f52be6503e386aaad8f1b3b8aa1ba2ddbe77acad857571cab1ad850a2c8992"
+      "sha256": "277462cdd45451b7a225416a75c7b8cb2ca745c36a3a781dd28a6e2dab196f8a"
     },
     {
       "path": "src/data/contracteAvisos.js",
@@ -91,7 +91,7 @@
     },
     {
       "path": "src/utils/esdeveniment.js",
-      "sha256": "207ba08e8b64d2099057b131586a6f0035bca8c582e0627e7f4db4378519d47a"
+      "sha256": "6e488a4a4e58a57d5286532e051b2e913c8fa9d78ebeb9b4c9b8d0f3b138d418"
     },
     {
       "path": "src/utils/fulls/inflate.js",

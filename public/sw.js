@@ -4,8 +4,9 @@
    FASE0_PWA.txt i _wiki_de_poble/02_saber/architecture/
    ADR-2026-10-APPS-DEL-DISPOSITIU.md (esmena de l'ADR-2026-08).
 
-   Online-first (ADR-2026-08): el servidor és la font de veritat i este worker
-   no en guarda cap dada. Fa quatre coses i prou:
+   Online-first (ADR-2026-08): el servidor és la font de veritat. No es guarden
+   respostes d’API ni dades autenticades. La reserva pública és text separat
+   de la lectura crua anònima, amb data i sense accions. El worker gestiona:
      · navegacions de l'origen propi → xarxa, amb precàrrega de navegació (la
        petició ix mentre el worker arrenca); sense xarxa, una pàgina honesta
        «Sense connexió» que viu dins d'este fitxer;
@@ -20,7 +21,7 @@
        la confirmació. Només es dona sense xarxa, a una navegació de la
        mateixa app, si la pàgina l'ha confirmada i si tots eixos recursos
        continuen desats; amb xarxa, cada navegació la refresca. Fora de
-       /app/* no es guarda mai cap HTML;
+       /app/* no es guarda mai l’HTML del servidor;
      · recursos del build amb empremta (/assets/<nom>-<hash de 8>.js|css|woff2,
        a l'arrel de /assets/) → memòria cau primer: el nom canvia amb el
        contingut. La memòria té sostre d'entrades i de bytes. La pàgina d'una
@@ -60,7 +61,13 @@ const MEMORIA_RECURSOS = `${PREFIX_PROPI}recursos-${VERSIO}`;
    vella en activar i deixa els recursos on són. */
 const VERSIO_CLOSCA = 'v1';
 const MEMORIA_CLOSCA = `${PREFIX_PROPI}closca-${VERSIO_CLOSCA}`;
-const MEMORIES_VIVES = Object.freeze([MEMORIA_RECURSOS, MEMORIA_CLOSCA]);
+const MEMORIA_LECTURES = `${PREFIX_PROPI}lectures-v1`;
+const MEMORIES_VIVES = Object.freeze([MEMORIA_RECURSOS, MEMORIA_CLOSCA, MEMORIA_LECTURES]);
+const MISSATGE_LECTURA_PUBLICA = 'sdp-lectura-publica';
+const CAPCALERA_CAPTURA = 'x-sdp-capturada';
+const MAXIM_LECTURES = 24;
+const CADUCITAT_LECTURA_MS = 7 * 86400000;
+const RUTA_LECTURA_PUBLICA = /^\/(?:mur|mercat|pobles|calendari)(?:\/[a-z0-9][a-z0-9_-]{0,99})?\/?$/i;
 /* Els chunks amb empremta s'acumulen entre desplegaments (este fitxer no
    canvia a cada build) i el chunk d'entrada canvia de nom a cada
    desplegament: poda FIFO per damunt d'estes entrades O d'estos bytes, el que
@@ -448,7 +455,7 @@ function midaDeLaClau(clau) {
 function paginaSenseConnexio(deLesApps = false) {
   const explicacio = deLesApps
     ? "<p>Esta app encara no està guardada en este dispositiu per a obrir-se sense connexió. Obri-la una vegada amb connexió i la pròxima vegada també s'obrirà sense xarxa.</p>"
-    : '<p>Sóc de Poble necessita la xarxa per a mostrar-te el poble: les dades viuen al servidor i este dispositiu no en guarda cap còpia.</p>';
+    : '<p>Sóc de Poble necessita la xarxa per a mostrar-te el poble: les dades viuen al servidor i només hi ha reserva de lectura de les pàgines públiques visitades sense sessió en este dispositiu.</p>';
   return `<!doctype html>
 <html lang="ca">
 <head>
@@ -479,6 +486,65 @@ ${explicacio}
 </body>
 </html>
 `;
+}
+
+/* La reserva pública és text pla d'una visita anònima, mai una closca SPA
+   ni una resposta d'API. No hi ha JavaScript ni accions sobre dades velles. */
+function esUrlDeLecturaPublica(url) {
+  return url.origin === self.location.origin && !url.search && !url.hash && !url.username && !url.password &&
+    RUTA_LECTURA_PUBLICA.test(url.pathname) && !/\/(?:nou|nova|editar|edit|create|esborranys?)\/?$/i.test(url.pathname);
+}
+
+function escapaLectura(text) {
+  return String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+/* v1.2.20 · Gauntlet R1 (L3-06) · La data visible de la còpia, llegible i en valencià, la llengua
+   del document (lang="ca"), a l'hora del poble: «22 de novembre del 2026, a les 0:30», no
+   «2026-11-21T23:30:00.000Z». L'ISO UTC queda intacte a l'atribut datetime. Sense Intl (cap
+   navegador de la línia base), el dia i l'hora en UTC, amb l'etiqueta UTC. Pura. */
+function dataLlegibleDeLaCopia(ms) {
+  try {
+    return new Intl.DateTimeFormat('ca', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Madrid' }).format(ms);
+  } catch {
+    const d = new Date(ms);
+    const dos = n => String(n).padStart(2, '0');
+    return `${d.getUTCDate()}-${dos(d.getUTCMonth() + 1)}-${d.getUTCFullYear()}, ${dos(d.getUTCHours())}:${dos(d.getUTCMinutes())} UTC`;
+  }
+}
+
+async function desaLecturaPublica(event) {
+  const dades = event.data;
+  if (!dades || dades.tipus !== MISSATGE_LECTURA_PUBLICA || typeof dades.cami !== 'string' ||
+      typeof dades.text !== 'string' || dades.text.length < 30 || dades.text.length > 80000 ||
+      typeof dades.titol !== 'string' || dades.titol.length > 200 || !event.source?.id) return;
+  // El client l'autoritat del qual es comprova ha de continuar en eixa ruta.
+  const client = await self.clients.get(event.source.id);
+  const url = new URL(client?.url || 'https://invalid.invalid');
+  if (!esUrlDeLecturaPublica(url) || url.pathname !== dades.cami) return;
+  const instantCaptura = typeof dades.capturadaEl === 'string' ? Date.parse(dades.capturadaEl) : NaN;
+  const edat = Date.now() - instantCaptura;
+  if (!Number.isFinite(instantCaptura) || edat < 0 || edat > CADUCITAT_LECTURA_MS) return;
+  const captura = new Date(instantCaptura).toISOString();
+  const html = `<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapaLectura(dades.titol)} · Còpia sense connexió</title><style>body{font:18px/1.6 system-ui;margin:24px auto;padding:0 20px;max-width:48rem;color:#171717;background:#fff}aside{border:2px solid #8a4200;padding:16px}article{white-space:pre-wrap;overflow-wrap:anywhere}a{display:inline-block;padding:12px 0}</style><main><aside><h1>Sense connexió · Còpia de lectura</h1><p>Esta còpia es va guardar el <time datetime="${captura}">${escapaLectura(dataLlegibleDeLaCopia(instantCaptura))}</time>. Pot haver canviat o haver-se retirat. Cap dada és en directe; torna a connectar-te per a confirmar-la.</p></aside><h2>${escapaLectura(dades.titol)}</h2><article>${escapaLectura(dades.text)}</article><a href="">Torna-ho a provar amb connexió</a></main></html>`;
+  const memoria = await caches.open(MEMORIA_LECTURES);
+  await memoria.put(new Request(url.href), new Response(html, { status: 503, headers: {
+    'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',
+    'Content-Security-Policy': CSP_SENSE_CONNEXIO, [CAPCALERA_CAPTURA]: captura
+  } }));
+  const claus = await memoria.keys();
+  for (const clau of claus.slice(0, Math.max(0, claus.length - MAXIM_LECTURES))) await memoria.delete(clau);
+}
+
+async function lecturaPublicaDesada(url) {
+  try {
+    if (!esUrlDeLecturaPublica(url) || !(await caches.has(MEMORIA_LECTURES))) return null;
+    const memoria = await caches.open(MEMORIA_LECTURES);
+    const desada = await memoria.match(url.href);
+    const captura = Date.parse(desada?.headers.get(CAPCALERA_CAPTURA));
+    const edat = Date.now() - captura;
+    return Number.isFinite(captura) && edat >= 0 && edat <= CADUCITAT_LECTURA_MS ? desada : null;
+  } catch { return null; }
 }
 
 function descriuPeticio(peticio) {
@@ -621,11 +687,13 @@ async function closcaDesada(cami) {
 /* Xarxa primer. Primer la precàrrega de navegació (ja ha eixit mentre el
    worker arrencava); si no n'hi ha, o falla, la xarxa una vegada. Un error
    HTTP del servidor arriba tal qual; només la falta de xarxa porta la pàgina
-   honesta. Fora de /app/* no s'obri cap memòria i cap navegació es guarda.
+   honesta. Fora de /app/* només es pot llegir la reserva pública separada,
+   datada i sense scripts; mai es guarda l'HTML de la navegació.
    A /app/*, una resposta bona es desa com a closca de la seua app i, sense
    xarxa, es dona la closca d'eixa app si encara es pot arrencar. */
 async function navega(event) {
-  const cami = new URL(event.request.url).pathname;
+  const url = new URL(event.request.url);
+  const cami = url.pathname;
   const app = esCamiDApp(cami);
   let resposta = null;
   try {
@@ -637,7 +705,7 @@ async function navega(event) {
     try {
       resposta = await fetch(event.request, { cache: 'no-store' });
     } catch {
-      if (!app) return respostaSenseConnexio();
+      if (!app) return (await lecturaPublicaDesada(url)) || respostaSenseConnexio();
       return (await closcaDesada(cami)) || respostaSenseConnexio(true);
     }
   }
@@ -836,6 +904,11 @@ self.addEventListener('message', (event) => {
   if (esOrdreLlegadaDeSaltarEspera(event.data)) {
     const salt = Promise.resolve(self.skipWaiting()).catch(() => {});
     if (typeof event.waitUntil === 'function') event.waitUntil(salt);
+    return;
+  }
+  if (event.data?.tipus === MISSATGE_LECTURA_PUBLICA) {
+    const feina = desaLecturaPublica(event).catch(() => {});
+    if (typeof event.waitUntil === 'function') event.waitUntil(feina);
     return;
   }
   const pla = planDEscalfament(event.data, self.location.origin);

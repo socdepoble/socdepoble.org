@@ -38,9 +38,9 @@
 import { enTransicioDeDocument } from './apps/plataforma/lazyRoute.js';
 
 if (typeof window !== 'undefined') {
-  window.addEventListener('vite:preloadError', (event) => {
+  window.addEventListener('vite:preloadError', () => {
     if (enTransicioDeDocument()) return;
-    console.error('[host] Error de xarxa en la càrrega diferida de mòduls Vite:', event);
+    registraIncident('tros', 'host', 'preload-error');
     // No preventDefault: el rebuig ha d'arribar al carregador i al propietari
     // de ruta. No hi ha recàrregues automàtiques ni cap estat a la URL.
   });

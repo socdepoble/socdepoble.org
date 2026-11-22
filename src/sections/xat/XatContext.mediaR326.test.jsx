@@ -143,3 +143,24 @@ test('R32.8 · opt-out no confirma una ubicació d’un primer intent antic', as
   await munta();mock.publicaAdjuntXat.mockResolvedValueOnce({ ...ack(), metadades: { ubicacio: { lat: 38.64, lng: -0.49 } } });
   await act(async () => { await expect(value.sendChatMedia({ id: FIL }, { ...adjunt(), conservaUbicacio: false })).rejects.toMatchObject({ code: 'sense-confirmacio' }); });
 });
+
+test('DOL-55: el port neutral rep només dos decimals encara que l’adjunt antic en tinga més', async () => {
+  await munta();
+  const ubicacio = Object.freeze({ lat: 38.5919, lng: -0.4184 });
+  mock.publicaAdjuntXat.mockResolvedValueOnce(ack({ metadades: { ubicacio: { lat: 38.59, lng: -0.42 } } }));
+  await act(async () => { expect(await value.sendChatMedia({ id: FIL }, { ...adjunt(), ubicacio })).toHaveLength(1); });
+  expect(mock.publicaAdjuntXat.mock.calls[0][1].ubicacio).toEqual({ lat: 38.59, lng: -0.42 });
+  expect(ubicacio).toEqual({ lat: 38.5919, lng: -0.4184 });
+});
+
+test.each([
+  [{ lat: 38.5919, lng: -0.4184 }, false],
+  [{ lat: 38.59, lng: -0.42 }, true],
+])('DOL-55: ACK amb decimals ocults o lloc després del fallback no entra a les bombolles %j', async (ubicacio, ubicacioNoAdmesa) => {
+  await munta();
+  mock.publicaAdjuntXat.mockResolvedValueOnce(ack({ metadades: { ubicacio }, ubicacioNoAdmesa }));
+  await act(async () => {
+    await expect(value.sendChatMedia({ id: FIL }, { ...adjunt(), ubicacio: { lat: 38.59, lng: -0.42 } })).rejects.toMatchObject({ code: 'sense-confirmacio' });
+  });
+  expect(value.getThreadMessages(FIL)).toEqual([]);
+});

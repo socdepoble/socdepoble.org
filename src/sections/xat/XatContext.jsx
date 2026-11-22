@@ -2033,6 +2033,8 @@ export function XatProvider({ children, config }) {
     const { errorAdjuntXat, normalitzaUbicacioXat } = await import('../../data/xatMultimedia.js');
     const ubicacioEsperada = normalitzaUbicacioXat(adjunt?.ubicacio);
     if (adjunt?.conservaUbicacio === false && ubicacioEsperada) throw errorAdjuntXat('ubicacio-invalida');
+    // La frontera neutral també quantitza els adjunts represos o legacy.
+    const adjuntPreparat = ubicacioEsperada ? { ...adjunt, ubicacio: ubicacioEsperada } : adjunt;
     if (!joId || !vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
     const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
     if (!complet?.id || complet.potEscriure === false || (complet.tipus === 'canal' && complet.potEscriure !== true)) {
@@ -2083,7 +2085,7 @@ export function XatProvider({ children, config }) {
        es torna a pujar); si les declina, l'AbortError de sempre. */
     const publica = () => {
       asseguraVigent();
-      const enVol = publicaAdjuntXat(complet.id, adjunt, { ...config, signal: controller.signal, onProgres });
+      const enVol = publicaAdjuntXat(complet.id, adjuntPreparat, { ...config, signal: controller.signal, onProgres });
       // També liquida la UI si un port ignora l'abort; el resultat tardà es consumix.
       return new Promise((resol, rebutja) => {
         const cancel = () => rebutja(controller.signal.reason);
@@ -2120,8 +2122,9 @@ export function XatProvider({ children, config }) {
     }
     const ubicacioConfirmada = normalitzaUbicacioXat(desat.metadades?.ubicacio);
     // v1.2.8 · Un servidor sense 20261117193000 publica sense la ubicació (ubicacioNoAdmesa, xatMultimedia.js).
-    if ((ubicacioEsperada && desat.ubicacioNoAdmesa !== true && (!ubicacioConfirmada || ubicacioConfirmada.lat !== ubicacioEsperada.lat || ubicacioConfirmada.lng !== ubicacioEsperada.lng))
-      || (adjunt.conservaUbicacio === false && ubicacioConfirmada)) throw errorAdjuntXat('sense-confirmacio');
+    if ((ubicacioConfirmada && (desat.metadades.ubicacio.lat !== ubicacioConfirmada.lat || desat.metadades.ubicacio.lng !== ubicacioConfirmada.lng))
+      || (ubicacioEsperada && desat.ubicacioNoAdmesa !== true && (!ubicacioConfirmada || ubicacioConfirmada.lat !== ubicacioEsperada.lat || ubicacioConfirmada.lng !== ubicacioEsperada.lng))
+      || ((!ubicacioEsperada || desat.ubicacioNoAdmesa === true || adjunt.conservaUbicacio === false) && ubicacioConfirmada)) throw errorAdjuntXat('sense-confirmacio');
     const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
     mutaMissatges((previs) => ({ ...previs, [complet.id]: fusionaPerSeq(previs[complet.id] || [], [definitiu]) }));
     mutaFils((previs) => previs.map((f) => f.id === complet.id ? actualitzaFilAmbMissatge(f, definitiu) : f));

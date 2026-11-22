@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { aturaRecuperacioChunkDeploy, CLAU_RECUPERACIO_CHUNK, classificaErrorChunkDeploy,
   creaRecuperacioChunkDeploy, entradesHtmlDeploy, ENTRADES_AMB_ESTAT_EN_MEMORIA, FINESTRA_ANTI_BUCLE_MS,
-  instalLaRecuperacioChunkDeploy, MAXIM_HTML_DEPLOY, recuperaErrorChunkDeploy } from './recuperacioChunkDeploy.js';
+  instalLaRecuperacioChunkDeploy, MAXIM_HTML_DEPLOY, recuperaErrorChunkDeploy, testimoniDeRecursos } from './recuperacioChunkDeploy.js';
 
 import { actualitzaWorkerPerDeploy } from './registre.js';
 import { buidaEsborranys, desaEsborrany, llegixEsborrany } from '../sections/xat/esborranys.js';
@@ -17,8 +17,29 @@ function storage() {
   const data = new Map();
   return { getItem: vi.fn(k => data.get(k) ?? null), setItem: vi.fn((k, v) => data.set(k, v)), data };
 }
+/* v1.2.20 · Gauntlet R1 (L4-01) · Una entrada de Resource Timing com la que
+   dona Chromium 158 per a un import fallit (comprovat amb Chrome headless, amb
+   i sense service worker): 404, 503, 0 per a la xarxa, 200 text/html. */
+const rt = (responseStatus, contentType = 'text/html', path = CHUNK) => ({ name: ORIGIN + path, initiatorType: 'script', responseStatus, contentType });
+const JS_200 = { status: 200, headers: { 'content-type': 'text/javascript' } };
+/* Un PerformanceObserver de mostra: guarda la funció, deixa emetre entrades i
+   encuar-ne de no lliurades (takeRecords). */
+function observadorFals() {
+  const instancies = [];
+  class Observador {
+    constructor(fn) {
+      this.fn = fn; this.pendents = [];
+      this.observe = vi.fn(); this.disconnect = vi.fn(); this.takeRecords = vi.fn(() => this.pendents.splice(0));
+      instancies.push(this);
+    }
+    emet(entrades) { this.fn({ getEntries: () => entrades }); }
+  }
+  return { Observador, instancies };
+}
+/* Per defecte, el navegador ja ha vist el 404 del tros fallit (Chromium); `vist: []` és un navegador que no ho sap. */
 function environment(options = {}) {
   const saved = options.saved || storage(), listeners = new Map(), fields = [];
+  const vist = new Map((options.vist ?? [rt(404)]).map(x => [x.name, x]));
   let entry = OLD, clock = 100000, current = NEXT;
   const update = vi.fn(async () => {}), waiting = { scriptURL: ORIGIN + '/sw.js', postMessage: vi.fn() };
   const registration = { scope: ORIGIN + '/', active: { scriptURL: ORIGIN + '/sw.js' }, waiting, update };
@@ -34,13 +55,15 @@ function environment(options = {}) {
     removeEventListener: vi.fn(name => listeners.delete(name)) };
   Object.defineProperty(finestra, 'indexedDB', { get() { throw Error('no tocar notes'); } });
   Object.defineProperty(finestra, 'localStorage', { get() { throw Error('no tocar persistència privada'); } });
+  finestra.performance = { getEntriesByName: vi.fn(name => vist.has(name) ? [vist.get(name)] : []) };
   const fetchFn = vi.fn(async url => url.endsWith('/index.html')
     ? new Response(html(current), { headers: { 'content-type': 'text/html; charset=utf-8' } })
     : new Response(null, { status: 404 }));
   const input = { finestra, navegador, fetchFn, ara: () => clock, topallMs: 100,
-    preparaWorker: ({ vigent }) => actualitzaWorkerPerDeploy({ navegador, finestra, vigent }) };
+    preparaWorker: ({ vigent }) => actualitzaWorkerPerDeploy({ navegador, finestra, vigent }),
+    retiratSenseSonda: testimoniDeRecursos(finestra).retirat };
   const motor = creaRecuperacioChunkDeploy(input);
-  return { ...input, motor, saved, listeners, fields, registration, waiting, update, cache, resources,
+  return { ...input, motor, saved, listeners, fields, registration, waiting, update, cache, resources, vist,
     setEntry: x => { entry = x; }, setFresh: x => { current = x; }, setTime: x => { clock = x; } };
 }
 afterEach(() => aturaRecuperacioChunkDeploy());
@@ -97,14 +120,16 @@ describe('classificació i parser del desplegament', () => {
 });
 
 describe('prova positiva, pressupost i dades preservades', () => {
-  test('404 + build nou: actualitza SW propi, purga només HTML propi, conserva ruta i reserva abans de reload', async () => {
+  test('hash fallit amb el 404 ja vist pel navegador + build nou, sense HEAD: actualitza SW propi, purga només HTML propi, conserva ruta i reserva abans de reload', async () => {
     const e = environment(), route = e.finestra.location.href;
     expect(await e.motor.recupera(failure())).toBe(true);
     expect(e.finestra.location.reload).toHaveBeenCalledOnce();
     expect(e.finestra.location.href).toBe(route);
     expect(e.fetchFn.mock.calls[0][0]).toBe(ORIGIN + '/index.html');
     expect(e.fetchFn.mock.calls[0][1]).toMatchObject({ cache: 'no-store', redirect: 'error' });
-    expect(e.fetchFn.mock.calls[1]).toEqual([ORIGIN + CHUNK, expect.objectContaining({ method: 'HEAD', cache: 'no-store' })]);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
+    expect(e.fetchFn.mock.calls.every(([url, options]) => url.endsWith('/index.html') && options.method !== 'HEAD')).toBe(true);
+    expect(e.finestra.performance.getEntriesByName).toHaveBeenCalledWith(ORIGIN + CHUNK, 'resource');
     expect(e.update).toHaveBeenCalledOnce();
     expect(e.waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
     expect(e.cache.delete.mock.calls).toEqual([['sdp-pwa-closca-v1']]);
@@ -118,7 +143,7 @@ describe('prova positiva, pressupost i dades preservades', () => {
     e.setTime(900000);
     const another = creaRecuperacioChunkDeploy({ ...e, magatzem: e.saved });
     expect(await another.recupera(failure())).toBe(false);
-    expect(e.fetchFn).toHaveBeenCalledTimes(2);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
     expect(e.finestra.location.reload).toHaveBeenCalledOnce();
   });
   test('una altra empremta també respecta la finestra global de60s', async () => {
@@ -132,7 +157,7 @@ describe('prova positiva, pressupost i dades preservades', () => {
   test('dos senyals concurrents compartixen la comprovació i una sola recàrrega', async () => {
     const e = environment();
     expect(await Promise.all([e.motor.recupera(failure()), e.motor.recupera(failure())])).toEqual([true, true]);
-    expect(e.fetchFn).toHaveBeenCalledTimes(2);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
     expect(e.finestra.location.reload).toHaveBeenCalledOnce();
   });
   test('dos motors sobre el mateix storage no poden reservar dues recàrregues', async () => {
@@ -141,11 +166,33 @@ describe('prova positiva, pressupost i dades preservades', () => {
     expect(result.filter(Boolean)).toHaveLength(1);
     expect(e.finestra.location.reload).toHaveBeenCalledOnce();
   });
-  test('MIME HTML en un hash retirat també és prova, sense llegir el cos com JavaScript', async () => {
+  test('el build nou queda acreditat per HTML sense llegir el hash retirat', async () => {
     const e = environment();
     e.fetchFn.mockImplementation(async url => new Response(url.endsWith('/index.html') ? html(NEXT) : '<html>',
       { headers: { 'content-type': 'text/html' } }));
     expect(await e.motor.recupera(failure())).toBe(true);
+  });
+  // v1.2.20 · Gauntlet R1 (L4-01) · Sense la prova del navegador, la de la v1.2.19: el HEAD del hash.
+  test('MIME HTML en un hash retirat també és prova, sense llegir el cos com JavaScript', async () => {
+    const e = environment({ vist: [] });
+    e.fetchFn.mockImplementation(async url => new Response(url.endsWith('/index.html') ? html(NEXT) : '<html>',
+      { headers: { 'content-type': 'text/html' } }));
+    expect(await e.motor.recupera(failure())).toBe(true);
+    expect(e.fetchFn.mock.calls[1]).toEqual([ORIGIN + CHUNK, expect.objectContaining({ method: 'HEAD', cache: 'no-store', redirect: 'error' })]);
+  });
+  test('un HTML 200 sota el hash, vist pel navegador, també és prova sense HEAD', async () => {
+    const e = environment({ vist: [rt(200, 'text/html; charset=utf-8')] });
+    expect(await e.motor.recupera(failure())).toBe(true);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
+  });
+  test('404 sense la prova del navegador: el HEAD el confirma abans de purgar i recarregar', async () => {
+    const e = environment({ vist: [] }), ordre = [], original = e.fetchFn.getMockImplementation();
+    e.fetchFn.mockImplementation(async (url, options) => { ordre.push((options.method ?? 'GET') + ' ' + url.slice(ORIGIN.length)); return original(url, options); });
+    e.cache.delete.mockImplementation(async name => { ordre.push('purga ' + name); return true; });
+    expect(await e.motor.recupera(failure())).toBe(true);
+    expect(ordre).toEqual(['GET /index.html', 'HEAD ' + CHUNK, 'purga sdp-pwa-closca-v1']);
+    expect(e.cache.delete.mock.calls).toEqual([['sdp-pwa-closca-v1']]);
+    expect(e.finestra.location.reload).toHaveBeenCalledOnce();
   });
   test('Safari sense URL acredita skew per les entrades del document i de la resposta fresca', async () => {
     const e = environment();
@@ -153,9 +200,18 @@ describe('prova positiva, pressupost i dades preservades', () => {
     expect(e.fetchFn).toHaveBeenCalledTimes(1);
   });
   test('pwa-04 · Firefox també es recupera amb la mateixa prova de build nou i hash retirat', async () => {
+    // v1.2.20 · Gauntlet R1 (L4-01) · Sense la prova del navegador, el HEAD de la v1.2.19 diu que el hash s'ha retirat.
+    const e = environment({ vist: [] });
+    expect(await e.motor.recupera(new TypeError('error loading dynamically imported module: ' + ORIGIN + CHUNK))).toBe(true);
+    expect(e.fetchFn.mock.calls[0][0]).toBe(ORIGIN + '/index.html');
+    expect(e.fetchFn.mock.calls[1]).toEqual([ORIGIN + CHUNK, expect.objectContaining({ method: 'HEAD' })]);
+    expect(e.finestra.location.reload).toHaveBeenCalledOnce();
+  });
+  test('pwa-04 · Firefox amb el 404 ja vist pel navegador no torna a demanar el hash', async () => {
     const e = environment();
     expect(await e.motor.recupera(new TypeError('error loading dynamically imported module: ' + ORIGIN + CHUNK))).toBe(true);
-    expect(e.fetchFn.mock.calls[1]).toEqual([ORIGIN + CHUNK, expect.objectContaining({ method: 'HEAD' })]);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
+    expect(e.fetchFn.mock.calls[0][0]).toBe(ORIGIN + '/index.html');
     expect(e.finestra.location.reload).toHaveBeenCalledOnce();
   });
   test('pwa-03 · update() que deixa el worker nou a installing també li envia SKIP_WAITING', async () => {
@@ -196,12 +252,85 @@ describe('refusos honestos i cancel·lació', () => {
     expect(e.fetchFn).toHaveBeenCalledTimes(1);
     expect(e.update).not.toHaveBeenCalled(); expect(e.finestra.location.reload).not.toHaveBeenCalled();
   });
-  test.each([200, 401, 403, 500, 503])('status %i del chunk no es convertix en recàrrega', async status => {
+  test.each([401, 403, 404, 410, 500, 503])('status %i de l’HTML no acredita cap build', async status => {
     const e = environment();
+    e.fetchFn.mockImplementation(async () => new Response(html(NEXT), { status, headers: { 'content-type': 'text/html' } }));
+    expect(await e.motor.recupera(failure())).toBe(false);
+    expect(e.finestra.location.reload).not.toHaveBeenCalled();
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
+  });
+  test.each(['text/javascript', 'application/json', 'text/plain', ''])('el MIME %s no acredita HTML', async type => {
+    const e = environment();
+    e.fetchFn.mockImplementation(async () => new Response(html(NEXT), { headers: { 'content-type': type } }));
+    expect(await e.motor.recupera(failure())).toBe(false);
+    expect(e.finestra.location.reload).not.toHaveBeenCalled();
+  });
+  test.each(['redirected', 'foreign'])('la resposta %s no acredita un desplegament propi', async mode => {
+    const e = environment(), response = new Response(html(NEXT), { headers: { 'content-type': 'text/html' } });
+    Object.defineProperty(response, mode === 'redirected' ? 'redirected' : 'url', {
+      value: mode === 'redirected' ? true : 'https://aliena.invalid/index.html',
+    });
+    e.fetchFn.mockResolvedValue(response);
+    expect(await e.motor.recupera(failure())).toBe(false);
+    expect(e.finestra.location.reload).not.toHaveBeenCalled();
+  });
+  // v1.2.20 · Gauntlet R1 (L4-01) · La prova de la v1.2.19, restituïda: sense la prova del navegador, el HEAD decidix.
+  test.each([200, 401, 403, 500, 503])('status %i del chunk no es convertix en recàrrega', async status => {
+    const e = environment({ vist: [] });
     e.fetchFn.mockImplementation(async url => url.endsWith('/index.html')
       ? new Response(html(NEXT), { headers: { 'content-type': 'text/html' } })
       : new Response(null, { status, headers: { 'content-type': 'text/javascript' } }));
     expect(await e.motor.recupera(failure())).toBe(false);
+    expect(e.finestra.location.reload).not.toHaveBeenCalled();
+  });
+  /* v1.2.20 · Gauntlet R1 (L4-01) · L'escenari de la troballa: una pestanya d'un build retingut
+     (tooling/scripts/retencio-assets.mjs), un tros que encara es servix (200 JS) i que falla per xarxa (0),
+     per un 503 o amb un 200 tallat, i un /index.html del build nou. Ni recarrega, ni purga la closca offline,
+     ni envia SKIP_WAITING, ni gasta el pressupost: el HEAD torna a preguntar pel tros abans de res. */
+  test.each([['xarxa', rt(0, '')], ['503', rt(503)], ['200 JS', rt(200, 'text/javascript')], ['sense dada', null]])(
+    'L4-01 · tros retingut (%s) amb el build nou publicat: el HEAD el troba i no es recarrega ni es purga res', async (_, vist) => {
+      const e = environment({ vist: vist ? [vist] : [] });
+      e.fetchFn.mockImplementation(async url => url.endsWith('/index.html')
+        ? new Response(html(NEXT), { headers: { 'content-type': 'text/html' } }) : new Response(null, JS_200));
+      expect(await e.motor.recupera(failure())).toBe(false);
+      expect(e.fetchFn.mock.calls.map(([url, options]) => [url, options.method ?? 'GET']))
+        .toEqual([[ORIGIN + '/index.html', 'GET'], [ORIGIN + CHUNK, 'HEAD']]);
+      expect(e.finestra.location.reload).not.toHaveBeenCalled();
+      expect(e.cache.delete).not.toHaveBeenCalled();
+      expect(e.resources.delete).not.toHaveBeenCalled();
+      expect(e.update).not.toHaveBeenCalled();
+      expect(e.waiting.postMessage).not.toHaveBeenCalled();
+      expect(e.saved.setItem).not.toHaveBeenCalled();
+    });
+  test('L4-01 · una fallada transitòria del HEAD tampoc no prova res', async () => {
+    for (const mode of ['xarxa', 'temps']) {
+      const e = environment({ vist: [rt(0, '')] });
+      e.fetchFn.mockImplementation(async url => {
+        if (url.endsWith('/index.html')) return new Response(html(NEXT), { headers: { 'content-type': 'text/html' } });
+        if (mode === 'xarxa') throw new TypeError('Failed to fetch');
+        return new Promise(() => {});
+      });
+      expect(await e.motor.recupera(failure())).toBe(false);
+      expect(e.finestra.location.reload).not.toHaveBeenCalled();
+      expect(e.cache.delete).not.toHaveBeenCalled();
+      expect(e.saved.setItem).not.toHaveBeenCalled();
+    }
+  });
+  test('L4-01 · una prova del navegador que llança o no diu `true` no estalvia el HEAD', async () => {
+    for (const retiratSenseSonda of [() => { throw Error('timing'); }, () => 'sí', () => 1]) {
+      const e = environment({ vist: [] }), motor = creaRecuperacioChunkDeploy({ ...e, retiratSenseSonda });
+      e.fetchFn.mockImplementation(async url => url.endsWith('/index.html')
+        ? new Response(html(NEXT), { headers: { 'content-type': 'text/html' } }) : new Response(null, JS_200));
+      expect(await motor.recupera(failure())).toBe(false);
+      expect(e.fetchFn).toHaveBeenCalledTimes(2);
+      expect(e.finestra.location.reload).not.toHaveBeenCalled();
+    }
+  });
+  test('el hash fallit encara present com a entrada fresca no provoca recàrrega', async () => {
+    const e = environment(); e.setFresh(CHUNK);
+    expect(await e.motor.recupera(failure())).toBe(false);
+    expect(e.fetchFn).toHaveBeenCalledTimes(1);
+    expect(e.saved.setItem).not.toHaveBeenCalled();
     expect(e.finestra.location.reload).not.toHaveBeenCalled();
   });
   test('quota, registre corrupte i escriptura no persistent fallen tancats', async () => {
@@ -388,5 +517,91 @@ describe('pwa-01 · l’estat que només viu en memòria no es perd en silenci',
       expect(e.finestra.removeEventListener).toHaveBeenCalledWith(tipus, expect.any(Function), expect.objectContaining({ capture: true }));
     }
     expect(e.listeners.size).toBe(0);
+  });
+});
+
+/* v1.2.20 · Gauntlet R1 (L4-01) · El testimoni de Resource Timing: el que el navegador ja sap de la càrrega
+   fallida, sense tornar a demanar el tros. Comprovat amb Chrome 158 headless (amb i sense service worker): la
+   càrrega fallida dona 404, 503, 0 (xarxa) o 200 text/html; l'observador la té abans que el rebuig arribe al
+   codi, i amb el buffer ple getEntriesByName ja no la torna però l'observador sí. */
+describe('L4-01 · testimoniDeRecursos', () => {
+  const finestraAmb = ({ Observador, buffer = [] } = {}) => ({ location: { origin: ORIGIN },
+    PerformanceObserver: Observador, performance: { getEntriesByName: vi.fn(name => buffer.filter(x => x.name === name)) } });
+  test('observa amb type i buffered; el que emet l\'observador compta encara que el buffer ja estiga ple', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    expect(instancies[0].observe).toHaveBeenCalledWith({ type: 'resource', buffered: true });
+    expect(t.retirat(CHUNK)).toBe(false);
+    instancies[0].emet([rt(404)]);
+    expect(t.retirat(CHUNK)).toBe(true);
+  });
+  test('una entrada encara no lliurada (takeRecords) també compta', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    instancies[0].pendents.push(rt(410));
+    expect(t.retirat(CHUNK)).toBe(true);
+    expect(instancies[0].takeRecords).toHaveBeenCalled();
+  });
+  test.each([[rt(404), true], [rt(410), true], [rt(200, 'text/html; charset=utf-8'), true], [rt(0, ''), false],
+    [rt(503), false], [rt(500), false], [rt(401), false], [rt(403), false], [rt(200, 'text/javascript'), false],
+    [rt(200, 'text/css'), false], [rt(200, ''), false], [{ name: ORIGIN + CHUNK, responseStatus: 200 }, false],
+    [{ name: ORIGIN + CHUNK }, false], [{ name: ORIGIN + CHUNK, responseStatus: '404' }, false]])('%o prova la retirada: %s', (entrada, esperat) => {
+    expect(testimoniDeRecursos(finestraAmb({ buffer: [entrada] })).retirat(CHUNK)).toBe(esperat);
+  });
+  test('l\'última càrrega del camí mana', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    instancies[0].emet([rt(404), rt(0, '')]);
+    expect(t.retirat(CHUNK)).toBe(false);
+    instancies[0].emet([rt(404)]);
+    expect(t.retirat(CHUNK)).toBe(true);
+  });
+  test('origen alié, consulta, fragment o camí sense empremta no proven res', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    instancies[0].emet([{ ...rt(404), name: 'https://evil.invalid' + CHUNK }, { ...rt(404), name: ORIGIN + CHUNK + '?v=1' },
+      { ...rt(404), name: ORIGIN + CHUNK + '#x' }, { ...rt(404), name: ORIGIN + '/assets/system/logo.svg' }, null, 7]);
+    expect(t.retirat(CHUNK)).toBe(false);
+    expect(t.retirat('/assets/system/logo.svg')).toBe(false);
+  });
+  test('com a molt 64 camins: el més antic ix i ja no prova res', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    const cami = n => '/assets/Tros' + n + '-AbCd' + String(n).padStart(4, '0') + '.js';
+    instancies[0].emet(Array.from({ length: 65 }, (_, n) => rt(404, 'text/html', cami(n))));
+    expect(t.retirat(cami(0))).toBe(false);
+    expect(t.retirat(cami(1))).toBe(true);
+    expect(t.retirat(cami(64))).toBe(true);
+  });
+  test('sense observador, o si llança, el buffer; si tot llança, fals i mai una excepció', () => {
+    expect(testimoniDeRecursos(finestraAmb({ buffer: [rt(404)] })).retirat(CHUNK)).toBe(true);
+    const Trencat = function () { throw Error('no'); };
+    expect(testimoniDeRecursos(finestraAmb({ Observador: Trencat, buffer: [rt(404)] })).retirat(CHUNK)).toBe(true);
+    const tot = { location: { origin: ORIGIN }, PerformanceObserver: Trencat,
+      performance: { getEntriesByName() { throw Error('timing'); } } };
+    expect(testimoniDeRecursos(tot).retirat(CHUNK)).toBe(false);
+    expect(testimoniDeRecursos(undefined).retirat(CHUNK)).toBe(false);
+    expect(() => testimoniDeRecursos(undefined).atura()).not.toThrow();
+  });
+  test('aturar-lo desconnecta l\'observador', () => {
+    const { Observador, instancies } = observadorFals(), t = testimoniDeRecursos(finestraAmb({ Observador }));
+    t.atura();
+    expect(instancies[0].disconnect).toHaveBeenCalledOnce();
+  });
+  test('l\'entrada instal·la el testimoni: amb el 404 vist no hi ha HEAD; amb una fallada de xarxa, el HEAD troba el tros i no recarrega', async () => {
+    const vist = environment({ vist: [] }), a = observadorFals();
+    vist.finestra.PerformanceObserver = a.Observador;
+    const stop = instalLaRecuperacioChunkDeploy(vist);
+    a.instancies[0].emet([rt(404)]);
+    expect(await recuperaErrorChunkDeploy(failure())).toBe(true);
+    expect(vist.fetchFn).toHaveBeenCalledTimes(1);
+    stop();
+    expect(a.instancies[0].disconnect).toHaveBeenCalledOnce();
+
+    const xarxa = environment({ vist: [] }), b = observadorFals();
+    xarxa.finestra.PerformanceObserver = b.Observador;
+    xarxa.fetchFn.mockImplementation(async url => url.endsWith('/index.html')
+      ? new Response(html(NEXT), { headers: { 'content-type': 'text/html' } }) : new Response(null, JS_200));
+    instalLaRecuperacioChunkDeploy(xarxa);
+    b.instancies[0].emet([rt(0, '')]);
+    expect(await recuperaErrorChunkDeploy(failure())).toBe(false);
+    expect(xarxa.fetchFn.mock.calls[1]).toEqual([ORIGIN + CHUNK, expect.objectContaining({ method: 'HEAD' })]);
+    expect(xarxa.finestra.location.reload).not.toHaveBeenCalled();
+    expect(xarxa.cache.delete).not.toHaveBeenCalled();
   });
 });

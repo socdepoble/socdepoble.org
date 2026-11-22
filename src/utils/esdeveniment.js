@@ -152,17 +152,25 @@ const instantDe = (text) => llegixDataHora(text)?.instant ?? null;
 /* ── Zones (Intl, sense dependències) ─────────────────────────────────── */
 
 /* El formatador d'una zona, o null si no existix (Intl llança un RangeError).
-   hourCycle h23: la mitjanit és 00, no 24. */
+   hourCycle h23: la mitjanit és 00, no 24.
+   v1.2.20 · Gauntlet R1 (L3-02) · Un sol formatador per zona, també el null d'una
+   zona que no existix: construir-ne un costa unes 70 µs, i el límit UNTIL en
+   demanava dos a cada dia i a cada minut. Amb més de 64 zones distintes es buida. */
+const FORMATADORS = new Map();
 function formatadorDe(zona) {
   if (typeof zona !== 'string') return null;
-  try {
-    return new Intl.DateTimeFormat('en-US', {
-      timeZone: zona, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', second: 'numeric'
-    });
-  } catch {
-    return null;
+  if (!FORMATADORS.has(zona)) {
+    if (FORMATADORS.size >= 64) FORMATADORS.clear();
+    let formatador = null;
+    try {
+      formatador = new Intl.DateTimeFormat('en-US', {
+        timeZone: zona, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric'
+      });
+    } catch { /* una zona que no existix: null */ }
+    FORMATADORS.set(zona, formatador);
   }
+  return FORMATADORS.get(zona);
 }
 
 /* El nom canònic de la zona ('europe/madrid' → 'Europe/Madrid'), o null. */
@@ -182,6 +190,11 @@ export function xifresEnZona(ms, zona) {
  * desfasament, l'exacte; en hora de paret, el d'eixa hora en la seua zona
  * (l'hora llegida en UTC menys el desfasament de la zona, afinat una volta
  * per si el canvi d'hora cau entremig). null si no és un moment amb hora.
+ * v1.2.20 · Gauntlet R1 (L3-03) · L'hora repetida de la tardor (les 02:30 del
+ * diumenge del canvi a Madrid) marca dos instants, i l'RFC 5545 (§3.3.5) mana
+ * el primer: si el desfasament de tres hores abans també dona eixa paret, és
+ * eixe. L'hora que no existix de la primavera no canvia (el desfasament d'abans
+ * del salt).
  */
 export function instantEnLaZona(moment) {
   const p = llegixDataHora(moment?.dataHora);
@@ -192,7 +205,9 @@ export function instantEnLaZona(moment) {
     return x ? Date.UTC(x.any, x.mes, x.dia, x.hora, x.minut, x.segon) - ms : NaN;
   };
   const instant = paret - desfas(paret - desfas(paret));
-  return Number.isNaN(instant) ? null : instant;
+  if (Number.isNaN(instant)) return null;
+  const primer = paret - desfas(instant - 3 * 3600000);
+  return primer < instant && desfas(primer) === paret - primer ? primer : instant;
 }
 
 /* ── Creació (fail-closed) ─────────────────────────────────────────────── */
@@ -394,6 +409,8 @@ function geometriaDe(esd) {
     iniciDia: numDia(d.getFullYear(), d.getMonth(), d.getDate()),
     minutInici: d.getHours() * 60 + d.getMinutes(),
     segonInici: d.getSeconds(),
+    // UNTIL és UTC: la paret es compara en la zona de DTSTART, no la del navegador.
+    zonaUntil: llegixDataHora(esd.inici.dataHora).ambDesfas ? null : esd.inici.zona,
     t0,
     dur: esd.fi ? instantDe(esd.fi.dataHora) - t0 : 0
   };
@@ -433,11 +450,14 @@ function compilaRegla(esd, geo) {
     .sort((a, b) => a - b);
   if (minuts.length > 1 && (rrule.count || exclosos.size)) return FALLA;
   const darrerMinut = minuts[minuts.length - 1];
+  // v1.2.20 · Gauntlet R1 (L3-02) · El dia de l'UNTIL en la zona de l'acte, calculat una sola vegada (dinsDelLimit).
+  const paretUntil = geo.zonaUntil && rrule.until?.instant != null ? xifresEnZona(rrule.until.instant, geo.zonaUntil) : null;
   return {
     ...rrule,
     pas: null,
     exclosos,
     minuts,
+    diaUntilZona: paretUntil ? numDia(paretUntil.any, paretUntil.mes, paretUntil.dia) : null,
     // El dia de l'inici només hi ha les ocurrències que no el precedixen.
     primerMinutInici: esd.totElDia ? 0 : (minuts.find((m) => m >= geo.minutInici) ?? null),
     // Dies de més que cobrix una ocurrència que passa de mitjanit.
@@ -496,16 +516,34 @@ function darrerDiaDeCount(r, geo) {
   return r.darrerDia;
 }
 
+/* L'instant per al límit UTC conserva la zona declarada de l'acte de paret.
+   La geometria de la graella continua sent local; el límit RFC és un instant. */
+function instantPerAlLimit(geo, n, minut) {
+  const { any, mes, dia } = dataDeNum(n);
+  if (!geo.zonaUntil) return new Date(any, mes, dia, Math.floor(minut / 60), minut % 60, geo.segonInici ?? 0).getTime();
+  return instantEnLaZona({
+    dataHora: `${clauDia(any, mes, dia)}T${dosDigits(Math.floor(minut / 60))}:${dosDigits(minut % 60)}:${dosDigits(geo.segonInici ?? 0)}`,
+    zona: geo.zonaUntil
+  });
+}
+
+/* v1.2.20 · Gauntlet R1 (L3-02) · L'ocurrència del dia n al minut `minut` no passa
+   de l'UNTIL UTC? A més de dos dies del dia de l'UNTIL en la zona de l'acte, el dia
+   ja ho decidix: cap desfasament no mou una hora de paret 48 hores. Només els dies
+   del voltant demanen l'instant exacte (instantPerAlLimit, amb Intl), i un acte
+   repetit ja acabat no paga Intl a cada dia que el Calendari li pregunta. */
+function dinsDelLimit(r, geo, n, minut) {
+  if (r.diaUntilZona != null && Math.abs(n - r.diaUntilZona) > 2) return n < r.diaUntilZona;
+  const instant = instantPerAlLimit(geo, n, minut);
+  return instant !== null && instant <= r.until.instant;
+}
+
 /* Comença una ocurrència el dia n? Les EXDATE no descompten COUNT (RFC 5545). */
 function iniciaElDia(r, geo, n) {
   if (!generaElDia(r, geo, n) || r.exclosos.has(n)) return false;
   if (r.until) {
     if (r.until.instant === null) return n <= r.until.dia;
-    // L'hora local d'eixe dia: sumar-la a la mitjanit la desplaçaria una hora
-    // els diumenges del canvi d'hora.
-    const minut = n === geo.iniciDia ? r.primerMinutInici : r.minuts[0];
-    const { any, mes, dia } = dataDeNum(n);
-    return new Date(any, mes, dia, Math.floor(minut / 60), minut % 60, geo.segonInici ?? 0).getTime() <= r.until.instant;
+    return dinsDelLimit(r, geo, n, n === geo.iniciDia ? r.primerMinutInici : r.minuts[0]);
   }
   return !r.count || n <= darrerDiaDeCount(r, geo);
 }
@@ -632,6 +670,7 @@ function diesEnRang(esd, r, geo, a, b, max) {
     const { any, mes, dia } = dataDeNum(n);
     for (const minut of r.minuts) {
       if (n === geo.iniciDia && minut < geo.minutInici) continue;
+      if (r.until?.instant != null && !dinsDelLimit(r, geo, n, minut)) continue;
       const extra = geo.dur > 0 ? Math.floor((minut * 60000 + geo.dur - 1) / DIA_MS) : 0;
       if (n + 1 + extra <= a) continue;
       if (ocurrencies.length >= max) return { ocurrencies, retallat: true };
