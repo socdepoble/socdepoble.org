@@ -1,18 +1,32 @@
 /**
  * EspecimenPanell.jsx — El Panell de Disseny (MarIA, Onada 4): dos controls
- * vius, el Mode Bancal i l'ombra de la targeta.
+ * vius, el «Mode Bancal · Sol i Lletra Gran» i l'ombra de la targeta.
  *
  * W4-13 (auditoria de Codex, 261004) · Abans es trencava en muntar
  * (/disseny?categoria=fonaments&item=fonaments-panell): importava per defecte
  * una UniversalCard que només s'exporta amb nom, i li passava props que no són
  * del seu contracte. A més, els dos controls escrivien directament a l'arrel
  * del document de la pàgina, fora de l'estat de l'app.
- *  · BANCAL. És el mateix estat que el control «Contrast» del full «Ajustos»
- *    del Xat (UIContext.setContrast → config/theme.js): es desa per a esta
- *    persona i este dispositiu i arriba a les altres instàncies. L'atribut el
- *    posa App.jsx a l'arrel que pertoca (theme.js, arrelDePresentacio): ací no
- *    s'escriu cap atribut. L'interruptor diu el mode que es veu, també quan
- *    l'ha triat el sistema («Segons el sistema», als Ajustos).
+ *  · MODE BANCAL. És el mateix estat que el xip de l'accés del Xat, d'El meu
+ *    perfil, del Panell de Control i de L'Avisador, i que l'opció «Mode Bancal ·
+ *    Sol i Lletra Gran» del full «Ajustos» del Xat (UIContext → config/theme.js,
+ *    esModeBancal): es desa per a esta persona i este dispositiu i arriba a les
+ *    altres instàncies. Els atributs els posa App.jsx a l'arrel que pertoca
+ *    (theme.js, arrelDePresentacio): ací no s'escriu cap atribut.
+ *    v1.2.22 · Gauntlet R1 (L2-01, L3-05 i L2-02) · IDEA-323.4 · DOL-31 · Un sol
+ *    interruptor, amb el rètol del xip (TEXTOS_MODE_SENIOR.ca.xip). Hi havia un
+ *    segon interruptor, «Mode Sènior / Lectura Gran», que buscava setModeSenior i
+ *    modeSenior, dos noms que UIContext no exposa (són setSeniorMode i
+ *    seniorMode): dins de l'app sempre estava desactivat i deia «No», també amb
+ *    la lletra gran encesa. Ja no hi és: és el mateix mode.
+ *    L'interruptor diu el mode (seniorMode), com el xip, i no el contrast que es
+ *    pinta. Amb «Segons el sistema» i el dispositiu demanant més contrast, es veu
+ *    el contrast Bancal sense la lletra gran: l'interruptor diu «No» i una nota ho
+ *    explica. Encendre'l és setContrast('bancal'), com triar-lo als Ajustos;
+ *    apagar-lo és setSeniorMode(false), com el xip. Així cap toc d'ací no
+ *    sobreescriu amb 'normal' la tria «Segons el sistema» desada (setContrast
+ *    ('normal') l'esborrava sense dir-ho); un 'bancal' desat per una versió
+ *    anterior sí que torna a 'normal' en apagar, com al xip.
  *  · OMBRA. La targeta conserva sempre l'ombra (Q6 del Mestre: cap vora sòlida
  *    en lloc de l'ombra). Els botons redefinixen --sdp-ombra-2, la que porta
  *    .sp-card, NOMÉS a la caixa de la mostra i amb tokens (--sdp-ombra-1 o
@@ -29,6 +43,7 @@ import { UniversalCard } from '../../../../components/PedraSeca/organismes/Unive
 import { useUIActionsOpcional, useUIStateOpcional } from '../../../../app/contexts/UIContext.jsx';
 import { usePropietatsCss } from '../../../../hooks/usePropietatsCss.js';
 import { CONTRAST_BANCAL } from '../../../../config/theme.js';
+import { TEXTOS_MODE_SENIOR } from '../../../../config/textosModeSenior.js';
 
 /* Els tres graons d'ombra del sistema. La mitjana és la de .sp-card: sense
    valor, no es redefinix res. */
@@ -38,19 +53,19 @@ const OMBRES = Object.freeze([
   Object.freeze({ id: 'elevada', etiqueta: 'Ombra elevada', valor: 'var(--sdp-ombra-3)' })
 ]);
 const OMBRA_DE_SEMPRE = 'mitjana';
+/* El rètol i la descripció del xip, en valencià: el catàleg de Disseny és en valencià. */
+const MODE = TEXTOS_MODE_SENIOR.ca;
 
 export default function EspecimenPanell() {
   const estat = useUIStateOpcional();
   const accions = useUIActionsOpcional();
-  const potTriar = typeof accions?.setContrast === 'function';
-  const bancalActiu = estat?.contrastMode === CONTRAST_BANCAL;
-  const canviaBancal = (actiu) => {
-    if (potTriar) accions.setContrast(actiu ? CONTRAST_BANCAL : 'normal');
-  };
-  const potTriarSenior = typeof accions?.setModeSenior === 'function';
-  const seniorActiu = estat?.modeSenior === true;
-  const canviaSenior = (actiu) => {
-    if (potTriarSenior) accions.setModeSenior(Boolean(actiu));
+  const potTriar = typeof accions?.setContrast === 'function' && typeof accions?.setSeniorMode === 'function';
+  const modeActiu = estat?.seniorMode === true;
+  const contrastDelSistema = !modeActiu && estat?.contrastMode === CONTRAST_BANCAL;
+  const canviaMode = (actiu) => {
+    if (!potTriar) return;
+    if (actiu) accions.setContrast(CONTRAST_BANCAL);
+    else accions.setSeniorMode(false);
   };
 
   const [ombra, setOmbra] = useState(OMBRA_DE_SEMPRE);
@@ -61,38 +76,30 @@ export default function EspecimenPanell() {
     <>
       <Especimen
         id="panell-bancal"
-        nom="Mode Bancal"
+        nom={MODE.xip}
         fitxer="src/config/theme.js"
-        descripcio="El mateix interruptor que «Contrast» al full «Ajustos» del Xat: la tria es desa per a esta persona i este dispositiu i val per a tota l’app i per a les altres instàncies de la pàgina. Encés, el text passa a graons foscos de 9:1 o més i els enllaços, de 7:1 o més; les targetes conserven l’ombra. «Segons el sistema» es tria als Ajustos; ací l’interruptor diu el mode que es veu."
+        descripcio={`${MODE.descripcio} D’un sol toc encén o apaga alhora la lletra gran i el contrast Bancal; les targetes conserven l’ombra. És el mateix mode del xip de l’accés del Xat, d’El meu perfil, del Panell de Control i de L’Avisador, i de «${MODE.xip}» al full «Ajustos» del Xat: la tria es desa per a esta persona i este dispositiu i val per a tota l’app i per a les altres instàncies de la pàgina. «Segons el sistema» es tria als Ajustos i només posa el contrast que demana el dispositiu, sense la lletra gran: ací l’interruptor diu el mode, no eixe contrast.`}
         a11y={[
           'Interruptor amb role="switch" sobre un botó natiu: Intro i Espai sense JS, i l’estat es llig en text («Sí» o «No»).',
-          'L’atribut de contrast va a l’arrel de l’app (theme.js, arrelDePresentacio): mai a l’<html> d’una pàgina amfitriona.'
+          'Encés, les dianes d’acció primària fan 56 × 56 píxels com a mínim.',
+          'Els atributs de la lletra gran i del contrast van a l’arrel de l’app (theme.js, arrelDePresentacio): mai a l’<html> d’una pàgina amfitriona.'
         ]}
-        fes={['Canviar el contrast amb setContrast (UIContext): un sol estat per als Ajustos, este Panell i el sistema.']}
-        noFacis={['Escriure data-contrast a mà en qualsevol element: App.jsx ja el posa a l’arrel que pertoca.']}
+        fes={['Encendre el mode amb setContrast(\'bancal\') i apagar-lo amb setSeniorMode(false) (UIContext): un sol estat per al xip, els Ajustos, este Panell i les altres instàncies.']}
+        noFacis={[
+          'Escriure data-contrast o data-sdp-senior a mà en qualsevol element: App.jsx ja els posa a l’arrel que pertoca.',
+          'Afegir un segon interruptor de lectura gran: és el mateix mode (IDEA-323.4).'
+        ]}
       >
         <GrupCamps llegenda="Accessibilitat visual">
-          <Interruptor etiqueta="Activar el Mode Bancal" actiu={bancalActiu} onCanvi={canviaBancal} desactivat={!potTriar} />
+          <Interruptor etiqueta={MODE.xip} actiu={modeActiu} onCanvi={canviaMode} desactivat={!potTriar} />
         </GrupCamps>
-        {potTriar ? null : <p>Fora de l’app no hi ha cap preferència de contrast a canviar.</p>}
-      </Especimen>
-
-      <Especimen
-        id="panell-mode-senior"
-        nom="Mode Sènior / Lectura Gran"
-        fitxer="src/components/universal/ControlModeSenior.jsx"
-        descripcio="El mateix interruptor d’un sol toc disponible a El meu perfil, al Panell de Control i a la capçalera de L’Avisador · Batec de Vida. Quan s’activa, l’arrel de l’app amplia la lletra Noto Sans, puja les dianes d’acció primària a un mínim de 56 × 56 píxels centrats i eleva el contrast real a 10:1 o més (AAA) en clar i en fosc."
-        a11y={[
-          'Interruptor natiu amb role="switch" i estat anunciat per veu i en text.',
-          'Dianes primàries centrades de 56 × 56 píxels mínims i contrast 10:1 AAA sense trencar pantalles de 320 o 359 píxels.'
-        ]}
-        fes={['Canviar la preferència amb setModeSenior (UIContext) perquè totes les instàncies ho recorden.']}
-        noFacis={['Posar atributs de presentació a mà fora de l’arrel governada per App.jsx.']}
-      >
-        <GrupCamps llegenda="Lectura gran i dianes tàctils de 56 píxels">
-          <Interruptor etiqueta="Activar el Mode Sènior (Lectura Gran)" actiu={seniorActiu} onCanvi={canviaSenior} desactivat={!potTriarSenior} />
-        </GrupCamps>
-        {potTriarSenior ? null : <p>Fora de l’app no hi ha cap preferència de lectura gran a canviar.</p>}
+        {contrastDelSistema ? (
+          <p>
+            Ara el contrast Bancal el posa el dispositiu («Segons el sistema», triat als Ajustos) i la lletra gran no hi és:
+            el mode està apagat. Encendre’l o apagar-lo d’ací no canvia eixa tria.
+          </p>
+        ) : null}
+        {potTriar ? null : <p>Fora de l’app no hi ha cap preferència del Mode Bancal a canviar.</p>}
       </Especimen>
 
       <Especimen

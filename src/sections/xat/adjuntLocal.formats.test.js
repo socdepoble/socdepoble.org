@@ -37,12 +37,12 @@ describe('formats que dona el selector del mòbil', () => {
     expect(comprimeix.mock.calls[0][1].maxSize).toBe(mime === 'image/png' ? 2048 : 1200);
   });
 
-  test.each([['MP4', 'video/mp4'], ['mov', 'video/quicktime'], ['webm', 'video/webm']])('type buit amb .%s conserva durada i passa per compressió sense llevar el lloc per defecte', async (extensio, mime) => {
+  test.each([['MP4', 'video/mp4'], ['mov', 'video/quicktime'], ['webm', 'video/webm']])('type buit amb .%s conserva durada i exigix sanejament per a MP4/MOV', async (extensio, mime) => {
     const lligDurada = vi.fn().mockResolvedValue(4000);
-    const netejaVideo = vi.fn(async (fitxer) => ({ fitxer, net: false }));
+    const netejaVideo = vi.fn(async (fitxer) => ({ fitxer, net: true }));
     const comprimeix = comprimeixPetit();
     const adjunt = await preparaAdjunt(new File(['video'], `record.${extensio}`), { comprimeix, lligDurada, netejaVideo, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
-    expect(adjunt).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: false });
+    expect(adjunt).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: mime !== 'video/webm' });
     expect(adjunt.fitxer.type).toBe(mime);
     expect(lligDurada.mock.calls[0][0].type).toBe(mime);
     if (mime === 'video/webm') expect(netejaVideo).not.toHaveBeenCalled();

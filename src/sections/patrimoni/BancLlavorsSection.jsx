@@ -7,6 +7,7 @@ import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
 import EmpremtaFont from './EmpremtaFont.jsx';
 import { FASES_CALENDARI, ambComa, barra12MesosDe, fasesAmbMesos, nutricioDe } from './fitxaDidactica.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
+import { textosBibliotecaAgricola } from './i18nBibliotecaAgricola.js';
 
 /* IDEA-112 (Onada R9, carril C5) · /page/banc-de-llavors: la consulta dels tres catàlegs, davall del text breu de
    PAGE_COPY (PageDetailSection la carrega en un chunk lazy). Només llig dades literals: cap formulari, cap
@@ -19,7 +20,16 @@ import { traductorPatrimoni } from './textosPatrimoni.js';
    ho diu. Sense calendari (AVL, Atles) no hi ha barra; sense perfil, no hi ha bloc de nutrició. */
 const MIDA = 24;
 
-export function FitxaDeLaFont({ font, tr }) {
+/* v1.2.22 · Gauntlet R2 (M5-06) · La llengua del títol de la font: 'ca' si la font no en diu cap. L'estudi d'oliveres
+   (llenguaTitol: 'es') té el títol en castellà, i l'autoria i la nota de la font continuen en català. */
+const llenguaDelTitol = (font) => (typeof font?.llenguaTitol === 'string' && font.llenguaTitol ? font.llenguaTitol : 'ca');
+
+/* v1.2.22 · Gauntlet R2 (M4-01) · Amb `webEsRegistreDocument`, l'adreça és el registre del document (RedIVIA), no la
+   web d'una entitat: el rètol ve del mòdul de textos del Banc, en la llengua que rep `llengua`. */
+export function FitxaDeLaFont({ font, tr, llengua = 'ca' }) {
+  const etiquetaWeb = font.webEsRegistreDocument === true
+    ? textosBibliotecaAgricola(llengua).registreDocument
+    : tr('patrimoni.llavors.web', 'Web de l’entitat');
   return (
     <>
     <p lang="ca">{font.nota}</p>
@@ -29,12 +39,12 @@ export function FitxaDeLaFont({ font, tr }) {
       </Alerta>
     )}
     <dl>
-      <dt>{tr('patrimoni.font.titol', 'La font')}</dt><dd lang="ca">{font.titol}</dd>
+      <dt>{tr('patrimoni.font.titol', 'La font')}</dt><dd lang={llenguaDelTitol(font)}>{font.titol}</dd>
       <dt>{tr('patrimoni.llavors.autoria', 'Procedència')}</dt><dd lang="ca">{font.autoria}</dd>
       <dt>{tr('patrimoni.llavors.ambit', 'Àmbit')}</dt><dd lang="ca">{font.ambit}</dd>
       {font.web && (
         <>
-          <dt>{tr('patrimoni.llavors.web', 'Web de l’entitat')}</dt>
+          <dt>{etiquetaWeb}</dt>
           <dd><a href={font.web} target="_blank" rel="noopener noreferrer">{font.web.replace(/^https:\/\//, '')}</a> {tr('patrimoni.font.finestraNova', '(s’obri en una finestra nova)')}</dd>
         </>
       )}
@@ -194,7 +204,7 @@ function DetallAtles({ e, tr }) {
   );
 }
 
-export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFocus = true }) {
+export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFocus = true, llengua = 'ca' }) {
   const { dada } = entrada;
   const cataleg = useLaminesBotaniquesNode0();
   const lamina = cataleg?.obteLaminaBotanicaNode0(entrada.id);
@@ -215,17 +225,21 @@ export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFo
       {font.id === 'avl-mallorca' && <DetallAvl v={dada} tr={tr} />}
       {font.id === 'atles-catalunya' && <DetallAtles e={dada} tr={tr} />}
       <LaminesBotaniquesNode0 lamina={lamina} nom={entrada.nom} binomi={lamina?.binomiNet} titolElement="h4" />
-      <p>{tr('patrimoni.font.literal', 'Transcripció literal: es conserven les paraules i les xifres de la font, també les errates.')}</p>
+      {/* v1.2.22 · Gauntlet R1 (L4-11) · Les oliveres (Codex R32.42 lot 02) només porten el nom i la pàgina del document:
+          no se'n transcriu res, i la fitxa no ho pot dir. */}
+      {font.id !== 'oliveres-gva-ivia' ? (
+        <p>{tr('patrimoni.font.literal', 'Transcripció literal: es conserven les paraules i les xifres de la font, també les errates.')}</p>
+      ) : null}
       <h4>{tr('patrimoni.font.titol', 'La font')}</h4>
-      <p><span lang="ca">{font.autoria} · {font.titol}</span> · {tr('patrimoni.font.pagina', 'Pàgina {n} del PDF', { n: entrada.pagina })}</p>
-      <EmpremtaFont font={font} tr={tr} />
+      <p><span lang="ca">{font.autoria}</span> · <span lang={llenguaDelTitol(font)}>{font.titol}</span> · {tr('patrimoni.font.pagina', 'Pàgina {n} del PDF', { n: entrada.pagina })}</p>
+      <EmpremtaFont font={font} tr={tr} llengua={llengua} />
     </section>
   );
 }
 
 /** Cos viu de TextSection a /page/banc-de-llavors. */
 export default function BancLlavorsSection() {
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const [idFont, setIdFont] = useState(FONTS_BANC_LLAVORS[0].id);
   const [cerca, setCerca] = useState('');
@@ -257,13 +271,13 @@ export default function BancLlavorsSection() {
           opcions={FONTS_BANC_LLAVORS.map((f) => ({ valor: f.id, etiqueta: `${f.autoria} · ${f.ambit}` }))}
         />
       </Camp>
-      <FitxaDeLaFont font={font} tr={tr} />
+      <FitxaDeLaFont font={font} tr={tr} llengua={language} />
       <Camp etiqueta={tr('patrimoni.llavors.cerca', 'Cerca pel nom o pel nom científic')}>
         <CampText tipus="search" value={cerca} onChange={(e) => { setCerca(e.target.value); setLimit(MIDA); }} />
       </Camp>
       <p role="status">{tr('patrimoni.font.resultats', '{n} de {total}', { n: entrades.length, total: totes.length })}</p>
       {seleccio && (
-        <Fitxa key={seleccio.id} entrada={seleccio} totes={totes} onTriaEntrada={setSeleccio} font={font} onTanca={tanca} tr={tr} />
+        <Fitxa key={seleccio.id} entrada={seleccio} totes={totes} onTriaEntrada={setSeleccio} font={font} onTanca={tanca} tr={tr} llengua={language} />
       )}
       {entrades.length ? (
         <ol lang="ca" ref={llista}>

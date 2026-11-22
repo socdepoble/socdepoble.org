@@ -104,11 +104,12 @@ afterEach(() => {
 
 describe('Onada R32.28 · Lot 01 (C-2) · Geometria Sènior a AccesAlXat i 0 regles mortes', () => {
   test.each([
-    ['ca', 'Lletra gran'],
-    ['es', 'Letra grande'],
-    ['en', 'Large text'],
-    ['eu', 'Letra handia'],
-    ['gl', 'Letra grande'],
+    /* IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · Un sol «Mode Bancal»: el rètol curt de l'ordre. */
+    ['ca', 'Mode Bancal'],
+    ['es', 'Modo Bancal'],
+    ['en', 'Bancal Mode'],
+    ['eu', 'Bankal Modua'],
+    ['gl', 'Modo Bancal'],
   ])('en %s mostra el xip compacte «%s» d’1 línia i commuta netament Mode Sènior', (llengua, etiqueta) => {
     render(
       createElement(

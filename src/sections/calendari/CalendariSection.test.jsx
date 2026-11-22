@@ -292,6 +292,23 @@ test('B10a i B10c · el 20-11-2026, el curs acabat i l’Aplec del 2023 obrin el
   expect(within(desplegable).queryByRole('button', { name: /^(Assistiré|Potser|No assistiré)$/ })).toBeNull();
 });
 
+/* v1.2.22 · Gauntlet R2 (M2-06) · /calendari llig el context del Mur sense el filtre de l'aparador (useMur →
+   entradesDelCalendari, sense esVisibleAlMur): l'acte amb «Mostrar també al Mur» apagat, que la pestanya del Mur no
+   pinta (MurSection.agenda.test.jsx, «M2-06»), ací sí que hi és, amb el germà que el porta encés. */
+test('M2-06 · un acte amb «Mostrar també al Mur» apagat sí que és a /calendari: a la graella, a les targetes i al llistat', () => {
+  const amagat = { ...FIRA, id: 'amagat', title: 'Mercat amagat', date: '2026-10-24', mostrarAlMur: false };
+  mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, mostrarAlMur: true }, amagat] };
+  pinta();
+  expect(screen.getByRole('button', { name: 'Esdeveniments (2)', pressed: true })).toBeTruthy();
+  expect(regioMes(2026, 9)).toBeTruthy();
+  expect(tePeca('Mercat amagat')).toBe(true);
+  expect(tePeca('Fira de tardor')).toBe(true);
+  expect([...graella().querySelectorAll('a.sdp-cal-enllac')].map((a) => a.getAttribute('href')).sort())
+    .toEqual(['/events/amagat', '/events/fira']);
+  expect(titolsDeTargetes()).toEqual(['Mercat amagat', 'Fira de tardor']);
+  expect(within(screen.getByTestId('desplegable-esdeveniments-calendari')).getByText('Mercat amagat')).toBeTruthy();
+});
+
 test('les targetes són les del Mur: l’acte amb la seua insígnia i el producte amb la seua etiqueta i el seu enllaç', () => {
   pintaTot();
   const fira = targeta('Fira de tardor');

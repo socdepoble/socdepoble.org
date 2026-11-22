@@ -123,9 +123,13 @@ const especimen = (categoria, slug, title, subtitle, tags, lead, cerca = '') => 
    navegació. L'ordre és el de lectura: contracte → color → tipografia →
    espaiat → targeta mestra → controls → àtoms → maquetes heretades. */
 const FONAMENTS = [
+  /* v1.2.22 · Gauntlet R2 (M4-07) · L'entradeta (la de la pàgina i la meta description) i la cerca descrivien tres
+     controls (contrast, ombres i lletra Noto Sans) i «restablir els valors». Després de L2-01 i L3-05 el Panell té un
+     sol interruptor, el «Mode Bancal · Sol i Lletra Gran» del xip i dels Ajustos, i els tres graons d'ombra, amb un sol
+     «Restablir», el de l'ombra (detalls/EspecimenPanell.jsx). */
   especimen('fonaments', 'panell', 'Panell de Disseny', 'Contrast, ombres i lletra', ['sistema', 'ajustos', 'bancal'],
-    'Ajusta el contrast del mode Bancal, les ombres i la lletra Noto Sans. Els exemples mostren els canvis al moment, i pots restablir els valors.',
-    "panell disseny ajustos contrast bancal ombra lletra restablir human Ajustos del mode Bancal, ombres i lletra"),
+    'Encén o apaga d’un sol toc el Mode Bancal · Sol i Lletra Gran (lletra més gran, dianes d’acció de 56 px com a mínim i el contrast Bancal), el mateix del xip i dels Ajustos, i prova els tres graons d’ombra de la targeta, amb un botó per a tornar a l’ombra de sempre. Els exemples mostren els canvis al moment.',
+    "panell disseny ajustos mode bancal sol lletra gran senior sènior contrast dianes 56 px interruptor xip ombra graons restablir human Mode Bancal · Sol i Lletra Gran i ombres de la targeta"),
   especimen('fonaments', 'contracte', 'Contracte de Pedra Seca', 'Lleis, arquitectura universal i pàgines de sistema', ['llei', 'arquitectura', 'sistema']),
   especimen('fonaments', 'color', 'Identitat cromàtica', 'Colors amb contrast', ['token', 'color', 'contrast'],
     'La paleta de Sóc de Poble en OKLCH: tokens semàntics per a fons, text i accents, amb el contrast comprovat en clar i en fosc. Cap component pinta amb un color cru.', "Paleta OKLCH, contrast i escala Pedra"),
@@ -687,14 +691,17 @@ CATALOG_ITEMS.push(especimen('retroalimentacio', 'acollida-foraster-xat', 'Benvi
    el 22-11-2026) · Les cinc pàgines de l'Atles 2D, en l'ordre de lectura: la presentació i les quatre vistes de
    la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html. Ací només hi ha les fitxes (títol, emoji i textos
    curts): les dades (dades/atles2dDades.js) i les pàgines (detalls/EspecimenAtles2d*.jsx) es carreguen a
-   demanda des de detailRegistry.jsx. L'id és 'atles-2d-<slug>' i la URL, /disseny?categoria=atles-2d&item=<id>. */
+   demanda des de detailRegistry.jsx. L'id és 'atles-2d-<slug>' i la URL, /disseny?categoria=atles-2d&item=<id>.
+   v1.2.22 · Gauntlet R1 (L3-01 i L3-07) · D-ATLES-MOTOR · L'entradeta del Motor (que és també la de la seua
+   UniversalPage, la meta description i la targeta de la Presentació) diu les decisions del Mestre i no «per a
+   decidir»; el Poble virtual diu «perfils simulats» i no «veïns sintètics». */
 CATALOG_ITEMS.push(
   especimen('atles-2d', 'presentacio', 'Atles 2D de Sóc de Poble · Presentació i marc comú', 'Xifres globals, congelació d’Orkut, les quatre vistes i les fonts', ['atles', 'estudi', 'fonts'],
     'L’obertura comuna de l’Atles 2D: per què Orkut continua congelat al codi, les quatre xifres globals, les targetes que porten a les quatre pàgines d’estudi i d’on ix cada dada. Tot és lectura: cap mecànica social nova.',
     'atles 2d presentacio marc comu orkut congelat xifres fonts tracabilitat mercat entitats'),
-  especimen('atles-2d', 'poble-virtual', '1. El poble virtual (Assaig a la Plaça)', 'Rondes, veïns sintètics i dolors amb filtres', ['atles', 'estudi', 'veïns'],
-    'Les rondes d’«Assaig a la Plaça», els veïns sintètics amb selector, tots els dolors amb filtres d’estat, gravetat (P0–P3), ronda, veí i cerca lliure, les mètriques i les discrepàncies entre fonts (Llei 0).',
-    'assaig placa poble virtual rondes veins sintetics dolors gravetat p0 p1 p2 p3 metriques discrepancies llei 0'),
+  especimen('atles-2d', 'poble-virtual', '1. El poble virtual (Assaig a la Plaça)', 'Rondes, perfils simulats i dolors amb filtres', ['atles', 'estudi', 'veïns'],
+    'Les rondes d’«Assaig a la Plaça», els perfils simulats de veïns amb selector, tots els dolors amb filtres d’estat, gravetat (P0–P3), ronda, veí i cerca lliure, les mètriques i les discrepàncies entre fonts (Llei 0).',
+    'assaig placa poble virtual rondes perfils simulats veins sintetics dolors gravetat p0 p1 p2 p3 metriques discrepancies llei 0'),
   especimen('atles-2d', 'xarxes-mon', '2. Xarxes del món (Orkut, 10 referents i Nextdoor com a antimodel)', 'Gràfic d’afinitat, fitxes completes i Orkut peça per peça', ['atles', 'estudi', 'xarxes'],
     'Les xarxes per a pobles que ha estudiat Gemini, puntuades de 0 a 10 per la seua afinitat amb Sóc de Poble: el gràfic, el cercador i l’ordenació, cada fitxa amb el que adoptem en sala neta i el que rebutgem (Nextdoor com a anti-model), i la taula d’Orkut peça per peça.',
     'xarxes mon orkut nextdoor front porch forum panneaupocket intramuros nebenan karrot hylo fedivers afinitat sala neta'),
@@ -702,6 +709,6 @@ CATALOG_ITEMS.push(
     'Les cinc pàgines d’entitat en dues dimensions: el resum de cada entitat, la graella de dotze dimensions per cinc entitats amb el filtre d’estat i «Només les corregides», el visor de cada cel·la amb l’evidència fitxer:línia, l’estatut propi de l’Ajuntament (city_hall) i les rutes reals.',
     'mapa 2d entitats usuari empresa grup poble ajuntament city_hall graella cel·les corregides evidencia rutes'),
   especimen('atles-2d', 'motor-estudis', '4. Motor d’estudis de mercat (Proposta funcional)', 'Fase 1 simulada, Fase 2 humana i maqueta mòbil', ['atles', 'proposta', 'mercat'],
-    'Una proposta per a decidir, sense cap línia al producte: la Fase 1 simulada i la Fase 2 de contrast humà real, el recorregut en quatre passos, els principis ètics, el fonament tècnic que ja tenim, les preguntes per al Mestre i una maqueta mòbil amb un exemple inventat.',
-    'motor estudis mercat proposta fase 1 fase 2 contrast huma sintetic principis etics maqueta mobil preguntes mestre')
+    'Una proposta, amb les decisions del Mestre del 22-11-2026, sense cap línia al producte: la Fase 1 simulada i la Fase 2 de contrast humà real, el recorregut en quatre passos, els principis ètics, el fonament tècnic que ja tenim, les cinc decisions del Mestre i una maqueta mòbil amb un exemple inventat.',
+    'motor estudis mercat proposta fase 1 fase 2 contrast huma sintetic principis etics maqueta mobil decisions mestre perfils simulats')
 );

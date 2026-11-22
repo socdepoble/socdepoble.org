@@ -15,6 +15,10 @@
  * Gauntlet 261016 (Bloc 3.6) · Derogat per a la LLISTA: sense poble declarat,
  * la fila és la de POBLE_PER_DEFECTE («Gent de la Torre»), que el Mestre vol
  * sempre visible. L'entrada automàtica continua sense fer res.
+ * IDEA-323.1 (v1.2.22) · Amb sessió. El xat de mostra del Foraster sense
+ * amfitrió no porta cap poble (pobleDelForaster); el ?sobre=poble: de la
+ * pàgina del poble porta a /registre i, amb sessió, el xat de veres n'obri la
+ * comunitat (XatSection, efecte ?sobre=).
  *
  * Model B: ací no hi ha cap crida al backend. El poble és presentació i
  * navegació (configAmfitrio.js): mai `tenantId`.
@@ -41,6 +45,8 @@ export { pobleDeConfig };
  * també sense amfitrió (socdepoble.org, el standalone, localhost). És el poble
  * pilot de la llavor (sections/pobles/townsSeed.js), amb el nom de l'ordre.
  * Un poble declarat per l'amfitrió mana i el substituïx.
+ * IDEA-323.1 (v1.2.22) · Ara només amb sessió: el xat de mostra del Foraster
+ * sense amfitrió no porta cap poble (pobleDelForaster).
  * P1-70 (ordre del Mestre, 261029 18:20: «a Gent de la Torre le falta la
  * imagen») · I la seua cara: la foto de la llavor (townsSeed.js, la mateixa
  * de /pobles; el navegador en servix la bessona .webp), la reserva
@@ -59,6 +65,20 @@ export const POBLE_PER_DEFECTE = Object.freeze({
  * sense amfitrió, /xat no s'obri sol en cap fitxa.
  */
 export const pobleDelXat = (poble) => poble || POBLE_PER_DEFECTE;
+
+/**
+ * IDEA-323.1 (v1.2.22, ordre del Mestre del 261122: «Sóc de Poble és la
+ * plataforma de tots els pobles; la Torre és un poble més») · El poble del xat
+ * de mostra del Foraster (sense sessió). Derogat, només per a esta mostra, el
+ * POBLE_PER_DEFECTE del Gauntlet 261016: sense amfitrió, la llista porta els
+ * tres actors del projecte (Sóc de Poble, Javi Llinares i la IAIA) i cap poble.
+ * Hi entra un poble quan l'amfitrió el declara (pobleDeConfig). Des de la
+ * pàgina d'un poble («Comentar», ?sobre=poble:<id>), el Foraster passa per
+ * /registre i, amb sessió, el xat de veres obri la comunitat del poble
+ * (XatSection, efecte ?sobre=); la mostra no la pinta mai (Gauntlet R1, L1-02 i
+ * L5-02). La llista amb sessió continua amb pobleDelXat.
+ */
+export const pobleDelForaster = (amfitrio) => amfitrio || null;
 
 /** La ruta de la pàgina del poble dins de l'app. */
 export const rutaDelPobleXat = (poble) => `/pobles/${enc(poble.id)}`;

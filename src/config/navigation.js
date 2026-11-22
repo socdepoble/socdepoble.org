@@ -78,6 +78,7 @@ export const getSectionListPath = (sectionId) => {
 export const rutaDePerfil = (tipus, id) => {
   if (id == null || String(id) === '') return null;
   const clau = encodeURIComponent(String(id));
+  if (tipus === 'ajuntament' || tipus === 'city_hall') return `/ajuntament/${clau}`;
   if (tipus === 'entitat' || tipus === 'empresa') return `/empresa/${clau}`;
   if (tipus === 'grup') return `/grup/${clau}`;
   if (tipus === 'ia') return `/perfil/${clau}`;
@@ -392,15 +393,15 @@ export function objecteDePerfil(perfil) {
   const id = text(perfil?.id);
   if (!id) return null;
   const tipus = TIPUS_DE_PERFIL.has(perfil.tipus) ? perfil.tipus
-    : (perfil.tipus === 'empresa' ? 'entitat' : 'persona');
+    : (['empresa', 'ajuntament', 'city_hall'].includes(perfil.tipus) ? 'entitat' : 'persona');
   return {
-    tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(tipus, id), autor: null,
+    tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(perfil.kind === 'city_hall' || perfil.tipus === 'ajuntament' || perfil.tipus === 'city_hall' ? 'ajuntament' : tipus, id), autor: null,
     ...marcaDelProjecte({ tipus, id })
   };
 }
 
 /* La inversa exacta de rutaDePerfil: el prefix que ella escriu per a cada tipus. */
-const TIPUS_DE_PREFIX = Object.freeze({ gent: 'persona', empresa: 'entitat', grup: 'grup', perfil: 'ia' });
+const TIPUS_DE_PREFIX = Object.freeze({ gent: 'persona', empresa: 'entitat', ajuntament: 'entitat', grup: 'grup', perfil: 'ia' });
 
 /**
  * T63.2 · El descriptor d'un perfil a partir de la ruta que en fa rutaDePerfil
@@ -409,11 +410,11 @@ const TIPUS_DE_PREFIX = Object.freeze({ gent: 'persona', empresa: 'entitat', gru
  * pública el prefix és orientatiu i l'id pot ser un slug.
  */
 export function objecteDeRutaDePerfil(ruta, nom = '') {
-  const trossos = /^\/(gent|empresa|grup|perfil)\/([^/?#]+)$/.exec(typeof ruta === 'string' ? ruta : '');
+  const trossos = /^\/(gent|empresa|grup|ajuntament|perfil)\/([^/?#]+)$/.exec(typeof ruta === 'string' ? ruta : '');
   if (!trossos) return null;
   let id;
   try { id = decodeURIComponent(trossos[2]); } catch { return null; }
-  return objecteDePerfil({ tipus: TIPUS_DE_PREFIX[trossos[1]], id, nom });
+  return objecteDePerfil({ tipus: TIPUS_DE_PREFIX[trossos[1]], ...(trossos[1] === 'ajuntament' ? { kind: 'city_hall' } : {}), id, nom });
 }
 
 /**

@@ -8,8 +8,8 @@ import {
 } from '../../config/i18n';
 import { registraIncident } from '../../utils/autocuracio.js';
 import {
-  ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference,
-  readSeniorPreference, readThemePreference, resolveContrast, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema,
+  CONTRAST_BANCAL, ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, contrastDelMode, esModeBancal,
+  readContrastPreference, readSeniorPreference, readThemePreference, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema,
   subscriuModeSenior, writeContrastPreference, writeSeniorPreference, writeThemePreference
 } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
@@ -173,7 +173,6 @@ export function UIProvider({ children, externalConfig = {} }) {
     return subscriuContrastSistema(setSystemContrast);
   }, []);
 
-  const contrastMode = resolveContrast(contrastPreference, systemContrast);
 
   /* W4-12 · Un sol estat per a tots els controls (el full «Ajustos» del Xat,
      el Panell de Disseny) i per a totes les instàncies de la pàgina: la tria
@@ -190,8 +189,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     return () => window.removeEventListener(ESDEVENIMENT_CONTRAST, alCanviarContrast);
   }, []);
 
-  const setContrast = useCallback((preferencia) => {
-    if (!PREFERENCIES_CONTRAST.includes(preferencia)) return;
+  const desaContrast = useCallback((preferencia) => {
     writeContrastPreference(preferencia);
     setContrastPreference(preferencia);
     if (typeof window !== 'undefined') {
@@ -200,23 +198,49 @@ export function UIProvider({ children, externalConfig = {} }) {
   }, []);
 
   // === MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252) ===
-  const [seniorMode, setSeniorModeState] = useState(() => readSeniorPreference(externalConfig?.senior));
+  const [seniorPreference, setSeniorModeState] = useState(() => readSeniorPreference(externalConfig?.senior));
 
   useEffect(() => subscriuModeSenior(setSeniorModeState), []);
 
+  /* IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · Un sol «Mode Bancal · Sol i Lletra
+     Gran» (theme.js, esModeBancal): `seniorMode` és el mode, i amb ell el contrast és 'bancal'. La
+     preferència de contrast que es mostra (el selector d'Ajustos) és 'bancal' amb el mode; si no, la
+     tria 'normal' o 'sistema'. Cap control no pot deixar la lletra gran sense el contrast; el contrast Bancal sense
+     lletra gran només ve de «Segons el sistema» (prefers-contrast: more), per disseny (Gauntlet R1, L2-10).
+     Les refs donen el valor vigent a les accions (dos tocs seguits no partixen del mateix). */
+  const seniorMode = esModeBancal(seniorPreference, contrastPreference);
+  const contrastMode = contrastDelMode(seniorMode, contrastPreference, systemContrast);
+  const contrastVisible = seniorMode ? CONTRAST_BANCAL : contrastPreference;
+  const modeVigent = useRef(seniorMode);
+  modeVigent.current = seniorMode;
+  const contrastVigent = useRef(contrastPreference);
+  contrastVigent.current = contrastPreference;
+
   const setSeniorMode = useCallback((actiu) => {
     if (typeof actiu !== 'boolean') return;
+    modeVigent.current = actiu;
+    /* Un 'bancal' desat per una versió anterior apagaria el contrast només a mitges: torna a 'normal'. Abans que la
+       clau de Sènior, que avisa els oients i les altres instàncies: quan la lligen, el mode ja és el nou (Gauntlet R1,
+       L2-07; com ControlModeSenior). */
+    if (!actiu && contrastVigent.current === CONTRAST_BANCAL) {
+      contrastVigent.current = 'normal';
+      desaContrast('normal');
+    }
     writeSeniorPreference(actiu);
     setSeniorModeState(actiu);
-  }, []);
+  }, [desaContrast]);
 
-  const toggleSeniorMode = useCallback(() => {
-    setSeniorModeState((previ) => {
-      const seg = !previ;
-      writeSeniorPreference(seg);
-      return seg;
-    });
-  }, []);
+  const toggleSeniorMode = useCallback(() => setSeniorMode(!modeVigent.current), [setSeniorMode]);
+
+  /* El selector d'Ajustos (i el Panell de Disseny): 'bancal' encén el Mode Bancal; 'normal' i
+     'sistema' l'apaguen i queden desats com a tria de contrast. */
+  const setContrast = useCallback((preferencia) => {
+    if (!PREFERENCIES_CONTRAST.includes(preferencia)) return;
+    if (preferencia === CONTRAST_BANCAL) { setSeniorMode(true); return; }
+    contrastVigent.current = preferencia;
+    desaContrast(preferencia);
+    setSeniorMode(false);
+  }, [desaContrast, setSeniorMode]);
 
   const stateValue = useMemo(() => ({
     language,
@@ -227,11 +251,11 @@ export function UIProvider({ children, externalConfig = {} }) {
     themePreference,
     systemDark,
     contrastMode,
-    contrastPreference,
+    contrastPreference: contrastVisible,
     seniorMode,
     externalConfig,
     status: globalStatus
-  }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastPreference, seniorMode, externalConfig, globalStatus]);
+  }), [language, llenguaDelText, translator, locale, themeMode, themePreference, systemDark, contrastMode, contrastVisible, seniorMode, externalConfig, globalStatus]);
 
   const actionsValue = useMemo(() => ({
     language,

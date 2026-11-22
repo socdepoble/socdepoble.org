@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ACTIUS_PATRIMONIALS_LEGITIMS, ZIP_OPENDATA_CANONIC, validaManifestActius, sha256 } from '../lib/actius-patrimonials-legitims.mjs';
+import { llegeixZipNodeZero } from '../node0/paquet-opendata-node0.mjs';
 import { auditaAnonim, auditaCapcaleres, auditaBlindatge, main, parseArgs, LIMITS } from './tractor-sentinella-blindatge.mjs';
 
 const ANON = 'sb_publishable_' + 'TEST_ONLY_PUBLIC_FIXTURE_123456';
@@ -184,7 +186,7 @@ test('L2-02 · una imatge real amb «<?=» per atzar no fa caure localSecrets; e
   assert.equal(JSON.stringify(brut).includes('CANARI_PHP_L202'), false);
 });
 
-test('L2-02 · literals i binaris tenen pressupostos separats; cada límit continua sent desconegut', async t => {
+test('R32.43 · qualsevol fitxer gros fora del manifest és bloquejant, sense confiar en l’extensió', async t => {
   const root = fixture(t), buit = (rel, size) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, ''); fs.truncateSync(p, size); };
   for (let i = 0; i < 5; i++) buit(`public/galeria/f${i}.jpg`, LIMITS.localBinaryFileBytes - 1);
   let local = (await auditaBlindatge({ root })).localSecrets;
@@ -194,10 +196,216 @@ test('L2-02 · literals i binaris tenen pressupostos separats; cada límit conti
   const GROS_TXT = path.join('public', 'gros.txt');
   buit(GROS_TXT, LIMITS.localFileBytes + 1);
   local = (await auditaBlindatge({ root })).localSecrets;
-  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT');
-  assert.equal(local.coverage.literals.status, 'unknown'); assert.equal(local.coverage.staticBinaries.status, 'ok');
+  assert.equal(local.status, 'fail');
+  assert.equal(local.coverage.literals.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.ok(local.findings.some(f=>f.ruleId==='static-file-oversize-unregistered'));
   fs.rmSync(path.join(root, GROS_TXT)); buit('public/gros.png', LIMITS.localBinaryFileBytes + 1);
   local = (await auditaBlindatge({ root })).localSecrets;
-  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT');
-  assert.deepEqual(local.coverage.literals, { status: 'ok', files: 1, bytes: 27 }); assert.equal(local.coverage.staticBinaries.status, 'unknown');
+  assert.equal(local.status, 'fail');
+  assert.deepEqual(local.coverage.literals, { status: 'ok', files: 1, bytes: 27 }); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.equal(local.findings[0].ruleId, 'static-binary-unregistered');
+});
+
+
+// R32.43 · Integritat d'actius NIST PR.DS: no hi ha excepcions per basename ni per mida sola.
+function assetFixture(t, asset = ACTIUS_PATRIMONIALS_LEGITIMS[0]) {
+  const root = fixture(t), file = path.join(root, asset.path);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.copyFileSync(path.join(REPO_L202, asset.path), file);
+  const census = path.join(root, asset.census.file); fs.mkdirSync(path.dirname(census), { recursive: true });
+  const url = asset.path.slice('public'.length);
+  const declaration = asset.census.kind === 'image'
+    ? `export const CENS_IMATGES=Object.freeze([e(${JSON.stringify(url)},'Títol')]);`
+    : `export const OBRA_QUE_DINEM=congela({pdf:${JSON.stringify(url)},pdfBytes:${asset.bytes}});`;
+  // Les fonts només es parsegen; executar-les faria fallar la prova.
+  fs.writeFileSync(census, `throw new Error('NO_EXECUTAR_SOURCE');${declaration}`);
+  return { root, file, census, asset, url };
+}
+
+test('R32.43 · els 5 actius reals es lligen sencers i deixen cobertura binària ok', async () => {
+  assert.equal(ACTIUS_PATRIMONIALS_LEGITIMS.length, 5);
+  for (const asset of ACTIUS_PATRIMONIALS_LEGITIMS) {
+    const content = fs.readFileSync(path.join(REPO_L202, asset.path));
+    assert.equal(content.length, asset.bytes); assert.equal(sha256(content), asset.sha256);
+  }
+  const report = await auditaBlindatge({ root: REPO_L202 });
+  assert.equal(report.localSecrets.coverage.staticBinaries.status, 'ok');
+  assert.equal(report.localSecrets.integrity.approvedBinaries, 5);
+  assert.ok(report.localSecrets.coverage.staticBinaries.bytes >= ACTIUS_PATRIMONIALS_LEGITIMS.reduce((n,a)=>n+a.bytes,0));
+});
+
+test('R32.43 · ruta+mida+SHA+cens AST d’un actiu real deixen verd sense executar source', async t => {
+  for (const asset of [ACTIUS_PATRIMONIALS_LEGITIMS[0], ACTIUS_PATRIMONIALS_LEGITIMS[3]]) {
+    const { root } = assetFixture(t, asset), local = (await auditaBlindatge({ root })).localSecrets;
+    assert.equal(local.status, 'ok'); assert.equal(local.integrity.approvedBinaries, 1);
+    assert.equal(local.coverage.staticBinaries.bytes, asset.bytes);
+  }
+});
+
+test('R32.43 · byte alterat amb la mateixa mida és fallada d’integritat', async t => {
+  const { root, file } = assetFixture(t), fd = fs.openSync(file, 'r+'), byte = Buffer.alloc(1);
+  try { fs.readSync(fd, byte, 0, 1, 100); byte[0] ^= 1; fs.writeSync(fd, byte, 0, 1, 100); } finally { fs.closeSync(fd); }
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.ok(local.findings.some(f=>f.ruleId==='static-binary-integrity-mismatch'));
+});
+
+test('R32.43 · mida alterada no es transforma en unknown ni autoritza més bytes', async t => {
+  const { root, file } = assetFixture(t); fs.appendFileSync(file, Buffer.from([0]));
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.ok(local.findings.some(f=>f.ruleId==='static-binary-size-mismatch'));
+  assert.equal(local.integrity.approvedBinaries, 0);
+});
+
+test('R32.43 · actiu que deixa el cens exportat falla encara que la ruta romanga al comentari', async t => {
+  const { root, census, url } = assetFixture(t, ACTIUS_PATRIMONIALS_LEGITIMS[3]);
+  fs.writeFileSync(census, `// e(${JSON.stringify(url)})\nexport const CENS_IMATGES=Object.freeze([]);`);
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.ok(local.findings.some(f=>f.ruleId==='static-binary-census-orphan'));
+});
+
+test('R32.43 · pdfBytes o export incorrectes i cens amb symlink no acrediten cap actiu', async t => {
+  for (const mode of ['size','export','symlink']) {
+    const { root, census, url } = assetFixture(t);
+    if (mode === 'size') fs.writeFileSync(census, `export const OBRA_QUE_DINEM=congela({pdf:${JSON.stringify(url)},pdfBytes:1});`);
+    if (mode === 'export') fs.writeFileSync(census, `const OBRA_QUE_DINEM=congela({pdf:${JSON.stringify(url)},pdfBytes:7560366});`);
+    if (mode === 'symlink') { const target = path.join(root,'private-census.js'); fs.renameSync(census,target); fs.symlinkSync(target,census); }
+    const local = (await auditaBlindatge({ root })).localSecrets;
+    assert.equal(local.status, 'fail',mode); assert.ok(local.findings.some(f=>f.ruleId==='static-binary-census-orphan'),mode);
+  }
+});
+
+test('R32.43 · un basename o alias antic no entra al manifest per coincidència de hash', async t => {
+  const root = fixture(t), asset = ACTIUS_PATRIMONIALS_LEGITIMS[1], file = path.join(root,'public/assets/towns/tibi/DSC00410.JPG');
+  fs.mkdirSync(path.dirname(file),{recursive:true}); fs.copyFileSync(path.join(REPO_L202,asset.path),file);
+  const local=(await auditaBlindatge({root})).localSecrets;
+  assert.equal(local.status,'fail'); assert.ok(local.findings.some(f=>f.ruleId==='static-binary-unregistered'));
+});
+
+test('R32.43 · binari gros desconegut de qualsevol extensió falla fins i tot amb dist net', async t => {
+  for (const name of ['new.png','payload.bin','package.ZIP','new.js','new.svg']) {
+    const root=fixture(t),file=path.join(root,'public',name);fs.writeFileSync(file,'');fs.truncateSync(file,LIMITS.localBinaryFileBytes+1);
+    fs.mkdirSync(path.join(root,'dist'));fs.writeFileSync(path.join(root,'dist','safe.js'),'export const safe=1;');
+    const local=(await auditaBlindatge({root})).localSecrets;
+    assert.equal(local.status,'fail',name);assert.ok(local.findings.some(f=>['static-binary-unregistered','static-file-oversize-unregistered'].includes(f.ruleId)),name);
+  }
+});
+
+test('R32.43 · només ZIP actual amb mida/hash del datapackage, cap ZIP vell duplicat', async t => {
+  const root=fixture(t),dir=path.join(root,'public/opendata');fs.mkdirSync(dir);
+  const bytes=Buffer.from('PK\x03\x04CONTINGUT_SINTETIC'),file=path.join(dir,'actual.zip');fs.writeFileSync(file,bytes);
+  let local=(await auditaBlindatge({root})).localSecrets;
+  assert.equal(local.status,'fail');assert.ok(local.findings.some(f=>f.ruleId==='opendata-zip-outside-manifest'));
+  fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify({resources:[{path:'actual.zip',bytes:bytes.length,hash:'sha256:'+sha256(bytes)}]}));
+  local=(await auditaBlindatge({root})).localSecrets;assert.equal(local.status,'ok');
+  const manifestFile=path.join(dir,'manifest.json'),record={path:'actual.zip',bytes:bytes.length,hash:'sha256:'+sha256(bytes)};
+  fs.writeFileSync(manifestFile,JSON.stringify({resources:[record,record]}));
+  local=(await auditaBlindatge({root})).localSecrets;assert.equal(local.status,'fail');
+  fs.writeFileSync(manifestFile,JSON.stringify({resources:[{path:record.path,bytes:record.bytes}]}));
+  local=(await auditaBlindatge({root})).localSecrets;assert.equal(local.status,'fail');
+  fs.writeFileSync(manifestFile,JSON.stringify({resources:[record]}));
+  fs.copyFileSync(file,path.join(dir,'vell.zip'));
+  local=(await auditaBlindatge({root})).localSecrets;assert.equal(local.status,'fail');assert.ok(local.findings.some(f=>f.path.endsWith('/vell.zip')));
+  fs.unlinkSync(path.join(dir,'vell.zip'));fs.appendFileSync(file,'X');
+  local=(await auditaBlindatge({root})).localSecrets;assert.equal(local.status,'fail');
+});
+
+async function canonicalZipFixture(t) {
+  const root = fixture(t), pin = ZIP_OPENDATA_CANONIC;
+  fs.mkdirSync(path.join(root, 'public/opendata'));
+  for (const binding of [pin.snapshot, pin.manifest]) fs.copyFileSync(path.join(REPO_L202, 'public', binding.path), path.join(root, 'public', binding.path));
+  // L'API existent reprodueix en memòria els bytes reals; el gate només llig/hash.
+  const bytes = await llegeixZipNodeZero({ root, sha256Esperat: pin.sha256 });
+  assert.equal(bytes.length, pin.bytes); assert.equal(sha256(bytes), pin.sha256);
+  const file = path.join(root, 'public', pin.path); fs.writeFileSync(file, bytes);
+  return { root, file, bytes, pin };
+}
+
+test('R32.43 · ZIP canònic real reproduït del snapshot passa sense ser un resource interior', async t => {
+  const { root } = await canonicalZipFixture(t);
+  fs.mkdirSync(path.join(root, 'dist')); fs.writeFileSync(path.join(root, 'dist/safe.js'), 'export const safe=1;');
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'ok'); assert.equal(local.coverage.staticBinaries.status, 'ok');
+  assert.equal(local.coverage.staticBinaries.bytes, ZIP_OPENDATA_CANONIC.bytes);
+});
+
+test('R32.43 · pin ZIP exigeix ruta, bytes, SHA i bindings íntegres sense fallback resource', async t => {
+  for (const mode of ['extra', 'size', 'hash', 'snapshot-missing', 'snapshot-changed', 'manifest-missing', 'manifest-changed', 'resource-bypass']) {
+    const { root, file, bytes, pin } = await canonicalZipFixture(t);
+    if (mode === 'extra') fs.copyFileSync(file, path.join(path.dirname(file), 'antic.zip'));
+    if (mode === 'size') fs.appendFileSync(file, 'X');
+    if (mode === 'hash') { const bad = Buffer.from(bytes); bad[100] ^= 1; fs.writeFileSync(file, bad); }
+    if (mode === 'snapshot-missing') fs.unlinkSync(path.join(root, 'public', pin.snapshot.path));
+    if (mode === 'snapshot-changed') fs.appendFileSync(path.join(root, 'public', pin.snapshot.path), '\n');
+    if (mode === 'manifest-missing') fs.unlinkSync(path.join(root, 'public', pin.manifest.path));
+    if (mode === 'manifest-changed') fs.appendFileSync(path.join(root, 'public', pin.manifest.path), '\n');
+    if (mode === 'resource-bypass') fs.writeFileSync(path.join(root, 'public', pin.manifest.path), JSON.stringify({ resources: [{ path: path.basename(file), bytes: bytes.length, hash: `sha256:${pin.sha256}` }] }));
+    const local = (await auditaBlindatge({ root })).localSecrets;
+    assert.equal(local.status, 'fail', mode); assert.equal(local.coverage.staticBinaries.status, 'fail', mode);
+    assert.ok(local.findings.some(f => f.ruleId === 'opendata-zip-outside-manifest'), mode);
+  }
+});
+
+test('R32.43 · manifest declaratiu rebutja duplicats, traversal, controls i mides fora del pressupost', () => {
+  const value={schema:'sdp.static-binaries.integrity.v1',control:'prova',assets:structuredClone(ACTIUS_PATRIMONIALS_LEGITIMS)};
+  assert.equal(validaManifestActius(value).length,5);
+  for(const change of [v=>v.assets.push(v.assets[0]),v=>v.assets[0].path='public/assets/../secret.pdf',v=>v.assets[0].path='public/assets/\u0000bad.pdf',v=>v.assets[0].bytes=64*1024*1024,v=>v.assets[0].census.export='EXCLOSES']) {
+    const altered=structuredClone(value);change(altered);assert.throws(()=>validaManifestActius(altered),/STATIC_MANIFEST_INVALID/);
+  }
+});
+
+
+test('R32.43 · actiu encara referenciat que desapareix del disc és fallada, no cobertura verda', async t => {
+  const {root,file}=assetFixture(t);fs.unlinkSync(file);
+  const local=(await auditaBlindatge({root})).localSecrets;
+  assert.equal(local.status,'fail');assert.equal(local.coverage.staticBinaries.status,'fail');
+  assert.ok(local.findings.some(f=>f.ruleId==='static-binary-missing'));
+});
+
+
+test('R32.43 · spreads, computed keys i accessors no poden acreditar un PDF literal trepitjat', async t => {
+  for (const tail of ["...{pdf:'/other.pdf'}", "['pdf']:'/other.pdf'", "get pdf(){return '/other.pdf'}", "pdf:'/other.pdf'"]) {
+    const {root,census,url,asset}=assetFixture(t);
+    fs.writeFileSync(census, `throw new Error('NO_EXECUTAR_SOURCE');export const OBRA_QUE_DINEM=Object.freeze({pdf:${JSON.stringify(url)},pdfBytes:${asset.bytes},${tail}});`);
+    const local=(await auditaBlindatge({root})).localSecrets;
+    assert.equal(local.status,'fail',tail);assert.ok(local.findings.some(f=>f.ruleId==='static-binary-census-orphan'),tail);
+  }
+});
+
+// v1.2.22 · Gauntlet R1 (L4-03) · dist i public dins del seu topall, però junts per damunt de LIMITS.localEntries: abans
+// la passada d'integritat compartia el comptador, saltava LOCAL_LIMIT i no es llegia cap literal del build.
+test('v1.2.22 · L4-03 · la passada d’integritat de public té topall propi i no amaga els literals de dist', async t => {
+  const root = fixture(t), lot = Math.ceil(LIMITS.localEntries * 0.6);
+  fs.mkdirSync(path.join(root, 'dist', 'assets'), { recursive: true }); fs.mkdirSync(path.join(root, 'public', 'galeria'));
+  // .map no és candidat de lectura: només ocupa entrades, com els chunks d'un build real.
+  for (let i = 0; i < lot; i++) {
+    fs.writeFileSync(path.join(root, 'dist', 'assets', `c${i}.js.map`), '');
+    fs.writeFileSync(path.join(root, 'public', 'galeria', `g${i}.map`), '');
+  }
+  fs.writeFileSync(path.join(root, 'dist', 'z.js'), 'const clau = "sb_secret_' + 'a'.repeat(40) + '";');
+  let local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.root, 'dist'); assert.equal(local.code, undefined);
+  assert.ok(local.coverage.literals.files >= 1); assert.equal(local.coverage.literals.status, 'ok');
+  assert.ok(local.findings.some(f => f.ruleId === 'supabase-secret' && f.path === 'dist/z.js'));
+  assert.equal(local.status, 'fail');
+  // El veredicte dels binaris no canvia: un gros fora del manifest a public continua sent fallada bloquejant.
+  const gros = path.join(root, 'public', 'gros.png'); fs.writeFileSync(gros, ''); fs.truncateSync(gros, LIMITS.localBinaryFileBytes + 1);
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.ok(local.findings.some(f => f.ruleId === 'static-binary-unregistered' && f.path === 'public/gros.png'));
+  assert.ok(local.findings.some(f => f.ruleId === 'supabase-secret' && f.path === 'dist/z.js'));
+  // v1.2.22 · Gauntlet R2 (M3-03): la passada d'integritat sola per damunt del seu topall només deixa inconclusos
+  // els binaris; el secret de dist continua a findings i el veredicte és 'fail'.
+  fs.rmSync(gros);
+  for (let i = lot; i < LIMITS.localEntries; i++) fs.writeFileSync(path.join(root, 'public', 'galeria', `g${i}.map`), '');
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.code, 'LOCAL_LIMIT');
+  assert.ok(local.findings.some(f => f.ruleId === 'supabase-secret' && f.path === 'dist/z.js'));
+  assert.equal(local.coverage.literals.status, 'ok'); assert.equal(local.coverage.staticBinaries.status, 'unknown');
+  // Tancat per defecte: sense el secret, el mateix desbordament continua inconclús, mai verd.
+  fs.writeFileSync(path.join(root, 'dist', 'z.js'), 'export const publicValue = 1;');
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT'); assert.deepEqual(local.findings, []);
+  assert.equal(local.coverage.literals.status, 'ok'); assert.equal(local.coverage.staticBinaries.status, 'unknown');
 });

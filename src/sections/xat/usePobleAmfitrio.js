@@ -26,7 +26,8 @@ export default function usePobleAmfitrio() {
  * P1-70 (ordre del Mestre, 261029 18:20) · El poble és el de la fila del xat
  * (pobleDelXat): sense amfitrió, la Torre (POBLE_PER_DEFECTE), amb la seua
  * foto de reserva. Així el rail i els Preferits vestixen la comunitat de la
- * Torre com la llista, també a socdepoble.org.
+ * Torre com la llista, també a socdepoble.org. IDEA-323.1 (v1.2.22) · Ara
+ * només amb sessió: sense, la mostra no porta cap poble i no hi ha res a vestir.
  */
 export function useCaraDelPoble() {
   const poble = pobleDelXat(usePobleAmfitrio());

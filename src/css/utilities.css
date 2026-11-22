@@ -155,9 +155,18 @@
     line-height: var(--sdp-leading-titol);
     white-space: nowrap;
   }
+  /* v1.2.22 · IDEA-326 (ajust en calent del Mestre, 22-11-2026 20:51) · La IAIA és ara un botó quadrat de diana tàctil
+     (--sdp-touch, 48 px) sense rètol, i el ::before hi pinta un cercle blau centrat de 38 px (inset de 5 px; per davall
+     de 360 px, 36 px amb inset de 6 px sobre la mateixa diana de 48 px, més avall en este fitxer). El fons de control de
+     crom és fix, també quan la IA és activa: el resplendor és un halo de 4 px (box-shadow, sdp-iaia-resplendor-cercle)
+     que cap dins del marge de 5 i 6 px i no tapa mai el blau. La icona va a 28 px en escriptori i a 26 px en mòbil (més
+     avall en este fitxer; les altres tres icones, a layout.css). */
   .sdp-top-bar-btn.sdp-top-bar-btn--iaia {
-    margin-inline: 0 var(--sdp-space-1);
-    font-weight: 700;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    gap: 0;
+    margin-inline: 0;
+    padding: 0;
   }
   .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia)::before {
     content: '';
@@ -168,8 +177,21 @@
     background: var(--sdp-crom-control-fons);
     transition: background-color var(--sdp-t);
   }
+  .sdp-top-bar-btn.sdp-top-bar-btn--iaia::before {
+    inset: 5px;
+    border-radius: 50%;
+  }
   .sdp-top-bar-btn--iaia.sdp-top-bar-btn--iaia-activa { animation: none; }
-  .sdp-top-bar-btn--iaia-activa::before { animation: sdp-iaia-resplendor 8s ease-in-out infinite; }
+  /* Gauntlet R2 (M1-01) · El cercle té un keyframe propi que només anima box-shadow. El sdp-iaia-resplendor de layout.css
+     anima background-color, i una animació mana sobre el fons de l'autor: amb la IA activa, el cercle passava de
+     transparent a un vel taronja i el blau no eixia mai (ni el hover). Aquell keyframe es queda per a
+     .sdp-realitat__iaia--activa (modules.css). Amb moviment reduït, l'apagador global de base.css també el para. */
+  @keyframes sdp-iaia-resplendor-cercle {
+    0% { box-shadow: 0 0 0 0 transparent; }
+    50% { box-shadow: 0 0 0 4px var(--sdp-accent-vel); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .sdp-top-bar-btn--iaia-activa::before { animation: sdp-iaia-resplendor-cercle 8s ease-in-out infinite; }
   @media (hover: hover) and (pointer: fine) {
     .sdp-top-bar-btn:is(.sdp-top-bar-btn--instal, .sdp-top-bar-btn--iaia):hover {
       background-color: transparent;
@@ -191,8 +213,8 @@
     stroke-width: 2;
   }
   .bar-black .right-icons .sdp-top-bar-btn--iaia svg {
-    width: 18px;
-    height: 18px;
+    width: 28px;
+    height: 28px;
   }
   :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--instal {
     margin-inline: 0;
@@ -205,9 +227,30 @@
     display: none;
   }
   :where(.sdp-root.is-compact) .sdp-top-bar-btn.sdp-top-bar-btn--iaia {
-    gap: var(--sdp-space-1);
-    margin-inline: 0 var(--sdp-space-1);
-    padding: 0 var(--sdp-space-2);
+    gap: 0;
+    margin-inline: 0;
+    padding: 0;
+  }
+  /* v1.2.22 · IDEA-326 · En mòbil (≤ 480 px) la icona de la IAIA va a 26 px, com les altres tres (layout.css). Per davall
+     de 360 px la diana es queda a 48 px (--sdp-touch-min també val 48 px, design-tokens.css; LLEI_04: cap control per
+     davall de --sdp-touch) i el cercle baixa a 36 px (inset de 6 px), amb l'halo de 4 px dins del marge. L'avatar de la
+     sessió hi fa el mateix cercle de 36 px (per damunt, 38 px a modules.css). Ací i no a layout.css: @layer utilities
+     guanya @layer legacy, que és on viuen les regles de la barra estreta. */
+  @container sdp-arrel (max-width: 480px) {
+    .bar-black .right-icons .sdp-top-bar-btn--iaia svg { width: 26px; height: 26px; }
+  }
+  @container sdp-arrel (max-width: 359px) {
+    .sdp-top-bar-btn.sdp-top-bar-btn--iaia::before { inset: 6px; }
+    .sdp-top-bar-avatar .sdp-avatar { width: 36px; height: 36px; }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 480px) {
+      .bar-black .right-icons .sdp-top-bar-btn--iaia svg { width: 26px; height: 26px; }
+    }
+    @media (max-width: 359px) {
+      .sdp-top-bar-btn.sdp-top-bar-btn--iaia::before { inset: 6px; }
+      .sdp-top-bar-avatar .sdp-avatar { width: 36px; height: 36px; }
+    }
   }
 
   .sdp-bloc .sdp-editor-document > .sdp-universal-page-container--contained > .bar-blue,

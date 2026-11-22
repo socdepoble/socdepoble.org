@@ -2,8 +2,9 @@
    (src/css/diferit-acollida-foraster.css). jsdom no resol la cascada ni fa disposició: es comproven
    les regles del full, com XatSection.acces.capes.test.js, i es munta la targeta viva per a saber que
    els selectors casen de veres amb algun element (un selector sense cap element no guarda cap píxel).
-   L1-03 · Mode Sènior, coherent amb B11b de diferit-mode-senior.css (l'accés del Xat): l'«Entrar» a
-   56 px amb la lletra dels botons Sènior i les dues línies amb l'escala de la prosa Sènior.
+   L1-03 · Mode Sènior, coherent amb B11b de diferit-mode-senior.css (l'accés del Xat) per a l'«Entrar» de
+   56 px amb la lletra dels botons Sènior; les dues línies porten l'escala de la prosa Sènior pròpia de la
+   targeta (IDEA-323.3, v1.2.22: l'accés ja no té cap paràgraf).
    L1-08 · Pedra Seca: cap ombra (la vora ja separa), títol a 1.2, línies a 1.6 i el botó centrat i de
    48 px. */
 import { readFileSync } from 'node:fs';
@@ -93,25 +94,12 @@ test('L1-03 · en Sènior, l’«Entrar» va a 56 px amb la lletra dels botons S
   expect(valor(TEXT_SENIOR, 'line-height')).toBe('1.65');
 });
 
-/* v1.2.21 · R32.35b (DOL-29) · Per davall de 360 px, diferit-mode-senior.css compacta l'accés del Xat dins d'un
-   @media (max-width: 359px) que repetix el selector de la benvinguda. B11b parla de l'escala base: es llig el full
-   sense eixe bloc (la mida estreta la fixa XatAcces320px.r32_35b.test.jsx). */
-function senseBlocEstret(text) {
-  const inici = text.indexOf('@media (max-width: 359px)');
-  if (inici < 0) return text;
-  let fondaria = 0;
-  for (let i = text.indexOf('{', inici); i < text.length; i += 1) {
-    if (text[i] === '{') fondaria += 1;
-    if (text[i] === '}') { fondaria -= 1; if (fondaria === 0) return text.slice(0, inici) + text.slice(i + 1); }
-  }
-  return text;
-}
-
-test('L1-03 · coherent amb B11b: els mateixos valors que l’accés del Xat a diferit-mode-senior.css', () => {
-  /* B11b · La benvinguda de l'accés pren l'escala de la prosa Sènior. */
-  const base = senseBlocEstret(senior);
-  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'font-size', base)).toBe(valor(TEXT_SENIOR, 'font-size'));
-  expect(valor(`${SENIOR} .sdp-xat-acces > p`, 'line-height', base)).toBe(valor(TEXT_SENIOR, 'line-height'));
+/* v1.2.22 · IDEA-323.3 (Gauntlet R1, L1-04) · Fora senseBlocEstret: l'accés ja no té cap paràgraf de benvinguda que el
+   bloc ≤ 359 px repetisca, i el full Sènior no en conserva cap regla en cap bloc. */
+test('L1-03 · les píndoles de l’accés amb els mateixos valors Sènior que l’«Entrar» de la targeta, i cap regla per a un paràgraf de l’accés', () => {
+  /* B11b · IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · L'accés ja no porta la benvinguda: l'única és la
+     d'esta targeta (TEXT_SENIOR), i el full Sènior no en conserva cap regla. */
+  expect(senior).not.toContain('.sdp-xat-acces > p');
   /* Les píndoles de l'accés («Entrar», «Registrar-se») dins de la regla de les dianes Sènior. */
   const pindoles = regles(senior).find((regla) => regla.selectors.some((s) => s.startsWith(SENIOR) && s.includes('.sdp-xat-acces .sdp-xat-pindola')));
   expect(pindoles).toBeTruthy();

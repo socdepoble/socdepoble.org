@@ -690,16 +690,21 @@ describe('P1-70 · els quatre actors permanents en tots els modes', () => {
   const caraDe = (fila) => fila?.querySelector('img.sdp-avatar__imatge')?.getAttribute('src') ?? null;
   const nomsDeDalt = (n) => [...llista().querySelectorAll(':scope > li .sdp-xat-fila__nom')].slice(0, n).map((nom) => nom.firstChild.textContent);
 
-  test('sense sessió (remot, el xat de mostra de veres): els quatre, tots amb la seua imatge (cap «GD») i Javi obri el seu xat sense cap avís', () => {
+  /* IDEA-323.1 (v1.2.22, ordre del Mestre del 261122) · Sense sessió i sense
+     amfitrió, el Foraster veu els tres actors del projecte: «Gent de la Torre»
+     ja no hi és per defecte (la Torre és un poble més de /pobles). S'actualitza
+     a posta; les altres proves d'este bloc, amb sessió, continuen amb els quatre. */
+  test('IDEA-323.1 · sense sessió (remot, el xat de mostra de veres): els tres actors del projecte, tots amb la seua imatge, i Javi obri el seu xat sense cap avís', () => {
     mocks.senseSessio = true;
     mocks.joId = null;
     mocks.ambContextDeVeres = true;
     render(<XatSection />);
-    expect(nomsDeDalt(4)).toEqual(['Sóc de Poble', 'Javi Llinares', 'Gent de la Torre', 'IAIA MarIA']);
-    const files = [...llista().querySelectorAll(':scope > li')].slice(0, 4);
+    const files = [...llista().querySelectorAll(':scope > li')];
+    expect(files).toHaveLength(3);
+    expect(nomsDeDalt(3)).toEqual(['Sóc de Poble', 'Javi Llinares', 'IAIA MarIA']);
     expect(files.map(caraDe).every(Boolean)).toBe(true);
-    expect(caraDe(files[2])).toBe(POBLE_PER_DEFECTE.avatar);
-    expect(files[2].querySelector('.sdp-avatar').textContent).not.toContain('GD');
+    expect(llista().textContent).not.toContain('Gent de la Torre');
+    expect(filaDe('poble:la-torre-de-les-macanes')).toBeNull();
     fireEvent.click(files[1].querySelector('button'));
     expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/fake-javi');
     expect(mocks.showToast).not.toHaveBeenCalled();

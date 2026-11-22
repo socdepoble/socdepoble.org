@@ -21,7 +21,7 @@ import PedraSecaEmbed, { activeElements, defineCustomElement } from '../PedraSec
 import { UIProvider, useUIActions, useUIState } from './contexts/UIContext.jsx';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
-import { CONSULTA_CONTRAST_SISTEMA, CONTRAST_KEY, ESDEVENIMENT_CONTRAST } from '../config/theme.js';
+import { CONSULTA_CONTRAST_SISTEMA, CONTRAST_KEY, ESDEVENIMENT_CONTRAST, SENIOR_KEY, reiniciaMemoriaSenior } from '../config/theme.js';
 import { delVal, getVal, setVal } from '../config/storage.js';
 import { carregaDiccionari, createTranslator } from '../config/i18n.js';
 
@@ -76,6 +76,9 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('Xarxa inesperada'); }));
   contrastAbans = getVal(CONTRAST_KEY);
   delVal(CONTRAST_KEY);
+  /* IDEA-323.4 · DOL-31 (v1.2.22) · El Mode Bancal també porta la clau de Sènior. */
+  delVal(SENIOR_KEY);
+  reiniciaMemoriaSenior();
   temaHtmlAbans = html.getAttribute('data-theme');
   /* La pàgina amfitriona ja porta el seu propi data-contrast. */
   html.setAttribute('data-contrast', SENTINELLA);
@@ -113,6 +116,8 @@ afterEach(async () => {
   else html.setAttribute('data-theme', temaHtmlAbans);
   if (contrastAbans == null) delVal(CONTRAST_KEY);
   else setVal(CONTRAST_KEY, contrastAbans);
+  delVal(SENIOR_KEY);
+  reiniciaMemoriaSenior();
 });
 
 const arrelDe = (contenidor) => contenidor.querySelector('.sdp-root');
@@ -341,13 +346,18 @@ describe('un sol estat de contrast', () => {
     );
     act(() => { accions.a('bancal'); });
     expect([screen.getByTestId('a').dataset.mode, screen.getByTestId('b').dataset.mode]).toEqual(['bancal', 'bancal']);
-    expect(getVal(CONTRAST_KEY)).toBe('bancal');
-
-    act(() => { window.dispatchEvent(new CustomEvent(ESDEVENIMENT_CONTRAST, { detail: { contrast: 'fosc' } })); });
-    expect(screen.getByTestId('b').dataset.preferencia).toBe('bancal');
+    /* IDEA-323.4 · DOL-31 (v1.2.22) · «Bancal» és el Mode Bancal: el desa la clau de Sènior, que arriba a l'altra. */
+    expect(getVal(SENIOR_KEY)).toBe(true);
 
     act(() => { accions.b('normal'); });
     expect([screen.getByTestId('a').dataset.preferencia, screen.getByTestId('b').dataset.preferencia]).toEqual(['normal', 'normal']);
+
+    /* v1.2.22 · Gauntlet R1 (L2-05) · Amb el Mode Bancal encés, la preferència visible és 'bancal' arribe el que arribe:
+       el valor invàlid es prova amb el mode apagat, i un de vàlid fa de control (l'oient escolta el canal). */
+    act(() => { window.dispatchEvent(new CustomEvent(ESDEVENIMENT_CONTRAST, { detail: { contrast: 'fosc' } })); });
+    expect(screen.getByTestId('b').dataset.preferencia).toBe('normal');
+    act(() => { window.dispatchEvent(new CustomEvent(ESDEVENIMENT_CONTRAST, { detail: { contrast: 'sistema' } })); });
+    expect(screen.getByTestId('b').dataset.preferencia).toBe('sistema');
   });
 
   test('«Segons el sistema» triat en una instància seguix el dispositiu en les dues', () => {

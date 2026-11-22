@@ -8,6 +8,9 @@
  *  · L'interruptor del Bancal és el mateix estat que el full «Ajustos» del Xat
  *    (UIContext.setContrast → theme.js): desa la tria i App.jsx posa
  *    l'atribut a l'arrel que pertoca. En un document alié, .sdp-root.
+ *  · v1.2.22 · Gauntlet R1 (L2-01, L3-05 i L2-02) · Un sol interruptor, el
+ *    «Mode Bancal · Sol i Lletra Gran» (el rètol del xip): diu el mode
+ *    (seniorMode), com el xip, i cap toc no esborra la tria «Segons el sistema».
  *  · L'ombra de la targeta es canvia només a la caixa de la mostra, amb
  *    tokens (--sdp-ombra-1/2/3), mai a l'<html> ni a l'arrel de l'app.
  *  · Zero style=, cap color cru i el contracte públic de la UniversalCard.
@@ -20,8 +23,9 @@ import PedraSecaEmbed, { activeElements, defineCustomElement } from '../../../..
 import { MemoryRouter } from '../../../../app/contexts/RouterContext.jsx';
 import { CONTRACTE_NUCLI } from '../../../../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../../../../data/backendPort.js';
-import { CONSULTA_CONTRAST_SISTEMA, CONTRAST_KEY } from '../../../../config/theme.js';
+import { CONSULTA_CONTRAST_SISTEMA, CONTRAST_KEY, SENIOR_KEY, reiniciaMemoriaSenior } from '../../../../config/theme.js';
 import { delVal, getVal, setVal } from '../../../../config/storage.js';
+import { TEXTOS_MODE_SENIOR } from '../../../../config/textosModeSenior.js';
 import EspecimenPanell from './EspecimenPanell.jsx';
 
 vi.mock('../../../../host.js', () => ({ quanLlest: async () => undefined, arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
@@ -60,6 +64,9 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('Xarxa inesperada'); }));
   contrastAbans = getVal(CONTRAST_KEY);
   delVal(CONTRAST_KEY);
+  /* IDEA-323.4 · DOL-31 (v1.2.22) · El Mode Bancal també porta la clau de Sènior. */
+  delVal(SENIOR_KEY);
+  reiniciaMemoriaSenior();
   temaHtmlAbans = html.getAttribute('data-theme');
   html.setAttribute('data-contrast', 'HOST-CONTRAST');
   html.style.setProperty('--sdp-shadow-card', 'HOST-OMBRA');
@@ -90,10 +97,17 @@ afterEach(() => {
   else html.setAttribute('data-theme', temaHtmlAbans);
   if (contrastAbans == null) delVal(CONTRAST_KEY);
   else setVal(CONTRAST_KEY, contrastAbans);
+  delVal(SENIOR_KEY);
+  reiniciaMemoriaSenior();
 });
 
 const munta = (extra = {}) => render(<PedraSecaEmbed config={{ routerType: 'memory', manageDocumentHead: false, rutaInicial: RUTA, ...extra }} />);
-const interruptor = (dins = document.body) => within(dins).findByRole('switch', { name: 'Activar el Mode Bancal' }, ESPERA);
+/* v1.2.22 · Gauntlet R1 (L2-01) · L'interruptor porta el rètol del xip, «Mode Bancal · Sol i Lletra Gran»
+   (abans, «Activar el Mode Bancal»): és el mateix mode a tot arreu. */
+const MODE_BANCAL = TEXTOS_MODE_SENIOR.ca.xip;
+const interruptor = (dins = document.body) => within(dins).findByRole('switch', { name: MODE_BANCAL }, ESPERA);
+/* Els espècimens del Panell (fonaments-panell), sense la resta de la closca. */
+const especimens = (dins) => [...dins.querySelectorAll('.sdp-especimen')];
 
 describe('a la ruta del catàleg, dins de la closca real', () => {
   test('es munta: interruptor, botons d’ombra i la UniversalCard amb el contracte públic', async () => {
@@ -124,27 +138,71 @@ describe('a la ruta del catàleg, dins de la closca real', () => {
 
     fireEvent.click(boto);
     await waitFor(() => expect(boto.getAttribute('aria-checked')).toBe('true'));
-    expect(getVal(CONTRAST_KEY)).toBe('bancal');
+    /* IDEA-323.4 · DOL-31 (v1.2.22) · El Bancal és el Mode Bancal sencer: el desa la clau de Sènior. */
+    expect(getVal(SENIOR_KEY)).toBe(true);
     expect(arrel.getAttribute('data-contrast')).toBe('bancal');
     expect(estatHtml()).toBe(abans);
 
     fireEvent.click(boto);
     await waitFor(() => expect(boto.getAttribute('aria-checked')).toBe('false'));
-    expect(getVal(CONTRAST_KEY)).toBe('normal');
+    /* v1.2.22 · Gauntlet R1 (L2-02) · Apagar és setSeniorMode(false), com el xip: apaga el mode i no escriu cap tria de
+       contrast que la persona no haja fet (abans setContrast('normal') desava 'normal'). */
+    expect(getVal(SENIOR_KEY)).toBe(false);
+    expect(getVal(CONTRAST_KEY)).toBeNull();
     expect(arrel.hasAttribute('data-contrast')).toBe(false);
+    expect(arrel.hasAttribute('data-sdp-senior')).toBe(false);
     expect(estatHtml()).toBe(abans);
   }, 30_000);
 
-  test('«Segons el sistema» desat als Ajustos: l’interruptor diu el mode que es veu', async () => {
+  /* v1.2.22 · Gauntlet R1 (L2-02) · Abans l'interruptor deia el contrast que es veia («Sí» amb el contrast del sistema,
+     mentre el xip deia ○) i apagar-lo desava 'normal' damunt de «Segons el sistema». Ara diu el mode, com el xip; una
+     nota diu d'on ve el contrast, i ni encendre ni apagar no toquen la tria desada. */
+  test('«Segons el sistema» desat als Ajustos: l’interruptor diu el mode, com el xip, i cap toc no esborra la tria', async () => {
     sistema({ contrastMes: true });
     setVal(CONTRAST_KEY, 'sistema');
     const { container } = munta();
     const boto = await interruptor(container);
-    expect(boto.getAttribute('aria-checked')).toBe('true');
-    expect(container.querySelector('.sdp-root').getAttribute('data-contrast')).toBe('bancal');
+    const arrel = container.querySelector('.sdp-root');
+    const panell = container.querySelector('#panell-bancal');
+    expect(boto.getAttribute('aria-checked')).toBe('false');
+    expect(arrel.getAttribute('data-contrast')).toBe('bancal');
+    expect(arrel.hasAttribute('data-sdp-senior')).toBe(false);
+    expect(panell.textContent).toContain('Ara el contrast Bancal el posa el dispositiu («Segons el sistema», triat als Ajustos)');
+
+    fireEvent.click(boto);
+    await waitFor(() => expect(boto.getAttribute('aria-checked')).toBe('true'));
+    expect(getVal(SENIOR_KEY)).toBe(true);
+    expect(getVal(CONTRAST_KEY)).toBe('sistema');
+    expect(arrel.getAttribute('data-contrast')).toBe('bancal');
+    expect(arrel.getAttribute('data-sdp-senior')).toBe('true');
+    expect(panell.textContent).not.toContain('Ara el contrast Bancal el posa el dispositiu');
+
     fireEvent.click(boto);
     await waitFor(() => expect(boto.getAttribute('aria-checked')).toBe('false'));
-    expect(getVal(CONTRAST_KEY)).toBe('normal');
+    expect(getVal(SENIOR_KEY)).toBe(false);
+    expect(getVal(CONTRAST_KEY)).toBe('sistema');
+    expect(arrel.getAttribute('data-contrast')).toBe('bancal');
+    expect(arrel.hasAttribute('data-sdp-senior')).toBe(false);
+  }, 30_000);
+
+  /* v1.2.22 · Gauntlet R1 (L2-01 i L3-05) · El segon interruptor, «Mode Sènior / Lectura Gran», llegia setModeSenior i
+     modeSenior, que UIContext no exposa: dins de l'app deia «No» i estava desactivat amb la lletra gran encesa. */
+  test('un sol interruptor del mode al Panell: diu «Sí» amb la lletra gran desada i no queda cap rastre del segon', async () => {
+    sistema();
+    setVal(SENIOR_KEY, true);
+    const { container } = munta();
+    const boto = await interruptor(container);
+    const switches = especimens(container).flatMap((seccio) => within(seccio).queryAllByRole('switch'));
+    expect(switches).toEqual([boto]);
+    expect(boto.getAttribute('aria-checked')).toBe('true');
+    expect(boto.disabled).toBe(false);
+    expect(boto.textContent).toContain('Sí');
+    expect(within(container).getByRole('heading', { level: 3, name: MODE_BANCAL })).toBeTruthy();
+    expect(container.querySelector('#panell-mode-senior')).toBeNull();
+    const text = especimens(container).map((seccio) => seccio.textContent).join(' ');
+    expect(text).not.toMatch(/Mode Sènior|Lectura Gran\)|lectura gran a canviar|Fora de l’app/);
+    expect(container.querySelector('.sdp-root').getAttribute('data-sdp-senior')).toBe('true');
+    expect(container.querySelector('.sdp-root').getAttribute('data-contrast')).toBe('bancal');
   }, 30_000);
 
   test('l’ombra canvia només la caixa de la mostra, amb tokens; Restablir la torna; ni l’<html> ni l’arrel', async () => {
@@ -211,13 +269,14 @@ describe('dins de <soc-de-poble> (Shadow DOM tancat), la reproducció de Codex',
     element.setAttribute('ruta-inicial', RUTA);
     await act(async () => { document.body.appendChild(element); });
     const dins = within(element._closedRoot);
-    const boto = await dins.findByRole('switch', { name: 'Activar el Mode Bancal' }, ESPERA);
+    const boto = await dins.findByRole('switch', { name: MODE_BANCAL }, ESPERA);
     expect(estatHtml()).toBe(abans);
 
     fireEvent.click(boto);
     await waitFor(() => expect(boto.getAttribute('aria-checked')).toBe('true'));
     expect(element.getAttribute('data-contrast')).toBe('bancal');
-    expect(getVal(CONTRAST_KEY)).toBe('bancal');
+    /* IDEA-323.4 · DOL-31 (v1.2.22) · El Bancal és el Mode Bancal sencer: el desa la clau de Sènior. */
+    expect(getVal(SENIOR_KEY)).toBe(true);
     expect(estatHtml()).toBe(abans);
 
     fireEvent.click(dins.getByRole('button', { name: 'Ombra elevada' }));
@@ -253,8 +312,11 @@ describe('dins de <soc-de-poble> (Shadow DOM tancat), la reproducció de Codex',
 test('fora d’un UIProvider (el catàleg solt) es pinta i l’interruptor queda desactivat', () => {
   sistema();
   render(<MemoryRouter><EspecimenPanell /></MemoryRouter>);
-  const boto = screen.getByRole('switch', { name: 'Activar el Mode Bancal' });
+  const boto = screen.getByRole('switch', { name: MODE_BANCAL });
   expect(boto.disabled).toBe(true);
+  /* v1.2.22 · Gauntlet R1 (L2-01) · Un sol interruptor, també fora de l'app. */
+  expect(screen.getAllByRole('switch')).toHaveLength(1);
+  expect(screen.getByText('Fora de l’app no hi ha cap preferència del Mode Bancal a canviar.')).toBeTruthy();
   expect(screen.getByRole('heading', { name: 'Mas del Roure' })).toBeTruthy();
   /* Regla del Mestre (261025): la plataforma és «el Mas», i el mot vetat no
      ix mai en text visible. Gauntlet 261030 (cicle 4) el va trobar ací. */

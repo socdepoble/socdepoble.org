@@ -15,7 +15,8 @@ import EspecimenAtles2dPobleVirtual from './EspecimenAtles2dPobleVirtual.jsx';
 import EspecimenAtles2dXarxesMon from './EspecimenAtles2dXarxesMon.jsx';
 import EspecimenAtles2dMapaEntitats from './EspecimenAtles2dMapaEntitats.jsx';
 import EspecimenAtles2dMotorEstudis from './EspecimenAtles2dMotorEstudis.jsx';
-import { dataDeVerificacio, nomsDEntitat, textDeCerca } from './atles2dComu.jsx';
+import { dataDeVerificacio, nomsDEntitat, paginaAtles, textDeCerca } from './atles2dComu.jsx';
+import { objecteDePerfil, rutaDePerfil } from '../../../../config/navigation.js';
 
 const ARREL = process.cwd();
 const compta = (llista, clau) => llista.reduce((r, x) => ({ ...r, [x[clau]]: (r[x[clau]] || 0) + 1 }), {});
@@ -54,6 +55,19 @@ describe('les dades de l’Atles (dades/atles2dDades.js)', () => {
       fet: entitats.resum.fet, a_mitges: entitats.resum.a_mitges, falta: entitats.resum.falta, no_aplica: entitats.resum.no_aplica
     });
     expect(CELLES.filter((c) => c.estat_gemini && c.estat_gemini !== c.estat)).toHaveLength(entitats.resum.canvis_respecte_gemini);
+  });
+
+  /* v1.2.22 · Gauntlet R1 (L3-03) · La capçalera deia «només de text de ruta» i «cap substitució de vocabulari» quan la
+     v1.2.22 reescriu el bloc mercat amb les decisions del Mestre: ara ho declara, i meta.fonts.mercat també. */
+  test('la capçalera i meta.fonts declaren que el bloc mercat ja no és la transcripció de l’origen', () => {
+    const font = readFileSync(path.join(ARREL, 'src/sections/disseny/cataleg/dades/atles2dDades.js'), 'utf8');
+    const capcalera = font.slice(0, font.indexOf('*/'));
+    expect(capcalera).toContain('TRANSFORMACIONS EN COPIAR-LO (només de text de ruta');
+    expect(capcalera).toContain("el bloc mercat ja no és la transcripció de l'origen");
+    expect(capcalera).toContain('D-ATLES-MOTOR');
+    expect(capcalera).not.toMatch(/TRANSFORMACIONS \(només de text de ruta/);
+    expect(ATLES.meta.fonts.mercat).toContain('amb les decisions del Mestre del 22-11-2026 (D-ATLES-MOTOR)');
+    expect(ATLES.meta.fonts.mercat).toContain('cap línia implementada a src/');
   });
 
   test('no publiquen cap directori personal, cap camí del worktree ni cap paraula vetada', () => {
@@ -97,6 +111,47 @@ describe('Presentació i marc comú', () => {
     expect(screen.getByText(`Les ${placa.fonts_llegides.length} fonts llegides per a la vista del poble virtual`)).toBeTruthy();
   });
 
+  /* v1.2.22 · Gauntlet R2 (M4-06) · La xifra deia «perfils simulats en 6 rondes» quan el Motor i el Poble virtual diuen
+     que la V2 (l'arnés v2) no en té cap. Ara compta les rondes amb perfils (num_perfils > 0), les mateixes que pinta el
+     Motor, i nomena les que no en tenen; el detall ja no les escriu a mà. */
+  test('la xifra dels perfils simulats compta les mateixes rondes amb perfils que el Motor i nomena les que no en tenen', () => {
+    const ambPerfils = placa.rondes.filter((r) => r.num_perfils > 0);
+    const sensePerfils = placa.rondes.filter((r) => !(r.num_perfils > 0));
+    expect(sensePerfils.length).toBeGreaterThan(0);
+    const llistaCa = (grup) => new Intl.ListFormat('ca', { type: 'conjunction' }).format(grup.map((r) => r.id));
+
+    munta(EspecimenAtles2dMotorEstudis);
+    const fonament = screen.getByRole('heading', { level: 3, name: 'Què tenim ja com a fonament' }).closest('section');
+    const rondesDelMotor = [...fonament.querySelectorAll('dt')].find((dt) => dt.textContent.startsWith('Les rondes')).parentElement.textContent;
+    const [, ambDelMotor] = rondesDelMotor.match(/(\d+) amb perfils simulats/);
+    expect(Number(ambDelMotor)).toBe(ambPerfils.length);
+    cleanup();
+
+    munta(EspecimenAtles2dPresentacio);
+    const xifra = within(screen.getByRole('list', { name: 'Les quatre xifres de l’Atles' })).getAllByRole('listitem')[1];
+    expect(xifra.querySelector('.sdp-atles__xifra-n').textContent).toBe(String(placa.perfils.length));
+    expect(xifra.querySelector('.sdp-atles__xifra-t').textContent).toBe(`perfils simulats en ${ambDelMotor} rondes`);
+    const detall = xifra.querySelector('.sdp-atles__xifra-d').textContent;
+    expect(detall).toBe(`${llistaCa(ambPerfils)}; ${llistaCa(sensePerfils)}, sense cap perfil`);
+    expect(detall).not.toMatch(/#01–#04|arnés/);
+  });
+
+  /* v1.2.22 · Gauntlet R1 (L3-01, L3-03 i L3-07) · La targeta del Motor pinta l'entradeta del manifest, que deia «per a
+     decidir» i «les preguntes per al Mestre» quan el cos ja deia les decisions; «D'on ixen les dades» diu que el bloc
+     mercat porta les decisions del Mestre; l'obertura diu «perfils simulats», no «veïns sintètics». */
+  test('la targeta del Motor, les fonts i l’obertura diuen les decisions del Mestre i «perfils simulats»', () => {
+    const { container } = munta(EspecimenAtles2dPresentacio);
+    const motor = [...container.querySelectorAll('a')].find((a) => a.getAttribute('href') === rutaEspecimen('atles-2d-motor-estudis'));
+    expect(motor.textContent).toContain('Una proposta, amb les decisions del Mestre del 22-11-2026');
+    expect(motor.textContent).toContain('les cinc decisions del Mestre');
+    expect(motor.textContent).not.toMatch(/per a decidir|preguntes/);
+    const fonts = screen.getByRole('heading', { level: 3, name: 'D’on ixen les dades' }).closest('section');
+    expect(fonts.textContent).toContain('El motor d’estudis: proposta de Gemini i Claude, amb les decisions del Mestre del 22-11-2026');
+    const obertura = screen.getByRole('heading', { level: 3, name: 'Quatre vistes per a decidir abans de picar codi' }).closest('section');
+    expect(obertura.textContent).toContain('els perfils simulats de veïns d’«Assaig a la Plaça»');
+    expect(container.textContent).not.toMatch(/veïns sintètics|veus sintètiques/);
+  });
+
   /* v1.2.19 · Gauntlet R2 (L4R2-04) · Llei 0: les dades són d'un dia i d'una versió, i la pàgina ho diu a dalt. */
   test('una nota a la vista diu de quina data i de quina versió del codi són les dades', () => {
     expect(DATA_DADES).toMatch(/^\d{2}-\d{2}-\d{4} a les \d{2}:\d{2}$/);
@@ -114,7 +169,10 @@ describe('1. El poble virtual', () => {
     const { container } = munta(EspecimenAtles2dPobleVirtual);
     expect(container.querySelector('h1')).toBeNull();
     expect(screen.getByRole('heading', { level: 3, name: `Les ${placa.rondes.length} rondes, en ordre` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 3, name: `Els ${placa.perfils.length} veïns` })).toBeTruthy();
+    /* v1.2.22 · Gauntlet R2 (M4-06) · «perfils simulats de veïns», com la resta de la pàgina després de L3-07. */
+    expect(screen.getByRole('heading', { level: 3, name: `Els ${placa.perfils.length} perfils simulats de veïns` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `Els ${placa.perfils.length} perfils simulats de veïns` }).nextElementSibling.textContent)
+      .toMatch(/^Tria un perfil per a vore només els dolors que va trobar\./);
     expect(recompte(container)).toBe(`${placa.dolors.length} de ${placa.dolors.length} dolors`);
     expect(screen.getByRole('img', { name: /^Dolors per estat: / }).getAttribute('aria-label'))
       .toContain(`${compta(placa.dolors, 'estat').resolt} Resolt`);
@@ -182,6 +240,26 @@ describe('1. El poble virtual', () => {
     expect(obertura.textContent).not.toMatch(/\bavui\b/);
     expect(obertura.textContent).toContain(`com estava cada dolor el ${DATA_DADES}`);
     expect(datacio(container)?.textContent).toContain(ATLES.meta.versio_codi);
+  });
+
+  /* v1.2.22 · Gauntlet R1 (L3-07) · El text propi de la pàgina diu «perfils simulats» (abans «totes les veus» i «sense
+     veus»); les cites de les rondes no es reescriuen, i una nota diu que les seues «veus» són perfils, no àudio. */
+  test('el text propi diu «perfils simulats», i una nota aclarix les «veus» de les cites de les rondes', () => {
+    const { container } = munta(EspecimenAtles2dPobleVirtual);
+    const resum = screen.getByRole('heading', { level: 3, name: 'Què va dir el poble virtual' }).closest('section');
+    expect(resum.textContent).toContain('el que hi van dir els perfils simulats');
+    const rondes = screen.getByRole('heading', { level: 3, name: `Les ${placa.rondes.length} rondes, en ordre` }).closest('section');
+    const fitxes = [...rondes.querySelectorAll('ol > li')];
+    expect(fitxes).toHaveLength(placa.rondes.length);
+    placa.rondes.forEach((ronda, index) => {
+      expect(fitxes[index].textContent, ronda.id).toContain(ronda.num_perfils ? `${ronda.num_perfils} perfils simulats` : 'sense perfils simulats');
+    });
+    expect(placa.rondes.some((ronda) => !(ronda.num_perfils > 0))).toBe(true);
+    expect(container.textContent).not.toMatch(/sense veus|totes les veus/);
+    /* Les cites de l'origen sí que diuen «veus sintètiques»: la nota hi ha de ser. */
+    expect(placa.rondes.map((ronda) => `${ronda.conclusio} ${ronda.metode}`).join(' ')).toMatch(/veus sintètiques/);
+    expect(rondes.querySelector('.sdp-atles__suau').textContent)
+      .toContain('volen dir els perfils simulats de veïns, no cap veu d’àudio');
   });
 
   test('les mètriques i les discrepàncies, senceres', () => {
@@ -356,6 +434,53 @@ describe('3. Mapa 2D de les 5 entitats', () => {
     expect(within(screen.getByRole('region', { name: 'Les rutes reals de cada entitat' })).getAllByRole('row')).toHaveLength(entitats.rutes_reals.length + 1);
   });
 
+  /* v1.2.22 · Gauntlet R1 (L4-08) · El lot 02 de Codex R32.42 fa que rutaDePerfil i objecteDePerfil emeten /ajuntament/:id.
+     Les tres frases de l'Ajuntament que deien «sense cap emissor» en present ho diuen ara en passat (el 21-11-2026) i diuen
+     qui l'emet des de la v1.2.22, que és un àlies de la canònica /empresa/:slug i que no s'ha provat amb dades reals. */
+  test('l’Ajuntament: /ajuntament/:id té emissor des de la v1.2.22, i la matriu ho diu sense negar-ho en present', () => {
+    expect(rutaDePerfil('city_hall', 'x')).toBe('/ajuntament/x');
+    expect(rutaDePerfil('ajuntament', 'x')).toBe('/ajuntament/x');
+    expect(objecteDePerfil({ id: 'x', tipus: 'entitat', kind: 'city_hall' }).ruta).toBe('/ajuntament/x');
+    const aj = entitats.entitats.find((e) => e.id === 'ajuntament_entitat_oficial');
+    const cella = entitats.files.find((f) => f.dimensio_id === 'rutes_i_urls_canoniques').cel_les.ajuntament_entitat_oficial;
+    const fila = entitats.rutes_reals.find((r) => r.ruta === '/ajuntament/:agentId');
+    for (const [nom, text] of [['ruta_actual', aj.ruta_actual], ['nota de la cel·la', cella.nota], ['rutes_reals', fila.component]]) {
+      expect(text, nom).toMatch(/\bel 21-11-2026\b/i);
+      expect(text, nom).toMatch(/\bdes de la v1\.2\.22\b/i);
+      expect(text, nom).toMatch(/\/empresa\/:slug/);
+      expect(text, nom).not.toMatch(/cap emissor la genera|rutaDePerfil no la coneix\b|genèrica, (?:sense )?cap emissor/);
+    }
+    expect(cella.nota).toContain('src/config/navigation.js:81 i 398');
+    expect(cella.nota).toContain("No s'ha provat amb dades reals");
+    munta(EspecimenAtles2dMapaEntitats);
+    const rutes = within(screen.getByRole('region', { name: 'Les rutes reals de cada entitat' }));
+    expect(rutes.getByText(fila.component)).toBeTruthy();
+  });
+
+  /* v1.2.22 · Gauntlet R2 (M4-03) · Dues cites reescrites a la v1.2.22 apuntaven a línies que el mateix canvi movia:
+     tokens.css:810-817 (ara del Mode Sènior) a DOL-31 i App.jsx:1348 a la part d'ara de la fila de l'Ajuntament. Ara
+     DOL-31 cita el bloc pel nom i la fila separa la línia de 8749aa810 de la Route d'ara, citada pel seu path; i el que
+     citen existix a l'arbre. */
+  test('DOL-31 i la fila de l’Ajuntament citen el que no es mou, i el que citen existix a l’arbre', () => {
+    const tokens = readFileSync(path.join(ARREL, 'src/css/tokens.css'), 'utf8');
+    const app = readFileSync(path.join(ARREL, 'src/app/App.jsx'), 'utf8');
+    const dol31 = placa.dolors.find((dolor) => dolor.id === 'DOL-31');
+    expect(dol31.evidencia).not.toMatch(/tokens\.css:\d/);
+    expect(dol31.evidencia).toContain('src/css/tokens.css (bloc «MODE BANCAL», selector .sdp-root[data-contrast="bancal"] i el seu niat fosc)');
+    expect(tokens).toMatch(/\/\* ═+ MODE BANCAL\b/);
+    expect(tokens).toMatch(/^\.sdp-root\[data-contrast="bancal"\],$/m);
+    expect(tokens).toMatch(/^:root\[data-theme="dark"\] \.sdp-root\[data-contrast="bancal"\],$/m);
+    const fila = entitats.rutes_reals.find((r) => r.ruta === '/ajuntament/:agentId');
+    expect(fila.component).toContain('src/app/App.jsx:1348 a 8749aa810');
+    const dAra = fila.component.slice(fila.component.indexOf('des de la v1.2.22'));
+    expect(dAra).not.toMatch(/App\.jsx:\d/);
+    expect(dAra).toContain('Route path="ajuntament/:agentId"');
+    expect(app).toContain('<Route path="ajuntament/:agentId" element={<PerfilPublicSection agents={agents} />} />');
+    /* La nota de la cel·la de rutes barreja les dues fotos: la línia del 21-11-2026 diu de quin commit és. */
+    const cella = entitats.files.find((f) => f.dimensio_id === 'rutes_i_urls_canoniques').cel_les.ajuntament_entitat_oficial;
+    expect(cella.nota).toContain('resolveItemPath, navigation.js:450 a 8749aa810)');
+  });
+
   test('la columna «Entitat» de les rutes diu el nom de l’entitat, no l’id de la matriu', () => {
     munta(EspecimenAtles2dMapaEntitats);
     const rutes = within(screen.getByRole('region', { name: 'Les rutes reals de cada entitat' }));
@@ -393,18 +518,90 @@ describe('3. Mapa 2D de les 5 entitats', () => {
 });
 
 describe('4. Motor d’estudis de mercat', () => {
-  test('les dues fases, els quatre passos, els principis, les preguntes i la maqueta, que diu que és inventada', () => {
+  /* v1.2.22 · D-ATLES-MOTOR (decisions del Mestre del 22-11-2026) · Les preguntes tenen resposta: s'actualitza a posta. */
+  test('les dues fases, els quatre passos, els principis, les decisions del Mestre i la maqueta, que diu que és inventada', () => {
     const { container } = munta(EspecimenAtles2dMotorEstudis);
     expect(container.querySelector('h1')).toBeNull();
-    expect(screen.getByRole('note').textContent).toContain('Proposta per a decidir.');
+    expect(screen.getByRole('note').textContent).toContain('Proposta, amb les decisions del Mestre del 22-11-2026.');
     expect(screen.getByRole('heading', { level: 4, name: ATLES.mercat_subtitols[0] })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 4, name: ATLES.mercat_subtitols[1] })).toBeTruthy();
     expect(container.querySelectorAll('.sdp-atles__passos > li')).toHaveLength(ATLES.mercat.flux_ux_en_4_passos.length);
     const principis = within(screen.getByRole('heading', { level: 3, name: 'Principis que no es negocien' }).closest('section')).getAllByRole('listitem');
     expect(principis).toHaveLength(ATLES.mercat.principis_etics_innegociables.length);
-    expect(within(screen.getByRole('heading', { level: 3, name: 'Preguntes per al Mestre' }).closest('section')).getAllByRole('listitem')).toHaveLength(5);
-    expect(screen.getByRole('img', { name: /^Maqueta d’un informe d’estudi de mercat/ }).textContent).toContain('no són dades reals');
+    const decisions = screen.getByRole('heading', { level: 3, name: 'Les decisions del Mestre' }).closest('section');
+    expect(decisions.querySelectorAll('dt')).toHaveLength(5);
+    expect(screen.getByRole('img', { name: /^Maqueta d’un informe privat d’estudi de mercat/ }).textContent).toContain('no són dades reals');
     expect(container.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  test('D-ATLES-MOTOR · qualsevol persona, cap «llum verda» ni mínim de veïns, informe privat amb opció de compartir i perfils simulats al Node 0 a 0 €', () => {
+    const { container } = munta(EspecimenAtles2dMotorEstudis);
+    const decisions = screen.getByRole('heading', { level: 3, name: 'Les decisions del Mestre' }).closest('section').textContent;
+    expect(decisions).toContain('Qualsevol persona');
+    expect(decisions).toContain('No. No és un tràmit d’aprovació');
+    expect(decisions).toContain('opcional i voluntari, sense bons');
+    expect(decisions).toContain('L’informe és privat de qui fa l’estudi');
+    expect(decisions).toContain('Al Node 0, a 0 €');
+    expect(decisions).toContain('«veus sintètiques»');
+    /* Fora de la decisió que l'aclarix, cap «veus sintètiques» ni cap semàfor ni promesa de publicar per defecte. */
+    const resta = container.textContent.replace(decisions, '');
+    expect(resta).not.toMatch(/veus sintètiques|perfils sintètics/);
+    /* «Llum verda» només per a negar-la (els principis i la decisió). */
+    expect(resta.match(/llum verda/g) || []).toHaveLength((resta.match(/no hi ha «llum verda»/g) || []).length);
+    expect(container.querySelector('.sdp-atles__semafor, .sdp-atles__llum')).toBeNull();
+    const maqueta = screen.getByRole('img', { name: /^Maqueta d’un informe privat/ });
+    expect(maqueta.textContent).toContain('Privat');
+    expect(maqueta.textContent).toContain('Compartix l’informe, si vols');
+    expect(maqueta.textContent).not.toContain('Publica la pre-reserva');
+    expect(ATLES.mercat.principis_etics_innegociables.join(' ')).toContain('a 0 €');
+    expect(ATLES.mercat.flux_ux_en_4_passos.map((pas) => pas.descripcio).join(' ')).not.toMatch(/llum verda|perfils sintètics/);
+  });
+
+  /* v1.2.22 · Gauntlet R2 (M4-05) · D-ATLES-MOTOR fa opcional el contrast humà (pas 3), però el pas 4 prometia sempre la
+     «intenció real» i les «objeccions reals». Sense la Fase 2 no hi ha cap resposta real (principi 1, Llei 0): el pas 4
+     les promet només si s'ha fet el contrast humà, i sempre separades de la lectura simulada. */
+  test('el pas 4 promet la intenció i les objeccions reals només si s’ha fet el contrast humà, separades de la lectura simulada', () => {
+    const passos = ATLES.mercat.flux_ux_en_4_passos;
+    expect(passos.find((pas) => pas.pas === 3).descripcio).toMatch(/^Opcional, només si qui fa l'estudi ho vol/);
+    const pas4 = passos.find((pas) => pas.pas === 4).descripcio;
+    const condicio = pas4.indexOf("només si s'ha fet el contrast humà");
+    expect(condicio).toBeGreaterThan(-1);
+    /* Abans de la condició, només la lectura simulada: cap «real» ni «reals». */
+    expect(pas4.slice(0, condicio)).toContain('la lectura simulada de la Fase 1');
+    expect(pas4.slice(0, condicio)).not.toMatch(/\breals?\b/);
+    const condicionat = pas4.slice(condicio);
+    expect(condicionat).toContain("la intenció real de compra o d'ús");
+    expect(condicionat).toContain('les objeccions reals');
+    expect(condicionat).toContain('sempre separades de la lectura simulada');
+    const { container } = munta(EspecimenAtles2dMotorEstudis);
+    const passosPintats = [...container.querySelectorAll('.sdp-atles__passos > li')];
+    expect(passosPintats[3].textContent).toContain("només si s'ha fet el contrast humà de la Fase 2");
+  });
+
+  /* v1.2.22 · Gauntlet R1 (L3-01) · L'entradeta del manifest és la de la UniversalPage del Motor, la meta description i
+     la targeta de la Presentació: ha de dir les decisions, com el cos, i no «per a decidir» ni «les preguntes». */
+  test('l’entradeta i la cerca del Motor al manifest diuen les decisions del Mestre', () => {
+    const pagina = paginaAtles('atles-2d-motor-estudis');
+    expect(pagina.lead).toMatch(/^Una proposta, amb les decisions del Mestre del 22-11-2026, sense cap línia al producte: /);
+    expect(pagina.lead).toContain('les cinc decisions del Mestre');
+    expect(pagina.lead).not.toMatch(/per a decidir|preguntes/);
+    expect(pagina.searchText).toContain('decisions mestre');
+    expect(pagina.searchText).not.toContain('preguntes');
+    /* v1.2.22 · Gauntlet R1 (L3-07) · El Poble virtual, igual: «perfils simulats» al subtítol i a l'entradeta. */
+    const poble = paginaAtles('atles-2d-poble-virtual');
+    expect(`${poble.subtitle} ${poble.lead}`).not.toMatch(/veïns sintètics/);
+    expect(poble.subtitle).toBe('Rondes, perfils simulats i dolors amb filtres');
+  });
+
+  /* v1.2.22 · Gauntlet R1 (L3-06) · «On encaixaria» no pot limitar l'entrada a les fitxes d'organització quan la
+     decisió del Mestre diu que qualsevol persona pot llançar un estudi. */
+  test('«On encaixaria» obri l’entrada a qualsevol perfil, també el de l’Usuari, com diu la decisió', () => {
+    munta(EspecimenAtles2dMotorEstudis);
+    const encaix = screen.getByRole('heading', { level: 3, name: 'On encaixaria' }).closest('section').textContent;
+    expect(encaix).toContain("accessible des de qualsevol perfil: el de l'Usuari o veí");
+    const decisions = screen.getByRole('heading', { level: 3, name: 'Les decisions del Mestre' }).closest('section').textContent;
+    expect(decisions).toContain('Qualsevol persona');
+    expect(ATLES.mercat.encaix_arquitectonic_pedra_seca.ubicacio_natural).not.toMatch(/accessible des de les fitxes d'Empresa/);
   });
 
   /* v1.2.19 · Gauntlet R2 (L4R2-08) · El rètol i la xifra parlen del mateix conjunt: les rondes que diu la dada. */
@@ -418,10 +615,11 @@ describe('4. Motor d’estudis de mercat', () => {
     const senseVeus = placa.rondes.filter((r) => !(r.num_perfils > 0));
     expect(ambVeus.length + senseVeus.length).toBe(placa.rondes.length);
     expect(senseVeus.length).toBeGreaterThan(0);
-    expect(text).toContain(`${placa.rondes.length} rondes: ${ambVeus.length} amb veus`);
-    expect(text).toContain(`i ${senseVeus.length} sense cap veu`);
+    /* v1.2.22 · D-ATLES-MOTOR · «perfils simulats», no «veus». */
+    expect(text).toContain(`${placa.rondes.length} rondes: ${ambVeus.length} amb perfils simulats`);
+    expect(text).toContain(`i ${senseVeus.length} sense cap perfil`);
     for (const ronda of placa.rondes) expect(text.split(ronda.id).length - 1, ronda.id).toBeGreaterThan(0);
-    expect(text).toContain(`${placa.perfils.length} veus i ${placa.dolors.length} dolors`);
+    expect(text).toContain(`${placa.perfils.length} perfils simulats i ${placa.dolors.length} dolors`);
     expect(text).not.toContain('#01–#04 i la Fase 5');
   });
 });

@@ -1,0 +1,52 @@
+{
+  "id": "3ead9572-6d4f-4845-811b-21338209741c",
+  "session": "5e44c093-a629-4b02-a6f8-1a694d9a9170",
+  "operationId": "v1222-governanca-1795369798378",
+  "claim": "5e44c093-a629-4b02-a6f8-1a694d9a9170:governance-write",
+  "planHash": "08a69f2081dd47f36c944b597c917bca97735517476a6e37e88d1b4f2799896e",
+  "beforeSeal": "52ae667c7515c7f46cdc497c0520ef6341da876007802fb8aa91e56b69b7663a",
+  "files": [
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "f7d2ce50c8e13061ea96963695cc4eece0fc4771da0cb458188e7e87829f9a14",
+      "after": "279c7d1de774032879164778c76e3568cafdc385ac29981d2f8f06f6793b3f30"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.mjs",
+      "before": "bbf521a96c32853175131dea52010b5c762b10b7503664f690d7e963ea940f34",
+      "after": "9693ab9a8a2b609d5a9601e6693c4e498e280b608831c8dc8c72cef96c75d3a6"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "before": "7a2156f4a06160f3a3a4dc6b284bc63f633e99c394da4caa2d613357275d02dc",
+      "after": "34ebc0436a7217d3174561b261c277638c1fb16f01bf9a7a4f5e5dc6fd644aa3"
+    },
+    {
+      "path": "tooling/lib/actius-patrimonials-legitims.json",
+      "before": null,
+      "after": "43c9076ff760d3d6634b77cef4af670aa217181a9343321c253a205a8f154349"
+    },
+    {
+      "path": "tooling/lib/actius-patrimonials-legitims.mjs",
+      "before": null,
+      "after": "7f158b5df23cb42e3b5d096a34ff392f047968671e88119f1612320123506dc1"
+    },
+    {
+      "path": "tooling/gates/duplicats-public.registre.json",
+      "before": null,
+      "after": "ad41e60c036aae2ae8a69daa7fececdc4b7f3bf075210d3570d708fc04c0936a"
+    },
+    {
+      "path": "tooling/gates/tractor-duplicats-public.mjs",
+      "before": null,
+      "after": "d3b2278eaa390febd284208b16c2a4c5539d97fb0bef95ae5768e5ee9cae6880"
+    },
+    {
+      "path": "tooling/gates/tractor-duplicats-public.test.mjs",
+      "before": null,
+      "after": "6b9d8fe851bd5c3901748b05269be64c0555eb1c2124d07159e1fbef2b41cbff"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c"
+}

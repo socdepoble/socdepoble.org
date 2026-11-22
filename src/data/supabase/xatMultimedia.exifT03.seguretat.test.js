@@ -261,9 +261,9 @@ test('EXIF_T03 vídeo: legacy GPS amb bandera falsa no publica via RPC3 ni afirm
     throw Object.assign(new Error('PGRST202'), { status: 404 });
   });
   await expect(publicaAdjuntXat(FIL, { id: ID, fitxer, tipus: 'video', duradaMs: 4000, ubicacio: LLOC, senseUbicacio: true }))
-    .rejects.toMatchObject({ code: 'ubicacio-no-eliminable' });
-  expect(m.rpc.mock.calls.filter(([nom]) => nom === 'xat_publica_adjunt')).toHaveLength(1);
-  expect(fetch).toHaveBeenCalledOnce();
+    .rejects.toMatchObject({ code: 'video-no-acreditable' });
+  expect(m.rpc).not.toHaveBeenCalled();
+  expect(fetch).not.toHaveBeenCalled();
 });
 
 test.each(['reserva-pujada', '409', 'XHR409'])('EXIF_T03 delta: %s amb GPS remot antic i Blob local net del mateix ID no es publica', async via => {

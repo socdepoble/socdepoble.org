@@ -744,7 +744,9 @@ export function componResposta(resultats) {
    fet, entre claudàtors darrere de cada entrada. Les frases del Xat i de Javi
    casen amb el Bloc F.1 (P1-70): la IAIA hi és si no s'ha apagat amb el
    nivell d'IA, i la fila de Javi no promet cap directe en remot mentre el
-   seu compte no estiga connectat al xat del poble. */
+   seu compte no estiga connectat al xat del poble.
+   v1.2.22 · IDEA-323.1 (Gauntlet R1, L1-01) · Sense compte i sense un poble declarat pel lloc, el xat de mostra porta
+   tres converses (pobleDelForaster): la del poble només hi és amb compte o al lloc d'un poble. */
 const llistaDeNoms = (noms) => (noms.length > 1 ? `${noms.slice(0, -1).join(', ')} i ${noms[noms.length - 1]}` : noms.join(''));
 export const ATLES_OPERATIU = Object.freeze([
   {
@@ -759,7 +761,7 @@ export const ATLES_OPERATIU = Object.freeze([
     id: 'atles:xat', titol: 'El Xat', ruta: '/xat', claus: ['xat', 'missatges', 'converses', 'missatgeria'],
     paragrafs: [
       "El Xat funciona com les aplicacions de missatgeria que ja coneixes: la llista de converses, una bombolla per a cada missatge i el camp per a escriure baix de tot. Sóc de Poble no ven ni cedix les teues converses.",
-      "A la llista hi ha quatre converses fixes: la comunitat de Sóc de Poble, la gent del teu poble (per exemple, Gent de la Torre), Javi Llinares i la IAIA MarIA, si no l'has apagada amb el nivell d'IA.",
+      "Sense compte hi ha la comunitat de Sóc de Poble, Javi Llinares i la IAIA MarIA, si no l'has apagada amb el nivell d'IA. Amb compte, o al lloc d'un poble, també la gent del poble (com Gent de la Torre).",
       "Amb sessió, a les converses amb la gent, el botó + («Adjunta») envia fotos i vídeos. Sense registrar-te, el xat és una mostra: per a guardar les converses, has de registrar-te."
     ]
     /* [PAGE_COPY.xat (pageContent.js); actorsDelXat.js (P1-70, Bloc F.1); ca.js section.xat.iaia.apagada;

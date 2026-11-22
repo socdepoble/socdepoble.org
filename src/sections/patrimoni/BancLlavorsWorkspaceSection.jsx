@@ -4,7 +4,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 import { usePublicadorsRegistrats } from '../../hooks/usePublicadorsRegistrats.js';
 import { useSEO } from '../../hooks/useSEO';
-import { FONTS_BANC_LLAVORS, entradesDelCataleg } from '../../data/patrimoni/bancLlavors.js';
+import { FONTS_BANC_LLAVORS, entradesDelCataleg, textDeCercaDeLEntrada } from '../../data/patrimoni/bancLlavors.js';
 import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
@@ -36,6 +36,40 @@ function useConsultaDelRouterObjeto() {
 
 function useConsultaDelRouter() {
   return useConsultaDelRouterObjeto()?.searchParams?.toString() ?? '';
+}
+
+/* v1.2.22 · Gauntlet R2 (M5-02) · El total de fitxes del Banc ix de les dades (avui 45 + 65 + 15 + 3 = 128): el rètol de
+   la pestanya (`llibreLlavors`, una funció del total) no porta cap xifra escrita a mà. */
+export const TOTAL_FITXES_BANC_LLAVORS = FONTS_BANC_LLAVORS.reduce((suma, font) => suma + entradesDelCataleg(font.id).length, 0);
+
+/* El rètol d'un llibre: una cadena, o una funció del total de fitxes. */
+export function rotolDelLlibre(txBib, clauText) {
+  const rotol = txBib?.[clauText];
+  return typeof rotol === 'function' ? rotol(TOTAL_FITXES_BANC_LLAVORS) : rotol;
+}
+
+/* v1.2.22 · Gauntlet R2 (M4-04) · Els elements del Workspace, purs (la prova els passa per filterWorkspaceItems). La cerca
+   llig els mateixos camps que filtraEntrades (textDeCercaDeLEntrada: nom, nom científic, nom de l'índex, origen, `llista`
+   i `altres`) i l'autoria de la font: «Alfafara», el nom de la font a la pàgina 78, troba l'Alfafarenca. */
+export function elementsDelBancDeLlavors(cataleg = null, etiquetaLamina = '') {
+  return FONTS_BANC_LLAVORS.flatMap((font) => entradesDelCataleg(font.id).map((entrada) => {
+    const lamina = cataleg?.obteLaminaBotanicaNode0(entrada.id);
+    return {
+      id: entrada.id,
+      title: entrada.nom,
+      subtitle: entrada.nomCientific,
+      categoryIds: [font.id],
+      glyph: '🌱',
+      ...(lamina?.imatgePrincipal ? {
+        imageUrl: lamina.imatgePrincipal,
+        imageAlt: `${entrada.nom} (${entrada.nomCientific}) · ${etiquetaLamina}`
+      } : null),
+      lead: font.autoria,
+      entrada,
+      font,
+      searchText: [textDeCercaDeLEntrada(entrada), font.autoria].join(' ')
+    };
+  }));
 }
 
 function llibreDeConsulta(search, defecte = 'llavors') {
@@ -150,24 +184,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
       label: font.autoria,
       count: entradesDelCataleg(font.id).length
     })),
-    items: FONTS_BANC_LLAVORS.flatMap((font) => entradesDelCataleg(font.id).map((entrada) => {
-      const lamina = cataleg?.obteLaminaBotanicaNode0(entrada.id);
-      return {
-        id: entrada.id,
-        title: entrada.nom,
-        subtitle: entrada.nomCientific,
-        categoryIds: [font.id],
-        glyph: '🌱',
-        ...(lamina?.imatgePrincipal ? {
-          imageUrl: lamina.imatgePrincipal,
-          imageAlt: `${entrada.nom} (${entrada.nomCientific}) · ${txBib.laminaBotanicaNode0}`
-        } : null),
-        lead: font.autoria,
-        entrada,
-        font,
-        searchText: [entrada.nom, entrada.nomCientific, font.autoria].join(' ')
-      };
-    }))
+    items: elementsDelBancDeLlavors(cataleg, txBib.laminaBotanicaNode0)
   }), [cataleg, txBib.laminaBotanicaNode0]);
 
   return (
@@ -195,7 +212,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
               onClick={() => setLlibreActiu(llibre.id)}
             >
               <span className="sdp-fitxa-emoji-xl" aria-hidden="true">{llibre.emoji}</span>
-              <span>{txBib[llibre.clauText]}</span>
+              <span>{rotolDelLlibre(txBib, llibre.clauText)}</span>
             </button>
           );
         })}
@@ -241,11 +258,12 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
                         tr={tr}
                         onTriaEntrada={(nou) => onTriaItem(nou.id)}
                         onTanca={onClose}
+                        llengua={language}
                       />
                     </div>
                     <section className="sdp-cataleg-workspace__font" key={item.font.id}>
                       <h3>{item.font.autoria}</h3>
-                      <FitxaDeLaFont font={item.font} tr={tr} />
+                      <FitxaDeLaFont font={item.font} tr={tr} llengua={language} />
                     </section>
                     {children}
                   </PaginaVarietatLlavors>
@@ -261,7 +279,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
                   {FONTS_BANC_LLAVORS.map((font) => (
                     <section className="sdp-cataleg-workspace__fitxa" key={font.id}>
                       <h3>{font.autoria}</h3>
-                      <FitxaDeLaFont font={font} tr={tr} />
+                      <FitxaDeLaFont font={font} tr={tr} llengua={language} />
                     </section>
                   ))}
                   {children}

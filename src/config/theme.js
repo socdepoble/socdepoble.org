@@ -263,12 +263,9 @@ export function writeSeniorPreference(actiu, { emet = true } = {}) {
   return desat;
 }
 
-/** Commuta Mode Sènior d'1 sol toc i torna el nou estat booleà. */
-export function commutaModeSenior() {
-  const seg = !readSeniorPreference();
-  writeSeniorPreference(seg);
-  return seg;
-}
+/* v1.2.22 · Gauntlet R1 (L2-10) · Fora commutaModeSenior: no tenia cap consumidor i, amb el Mode Bancal (més avall),
+   commutar només SENIOR_KEY no apagava un 'bancal' antic desat. El commuta d'ara és UIContext.toggleSeniorMode i, fora
+   del proveïdor, el de ControlModeSenior. */
 
 /** Subscriu un oient als canvis de Mode Sènior dins de la mateixa finestra. */
 export function subscriuModeSenior(alCanviar) {
@@ -298,6 +295,18 @@ export function aplicaSenior(element, actiu) {
   if (actiu === true) element.setAttribute(ATRIBUT_SENIOR, 'true');
   else element.removeAttribute(ATRIBUT_SENIOR);
 }
+
+/* ════════════ UN SOL MODE BANCAL (IDEA-323.4 · DOL-31, ordre del Mestre del 261122) ════════════
+ *
+ * El Mode Sènior (lletra i dianes grans) i el contrast Bancal són UN sol mode, «Mode Bancal · Sol
+ * i Lletra Gran»: s'encén i s'apaga d'un sol toc i posa els dos atributs alhora. L'interruptor és
+ * SENIOR_KEY; un 'bancal' desat a CONTRAST_KEY per una versió anterior també l'encén (i en apagar
+ * el mode torna a 'normal'). Apagat, el contrast és la tria 'normal' o 'sistema' (prefers-contrast:
+ * more), que es respecta. */
+export const esModeBancal = (senior, contrast) => senior === true || contrast === CONTRAST_BANCAL;
+
+/** El contrast que es pinta: 'bancal' amb el Mode Bancal; si no, el de la tria i el sistema. */
+export const contrastDelMode = (modeBancal, contrast, sistemaMes) => (modeBancal ? CONTRAST_BANCAL : resolveContrast(contrast, sistemaMes));
 
 /** Neteja la memòria cau en proves unitàries quan es reseteja l'emmagatzematge (storage.js). */
 export function reiniciaMemoriaSenior() {

@@ -71,14 +71,17 @@ afterEach(() => {
 
 /* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares hi és
    amb la seua foto del padró pilot (mai el logo de l'entitat), i sense poble
-   declarat la mostra porta igualment «Gent de la Torre». S'actualitzen a
+   declarat la mostra portava igualment «Gent de la Torre». S'actualitzen a
    posta les proves de tres files i la de «sense poble, cap comunitat».
+   IDEA-323.1 (v1.2.22) · Ja no: sense poble declarat, tres files i cap poble
+   (prova «IDEA-323.1 · sense poble declarat»). Les d'ací munten la Torre com a
+   amfitrió (beforeEach).
    P1-70 (marató nocturna 261101, T5.2) · La fila la pinta amb la miniatura
    de 256 px de la mateixa foto (CaraXat · caresLleugeres.js), no amb la de
    1200 px: les dades de la fila continuen nomenant la gran. */
 const JAVI = '/assets/fotos/javi-llinares-256x256.jpg';
 
-test('sense amfitrió, cada fila de la mostra porta la seua cara: el poble, la IAIA, Sóc de Poble i Javi', () => {
+test('amb l’amfitrió de la Torre, cada fila de la mostra porta la seua cara: el poble, la IAIA, Sóc de Poble i Javi', () => {
   const { container } = munta();
   expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
 });
@@ -109,10 +112,13 @@ test('si el contingut del node no té la fitxa de la Torre, la comunitat porta l
   expect(cares(altre.container)["Gent d'Altea"]).toBeNull();
 });
 
-test('sense poble declarat, les quatre files porten cara: també «Gent de la Torre», el poble de la llavor', () => {
+/* IDEA-323.1 (v1.2.22, ordre del Mestre del 261122) · Sense poble declarat, el
+   Foraster veu els tres actors del projecte, tots amb cara, i cap poble. */
+test('IDEA-323.1 · sense poble declarat, les tres files porten cara i cap és «Gent de la Torre»', () => {
   mocks.externalConfig = {};
   const { container } = munta();
-  expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
+  expect(cares(container)).toEqual({ 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
+  expect(container.querySelector('[title="Gent de la Torre"]')).toBeNull();
 });
 
 test('«Nova conversa» de la mostra (cercaMembres) porta les mateixes cares que la llista', async () => {

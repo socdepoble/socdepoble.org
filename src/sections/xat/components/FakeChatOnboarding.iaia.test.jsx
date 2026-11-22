@@ -28,7 +28,8 @@ afterEach(cleanup);
 
 /* Gauntlet 261016 (Bloc 3.6) · Les converses directes de la mostra: sense
    poble declarat, la comunitat de «Gent de la Torre» (els fake-poble*) també
-   hi és, i Javi Llinares va a la cua. El nivell d'IA només toca la IAIA.
+   hi era, i Javi Llinares va a la cua. IDEA-323.1 (v1.2.22) · Des d'ara, sense
+   poble declarat cap comunitat de poble; la de Sóc de Poble sí. El nivell d'IA només toca la IAIA.
    Gauntlet 261016_1530 (Bloc 3.6.1) · 'fake-sdp' ja no és cap directe: és
    la comunitat de Sóc de Poble (els fake-sdp*), i tampoc no compta ací. */
 const esDeComunitat = (id) => id.startsWith('fake-poble') || id.startsWith('fake-sdp');

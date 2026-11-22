@@ -131,8 +131,10 @@ describe('Onada R17 · P0-88 · el peu del calaix CONTROL, damunt de la zona seg
    barra d'estat (zona segura de dalt) 24 i, en vertical, els tres botons
    d'Android davall (zona segura de baix) 48; en apaïsat els botons passen al
    costat (baix 0). El calaix comença davall de la barra negra (--sdp-calaix-dalt)
-   i, dins, la marca i la fila de CONTROL són fixes: la resta és la llista,
-   que ha de conservar com a mínim una diana tàctil i fer scroll. */
+   i, dins, la fila de CONTROL és fixa: la resta és la llista, que ha de
+   conservar com a mínim una diana tàctil i fer scroll. IDEA-329 (v1.2.22, ordre
+   del Mestre, 22-11-2026, 22:40): el calaix compacte ja no porta la marca (el
+   logotip és el de la barra negra), i la llista guanya --sdp-alt-negra (64 px). */
 describe('P0-93 · a 320×480 px la llista del calaix CONTROL conserva lloc i fa scroll', () => {
   const tokens = senseComentaris(llig('src/css/tokens.css'));
   const px = (nom) => Number(new RegExp(`${tok(nom)}:\\s*(\\d+)px`).exec(tokens)?.[1]);
@@ -144,8 +146,9 @@ describe('P0-93 · a 320×480 px la llista del calaix CONTROL conserva lloc i fa
     const llista = 'nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista';
     expect(valors(LAYOUT, llista, 'min-height')).toEqual(['0']);
     expect(valors(LAYOUT, llista, 'overflow-y')).toEqual(['auto']);
-    // Les files fixes del calaix: la marca (sense la zona segura de dalt) i CONTROL.
-    expect(valors(LAYOUT, ':where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand', 'height')).toEqual([`var(${tok('alt-negra')})`]);
+    // IDEA-329 · La marca del calaix compacte s'amaga: l'única fila fixa és la de CONTROL.
+    expect(valors(LAYOUT, ':where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand', 'display')).toEqual(['none']);
+    expect(valors(LAYOUT, ':where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand', 'height')).toEqual([]);
     expect(valors(LAYOUT, '.sidebar-control-btn', 'height')).toEqual([`var(${tok('alt-accio')})`]);
   });
 
@@ -157,7 +160,9 @@ describe('P0-93 · a 320×480 px la llista del calaix CONTROL conserva lloc i fa
     const [negra, accio, espai4, tactil] = [px('alt-negra'), px('alt-accio'), px('space-4'), px('touch')];
     expect([negra, accio, espai4, tactil].every((n) => n > 0)).toBe(true);
     const calaix = alt - (negra + dalt);
-    const llista = calaix - negra - accio - filesApp * tactil - (espai4 + baix);
+    // IDEA-329 · Sense la marca: abans es restava també una fila de --sdp-alt-negra.
+    const llista = calaix - accio - filesApp * tactil - (espai4 + baix);
     expect(llista).toBeGreaterThanOrEqual(tactil);
+    expect(llista - (calaix - negra - accio - filesApp * tactil - (espai4 + baix))).toBe(negra);
   });
 });

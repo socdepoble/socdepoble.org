@@ -193,6 +193,31 @@ test('B10a · sense cap acte per vindre, el mes de hui (mai un mes passat), que 
   expect(titolsDeTargetes()).toEqual(['2n Aplec pel Territori']);
 });
 
+/* v1.2.22 · Gauntlet R2 (M2-06) · La pestanya «Esdeveniments» (el calendari del Mur) pinta els actes de l'aparador:
+   vigentsDalt (alertesMunicipals.js, esVisibleAlMur) lleva el que té «Mostrar també al Mur» apagat, i el germà del
+   mateix mes, amb el Mur encés, sí que hi és. El mateix acte amagat continua a /calendari, que llig el context sense
+   filtre (CalendariSection.test.jsx, «M2-06»). */
+test('M2-06 · un acte amb «Mostrar també al Mur» apagat no és al calendari de la pestanya; el germà del mateix mes, sí', () => {
+  mocks.mur.sortedEvents = [
+    { ...acte('fira', '2026-11-14', 'Fira de tardor'), mostrarAlMur: true },
+    { ...acte('amagat', '2026-11-21', 'Mercat amagat'), mostrarAlMur: false }
+  ];
+  render(<MurSection />);
+  agenda();
+  expect(regioMes(2026, 10)).toBeTruthy();
+  expect([...calendari().querySelectorAll('a.sdp-cal-enllac')].map((a) => a.getAttribute('href'))).toEqual(['/events/fira']);
+  expect(peces()).toEqual(['Fira de tardor']);
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+  cleanup();
+
+  // El testimoni: el mateix acte sense cap decisió editorial sí que es pinta (l'amaga la decisió, no la data).
+  mocks.mur.sortedEvents = [mocks.mur.sortedEvents[0], { ...acte('amagat', '2026-11-21', 'Mercat amagat') }];
+  render(<MurSection />);
+  agenda();
+  expect([...calendari().querySelectorAll('a.sdp-cal-enllac')].map((a) => a.getAttribute('href')).sort())
+    .toEqual(['/events/amagat', '/events/fira']);
+});
+
 test('un calendari buit ho diu, al mes de hui', () => {
   mocks.mur.sortedEvents = [];
   render(<MurSection />);

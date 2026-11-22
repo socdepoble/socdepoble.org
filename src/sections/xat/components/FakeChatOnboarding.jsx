@@ -33,6 +33,12 @@
  *     missatge automàtic de l'ordre, literal (MISSATGE_AUTOMATIC_DE_JAVI), i
  *     de només lectura: ni compositor ni cap resposta simulada en nom seu.
  *     Va darrere de les altres: les files de sempre no es mouen.
+ * IDEA-323.1 (v1.2.22, ordre del Mestre del 261122) · Derogat el primer punt
+ * per al Foraster sense amfitrió: Sóc de Poble és la plataforma de tots els
+ * pobles i la Torre n'és un més. Sense `poble` declarat, la mostra porta tres
+ * actors: la comunitat de Sóc de Poble, Javi Llinares i la IAIA (si no està
+ * apagada). Amb un poble declarat, la comunitat d'eixe poble com sempre
+ * (pobleDelForaster). El «Comentar» de la pàgina d'un poble porta a /registre.
  *
  * Auditoria adversarial 261016 · El fil i la bombolla de Javi viuen ara a
  * data/xatsPerDefecte.js (filDeMostraDeJavi, missatgesDeMostraDeJavi), la
@@ -86,7 +92,7 @@ import {
   entitatDeMostraDe, filDeMostraDEntitat
 } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
-import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
+import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelForaster } from '../pobleAmfitrio.js';
 import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, RESPOSTA_IAIA, esIAIA } from '../../../data/identitatsSeed.js';
 import { loadPerfilPublic, teCapacitat } from '../../../data/backendPort.js';
 import { backendScope, normalizeBackendConfig } from '../../../config/backendConfig.js';
@@ -112,12 +118,14 @@ function useNavegaOpcional() {
   try { return useNavigate(); } catch { return null; }
 }
 
+
 /* P0-ANDROID-PUSH (v1.2.16) · B5 · Doctrina del Foraster (ordre del Mestre, 261121 01:55): qui
    aterra a /xat sense sessió passeja sense enganys. Cap fil de mostra porta cap no llegit: els
    Avisos de Sóc de Poble i del poble i la IAIA ja es donen per llegits (noLlegits 0 i
    llegitFinsSeq igual a ultimSeq), així que ni la insígnia, ni la de la comunitat, ni el «(N)» del
    títol (totalNoLlegits) ni el separador de no llegits de la conversa no diuen res que no siga cert,
-   i «Marcar com a llegides» en marca 0. Els quatre actors (ordre del 261016) es queden. */
+   i «Marcar com a llegides» en marca 0. Els quatre actors (ordre del 261016) es queden; sense amfitrió, des de la
+   v1.2.22, tres (IDEA-323.1). */
 function filsDeSocDePoble(t, ara) {
   const subjecte = { tipus: 'entitat', id: ENTITAT_PILOT_ID, ruta: RUTA_DE_SOC_DE_POBLE, titol: SOC_DE_POBLE.nom };
   const comuna = { comunitatId: ID_COMUNITAT_SDP, subjecte, ultimAl: ara, llegitFinsSeq: 0 };
@@ -166,7 +174,8 @@ function MostraDelXat({ originalContext, children, respostaIAIA = respostaDeLaIA
   const { threadId } = useParams();
   const destinatariDeRuta = typeof threadId === 'string' && threadId.startsWith('fake-entitat:')
     ? threadId.slice('fake-entitat:'.length) : '';
-  const poble = pobleDelXat(usePobleAmfitrio());
+  /* IDEA-323.1 (v1.2.22) · Sense amfitrió, cap poble: els tres actors del projecte (pobleDelForaster). */
+  const poble = pobleDelForaster(usePobleAmfitrio());
   const { towns } = useCoreContent();
   const local = MODES_LOCALS.has(normalizeBackendConfig(externalConfig || {}).dataMode);
   const avatarPoble = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);

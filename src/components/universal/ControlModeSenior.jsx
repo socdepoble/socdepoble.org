@@ -1,13 +1,20 @@
-import { useCallback, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import * as uiContextModul from '../../app/contexts/UIContext';
 import { useTraductorOpcional } from '../PedraSeca/hooks/useTraductorOpcional.js';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import {
-  aplicaSenior,
+  ATRIBUT_CONTRAST,
+  ATRIBUT_SENIOR,
+  CONTRAST_BANCAL,
+  ESDEVENIMENT_CONTRAST,
   arrelDePresentacio,
-  commutaModeSenior,
+  esModeBancal,
+  readContrastPreference,
   readSeniorPreference,
   subscriuModeSenior,
+  reclamaAtribut,
+  writeContrastPreference,
+  writeSeniorPreference,
 } from '../../config/theme.js';
 import { textosModeSenior } from '../../config/textosModeSenior.js';
 import cssModeSenior from '../../css/diferit-mode-senior.css?inline';
@@ -28,7 +35,7 @@ function lligAccionsUISegures() {
   return null;
 }
 
-const snapshotSenior = () => readSeniorPreference();
+const snapshotSenior = () => esModeBancal(readSeniorPreference(), readContrastPreference());
 const snapshotServidor = () => false;
 
 /**
@@ -52,6 +59,17 @@ const snapshotServidor = () => false;
  * v1.2.18 · Gauntlet R2 (L1R2-02) · El xip curt és d'una sola línia en mode normal (`--curt`,
  * nowrap); en Sènior la regla de les dianes (diferit-mode-senior.css) torna `white-space: normal`
  * i, amb el text molt gran, l'etiqueta pot partir.
+ *
+ * IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · És l'interruptor del «Mode Bancal · Sol i
+ * Lletra Gran» (theme.js, esModeBancal): encén i apaga alhora la lletra gran (data-sdp-senior) i el
+ * contrast Bancal (data-contrast). Fora d'UIProvider fa el mateix sobre la seua arrel de presentació.
+ *
+ * v1.2.22 · Gauntlet R2 (M2-03) · Fora d'UIProvider, els dos atributs no els escriu el toc: es deriven de l'estat global
+ * (el magatzem, que avisa per subscriuModeSenior) en un sol efecte, que els reclama junts (reclamaAtribut) mentre el mode
+ * està encés i els allibera junts quan s'apaga o el xip es desmunta. Dos xips no es deixen el mode a mitges, i mai no
+ * queda un atribut sol. En tornar un 'bancal' antic a 'normal', el xip avisa per ESDEVENIMENT_CONTRAST, com desaContrast
+ * (UIContext), perquè un proveïdor de la mateixa pàgina se n'assabente. Dins del proveïdor no canvia res: el toc és
+ * toggleSeniorMode i els atributs els posa App.jsx.
  */
 export default function ControlModeSenior({
   llengua = null,
@@ -68,6 +86,18 @@ export default function ControlModeSenior({
 
   const arrelRef = useRef(null);
   useFullDiferit(arrelRef, 'mode-senior', cssModeSenior);
+  const dinsProveidor = typeof accionsUI?.toggleSeniorMode === 'function';
+  /* v1.2.22 · Gauntlet R2 (M2-03) · Fora d'UIProvider, un sol efecte deriva els dos atributs del mode global i els
+     reclama junts (reclamaAtribut, W4-12): en apagar, o en desmuntar, l'element recupera els valors que tenia (els de
+     l'amfitrió, o cap). Abans de pintar, com App.jsx: un mode desat encés ja porta els dos atributs en el primer
+     fotograma. Dins del proveïdor no fa res. */
+  useLayoutEffect(() => {
+    if (dinsProveidor || !externActiu) return undefined;
+    const arrel = arrelDePresentacio(arrelRef.current, { amaDelDocument: true });
+    const alliberaSenior = reclamaAtribut(arrel, ATRIBUT_SENIOR, 'true');
+    const alliberaContrast = reclamaAtribut(arrel, ATRIBUT_CONTRAST, CONTRAST_BANCAL);
+    return () => { alliberaContrast(); alliberaSenior(); };
+  }, [dinsProveidor, externActiu]);
 
   const codiLlengua = llengua || estatUI?.language || accionsUI?.language || null;
   const tx = textosModeSenior(codiLlengua, t || accionsUI?.t);
@@ -77,9 +107,21 @@ export default function ControlModeSenior({
       accionsUI.toggleSeniorMode();
       return;
     }
-    const seg = commutaModeSenior();
-    const arrel = arrelDePresentacio(arrelRef.current, { amaDelDocument: true });
-    aplicaSenior(arrel, seg);
+    const contrast = readContrastPreference();
+    const seg = !esModeBancal(readSeniorPreference(), contrast);
+    /* Un 'bancal' desat per una versió anterior, en apagar, torna a 'normal'. Abans que la clau de
+       Sènior, que avisa els oients: quan la lligen, el mode ja és el nou. I amb el mateix avís que
+       desaContrast (Gauntlet R2, M2-03): un proveïdor de la pàgina també deixa el 'bancal'. */
+    const contrastSeg = !seg && contrast === CONTRAST_BANCAL ? 'normal' : contrast;
+    if (contrastSeg !== contrast) {
+      writeContrastPreference(contrastSeg);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(ESDEVENIMENT_CONTRAST, { detail: { contrast: contrastSeg } }));
+      }
+    }
+    /* Els atributs no es toquen ací: el magatzem avisa tots els xips (useSyncExternalStore) i l'efecte de cada un
+       els reclama o els allibera. */
+    writeSeniorPreference(seg);
   }, [accionsUI]);
 
   const classesXip = [

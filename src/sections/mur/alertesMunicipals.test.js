@@ -155,3 +155,19 @@ describe('vigència i ordre', () => {
     expect(vigentsDalt(null, () => true)).toEqual([]);
   });
 });
+
+/* v1.2.22 · Gauntlet R1 (L4-06) · La projecció de l'aparador del Mur (Codex R32.42 lot 03): un acte amb «Mostrar també
+   al Mur» apagat ix de vigentsDalt, i la llista que rep no muta. Esta prova és de la funció pura: no munta cap pàgina.
+   Gauntlet R2 (M2-06) · La divergència volguda entre la pestanya del Mur i /calendari la fixen les proves integrades
+   «M2-06» de MurSection.agenda.test.jsx (no hi és) i de CalendariSection.test.jsx (sí que hi és). */
+describe('v1.2.22 · vigentsDalt i la visibilitat al Mur', () => {
+  test('vigentsDalt lleva de l’aparador l’acte amb el Mur apagat i no muta l’entrada', async () => {
+    const { vigentsDalt } = await import('./alertesMunicipals.js');
+    const amagat = { item: { id: 'acte-off', mostrarAlMur: false } };
+    const visible = { item: { id: 'acte-on', mostrarAlMur: true } };
+    const senseDecisio = { item: { id: 'acte-sense' } };
+    const entrades = [amagat, visible, senseDecisio];
+    expect(vigentsDalt(entrades, () => false).map(({ item }) => item.id)).toEqual(['acte-on', 'acte-sense']);
+    expect(entrades.map(({ item }) => item.id)).toEqual(['acte-off', 'acte-on', 'acte-sense']);
+  });
+});

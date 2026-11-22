@@ -98,14 +98,31 @@ async function lligPublicacionsAnteriors(tenant, section, limit, config, { befor
   return { rows, elements: rows.map(row => elementDeFila(row, section)), complet: esCompletaPerRang(rows, contentRange) };
 }
 
+/* v1.2.22 · Integració (costura de Codex R32.42 lot 03; Gauntlet R1, L4-05; CDP r1) · La RPC7 de llig_mur_public
+   (p_inclou_visibilitat) només la té un servidor amb la migració 20261122160300_r32_42_mur_visibilitat_publica.sql, que
+   esta versió no aplica a producció. Negociar-la contra el servidor d'ara costava quatre 404 per càrrega de pàgina (una
+   per secció del Mur) a tots els visitants (CDP r1: 332 respostes 404 en 83 escenaris), i tres peticions per secció al
+   foraster autenticat. Fins que s'aplique la migració, el build només la negocia amb la bandera literal
+   VITE_SDP_MUR_VISIBILITAT=1, que Vite plega com VITE_SDP_IAIA_SERVIDOR (supabase/index.js). Sense la bandera, la RPC6 de
+   sempre: cap petició nova i cap flag mostrar_al_mur inventat (murPublic.js només el copia si el servidor el dona). */
+const negociaVisibilitatMur = () => import.meta.env?.VITE_SDP_MUR_VISIBILITAT === '1';
+
 async function lligPublicacions(tenant, section, limit, config, { before = null, signal } = {}) {
   const sessionGuard = capturaSessio();
   const autenticat = Boolean(getCurrentUser()?.id);
   const senyal = signal || config.signal;
   const params = new URLSearchParams({ p_tenant_id: tenant, p_section_id: section, p_limit: String(limit) });
   if (before) { params.set('p_before_created_at', before.createdAt); params.set('p_before_id', before.id); }
-  const llig = membres => request(`/rest/v1/rpc/${membres ? 'llig_mur_membres' : 'llig_mur_public'}?${params}`,
-    config, { signal: senyal, ...(membres ? {} : { anonim: true }) });
+  const llig = async (membres, ambSessio = false) => {
+    const opts = { signal: senyal, ...(membres || ambSessio ? {} : { anonim: true }) };
+    if (membres) return request(`/rest/v1/rpc/llig_mur_membres?${params}`, config, opts);
+    if (!negociaVisibilitatMur()) return request(`/rest/v1/rpc/llig_mur_public?${params}`, config, opts);
+    // RPC7: discriminador obligatori, sis opcions amb defaults. RPC6 continua inequívoca.
+    const publics = new URLSearchParams(params); publics.set('p_inclou_visibilitat', 'true');
+    try { return await request(`/rest/v1/rpc/llig_mur_public?${publics}`, config, opts); }
+    catch (error) { if (!esRpcAbsent(error)) throw error; sessionGuard(); }
+    return request(`/rest/v1/rpc/llig_mur_public?${params}`, config, opts);
+  };
   let data, ambSobre = autenticat;
   try {
     data = await llig(autenticat);
@@ -125,6 +142,12 @@ async function lligPublicacions(tenant, section, limit, config, { before = null,
     }
   }
   sessionGuard();
+  // Un compte autenticat que és foraster rep un DTO públic dins de l'envelope.
+  // Eixa branca antiga tampoc porta el flag: renegociem la mateixa RPC7 mínima
+  // que el visitant, sense inferir pertinença ni ampliar el DTO de membres.
+  if (negociaVisibilitatMur() && ambSobre && data?.lectura === 'public') {
+    data = await llig(false, true); ambSobre = false; sessionGuard();
+  }
   const membre = ambSobre && data?.lectura === 'membre';
   const rows = ambSobre ? data?.files : data;
   if (!Array.isArray(rows) || rows.length > limit || (ambSobre && !['membre', 'public'].includes(data?.lectura))) {

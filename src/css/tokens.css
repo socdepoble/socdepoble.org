@@ -785,6 +785,59 @@
   --sdp-xat-autor-6: #ffd6c2;
 }
 
+/* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · ≥ 10:1 AAA) ═════════
+   Preferència persistent d'1 sol toc (data-sdp-senior="true") per a gent gran
+   i baixa visió. Eleva tots els parells de text i controls d'acció primària a
+   un contrast mínim >= 10:1 tant en clar com en fosc sobre targeta, app i fons
+   subtil, conserva les ombres canòniques i desactiva l'escala de premut.
+   v1.2.22 · IDEA-323.4 · DOL-31 (Gauntlet R1, L2-03) · El Mode Bancal encén alhora este atribut i data-contrast="bancal".
+   Per això els dos blocs Sènior van ARA davant dels del Bancal: amb la mateixa especificitat, en l'estat combinat guanya
+   la paleta Bancal de màxim contrast (calibrada a R32.35b) per a cada token compartit, i del Sènior queden els seus
+   propis (--sdp-sobre-accio i l'escala de premut). IDEA-328 v2 · L'accent (--sdp-accent, --sdp-accent-hover i
+   --sdp-sobre-accent) no es redefinix enlloc: és el taronja de marca de la paleta base. */
+.sdp-root[data-sdp-senior="true"],
+:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]),
+:root[data-sdp-senior="true"] .sdp-root, :host([data-sdp-senior="true"]) .sdp-root {
+  --sdp-fons-subtil:         var(--sdp-pedra-150);     /* garanteix >= 10,33:1 també per a primary-900 */
+  --sdp-text-titol:          var(--sdp-pedra-900);     /* 19,42:1 blanc · 17,09:1 subtil */
+  --sdp-text-cos:            var(--sdp-pedra-850);     /* 17,91:1 blanc · 15,30:1 subtil */
+  --sdp-text-suau:           var(--sdp-pedra-750);     /* 13,54:1 blanc · 11,56:1 subtil (>= 10:1) */
+  --sdp-vora-control:        var(--sdp-pedra-800);
+  /* v1.2.22 · IDEA-328 v2 (ordre del Mestre, 22-11-2026) · Cap redefinició de --sdp-accent, --sdp-accent-hover ni
+     --sdp-sobre-accent: la caputxa .sp-card-header, la .bar-orange i el .btn-date-time conserven SEMPRE el taronja alegre
+     de marca de la paleta base (primary-500, #FF7300) amb pedra-900 al damunt (7,12:1 AAA), en clar i en fosc. */
+  --sdp-accent-text:         var(--sdp-primary-900);   /* 11,74:1 blanc · 10,03:1 subtil */
+  --sdp-accent-titol:        var(--sdp-primary-900);
+  --sdp-accent-text-hover:   var(--sdp-pedra-900);
+  --sdp-accent-control:      var(--sdp-primary-900);
+  --sdp-accio-text:          var(--sdp-secondary-800); /* 12,63:1 blanc · 10,50:1 subtil */
+  --sdp-accio-control:       var(--sdp-secondary-800); /* 12,63:1 amb blanc */
+  --sdp-accio-control-hover: var(--sdp-secondary-900);
+  --sdp-sobre-accio:         var(--sdp-blanc-pur);
+  --sdp-escala-premut:       1;
+}
+
+:root[data-theme='dark'] .sdp-root[data-sdp-senior="true"],
+:root[data-theme='dark'][data-sdp-senior="true"], :host([data-theme='dark'][data-sdp-senior="true"]),
+:root[data-theme='dark'][data-sdp-senior="true"] .sdp-root, :host([data-theme='dark'][data-sdp-senior="true"]) .sdp-root {
+  /* v1.2.22 · IDEA-328 · El subtil del fosc, el mateix del Bancal fosc (pedra-800): amb pedra-750 el taronja viu de
+     primary-400 hi quedava a 6,27:1. Ara 7,44:1 (AAA). */
+  --sdp-fons-subtil:         var(--sdp-pedra-800);
+  --sdp-text-titol:          var(--sdp-pedra-50);      /* 17,91:1 targeta · 13,54:1 subtil */
+  --sdp-text-cos:            var(--sdp-pedra-100);     /* 16,62:1 targeta · 12,55:1 subtil */
+  --sdp-text-suau:           var(--sdp-pedra-200);     /* 15,30:1 targeta · 11,56:1 subtil (>= 10:1) */
+  --sdp-vora-control:        var(--sdp-pedra-200);
+  /* v1.2.22 · IDEA-328 v2 · Fora el salmó (primary-200) i els rentats (primary-100): l'accent és el de la paleta base
+     (cap redefinició, vegeu el bloc clar) i el primary-400 viu va al text i als títols d'accent de les targetes. */
+  --sdp-accent-text:         var(--sdp-primary-400);   /*  8,97:1 targeta · 7,44:1 subtil · 9,70:1 app */
+  --sdp-accent-titol:        var(--sdp-primary-400);
+  --sdp-accent-text-hover:   var(--sdp-pedra-50);
+  /* Gauntlet v1.2.13 · --sdp-accent-control s'hereta del bloc clar del Mode Sènior (primary-900, 11,74:1 amb el
+     text blanc): amb primary-200, el text blanc de .sp-card-calendar-badge hi quedava a 1,39:1. */
+  /* v1.2.22 · IDEA-328 · Els títols blaus, un blau viu: secondary-300 (secondary-400 quedava a 6,06:1 sobre el subtil). */
+  --sdp-accio-text:          var(--sdp-secondary-300); /* 11,18:1 targeta · 9,27:1 subtil · 12,10:1 app */
+}
+
 /* ═══ MODE BANCAL · CONTRAST EXTREM PER A L'HORT A PLE SOL ════════════
    Q1 del Mestre (261004): les correccions AAA van sempre, en tots els
    modes; el Bancal és l'interruptor de més. data-contrast="bancal" el posa
@@ -830,6 +883,8 @@
   --sdp-accio-control:         var(--sdp-secondary-800);  /* 12,30:1 amb --sdp-sobre-accio */
   --sdp-accio-control-hover:   var(--sdp-secondary-900);  /* 15,52:1 amb --sdp-sobre-accio */
   --sdp-focus:                 var(--sdp-negre-pur);
+  /* v1.2.22 · IDEA-328 · El mateix valor de la paleta base clara: només per a declarar-lo també al Bancal fosc, on canvia. */
+  --sdp-accent-subtil:         var(--sdp-primary-50);
   --sdp-escala-premut: 1;
 }
 
@@ -847,61 +902,22 @@
   --sdp-vora:                  var(--sdp-pedra-200);      /* 16,57:1 targeta · 13,66:1 subtil */
   --sdp-vora-control:          var(--sdp-blanc-pur);      /* 19,42:1 targeta · 21,00:1 app */
   --sdp-vora-forta:            var(--sdp-blanc-pur);      /* 19,42:1 targeta · 21,00:1 app */
-  --sdp-accent-text:           var(--sdp-primary-100);    /* 16,38:1 targeta · 13,58:1 subtil */
-  --sdp-accent-titol:          var(--sdp-primary-100);    /* 16,38:1 targeta · 13,58:1 subtil */
+  /* v1.2.22 · IDEA-328 (ordre del Mestre, 22-11-2026) · Cap color rentat als títols i subtítols de les targetes: el taronja
+     viu primary-400 per al text i els títols d'accent, i el blau viu secondary-300 per als títols blaus (secondary-400
+     quedava a 6,06:1 sobre el subtil i a 6,74:1 sobre l'elevat, per davall de l'AAA que demana contrast-aaa.mjs). */
+  --sdp-accent-text:           var(--sdp-primary-400);    /*  8,97:1 targeta ·  7,44:1 subtil · 9,70:1 app */
+  --sdp-accent-titol:          var(--sdp-primary-400);    /*  8,97:1 targeta ·  7,44:1 subtil · 9,70:1 app */
+  /* v1.2.22 · IDEA-328 · Les píndoles i l'avatar to-6 porten el text d'accent sobre este fons: amb el primary-900 del fosc
+     el taronja viu hi quedava a 5,43:1. Un tint taronja fosc (18 % del taronja de marca sobre negre, #2e1500) el porta a
+     7,93:1, i el text blanc a 17,16:1. */
+  --sdp-accent-subtil:         color-mix(in srgb, var(--sdp-primary-500) 18%, var(--sdp-negre-pur));
   --sdp-accent-text-hover:     var(--sdp-blanc-pur);      /* 19,42:1 · el hover augmenta el contrast */
   --sdp-accent-control:        var(--sdp-primary-900);    /* 11,74:1 amb --sdp-sobre-color blanc */
   --sdp-accent-control-hover:  var(--sdp-negre-pur);      /* 21,00:1 amb --sdp-sobre-color blanc */
-  --sdp-accio-text:            var(--sdp-secondary-200);  /* 14,26:1 targeta · 11,83:1 subtil */
+  --sdp-accio-text:            var(--sdp-secondary-300);  /* 11,18:1 targeta ·  9,27:1 subtil · 12,10:1 app */
   --sdp-accio-control:         var(--sdp-secondary-800);  /* 12,30:1 amb --sdp-sobre-accio */
   --sdp-accio-control-hover:   var(--sdp-secondary-900);  /* 15,52:1 amb --sdp-sobre-accio */
   --sdp-focus:                 var(--sdp-blanc-pur);
-}
-
-/* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · ≥ 10:1 AAA) ═════════
-   Preferència persistent d'1 sol toc (data-sdp-senior="true") per a gent gran
-   i baixa visió. Eleva tots els parells de text i controls d'acció primària a
-   un contrast mínim >= 10:1 tant en clar com en fosc sobre targeta, app i fons
-   subtil, conserva les ombres canòniques i desactiva l'escala de premut. */
-.sdp-root[data-sdp-senior="true"],
-:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]),
-:root[data-sdp-senior="true"] .sdp-root, :host([data-sdp-senior="true"]) .sdp-root {
-  --sdp-fons-subtil:         var(--sdp-pedra-150);     /* garanteix >= 10,33:1 també per a primary-900 */
-  --sdp-text-titol:          var(--sdp-pedra-900);     /* 19,42:1 blanc · 17,09:1 subtil */
-  --sdp-text-cos:            var(--sdp-pedra-850);     /* 17,91:1 blanc · 15,30:1 subtil */
-  --sdp-text-suau:           var(--sdp-pedra-750);     /* 13,54:1 blanc · 11,56:1 subtil (>= 10:1) */
-  --sdp-vora-control:        var(--sdp-pedra-800);
-  --sdp-accent:              var(--sdp-primary-900);   /* 11,74:1 amb blanc */
-  --sdp-accent-hover:        var(--sdp-pedra-900);
-  --sdp-sobre-accent:        var(--sdp-blanc-pur);
-  --sdp-accent-text:         var(--sdp-primary-900);   /* 11,74:1 blanc · 10,03:1 subtil */
-  --sdp-accent-titol:        var(--sdp-primary-900);
-  --sdp-accent-text-hover:   var(--sdp-pedra-900);
-  --sdp-accent-control:      var(--sdp-primary-900);
-  --sdp-accio-text:          var(--sdp-secondary-800); /* 12,63:1 blanc · 10,50:1 subtil */
-  --sdp-accio-control:       var(--sdp-secondary-800); /* 12,63:1 amb blanc */
-  --sdp-accio-control-hover: var(--sdp-secondary-900);
-  --sdp-sobre-accio:         var(--sdp-blanc-pur);
-  --sdp-escala-premut:       1;
-}
-
-:root[data-theme='dark'] .sdp-root[data-sdp-senior="true"],
-:root[data-theme='dark'][data-sdp-senior="true"], :host([data-theme='dark'][data-sdp-senior="true"]),
-:root[data-theme='dark'][data-sdp-senior="true"] .sdp-root, :host([data-theme='dark'][data-sdp-senior="true"]) .sdp-root {
-  --sdp-fons-subtil:         var(--sdp-pedra-750);
-  --sdp-text-titol:          var(--sdp-pedra-50);      /* 17,91:1 targeta · 13,54:1 subtil */
-  --sdp-text-cos:            var(--sdp-pedra-100);     /* 16,62:1 targeta · 12,55:1 subtil */
-  --sdp-text-suau:           var(--sdp-pedra-200);     /* 15,30:1 targeta · 11,56:1 subtil (>= 10:1) */
-  --sdp-vora-control:        var(--sdp-pedra-200);
-  --sdp-accent:              var(--sdp-primary-200);   /* 14,01:1 amb pedra-900 */
-  --sdp-accent-hover:        var(--sdp-primary-100);
-  --sdp-sobre-accent:        var(--sdp-pedra-900);
-  --sdp-accent-text:         var(--sdp-primary-100);   /* 15,13:1 targeta · 11,43:1 subtil */
-  --sdp-accent-titol:        var(--sdp-primary-100);
-  --sdp-accent-text-hover:   var(--sdp-pedra-50);
-  /* Gauntlet v1.2.13 · --sdp-accent-control s'hereta del bloc clar del Mode Sènior (primary-900, 11,74:1 amb el
-     text blanc): amb primary-200, el text blanc de .sp-card-calendar-badge hi quedava a 1,39:1. */
-  --sdp-accio-text:          var(--sdp-secondary-100); /* 15,49:1 targeta · 11,70:1 subtil */
 }
 
 /* Moviment reduït · les escales valen 1 i el desplaçament 0: ni el CSS ni

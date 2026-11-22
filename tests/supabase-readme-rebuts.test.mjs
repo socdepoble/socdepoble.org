@@ -47,8 +47,15 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   // R32.14 adds 20261119143000; R32.25 afig 20261121090000, encara NO aplicada.
   // Onada v1.2.13 · Les files 122–124 giren a «Aplicada» amb el rebut del Super-Bundle
   // R32.14 (19-11-2026); la resta de rebuts històrics es queden com eren, i l'empremta es torna a fixar.
-  assert.equal(taula.length, 126);
-  const historic = taula.filter(f => !['20261119143000', '20261121090000'].includes(f.versio));
+  // v1.2.22 · R32.42 (lots 02 i 03) afig 20261122160000, 20261122160200 i 20261122160300 (files 127 a 129),
+  // NO aplicades a Producció en esta versió: les 124 files històriques i la seua empremta no canvien.
+  assert.equal(taula.length, 129);
+  const R3242 = [
+    [127, '20261122160000', '20261122160000_r3242_ajuntament_acreditacio_institucional.sql'],
+    [128, '20261122160200', '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql'],
+    [129, '20261122160300', '20261122160300_r32_42_mur_visibilitat_publica.sql']
+  ];
+  const historic = taula.filter(f => !['20261119143000', '20261121090000', ...R3242.map(([, versio]) => versio)].includes(f.versio));
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
     'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
@@ -59,6 +66,12 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   assert.equal(fila('20261121090000').fitxer, '20261121090000_r32_25_push_directes_i_bandols.sql');
   assert.equal(declarat.get('20261121090000'), 'declarada_no_aplicada');
   assert.match(fila('20261121090000').estat, /NO aplicada/);
+  for (const [ordre, versio, fitxer] of R3242) {
+    assert.equal(fila(versio).ordre, ordre, versio);
+    assert.equal(fila(versio).fitxer, fitxer, versio);
+    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
+    assert.match(fila(versio).estat, /NO aplicada/, versio);
+  }
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
 });

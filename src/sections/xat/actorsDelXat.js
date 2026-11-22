@@ -39,7 +39,8 @@
  *     amb el mateix nom fins a la hidratació;
  *   · Javi Llinares · la seua fila sintètica, el seu xat de només lectura
  *     (fake-javi) o un directe real amb ell (jaTeElXat);
- *   · Gent de la Torre · la fila del poble (anteposaPoble, `delPoble`);
+ *   · Gent de la Torre · la fila del poble (anteposaPoble, `delPoble`); IDEA-323.1
+ *     (v1.2.22): el Foraster sense amfitrió no en porta cap i no ocupa cap lloc;
  *   · la IAIA · la seua fila sintètica, la de mostra (fake-iaia), el seu fil
  *     o un directe amb ella; si no n'hi ha cap, el xat públic de /iaia (on
  *     porta la fila en remot).

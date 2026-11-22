@@ -79,14 +79,18 @@ describe('Onada R32.15 · Lot 03 · Coherència Editorial Viva en 5 llengües (L
     },
   );
 
-  test('Llei 35 · EspecimenPanell inclou l’espècimen visual de Mode Sènior / Lectura Gran al catàleg diferit de /disseny', () => {
+  /* v1.2.22 · Gauntlet R1 (L3-05) · Un sol «Mode Bancal · Sol i Lletra Gran»: el segon interruptor, mort, ja no hi és.
+     S'actualitza a posta (abans, l'espècimen «Mode Sènior / Lectura Gran»). */
+  test('Llei 35 · EspecimenPanell porta un sol interruptor, el del Mode Bancal · Sol i Lletra Gran, al catàleg diferit de /disseny', () => {
     render(
       <MemoryRouter>
         <EspecimenPanell />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: 'Mode Sènior / Lectura Gran' })).toBeTruthy();
-    const sw = screen.getByRole('switch', { name: 'Activar el Mode Sènior (Lectura Gran)' });
-    expect(sw.disabled).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Mode Bancal · Sol i Lletra Gran' })).toBeTruthy();
+    expect(screen.getByRole('switch', { name: 'Mode Bancal · Sol i Lletra Gran' }).disabled).toBe(true);
+    expect(screen.queryByRole('switch', { name: 'Activar el Mode Sènior (Lectura Gran)' })).toBeNull();
+    expect(screen.getAllByRole('switch')).toHaveLength(1);
+    expect(document.body.textContent).not.toContain('preferència de lectura gran');
   });
 });

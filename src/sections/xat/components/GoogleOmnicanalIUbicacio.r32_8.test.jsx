@@ -178,7 +178,7 @@ describe('R32.8 · Lot 01 + Lot 02 · Google Omnicanal, Geolocalització per Def
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  test('Lot 02 · Bombolla pinta «Veure al mapa» clicable (no enfocable en triable), Conversa tanca avisFil amb ✕ i BotoIdentitatActiva mesura 36px visuals', () => {
+  test('Lot 02 · Bombolla pinta «Veure al mapa» clicable (no enfocable en triable), Conversa tanca avisFil amb ✕ i BotoIdentitatActiva mesura 38px visuals (36px per davall de 360 px)', () => {
     const t = createTranslator('ca');
     const missatgeUbicat = {
       id: 'm-safareig',
@@ -259,7 +259,10 @@ describe('R32.8 · Lot 01 + Lot 02 · Google Omnicanal, Geolocalització per Def
 
     cleanup();
 
-    // Cercle SB 36px (2.25rem) dins de diana --sdp-touch a header.bar-black
+    // Cercle SB dins de diana --sdp-touch a header.bar-black. IDEA-326 (v1.2.22): el Mestre demana l'avatar proporcional
+    // a les icones més grans; passa de 36px (2.25rem) a 38px, igual que el cercle blau de la IAIA (inset 5px sobre 48).
+    // Gauntlet R2 (M1-07): en píxels fixos i no en rem, que dins de WordPress depén de l'arrel de l'amfitrió; per davall
+    // de 360 px, tots dos baixen a 36px (utilities.css, @container i la xarxa @media).
     render(
       <header className="bar-black">
         <div className="right-icons">
@@ -269,6 +272,8 @@ describe('R32.8 · Lot 01 + Lot 02 · Google Omnicanal, Geolocalització per Def
     );
     expect(screen.getByRole('button', { name: 'El teu perfil: Sofía Bornay' }).textContent).toBe('SB');
     const modulesCss = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
-    expect(modulesCss).toMatch(/\.sdp-top-bar-avatar\s+\.sdp-avatar\s*\{[^}]*width:\s*2\.25rem;\s*height:\s*2\.25rem;/);
+    expect(modulesCss).toMatch(/\.sdp-top-bar-avatar\s+\.sdp-avatar\s*\{[^}]*width:\s*38px;\s*height:\s*38px;/);
+    const utilitiesCss = readFileSync(resolve(process.cwd(), 'src/css/utilities.css'), 'utf8');
+    expect(utilitiesCss.match(/\.sdp-top-bar-avatar \.sdp-avatar \{ width: 36px; height: 36px; \}/g)).toHaveLength(2);
   });
 });

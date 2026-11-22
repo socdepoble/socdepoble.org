@@ -385,7 +385,11 @@ header.bar-black {
    massís) que va i ve en 8 segons. Inactiva, ni fons ni moviment: la classe
    no hi és. El botó la rep des de TopBar (App.jsx) segons el nivell del
    Selector de Realitat. Este bloc substituïx un `.iaia-icon` que cap
-   element portava (el SVG du `sdp-iaia-icon`, icones.jsx). */
+   element portava (el SVG du `sdp-iaia-icon`, icones.jsx).
+   v1.2.22 · IDEA-326 i Gauntlet R2 (M1-01) · A la barra negra, utilities.css
+   para esta animació del botó (animation: none) i el cercle blau (::before)
+   respira amb un halo propi que no toca el fons (sdp-iaia-resplendor-cercle).
+   Este keyframe es queda per a .sdp-realitat__iaia--activa (modules.css). */
 @keyframes sdp-iaia-resplendor {
   0% { background-color: transparent; }
   50% { background-color: var(--sdp-accent-vel); }
@@ -812,11 +816,14 @@ nav.mobile-nav { display: none; }
      (modules.css) llevava el marge dret i el logotip tocava la vora. El marge
      de la regla de dalt torna a valdre també a la dreta. */
   :where(.sdp-root.is-compact) .brand.sdp-unstyled-btn { padding-inline-end: var(--sdp-space-4); }
-  /* O4-CLAUDE-1b · B1b-01 · El calaix del menú compacte ja naix davall de la
-     barra negra i de la zona segura (--sdp-calaix-dalt, components.css): la
-     seua marca no torna a sumar la zona segura de dalt. L'!important, com el
-     de .brand, i més específic per a guanyar-li dins de la mateixa capa. */
-  :where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand { height: var(--sdp-alt-negra); padding-top: 0 !important; }
+  /* IDEA-329 (ordre del Mestre, 22-11-2026, 22:40) · El calaix compacte naix davall de la barra
+     negra (--sdp-calaix-dalt, components.css), que ja porta el logotip (.mobile-logo-wrapper): la
+     marca del calaix pintava un segon logotip apilat. App.jsx (SidebarContent) i BarraApp.jsx ja no
+     la pinten en compacte; esta regla n'és la segona barrera, i la fila de CONTROL queda al cim del
+     calaix (calaixControl.zonaSegura.capes.test.jsx: la llista guanya --sdp-alt-negra, 64 px).
+     Un sol logotip visible a la closca: unLogotipALaClosca.idea329.test.jsx i la sonda CDP.
+     Substituïx la regla O4-CLAUDE-1b · B1b-01, que només llevava a la marca la zona segura de dalt. */
+  :where(.sdp-root.is-compact) .sdp-dialeg-sidebar .brand { display: none; }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
 @container sdp-arrel (max-width: 720px) {
@@ -881,7 +888,8 @@ nav.mobile-nav { display: none; }
      tireta). Ara: alçada fixa de var(--sdp-space-8) (32px) i amplària
      automàtica (300×78 → 123×32), les icones no s'encongixen i, si la
      pantalla és més estreta que 375px, el logotip baixa d'escala sencer
-     (max-width) sense perdre mai la proporció. */
+     (max-width) sense perdre mai la proporció.
+     v1.2.22 · IDEA-323.2 · El sostre és ara de 38 px (davall); la resta de la nota és la del seu dia. */
   .mobile-logo-wrapper {
     flex: 1 1 auto;
     min-width: 0;
@@ -890,19 +898,28 @@ nav.mobile-nav { display: none; }
     padding: 0 0 0 var(--sdp-space-4) !important;
     justify-content: flex-start;
   }
+  /* IDEA-323.2 (v1.2.22, ordre del Mestre del 261122) · Sense el selector
+     d'idioma (R32.4) hi ha espai fins al xip de la IAIA: el sostre del logotip
+     puja de 26 a 38 px, dins de la cel·la tàctil i de --sdp-alt-negra. En
+     pantalla estreta el limita l'amplària (max-width) i baixa sencer. */
   .mobile-logo-wrapper img {
     width: auto;
     height: auto;
-    max-height: 26px;
+    max-height: 38px;
     max-width: 100%;
     object-fit: contain;
   }
   header.bar-black .right-icons { flex: none; }
-  header.bar-black .right-icons { gap: 0; margin-left: auto; }
+  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. Sense ell, la
+     cel·la del logotip (flex: 1 1 auto) s'emportava tot l'espai lliure i, a 320 i 360 px, el tocava (0 px); margin-left:
+     auto no hi feia res. A 320 px el logotip baixa a uns 112 × 29 px (sonda CDP r2b), l'amplària que queda. */
+  header.bar-black .right-icons { gap: 0; margin-inline-start: var(--sdp-space-2); }
   /* Q2 (pla 261004_0050) · la cel·la tàctil és el token, no un 44 a mà. */
   header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
-  header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
+  /* v1.2.22 · IDEA-326 (ajust en calent del Mestre) · Les quatre icones, més grans en mòbil: 26 px (abans 22) i traç de
+     2.2. La de la IAIA, dins del seu cercle blau, la mana utilities.css (@layer utilities guanya este @layer legacy). */
+  header.bar-black .right-icons svg { width: 26px; height: 26px; stroke-width: 2.2; }
 
   /* Barra Blava · en pantalla estreta el coixí baixa a 8px i els packs (T20)
      s'acosten a 8px. Els passos fins per amplària de la BARRA viuen a
@@ -931,7 +948,8 @@ nav.mobile-nav { display: none; }
      tireta). Ara: alçada fixa de var(--sdp-space-8) (32px) i amplària
      automàtica (300×78 → 123×32), les icones no s'encongixen i, si la
      pantalla és més estreta que 375px, el logotip baixa d'escala sencer
-     (max-width) sense perdre mai la proporció. */
+     (max-width) sense perdre mai la proporció.
+     v1.2.22 · IDEA-323.2 · El sostre és ara de 38 px (davall); la resta de la nota és la del seu dia. */
   .mobile-logo-wrapper {
     flex: 1 1 auto;
     min-width: 0;
@@ -940,18 +958,27 @@ nav.mobile-nav { display: none; }
     padding: 0 0 0 var(--sdp-space-4) !important;
     justify-content: flex-start;
   }
+  /* IDEA-323.2 (v1.2.22, ordre del Mestre del 261122) · Sense el selector
+     d'idioma (R32.4) hi ha espai fins al xip de la IAIA: el sostre del logotip
+     puja de 26 a 38 px, dins de la cel·la tàctil i de --sdp-alt-negra. En
+     pantalla estreta el limita l'amplària (max-width) i baixa sencer. */
   .mobile-logo-wrapper img {
     width: auto;
     height: auto;
-    max-height: 26px;
+    max-height: 38px;
     max-width: 100%;
     object-fit: contain;
   }
   header.bar-black .right-icons { flex: none; }
-  header.bar-black .right-icons { gap: 0; margin-left: auto; }
+  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. Sense ell, la
+     cel·la del logotip (flex: 1 1 auto) s'emportava tot l'espai lliure i, a 320 i 360 px, el tocava (0 px); margin-left:
+     auto no hi feia res. A 320 px el logotip baixa a uns 112 × 29 px (sonda CDP r2b), l'amplària que queda. */
+  header.bar-black .right-icons { gap: 0; margin-inline-start: var(--sdp-space-2); }
   header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
-  header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
+  /* v1.2.22 · IDEA-326 (ajust en calent del Mestre) · Les quatre icones, més grans en mòbil: 26 px (abans 22) i traç de
+     2.2. La de la IAIA, dins del seu cercle blau, la mana utilities.css (@layer utilities guanya este @layer legacy). */
+  header.bar-black .right-icons svg { width: 26px; height: 26px; stroke-width: 2.2; }
 
   /* Barra Blava · en pantalla estreta el coixí baixa a 8px i els packs (T20)
      s'acosten a 8px. Els passos fins per amplària de la BARRA viuen a
@@ -975,10 +1002,11 @@ nav.mobile-nav { display: none; }
 }
 
 /* R21 (P0-76 / P0-77) · Sostre ultra-estret (≤ 359 px, p. ex. 280 px):
-   les cinc dianes de la dreta baixen al mínim tàctil de la casa
-   (--sdp-touch-min, 44 px: 5 × 44 = 220 px) i el coixí lateral de la barra
+   les dianes de la dreta es queden al mínim tàctil de la casa
+   (--sdp-touch-min, que val 48 px a design-tokens.css, el mateix que
+   --sdp-touch; Gauntlet R2 de la v1.2.22) i el coixí lateral de la barra
    negra baixa a 4 px (--sdp-space-1): el botó del logotip (Obrir menú)
-   conserva com a mínim 44 px d'ample (52 px a 280 px) sense cap desbordament. */
+   conserva com a mínim --sdp-touch-min d'ample sense cap desbordament. */
 @container sdp-arrel (max-width: 359px) {
   header.bar-black { padding-inline: var(--sdp-space-1); }
   .mobile-logo-wrapper {

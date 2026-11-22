@@ -15,7 +15,39 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js, dades/atles2dDades.js, detalls/atles2dComu.jsx,
+ * Darrera posada al dia: dades/atles2dDades.js, manifest.js, detalls/atles2dComu.jsx i
+ * detalls/EspecimenAtles2dPobleVirtual.jsx, 2026-11-22T22:44:34+01:00, v1.2.22 · Gauntlet R2 (M4-03, M4-05, M4-06 i
+ * M4-07): l'evidència de DOL-31 cita el bloc «MODE BANCAL» de tokens.css pel nom, i no el tram 810-817, que el mateix
+ * canvi ha donat al Mode Sènior; la fila de rutes_reals de l'Ajuntament separa la línia de 8749aa810 (App.jsx:1348) de
+ * la Route d'ara, citada pel seu path, i la nota de la seua cel·la de rutes diu que navigation.js:450 és de 8749aa810;
+ * el pas 4 del Motor promet la intenció i les objeccions reals només si s'ha fet el contrast humà (la Fase 2,
+ * opcional), sempre separades de la lectura simulada; la xifra de la Presentació compta els perfils simulats en les
+ * rondes que en tenen (num_perfils > 0), com el Motor, i nomena la V2, que no en té cap; el Poble virtual titula «Els
+ * 15 perfils simulats de veïns» i diu «Tria un perfil»; i l'entradeta i la cerca del Panell de Disseny al manifest
+ * descriuen el sol interruptor del «Mode Bancal · Sol i Lletra Gran» (el del xip i dels Ajustos, amb dianes d'acció de
+ * 56 px com a mínim) i els tres graons d'ombra, amb el botó per a tornar a l'ombra de sempre, en lloc del contrast, les
+ * ombres i la lletra Noto Sans per separat i de «restablir els valors».
+ * Versió anterior: manifest.js, dades/atles2dDades.js, detalls/EspecimenPanell.jsx,
+ * detalls/EspecimenAtles2dPresentacio.jsx, detalls/EspecimenAtles2dPobleVirtual.jsx i
+ * detalls/EspecimenAtles2dMotorEstudis.jsx, 2026-11-22T21:06:53+01:00, v1.2.22 · Gauntlet R1 (L3-01, L2-01, L3-05,
+ * L2-02, L3-03, L3-04, L3-06, L3-07 i L4-08): el Panell de Disseny porta un sol interruptor, «Mode Bancal · Sol i
+ * Lletra Gran», que diu el mode com el xip i no esborra la tria «Segons el sistema» (fora el segon interruptor
+ * «Mode Sènior / Lectura Gran», mort dins de l'app); l'entradeta i la cerca del Motor al manifest diuen les
+ * decisions del Mestre; la capçalera de les dades i meta.fonts.mercat declaren que el bloc mercat es reescriu amb
+ * D-ATLES-MOTOR; la nota de DOL-31 torna la reserva sobre la mesura del 39 % i del 64 % (d'abans de la costura de
+ * R32.41) i diu que la capçalera no canvia; «On encaixaria» obri l'entrada també al perfil de l'Usuari; la
+ * Presentació i el Poble virtual diuen «perfils simulats», amb una nota per a les «veus» de les cites de les
+ * rondes; i les tres frases de l'Ajuntament diuen en passat que /ajuntament/:id no tenia cap emissor i qui l'emet
+ * des de la v1.2.22. Arreplega també els canvis de les 19:27:02 a dades/atles2dDades.js i detalls/atles2dComu.jsx
+ * (Gauntlet R1, L3-08): meta.posat_al_dia és una llista de passades, DOL-31 es tanca amb IDEA-323.4 a la passada de la
+ * v1.2.22 i NotaDatacio pinta una frase per passada. A les 21:06:53, la nota de la cel·la de rutes de l'Ajuntament diu que
+ * seed.sql no porta cap city_hall, que a Producció no s'ha comprovat i que la migració que en sembra no s'ha aplicat.
+ * Versió anterior: dades/atles2dDades.js, detalls/atles2dComu.jsx i detalls/EspecimenAtles2dMotorEstudis.jsx,
+ * 2026-11-22T19:22:33+01:00, v1.2.22 · D-ATLES-MOTOR (decisions del Mestre del 22-11-2026, pla 261122_1502 §2.1): el Motor
+ * d'estudis diu les cinc decisions en lloc de les preguntes (qualsevol persona, cap «llum verda» ni mínim de veïns, el
+ * contrast humà opcional i voluntari, l'informe privat amb l'opció de compartir-lo, i els perfils simulats al Node 0 a
+ * 0 €), «perfils simulats» en lloc de «veus sintètiques» i la maqueta sense semàfor.
+ * Versió anterior: manifest.js, dades/atles2dDades.js, detalls/atles2dComu.jsx,
  * detalls/EspecimenAtles2dPresentacio.jsx, detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx,
  * detalls/EspecimenAtles2dMapaEntitats.jsx, detalls/EspecimenAtles2dMotorEstudis.jsx i detalls/EspecimenInventariGlobal.jsx,
  * 2026-11-22T17:10:02+01:00, v1.2.21 · IDEA-319 (ordre del Mestre del 22-11-2026, captura 261122_1412): seccions en h3 i
@@ -437,4 +469,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-22T17:10:02+01:00';
+export const VERSIO_CATALEG = '2026-11-22T22:44:34+01:00';

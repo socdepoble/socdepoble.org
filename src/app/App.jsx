@@ -198,7 +198,6 @@ const NOMS_CLOSCA = Object.freeze({
   panell: Object.freeze(['nav.panellAria', 'Panell de control']),
   desplegaBarra: Object.freeze(['nav.desplegaBarra', 'Desplegar barra lateral']),
   plegaBarra: Object.freeze(['nav.plegaBarra', 'Plegar barra lateral']),
-  tancaMenu: Object.freeze(['nav.tancaMenu', 'Tancar menú']),
   seccions: Object.freeze(['nav.seccions', 'Seccions']),
   sistema: Object.freeze(['nav.sistema', 'Sistema']),
   idioma: Object.freeze(['nav.idioma', 'Idioma']),
@@ -261,9 +260,15 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
 
   return (
     <>
-        <button type="button" className="brand sdp-unstyled-btn" aria-label={nom(NOMS_CLOSCA.obrirTancarMenu)} aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-          <BrandMark />
-        </button>
+        {/* IDEA-329 (ordre del Mestre, 22-11-2026, 22:40) · En compacte el calaix naix davall de
+            header.bar-black, que ja porta el logotip (.mobile-logo-wrapper): una segona marca ací
+            en pintava dos d'apilats. Un sol logotip visible a la closca, sempre; la fila de CONTROL
+            passa al cim del calaix. Ho vigilen unLogotipALaClosca.idea329.test.jsx i la sonda CDP. */}
+        {isCompact ? null : (
+          <button type="button" className="brand sdp-unstyled-btn" aria-label={nom(NOMS_CLOSCA.obrirTancarMenu)} aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+            <BrandMark />
+          </button>
+        )}
 
         {/* Rètol curt (Mestre, 260926): «PANELL DE CONTROL» era la fila més ampla
             i fixava la barra al topall de 260px. El nom accessible conserva el sencer. */}
@@ -273,7 +278,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
           className="sidebar-control-btn"
           aria-label={nom(NOMS_CLOSCA.panell)}
           aria-current={controlActiu ? 'page' : undefined}
-          onClick={() => navigate('/control')}
+          onClick={() => { if (isCompact) toggleSidebar(); navigate('/control'); }}
         >
           <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
           <span className="nav-item__text">CONTROL</span>
@@ -281,14 +286,20 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
         {/* T24 (Mestre, 260927 nit): plegada, la cel·la de dalt del rail no
             ensenya una fletxa sinó la roda de CONTROL, la mateixa del botó
             que amaga (layout.css: .sidebar-closed .sidebar-control-btn):
-            així es llig que eixe botó obri la barra de control. */}
-        <button type="button" className="sidebar-rail-toggle"
-          aria-label={nom(isDesktopSidebarClosed ? NOMS_CLOSCA.desplegaBarra : (isCompact ? NOMS_CLOSCA.tancaMenu : NOMS_CLOSCA.plegaBarra))}
-          aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-          {!isCompact && isDesktopSidebarClosed
-            ? <Settings className="icona-linia" strokeWidth={2.1} aria-hidden="true" focusable="false" />
-            : <PanelLeftClose size={24} />}
-        </button>
+            així es llig que eixe botó obri la barra de control.
+            IDEA-330 (Llei d'Icona Operativa, ordre del Mestre, 22-11-2026, 22:48): només en
+            pantalla gran, on plega el rail de 56 px. En compacte no hi ha rail: el calaix es tanca
+            triant una entrada (també CONTROL, que tanca abans de navegar), amb Escape o tocant
+            fora, com a BarraApp.jsx. */}
+        {isCompact ? null : (
+          <button type="button" className="sidebar-rail-toggle"
+            aria-label={nom(isDesktopSidebarClosed ? NOMS_CLOSCA.desplegaBarra : NOMS_CLOSCA.plegaBarra)}
+            aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+            {isDesktopSidebarClosed
+              ? <Settings className="icona-linia" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+              : <PanelLeftClose size={24} />}
+          </button>
+        )}
         </div>
 
         {/* Sense peu: la llista sencera fa scroll (layout.css § SIDEBAR · SCROLL).
@@ -925,8 +936,10 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
           aria-label={t('nav.iaiaFitxa', 'IAIA MarIA')}
           title={t('nav.iaiaFitxaTitol', 'IAIA MarIA · Assistent digital de Sóc de Poble')}
         >
+          {/* v1.2.22 · IDEA-326 (ajust en calent del Mestre, 22-11-2026 20:51) · Fora el rètol «IAIA»: no competix amb la
+              marca Sóc de Poble. El botó és un cercle blau amb la icona gran (utilities.css); el nom accessible
+              (aria-label «IAIA MarIA») i el title traduït en cinc llengües es queden. */}
           <IaiaIcon aria-hidden="true" focusable="false" />
-          <span className="sdp-top-bar-btn__rotul" aria-hidden="true">{t('nav.iaiaCurt', 'IAIA')}</span>
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />

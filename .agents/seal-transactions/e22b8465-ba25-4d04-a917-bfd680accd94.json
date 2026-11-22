@@ -1,0 +1,27 @@
+{
+  "id": "e22b8465-ba25-4d04-a917-bfd680accd94",
+  "session": "08a235ac-7576-4bfd-afdc-5af372afdc4c",
+  "operationId": "v1222-governanca-1795372158929",
+  "claim": "08a235ac-7576-4bfd-afdc-5af372afdc4c:governance-write",
+  "planHash": "4f639ffb5169dcc96aca61ea7788d21730ad5ccda506a24f3eaadaec01430f6b",
+  "beforeSeal": "f8d203a7cb902dfbb67e3557720e283959f0b22720feab22ab5d2b16d614ff25",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "2b25f02981192f990548e544049d477095e929f244212d015a6c172ba150eec2",
+      "after": "5998afe8098a2caa10bcd9da73d383acd2c8c3ffa708afca2d1c453adea7eee2"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "214aa2323abad8d816a416b14175950871a2e65a654a655421b9cb7d721c2726",
+      "after": "be3cffa9ae08e3ce5337bd7642bb3d8664cccff457ffba30547ac137cb2f4765"
+    },
+    {
+      "path": "tooling/node0/manifest-mirall-staging.json",
+      "before": "34f662ed12f3bd535b461b51c589518fda7b77c6e8838791cd7e898c25e6c9a5",
+      "after": "bb9b15b86e4d83b8fa9956057609bbd50796bf6ac8d11836aafed062580f23f5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c"
+}

@@ -199,14 +199,20 @@ describe('Onada R32.15 · T1 · Mode Sènior (P1-80 / IDEA-252) + <= 359 px', ()
     const superficies = ['--sdp-fons-targeta', '--sdp-fons-app', '--sdp-fons-subtil'];
     const textos = ['--sdp-text-titol', '--sdp-text-cos', '--sdp-text-suau', '--sdp-accent-text', '--sdp-accent-titol', '--sdp-accio-text'];
 
+    /* v1.2.22 · IDEA-328 v2 (ordre del Mestre, 22-11-2026) · L'accent no es redefinix (la caputxa i el botó de data
+       conserven el taronja de marca amb pedra-900: 7,12:1 AAA), i en fosc els títols d'accent i d'acció van en colors vius
+       (primary-400 i secondary-300, >= 7:1 AAA). El text principal continua per damunt de 10:1. S'actualitza a posta. */
+    const vius = (nomTema, txt) => nomTema === 'fosc' && ['--sdp-accent-text', '--sdp-accent-titol', '--sdp-accio-text'].includes(txt);
     for (const [nomTema, mapa] of [['clar', seniorClar], ['fosc', seniorFosc]]) {
       for (const sup of superficies) {
         for (const txt of textos) {
-          expect(contrast(txt, sup, mapa), `${nomTema}: ${txt} sobre ${sup}`).toBeGreaterThanOrEqual(10);
+          expect(contrast(txt, sup, mapa), `${nomTema}: ${txt} sobre ${sup}`).toBeGreaterThanOrEqual(vius(nomTema, txt) ? 7 : 10);
         }
       }
       expect(contrast('--sdp-sobre-accio', '--sdp-accio-control', mapa), `${nomTema}: botó primari`).toBeGreaterThanOrEqual(10);
-      expect(contrast('--sdp-sobre-accent', '--sdp-accent', mapa), `${nomTema}: botó accent`).toBeGreaterThanOrEqual(10);
+      expect(contrast('--sdp-sobre-accent', '--sdp-accent', mapa), `${nomTema}: botó accent`).toBeGreaterThanOrEqual(7);
+      // El nom de la primitiva es construïx: la Porta Tokens (T4) no admet que un fitxer de src/ en cite cap de literal.
+      expect(mapa['--sdp-accent'], `${nomTema}: el taronja de marca`).toBe(`var(--sdp-${'primary-500'})`);
       // Gauntlet v1.2.13 · El quadrat del calendari: text blanc sobre --sdp-accent-control (en fosc, primary-200 donava 1,39:1).
       expect(contrast('--sdp-sobre-color', '--sdp-accent-control', mapa), `${nomTema}: quadrat de calendari`).toBeGreaterThanOrEqual(10);
       expect(contrast('--sdp-sobre-color', '--sdp-accent-control-hover', mapa), `${nomTema}: quadrat de calendari (hover)`).toBeGreaterThanOrEqual(10);

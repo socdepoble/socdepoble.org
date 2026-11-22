@@ -413,7 +413,12 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
      socdepoble.org: res no canvia.
      Gauntlet 261016 (Bloc 3.6) · La FILA, però, és sempre: sense amfitrió,
      la de «Gent de la Torre» (pobleDelXat, POBLE_PER_DEFECTE). `poble`
-     continua sent el declarat, l'únic que obri sol la seua fitxa. */
+     continua sent el declarat, l'únic que obri sol la seua fitxa.
+     IDEA-323.1 (v1.2.22) · Amb sessió. Sense sessió, la mostra del Foraster
+     (FakeChatOnboarding, pobleDelForaster) no porta cap poble sense amfitrió,
+     i la llista té els tres actors del projecte; el ?sobre=poble: de la
+     pàgina del poble porta a /registre i, amb sessió, el xat de veres n'obri
+     la comunitat (efecte ?sobre=, més avall). */
   const poble = usePobleAmfitrio();
   const pobleDeLaLlista = pobleDelXat(poble);
   /* Onada 3 (P2, revisió) · La cara del poble de l'amfitrió, la de la seua
@@ -2449,10 +2454,13 @@ function FitxaDeLaClosca({ onObriFil, ...resta }) {
      en normal, el basc baixa també a 375 i 390 px (hi cap des d'uns 412 px), i en Sènior baixa a
      totes les amplàries, perquè la fila es topa a 384 px (--sdp-targeta-viva-ample) i la lletra
      Sènior, fluida, en demana com a mínim 3 px més. */
+/* IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · Fora el segon rètol «Benvinguda a Sóc de
+   Poble» damunt dels botons: la benvinguda ja és dalt, a la targeta d'acollida del Foraster
+   (AcollidaForasterXat). La clau section.xat.sessio.calEntrar continua als diccionaris per a
+   DialegNovaConversa. */
 function AccesAlXat({ t, tornar, navigate }) {
   return (
     <div className="sdp-alerta sdp-xat-acces">
-      <p>{t('section.xat.sessio.calEntrar', 'Benvinguda a Sóc de Poble')}</p>
       <div className="sdp-alerta__accions">
         {esAppNativa() ? null : (
           <button type="button" className="sdp-xat-pindola sdp-xat-acces__descarrega" onClick={() => navigate('/descarregues')}>

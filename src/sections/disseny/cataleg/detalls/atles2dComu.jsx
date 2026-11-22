@@ -92,16 +92,25 @@ export function dataDeVerificacio(text) {
   return `${dia.padStart(2, '0')}-${MESOS_EN[mes]}-${any} a les ${hora} (${zona})`;
 }
 
-/** Els dolors repassats després de la fotografia (meta.posat_al_dia), en una frase: «DOL-04, DOL-13 i DOL-29». */
+/** v1.2.22 · Les passades de posada al dia (meta.posat_al_dia): una llista de { data, versio, dolors }, la més vella
+    primer. Una passada sola (l'objecte de la v1.2.21) també val. Cada dolor és a la darrera passada que l'ha repassat. */
+export const passadesAlDia = (meta = ATLES.meta) => {
+  const posat = meta?.posat_al_dia;
+  return (Array.isArray(posat) ? posat : posat ? [posat] : []).filter((passada) => Array.isArray(passada?.dolors) && passada.dolors.length);
+};
+
+const llistaDeDolors = (ids) => new Intl.ListFormat('ca', { type: 'conjunction' }).format(ids);
+
+/** Els dolors repassats després de la fotografia (totes les passades), en una frase: «DOL-04, DOL-13 i DOL-29». */
 export function dolorsPosatsAlDia(meta = ATLES.meta) {
-  const ids = Array.isArray(meta?.posat_al_dia?.dolors) ? meta.posat_al_dia.dolors : [];
-  return ids.length ? new Intl.ListFormat('ca', { type: 'conjunction' }).format(ids) : '';
+  const ids = passadesAlDia(meta).flatMap((passada) => passada.dolors);
+  return ids.length ? llistaDeDolors(ids) : '';
 }
 
 /** L'avís de datació: de quin dia i de quina versió del codi són les dades, a dalt de la pàgina.
     v1.2.21 · Si algú ha posat al dia uns dolors després (meta.posat_al_dia), l'avís diu quins, quan i contra quina versió. */
 export function NotaDatacio({ meta = ATLES.meta }) {
-  const posat = meta?.posat_al_dia;
+  const passades = passadesAlDia(meta);
   const repassats = dolorsPosatsAlDia(meta);
   return (
     <p className="sdp-atles__datacio">
@@ -110,7 +119,12 @@ export function NotaDatacio({ meta = ATLES.meta }) {
         <strong>Fotografia del {dataLlegible(meta?.generat)}</strong>, contra el codi {meta?.versio_codi}. Els estats, les
         xifres i les evidències <code>fitxer:línia</code> són els d’eixe dia{repassats ? ', llevat dels dolors que es diuen tot seguit' : ''}: el
         que haja canviat després no es veu ací fins que algú pose al dia les dades.
-        {repassats ? <> Els dolors {repassats} es van repassar el {dataLlegible(posat.data)} contra la {posat.versio}.</> : null}
+        {passades.map((passada) => (
+          <span key={passada.versio}>
+            {' '}{passada.dolors.length > 1 ? 'Els dolors' : 'El dolor'} {llistaDeDolors(passada.dolors)}{' '}
+            {passada.dolors.length > 1 ? 'es van repassar' : 'es va repassar'} el {dataLlegible(passada.data)} contra la {passada.versio}.
+          </span>
+        ))}
       </span>
     </p>
   );
@@ -214,11 +228,19 @@ export function xifresGlobals(atles = ATLES) {
   const totalCelles = celles(atles.entitats).length;
   const orkut = atles.xarxes.find((xarxa) => String(xarxa.id).startsWith('orkut'));
   const antiModels = atles.xarxes.filter((xarxa) => xarxa.afinitat_sdp_sobre_10 < 5);
+  /* v1.2.22 · Gauntlet R2 (M4-06) · La xifra comptava les sis rondes com si totes tingueren perfils, i el detall les
+     nomenava a mà («les places #01–#04, la Fase 5 i l’arnés v2»). La V2 (l’arnés v2) no en té cap: ara compta només
+     les rondes amb perfils (num_perfils > 0), com el Motor des de L4R2-08, i nomena les que no en tenen. */
+  const rondes = atles.placa.rondes || [];
+  const ambPerfils = rondes.filter((ronda) => ronda.num_perfils > 0);
+  const sensePerfils = rondes.filter((ronda) => !(ronda.num_perfils > 0));
+  const idsDeRondes = (grup) => new Intl.ListFormat('ca', { type: 'conjunction' }).format(grup.map((ronda) => ronda.id));
   return [
     { id: 'dolors', pagina: 'atles-2d-poble-virtual', n: String(dolors.length), t: 'dolors del poble virtual',
       d: `${perEstat.resolt || 0} resolts · ${perEstat.en_kit || 0} en kit · ${perEstat.decisio_mestre || 0} per decidir · ${perEstat.obert || 0} oberts` },
-    { id: 'veus', pagina: 'atles-2d-poble-virtual', n: String(atles.placa.perfils.length), t: `veus sintètiques en ${atles.placa.rondes.length} rondes`,
-      d: `de ${atles.placa.rondes[0]?.id} a ${atles.placa.rondes[atles.placa.rondes.length - 1]?.id}: les places #01–#04, la Fase 5 i l’arnés v2` },
+    { id: 'veus', pagina: 'atles-2d-poble-virtual', n: String(atles.placa.perfils.length),
+      t: `perfils simulats en ${ambPerfils.length} ${ambPerfils.length === 1 ? 'ronda' : 'rondes'}`,
+      d: `${idsDeRondes(ambPerfils)}${sensePerfils.length ? `; ${idsDeRondes(sensePerfils)}, sense cap perfil` : ''}` },
     { id: 'xarxes', pagina: 'atles-2d-xarxes-mon', n: String(atles.xarxes.length), t: 'xarxes per a pobles estudiades',
       d: `Orkut, ${nota(orkut?.afinitat_sdp_sobre_10)} / 10; ${antiModels.map((xarxa) => `${xarxa.nom.split(' ')[0]}, ${nota(xarxa.afinitat_sdp_sobre_10)}`).join(' i ')}: l’anti-model` },
     { id: 'celles', pagina: 'atles-2d-mapa-entitats', n: `${resum.fet} / ${totalCelles}`, t: 'cel·les fetes al mapa',

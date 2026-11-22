@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { MOCK_TOWNS } from '../pobles/townsSeed.js';
 import {
   POBLE_PER_DEFECTE, anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, generalDeComunitat,
-  objecteDelPoble, pobleDeConfig, pobleDelXat, rutaSobreDelPoble
+  objecteDelPoble, pobleDeConfig, pobleDelForaster, pobleDelXat, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
 import { objecteDeSobre } from './XatSection.jsx';
 
@@ -14,6 +14,22 @@ const SELLA = { id: 'sella', nom: 'Gent de Sella' };
 const comunitat = (id, subjecte, fills = []) => ({ fil: { id, tipus: 'comunitat', subjecte }, fills });
 const filaDe = (c) => ({ clau: `comunitat:${c.fil.id}`, tipus: 'comunitat', comunitat: c });
 const filaFil = (id) => ({ clau: id, tipus: 'fil', fil: { id } });
+
+/* IDEA-323.1 (v1.2.22, ordre del Mestre del 261122) · El poble del xat de mostra del Foraster: el de l'amfitrió o cap.
+   Mai POBLE_PER_DEFECTE per si sol (Gauntlet R1, L1-02: la consulta ?sobre=poble: porta a /registre). */
+describe('pobleDelForaster (IDEA-323.1)', () => {
+  it('sense amfitrió, cap poble (els tres actors del projecte)', () => {
+    expect(pobleDelForaster(null)).toBeNull();
+    expect(pobleDelForaster(undefined)).toBeNull();
+  });
+  it('(c) el poble que declara l’amfitrió mana', () => {
+    expect(pobleDelForaster(SELLA)).toBe(SELLA);
+    expect(pobleDelForaster(POBLE)).toBe(POBLE);
+  });
+  it('la llista amb sessió continua amb POBLE_PER_DEFECTE (pobleDelXat)', () => {
+    expect(pobleDelXat(null)).toBe(POBLE_PER_DEFECTE);
+  });
+});
 
 describe('pobleDeConfig', () => {
   it('llig i torna a sanejar el poble i el nom de l\'amfitrió', () => {

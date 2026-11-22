@@ -30,7 +30,9 @@ const rows123=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.ver
 // P1-74 (A-03): el complet real és el 123 més 20261118230000 (la caché de credencials natives per configuració).
 const rows124=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261118230000')<=0);
 const rows125=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261119143000')<=0);
-const rows126=creaPlaMigracions().migrations;
+// v1.2.22 · el 126 de la v1.2.17 es fixa fins a 20261121090000; el complet real passa a 129 amb les tres R32.42.
+const rows126=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261121090000')<=0);
+const rows129=creaPlaMigracions().migrations;
 // El 120 del kit R32.5 de Codex: els 119 d'R32.2 més 20261117140000, sense 20261117150000.
 const kitR325=rows121.filter(row=>row.version!=='20261117150000');
 const r32=new Set(['20261116170000','20261116170100','20261116170200']);
@@ -74,6 +76,8 @@ const PIN123='123:1de4ff25c313f242b463d00445377f5692f87b762927a13e1ed20464ab1f0b
 const PIN124='124:8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a961277';
 const PIN125='125:f09f94686782ea28b4ae500ce21567994670f53d1b91782246a0b4d841e56dc7';
 const PIN126='126:595c69b52d28713884c9af3d802dc1f1a3a47853e2d8eb180e65f53b51be3e51';
+// v1.2.22 · 129 calculat des dels bytes reals del catàleg (el 126 de la v1.2.17 més les tres R32.42, NO aplicades).
+const PIN129='129:75dab97bc68995d76540d0cf705f8a8f7f7bd75841e6934a1c31f4e176fc065b';
 // Perfil 120 del kit R32.5 de Codex, calculat sobre la v1.2.5 (sense 20261117150000): no és canònic.
 const PIN_EXPERIMENTAL_120='120:3e45e1da922cb8a51c43ae23504b4e279eae11f0db7f1046b1f31156800edb85';
 // Perfil experimental del kit R32 de Codex, calculat amb la versió anterior de 20261116170000: no és canònic.
@@ -150,11 +154,27 @@ test('R32.25 adds only its disabled urgent and D24 migration, preserves exact125
  const added=rows126.filter(row=>!rows125.some(previous=>previous.version===row.version));
  assert.deepEqual(added.map(({version,file,sha256})=>[version,file,sha256]),[['20261121090000','20261121090000_r32_25_push_directes_i_bandols.sql','2122eceeef44039f60c9cf6931043a5d7dcc1bfd4c1ae834d651743119315b36']]);
  assert.equal(rows126.length,126);assert.equal(`126:${ledgerHash(rows126)}`,PIN126);
- assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126]);
+ assert.deepEqual(pins.slice(0,oldPins.length+7),[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126]);
 });
 
-test('the real installer accepts 114,116,119,120,121,123,124,125,126 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
- for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+test('v1.2.22 · R32.42 adds only its institutional, two-decimal location and public Mur migrations, preserves exact126 and pins exact129',()=>{
+ // Ordenades per versió: la prova no depén de l'ordre topològic d'ordre_desplegament.json.
+ const added=rows129.filter(row=>!rows126.some(previous=>previous.version===row.version)).sort((a,b)=>comparaVersions(a.version,b.version));
+ assert.deepEqual(added.map(({version,file,sha256})=>[version,file,sha256]),[
+  ['20261122160000','20261122160000_r3242_ajuntament_acreditacio_institucional.sql','b2d96bd25836c71864344b16608839e87e4005d4cd33b275ec8364dace390769'],
+  ['20261122160200','20261122160200_r32_42_xat_ubicacio_dos_decimals.sql','ce45516f5607dc857e24d1e6bc7ae4d3d285484c0ac68f3032e84b3ec43785fe'],
+  ['20261122160300','20261122160300_r32_42_mur_visibilitat_publica.sql','9b8af76f107e06e0f2e67b138f0e97ec360e70689f2c2ea9064b7dfcf2d73d06']
+ ]);
+ assert.equal(rows129.length,129);assert.equal(`129:${ledgerHash(rows129)}`,PIN129);
+ assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126,PIN129]);
+});
+
+test('the real installer accepts 114,116,119,120,121,123,124,125,126,129 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
+ for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+ // v1.2.22 · el 129 exacte; un byte, un recompte o un 127/128 intermedi (només un dels dos lots R32.42) no s'accepten.
+ const corrupt129=structuredClone(rows129);corrupt129.find(row=>row.version==='20261122160300').sha256='0'.repeat(64);
+ for(const state of[ready(corrupt129),{...ready(rows129),migrations:126},{...ready(rows126),migrations:129}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
+ for(const omet of[['20261122160200','20261122160300'],['20261122160000'],['20261122160200'],['20261122160300']])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>ready(rows129.filter(row=>!omet.includes(row.version)))}}),/posse_schema_drift/);
  const corrupt126=structuredClone(rows126);corrupt126.find(row=>row.version==='20261121090000').sha256='0'.repeat(64);
  for(const state of[ready(corrupt126),{...ready(rows126),migrations:125},{...ready(rows125),migrations:126}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
  const corrupt125=structuredClone(rows125);corrupt125.find(row=>row.version==='20261119143000').sha256='0'.repeat(64);
@@ -178,7 +198,7 @@ test('PostgreSQL evaluates the actual install guard for both preserved and full 
     await db.exec('truncate node0.schema_migrations');
     for(const {version,file,sha256} of entries)await db.query('insert into node0.schema_migrations values($1,$2,$3)',[version,file,sha256]);
   };
-  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126]){
+  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129]){
     await carrega(entries);
     await db.exec(guard);
     assert.equal((await db.query('select count(*)::int n from node0.schema_migrations')).rows[0].n,entries.length);

@@ -324,9 +324,12 @@ describe('Mode Bancal (data-contrast="bancal")', () => {
         .toBeGreaterThan(contrast('--sdp-accent-text', '--sdp-fons-targeta', mapa));
     });
 
-    test(`${tema}: el Bancal mai rebaixa el contrast del mode normal`, () => {
+    /* v1.2.22 · IDEA-328 (ordre del Mestre, 22-11-2026) · En fosc, el text d'accent del Bancal és el taronja viu primary-400
+       (8,97:1), no el primary-200 rentat del fosc normal: el rebaixa a posta i continua en AAA (>= 7:1, prova d'ací dalt). */
+    test(`${tema}: el Bancal mai rebaixa el contrast del mode normal${tema === 'fosc' ? ' (llevat de l’accent viu d’IDEA-328)' : ''}`, () => {
       const normal = tema === 'clar' ? CLAR : MAPA_FOSC;
-      for (const text of ['--sdp-text-cos', '--sdp-text-suau', '--sdp-accent-text', '--sdp-accent-titol']) {
+      const textos = tema === 'fosc' ? ['--sdp-text-cos', '--sdp-text-suau'] : ['--sdp-text-cos', '--sdp-text-suau', '--sdp-accent-text', '--sdp-accent-titol'];
+      for (const text of textos) {
         expect(contrast(text, '--sdp-fons-targeta', mapa), text)
           .toBeGreaterThanOrEqual(contrast(text, '--sdp-fons-targeta', normal) - 1e-9);
       }

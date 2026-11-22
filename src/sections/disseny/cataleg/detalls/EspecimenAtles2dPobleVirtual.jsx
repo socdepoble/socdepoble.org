@@ -3,10 +3,14 @@
  *
  * Atles 2D (ordre del Mestre del 21-11-2026 a les 23:28; pla 261121_2335, Carril 1, Tram 1, punt b),
  * integrat el 22-11-2026 a /disseny?categoria=atles-2d&item=atles-2d-poble-virtual. És la pestanya
- * «El poble virtual» de la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html: les rondes, els veïns
- * sintètics amb selector, tots els dolors amb els cinc filtres (estat, gravetat, ronda, veí i cerca
+ * «El poble virtual» de la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html: les rondes, els perfils
+ * simulats de veïns amb selector, tots els dolors amb els cinc filtres (estat, gravetat, ronda, veí i cerca
  * lliure), les mètriques i les discrepàncies entre fonts (Llei 0).
  * Lectura pura: els filtres només canvien què es veu; res no s'escriu enlloc.
+ *
+ * v1.2.22 · Gauntlet R1 (L3-07) · D-ATLES-MOTOR · El text propi de la pàgina diu «perfils simulats», com el
+ * Motor i la xifra de la Presentació, perquè «veus» es confonia amb l'àudio. Les conclusions i els mètodes de
+ * les rondes són text de l'origen i no es reescriuen: una nota diu què volen dir les «veus» que hi apareixen.
  */
 import { useMemo, useRef, useState } from 'react';
 import { Boto, Camp, CampText, Fila, Pila, PillToggle, Selector, Taula } from '../../../../components/PedraSeca/index.js';
@@ -96,8 +100,8 @@ export default function EspecimenAtles2dPobleVirtual() {
         <h3 id="atles-placa-resum">Què va dir el poble virtual</h3>
         <p>
           «Assaig a la Plaça» és el nostre mètode d’estudi: primer un <strong>estudi sintètic d’ús i viabilitat</strong> amb
-          veïns simulats per les IA, després el <strong>contrast humà</strong> amb veïns reals. Ací hi ha totes les veus de les
-          rondes i com estava cada dolor el {dataDeLaFotografia()}.
+          veïns simulats per les IA, després el <strong>contrast humà</strong> amb veïns reals. Ací hi ha totes les rondes, el
+          que hi van dir els perfils simulats i com estava cada dolor el {dataDeLaFotografia()}.
         </p>
         {/* v1.2.19 · Gauntlet R2 (L4R2-04): l'estat dels dolors és el del dia de les dades, no el d'ara. */}
         <NotaDatacio />
@@ -119,6 +123,10 @@ export default function EspecimenAtles2dPobleVirtual() {
 
       <section className="sdp-atles__bloc">
         <h3 id="atles-placa-rondes">Les {placa.rondes.length} rondes, en ordre</h3>
+        <p className="sdp-atles__suau">
+          Les conclusions i els mètodes de cada ronda són el text de l’origen: quan hi diuen «veus», «veus sintètiques» o
+          «veïns sintètics», volen dir els perfils simulats de veïns, no cap veu d’àudio.
+        </p>
         <ol className="sdp-atles__graella">
           {placa.rondes.map((ronda) => (
             <li key={ronda.id} className="sdp-atles__fitxa">
@@ -127,7 +135,7 @@ export default function EspecimenAtles2dPobleVirtual() {
                 <span className="sdp-atles__meta">{ronda.data}</span>
               </div>
               <h4><TextFont text={ronda.titol} /></h4>
-              <p><strong>{ronda.autor_ia}</strong> · {ronda.num_perfils ? `${ronda.num_perfils} perfils` : 'sense veus'}</p>
+              <p><strong>{ronda.autor_ia}</strong> · {ronda.num_perfils ? `${ronda.num_perfils} perfils simulats` : 'sense perfils simulats'}</p>
               <p><TextFont text={ronda.conclusio} /></p>
               <details>
                 <summary>Mètode i carpeta</summary>
@@ -140,9 +148,10 @@ export default function EspecimenAtles2dPobleVirtual() {
       </section>
 
       <section className="sdp-atles__bloc">
-        <h3 id="atles-placa-veins">Els {placa.perfils.length} veïns</h3>
+        {/* v1.2.22 · Gauntlet R2 (M4-06) · «perfils simulats de veïns», com la resta de la pàgina després de L3-07. */}
+        <h3 id="atles-placa-veins">Els {placa.perfils.length} perfils simulats de veïns</h3>
         <p>
-          Tria un veí per a vore només els dolors que va trobar. Les entrades «(Fase 5)» són els mateixos noms amb una altra
+          Tria un perfil per a vore només els dolors que va trobar. Les entrades «(Fase 5)» són els mateixos noms amb una altra
           edat o un altre rol: la Fase 5 els va redefinir.
         </p>
         <ul className="sdp-atles__graella">

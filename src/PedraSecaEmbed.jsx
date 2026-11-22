@@ -106,7 +106,7 @@ import { SessionProvider } from './app/contexts/SessionContext.jsx';
 import { UIProvider } from './app/contexts/UIContext.jsx';
 import { IdentitatProvider } from './app/contexts/IdentitatContext.jsx';
 import styles from './css/index.css?inline';
-import { PREFERENCIES_TEMA, aplicaContrast, aplicaSenior, readContrastPreference, readSeniorPreference, readThemePreference, resolveContrast, resolveTheme } from './config/theme';
+import { PREFERENCIES_TEMA, aplicaContrast, aplicaSenior, contrastDelMode, esModeBancal, readContrastPreference, readSeniorPreference, readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { AmbitCapesEnrere } from './components/PedraSeca/hooks/useCapaEnrere.js';
 import { normalizeBackendConfig } from './config/backendConfig.js';
@@ -874,8 +874,11 @@ class SocDePobleElement extends BaseElement {
     this.dataset.theme = resolveTheme(this._config.themeMode ?? readThemePreference());
     /* D6 · Mode Bancal (261004): com el tema, abans del primer pintat de
        React. Després el manté App.jsx (tria i `prefers-contrast`). */
-    aplicaContrast(this, resolveContrast(readContrastPreference()));
-    aplicaSenior(this, readSeniorPreference(this._config.senior));
+    /* IDEA-323.4 · DOL-31 (v1.2.22) · Un sol Mode Bancal: la lletra gran i el contrast, junts. */
+    const contrast = readContrastPreference();
+    const modeBancal = esModeBancal(readSeniorPreference(this._config.senior), contrast);
+    aplicaContrast(this, contrastDelMode(modeBancal, contrast));
+    aplicaSenior(this, modeBancal);
     this._escoltaTemaDelSistema();
     this._pintaAmfitrio();
 

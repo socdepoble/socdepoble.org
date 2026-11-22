@@ -42,10 +42,14 @@ export function BarraApp({ app, isCompact = false, isDesktopSidebarClosed = fals
 
   return (
     <>
-      <button type="button" className="brand sdp-unstyled-btn" aria-label={`Obrir o tancar menú ${titol}`}
-        aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-        <BrandMark />
-      </button>
+      {/* IDEA-329 · Com a SidebarContent (App.jsx): en compacte el logotip ja és a la barra negra,
+          i el calaix comença per la fila «← Sóc de Poble». Un sol logotip visible a la closca. */}
+      {isCompact ? null : (
+        <button type="button" className="brand sdp-unstyled-btn" aria-label={`Obrir o tancar menú ${titol}`}
+          aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+          <BrandMark />
+        </button>
+      )}
 
       <div className="sidebar-control-row">
         <button type="button" className="sidebar-control-btn" aria-label="Torna a Sóc de Poble"

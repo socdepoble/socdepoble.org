@@ -59,17 +59,17 @@ afterEach(() => {
    COMUNITAT de Sóc de Poble (Avisos, General i Beta Testers), com la de la
    llavor. L'ordre de la pantalla el posa la llista (actorsDelXat.js; vegeu
    XatSection.actorsPermanents.test.jsx). S'actualitza a posta. */
-test('sense poble declarat, els quatre actors: la comunitat de Sóc de Poble, la de «Gent de la Torre», la IAIA i Javi; cap directe amb l’entitat', () => {
+/* IDEA-323.1 (v1.2.22, ordre del Mestre del 261122) · Derogat el poble de la
+   llavor per al Foraster sense amfitrió: «Sóc de Poble és la plataforma de
+   tots els pobles; la Torre n'és un més». Tres actors: la comunitat de Sóc de
+   Poble, la IAIA i Javi. S'actualitza a posta. */
+test('IDEA-323.1 · sense poble declarat, els tres actors del projecte: la comunitat de Sóc de Poble, la IAIA i Javi; cap poble ni cap directe amb l’entitat', () => {
   munta();
   expect(xat.chatThreads.map((f) => f.id)).toEqual([
-    'fake-sdp', 'fake-sdp-avisos', 'fake-sdp-general', 'fake-sdp-beta',
-    'fake-poble', 'fake-poble-avisos', 'fake-poble-general', 'fake-iaia', 'fake-javi'
+    'fake-sdp', 'fake-sdp-avisos', 'fake-sdp-general', 'fake-sdp-beta', 'fake-iaia', 'fake-javi'
   ]);
-  expect(xat.comunitats.map((c) => c.fil.name)).toEqual(['Sóc de Poble', 'Gent de la Torre']);
-  const poble = xat.comunitats.find((c) => c.fil.subjecte?.tipus === 'poble');
-  expect(poble.fil.subjecte).toEqual({
-    tipus: 'poble', id: 'la-torre-de-les-macanes', titol: 'Gent de la Torre', ruta: '/pobles/la-torre-de-les-macanes'
-  });
+  expect(xat.comunitats.map((c) => c.fil.name)).toEqual(['Sóc de Poble']);
+  expect(xat.chatThreads.some((f) => f.subjecte?.tipus === 'poble' || /Gent de la Torre/.test(f.name || ''))).toBe(false);
   /* Cap fil de Sóc de Poble que no siga de la seua comunitat. */
   expect(xat.chatThreads.filter((f) => f.name === 'Sóc de Poble').map((f) => f.tipus)).toEqual(['comunitat']);
   /* Onada 261030 (cicle 2) · El total del títol és la suma dels fils que
@@ -342,14 +342,14 @@ test('canviar d’amfitrió oblida els textos locals i restaura l’entitat de n
   const id = 'fake-entitat:3073b933-69fc-4c3e-80dc-b0df9c6b8391';
   const { rerender } = render(mostraDeRuta(id));
   await buidaMicrotasques();
-  await act(async () => { await xat.sendChatMessage(xat.chatThreads.find((f) => f.id === 'fake-poble-general'), 'Text de l’altre amfitrió'); });
-  expect(xat.getThreadMessages('fake-poble-general')).toHaveLength(1);
+  await act(async () => { await xat.sendChatMessage(xat.chatThreads.find((f) => f.id === 'fake-sdp-general'), 'Text de l’altre amfitrió'); });
+  expect(xat.getThreadMessages('fake-sdp-general')).toHaveLength(1);
   mocks.externalConfig = { dataMode: 'seed', backendUrl: 'https://altre-node.example' };
   rerender(mostraDeRuta(id));
   await buidaMicrotasques();
   expect(xat.chatThreads.find((f) => f.id === id)).toMatchObject({ name: 'Oli de La Torre' });
   expect(xat.getThreadMessages(id)).toEqual([]);
-  expect(xat.getThreadMessages('fake-poble-general')).toEqual([]);
+  expect(xat.getThreadMessages('fake-sdp-general')).toEqual([]);
   expect(vi.getTimerCount()).toBe(0);
 });
 
@@ -412,6 +412,17 @@ test('amb poble, la comunitat del poble amb Avisos (només lectura, amb la benvi
   expect(xat.getThreadMessages('fake-poble-general')).toEqual([]);
 });
 
+/* IDEA-323.1 (v1.2.22) · (b) des de la pàgina del poble: sense sessió, el «Comentar» (?sobre=poble:<id>) porta a
+   /registre amb la tornada (XatSection.test.jsx, «IDEA-323.1 · (b)»); la mostra no pinta cap poble per la consulta. */
+test('IDEA-323.1 · (c) l’amfitrió que declara la Torre la porta, encara que la URL no diga res', () => {
+  mocks.externalConfig = { dataMode: 'seed', poble: 'la-torre-de-les-macanes' };
+  munta();
+  expect(xat.chatThreads.map((f) => f.id)).toEqual([
+    'fake-sdp', 'fake-sdp-avisos', 'fake-sdp-general', 'fake-sdp-beta',
+    'fake-poble', 'fake-poble-avisos', 'fake-poble-general', 'fake-iaia', 'fake-javi'
+  ]);
+});
+
 /* IDEA-56 (pla 261029_1605, Bloc F.2) · La IAIA respon amb el seu cervell
    local (injectat ací), en microtasques i sense temporitzador: es buiden
    abans de mirar els seq (actualitzat a posta). */
@@ -469,6 +480,8 @@ const comunitatDe = (valor, id) => valor.comunitats.find((c) => c.fil.id === id)
 const FILS_AMB_MISSATGES = ['fake-sdp-avisos', 'fake-poble-avisos', 'fake-iaia'];
 
 test('P0-ANDROID-PUSH · B5 · cap fil de mostra porta cap no llegit: ni la insígnia, ni la comunitat, ni el títol', () => {
+  /* IDEA-323.1 · Amb un poble declarat, perquè també hi siga la comunitat del poble. */
+  mocks.externalConfig = { dataMode: 'seed', poble: 'la-torre-de-les-macanes' };
   munta();
   for (const fil of xat.chatThreads) expect(fil.noLlegits ?? 0, fil.id).toBe(0);
   for (const id of FILS_AMB_MISSATGES) {
@@ -483,6 +496,8 @@ test('P0-ANDROID-PUSH · B5 · cap fil de mostra porta cap no llegit: ni la ins�
 });
 
 test('P0-ANDROID-PUSH · B5 · llegir els fils de mostra no en crea cap ni torna a pujar res', () => {
+  /* IDEA-323.1 · Amb un poble declarat, perquè també hi siga la comunitat del poble. */
+  mocks.externalConfig = { dataMode: 'seed', poble: 'la-torre-de-les-macanes' };
   munta();
   act(() => { xat.marcaVist('fake-iaia', 1); });
   act(() => { xat.marcaVist('fake-iaia', 2); });
@@ -495,6 +510,8 @@ test('P0-ANDROID-PUSH · B5 · llegir els fils de mostra no en crea cap ni torna
 });
 
 test('P0-ANDROID-PUSH · B5 · «Marcar com a llegides» de la selecció en marca 0', () => {
+  /* IDEA-323.1 · Amb un poble declarat, perquè també hi siga la comunitat del poble. */
+  mocks.externalConfig = { dataMode: 'seed', poble: 'la-torre-de-les-macanes' };
   munta();
   let marcades = null;
   act(() => { marcades = xat.marcaLlegides(['fake-sdp-avisos', 'fake-sdp-general', 'fake-poble-avisos', 'fake-iaia']); });

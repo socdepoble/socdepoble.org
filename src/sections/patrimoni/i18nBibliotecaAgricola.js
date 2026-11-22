@@ -4,6 +4,9 @@
  * i el Calendari Agrícola (CalendariAgricolaLlavorsView), destí canònic de DOL-38.
  * En valencià (ca) conserva caràcter a caràcter tots els literals originals.
  * Mòdul carregat només dins del tros diferit de Patrimoni (+0 B a pesDelNucli).
+ * v1.2.22 · Gauntlet R2 (M5-02) · `llibreLlavors` és una funció del total de fitxes que calcula
+ * BancLlavorsWorkspaceSection a partir de les dades (cap xifra escrita a mà). (M4-01) `empremtaDeclarada` i
+ * `registreDocument` són els rètols d'una font sense extracte al repositori (EmpremtaFont i FitxaDeLaFont).
  */
 export const CODIS_LLENGUA_BIBLIOTECA_AGRICOLA = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
 
@@ -14,7 +17,7 @@ export function codiLlenguaBibliotecaAgricola(language = 'ca') {
 
 const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
   ca: Object.freeze({
-    llibreLlavors: 'Catàleg del Banc de Llavors (125 varietats)',
+    llibreLlavors: (n) => `Catàleg del Banc de Llavors (${n} fitxes)`,
     llibreCalendari: 'Calendari Agrícola i Tomaques',
     llibreAnatomia: 'Anatomia Rural · Pou de la Neu 3D',
     laminaBotanicaNode0: 'làmina botànica Node 0',
@@ -53,9 +56,11 @@ const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
     buitCombinacio: 'Cap varietat tradicional té activitat registrada amb esta combinació de mes i fase.',
     paginaPdf: (p) => ` · Pàgina ${p} del PDF`,
     obrirFitxaVarietat: 'Obrir fitxa de varietat',
+    empremtaDeclarada: 'Empremta SHA-256 declarada del PDF, no contrastada al repositori',
+    registreDocument: 'Registre del document',
   }),
   es: Object.freeze({
-    llibreLlavors: 'Catálogo del Banco de Semillas (125 variedades)',
+    llibreLlavors: (n) => `Catálogo del Banco de Semillas (${n} fichas)`,
     llibreCalendari: 'Calendario Agrícola y Tomates',
     llibreAnatomia: 'Anatomía Rural · Pozo de Nieve 3D',
     laminaBotanicaNode0: 'lámina botánica Nodo 0',
@@ -94,9 +99,11 @@ const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
     buitCombinacio: 'Ninguna variedad tradicional tiene actividad registrada con esta combinación de mes y fase.',
     paginaPdf: (p) => ` · Página ${p} del PDF`,
     obrirFitxaVarietat: 'Abrir ficha de variedad',
+    empremtaDeclarada: 'Huella SHA-256 declarada del PDF, no contrastada en el repositorio',
+    registreDocument: 'Registro del documento',
   }),
   en: Object.freeze({
-    llibreLlavors: 'Seed Bank Catalogue (125 varieties)',
+    llibreLlavors: (n) => `Seed Bank Catalogue (${n} records)`,
     llibreCalendari: 'Agricultural Calendar & Tomatoes',
     llibreAnatomia: 'Rural Anatomy · 3D Icehouse',
     laminaBotanicaNode0: 'Node 0 botanical plate',
@@ -135,9 +142,11 @@ const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
     buitCombinacio: 'No traditional variety has recorded activity for this month and stage combination.',
     paginaPdf: (p) => ` · PDF page ${p}`,
     obrirFitxaVarietat: 'Open variety record',
+    empremtaDeclarada: 'Declared SHA-256 fingerprint of the PDF, not checked in the repository',
+    registreDocument: 'Document record',
   }),
   eu: Object.freeze({
-    llibreLlavors: 'Hazi Bankuaren Katalogoa (125 barietate)',
+    llibreLlavors: (n) => `Hazi Bankuaren Katalogoa (${n} fitxa)`,
     llibreCalendari: 'Nekazaritza Egutegia eta Tomateak',
     llibreAnatomia: 'Landa Anatomia · 3D Elurzuloa',
     laminaBotanicaNode0: '0 Nodoko xafla botanikoa',
@@ -176,9 +185,11 @@ const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
     buitCombinacio: 'Ez dago jarduera erregistraturik duen barietate tradizionalik hilabete eta fase konbinazio honekin.',
     paginaPdf: (p) => ` · PDFko ${p}. orrialdea`,
     obrirFitxaVarietat: 'Ireki barietatearen fitxa',
+    empremtaDeclarada: 'PDFaren SHA-256 hatz marka adierazia, biltegian egiaztatu gabea',
+    registreDocument: 'Dokumentuaren erregistroa',
   }),
   gl: Object.freeze({
-    llibreLlavors: 'Catálogo do Banco de Sementes (125 variedades)',
+    llibreLlavors: (n) => `Catálogo do Banco de Sementes (${n} fichas)`,
     llibreCalendari: 'Calendario Agrícola e Tomates',
     llibreAnatomia: 'Anatomía Rural · Pozo da Neve 3D',
     laminaBotanicaNode0: 'lámina botánica Nodo 0',
@@ -217,6 +228,8 @@ const DICCIONARI_BIBLIOTECA_AGRICOLA = Object.freeze({
     buitCombinacio: 'Ningunha variedade tradicional ten actividade rexistrada con esta combinación de mes e fase.',
     paginaPdf: (p) => ` · Páxina ${p} do PDF`,
     obrirFitxaVarietat: 'Abrir ficha de variedade',
+    empremtaDeclarada: 'Pegada SHA-256 declarada do PDF, non contrastada no repositorio',
+    registreDocument: 'Rexistro do documento',
   }),
 });
 

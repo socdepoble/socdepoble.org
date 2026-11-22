@@ -203,7 +203,7 @@ Un sol codi font genera quatre artefactes. Les ordres de build són a `package.j
 
 ### Connector WordPress i el seu sostre d'arrencada
 
-El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.29 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
+El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.30 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
 
 - **Aïllament:** l'element munta l'app dins d'un Shadow DOM tancat (`attachShadow({ mode: 'closed' })` a `src/PedraSecaEmbed.jsx`).
 - **Federació:** instal·lar el connector no convertix el WordPress en un node del Fedivers (`wordpress-plugin/readme.txt`).

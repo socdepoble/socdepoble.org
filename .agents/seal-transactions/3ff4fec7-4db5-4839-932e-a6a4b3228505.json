@@ -1,0 +1,27 @@
+{
+  "id": "3ff4fec7-4db5-4839-932e-a6a4b3228505",
+  "session": "b8559215-b4fc-4ff8-b118-6aa807d7d928",
+  "operationId": "v1222-governanca-1795387187543",
+  "claim": "b8559215-b4fc-4ff8-b118-6aa807d7d928:governance-write",
+  "planHash": "1cd5c7cd2442ec17ca2c08cf2cc9090a2be99403414f0a66825aef505e2b8678",
+  "beforeSeal": "ed58f06d67906da588dfc4fdec72caf82a13eee6b4e97b021a6c331bfc1cee2a",
+  "files": [
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "279c7d1de774032879164778c76e3568cafdc385ac29981d2f8f06f6793b3f30",
+      "after": "f17deaad105f6622e79552b090666cecf576b45f1967406b6d99a72e9a32035d"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.mjs",
+      "before": "b91609e2d35616d45c38194ee43986897316d1e07b1d33204c473a3f198f0f05",
+      "after": "055a60fa37b72dbf3eed16df162b3e9eb8c4692b496e1fb85ca22e2a2fb5d424"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "before": "3cfeadb0623cb058263a56656730d211bdaf4387e222132b8fde8fc50f19c8e5",
+      "after": "e814da032e4930dd3b10cc7970ea30cc2e7fe5006ac768cc5cf4362db726c2f2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c"
+}

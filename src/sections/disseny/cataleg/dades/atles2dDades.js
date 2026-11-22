@@ -2,17 +2,18 @@
    Atles 2D (ordre del Mestre del 21-11-2026 a les 23:28; pla 261121_2335, Carril 1, Tram 1, punt b) · integrat
    a /disseny?categoria=atles-2d el 22-11-2026.
 
-   ORIGEN (Llei 0: cap xifra no s'ha tocat)
+   ORIGEN (Llei 0: en copiar-lo, cap xifra no s'ha tocat)
      · Fitxer: _investigacio_ia_de_poble/261121_estudi_mercat_2d_i_entitats/atles_2d_dades.js
        (window.ATLES, generat el 2026-11-21T19:34+01:00; 143.955 B).
      · SHA-256: 9aa278df4a03254eab9f0cbf026c952f623ebd1e473c58af7d6d52448889bc07
      · El mateix objecte viatja dins d'ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html (la maqueta de referència).
-   TRANSFORMACIONS (només de text de ruta, comprovades amb un script que compara tots els números):
+   TRANSFORMACIONS EN COPIAR-LO (només de text de ruta, comprovades amb un script que compara tots els números):
      · 43 rutes absolutes del disc del Mestre (fonts_llegides) passen a ser relatives a «Som de Poble»:
        una pàgina pública no ha de publicar el directori personal de ningú.
      · 35 rutes del worktree de Claude (_builds_de_poble/sandboxes_r26/claude_r26_worktree/…) passen a ser
        relatives al repositori (src/…), com les evidències fitxer:línia de la matriu.
-     · Cap substitució de vocabulari: les dades no porten cap paraula vetada.
+     · Cap substitució de vocabulari en la còpia: les dades no porten cap paraula vetada. (La v1.2.22 sí que reescriu
+       el bloc mercat a posta: vegeu les notes de POSAR-LO AL DIA.)
      · Una cita el·lidida (v1.2.19 · integrador): a fonts_llegides, el nom de l'informe del poble virtual del
        21-11-2026 (carpeta 261121_reunio_fase5_placa_assaig) es cita «INFORME_…_POBLE_VIRTUAL_…», perquè el nom
        sencer casa amb el patró del fantasma de src/data/identitatDual.guarda.test.js. La guarda no es toca; el
@@ -28,7 +29,32 @@
    · v1.2.21 (22-11-2026): repassats els huit dolors que toquen els kits R32.35b, R32.37 i R32.38. Només DOL-29 es
      tanca sencer (mesurat amb Chrome sobre el codi integrat); DOL-51 queda en la decisió del Mestre (l'entrada per
      defecte del Bar) i els altres sis continuen oberts amb la part feta i la que queda a la nota (Gauntlet R1, L1-01,
-     L1-02 i L1-10). */
+     L1-02 i L1-10).
+   · v1.2.22 (22-11-2026): meta.posat_al_dia és una llista de passades. DOL-31 es tanca amb IDEA-323.4 (un sol Mode
+     Bancal, a la vista a l'accés del Xat, a /el-meu-perfil, a /control i a Xat › Ajustos › Aparença) i passa a la
+     passada de la v1.2.22; els altres set dolors es queden a la de la v1.2.21.
+   · v1.2.22 (22-11-2026) · D-ATLES-MOTOR (decisions del Mestre del 22-11-2026, 15:39; pla 261122_1502 §2.1) i
+     Gauntlet R1 (L3-03 i L3-06): el bloc mercat ja no és la transcripció de l'origen, sinó la proposta amb les decisions
+     del Mestre. Es reescriuen visio (qualsevol persona), principis_etics_innegociables[1] i [2] (l'informe privat, el
+     Node 0 a 0 € i cap tràmit d'aprovació; fora els bons de comerç local KM 0), les descripcions dels passos 2, 3 i 4
+     (fora el semàfor de viabilitat, la «llum verda» i el botó d'1 clic per a publicar la pre-reserva) i
+     encaix_arquitectonic_pedra_seca (port_de_dades i ubicacio_natural, que obri l'entrada també al perfil de l'Usuari);
+     «sintètics» passa a «simulats» en tres llocs i meta.fonts.mercat ho diu. El text d'abans és al fitxer d'origen,
+     amb el SHA-256 de dalt.
+   · v1.2.22 (22-11-2026) · Gauntlet R1 (L3-04 i L4-08): la nota de DOL-31 torna a dir que la mesura del 39 % i del
+     64 % és d'abans de la costura de R32.41 i que la capçalera no canvia; i les tres frases de l'Ajuntament que deien
+     que /ajuntament/:id no tenia cap emissor (ruta_actual, la cel·la de rutes i la fila de rutes_reals) ho diuen en
+     passat, amb el que el lot 02 de Codex R32.42 hi afig a src/config/navigation.js. La resta de la matriu, les
+     evidències fitxer:línia incloses, continua sent la fotografia del 21-11-2026, contra la v1.2.17 (meta.versio_codi).
+   · v1.2.22 (22-11-2026) · Gauntlet R2 (M4-03 i M4-05): dues cites reescrites a la v1.2.22 apuntaven a línies que el
+     mateix canvi movia. L'evidència de DOL-31 cita ara el bloc «MODE BANCAL» de src/css/tokens.css pel nom (el selector
+     .sdp-root[data-contrast="bancal"] i el seu niat fosc), no el tram 810-817, que la v1.2.22 ha donat al Mode Sènior. La
+     fila de rutes_reals de l'Ajuntament separa la línia de la fotografia (App.jsx:1348 a 8749aa810) de la part d'ara, que
+     cita la Route pel seu path; i la nota de la seua cel·la de rutes diu que navigation.js:450 és de 8749aa810, al
+     costat de les línies d'ara (81 i 398). Les altres files de rutes_reals i les evidències de les cel·les continuen sent de
+     8749aa810, com diu la pàgina (base_codi i «Evidència al codi de la v1.2.17 (build 22)»). I la descripció del pas 4 del Motor
+     ja no promet sempre la intenció ni les objeccions reals: només si s'ha fet el contrast humà (la Fase 2, opcional),
+     sempre separades de la lectura simulada. */
 
 export const ORIGEN_ATLES = Object.freeze({
   fitxer: '_investigacio_ia_de_poble/261121_estudi_mercat_2d_i_entitats/atles_2d_dades.js',
@@ -50,17 +76,24 @@ export const ATLES = {
       "IDEA-314",
       "IDEA-312"
     ],
-    "posat_al_dia": {
-      "data": "2026-11-22",
-      "versio": "v1.2.21 (build 26)",
-      "dolors": ["DOL-04", "DOL-13", "DOL-29", "DOL-31", "DOL-38", "DOL-51", "DOL-56", "DOL-59"]
-    },
+    "posat_al_dia": [
+      {
+        "data": "2026-11-22",
+        "versio": "v1.2.21 (build 26)",
+        "dolors": ["DOL-04", "DOL-13", "DOL-29", "DOL-38", "DOL-51", "DOL-56", "DOL-59"]
+      },
+      {
+        "data": "2026-11-22",
+        "versio": "v1.2.22 (build 27)",
+        "dolors": ["DOL-31"]
+      }
+    ],
     "orkut_congelat": true,
     "fonts": {
       "placa": "compilació de Claude a partir de 43 fonts (rondes #01–#04, Fase 5, arnés v2 i auditories de l'Escriptori)",
       "matriu": "matriu de Gemini (12 × 5) verificada cel·la a cel·la contra el codi: 8749aa810 + canvis v1.2.17 sense cometre",
       "xarxes": "dossier de Gemini 4 Carbon (High), 21-11-2026 19:08",
-      "mercat": "proposta de Gemini i Claude; cap línia implementada a src/"
+      "mercat": "proposta de Gemini i Claude, amb les decisions del Mestre del 22-11-2026 (D-ATLES-MOTOR); cap línia implementada a src/"
     }
   },
   "placa": {
@@ -896,18 +929,18 @@ export const ATLES = {
       },
       {
         "id": "DOL-31",
-        "titol": "El Mode Bancal quasi no es nota i està amagat",
-        "descripcio": "Abans de la v1.2.21: Canvia entre el 0,49 i l'1,22 % dels píxels i viu a Xat › Ajustos › Aparença; la lluna de la capçalera posa mode fosc.",
+        "titol": "El Mode Bancal quasi no es notava i estava amagat",
+        "descripcio": "Abans de la v1.2.21 canviava entre el 0,49 i l'1,22 % dels píxels, i fins a la v1.2.22 vivia sol a Xat › Ajustos › Aparença, separat de la «Lletra gran»; Vicent buscava el sol i trobava la lluna de la capçalera, que posa el tema fosc.",
         "perfils": [
           "vicent"
         ],
         "ronda": "R02",
         "severitat": "P2",
         "superficie": "Mode Bancal",
-        "estat": "obert",
-        "versio_o_kit": "v1.2.21 (build 26) · R32.35b lot 01 (només el contrast)",
-        "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/vicent.json; src/css/tokens.css:810-817",
-        "nota": "La v1.2.21 calibra el contrast AAA del Mode Bancal en clar i en fosc (src/css/tokens.css). El kit R32.35b va mesurar a /pobles que passava de canviar entre el 0,49 i l'1,22 % dels píxels a canviar-ne el 39 % en clar i el 64 % en fosc, abans que la costura de R32.41 ajustara quatre valors. Continua amagat a Xat › Ajustos › Aparença, i la lluna de la capçalera continua posant el mode fosc."
+        "estat": "resolt",
+        "versio_o_kit": "v1.2.22 (build 27) · IDEA-323.4 (un sol Mode Bancal)",
+        "evidencia": "_investigacio_ia_de_poble/261120_placa_assaig_02_claude_poble_multiagent/personas/vicent.json; src/css/tokens.css (bloc «MODE BANCAL», selector .sdp-root[data-contrast=\"bancal\"] i el seu niat fosc); src/config/theme.js (esModeBancal); src/app/contexts/UIContext.jsx (setSeniorMode, setContrast); src/components/universal/ControlModeSenior.jsx",
+        "nota": "La v1.2.21 va calibrar el contrast AAA del Mode Bancal en clar i en fosc. El kit R32.35b va mesurar a /pobles que es passava de canviar entre el 0,49 i l'1,22 % dels píxels a canviar-ne el 39 % en clar i el 64 % en fosc, però ho va mesurar abans que la costura de R32.41 ajustara quatre valors (dos fons del clar i dos controls del fosc): no és una mesura del contrast publicat. La v1.2.22 fa de la «Lletra gran» i del contrast Bancal un sol «Mode Bancal · Sol i Lletra Gran», que s'encén d'un toc des del xip de l'accés del Xat, /el-meu-perfil, /control i Xat › Ajustos › Aparença, i posa alhora la lletra gran i el màxim contrast. La capçalera no canvia: la lluna (el sol, en fosc) és el tema fosc, una altra preferència, i el Mode Bancal no hi té cap entrada."
       },
       {
         "id": "DOL-32",
@@ -2019,7 +2052,7 @@ export const ATLES = {
       {
         "id": "ajuntament_entitat_oficial",
         "titol": "5. Ajuntament / Entitat Oficial",
-        "ruta_actual": "/ajuntament/:id cap a la PerfilPublicSection genèrica, sense cap emissor; un city_hall real es mostra i es canonitza a /empresa/:slug",
+        "ruta_actual": "/ajuntament/:id cap a la PerfilPublicSection genèrica: el 21-11-2026 sense cap emissor, des de la v1.2.22 l'emeten els descriptors d'un city_hall; un city_hall es mostra i es canonitza a /empresa/:slug",
         "estat_global": "falta",
         "nota": "La pàgina pròpia falta, però, contra el que diu Gemini («sense kind»), el model ja existix: kind 'city_hall' a la BD, bloqueig de l'autoservei i reclamació revisada, transferència bloquejada, alertes i bàndols urgents del Mur signats per l'ajuntament del mateix poble (D-6) i un push de bàndols preparat i apagat; tot depén d'un city_hall aprovisionat per SQL, perquè no hi ha cap interfície per crear-lo ni per aprovar-ne la reclamació."
       }
@@ -2076,7 +2109,7 @@ export const ATLES = {
               "src/app/App.jsx:1348",
               "src/data/supabase/perfils.js:75"
             ],
-            "nota": "La ruta /ajuntament/:id existeix però cap emissor la genera (rutaDePerfil no la coneix i ningú produïx el tipus 'ajuntament' de resolveItemPath, navigation.js:450), i una fila kind 'city_hall' es mapeja a tipus 'entitat', de manera que la seua canònica real és /empresa/:slug amb schema Organization.",
+            "nota": "El 21-11-2026 la ruta /ajuntament/:id existia però cap emissor no la generava (rutaDePerfil no la coneixia i ningú no produïa el tipus 'ajuntament' de resolveItemPath, navigation.js:450 a 8749aa810). Des de la v1.2.22 (lot 02 de Codex R32.42) la generen rutaDePerfil('ajuntament'|'city_hall') i objecteDePerfil per a un perfil amb kind 'city_hall' (src/config/navigation.js:81 i 398), però és un àlies: una fila kind 'city_hall' es mapeja a tipus 'entitat', rutaPublicaDePerfil la canonitza a /empresa/:slug amb schema Organization i la targeta d'EntitatsDelPoble enllaça a /empresa/:id. No s'ha provat amb dades reals: seed.sql no porta cap city_hall, a Producció no s'ha comprovat, i la migració del lot que en sembra (20261122160000) no s'ha aplicat.",
             "canvi": ""
           }
         }
@@ -2735,7 +2768,7 @@ export const ATLES = {
       },
       {
         "ruta": "/ajuntament/:agentId",
-        "component": "PerfilPublicSection genèrica, cap emissor (src/app/App.jsx:1348)",
+        "component": "PerfilPublicSection genèrica (src/app/App.jsx:1348 a 8749aa810); el 21-11-2026 sense cap emissor, des de la v1.2.22 l'emeten els descriptors d'un city_hall, com a àlies de la canònica /empresa/:slug (la mateixa Route path=\"ajuntament/:agentId\" d'App.jsx)",
         "entitat": "ajuntament_entitat_oficial"
       },
       {
@@ -2798,11 +2831,11 @@ export const ATLES = {
     }
   },
   "mercat": {
-    "visio": "Convertir la maquinària interna d'«Assaig a la Plaça» en una ferramenta cívica i cooperativa dins de Sóc de Poble perquè un forner, una cooperativa d'oli, un jove emprenedor rural, una associació o un ajuntament puguen posar a prova una idea, un producte, un cartell o un servei abans d'invertir-hi estalvis.",
+    "visio": "Convertir la maquinària interna d'«Assaig a la Plaça» en una ferramenta cívica i cooperativa dins de Sóc de Poble perquè qualsevol persona (un veí amb un cartell o una idea, un forner, una cooperativa d'oli, un jove emprenedor rural, una associació o un ajuntament) puga posar a prova una idea, un producte, un cartell o un servei abans d'invertir-hi estalvis.",
     "principis_etics_innegociables": [
       "Honestedat radical (Llei 0): separar sempre visualment la Fase 1 («Estudi sintètic d'ús i viabilitat», simulada amb arquetips d'IA) de la Fase 2 («Contrast humà», respostes de veïns reals verificats).",
-      "Privacitat absoluta (RGPD + Model B): mai s'entrenen models externs amb idees privades d'un emprenedor; execució local al Node 0 o crida efímera sense retenció (`Gemini Decisions API` 0 output tokens per a rúbriques visuals).",
-      "Economia circular rural: el Contrast Humà pot ser voluntari solidari (per a projectes comunitaris/associacions) o recompensat amb bons de comerç local KM 0 per als veïns verificadors."
+      "Privacitat absoluta (RGPD + Model B): l'informe és privat de qui fa l'estudi i només es comparteix o es publica si ho vol; mai s'entrenen models externs amb idees privades; els perfils simulats i qualsevol síntesi d'àudio futura corren al Node 0, a 0 € (decisió del Mestre del 22-11-2026).",
+      "Cap tràmit d'aprovació: no hi ha «llum verda» ni mínim de veïns. Demanar opinió a veïns reals és opcional i voluntari, sense bons ni sistemes de recompensa ara mateix; la promoció del comerç KM 0 va pel seu camí (decisió del Mestre del 22-11-2026)."
     ],
     "flux_ux_en_4_passos": [
       {
@@ -2813,22 +2846,22 @@ export const ATLES = {
       {
         "pas": 2,
         "titol": "Fase 1 · Assaig a la Plaça · Estudi sintètic d’ús i viabilitat (~60 segons)",
-        "descripcio": "Un panell equilibrat de 8–12 perfils sintètics rurals calibrats demogràficament (gent gran de 75+, famílies joves, llauradors, neorurals, estiuejants, hostalers) avalua la proposta buscant punts cecs: preu percebut, frens d'accés per a majors, claredat del missatge en 3 segons i dubtes logístics. Lliura un semàfor de viabilitat inicial i 3 millores abans d'eixir al carrer."
+        "descripcio": "Un panell equilibrat de 8–12 perfils simulats rurals calibrats demogràficament (gent gran de 75+, famílies joves, llauradors, neorurals, estiuejants, hostalers) avalua la proposta buscant punts cecs: preu percebut, frens d'accés per a majors, claredat del missatge en 3 segons i dubtes logístics. Lliura una primera lectura orientativa, que no és cap aprovació, i 3 millores abans d'eixir al carrer."
       },
       {
         "pas": 3,
         "titol": "Fase 2 · Assaig a la Plaça · Contrast humà (5 minuts per veí opt-in)",
-        "descripcio": "Amb la proposta ja polida, es convida un grup reduït (10–25 veïns reals del poble/comarca que s'han apuntat voluntàriament al «Consell de Veïns Verificadors») a respondre 4 preguntes tancades i 1 consell obert des del mòbil, sense soroll de comentaris públics hostils."
+        "descripcio": "Opcional, només si qui fa l'estudi ho vol: amb la proposta ja polida, es convida un grup reduït (10–25 veïns reals del poble/comarca que s'han apuntat voluntàriament al «Consell de Veïns Verificadors») a respondre 4 preguntes tancades i 1 consell obert des del mòbil, sense soroll de comentaris públics hostils."
       },
       {
         "pas": 4,
         "titol": "Informe de Trellat i Acció Directa",
-        "descripcio": "La pàgina genera una fitxa executiva clara (percentatge d'intenció real de compra/ús, franja de preu justa, objeccions reals vs. sintètiques) i, si té llum verda, un botó d'1 clic per publicar-ho com a pre-reserva al Mercat KM 0 o a l'Agenda del poble."
+        "descripcio": "La pàgina genera un informe privat de qui ha fet l'estudi, amb una fitxa executiva clara: la lectura simulada de la Fase 1 (preu percebut, frens, dubtes i millores) i, només si s'ha fet el contrast humà de la Fase 2, la intenció real de compra o d'ús, la franja de preu justa i les objeccions reals, sempre separades de la lectura simulada. Porta un botó opcional per a compartir-lo o publicar-lo, per exemple com a pre-reserva al Mercat KM 0 o a l'Agenda del poble."
       }
     ],
     "encaix_arquitectonic_pedra_seca": {
-      "ubicacio_natural": "Micro-aplicació enxufable `/app/assaig-placa` dins de `src/apps/` (zero pes a l'arrencada estàtica del connector de WordPress!), accessible des de les fitxes d'Empresa, Cooperativa, Grup i Ajuntament.",
-      "port_de_dades": "Esborranys i estudis sintètics en IndexedDB local (`sdp-assaig-placa`); només quan l'autor llança el «Contrast humà» passa pel port neutral `backendPort.js` amb respostes agregades anònimes."
+      "ubicacio_natural": "Micro-aplicació enxufable `/app/assaig-placa` dins de `src/apps/` (zero pes a l'arrencada estàtica del connector de WordPress!), accessible des de qualsevol perfil: el de l'Usuari o veí i les fitxes d'Empresa, Cooperativa, Grup i Ajuntament.",
+      "port_de_dades": "Esborranys i estudis simulats en IndexedDB local (`sdp-assaig-placa`); només quan l'autor llança el «Contrast humà» passa pel port neutral `backendPort.js` amb respostes agregades anònimes."
     }
   },
   "mercat_subtitols": [

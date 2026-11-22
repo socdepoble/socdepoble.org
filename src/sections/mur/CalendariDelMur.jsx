@@ -12,6 +12,10 @@
  * regla (entradesDelDia, la d'acteOcorreElDia). Només els actes del Mur: ni
  * l'agenda de Sollutia ni les fonts de Google (són de la pàgina /calendari),
  * ni les tasques del Mapa de la Consola (privacitat, agendaMur.js).
+ * v1.2.22 · Gauntlet R2 (M2-06) · El mateix component, però amb els actes de
+ * l'aparador: MurSection li passa els que han passat per vigentsDalt
+ * (esVisibleAlMur), sense els que tenen «Mostrar també al Mur» apagat, que sí
+ * que són a /calendari (CalendariSection llig el context sense eixe filtre).
  *
  * L'estat és el de la URL, com a /calendari (useEstatCalendari: ?vista=,
  * ?setmana=, ?date=, ?mes= i ?any=, sempre amb replace); el ?date= és el

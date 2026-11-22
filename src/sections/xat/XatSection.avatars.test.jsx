@@ -646,7 +646,9 @@ test('sense sessió, a l’aterratge «Descarrega l’App» va damunt de la pare
   const fila = boto.parentElement;
   expect([...fila.classList]).toEqual(['sdp-alerta__accions']);
   expect(fila.parentElement).toBe(acces);
-  expect(fila.previousElementSibling.tagName).toBe('P');
+  /* IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · Cap rètol damunt: la fila del xip és la primera. */
+  expect(fila.previousElementSibling).toBeNull();
+  expect(acces.querySelector(':scope > p')).toBeNull();
   expect(fila.nextElementSibling.classList.contains('sdp-alerta__accions')).toBe(true);
   expect(boto.nextElementSibling.querySelector('[role="switch"]')).toBeTruthy();
   expect([...acces.querySelectorAll('button.sdp-xat-pindola')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Entrar', 'Registrar-se']);
@@ -751,7 +753,9 @@ test('sense sessió, el filtre buit no repetix la crida a entrar', () => {
   const cos = pindoles.closest('aside').querySelector(':scope > .sdp-workspace-column__body');
   expect(cos.querySelector('.sdp-workspace-state').textContent).toBe('Cap conversa amb este filtre.');
   // Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · La benvinguda substituïx la crida a entrar.
-  expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(1);
+  // IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · I ja no es repetix al peu: la diu la targeta d'acollida de dalt.
+  expect([...cos.querySelectorAll('p')].filter((p) => p.textContent === 'Benvinguda a Sóc de Poble')).toHaveLength(0);
+  expect(cos.querySelector('.sdp-xat-acces > p')).toBeNull();
   // Ordre del Mestre (261026_2126; prompt 261026_2130, tasca 1) · «Descarrega l'App», damunt de la parella.
   expect([...cos.querySelectorAll('button.sdp-xat-pindola')].map((b) => b.textContent)).toEqual(["Descarrega l'App", 'Entrar', 'Registrar-se']);
 });
@@ -798,11 +802,12 @@ test('B11c · sense sessió, a l’aterratge, el xip va a la fila de «Descarreg
 /* Costura C-1 de l'informe del carril A: l'etiqueta curta (`xipCurt`, textosModeSenior.js) i la prop
    `etiquetaCurta` de ControlModeSenior.jsx són de fitxers fora del carril. Fins que l'integrador
    aplique la costura, esta prova queda en espera (i el xip diu l'etiqueta llarga de sempre). */
-test.runIf(Boolean(ETIQUETA_CURTA))('B11c · el xip de l’accés diu «Lletra gran» (etiqueta curta), amb la pastilla d’estat', () => {
+/* IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · L'etiqueta curta és ara «Mode Bancal». */
+test.runIf(Boolean(ETIQUETA_CURTA))('B11c · IDEA-323.4 · el xip de l’accés diu «Mode Bancal» (etiqueta curta), amb la pastilla d’estat', () => {
   munta(senseSessio());
   const xip = screen.getByRole('switch', { name: ETIQUETA_CURTA });
-  expect(ETIQUETA_CURTA).toBe('Lletra gran');
-  expect(xip.querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe('Lletra gran');
+  expect(ETIQUETA_CURTA).toBe('Mode Bancal');
+  expect(xip.querySelector('.sdp-mode-senior-xip__etiqueta').textContent).toBe('Mode Bancal');
 });
 
 test('B11c · amb sessió, l’accés no hi és i el xip tampoc', () => {

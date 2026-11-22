@@ -68,6 +68,19 @@ export const ERRORS_ADJUNT_XAT = Object.freeze({
   'ubicacio-invalida': 'La ubicació del fitxer no és vàlida. Torna a preparar-lo.',
   'ubicacio-no-admesa': 'S’ha enviat sense la ubicació: el servidor de Sóc de Poble encara no l’admet.',
   'ubicacio-no-eliminable': 'Este navegador no ha pogut amagar la ubicació del vídeo. Tria un MP4 o prova-ho amb un altre navegador.',
+  /* v1.2.22 · Gauntlet R1 (L4-04, L5-03) · Un MP4 o MOV que el sanejador de Codex R32.42 no pot acreditar (una pista de
+     dades opaca, un uuid desconegut, un moov comprimit) no s'envia, triï el que triï la persona, i no s'arregla «triant
+     un MP4». ubicacio-no-eliminable queda per al WebM amb «Amaga el lloc».
+     Gauntlet R2 (M2-02) · La causa depén del camí. video-no-acreditable és el del fitxer: el reenviament
+     (creaOpcionsMotorAccions.js) i la comprovació abans de reservar (supabase/xatMultimedia.js), on el sanejador mira
+     el fitxer mateix, sense cap compressió pel mig. A preparaAdjunt, en canvi, el sanejador només actua quan el
+     navegador no ha pogut comprimir (motiuFallback de compressioVideoClient.js: compressió no disponible; àudio no
+     capturable, per exemple un element <video> sense captureStream amb un vídeo que porta so; error; temps o mida); si
+     comprimix, el mateix fitxer ix en un contenidor nou i s'envia. Eixe camí té el seu avís,
+     video-no-acreditable-navegador, que no promet cap eixida: un altre vídeo del mateix telèfon fa el mateix recorregut,
+     i un altre navegador pot no saber descodificar-lo. */
+  'video-no-acreditable': 'No podem comprovar que este vídeo no porte dins el lloc on es va gravar i, per a protegir-te, no l’enviem. Prova-ho amb un altre vídeo.',
+  'video-no-acreditable-navegador': 'Este aparell o navegador no ha pogut preparar el vídeo per a enviar-lo sense el lloc on es va gravar i, per a protegir-te, no l’enviem.',
   foto: 'No hem pogut preparar la foto.',
   'foto-mida': 'No hem pogut reduir prou esta foto. Tria’n una altra o guarda-la amb menys resolució.',
   'foto-codificacio': 'Este navegador no ha pogut preparar la foto. Prova-ho amb una altra foto o amb un altre navegador.',

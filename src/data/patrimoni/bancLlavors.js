@@ -1,8 +1,15 @@
-/** IDEA-112 (Onada R9, carril C5) · Banc de llavors: consulta de tres catàlegs publicats de varietats tradicionals.
+/** IDEA-112 (Onada R9, carril C5) · Banc de llavors: consulta de tres catàlegs publicats i una font oficial d’oliveres.
  *
- * Totes les dades són literals de les fonts del disc (camí, SHA-256 i línies a cada fitxa). La procedència es
- * reproduïx amb la prova patrimoniR9.fonts.test.js, que les contrasta lletra a lletra amb els extractes de
+ * Les dades dels tres catàlegs hortícoles són literals de les fonts del disc (camí, SHA-256 i línies a cada fitxa). La
+ * procedència es reproduïx amb la prova patrimoniR9.fonts.test.js, que les contrasta lletra a lletra amb els extractes de
  * tests/fixtures/patrimoni/ (i amb la font sencera quan és a ../_cultura_de_poble).
+ * v1.2.22 · Gauntlet R1 (L5-08) · La quarta font, «oliveres-gva-ivia» (Codex R32.42 lot 02), en queda fora: el seu
+ * document és l'adreça de RedIVIA, cita pàgines del PDF i no línies, no té cap extracte al disc, i el seu SHA-256 és el
+ * del PDF que va baixar el kit, sense contrast al repositori. No se'n transcriu res: les fitxes en donen el nom de la varietat, l'espècie i la pàgina.
+ * v1.2.22 · Gauntlet R2 (M4-01, M5-06) · Tres camps propis d'eixa font, i cap altra no en porta: `empremtaContrastada:
+ * false` (EmpremtaFont diu que l'empremta és declarada, no contrastada al repositori), `webEsRegistreDocument: true`
+ * (l'adreça és el registre del document a RedIVIA, no la web d'una entitat) i `llenguaTitol: 'es'` (el títol és en
+ * castellà; sense el camp, el títol és en català).
  * No és cap banc d'intercanvi: cap custodi, cap lot, cap formulari, cap registre. Les descripcions en prosa dels
  * catàlegs no es copien; el calendari dels 12 mesos del Catàleg valencià prové del gràfic vectorial de les
  * pàgines 4 a 48 del PDF de la font: `sembra`, `plantacio` (Trasplantament), `collita` (Recol·lecció) i
@@ -19,9 +26,9 @@ const congela = (valor) => {
   return valor;
 };
 
-export const VERSIO_BANC_LLAVORS = '1.1.0';
+export const VERSIO_BANC_LLAVORS = '1.2.0';
 
-/** Les tres fonts, amb l'atribució que diu el document mateix (línies citades a `cites`). */
+/** Les fonts, amb l'atribució que diu el document mateix (línies citades a `cites`). */
 export const FONTS_BANC_LLAVORS = congela([
  {
   "id": "cataleg-valencia",
@@ -120,7 +127,38 @@ export const FONTS_BANC_LLAVORS = congela([
   "discrepancies": [
    "L’encapçalament del fitxer de corpus (línia 1) l’anomena «Atles de les Varietats Locals i Patrimoni Agrícola»; el document es titula «Atles de les varietats hortícoles locals catalanes»."
   ]
- }
+ },
+ {
+  "id": "oliveres-gva-ivia",
+  "titol": "Variedades de olivo cultivadas en la Comunidad Valenciana",
+  "llenguaTitol": "es",
+  "autoria": "Generalitat Valenciana · IVIA (Iniguez, Paz i Illa-Gómez, 2001)",
+  "ambit": "Comunitat Valenciana · oliveres",
+  "document": "https://redivia.gva.es/handle/20.500.11939/8499",
+  "web": "https://redivia.gva.es/handle/20.500.11939/8499",
+  "webEsRegistreDocument": true,
+  "sha256": "45550586f3b1a25b9876550b59f4016440a0aab1a1dfd11506e9259543548ec4",
+  "empremtaContrastada": false,
+  "pagines": 276,
+  "nota": "Font de llenyosos independent del catàleg hortícola. Pàgines del PDF: Villalonga 54, Blanqueta 58, Alfafara 78. No s’hi atribuïx cap calendari mensual no transcrit.",
+  "cites": {
+    "villalonga": [
+      54,
+      54
+    ],
+    "blanqueta": [
+      58,
+      58
+    ],
+    "alfafarenca": [
+      78,
+      78
+    ]
+  },
+  "discrepancies": [
+    "Alfafarenca és una sinonímia local d’Alfafara. La presència d’una varietat al catàleg no acredita que siga adequada per a qualsevol secà."
+  ]
+}
 ]);
 
 /** Catàleg valencià: les 45 fitxes (pàgines 4 a 48). `camps` = el bloc «Informació tècnica», línia lògica a línia lògica. */
@@ -5761,14 +5799,70 @@ export const ESPECIES_ATLES_CATALUNYA = congela([
  }
 ]);
 
+/** Llenyosos: identificació varietal de la font IVIA; cap mes de collita inventat. */
+export const VARIETATS_OLIVERA_GVA_IVIA = congela([
+  {
+    "id": "olivera-alfafarenca",
+    "nom": "Alfafarenca",
+    "nomCientific": "Olea europaea L.",
+    "pagina": 78,
+    "llista": [
+      "Alfafara"
+    ],
+    "altres": [],
+    "sinonimies": [
+      "Alfafarenca"
+    ],
+    "grupCultiu": "llenyosos-seca",
+    "fontId": "oliveres-gva-ivia",
+    "calendari": null
+  },
+  {
+    "id": "olivera-blanqueta",
+    "nom": "Blanqueta",
+    "nomCientific": "Olea europaea L.",
+    "pagina": 58,
+    "llista": [
+      "Blanqueta"
+    ],
+    "altres": [],
+    "sinonimies": [],
+    "grupCultiu": "llenyosos-seca",
+    "fontId": "oliveres-gva-ivia",
+    "calendari": null
+  },
+  {
+    "id": "olivera-villalonga",
+    "nom": "Villalonga",
+    "nomCientific": "Olea europaea L.",
+    "pagina": 54,
+    "llista": [
+      "Villalonga"
+    ],
+    "altres": [],
+    "sinonimies": [],
+    "grupCultiu": "llenyosos-seca",
+    "fontId": "oliveres-gva-ivia",
+    "calendari": null
+  }
+]);
+
 const pla = (text) => normalitzaUnicodeAmbLimit(String(text ?? ''), 'NFD').replace(/\p{M}/gu, '').replace(/[·.]/g, '').toLowerCase();
 
 /** Les entrades d'un catàleg en una forma comuna per a la llista; la cerca no distingix accents ni el punt volat. */
 export function entradesDelCataleg(idFont) {
   if (idFont === 'cataleg-valencia') return VARIETATS_CATALEG_VALENCIA.map((v) => ({ id: v.id, nom: v.nom, nomCientific: v.nomCientific, pagina: v.pagina, dada: v }));
   if (idFont === 'avl-mallorca') return VARIETATS_AVL_MALLORCA.map((v) => ({ id: v.id, nom: v.nom, nomCientific: v.nomCientific, pagina: v.pagina, dada: v }));
+  if (idFont === 'oliveres-gva-ivia') return VARIETATS_OLIVERA_GVA_IVIA.map((v) => ({ id: v.id, nom: v.nom, nomCientific: v.nomCientific, pagina: v.pagina, dada: v }));
   if (idFont === 'atles-catalunya') return ESPECIES_ATLES_CATALUNYA.map((e) => ({ id: e.id, nom: e.especie, nomCientific: e.nomCientific, pagina: e.pagina, dada: e }));
   return [];
+}
+
+/** v1.2.22 · Gauntlet R2 (M4-04) · Els camps on es cerca una entrada: el nom, el nom científic, el nom de l'índex,
+ *  l'origen i els noms de les llistes de la font (`llista` i `altres`). Un sol lloc per a filtraEntrades i per al
+ *  Workspace de /page/banc-de-llavors, perquè «Alfafara» (el nom de la font a la pàgina 78) trobe l'Alfafarenca. */
+export function textDeCercaDeLEntrada(e) {
+  return [e?.nom, e?.nomCientific, e?.dada?.nomIndex?.text, e?.dada?.origen, ...(e?.dada?.llista ?? []), ...(e?.dada?.altres ?? [])].join(' ');
 }
 
 export function filtraEntrades(entrades, cerca = '') {
@@ -5781,7 +5875,7 @@ export function filtraEntrades(entrades, cerca = '') {
   }
   if (!q) return entrades;
   return entrades.filter((e) => {
-    const text = pla([e.nom, e.nomCientific, e.dada?.nomIndex?.text, e.dada?.origen, ...(e.dada?.llista ?? []), ...(e.dada?.altres ?? [])].join(' '));
+    const text = pla(textDeCercaDeLEntrada(e));
     return q.split(/\s+/).every((tros) => text.includes(tros));
   });
 }

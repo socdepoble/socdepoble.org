@@ -13,6 +13,7 @@ import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { esIpPublica } from '../node0/xarxa-node0.mjs';
 import { escanejaLiterals } from './literals-secrets-node0.mjs';
 import { defectesFitxerEstatic, PRESSUPOST_ESTATIC } from './tractor-vigilant.mjs';
+import { ACTIUS_PATRIMONIALS_LEGITIMS, referenciaActiva, sha256, zipOpendataVigent } from '../lib/actius-patrimonials-legitims.mjs';
 
 // v1.2.19 · Gauntlet R1 (L2-02): localFiles/localBytes tornen a ser només dels textos, com a la v1.2.18;
 // els binaris tenen el pressupost propi del Vigilant.
@@ -104,7 +105,9 @@ function readConfig(root, relative) {
 
 function scanPublic(root) {
   const base = fs.existsSync(path.join(root, 'dist')) ? 'dist' : 'public';
-  let bytes = 0, files = 0, entries = 1, partial = false; const findings = [], candidates = [];
+  let bytes = 0, files = 0, entries = 1, integrityEntries = 1, partial = false; const findings = [], candidates = [];
+  const approved = new Map(ACTIUS_PATRIMONIALS_LEGITIMS.map(asset => [asset.path, asset]));
+  const censusCache = new Map(), approvedPaths = new Set();
   const textual = relative => /\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|svg)$|(?:^|\/)\.htaccess$/i.test(relative);
   // Els noms de fitxer també són entrada no fiable; no publiquem credencials
   // reconegudes ni segments opacs, i mai calculem un hash del valor ocultat.
@@ -116,7 +119,7 @@ function scanPublic(root) {
     if (findings.length + values.length > LIMITS.findings) fail('LOCAL_LIMIT');
     findings.push(...values.map(value => ({ ...value, path: reportPath(value.path) })));
   };
-  const walk = (relative, depth = 0) => {
+  const walk = (relative, depth = 0, integrityOnly = false) => {
     if (depth > 12) fail('LOCAL_LIMIT');
     const file = path.join(root, relative), stat = fs.lstatSync(file);
     if (stat.isSymbolicLink()) fail('UNSAFE_SOURCE');
@@ -124,11 +127,13 @@ function scanPublic(root) {
       const names = [], dir = fs.opendirSync(file);
       try {
         for (let entry = dir.readSync(); entry; entry = dir.readSync()) {
-          if (++entries > LIMITS.localEntries) fail('LOCAL_LIMIT');
+          // v1.2.22 · Gauntlet R1 (L4-03): la passada d'integritat de public/ té el seu propi topall. Sumada al de dist,
+          // un build real l'esgotava abans de llegir cap literal. Cada passada continua fitada i tanca en LOCAL_LIMIT.
+          if ((integrityOnly ? ++integrityEntries : ++entries) > LIMITS.localEntries) fail('LOCAL_LIMIT');
           names.push(entry.name);
         }
       } finally { dir.closeSync(); }
-      for (const name of names.sort()) walk(relative + '/' + name, depth + 1);
+      for (const name of names.sort()) walk(relative + '/' + name, depth + 1, integrityOnly);
       return;
     }
     if (!stat.isFile()) fail('UNSAFE_SOURCE');
@@ -137,30 +142,68 @@ function scanPublic(root) {
     if (/^\.env(?:\.|$)/i.test(path.basename(relative)) || /\.(?:key|pem|p12|pfx|agekey|log)$/i.test(relative)) {
       add([{ ruleId: 'private-public-path', path: relative, line: 1 }]); return;
     }
-    if (/\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|png|jpe?g|gif|ico|webp|avif|svg|bmp|pdf|woff2?)$|(?:^|\/)\.htaccess$/i.test(relative)) candidates.push({relative,size:stat.size});
+    const canonical = relative.startsWith('dist/') ? `public/${relative.slice('dist/'.length)}` : relative;
+    const asset = approved.get(canonical), zip = /^(?:public|dist)\/opendata\//.test(relative) && /\.zip$/i.test(relative);
+    // Una extensió .js/.svg no acredita text: cap fitxer gros no registrat pot ocultar un binari.
+    if (stat.size > LIMITS.localBinaryFileBytes && !asset) {
+      read.staticBinaries.failed = true;
+      if (textual(relative)) read.literals.failed = true;
+      add([{ ruleId: zip ? 'opendata-zip-outside-manifest' : textual(relative) ? 'static-file-oversize-unregistered' : 'static-binary-unregistered', path: relative, line: 1 }]);
+      return;
+    }
+    if (asset && stat.size !== asset.bytes) {
+      read.staticBinaries.failed = true;
+      add([{ ruleId: 'static-binary-size-mismatch', path: relative, line: 1 }]);
+      if (stat.size > LIMITS.localBinaryFileBytes) return;
+    }
+    if ((!integrityOnly || asset || zip) && (zip || /\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|png|jpe?g|gif|ico|webp|avif|svg|bmp|pdf|woff2?)$|(?:^|\/)\.htaccess$/i.test(relative))) candidates.push({relative,size:stat.size,asset,zip});
   };
   // v1.2.19 · Gauntlet R1 (L2-02): dos pressupostos; els literals tenen la cobertura de la v1.2.18
   // encara que la galeria esgote el seu.
   const read = { literals: { files: 0, bytes: 0, partial: false }, staticBinaries: { files: 0, bytes: 0, partial: false } };
-  const coverage = () => Object.fromEntries(Object.entries(read).map(([k, v]) => [k, { status: v.partial ? 'unknown' : 'ok', files: v.files, bytes: v.bytes }]));
+  const coverage = () => Object.fromEntries(Object.entries(read).map(([k, v]) => [k, { status: v.failed ? 'fail' : v.partial ? 'unknown' : 'ok', files: v.files, bytes: v.bytes }]));
   try {
     walk(base);
+    // Un build present no pot ocultar un binari públic gros/ZIP nou o alterat.
+    // v1.2.22 · Gauntlet R2 (M3-03): si esta passada desborda (LOCAL_LIMIT), només degrada staticBinaries;
+    // els literals de dist ja recollits es continuen llegint i un secret hi dona 'fail'. Mai 'ok': partial queda true.
+    if (base === 'dist' && fs.existsSync(path.join(root, 'public'))) {
+      try { walk('public', 0, true); }
+      catch (error) { if (safeCode(error) !== 'LOCAL_LIMIT') throw error; read.staticBinaries.partial = partial = true; }
+    }
+    if (fs.existsSync(path.join(root, 'public'))) for (const asset of approved.values()) {
+      if (!fs.existsSync(path.join(root, asset.path)) && referenciaActiva(root, asset, sourceBytes, censusCache)) {
+        read.staticBinaries.failed = true;
+        add([{ ruleId: 'static-binary-missing', path: asset.path, line: 1 }]);
+      }
+    }
     // Primer els textos: una galeria gran no ha d'amagar els literals dels JS.
     candidates.sort((a,b)=>Number(textual(b.relative))-Number(textual(a.relative))||a.relative.localeCompare(b.relative));
-    for (const {relative,size} of candidates) {
+    for (const {relative,size,asset,zip} of candidates) {
       const text = textual(relative), r = text ? read.literals : read.staticBinaries;
       const max = text ? { files: LIMITS.localFiles, bytes: LIMITS.localBytes, file: LIMITS.localFileBytes }
         : { files: LIMITS.localBinaryFiles, bytes: LIMITS.localBinaryBytes, file: LIMITS.localBinaryFileBytes };
-      if (r.files >= max.files || size > max.file || r.bytes + size > max.bytes) { r.partial = partial = true; continue; }
-      const content = sourceBytes(path.join(root,relative), max.file); r.files++; r.bytes += content.length; files++; bytes += content.length;
+      // Una entrada legítima no s'exclou: es llig sencera dins del pressupost global existent.
+      const fileMaximum = asset && size === asset.bytes ? asset.bytes : max.file;
+      if (r.files >= max.files || size > fileMaximum || r.bytes + size > max.bytes) { r.partial = partial = true; continue; }
+      const content = sourceBytes(path.join(root,relative), fileMaximum); r.files++; r.bytes += content.length; files++; bytes += content.length;
+      if (asset) {
+        const matches = content.length === asset.bytes && sha256(content) === asset.sha256;
+        if (!matches) { r.failed = true; add([{ ruleId: 'static-binary-integrity-mismatch', path: relative, line: 1 }]); }
+        else if (!referenciaActiva(root, asset, sourceBytes, censusCache)) { r.failed = true; add([{ ruleId: 'static-binary-census-orphan', path: relative, line: 1 }]); }
+        else approvedPaths.add(asset.path);
+      }
+      if (zip && !zipOpendataVigent(root, relative, content, sourceBytes)) {
+        r.failed = true; add([{ ruleId: 'opendata-zip-outside-manifest', path: relative, line: 1 }]);
+      }
       add(defectesFitxerEstatic(relative,content).map(ruleId=>({ruleId,path:relative,line:1})));
       if (text) add(escanejaLiterals(content.toString('utf8'), relative));
     }
-    return { status: findings.length ? 'fail' : partial ? 'unknown' : 'ok', root: base, files, bytes, findings, ...(partial?{code:'LOCAL_LIMIT'}:{}), coverage: coverage(), exhaustive: false };
+    return { status: findings.length ? 'fail' : partial ? 'unknown' : 'ok', root: base, files, bytes, findings, ...(partial?{code:'LOCAL_LIMIT'}:{}), coverage: coverage(), integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
   }
   catch (error) {
     for (const r of Object.values(read)) r.partial = true;
-    return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), coverage: coverage(), exhaustive: false };
+    return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), coverage: coverage(), integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
   }
 }
 

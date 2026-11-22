@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from '../../app/contexts/RouterContext';
+import { FONTS_BANC_LLAVORS, entradesDelCataleg } from '../../data/patrimoni/bancLlavors.js';
 import BancLlavorsWorkspaceSection from './BancLlavorsWorkspaceSection.jsx';
 import CalendariAgricolaLlavorsView from './CalendariAgricolaLlavorsView.jsx';
 import {
@@ -29,6 +30,10 @@ vi.mock('../text/TextSection', () => ({
   default: ({ children }) => <article>{children}</article>
 }));
 
+/* v1.2.22 · Gauntlet R2 (M5-02) · El rètol de la pestanya del Banc és una funció del total de fitxes, que es calcula
+   ací de les dades, a part del component (avui 45 + 65 + 15 + 3 = 128). */
+const TOTAL_FITXES = FONTS_BANC_LLAVORS.reduce((suma, font) => suma + entradesDelCataleg(font.id).length, 0);
+
 beforeEach(() => {
   ui.language = 'ca';
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
@@ -54,6 +59,10 @@ describe('Onada R32.38 · Lot 02 · Biblioteca Agrícola i Calendari Agrícola e
       expect(tx.recompteDe(12, 45)).toContain('12');
       expect(tx.veureVarietats(12)).toContain('12');
       expect(tx.paginaPdf(88)).toContain('88');
+      expect(typeof tx.llibreLlavors).toBe('function');
+      expect(tx.llibreLlavors(TOTAL_FITXES)).toContain(`(${TOTAL_FITXES} `);
+      expect(tx.empremtaDeclarada).toMatch(/SHA-256/);
+      expect(tx.registreDocument.length).toBeGreaterThan(5);
     }
   );
 
@@ -92,7 +101,7 @@ describe('Onada R32.38 · Lot 02 · Biblioteca Agrícola i Calendari Agrícola e
 
     const tabs = screen.getAllByRole('tab');
     expect(tabs.map((tab) => tab.textContent.trim())).toEqual([
-      `🌱${txEu.llibreLlavors}`,
+      `🌱${txEu.llibreLlavors(TOTAL_FITXES)}`,
       `🍅${txEu.llibreCalendari}`,
       `🧊${txEu.llibreAnatomia}`,
     ]);

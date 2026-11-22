@@ -320,8 +320,13 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
      de 36 a 40 KB; el límit real continua sent el de paraules (Changelog, unes 1.000 de 5.000).
      Onada v1.2.17 (WP 1.1.25) · El readme de la 1.1.24 ja en feia 40.926 B (34 de marge): les notes
      obligatòries de la 1.1.25 no hi caben sense esborrar història publicada. El sostre passa de 40 a
-     44 KB; el límit real continua sent el de paraules. */
-  assert.ok(Buffer.byteLength(readme) < 45056, 'readme de menys de 44 KB');
+     44 KB; el límit real continua sent el de paraules.
+     v1.2.22 (WP 1.1.30) · El readme de la 1.1.29 ja en feia 44.506 B (550 de marge) i les notes
+     obligatòries de la 1.1.30 (Changelog, amb la línia del Mur del Gauntlet R2, i Upgrade Notice,
+     864 B) el porten a 45.370 B: no hi caben sense esborrar història publicada. El sostre passa de
+     44 a 48 KB; el límit real continua sent el de paraules (el Changelog en fa unes 2.084 de 5.000;
+     la xifra de la v1.2.10 és la del seu dia). */
+  assert.ok(Buffer.byteLength(readme) < 49152, 'readme de menys de 48 KB');
   // E-10: WordPress.org pinta «Donate link» com un botó de donació, i cap pàgina de socdepoble.org no permet donar.
   assert.equal(capcalera(readme, 'Donate link'), null, 'sense Donate link fins que hi haja una pàgina de donacions real');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);
@@ -1038,7 +1043,14 @@ test('readme 1.1.14: cap recuperació automàtica que el paquet no porta, i el r
   const lectura = funcio('lligPublicacions');
   const anteriors = funcio('lligPublicacionsAnteriors');
   assert.ok(lectura && anteriors, 'lligPublicacions i lligPublicacionsAnteriors hi són');
-  const llegixComAbans = /rpc\/\$\{membres \? 'llig_mur_membres' : 'llig_mur_public'\}/.test(lectura)
+  /* v1.2.22 · R32.42 lot 03 (L1R2-01) i Gauntlet R1 (L4-02, L4-05) · Sense la bandera de build VITE_SDP_MUR_VISIBILITAT=1
+     (cap build l'activa), la lectura pública va directa a la RPC6 de 2611122200; amb la bandera, prova primer la RPC7
+     (`p_inclou_visibilitat`, migració 20261122160300, NO aplicada) i, si el servidor no la té, torna a la RPC6 amb els
+     mateixos paràmetres. Sense cap de les dues, el catch exterior continua caient en lligPublicacionsAnteriors. Canvia
+     la forma del codi, no el requisit del readme: es comprova membres | RPC6 per defecte | RPC7 → RPC6 → lectura d'abans. */
+  const llegixComAbans = /if \(membres\) return request\(`\/rest\/v1\/rpc\/llig_mur_membres\?\$\{params\}`, config, opts\);/.test(lectura)
+    && /if \(!negociaVisibilitatMur\(\)\) return request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{params\}`, config, opts\);/.test(lectura)
+    && /try \{ return await request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{publics\}`, config, opts\); \}\n\s*catch \(error\) \{ if \(!esRpcAbsent\(error\)\) throw error; sessionGuard\(\); \}\n\s*return request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{params\}`, config, opts\);/.test(lectura)
     && /\} catch \(error\) \{\n\s*if \(!esRpcAbsent\(error\)\) throw error;/.test(lectura)
     && /\} catch \(absent\) \{\n\s*if \(!esRpcAbsent\(absent\)\) throw absent;\n[\s\S]*?const anteriors = await lligPublicacionsAnteriors\([\s\S]*?return anteriors;/.test(lectura)
     && /`\/rest\/v1\/section_submissions\?select=/.test(anteriors) && !/llig_mur_/.test(anteriors);

@@ -4,8 +4,8 @@
    fonts. El DOM el comprova XatSection.avatars.test.jsx.
    · B9 · Un sol verb, «Entrar», en les 5 llengües: la clau de /registre i de la barra negra; la vella
      «Connectar-se» ja no és a cap diccionari (també resta bytes del tros `ca` d'arrencada, [VA2-19]).
-   · B11b · El Sènior escala només l'accés ([VA2-20]): les píndoles a 56 px i la benvinguda amb
-     l'escala de la prosa Sènior; cap regla per a les files ni per a les bombolles.
+   · B11b · El Sènior escala només l'accés ([VA2-20]): les píndoles a 56 px; cap regla per a les files, per a les
+     bombolles ni (IDEA-323.3, v1.2.22) per a cap paràgraf de l'accés.
    · B11c · La fila del xip «Lletra gran», al full diferit; modules.css (arrencada de WordPress) no hi
      porta cap regla .sdp-mode-senior-.
    v1.2.18 · Gauntlet R1 (L1-01) · modules.css ja no és intacte: l'Onada R32.28 (C-2) hi deixa la regla
@@ -92,10 +92,10 @@ describe('B11b · el Sènior escala l’accés del Xat i res més', () => {
     expect(net(senseComentaris(diferit))).not.toMatch(/[(,] \.sdp-xat-pindola[ ,)]/);
   });
 
-  test('la benvinguda de l’accés pren l’escala de la prosa Sènior', () => {
-    const benvinguda = totes.find((r) => r.selector === `${SENIOR} .sdp-xat-acces > p`);
-    expect(benvinguda).toBeTruthy();
-    expect(benvinguda.decl['font-size']).toBe('clamp(1.25rem, 1.18rem + 0.35vw, 1.4375rem)');
+  /* IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · L'accés ja no porta la benvinguda (la diu la targeta
+     d'acollida de dalt): fora la seua escala Sènior. S'actualitza a posta. */
+  test('IDEA-323.3 · l’accés no porta cap benvinguda: cap regla Sènior per al paràgraf', () => {
+    expect(totes.some((r) => r.selector.includes('.sdp-xat-acces > p'))).toBe(false);
   });
 
   test('[VA2-20] cap regla per a les files ni per a les bombolles del Xat', () => {

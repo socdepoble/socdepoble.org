@@ -103,10 +103,9 @@ describe('Onada R32.35b · DOL-29 · /xat a 320px en les 5 llengües (normal i S
     expect(bloc359).not.toContain('.sdp-xat-fila');
     expect(bloc359).not.toContain('.sdp-xat-llista');
     expect(bloc359).toContain('min-inline-size: auto');
-    // v1.2.21 · Gauntlet R1 (L2-01) i R2 (Lkits-02) · Amb la «Lletra gran», la benvinguda a 320 px no és mai més menuda
-    // que en mode normal (1rem) i conserva l'interlineat de lectura (1.5).
-    const senior359 = bloc359.slice(bloc359.indexOf('[data-sdp-senior="true"]) .sdp-xat-acces > p'));
-    expect(senior359.slice(0, senior359.indexOf('}'))).toMatch(/font-size:\s*1rem;[\s\S]*line-height:\s*1\.5;/);
+    // IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · L'accés ja no porta la benvinguda: cap regla per al
+    // paràgraf (abans, v1.2.21 L2-01, la de 1rem i 1.5 en Sènior).
+    expect(bloc359).not.toContain('.sdp-xat-acces > p');
     expect(bloc359).toContain('padding-inline: var(--sdp-space-3)');
 
     // Fora de @media (max-width: 359px), cap regla nova que altere >= 360px

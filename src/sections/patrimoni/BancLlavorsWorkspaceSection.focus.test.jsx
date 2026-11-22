@@ -29,7 +29,8 @@ test.each([768, 1440])('el Workspace a %ipx conserva les fletxes en la llista qu
   fireEvent.click(screen.getByRole('button', { name: 'Quadrícula 2×2', exact: true }));
   fireEvent.click(screen.getByRole('button', { name: 'Canònica', exact: true }));
   const overlays = () => [...container.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')];
-  expect(overlays()).toHaveLength(125);
+  // v1.2.22 · R32.42 lot 02 afig la font GVA/IVIA amb tres oliveres (Alfafarenca, Blanqueta i Villalonga): 45 + 65 + 15 + 3 = 128.
+  expect(overlays()).toHaveLength(128);
   act(() => overlays()[0].focus());
   fireEvent.keyDown(overlays()[0], { key: 'ArrowDown' });
   expect(overlays()[1].getAttribute('aria-current')).toBe('true');

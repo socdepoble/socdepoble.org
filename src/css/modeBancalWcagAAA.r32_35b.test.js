@@ -40,6 +40,26 @@ const MAPA_FOSC = { ...CLAR, ...declaracions(FOSC.cos) };
 const MAPA_BANCAL = { ...CLAR, ...declaracions(BANCAL.cos) };
 const MAPA_BANCAL_FOSC = { ...MAPA_FOSC, ...declaracions(BANCAL.cos), ...declaracions(BANCAL_FOSC.cos) };
 
+/* v1.2.22 · Gauntlet R2 (M2-04 a) · El Mode Bancal posa alhora data-sdp-senior i data-contrast="bancal" (DOL-31), i els
+   blocs Sènior i Bancal empaten en especificitat dos a dos: en l'estat combinat només mana l'ordre del fitxer (L2-03).
+   La cascada es calcula de veres, sense suposar l'ordre: primer l'especificitat de la variant :root / :host (la de
+   l'<html> o l'amfitrió) i, si empata, la posició al fitxer. Per a .sdp-root, dins d'una arrel amb els atributs, cada
+   bloc puja un graó llevat del principal, i l'ordre relatiu és el mateix. */
+const SEL_SENIOR = ':root[data-sdp-senior="true"], :host([data-sdp-senior="true"]),\n'
+  + ':root[data-sdp-senior="true"] .sdp-root, :host([data-sdp-senior="true"]) .sdp-root';
+const SEL_SENIOR_FOSC = ':root[data-theme=\'dark\'][data-sdp-senior="true"], :host([data-theme=\'dark\'][data-sdp-senior="true"]),\n'
+  + ':root[data-theme=\'dark\'][data-sdp-senior="true"] .sdp-root, :host([data-theme=\'dark\'][data-sdp-senior="true"]) .sdp-root';
+const SENIOR = bloc(TOKENS, SEL_SENIOR);
+const SENIOR_FOSC = bloc(TOKENS, SEL_SENIOR_FOSC);
+
+/** El mapa de tokens que resol la cascada: [bloc, especificitat] ordenats per especificitat i, si empaten, per posició. */
+const cascada = (blocs) => blocs
+  .slice()
+  .sort(([a, ea], [b, eb]) => (ea - eb) || (a.inici - b.inici))
+  .reduce((mapa, [b]) => ({ ...mapa, ...declaracions(b.cos) }), declaracions(CANON));
+const MAPA_COMBINAT = cascada([[PRINCIPAL, 1], [SENIOR, 2], [BANCAL, 2]]);
+const MAPA_COMBINAT_FOSC = cascada([[PRINCIPAL, 1], [FOSC, 2], [SENIOR, 2], [BANCAL, 2], [SENIOR_FOSC, 3], [BANCAL_FOSC, 3]]);
+
 function resol(valor, mapa, vistos = new Set()) {
   return valor.replace(/var\((--[\w-]+)\)/g, (_, nom) => {
     expect(vistos.has(nom), `cicle a ${nom}`).toBe(false);
@@ -76,13 +96,20 @@ describe('Onada R32.35b · DOL-31 · Mode Bancal solar WCAG AAA (>= 7:1 i vores 
   ];
   const VORES = ['--sdp-vora', '--sdp-vora-control', '--sdp-vora-forta', '--sdp-focus'];
 
+  /* v1.2.22 · Gauntlet R2 (M2-04 a) · També l'estat combinat del Mode Bancal (lletra gran i contrast alhora). */
   test.each([
     ['clar solar', MAPA_BANCAL, CLAR],
     ['fosc solar', MAPA_BANCAL_FOSC, MAPA_FOSC],
-  ])('%s: tot el text principal, secundari, d’accent i d’acció supera >= 9:1 (AAA+) sobre totes 5 superfícies', (_nom, mapa) => {
+    ['clar solar amb la lletra gran', MAPA_COMBINAT, CLAR],
+    ['fosc solar amb la lletra gran', MAPA_COMBINAT_FOSC, MAPA_FOSC],
+  ])('%s: tot el text principal, secundari, d’accent i d’acció supera >= 9:1 (AAA+) sobre totes 5 superfícies; en fosc, l’accent i l’acció vius, >= 7:1 (IDEA-328)', (nom, mapa) => {
+    /* v1.2.22 · IDEA-328 (ordre del Mestre, 22-11-2026) · En el Bancal fosc, els títols i subtítols de les targetes van en
+       colors vius (primary-400 i secondary-300) en lloc dels rentats (primary-100 i secondary-200): AAA real (>= 7:1) sobre
+       totes les superfícies. El text principal i el hover continuen per damunt de 9:1. S'actualitza a posta. */
+    const vius = nom.startsWith('fosc solar') ? new Set(['--sdp-accent-text', '--sdp-accent-titol', '--sdp-accio-text']) : new Set();
     for (const text of TEXTOS) {
       for (const fons of SUPERFICIES) {
-        expect(contrast(text, fons, mapa), `${text} sobre ${fons}`).toBeGreaterThanOrEqual(9);
+        expect(contrast(text, fons, mapa), `${text} sobre ${fons}`).toBeGreaterThanOrEqual(vius.has(text) ? 7 : 9);
       }
     }
   });
@@ -90,6 +117,8 @@ describe('Onada R32.35b · DOL-31 · Mode Bancal solar WCAG AAA (>= 7:1 i vores 
   test.each([
     ['clar solar', MAPA_BANCAL],
     ['fosc solar', MAPA_BANCAL_FOSC],
+    ['clar solar amb la lletra gran', MAPA_COMBINAT],
+    ['fosc solar amb la lletra gran', MAPA_COMBINAT_FOSC],
   ])('%s: totes les vores de targeta, control i focus assoleixen nitidesa solar >= 9:1 sobre totes les superfícies', (_nom, mapa) => {
     for (const vora of VORES) {
       for (const fons of ['--sdp-fons-targeta', '--sdp-fons-app', '--sdp-fons-subtil']) {
@@ -113,5 +142,52 @@ describe('Onada R32.35b · DOL-31 · Mode Bancal solar WCAG AAA (>= 7:1 i vores 
     expect(contrast('--sdp-vora', '--sdp-fons-targeta', MAPA_BANCAL)).toBeGreaterThanOrEqual(11);
     expect(contrast('--sdp-vora', '--sdp-fons-targeta', MAPA_FOSC)).toBeLessThan(2);
     expect(contrast('--sdp-vora', '--sdp-fons-targeta', MAPA_BANCAL_FOSC)).toBeGreaterThanOrEqual(15);
+  });
+});
+
+/* v1.2.22 · Gauntlet R2 (M2-04 a) · Les correccions L2-03 (els blocs Sènior davant dels del Bancal) no tenien cap prova:
+   tornar a moure un bloc deixava guanyar la paleta Sènior amb tota la bateria en verd. Ara l'ordre, el valor resolt de
+   l'estat combinat i la cobertura del Bancal fosc sobre el Sènior fosc queden fixats. */
+describe('v1.2.22 · Gauntlet R2 (M2-04) · estat combinat del Mode Bancal: data-sdp-senior i data-contrast="bancal" alhora', () => {
+  test('els blocs del Bancal clar i fosc van DESPRÉS dels del Sènior clar i fosc a tokens.css', () => {
+    expect(BANCAL.inici, 'Bancal clar darrere del Sènior clar').toBeGreaterThan(SENIOR.fi);
+    expect(BANCAL_FOSC.inici, 'Bancal fosc darrere del Sènior fosc').toBeGreaterThan(SENIOR_FOSC.fi);
+  });
+
+  test('en l’estat combinat, --sdp-text-titol resol a negre pur en clar i a blanc pur en fosc (màxim contrast)', () => {
+    // El nom de la primitiva es construïx: la Porta Tokens (T4) no admet que un fitxer de src/ en cite cap de literal.
+    const primitiva = (nom) => `var(--sdp-${nom})`;
+    expect(resol('var(--sdp-text-titol)', MAPA_COMBINAT)).toBe(resol(primitiva('negre-pur'), MAPA_COMBINAT));
+    expect(resol('var(--sdp-text-titol)', MAPA_COMBINAT_FOSC)).toBe(resol(primitiva('blanc-pur'), MAPA_COMBINAT_FOSC));
+  });
+
+  test('en l’estat combinat, cada token que declara el Bancal té el valor del Bancal: el Sènior no en rebaixa cap', () => {
+    for (const nom of Object.keys(declaracions(BANCAL.cos))) {
+      expect(MAPA_COMBINAT[nom], `clar: ${nom}`).toBe(MAPA_BANCAL[nom]);
+    }
+    for (const nom of Object.keys({ ...declaracions(BANCAL.cos), ...declaracions(BANCAL_FOSC.cos) })) {
+      expect(MAPA_COMBINAT_FOSC[nom], `fosc: ${nom}`).toBe(MAPA_BANCAL_FOSC[nom]);
+    }
+  });
+
+  test('cada token del bloc Sènior fosc també és al Bancal fosc (el Sènior fosc guanya el Bancal clar per especificitat)', () => {
+    const bancalFosc = declaracions(BANCAL_FOSC.cos);
+    const seniorFosc = Object.keys(declaracions(SENIOR_FOSC.cos));
+    expect(seniorFosc.length).toBeGreaterThan(0);
+    for (const nom of seniorFosc) {
+      expect(bancalFosc[nom], `${nom} del Sènior fosc, absent del Bancal fosc`).toBeDefined();
+    }
+  });
+
+  test('IDEA-328 v2 · cap bloc Sènior ni Bancal redefinix l’accent de marca: en l’estat combinat és el de la paleta base', () => {
+    const MARCA = ['--sdp-accent', '--sdp-accent-hover', '--sdp-sobre-accent'];
+    for (const [nomBloc, b] of [['Sènior clar', SENIOR], ['Sènior fosc', SENIOR_FOSC], ['Bancal clar', BANCAL], ['Bancal fosc', BANCAL_FOSC]]) {
+      const propis = declaracions(b.cos);
+      for (const nom of MARCA) expect(propis[nom], `${nomBloc}: ${nom}`).toBeUndefined();
+    }
+    for (const nom of MARCA) {
+      expect(MAPA_COMBINAT[nom], `clar: ${nom}`).toBe(CLAR[nom]);
+      expect(MAPA_COMBINAT_FOSC[nom], `fosc: ${nom}`).toBe(MAPA_FOSC[nom]);
+    }
   });
 });

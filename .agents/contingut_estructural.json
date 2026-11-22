@@ -20,10 +20,10 @@
       "data": "2026-11-12"
     },
     "banc-de-llavors": {
-      "sha256": "1f0de487fd99ee8dfd8532c64c56cca2e9d52c5d9ead14aca2af72ae3823a32e",
-      "html": 571,
-      "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "sha256": "9feaa5e7a52405caebd403ac467f5dfd8d27f8e081561bd3d1d61c2eeb25f4a9",
+      "html": 840,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.22), per ordre del Mestre Javi (prompt 261122_1835; 22-11-2026): subtítol, lead i cos del Banc de llavors en cinc llengües amb la quarta font del lot 02 de Codex R32.42 (3 varietats d'olivera de l'estudi de la Generalitat Valenciana), i el cos matisat pel Gauntlet R2 (M4-01 i revisió): de l'estudi d'oliveres no se'n transcriu res (les fitxes porten el nom de la varietat, l'espècie i la pàgina del PDF) i «Alfafarenca» és la sinonímia local d'«Alfafara». Pendent de lectura humana (Gauntlet R2, M3-04), 2026-11-22.",
+      "data": "2026-11-22"
     },
     "cervell": {
       "sha256": "ab8623d080dd0661bfd48b2bea64ef3cdaf52cb645aeac6c1952654897036a93",
@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "cb988e933c733ee2fccff57078ceace792488959da76e668de3072d1a7090c03",
-      "html": 172782,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.21), per ordre del Mestre Javi (pla 261122_1502; 22-11-2026): crònica FITA_R32_41 de la v1.2.21 build 26 (recepta R32.41: Atles 2D a tota l'amplada, accés del Xat a 320 px, Mode Bancal, benvinguda del Foraster, TPV del Bar, porta del Calendari Agrícola, mateix preu al Mur i al Mercat i micròfon; WP 1.1.29) i capçalera amb el connector que serveix WordPress.org (1.1.28). Contrastat amb el codi i corregit per dues rondes de Gauntlet amb lents i verificadors escèptics; pendent de lectura humana",
+      "sha256": "357eb70223e07125f010126173389a069d37e869a146e0b3f34608ba3b9f7edc",
+      "html": 178205,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.22), per ordre del Mestre Javi (prompt 261122_1835 i ajustos en calent IDEA-326, IDEA-328, IDEA-329 i IDEA-330; 22-11-2026): crònica FITA_R32_42 de la v1.2.22 build 27 (Onades R32.42 i R32.43: oliveres al Banc de Llavors, Xat de qui arriba amb tres actors, un sol Mode Bancal amb el taronja de marca i Títol > Subtítol > Paràgraf a les targetes, logotip més gran, la IAIA en cercle blau, icones més grans al mòbil, un sol logotip al menú del mòbil que comença per CONTROL, decisions del Motor d'estudis, una sola benvinguda, vídeos del telèfon sense el lloc a dins i les peces amb el Mur apagat; WP 1.1.30) i capçalera amb el connector que serveix WordPress.org (1.1.29). Contrastat amb el codi i corregit per les dues rondes del Gauntlet (lents i verificadors escèptics); pendent de lectura humana (Gauntlet R2, M3-04), 2026-11-22.",
       "data": "2026-11-22"
     },
     "wikidepoble": {

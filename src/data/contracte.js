@@ -944,8 +944,13 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.21 · R32.41 i IDEA-319 (pla 261122_1502) · Versió unificada 1.2.21 amb
    el build 26: els sis kits de la recepta R32.41 (Codex R32.36 i Gemini R32.35b, R32.37, R32.38, R32.39 i R32.40, amb
    les seues costures i la dieta del full del Xat), el preu del Mur amb el formatador del Mercat (L3-05), la maquetació
-   canònica de l'Atles 2D i el connector WordPress 1.1.29. */
-export const VERSIO_CLIENT_NATIU = 26;
+   canònica de l'Atles 2D i el connector WordPress 1.1.29.
+   Onada v1.2.22 · IDEA-323, R32.42 i R32.43 (prompt 261122_1835) · Versió unificada 1.2.22 amb el build 27: el Xat del
+   Foraster sense amfitrió amb els tres actors del projecte, el logotip més gran a la barra negra, l'accés del Xat sense
+   el segon rètol de benvinguda, un sol Mode Bancal (DOL-31), les decisions del Motor d'estudis a l'Atles, els lots 02 i
+   03 de Codex R32.42 (Ajuntament i privadesa de la ubicació i del Mur, amb les migracions encara sense aplicar) i 02 i 03
+   de R32.43 (Sentinella i duplicats de public), i el connector WordPress 1.1.30. */
+export const VERSIO_CLIENT_NATIU = 27;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

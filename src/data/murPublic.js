@@ -6,6 +6,7 @@ const text = value => typeof value === 'string' ? value : '';
 export function elementDeMurPublic(row, sectionId) {
   const payload = { sectionId, type: ({ mur: 'feed', mercat: 'product', events: 'event', multimedia: 'media' })[sectionId],
     title: text(row.title), description: text(row.description), content: text(row.public_content) };
+  if (typeof row.mostrar_al_mur === 'boolean') payload.mostrarAlMur = row.mostrar_al_mur;
   const item = elementDeFilaPublicada({ id: text(row.id), payload, titol: text(row.title),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at), sectionId });
   item._murPublic = true;

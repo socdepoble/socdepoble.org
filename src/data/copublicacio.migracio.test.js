@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { PAGE_ROUTE_MAP } from '../config/navigation.js';
 import { ESPECIES_HERBARI_LA_TORRE_117 } from './patrimoni/herbariLaTorre117.js';
-import { FONTS_BANC_LLAVORS, VARIETATS_CATALEG_VALENCIA, VARIETATS_AVL_MALLORCA, ESPECIES_ATLES_CATALUNYA } from './patrimoni/bancLlavors.js';
+import { FONTS_BANC_LLAVORS, VARIETATS_CATALEG_VALENCIA, VARIETATS_AVL_MALLORCA, ESPECIES_ATLES_CATALUNYA, VARIETATS_OLIVERA_GVA_IVIA } from './patrimoni/bancLlavors.js';
 import { LLIBRES_ARBRES_MONUMENTALS } from './patrimoni/llibresArbresMonumentals.js';
 import { RECEPTES_QUE_DINEM } from './patrimoni/queDinem.js';
 
@@ -17,6 +17,12 @@ const SQL = ['2611111735_copublicacio_registrada.sql', '20261117150000_r324_copu
    queda declarada ací com a pendent: fora del registre, private.copub_recurs no la reconeix com a peça del paquet, i la
    prova falla el dia que la migració arribe sense que algú lleve la clau d'esta llista. */
 const PAGINES_PENDENTS_DE_REGISTRE = ['tot-el-que-pots-fer'];
+/* v1.2.22 · Codex R32.42 (lot 02) afig al Banc de llavors la font oficial d'oliveres GVA/IVIA i les seues tres varietats,
+   però el kit no porta cap migració que les afija al registre de 2611111735. Com tot-el-que-pots-fer: queden declarades
+   pendents (la migració i el seu pin POSSE són de l'integrador i del Mestre). La migració de registre que arribe s'ha
+   d'afegir a la constant SQL, i llavors esta llista fa caure la prova fins que algú les lleve d'ací. */
+const CATALEGS_PENDENTS_DE_REGISTRE = ['oliveres-gva-ivia'];
+const LLAVORS_PENDENTS_DE_REGISTRE = VARIETATS_OLIVERA_GVA_IVIA.map(llavor => llavor.id);
 
 test('el registre SQL cobreix els identificadors reals de les set superfícies del contracte', () => {
   const idsPerTipus = new Map();
@@ -32,7 +38,7 @@ test('el registre SQL cobreix els identificadors reals de les set superfícies d
     /* v1.2.8 · Codex R32.9 · /page/sistema-nervios passa al llibre de la Wiki (PAGE_ROUTE_MAP, Navigate amb replace):
        la clau ja no és a PAGE_COPY, però el registre de 20261117150000 (R32.4, fixat al pin POSSE) la conserva. */
     pagina: [...Object.keys(PAGE_COPY).filter((clau) => !PAGINES_PENDENTS_DE_REGISTRE.includes(clau)), ...['sistema-nervios'].filter((clau) => PAGE_ROUTE_MAP[clau]?.startsWith('/wikidepoble?item='))],
-    llibre_cataleg: ['que-dinem', 'herbari', 'banc-de-llavors', ...catalegs, ...FONTS_BANC_LLAVORS.map(font => font.id)],
+    llibre_cataleg: ['que-dinem', 'herbari', 'banc-de-llavors', ...catalegs, ...FONTS_BANC_LLAVORS.map(font => font.id).filter(id => !CATALEGS_PENDENTS_DE_REGISTRE.includes(id))],
     recepta: RECEPTES_QUE_DINEM.map(recepta => recepta.slug),
     arbre: arbres,
     planta: ESPECIES_HERBARI_LA_TORRE_117.map(planta => planta.id),
@@ -43,6 +49,10 @@ test('el registre SQL cobreix els identificadors reals de les set superfícies d
     expect(Object.hasOwn(PAGE_COPY, clau), clau).toBe(true);
     expect(SQL.includes(`'${clau}'`), clau).toBe(false);
   }
+  // Cada catàleg i cada llavor pendents són reals (FONTS_BANC_LLAVORS i VARIETATS_OLIVERA_GVA_IVIA) i encara no són al registre.
+  expect(CATALEGS_PENDENTS_DE_REGISTRE.every(id => FONTS_BANC_LLAVORS.some(font => font.id === id))).toBe(true);
+  expect(LLAVORS_PENDENTS_DE_REGISTRE).toEqual(['olivera-alfafarenca', 'olivera-blanqueta', 'olivera-villalonga']);
+  for (const clau of [...CATALEGS_PENDENTS_DE_REGISTRE, ...LLAVORS_PENDENTS_DE_REGISTRE]) expect(SQL.includes(`'${clau}'`), clau).toBe(false);
   expect([...idsPerTipus.keys()].sort()).toEqual(Object.keys(ids).sort());
   for (const [tipus, valors] of Object.entries(ids)) expect(idsPerTipus.get(tipus).sort(), tipus).toEqual(valors.sort());
   expect(origensRentonar.get('llibre_cataleg')).toEqual(catalegs.sort());

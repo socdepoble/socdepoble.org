@@ -1,3 +1,4 @@
+import { esVisibleAlMur } from '../../data/visibilitatMur.js';
 /**
  * alertesMunicipals.js — T3.3 (marató nocturna 261101, carril B3) · Les
  * alertes d'emergència i els bàndols urgents del Mur, pur.
@@ -268,9 +269,18 @@ export function trossosDeCaducitat(caducaAlMs, locale) {
 /**
  * Les entrades ja ordenades, amb les que complixen `esAlertaVigent` al
  * capdamunt. Partició estable: dins de cada grup, l'ordre d'entrada.
+ * Codex R32.42 lot 03 (L1R2-01) · Abans lleva les que no passen esVisibleAlMur
+ * (la projecció de l'aparador: «Mostrar també al Mur» apagat). v1.2.22 ·
+ * Gauntlet R1 (L4-06) · Això inclou els actes de la pestanya Calendari del Mur,
+ * que ix d'estes entrades: un acte amb el Mur apagat no hi és, però continua a
+ * /calendari i a la seua fitxa, que lligen el context sense filtre. És volgut.
  */
 export function vigentsDalt(entrades, esAlertaVigent) {
-  if (!Array.isArray(entrades) || typeof esAlertaVigent !== 'function') return Array.isArray(entrades) ? entrades : [];
+  if (!Array.isArray(entrades)) return [];
+  // Projecció final exclusiva de l'aparador del Mur. El context manté totes
+  // les peces per al Mercat, el Calendari i les seues fitxes pròpies.
+  if (!entrades.every(entrada => esVisibleAlMur(entrada?.item))) entrades = entrades.filter(entrada => esVisibleAlMur(entrada?.item));
+  if (typeof esAlertaVigent !== 'function') return entrades;
   const dalt = [];
   const resta = [];
   for (const entrada of entrades) (esAlertaVigent(entrada) ? dalt : resta).push(entrada);

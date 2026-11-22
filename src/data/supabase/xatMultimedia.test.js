@@ -95,6 +95,8 @@ test('el temps límit de la pujada és proporcional a la mida i allibera la rese
   fetch.mockImplementationOnce((_url, { signal }) => new Promise((_resolve, reject) => { signal.addEventListener('abort', () => reject(new DOMException('cancel·lat', 'AbortError'))); }));
   let acabat = null;
   const resultat = publicaAdjuntXat(FIL, gran).catch((e) => { acabat = e; return e; });
+  // La inspecció binària és asíncrona: el rellotge de pujada comença quan ix la petició.
+  await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
   await vi.advanceTimersByTimeAsync(30_000);
   expect(acabat).toBeNull();
   await vi.advanceTimersByTimeAsync(tempsLimitPujada(5_000_000) - 30_000);
@@ -160,11 +162,13 @@ test('amb onProgres, cancel·lar avorta el XHR i no publica', async () => {
 });
 test('amb onProgres, el temps límit proporcional talla igual i diu temps-esgotat', async () => {
   vi.useFakeTimers();
-  ambXhr(() => {});
+  let iniciPujada;
+  ambXhr(() => { iniciPujada = Date.now(); });
   const gran = { id: ID, fitxer: new Blob([mp4DeMida(5_000_000)], { type: 'video/mp4' }), tipus: 'video', duradaMs: 9_000 };
   let acabat = null;
   const resultat = publicaAdjuntXat(FIL, gran, { onProgres: vi.fn() }).catch((e) => { acabat = e; return e; });
-  await vi.advanceTimersByTimeAsync(tempsLimitPujada(5_000_000) - 1);
+  await vi.waitFor(() => expect(XhrFals.tots).toHaveLength(1));
+  await vi.advanceTimersByTimeAsync(iniciPujada + tempsLimitPujada(5_000_000) - 1 - Date.now());
   expect(acabat).toBeNull();
   await vi.advanceTimersByTimeAsync(1);
   expect(await resultat).toMatchObject({ name: 'TimeoutError', code: 'temps-esgotat', message: ERRORS_ADJUNT_XAT['temps-esgotat'] });

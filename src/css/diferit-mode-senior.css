@@ -135,11 +135,24 @@
   :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(
     article.content-wrapper,
     .content-wrapper,
-    .sdp-prose,
-    .sp-card-body
+    .sdp-prose
   ) :where(p, li) {
     font-size: clamp(1.25rem, 1.18rem + 0.35vw, 1.4375rem);
     line-height: 1.65;
+  }
+
+  /* v1.2.22 · IDEA-328 v2 (ordre del Mestre, 22-11-2026) · A les targetes, en Mode Bancal, l'escala harmònica Títol >
+     Subtítol > Paràgraf. El cos de la targeta ix del clamp de prosa d'article de dalt (20–23 px, que el feia més gran que
+     el subtítol). El títol (.sp-card-title) es queda en --sdp-text-h5 (1.5rem, 24 px); el subtítol (.sp-card-subtitle) i
+     l'h2 del cos van a 1.25rem (20 px); i el paràgraf del cos (p, li i .sp-card-text) a 1.125rem (18 px): quasi tan gran
+     com el subtítol, mai més. Les targetes d'acció i les rajoles del catàleg tenen la seua escala pròpia i no hi entren. */
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sp-card:not(.sp-card--action):not(.sdp-cataleg-workspace__rajola .sp-card) :is(.sp-card-subtitle, .sp-card-body h2) {
+    font-size: 1.25rem;
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sp-card:not(.sp-card--action):not(.sdp-cataleg-workspace__rajola .sp-card) .sp-card-body :where(p, li, .sp-card-text) {
+    font-size: 1.125rem;
+    line-height: 1.6;
   }
 
   :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(
@@ -154,13 +167,10 @@
   /* P0-ANDROID-PUSH (v1.2.16) · B11b (ordre del Mestre 261121; prompt 0216, T2.5; D-13; [VA2-20]) ·
      El Sènior escala l'ACCÉS del Xat, la porta del Foraster: les píndoles («Descarrega l'App»,
      «Entrar», «Registrar-se») ja van a 56 px amb la llista de dalt (només dins de .sdp-xat-acces:
-     .sdp-xat-pindola també fa de botó en línia dins de text, on 56 px trencarien la línia), i la
-     benvinguda pren l'escala de la prosa Sènior. Les files i les bombolles del Xat no canvien
-     ([VA2-20]: només amb el sí del Mestre davant de les captures). Sense Sènior, cap píxel. */
-  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-xat-acces > p {
-    font-size: clamp(1.25rem, 1.18rem + 0.35vw, 1.4375rem);
-    line-height: 1.65;
-  }
+     .sdp-xat-pindola també fa de botó en línia dins de text, on 56 px trencarien la línia). Les
+     files i les bombolles del Xat no canvien ([VA2-20]: només amb el sí del Mestre davant de les
+     captures). Sense Sènior, cap píxel. IDEA-323.3 (v1.2.22) · L'accés ja no porta la benvinguda
+     (la diu la targeta d'acollida): fora la seua escala. */
 
   .sdp-mode-senior-xip--curt {
     flex-wrap: nowrap;
@@ -225,18 +235,6 @@
       padding-top: var(--sdp-space-1);
       padding-inline: var(--sdp-space-3);
       gap: var(--sdp-space-2);
-    }
-
-    .sdp-xat-acces > p {
-      font-size: var(--sdp-text-small);
-      line-height: 1.3;
-    }
-
-    /* v1.2.21 · Gauntlet R1 (L2-01) · Amb la «Lletra gran», la benvinguda mai és més menuda que en mode normal
-       (1rem, 16 px) i conserva un interlineat de lectura (1.5, WCAG 1.4.8). */
-    :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sdp-xat-acces > p {
-      font-size: 1rem;
-      line-height: 1.5;
     }
 
     .sdp-xat-acces > .sdp-alerta__accions:first-of-type {

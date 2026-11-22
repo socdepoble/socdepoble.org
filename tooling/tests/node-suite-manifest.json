@@ -295,7 +295,11 @@
     "tests/node/edgeNoticiesPushHostil.r32_23.test.mjs",
     "tooling/tests/mapa-editorial-r3223.test.mjs",
     "tests/botigues-alpha-zero-apk.v1216.test.mjs",
-    "tests/botigues-wordpress-svn.v1216.test.mjs"
+    "tests/botigues-wordpress-svn.v1216.test.mjs",
+    "tests/r3242-ajuntament-sql.test.mjs",
+    "tests/r3242-xat-ubicacio-postgres.test.mjs",
+    "tests/cartograf-som-de-poble.test.mjs",
+    "tooling/gates/tractor-duplicats-public.test.mjs"
   ],
   "files": [
     {
@@ -2593,6 +2597,26 @@
       "path": "tests/tractor-rutes.proveidors.r3236.test.mjs",
       "suite": "primary",
       "reason": "R32.36: definicions canòniques i literals orfes amb proves positives i adversàries."
+    },
+    {
+      "path": "tests/r3242-ajuntament-sql.test.mjs",
+      "suite": "primary",
+      "reason": "R32.42 lot 02: acreditació institucional de l'Ajuntament i sembrat INE sense reclamar, sobre PGlite (PostgreSQL natiu amb SDP_R3242_SQL_ENGINE=native)."
+    },
+    {
+      "path": "tests/r3242-xat-ubicacio-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "R32.42 lot 03: ubicació del xat a dos decimals al servidor i visibilitat pública del Mur, sobre PostgreSQL natiu (PGlite amb SDP_R3242_ENGINE=pglite)."
+    },
+    {
+      "path": "tests/cartograf-som-de-poble.test.mjs",
+      "suite": "primary",
+      "reason": "R32.43 lot 03: Cartògraf sobre un snapshot byte-idèntic, sense llegir l'arbre viu."
+    },
+    {
+      "path": "tooling/gates/tractor-duplicats-public.test.mjs",
+      "suite": "primary",
+      "reason": "R32.43 lot 03: registre congelat de grups duplicats de public/ (hash, mida i rutes exactes) i casos adversaris."
     }
   ]
 }

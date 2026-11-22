@@ -7,6 +7,7 @@
    la integritat de l'Atles, les pàgines, el llindar i el temps. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { pobleDelForaster } from '../sections/xat/pobleAmfitrio.js';
 import {
   ATLES_OPERATIU, DF_MAXIM_DEL_COS, ENCAPCALAMENT_DE_LA_WIKI, ENCAPCALAMENT_DE_SOC_DE_POBLE, EQUIVALENCIES, MAXIM_FRAGMENT_DE_L_ATLES,
   PAGINES_PER_A_LA_IAIA, RUTA_INTERNA, RUTES_DE_PAGINA, SUGGERIMENTS_RAPIDS_IAIA, componResposta, construeixIndex, cercaRellevant, documentDelPoble,
@@ -226,8 +227,12 @@ describe('l’Atles Operatiu del Sistema', () => {
     expect(text(perId('atles:proposa_card'))).toContain(CA['section.notes.proposaCard']);
     expect(text(perId('atles:proposa_card'))).toContain(CA['section.notes.proposaCardDesfer']);
     /* Bloc F.1 (P1-70) · Cap promesa que no siga certa en tots els modes:
-       la IAIA es pot apagar, i Javi no té directe en remot sense compte. */
-    expect(text(perId('atles:xat'))).toContain('quatre converses fixes');
+       la IAIA es pot apagar, i Javi no té directe en remot sense compte.
+       v1.2.22 · IDEA-323.1 (Gauntlet R1, L1-01) · Ni un número fix de converses: sense compte i sense poble declarat,
+       la mostra porta tres actors (pobleDelForaster(null) és null) i la gent del poble només amb compte. */
+    expect(text(perId('atles:xat'))).not.toMatch(/quatre converses/);
+    expect(text(perId('atles:xat'))).toContain('Sense compte hi ha la comunitat de Sóc de Poble, Javi Llinares i la IAIA MarIA');
+    expect(pobleDelForaster(null)).toBeNull();
     expect(text(perId('atles:xat'))).toContain('nivell d');
     expect(plega(text(perId('atles:javi')))).not.toMatch(/directe|parla amb ell|escriu-li/);
   });

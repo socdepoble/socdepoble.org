@@ -160,8 +160,10 @@ describe('IDEA-319 · el full de l’Atles (diferit-atles-2d.css)', () => {
 describe('v1.2.21 · els dolors posats al dia', () => {
   test('cada dolor repassat diu la v1.2.21, i l’avís de datació de la pàgina ho diu a la vista', async () => {
     const { ATLES } = await import('../dades/atles2dDades.js');
-    const posat = ATLES.meta.posat_al_dia;
+    /* v1.2.22 · posat_al_dia és una llista de passades: la primera és la de la v1.2.21 (DOL-31 passa a la de la v1.2.22). */
+    const posat = ATLES.meta.posat_al_dia[0];
     expect(posat).toEqual({ data: '2026-11-22', versio: 'v1.2.21 (build 26)', dolors: expect.any(Array) });
+    expect(posat.dolors).toHaveLength(7);
     const repassats = ATLES.placa.dolors.filter((dolor) => posat.dolors.includes(dolor.id));
     expect(repassats).toHaveLength(posat.dolors.length);
     for (const dolor of repassats) expect(dolor.versio_o_kit, dolor.id).toMatch(/^v1\.2\.21 \(build 26\) · R32\./);
@@ -187,5 +189,33 @@ describe('v1.2.21 · els dolors posats al dia', () => {
     const avis = container.querySelector('.sdp-atles__datacio').textContent;
     expect(avis).toContain('es van repassar el 22-11-2026 contra la v1.2.21 (build 26)');
     for (const id of posat.dolors) expect(avis).toContain(id);
+  });
+});
+
+/* v1.2.22 · IDEA-323.4 · DOL-31 · Un sol Mode Bancal tanca el dolor sencer: el contrast es nota (v1.2.21) i ja no és
+   amagat (el xip de l'accés del Xat, /el-meu-perfil, /control i Ajustos, i els dos atributs alhora). */
+describe('v1.2.22 · DOL-31 resolt i la segona passada de datació', () => {
+  test('DOL-31 és resolt a la passada de la v1.2.22, en passat, i l’avís ho diu a la vista', async () => {
+    const { ATLES } = await import('../dades/atles2dDades.js');
+    const [primera, segona] = ATLES.meta.posat_al_dia;
+    expect(segona).toEqual({ data: '2026-11-22', versio: 'v1.2.22 (build 27)', dolors: ['DOL-31'] });
+    expect(primera.dolors).not.toContain('DOL-31');
+    const dol31 = ATLES.placa.dolors.find((dolor) => dolor.id === 'DOL-31');
+    expect(dol31.estat).toBe('resolt');
+    expect(dol31.versio_o_kit).toMatch(/^v1\.2\.22 \(build 27\) · IDEA-323\.4/);
+    for (const camp of ['titol', 'descripcio', 'nota']) {
+      expect(dol31[camp], camp).not.toMatch(/\b(?:queda|queden|continua|continuen|encara no)\b/i);
+    }
+    for (const ruta of ['src/config/theme.js', 'src/app/contexts/UIContext.jsx', 'src/components/universal/ControlModeSenior.jsx']) {
+      expect(dol31.evidencia).toContain(ruta);
+    }
+    /* v1.2.22 · Gauntlet R1 (L3-04) · La mesura del 39 % i del 64 % és del kit R32.35b, d'abans que la costura de R32.41
+       ajustara quatre valors: la nota no la pot presentar com la del contrast publicat. I la capçalera no canvia. */
+    expect(dol31.nota).toContain('el 39 % en clar i el 64 % en fosc, però ho va mesurar abans que la costura de R32.41 ajustara quatre valors');
+    expect(dol31.nota).toContain('no és una mesura del contrast publicat');
+    expect(dol31.nota).toContain('La capçalera no canvia');
+    const { container } = munta(EspecimenAtles2dPresentacio);
+    const avis = container.querySelector('.sdp-atles__datacio').textContent;
+    expect(avis).toContain('El dolor DOL-31 es va repassar el 22-11-2026 contra la v1.2.22 (build 27).');
   });
 });

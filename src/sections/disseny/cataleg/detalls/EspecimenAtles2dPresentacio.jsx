@@ -6,6 +6,9 @@
  * de la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html: l'avís de la congelació d'Orkut, les quatre
  * xifres globals, les targetes que porten a les quatre pàgines d'estudi i totes les fonts.
  * Lectura pura: cap mecànica social ni cap escriptura.
+ *
+ * v1.2.22 · Gauntlet R1 (L3-07) · D-ATLES-MOTOR · L'obertura diu «perfils simulats», com la xifra global i el
+ * Motor: els perfils de l'Assaig a la Plaça no són veus d'àudio.
  */
 import { useRef } from 'react';
 import { useFullDiferit } from '../../../../config/fullDiferit.js';
@@ -51,7 +54,7 @@ export default function EspecimenAtles2dPresentacio() {
         {/* v1.2.19 · Gauntlet R2 (L4R2-04): la data i la versió de les dades, a la vista i en passat. */}
         <NotaDatacio meta={meta} />
         <p>
-          Què ens van dir els veïns sintètics d’«Assaig a la Plaça», què fan les xarxes per a pobles del món, en quin
+          Què ens van dir els perfils simulats de veïns d’«Assaig a la Plaça», què fan les xarxes per a pobles del món, en quin
           estat real tenim les cinc pàgines d’entitat i com podria Sóc de Poble oferir estudis de mercat a qui en necessite.
           Cada vista és una pàgina d’este catàleg, amb els seus filtres.
         </p>

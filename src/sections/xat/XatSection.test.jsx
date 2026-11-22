@@ -2161,6 +2161,18 @@ test('T63.2 · ?sobre= d’una pàgina sense xat no crida el backend; en remot s
   expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
 });
 
+/* v1.2.22 · IDEA-323.1 (b) · Des de la pàgina d'un poble, el Foraster passa per l'entrada amb la tornada al ?sobre= del
+   poble; amb sessió, el xat de veres n'obri la comunitat (obriFilDePagina). La mostra no pinta cap poble per la consulta. */
+test('IDEA-323.1 · (b) sense sessió, el «Comentar» de la pàgina de la Torre porta a /registre i torna al seu ?sobre=', () => {
+  mocks.threadId = null;
+  mocks.senseSessio = true;
+  mocks.joId = null;
+  mocks.params = new URLSearchParams({ sobre: 'poble:la-torre-de-les-macanes', titol: 'Gent de la Torre', ruta: '/pobles/la-torre-de-les-macanes' });
+  render(<XatSection />);
+  expect(mocks.navigate).toHaveBeenCalledWith(rutaDEntrada({ tornar: rutaAmbConsulta('/xat', mocks.params) }), { replace: true });
+  expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
+});
+
 /* T4 · La tornada que el Xat passa a rutaDEntrada: la ruta amb la consulta.
    (Des de la correcció de la revisió, el mock de XatContext conserva el mòdul
    real amb importOriginal i FakeChatOnboarding es pot pintar: la prova T63.2

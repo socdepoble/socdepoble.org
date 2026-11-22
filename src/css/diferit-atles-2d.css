@@ -812,23 +812,7 @@
     text-align: center;
   }
 
-  .sdp-atles__semafor {
-    display: inline-flex;
-    gap: var(--sdp-space-1);
-  }
-
-  .sdp-atles__llum {
-    inline-size: 12px;
-    block-size: 12px;
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: 50%;
-    background: var(--sdp-fons-subtil);
-  }
-
-  .sdp-atles__llum--verd {
-    border-color: var(--sdp-exit-text);
-    background: var(--sdp-exit-text);
-  }
+  /* v1.2.22 · D-ATLES-MOTOR (Mestre, 22-11-2026) · Cap «llum verda»: la maqueta ja no pinta cap semàfor. */
 
   /* ── Fonts i traçabilitat ── */
   /* Llei de llistes: el <ul> i l'<ol> conserven els marcadors, així que van en bloc i l'aire el

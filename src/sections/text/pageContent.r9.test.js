@@ -226,7 +226,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.19 · La crònica de les Onades R32.29 a R32.33 obri /versions, davant de la crònica R32.27 i R32.28.
     // Onada v1.2.20 · La crònica de l'Onada R32.34 obri /versions, davant de la crònica R32.29 a R32.33.
     // Onada v1.2.21 · I la crònica de l'Onada R32.41 obri /versions, davant de la R32.34.
-    expect([...versions.querySelectorAll('h3')].slice(0, 33).map((h3) => h3.textContent)).toEqual([
+    // Onada v1.2.22 · I la crònica de les Onades R32.42 i R32.43 obri /versions, davant de la R32.41.
+    expect([...versions.querySelectorAll('h3')].slice(0, 34).map((h3) => h3.textContent)).toEqual([
+      '22 de novembre de 2026, nit · Onades R32.42 i R32.43 · Un Xat obert a tots els pobles, un logotip que es veu i un sol Mode Bancal',
       '22 de novembre de 2026, vesprada · Onada R32.41 · Les pàgines de l’Atles a tota l’amplada, un accés al Xat que cap en pantalles estretes i el mateix preu al Mur i al Mercat',
       '22 de novembre de 2026, matinada · Onada R32.34 · Lectura sense cobertura, fotos sense la posició amagada i notes que diuen on és cada text',
       '21 de novembre de 2026, nit · Onades R32.29 a R32.33 · L’Atles 2D a Disseny, cada sessió amb les seues dades i el lector de pantalla en la teua llengua',

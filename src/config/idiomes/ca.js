@@ -2760,6 +2760,8 @@ export default {
   'section.xat.adjunts.error.ubicacio-invalida': "La ubicació del fitxer no és vàlida. Torna a preparar-lo.",
   'section.xat.adjunts.error.ubicacio-no-admesa': "S’ha enviat sense la ubicació: el servidor de Sóc de Poble encara no l’admet.",
   'section.xat.adjunts.error.ubicacio-no-eliminable': "Este navegador no ha pogut amagar la ubicació del vídeo. Tria un MP4 o prova-ho amb un altre navegador.",
+  'section.xat.adjunts.error.video-no-acreditable': "No podem comprovar que este vídeo no porte dins el lloc on es va gravar i, per a protegir-te, no l’enviem. Prova-ho amb un altre vídeo.",
+  'section.xat.adjunts.error.video-no-acreditable-navegador': "Este aparell o navegador no ha pogut preparar el vídeo per a enviar-lo sense el lloc on es va gravar i, per a protegir-te, no l’enviem.",
   'section.xat.ubicacio.inclosa': 'Ubicació inclosa ({coords})',
   'section.xat.ubicacio.inclosaSenseCoords': 'Ubicació inclosa',
   'section.xat.ubicacio.amaga': 'Amaga el lloc',
@@ -3076,9 +3078,9 @@ export default {
   // D6 · Mode Bancal (Q1 del Mestre, 261004): el contrast a l'Aparença dels Ajustos.
   'section.xat.ajustos.contrast': 'Contrast',
   'section.xat.ajustos.contrast.normal': 'Normal',
-  'section.xat.ajustos.contrast.bancal': 'Bancal (exterior, màxim contrast)',
+  'section.xat.ajustos.contrast.bancal': 'Mode Bancal · Sol i Lletra Gran',
   'section.xat.ajustos.contrast.sistema': 'Segons el sistema',
-  'section.xat.ajustos.contrast.paraules': 'sol exterior llegibilitat lectura',
+  'section.xat.ajustos.contrast.paraules': 'exterior llegibilitat lectura vista',
   // P1-64 (261028) · La foto del cos d'una publicació: conservar-ne la ubicació i la data.
   'editor.imatge.exif.cancela': "Cancel·lar",
   'editor.imatge.exif.descripcio': "Decidix si es publiquen amb la foto i, la ubicació, amb quina precisió.",

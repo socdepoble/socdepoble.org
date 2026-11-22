@@ -44,6 +44,8 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
   'ubicacio-invalida': 'section.xat.adjunts.error.ubicacio-invalida',
   'ubicacio-no-admesa': 'section.xat.adjunts.error.ubicacio-no-admesa',
   'ubicacio-no-eliminable': 'section.xat.adjunts.error.ubicacio-no-eliminable',
+  'video-no-acreditable': 'section.xat.adjunts.error.video-no-acreditable',
+  'video-no-acreditable-navegador': 'section.xat.adjunts.error.video-no-acreditable-navegador',
 
   'foto-mida': 'section.xat.adjunts.error.fotoMida',
   'foto-codificacio': 'section.xat.adjunts.error.fotoCodificacio',
@@ -269,7 +271,13 @@ export async function preparaAdjunt(fitxer, {
     // manté l'admissió de sempre; no se li atribuïx una neteja no observada.
     if (!net && (!conserva || /^video\/(mp4|quicktime)$/.test(preparat.type))) {
       const netejat = await netejaVideo(preparat, { signal });
-      if (!netejat.net && !conserva) throw errorAdjuntXat('ubicacio-no-eliminable');
+      // v1.2.22 · Gauntlet R1 (L4-04) · Un MP4/MOV que no es pot acreditar té el seu avís (video-no-acreditable).
+      // Gauntlet R2 (M2-02) · Si el navegador no l'ha pogut comprimir (motiuFallback), la causa és el camí, no el
+      // fitxer: el mateix MP4/MOV comprimit ix en un contenidor nou. L'avís és el del navegador i porta el motiu.
+      if (!netejat.net && reduit.motiuFallback && /^video\/(mp4|quicktime)$/.test(preparat.type)) {
+        throw errorAdjuntXat('video-no-acreditable-navegador', { motiuFallback: reduit.motiuFallback });
+      }
+      if (!netejat.net) throw errorAdjuntXat(/^video\/(mp4|quicktime)$/.test(preparat.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');
       if (netejat.net) { preparat = netejat.fitxer; net = true; }
     }
     resultat = { fitxer: preparat, tipus: 'video', duradaMs, senseUbicacio: net, videoComprimit: reduit.comprimit === true };
@@ -287,7 +295,7 @@ export async function amagaUbicacioAdjunt(adjunt, { signal, comprimeix = compres
   if (adjunt.tipus === 'imatge') fitxer = await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: false });
   else if (adjunt.tipus === 'video' && !adjunt.senseUbicacio) {
     const netejat = await netejaVideo(fitxer, { signal });
-    if (!netejat.net) throw errorAdjuntXat('ubicacio-no-eliminable');
+    if (!netejat.net) throw errorAdjuntXat(/^video\/(mp4|quicktime)$/.test(fitxer.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');
     fitxer = netejat.fitxer;
   }
   if (signal?.aborted) throw abortat();

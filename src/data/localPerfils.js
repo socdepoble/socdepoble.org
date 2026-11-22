@@ -330,7 +330,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     usuari: (perfil.is_public || (Boolean(usuari?.id) && perfil.id === usuari.id)) && perfil.username ? perfil.username : null
   });
   const publicDEntitat = (org, usuari) => ({
-    tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: org.name, avatar: org.logo_url || '',
+    tipus: org.kind === 'group' ? 'grup' : 'entitat', kind: typeof org.kind === 'string' ? org.kind : null,
+    claimed: org.claimed === true, id: org.id, slug: org.slug || null, nom: org.name, avatar: org.logo_url || '',
     hero: org.hero_url || '', ...(org.hero_video_url ? { heroVideo: org.hero_video_url } : null),
     lema: org.lema || '', bio: org.description || '', presentacioHtml: org.presentacio_html || '',
     poble: org.town_name || '', esIA: false, publicat: org.visibility === 'public',

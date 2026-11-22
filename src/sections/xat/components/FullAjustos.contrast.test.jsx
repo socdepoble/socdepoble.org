@@ -91,8 +91,10 @@ describe('el control «Contrast»', () => {
     const grups = [...full().querySelectorAll('[role="group"]')].map((g) => g.querySelector('h3')?.textContent);
     expect(grups).toEqual(['Tema', 'Contrast', 'Llengua']);
     const contrast = within(full()).getByRole('group', { name: 'Contrast' });
+    /* IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · La segona opció és el Mode Bancal sencer, el
+       mateix del xip: un sol mode, cap segon interruptor. S'actualitza a posta. */
     expect(opcionsDe(contrast)).toEqual([
-      ['Normal', 'true'], ['Bancal (exterior, màxim contrast)', 'false'], ['Segons el sistema', 'false']
+      ['Normal', 'true'], ['Mode Bancal · Sol i Lletra Gran', 'false'], ['Segons el sistema', 'false']
     ]);
     /* El ✓ només a la triada. */
     const [normal, bancal] = within(contrast).getAllByRole('button');
@@ -103,7 +105,7 @@ describe('el control «Contrast»', () => {
   test('triar «Bancal» crida setContrast a l’acte, sense tocar el tema ni la llengua', () => {
     obriAparenca();
     const contrast = within(full()).getByRole('group', { name: 'Contrast' });
-    fireEvent.click(within(contrast).getByRole('button', { name: 'Bancal (exterior, màxim contrast)' }));
+    fireEvent.click(within(contrast).getByRole('button', { name: 'Mode Bancal · Sol i Lletra Gran' }));
     expect(mocks.setContrast).toHaveBeenCalledTimes(1);
     expect(mocks.setContrast).toHaveBeenCalledWith('bancal');
     fireEvent.click(within(contrast).getByRole('button', { name: 'Segons el sistema' }));
@@ -138,14 +140,20 @@ describe('el model i la cerca', () => {
     expect(OPCIONS_CONTRAST.map((o) => o.opcio)).toEqual(PREFERENCIES_CONTRAST);
     const grup = paginaAjustos('aparenca').grups.find((g) => g.seleccio === 'contrast');
     expect(grup.files).toBe(OPCIONS_CONTRAST);
-    expect(etiquetaDeFila(grup.files[1])).toBe('Bancal (exterior, màxim contrast)');
+    expect(etiquetaDeFila(grup.files[1])).toBe('Mode Bancal · Sol i Lletra Gran');
   });
 
-  test('«contrast», «sol» i «exterior» troben la secció Contrast a l’Aparença', () => {
-    for (const terme of ['contrast', 'sol', 'exterior']) {
+  test('«contrast», «exterior» i «vista» troben la secció Contrast a l’Aparença; «sol» i «bancal», la fila del Mode Bancal', () => {
+    for (const terme of ['contrast', 'exterior', 'vista']) {
       const [primer] = cercaAjustos(terme);
       expect([terme, etiquetaDeFila(primer.fila)]).toEqual([terme, 'Contrast']);
       expect(primer).toMatchObject({ pagina: 'aparenca', cami: ['arrel', 'aparenca'] });
+    }
+    /* IDEA-323.4 · La fila ja porta «Sol» al nom: la paraula clau no la repetix i la cerca troba la fila. */
+    for (const terme of ['sol', 'bancal']) {
+      const [primer] = cercaAjustos(terme);
+      expect([terme, etiquetaDeFila(primer.fila)]).toEqual([terme, 'Mode Bancal · Sol i Lletra Gran']);
+      expect(primer).toMatchObject({ pagina: 'aparenca' });
     }
   });
 });
@@ -154,9 +162,9 @@ describe('les claus i18n del contrast', () => {
   const CLAUS = {
     'section.xat.ajustos.contrast': 'Contrast',
     'section.xat.ajustos.contrast.normal': 'Normal',
-    'section.xat.ajustos.contrast.bancal': 'Bancal (exterior, màxim contrast)',
+    'section.xat.ajustos.contrast.bancal': 'Mode Bancal · Sol i Lletra Gran',
     'section.xat.ajustos.contrast.sistema': 'Segons el sistema',
-    'section.xat.ajustos.contrast.paraules': 'sol exterior llegibilitat lectura'
+    'section.xat.ajustos.contrast.paraules': 'exterior llegibilitat lectura vista'
   };
   const LLENGUES = SUPPORTED_LANGUAGES.map(({ code }) => code);
 
@@ -169,9 +177,15 @@ describe('les claus i18n del contrast', () => {
     expect([clau, fontI18n.split(`'${clau}':`).length - 1]).toEqual([clau, LLENGUES.length]);
   });
 
-  test('la «Bancal» traduïda conserva el nom propi', () => {
+  /* IDEA-323.4 (v1.2.22) · Els literals de l'ordre: el nom propi (en basc, «Bankal») i el mateix rètol complet que el xip. */
+  test('la «Bancal» traduïda conserva el nom propi i és el rètol complet del xip', () => {
+    const LITERALS = {
+      ca: 'Mode Bancal · Sol i Lletra Gran', es: 'Modo Bancal · Sol y Letra Grande', en: 'Bancal Mode · Sun & Large Text',
+      eu: 'Bankal Modua · Eguzkia eta Letra Handia', gl: 'Modo Bancal · Sol e Letra Grande'
+    };
     for (const codi of LLENGUES) {
-      expect([codi, createTranslator(codi)('section.xat.ajustos.contrast.bancal').startsWith('Bancal (')]).toEqual([codi, true]);
+      expect([codi, createTranslator(codi)('section.xat.ajustos.contrast.bancal')]).toEqual([codi, LITERALS[codi]]);
+      expect([codi, /Ban[ck]al/.test(LITERALS[codi])]).toEqual([codi, true]);
     }
   });
 });

@@ -102,7 +102,16 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
         const blob = await resposta.blob(); bytes = blob.size; chunks.push(blob);
       }
       if (!bytes || bytes > maxim) throw new Error('L’adjunt no té una mida vàlida.');
-      return new Blob(chunks, { type: meta.mime });
+      const original = new Blob(chunks, { type: meta.mime });
+      if (m.tipus === 'video' && /^video\/(mp4|quicktime)$/.test(meta.mime)) {
+        // Els originals antics poden dur GPS: la còpia per a reenviar es neteja
+        // abans de donar-la al motor, sense mutar ni tornar a pujar l'original.
+        const { senseUbicacioVideo } = await import('../../utils/ubicacioMitjans.js');
+        const net = await senseUbicacioVideo(original, { signal });
+        if (!net.net) throw (await import('../xatMultimedia.js')).errorAdjuntXat('video-no-acreditable');
+        return net.fitxer;
+      }
+      return original;
     }
   });
 }

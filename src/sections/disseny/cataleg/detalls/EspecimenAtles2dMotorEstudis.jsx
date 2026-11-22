@@ -5,8 +5,15 @@
  * integrat el 22-11-2026 a /disseny?categoria=atles-2d&item=atles-2d-motor-estudis. És la pestanya
  * «Motor d'estudis» de la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html: la Fase 1 simulada i la
  * Fase 2 de contrast humà real, el recorregut en quatre passos, els principis ètics, el fonament tècnic que
- * ja existix, les preguntes per al Mestre i la maqueta mòbil (un exemple inventat, i ho diu).
- * És una proposta per a decidir: no hi ha cap línia d'este motor al producte, i esta pàgina no en munta cap.
+ * ja existix, les decisions del Mestre i la maqueta mòbil (un exemple inventat, i ho diu).
+ * És una proposta: no hi ha cap línia d'este motor al producte, i esta pàgina no en munta cap.
+ *
+ * v1.2.22 · D-ATLES-MOTOR (decisions del Mestre del 22-11-2026, 15:39; pla 261122_1502, §2.1) · Les cinc
+ * preguntes de la maqueta tenen resposta i es diuen com a decisions: qualsevol persona pot llançar un estudi;
+ * cap «llum verda» ni cap mínim de veïns (és un taller d'estudi i consulta privat, no un tràmit); demanar opinió
+ * a veïns reals és opcional i voluntari, sense bons ara mateix; l'informe és privat de qui fa l'estudi, amb
+ * l'opció de compartir-lo; i els perfils simulats (abans «veus sintètiques», que es confonia amb l'àudio) i
+ * qualsevol síntesi d'àudio futura corren al Node 0, a 0 €.
  */
 import { useRef } from 'react';
 import { useFullDiferit } from '../../../../config/fullDiferit.js';
@@ -15,13 +22,14 @@ import { ATLES } from '../dades/atles2dDades.js';
 import { PeuAtles, TextFont } from './atles2dComu.jsx';
 
 const SUBTITOLS_RESERVA = Object.freeze(['Assaig a la Plaça · Estudi sintètic d’ús i viabilitat', 'Assaig a la Plaça · Contrast humà']);
-/* Les preguntes de la maqueta: les decidix el Mestre, no les dades. */
-const PREGUNTES_MESTRE = Object.freeze([
-  'Qui pot llançar un estudi: qualsevol veí, o només empreses, grups i ajuntaments verificats?',
-  'Com es recompensa el contrast humà: voluntari, bons de comerç KM 0 o totes dues coses?',
-  'Quin mínim de veïns reals fa falta perquè un informe diga «llum verda»?',
-  'Els resultats són privats de qui encarrega l’estudi o es poden publicar al poble?',
-  'On s’executen les veus sintètiques: només al Node 0, o també amb un servei extern sense retenció?'
+/* D-ATLES-MOTOR (Mestre, 22-11-2026) · Les cinc preguntes de la maqueta, amb la seua resposta. Les decidix el Mestre,
+   no les dades: viuen ací, a la vista, amb la data de la decisió. */
+const DECISIONS_MESTRE = Object.freeze([
+  Object.freeze({ pregunta: 'Qui pot llançar un estudi?', resposta: 'Qualsevol persona: un veí amb un cartell que acaba de fer, una idea o una proposta, no només empreses, associacions o ajuntaments.' }),
+  Object.freeze({ pregunta: 'Cal un mínim de veïns o una «llum verda»?', resposta: 'No. No és un tràmit d’aprovació: és un taller d’estudi i consulta privat, com l’Assaig a la Plaça, que dona idees per a millorar el que has fet.' }),
+  Object.freeze({ pregunta: 'Com es recompensa el contrast humà?', resposta: 'Demanar opinió a veïns reals és opcional i voluntari, sense bons ni sistemes de recompensa ara mateix. La promoció del comerç KM 0 anirà pel seu camí.' }),
+  Object.freeze({ pregunta: 'Qui veu els resultats?', resposta: 'L’informe és privat de qui fa l’estudi. Si vol, el pot compartir o publicar amb un botó.' }),
+  Object.freeze({ pregunta: 'On s’executen els perfils simulats?', resposta: 'Al Node 0, a 0 €: els perfils simulats de veïns (abans en dèiem «veus sintètiques», i es confonia amb la veu d’àudio) i qualsevol síntesi d’àudio futura.' })
 ]);
 
 export default function EspecimenAtles2dMotorEstudis() {
@@ -44,8 +52,8 @@ export default function EspecimenAtles2dMotorEstudis() {
         <p className="sdp-atles__proposta" role="note">
           <span aria-hidden="true">✎</span>
           <span>
-            <strong>Proposta per a decidir.</strong> No hi ha cap línia d’este motor a <code>src/</code>; la maquinària que ja
-            tenim és d’estudi intern.
+            <strong>Proposta, amb les decisions del Mestre del 22-11-2026.</strong> No hi ha cap línia d’este motor a{' '}
+            <code>src/</code>; la maquinària que ja tenim és d’estudi intern.
           </span>
         </p>
         <p><TextFont text={mercat.visio} /></p>
@@ -59,17 +67,18 @@ export default function EspecimenAtles2dMotorEstudis() {
             <p className="sdp-atles__etiqueta">Fase 1 · simulada</p>
             <h4>{subtitols[0]}</h4>
             <p>
-              Un panell de 8 a 12 perfils sintètics del món rural avalua la proposta en un minut: preu percebut, frens per a la
-              gent gran, si el missatge s’entén en tres segons i dubtes de logística. Torna un semàfor inicial i tres millores.
+              Un panell de 8 a 12 perfils simulats del món rural avalua la proposta en un minut: preu percebut, frens per a la
+              gent gran, si el missatge s’entén en tres segons i dubtes de logística. Torna una primera lectura, que no és cap
+              aprovació, i tres millores.
             </p>
             <p className="sdp-atles__suau">Vora puntejada: es veu que no és gent real.</p>
           </li>
           <li className="sdp-atles__fitxa sdp-atles__fase--humana">
-            <p className="sdp-atles__etiqueta">Fase 2 · real</p>
+            <p className="sdp-atles__etiqueta">Fase 2 · real, opcional</p>
             <h4>{subtitols[1]}</h4>
             <p>
-              De 10 a 25 veïns verificats del poble o la comarca, apuntats voluntàriament, contesten quatre preguntes tancades i
-              un consell obert des del mòbil, sense comentaris públics.
+              Només si qui fa l’estudi ho vol: de 10 a 25 veïns verificats del poble o la comarca, apuntats voluntàriament,
+              contesten quatre preguntes tancades i un consell obert des del mòbil, sense comentaris públics.
             </p>
             <p className="sdp-atles__suau">Vora sòlida: respostes de persones.</p>
           </li>
@@ -117,26 +126,29 @@ export default function EspecimenAtles2dMotorEstudis() {
           </div>
           <div>
             <dt>Resumidor del Node 0 (Codex R32.25, a la v1.2.17)</dt>
-            <dd><code>tooling/placa/resumDomNode0.mjs</code> resumix una pantalla perquè les veus sintètiques la lligen sense CSS ni dades personals.</dd>
+            <dd><code>tooling/placa/resumDomNode0.mjs</code> resumix una pantalla perquè els perfils simulats la lligen sense CSS ni dades personals.</dd>
           </div>
           <div>
             <dt>Les rondes de l’Assaig a la Plaça, de {rondes[0]?.id} a {rondes[rondes.length - 1]?.id}</dt>
             <dd>
-              {rondes.length} rondes: {ambVeus.length} amb veus ({llista(ambVeus)})
-              {senseVeus.length ? ` i ${senseVeus.length} sense cap veu (${llista(senseVeus)})` : null}. En total,{' '}
-              {placa.perfils.length} veus i {placa.dolors.length} dolors, que són la prova que el mètode troba coses reals.
+              {rondes.length} rondes: {ambVeus.length} amb perfils simulats ({llista(ambVeus)})
+              {senseVeus.length ? ` i ${senseVeus.length} sense cap perfil (${llista(senseVeus)})` : null}. En total,{' '}
+              {placa.perfils.length} perfils simulats i {placa.dolors.length} dolors, que són la prova que el mètode troba coses reals.
             </dd>
           </div>
         </dl>
       </section>
       <section className="sdp-atles__bloc">
-        <h3 id="atles-motor-preguntes">Preguntes per al Mestre</h3>
-        <ul>{PREGUNTES_MESTRE.map((text) => <li key={text}>{text}</li>)}</ul>
+        <h3 id="atles-motor-preguntes">Les decisions del Mestre</h3>
+        <p className="sdp-atles__meta">Decidides el 22-11-2026.</p>
+        <dl className="sdp-atles__dl">
+          {DECISIONS_MESTRE.map(({ pregunta, resposta }) => <div key={pregunta}><dt>{pregunta}</dt><dd>{resposta}</dd></div>)}
+        </dl>
       </section>
       <section className="sdp-atles__bloc">
         <h3 id="atles-motor-maqueta">Maqueta mòbil</h3>
         <p className="sdp-atles__etiqueta">Exemple inventat</p>
-        <div className="sdp-atles__mobil" role="img" aria-label="Maqueta d’un informe d’estudi de mercat al mòbil, amb dades d’exemple inventades: cistella setmanal de verdura, Fase 1 amb 10 perfils simulats i Fase 2 amb 14 veïns verificats.">
+        <div className="sdp-atles__mobil" role="img" aria-label="Maqueta d’un informe privat d’estudi de mercat al mòbil, amb dades d’exemple inventades: cistella setmanal de verdura, Fase 1 amb 10 perfils simulats, Fase 2 amb 14 veïns verificats i un botó opcional per a compartir l’informe.">
           <div className="sdp-atles__mobil-barra" aria-hidden="true"><span>Sóc de Poble</span><span>Assaig a la Plaça</span></div>
           <div className="sdp-atles__mobil-cos" aria-hidden="true">
             <span className="sdp-atles__mobil-marca">Exemple per a la maqueta · no són dades reals</span>
@@ -147,10 +159,7 @@ export default function EspecimenAtles2dMotorEstudis() {
             </div>
             <div className="sdp-atles__mobil-targeta sdp-atles__mobil-targeta--sint">
               <p className="sdp-atles__mobil-titol">Fase 1 · Estudi sintètic</p>
-              <div className="sdp-atles__mobil-fila">
-                <span>10 perfils simulats</span>
-                <span className="sdp-atles__semafor"><span className="sdp-atles__llum" /><span className="sdp-atles__llum sdp-atles__llum--verd" /><span className="sdp-atles__llum" /></span>
-              </div>
+              <div className="sdp-atles__mobil-fila"><span>Perfils simulats</span><b>10</b></div>
               <div className="sdp-atles__mobil-fila"><span>Millora 1</span><b>Repartiment el dissabte</b></div>
               <div className="sdp-atles__mobil-fila"><span>Millora 2</span><b>Pagament en efectiu</b></div>
               <div className="sdp-atles__mobil-fila"><span>Millora 3</span><b>Mitja cistella per a una persona</b></div>
@@ -162,7 +171,8 @@ export default function EspecimenAtles2dMotorEstudis() {
               <div className="sdp-atles__mobil-fila"><span>Preu just</span><b>12–15 €</b></div>
               <div className="sdp-atles__mobil-fila"><span>Objecció real</span><b>«Si falla una setmana, què?»</b></div>
             </div>
-            <span className="sdp-atles__mobil-boto">Publica la pre-reserva al Mercat</span>
+            <div className="sdp-atles__mobil-fila"><span>Informe</span><b>Privat</b></div>
+            <span className="sdp-atles__mobil-boto">Compartix l’informe, si vols</span>
           </div>
         </div>
       </section>

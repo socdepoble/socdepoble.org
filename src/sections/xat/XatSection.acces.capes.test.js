@@ -107,10 +107,13 @@ test('XAT-1 · amb poc contingut, el peu de l’accés baixa al fons del cos; am
   expect(valor(`${AMB_PEU} > .sdp-xat-fitxa-comunitat`, 'flex-grow')).toBe('1');
 });
 
-test('XAT-1 · en una pantalla baixa, l’accés es compacta i la frase cau', () => {
+/* IDEA-323.3 (v1.2.22, ordre del Mestre del 261122) · L'accés ja no porta cap frase (la benvinguda és dalt,
+   a la targeta d'acollida): cap regla per al paràgraf, ni per a amagar-lo. */
+test('XAT-1 · en una pantalla baixa, l’accés es compacta; IDEA-323.3 · ja no hi ha cap frase que amagar', () => {
   const blocs = blocsMedia('(max-height: 500px)').filter((bloc) => bloc.includes('.sdp-xat-acces'));
   expect(blocs).toHaveLength(1);
-  expect(valor('.sdp-xat-acces > p', 'display', blocs[0])).toBe('none');
+  expect(blocs[0]).not.toContain('.sdp-xat-acces > p');
+  expect(modules).not.toContain('.sdp-xat-acces > p');
   expect(valor('.sdp-alerta.sdp-xat-acces', 'padding', blocs[0])).toBe('var(--sdp-space-2) var(--sdp-space-3)');
 });
 
@@ -138,7 +141,6 @@ test('puresa visual de l’accés: sense vora lateral de cita ni fons d’alerta
   expect(valor('.sdp-alerta.sdp-xat-acces', 'background')).toBe('transparent');
   expect(valor('.sdp-alerta.sdp-xat-acces', 'text-align')).toBe('center');
   expect(valor('.sdp-alerta.sdp-xat-acces', 'align-items')).toBe('center');
-  expect(valor('.sdp-xat-acces > p', 'text-align')).toBe('center');
   expect(valor('.sdp-xat-acces > .sdp-alerta__accions', 'justify-content')).toBe('center');
 });
 
@@ -322,7 +324,7 @@ afterEach(() => {
 test('261026_2126 · C-2 · al DOM viu, el botó i el xip conviuen a la primera fila i no queden regles mortes a modules.css', () => {
   const acces = muntaAcces();
   const boto = screen.getByRole('button', { name: "Descarrega l'App" });
-  const xip = screen.getByRole('switch', { name: 'Lletra gran' });
+  const xip = screen.getByRole('switch', { name: 'Mode Bancal' });
   expect(boto.matches(DESCARREGA)).toBe(true);
   expect(boto.matches(PINDOLA_DE_LA_FILA)).toBe(true);
   expect(xip.classList.contains('sdp-mode-senior-xip--curt')).toBe(true);
@@ -340,7 +342,7 @@ test('261026_2126 · C-2 · dins de l’app nativa (sense botó de descàrrega),
   try {
     muntaAcces();
     expect(screen.queryByRole('button', { name: "Descarrega l'App" })).toBeNull();
-    expect(screen.getByRole('switch', { name: 'Lletra gran' })).toBeTruthy();
+    expect(screen.getByRole('switch', { name: 'Mode Bancal' })).toBeTruthy();
     expect(document.querySelectorAll(`${ACCIONS} + .sdp-alerta__accions`)).toHaveLength(1);
   } finally {
     delete window.Capacitor;

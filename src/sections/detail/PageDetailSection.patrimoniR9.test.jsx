@@ -59,7 +59,8 @@ describe('les tres pàgines de patrimoni de l’Onada R9', () => {
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(titol);
       if (clau === 'banc-de-llavors') {
         expect(document.querySelector('.sdp-workspace').closest('.cms-preview')).toBeNull();
-        expect(document.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(125);
+        // v1.2.22 · R32.42 lot 02 afig la font GVA/IVIA amb tres oliveres (Alfafarenca, Blanqueta i Villalonga): 45 + 65 + 15 + 3 = 128.
+        expect(document.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(128);
         expect(document.getElementById('app-grid-main').textContent).toContain('Discrepància');
         return;
       }

@@ -100,11 +100,11 @@ async function comprovaVideoSenseUbicacio(fitxer, comprova, signal) {
   const { senseUbicacioVideo } = await import('../../utils/ubicacioMitjans.js');
   const net = await senseUbicacioVideo(fitxer, { signal });
   comprova();
-  if (!net.net) throw errorAdjuntXat('ubicacio-no-eliminable');
+  if (!net.net) throw errorAdjuntXat('video-no-acreditable');
   const [a, b] = await Promise.all([fitxer.arrayBuffer(), net.fitxer.arrayBuffer()]);
   comprova();
   const bytes = new Uint8Array(a), nets = new Uint8Array(b);
-  if (bytes.length !== nets.length || bytes.some((v, i) => v !== nets[i])) throw errorAdjuntXat('ubicacio-no-eliminable');
+  if (bytes.length !== nets.length || bytes.some((v, i) => v !== nets[i])) throw errorAdjuntXat('video-no-acreditable');
 }
 
 function esperaAmbSenyal(promesa, signal) {
@@ -305,6 +305,9 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
     comprova();
   }
   if (tipus === 'imatge') await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
+  // R32.42: la ubicació consentida només viatja al DTO arrodonit.
+  // També els reenviaments i clients antics han d'acreditar els bytes abans de reservar.
+  if (tipus === 'video' && /^video\/(mp4|quicktime)$/.test(fitxer.type)) await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null
   }, config));

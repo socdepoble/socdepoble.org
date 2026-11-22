@@ -19,7 +19,11 @@ import { dataDElement } from '../../components/universal/editorial.js';
    les MATEIXES targetes amb la MATEIXA data.
    Onada 6 (prompt 261009_0230, punt 1) · i la pestanya Calendari munta el
    MATEIX calendari que /calendari (CalendariDelMur → CalendariDelPoble);
-   CalendariMur queda sense importador. */
+   CalendariMur queda sense importador.
+   v1.2.22 · Gauntlet R2 (M2-06) · El mateix component, però amb els actes de
+   l'aparador (actesDelCalendari ix d'allItems, que ja ha passat per
+   vigentsDalt): sense els que tenen «Mostrar també al Mur» apagat, que sí que
+   són a /calendari. */
 import { CalendariDelMur } from './CalendariDelMur.jsx';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
 import { clauDeLaTargeta, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
@@ -502,7 +506,9 @@ export default function MurSection() {
               Onada 6 (prompt 261009_0230, punt 1) · El MATEIX calendari que
               /calendari (CalendariDelMur), amb les seues targetes de davall
               (el dia triat o el període que es veu, amb TargetaDelMur i
-              .sdp-card-grid): en esta pestanya, la graella general no es pinta. */}
+              .sdp-card-grid): en esta pestanya, la graella general no es pinta.
+              v1.2.22 (M2-06) · Amb els actes de l'aparador: un acte amb
+              «Mostrar també al Mur» apagat no hi és, però sí a /calendari. */}
           {filterType === 'all' && !dateFilter && !categoryFilter ? <ProjeccionsEnSuperficie desti="mur" /> : null}
           {filterType === 'events' ? <CalendariDelMur actes={actesDelCalendari} /> : (
             <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>

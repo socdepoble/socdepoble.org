@@ -6008,8 +6008,8 @@ details[open] summary.accordion-header svg:last-child {
      baixa al fons de la columna, com abans; amb molt, va darrere i el cos fa
      scroll. La fitxa ja no reclama tota l'altura: s'estira fins al peu. Dins
      d'una conversa la reserva de la barra la porta .sdp-xat-conversa i
-     l'accés no s'encongix (els missatges sí). Text damunt i accions que
-     poden compartir fila. */
+     l'accés no s'encongix (els missatges sí). Només dues files d'accions
+     (IDEA-323.3, v1.2.22: la benvinguda és a la targeta d'acollida). */
   .sdp-alerta.sdp-xat-acces {
     flex: none;
     flex-direction: column;
@@ -6020,7 +6020,6 @@ details[open] summary.accordion-header svg:last-child {
     text-align: center;
     align-items: center;
   }
-  .sdp-xat-acces > p { margin: 0; text-align: center; }
   /* Ordre del Mestre (261026, prompt 261026_1615, tasca 4) · «Connectar-se» i
      «Registrar-se» van en línia, de la mateixa amplària, amb el buit de la
      reixeta entre els dos i com a molt l'amplària de la columna del llistat
@@ -6064,14 +6063,13 @@ details[open] summary.accordion-header svg:last-child {
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-fitxa-comunitat__peu { padding-bottom: var(--sdp-space-3); }
   :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-cos--amb-peu .sdp-xat-vista-comunitats { padding-bottom: var(--sdp-space-4); }
   /* En una pantalla baixa (≤ 500 px d'alt, un mòbil apaïsat), compacte: menys
-     coixí, i la frase cau: els botons ja diuen què fan. Els missatges
-     conserven l'espai. Les dos píndoles ja comparteixen fila sempre (261026). */
+     coixí. Els missatges conserven l'espai. Les dos píndoles ja comparteixen
+     fila sempre (261026). IDEA-323.3 (v1.2.22) · L'accés ja no porta cap frase. */
   @media (max-height: 500px) {
     .sdp-alerta.sdp-xat-acces { padding: var(--sdp-space-2) var(--sdp-space-3); }
     :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu--acces > .sdp-xat-acces {
       padding-bottom: calc(var(--sdp-space-2) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
     }
-    .sdp-xat-acces > p { display: none; }
   }
   .sdp-xat-informe:disabled { opacity: 0.6; cursor: progress; }
   .sdp-xat-informe__nota {
@@ -9067,10 +9065,13 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
   }
   /* R32.8 (P0-125d) · Cercle visual equilibrat de 36×36 px (2.25rem) tant per a
-     inicials («SB») com per a foto dins de la diana tàctil de --sdp-touch (48px). */
+     inicials («SB») com per a foto dins de la diana tàctil de --sdp-touch (48px).
+     v1.2.22 · IDEA-326 · A 38×38 px, el mateix cercle que el de la IAIA (diana de 48 px amb inset de 5 px). En píxels i
+     no en rem (Gauntlet R2, M1-07): dins de WordPress el rem es resol contra l'arrel de l'amfitrió (Q8, tokens.css), i
+     la IAIA va en píxels. Per davall de 360 px, tots dos fan 36 px (utilities.css). La lletra de les inicials no canvia. */
   .sdp-top-bar-avatar .sdp-avatar {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 38px;
+    height: 38px;
     font-size: var(--sdp-text-meta);
     border-width: 0;
     background: var(--sdp-crom-capcalera-clara);
@@ -9443,9 +9444,11 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-cos);
   }
   .sdp-realitat__iaia .sdp-iaia-icon { width: var(--sdp-space-10); height: var(--sdp-space-10); }
-  /* Mateixos @keyframes que la IAIA de la barra negra (layout.css,
-     sdp-iaia-resplendor): si es reanomenen allà, cal canviar-los ací. Amb
-     moviment reduït l'animació para i la vora taronja sosté l'estat. */
+  /* Els @keyframes sdp-iaia-resplendor de layout.css: si es reanomenen allà,
+     cal canviar-los ací. Amb moviment reduït l'animació para i la vora
+     taronja sosté l'estat. v1.2.22 · Gauntlet R2 (M1-01) · La IAIA de la
+     barra negra ja no els usa: el seu cercle té un halo propi que no toca el
+     fons (sdp-iaia-resplendor-cercle, utilities.css). */
   .sdp-realitat__iaia--activa {
     border-color: var(--sdp-accent);
     color: var(--sdp-accent-text);

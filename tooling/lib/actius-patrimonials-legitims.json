@@ -1,0 +1,56 @@
+{
+  "schema": "sdp.static-binaries.integrity.v1",
+  "control": "D-SENTINELLA-2MB · NIST CSF 2.0 PR.DS / MITRE D3FEND File Integrity Monitoring",
+  "assets": [
+    {
+      "path": "public/assets/uploads/patrimoni/que-dinem/llibre-que-dinem.pdf",
+      "bytes": 7560366,
+      "sha256": "399d2f54abdba0fb4c75f0e4d1b60744f2b19ed0bdf781ae186e5758bc86fddd",
+      "census": {
+        "file": "src/data/patrimoni/queDinem.js",
+        "export": "OBRA_QUE_DINEM",
+        "kind": "work-pdf"
+      }
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00410.JPG",
+      "bytes": 6881084,
+      "sha256": "c8461072d6993fc7ae5ce103e92fa037f218eb67259e8ec810a7b39f099e6710",
+      "census": {
+        "file": "src/sections/multimedia/censImatges.js",
+        "export": "CENS_IMATGES",
+        "kind": "image"
+      }
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/DSC00320.JPG",
+      "bytes": 6429500,
+      "sha256": "94848b83c46a69cddef93a89e27fcfbccee568d023decc659a21cd38f1968292",
+      "census": {
+        "file": "src/sections/multimedia/censImatges.js",
+        "export": "CENS_IMATGES",
+        "kind": "image"
+      }
+    },
+    {
+      "path": "public/assets/events/aplec_2023_ponents.png",
+      "bytes": 2598699,
+      "sha256": "8c5fea692fe9d97b296596fa737c499d92d3e6614cb76fdc01124abeec09f3d7",
+      "census": {
+        "file": "src/sections/multimedia/censImatges.js",
+        "export": "CENS_IMATGES",
+        "kind": "image"
+      }
+    },
+    {
+      "path": "public/assets/uploads/poble/la-torre-de-les-macanes/P_20161028_150735.jpg",
+      "bytes": 2120426,
+      "sha256": "d369328c496491e8c20163c7988589c9181650d76a7330f34a8df25621eff3f5",
+      "census": {
+        "file": "src/sections/multimedia/censImatges.js",
+        "export": "CENS_IMATGES",
+        "kind": "image"
+      }
+    }
+  ]
+}

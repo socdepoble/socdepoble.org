@@ -125,14 +125,15 @@ describe('AH-R17-13 / AH-R17-15 / P0-95 · Workspaces Multi-Llibre Lazy', () => 
     expect(onObrirVarietat).toHaveBeenCalledTimes(1);
   });
 
-  it('Workspace 2 (Biblioteca Agrícola i Banc de Llavors) articula Llavors (125), Calendari Agrícola i Pou de la Neu 3D', async () => {
+  it('Workspace 2 (Biblioteca Agrícola i Banc de Llavors) articula Llavors (128), Calendari Agrícola i Pou de la Neu 3D', async () => {
     const { container } = render(
       <MemoryRouter rutaInicial="/page/banc-de-llavors">
         <BancLlavorsWorkspaceSection page={{ title: 'Banc de llavors', html: '<p>Cos banc</p>' }} />
       </MemoryRouter>
     );
 
-    expect(container.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(125);
+    // v1.2.22 · R32.42 lot 02 afig la font GVA/IVIA amb tres oliveres (Alfafarenca, Blanqueta i Villalonga): 45 + 65 + 15 + 3 = 128.
+    expect(container.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(128);
 
     // Passem al Llibre 2: Calendari Agrícola i obrim una varietat cap al Llibre 1
     fireEvent.click(screen.getByRole('tab', { name: /Calendari Agrícola i Tomaques/i }));

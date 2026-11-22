@@ -72,10 +72,15 @@ export const OPCIONS_TEMA = Object.freeze([
 
 /* D6 · Mode Bancal (Q1 del Mestre, 261004) · Les tres preferències de
    contrast que coneix config/theme.js ('normal', 'bancal', 'sistema'), en
-   eixe ordre. «Bancal» porta entre parèntesis per a què servix. */
+   eixe ordre. «Bancal» portava entre parèntesis per a què servia; des de la v1.2.22 'bancal' és el Mode Bancal
+   sencer (lletra gran i contrast) i el seu rètol ho diu (Gauntlet R1, L2-10).
+   IDEA-323.4 · DOL-31 (v1.2.22, ordre del Mestre del 261122) · 'bancal' és el
+   «Mode Bancal · Sol i Lletra Gran», el mateix del xip de l'accés del Xat, de
+   /el-meu-perfil i de /control (UIContext.setContrast): un sol mode, cap
+   segon interruptor. «Normal» i «Segons el sistema» l'apaguen. */
 export const OPCIONS_CONTRAST = Object.freeze([
   Object.freeze({ id: 'contrast-normal', tipus: 'opcio', opcio: 'normal', clau: 'section.xat.ajustos.contrast.normal', text: 'Normal' }),
-  Object.freeze({ id: 'contrast-bancal', tipus: 'opcio', opcio: 'bancal', clau: 'section.xat.ajustos.contrast.bancal', text: 'Bancal (exterior, màxim contrast)' }),
+  Object.freeze({ id: 'contrast-bancal', tipus: 'opcio', opcio: 'bancal', clau: 'section.xat.ajustos.contrast.bancal', text: 'Mode Bancal · Sol i Lletra Gran' }),
   Object.freeze({ id: 'contrast-sistema', tipus: 'opcio', opcio: 'sistema', clau: 'section.xat.ajustos.contrast.sistema', text: 'Segons el sistema' })
 ]);
 
@@ -240,7 +245,7 @@ export const PAGINES_AJUSTOS = Object.freeze({
       Object.freeze({
         id: 'contrast',
         capcalera: ['section.xat.ajustos.contrast', 'Contrast'],
-        paraules: ['section.xat.ajustos.contrast.paraules', 'sol exterior llegibilitat lectura'],
+        paraules: ['section.xat.ajustos.contrast.paraules', 'exterior llegibilitat lectura vista'],
         seleccio: 'contrast',
         files: OPCIONS_CONTRAST
       }),

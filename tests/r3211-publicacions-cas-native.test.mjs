@@ -71,15 +71,18 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     assert.equal((await db.query('SELECT inet_server_addr() AS addr')).rows[0].addr, null);
     t.diagnostic(JSON.stringify({ version, connection: 'disposable Unix socket; listen_addresses empty', manualSHA }));
     const plan = creaPlaMigracions(), hydration = await preparaHidratacio();
-    assert.equal(plan.migrations.length, 126);
-    assert.equal(plan.migrations.filter(row => row.version !== '20261121090000').length, 125);
+    // v1.2.22 · R32.42 afig tres fonts NO aplicades (20261122160000, 20261122160200 i 20261122160300): 129 en total.
+    const R32_42 = ['20261122160000', '20261122160200', '20261122160300'];
+    assert.equal(plan.migrations.length, 129);
+    assert.equal(plan.migrations.filter(row => !R32_42.includes(row.version)).length, 126);
+    assert.equal(plan.migrations.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
     assert.deepEqual(plan.migrations.filter(row => row.version === '20261121090000').map(({file,sha256})=>[file,sha256]),[['20261121090000_r32_25_push_directes_i_bandols.sql','2122eceeef44039f60c9cf6931043a5d7dcc1bfd4c1ae834d651743119315b36']]);
     const preview = plan.migrations.filter(row => row.version === '20261119143000');
     assert.deepEqual(preview.map(({ version, file, sha256: hash }) => [version, file, hash]), [
       ['20261119143000', '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql', 'a030604331e272f6560579c264d94f6ac763d2faa1e94db5e5a3fdfe154dd1b0']
     ]);
     // The 124 pre-R32.14 sources retain the exact A-03 ledger; no old source is repinned.
-    const historical = plan.migrations.filter(row => row.version !== '20261119143000' && row.version !== '20261121090000');
+    const historical = plan.migrations.filter(row => row.version !== '20261119143000' && row.version !== '20261121090000' && !R32_42.includes(row.version));
     assert.equal(historical.length, 124);
     assert.equal(sha256([...historical].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))
       .map(({ version: v, file, sha256: hash }) => `${v}\t${file}\t${hash}`).join('\n')),
@@ -221,8 +224,9 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
       await db.query(manual);
       assert.deepEqual((await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows, receipts);
       const installed = (await db.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
-      assert.equal(installed.length, 126);
-      assert.equal(installed.filter(row => row.version !== '20261121090000').length, 125);
+      assert.equal(installed.length, 129);
+      assert.equal(installed.filter(row => !R32_42.includes(row.version)).length, 126);
+      assert.equal(installed.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
       assert.deepEqual(installed, [...plan.migrations].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))
         .map(({ version: v, file, sha256: hash }) => ({ version: v, file, sha256: hash })));
       assert.equal(sha256(readFileSync(MANUAL_URL)), manualSHA);

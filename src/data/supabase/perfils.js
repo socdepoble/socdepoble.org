@@ -5,7 +5,7 @@
  *   `localPerfils`, que fa de servidor.
  * @contract
  *   - loadPerfilPublic(idOSlug, config) → PerfilPublic | null
- *       { tipus: 'persona'|'entitat'|'grup'|'ia', id, slug, nom, avatar, hero,
+ *       { tipus: 'persona'|'entitat'|'grup'|'ia', kind? ('city_hall'|'company'|'entity'|'group'), claimed?, id, slug, nom, avatar, hero,
  *         lema, bio, presentacioHtml, poble, esIA, publicat, propietari, copyright,
  *         correu (T43: només el públic d'una organització; buit si no n'hi ha),
  *         creat, modificat (T51: created_at i updated_at de la fila; la
@@ -72,7 +72,8 @@ export function perfilDOrganitzacio(org) {
      la vista): el client no n'hi posa cap ni n'hidrata cap de llavor. */
   const heroVideo = text(org.hero_video_url);
   return {
-    tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: text(org.name),
+    tipus: org.kind === 'group' ? 'grup' : 'entitat', kind: typeof org.kind === 'string' ? org.kind : null,
+    claimed: org.claimed === true, id: org.id, slug: org.slug || null, nom: text(org.name),
     avatar: text(org.logo_url), hero: text(org.hero_url), ...(heroVideo ? { heroVideo } : null), lema: text(org.lema), bio: text(org.description),
     /* Ordre del Mestre (261008, grup C) · El poble de l'organització (columna
        `town_name` de la vista, 2610081401). Sense la columna o sense tria,

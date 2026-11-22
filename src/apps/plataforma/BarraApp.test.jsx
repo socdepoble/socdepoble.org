@@ -194,6 +194,10 @@ describe('dins d’una app', () => {
   test('en compacte, triar una entrada o la fletxa tanca el calaix; cap botó de plegar', () => {
     const { nav, toggleSidebar } = muntaBarra('/app/prova/inici', { isCompact: true });
     expect(within(nav).queryByRole('button', { name: /barra lateral/ })).toBeNull();
+    // IDEA-329 · En compacte el logotip és el de la barra negra: el calaix de l'app no en porta cap.
+    expect(nav.querySelector('.brand')).toBeNull();
+    expect(nav.querySelector('img[alt="Sóc de Poble"]')).toBeNull();
+    expect(nav.firstElementChild.classList.contains('sidebar-control-row')).toBe(true);
     fireEvent.click(within(nav).getByRole('link', { name: 'Caixa' }));
     expect(toggleSidebar).toHaveBeenCalledTimes(1);
     fireEvent.click(within(nav).getByRole('button', { name: 'Torna a Sóc de Poble' }));

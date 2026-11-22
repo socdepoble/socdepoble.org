@@ -1,0 +1,47 @@
+{
+  "id": "8e1edad4-3ee3-4725-9adb-b86945e2ac8d",
+  "session": "2ee0cfed-1e4d-498a-a028-610446beebf0",
+  "operationId": "v1222-governanca-1795379659286",
+  "claim": "2ee0cfed-1e4d-498a-a028-610446beebf0:governance-write",
+  "planHash": "080222b5f2dd94f0a8a685d41400d10444ef8022a45cfcc214e154b5b5eebab6",
+  "beforeSeal": "7381a4324faf142d20ed6ab3ffc49daf2032ed2411a1f1e6d30a4e6f8ecfeb04",
+  "files": [
+    {
+      "path": "tooling/node0/posse/posse-ledger.sql",
+      "before": "eddffe60819433026dbec962428ff1f458384fecd52ae3e116ed91dba131d3ec",
+      "after": "d7261843ed4216f9856853fe9e3c461ab04c1f47b4c7a5d982848ecf0f847d17"
+    },
+    {
+      "path": "tooling/node0/posse/instal-la-posse-node0.mjs",
+      "before": "1f27dffa53984b94dbaa2547439f1dfe842247e9343008ee165210afef18c25c",
+      "after": "e5651d972427db1c6c87bdee8cb4d171695b3306c27ff3b294d75e4ad9ba0970"
+    },
+    {
+      "path": "tooling/lib/tellado-cataleg-r32_14.json",
+      "before": "502b3cc13104f999ab34fcac9c88a9ed47b74d6459732e2733e2f5ca6017d8e6",
+      "after": "fbf235f8f221e030707dd357b758a521cd1e58218c82c39d43c68654421b18a7"
+    },
+    {
+      "path": "tooling/gates/tractor-tellado-r32-29.test.mjs",
+      "before": "38024bf3097725dac7b178bd27823b235fdbf8cf25a2a60e21243fd6f9f372c6",
+      "after": "aa30deea96bdb1a69ed184edbefab1a0822d08bde4c78f944c95bd280c96f8d4"
+    },
+    {
+      "path": "tooling/gates/tractor-duplicats-public.mjs",
+      "before": "d3b2278eaa390febd284208b16c2a4c5539d97fb0bef95ae5768e5ee9cae6880",
+      "after": "64e1936d37c4c7ee3133662d013287ce3e362cbaaa9f4874456fb78d71dced4e"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.mjs",
+      "before": "9693ab9a8a2b609d5a9601e6693c4e498e280b608831c8dc8c72cef96c75d3a6",
+      "after": "b91609e2d35616d45c38194ee43986897316d1e07b1d33204c473a3f198f0f05"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "before": "34ebc0436a7217d3174561b261c277638c1fb16f01bf9a7a4f5e5dc6fd644aa3",
+      "after": "3cfeadb0623cb058263a56656730d211bdaf4387e222132b8fde8fc50f19c8e5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c"
+}

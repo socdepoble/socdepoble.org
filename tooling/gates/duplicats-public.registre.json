@@ -1,0 +1,572 @@
+{
+  "schema": "sdp.duplicats-public.v1",
+  "scope": "public/assets",
+  "base": "8f1c7646ed7980f7abdc4e2bfb1744f11442a0ab + R32.41 + R32.42_codex",
+  "frozenAt": "2026-11-22",
+  "groups": [
+    {
+      "sha256": "0030aca89acd848d192e8041198c313f2f5813f796972f47fe7644cc531f0d76",
+      "bytes": 239518,
+      "paths": [
+        "public/assets/uploads/avatars/avatar_samir_comic.webp",
+        "public/assets/uploads/brain/hero_serrella_comic_1774709602282.webp",
+        "public/assets/uploads/gent/avatars/avatar_samir_comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "07ccb878d7abf1fe949b577df434495f1e66bb6d24ae2431dd4033011e2e426b",
+      "bytes": 106519,
+      "paths": [
+        "public/assets/uploads/avatars/joan-batiste-comic.png",
+        "public/assets/uploads/gent/avatars/joan-batiste-comic.png",
+        "public/assets/uploads/ia/09-joan-batiste-arxiver/avatars/joan-batiste-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "1253cd5e1534adeb537dd69a0b398391345d19f0a9c5056d8943b4d5e21a98d2",
+      "bytes": 75872,
+      "paths": [
+        "public/assets/uploads/avatars/andreu-soler-comic.webp",
+        "public/assets/uploads/gent/avatars/andreu-soler-comic.webp",
+        "public/assets/uploads/ia/07-andreu-soler-capatas/avatars/andreu-soler-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "14f00b5425b90192423a6aac65201dc693a83494172cb7b4d67e37e121be2478",
+      "bytes": 420844,
+      "paths": [
+        "public/assets/fotos/el-viatjant.png",
+        "public/assets/uploads/avatars/el-viatjant.png",
+        "public/assets/uploads/gent/avatars/el-viatjant.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "17eb6b6cf695e35cf19aaf95954d1ac2ce6de10bd33fde85a18975f0c1803046",
+      "bytes": 576852,
+      "paths": [
+        "public/assets/fotos/iaia-maria.png",
+        "public/assets/uploads/avatars/iaia_comic_matriarch.png",
+        "public/assets/uploads/gent/avatars/iaia_comic_matriarch.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "1ac50adbed73ffd843241cce7c6dc669346e62d63b2eb3ae79a91ae8fe35dc03",
+      "bytes": 180332,
+      "paths": [
+        "public/assets/uploads/brain/art_trellat_farmer_1774708525806.webp",
+        "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-trellat-v3.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "216cdcf681624c983b8585f3c13f915e328316efcd3b59013ccf2729e843f7d7",
+      "bytes": 201169,
+      "paths": [
+        "public/assets/uploads/avatars/nano_salut_comic.png",
+        "public/assets/uploads/gent/avatars/nano_salut_comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "28ec542f15bd017249cb7594de884d1109daf42f44cd0e4882d8b5b6d04426fa",
+      "bytes": 98924,
+      "paths": [
+        "public/assets/uploads/avatars/nano_escola_comic.webp",
+        "public/assets/uploads/gent/avatars/nano_escola_comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "2e441226155f4aca4a8587fb0ec44432d1cda012a21ea0e4a770376b08ac73b0",
+      "bytes": 519548,
+      "paths": [
+        "public/assets/uploads/brain/cuc-de-pi-poster.png",
+        "public/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "314fe26edf0bb6a5cc07b674b2e0a12582b869b9468c513f5cdd5881e6408cfe",
+      "bytes": 55986,
+      "paths": [
+        "public/assets/uploads/avatars/joan-batiste-comic.webp",
+        "public/assets/uploads/gent/avatars/joan-batiste-comic.webp",
+        "public/assets/uploads/ia/09-joan-batiste-arxiver/avatars/joan-batiste-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "3585f4656afd99b4297acb8e20b2a02bab1b8403a7fa57d6b3e466eb047249ef",
+      "bytes": 81562,
+      "paths": [
+        "public/assets/fotos/iaia_maria_avatar_mobil.png",
+        "public/assets/uploads/brain/iaia_maria_avatar_mobil.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "45c5622de974f01e5ae65521e0d0aae69643d42224c8dcafce8f170f4f1debd9",
+      "bytes": 501556,
+      "paths": [
+        "public/assets/uploads/avatars/avatar-ratoli-comic.png",
+        "public/assets/uploads/ia/12-el-ratoli-informatic/avatars/avatar-ratoli-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "469354151e5a00e64c7cfb26ebbd7ec67d7cec58f997cbc36795b8312186082d",
+      "bytes": 239036,
+      "paths": [
+        "public/assets/uploads/brain/cuc-de-pi-poster.webp",
+        "public/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "47952f36c83553445b5dde61d65a6d09a96d21f665129fb6dc6e63e8a072dd9f",
+      "bytes": 125585,
+      "paths": [
+        "public/assets/system/ui/logo-socdepoble-rect-blanc.svg",
+        "public/assets/system/ui/logo-socdepoble-rect.svg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "488ce69719a06e42f3920e6e27f3aee6b43e1f078c89cbd51c67530c1108a7ea",
+      "bytes": 336184,
+      "paths": [
+        "public/assets/nano_cards/cervell_nano_card.webp",
+        "public/assets/ui/plugins/cervell_vinyeta.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "4b4c2339955188f64c843f6605a480ef2369e75aae8cf0ab2cfdfdaa2a87f464",
+      "bytes": 252250,
+      "paths": [
+        "public/assets/fotos/javi-llinares-perfil-1200px.jpg",
+        "public/assets/uploads/avatars/javi-llinares-foto_perfil-01.jpg",
+        "public/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.jpg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "4c35302c14f00b8165d03fd253287986b7ff81b7d6f55757742de53874ffd90b",
+      "bytes": 457395,
+      "paths": [
+        "public/assets/uploads/companies/mercat/camiseta_portada.png",
+        "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "4e1d83f2c91959bb07bb082ecc767b4d18d5310d94a74dd1d437f0b7290730fc",
+      "bytes": 490986,
+      "paths": [
+        "public/assets/uploads/avatars/avatar_samir_comic.png",
+        "public/assets/uploads/brain/hero_serrella_comic_1774709602282.png",
+        "public/assets/uploads/gent/avatars/avatar_samir_comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "4fb306c6e85365465526cd39be9123e28ea281e85b89a9ece8c8908ba1bc59d5",
+      "bytes": 109704,
+      "paths": [
+        "public/assets/uploads/avatars/javi-llinares-foto_perfil-01.webp",
+        "public/assets/uploads/gent/javi-llinares/avatars/javi-llinares-perfil-1200px.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "508c7045562723c8b1462ae7b5996ef9cb6f457e49b28b45fde4ebc30d65ac32",
+      "bytes": 129510,
+      "paths": [
+        "public/assets/uploads/avatars/elena-popova-comic.png",
+        "public/assets/uploads/gent/avatars/elena-popova-comic.png",
+        "public/assets/uploads/ia/08-elena-popova-music/avatars/elena-popova-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "55f3edf9b899dd665e3b43ed046b7939aabe17e1a4723bdad24c1dd97257c033",
+      "bytes": 559078,
+      "paths": [
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.24.28-3-1024x766.jpeg",
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-1-1024x766.jpeg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "596792cb2180df0ed298fe4e581e8cf49de6ae0f72fcbe7a4b87ae71627cd585",
+      "bytes": 44298,
+      "paths": [
+        "public/assets/uploads/avatars/carla-soriano_comic.webp",
+        "public/assets/uploads/gent/avatars/carla-soriano_comic.webp",
+        "public/assets/uploads/ia/05-carla-soriano-doctora/avatars/carla-soriano-ibanez.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "5975e97dab73e39b262f3c73f4c97104d354ecfbc6c210e6fbb1e3b30e3259e1",
+      "bytes": 36644,
+      "paths": [
+        "public/assets/uploads/avatars/pepica-vall-comic.webp",
+        "public/assets/uploads/gent/avatars/pepica-vall-comic.webp",
+        "public/assets/uploads/ia/06-pepica-la-vall-cuinera/avatars/pepica-vall-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "5eb9912b8ee527120657acea8c76a2225699702b09e9886591b80f159f52b25f",
+      "bytes": 48114,
+      "paths": [
+        "public/assets/uploads/avatars/mixa-comic.webp",
+        "public/assets/uploads/gent/avatars/mixa-comic.webp",
+        "public/assets/uploads/ia/14-la-mixa-gestora/avatars/mixa-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "7ce619eb3dba055b5201948f0cc9c74ed7484bb6e70f3db71c65e08114bf9099",
+      "bytes": 191557,
+      "paths": [
+        "public/assets/uploads/avatars/nano_escola_comic.png",
+        "public/assets/uploads/gent/avatars/nano_escola_comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "7eafd8812f6c7bd4d8eda3361ea854a4de385930f3cdaf64ffe26f3afac32bdb",
+      "bytes": 73778,
+      "paths": [
+        "public/assets/uploads/avatars/carla-soriano_comic.png",
+        "public/assets/uploads/gent/avatars/carla-soriano_comic.png",
+        "public/assets/uploads/ia/05-carla-soriano-doctora/avatars/carla-soriano-ibanez.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "8357d47a51fccf6e3795d1c3f385ac136a4c0e9f9c9d368dc7c90042cab6ca97",
+      "bytes": 131532,
+      "paths": [
+        "public/assets/uploads/avatars/avatar-marc-comic.webp",
+        "public/assets/uploads/gent/avatars/avatar-marc-comic.webp",
+        "public/assets/uploads/ia/15-marc-el-gall-el-temps/avatars/avatar-marc-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "8660ae4117bd5801b2dfd8f6fa2507b1243929205953f8a840bf05764e423f8d",
+      "bytes": 71168,
+      "paths": [
+        "public/assets/uploads/avatars/pepica-vall-comic.png",
+        "public/assets/uploads/gent/avatars/pepica-vall-comic.png",
+        "public/assets/uploads/ia/06-pepica-la-vall-cuinera/avatars/pepica-vall-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "89157af5c291f39461bf4f84696a01f6e270aee364029fcddfe82a0909da79e8",
+      "bytes": 42898,
+      "paths": [
+        "public/assets/uploads/avatars/flash-comic.webp",
+        "public/assets/uploads/gent/avatars/flash-comic.webp",
+        "public/assets/uploads/ia/13-flash-carter/avatars/flash-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "8b4e60b15a2377c9a043ccb6079797c678a1b62ad9de9cfdd56b56c4776c6e0d",
+      "bytes": 561166,
+      "paths": [
+        "public/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png",
+        "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "97781d9d6e06ca66025a347362434dc81053d711779a2165249688c112236cc4",
+      "bytes": 206288,
+      "paths": [
+        "public/assets/events/nano_sessio_treball.webp",
+        "public/assets/uploads/avatars/nano_sessio_treball.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "9d27893607daf35d3ea0b8d43bab3913c4aa23e9c3e464b884bb76f540ff68ed",
+      "bytes": 541614,
+      "paths": [
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.28.07-1024x769.jpeg",
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-8-1024x769.jpeg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "a5fa890fe6f4e6d96da97e7e7408a4c21ad06078b924ce10c5de495a5d925982",
+      "bytes": 410473,
+      "paths": [
+        "public/assets/nano_cards/cervell_nano_card.jpg",
+        "public/assets/ui/plugins/cervell_vinyeta.jpg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "a61a339dfd9a52fa08178d252e5e86616f8ee179f3fdb83eb0df216c63ba93c2",
+      "bytes": 255712,
+      "paths": [
+        "public/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.webp",
+        "public/assets/uploads/brain/nano_astronauta_esmorzar_1773441997380.webp",
+        "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/exemple-de-poble-001.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "a8ccf23d7ac08820af9f030025c902530071b278b4dbb747484d6358b272bb01",
+      "bytes": 300056,
+      "paths": [
+        "public/assets/uploads/avatars/nano-banana-comic.webp",
+        "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/nano-banana.webp",
+        "public/assets/uploads/gent/avatars/nano-banana-comic.webp",
+        "public/assets/uploads/ia/02-nano-banana-artiste/avatars/nano-banana-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "ab8e29da2e2af9f1ad1b85122a8fe8b9243394e0ed1e86095af2aea0bc8c373d",
+      "bytes": 146538,
+      "paths": [
+        "public/assets/uploads/companies/mercat/camiseta_portada.webp",
+        "public/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "ac16346abf77b3b0bfaeb275740efbdd2e6af9bb39e8337d0c90eecbd6210401",
+      "bytes": 213730,
+      "paths": [
+        "public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg",
+        "public/assets/uploads/empresa/soc-de-poble/avatars/logo-socdepoble-cuadrat-verd.svg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "ae9b963eb60d591bbb68d5ce8af3e081210cc1fe823e65b05b80296a36803967",
+      "bytes": 427060,
+      "paths": [
+        "public/assets/uploads/avatars/nano-banana-comic.png",
+        "public/assets/uploads/gent/avatars/nano-banana-comic.png",
+        "public/assets/uploads/ia/02-nano-banana-artiste/avatars/nano-banana-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "b81d3d579e0554ff1c18d872df5559ad1415723908a68ffb1f80cdc7d7c8d13d",
+      "bytes": 225222,
+      "paths": [
+        "public/assets/uploads/avatars/avatar-ratoli-comic.webp",
+        "public/assets/uploads/brain/avatar_ratoli_comic_1778960942888.webp",
+        "public/assets/uploads/ia/12-el-ratoli-informatic/avatars/avatar-ratoli-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "b82071cf8b2bd60a7c124bbe39207233a1db0aec42ec7a283bb23ea959b3d0af",
+      "bytes": 304102,
+      "paths": [
+        "public/assets/uploads/avatars/avatar-marc-comic.png",
+        "public/assets/uploads/gent/avatars/avatar-marc-comic.png",
+        "public/assets/uploads/ia/15-marc-el-gall-el-temps/avatars/avatar-marc-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "b88e0b67c31a702d65b386c9be4155dd1d6ac04d88452a9684e0579b14f0402f",
+      "bytes": 104188,
+      "paths": [
+        "public/assets/uploads/avatars/vicent-ferris-comic.png",
+        "public/assets/uploads/gent/avatars/vicent-ferris-comic.png",
+        "public/assets/uploads/ia/03-vicent-ferris-agronom/avatars/vicent-ferris-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "ba710f7f07650270b05f65e64292ecd560c1564fad229821e9e6721eff18d120",
+      "bytes": 92596,
+      "paths": [
+        "public/assets/towns/la-torre-de-les-macanes/1.webp",
+        "public/assets/uploads/poble/la-torre-de-les-macanes/img-la-torre-de-les-ma-anes-main.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "bde14631139cf9cb47d5d06b642448160b30d9e4074319cc0a805ef67b4b900b",
+      "bytes": 54978,
+      "paths": [
+        "public/assets/uploads/avatars/beatriz-ortega-comic.webp",
+        "public/assets/uploads/gent/avatars/beatriz-ortega-comic.webp",
+        "public/assets/uploads/ia/04-beatriz-ortega-mestra/avatars/beatriz-ortega-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "be1629594e1c4de3284afcbb781c68d662e410e4a1c8681c431f7397692ca6e2",
+      "bytes": 104698,
+      "paths": [
+        "public/assets/towns/la-torre-de-les-macanes/1.jpg",
+        "public/assets/uploads/poble/la-torre-de-les-macanes/img-la-torre-de-les-ma-anes-main.jpg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "c1c7300939ef6aa4809c31dd3cd9068a751d0100b828a87dec04f78060efc5c7",
+      "bytes": 500272,
+      "paths": [
+        "public/assets/uploads/avatars/flash-comic.png",
+        "public/assets/uploads/gent/avatars/flash-comic.png",
+        "public/assets/uploads/ia/13-flash-carter/avatars/flash-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "c681b14982917f05b8bfdfb77f025fcabcb28589b621d46348f0f8d7e7f5c330",
+      "bytes": 235262,
+      "paths": [
+        "public/assets/fotos/el-viatjant.webp",
+        "public/assets/uploads/avatars/el-viatjant.webp",
+        "public/assets/uploads/gent/avatars/el-viatjant.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "c884b685076bf4ecc9f8a4dc7d14b9148e8cc5aeba8b00d42b98b8afe34710d4",
+      "bytes": 265222,
+      "paths": [
+        "public/assets/fotos/iaia-maria.webp",
+        "public/assets/uploads/avatars/iaia_comic_matriarch.webp",
+        "public/assets/uploads/empresa/soc-de-poble/posts/el-projecte/art-iaia-v4.webp",
+        "public/assets/uploads/gent/avatars/iaia_comic_matriarch.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "cd6da66c962ea6e4462afe1b36b01eb8012e56b7cfec5f467a4c3b5e4cfddc70",
+      "bytes": 102738,
+      "paths": [
+        "public/assets/uploads/avatars/nano_salut_comic.webp",
+        "public/assets/uploads/gent/avatars/nano_salut_comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "cdbb1372711c996648b36cb45c107eb31a1c769cb4d9d8e6045d8f8f8e624d1b",
+      "bytes": 139862,
+      "paths": [
+        "public/assets/uploads/avatars/andreu-soler-comic.png",
+        "public/assets/uploads/gent/avatars/andreu-soler-comic.png",
+        "public/assets/uploads/ia/07-andreu-soler-capatas/avatars/andreu-soler-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "cf8e5844014b5e6cf65ae45458421ddb389314fdaca34cbc77fd414064c6afd0",
+      "bytes": 72404,
+      "paths": [
+        "public/assets/uploads/avatars/elena-popova-comic.webp",
+        "public/assets/uploads/gent/avatars/elena-popova-comic.webp",
+        "public/assets/uploads/ia/08-elena-popova-music/avatars/elena-popova-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "d5b49277bbed002df80f4292ce749f4df3a73fcc7d940db2391aa923a0c3b14d",
+      "bytes": 370903,
+      "paths": [
+        "public/assets/towns/penaguila/1.jpg",
+        "public/assets/uploads/poble/penaguila/img-pen-guila-main.jpg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "d9cca6bd25b34df4636bd5c224d10285320a5911b1fc6531635e2a791d0d0990",
+      "bytes": 513578,
+      "paths": [
+        "public/assets/events/nano_sessio_treball.png",
+        "public/assets/uploads/avatars/nano_sessio_treball.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "ddf870eed048e567c04c89ad2941c48516307e91fe5efbcaa2da345830bf9459",
+      "bytes": 104278,
+      "paths": [
+        "public/assets/uploads/avatars/beatriz-ortega-comic.png",
+        "public/assets/uploads/gent/avatars/beatriz-ortega-comic.png",
+        "public/assets/uploads/ia/04-beatriz-ortega-mestra/avatars/beatriz-ortega-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "e9020188f21608f476d312834c478ec194abbdb99b0b959e6faf2d35f858edce",
+      "bytes": 292752,
+      "paths": [
+        "public/assets/towns/penaguila/1.webp",
+        "public/assets/uploads/poble/penaguila/img-pen-guila-main.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "efaade91090498f0bae156879216a18f4cc8a4fe8903a3c4e934016f5dbddc67",
+      "bytes": 557171,
+      "paths": [
+        "public/assets/uploads/avatars/mixa-comic.png",
+        "public/assets/uploads/gent/avatars/mixa-comic.png",
+        "public/assets/uploads/ia/14-la-mixa-gestora/avatars/mixa-comic.png"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "f11dd63653b1b4b29558c2fabcfedcf3b904485418a89c5318963dde1766f980",
+      "bytes": 21668,
+      "paths": [
+        "public/assets/fotos/iaia_maria_avatar_mobil.webp",
+        "public/assets/uploads/brain/iaia_maria_avatar_mobil.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "f12d4ca258a7a16b99d5e7e6c1a059f7292fea4aff904554f41857ea3e6733f2",
+      "bytes": 205698,
+      "paths": [
+        "public/assets/uploads/ajuntament/la-torre-de-les-macanes/post/collita-poma-local.webp",
+        "public/assets/uploads/brain/collita_pomes_valencia_1779774496548.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "faad39419cf116234fe9bda97bb41952c770761c9c65be0a60876802a6d091aa",
+      "bytes": 52874,
+      "paths": [
+        "public/assets/uploads/avatars/vicent-ferris-comic.webp",
+        "public/assets/uploads/gent/avatars/vicent-ferris-comic.webp",
+        "public/assets/uploads/ia/03-vicent-ferris-agronom/avatars/vicent-ferris-comic.webp"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    },
+    {
+      "sha256": "fcfdaae2e5b7332dbe09fd31cfc58dac0c2f29e77c143acb6726ebf24602a1da",
+      "bytes": 546785,
+      "paths": [
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-19.27.39-1024x766.jpeg",
+        "public/assets/events/aplec-2023/WhatsApp-Image-2023-01-29-at-21.04.50-7-1024x766.jpeg"
+      ],
+      "reason": "Grup existent a la base8f1c7646e: URLs històriques i/o del cens vigent preservades; cap ampliació de membres autoritzada."
+    }
+  ]
+}

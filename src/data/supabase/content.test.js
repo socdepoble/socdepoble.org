@@ -384,9 +384,10 @@ test('R21 v2 · la sessió autenticada usa pertinença del servidor i conserva l
 });
 test('R21 v2 · un Foraster autenticat rep la projecció mínima sense substituir-la per payload ric', async () => {
   getCurrentUser.mockReturnValue({ id: 'foraster' });
+  const publiques = url => url.includes('p_section_id=mur') ? [{ id: 'public', title: 'Fira', public_content: 'Text públic',
+    owner_user_id: 'PRIVATE', payload: { phone: 'PRIVATE', image: '/private.jpg' } }] : [];
   request.mockReset(); request.mockImplementation(async url => url.includes('app_content') ? []
-    : { lectura: 'public', files: url.includes('p_section_id=mur') ? [{ id: 'public', title: 'Fira', public_content: 'Text públic',
-      owner_user_id: 'PRIVATE', payload: { phone: 'PRIVATE', image: '/private.jpg' } }] : [] });
+    : url.includes('/llig_mur_public?') ? publiques(url) : { lectura: 'public', files: publiques(url) });
   const item = (await loadMur('ignored')).feedPosts[0];
   expect(item).toMatchObject({ _murPublic: true, ownerUserId: null, author_name: 'Autoria no publicada' });
   expect(JSON.stringify(item)).not.toContain('PRIVATE');
