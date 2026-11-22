@@ -26,7 +26,7 @@ import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg }
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { ARTICLES_PRODUCTES, LIMITS, articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
-import { ambPreusMercadona, esLlistaMercadona, nomLlistaVisible } from '../mercadona.js';
+import { NOM_LLISTA_BOTIGA, ambPreusMercadona, esLlistaMercadona, nomLlistaVisible } from '../mercadona.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { COMPRA } from './constants.js';
@@ -69,7 +69,7 @@ export function ColumnaLlistes({ params }) {
   return (
     <ColumnaColleccions
       titol={tx.lesMeuesLlistes}
-      colleccions={estat.llistes.map((llista) => ({ id: llista.id, nom: nomLlistaVisible(llista.nom), comptador: llista.linies.length }))}
+      colleccions={estat.llistes.map((llista) => ({ id: llista.id, nom: nomLlistaVisible(llista.nom, idioma), comptador: llista.linies.length }))}
       actiu={llistaDelCami(params) ?? llistaVigent(null).id}
       hrefDe={(colleccio) => ruta(COMPRA.entrada, colleccio.id)}
       onCrea={obriNovaLlista}
@@ -78,7 +78,8 @@ export function ColumnaLlistes({ params }) {
       avis={(
         <Botonera etiqueta={tx.catalegsDeCompra}>
           <Boto disabled={!mercadona && (!llegit || mode === 'lectora' || estat.llistes.length >= LIMITS.llistes)} onClick={() => {
-            const id = mercadona?.id || accions.creaLlista(tx.botigaDePoble);
+            /* v1.2.19 · Gauntlet R1 (L3-02) · Nom canònic: la llista es reconeix en qualsevol llengua i es pinta traduïda. */
+            const id = mercadona?.id || accions.creaLlista(NOM_LLISTA_BOTIGA);
             if (id) navigate(ruta(COMPRA.entrada, id));
           }}>{tx.catalegDeBotiga}</Boto>
         </Botonera>
@@ -106,7 +107,7 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
       forma="rajoles"
       estilCompra
       ometDataNoIndicada
-      titol={nomLlistaVisible(llista.nom)}
+      titol={nomLlistaVisible(llista.nom, idioma)}
       linies={linies}
       resum={{ etiqueta: tx.perComprar, comptador: linies.length, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount }}
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
@@ -213,7 +214,7 @@ export function ColumnaCatalegCompra({ params }) {
           }}>{tx.llevaDeLaLlista}</Boto>
         ) : null)
       } : null}
-      resum={llista ? { etiqueta: nomLlistaVisible(llista.nom), comptador: linies.size, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount } : null}
+      resum={llista ? { etiqueta: nomLlistaVisible(llista.nom, idioma), comptador: linies.size, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount } : null}
       textos={{ buit: txBuit.catalegBuit, buitText: txBuit.catalegBuitText }}
       primer={COMPRA.primer}
       tram={COMPRA.tram}

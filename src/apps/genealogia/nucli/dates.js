@@ -207,6 +207,7 @@ export function intervalAny(data) {
     if (qualificador === 'AFT') return null;
     const ultima = Number(data.gedcom.slice(data.gedcom.lastIndexOf(' ') + 1));
     if (qualificador === 'BET' || qualificador === 'FROM') {
+      if (!Number.isSafeInteger(ultima) || ultima < data.any) return null;
       return qualificador === 'BET' || data.gedcom.includes(' TO ') ? { min: data.any, max: ultima } : null;
     }
   }

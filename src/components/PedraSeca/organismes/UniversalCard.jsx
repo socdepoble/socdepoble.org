@@ -385,6 +385,8 @@ function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, 
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
+      {/* v1.2.19 · P0-CONSOLA-ZERO (ordre del Mestre, 22-11-2026 00:02) · preload="none": en repòs, només el pòster local;
+          el vídeo es demana quan algú prem «reproduir» (amb «metadata», el Mur el demanava en muntar la targeta). */}
       {video ? (
         <div className="sp-card-media-container sp-card-media-container--video">
           <video
@@ -393,7 +395,7 @@ function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, 
             poster={imatge || undefined}
             controls
             playsInline
-            preload="metadata"
+            preload="none"
           />
         </div>
       ) : imatge && formaMitja === FORMA_MITJA_16_9 ? (

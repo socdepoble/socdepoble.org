@@ -4,6 +4,7 @@ import cssPerfilShell from '../../css/diferit-perfil-shell.css?inline';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import { Alerta, Boto, Carregant, DialegConfirmacio, Insignia } from '../../components/PedraSeca';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { esborraElMeuMitja, getRuntimeDataMode, llistaElsMeusMitjans, teCapacitat } from '../../data/backendPort.js';
@@ -22,6 +23,7 @@ import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import {
   avatarDeLaBarraDeFitxa, avatarDeLaFitxa, deNom, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
 } from './fitxaDePerfil.js';
+import { textosPerfilA11y } from './i18nPerfilA11y.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    MULTIMÈDIA · les fotos de cada actor del Perfil, de veres
@@ -643,6 +645,8 @@ const FILES_SENSE_ARTICLE = Object.freeze(['poble', 'publicat']);
 export function DetallMultimedia({ identitat, config }) {
   const arrelPerfilRef = useRef(null);
   useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
+  const t = useTraductorOpcional();
+  const txPerfil = textosPerfilA11y({ t });
   const perfil = usePerfilOpcional();
   const { mediaItems } = useMultimedia();
   const dades = useMemo(() => identitat?.dades || {}, [identitat]);
@@ -1034,7 +1038,7 @@ export function DetallMultimedia({ identitat, config }) {
                         type="button"
                         className="sdp-visor__obridor"
                         aria-haspopup="dialog"
-                        aria-label="Obri al visor"
+                        aria-label={txPerfil.obriAlVisorAria}
                         aria-describedby={idTitol}
                         onClick={() => setVisor(entrada.clau)}
                       >

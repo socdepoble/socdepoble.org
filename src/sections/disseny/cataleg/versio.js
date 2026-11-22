@@ -15,7 +15,33 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenUniversalCard.jsx i detalls/EspecimenXat.jsx, 2026-11-19T01:59:30+01:00,
+ * Darrera posada al dia: detalls/atles2dComu.jsx, detalls/EspecimenAtles2dPresentacio.jsx,
+ * detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx, detalls/EspecimenAtles2dMapaEntitats.jsx
+ * i detalls/EspecimenAtles2dMotorEstudis.jsx, 2026-11-22T03:09:53+01:00, v1.2.19 · Gauntlet R2 de l'Atles 2D (troballes
+ * L4R2-01 a L4R2-08): les cerques de les Xarxes i del Poble virtual no distingixen accents (normalizeSearchText);
+ * la Presentació, el Poble virtual i el Mapa diuen a la vista de quina data i de quina versió del codi són les dades
+ * (NotaDatacio, en passat; la data de verificació del Mapa, en valencià); les cel·les fora del ressalt del Mapa
+ * s'aplanen en compte d'esvair-se i ho diuen al lector de pantalla («fora del filtre»); cada eslògan de les Xarxes
+ * porta la seua llengua (lang); i el Motor compta les rondes igual que les nomena (amb veus i sense). El full
+ * diferit-atles-2d.css (fora d'esta regla) enganxa la cantonada del Mapa, no partix els noms curts a l'iPad i posa
+ * els :hover dins de la guarda de la Fase B.
+ * Versió anterior: detalls/atles2dComu.jsx, detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx
+ * i detalls/EspecimenAtles2dMapaEntitats.jsx, 2026-11-22T01:33:29+01:00, reparació 1 de l'Atles 2D (verificació escèptica del
+ * 22-11-2026): la cerca de les xarxes llig el text de les fitxes i no les claus de la dada, «Vore els seus dolors (n)»
+ * lleva la resta de filtres perquè se'n vegen n, el Mapa porta la vista «Per entitat» i noms d'entitat curts quan la
+ * caixa de la graella és estreta (iPad), i la columna «Entitat» de les rutes reals diu el nom i no l'id de la matriu.
+ * Versió anterior: manifest.js, detailRegistry.jsx, detalls/atles2dComu.jsx, detalls/EspecimenAtles2dPresentacio.jsx,
+ * detalls/EspecimenAtles2dPobleVirtual.jsx, detalls/EspecimenAtles2dXarxesMon.jsx, detalls/EspecimenAtles2dMapaEntitats.jsx
+ * i detalls/EspecimenAtles2dMotorEstudis.jsx, 2026-11-22T00:56:14+01:00, Atles 2D (ordre del Mestre del 21-11-2026 a les 23:28,
+ * pla 261121_2335, Carril 1, Tram 1, punts a i b; integrat el 22-11-2026): la carpeta «Inventari» es diu «Recursos»
+ * (l'id inventari i les URL no canvien) i la carpeta nova «Atles 2D» (atles-2d, 🗺️) porta les cinc pàgines d'estudi
+ * de la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html (presentació, poble virtual, xarxes del món, mapa de les
+ * 5 entitats i motor d'estudis), amb les dades a dades/atles2dDades.js i el full diferit diferit-atles-2d.css, tot a
+ * demanda. Arreplega també els fitxers del catàleg que les versions v1.2.11–v1.2.18 van tocar sense posar-la al dia
+ * (segons git diff 34ffb539a..d50ef6c95): AssignacioEmoji.jsx, registre.js, detalls/EspecimenAcollidaForasterXat.jsx,
+ * detalls/EspecimenBandaBetaMicroApp.jsx, detalls/EspecimenColor.jsx, detalls/EspecimenPanell.jsx i
+ * detalls/EspecimenXatRail.jsx.
+ * Versió anterior: detalls/EspecimenUniversalCard.jsx i detalls/EspecimenXat.jsx, 2026-11-19T01:59:30+01:00,
  * Onada v1.2.10 (integració del 19-11-2026 dels ítems del Llibre Mestre): el contracte de la UniversalCard diu què
  * fa la data al Mur segons l'arquetip (arquetipDeData.js, P0-77) i documenta etiquetaData, i la conversa d'espill
  * del Xat marca la llista mentre hi ha una capa flotant oberta (onCapaFlotantCanvia).
@@ -403,4 +429,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-19T01:59:30+01:00';
+export const VERSIO_CATALEG = '2026-11-22T03:09:53+01:00';

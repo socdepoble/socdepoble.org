@@ -14,6 +14,7 @@
  * Text pla: React escapa, cap HTML. Enllaços de prosa sense classe (base.css).
  */
 import { miniaturaDeCommons } from './fitxaDelPoble.js';
+import { textosFontsTerritorials } from './i18nFontsTerritorials.js';
 import {
   LLICENCIA_DEL_TEXT,
   LOCALE_PER_DEFECTE,
@@ -33,13 +34,15 @@ function EnllacDeFora({ href, children }) {
 
 export function CreditsDeViquipedia({ entrada, ambFotos = false, t, locale = LOCALE_PER_DEFECTE }) {
   const tx = traductorDeViquipedia(t);
+  const etq = textosFontsTerritorials(locale);
   const { dto, llegitEl } = entrada;
   const fotos = ambFotos ? fotosDe(dto.imatges) : [];
+  const dataConsultat = dataLlegible(llegitEl, locale);
   const dades = [
-    ['Població', dto.population ? `${dto.population}${dto.population_year ? ` (${dto.population_year})` : ''}` : null],
-    ['Altitud', Number.isFinite(dto.elevation) ? `${dto.elevation} m` : null],
-    ['Superfície', Number.isFinite(dto.area) ? `${dto.area} km²` : null], ['Gentilici', dto.gentilici],
-    ['Coordenades', Number.isFinite(dto.lat) && Number.isFinite(dto.lng) ? `${dto.lat}, ${dto.lng}` : null]
+    [etq.poblacio, dto.population ? `${dto.population}${dto.population_year ? ` (${dto.population_year})` : ''}` : null],
+    [etq.altitud, Number.isFinite(dto.elevation) ? `${dto.elevation} m` : null],
+    [etq.superficie, Number.isFinite(dto.area) ? `${dto.area} km²` : null], [etq.gentilici, dto.gentilici],
+    [etq.coordenades, Number.isFinite(dto.lat) && Number.isFinite(dto.lng) ? `${dto.lat}, ${dto.lng}` : null]
   ].filter(([, valor]) => valor != null);
   return (
     <>
@@ -68,7 +71,7 @@ export function CreditsDeViquipedia({ entrada, ambFotos = false, t, locale = LOC
           </figcaption>
         </figure>
       ))}
-      {Number.isFinite(llegitEl) ? <p>{tx('consultat').replace('{data}', () => dataLlegible(llegitEl, locale))}</p> : null}
+      {dataConsultat ? <p>{tx('consultat').replace('{data}', () => dataConsultat)}</p> : null}
     </>
   );
 }

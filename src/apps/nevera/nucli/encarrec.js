@@ -149,10 +149,16 @@ function marcaProducteNeta(marca) {
   return purgaMarquesGranSuperficie(neta);
 }
 
+/* v1.2.19 · Gauntlet R1 (L3-02) · La llista de botiga es desa amb un nom canònic
+   (o, si es va crear abans fora del valencià, amb una traducció): l'encàrrec la
+   titula sempre en la llengua triada. */
+const NOMS_LLISTA_BOTIGA = new Set([...Object.values(TITOLS_LLISTA_BOTIGA), 'Catàleg de botiga'].map((nom) => nom.toLocaleLowerCase('ca')));
+
 export function netejaNomLlistaEncarrec(nom, idioma = 'ca') {
   const llengua = Object.hasOwn(TITOLS_LLISTA_BOTIGA, idioma) ? idioma : 'ca';
   const net = netejaText(nom, LIMITS.nom);
-  if (!net || MARQUES_GRAN_SUPERFICIE.has(net.toLocaleLowerCase('ca'))) {
+  const clau = net ? net.toLocaleLowerCase('ca') : '';
+  if (!net || MARQUES_GRAN_SUPERFICIE.has(clau) || NOMS_LLISTA_BOTIGA.has(clau)) {
     return TITOLS_LLISTA_BOTIGA[llengua];
   }
   const purgat = purgaMarquesGranSuperficie(net);

@@ -35,22 +35,33 @@
  *   textEsgotat  string · el text de la insígnia, ja traduït.
  */
 import { useId } from 'react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import {
-  TEXT_ESGOTAT_PER_DEFECTE,
   classeVariantOpcio,
   idLlegendaVariacions,
   idOpcioVariacio,
+  textEsgotatVariacio,
 } from './selectorDeVariacionsModel.js';
+
+function useIdiomaVariacions() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 export function SelectorDeVariacions({
   llegenda,
   opcions = [],
   valor,
   onCanvi,
-  textEsgotat = TEXT_ESGOTAT_PER_DEFECTE,
+  textEsgotat,
 }) {
   const id = useId();
+  const idioma = useIdiomaVariacions();
+  const etiquetaEsgotat = textEsgotat ?? textEsgotatVariacio(idioma);
   const idLlegenda = idLlegendaVariacions(id);
   return (
     <fieldset className="sdp-variants" role="radiogroup" aria-labelledby={idLlegenda}>
@@ -68,7 +79,7 @@ export function SelectorDeVariacions({
                 <span className="sdp-variant__nom">{opcio.etiqueta}</span>
                 {/* L'espai separa les dues paraules al nom del ràdio («Edició
                     Verda Esgotat»); dins del flex de la píndola no es pinta. */}
-                {opcio.esgotada ? <>{' '}<Insignia to="avis" className="sdp-variant__estat">{textEsgotat}</Insignia></> : null}
+                {opcio.esgotada ? <>{' '}<Insignia to="avis" className="sdp-variant__estat">{etiquetaEsgotat}</Insignia></> : null}
               </label>
             </div>
           );

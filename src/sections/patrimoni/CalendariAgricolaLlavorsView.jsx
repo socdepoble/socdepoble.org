@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import {
   FONTS_BANC_LLAVORS,
   entradesDelCataleg
@@ -49,6 +51,7 @@ function grupDeVarietat(entrada) {
 }
 
 export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null }) {
+  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
   const [grupActiu, setGrupActiu] = useState('tots');
   const [faseActiva, setFaseActiva] = useState('totes');
   const [mesActiu, setMesActiu] = useState(0);
@@ -107,7 +110,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
   return (
     <section ref={adoptaEstilsDiferits}
       className="sdp-calendari-agricola"
-      aria-label="Calendari agrícola anual de varietats tradicionals i tomaques"
+      aria-label={txPat.calendariAgricolaAria}
     >
       <div>
         <h3>Calendari agrícola de cultius i tomaques tradicionals</h3>
@@ -121,7 +124,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         Només s’hi mostren els mesos documentats oficialment al Catàleg valencià de varietats tradicionals d’interés agrari. Les entrades d’AVL Mallorca i de l’Atles català no inclouen diagrama mensual a la font i es consulten al llibre principal del catàleg.
       </Alerta>
 
-      <div className="sdp-calendari-agricola__filtres" role="group" aria-label="Filtre per família de cultiu">
+      <div className="sdp-calendari-agricola__filtres" role="group" aria-label={txPat.filtreFamiliaCultiuAria}>
         {GRUPS_CULTIU.map((grup) => (
           <Boto
             key={grup.id}
@@ -134,7 +137,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         ))}
       </div>
 
-      <div className="sdp-calendari-agricola__filtres" role="group" aria-label="Filtre per fase agronòmica">
+      <div className="sdp-calendari-agricola__filtres" role="group" aria-label={txPat.filtreFaseAgronomicaAria}>
         <Boto
           varietat={faseActiva === 'totes' ? 'primari' : 'secundari'}
           aria-pressed={faseActiva === 'totes'}
@@ -179,7 +182,7 @@ export default function CalendariAgricolaLlavorsView({ onObrirVarietat = null })
         </div>
       </div>
 
-      <div className="sdp-calendari-agricola__mesos" role="group" aria-label="Filtre per mes de l’any">
+      <div className="sdp-calendari-agricola__mesos" role="group" aria-label={txPat.filtreMesAnyAria}>
         <Boto
           varietat={mesActiu === 0 ? 'primari' : 'secundari'}
           aria-pressed={mesActiu === 0}

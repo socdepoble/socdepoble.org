@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { AreaText, Boto, Camp, CampText } from '../../components/PedraSeca/index.js';
 import { creaFitxaDoctoralArbre, calculaDeltaBiometricArbre, slugRevisionsDoctoralsArbre,
   LIMITS_MESURES_DOCTORALS, esMesuraDendrometricaValida } from '../../data/patrimoni/esquemaDoctoralArbres.js';
 import EinesDadesArbres from './EinesDadesArbres.jsx';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { useRevisionsArbre } from './useRevisionsArbre.js';
 
 const COTES = Object.freeze([
@@ -15,6 +17,7 @@ const buit = () => ({ campanyaAny: String(new Date().getFullYear()), estatConser
   alcadaM: '', diametreCapcadaM: '', perimetreNormalCm: '', perimetreBasalCm: '' });
 
 function FormulariCampanya({ servei }) {
+  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
   const [entrada, setEntrada] = useState(buit);
   const [original, setOriginal] = useState(null);
   const [ocupat, setOcupat] = useState(false);
@@ -102,7 +105,7 @@ function FormulariCampanya({ servei }) {
             {original && <Boto onClick={reinicia}>Nova campanya</Boto>}
             {original && <Boto varietat="perill" onClick={() => setConfirmaBaixa(true)}>Esborra campanya</Boto>}
             {confirmaBaixa && (
-              <div role="group" aria-label="Confirmació de baixa de campanya">
+              <div role="group" aria-label={txPat.confirmacioBaixaCampanyaAria}>
                 <p>Esborrar la campanya {original.campanyaAny}?</p>
                 <Boto varietat="perill" onClick={esborra}>Confirma l’esborrat</Boto>
                 <Boto onClick={() => setConfirmaBaixa(false)}>Conserva la campanya</Boto>

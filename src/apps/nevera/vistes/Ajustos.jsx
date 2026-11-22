@@ -16,6 +16,7 @@ import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto, Camp, CampText, GrupCamps, MarcColumna, OrdenaCategories } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { LIMITS, MAX_COPIA, llegixCopia, serialitzaCopia } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { AJUSTOS } from './constants.js';
@@ -56,11 +57,13 @@ export function ColumnaAjustosLlista({ params }) {
   const tx = textosVistaNevera(idioma);
   const navigate = useNavigate();
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const unica = estat.llistes.length < 2;
   const startActions = useAccioEstreta({
     id: 'dades', icona: Database, etiqueta: tx.dadesICopia, onAcciona: () => navigate(ruta(AJUSTOS.entrada, llista.id, AJUSTOS.tramDades))
   });
-  const titol = tx.ajustosDe(llista.nom);
+  const titol = tx.ajustosDe(nomLlista);
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} startActions={startActions} />} etiqueta={titol}>
       <GrupCamps llegenda={tx.laLlista}>
@@ -69,7 +72,7 @@ export function ColumnaAjustosLlista({ params }) {
       <GrupCamps llegenda={tx.seccions}>
         <OrdenaCategories
           categories={seccionsDe(estat, llista.id)}
-          etiqueta={tx.ordreSeccions(llista.nom)}
+          etiqueta={tx.ordreSeccions(nomLlista)}
           onMou={(id, direccio) => accions.mouSeccio(llista.id, id, direccio)}
           onVisibilitat={(id, visible) => accions.amagaSeccio(llista.id, id, !visible)}
         />
@@ -78,7 +81,7 @@ export function ColumnaAjustosLlista({ params }) {
       <GrupCamps llegenda={tx.esborrar}>
         {unica ? <p>{tx.unicaLlistaAvis}</p> : null}
         <Boto varietat="perill" icona={Trash2} disabled={unica} onClick={() => demanaConfirmacio({
-          titol: tx.volsEsborrarLlista(llista.nom),
+          titol: tx.volsEsborrarLlista(nomLlista),
           descripcio: tx.esborrarLlistaDesc,
           etiquetaConfirma: tx.esborraLaLlista,
           accio: () => accions.esborraLlista(llista.id)

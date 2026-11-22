@@ -7,8 +7,17 @@ export function textNet(valor) {
   return typeof valor === 'string' ? valor.trim() : '';
 }
 
+const LOCALES_DESPLEGABLE = Object.freeze({
+  ca: 'ca-ES',
+  es: 'es-ES',
+  en: 'en-GB',
+  eu: 'eu-ES',
+  gl: 'gl-ES',
+});
+
 export function localeCalendariDe(language = 'ca') {
-  return language === 'en' ? 'en-GB' : `${language}-ES`;
+  const codi = String(language || 'ca').trim().toLowerCase().split(/[-_]/)[0];
+  return Object.hasOwn(LOCALES_DESPLEGABLE, codi) ? LOCALES_DESPLEGABLE[codi] : 'ca-ES';
 }
 
 export function formataDataCurtaIso(clau, locale) {

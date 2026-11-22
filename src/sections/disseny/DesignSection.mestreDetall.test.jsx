@@ -90,7 +90,7 @@ test('MD · /disseny a 375 px: primer DISSENY; família → COMPONENTS → espè
   expect([closca(container).dataset.layout, panell(container)]).toEqual(['estret', 'left']);
   expect(obertes(container)).toEqual(['#app-grid-sidebar']);
 
-  fireEvent.click(within(columna(container, 'app-grid-sidebar')).getByRole('button', { name: 'Inventari' }));
+  fireEvent.click(within(columna(container, 'app-grid-sidebar')).getByRole('button', { name: 'Recursos' }));
   expect(panell(container)).toBe('middle');
   expect(obertes(container)).toEqual(['#app-grid-list']);
   buida();
@@ -152,7 +152,7 @@ test('MD · triar una família escriu la seua primera fitxa a la URL: eixir i to
     </MemoryRouter>
   );
   expect(panell(container)).toBe('left');
-  fireEvent.click(within(columna(container, 'app-grid-sidebar')).getByRole('button', { name: 'Inventari' }));
+  fireEvent.click(within(columna(container, 'app-grid-sidebar')).getByRole('button', { name: 'Recursos' }));
   expect(panell(container)).toBe('middle');
   const enLaLlista = url();
   expect(enLaLlista).toMatch(/[?&]item=/);

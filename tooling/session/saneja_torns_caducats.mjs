@@ -6,6 +6,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { canonical, turnPattern } from '../documental/core.mjs';
 import { readTurn } from '../documental/turns.mjs';
+import { ESTAT_BASE_EFIMERA, validaSolicitudBaseEfimera, comprovaBaseEfimera, validaTracaBaseEfimera } from './base-efimera.mjs';
 
 const DIR_TORNS = '.agents/runtime/turns';
 const FITXER_TORN = /^torn_.*\.json$/;
@@ -54,14 +55,64 @@ function regular(abs) {
   if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size > MAX_REGISTRE || canonical(abs) !== abs) throw new Error('Registre no regular');
   return stat;
 }
-function escriuAtomic(abs, valor, abans, identity) {
-  const tmp = `${abs}.${randomUUID()}.tmp`;
+function mateixaIdentitat(actual, expected) {
+  return actual.dev === expected.dev && actual.ino === expected.ino && actual.mode === expected.mode
+    && actual.size === expected.size && actual.mtimeMs === expected.mtimeMs && actual.ctimeMs === expected.ctimeMs;
+}
+function comprovaPany(lock, fd, identity) {
+  if (!identity || !mateixaIdentitat(fs.fstatSync(fd), identity) || !mateixaIdentitat(regular(lock), identity))
+    throw new Error('Pany substituït abans del commit: no es tanca el torn');
+}
+/** Descriptor reads do not follow a substituted final symlink; the name and
+ * parents are rechecked after reading, immediately before committing. A writer
+ * ignoring the cooperative lock can still race the final check and rename. */
+function comprovaPreimatge(abs, abans, identity) {
+  if (!mateixaIdentitat(regular(abs), identity)) throw new Error('CAS divergent en el torn');
+  const fd = fs.openSync(abs, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
-    fs.writeFileSync(tmp, `${JSON.stringify(valor, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-    const actual = regular(abs);
-    if (actual.dev !== identity.dev || actual.ino !== identity.ino || fs.readFileSync(abs, 'utf8') !== abans) throw new Error('CAS divergent en el torn');
+    if (!mateixaIdentitat(fs.fstatSync(fd), identity)) throw new Error('CAS divergent en el torn');
+    const raw = fs.readFileSync(fd, 'utf8');
+    if (raw !== abans || !mateixaIdentitat(fs.fstatSync(fd), identity)
+        || !mateixaIdentitat(regular(abs), identity)) throw new Error('CAS divergent en el torn');
+  } finally { fs.closeSync(fd); }
+}
+function escriuAtomic(abs, valor, abans, identity, revalida = null, pany = null) {
+  const tmp = `${abs}.${randomUUID()}.tmp`;
+  let fd, temporal, failure;
+  try {
+    // Check again before creating a temporary: a substituted parent must not
+    // redirect even a prepared postimage outside the turn store.
+    if (pany) pany();
+    comprovaPreimatge(abs, abans, identity);
+    fd = fs.openSync(tmp, 'wx', 0o600);
+    temporal = fs.fstatSync(fd);
+    fs.fchmodSync(fd, identity.mode & 0o777);
+    fs.writeFileSync(fd, `${JSON.stringify(valor, null, 2)}\n`);
+    fs.fsyncSync(fd);
+    if (revalida) revalida();
+    if (pany) pany();
+    const prepared = regular(tmp);
+    if (prepared.dev !== temporal.dev || prepared.ino !== temporal.ino) throw new Error('Temporal del torn substituït');
+    comprovaPreimatge(abs, abans, identity);
+    if (pany) pany();
     fs.renameSync(tmp, abs);
-  } finally { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); }
+  } catch (error) { failure = error; throw error; }
+  finally {
+    if (fd !== undefined) fs.closeSync(fd);
+    if (temporal) {
+      try {
+        const current = fs.lstatSync(tmp);
+        if (current.dev !== temporal.dev || current.ino !== temporal.ino || canonical(tmp) !== tmp)
+          throw new Error('Temporal propi no retirat: ruta o identitat substituïda');
+        fs.unlinkSync(tmp);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          if (failure) failure.message += `; ${error.message}`;
+          else throw error;
+        }
+      }
+    }
+  }
 }
 export function esTornCaducat(torn, ara = Date.now()) {
   if (!torn || typeof torn !== 'object' || Array.isArray(torn) || torn.state === 'closed') return false;
@@ -70,35 +121,53 @@ export function esTornCaducat(torn, ara = Date.now()) {
 }
 
 /** The same per-turn lock as mutateTurn; dry-run does not write even a lock. */
-export function sanejaTornsCaducats(arrel = arrelSegura(), { ara = Date.now(), sec = false } = {}) {
+export function sanejaTornsCaducats(arrel = arrelSegura(), { ara = Date.now(), sec = false, ephemeral = null } = {}) {
   if (!Number.isSafeInteger(ara) || !Number.isFinite(new Date(ara).getTime())) throw new Error('Rellotge invàlid');
   arrel = fs.realpathSync(arrel);
+  const request = ephemeral === null ? null : validaSolicitudBaseEfimera(ephemeral);
   const dir = path.join(arrel, DIR_TORNS);
-  const resultat = { total: 0, tancatsAra: 0, jaTancats: 0, vius: 0, omesosLock: 0, idsTancats: [], transicions: [], errors: [] };
-  if (!fs.existsSync(dir)) return { ...resultat, valid: true };
+  const resultat = { total: 0, tancatsAra: 0, jaTancats: 0, vius: 0, omesosLock: 0, idsTancats: [], transicions: [], diagnostics: [], errors: [] };
+  if (!fs.existsSync(dir)) {
+    if (request) resultat.errors.push({ file: `${DIR_TORNS}/${request.turnId}.json`, error: 'Torn sol·licitat absent' });
+    return { ...resultat, valid: resultat.errors.length === 0 };
+  }
   if (canonical(dir) !== dir) throw new Error('Directori de torns amb symlink');
-  const noms = fs.readdirSync(dir).filter((nom) => FITXER_TORN.test(nom)).sort();
+  const noms = request ? [`${request.turnId}.json`] : fs.readdirSync(dir).filter((nom) => FITXER_TORN.test(nom)).sort();
   resultat.total = noms.length;
   const isoAra = new Date(ara).toISOString();
   for (const nom of noms) {
     const abs = path.join(dir, nom), lock = `${abs}.lock`, id = nom.slice(0, -'.json'.length);
-    let fd;
+    let fd, lockIdentity;
     try {
       if (!turnPattern.test(id)) throw new Error('Identificador de torn invàlid');
       if (sec) {
         if (fs.existsSync(lock)) { resultat.omesosLock += 1; continue; }
       } else {
-        try { fd = fs.openSync(lock, 'wx', 0o600); }
+        try { fd = fs.openSync(lock, 'wx', 0o600); lockIdentity = fs.fstatSync(fd); }
         catch (error) { if (error.code === 'EEXIST') { resultat.omesosLock += 1; continue; } throw error; }
       }
       const identity = regular(abs), abans = fs.readFileSync(abs, 'utf8');
       // Expired reads are explicit; all ordinary readers retain fail-closed expiry.
       const torn = readTurn(arrel, id, { closed: true, expired: true, now: ara });
       if (torn.closure?.schema === 'sdp.turn-expiry.v1') verificaTracaCaducitat(arrel, torn.closure.audit);
-      if (torn.state === 'closed') { resultat.jaTancats += 1; continue; }
+      if (torn.state === 'closed') {
+        if (request && (torn.closure?.initialInventory?.status !== ESTAT_BASE_EFIMERA
+            || torn.closure.preimageSHA256 !== request.sha256 || torn.closure.initialInventory.base !== request.base
+            || torn.closure.initialInventory.reason !== request.reason)) throw new Error('El torn ja estava tancat amb una altra reconciliació');
+        resultat.jaTancats += 1; continue;
+      }
+      if (request && sha(abans) !== request.sha256) throw new Error('SHA-256 de la preimatge divergent');
       if (dataCanonica(torn.expiresAt) === null) throw new Error('Caducitat de torn no canònica');
-      if (!esTornCaducat(torn, ara)) { resultat.vius += 1; continue; }
+      if (!esTornCaducat(torn, ara)) {
+        resultat.vius += 1;
+        if (request) throw new Error('Torn encara viu: no s’admet una reconciliació administrativa anticipada');
+        continue;
+      }
+      const initialInventory = request ? comprovaBaseEfimera(arrel, torn, request) : null;
+      if (initialInventory) resultat.diagnostics.push({ id, state: torn.state, expiresAt: torn.expiresAt, preimageSHA256: sha(abans), initialInventory });
       if (!sec) {
+        const pany = () => comprovaPany(lock, fd, lockIdentity);
+        pany();
         const estatPrevi = torn.state;
         torn.state = 'closed';
         torn.revision = (Number.isInteger(torn.revision) ? torn.revision : 0) + 1;
@@ -106,7 +175,8 @@ export function sanejaTornsCaducats(arrel = arrelSegura(), { ara = Date.now(), s
         const preimageSHA256 = sha(abans), documents = documentsObservats(arrel, torn.receipts);
         const audit = `.agents/runtime/turn-expiry/${preimageSHA256}-${ara}.json`;
         torn.closure = { reason: 'expired', at: isoAra, previousState: estatPrevi,
-          schema: 'sdp.turn-expiry.v1', expiresAt: torn.expiresAt, preimageSHA256, audit, documents };
+          schema: 'sdp.turn-expiry.v1', expiresAt: torn.expiresAt, preimageSHA256, audit, documents,
+          ...(initialInventory && { initialInventory }) };
         torn.history.push({ state: 'closed', action: 'expire-close', previousState: estatPrevi, at: isoAra });
         // Preserve any genuine prior verification byte-for-byte; never create/re-hash it.
         const postimage = serialitza(torn);
@@ -116,15 +186,31 @@ export function sanejaTornsCaducats(arrel = arrelSegura(), { ara = Date.now(), s
         // visible, never a receipt, verification or exemption from any gate.
         desaTraca(arrel, audit, { schema: 'sdp.turn-expiry.audit.v1', turn_id: id, at: isoAra,
           file: `${DIR_TORNS}/${nom}`, preimageSHA256, postimageSHA256, preimage: abans, documents,
+          ...(initialInventory && { initialInventory }),
           meaning: 'Abandonament per caducitat; no acredita treball ni tancament documental verificat.' });
-        escriuAtomic(abs, torn, abans, identity);
+        escriuAtomic(abs, torn, abans, identity, request ? () => {
+          const current = readTurn(arrel, id, { closed: true, expired: true, now: ara });
+          if (!esTornCaducat(current, ara) || current.state !== estatPrevi || sha(fs.readFileSync(abs)) !== request.sha256)
+            throw new Error('CAS divergent: estat, hash o caducitat renovats durant la reconciliació');
+          comprovaBaseEfimera(arrel, current, request);
+        } : null, pany);
         resultat.transicions.push({ id, file: `${DIR_TORNS}/${nom}`, audit, preimageSHA256, postimageSHA256,
           previousState: estatPrevi, state: 'closed', reason: 'expired', at: isoAra });
       }
       resultat.tancatsAra += 1;
       resultat.idsTancats.push(id);
     } catch (error) { resultat.errors.push({ file: `${DIR_TORNS}/${nom}`, error: error.message }); }
-    finally { if (fd !== undefined) { fs.closeSync(fd); fs.unlinkSync(lock); } }
+    finally {
+      if (fd !== undefined) {
+        fs.closeSync(fd);
+        try {
+          const named = fs.lstatSync(lock);
+          if (named.dev !== lockIdentity.dev || named.ino !== lockIdentity.ino || canonical(lock) !== lock)
+            throw new Error('Pany substituït: no es retira un fitxer alié');
+          fs.unlinkSync(lock);
+        } catch (error) { resultat.errors.push({ file: `${DIR_TORNS}/${nom}.lock`, error: error.message }); }
+      }
+    }
   }
   if (!sec) resultat.jaTancats += resultat.tancatsAra;
   return { ...resultat, valid: resultat.errors.length === 0 && resultat.omesosLock === 0 };
@@ -149,9 +235,11 @@ export function verificaTracaCaducitat(arrel, relative) {
     || Object.values(audit.documents).some(v => v !== null && (typeof v !== 'string' || !/^[a-f0-9]{64}$/.test(v)))) throw new Error('Inventari de documents de caducitat invàlid');
   const expectedFiles = [...new Set(Object.values(before.receipts ?? {}).map(r => r?.file).filter(f => typeof f === 'string'))].sort();
   if (JSON.stringify(Object.keys(audit.documents).sort()) !== JSON.stringify(expectedFiles)) throw new Error('Inventari de documents de caducitat divergent');
+  const initialInventory = Object.hasOwn(audit, 'initialInventory') ? validaTracaBaseEfimera(before, audit.initialInventory) : null;
   const expected = { ...before, state: 'closed', revision: (Number.isInteger(before.revision) ? before.revision : 0) + 1, updatedAt: audit.at,
     closure: { reason: 'expired', at: audit.at, previousState: before.state, schema: 'sdp.turn-expiry.v1',
-      expiresAt: before.expiresAt, preimageSHA256: audit.preimageSHA256, audit: relative, documents: audit.documents },
+      expiresAt: before.expiresAt, preimageSHA256: audit.preimageSHA256, audit: relative, documents: audit.documents,
+      ...(initialInventory && { initialInventory }) },
     history: [...before.history, { state: 'closed', action: 'expire-close', previousState: before.state, at: audit.at }] };
   // Property order does not determine identity of the transition; exact postimage
   // bytes are independently bound by the SHA below.
@@ -161,6 +249,7 @@ export function verificaTracaCaducitat(arrel, relative) {
     || record.closure?.audit !== relative) throw new Error('Postimatge de caducitat divergent');
   return { valid: true, id: audit.turn_id, file: audit.file, audit: relative, at: audit.at,
     preimageSHA256: audit.preimageSHA256, postimageSHA256: audit.postimageSHA256,
+    ...(initialInventory && { initialInventory }),
     noCertifica: ['Autoria de la transició', 'Execució o verificació del treball', 'Validesa dels documents del torn'] };
 }
 function main() {

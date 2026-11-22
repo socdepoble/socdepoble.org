@@ -33,7 +33,8 @@ const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDife
 
 /* El domicili fiscal d'una configuració, en una línia. */
 function domiciliDe(config) {
-  const fiscal = config.domicilis.find((d) => d.id === config.domiciliFiscal);
+  const domicilis = Array.isArray(config?.domicilis) ? config.domicilis : [];
+  const fiscal = domicilis.find((d) => d.id === config?.domiciliFiscal);
   return fiscal ? `${fiscal.adreca}, ${fiscal.codiPostal} ${fiscal.poblacio}${fiscal.provincia ? ` (${fiscal.provincia})` : ''}` : '';
 }
 

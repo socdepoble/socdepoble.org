@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ store: new Map(), epoch: 0, exp: new Map() }));
+/* v1.2.19 · fusió · `exp` és del preflight de la v1.2.17 i `entry` és de la guarda d'entrada de Codex R32.29. */
+const m = vi.hoisted(() => ({ store: new Map(), epoch: 0, exp: new Map(), entry: 0 }));
 vi.mock('../../config/publicCredentials.js', () => ({ validatePublicCredentials: () => {} }));
 vi.mock('../../utils/sanitize.js', () => ({ permetOrigenMitjans: () => {} }));
 vi.mock('../appSeed.js', () => ({ APP_SEED: { noteFolders: [{ id: 'demo-folder' }], notes: [{ id: 'demo-note' }] }, APP_SEED_VERSION: 'synthetic', getDefaultUserId: () => 'A' }));
@@ -7,6 +8,10 @@ vi.mock('../../config/storage.js', () => ({ getEfimer: (key, fallback = null) =>
 /* P0-ZERO-401-PREFLIGHT (v1.2.17) · caducitatJwt per token: sense entrada, null (un token opac),
    i request() no renova abans d'hora; les proves de sempre no en noten res. */
 vi.mock('../identitat.js', () => ({ jwtPerBackend: () => m.store.get('jwt') ?? null, CLAU_JWT: 'jwt', CLAU_USUARI: 'user', usuariDeSessio: () => m.store.get('user') ?? null,
+  capturaSessio: () => {
+    const entry = m.entry;
+    return () => { if (entry !== m.entry) throw new DOMException('La sessió ha canviat.', 'AbortError'); };
+  },
   get versioSessio() { return m.epoch; }, caducitatJwt: (jwt) => m.exp.get(jwt) ?? null, MARGE_RENOVACIO_MS: 60_000 }));
 import { configuraRefrescSessio, request, rpc, ErrorSupabase, mapContentRowsToData } from './runtime.js';
 import { CODI_BACKEND_INABASTABLE, esBackendInabastable } from '../errorsBackend.js';
@@ -49,8 +54,8 @@ test('Onada 12 · un payload que no és una llista (objecte, text o null) dona [
 });
 
 const CONFIG = { supabaseUrl: 'https://api.example.test', supabaseAnonKey: 'sb_publishable_synthetic' };
-const desa = (token, id) => { m.epoch++; m.store.set('jwt', token); m.store.set('user', { id }); };
-const esborra = () => { m.epoch++; m.store.clear(); };
+const desa = (token, id) => { if (m.store.get('user')?.id !== id) m.entry++; m.epoch++; m.store.set('jwt', token); m.store.set('user', { id }); };
+const esborra = () => { m.entry++; m.epoch++; m.store.clear(); };
 const resposta = (status, body = null) => ({ ok: status < 400, status, text: async () => '', json: async () => body, headers: { get: () => null } });
 
 test('R21.6 preserves SQLSTATE without confusing generic serialization with a revision rejection', async () => {
@@ -530,4 +535,142 @@ test('v1.2.17 · Gauntlet R1 (S-02) · amb una Authorization pròpia no renova a
   await request('/rest/v1/a', CONFIG);
   expect(renova).toHaveBeenCalledTimes(1);
   expect(tokens(fetch).at(-1)).toBe('Bearer synthetic-A-s02-renewed');
+});
+
+/* ═══════════════ v1.2.19 · fusió · preflight de la v1.2.17 + llinatge i cancel·lació de Codex R32.29 ═══════════════
+   Les dues bandes conviuen dins del mateix request(): la guarda d'entrada (capturaSessio) també vigila el preflight,
+   la renovació post-401 que buida la pestanya continua donant el 401 de sempre.
+   v1.2.19 · Gauntlet R1 (L1-02) · I la mateixa regla del temporitzador als dos camins (L2-02): cap renovació, ni la
+   preventiva ni la post-401, no es menja el temps del fetch; només el signal de qui crida en talla l'espera. */
+test('v1.2.19 · fusió · el preflight que torna una entrada nova del mateix UUID com a renovació avorta sense enviar res', async () => {
+  desa(caducat('synthetic-A-fus-expired'), 'A');
+  // Època + 1 i el mateix actor (passa la C14), però una entrada nova: la guarda d'entrada de R32.29 l'atura.
+  configuraRefrescSessio(async () => { m.entry++; desa(caducat('synthetic-A-fus-reentrada', 3_600_000), 'A'); return true; });
+  const fetch = servidorEnHora();
+  vi.stubGlobal('fetch', fetch);
+  await expect(request('/rest/v1/a', CONFIG)).rejects.toMatchObject({ name: 'AbortError' });
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test('v1.2.19 · fusió · (L2-03) la renovació post-401 que falla i buida la pestanya dona el 401 de sempre; si hi entra un altre, AbortError', async () => {
+  // Un JWT encara vàlid per al client: sense preflight; el 401 és del servidor (revocació remota).
+  desa(caducat('synthetic-A-fus-viu', 3_600_000), 'A');
+  configuraRefrescSessio(async () => { esborra(); return false; });
+  const text = vi.fn(async () => '');
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ...resposta(401), text })));
+  const error = await request('/rest/v1/a', CONFIG).catch((e) => e);
+  expect(error).toBeInstanceOf(ErrorSupabase);
+  expect(error).toMatchObject({ status: 401, message: 'Supabase 401: la sessió ha caducat i no s\'ha pogut renovar.' });
+  desa(caducat('synthetic-A-fus-viu-2', 3_600_000), 'A');
+  configuraRefrescSessio(async () => { esborra(); desa('synthetic-B', 'B'); return false; });
+  await expect(request('/rest/v1/b', CONFIG)).rejects.toMatchObject({ name: 'AbortError' });
+  // Cap de les dues llig el cos de la sessió que ja no existix.
+  expect(text).not.toHaveBeenCalled();
+});
+
+/* v1.2.19 · Gauntlet R1 (L1-02) · Substituïx «(L2-02 + R32.29) … talla també l’espera del refresc post-401», que fixava
+   la regla contrària al camí post-401. Ara els dos camins, amb els mateixos números: timeoutMs 1000 i una renovació de
+   1500 ms que acaba bé. «pre»: el JWT ja ha caducat per al client (preflight). «post»: encara val per al client, però el
+   servidor el rebutja (revocació remota, deriva de rellotge): 401, renovació i reintent amb temporitzador propi. */
+test.each([['preventiva (preflight)', 'pre'], ['post-401', 'post']])('v1.2.19 · Gauntlet R1 (L1-02) · la renovació %s no es menja el temps del fetch; el fetch de després el té sencer i el signal de qui crida talla l’espera', async (_cas, cami) => {
+  vi.useFakeTimers();
+  try {
+    const nou = (ronda) => `synthetic-A-l102-${cami}-${ronda}-nou`;
+    const entra = (ronda) => desa(caducat(`synthetic-A-l102-${cami}-${ronda}-vell`, cami === 'pre' ? -1000 : 3_600_000), 'A');
+    const text = vi.fn(async () => '');
+    /* Només el token renovat val al servidor; la resposta bona tarda `ms` i el signal la talla. */
+    const servidor = (ronda, ms) => vi.fn((_url, opcions) => {
+      if (opcions.headers.Authorization !== `Bearer ${nou(ronda)}`) return Promise.resolve({ ...resposta(401), text });
+      return new Promise((resolve, reject) => {
+        const t = setTimeout(() => resolve(resposta(200, { ok: true })), ms);
+        opcions.signal.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('avortada', 'AbortError')); });
+      });
+    });
+    const renovaEn = (ronda, ms) => configuraRefrescSessio(() => new Promise((r) => setTimeout(() => { desa(caducat(nou(ronda), 3_600_000), 'A'); r(true); }, ms)));
+    const esperat = (ronda) => [...(cami === 'post' ? [`Bearer synthetic-A-l102-${cami}-${ronda}-vell`] : []), `Bearer ${nou(ronda)}`];
+
+    // 1. Renovació de 1500 ms + fetch de 200 ms amb timeoutMs 1000: les dades, no TimeoutError.
+    entra(1); renovaEn(1, 1_500);
+    let fetch = servidor(1, 200); vi.stubGlobal('fetch', fetch);
+    let estat = 'pendent';
+    let crida = request('/rest/v1/a', CONFIG, { timeoutMs: 1000 }).then((d) => { estat = d; }, (e) => { estat = e.name; });
+    await vi.advanceTimersByTimeAsync(1_400);
+    expect(estat).toBe('pendent');                          // passat timeoutMs, la renovació encara no ha acabat
+    await vi.advanceTimersByTimeAsync(300);
+    await crida;
+    expect(estat).toEqual({ ok: true });
+    expect(tokens(fetch)).toEqual(esperat(1));
+
+    // 2. El fetch de després (el del preflight o el reintent) porta el temporitzador sencer: 1200 ms > 1000, TimeoutError.
+    entra(2); renovaEn(2, 1_500);
+    fetch = servidor(2, 1_200); vi.stubGlobal('fetch', fetch);
+    estat = 'pendent';
+    crida = request('/rest/v1/b', CONFIG, { timeoutMs: 1000 }).then((d) => { estat = d; }, (e) => { estat = e.name; });
+    await vi.advanceTimersByTimeAsync(2_450);
+    expect(estat).toBe('pendent');                          // 1500 de renovació + 950 del fetch de després
+    await vi.advanceTimersByTimeAsync(100);
+    await crida;
+    expect(estat).toBe('TimeoutError');
+    expect(tokens(fetch)).toEqual(esperat(2));
+
+    // 3. Una renovació penjada: el temporitzador no la talla; el signal de qui crida, sí, sense enviar res més ni llegir el cos.
+    entra(3);
+    configuraRefrescSessio(() => new Promise(() => {}));
+    fetch = servidor(3, 0); vi.stubGlobal('fetch', fetch);
+    text.mockClear();
+    const ctl = new AbortController();
+    estat = 'pendent';
+    crida = request('/rest/v1/c', CONFIG, { timeoutMs: 1000, signal: ctl.signal }).then((d) => { estat = d; }, (e) => { estat = e.name; });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(estat).toBe('pendent');
+    ctl.abort();
+    await crida;
+    expect(estat).toBe('AbortError');
+    expect(fetch).toHaveBeenCalledTimes(cami === 'pre' ? 0 : 1);
+    expect(text).not.toHaveBeenCalled();
+  } finally { vi.useRealTimers(); }
+});
+
+/* v1.2.19 · Gauntlet R1 (L1-02) · Sense reintent (la renovació post-401 torna false i la sessió es queda), el cos del
+   401 té el temps que li quedava al fetch: la renovació no el consumix, però el temporitzador el continua tallant. */
+test('v1.2.19 · Gauntlet R1 (L1-02) · renovació post-401 fallida sense buidar la pestanya: el cos del 401 té la resta del temps del fetch', async () => {
+  vi.useFakeTimers();
+  try {
+    desa(caducat('synthetic-A-l102-cos-viu', 3_600_000), 'A');
+    configuraRefrescSessio(() => new Promise((r) => setTimeout(() => r(false), 1_500)));
+    // El 401 arriba als 300 ms; el cos no arriba mai, però escolta el signal com un fetch de veres.
+    vi.stubGlobal('fetch', vi.fn((_url, opcions) => new Promise((resolve) => setTimeout(() => resolve({ ...resposta(401),
+      text: () => new Promise((_r, reject) => opcions.signal.addEventListener('abort', () => reject(new DOMException('avortada', 'AbortError')))) }), 300))));
+    let estat = 'pendent';
+    const crida = request('/rest/v1/a', CONFIG, { timeoutMs: 1000 }).then((d) => { estat = d; }, (e) => { estat = e.name; });
+    // 300 ms de fetch + 1500 de renovació + 650 dels 700 que li quedaven: encara no.
+    await vi.advanceTimersByTimeAsync(2_450);
+    expect(estat).toBe('pendent');
+    await vi.advanceTimersByTimeAsync(100);
+    await crida;
+    expect(estat).toBe('TimeoutError');
+  } finally { vi.useRealTimers(); }
+});
+
+/* v1.2.19 · Gauntlet R2 (L1R2-01) · El termini del cos del 401 va amb un rellotge monotònic: un salt de l'hora del sistema
+   durant el fetch (±1 h, el telèfon que corregix l'hora en tornar la xarxa) no el deixa sense topall ni el talla a zero. */
+test.each([['arrere', -3_600_000], ['avant', 3_600_000]])('v1.2.19 · Gauntlet R2 (L1R2-01) · si l’hora salta %s durant el fetch, el cos del 401 continua tenint la resta del temps', async (_sentit, salt) => {
+  vi.useFakeTimers();
+  try {
+    desa(caducat(`synthetic-A-l1r201-${_sentit}`, 3_600_000), 'A');
+    configuraRefrescSessio(() => new Promise((r) => setTimeout(() => r(false), 1_500)));
+    vi.stubGlobal('fetch', vi.fn((_url, opcions) => new Promise((resolve) => setTimeout(() => {
+      vi.setSystemTime(Date.now() + salt);
+      resolve({ ...resposta(401),
+        text: () => new Promise((_r, reject) => opcions.signal.addEventListener('abort', () => reject(new DOMException('avortada', 'AbortError')))) });
+    }, 300))));
+    let estat = 'pendent';
+    const crida = request('/rest/v1/a', CONFIG, { timeoutMs: 1000 }).then((d) => { estat = d; }, (e) => { estat = e.name; });
+    // Com sense salt: 300 ms de fetch + 1500 de renovació + els 700 que li quedaven.
+    await vi.advanceTimersByTimeAsync(2_450);
+    expect(estat).toBe('pendent');
+    await vi.advanceTimersByTimeAsync(100);
+    await crida;
+    expect(estat).toBe('TimeoutError');
+  } finally { vi.useRealTimers(); }
 });

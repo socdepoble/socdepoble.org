@@ -31,6 +31,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ShieldCheck, ShieldOff } from 'lucide-react';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { Alerta, Boto, Camp, CampText, Carregant, DialegConfirmacio, EstatBuit, Insignia } from '../../components/PedraSeca/index.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { textosAdminA11y } from './i18nAdminA11y.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { inscriuFactor, llistaFactors, reptaFactor, retiraFactor, teCapacitat, verificaFactor } from '../../data/backendPort.js';
 import { CODI_SEGON_FACTOR, MISSATGE_SEGON_FACTOR } from '../../data/errorsBackend.js';
@@ -54,6 +56,7 @@ function portDeSegonFactor() {
 
 export function SegonFactor() {
   const { nivell = null } = useSession();
+  const txAdmin = textosAdminA11y({ t: useTraductorOpcional() });
   const [port] = useState(portDeSegonFactor);
   const [factors, setFactors] = useState({ fase: 'carregant', llista: [], error: null });
   const [versio, setVersio] = useState(0);
@@ -209,7 +212,7 @@ export function SegonFactor() {
         <p>{`Escaneja este codi QR amb l’aplicació d’autenticació i escriu davall el codi de ${XIFRES_CODI} xifres que et mostra.`}</p>
         <div className="sdp-segon-factor__qr">
           {inscripcio.qr
-            ? <img src={inscripcio.qr} alt="Codi QR per a l’aplicació d’autenticació" width={MIDA_QR} height={MIDA_QR} />
+            ? <img src={inscripcio.qr} alt={txAdmin.codiQrAlt} width={MIDA_QR} height={MIDA_QR} />
             : <p className="sdp-camp__ajuda">El servidor no ha tornat cap codi QR: escriu la clau a mà.</p>}
         </div>
         <p className="sdp-camp__ajuda">{TEXT_PISTA}</p>
@@ -256,7 +259,7 @@ export function SegonFactor() {
   }
 
   return (
-    <section className="sdp-segon-factor" aria-label="Segon factor">
+    <section className="sdp-segon-factor" aria-label={txAdmin.segonFactorAria}>
       {blocMissatge}
       {contingut}
       <DialegConfirmacio

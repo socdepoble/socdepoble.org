@@ -5,6 +5,7 @@
    (construeixMapa.js), en tipografia de màquina: <Mono> les amaga amb el mode
    privacitat. Un codi sense frase es diu pel seu nom, mai s'amaga. */
 import { Insignia } from '../../../components/PedraSeca';
+import { tca, useIdiomaConsola } from '../i18nConsolaA11y.js';
 import { Mono } from '../peces.jsx';
 import { TEXTOS_AVIS, TO_SEVERITAT } from './grafMapa.js';
 import { evidenciesDe } from './mapaContent.js';
@@ -22,11 +23,12 @@ export const codiIFrase = (codi) => (TEXTOS_AVIS[codi] ? `${codi}: ${TEXTOS_AVIS
 
 /** Les evidències d'un avís: cap («—»), una sola o la llista sencera. */
 export function EvidenciesAvis({ avis }) {
+  const idioma = useIdiomaConsola();
   const llista = evidenciesDe(avis);
   if (!llista.length) return '—';
   if (llista.length === 1) return <Mono>{llista[0]}</Mono>;
   return (
-    <ul className="sdp-consola__evidencies" aria-label={`${llista.length} evidències`}>
+    <ul className="sdp-consola__evidencies" aria-label={tca(idioma, 'evidenciesRecompta', llista.length)}>
       {llista.map((e, i) => <li key={`${i}-${e}`}><Mono>{e}</Mono></li>)}
     </ul>
   );

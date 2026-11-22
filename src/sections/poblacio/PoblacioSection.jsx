@@ -12,9 +12,11 @@ import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 /* Public catalogue values may be numeric or formatted text. Complex values
    are not population counts and must not crash the complete directory. */
 export function habitantsDe(valor) {
-  if (typeof valor === 'number') return Number.isFinite(valor) && valor >= 0 ? Math.trunc(valor) : 0;
+  if (typeof valor === 'number') return Number.isFinite(valor) && valor > 0 ? Math.trunc(valor) : 0;
   if (typeof valor !== 'string') return 0;
-  const digits = valor.slice(0, 256).replace(/\D/g, '');
+  const net = valor.slice(0, 256).trim();
+  if (net.startsWith('-')) return 0;
+  const digits = net.replace(/\D/g, '');
   const count = Number(digits);
   return Number.isSafeInteger(count) ? count : 0;
 }

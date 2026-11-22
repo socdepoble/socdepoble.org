@@ -87,7 +87,7 @@ function pagina(captura, recurs) {
 }
 
 function centims(valor, maxim = 10000000) {
-  const arrodonit = Math.round(valor * 100);
+  const arrodonit = Math.round(valor * 100) || 0;
   if (typeof valor !== 'number' || !Number.isFinite(valor) || valor < 0 ||
       !Number.isSafeInteger(arrodonit) || arrodonit > maxim || Math.abs(valor * 100 - arrodonit) > 1e-7) {
     falla('Un import no es pot representar en cèntims exactes.');

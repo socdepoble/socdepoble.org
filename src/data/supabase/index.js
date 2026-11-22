@@ -157,10 +157,16 @@ export const votaVariantIsoglossaPoble = ambConsens ? consensAmbServidor.votaVar
 export const desaAportacioVeuPoble = ambConsens ? consensAmbServidor.desaAportacioVeuPoble : undefined;
 
 /* Explicitly invoked only after the optional R32.13 SQL is installed. */
-export async function confirmaCapturaCrdtRural(input, config = {}) { return (await import('./crdtRuralAck.js')).confirmaCapturaCrdtRural(input, config); }
-export async function registraDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).registraDenunciaDiligent(input, config); }
-export async function revisaDenunciaDiligent(input, config = {}) { return (await import('./denunciesDiligents.js')).revisaDenunciaDiligent(input, config); }
-export async function llistaDenunciesDiligents(input, config = {}) { return (await import('./denunciesDiligents.js')).llistaDenunciesDiligents(input, config); }
+async function delegaCapturat(carrega, nom, input, config) {
+  const capturedConfig = { ...config }, check = capturaSessioProjeccions();
+  const port = await carrega();
+  check();
+  return port[nom](input, capturedConfig);
+}
+export const confirmaCapturaCrdtRural = (input, config = {}) => delegaCapturat(() => import('./crdtRuralAck.js'), 'confirmaCapturaCrdtRural', input, config);
+export const registraDenunciaDiligent = (input, config = {}) => delegaCapturat(() => import('./denunciesDiligents.js'), 'registraDenunciaDiligent', input, config);
+export const revisaDenunciaDiligent = (input, config = {}) => delegaCapturat(() => import('./denunciesDiligents.js'), 'revisaDenunciaDiligent', input, config);
+export const llistaDenunciesDiligents = (input, config = {}) => delegaCapturat(() => import('./denunciesDiligents.js'), 'llistaDenunciesDiligents', input, config);
 
 /* R32.19 · Formes pures i transport del protocol darrere del port neutral. */
 export * from './protocolPublic.js';

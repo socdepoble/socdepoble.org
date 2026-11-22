@@ -18,6 +18,10 @@ defined( 'ABSPATH' ) || exit;
  * @return array
  */
 function socdepoble_enxufe_proves_salut( $proves ) {
+	$proves['direct']['socdepoble_enxufe_entorn'] = array(
+		'label' => __( 'Sóc de Poble cache and own options', 'socdepoble' ),
+		'test' => 'socdepoble_enxufe_prova_entorn',
+	);
 	$proves['direct']['socdepoble_enxufe_paquet'] = array(
 		'label' => __( 'Sóc de Poble package', 'socdepoble' ),
 		'test'  => 'socdepoble_enxufe_prova_paquet',
@@ -174,6 +178,9 @@ function socdepoble_enxufe_prova_paquet() {
 function socdepoble_enxufe_prova_secrets_wp72() {
 	$prova = 'socdepoble_enxufe_secrets';
 	// v1.2.18 · Gauntlet R2 (L3R2-01) · Ni «arriben amb WordPress 7.2» ni «encara»: el text no lliga l'API a cap versió.
+	// v1.2.19 · fusió · R32.29 (lot 02) reescrivia este mateix text amb la mateixa intenció (cap
+	// versió) sobre la preimatge d'abans de L3R2-01. Es queda el de la v1.2.18, ja publicat i amb la
+	// terminologia «Secrets API» de la resta del catàleg ca; el del kit seria una tercera variant.
 	if ( ! function_exists( 'wp_get_secret' ) ) {
 		return socdepoble_enxufe_resultat_salut(
 			$prova,
@@ -243,4 +250,114 @@ function socdepoble_enxufe_prova_secrets_wp72() {
 		__( 'WordPress 7.2 encrypted secrets are active for Sóc de Poble', 'socdepoble' ),
 		__( 'WP_SECRETS_KEY is active in wp-config.php. Back up this key separately and never rotate WP_SECRETS_KEY when rotating session SALTs, or stored encrypted secrets will become unreadable and fall back to Apertium.', 'socdepoble' )
 	);
+}
+
+/**
+ * Només metadades de les nostres opcions; mai es lligen ni s'imprimixen els valors.
+ *
+ * v1.2.19 · Gauntlet R1 (L2-04) · Les dues opcions fixes es consulten a banda i
+ * sempre es miren. Dels prefixos només tornen les files que es poden carregar
+ * soles: un transient amb caducitat no ho fa mai, i el límit de 500 ja no se'l
+ * mengen les traduccions en memòria cau.
+ * v1.2.19 · Gauntlet R1 (L2-07) · prepare() en línia dins de get_results, com a traduccio.php.
+ * v1.2.19 · Gauntlet R2 (L2R2-02) · Una consulta que falla dona «unknown», mai
+ * verd. wpdb::get_results(ARRAY_A) no torna null quan la consulta falla: torna
+ * array() i deixa el motiu a $wpdb->last_error (null només ix d'una consulta
+ * buida, quan prepare() falla). query() buida last_error abans de cada consulta,
+ * i per això es mira just després de CADA get_results: al final només quedaria
+ * el de l'última.
+ */
+function socdepoble_enxufe_diagnostic_autoload() {
+	global $wpdb;
+	$desconegut = array( 'estat' => 'unknown', 'files' => array(), 'bytes' => null );
+	if ( ! isset( $wpdb ) || ! is_callable( array( $wpdb, 'get_results' ) ) ) {
+		return $desconegut;
+	}
+	$fixes = $wpdb->get_results( $wpdb->prepare( "SELECT option_name, autoload, LENGTH(option_value) AS bytes FROM {$wpdb->options} WHERE option_name IN (%s,%s)", SOCDEPOBLE_ENXUFE_OPCIO, 'socdepoble_enxufe_canal' ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- diagnòstic explícit, sense valors.
+	if ( ! is_array( $fixes ) || ! empty( $wpdb->last_error ) ) {
+		return $desconegut;
+	}
+	// Prefixos escapats i cap fila que el nucli no carregue mai. Límit explícit: no es recorre tota wp_options.
+	$altres = $wpdb->get_results( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- diagnòstic explícit, sense valors.
+		"SELECT option_name, autoload, LENGTH(option_value) AS bytes FROM {$wpdb->options} WHERE ( option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s ) AND autoload NOT IN ('no','off','auto-off') ORDER BY option_name LIMIT 501",
+		$wpdb->esc_like( 'sdp_traduccio_' ) . '%', $wpdb->esc_like( '_transient_sdp_tr_' ) . '%',
+		$wpdb->esc_like( '_transient_timeout_sdp_tr_' ) . '%', $wpdb->esc_like( 'sdp_tr_' ) . '%'
+	), ARRAY_A );
+	if ( ! is_array( $altres ) || ! empty( $wpdb->last_error ) ) {
+		return $desconegut;
+	}
+	$actius = function_exists( 'wp_autoload_values_to_autoload' ) ? wp_autoload_values_to_autoload() : array( 'yes', 'on', 'auto', 'auto-on' );
+	$bytes = 0;
+	$carregades = array();
+	foreach ( array_merge( $fixes, array_slice( $altres, 0, 500 ) ) as $fila ) {
+		if ( in_array( $fila['autoload'], $actius, true ) ) {
+			$bytes += max( 0, (int) $fila['bytes'] );
+			$carregades[] = array( 'nom' => $fila['option_name'], 'bytes' => max( 0, (int) $fila['bytes'] ) );
+		}
+	}
+	return array( 'estat' => $carregades ? 'recommended' : ( count( $altres ) > 500 ? 'unknown' : 'ok' ), 'files' => $carregades, 'bytes' => $bytes, 'limit' => 500 );
+}
+
+/** Observacions del procés actual: extensió carregada no prova un servei Memcached viu. */
+function socdepoble_enxufe_diagnostic_cache() {
+	$opcache = null;
+	$motiu = 'api_unavailable';
+	if ( function_exists( 'opcache_get_status' ) ) {
+		try {
+			// restrict_api pot denegar-la amb E_WARNING: estat desconegut, no «desactivada».
+			$estat = @opcache_get_status( false ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- API opcional restringida per l'amfitrió.
+			if ( is_array( $estat ) && isset( $estat['opcache_enabled'] ) ) {
+				$opcache = (bool) $estat['opcache_enabled'];
+				$motiu = 'runtime_status';
+			} else {
+				$motiu = 'status_unavailable';
+			}
+		} catch ( Throwable $error ) {
+			$motiu = 'status_unavailable';
+		}
+	}
+	return array(
+		'memcached_extension' => extension_loaded( 'memcached' ),
+		'object_cache_declared' => function_exists( 'wp_using_ext_object_cache' ) ? (bool) wp_using_ext_object_cache() : null,
+		'object_cache_persistence_verified' => false,
+		'opcache_active' => $opcache, 'opcache_observation' => $motiu, 'sapi' => PHP_SAPI,
+		'php_version' => PHP_VERSION, 'php_vulnerability_absence_verified' => false,
+	);
+}
+
+/**
+ * Salut addicional, sense substituir ni silenciar cap prova del nucli de WordPress.
+ *
+ * v1.2.19 · Gauntlet R1 (L2-05) · Taronja només per al que el lloc pot corregir:
+ * un autoload propi actiu o un OPcache observat inactiu. Un OPcache que no es
+ * pot observar (restrict_api, sense extensió, CLI) no ho és; unes opcions que
+ * no s'han pogut llegir tampoc no donen verd. Els valors interpolats passen per
+ * __().
+ */
+function socdepoble_enxufe_prova_entorn() {
+	return socdepoble_enxufe_resultat_entorn( socdepoble_enxufe_diagnostic_autoload(), socdepoble_enxufe_diagnostic_cache() );
+}
+
+/**
+ * v1.2.19 · Gauntlet R1 (L2-05) · El resultat de Salut a partir de les dues observacions.
+ *
+ * @param array $opcions socdepoble_enxufe_diagnostic_autoload().
+ * @param array $cache   socdepoble_enxufe_diagnostic_cache().
+ * @return array
+ */
+function socdepoble_enxufe_resultat_entorn( $opcions, $cache ) {
+	$estat = 'ok' === $opcions['estat'] && false !== $cache['opcache_active'] ? 'good' : 'recommended';
+	$desconegut = __( 'unknown', 'socdepoble' );
+	$autoload = array(
+		'ok' => __( 'off', 'socdepoble' ),
+		'recommended' => __( 'on', 'socdepoble' ),
+	);
+	$text = sprintf(
+		/* translators: 1: autoload status, 2: own autoloaded bytes, 3: object-cache declaration, 4: OPcache observation, 5: PHP SAPI. */
+		__( 'Own options autoload: %1$s (%2$s bytes). WordPress external object-cache declaration: %3$s; persistence is not verified. OPcache in this process: %4$s (SAPI %5$s). A loaded Memcached extension does not prove that its service works. This check does not certify PHP vulnerability fixes; ask the host about patched PHP workers.', 'socdepoble' ),
+		$autoload[ $opcions['estat'] ] ?? $desconegut, null === $opcions['bytes'] ? $desconegut : (string) $opcions['bytes'],
+		null === $cache['object_cache_declared'] ? $desconegut : ( $cache['object_cache_declared'] ? __( 'yes', 'socdepoble' ) : __( 'no', 'socdepoble' ) ),
+		null === $cache['opcache_active'] ? $desconegut : ( $cache['opcache_active'] ? __( 'active', 'socdepoble' ) : __( 'inactive', 'socdepoble' ) ), $cache['sapi']
+	);
+	return socdepoble_enxufe_resultat_salut( 'socdepoble_enxufe_entorn', $estat, __( 'Sóc de Poble cache and own options observations', 'socdepoble' ), $text );
 }

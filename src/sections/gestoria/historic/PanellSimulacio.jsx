@@ -20,7 +20,7 @@ import { AccordionItem } from '../../../components/PedraSeca/organismes/Accordio
 import { Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { CAMPS_PARAMETRES, ETIQUETA_NO_VERIFICAT, totalDeLAny } from '../impostos/nucli/simulacio.js';
-import { tg } from '../i18nGestoria.js';
+import { tg, tga } from '../i18nGestoria.js';
 import { formatData } from '../nucli/dates.js';
 import { Xifra } from '../tauler/Tauler.jsx';
 import { CAMPS_SUPOSITS } from './nucli/operacions.js';
@@ -67,7 +67,7 @@ function centesimes(text) {
 const unics = (avisos) => [...new Map(avisos.map((a) => [a.codi, a])).values()];
 
 /* Els impostos estimats d'un any: els trimestres, el 390 i la renda. */
-function ImpostosDeLAny({ any, visible }) {
+function ImpostosDeLAny({ any, visible, idioma = 'ca' }) {
   const avisos = unics([...any.avisos, ...any.trimestres.flatMap((tr) => [...tr.iva.avisos, ...tr.irpf.avisos])]);
   const r = any.renda;
   return (
@@ -124,7 +124,7 @@ function ImpostosDeLAny({ any, visible }) {
         </tbody>
       </Taula>
       {avisos.length ? (
-        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos" aria-label={`Avisos de ${any.any}`}>
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__avisos" aria-label={tga(idioma, 'avisosAnyAria', any.any)}>
           {avisos.map((a) => <li ref={adoptaEstilsDiferits} key={a.codi}>{a.missatge}</li>)}
         </ul>
       ) : null}
@@ -218,7 +218,7 @@ const ERROR_TRAMS = Object.freeze({
  * camps són text lliure fins que s'aplica: aleshores l'escala sencera es
  * valida (validaParametres, via canviaParametre) i, si no és bona, no canvia res.
  */
-function EditorTrams({ h, any, clau, nom, unitat, trams }) {
+function EditorTrams({ h, any, clau, nom, unitat, trams, idioma = 'ca' }) {
   const escala = unitat === 'escala';
   const [files, setFiles] = useState(() => filesDe(trams, unitat));
   const [error, setError] = useState('');
@@ -250,7 +250,7 @@ function EditorTrams({ h, any, clau, nom, unitat, trams }) {
   };
   const etiquetaValor = escala ? 'tipus (%)' : 'minoració (€)';
   return (
-    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__trams" onSubmit={aplica} aria-label={`Trams: ${nom} de ${any}`}>
+    <form ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__trams" onSubmit={aplica} aria-label={tga(idioma, 'tramsAria', nom, any)}>
       {files.map((f, i) => (
         <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__tram" key={f.id}>
           <Camp etiqueta={`Tram ${i + 1}: fins a (€)`} ajuda={escala && i === files.length - 1 ? 'Buit: la resta de la base.' : undefined}>
@@ -260,7 +260,7 @@ function EditorTrams({ h, any, clau, nom, unitat, trams }) {
             <CampText inputMode="decimal" value={f.valor} onChange={canvia(i, 'valor')} />
           </Camp>
           <Boto varietat="fantasma" icona={Trash2} onClick={() => lleva(i)} disabled={files.length < 2}
-            aria-label={`Lleva el tram ${i + 1}`}>Lleva</Boto>
+            aria-label={tga(idioma, 'llevaTramAria', i + 1)}>{tg(idioma, 'Lleva')}</Boto>
         </div>
       ))}
       {error ? <p ref={adoptaEstilsDiferits} className="sdp-camp__error" role="alert">{error}</p> : null}
@@ -274,7 +274,7 @@ function EditorTrams({ h, any, clau, nom, unitat, trams }) {
 }
 
 /* Els paràmetres fiscals d'un any: els escalars, en un camp; les escales i la minoració, tram a tram (desplegable). */
-function ParametresDeLAny({ h, any }) {
+function ParametresDeLAny({ h, any, idioma = 'ca' }) {
   const p = h.parametresDeLAny(any);
   const [versio, setVersio] = useState(0);
   return (
@@ -304,8 +304,8 @@ function ParametresDeLAny({ h, any }) {
               <p className="sdp-gestoria-historic__escala-nom">{nom}</p>
               <p>{textValor(p[clau], unitat)}</p>
               <p className="sdp-gestoria-historic__nota">{font}</p>
-              <AccordionItem title={`Edita els trams (${nom.toLowerCase()}, ${any})`}>
-                <EditorTrams h={h} any={any} clau={clau} nom={nom} unitat={unitat} trams={p[clau]} />
+              <AccordionItem title={tga(idioma, 'editaTramsTitol', nom, any)}>
+                <EditorTrams h={h} any={any} clau={clau} nom={nom} unitat={unitat} trams={p[clau]} idioma={idioma} />
               </AccordionItem>
             </div>
           );
@@ -346,13 +346,13 @@ export function PanellSimulacio({ h, visible, idioma = 'ca' }) {
           {'.'}
         </p>
       ) : null}
-      {(h.simulacio?.anys ?? []).map((any) => <ImpostosDeLAny key={any.any} any={any} visible={visible} />)}
+      {(h.simulacio?.anys ?? []).map((any) => <ImpostosDeLAny key={any.any} any={any} visible={visible} idioma={idioma} />)}
       {/* La clau `carregada` torna a pintar els camps quan arriba la configuració desada. */}
       <Escenaris key={`escenari-${h.carregada}`} h={h} visible={visible} idioma={idioma} />
       <div className="sdp-gestoria-historic__any">
         <h3 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Paràmetres i suposicions')}</h3>
         <Suposits key={`suposits-${h.carregada}`} h={h} idioma={idioma} />
-        {(h.simulacio?.anys ?? h.serie?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} />)}
+        {(h.simulacio?.anys ?? h.serie?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} idioma={idioma} />)}
       </div>
     </section>
   );

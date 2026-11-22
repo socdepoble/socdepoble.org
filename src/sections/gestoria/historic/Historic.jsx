@@ -78,7 +78,7 @@ import PortaCofre from '../cofre/PortaCofre.jsx';
 import { CATEGORIES, PROVEIDORS, TEXT_MOTIUS, categoriaDe, proveidorDe } from '../despeses/nucli/categories.js';
 import { perRevisar } from '../despeses/nucli/serieHistorica.js';
 import { formatData, nomMes } from '../nucli/dates.js';
-import { tg, tf, localitzaTargetaGestoria } from '../i18nGestoria.js';
+import { tg, tf, tga, localitzaTargetaGestoria } from '../i18nGestoria.js';
 import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { BlocTargetes, PaginaTargeta, Xifra } from '../tauler/Tauler.jsx';
@@ -134,10 +134,11 @@ function descarregaPerDefecte({ nom, tipus, dades }) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** La pastilla de la boina: l'instant de la darrera lectura (hh:mm i dd/mm/aa). */
+/** La pastilla de la boina: l'instant de la darrera lectura (hh:mm i dd/mm/aa); R32.32: blindatge contra ms fora de rang. */
 export function pastillaDe(ms) {
   if (!Number.isFinite(ms)) return null;
   const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return null;
   const data = `${dosXifres(d.getDate())}/${dosXifres(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`;
   const hora = `${dosXifres(d.getHours())}:${dosXifres(d.getMinutes())}`;
   return { time: hora, date: data, dateTime: `${d.getFullYear()}-${dosXifres(d.getMonth() + 1)}-${dosXifres(d.getDate())}T${hora}` };
@@ -396,7 +397,7 @@ function TaulaRevisio({ titol, moviments, total, visible, h }) {
 }
 
 /* Els moviments per revisar (reclassificar a mà), separats en eixides i entrades, i les regles de la persona. */
-function SeccioRevisio({ h, visible }) {
+function SeccioRevisio({ h, visible, idioma = 'ca' }) {
   const [patro, setPatro] = useState('');
   const [categoria, setCategoria] = useState('ia');
   const [proveidor, setProveidor] = useState('');
@@ -441,11 +442,11 @@ function SeccioRevisio({ h, visible }) {
         <Boto tipus="submit" varietat="secundari">Afig la regla</Boto>
       </form>
       {h.configuracio.regles.length ? (
-        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__regles" aria-label="Les teues regles">
+        <ul ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__regles" aria-label={tga(idioma, 'lesTeuesReglesAria')}>
           {h.configuracio.regles.map((r, i) => (
             <li ref={adoptaEstilsDiferits} key={`${r.patro}-${i}`}>
               <span>{`«${r.patro}» → ${categoriaDe(r.categoria)?.nom ?? r.categoria}${r.proveidor ? ` (${proveidorDe(r.proveidor)?.nom ?? r.proveidor})` : ''}`}</span>
-              <Boto varietat="fantasma" onClick={() => h.llevaRegla(i)} aria-label={`Lleva la regla «${r.patro}»`}>Lleva</Boto>
+              <Boto varietat="fantasma" onClick={() => h.llevaRegla(i)} aria-label={tga(idioma, 'llevaReglaAria', r.patro)}>{tg(idioma, 'Lleva')}</Boto>
             </li>
           ))}
         </ul>
@@ -494,7 +495,7 @@ function SeccioLlibre({ h, subtle, descarrega, onAnuncia, idioma = 'ca' }) {
         {llibre ? (
           <dl ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__dades">
             <dt>Fitxer</dt><dd>{llibre.nom}</dd>
-            <dt>Mida</dt><dd>{`${Math.max(1, Math.round(llibre.mida / 1024))} kB`}</dd>
+            <dt>Mida</dt><dd>{Number.isFinite(llibre.mida) && llibre.mida >= 0 ? `${Math.max(1, Math.round(llibre.mida / 1024))} kB` : '—'}</dd>
             <dt>Empremta SHA-256</dt><dd><code className="sdp-gestoria-historic__empremta">{llibre.empremta}</code></dd>
           </dl>
         ) : null}
@@ -591,7 +592,7 @@ export function VistaHistoric({
             <TaulaCategories totals={h.serie.totals} visible={visible} />
           </Seccio>
           <SeccioIa serie={h.serie} visible={visible} />
-          <SeccioRevisio h={h} visible={visible} />
+          <SeccioRevisio h={h} visible={visible} idioma={idioma} />
           <PanellSimulacio h={h} visible={visible} idioma={idioma} />
           <SeccioLlibre h={h} subtle={subtle} descarrega={descarrega} onAnuncia={setAnunci} idioma={idioma} />
         </>

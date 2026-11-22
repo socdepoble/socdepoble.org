@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useRouter } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Botonera, Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/index.js';
 import { textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { LIMITS, ingredientDArticle } from '../nucli/index.js';
 import { useVistaNevera } from './context.js';
 import { carregaReceptes, mesuraIngredient, validaEsborranyTrasllat } from '../../plataforma/index.js';
@@ -9,7 +10,9 @@ import { carregaReceptes, mesuraIngredient, validaEsborranyTrasllat } from '../.
 const racionsValides = (valor) => /^\d{1,5}$/.test(String(valor)) && Number(valor) > 0 && Number(valor) <= 10000;
 
 function FormulariRecepcio({ recepta, mesuraIngredient, llista, esborrany, tx }) {
-  const { accions, mode, llegit } = useVistaNevera();
+  const { accions, mode, llegit, idioma = 'ca' } = useVistaNevera();
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const [base, setBase] = useState(esborrany ? String(esborrany.racionsBase) : '');
   const [racions, setRacions] = useState(esborrany ? String(esborrany.racions) : '');
   const mesures = esborrany?.linies || recepta.ingredients.map(mesuraIngredient);
@@ -28,12 +31,12 @@ function FormulariRecepcio({ recepta, mesuraIngredient, llista, esborrany, tx })
     if (!valides) { setResultat(tx.confirmaRacions); return; }
     try {
       const canvi = accions.afigIngredientsRecepta(llista.id, mesures.map((_, index) => ({ nom: noms[index], especificacio: quantitatDe(index), index })).filter((l) => !exclusions[l.index]));
-      setResultat(canvi ? tx.ingredientsAfegits(llista.nom) : tx.llistaSenseCanvi);
+      setResultat(canvi ? tx.ingredientsAfegits(nomLlista) : tx.llistaSenseCanvi);
     } catch (error) { setResultat(error.message); }
   };
   return (
     <GrupCamps llegenda={tx.ingredientsDeRecepta(recepta.nom)}>
-      <p>{tx.revisaIngredientsText(llista.nom)}</p>
+      <p>{tx.revisaIngredientsText(nomLlista)}</p>
       <Camp etiqueta={tx.racionsOriginals}><CampText value={base} inputMode="numeric" onChange={(event) => { setBase(event.target.value); setResultat(null); }} /></Camp>
       <Camp etiqueta={tx.racionsPreparar}><CampText value={racions} inputMode="numeric" onChange={(event) => { setRacions(event.target.value); setResultat(null); }} /></Camp>
       <p>{tx.ingredientRepetitAjuda}</p>

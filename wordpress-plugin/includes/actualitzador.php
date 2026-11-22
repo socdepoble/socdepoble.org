@@ -53,6 +53,7 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+require_once __DIR__ . '/http-perimetre.php';
 
 /* Un lloc pot definir-les abans a wp-config.php (per exemple, un canal de
    proves local o el canal propi d'un poble). */
@@ -209,6 +210,11 @@ function socdepoble_enxufe_llig_url( $url, $maxim ) {
 		return $resposta;
 	}
 	$codi = (int) wp_remote_retrieve_response_code( $resposta );
+	if ( 503 === $codi ) {
+		$pausa = socdepoble_enxufe_retry_after( $resposta['headers']['retry-after'] ?? '' );
+		// v1.2.19 · Gauntlet R1 (L2-03) · Ací no se sap si hi ha cap versió verificada: ho diu refresca_canal.
+		return new WP_Error( 'socdepoble_enxufe_503', __( 'The update service is temporarily unavailable.', 'socdepoble' ), array( 'status' => 503, 'retry_after' => $pausa ) );
+	}
 	if ( 200 !== $codi ) {
 		/* translators: 1: URL, 2: HTTP status code. */
 		return new WP_Error( 'socdepoble_enxufe_http', sprintf( __( '%1$s answered HTTP %2$d.', 'socdepoble' ), $url, $codi ) );
@@ -347,6 +353,7 @@ function socdepoble_enxufe_analitza_canal( $cos, $signatura ) {
  */
 function socdepoble_enxufe_refresca_canal( $estat ) {
 	$estat['comprovat'] = time();
+	unset( $estat['reintenta_despres'] );
 	$url                = SOCDEPOBLE_ENXUFE_CANAL;
 	$motiu              = socdepoble_enxufe_url_no_permesa( $url );
 	if ( '' === $motiu ) {
@@ -354,6 +361,19 @@ function socdepoble_enxufe_refresca_canal( $estat ) {
 		$sig = is_wp_error( $cos ) ? $cos : socdepoble_enxufe_llig_url( $url . '.sig', 1024 );
 		if ( is_wp_error( $sig ) ) {
 			$motiu = $sig->get_error_message();
+			if ( 'socdepoble_enxufe_503' === $sig->get_error_code() ) {
+				$data  = $sig->get_error_data();
+				$pausa = (int) ( $data['retry_after'] ?? 0 );
+				// v1.2.19 · Gauntlet R1 (L2-03) · Només un Retry-After vàlid pausa el botó, i pel temps que demana;
+				// un 503 sense capçalera és un error com a la v1.2.18 (REINTENT per a les comprovacions automàtiques).
+				if ( $pausa > 0 ) {
+					$estat['reintenta_despres'] = time() + $pausa;
+				}
+				list( $previ ) = socdepoble_enxufe_analitza_canal( $estat['cos'] ?? '', $estat['signatura'] ?? '' );
+				if ( null !== $previ ) {
+					$motiu = __( 'The update service is temporarily unavailable. The last verified release is kept.', 'socdepoble' );
+				}
+			}
 		} else {
 			list( $canal, $motiu ) = socdepoble_enxufe_analitza_canal( $cos, $sig );
 			if ( null !== $canal ) {
@@ -388,7 +408,8 @@ function socdepoble_enxufe_canal( $forca = false ) {
 	$estat     = socdepoble_enxufe_estat_canal();
 	$comprovat = isset( $estat['comprovat'] ) ? (int) $estat['comprovat'] : 0;
 	$vigencia  = empty( $estat['error'] ) ? SOCDEPOBLE_ENXUFE_CANAL_VIGENCIA : SOCDEPOBLE_ENXUFE_CANAL_REINTENT;
-	if ( $forca || time() - $comprovat > $vigencia ) {
+	// Ni el botó de comprovació força un servei que ha demanat una pausa explícita (Retry-After).
+	if ( time() >= (int) ( $estat['reintenta_despres'] ?? 0 ) && ( $forca || time() - $comprovat > $vigencia ) ) {
 		$estat = socdepoble_enxufe_refresca_canal( $estat );
 	}
 	list( $canal ) = socdepoble_enxufe_analitza_canal( $estat['cos'] ?? '', $estat['signatura'] ?? '' );
@@ -773,10 +794,17 @@ add_filter( 'upgrader_source_selection', 'socdepoble_enxufe_seleccio_origen', 10
 /**
  * Quan WordPress buida la seua memòria cau d'actualitzacions (per exemple,
  * «Comprova-ho de nou»), el canal també caduca.
+ *
+ * v1.2.19 · Gauntlet R2 (L2R2-01) · Durant una pausa de Retry-After no caduca:
+ * canal() no tornarà a llegir fins que acabe (ni amb el botó) i, per tant, no
+ * tornaria a posar l'hora. Posar `comprovat` a 0 només faria que la secció del
+ * canal diguera «mai» al costat d'una versió verificada. L'hora real es
+ * conserva i la fila «Pròxima comprovació permesa» diu fins quan dura la pausa.
+ * Fora de la pausa, igual que a la v1.2.18.
  */
 function socdepoble_enxufe_caduca_canal() {
 	$estat = socdepoble_enxufe_estat_canal();
-	if ( ! empty( $estat['comprovat'] ) ) {
+	if ( ! empty( $estat['comprovat'] ) && time() >= (int) ( $estat['reintenta_despres'] ?? 0 ) ) {
 		$estat['comprovat'] = 0;
 		socdepoble_enxufe_desa_estat_canal( $estat );
 	}
@@ -840,6 +868,7 @@ function socdepoble_enxufe_seccio_canal() {
 	$clau                  = socdepoble_enxufe_clau_publica();
 	$comprovat             = isset( $estat['comprovat'] ) ? (int) $estat['comprovat'] : 0;
 	$bloqueig              = socdepoble_enxufe_bloqueig_instal_lacio();
+	$reintenta             = (int) ( $estat['reintenta_despres'] ?? 0 );
 
 	$files = array(
 		__( 'Channel', 'socdepoble' )                 => SOCDEPOBLE_ENXUFE_CANAL,
@@ -847,6 +876,12 @@ function socdepoble_enxufe_seccio_canal() {
 		__( 'Last check', 'socdepoble' )              => $comprovat > 0 ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $comprovat ) : __( 'never', 'socdepoble' ),
 		__( 'Latest verified release', 'socdepoble' ) => null !== $canal ? $canal['versio'] : $motiu,
 		__( 'Last error', 'socdepoble' )              => ! empty( $estat['error'] ) ? (string) $estat['error'] : __( 'none', 'socdepoble' ),
+	);
+	// v1.2.19 · Gauntlet R1 (L2-03) · Mentre dura la pausa que ha demanat el servei, el botó no llig el canal: es diu fins quan.
+	if ( $reintenta > time() ) {
+		$files[ __( 'Next check allowed', 'socdepoble' ) ] = wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $reintenta );
+	}
+	$files += array(
 		__( 'WordPress update check', 'socdepoble' )  => socdepoble_enxufe_wp_aplica_el_canal() ? __( 'The channel is applied.', 'socdepoble' ) : __( 'Not applied yet: WordPress only asks the channel after api.wordpress.org answers its update check.', 'socdepoble' ),
 		__( 'This installation', 'socdepoble' )       => '' !== $bloqueig ? $bloqueig : __( 'Can update itself.', 'socdepoble' ),
 	);

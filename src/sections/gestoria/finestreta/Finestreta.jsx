@@ -69,7 +69,7 @@ import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { cofreDeLaGestoria, persistenciaDelCofre } from '../cofre/cofre.js';
 import PortaCofre from '../cofre/PortaCofre.jsx';
-import { tg, tf } from '../i18nGestoria.js';
+import { tg, tf, tga } from '../i18nGestoria.js';
 import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { TRACTOR_IDENTITAT } from '../tractors.js';
@@ -191,10 +191,12 @@ const OPCIONS_A_MA = Object.freeze([
 ]);
 const dosXifres = (n) => String(n).padStart(2, '0');
 
-/* El dia d'avui, «aaaa-mm-dd», del rellotge de la pàgina (la data dels formularis). */
-function avuiDe(rellotge) {
-  const d = new Date(typeof rellotge === 'function' ? rellotge() : Date.now());
-  return `${d.getFullYear()}-${dosXifres(d.getMonth() + 1)}-${dosXifres(d.getDate())}`;
+/* El dia d'avui, «aaaa-mm-dd», del rellotge de la pàgina (la data dels formularis); R32.32: blindatge contra Invalid Date. */
+export function avuiDe(rellotge) {
+  const brut = typeof rellotge === 'function' ? rellotge() : Date.now();
+  const d = new Date(brut);
+  const segur = Number.isNaN(d.getTime()) ? new Date(Date.now()) : d;
+  return `${segur.getFullYear()}-${dosXifres(segur.getMonth() + 1)}-${dosXifres(segur.getDate())}`;
 }
 
 /** L'autoria de la boina: la persona de la sessió (sempre amb la seua pàgina) o la veritat, sense configurar. */
@@ -271,7 +273,7 @@ function Valor({ text, visible, idioma = 'ca' }) {
    una pestanya» crida obriPaper DINS del clic, sense esperar res. Tots dos, només amb l'ull obert (com l'esborrany
    per imprimir) i amb una carpeta viva. El motiu d'un error es veu al costat del botó i s'anuncia, sense cap ruta.
    En comprovar-lo, el focus passa a «Obri’l…» (Boto no reenvia cap ref: es busca dins del grup). */
-function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
+function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia, idioma = 'ca' }) {
   const accions = useRef(null);
   const enCurs = useRef(false);
   const idMotiu = useId();
@@ -334,13 +336,13 @@ function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
       {h.teCarpeta ? (
         <div className="sdp-gestoria-finestreta__accions" ref={accions}>
           {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
-          <Boto varietat="secundari" icona={FileCheck} data-accio="comprova" disabled={tancat} aria-label={`Comprova el paper: ${font.ruta}`}
+          <Boto varietat="secundari" icona={FileCheck} data-accio="comprova" disabled={tancat} aria-label={tga(idioma, 'comprovaPaperAria', font.ruta)}
             aria-describedby={motiu ? idMotiu : undefined} onClick={comprova}>
-            Comprova el paper
+            {tga(idioma, 'comprovaPaper')}
           </Boto>
-          <Boto varietat="fantasma" icona={ExternalLink} data-accio="obri" disabled={tancat || !url} aria-label={`Obri’l en una pestanya: ${font.ruta}`}
+          <Boto varietat="fantasma" icona={ExternalLink} data-accio="obri" disabled={tancat || !url} aria-label={tga(idioma, 'obriPestanyaAria', font.ruta)}
             onClick={obri}>
-            Obri’l en una pestanya
+            {tga(idioma, 'obriPestanya')}
           </Boto>
           {comprovant ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">Comprovant el paper…</p> : null}
           {motiu ? <p ref={adoptaEstilsDiferits} id={idMotiu} className="sdp-gestoria-finestreta__nota">{motiu}</p> : null}
@@ -443,7 +445,7 @@ function SeccioCarpeta({ h, onOblida, idioma = 'ca' }) {
    o tots de colp; marcar no és llegir: només «Llig…» obri cap paper, i els que no s'obriran no tenen casella. Els
    anuncis només porten recomptes: el nom de cada paper només és a la taula (ordre del Mestre, pla 261013_1405,
    front D). */
-function SeccioPla({ h, onAnuncia }) {
+function SeccioPla({ h, onAnuncia, idioma = 'ca' }) {
   const grup = useRef(null);
   const idLimit = useId();
   /* El botó clicat queda desactivat i el focus cauria al body: el rep el germà (Boto no reenvia cap ref). */
@@ -492,7 +494,7 @@ function SeccioPla({ h, onAnuncia }) {
       {/* Fora de la regió desplaçable de la taula: en mòbil es veu encara que la taula llisque. El nom de cada botó és
           el seu text (A11Y-1, WCAG 2.5.3). */}
       {opacs.length ? (
-        <div role="group" aria-label="Papers de nom opac" className="sdp-gestoria-finestreta__accions" ref={grup}>
+        <div role="group" aria-label={tga(idioma, 'papersNomOpacAria')} className="sdp-gestoria-finestreta__accions" ref={grup}>
           <Boto varietat="secundari" icona={ListChecks} data-accio="marca" disabled={pendents === 0 || ocupat} onClick={marcaTots}>
             {`Marca tots els pendents (${pendents})`}
           </Boto>
@@ -517,9 +519,9 @@ function SeccioPla({ h, onAnuncia }) {
                   <td>
                     {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
                     {d.decisio === 'demanar' ? (
-                      <Casella etiqueta="Llig-lo" aria-label={`Llig-lo: ${d.ruta}`} checked={marcats.has(d.ruta)} disabled={ocupat}
+                      <Casella etiqueta={tga(idioma, 'lligLo')} aria-label={tga(idioma, 'lligLoAria', d.ruta)} checked={marcats.has(d.ruta)} disabled={ocupat}
                         onChange={() => h.commutaMarcat(d.ruta)} />
-                    ) : (d.decisio === 'llegir' ? 'Sí' : 'No')}
+                    ) : (d.decisio === 'llegir' ? tg(idioma, 'Sí') : tg(idioma, 'No'))}
                   </td>
                 </tr>
               );
@@ -584,9 +586,9 @@ function FormulariCorreccio({ etiqueta, onDesa, onCancela }) {
 }
 
 /* Pas 3: les propostes per revisar, agrupades per titular; a «D’on ix», els papers per a consultar (Front 6). */
-function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
+function SeccioPropostes({ h, visible, obriPaper, onAnuncia, idioma = 'ca' }) {
   const [corregint, setCorregint] = useState(null);
-  const paper = { h, visible, obriPaper, onAnuncia };
+  const paper = { h, visible, obriPaper, onAnuncia, idioma };
   const grups = portadorsDe(h.fitxa)
     .map((p) => ({ ...p, files: campsOrdenats(p.camps, (v) => v.estat !== 'confirmat') }))
     .filter((p) => p.files.length);
@@ -607,30 +609,30 @@ function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
           </thead>
           <tbody>
             {g.files.flatMap(([camp, valor]) => {
-              const etiqueta = ETIQUETES_CAMPS[camp] ?? camp;
+              const etiqueta = idioma === 'ca' ? (ETIQUETES_CAMPS[camp] ?? camp) : tg(idioma, ETIQUETES_CAMPS[camp] ?? camp);
               const candidates = [{ valor: valor.valor, fonts: valor.fonts }, ...valor.alternatives];
               const conflicte = candidates.length > 1;
               const clau = `${g.id}|${camp}`;
               const files = candidates.map((c, i) => {
                 const confianca = CONFIANCES[h.confiances.get(clauConfianca(camp, c.valor))] ?? null;
-                const nom = conflicte ? `${etiqueta}, opció ${i + 1}` : etiqueta;
+                const nom = conflicte ? tga(idioma, 'campOpcio', etiqueta, i + 1) : etiqueta;
                 return (
                   <tr ref={adoptaEstilsDiferits} key={`${clau}-${i}`}>
                     <th scope="row">
                       {etiqueta}
                       {conflicte ? <Insignia to="avis">{`En conflicte · opció ${i + 1}`}</Insignia> : null}
                     </th>
-                    <td><Valor text={valorEnText(camp, c.valor)} visible={visible} /></td>
+                    <td><Valor text={valorEnText(camp, c.valor)} visible={visible} idioma={idioma} /></td>
                     <td><Origens fonts={c.fonts} paper={paper} /></td>
                     <td>{confianca ? <Insignia to={confianca.to}>{confianca.text}</Insignia> : '—'}</td>
                     <td>
                       <div className="sdp-gestoria-finestreta__accions">
-                        <Boto varietat="secundari" icona={Check} aria-label={`Confirma ${nom}`}
-                          onClick={() => fet(h.confirma({ titular: g.id, camp, valor: c.valor }), `Confirmat: ${etiqueta}.`)}>Confirma</Boto>
-                        <Boto varietat="fantasma" icona={X} aria-label={`Rebutja ${nom}`}
-                          onClick={() => fet(h.rebutja({ titular: g.id, camp, valor: c.valor }), `Rebutjat: ${etiqueta}.`)}>Rebutja</Boto>
+                        <Boto varietat="secundari" icona={Check} aria-label={`${tg(idioma, 'Confirma')} ${nom}`}
+                          onClick={() => fet(h.confirma({ titular: g.id, camp, valor: c.valor }), `Confirmat: ${etiqueta}.`)}>{tg(idioma, 'Confirma')}</Boto>
+                        <Boto varietat="fantasma" icona={X} aria-label={`${tg(idioma, 'Rebutja')} ${nom}`}
+                          onClick={() => fet(h.rebutja({ titular: g.id, camp, valor: c.valor }), `Rebutjat: ${etiqueta}.`)}>{tg(idioma, 'Rebutja')}</Boto>
                         {i === 0 ? (
-                          <Boto varietat="fantasma" icona={PenLine} aria-label={`Corregix ${etiqueta}`} onClick={() => setCorregint(clau)}>Corregix</Boto>
+                          <Boto varietat="fantasma" icona={PenLine} aria-label={`${tg(idioma, 'Corregix')} ${etiqueta}`} onClick={() => setCorregint(clau)}>{tg(idioma, 'Corregix')}</Boto>
                         ) : null}
                       </div>
                     </td>
@@ -702,7 +704,7 @@ function FormulariAMa({ h, onAnuncia, idioma = 'ca' }) {
 /* Pas 4: la teua fitxa, només els valors confirmats (els que es desen xifrats); «D’on ix», com a les propostes. */
 function SeccioFitxa({ h, visible, obriPaper, onAnuncia, idioma = 'ca' }) {
   const [corregint, setCorregint] = useState(null);
-  const paper = { h, visible, obriPaper, onAnuncia };
+  const paper = { h, visible, obriPaper, onAnuncia, idioma };
   const grups = portadorsDe(h.fitxa)
     .map((p) => ({ ...p, files: campsOrdenats(p.camps, (v) => v.estat === 'confirmat') }))
     .filter((p) => p.files.length);
@@ -750,10 +752,10 @@ function SeccioFitxa({ h, visible, obriPaper, onAnuncia, idioma = 'ca' }) {
                     <td>
                       {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
                       <div className="sdp-gestoria-finestreta__accions">
-                        <Boto varietat="secundari" icona={Check} aria-label={`Confirma este: valor nou de ${etiqueta}`}
-                          onClick={() => fet(h.confirma({ titular: g.id, camp, valor: alternativa.valor }), `Confirmat el valor nou: ${etiqueta}.`)}>Confirma este</Boto>
-                        <Boto varietat="fantasma" icona={X} aria-label={`Rebutja’l: valor nou de ${etiqueta}`}
-                          onClick={() => fet(h.rebutja({ titular: g.id, camp, valor: alternativa.valor }), `Rebutjat el valor nou: ${etiqueta}.`)}>Rebutja’l</Boto>
+                        <Boto varietat="secundari" icona={Check} aria-label={tga(idioma, 'confirmaEsteAria', etiqueta)}
+                          onClick={() => fet(h.confirma({ titular: g.id, camp, valor: alternativa.valor }), `Confirmat el valor nou: ${etiqueta}.`)}>{tga(idioma, 'confirmaEste')}</Boto>
+                        <Boto varietat="fantasma" icona={X} aria-label={tga(idioma, 'rebutjaLAria', etiqueta)}
+                          onClick={() => fet(h.rebutja({ titular: g.id, camp, valor: alternativa.valor }), `Rebutjat el valor nou: ${etiqueta}.`)}>{tga(idioma, 'rebutjaL')}</Boto>
                       </div>
                     </td>
                   </tr>
@@ -925,10 +927,10 @@ export function VistaFinestreta({
       {h.desaBlocat && h.errorPersistencia ? <Alerta to="error" titol="La fitxa desada">{h.errorPersistencia}</Alerta> : null}
       {!h.fitxaLlegida ? <Carregant etiqueta={tg(idioma, 'Obrint la teua fitxa…')} /> : null}
       {h.aprovat ? <SeccioCarpeta h={h} onOblida={oblida} idioma={idioma} /> : null}
-      {h.aprovat && h.pla ? <SeccioPla h={h} onAnuncia={setAnunci} /> : null}
+      {h.aprovat && h.pla ? <SeccioPla h={h} onAnuncia={setAnunci} idioma={idioma} /> : null}
       {h.aprovat && h.lectura ? <ResumLectura lectura={h.lectura} /> : null}
       {/* La fitxa i la Finestreta també són codi del tractor: sense la seua aprovació, no es pinten. */}
-      {h.aprovat ? <SeccioPropostes h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} /> : null}
+      {h.aprovat ? <SeccioPropostes h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} idioma={idioma} /> : null}
       {h.aprovat && h.fitxaLlegida ? <SeccioFitxa h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} idioma={idioma} /> : null}
       {h.aprovat && h.fitxaLlegida ? (
         <SeccioFinestreta h={h} visible={visible} avui={avui} copia={copia} imprimix={imprimix} onAnuncia={setAnunci} idioma={idioma} />

@@ -74,11 +74,11 @@ const detall = (c) => c.querySelector('#app-grid-main');
 const url = () => screen.getByTestId('url').textContent;
 const titol = (c) => within(detall(c)).getByRole('heading', { level: 1 }).textContent;
 
-test('la premissa: l’espècimen de reserva d’Inventari és al catàleg', () => {
+test('la premissa: l’espècimen de reserva de Recursos (inventari) és al catàleg', () => {
   expect(ESPECIMEN?.title).toBe('Inventari Global');
 });
 
-test.each([1400, 375])('a %i px, ?item= desconegut a Inventari porta a la primera fitxa, sense cap alerta', (amplada) => {
+test.each([1400, 375])('a %i px, ?item= desconegut a Recursos (inventari) porta a la primera fitxa, sense cap alerta', (amplada) => {
   const buida = ambAmplada(amplada);
   const { container } = munta('/disseny?categoria=inventari&item=no-existix');
   buida();

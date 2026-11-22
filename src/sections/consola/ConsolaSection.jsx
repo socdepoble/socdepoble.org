@@ -51,6 +51,7 @@ import { TEXTOS_AVIS } from './mapa/grafMapa.js';
 import { useGovern } from './govern/useGovern.js';
 import { PaginaDeGovern, SeccioGovern } from './govern/GovernConsola.jsx';
 import { TITOL_SALA_MAQUINES, paginaGovern, segmentGovern } from './govern/governConsola.js';
+import { IdiomaConsolaContext, codiIdiomaConsola, tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 import { PAGINA_BRAIN_TAXONOMIA, esRutaBrainTaxonomia } from '../../data/taxonomia/paginaBrainTaxonomia.js';
 
 /* P0-61 / IDEA-192 · El Brain de categories i etiquetes, diferit: ni el tros
@@ -66,6 +67,7 @@ export const ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA = 'Canals, empaquetats i 
    taxonomia i Botigues i verificadors) agrupades en una única fila harmònica. */
 function SeccioCanalsEmpaquetatsTaxonomia({ empaquetats }) {
   const id = useId();
+  const idioma = useIdiomaConsola();
   const pagina = PAGINA_BRAIN_TAXONOMIA;
   return (
     <section aria-labelledby={id}>
@@ -74,7 +76,7 @@ function SeccioCanalsEmpaquetatsTaxonomia({ empaquetats }) {
       <nav
         className="sdp-card-grid sdp-consola__graella sdp-consola__graella--canals"
         onKeyDown={gestionaTeclaGraella}
-        aria-label={ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA}
+        aria-label={idioma === 'ca' ? ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA : tca(idioma, 'canalsEmpaquetatsTaxonomia')}
       >
         <TargetaEmpaquetats font={empaquetats} />
         <TargetaConsola icona={Network} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead} a={pagina.ruta} creat={copyConsola().date} />
@@ -285,11 +287,12 @@ const fontsDe = (consola, mapa) => ({
  */
 export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alertaFora = false, ara = Date.now() }) {
   const fonts = fontsDe(consola, mapa);
+  const idioma = useIdiomaConsola();
   const [vistes] = useState(llegixVistes);
   return (
     <>
       {alertaFora ? null : <AlertaVigilancia mapa={mapa.mapa} />}
-      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label="Pàgines de la Consola" ref={cimRef}>
+      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={tca(idioma, 'paginesConsola')} ref={cimRef}>
         {paginesConsola().map((p) => {
           const delMapa = p.id !== 'pols';
           return (
@@ -373,10 +376,16 @@ export function ConsolaIncrustada() {
   const mapa = useMapa();
   const govern = useGovern();
   const [privat] = useState(() => llegixPrivacitat());
+  /* v1.2.19 · Gauntlet R2 (L3R2-01) · La Consola incrustada (l'element Consola de la Wiki i la pàgina node-zero) també
+     proveïx la llengua dels seus ròtuls, igual que ConsolaSection: useIdiomaConsola només la llig d'IdiomaConsolaContext. */
+  const ui = useUIState() ?? {};
+  const idioma = codiIdiomaConsola(ui.llenguaDelText || ui.language || ui.locale || 'ca');
   return (
-    <PrivacitatConsola.Provider value={privat}>
-      <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={Date.now()} ambImatges />
-    </PrivacitatConsola.Provider>
+    <IdiomaConsolaContext.Provider value={idioma}>
+      <PrivacitatConsola.Provider value={privat}>
+        <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={Date.now()} ambImatges />
+      </PrivacitatConsola.Provider>
+    </IdiomaConsolaContext.Provider>
   );
 }
 
@@ -491,7 +500,12 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, idGo
 const headPublic = ({ title, description, image }) => ({ title, description, image: image || undefined });
 
 export default function ConsolaSection() {
-  const { locale } = useUIState();
+  const ui = useUIState() ?? {};
+  const { locale } = ui;
+  const idioma = codiIdiomaConsola(ui.llenguaDelText || ui.language || locale || 'ca');
+  const ambIdioma = (contingut) => (
+    <IdiomaConsolaContext.Provider value={idioma}>{contingut}</IdiomaConsolaContext.Provider>
+  );
   const params = useParams();
   /* Ordre del Mestre, 261004 (xat: cap xifra solta) · /consola/xifres/<slug>
      és la pàgina d'una xifra o d'una peça; /consola/pols/<id>, la d'un panell
@@ -545,27 +559,27 @@ export default function ConsolaSection() {
      vegada per pintada (xifraDelMas recorre totes les vistes de la Consola):
      la mateixa del SEO i del peu passa a la pàgina, i la pàgina al detall. */
   if (slugXifra !== null) {
-    return (
+    return ambIdioma(
       <PaginaXifra slug={slugXifra} xifra={xifra} fonts={{ mapa, consola }} creat={dataDelCopy()} privat={privat} locale={locale}
         peu={peu(xifra?.origen === 'consola' ? 'pols' : 'xifra')} />
     );
   }
 
   if (idPanell !== null) {
-    return <PaginaPanellPols id={idPanell} consola={consola} locale={locale} privat={privat} peu={peu('pols')} />;
+    return ambIdioma(<PaginaPanellPols id={idPanell} consola={consola} locale={locale} privat={privat} peu={peu('pols')} />);
   }
 
   if (idGovern !== null) {
-    return <PaginaDeGovern id={idGovern} govern={govern} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />;
+    return ambIdioma(<PaginaDeGovern id={idGovern} govern={govern} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />);
   }
 
-  if (deEmpaquetats) return <PaginaEmpaquetats font={empaquetats} privat={privat} peu={peu('empaquetats')} />;
+  if (deEmpaquetats) return ambIdioma(<PaginaEmpaquetats font={empaquetats} privat={privat} peu={peu('empaquetats')} />);
 
   /* P0-61 / IDEA-192 · Com les altres pàgines de la Consola: molla de pa, text en
      valencià declarat (llenguaDelContingut) i sense Traductor. La molla porta el
      cim (cimRef) per a tornar dalt en entrar-hi des del tauler. */
   if (deTaxonomia) {
-    return (
+    return ambIdioma(
       <UniversalPage title={PAGINA_BRAIN_TAXONOMIA.title} subtitle={PAGINA_BRAIN_TAXONOMIA.subtitle} lead={PAGINA_BRAIN_TAXONOMIA.lead}
         chrome="system" nivellMaxIndex={6} traduccio={false} llenguaDelContingut="ca">
         <div ref={cim}>
@@ -576,14 +590,14 @@ export default function ConsolaSection() {
     );
   }
 
-  if (deBotigues) return <PaginaBotiguesConsola cimRef={cim} />;
+  if (deBotigues) return ambIdioma(<PaginaBotiguesConsola cimRef={cim} />);
 
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
   if (!pagina) {
     // Un sol rellotge per a les targetes i el Diagnòstic de Sóc de Poble: el text diu el mateix dels rebuts.
     const ara = Date.now();
-    return (
+    return ambIdioma(
       /* T2 (ordre del Mestre, 260930) · l'Índex de la Consola arriba a h6: hi entren les mètriques (h5).
          Correcció B1 (260930) · el tauler també respecta la privacitat recordada: l'alerta de
          vigilància hi pinta rutes i ordres.
@@ -640,7 +654,7 @@ export default function ConsolaSection() {
     );
   }
 
-  return (
+  return ambIdioma(
     <UniversalPage title={pagina.title} subtitle={pagina.subtitle} lead={pagina.lead} chrome="system" nivellMaxIndex={6}
       topBarData={dataHoraDeBarra({ creat: dataDelCopy(), modificat: pagina.id === 'pols' ? consola.dades?.generat : mapa.mapa?.generat })}
       traduccio={false} llenguaDelContingut="ca">

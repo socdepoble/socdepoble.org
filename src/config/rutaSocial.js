@@ -16,6 +16,18 @@ export const ID_DOCUMENT_WIKI = /^[a-zA-Z0-9_-]{1,180}$/;
 
 const senseBarraFinal = (cami) => String(cami || '').replace(/\/+$/, '') || '/';
 
+/* v1.2.19 · Gauntlet R2 de la v1.2.18 (L2R2-03) · Un camí en forma canònica (RFC 3986 §6.2.2): la %XX d'un caràcter
+   no reservat (lletra, xifra, «-», «.», «_» o «~») es descodifica, i la resta de %xx passa a majúscula. Així
+   /merc%61t/<id> té la mateixa clau (i el mateix canonical) que /mercat/<id>, i el head servit no es purga. Una %
+   que no forma cap seqüència es queda tal qual. La mateixa regla és a routeKey (tooling/seo/social-edge.mjs). */
+const NO_RESERVAT = /^[A-Za-z0-9\-._~]$/;
+export function canonitzaCami(cami) {
+  return String(cami).replace(/%([0-9A-Fa-f]{2})/g, (tros, hex) => {
+    const caracter = String.fromCharCode(Number.parseInt(hex, 16));
+    return NO_RESERVAT.test(caracter) ? caracter : `%${hex.toUpperCase()}`;
+  });
+}
+
 /** L'id d'un document de la Wiki si és vàlid; si no, null. */
 export function idDeDocumentWiki(valor) {
   return typeof valor === 'string' && ID_DOCUMENT_WIKI.test(valor) ? valor : null;
@@ -28,7 +40,7 @@ export function camiDeDocumentWiki(id) {
 
 /** La clau social de `pathname` i `search` ('?…' o ''). */
 export function clauSocialDeRuta(pathname, search = '') {
-  const cami = senseBarraFinal(pathname);
+  const cami = canonitzaCami(senseBarraFinal(pathname));
   if (cami.startsWith(`${RUTA_WIKI}/`)) {
     const id = idDeDocumentWiki(cami.slice(RUTA_WIKI.length + 1));
     return id ? `${RUTA_WIKI}?item=${id}` : cami;

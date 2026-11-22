@@ -191,5 +191,24 @@ return array(
 		'Scheduled maintenance in progress' => 'Manteniment tècnic programat en curs',
 		'We are performing a brief technical update on the community portal. No external trackers or assets are loaded on this page.' => 'Estem fent una breu actualització tècnica al portal comunitari. Esta pàgina no carrega cap rastrejador ni cap recurs extern.',
 		'Estimated time to reopen: %d min.' => 'Temps estimat de reobertura: %d min.',
+
+		// v1.2.19 · fusió · R32.29 (lot 02): Retry-After de l'actualitzador i observacions d'entorn de la Salut.
+		// Els dos textos «optional secrets API» del kit no hi són: salut.php conserva els de la v1.2.18 (L3R2-01).
+		'The update service is temporarily unavailable. The last verified release is kept.' => 'El servei d’actualització no està disponible temporalment. Es conserva l’última versió verificada.',
+		'Sóc de Poble cache and own options' => 'Memòria cau i opcions pròpies de Sóc de Poble',
+		'Own options autoload: %1$s (%2$s bytes). WordPress external object-cache declaration: %3$s; persistence is not verified. OPcache in this process: %4$s (SAPI %5$s). A loaded Memcached extension does not prove that its service works. This check does not certify PHP vulnerability fixes; ask the host about patched PHP workers.' => 'Autoload de les opcions pròpies: %1$s (%2$s bytes). WordPress declara memòria cau externa d’objectes: %3$s; la persistència no està verificada. OPcache en este procés: %4$s (SAPI %5$s). Tindre carregada l’extensió Memcached no prova que el servei funcione. Esta prova no certifica els pedaços de vulnerabilitats PHP; consulta l’amfitrió sobre els processos PHP actualitzats.',
+		'Sóc de Poble cache and own options observations' => 'Observacions de memòria cau i opcions pròpies de Sóc de Poble',
+
+		// v1.2.19 · Gauntlet R1 (L2-03): el 503 del canal sense versió verificada i la pausa visible a la secció.
+		'The update service is temporarily unavailable.' => 'El servei d’actualització no està disponible temporalment.',
+		'Next check allowed' => 'Pròxima comprovació permesa',
+		// v1.2.19 · Gauntlet R1 (L2-05): els valors que s'interpolen a les observacions d'entorn.
+		'unknown' => 'desconegut',
+		'off' => 'desactivat',
+		'on' => 'activat',
+		'yes' => 'sí',
+		'no' => 'no',
+		'active' => 'actiu',
+		'inactive' => 'inactiu',
 	),
 );

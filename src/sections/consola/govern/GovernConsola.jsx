@@ -36,6 +36,7 @@ import { dataLocal } from '../consolaContent.js';
 import { ambEscriptures, ambInstantania } from '../fontsConsola.js';
 import { ETIQUETES, RUTA_CONSOLA, copyConsola } from '../consolaPagines.js';
 import { plural } from '../concordanca.js';
+import { tca, useIdiomaConsola } from '../i18nConsolaA11y.js';
 import { Privat, PrivacitatConsola, TargetaConsola } from '../peces.jsx';
 import { miniaturaDePagina } from '../imatgesConsola.js';
 import {
@@ -149,12 +150,14 @@ function cobertaDe(id, govern, { vista, balanc, comparacio, resums }) {
  */
 export function SeccioGovern({ govern, ara = Date.now(), ambImatges = false }) {
   const id = useId();
+  const idioma = useIdiomaConsola();
   const derivat = derivaGovern(govern, ara);
   return (
     <section aria-labelledby={id}>
       <h2 id={id}>{TITOL_GOVERN}</h2>
       <p>{ENTRADETA_GOVERN}</p>
-      <nav className="sdp-card-grid sdp-consola__graella" aria-label={ETIQUETA_NAV_GOVERN}>
+      <nav className="sdp-card-grid sdp-consola__graella"
+        aria-label={idioma === 'ca' ? ETIQUETA_NAV_GOVERN : tca(idioma, 'paginesGovern')}>
         {paginesGovern().map((p) => {
           const coberta = cobertaDe(p.id, govern, derivat);
           return (
@@ -526,17 +529,14 @@ function PaginaCertificacio({ govern, vista, locale }) {
     }
   }
 
-  const apunts = ordenaCertificacions(registres ?? []).reverse().map((r) => {
-    const d = new Date(r.data);
-    const dos = (n) => String(n).padStart(2, '0');
-    return {
-      id: r.nonce,
-      hora: `${dos(d.getHours())}:${dos(d.getMinutes())}`,
-      moment: r.data,
-      titol: `${TEXT_DECISIO[r.decisio]} · ${r.id}`,
-      detall: `${dataLocal(r.data, locale)} · ${r.actor ?? 'sense nom'}${r.nota ? ` · ${r.nota}` : ''}`
-    };
-  });
+  const idioma = useIdiomaConsola();
+  const apunts = ordenaCertificacions(registres ?? []).reverse().map((r) => ({
+    id: r.nonce,
+    hora: horaCertificacio(r.data),
+    moment: r.data,
+    titol: `${TEXT_DECISIO[r.decisio]} · ${r.id}`,
+    detall: `${dataLocal(r.data, locale)} · ${r.actor ?? 'sense nom'}${r.nota ? ` · ${r.nota}` : ''}`
+  }));
   const files = vista ? filtraFiles(vista.files, filtre) : [];
   const retornar = obert?.decisio === 'retornat';
 
@@ -609,8 +609,8 @@ function PaginaCertificacio({ govern, vista, locale }) {
                       {/* Tres verbs a cada fila; «Certifica» és el primari només on la matriu ja la dona per feta. */}
                       {DECISIONS_GOVERN.map((d) => (
                         <Boto key={d} varietat={d === 'certificat' && f.estatVist === 'fet' ? 'primari' : 'secundari'} disabled={!potDecidir}
-                          aria-label={`${VERB_DECISIO[d]} ${f.id}`} onClick={() => obri(f, d)}>
-                          {VERB_DECISIO[d]}
+                          aria-label={idioma === 'ca' ? `${VERB_DECISIO[d]} ${f.id}` : tca(idioma, 'verbDecisioAria', d, f.id)} onClick={() => obri(f, d)}>
+                          {idioma === 'ca' ? VERB_DECISIO[d] : tca(idioma, 'verbDecisio', d)}
                         </Boto>
                       ))}
                     </td>
@@ -645,6 +645,15 @@ function PaginaCertificacio({ govern, vista, locale }) {
       </DialegConfirmacio>
     </div>
   );
+}
+
+/* R32.32: blindatge contra r.data corrupta, no textual o buida (mai «NaN:NaN» ni 1970). */
+export function horaCertificacio(data) {
+  if (typeof data !== 'string' || !data.trim()) return '—';
+  const d = new Date(data);
+  if (Number.isNaN(d.getTime())) return '—';
+  const dos = (n) => String(n).padStart(2, '0');
+  return `${dos(d.getHours())}:${dos(d.getMinutes())}`;
 }
 
 /* ── 4 · Comunicació amb les IAs ─────────────────────────────────────── */

@@ -2141,6 +2141,7 @@ export function nomVisible(persona, idioma) {
   return nom || t(idioma, 'persona.senseNom');
 }
 
+export const CODIS_IDIOMA_GENEALOGIA = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
 export const TEXTOS_GENEALOGIA = TEXTOS;
 export const codiIdiomaGenealogia = llenguaDe;
 export const textosGenealogia = (idioma) => TEXTOS[llenguaDe(idioma)];

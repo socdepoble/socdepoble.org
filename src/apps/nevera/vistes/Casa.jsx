@@ -18,6 +18,7 @@ import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { propostesDeCasa } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
@@ -43,6 +44,8 @@ export function ColumnaACasa({ params }) {
   /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
   const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const linies = perArticle(llista);
   const aCasa = new Map(estat.casa.map((entrada) => [entrada.articleId, entrada.estat]));
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => txCasa[aCasa.get(a.id)], idioma };
@@ -58,7 +61,7 @@ export function ColumnaACasa({ params }) {
       categories={seccionsDe(estat, llista.id, { totesVisibles: true, idioma })}
       articles={articles}
       destacats={seguits.length ? [{ id: 'seguits', nom: tx.elQueTensACasa, icona: Refrigerator, articles: seguits }] : []}
-      textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
+      textosEstat={{ 'en-colleccio': tx.aLlistaNom(nomLlista) }}
       onTria={(article, { obriDetall }) => obriDetall()}
       afegit={{ etiqueta: tx.buscaACasa, suggeriments: suggerimentsVestits(estat, vestit) }}
       detall={{
@@ -70,7 +73,7 @@ export function ColumnaACasa({ params }) {
           <Boto icona={Plus} onClick={() => {
             accions.afig(llista.id, article.id);
             tanca();
-          }}>{tx.afigALlistaNom(llista.nom)}</Boto>
+          }}>{tx.afigALlistaNom(nomLlista)}</Boto>
         ))
       }}
       resum={{ etiqueta: tx.calComprar, comptador: propostes.length, textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount }}
@@ -89,6 +92,8 @@ export function ColumnaCalComprar({ params }) {
   const txCasa = textosCasa(idioma);
   const obriDetall = useObriDetall(CASA);
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const propostes = propostesDeCasa(estat, llista.id);
   const linies = liniesVestides(estat, propostes, { detall: (proposta) => txCasa[proposta.estat], idioma });
   return (
@@ -96,14 +101,14 @@ export function ColumnaCalComprar({ params }) {
       titol={tx.calComprar}
       linies={linies}
       resum={{
-        etiqueta: tx.perALlistaNom(llista.nom),
+        etiqueta: tx.perALlistaNom(nomLlista),
         comptador: linies.length,
         textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount,
         accio: { text: tx.afigHoTot, onClick: () => accions.afigPropostes(llista.id), desactivada: linies.length === 0 }
       }}
       onTria={(linia) => obriDetall(linia.articleId)}
       onSuma={(linia) => accions.afig(llista.id, linia.articleId)}
-      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, llista.nom) }}
+      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, nomLlista) }}
       textos={{
         buit: txBuit.casaCalComprarBuit,
         buitText: txBuit.casaCalComprarBuitText,

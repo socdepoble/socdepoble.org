@@ -463,6 +463,14 @@ function transportQueRespon(config, valor, abans = null, retardMs = 5) {
   });
 }
 
+/* La prova decidix l'ordre real: transport en vol → rotació → ACK tardà.
+   Cap temporitzador pot avançar l'ACK abans de la revocació sota càrrega. */
+function barrera() {
+  let resol;
+  const promesa = new Promise((resolve) => { resol = resolve; });
+  return { promesa, resol };
+}
+
 /* Model de `xat_envia_xifrat` (2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql): el
    mateix p_id amb un altre sobre és SDP-XAT-008; amb el mateix, la fila desada.
    `transport` fa com el decorador (xifratXat.js · motor.prepara): torna a xifrar a
@@ -766,19 +774,37 @@ describe('R26 ronda 3 · sense font viva de l\'actor, un senyal del relleu que c
       entra(identitat, CONFIG_A);
       const cadena = cadenaOperacions();
       const senyals = [];
+      const enVol = barrera();
+      const ack = barrera();
+      let payloadEnVol;
       const enviaMissatge = vi.fn((_fil, payload, config) => {
         senyals.push(config.signal);
-        if (senyals.length === 1) return transportQueRespon(config, confirmacio(payload, 4), () => rota(cadena));
+        if (senyals.length === 1) {
+          payloadEnVol = payload;
+          enVol.resol();
+          return ack.promesa; // Sord a l'abort: el servei ha de tallar-lo igualment.
+        }
         return Promise.resolve(confirmacio(payload, 5));
       });
       const servei = creaServeiXat({ enviaMissatge, refreshSession: vi.fn(), escoltaCanvisSessio: null });
 
-      await expect(servei.enviaMissatge(FIL, { text: 'Com a forn, sense font de l\'actor' }, {
+      const enviament = servei.enviaMissatge(FIL, { text: 'Com a forn, sense font de l\'actor' }, {
         ...CONFIG_A,
         obteSenyalIntent: () => cadena.actual.controller.signal, // ingenu: l'operació viva, siga de l'àmbit que siga
-      })).rejects.toMatchObject({ codi: 'OPERACIO_CANCELADA', motiu: 'SENYAL_INTENT_AVORTAT', definitiu: true, retriable: false });
+      });
+      const rebut = expect(enviament).rejects.toMatchObject({ codi: 'OPERACIO_CANCELADA', motiu: 'SENYAL_INTENT_AVORTAT', definitiu: true, retriable: false });
+      await enVol.promesa;
+      expect(senyals[0].aborted).toBe(false);
+      expect(servei.comptaEnVol()).toBe(1);
+      rota(cadena);
+      await rebut; // La cancel·lació es liquida ABANS que el transport torne.
       expect(enviaMissatge).toHaveBeenCalledTimes(1);
       expect(senyals[0].aborted).toBe(true); // fallada tancada: el transport es talla
+      expect(servei.comptaEnVol()).toBe(0);
+      ack.resol(confirmacio(payloadEnVol, 4));
+      await ack.promesa;
+      await expect(enviament).rejects.toMatchObject({ codi: 'OPERACIO_CANCELADA', definitiu: true });
+      expect(enviaMissatge).toHaveBeenCalledTimes(1);
       expect(servei.comptaEnVol()).toBe(0);
     }, 4000);
   }
@@ -787,14 +813,18 @@ describe('R26 ronda 3 · sense font viva de l\'actor, un senyal del relleu que c
     const { identitat, creaServeiXat } = await carrega();
     entra(identitat, CONFIG_A);
     const cadena = cadenaOperacions();
+    const enVol = barrera();
     const enviaMissatge = vi.fn(() => {
-      setTimeout(() => cadena.renova(), 0);
+      enVol.resol();
       return new Promise(() => {}); // sord a l'abort i sense resposta
     });
     const servei = creaServeiXat({ enviaMissatge, refreshSession: vi.fn(), escoltaCanvisSessio: null });
 
-    await expect(servei.enviaMissatge(FIL, { text: 'Transport sord' }, { ...CONFIG_A, obteSenyalIntent: relleuDeLaCrida(cadena) }))
+    const rebut = expect(servei.enviaMissatge(FIL, { text: 'Transport sord' }, { ...CONFIG_A, obteSenyalIntent: relleuDeLaCrida(cadena) }))
       .rejects.toMatchObject({ codi: 'OPERACIO_CANCELADA', motiu: 'SENYAL_INTENT_AVORTAT', definitiu: true });
+    await enVol.promesa;
+    cadena.renova();
+    await rebut;
     expect(enviaMissatge).toHaveBeenCalledTimes(1);
   }, 4000);
 });

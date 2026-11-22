@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { analitzaVigilant, codiVigilant, readOnly, defectesWp72, defectesSvgWp72 } from '../tooling/gates/tractor-vigilant.mjs';
+import { fileURLToPath } from 'node:url';
+import { analitzaVigilant, codiVigilant, readOnly, defectesWp72, defectesSvgWp72, defectesFitxerEstatic, PRESSUPOST_ESTATIC } from '../tooling/gates/tractor-vigilant.mjs';
 function fixture(t) {const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-vigilant-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return {root,write:(p,s)=>{fs.mkdirSync(path.dirname(path.join(root,p)),{recursive:true});fs.writeFileSync(path.join(root,p),s);}};}
 const regla=(r,id)=>r.comprovacions.find(c=>c.id===id);
 test('R32.27 VIG-07 bloqueja secrets.php no autoritzat sense llegir ni revelar valors',t=>{
@@ -189,4 +190,49 @@ test('R32.27 VIG-07: SVG actius en fitxer o PHP incrustat bloquegen, incloent en
  }
  assert.equal(defectesSvgWp72('<svg><!-- <script>test</script> --><path d="M0 0h1"/></svg>',{fitxerSvg:true}),false);
  assert.equal(defectesSvgWp72('<script>recurs habitual fora d’SVG</script>'),false);
+});
+// v1.2.19 · Gauntlet R1 (L2-02): actius versionats que contenen '<?=' per atzar dins de les dades comprimides.
+// Es lligen del repositori i només es copien a l'arrel temporal de la prova.
+const REPO_L202=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const ATZAR_L202=['public/assets/img/nano_porta_del_mas.png','public/assets/nano_cards/mur_nano_card.jpg','public/assets/notes/bloc_notes_vintage.jpg','public/assets/towns/balones/commons-ah27.webp'];
+test('L2-02 · imatges reals amb «<?=» per atzar: VIG-12 ok i cap bloquejant',t=>{
+ const {root,write}=fixture(t);
+ for(const rel of ATZAR_L202){
+  const bytes=fs.readFileSync(path.join(REPO_L202,rel));
+  assert.ok(bytes.includes('<?='),`${rel} ja no conté la seqüència: actualitzeu la llista`);
+  assert.deepEqual(defectesFitxerEstatic(rel,bytes),[],rel);write(rel,bytes);
+ }
+ const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-12').estat,'ok');assert.equal(r.recompte.bloquejants,0);assert.equal(codiVigilant(r),0);
+});
+test('L2-02 · el PHP camuflat en binaris continua detectat; les obertures que PHP no accepta no compten',t=>{
+ const png=fs.readFileSync(path.join(REPO_L202,'public/assets/img/nano_porta_del_mas.png')),soroll=Buffer.from([0x89,0x01,0xfe,0x00,0x7f]);
+ const camuflats={
+  'despres-iend.png':Buffer.concat([png,Buffer.from('<?php system($_GET["c"]); ?>')]),
+  'idat.png':Buffer.concat([png.subarray(0,4096),Buffer.from('<?=$_GET[0]($_POST[1]);?>'),png.subarray(4096)]),
+  'halt.jpg':Buffer.concat([soroll,Buffer.from('<?=system($_GET[0]);__halt_compiler();'),soroll]),
+  'final.webp':Buffer.concat([soroll,Buffer.from('<?= `$_GET[1]`;')]),
+  'tab.pdf':Buffer.concat([soroll,Buffer.from('<?PHP\tphpinfo();'),soroll]),
+  'final.woff2':Buffer.concat([soroll,Buffer.from('<?php')]),
+ };
+ for(const [nom,bytes] of Object.entries(camuflats)) assert.deepEqual(defectesFitxerEstatic(`public/${nom}`,bytes),['php-in-static-bytes'],nom);
+ for(const bytes of [Buffer.concat([soroll,Buffer.from('<?phpinfo'),soroll]),Buffer.concat([soroll,Buffer.from('<?='),soroll,Buffer.from('?>')]),Buffer.concat([soroll,Buffer.from('<?=abc'),soroll]),Buffer.from('<?=a'.repeat(4096)+'\u0001')])
+  assert.deepEqual(defectesFitxerEstatic('public/x.png',bytes),[]);
+ // Els textos conserven la regla estricta de la v1.2.19.
+ assert.deepEqual(defectesFitxerEstatic('public/x.svg',Buffer.from('<svg><?=\u0001</svg>')),['php-in-static-bytes']);
+ const {root,write}=fixture(t);write('public/assets/img/porta.png',camuflats['despres-iend.png']);
+ const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-12').estat,'falla');assert.equal(codiVigilant(r),1);
+ assert.deepEqual(regla(r,'VIG-12').evidencia,[{fitxer:'public/assets/img/porta.png'}]);assert.equal(JSON.stringify(r).includes('system('),false);
+});
+test('L2-02 · textos i binaris gasten pressupostos separats; cada límit continua deixant no-mesurat',t=>{
+ const {root,write}=fixture(t);
+ for(let i=0;i<5;i++){const p=path.join(root,`public/galeria/f${i}.jpg`);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,'');fs.truncateSync(p,2*1024*1024-1);}
+ write('public/z.svg','<svg><?= $x ?></svg>');
+ let c=regla(analitzaVigilant(root),'VIG-12');
+ assert.equal(c.estat,'falla');assert.deepEqual(c.evidencia,[{fitxer:'public/z.svg'}]);
+ fs.rmSync(path.join(root,'public/z.svg'));c=regla(analitzaVigilant(root),'VIG-12');
+ assert.equal(c.estat,'ok');assert.match(c.proposta,/binaris 5 fitxers\/10485755 bytes, 0 sense llegir/);
+ const gros=path.join(root,'public/gros.txt');fs.writeFileSync(gros,'');fs.truncateSync(gros,PRESSUPOST_ESTATIC.text.perFitxer+1);
+ c=regla(analitzaVigilant(root),'VIG-12');assert.equal(c.estat,'no-mesurat');assert.match(c.proposta,/textos 0 fitxers\/0 bytes, 1 sense llegir/);
+ fs.rmSync(gros);for(let i=0;i<=PRESSUPOST_ESTATIC.binari.fitxers-5;i++) write(`public/molts/${String(i).padStart(4,'0')}.png`,'');
+ c=regla(analitzaVigilant(root),'VIG-12');assert.equal(c.estat,'no-mesurat');assert.match(c.proposta,new RegExp(`binaris ${PRESSUPOST_ESTATIC.binari.fitxers} fitxers/\\d+ bytes, 1 sense llegir`));
 });

@@ -1,4 +1,5 @@
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
+import { tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 /**
  * XifresMas.jsx — les targetes amb pàgina pròpia de la Consola: «Sóc de Poble en
  * xifres» del tauler, les xifres de dins de cada pàgina, les peces del Mapa
@@ -235,6 +236,7 @@ function DadaViva({ detall, font, textos: t, icona }) {
 export function PaginaXifra({ slug, xifra: donada, fonts, creat, privat = false, peu = null, locale = 'ca-ES' }) {
   const navigate = useNavigate();
   const id = useId();
+  const idioma = useIdiomaConsola();
   const copy = copyConsola();
   const { mapa: fontMapa, consola: fontConsola } = fonts;
   const xifra = donada === undefined ? xifraDelMas(slug, fontMapa.mapa, fontConsola.dades, locale) : donada;
@@ -251,20 +253,22 @@ export function PaginaXifra({ slug, xifra: donada, fonts, creat, privat = false,
       <MollaPa className="sdp-molla--panell" passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: darrer }]} />
     );
     if (llegint) {
+      const titolLlegint = tca(idioma, 'llegintLaXifra');
       return (
-        <PaginaApp title="Llegint la xifra…" subtitle="Sóc de Poble en xifres"
+        <PaginaApp title={titolLlegint} subtitle="Sóc de Poble en xifres"
           lead="La Consola encara llig les seues fonts: el Mapa de Sóc de Poble i consola.json."
           author={AUTOR} {...dataHoraDeBarra({ creat, modificat: fontMapa.mapa?.generat })} onBack={tornar}>
-          {molla('Llegint la xifra…')}
+          {molla(titolLlegint)}
           <Carregant etiqueta="Llegint les fonts de la Consola…" />
         </PaginaApp>
       );
     }
+    const titolNoTrobada = tca(idioma, 'xifraNoTrobada');
     return (
-      <PaginaApp title="Xifra no trobada" subtitle="Sóc de Poble en xifres"
+      <PaginaApp title={titolNoTrobada} subtitle="Sóc de Poble en xifres"
         lead="Esta adreça no correspon a cap xifra ni a cap peça de Sóc de Poble: les xifres vives són a les targetes de la Consola."
         author={AUTOR} {...dataHoraDeBarra({ creat, modificat: fontMapa.mapa?.generat })} onBack={tornar}>
-        {molla('Xifra no trobada')}
+        {molla(titolNoTrobada)}
         <EstatBuit icona={SearchX} titol="Cap xifra amb este nom">
           <Link to={RUTA_CONSOLA}>Torna a la Consola</Link> per a vore les xifres de Sóc de Poble.
           {/* Correcció 261004 (verificador de la tercera passada, informatiu) · també les condicionals. */}

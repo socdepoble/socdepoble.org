@@ -134,7 +134,7 @@ export function resumTorn(torn, tiquets = [], obertes = [], { categories = [] } 
       if (!compta(linia)) continue;
       const unitats = signeDe(t) * linia.quantitat;
       const importCents = importLiniaTiquet(t, linia);
-      const costCents = Number.isSafeInteger(linia.costUnitariCents) ? linia.costUnitariCents * unitats : null;
+      const costCents = Number.isSafeInteger(linia.costUnitariCents) ? (linia.costUnitariCents * unitats) || 0 : null;
       afig(productes, linia.producteId, { unitats, importCents, costCents, dades: { nom: linia.nomCongelat, categoriaId: linia.categoriaId } });
       afig(perCategoria, linia.categoriaId, { unitats, importCents, costCents: null, dades: {} });
     }

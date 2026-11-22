@@ -13,6 +13,7 @@ import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendIna
 import { tempsLimitPujada } from '../src/data/xatMultimedia.js';
 import { controlStorageDe, informaReconciliacioStorage } from '../src/data/supabase/controlStorage.js';
 import { PNG_NET } from './helpers/mitjansPublicsNets.js';
+import { capturaSessio } from '../src/data/identitat.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -180,7 +181,7 @@ test('transport: rebutja secrets abans de fetch i no seguix redireccions', async
   globalThis.fetch = async (url, options) => { calls++; received = options; return {ok:true, status:200, json:async()=>[]}; };
   const runtime = await isolated('src/data/supabase/runtime.js', {
     validatePublicCredentials, APP_SEED: {}, APP_SEED_VERSION: 1, getDefaultUserId: () => 'user',
-    normalizeBackendConfig: c => c, jwtPerBackend: () => null, getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {},
+    normalizeBackendConfig: c => c, jwtPerBackend: () => null, getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {}, capturaSessio,
     // runtime.js l'importa d'identitat.js i l'usa a actorDesat(); valor real d'identitat.js:63.
     CLAU_USUARI: 'socdepoble-user',
   });

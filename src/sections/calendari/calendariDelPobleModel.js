@@ -1,90 +1,91 @@
 /**
- * Model pur de formatació, períodes i textos per a CalendariDelPoble (R32.24).
+ * Model pur de formatació, períodes i textos per a CalendariDelPoble (R32.24 + R32.33).
  */
 import { sumaDies } from '../../utils/periodes.js';
+import {
+  TEXTOS_CALENDARI_POBLE,
+  localeCalendariPerIdioma,
+  textosCalendariPoble,
+} from './i18nCalendariDelPoble.js';
 
 export const LOCALE_CALENDARI = 'ca-ES';
 
 export const DENSITAT_CALENDARI = 'responsiva';
 
-export const MES_PER_PAS = Object.freeze({
-  anterior: 'Mes anterior',
-  hui: 'Hui',
-  seguent: 'Mes següent',
-});
+export const MES_PER_PAS = TEXTOS_CALENDARI_POBLE.ca.etiquetesPeriode.mes;
 
-export const ETIQUETES_PERIODE = Object.freeze({
-  setmana: Object.freeze({ anterior: 'Setmana anterior', hui: 'Hui', seguent: 'Setmana següent' }),
-  'dues-setmanes': Object.freeze({
-    anterior: 'Dues setmanes anteriors',
-    hui: 'Hui',
-    seguent: 'Dues setmanes següents',
-  }),
-  mes: MES_PER_PAS,
-  any: Object.freeze({ anterior: 'Any anterior', hui: 'Hui', seguent: 'Any següent' }),
-  agenda: MES_PER_PAS,
-});
+export const ETIQUETES_PERIODE = TEXTOS_CALENDARI_POBLE.ca.etiquetesPeriode;
 
-export const nomDelMes = ({ any, mes }) => (
-  new Date(any, mes, 1).toLocaleDateString(LOCALE_CALENDARI, { month: 'long', year: 'numeric' })
+export const nomDelMes = ({ any, mes }, locale = LOCALE_CALENDARI) => (
+  new Date(any, mes, 1).toLocaleDateString(locale || LOCALE_CALENDARI, { month: 'long', year: 'numeric' })
 );
 
-export const dataSenseDiaDeLaSetmana = (data) => (
-  data.toLocaleDateString(LOCALE_CALENDARI, { day: 'numeric', month: 'long', year: 'numeric' })
+export const dataSenseDiaDeLaSetmana = (data, locale = LOCALE_CALENDARI) => (
+  data.toLocaleDateString(locale || LOCALE_CALENDARI, { day: 'numeric', month: 'long', year: 'numeric' })
 );
 
-export const nomDelRang = ({ desde, fins }) => (
-  `${dataSenseDiaDeLaSetmana(desde)} – ${dataSenseDiaDeLaSetmana(sumaDies(fins, -1))}`
+export const nomDelRang = ({ desde, fins }, locale = LOCALE_CALENDARI) => (
+  `${dataSenseDiaDeLaSetmana(desde, locale)} – ${dataSenseDiaDeLaSetmana(sumaDies(fins, -1), locale)}`
 );
 
 export const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
 
-export function textosDeLaVista(vista, cursor, rang) {
+export function textosDeLaVista(vista, cursor, rang, idioma = 'ca') {
+  const tx = textosCalendariPoble(idioma);
+  const locale = localeCalendariPerIdioma(idioma);
   if (vista === 'setmana') {
-    const periode = nomDelRang(rang);
+    const periode = nomDelRang(rang, locale);
     return {
       periode,
-      regio: `Calendari de la setmana del ${periode}`,
-      buit: 'Cap publicació esta setmana.',
+      regio: tx.regioSetmana(periode),
+      buit: tx.buitSetmana,
+      buitDia: tx.buitDia,
+      buitAgenda: tx.buitAgenda,
     };
   }
   if (vista === 'dues-setmanes') {
-    const periode = nomDelRang(rang);
+    const periode = nomDelRang(rang, locale);
     return {
       periode,
-      regio: `Calendari de les dues setmanes del ${periode}`,
-      buit: 'Cap publicació estes dues setmanes.',
+      regio: tx.regioDuesSetmanes(periode),
+      buit: tx.buitDuesSetmanes,
+      buitDia: tx.buitDia,
+      buitAgenda: tx.buitAgenda,
     };
   }
   if (vista === 'any') {
     const periode = String(cursor.any);
     return {
       periode,
-      regio: `Calendari de l’any ${periode}`,
-      buit: 'Cap publicació este any.',
+      regio: tx.regioAny(periode),
+      buit: tx.buitAny,
+      buitDia: tx.buitDia,
+      buitAgenda: tx.buitAgenda,
     };
   }
-  const periode = nomDelMes(cursor);
+  const periode = nomDelMes(cursor, locale);
   if (vista === 'agenda') {
     return {
       periode,
-      regio: `Agenda ${ambDe(periode)}`,
-      buit: 'Cap publicació en este període.',
+      regio: tx.regioAgenda(periode),
+      buit: tx.buitAgenda,
+      buitDia: tx.buitDia,
+      buitAgenda: tx.buitAgenda,
     };
   }
   return {
     periode,
-    regio: `Calendari ${ambDe(periode)}`,
-    buit: 'Cap publicació este mes.',
+    regio: tx.regioMes(periode),
+    buit: tx.buitMes,
+    buitDia: tx.buitDia,
+    buitAgenda: tx.buitAgenda,
   };
 }
 
 export const capitalitzaPeriode = (periode) => (
-  periode.charAt(0).toUpperCase() + periode.slice(1)
+  periode ? periode.charAt(0).toUpperCase() + periode.slice(1) : ''
 );
 
-export const textSenseDataCalendari = (senseData) => (
-  senseData === 1
-    ? 'Una publicació no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.'
-    : `${senseData} publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.`
+export const textSenseDataCalendari = (senseData, idioma = 'ca') => (
+  textosCalendariPoble(idioma).senseData(senseData)
 );

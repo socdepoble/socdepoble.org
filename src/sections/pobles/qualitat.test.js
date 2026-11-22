@@ -35,6 +35,7 @@ const MODULS_NOUS = Object.freeze([
   'src/sections/pobles/usePobleHidratat.js',
   'src/sections/pobles/CreditsDeViquipedia.jsx',
   'src/sections/pobles/creditsDeViquipediaModel.js',
+  'src/sections/pobles/i18nFontsTerritorials.js',
   'src/sections/pobles/PanellDeViquipedia.jsx',
   /* D-5 (pla 261101_1246) · La lògica dels àlies de poble: cap nom de poble. */
   'src/sections/pobles/aliesDePobles.js',
@@ -81,7 +82,8 @@ const FITXERS = Object.freeze([
   'src/sections/pobles/RestauradorOpenData.jsx',
   'src/sections/pobles/restauradorOpenDataModel.js',
   'src/sections/pobles/RestauradorOpenData.test.jsx',
-  'src/sections/pobles/puresaHmrPoblesWikiPlugins.r32_20.test.js'
+  'src/sections/pobles/puresaHmrPoblesWikiPlugins.r32_20.test.js',
+  'src/sections/pobles/CreditsDeViquipedia5LlenguesIVores.r32_33.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

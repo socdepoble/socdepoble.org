@@ -13,7 +13,9 @@ import { useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, GrupCamps, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
-import { etiquetaDataSalut, textErrorSalut, tipusSalutTraduit } from '../i18nSalut.js';
+import {
+  errorLlegirFitxerSalut, etiquetaDataSalut, propostaImportacioTraduida, textErrorSalut, tipusSalutTraduit
+} from '../i18nSalut.js';
 import { tipusDe } from '../nucli/diccionari.js';
 import { diesDe, llegixFitxer, proposaApunts } from '../nucli/importacio.js';
 import { useSalut } from '../useSalut.jsx';
@@ -54,9 +56,10 @@ export function ImportarFull() {
   const [versio, setVersio] = useState(0);
   const [desant, setDesant] = useState(false);
   const { persona, ofsetDe, apunts: existents } = salut;
-  const proposta = useMemo(() => (triat ? proposaApunts({
+  const propostaCrua = useMemo(() => (triat ? proposaApunts({
     llibre: triat.llibre, dates, persona, ofsetDe, fitxer: triat.nom, existents
   }) : null), [triat, dates, persona, ofsetDe, existents]);
+  const proposta = useMemo(() => propostaImportacioTraduida(propostaCrua, idioma), [propostaCrua, idioma]);
   if (!salut.carregat) return null;
 
   const tria = async (event) => {
@@ -71,7 +74,7 @@ export function ImportarFull() {
       const llegit = llegixFitxer(new Uint8Array(await fitxer.arrayBuffer()), fitxer.name);
       if (!llegit.ok) {
         setTriat(null);
-        setMissatge({ to: 'error', text: idioma === 'ca' ? llegit.error : tx.errorLlegirFitxer });
+        setMissatge({ to: 'error', text: errorLlegirFitxerSalut(llegit.error, idioma, tx.errorLlegirFitxer) });
         return;
       }
       setDates(diesDe(llegit.llibre).map((dia) => dia.data || ''));

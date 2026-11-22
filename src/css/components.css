@@ -1502,6 +1502,13 @@
   margin: 0 auto;
 }
 
+/* v1.2.19 · Gauntlet R2 (L5R2-01) · Amb preload="none" (P0-CONSOLA-ZERO) el navegador no llig les mides del vídeo
+   fins que algú el posa en marxa. Sense pòster, el reproductor es quedava en la franja de 150 px per defecte i creixia
+   de colp en prémer «reproduir»: es reserva la proporció. Amb pòster, res no canvia. */
+.sdp-hero-video__player:not([poster]) {
+  aspect-ratio: 16 / 9;
+}
+
 /* AH-01 · En mòbil i mode compacte, el vídeo Hero prioritza 100% de l'amplària
    sense bandes negres laterals. */
 :where(.sdp-root.is-compact) .sdp-hero-video__player {

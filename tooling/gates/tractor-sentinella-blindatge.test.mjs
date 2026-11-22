@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { auditaAnonim, auditaCapcaleres, auditaBlindatge, main, parseArgs, LIMITS } from './tractor-sentinella-blindatge.mjs';
 
 const ANON = 'sb_publishable_' + 'TEST_ONLY_PUBLIC_FIXTURE_123456';
@@ -164,4 +165,39 @@ test('interrompre l’interval conserva el rebut de la primera ronda i no envia 
   });
   assert.equal(report.status, 'unknown'); assert.equal(report.cycles.length, 1); assert.equal(report.results.length, 12);
   assert.equal(calls, 12); assert.equal(JSON.stringify(report).includes('PRIVATE_CANARY'), false);
+});
+
+// v1.2.19 · Gauntlet R1 (L2-02): PNG versionat amb '<?=' per atzar a l'offset 13864; es llig del
+// repositori i només es copia a l'arrel temporal.
+const REPO_L202 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const PNG_L202 = 'public/assets/img/nano_porta_del_mas.png';
+test('L2-02 · una imatge real amb «<?=» per atzar no fa caure localSecrets; el PHP darrere d’IEND sí', async t => {
+  const root = fixture(t), bytes = fs.readFileSync(path.join(REPO_L202, PNG_L202)), desti = path.join(root, PNG_L202);
+  assert.ok(bytes.includes('<?='), `${PNG_L202} ja no conté la seqüència: trieu un altre actiu`);
+  fs.mkdirSync(path.dirname(desti), { recursive: true }); fs.writeFileSync(desti, bytes);
+  const net = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(net.status, 'ok'); assert.deepEqual(net.findings, []);
+  assert.deepEqual(net.coverage.staticBinaries, { status: 'ok', files: 1, bytes: bytes.length });
+  fs.writeFileSync(desti, Buffer.concat([bytes, Buffer.from('<?php echo "CANARI_PHP_L202"; ?>')]));
+  const brut = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(brut.status, 'fail'); assert.deepEqual(brut.findings.map(f => f.ruleId), ['php-in-static-bytes']);
+  assert.equal(JSON.stringify(brut).includes('CANARI_PHP_L202'), false);
+});
+
+test('L2-02 · literals i binaris tenen pressupostos separats; cada límit continua sent desconegut', async t => {
+  const root = fixture(t), buit = (rel, size) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, ''); fs.truncateSync(p, size); };
+  for (let i = 0; i < 5; i++) buit(`public/galeria/f${i}.jpg`, LIMITS.localBinaryFileBytes - 1);
+  let local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'ok'); assert.equal(local.code, undefined);
+  assert.deepEqual(local.coverage, { literals: { status: 'ok', files: 1, bytes: 27 }, staticBinaries: { status: 'ok', files: 5, bytes: 5 * (LIMITS.localBinaryFileBytes - 1) } });
+  /* v1.2.19 · Porta Arrel (A5) · El camí del text gros es fa en execució: és un fitxer de l'arrel temporal de la prova, no una configuració del repositori. */
+  const GROS_TXT = path.join('public', 'gros.txt');
+  buit(GROS_TXT, LIMITS.localFileBytes + 1);
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT');
+  assert.equal(local.coverage.literals.status, 'unknown'); assert.equal(local.coverage.staticBinaries.status, 'ok');
+  fs.rmSync(path.join(root, GROS_TXT)); buit('public/gros.png', LIMITS.localBinaryFileBytes + 1);
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT');
+  assert.deepEqual(local.coverage.literals, { status: 'ok', files: 1, bytes: 27 }); assert.equal(local.coverage.staticBinaries.status, 'unknown');
 });

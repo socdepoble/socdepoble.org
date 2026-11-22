@@ -11,6 +11,7 @@ const BrainGraph = lazy(() => import('../../../components/universal/graph/BrainG
 import { Link, useSearchParams } from '../../../app/contexts/RouterContext';
 import { de, plural } from '../concordanca.js';
 import { CLAU_PECA } from '../consolaPagines.js';
+import { tca, useIdiomaConsola } from '../i18nConsolaA11y.js';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { rutaXifra, xifresDeVista } from '../xifresMas.js';
 import { TIPUS_NODE, CONFIANCES } from './contracteMapa.js';
@@ -128,6 +129,7 @@ export function ExploradorMapa({ mapa }) {
   }, [mapa]);
   const canvis = comptaCanvis(filtres, densitat);
   const nomDensitat = OPCIONS_FORCES.find((o) => o.valor === densitat)?.text;
+  const idioma = useIdiomaConsola();
   const xifres = useMemo(() => xifresDeVista('explorador', mapa), [mapa]);
 
   return (
@@ -153,7 +155,7 @@ export function ExploradorMapa({ mapa }) {
           <Recompte visibles={graf.links.length} total={mapa.arestes.length} slug="arestes" un="relació" molts="relacions" />
         </p>
       </div>
-      <div className="sdp-explorador__filtres" ref={panellFiltres} role="group" aria-label="Filtres del graf">
+      <div className="sdp-explorador__filtres" ref={panellFiltres} role="group" aria-label={tca(idioma, 'filtresDelGraf')}>
         <details className="sdp-explorador__grup">
           <Resum titol="Tipus de peça" estat={`${encesos(filtres.tipus)} ${de(TIPUS_NODE.length)}`} />
           <div className="sdp-explorador__opcions">

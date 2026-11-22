@@ -14,6 +14,7 @@ import {
   METRIQUES, campDe, etiquetaValor, opcionsDe, resumApunt, textDecimes, tipusDe
 } from './nucli/diccionari.js';
 import { textValorsAdmesos } from './nucli/full.js';
+import { COLUMNES_DIARI_5_LLENGUES } from './nucli/importacio.js';
 import { dataCurta, diaSetmana, etiquetaData, etiquetaDataLlarga } from './nucli/hores.js';
 import { MOTIUS_SENSE_VOLUMS, textCobertura } from './nucli/metriques.js';
 import { APARTATS_GUIA, AVIS_SALUT, FINALITAT, textError } from './textos.js';
@@ -1388,4 +1389,420 @@ export function resumFullTraduit(resum, { des, fins, dies, completes, nomPersona
       ...files,
     ],
   };
+}
+
+/* ── Exportació completa del model (5 fulles) i proposta d'importació ───── */
+
+const NOMS_FULLES_TR = Object.freeze({
+  Resum: L4('Resumen', 'Summary', 'Laburpena', 'Resumo'),
+  Diari: L4('Diario', 'Diary', 'Egunkaria', 'Diario'),
+  Conducta: L4('Conducta', 'Behaviour', 'Jokabidea', 'Conduta'),
+  'Medicació': L4('Medicación', 'Medication', 'Medikazioa', 'Medicación'),
+  Diccionari: L4('Diccionario', 'Dictionary', 'Hiztegia', 'Dicionario'),
+});
+
+const PERIODE_DIARI_TR = Object.freeze({
+  Dia: L4('Día', 'Day', 'Eguna', 'Día'),
+  Nit: L4('Noche', 'Night', 'Gaua', 'Noite'),
+  'Matí següent': L4('Mañana siguiente', 'Next morning', 'Biharamun goiza', 'Mañá seguinte'),
+});
+
+const COLUMNES_ALTRES_TR = Object.freeze({
+  Data: L4('Fecha', 'Date', 'Data', 'Data'),
+  Hora: L4('Hora', 'Time', 'Ordua', 'Hora'),
+  'Durada (min)': L4('Duración (min)', 'Duration (min)', 'Iraupena (min)', 'Duración (min)'),
+  Intensitat: L4('Intensidad', 'Intensity', 'Intentsitatea', 'Intensidade'),
+  'Què ha fet': L4('Qué ha hecho', 'What happened', 'Zer egin du', 'Que fixo'),
+  'Què passava abans': L4('Qué pasaba antes', 'Context beforehand', 'Zer gertatzen zen aurretik', 'Que pasaba antes'),
+  'Què hem fet': L4('Qué hemos hecho', 'How we responded', 'Zer egin dugu', 'Que fixemos'),
+  'Com ha acabat': L4('Cómo ha terminado', 'Outcome', 'Nola amaitu da', 'Como rematou'),
+  Perill: L4('Peligro', 'Safety risk', 'Arriskua', 'Perigo'),
+  Notes: L4('Notas', 'Notes', 'Oharrak', 'Notas'),
+  Nom: L4('Nombre', 'Name', 'Izena', 'Nome'),
+  Quantitat: L4('Cantidad', 'Amount', 'Kopurua', 'Cantidade'),
+  Pauta: L4('Pauta', 'Schedule', 'Jarraibidea', 'Pauta'),
+  Estat: L4('Estado', 'Status', 'Egoera', 'Estado'),
+  'Per a què (ho diu la família)': L4('Para qué (según la familia)', 'Purpose (family label)', 'Zertarako (familiak dioena)', 'Para que (dio a familia)'),
+  Entitat: L4('Entidad', 'Section', 'Atala', 'Entidade'),
+  Camp: L4('Campo', 'Field', 'Eremua', 'Campo'),
+  Columna: L4('Columna', 'Column', 'Zutabea', 'Columna'),
+  Tipus: L4('Tipo', 'Type', 'Mota', 'Tipo'),
+  Unitat: L4('Unidad', 'Unit', 'Unitatea', 'Unidade'),
+  'Valors admesos': L4('Valores admitidos', 'Allowed values', 'Balio onartuak', 'Valores admitidos'),
+  'Definició': L4('Definición', 'Meaning', 'Definizioa', 'Definición'),
+  'Per què importa': L4('Por qué importa', 'Why it matters', 'Zergatik inporta du', 'Por que importa'),
+});
+
+const TIPUS_LLEGIBLE_TR = Object.freeze({
+  enter: L4('número entero', 'whole number', 'zenbaki osoa', 'número enteiro'),
+  decimes: L4('número con un decimal', 'number to 1 decimal', 'hamartar bateko zenbakia', 'número cun decimal'),
+  escala: L4('escala', 'scale', 'eskala', 'escala'),
+  opcio: L4('una opción', 'single choice', 'aukera bat', 'unha opción'),
+  multiopcio: L4('varias opciones', 'multiple choice', 'aukera anitz', 'varias opcións'),
+  boolea: L4('sí o no', 'yes or no', 'bai ala ez', 'si ou non'),
+  text: L4('texto', 'text', 'testua', 'texto'),
+  moment: L4('día y hora', 'date and time', 'eguna eta ordua', 'día e hora'),
+  hora: L4('hora', 'time', 'ordua', 'hora'),
+  data: L4('fecha', 'date', 'data', 'data'),
+  decimal: L4('número con decimales', 'decimal number', 'hamartardun zenbakia', 'número con decimais'),
+});
+
+function tradueixLlistaPuntIComa(valor, codi) {
+  if (!valor) return '';
+  return String(valor).split('; ').map((item) => tr(item, codi)).join('; ');
+}
+
+function tradueixColumnaDiccionari(titolCa, codi) {
+  if (!titolCa || codi === 'ca') return titolCa || '';
+  if (COLUMNES_RESUM_TR[titolCa]?.[codi]) return COLUMNES_RESUM_TR[titolCa][codi];
+  const entradaDiari = Object.values(COLUMNES_DIARI_5_LLENGUES).find((m) => m.ca === titolCa);
+  if (entradaDiari?.[codi]) return entradaDiari[codi];
+  return COLUMNES_ALTRES_TR[titolCa]?.[codi] || titolCa;
+}
+
+function tradueixCelConductaDiari(valor, codi) {
+  if (!valor) return '';
+  const idx = valor.indexOf(' · ');
+  if (idx < 0) return tr(valor, codi);
+  return `${tr(valor.slice(0, idx), codi)} · ${tradueixLlistaPuntIComa(valor.slice(idx + 3), codi)}`;
+}
+
+function tradueixCelMedicacioDiari(valor, codi) {
+  if (!valor) return '';
+  const idx = valor.lastIndexOf(' · ');
+  if (idx < 0) return valor;
+  return `${valor.slice(0, idx)} · ${tr(valor.slice(idx + 3), codi)}`;
+}
+
+/**
+ * Traduïx el model complet de 5 fulles (`fullDiari`) a l'idioma actiu
+ * (`ca, es, en, eu, gl`). En `ca` retorna el model canònic intacte.
+ * v1.2.19 · Gauntlet R1 (L3-03): la columna Notes del Diari no es traduïx.
+ */
+export function modelFullSalutTraduit(model, { des, fins, dies, completes, nomPersona, idioma = 'ca' }) {
+  const codi = codiDe(idioma);
+  if (codi === 'ca' || !model || !Array.isArray(model.fulles)) return model;
+  const entitatsTr = entitatsSalutTraduites(codi);
+  const filesDiccionari = ENTITATS.flatMap((entitatOrig, idxEnt) => {
+    const entitatTr = entitatsTr[idxEnt];
+    return entitatOrig.camps.map((cOrig, idxCamp) => {
+      const cTr = entitatTr.camps[idxCamp];
+      return [
+        entitatTr.nom,
+        cTr.etiqueta,
+        tradueixColumnaDiccionari(cOrig.columna, codi),
+        TIPUS_LLEGIBLE_TR[cOrig.tipus]?.[codi] || cOrig.tipus,
+        cOrig.unitat || '',
+        textValorsAdmesosSalut(cOrig, codi),
+        cTr.definicio,
+        cTr.perQueImporta,
+      ];
+    });
+  });
+
+  const fulles = model.fulles.map((fulla, index) => {
+    const nomFulla = NOMS_FULLES_TR[fulla.nom]?.[codi] || fulla.nom;
+    if (index === 0) {
+      const resum = resumFullTraduit(fulla, { des, fins, dies, completes, nomPersona, idioma: codi });
+      return { ...resum, nom: nomFulla };
+    }
+    if (index === 1) {
+      return {
+        ...fulla,
+        nom: nomFulla,
+        columnes: fulla.columnes.map((c) => ({
+          ...c,
+          titol: COLUMNES_DIARI_5_LLENGUES[c.font]?.[codi] || c.titol,
+        })),
+        files: fulla.files.map((fila) => [
+          fila[0],
+          fila[1],
+          PERIODE_DIARI_TR[fila[2]]?.[codi] || fila[2],
+          tr(fila[3], codi),
+          fila[4],
+          fila[5],
+          tr(fila[6], codi),
+          fila[7],
+          tr(fila[8], codi),
+          tr(fila[9], codi),
+          fila[10],
+          tradueixCelConductaDiari(fila[11], codi),
+          tradueixCelMedicacioDiari(fila[12], codi),
+          /* v1.2.19 · Gauntlet R1 (L3-03): Notes és text de la persona; les marques del sistema queden canòniques. */
+          fila[13],
+        ]),
+      };
+    }
+    if (index === 2) {
+      return {
+        ...fulla,
+        nom: nomFulla,
+        columnes: fulla.columnes.map((c) => ({ ...c, titol: COLUMNES_ALTRES_TR[c.titol]?.[codi] || c.titol })),
+        files: fulla.files.map((fila) => [
+          fila[0],
+          fila[1],
+          fila[2],
+          tr(fila[3], codi),
+          tradueixLlistaPuntIComa(fila[4], codi),
+          tradueixLlistaPuntIComa(fila[5], codi),
+          tradueixLlistaPuntIComa(fila[6], codi),
+          tr(fila[7], codi),
+          tradueixLlistaPuntIComa(fila[8], codi),
+          fila[9],
+        ]),
+      };
+    }
+    if (index === 3) {
+      return {
+        ...fulla,
+        nom: nomFulla,
+        columnes: fulla.columnes.map((c) => ({ ...c, titol: COLUMNES_ALTRES_TR[c.titol]?.[codi] || c.titol })),
+        files: fulla.files.map((fila) => [
+          fila[0], fila[1], fila[2], fila[3],
+          tr(fila[4], codi), tr(fila[5], codi), tr(fila[6], codi),
+        ]),
+      };
+    }
+    return {
+      ...fulla,
+      nom: nomFulla,
+      columnes: fulla.columnes.map((c) => ({ ...c, titol: COLUMNES_ALTRES_TR[c.titol]?.[codi] || c.titol })),
+      files: filesDiccionari,
+    };
+  });
+
+  return { ...model, fulles };
+}
+
+const AVISOS_IMPORTACIO_TR = Object.freeze({
+  /* v1.2.19 · Gauntlet R1 (L5-08): el full de l'exportació amb el nom que li dona l'exportació en eixa llengua. */
+  'format-desconegut': L4(
+    `Esta hoja no tiene la forma de un diario reconocible: una cuadrícula con la columna «HORA» y sus franjas, o la hoja «${NOMS_FULLES_TR.Diari.es}» exportada por Salud.`,
+    `This spreadsheet does not match a supported diary layout: an hourly grid with a “HORA” column, or the “${NOMS_FULLES_TR.Diari.en}” tab exported by this app.`,
+    `Orri honek ez du aplikazioak ezagutzen duen egunkari-itxurarik: «HORA» zutabea duen sareta bat, edo aplikazioak esportatutako «${NOMS_FULLES_TR.Diari.eu}» orria.`,
+    `Esta folla non ten a forma dun diario recoñecible: unha grella coa columna «HORA» e as franxas, ou a folla «${NOMS_FULLES_TR.Diari.gl}» exportada por Saúde.`
+  ),
+  'camps-per-defecte': L4(
+    'Esta hoja no incluye todos los campos (como el lugar, la ayuda o las circunstancias): quedan con los valores habituales del formulario. Para conservarlo todo, importa la copia (.json).',
+    'This spreadsheet omits detailed fields (such as location, assistance or circumstances): default form values are used. Import a backup (.json) to restore every detail.',
+    'Orri honek ez ditu eremu guztiak ekartzen (lekua, laguntza edo inguruabarrak): inprimakiaren balio lehenetsiekin geratzen dira. Dena berreskuratzeko, inportatu kopia (.json).',
+    'Esta folla non trae todos os campos (como o lugar, a axuda ou as circunstancias): quedan cos valores habituais do formulario. Para recuperalo todo, importa a copia (.json).'
+  ),
+});
+
+function tradueixAvisImportacio(avis, codi) {
+  if (!avis || codi === 'ca') return avis;
+  if (AVISOS_IMPORTACIO_TR[avis.codi]?.[codi]) {
+    return Object.freeze({ ...avis, text: AVISOS_IMPORTACIO_TR[avis.codi][codi] });
+  }
+  const t = avis.text;
+  if (avis.codi === 'falta-data') {
+    const nom = /«([^»]+)»/.exec(t)?.[1] || '';
+    const map = {
+      es: `Falta la fecha de la hoja «${nom}»: elígela para ver qué se añadirá.`,
+      en: `Date missing for sheet “${nom}”: pick a date to preview entries.`,
+      eu: `«${nom}» orriaren data falta da: aukeratu zer gehituko den ikusteko.`,
+      gl: `Falta a data da folla «${nom}»: escóllea para ver que se engadirá.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'grup-no-importat') {
+    const m = /^El grup «([^»]+)» \((\d+)/.exec(t);
+    const grup = m?.[1] || '';
+    const n = Number(m?.[2] || 1);
+    const map = {
+      es: `El grupo «${grup}» (${n} ${n === 1 ? 'celda' : 'celdas'}) no se importa en la app.`,
+      en: `Group “${grup}” (${n} ${n === 1 ? 'cell' : 'cells'}) is not imported by the app.`,
+      eu: `«${grup}» taldea (${n} gelaxka) ez da aplikazioan inportatzen.`,
+      gl: `O grupo «${grup}» (${n} ${n === 1 ? 'cela' : 'celas'}) non se importa na app.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'columna-no-reconeguda') {
+    const m = /^La columna «([^»]+)» de «([^»]+)»/.exec(t);
+    const col = m?.[1] || '';
+    const grup = m?.[2] || '';
+    const map = {
+      es: `La columna «${col}» de «${grup}» no se reconoce y no se importa.`,
+      en: `Column “${col}” under “${grup}” is unrecognised and skipped.`,
+      eu: `«${grup}» taldeko «${col}» zutabea ez da ezagutzen eta ez da inportatzen.`,
+      gl: `A columna «${col}» de «${grup}» non se recoñece e non se importa.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'urgencia-sense-miccio') {
+    const hores = /micció a (.+?): no es desa/.exec(t)?.[1] || '';
+    const map = {
+      es: `Hay urgencia anotada sin micción en ${hores}: no se guarda porque las ganas se registran dentro de cada micción.`,
+      en: `Urgency logged without a bathroom visit at ${hores}: skipped because urgency is stored inside each visit.`,
+      eu: `Pixa-egiterik gabeko larrialdia dago ${hores} orduetan: ez da gordetzen, gogoa pixa-egite bakoitzaren barruan gordetzen baita.`,
+      gl: `Hai urxencia anotada sen micción ás ${hores}: non se garda porque as ganas van dentro de cada micción.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'franja-alcar') {
+    const m = /^(\d+) apunts? de la franja de les (\d\d:\d\d) .* a les (\d\d:\d\d)/.exec(t);
+    const n = Number(m?.[1] || 1);
+    const franja = m?.[2] || '';
+    const hora = m?.[3] || '';
+    const map = {
+      es: `${n} ${n === 1 ? 'apunte' : 'apuntes'} de la franja de las ${franja} se ${n === 1 ? 'sitúa' : 'sitúan'} a las ${hora} (hora de levantarse) para contar en el día actual.`,
+      en: `${n} ${n === 1 ? 'entry' : 'entries'} in the ${franja} slot ${n === 1 ? 'is' : 'are'} placed at wake-up time (${hora}) so ${n === 1 ? 'it counts' : 'they count'} towards this day.`,
+      eu: `${franja} tarteko ${n} ohar ${hora}(e)tan (jaikitzeko orduan) kokatzen dira egun honetan zenbatzeko.`,
+      gl: `${n} ${n === 1 ? 'apuntamento' : 'apuntamentos'} da franxa das ${franja} ${n === 1 ? 'ponse' : 'póñense'} ás ${hora} (hora de erguerse) para contar no día actual.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'totals-no-quadren') {
+    const detall = /franges a (.+?): revisa/.exec(t)?.[1] || '';
+    const map = {
+      es: `Los totales de la hoja no cuadran con las franjas en ${detall}: revisa la hoja por si hay valores no legibles.`,
+      en: `Sheet totals do not match slot sums in ${detall}: check the sheet for unreadable cells.`,
+      eu: `Orriaren guztizkoak ez datoz bat tarteekin hemen: ${detall}. Berrikusi orria.`,
+      gl: `Os totais da folla non cadran coas franxas en ${detall}: revisa a folla por se hai valores non lexibles.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'nit-jornada-anterior') {
+    const m = /^(\d+) apunts? de la matinada \(abans de les (\d\d:\d\d)\)/.exec(t);
+    const n = Number(m?.[1] || 1);
+    const alcar = m?.[2] || '07:00';
+    const map = {
+      es: `${n} ${n === 1 ? 'apunte' : 'apuntes'} de madrugada (antes de las ${alcar}) ${n === 1 ? 'pasa' : 'pasan'} a la jornada del día anterior.`,
+      en: `${n} early-morning ${n === 1 ? 'entry' : 'entries'} (before ${alcar}) ${n === 1 ? 'belongs' : 'belong'} to the previous care day’s night.`,
+      eu: `Goizaldeko ${n} ohar (${alcar} baino lehenagokoak) aurreko eguneko jardunaldira doaz.`,
+      gl: `${n} ${n === 1 ? 'apuntamento' : 'apuntamentos'} da madrugada (antes das ${alcar}) ${n === 1 ? 'vai' : 'van'} á xornada do día anterior.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'falta-mati-seguent') {
+    const diesTxt = /la nit del (.+?) cal la primera/.exec(t)?.[1] || '';
+    const map = {
+      es: `Para cerrar la noche del ${diesTxt} falta la primera micción de la mañana siguiente: anótala en la app o importa también el día siguiente.`,
+      en: `To close the night of ${diesTxt}, the first morning visit of the next day is needed: log it in the app or import the next day too.`,
+      eu: `${diesTxt} eguneko gaua ixteko biharamun goizeko lehen pixa-egitea falta da: apuntatu aplikazioan edo inportatu hurrengo eguna ere.`,
+      gl: `Para pechar a noite do ${diesTxt} falta a primeira micción da mañá seguinte: anótaa na app ou importa tamén o día seguinte.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  if (avis.codi === 'canvi-hora') {
+    const diesTxt = /^El (.+?) canvia l’hora/.exec(t)?.[1] || '';
+    const map = {
+      es: `El ${diesTxt} cambia la hora oficial: las franjas de madrugada pueden desplazarse una hora.`,
+      en: `Clocks change on ${diesTxt}: overnight slots may shift by one hour.`,
+      eu: `${diesTxt} egunean ordu-aldaketa dago: goizaldeko tarteak ordubete mugi daitezke.`,
+      gl: `O ${diesTxt} cambia a hora: as franxas da madrugada poden desprazarse unha hora.`,
+    };
+    return Object.freeze({ ...avis, text: map[codi] });
+  }
+  return avis;
+}
+
+const MOTIUS_DESCARTAT_FIXOS = Object.freeze({
+  'És una fórmula: el full la calcula i no s’importa (escriu-hi el valor).': L4(
+    'Es una fórmula: la hoja la calcula y no se importa (escribe el valor).',
+    'Formula cell: calculated by the sheet and skipped (enter the plain number).',
+    'Formula bat da: orriak kalkulatzen du eta ez da inportatzen (idatzi balioa).',
+    'É unha fórmula: a folla calcúlaa e non se importa (escribe o valor).'
+  ),
+  'No és un volum en ml (un nombre sencer).': L4(
+    'No es un volumen en ml (un número entero).',
+    'Not a volume in ml (whole number expected).',
+    'Ez da ml-tan emandako bolumen oso bat.',
+    'Non é un volume en ml (un número enteiro).'
+  ),
+  'La micció d’esta franja no té un volum que es puga llegir: la urgència no es pot desar.': L4(
+    'La micción de esta franja no tiene un volumen legible: la urgencia no se puede guardar.',
+    'Bathroom visit in this slot has an unreadable volume: urgency cannot be saved.',
+    'Tarte honetako pixa-egiteak ez du bolumen irakurgarria: larrialdia ezin da gorde.',
+    'A micción desta franxa non ten un volume lexible: a urxencia non se pode gardar.'
+  ),
+  'Urgència sense micció a la mateixa franja.': L4(
+    'Urgencia sin micción en la misma franja.',
+    'Urgency without a bathroom visit in the same slot.',
+    'Pixa-egiterik gabeko larrialdia tarte berean.',
+    'Urxencia sen micción na mesma franxa.'
+  ),
+  'Fila sense hora.': L4('Fila sin hora.', 'Row without time.', 'Ordurik gabeko errenkada.', 'Fila sen hora.'),
+  'Fila sense data o hora.': L4('Fila sin fecha u hora.', 'Row missing date or time.', 'Data edo ordurik gabeko errenkada.', 'Fila sen data ou hora.'),
+  'Fila buida.': L4('Fila vacía.', 'Empty row.', 'Errenkada hutsa.', 'Fila baleira.'),
+  'La beguda que no ha volgut no porta el volum al full.': L4(
+    'La bebida rechazada no incluye el volumen en la hoja.',
+    'Declined drink has no volume recorded in the sheet.',
+    'Ukatutako edariak ez dakar bolumenik orrian.',
+    'A bebida rexeitada non trae o volume na folla.'
+  ),
+  'Falta el volum de la beguda.': L4(
+    'Falta el volumen de la bebida.',
+    'Drink volume is missing.',
+    'Edariaren bolumena falta da.',
+    'Falta o volume da bebida.'
+  ),
+  'No s’entén quin moment del son és.': L4(
+    'No se reconoce qué momento del sueño es.',
+    'Unrecognised sleep event.',
+    'Ez da ulertzen zein lo-une den.',
+    'Non se entende que momento do sono é.'
+  ),
+  'El full no porta tots els camps d’este apunt: per a recuperar-lo, importa la còpia (.json).': L4(
+    'La hoja no incluye todos los campos de este apunte: para recuperarlo, importa la copia (.json).',
+    'This spreadsheet lacks required fields for this entry type: import a backup (.json) instead.',
+    'Orriak ez ditu ohar honen eremu guztiak: berreskuratzeko, inportatu kopia (.json).',
+    'A folla non trae todos os campos deste apuntamento: para recuperalo, importa a copia (.json).'
+  ),
+});
+
+function tradueixMotiuDescartat(motiu, codi) {
+  if (!motiu || codi === 'ca') return motiu;
+  if (MOTIUS_DESCARTAT_FIXOS[motiu]?.[codi]) return MOTIUS_DESCARTAT_FIXOS[motiu][codi];
+  let m = /^El grup «([^»]+)» no s’importa\.$/.exec(motiu);
+  if (m) return { es: `El grupo «${m[1]}» no se importa.`, en: `Group “${m[1]}” is not imported.`, eu: `«${m[1]}» taldea ez da inportatzen.`, gl: `O grupo «${m[1]}» non se importa.` }[codi];
+  m = /^La columna «([^»]+)» no s’importa\.$/.exec(motiu);
+  if (m) return { es: `La columna «${m[1]}» no se importa.`, en: `Column “${m[1]}” is not imported.`, eu: `«${m[1]}» zutabea ez da inportatzen.`, gl: `A columna «${m[1]}» non se importa.` }[codi];
+  m = /^Més d’una marca a «([^»]+)»/.exec(motiu);
+  if (m) return { es: `Más de una marca en «${m[1]}» en la misma franja.`, en: `Multiple marks under “${m[1]}” in the same slot.`, eu: `Marka bat baino gehiago «${m[1]}» taldean tarte berean.`, gl: `Máis dunha marca en «${m[1]}» na mesma franxa.` }[codi];
+  m = /^La marca de «([^»]+)» no és cap nivell/.exec(motiu);
+  if (m) return { es: `La marca de «${m[1]}» no corresponde a un nivel válido.`, en: `Mark under “${m[1]}” does not match a valid level.`, eu: `«${m[1]}» taldeko marka ez dagokio baliozko maila bati.`, gl: `A marca de «${m[1]}» non corresponde a ningún nivel válido.` }[codi];
+  m = /^La marca de «([^»]+)» porta un nombre/.exec(motiu);
+  if (m) return { es: `La marca de «${m[1]}» lleva un número distinto al nivel de su columna.`, en: `Mark under “${m[1]}” contains a number different from its column level.`, eu: `«${m[1]}» taldeko markak bere zutabeko maila ez den zenbaki bat darama.`, gl: `A marca de «${m[1]}» leva un número distinto ao nivel da súa columna.` }[codi];
+  m = /^No s’entén l’hora de «([^»]+)»\.$/.exec(motiu);
+  if (m) return { es: `No se reconoce la hora de «${m[1]}».`, en: `Unrecognised time in “${m[1]}”.`, eu: `Ez da ulertzen «${m[1]}» eremuko ordua.`, gl: `Non se entende a hora de «${m[1]}».` }[codi];
+  m = /^«([^»]+)» ha d’estar entre (\S+) i (\S+)\.$/.exec(motiu);
+  if (m) return PLANTILLES_VALIDACIO[codi].rang(tr(m[1], codi), m[2], m[3]);
+  return motiu;
+}
+
+export function propostaImportacioTraduida(proposta, idioma = 'ca') {
+  const codi = codiDe(idioma);
+  if (!proposta || codi === 'ca') return proposta;
+  return Object.freeze({
+    ...proposta,
+    avisos: Object.freeze(proposta.avisos.map((avis) => tradueixAvisImportacio(avis, codi))),
+    descartats: Object.freeze(proposta.descartats.map((d) => Object.freeze({
+      ...d,
+      motiu: tradueixMotiuDescartat(d.motiu, codi),
+    }))),
+  });
+}
+
+const ERRORS_FITXER_TR = Object.freeze({
+  'El fitxer és buit.': L4('El archivo está vacío.', 'The file is empty.', 'Fitxategia hutsik dago.', 'O ficheiro está baleiro.'),
+  'El fitxer passa de 20 MB: és massa gran per a ser un diari.': L4(
+    'El archivo supera los 20 MB: es demasiado grande para ser un diario.',
+    'File exceeds 20 MB: too large to be a care diary.',
+    'Fitxategiak 20 MB gainditzen ditu: handiegia da egunkari bat izateko.',
+    'O ficheiro pasa de 20 MB: é demasiado grande para ser un diario.'
+  ),
+  'El fitxer té massa cel·les per a llegir-lo ací.': L4(
+    'El archivo tiene demasiadas celdas para leerlo aquí.',
+    'File contains too many cells to process locally.',
+    'Fitxategiak gelaxka gehiegi ditu hemen irakurtzeko.',
+    'O ficheiro ten demasiadas celas para lelo aquí.'
+  ),
+});
+
+export function errorLlegirFitxerSalut(errorCa, idioma = 'ca', reserva = '') {
+  const codi = codiDe(idioma);
+  if (codi === 'ca') return errorCa;
+  return ERRORS_FITXER_TR[errorCa]?.[codi] || reserva || ERRORS_MAGATZEM[codi].DEFECTE;
 }

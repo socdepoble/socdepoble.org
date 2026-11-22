@@ -107,14 +107,14 @@ test('Wiki · la roda obri l’amplada i les carpetes a la vista; amagar SER la 
 
 test('Disseny · la roda obri les carpetes a la vista (una per família del catàleg) i la preferència es desa a l’espai «disseny»', () => {
   const { container } = render(<MemoryRouter rutaInicial="/disseny"><DesignSection /></MemoryRouter>);
-  const inventari = CATALOG_CATEGORIES.find((categoria) => categoria.label === 'Inventari');
+  const inventari = CATALOG_CATEGORIES.find((categoria) => categoria.label === 'Recursos');
   expect(inventari).toBeTruthy();
-  expect(enNavegacio(container, 'Inventari')).toBeTruthy();
+  expect(enNavegacio(container, 'Recursos')).toBeTruthy();
   const { dialeg } = obriRoda(container);
   expect(dialeg.getByRole('heading', { level: 3, name: 'Carpetes a la vista' })).toBeTruthy();
   expect(dialeg.getAllByRole('switch').length).toBeGreaterThan(1);
-  fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Inventari' }));
-  expect(enNavegacio(container, 'Inventari')).toBeNull();
+  fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Recursos' }));
+  expect(enNavegacio(container, 'Recursos')).toBeNull();
   expect(amagades()).toEqual({ disseny: { [String(inventari.id)]: false } });
 });
 

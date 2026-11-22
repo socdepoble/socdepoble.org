@@ -932,8 +932,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    claus i la regla VIG-07; lot 2: enllaços ugc i sponsored, pàgines de poble sense contingut verificat fora dels
    cercadors i la Sentinella) i Gemini R32.28 (una «Lletra gran» més compacta i la IAIA amb el seu nom), el full diferit
    dels panells d'administració per al sostre d'arrencada i el connector WordPress 1.1.26. El lot 3 de R32.27 (huit
-   skills) espera el segell del Mestre. */
-export const VERSIO_CLIENT_NATIU = 23;
+   skills) espera el segell del Mestre.
+   Onada v1.2.19 · R32.29 a R32.33 (ordre del Mestre 261121 18:53; prompt 261121_1855, T3) · Versió unificada 1.2.19 amb
+   el build 24: les sessions que no es barregen (Codex R32.29 i el lot 01 de R32.31), els ròtuls del lector de pantalla en
+   cinc llengües i les vores de dades (Gemini R32.30b, R32.32 i R32.33), els àlies codificats amb el seu canonical net
+   (L2R2-03) i el connector WordPress 1.1.27. El lot 02 de R32.31 (la cadència de la sessió) espera la decisió del Mestre. */
+export const VERSIO_CLIENT_NATIU = 24;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

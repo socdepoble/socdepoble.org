@@ -26,7 +26,7 @@ export const signeDe = (tiquet) => (tiquet?.tipus === 'devolucio' ? -1 : 1);
 
 /** L'import d'una línia de tiquet amb el signe del tiquet (0 si està anul·lada). */
 export function importLiniaTiquet(tiquet, linia) {
-  return signeDe(tiquet) * totalLinia(linia);
+  return (signeDe(tiquet) * totalLinia(linia)) || 0;
 }
 
 /** Unitats ja retornades de cada línia d'un tiquet de venda: Map(liniaId → { quantitat, importCents }). */

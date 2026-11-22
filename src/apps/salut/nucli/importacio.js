@@ -36,7 +36,7 @@
  * proposta ho diu (avís camps-per-defecte) i la còpia (.json) ho porta tot.
  */
 import { llegixCsv, llegixLlibre } from '../../../utils/fulls/index.js';
-import { campDe, opcionsDe, tipusDe, validaApunt, valorsPerDefecte } from './diccionari.js';
+import { campDe, opcionsDe, validaApunt, valorsPerDefecte } from './diccionari.js';
 import { COLUMNES_DIARI } from './full.js';
 import { assignaJornades, dataCurta, dataDe, esData, esHora, momentDe, ofsetLocal, sumaDies } from './hores.js';
 import { normalitzaUnicodeAmbLimit } from '../../../utils/normalitzaUnicodeSegura.js';
@@ -331,12 +331,49 @@ function analitzaDies(fulles, perfil) {
   });
 }
 
-/* ── L'exportació pròpia (fulla «Diari») ───────────────────────────────── */
+/* ── L'exportació pròpia (fulla «Diari» en 5 llengües) ─────────────────── */
 
-const TITOLS_DIARI = COLUMNES_DIARI.map((c) => normalitzaEtiqueta(c.titol));
-const COLUMNA = Object.freeze(Object.fromEntries(COLUMNES_DIARI.map((c, i) => [c.font, i])));
+const L5 = (ca, es, en, eu, gl) => congela({ ca, es, en, eu, gl });
 
-const esDiariSalut = (f) => TITOLS_DIARI.every((titol, i) => etiquetaDe(f.cella(1, i)) === titol);
+/**
+ * Capçaleres de les 14 columnes de la fulla «Diari» en les 5 llengües oficials
+ * (ca, es, en, eu, gl), indexades per la font del diccionari. Garantix l'anada
+ * i tornada d'XLSX i CSV sense claus crues ni valors indefinits.
+ */
+export const COLUMNES_DIARI_5_LLENGUES = congela({
+  'comuns.moment': L5('Data', 'Fecha', 'Date', 'Data', 'Data'),
+  'derivats.hora': L5('Hora', 'Hora', 'Time', 'Ordua', 'Hora'),
+  'derivats.periode': L5('Dia o nit', 'Día o noche', 'Day or night', 'Eguna edo gaua', 'Día ou noite'),
+  'ingesta.beguda': L5('Beguda', 'Bebida', 'Drink', 'Edaria', 'Bebida'),
+  'ingesta.volumMl': L5('Begut (ml)', 'Bebido (ml)', 'Fluids (ml)', 'Edandakoa (ml)', 'Bebido (ml)'),
+  'miccio.volumMl': L5('Orina (ml)', 'Orina (ml)', 'Urine (ml)', 'Gernua (ml)', 'Ouriños (ml)'),
+  'miccio.mesura': L5('Mesura', 'Medida', 'Measurement', 'Neurketa', 'Medida'),
+  'miccio.urgencia': L5('Urgència (0–4)', 'Urgencia (0–4)', 'Urgency (0–4)', 'Larrialdia (0–4)', 'Urxencia (0–4)'),
+  'escapament.quantitat': L5('Escapament', 'Escape', 'Leak', 'Ihesa', 'Perda'),
+  'absorbent.estat': L5('Absorbent', 'Absorbente', 'Pad', 'Xurgatzailea', 'Absorbente'),
+  'deposicio.bristol': L5('Deposició (Bristol)', 'Deposición (Bristol)', 'Bowel (Bristol)', 'Sabel-hustuketa (Bristol)', 'Deposición (Bristol)'),
+  'conducta.intensitat': L5('Conducta', 'Conducta', 'Behaviour', 'Jokabidea', 'Conduta'),
+  'medicacio.nom': L5('Medicació', 'Medicación', 'Medication', 'Medikazioa', 'Medicación'),
+  'comuns.nota': L5('Notes', 'Notas', 'Notes', 'Oharrak', 'Notas')
+});
+
+export const PREFIXOS_NOTES_DIARI_5_LLENGUES = congela({
+  rebutjada: L5('No l’ha volguda', 'No la ha querido', 'Declined', 'Ez du nahi izan', 'Non a quixo'),
+  estimat: L5('Calculat a ull', 'Calculado a ojo', 'Estimated amount', 'Begiz kalkulatua', 'Calculado a ollo'),
+  sonBoto: L5('Son', 'Sueño', 'Sleep', 'Loa', 'Sono'),
+  altresBoto: L5('Altres', 'Otros', 'Other', 'Besteak', 'Outros'),
+  notaFranja: L5(NOTA_FRANJA, 'Hora aproximada (franja)', 'Approximate time (slot)', 'Gutxi gorabeherako ordua (tartea)', 'Hora aproximada (franxa)'),
+  /* v1.2.19 · Gauntlet R1 (L3-03): la marca de la columna «menjar» de la graella, per a reconéixer-la en importar. */
+  liquidMenjar: L5('Líquid del menjar', 'Líquido de la comida', 'Fluid from food', 'Janariaren likidoa', 'Líquido da comida')
+});
+
+const LLENGUES_DIARI = congela(['ca', 'es', 'en', 'eu', 'gl']);
+const TITOLS_DIARI_SETS = congela(LLENGUES_DIARI.map((codi) => congela(
+  COLUMNES_DIARI.map((c) => normalitzaEtiqueta(COLUMNES_DIARI_5_LLENGUES[c.font]?.[codi] || c.titol))
+)));
+const COLUMNA = congela(Object.fromEntries(COLUMNES_DIARI.map((c, i) => [c.font, i])));
+
+const esDiariSalut = (f) => TITOLS_DIARI_SETS.some((titols) => titols.every((titol, i) => etiquetaDe(f.cella(1, i)) === titol));
 
 /* ── El format ─────────────────────────────────────────────────────────── */
 
@@ -571,15 +608,62 @@ function textDiari(c) {
 }
 
 /* Lleva un prefix conegut d'unes notes («No l’ha volguda · …»): [la resta, si hi era]. */
-function trauPrefix(text, prefix) {
-  if (text === prefix) return ['', true];
-  return text.startsWith(`${prefix} · `) ? [text.slice(prefix.length + 3), true] : [text, false];
+function trauPrefixos(text, prefixos) {
+  for (const prefix of prefixos) {
+    if (text === prefix) return ['', true];
+    if (text.startsWith(`${prefix} · `)) return [text.slice(prefix.length + 3), true];
+  }
+  return [text, false];
 }
 
-/* El valor d'una opció a partir de la seua etiqueta («Mesurat» → 'mesurat'); undefined si no hi és. */
+const SINONIMS_OPCIONS_DIARI = congela({
+  'ingesta.beguda': congela({
+    aigua: ['Aigua', 'Agua', 'Water', 'Ura', 'Auga'],
+    cafe: ['Cafè', 'Café', 'Coffee', 'Kafea'],
+    te: ['Te', 'Té', 'Tea'],
+    infusio: ['Infusió', 'Infusión', 'Herbal tea', 'Infusioa'],
+    llet: ['Llet', 'Leche', 'Milk', 'Esnea', 'Leite'],
+    suc: ['Suc', 'Zumo', 'Juice', 'Zukua', 'Zume'],
+    refresc: ['Refresc', 'Refresco', 'Soft drink', 'Freskagarria'],
+    'refresc-cafeina': ['Refresc amb cafeïna', 'Refresco con cafeína', 'Caffeinated drink', 'Kafeinadun freskagarria'],
+    alcohol: ['Alcohol', 'Alkohola', 'Alcol'],
+    'brou-sopa': ['Brou o sopa', 'Caldo o sopa', 'Broth or soup', 'Salda edo zopa', 'Caldo ou sopa'],
+    'postres-liquides': ['Postres líquides', 'Postre líquido', 'Liquid dessert', 'Postre likidoa', 'Sobremesa líquida'],
+    espessida: ['Beguda espessida', 'Bebida espesada', 'Thickened drink', 'Edari loditua'],
+    altra: ['Una altra', 'Otra', 'Other', 'Beste bat', 'Outra']
+  }),
+  'miccio.mesura': congela({
+    mesurat: ['Mesurat', 'Medido', 'Measured', 'Neurtuta'],
+    estimat: ['A ull', 'A ojo', 'Estimated', 'Begiz', 'A ollo'],
+    'no-mesurat': ['No s’ha mesurat', 'No se ha medido', 'Not measured', 'Ez da neurtu', 'Non se mediu']
+  }),
+  'escapament.quantitat': congela({
+    gotes: ['Unes gotes', 'Unas gotas', 'A few drops', 'Tanta batzuk', 'Unhas pingas'],
+    humit: ['Humit', 'Húmedo', 'Damp', 'Hezea', 'Húmido'],
+    xopat: ['Xopat', 'Empapado', 'Soaked', 'Blai eginda']
+  }),
+  'son.event': congela({
+    'gitar-se': ['Se’n va al llit', 'Se va a la cama', 'Goes to bed', 'Ohera doa', 'Vai para a cama'],
+    'adormir-se': ['S’adorm', 'Se duerme', 'Falls asleep', 'Lokartzen da', 'Adormece'],
+    despertar: ['Es desperta de nit', 'Se despierta de noche', 'Wakes at night', 'Gauez esnatzen da', 'Esperta de noite'],
+    'alcar-se': ['S’alça (comença el dia)', 'Se levanta (empieza el día)', 'Gets up (starts day)', 'Jaikitzen da (eguna hasten da)', 'Érguese (comeza o día)'],
+    'migdiada-inici': ['Comença la migdiada', 'Empieza la siesta', 'Starts nap', 'Siesta hasten du', 'Comeza a sesta'],
+    'migdiada-fi': ['Acaba la migdiada', 'Termina la siesta', 'Ends nap', 'Siesta amaitzen du', 'Remata a sesta']
+  })
+});
+
+/* El valor d'una opció a partir de la seua etiqueta («Mesurat» / «Measured» → 'mesurat'); undefined si no hi és. */
 function valorDeEtiqueta(tipus, clau, text) {
   const objectiu = normalitzaEtiqueta(text);
-  return opcionsDe(campDe(tipus, clau)).find((o) => normalitzaEtiqueta(o.etiqueta) === objectiu)?.valor;
+  if (!objectiu) return undefined;
+  const base = opcionsDe(campDe(tipus, clau)).find((o) => normalitzaEtiqueta(o.etiqueta) === objectiu)?.valor;
+  if (base !== undefined) return base;
+  const mapa = SINONIMS_OPCIONS_DIARI[`${tipus}.${clau}`];
+  if (!mapa) return undefined;
+  for (const [valor, etiquetes] of Object.entries(mapa)) {
+    if (etiquetes.some((etiqueta) => normalitzaEtiqueta(etiqueta) === objectiu)) return valor;
+  }
+  return undefined;
 }
 
 const NO_RECONSTRUIBLE = 'El full no porta tots els camps d’este apunt: per a recuperar-lo, importa la còpia (.json).';
@@ -595,14 +679,36 @@ function avisaCampsPerDefecte(crus, ix) {
   ix.avisa('camps-per-defecte', `Este full no porta tots els camps: ${parts.join('; ')}. Queden com els proposa el formulari (una micció, al vàter); per a recuperar-ho tot, importa la còpia (.json).`);
 }
 
+const PREFIXOS_REBUTJADA = Object.freeze([...new Set(Object.values(PREFIXOS_NOTES_DIARI_5_LLENGUES.rebutjada))]);
+const PREFIXOS_ESTIMAT = Object.freeze([...new Set(Object.values(PREFIXOS_NOTES_DIARI_5_LLENGUES.estimat))]);
+const PREFIXOS_SON = Object.freeze([...new Set(Object.values(PREFIXOS_NOTES_DIARI_5_LLENGUES.sonBoto))].map((b) => `${b} · `));
+
+/* v1.2.19 · Gauntlet R1 (L3-03): la columna Notes ix sense traduir, però un full que porte les marques
+   del sistema en una altra de les 5 llengües les torna a la forma canònica; la resta de la nota no es toca. */
+const MARQUES_CANONIQUES = new Map(['notaFranja', 'liquidMenjar'].flatMap((clau) => Object.values(PREFIXOS_NOTES_DIARI_5_LLENGUES[clau])
+  .map((variant) => [variant, PREFIXOS_NOTES_DIARI_5_LLENGUES[clau].ca])));
+const notaDiari = (text) => notaAmb(text && text.split(' · ').map((part) => MARQUES_CANONIQUES.get(part) ?? part).join(' · '));
+
+function extreuEventSon(resta) {
+  const opcionsSon = opcionsDe(campDe('son', 'event'));
+  for (const o of opcionsSon) {
+    const candidats = SINONIMS_OPCIONS_DIARI['son.event'][o.valor] || [o.etiqueta];
+    for (const candidat of candidats) {
+      const etiqueta = candidat.toLowerCase();
+      const restaMin = resta.toLowerCase();
+      if (restaMin === etiqueta) return { valor: o.valor, nota: undefined };
+      if (restaMin.startsWith(`${etiqueta} · `)) return { valor: o.valor, nota: notaDiari(resta.slice(candidat.length + 3)) };
+    }
+  }
+  return null;
+}
+
 /* Els apunts de la fulla «Diari» de l'exportació de Salut: els del diari miccional (micció, beguda, escapament i son). */
 function apuntsDeDiari(f, ix) {
-  const prefixSon = `${tipusDe('son').boto} · `;
-  const opcionsSon = opcionsDe(campDe('son', 'event'));
   for (const fila of f.files) {
     if (fila === 1) continue;
     const c = (font) => f.cella(fila, COLUMNA[font]);
-    const t = (font) => textDiari(c(font));
+    const textColumna = (font) => textDiari(c(font));
     const lloc = `${f.nom}!A${fila}`;
     const data = dataDeCella(c('comuns.moment'));
     const hora = horaDeCella(c('derivats.hora'));
@@ -611,40 +717,41 @@ function apuntsDeDiari(f, ix) {
       continue;
     }
     const moment = momentDe(data, hora);
-    const notes = t('comuns.nota');
-    if (t('ingesta.beguda')) {
-      const [senseRebuig, rebutjada] = trauPrefix(notes, 'No l’ha volguda');
-      const [resta, estimat] = trauPrefix(senseRebuig, 'Calculat a ull');
+    const notes = textColumna('comuns.nota');
+    const textBeguda = textColumna('ingesta.beguda');
+    const textMesura = textColumna('miccio.mesura');
+    const textVolumMiccio = textColumna('miccio.volumMl');
+    const textEscapament = textColumna('escapament.quantitat');
+    const prefixSon = PREFIXOS_SON.find((p) => notes.startsWith(p));
+    if (textBeguda) {
+      const [senseRebuig, rebutjada] = trauPrefixos(notes, PREFIXOS_REBUTJADA);
+      const [resta, estimat] = trauPrefixos(senseRebuig, PREFIXOS_ESTIMAT);
       const volumMl = enterDe(c('ingesta.volumMl'));
       if (volumMl === undefined) {
         ix.descarta(lloc, rebutjada ? 'La beguda que no ha volgut no porta el volum al full.' : 'Falta el volum de la beguda.');
         continue;
       }
       ix.proposa({
-        ...valorsPerDefecte('ingesta'), tipus: 'ingesta', moment, beguda: valorDeEtiqueta('ingesta', 'beguda', t('ingesta.beguda')),
-        volumMl, estimat, rebutjada, nota: notaAmb(resta)
+        ...valorsPerDefecte('ingesta'), tipus: 'ingesta', moment, beguda: valorDeEtiqueta('ingesta', 'beguda', textBeguda),
+        volumMl, estimat, rebutjada, nota: notaDiari(resta)
       }, lloc);
-    } else if (t('miccio.mesura') || t('miccio.volumMl')) {
+    } else if (textMesura || textVolumMiccio) {
       const volumMl = enterDe(c('miccio.volumMl'));
       ix.proposa({
         ...valorsPerDefecte('miccio'), tipus: 'miccio', moment, volumMl,
-        mesura: valorDeEtiqueta('miccio', 'mesura', t('miccio.mesura')) ?? (volumMl === undefined ? 'no-mesurat' : 'mesurat'),
-        urgencia: enterDe(c('miccio.urgencia')), nota: notaAmb(notes)
+        mesura: valorDeEtiqueta('miccio', 'mesura', textMesura) ?? (volumMl === undefined ? 'no-mesurat' : 'mesurat'),
+        urgencia: enterDe(c('miccio.urgencia')), nota: notaDiari(notes)
       }, lloc);
-    } else if (t('escapament.quantitat')) {
+    } else if (textEscapament) {
       ix.proposa({
-        ...valorsPerDefecte('escapament'), tipus: 'escapament', moment, quantitat: valorDeEtiqueta('escapament', 'quantitat', t('escapament.quantitat')), nota: notaAmb(notes)
+        ...valorsPerDefecte('escapament'), tipus: 'escapament', moment, quantitat: valorDeEtiqueta('escapament', 'quantitat', textEscapament), nota: notaDiari(notes)
       }, lloc);
-    } else if (['absorbent.estat', 'deposicio.bristol', 'conducta.intensitat', 'medicacio.nom'].some((font) => t(font))) {
+    } else if (['absorbent.estat', 'deposicio.bristol', 'conducta.intensitat', 'medicacio.nom'].some((font) => textColumna(font))) {
       ix.descarta(lloc, NO_RECONSTRUIBLE);
-    } else if (notes.startsWith(prefixSon)) {
-      const resta = notes.slice(prefixSon.length);
-      const opcio = opcionsSon.find((o) => {
-        const etiqueta = o.etiqueta.toLocaleLowerCase('ca');
-        return resta === etiqueta || resta.startsWith(`${etiqueta} · `);
-      });
-      if (!opcio) ix.descarta(lloc, 'No s’entén quin moment del son és.');
-      else ix.proposa({ tipus: 'son', moment, event: opcio.valor, nota: notaAmb(resta.slice(opcio.etiqueta.length + 3)) }, lloc);
+    } else if (prefixSon) {
+      const eventSon = extreuEventSon(notes.slice(prefixSon.length));
+      if (!eventSon) ix.descarta(lloc, 'No s’entén quin moment del son és.');
+      else ix.proposa({ tipus: 'son', moment, event: eventSon.valor, nota: eventSon.nota }, lloc);
     } else {
       ix.descarta(lloc, notes ? NO_RECONSTRUIBLE : 'Fila buida.');
     }

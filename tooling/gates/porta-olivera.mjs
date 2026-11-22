@@ -1593,14 +1593,17 @@ async function main(argv = process.argv.slice(2)) {
     const { planificaArxiu, textPla, plaAmbEfectes, liniaVersiona, reescriuEnllacos, hashBytes } = await import('../documental/arxiu-enllacos.mjs');
     const carpeta = o.sessio ? `${ARXIU}/${o.sessio}` : ARXIU;
     const pla = await planificaArxiu(arrel, { bruts: arxivables(arrel, { noms: o.noms, onadesAnteriors: o.onadesAnteriors }), carpeta, reapunta: o.reapunta, torn: o.torn });
+    const reconciliacio = pla.aturades.some(motiu => motiu.includes('inventari inicial no es pot reconstruir'))
+      ? 'Un torn viu no es tanca per esquivar este bloqueig. Quan haja caducat, reconcilia-torns-caducats.mjs pot observar la base absent amb --unreconstructible-ephemeral-base i preimatge exacta, primer sense --apply; no reconstruïx inventaris ni verifica treball.' : null;
     if (o.sec) {
       console.log('[Porta Olivera] Simulació (--sec): no es mou cap fitxer ni es toca l’índex.');
       for (const m of sim.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);
       for (const linia of textPla(pla, { sec: true })) console.log(linia);
+      if (reconciliacio) console.log(`[Porta Olivera] ${reconciliacio}`);
       process.exitCode = pla.aturades.length ? 1 : 0;
       return;
     }
-    if (pla.aturades.length) throw new Error(`[Porta Olivera] No s'ha mogut res: l'arxivat s'atura abans de tocar cap fitxer.\n${textPla(pla).join('\n')}`);
+    if (pla.aturades.length) throw new Error(`[Porta Olivera] No s'ha mogut res: l'arxivat s'atura abans de tocar cap fitxer.\n${textPla(pla).join('\n')}${reconciliacio ? `\n${reconciliacio}` : ''}`);
     const { ambTornsArxiu } = await import('../documental/turns.mjs');
     const r = arxiva(arrel, { noms: o.noms, onadesAnteriors: o.onadesAnteriors, sessio: o.sessio, reapunta: o.reapunta, enllacos: { pla, ambTorns: ambTornsArxiu, reescriu: reescriuEnllacos, hash: hashBytes } });
     for (const m of r.moguts) console.log(`   · ${m.nom} → ${path.posix.dirname(m.desti)}/ (${m.nota})`);

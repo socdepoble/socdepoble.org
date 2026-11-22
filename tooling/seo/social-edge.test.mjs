@@ -262,3 +262,13 @@ test('OpenGraph sense indexar: meta robots, og:url i cap canonical; només amb l
   }
   assert.ok(!esServible({ index: false }) && !esServible(null) && esServible({ index: true }) && !esSenseIndexar({ index: true, compartible: true }));
 });
+
+/* v1.2.19 · Gauntlet R2 de la v1.2.18 (L2R2-03) · El servidor canonitza el camí com el client (rutaSocial.js). */
+test('routeKey: un àlies codificat té la mateixa clau que la ruta neta (paritat amb clauSocialDeRuta)', async () => {
+  const { clauSocialDeRuta } = await import('../../src/config/rutaSocial.js');
+  for (const [cami, cerca] of [['/merc%61t/oli', ''], ['/%6Dur/1', ''], ['/pob%6ces/sella/', ''], ['/a%2fb', ''], ['/wikidepoble/%61bc', ''], ['/mercat/%zz', '']]) {
+    const url = `https://socdepoble.org${cami}${cerca}`;
+    assert.equal(routeKey(url), clauSocialDeRuta(cami, cerca), cami);
+  }
+  assert.equal(routeKey('https://socdepoble.org/merc%61t/oli'), '/mercat/oli');
+});

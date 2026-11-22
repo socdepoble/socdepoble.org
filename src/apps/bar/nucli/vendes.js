@@ -89,6 +89,7 @@ export function esZona(zona) {
 /* Les parts d'un moment en la zona: { a, m, d, hora: 'HH:MM' }. */
 function partsEnZona(moment, zona) {
   exigeix(esZona(zona), 'ZONA', 'Cal la zona IANA de l’establiment (per exemple, Europe/Madrid).');
+  exigeix(esMoment(moment), 'MOMENT', 'Cal un moment ISO 8601 vàlid.');
   const parts = {};
   for (const { type, value } of formatadorDe(zona).formatToParts(new Date(moment))) parts[type] = value;
   return { a: Number(parts.year), m: Number(parts.month), d: Number(parts.day), hora: `${parts.hour}:${parts.minute}` };

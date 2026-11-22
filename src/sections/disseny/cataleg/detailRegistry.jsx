@@ -140,4 +140,11 @@ export const CATALOG_DETAIL_LOADERS = {
   'formularis/traspas-copublicacio': lazyRoute(() => import('./detalls/EspecimenTraspasCopublicacio.jsx')),
   /* IDEA-255 (Onada R23 · 14-11-2026) · Reproductor flotant universal de veu de PageFrame. */
   'superposicions/barra-reproductor-veu': lazyRoute(() => import('./detalls/EspecimenBarraReproductorVeu.jsx')),
+  /* Atles 2D (ordre del Mestre del 21-11-2026; pla 261121_2335, Carril 1, Tram 1, punt b) · les cinc pàgines
+     i les seues dades (dades/atles2dDades.js) viatgen només en trossos diferits: +0 B a l'arrencada. */
+  'atles-2d/presentacio': lazyRoute(() => import('./detalls/EspecimenAtles2dPresentacio.jsx')),
+  'atles-2d/poble-virtual': lazyRoute(() => import('./detalls/EspecimenAtles2dPobleVirtual.jsx')),
+  'atles-2d/xarxes-mon': lazyRoute(() => import('./detalls/EspecimenAtles2dXarxesMon.jsx')),
+  'atles-2d/mapa-entitats': lazyRoute(() => import('./detalls/EspecimenAtles2dMapaEntitats.jsx')),
+  'atles-2d/motor-estudis': lazyRoute(() => import('./detalls/EspecimenAtles2dMotorEstudis.jsx')),
 };

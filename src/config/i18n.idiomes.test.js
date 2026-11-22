@@ -109,10 +109,17 @@ describe('peresa', () => {
     expect(font).not.toMatch(/^\s*['"][\w.-]+['"]\s*:/m);
   });
 
+  /* Atles 2D (261122) · La còpia de les dades d'estudi de /disseny?categoria=atles-2d cita l'evidència
+     «fitxer:línia» de les auditories (src/config/idiomes/ca.js:1484): és text citat, no cap càrrega. Només
+     eixes cites, i només en eixe fitxer: un import relatiu o un import.meta.glob dels diccionaris hi cauria. */
+  const CITES_D_EVIDENCIA = new Map([
+    ['src/sections/disseny/cataleg/dades/atles2dDades.js', /\bsrc\/config\/idiomes\/[a-z]{2}\.js(?::\d+)?/g]
+  ]);
+
   test('cap altre fitxer de producció nomena la carpeta dels diccionaris', () => {
     const nomenen = PRODUCCIO.filter((rel) => rel !== 'src/config/i18n.js' && !rel.startsWith('src/config/idiomes/'))
       .filter((rel) => {
-        const font = llig(rel);
+        const font = CITES_D_EVIDENCIA.has(rel) ? llig(rel).replace(CITES_D_EVIDENCIA.get(rel), '') : llig(rel);
         return /(['"`])[^'"`\n]*idiomes\/[^'"`\n]*\1/.test(font) || /import\.meta\.glob\([^)]*idiomes/.test(font);
       });
     expect(nomenen).toEqual([]);

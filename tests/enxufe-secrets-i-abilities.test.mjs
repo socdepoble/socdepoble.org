@@ -67,7 +67,7 @@ test('T1 (WP < 6.9 / < 7.2): no-op net sense fatals, fallback a Apertium i refú
   assert.equal(res.desa_codi, 'socdepoble_enxufe_secret_no_disponible');
   assert.equal(res.options_writes, 0, 'mai no pot escriure claus en text pla a wp_options');
   assert.equal(res.abilities_n, 0, 'en WP < 6.9 no registra cap ability ni peta');
-  assert.deepEqual(res.salut_proves, ['socdepoble_enxufe_paquet'], 'sense 7.2 ni WP_SECRETS_KEY, cap prova de secrets a Salut');
+  assert.deepEqual(res.salut_proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet'], 'sense 7.2 ni WP_SECRETS_KEY, cap prova de secrets a Salut');
 });
 
 test('T1 (WP 7.2 Secrets API + Abilities MCP): precedència 1..4, rotació trencada a prova de bombes i permisos MCP estrictes', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
@@ -348,9 +348,11 @@ test('R26.2 · Salut: cada causa amb el seu text (abans de la 7.2, valor invàli
   assert.equal(res.crides_sense_api, 0, 'sense l\'API disponible, Salut no crida wp_get_secret');
 
   const antic = executaCasPhp('wp_antic_amb_clau');
-  assert.deepEqual(antic.proves, ['socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets']);
+  assert.deepEqual(antic.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets']);
   assert.equal(antic.salut.status, 'good');
   // v1.2.18 · Gauntlet R2 (L3R2-01) · sense l'API, el text no la promet per a cap versió.
+  // v1.2.19 · fusió · R32.29 (lot 02) hi esperava «The optional WordPress secrets API is not available»;
+  // salut.php conserva el text de la v1.2.18, i la prova d'entorn del kit queda a la llista de dalt.
   assert.equal(antic.salut.label, 'This WordPress does not have the secrets API');
   assert.doesNotMatch(JSON.stringify(antic.salut), /7\.2|\byet\b|arrive/, 'sense l\'API, cap promesa lligada a una versió');
   assert.doesNotMatch(antic.salut.description, /Restore|cannot use it/, 'sense l\'API no hi ha cap clau a restaurar');
@@ -375,9 +377,10 @@ function salutSenseApi({ ambClau }) {
 test('v1.2.18 · Gauntlet R2 (L3R2-01) · Salut: la prova de secrets es registra per presència, mai per la versió 7.2', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
   const sense = salutSenseApi({ ambClau: false });
   assert.equal(sense.te_wp_get_secret, false);
-  assert.deepEqual(sense.proves, ['socdepoble_enxufe_paquet'], 'un 7.2 sense l\'API ni WP_SECRETS_KEY no rep cap prova de secrets');
+  // v1.2.19 · fusió · R32.29 (lot 02) registra sempre la prova d'entorn (autoload i memòria cau) davant del paquet.
+  assert.deepEqual(sense.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet'], 'un 7.2 sense l\'API ni WP_SECRETS_KEY no rep cap prova de secrets');
   const ambClau = salutSenseApi({ ambClau: true });
-  assert.deepEqual(ambClau.proves, ['socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets'], 'WP_SECRETS_KEY sí que la registra');
+  assert.deepEqual(ambClau.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets'], 'WP_SECRETS_KEY sí que la registra');
   assert.deepEqual({ status: ambClau.status, label: ambClau.label }, { status: 'good', label: 'This WordPress does not have the secrets API' });
   assert.doesNotMatch(nomesCodiPhp(llig('includes/salut.php')), /\bis_wp_version_compatible\s*\(|\$wp_version\b|get_bloginfo\(\s*'version'/, 'salut.php no inferix l\'API per la versió');
 });

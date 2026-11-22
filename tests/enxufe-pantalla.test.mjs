@@ -300,7 +300,19 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   /* Onada v1.2.17 · La 1.1.25 obri ara el registre (el sostre passa a 44 KB, enxufe-plugin.test.mjs), i la 1.1.24
      continua darrere, íntegra. */
   /* Onada v1.2.18 · La 1.1.26 obri ara el registre (Gauntlet R1, L5-04), i la 1.1.25 continua darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.26</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.18 de Sóc de Poble'), 'v1.2.18: la 1.1.26 obri el registre');
+  /* Onada v1.2.19 · La 1.1.27 obri ara el registre, i la 1.1.26 continua darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.27</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.19 de Sóc de Poble'), 'v1.2.19: la 1.1.27 obri el registre');
+  /* v1.2.19 · Gauntlet R1 (L4-04, L5-01 i L2-06) · Les dues línies senceres de la 1.1.27, amb els mateixos límits que la
+     crònica de /versions: res d'absoluts («cap pantalla», «ja no es barregen») ni de promeses que el codi no fa. */
+  const reg1127 = changelog.slice(0, changelog.indexOf('</ul><h4>1.1.26</h4>'));
+  assert.match(reg1127, /el perfil i la IAIA ja no mostren respostes d(?:'|&#0?39;|&#8217;|’)una sessió tancada/, 'v1.2.19: la sessió, acotada al perfil i a la IAIA');
+  assert.ok(reg1127.includes('algunes pantalles aguanten millor les dates i els imports que no quadren'), 'v1.2.19: les pantalles, sense absoluts');
+  assert.ok(reg1127.includes('si el connector ja hi era, des que un administrador obri el tauler'), 'v1.2.19: els ajustos, amb la seua condició');
+  assert.ok(!/cap pantalla|totes les pantalles|ja no es barregen|demana una pausa|quant ocupen|conserva l.última versió|més lleugers/.test(reg1127), 'v1.2.19: cap promesa que el codi no sostinga');
+  /* v1.2.19 · Gauntlet R2 (L2R2-03) · El registre arriba sencer al paquet de WordPress.org, que no porta l'actualitzador:
+     cap frase del servei d'actualitzacions. */
+  assert.ok(!/servei d(?:'|&#0?39;|&#8217;|’)actualitzacions/.test(reg1127), 'v1.2.19: el registre no parla del servei d\'actualitzacions');
+  assert.ok(changelog.includes('</ul><h4>1.1.26</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.18 de Sóc de Poble'), 'v1.2.19: la 1.1.26 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.25</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.17 de Sóc de Poble'), 'v1.2.18: la 1.1.25 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.24</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.16 de Sóc de Poble'), 'v1.2.17: la 1.1.24 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.23</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.15 de Sóc de Poble'), 'v1.2.16: la 1.1.23 es queda al registre');

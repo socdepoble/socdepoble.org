@@ -76,7 +76,8 @@ test('una entitat amb vídeo del Node 0: <video> amb la foto de capçalera de po
   expect(video.getAttribute('poster')).toBe(PORTADA);
   expect(video.hasAttribute('controls')).toBe(true);
   expect(video.hasAttribute('playsinline')).toBe(true);
-  expect(video.getAttribute('preload')).toBe('metadata');
+  // v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Cap petició de xarxa en repòs: el vídeo, en prémer «reproduir».
+  expect(video.getAttribute('preload')).toBe('none');
 });
 
 test('una persona amb vídeo i portada sdp-media://: tots dos passen pel port i ixen resolts', async () => {

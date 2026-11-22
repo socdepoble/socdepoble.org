@@ -24,6 +24,8 @@ const FITXERS = Object.freeze([
   'src/sections/profile/DetallAjust.test.jsx',
   'src/sections/profile/DetallPrivacitat.jsx',
   'src/sections/profile/DetallEspai.jsx',
+  'src/sections/profile/i18nPerfilA11y.js',
+  'src/sections/profile/__tests__/PerfilAdmin.i18nA11y.r32_30b.test.jsx',
   'src/sections/profile/perfilCamps.js',
   'src/sections/profile/perfilCamps.test.js',
   'src/sections/profile/visibilitatFitxa.js',

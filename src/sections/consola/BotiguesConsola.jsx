@@ -4,6 +4,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { Carregant, MollaPa } from '../../components/PedraSeca/index.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { TargetaConsola } from './peces.jsx';
+import { tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 import { BOTIGUES_SISTEMA_META as meta } from '../botigues/botiguesSistemaMeta.js';
 
 const BotiguesSistema = lazy(() => import('../botigues/BotiguesSistema.jsx'));
@@ -13,7 +14,8 @@ export function TargetaBotiguesConsola() {
 }
 
 export function SeccioBotiguesConsola() {
-  return <section aria-label="Botigues i verificadors"><h2>Botigues i verificadors</h2><div className="sdp-card-grid">
+  const idioma = useIdiomaConsola();
+  return <section aria-label={tca(idioma, 'botiguesIVerificadors')}><h2>Botigues i verificadors</h2><div className="sdp-card-grid">
     <TargetaBotiguesConsola />
   </div></section>;
 }

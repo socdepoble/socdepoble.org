@@ -147,7 +147,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
     'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
     'socdepoble_enxufe_seo',                                                                 // filtre públic (Onada 11, 261010, tasca 7): OpenGraph de la ruta
     'socdepoble_enxufe_idioma',                                                              // filtre públic (pla 261028_1526, TE-05): la llengua opt-in
-    'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets',      // opció i proves de Salut
+    'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets', 'socdepoble_enxufe_entorn',      // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
     'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig', // codis d'error
     'socdepoble_enxufe_secret_invalid', 'socdepoble_enxufe_secret_no_disponible', 'socdepoble_enxufe_secret_error', // codis d'error WP 7.2 Secrets API
@@ -408,6 +408,7 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
 // Secrets: @since 7.2 de la BETA retirada en r65538; mai s'inferix disponibilitat per versió.
 // Cada ús es manté darrere function_exists també en WP 7.2 RC1/final sense l'API.
 const FUNCIONS_WP = {
+  wp_set_option_autoload: '6.4', wp_autoload_values_to_autoload: '6.6', wp_using_ext_object_cache: '2.5',
   __: '2.1', add_action: '1.2', add_filter: '0.71', add_options_page: '1.5', add_query_arg: '1.5',
   add_settings_field: '2.7', add_settings_section: '2.7', add_shortcode: '2.5', admin_url: '2.6',
   apply_filters: '0.71', bloginfo: '0.71', body_class: '2.8', check_admin_referer: '1.2', current_user_can: '2.0',
@@ -443,12 +444,14 @@ const FUNCIONS_WP = {
 const CLASSES_WP = { WP_Error: '2.1', WP_Filesystem_Base: '2.5', WP_REST_Response: '4.4', WP_Secret: '7.2' };
 // De $wpdb, WP_REST_Request, WP_Error, WP_Filesystem_Base i WP_Secret.
 const METODES_WP = {
+  get_error_code: '2.1', get_error_data: '2.1', get_results: '0.71', get_status: '4.4', get_data: '4.4', header: '4.4',
   esc_like: '4.0', get_body: '4.4', get_error_message: '2.1', get_header: '4.4', get_json_params: '4.4', get_route: '4.4',
   get_var: '0.71', is_file: '2.5', is_json_content_type: '5.6', prepare: '2.3', query: '0.71',
   reveal: { des_de: '7.2', inert: 'només es crida sobre un WP_Secret (instanceof, darrere de class_exists), que abans de la 7.2 no existix' }
 };
 // Els que el plugin enganxa o aplica; els dinàmics, amb el nom del nucli: {$…} és la part variable.
 const GANXOS_WP = {
+  'add_option_{$option}': '2.5', rest_post_dispatch: '4.4',
   admin_init: '2.5', admin_menu: '1.5', 'admin_post_{$action}': '2.6', all_admin_notices: '3.1', body_class: '2.8',
   change_locale: '4.7', // el de switch_to_locale() i restore_*_locale(): la reserva de idioma-local.php seguix la llengua viva (P1-09)
   'delete_site_transient_{$transient}': '3.0', 'gettext_{$domain}': '5.5', 'gettext_with_context_{$domain}': '5.5',
@@ -511,6 +514,7 @@ const TAULA_WP = [
 
 // El que crida el plugin i és de PHP, no de WordPress (comprovat amb get_defined_functions de PHP 8.4).
 const PHP_INTERN = new Set([
+  'is_callable', 'extension_loaded', 'opcache_get_status',
   'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
   'array_values', 'array_search', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',
   'file_exists', 'file_get_contents', 'filemtime', 'filesize', 'filter_var', 'function_exists', 'get_class', 'getenv', 'gmdate',
@@ -1337,7 +1341,7 @@ test('A1 · cap PHP emet ni mostra un tenant, cap empeny la cua, i l’opció he
   assert.equal([...ajustos.matchAll(/'tenantId'/g)].length, 2, 'array_key_exists i unset');
   const cos = cosDe('includes/ajustos.php', neteja);
   assert.match(cos, /array_key_exists\( 'tenantId', \$opcio \)/);
-  assert.match(cos, /unset\( \$opcio\['tenantId'\] \);\n\tupdate_option\( SOCDEPOBLE_ENXUFE_OPCIO, \$opcio \);/, 'esborra la clau i desa la resta tal qual');
+  assert.match(cos, /unset\( \$opcio\['tenantId'\] \);\n\tupdate_option\( SOCDEPOBLE_ENXUFE_OPCIO, \$opcio, false \);/, 'esborra la clau i desa la resta tal qual');
   assert.match(ajustos, /^add_action\( 'admin_init', 'socdepoble_enxufe_oblida_tenant_heretat', 5 \);$/m, 'abans de register_setting: no passa pel sanejador');
   assert.match(ajustos, /^add_action\( 'admin_init', 'socdepoble_enxufe_registra_ajustos' \);$/m);
   // La diagnosi, el manifest local i la declaració de la pàgina ja no porten cap tenant.

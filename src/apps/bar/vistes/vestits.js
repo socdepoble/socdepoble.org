@@ -274,6 +274,7 @@ export function nomOrigen(origen, sala, idioma = 'ca') {
 
 /** Hora local curta d'un moment ISO. */
 export function horaCurta(moment) {
+  if (typeof moment !== 'string' || !moment.trim()) return '';
   const data = new Date(moment);
   return Number.isNaN(data.getTime()) ? '' : `${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}`;
 }

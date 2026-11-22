@@ -11,6 +11,7 @@ import { useSEO } from '../../hooks/useSEO';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { compatibilitatDispositius } from '../text/pageContent.dispositius.js';
+import { textosDispositiusA11y } from './i18nDispositiusA11y.js';
 import {
   PRESENCE_STALE_MS,
   ambNomSuggerit,
@@ -85,6 +86,7 @@ export default function DevicesSection() {
   const idCampMissatge = useId();
   const { externalConfig, language = 'ca' } = useUIState();
   const compatibilitat = compatibilitatDispositius(language);
+  const txDisp = textosDispositiusA11y(language);
   const { agents } = useCoreContent();
   const currentUser = useSessioOpcional()?.currentUser || null;
   const tenantId = externalConfig?.tenantId || 'default-tenant';
@@ -93,8 +95,8 @@ export default function DevicesSection() {
   /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
      ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
-    title: 'Dispositius',
-    description: 'Gestió de dispositius i connexions locals entre pestanyes'
+    title: txDisp.seoTitle,
+    description: txDisp.seoDescription
   });
 
   const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, nomPersona));
@@ -330,9 +332,9 @@ export default function DevicesSection() {
   /* Decisions 261030 §7 · Dispositius i missatges directes: Traduir no envia res fora. */
   return (
     <UniversalPage
-      title="Dispositius"
-      subtitle="Descobrix instàncies obertes i parla en local"
-      lead="Connecta pestanyes i finestres obertes en este mateix navegador i envia missatges directes sense passar per cap servidor."
+      title={txDisp.title}
+      subtitle={txDisp.subtitle}
+      lead={txDisp.lead}
       traduccio={false}
       chrome="system"
     >
@@ -383,7 +385,7 @@ export default function DevicesSection() {
                 <div className="devices-panel__accions">
                   <button
                     type="button"
-                    title={profile.isVisible ? 'Mode públic' : 'Mode privat'}
+                    title={profile.isVisible ? txDisp.modePublicTitle : txDisp.modePrivatTitle}
                     className={profile.isVisible ? 'sdp-boto sdp-boto--primari' : 'sdp-boto sdp-boto--secundari'}
                     onClick={() => {
                       const next = { ...profile, isVisible: !profile.isVisible };
@@ -400,14 +402,14 @@ export default function DevicesSection() {
                 </div>
 
                 <div className="devices-name-row">
-                  <label htmlFor={idCampNom} className="sdp-nomes-lector">Nom del dispositiu</label>
+                  <label htmlFor={idCampNom} className="sdp-nomes-lector">{txDisp.nomDispositiuLabel}</label>
                   <input
                     id={idCampNom}
                     type="text"
                     value={draftName}
                     onChange={(event) => setDraftName(event.target.value)}
                     className="sdp-control"
-                    placeholder="Nom del dispositiu"
+                    placeholder={txDisp.nomDispositiuPlaceholder}
                   />
                   <button type="button" className="sdp-boto sdp-boto--primari" onClick={saveName}>
                     <Check size={16} aria-hidden="true" /> <span>Guardar</span>
@@ -566,7 +568,7 @@ export default function DevicesSection() {
                 </div>
 
                 <div className="search-bar-basic">
-                  <label htmlFor={idCampMissatge} className="sdp-nomes-lector">Missatge directe</label>
+                  <label htmlFor={idCampMissatge} className="sdp-nomes-lector">{txDisp.missatgeDirecteLabel}</label>
                   <input
                     id={idCampMissatge}
                     type="text"
@@ -577,7 +579,7 @@ export default function DevicesSection() {
                         sendMessage(draftMessage);
                       }
                     }}
-                    placeholder="Escriu un missatge directe..."
+                    placeholder={txDisp.missatgeDirectePlaceholder}
                   />
                   <button
                     type="button"

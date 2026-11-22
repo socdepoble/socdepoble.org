@@ -41,6 +41,7 @@
  */
 import { useMemo } from 'react';
 import { Link } from '../../app/contexts/RouterContext';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import {
   NavegacioPeriode, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana
 } from '../../components/PedraSeca/index.js';
@@ -52,17 +53,28 @@ import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
 import { clauDeData } from '../../utils/periodes.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import {
-  TEXTOS_TARGETES, entradesDelDia, entradesDelMes, entradesDelRang, recompteTargetes, rutaDeLEntrada
+  entradesDelDia, entradesDelMes, entradesDelRang, rutaDeLEntrada
 } from './calendariGlobal.js';
 import { SETMANES_DEL_MES, rangDeLaVista } from './estatCalendari.js';
 import {
   DENSITAT_CALENDARI,
-  ETIQUETES_PERIODE,
-  LOCALE_CALENDARI,
   capitalitzaPeriode,
   textSenseDataCalendari,
   textosDeLaVista,
 } from './calendariDelPobleModel.js';
+import {
+  codiIdiomaCalendari,
+  localeCalendariPerIdioma,
+  textosCalendariPoble,
+} from './i18nCalendariDelPoble.js';
+
+function useIdiomaCalendariPoble() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 /* Un acte de l'agenda de Sollutia (o d'una font de fora): la targeta
    universal amb el títol, el lloc i la pastilla del seu inici (la regla de la
@@ -82,11 +94,11 @@ function TargetaDeLAgenda({ entrada }) {
    diu sense cap targeta.
    Ordre del Mestre (261007) · Comentar, el menú de dues vies de totes les
    targetes (el mateix del Mur): cap gestor de llista. */
-function TargetesDeDavall({ visibles, buit }) {
+function TargetesDeDavall({ visibles, buit, recompte }) {
   return (
     <>
       <h4 role="status">
-        {visibles.length ? recompteTargetes(visibles.length) : buit}
+        {visibles.length ? recompte(visibles.length) : buit}
       </h4>
       <div className="sdp-card-grid">
         {visibles.map((entrada) => (entrada.agenda
@@ -131,8 +143,13 @@ function useTraduiblesDeLesEntrades(entrades) {
 
 export function CalendariDelPoble({
   estat, navega, canviaVista, triaDia, obriDia, entrades, avui, senseData = 0,
-  avisos = null, abansNavegacio = null, avisAgenda = null, accions = null, LinkComponent = Link
+  avisos = null, abansNavegacio = null, avisAgenda = null, accions = null, LinkComponent = Link,
+  idioma: idiomaPropi
 }) {
+  const idiomaContext = useIdiomaCalendariPoble();
+  const idioma = codiIdiomaCalendari(idiomaPropi ?? idiomaContext);
+  const tx = textosCalendariPoble(idioma);
+  const locale = localeCalendariPerIdioma(idioma);
   const { vista, diaTriat, cursor, dilluns } = estat;
   const rang = useMemo(() => rangDeLaVista(estat, avui), [estat, avui]);
   const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
@@ -153,9 +170,9 @@ export function CalendariDelPoble({
     return entradesDelRang(entrades, { desde: clauDeData(rang.desde), fins: clauDeData(rang.fins) });
   }, [entrades, delDia, vista, cursor, rang]);
 
-  const textos = textosDeLaVista(vista, cursor, rang);
-  const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
-  const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE_CALENDARI, titol: textos.regio };
+  const textos = textosDeLaVista(vista, cursor, rang, idioma);
+  const buit = delDia ? textos.buitDia : textos.buit;
+  const comunes = { esdeveniments, avui, recompte: tx.recompte, locale, titol: textos.regio };
   // Onada 6 · Les vistes amb peces d'esdeveniment porten l'enllaç a la publicació.
   // R51 (troballa R12G-BH-02) · I el veredicte de traducció de cada esdeveniment.
   const enllacos = { rutaDeLEsdeveniment, LinkComponent, esTraduible };
@@ -168,7 +185,8 @@ export function CalendariDelPoble({
       {/* Onada 6 (prompt 261009_0230) · El títol del període, a la mateixa fila
           que «Hui ‹ ›» i el selector, com a Google Calendar: és l'h3 de
           sempre (abans, damunt de la barra), dins de la navegació. */}
-      <NavegacioPeriode titol={titolSuperior} nivellTitol={3} etiquetes={ETIQUETES_PERIODE[vista]}
+      <NavegacioPeriode titol={titolSuperior} nivellTitol={3} etiquetes={tx.etiquetesPeriode[vista]}
+        vistes={tx.vistes} etiquetaVistes={tx.etiquetaVistes}
         onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
         vista={vista} onCanviaVista={canviaVista} accions={accions} />
       {vista === 'setmana' ? (
@@ -181,14 +199,14 @@ export function CalendariDelPoble({
       ) : null}
       {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
       {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
-      {vista === 'agenda' ? <VistaAgenda {...comunes} {...enllacos} desde={rang.desde} fins={rang.fins} buit="Cap publicació en este període." /> : null}
-      {sensePintar ? <p>{TEXTOS_TARGETES.sensePintar(sensePintar)}</p> : null}
+      {vista === 'agenda' ? <VistaAgenda {...comunes} {...enllacos} desde={rang.desde} fins={rang.fins} buit={textos.buitAgenda} /> : null}
+      {sensePintar ? <p>{tx.sensePintar(sensePintar)}</p> : null}
       {avisAgenda}
       {/* Revisió del carril A (ordre del Mestre, 261001) · Una targeta sense
           esdeveniment no ix ni a la graella ni a la llista, i l'avís diu la
           veritat: pot ser que no porte data o que no tinga identificador. */}
-      {senseData ? <p>{textSenseDataCalendari(senseData)}</p> : null}
-      <TargetesDeDavall visibles={visibles} buit={buit} />
+      {senseData ? <p>{textSenseDataCalendari(senseData, idioma)}</p> : null}
+      <TargetesDeDavall visibles={visibles} buit={buit} recompte={tx.recompte} />
     </>
   );
 }

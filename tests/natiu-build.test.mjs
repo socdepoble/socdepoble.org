@@ -179,7 +179,7 @@ test('transformaIndexNatiu sobre l\'index.html real: entrada nativa, CSP del §4
   // lleven 9 línies i en canvien 2 (entrada i CSP).
   for (const intacte of ['<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />',
     '<meta name="theme-color" content="#fff4ef" />', '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />',
-    '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />', '<title>Sóc de Poble</title>', '<div id="root"></div>',
+    '<link rel="icon" type="image/png" sizes="192x192" href="/icona-app-192.png" />', '<title>Sóc de Poble</title>', '<div id="root"></div>',
     ENLLAC_FONTS_LOCALS, '<link rel="preload" href="/fonts/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5a7duw.woff2" as="font" type="font/woff2" crossorigin />']) {
     assert.ok(html.includes(intacte), intacte);
   }

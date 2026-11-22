@@ -28,6 +28,8 @@ const RUTES = [
   'src/css/sdp.css',
   'src/css/utilities.css',
   'src/css/diferit-perfil-shell.css',
+  // v1.2.19 · Gauntlet R2 (L4R2-06) · El full diferit de l'Atles 2D també passa per la guarda de la Fase B.
+  'src/css/diferit-atles-2d.css',
   BLOC_CATALEG
 ];
 const CSS = Object.fromEntries(RUTES.map((ruta) => [ruta, senseComentaris(ruta === BLOC_CATALEG ? lligBloc('catalegColleccio') : llig(ruta))]));

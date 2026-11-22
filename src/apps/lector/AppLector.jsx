@@ -281,7 +281,8 @@ function LectorAmbFont({ magatzem: magatzemPropi, font: fontPropia, servei, rell
   const instant = useMemo(() => ({ clau: pathname, ara: rellotge() }), [rellotge, pathname]);
   const { ara } = instant;
   /* El fus de qui llig, en minuts respecte d'UTC (+120 a l'estiu de València). */
-  const desfas = -new Date(ara).getTimezoneOffset();
+  const desfasCru = new Date(ara).getTimezoneOffset();
+  const desfas = Number.isFinite(desfasCru) ? -desfasCru || 0 : 0;
   /* IDEA-265 · Qui no veu l'observatori no en veu cap desat (només la vista; les accions, les de sempre). */
   const lectorVist = useMemo(() => {
     const estatVist = observatori ? lector.estat : estatSenseObservatori(lector.estat);

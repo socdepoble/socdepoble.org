@@ -575,22 +575,42 @@ export function reiniciaMemoriaContacte() {
   columnesOpcionalsOrg = creaColumnesOpcionals('l’organització', { hero_video_url: 'hero_video_url' });
 }
 
+/* Només es cancel·la l'espera d'este consumidor, mai la sonda compartida.
+   Els dos handlers consumixen també el desenllaç tardà de la sonda. */
+function esperaSondaContacte(sonda, signal) {
+  if (!signal) return Promise.resolve(sonda).then(() => {}, () => {});
+  return new Promise((resolve, reject) => {
+    const acaba = (handler, value) => { signal.removeEventListener('abort', avorta); handler(value); };
+    const avorta = () => acaba(reject, signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError'));
+    Promise.resolve(sonda).then(() => acaba(resolve), () => acaba(resolve));
+    signal.addEventListener('abort', avorta, { once: true });
+    if (signal.aborted) avorta();
+  });
+}
+
 async function rpcDeContacte(rpc, body, config) {
+  const { vigila } = capturaOperacioOrganitzacio(config);
+  vigila();
   const { supabaseUrl, tenantId } = getResolvedConfig(config);
   const clau = JSON.stringify([rpc, supabaseUrl || '', tenantId || '']);
   const sonda = sondesEnCurs.get(clau);
-  if (sonda) await sonda.catch(() => {});
+  // La sonda informa de la capacitat; no presta la seua identitat ni la seua
+  // cancel·lació a un altre consumidor. La guarda pròpia talla l'espera antiga.
+  if (sonda) await esperaSondaContacte(sonda, config.signal);
+  vigila();
   if (rpcsAbsents.has(clau)) throw errorAmbCodi(SENSE_CONTACTE, 'NO-DISPONIBLE');
   /* Entre la consulta i el registre no hi ha cap await: dues crides no poden
      fer de sonda alhora. Qui ha esperat una sonda no en fa una altra. */
-  const crida = request(`/rest/v1/rpc/${rpc}`, config, { method: 'POST', body });
+  const crida = request(`/rest/v1/rpc/${rpc}`, config, { method: 'POST', body, signal: config.signal });
   const esSonda = !sonda && !rpcsPresents.has(clau);
   if (esSonda) sondesEnCurs.set(clau, crida);
   try {
     const resposta = await crida;
+    vigila();
     rpcsPresents.add(clau);
     return contacteDeFila(resposta);
   } catch (error) {
+    vigila();
     const normalitzat = errorDeContacte(error);
     if (normalitzat?.code === 'NO-DISPONIBLE') rpcsAbsents.add(clau);
     else if (haContestat(normalitzat)) rpcsPresents.add(clau);

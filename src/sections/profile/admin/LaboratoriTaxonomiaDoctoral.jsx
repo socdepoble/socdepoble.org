@@ -1,7 +1,12 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext.jsx';
 import { Boto, Insignia } from '../../../components/PedraSeca';
 import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.jsx';
+/* v1.2.19 · fusió · R32.30b (lot 03) porta els aria-label i placeholder d'este panell al diccionari diferit
+   del Perfil (5 llengües, el valencià byte a byte); el ref adoptaEstilsAdminTaxonomia de la v1.2.18 es queda a
+   cada etiqueta .sdp-admin-taxonomia__*: les dues coses viuen en la mateixa etiqueta. */
+import { textosPerfilA11y } from '../i18nPerfilA11y.js';
 import {
   RESUM_AUDITORIA_BIBLIOTECONOMIA,
   FACETA_1_CATEGORIES_GEOGRAFIQUES,
@@ -24,6 +29,7 @@ const PaginesTrilogiaWp = lazy(() => import('./PaginesTrilogiaWp.jsx'));
 const BrainTaxonomia = lazy(() => import('../../taxonomia/BrainTaxonomia.jsx'));
 
 export function LaboratoriTaxonomiaDoctoral() {
+  const txPerfil = textosPerfilA11y({ language: useUIStateOpcional()?.language });
   const [mostraPaginesWp, setMostraPaginesWp] = useState(false);
   const [estat, setEstat] = useState(() => llegeixEstatTaxonomiaAdmin());
   const [facetaActiva, setFacetaActiva] = useState('totes');
@@ -148,7 +154,7 @@ export function LaboratoriTaxonomiaDoctoral() {
   const comptadorCategoriesActives = Object.values(estat.categoriesActives).filter(Boolean).length;
 
   return (
-    <article className="sdp-admin-taxonomia" aria-label="Laboratori Doctoral de Biblioteconomia i Classificació">
+    <article className="sdp-admin-taxonomia" aria-label={txPerfil.laboratoriBiblioteconomiaAria}>
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">PMEST · S. R. Ranganathan</Insignia>
@@ -163,12 +169,12 @@ export function LaboratoriTaxonomiaDoctoral() {
         </blockquote>
       </header>
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-label="Corpus editorial WordPress">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-label={txPerfil.corpusEditorialWpAria}>
         <button type="button" className="sdp-boto sdp-boto--secundari" aria-expanded={mostraPaginesWp} onClick={() => setMostraPaginesWp(value => !value)}>Revisa les 10 pàgines de Trilogia Mediterrània i La Torre</button>
         {mostraPaginesWp && <Suspense fallback={<p role="status">Obrint la revisió privada…</p>}><PaginesTrilogiaWp /></Suspense>}
       </section>
 
-      <nav ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__tabs" aria-label="Facetes de la classificació">
+      <nav ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__tabs" aria-label={txPerfil.facetesClassificacioAria}>
         {[
           ['brain', '🧠 Brain i laboratori de decisions'],
           ['totes', '📚 Vista Integral (4 Facetes)'],
@@ -206,7 +212,7 @@ export function LaboratoriTaxonomiaDoctoral() {
               id="cerca-geo"
               type="search"
               className="sdp-input"
-              placeholder="Ex. La Torre de les Maçanes, El Comtat, Alcoi, Benifallim…"
+              placeholder={txPerfil.cercaGeograficaPlaceholder}
               value={cercaGeografica}
               onChange={(e) => setCercaGeografica(e.target.value)}
             />
@@ -326,8 +332,8 @@ export function LaboratoriTaxonomiaDoctoral() {
             <input
               type="search"
               className="sdp-input"
-              aria-label="Cercar etiqueta al tesaurus SKOS"
-              placeholder="Cercar etiqueta, Broader Term o sinònim…"
+              aria-label={txPerfil.cercarEtiquetaSkosAria}
+              placeholder={txPerfil.cercarEtiquetaSkosPlaceholder}
               value={cercaEtiquetes}
               onChange={(e) => setCercaEtiquetes(e.target.value)}
             />
@@ -340,7 +346,7 @@ export function LaboratoriTaxonomiaDoctoral() {
           ) : null}
 
           <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap">
-            <table className="sdp-table" aria-label={`Tesaurus SKOS de ${FACETA_4_ETIQUETES_SKOS.length} termes, 49 canònics`}>
+            <table className="sdp-table" aria-label={txPerfil.tesaurusSkosTaulaAria(FACETA_4_ETIQUETES_SKOS.length)}>
               <thead>
                 <tr>
                   <th>Activa</th>
@@ -399,8 +405,8 @@ export function LaboratoriTaxonomiaDoctoral() {
               <input
                 type="search"
                 className="sdp-input"
-                aria-label="Cercar entre els 425 articles"
-                placeholder="Cercar per títol, slug, poble o etiqueta…"
+                aria-label={txPerfil.cercar425ArticlesAria}
+                placeholder={txPerfil.cercar425ArticlesPlaceholder}
                 value={cercaArticles}
                 onChange={(e) => {
                   setCercaArticles(e.target.value);
@@ -410,7 +416,7 @@ export function LaboratoriTaxonomiaDoctoral() {
 
               <select
                 className="sdp-select"
-                aria-label="Filtrar per Categoria Temàtica"
+                aria-label={txPerfil.filtrarCategoriaTematicaAria}
                 value={filtreCatIA}
                 onChange={(e) => {
                   setFiltreCatIA(e.target.value);
@@ -425,7 +431,7 @@ export function LaboratoriTaxonomiaDoctoral() {
 
               <select
                 className="sdp-select"
-                aria-label="Filtrar per Poble"
+                aria-label={txPerfil.filtrarPobleAria}
                 value={filtrePoble}
                 onChange={(e) => {
                   setFiltrePoble(e.target.value);
@@ -440,7 +446,7 @@ export function LaboratoriTaxonomiaDoctoral() {
 
               <select
                 className="sdp-select"
-                aria-label="Filtrar per Etiqueta Neta"
+                aria-label={txPerfil.filtrarEtiquetaNetaAria}
                 value={filtreEtiqueta}
                 onChange={(e) => {
                   setFiltreEtiqueta(e.target.value);
@@ -459,7 +465,7 @@ export function LaboratoriTaxonomiaDoctoral() {
             </p>
 
             <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__table-wrap">
-              <table className="sdp-table" aria-label="Simulador IA dels 425 articles">
+              <table className="sdp-table" aria-label={txPerfil.simulador425TaulaAria}>
                 <thead>
                   <tr>
                     <th>Data</th>

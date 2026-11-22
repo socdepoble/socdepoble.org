@@ -11,6 +11,7 @@ import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 import { resumDeProblemes } from './resumProblemes.js';
 import { semaforDEtiquetes } from './semafor.js';
+import { tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -168,6 +169,7 @@ export function TargetaConsola({
   imatge = null, imatgeAlt = ''
 }) {
   const navigate = useNavigate();
+  const idioma = useIdiomaConsola();
   const activa = Boolean(a || onObri);
   const obri = a ? () => navigate(a) : onObri;
   const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
@@ -203,12 +205,12 @@ export function TargetaConsola({
             </div>
           ) : dada && <p className="sdp-consola__dada">{dada}</p>}
           {ambEstats && (
-            <ul className="sdp-consola__estats" aria-label="Estat per dins, el més greu primer">
+            <ul className="sdp-consola__estats" aria-label={tca(idioma, 'estatPerDins')}>
               {estats.map((e) => <li key={e.clau}><Insignia to={e.to}>{e.text}</Insignia></li>)}
             </ul>
           )}
           {visibles.length > 0 && (
-            <ul className="sdp-consola__evidencies sdp-consola__problemes" aria-label="Quins problemes hi ha">
+            <ul className="sdp-consola__evidencies sdp-consola__problemes" aria-label={tca(idioma, 'quinsProblemesHiHa')}>
               {visibles.map((g) => (
                 <li key={g.clau}>
                   {g.marca ? <><Insignia to={g.to}>{g.marca}</Insignia>{' '}</> : null}

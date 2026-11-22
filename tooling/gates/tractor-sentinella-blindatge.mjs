@@ -12,12 +12,17 @@ import { BlockList, isIP } from 'node:net';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { esIpPublica } from '../node0/xarxa-node0.mjs';
 import { escanejaLiterals } from './literals-secrets-node0.mjs';
+import { defectesFitxerEstatic, PRESSUPOST_ESTATIC } from './tractor-vigilant.mjs';
 
+// v1.2.19 · Gauntlet R1 (L2-02): localFiles/localBytes tornen a ser només dels textos, com a la v1.2.18;
+// els binaris tenen el pressupost propi del Vigilant.
 export const LIMITS = Object.freeze({ requestsPerCycle: 16, bytesPerCycle: 2 * 1024 * 1024,
   cycleMs: 60000, requestMs: 8000, headerBytes: 16384, htmlBytes: 262144, jsonBytes: 65536,
   privateBytes: 16384, iterations: 3, intervalMin: 60000, intervalMax: 300000,
   configBytes: 16384, localFileBytes: 2 * 1024 * 1024, localBytes: 8 * 1024 * 1024,
-  localEntries: 4096, localFiles: 512, findings: 64, outputBytes: 131072 });
+  localEntries: 4096, localFiles: 512, localBinaryFileBytes: PRESSUPOST_ESTATIC.binari.perFitxer,
+  localBinaryBytes: PRESSUPOST_ESTATIC.binari.bytes, localBinaryFiles: PRESSUPOST_ESTATIC.binari.fitxers,
+  findings: 64, outputBytes: 131072 });
 const OWN = ['https://socdepoble.org', 'https://socdepoble.cat'];
 const SEO_BROWSER_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const SEO_PROFILES = Object.freeze({ normal: SEO_BROWSER_UA, googlebot: 'Googlebot/2.1', google: SEO_BROWSER_UA });
@@ -27,7 +32,7 @@ const TABLES = Object.freeze({ xat_fils: 'id', xat_participants: 'fil_id', xat_m
   xat_reaccions: 'missatge_id', xat_missatges_destacats: 'missatge_id', xat_missatges_fixats: 'missatge_id', xat_missatges_amagats: 'missatge_id' });
 const CODES = new Set(['INVALID_ARGUMENT', 'INVALID_CONFIG', 'UNSAFE_SOURCE', 'LOCAL_LIMIT', 'ORIGIN_REJECTED',
   'ADDRESS_REJECTED', 'DNS_FAILED', 'ABORTED', 'TIMEOUT', 'REQUEST_LIMIT', 'BYTE_LIMIT', 'HEADERS_LIMIT',
-  'REDIRECT_REJECTED', 'UPGRADE_REJECTED', 'TLS_REJECTED', 'BODY_INCOMPLETE', 'ENCODING_REJECTED', 'TRANSPORT_FAILED']);
+  'REDIRECT_REJECTED', 'REDIRECT_LOOP', 'REDIRECT_DUPLICATE', 'HTTPS_DOWNGRADE', 'UPGRADE_REJECTED', 'TLS_REJECTED', 'BODY_INCOMPLETE', 'ENCODING_REJECTED', 'TRANSPORT_FAILED']);
 const fail = code => { throw Object.assign(new Error(code), { code }); };
 const safeCode = error => CODES.has(error?.code) ? error.code : 'TRANSPORT_FAILED';
 const DAY = 86400000;
@@ -99,7 +104,8 @@ function readConfig(root, relative) {
 
 function scanPublic(root) {
   const base = fs.existsSync(path.join(root, 'dist')) ? 'dist' : 'public';
-  let bytes = 0, files = 0, entries = 1; const findings = [];
+  let bytes = 0, files = 0, entries = 1, partial = false; const findings = [], candidates = [];
+  const textual = relative => /\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|svg)$|(?:^|\/)\.htaccess$/i.test(relative);
   // Els noms de fitxer també són entrada no fiable; no publiquem credencials
   // reconegudes ni segments opacs, i mai calculem un hash del valor ocultat.
   const reportPath = relative => relative.split('/').map(segment => (
@@ -126,22 +132,60 @@ function scanPublic(root) {
       return;
     }
     if (!stat.isFile()) fail('UNSAFE_SOURCE');
+    const staticNames = defectesFitxerEstatic(relative);
+    if (staticNames.length) { add(staticNames.map(ruleId=>({ruleId,path:relative,line:1}))); return; }
     if (/^\.env(?:\.|$)/i.test(path.basename(relative)) || /\.(?:key|pem|p12|pfx|agekey|log)$/i.test(relative)) {
       add([{ ruleId: 'private-public-path', path: relative, line: 1 }]); return;
     }
-    if (!/\.(?:[cm]?js|json|html|css|txt|xml|webmanifest)$/i.test(relative)) return;
-    if (++files > LIMITS.localFiles || stat.size > LIMITS.localFileBytes || bytes + stat.size > LIMITS.localBytes) fail('LOCAL_LIMIT');
-    const content = sourceBytes(file, LIMITS.localFileBytes); bytes += content.length;
-    add(escanejaLiterals(content.toString('utf8'), relative));
+    if (/\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|png|jpe?g|gif|ico|webp|avif|svg|bmp|pdf|woff2?)$|(?:^|\/)\.htaccess$/i.test(relative)) candidates.push({relative,size:stat.size});
   };
-  try { walk(base); return { status: findings.length ? 'fail' : 'ok', root: base, files, bytes, findings, exhaustive: false }; }
-  catch (error) { return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), exhaustive: false }; }
+  // v1.2.19 · Gauntlet R1 (L2-02): dos pressupostos; els literals tenen la cobertura de la v1.2.18
+  // encara que la galeria esgote el seu.
+  const read = { literals: { files: 0, bytes: 0, partial: false }, staticBinaries: { files: 0, bytes: 0, partial: false } };
+  const coverage = () => Object.fromEntries(Object.entries(read).map(([k, v]) => [k, { status: v.partial ? 'unknown' : 'ok', files: v.files, bytes: v.bytes }]));
+  try {
+    walk(base);
+    // Primer els textos: una galeria gran no ha d'amagar els literals dels JS.
+    candidates.sort((a,b)=>Number(textual(b.relative))-Number(textual(a.relative))||a.relative.localeCompare(b.relative));
+    for (const {relative,size} of candidates) {
+      const text = textual(relative), r = text ? read.literals : read.staticBinaries;
+      const max = text ? { files: LIMITS.localFiles, bytes: LIMITS.localBytes, file: LIMITS.localFileBytes }
+        : { files: LIMITS.localBinaryFiles, bytes: LIMITS.localBinaryBytes, file: LIMITS.localBinaryFileBytes };
+      if (r.files >= max.files || size > max.file || r.bytes + size > max.bytes) { r.partial = partial = true; continue; }
+      const content = sourceBytes(path.join(root,relative), max.file); r.files++; r.bytes += content.length; files++; bytes += content.length;
+      add(defectesFitxerEstatic(relative,content).map(ruleId=>({ruleId,path:relative,line:1})));
+      if (text) add(escanejaLiterals(content.toString('utf8'), relative));
+    }
+    return { status: findings.length ? 'fail' : partial ? 'unknown' : 'ok', root: base, files, bytes, findings, ...(partial?{code:'LOCAL_LIMIT'}:{}), coverage: coverage(), exhaustive: false };
+  }
+  catch (error) {
+    for (const r of Object.values(read)) r.partial = true;
+    return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), coverage: coverage(), exhaustive: false };
+  }
 }
 
 function headersOf(raw) {
   const headers = {};
   for (const [key, value] of raw instanceof Headers ? raw.entries() : Object.entries(raw || {})) headers[key.toLowerCase()] = Array.isArray(value) ? value.join(', ') : String(value);
   return headers;
+}
+/** Capçaleres acotades; el valor només programa una pausa, mai una espera activa. */
+export function retryAfterSeconds(value, now = Date.now()) {
+  if (typeof value !== 'string' || value.length >128) return null;
+  const raw=value.trim();
+  if (/^\d{1,10}$/.test(raw)) return Math.max(1,Math.min(86400,Number(raw)));
+  if (!/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(raw)) return null;
+  const time=Date.parse(raw);
+  return Number.isFinite(time)&&new Date(time).toUTCString()===raw&&time>now ? Math.min(86400,Math.ceil((time-now)/1000)):null;
+}
+export function redirectFailure(target, location) {
+  if (Array.isArray(location)) return location.length>1?'REDIRECT_DUPLICATE':'REDIRECT_REJECTED';
+  try {
+    const next=new URL(location,target);
+    if(next.protocol==='http:') return 'HTTPS_DOWNGRADE';
+    if(next.href===new URL(target).href) return 'REDIRECT_LOOP';
+  } catch { /* Una destinació invàlida continua rebutjada. */ }
+  return 'REDIRECT_REJECTED';
 }
 export function auditaCapcaleres(raw, profile, origin) {
   const h = headersOf(raw), errors = [];
@@ -274,7 +318,10 @@ export async function requestGet(value, options = {}, deps = {}) {
           response.on('error', () => rejectOnce(Object.assign(new Error('BODY_INCOMPLETE'), { code: 'BODY_INCOMPLETE' })));
           if (settled) { response.destroy(); return; }
           const status = response.statusCode, headers = headersOf(response.headers);
-          if (!seo && status >= 300 && status < 400) { rejectOnce(Object.assign(new Error('REDIRECT_REJECTED'), { code: 'REDIRECT_REJECTED' })); return; }
+          if (!seo && status >= 300 && status < 400) {
+            const code=redirectFailure(target,response.headers.location);
+            rejectOnce(Object.assign(new Error(code), { code })); return;
+          }
           const cert = response.socket?.getPeerCertificate?.();
           const validTo = Date.parse(cert?.valid_to), validFrom = Date.parse(cert?.valid_from);
           if (target.protocol === 'https:' && (response.socket?.authorized !== true || !cert || tls.checkServerIdentity(target.hostname, cert)
@@ -297,7 +344,8 @@ export async function requestGet(value, options = {}, deps = {}) {
           response.on('end', () => {
             if (settled) return;
             settled = true; cleanup();
-            resolve({ status, headers, text: Buffer.concat(chunks).toString('utf8'), bytes: size, accounted: true,
+            const body=Buffer.concat(chunks);
+            resolve({ status, headers, text: body.toString('utf8'), ...(options.binary===true?{body}:{}), bytes: size, accounted: true,
               tls: target.protocol === 'http:' ? null : { authorized: true, validFrom: new Date(validFrom).toISOString(), validTo: new Date(validTo).toISOString(),
                 daysRemaining: Math.floor((validTo - now()) / DAY), fingerprint256: cert.fingerprint256 || null } });
           });
@@ -457,7 +505,7 @@ export async function auditaBlindatge(options = {}, deps = {}) {
     || intervalMs < LIMITS.intervalMin || intervalMs > LIMITS.intervalMax || !options.remote && iterations !== 1) fail('INVALID_ARGUMENT');
   if (options.seo && (!options.remote || options.configPath || options.config) || options.domain && (!options.seo || !Object.hasOwn(SEO_DOMAINS, options.domain))) fail('INVALID_ARGUMENT');
   const config = configValidated(options.config || (options.configPath ? readConfig(root, options.configPath) : {}));
-  const budget = newBudget(iterations, intervalMs, now), localSecrets = scanPublic(root), cycles = [], results = [];
+  const budget = newBudget(iterations, intervalMs, now), localSecrets = scanPublic(root), cycles = [], results = [], pauses = new Map();
   let interrupted = false;
   if (options.remote) for (let i = 0; i < iterations; i++) {
     if (i) {
@@ -477,6 +525,7 @@ export async function auditaBlindatge(options = {}, deps = {}) {
           try {
             if (control.signal.aborted) fail(control.signal.reason?.code === 'TIMEOUT' ? 'TIMEOUT' : 'ABORTED');
             if (options.signal?.aborted) fail('ABORTED');
+            if ((pauses.get(item.id)||0)>now()) { output[at]={id:item.id,cycle:i+1,kind:item.kind,status:'unknown',code:'RETRY_AFTER_PENDING',retryAfterSeconds:Math.ceil((pauses.get(item.id)-now())/1000)};continue; }
             if (now() >= cycle.deadline) fail('TIMEOUT');
             if (budget.requests >= budget.maxRequests || cycle.requests >= LIMITS.requestsPerCycle) fail('REQUEST_LIMIT');
             budget.requests++; cycle.requests++;
@@ -487,7 +536,12 @@ export async function auditaBlindatge(options = {}, deps = {}) {
             if (!response.accounted) acceptBytes(budget, cycle, size);
             const secrets = escanejaLiterals(response.text || '', item.id).slice(0, LIMITS.findings);
             let observation;
-            if (item.kind === 'seo-html') {
+            const retry=retryAfterSeconds(headersOf(response.headers)['retry-after'],now());
+            if (response.status===503) {
+              if(retry!==null) pauses.set(item.id,now()+retry*1000);
+              observation={status:'unknown',code:'SERVICE_UNAVAILABLE',retryAfterSeconds:retry,retryAfterValid:retry!==null};
+            }
+            else if (item.kind === 'seo-html') {
               const seo = await seoObservation(response, item);
               observation = seo.observation; projections[at] = secrets.length ? null : seo.projection;
             }

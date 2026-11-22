@@ -104,3 +104,19 @@ test('amb la interfície en valencià, cap lang (el DOM de sempre)', async () =>
     unmount();
   }
 });
+
+/* v1.2.19 · Gauntlet R2 (L3R2-01) · La Consola incrustada (l'element Consola de la Wiki i la pàgina node-zero) també porta
+   els ròtuls en la llengua de la interfície: ConsolaIncrustada proveïx IdiomaConsolaContext com ConsolaSection. */
+test('la Consola incrustada pinta els ròtuls del lector de pantalla en la llengua de la interfície', async () => {
+  const { ConsolaIncrustada } = await import('./ConsolaSection.jsx');
+  const { tca } = await import('./i18nConsolaA11y.js');
+  mocks.ui = { language: 'es', locale: 'es-ES', llenguaDelText: 'es' };
+  render(<RouterProvider><ConsolaIncrustada /></RouterProvider>);
+  await act(async () => {});
+  const nav = await waitFor(() => {
+    const n = document.querySelector(`nav[aria-label="${tca('es', 'paginesConsola')}"], nav[aria-label="${tca('es', 'paginesGovern')}"]`);
+    expect(n).not.toBeNull();
+    return n;
+  });
+  expect(nav.getAttribute('aria-label')).not.toBe(tca('ca', 'paginesConsola'));
+});

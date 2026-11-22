@@ -40,6 +40,29 @@ test('mode sec conserva tots els bytes i no crea locks', t => {
   assert.equal(sanejaTornsCaducats(root, { ara: ARA, sec: true }).tancatsAra, 1);
   assert.deepEqual(fs.readFileSync(file), before); assert.equal(fs.existsSync(`${file}.lock`), false);
 });
+
+test('la baixa conserva el mode original del registre', t => {
+  const { root, file } = expired(t);
+  fs.chmodSync(file, 0o640);
+  assert.equal(sanejaTornsCaducats(root, { ara: ARA }).valid, true);
+  assert.equal(fs.statSync(file).mode & 0o777, 0o640);
+});
+
+test('un canvi concurrent de permisos es conserva i bloqueja el rename del torn', t => {
+  const { root, file } = expired(t), original = fs.writeFileSync, before = fs.readFileSync(file);
+  fs.chmodSync(file, 0o640);
+  let injected = false;
+  fs.writeFileSync = function (target, ...args) {
+    const result = original.call(fs, target, ...args);
+    if (!injected && String(target).includes('/turn-expiry/')) { injected = true; fs.chmodSync(file, 0o600); }
+    return result;
+  };
+  let result;
+  try { result = sanejaTornsCaducats(root, { ara: ARA }); } finally { fs.writeFileSync = original; }
+  assert.equal(injected, true); assert.equal(result.valid, false); assert.equal(result.tancatsAra, 0);
+  assert.deepEqual(fs.readFileSync(file), before); assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  assert.match(result.errors[0].error, /CAS divergent/);
+});
 test('locks ocupats i registres corruptes es compten sense escriptura', t => {
   const { root, file, turn } = expired(t), before = fs.readFileSync(file);
   fs.writeFileSync(`${file}.lock`, 'ocupat');

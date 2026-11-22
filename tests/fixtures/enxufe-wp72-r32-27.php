@@ -27,6 +27,7 @@ function current_user_can( $cap ) {
 	return ! empty( $GLOBALS['caps'][ $cap ] );
 }
 function add_action( ...$args ) {}
+function add_filter( ...$args ) {}
 function wp_salt( $nom ) { return 'sal-fixture'; }
 function wp_parse_url( $url ) { return parse_url( $url ); }
 function wp_json_encode( $valor ) { return json_encode( $valor, JSON_THROW_ON_ERROR ); }

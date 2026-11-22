@@ -4,6 +4,7 @@ import { esAppNativa } from '../../config/origenPublic.js';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { backendScope } from '../../config/backendConfig.js';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { creaFitxaDoctoralArbre, exportaFitxesDoctoralsArbres, importaFitxesDoctoralsArbres,
   FORMATS_FITXES_DOCTORALS, LIMIT_BYTES_FITXES_DOCTORALS, REFERENCIES_DOCTORALS_ARBRES } from '../../data/patrimoni/esquemaDoctoralArbres.js';
 
@@ -20,6 +21,7 @@ export default function EinesDadesArbres(props) {
 }
 
 function CosEinesDadesArbres({ arbres, font, revisionsPerArbre = REVISIONS_BUIDES }) {
+  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
   const [format, setFormat] = useState('jsonld');
   const [formatImportacio, setFormatImportacio] = useState('jsonld');
   const [text, setText] = useState('');
@@ -82,7 +84,7 @@ function CosEinesDadesArbres({ arbres, font, revisionsPerArbre = REVISIONS_BUIDE
   }
 
   return (
-    <section aria-label="Intercanvi de dades d’arbres">
+    <section aria-label={txPat.intercanviDadesArbresAria}>
       <h4>Intercanvi de dades d’arbres</h4>
       <Camp etiqueta="Format d’exportació">
         <Selector opcions={OPCIONS} value={format} onChange={event => setFormat(event.target.value)} />

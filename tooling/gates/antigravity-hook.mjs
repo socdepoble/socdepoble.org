@@ -113,8 +113,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { knownPureRead, SECURITY_PATHS, mutationPath } from './mutation-policy.mjs';
 import { documentArgv } from '../documental/command-policy.mjs';
+import { CAMINS } from '../lib/arrel.mjs';
 
-export const DESK = '_wiki_de_poble/04_escriptori';
+export const DESK = CAMINS.escriptori;
 export const INTERRUPTOR = '.agents/runtime/antigravity-hook.off';
 export const TRACA = '.agents/runtime/antigravity-hook.log';
 export const MODES = Object.freeze(['pre-tool', 'pre-invocation']);
@@ -438,7 +439,7 @@ function preShell(args, root, { conversa = null, observada = null } = {}) {
   const lexicalRisk = ordre.replace(/['"\\]/g,'');
   const riskText = lexicalRisk.toLowerCase();
   const mentions = dir => new RegExp(`(?:^|[\\s/])${dir.replaceAll('.','[.]')}(?=$|[\\s/;&|()])`).test(riskText);
-  const tocaTaulell = mentions('04_escriptori') || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
+  const tocaTaulell = mentions(path.posix.basename(DESK)) || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
   const enclosesProtected = directory => [DESK,...SECURITY_PATHS].some(dir=>{
     const rel=path.relative(directory,path.join(root,dir));
     return rel==='' || (rel!=='..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
@@ -449,7 +450,7 @@ function preShell(args, root, { conversa = null, observada = null } = {}) {
   const destructiva = /(?:^|[\s;&|(`])(?:\/(?:[^/\s`]+\/)*)?(?:rm|mv|unlink|rmdir|truncate)(?=[\s`]|$)/.test(riskText);
   if (tocaTaulell && destructiva) return forceAsk(`${MOTIU_MV}${tocaGovern?' Si afecta governança, necessita executor-mutacio.mjs amb pla exacte i lease.':''}`);
   if (tocaGovern && destructiva) return forceAsk('Destrucció o trasllat de governança: necessita autoritat explícita; usa executor-mutacio.mjs amb pla exacte i lease.');
-  const ARXIU_REL = '_wiki_de_poble/90_arxiu_historic';
+  const ARXIU_REL = CAMINS.arxiuHistoric;
   if (destructiva && (mentions('90_arxiu_historic') || cwdRel === ARXIU_REL || cwdRel.startsWith(`${ARXIU_REL}/`))) return forceAsk(MOTIU_ARXIU);
   // Un intèrpret inline amb destí explícit no és una via documental ni un lease.
   if ((tocaTaulell || tocaGovern) && /(?:^|[\s;&|('"`])(?:\/(?:[^/\s'"`]+\/)*)?(?:node|python[0-9.]*|perl|ruby|sh|bash|zsh)(?:[ \t]+[^;&|]*)?[ \t]-(?:e|c|p)(?=[ \t]|$)/.test(lexicalRisk)) {

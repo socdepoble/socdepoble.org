@@ -328,6 +328,53 @@ test('GL només a la beta: si cau, 502 net i mai l’extrem principal (400 «Tha
   assert.deepEqual(amb.calls.map((c) => [c.url, c.body.langpair]), [[BETA, 'cat|glg']]);
 });
 
+/* v1.2.19 · Gauntlet R1 (L2-01) · Un 503 amb Retry-After pausa només l'extrem
+   que l'envia (G10: és un 5xx). Si en queda un altre, compta com a caigut i la
+   petició continua; la pausa mai és de tot Apertium ni de les altres llengües. */
+const pausesDe = (r) => Object.entries(r.cache).filter(([k]) => k.startsWith('sdp_tr_pause_'));
+test('503 amb Retry-After de la beta: pausa només la beta; la principal servix ES, EN-GB i FR i GL espera sense crida', options, () => {
+  const r = run({ key: '', steps: [
+    { body: body(['Bon dia', 'Poble']), fail: { [BETA]: 503 }, retryAfter: { [BETA]: '86400' } },
+    { body: body(['Bona nit'], { desti: 'EN-GB' }) },
+    { body: body(['Bon dia'], { desti: 'GL' }) },
+  ] });
+  assert.deepEqual(r.calls.map((c) => c.url), [BETA, PRINCIPAL, PRINCIPAL, PRINCIPAL], 'la beta pausada no es torna a cridar');
+  assert.deepEqual(r.responses[0].data.traduccions, ['spa:Bon dia', 'spa:Poble']);
+  assert.deepEqual(r.responses[1].data.traduccions, ['eng:Bona nit']);
+  assert.equal(r.responses[2].code, 'sdp_traduccio_proveidor');
+  assert.equal(r.responses[2].data.status, 503);
+  assert.ok(r.responses[2].data.retry_after > 86000 && r.responses[2].data.retry_after <= 86400, String(r.responses[2].data.retry_after));
+  const pauses = pausesDe(r);
+  assert.equal(pauses.length, 1, 'una sola pausa: la de l’extrem que l’ha demanada');
+  assert.match(pauses[0][0], /^sdp_tr_pause_[a-f0-9]{64}$/);
+  assert.equal(pauses[0][1].ttl, 86400);
+  assert.equal(r.cache[`sdp_tr_pause_${hmac('sdp-apertium-v1')}`], undefined, 'cap pausa compartida de tot Apertium');
+  assert.equal(r.budget.diari, 'Bon dia'.length + 'Poble'.length + 'Bona nit'.length, 'el gallec en pausa no reserva pressupost');
+  // La pausa de la beta que demana el gallec tampoc no bloqueja ES: va directa a la principal.
+  const gl = run({ key: '', steps: [
+    { body: body(['Bon dia'], { desti: 'GL' }), fail: { [BETA]: 503 }, retryAfter: { [BETA]: '300' } },
+    { body: body(['Bon dia']) },
+  ] });
+  assert.deepEqual(gl.calls.map((c) => c.url), [BETA, PRINCIPAL]);
+  assert.deepEqual([gl.responses[0].data.status, gl.responses[0].data.retry_after], [503, 300]);
+  assert.deepEqual(gl.responses[1].data.traduccions, ['spa:Bon dia']);
+});
+
+test('503 amb Retry-After als dos extrems: 503 amb l’espera més curta i, mentre dura, cap crida ni pressupost', options, () => {
+  const r = run({ key: '', steps: [
+    { fail: { [BETA]: 503, [PRINCIPAL]: 503 }, retryAfter: { [BETA]: '600', [PRINCIPAL]: '120' } },
+    { body: body(['Bon dia'], { desti: 'FR' }) },
+  ] });
+  assert.deepEqual(r.calls.map((c) => c.url), [BETA, PRINCIPAL]);
+  assert.deepEqual(r.responses.map((x) => [x.code, x.data.status]), [['sdp_traduccio_proveidor', 503], ['sdp_traduccio_proveidor', 503]]);
+  assert.equal(r.responses[0].data.retry_after, 120);
+  assert.ok(r.responses[1].data.retry_after >= 119 && r.responses[1].data.retry_after <= 120);
+  assert.deepEqual(pausesDe(r).map(([, v]) => v.ttl).sort((a, b) => a - b), [120, 600]);
+  assert.equal(traduccionsGuardades(r).length, 0);
+  assert.equal(r.budget.diari, 'Bon dia'.length, 'la segona petició no reserva res');
+  assert.equal(r.lock, null);
+});
+
 test('els dos extrems d’Apertium caiguts: 502 sense cache; ni el transport ni un 5xx obrin la pausa', options, () => {
   const caiguts = run({ key: '', steps: [{ fail: { [BETA]: 'transport', [PRINCIPAL]: 'transport' } }, { body: body(['Nit']) }] });
   assert.deepEqual(caiguts.calls.map((c) => c.url), [BETA, PRINCIPAL, BETA]);

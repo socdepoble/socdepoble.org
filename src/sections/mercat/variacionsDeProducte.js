@@ -17,7 +17,7 @@
 import { idDeVariacio } from '../../data/mapejadorSeccions.js';
 
 const text = (valor) => {
-  if (typeof valor === 'number' && Number.isFinite(valor)) return String(valor);
+  if (typeof valor === 'number' && Number.isFinite(valor)) return String(valor === 0 ? 0 : valor);
   return typeof valor === 'string' ? valor.trim() : '';
 };
 
@@ -28,7 +28,11 @@ const text = (valor) => {
 const normalitza = (valor) => text(valor).toLowerCase().normalize('NFD')
   .replace(/[̀-ͯ]/g, '').replace(/[\s_]+/g, ' ');
 const ESTATS_ESGOTAT = new Set([
-  'esgotat', 'esgotada', 'esgotats', 'esgotades', 'agotado', 'agotada', 'out of stock', 'sold out'
+  'esgotat', 'esgotada', 'esgotats', 'esgotades',
+  'agotado', 'agotada',
+  'out of stock', 'sold out',
+  'agortuta', 'agortua',
+  'esgotado',
 ]);
 
 /** Cert si la variació declara que està esgotada (stock_status). */

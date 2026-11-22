@@ -24,6 +24,8 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Palette } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, EstatBuit, GrupCamps, Selector } from '../../components/PedraSeca/index.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { textosAdminA11y } from './i18nAdminA11y.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { adminDesaPersonalitzacio, adminHistorialPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
@@ -95,7 +97,8 @@ function dataDe(iso) {
   return Number.isNaN(data.getTime()) ? String(iso) : FORMAT_DATA.format(data);
 }
 
-function CampToken({ token, valor, personalitzat, onCanvi, onCanon }) {
+/* v1.2.19 · Gauntlet R1 (L3-01) · «Cànon» i «Restaurar» es veuen en la llengua de l'aria-label, que hi comença (WCAG 2.5.3). */
+function CampToken({ token, valor, personalitzat, onCanvi, onCanon, txAdmin }) {
   const { nom, tipus } = token;
   const opcions = valor || tipus === 'color' ? OPCIONS_RADI : [{ valor: '', etiqueta: '(sense valor)', desactivat: true }, ...OPCIONS_RADI];
   return (
@@ -103,19 +106,19 @@ function CampToken({ token, valor, personalitzat, onCanvi, onCanon }) {
       {tipus === 'color'
         ? <CampText tipus="color" value={valor || '#000000'} onChange={(e) => onCanvi(nom, e.target.value)} />
         : <Selector opcions={opcions} value={valor} onChange={(e) => onCanvi(nom, e.target.value)} />}
-      {personalitzat ? <Boto varietat="fantasma" onClick={() => onCanon(nom)} aria-label={`Tornar ${etiquetaDe(nom)} al cànon`}>Cànon</Boto> : null}
+      {personalitzat ? <Boto varietat="fantasma" onClick={() => onCanon(nom)} aria-label={txAdmin.tornarTokenAlCanonAria(etiquetaDe(nom))}>{txAdmin.canon}</Boto> : null}
     </Camp>
   );
 }
 
-function Historial({ entrades, onRestaura }) {
+function Historial({ entrades, onRestaura, txAdmin }) {
   if (!entrades.length) return <p className="sdp-camp__ajuda">Encara no hi ha cap versió desada.</p>;
   return (
-    <ul className="sdp-estil__historial" aria-label="Versions desades">
+    <ul className="sdp-estil__historial" aria-label={txAdmin.versionsDesadesAria}>
       {entrades.map((e) => (
         <li key={e.versio} className="sdp-estil__versio">
           <span>{`Versió ${e.versio}`}{e.creat ? ` · ${dataDe(e.creat)}` : ''}{e.autor ? ` · ${e.autor}` : ''}</span>
-          <Boto onClick={() => onRestaura(e)} aria-label={`Restaurar la versió ${e.versio}`}>Restaurar</Boto>
+          <Boto onClick={() => onRestaura(e)} aria-label={txAdmin.restaurarVersioAria(e.versio)}>{txAdmin.restaurar}</Boto>
         </li>
       ))}
     </ul>
@@ -123,6 +126,7 @@ function Historial({ entrades, onRestaura }) {
 }
 
 export function FacetaEstil({ ambit = null }) {
+  const txAdmin = textosAdminA11y({ t: useTraductorOpcional() });
   const ambPoble = Boolean(ambit);
   const identificador = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const [previsualitzacio, setPrevisualitzacio] = useState(null);
@@ -297,7 +301,7 @@ export function FacetaEstil({ ambit = null }) {
   if (ambit && !ambit.preparada) return ambit.selector;
 
   return (
-    <section ref={setNode} className="sdp-estil" aria-label="Estil del poble" data-sdp-estil-admin={ambPoble ? identificador : undefined}>
+    <section ref={setNode} className="sdp-estil" aria-label={txAdmin.estilDelPobleAria} data-sdp-estil-admin={ambPoble ? identificador : undefined}>
       {ambPoble && previsualitzacio ? <style data-sdp-estil-admin-full="">{cssDePersonalitzacio(previsualitzacio).replace(/^[^\n{]+\{/gm, `[data-sdp-estil-admin="${identificador}"] {`)}</style> : null}
       {ambit?.selector}
       {sessio?.calSegonFactor ? (
@@ -310,7 +314,7 @@ export function FacetaEstil({ ambit = null }) {
         <GrupCamps key={grup} llegenda={llegenda}>
           {TOKENS_EDITABLES.filter((t) => t.grup === grup).map((t) => (
             <CampToken key={t.nom} token={t} valor={valorMostrat(t.nom)} personalitzat={tokens[t.nom] !== undefined}
-              onCanvi={canvia} onCanon={reinicia} />
+              onCanvi={canvia} onCanon={reinicia} txAdmin={txAdmin} />
           ))}
         </GrupCamps>
       ))}
@@ -323,7 +327,7 @@ export function FacetaEstil({ ambit = null }) {
         <p className="sdp-camp__ajuda">Gir aplicat: {to.toFixed(1)}°{to === 0 ? ' — paleta canònica intacta' : ''}</p>
       </GrupCamps>
 
-      <section className="sdp-estil__contrast" aria-label="Contrast">
+      <section className="sdp-estil__contrast" aria-label={txAdmin.contrastAria}>
         <h3 className="sdp-estil__subtitol">{`Contrast (mínim ${CONTRAST_MINIM}:1)`}</h3>
         <ul className="sdp-estil__parells">
           {contrastos.map((c) => (
@@ -349,7 +353,7 @@ export function FacetaEstil({ ambit = null }) {
 
       {avis ? <Alerta to={avis.to} onTanca={() => setAvis(null)}>{avis.text}</Alerta> : null}
       {historial === 'carregant' ? <Carregant etiqueta="Carregant l’historial…" /> : null}
-      {Array.isArray(historial) ? <Historial entrades={historial} onRestaura={restaura} /> : null}
+      {Array.isArray(historial) ? <Historial entrades={historial} onRestaura={restaura} txAdmin={txAdmin} /> : null}
     </section>
   );
 }

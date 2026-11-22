@@ -5,6 +5,7 @@ import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { carregaWikiManifest, wikiManifestCarregat } from '../../../data/carregaWikiManifest.js';
 import { Mono, PrivacitatConsola } from '../peces.jsx';
+import { tca, useIdiomaConsola } from '../i18nConsolaA11y.js';
 import {
   NOMS_TIPUS, TEXTOS_AVIS, TO_CONFIANCA, TO_SEVERITAT,
   dadesDelNode, documentWiki, etiquetaNode, fitxerAbsent, fitxerDelNode,
@@ -202,6 +203,7 @@ export function AccionsFitxer({ ruta, avisos = [], doc = null, graf = null, ordr
  */
 export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfoca = false }) {
   const privat = useContext(PrivacitatConsola);
+  const idioma = useIdiomaConsola();
   const panell = useRef(null);
   const titol = useRef(null);
   const enfocaTitol = useRef(enfoca);
@@ -234,7 +236,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
 
   if (!node) {
     return (
-      <aside className="sdp-explorador__detall" aria-label="Detall de la peça" ref={panell}>
+      <aside className="sdp-explorador__detall" aria-label={tca(idioma, 'detallDeLaPeca')} ref={panell}>
         {tria}
         <p ref={adoptaEstilsDiferits}>
           Fes clic en un punt del graf o tria una peça de la llista. Ací veuràs
@@ -259,7 +261,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfo
   const repara = node.tipus === 'skill' ? codisReparats({ avisos }) : [];
 
   return (
-    <aside className="sdp-explorador__detall" aria-label="Detall de la peça" ref={panell}>
+    <aside className="sdp-explorador__detall" aria-label={tca(idioma, 'detallDeLaPeca')} ref={panell}>
       {tria}
 
       <div ref={adoptaEstilsDiferits} className="sdp-explorador__detall-cap">

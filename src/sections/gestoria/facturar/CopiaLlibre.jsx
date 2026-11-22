@@ -37,10 +37,19 @@ export function insigniaDeLaCopia(f, idioma = 'ca') {
   return pendents ? { to: 'avis', text: tg(idioma, 'Còpia antiga') } : { to: 'exit', text: tg(idioma, 'Al dia') };
 }
 
+export function dataHoraSeguraDeCopia(instant) {
+  try {
+    return dataHoraAmbHus(instant);
+  } catch {
+    return null;
+  }
+}
+
 export function CopiaLlibre({ f, idioma = 'ca' }) {
-  const copia = f.perfil.copia;
+  const copia = f.perfil?.copia ?? null;
   const pendents = f.config ? registresSenseCopia(f.cadena, copia, f.config.nif) : 0;
-  const quan = copia ? dataHoraAmbHus(copia.instant) : null;
+  const quan = copia ? dataHoraSeguraDeCopia(copia.instant) : null;
+  const nomCopia = copia?.dades?.nomFitxer ?? 'sense nom';
   const ocupat = Boolean(f.ocupat);
 
   async function restaura(event) {
@@ -62,7 +71,11 @@ export function CopiaLlibre({ f, idioma = 'ca' }) {
         {tg(idioma, 'El llibre viu en este navegador, que el pot esborrar si es netegen les dades del lloc. Fes-ne còpia cada dia que factures i guarda-la també fora d’este ordinador: un llapis USB o la carpeta de la gestoria.')}
       </p>
       {copia ? (
-        <p ref={adoptaEstilsDiferits}>{`L’última còpia és «${copia.dades.nomFitxer ?? 'sense nom'}», del ${dataCurta(quan.slice(0, 10))} a les ${quan.slice(11, 16)}.`}</p>
+        <p ref={adoptaEstilsDiferits}>
+          {quan
+            ? `L’última còpia és «${nomCopia}», del ${dataCurta(quan.slice(0, 10))} a les ${quan.slice(11, 16)}.`
+            : `L’última còpia és «${nomCopia}».`}
+        </p>
       ) : (
         <Alerta to="avis" viva={false} titol={tg(idioma, 'Encara no hi ha cap còpia del llibre')}>
           {tg(idioma, 'Fes-ne una ara: sense còpia, si el navegador esborra les dades, el llibre es perd.')}

@@ -15,6 +15,7 @@ import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { CATALEG } from './constants.js';
@@ -44,6 +45,8 @@ export function ColumnaCatalegSencer({ params }) {
   const { article: obert, fitxa } = useVistaCataleg();
   const esborra = useEsborraPropi(tx);
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const linies = perArticle(llista);
   const propis = new Set(estat.propis.map((propi) => propi.id));
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio, idioma };
@@ -56,13 +59,13 @@ export function ColumnaCatalegSencer({ params }) {
       titol={tx.cataleg}
       categories={seccionsDe(estat, llista.id, { totesVisibles: true, idioma })}
       articles={articles}
-      textosEstat={{ 'en-colleccio': tx.aLlistaNom(llista.nom) }}
+      textosEstat={{ 'en-colleccio': tx.aLlistaNom(nomLlista) }}
       onTria={(article, { obriDetall }) => obriDetall()}
       afegit={{ etiqueta: tx.buscaOCreaArticle, suggeriments: suggerimentsVestits(estat, vestit), onCrea: (text) => accions.creaArticlePropi(text) }}
       detall={{
         ambQuantitat: false,
         etiquetaNota: tx.especificacio,
-        textAccepta: tx.posaHoALlistaNom(llista.nom),
+        textAccepta: tx.posaHoALlistaNom(nomLlista),
         inicialDe: (article) => ({ nota: linies.get(article.id)?.especificacio ?? '' }),
         onAccepta: ({ nota }, article) => accions.afig(llista.id, article.id, { especificacio: nota }),
         accionsDe: (article, tanca) => (propis.has(article.id) ? (
@@ -88,12 +91,14 @@ export function ColumnaArticlesPropis({ params }) {
   const esborra = useEsborraPropi(tx);
   const obriDetall = useObriDetall(CATALEG);
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const linies = perArticle(llista);
   const files = estat.propis.map((propi) => ({
     id: propi.id,
     articleId: propi.id,
     nom: propi.nom,
-    detall: linies.has(propi.id) ? tx.aLlistaNom(llista.nom) : undefined
+    detall: linies.has(propi.id) ? tx.aLlistaNom(nomLlista) : undefined
   }));
   return (
     <ColumnaColleccio

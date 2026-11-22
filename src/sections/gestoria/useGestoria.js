@@ -292,16 +292,26 @@ const CAMPS_EN_PROPORCIO = Object.freeze(['subtotal', 'retencio']);
 
 /* G3T-15: els imports d'una factura en una altra moneda passats a euros amb el total del càrrec. La base i la
    retenció es converteixen en la mateixa proporció i l'IVA és el que falta perquè el total quadre; sense la base
-   llegida, l'IVA també va en proporció (mai no es queda en la moneda de la factura). */
-function importsEnEuros(f, euros) {
-  const proporcio = (camp) => (Number.isSafeInteger(f[camp]) ? Math.round((f[camp] * euros) / f.total) : f[camp]);
+   llegida, l'IVA també va en proporció (mai no es queda en la moneda de la factura).
+   R32.32: blindatge contra divisió per zero (f.total === 0 o no enter) i contra -0 en abonaments. */
+export function importsEnEuros(f, euros) {
+  const zeroNet = (n) => (Object.is(n, -0) ? 0 : n);
+  const totalValid = Number.isSafeInteger(f?.total) && f.total !== 0;
+  const proporcio = (camp) => {
+    if (!Number.isSafeInteger(f?.[camp])) return f?.[camp];
+    if (!totalValid) {
+      if (euros === 0 || camp !== 'subtotal') return 0;
+      return Number.isSafeInteger(f?.iva) && f.iva === 0 ? zeroNet(euros) : 0;
+    }
+    return zeroNet(Math.round((f[camp] * euros) / f.total));
+  };
   const [subtotal, retencio] = CAMPS_EN_PROPORCIO.map(proporcio);
   const ambRetencio = Number.isSafeInteger(retencio) ? Math.abs(retencio) : 0;
   const signeRetencio = Number.isSafeInteger(subtotal) && subtotal < 0 ? -1 : 1;
-  const iva = Number.isSafeInteger(subtotal) && Number.isSafeInteger(f.iva)
-    ? euros - subtotal + signeRetencio * ambRetencio
+  const iva = Number.isSafeInteger(subtotal) && Number.isSafeInteger(f?.iva)
+    ? zeroNet(euros - subtotal + signeRetencio * ambRetencio)
     : proporcio('iva');
-  return { subtotal, iva, total: euros, ...(Object.prototype.hasOwnProperty.call(f, 'retencio') ? { retencio } : {}) };
+  return { subtotal, iva, total: zeroNet(euros), ...(Object.prototype.hasOwnProperty.call(f, 'retencio') ? { retencio } : {}) };
 }
 const plural = (n, una, moltes, cap = null) => {
   if (n === 0 && cap) return cap;

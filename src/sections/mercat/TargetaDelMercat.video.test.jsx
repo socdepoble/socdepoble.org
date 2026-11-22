@@ -45,7 +45,7 @@ afterEach(() => {
 });
 
 describe('R22.1 · Peça 1 · Vídeo Principal + Portada estil YouTube en Productes del Mercat', () => {
-  test('un producte amb portada i video_url propis pinta <video poster controls playsInline preload="metadata"> a la Card', () => {
+  test('un producte amb portada i video_url propis pinta <video poster controls playsInline preload="none"> a la Card', () => {
     const props = propsDeTargetaDeProducte(PRODUCTE_AMB_VIDEO);
     expect(props.imageUrl).toBe(PORTADA);
     expect(props.videoUrl).toBe(VIDEO);
@@ -59,7 +59,8 @@ describe('R22.1 · Peça 1 · Vídeo Principal + Portada estil YouTube en Produc
     expect(video.getAttribute('poster')).toBe(PORTADA);
     expect(video.hasAttribute('controls')).toBe(true);
     expect(video.hasAttribute('playsinline')).toBe(true);
-    expect(video.getAttribute('preload')).toBe('metadata');
+    // v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Cap petició de xarxa en repòs: el vídeo, en prémer «reproduir».
+    expect(video.getAttribute('preload')).toBe('none');
   });
 
   test('qualsevol producte amb video_url propi pinta el reproductor a la Card i al Hero de la fitxa (portadaDElement), i rebutja URLs externes', () => {
@@ -86,7 +87,8 @@ describe('R22.1 · Peça 1 · Vídeo Principal + Portada estil YouTube en Produc
     expect(videoHero.getAttribute('poster')).toBe('/assets/mercat/mel.webp');
     expect(videoHero.hasAttribute('controls')).toBe(true);
     expect(videoHero.hasAttribute('playsinline')).toBe(true);
-    expect(videoHero.getAttribute('preload')).toBe('metadata');
+    // v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Cap petició de xarxa en repòs: el vídeo, en prémer «reproduir».
+    expect(videoHero.getAttribute('preload')).toBe('none');
 
     cleanup();
     const producteExtern = {

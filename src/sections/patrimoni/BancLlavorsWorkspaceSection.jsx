@@ -10,6 +10,7 @@ import { useRouter } from '../../app/contexts/RouterContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
 import TextSection from '../text/TextSection';
 import { Fitxa, FitxaDeLaFont } from './BancLlavorsSection.jsx';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 
 const CalendariAgricolaLlavorsView = lazy(() => import('./CalendariAgricolaLlavorsView.jsx'));
@@ -98,6 +99,8 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
   const baseId = useId();
   const search = useConsultaDelRouter();
   const { t } = useUIActions();
+  const language = useUIStateOpcional()?.language || 'ca';
+  const txPat = textosPatrimoniA11y(language);
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const [llibreActiu, setLlibreActiu] = useState(() => (
     llibreInicial && LLIBRES_BIBLIOTECA_AGRICOLA.some((l) => l.id === llibreInicial)
@@ -143,7 +146,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
       <div
         className="sdp-workspace-llibres__barra"
         role="tablist"
-        aria-label="Llibres de la Biblioteca Agrícola i Banc de Llavors"
+        aria-label={txPat.llibresBibliotecaAgricolaAria}
       >
         {LLIBRES_BIBLIOTECA_AGRICOLA.map((llibre) => {
           const actiu = llibreActiu === llibre.id;
@@ -180,7 +183,7 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
             itemSlug={itemSlug}
             sincronitzaRuta={sincronitzaRuta}
             model={model}
-            labels={{ categories: 'Catàlegs', items: 'Varietats', all: 'Tots els catàlegs' }}
+            labels={{ categories: txPat.catalegs, items: txPat.varietats, all: txPat.totsElsCatalegs }}
             renderDetail={({ item, onClose, onTriaItem }) => {
               const entrada = item?.entrada;
               const pont = varietatPendent ? (

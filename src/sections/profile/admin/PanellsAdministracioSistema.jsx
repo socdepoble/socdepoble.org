@@ -4,7 +4,12 @@ import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { carpetesAmagadesDe, desaCarpetaAmagada, subscriuCarpetesVisibles } from '../../../components/universal/workspace/carpetesVisibles.js';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext.jsx';
+import { useUIStateOpcional } from '../../../app/contexts/UIContext.jsx';
 import { Link } from '../../../app/contexts/RouterContext.jsx';
+/* v1.2.19 · fusió · R32.30b (lot 03) porta els aria-label i placeholder d'este panell al diccionari diferit
+   del Perfil (5 llengües, el valencià byte a byte); el ref adoptaEstilsAdminTaxonomia de la v1.2.18 es queda a
+   cada etiqueta .sdp-admin-taxonomia__*: les dues coses viuen en la mateixa etiqueta. */
+import { textosPerfilA11y } from '../i18nPerfilA11y.js';
 import { adminDesaPersonalitzacio, teCapacitat } from '../../../data/backendPort.js';
 import { MISSATGE_PERSONALITZACIO } from '../../../data/errorsBackend.js';
 import { ambCrom } from '../../../config/estil.js';
@@ -48,6 +53,7 @@ function ambCapacitatPersonalitzacio() {
  * Accent i Acció que abans vivia darrere de la roda dentada de la barra negra superior.
  */
 export function PanellCromIntegrat() {
+  const txPerfil = textosPerfilA11y({ language: useUIStateOpcional()?.language });
   const arrelRef = useRef(null);
   const [arrel, setArrel] = useState(null);
   const [color, setColor] = useState('');
@@ -127,7 +133,7 @@ export function PanellCromIntegrat() {
   }, [arrel, delta, estilDesat, refresh, potDesar]);
 
   return (
-    <article ref={setNode} className="sdp-admin-taxonomia" aria-label="Colors i disseny (Crom del sistema)">
+    <article ref={setNode} className="sdp-admin-taxonomia" aria-label={txPerfil.cromSistemaAria}>
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Pedra Seca · OKLCH / Contrastos AAA</Insignia>
@@ -197,6 +203,7 @@ export function PanellCromIntegrat() {
  * que abans s'obrien des de la roda dentada de la Columna 1.
  */
 export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
+  const txPerfil = textosPerfilA11y({ language: useUIStateOpcional()?.language });
   const id = useId();
   const grid = useAppGrid();
   const applyPreset = grid?.applyPreset ?? (() => {});
@@ -221,7 +228,7 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
   );
 
   return (
-    <article className="sdp-admin-taxonomia" aria-label="Ajustos de vistes i columnes">
+    <article className="sdp-admin-taxonomia" aria-label={txPerfil.ajustosVistesColumnesAria}>
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">AppGridShell · 3 Columnes</Insignia>
@@ -240,7 +247,7 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
         <p className="sdp-muted">
           Ara: navegació <strong>{columnWidths.left}px</strong> · llistat <strong>{columnWidths.middle}px</strong>
         </p>
-        <div className="sdp-admin-actions-inline" role="group" aria-label="Amplada de les columnes">
+        <div className="sdp-admin-actions-inline" role="group" aria-label={txPerfil.ampladaColumnesAria}>
           <Boto varietat="secundari" onClick={() => applyPreset('compacta')}>
             Compacta
           </Boto>
@@ -263,7 +270,7 @@ export function PanellAjustosVistesColumnes({ navigationGroups = [] }) {
             Amagar una carpeta la lleva de la navegació, però no l’esborra: els seus documents continuen a «Tot» i a la
             cerca.
           </p>
-          <ul className="sdp-workspace-settings__carpetes" aria-label="Carpetes a la vista">
+          <ul className="sdp-workspace-settings__carpetes" aria-label={txPerfil.carpetesALaVistaAria}>
             {opcionsArrel.map((node) => {
               const visible = preferides[node.id] !== false;
               return (
@@ -313,6 +320,7 @@ const ESTAT_NODE0_BASE = Object.freeze({
  * Mostra en viu les dades reals de GET /api/v1/node0/status i l'estat del pont Fedivers i Mirall 3-2-1.
  */
 export function PanellNodesFediversResiliencia() {
+  const txPerfil = textosPerfilA11y({ language: useUIStateOpcional()?.language });
   const [estatViu, setEstatViu] = useState(ESTAT_NODE0_BASE);
   const [fontEstat, setFontEstat] = useState('llavor_certificada');
   const [comprovant, setComprovant] = useState(false);
@@ -348,7 +356,7 @@ export function PanellNodesFediversResiliencia() {
   }, [comprovaNode0]);
 
   return (
-    <article className="sdp-admin-taxonomia" aria-label="Nodes, Fedivers i Resiliència 3-2-1">
+    <article className="sdp-admin-taxonomia" aria-label={txPerfil.nodesFediversAria}>
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="exit">PostgreSQL 17.11 · 40 taules</Insignia>
@@ -363,7 +371,7 @@ export function PanellNodesFediversResiliencia() {
         </p>
       </header>
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label="Mètriques del Node 0 i Fedivers">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label={txPerfil.metriquesNode0Aria}>
         <div className="sdp-admin-kpi">
           <strong>17.11</strong>
           <span>PostgreSQL Node 0</span>
@@ -448,7 +456,7 @@ export function PanellNodesFediversResiliencia() {
 
       <section ref={adoptaEstilsAdminTaxonomia}
         className="sdp-admin-taxonomia__panel"
-        aria-label="Funcionament del Node 0, la IAIA, el Revisor Editorial i la Consola Incrustada"
+        aria-label={txPerfil.funcionamentNode0Aria}
         data-testid="admin-node0-explicatiu-consola"
       >
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
@@ -496,11 +504,11 @@ export function PanellNodesFediversResiliencia() {
 /* Onada R9 · C3 (G8-12, G8-14) · El QR de la guia de descàrregues: el camí precalculat amb el
    codificador de la Gestoria (assistentBotigues.js), paper clar i tinta fosca que no canvien amb el
    tema, amb la zona de silenci de la norma. */
-function QrGuiaDescarregues() {
+function QrGuiaDescarregues({ txPerfil }) {
   const { costat, d, text } = QR_GUIA_DESCARREGUES;
   return (
     <svg className="sdp-admin-qr__svg" viewBox={`0 0 ${costat} ${costat}`} role="img"
-      aria-label={`QR de la guia de descàrregues: ${text}`} shapeRendering="crispEdges" data-testid="qr-svg-botigues">
+      aria-label={txPerfil.qrGuiaDescarreguesAria(text)} shapeRendering="crispEdges" data-testid="qr-svg-botigues">
       <rect className="sdp-admin-qr__paper" x="0" y="0" width={costat} height={costat} />
       <path className="sdp-admin-qr__tinta" d={d} />
     </svg>
@@ -538,18 +546,18 @@ function EstatAvisosPushAdmin() {
    ací en faria un de compartit més, que l'entrada hauria de llistar: +49 B) i la versió de la botiga a part de la
    del projecte; Google Play, els tres passos dels verificadors amb l'enllaç del pas 1 i el camí als
    Indicadors. */
-function AssistentBotigues() {
+function AssistentBotigues({ txPerfil }) {
   const [canalActiuId, setCanalActiuId] = useState('pwa');
   const canalActiu = CANALS_BOTIGUES.find((c) => c.id === canalActiuId) || CANALS_BOTIGUES[0];
   return (
-    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Botigues, guia de descàrregues i avisos push" data-testid="assistent-botigues-qr-admin">
+    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={txPerfil.botiguesGuiaPushAria} data-testid="assistent-botigues-qr-admin">
       <h3>📲 Botigues i guia de descàrregues</h3>
       <p className="sdp-muted">
         El QR porta a la guia pública de descàrregues, que ja porta el botó de l’App Store i els tres passos de
         Google Play per als verificadors. No és cap enllaç d’instal·lació directa: des d’este panell no es llig
         l’estat de cap botiga.
       </p>
-      <div className="sdp-admin-actions-inline" role="group" aria-label="Canals d’instal·lació">
+      <div className="sdp-admin-actions-inline" role="group" aria-label={txPerfil.canalsInstallacioAria}>
         {CANALS_BOTIGUES.map((c) => (
           <Boto key={c.id} varietat={c.id === canalActiu.id ? 'primari' : 'secundari'} aria-pressed={c.id === canalActiu.id}
             onClick={() => setCanalActiuId(c.id)} data-testid={`boto-canal-botiga-${c.id}`}>
@@ -559,7 +567,7 @@ function AssistentBotigues() {
       </div>
       <div className="sdp-admin-botiga-detall" data-testid={`detall-canal-botiga-${canalActiu.id}`}>
         <div className="sdp-admin-botiga-detall__qr">
-          <QrGuiaDescarregues />
+          <QrGuiaDescarregues txPerfil={txPerfil} />
           <code className="sdp-admin-botiga-detall__url">{URL_GUIA_DESCARREGUES}</code>
         </div>
         <div className="sdp-admin-botiga-detall__info">
@@ -640,8 +648,9 @@ function AssistentBotigues() {
  * Apartat 6 · 📦 Empaquetats i Desplegament (Mode Jarvis)
  */
 export function PanellEmpaquetatsDesplegament() {
+  const txPerfil = textosPerfilA11y({ language: useUIStateOpcional()?.language });
   return (
-    <article className="sdp-admin-taxonomia" aria-label="Empaquetats i Desplegament (Mode Jarvis)">
+    <article className="sdp-admin-taxonomia" aria-label={txPerfil.empaquetatsDesplegamentAria}>
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="primari">Model B · Port Neutral</Insignia>
@@ -654,7 +663,7 @@ export function PanellEmpaquetatsDesplegament() {
         </p>
       </header>
 
-      <AssistentBotigues />
+      <AssistentBotigues txPerfil={txPerfil} />
 
       <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel">
         <h3>📦 Artefactes i Portes de Seguretat</h3>

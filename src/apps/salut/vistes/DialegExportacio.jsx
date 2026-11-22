@@ -14,8 +14,11 @@ import { Download, Share2 } from 'lucide-react';
 import {
   Alerta, Boto, Camp, CampText, Casella, Dialeg, GrupOpcions, Pila
 } from '../../../components/PedraSeca/index.js';
+import { useApp } from '../../plataforma/index.js';
+import { modelFullSalutTraduit } from '../i18nSalut.js';
 import { FULLA_CSV, exporta } from '../nucli/exportacio.js';
 import { fullDiari } from '../nucli/full.js';
+import { sumaDies } from '../nucli/hores.js';
 import { useSalut } from '../useSalut.jsx';
 import { useTextosSalut } from './comunes.jsx';
 import { descarregaFitxer } from './descarrega.js';
@@ -27,14 +30,18 @@ function potCompartirFitxers() {
 
 export function DialegExportacio({ obert, onTanca, des, dies }) {
   const salut = useSalut();
+  const { idioma = 'ca' } = useApp();
   const tx = useTextosSalut();
   const [format, setFormat] = useState('xlsx');
   const [ambNom, setAmbNom] = useState(false);
   const [nom, setNom] = useState('');
   const [missatge, setMissatge] = useState(null);
-  const model = useMemo(() => (obert ? fullDiari({
+  const full = useMemo(() => (obert ? fullDiari({
     des, dies, apunts: salut.apunts, jornades: salut.jornades, persona: salut.persona, ofsetDe: salut.ofsetDe, nomPersona: ambNom ? nom : ''
-  }).model : null), [obert, des, dies, salut.apunts, salut.jornades, salut.persona, salut.ofsetDe, ambNom, nom]);
+  }) : null), [obert, des, dies, salut.apunts, salut.jornades, salut.persona, salut.ofsetDe, ambNom, nom]);
+  const model = useMemo(() => (full ? modelFullSalutTraduit(full.model, {
+    des, fins: sumaDies(des, dies - 1), dies, completes: full.periode.completes, nomPersona: ambNom ? nom : '', idioma
+  }) : null), [full, des, dies, ambNom, nom, idioma]);
 
   const tanca = (motiu) => {
     /* El nom no es guarda: en tancar, s'oblida. */
@@ -43,7 +50,7 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
     setMissatge(null);
     onTanca?.(motiu);
   };
-  const fitxer = () => exporta({ model, format, des, dies });
+  const fitxer = () => exporta({ model, format, des, dies, fullaCsv: model?.fulles?.[1]?.nom || FULLA_CSV });
 
   const descarrega = () => {
     if (!model) return;
@@ -66,7 +73,7 @@ export function DialegExportacio({ obert, onTanca, des, dies }) {
     }
   };
 
-  const fulles = model ? model.fulles.filter((fulla) => format === 'xlsx' || fulla.nom === FULLA_CSV) : [];
+  const fulles = model ? (format === 'xlsx' ? model.fulles : model.fulles.slice(1, 2)) : [];
   return (
     <Dialeg obert={obert} onTanca={tanca} titol={tx.exportarFullTitol} mida="g"
       descripcio={tx.exportarFullDesc}

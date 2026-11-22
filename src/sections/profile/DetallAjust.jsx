@@ -21,6 +21,7 @@ import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadramen
 import { GestioMembres } from './GestioMembres.jsx';
 import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
+import { textosPerfilA11y } from './i18nPerfilA11y.js';
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La ruta del Tauler de
    superadministració (App.jsx: /admin/*, darrere de RequireAuth). */
@@ -96,6 +97,7 @@ export default function DetallAjust({
 }) {
   const navigate = useNavigate();
   const t = useTraductorOpcional();
+  const txPerfil = textosPerfilA11y({ t });
   /* T47 (correcció de la revisió C01, 260928) · «Confirmar eixida» pregunta
      primer què no ha arribat al servidor i ho diu abans d'esborrar-ho.
      Recàrrega completa: cap context en memòria sobreviu a la sessió. */
@@ -575,13 +577,13 @@ export default function DetallAjust({
       setValorTemp(formataPoble(queden));
       setAvisPobles(`S’ha llevat ${nom}: prem «Guardar» per a desar-ho.`);
       focusPobles.current = queden.length > 1
-        ? { etiqueta: `Llevar ${queden[Math.min(index, queden.length - 1)]}` }
+        ? { etiqueta: txPerfil.llevarPobleAria(queden[Math.min(index, queden.length - 1)]) }
         : { selector: 'ul' };
     };
     const fesPrincipal = (nom) => {
       setValorTemp(formataPoble([nom, ...triats.filter((poble) => poble !== nom)]));
       setAvisPobles(`${nom} és ara el poble principal: prem «Guardar» per a desar-ho.`);
-      focusPobles.current = { etiqueta: `Llevar ${nom}` };
+      focusPobles.current = { etiqueta: txPerfil.llevarPobleAria(nom) };
     };
     const textSenseOpcions = cataleg.length ? 'No en queda cap més al catàleg' : 'Encara no s’ha pogut llegir el catàleg de pobles';
     return (
@@ -589,18 +591,19 @@ export default function DetallAjust({
         <div className="perfil-pobles-multi" ref={contenidorPobles}>
           <p className="sdp-nomes-lector" aria-live="polite">{avisPobles}</p>
           {triats.length > 0 ? (
-            <ul className="perfil-pobles-multi__llista" aria-label="Els teus pobles" tabIndex={-1}>
+            <ul className="perfil-pobles-multi__llista" aria-label={txPerfil.elsTeusPoblesAria} tabIndex={-1}>
               {triats.map((nom, index) => (
                 <li key={nom} className="perfil-pobles-multi__poble">
                   <span>{nom}</span>
+                  {/* v1.2.19 · Gauntlet R1 (L3-01) · El text visible ix del mateix diccionari que l'aria-label, que hi comença (WCAG 2.5.3). */}
                   {index === 0 ? <Insignia to="info">Principal</Insignia> : (
-                    <Boto varietat="fantasma" aria-label={`Fer principal ${nom}`} onClick={() => fesPrincipal(nom)} disabled={desant}>
-                      Fer principal
+                    <Boto varietat="fantasma" aria-label={txPerfil.ferPrincipalPobleAria(nom)} onClick={() => fesPrincipal(nom)} disabled={desant}>
+                      {txPerfil.ferPrincipal}
                     </Boto>
                   )}
                   {triats.length > 1 ? (
-                    <Boto varietat="fantasma" aria-label={`Llevar ${nom}`} onClick={() => lleva(nom)} disabled={desant}>
-                      Llevar
+                    <Boto varietat="fantasma" aria-label={txPerfil.llevarPobleAria(nom)} onClick={() => lleva(nom)} disabled={desant}>
+                      {txPerfil.llevar}
                     </Boto>
                   ) : null}
                 </li>
@@ -759,7 +762,7 @@ export default function DetallAjust({
             <div className="sdp-alerta__accions">
               {valorTemp && (
                 <div className="sdp-avatar sdp-avatar--xl">
-                  <img src={valorTemp} alt="Previsualització" className="sdp-avatar__imatge" />
+                  <img src={valorTemp} alt={txPerfil.previsualitzacioAlt} className="sdp-avatar__imatge" />
                 </div>
               )}
               <input

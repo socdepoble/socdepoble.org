@@ -447,6 +447,9 @@ test('R2 · la sessió d’abans cau durant el PUT: la contrasenya ja és la nov
   expect(avisos).toEqual([null]);                           // només el buidat de la pestanya
   expect(m.desa).not.toHaveBeenCalled();
   expect(crides()).toEqual(['POST /auth/v1/verify', 'PUT /auth/v1/user']);
+  /* v1.2.19 · Gauntlet R1 (L1-01) · Cap de les dues va en nom de la sessió de la pestanya: sense la guarda d'entrada
+     de request(). Amb el runtime de veres: auth.recuperacio.senseSessio.test.js. */
+  expect(m.request.mock.calls.map(([, , opcions]) => opcions?.senseSessio)).toEqual([true, true]);
   expect(m.fetch).toHaveBeenCalledTimes(1);                 // la privada es revoca
   expect(m.fetch.mock.calls[0][1]).toMatchObject({ headers: { Authorization: `Bearer ${SESSIO.access_token}` } });
   expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
@@ -495,6 +498,8 @@ test('R2 · la sessió d’abans caduca mentre es verifica: el token no es crema
   expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
   await expect(definixContrasenyaNova(NOVA, {})).resolves.toBe(true);
   expect(crides()).toEqual(['POST /auth/v1/verify', 'PUT /auth/v1/user']);
+  /* v1.2.19 · Gauntlet R1 (L1-01) · Sense la guarda d'entrada de request() (auth.recuperacio.senseSessio.test.js). */
+  expect(m.request.mock.calls.map(([, , opcions]) => opcions?.senseSessio)).toEqual([true, true]);
   expect(m.desa).toHaveBeenCalledWith(SESSIO);
   expect(m.fetch).not.toHaveBeenCalled();                   // ni la sessió d'abans (pestanya) ni la nova es revoquen
 });

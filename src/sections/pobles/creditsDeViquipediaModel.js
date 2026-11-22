@@ -54,16 +54,26 @@ export function fotosDe(imatges) {
 
 export const altDeFotoCommons = (fitxer) => String(fitxer).replace(/\.[a-z0-9]+$/i, '').replace(/_/g, ' ');
 export const midaDeFotoCommons = (foto) => {
+  if (!foto || !(Number.isFinite(foto.amplada) && foto.amplada > 0) || !(Number.isFinite(foto.alcada) && foto.alcada > 0)) {
+    return {};
+  }
   const amplada = Math.min(960, foto.amplada);
-  return { width: amplada, height: Math.round((foto.alcada * amplada) / foto.amplada) };
+  return { width: amplada, height: Math.max(1, Math.round((foto.alcada * amplada) / foto.amplada)) };
 };
 
 export const LOCALE_PER_DEFECTE = 'ca-ES';
 
 export function dataLlegible(ms, locale = LOCALE_PER_DEFECTE) {
+  if (typeof ms !== 'number' || !Number.isFinite(ms)) return '';
+  const data = new Date(ms);
+  if (Number.isNaN(data.getTime())) return '';
   try {
-    return new Intl.DateTimeFormat(locale || LOCALE_PER_DEFECTE, { dateStyle: 'long' }).format(new Date(ms));
+    return new Intl.DateTimeFormat(locale || LOCALE_PER_DEFECTE, { dateStyle: 'long' }).format(data);
   } catch {
-    return new Date(ms).toISOString().slice(0, 10);
+    try {
+      return new Intl.DateTimeFormat(LOCALE_PER_DEFECTE, { dateStyle: 'long' }).format(data);
+    } catch {
+      return data.toISOString().slice(0, 10);
+    }
   }
 }

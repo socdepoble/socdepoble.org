@@ -29,6 +29,7 @@ import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { receptaPerId } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
@@ -66,6 +67,8 @@ export function ColumnaReceptes({ params }) {
   const txBuit = textosBuitNevera(idioma);
   const tx = textosVistaNevera(idioma);
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   /* Correcció del refutador (261011, R3) · En mode `lectora` (una altra pestanya escriu), o si el
      disc no s'ha pogut llegir, les accions tornen false en silenci: «Afig el que falta» es
      desactiva i el diàleg diu per què (AvisNevera). L'avís de la columna el porta «Cal comprar
@@ -108,7 +111,7 @@ export function ColumnaReceptes({ params }) {
             <Boto icona={Plus} disabled={!potEscriure} onClick={() => {
               falta.forEach((linia) => afigIngredient(accions, llista.id, linia));
               tanca();
-            }}>{tx.afigElQueFalta(llista.nom)}</Boto>
+            }}>{tx.afigElQueFalta(nomLlista)}</Boto>
           ) : null;
         }
       }}
@@ -133,13 +136,15 @@ export function ColumnaCalPerACuinar({ params }) {
   const txBuit = textosBuitNevera(idioma);
   const tx = textosVistaNevera(idioma);
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const linies = liniesQueFalten(estat, llista.id, recomanacionsDeCasa(estat));
   return (
     <ColumnaColleccio
       titol={tx.calComprarPerACuinar}
       linies={linies}
       resum={{
-        etiqueta: tx.perALlistaNom(llista.nom),
+        etiqueta: tx.perALlistaNom(nomLlista),
         comptador: linies.length,
         textComptador: idioma === 'ca' ? textArticles : tx.textArticlesCount,
         accio: {
@@ -149,7 +154,7 @@ export function ColumnaCalPerACuinar({ params }) {
         }
       }}
       onSuma={(linia) => afigIngredient(accions, llista.id, linia)}
-      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, llista.nom) }}
+      textosLinies={{ suma: (nom) => tx.afigItemALlistaNom(nom, nomLlista) }}
       textos={{
         buit: txBuit.cuinarBuit,
         buitText: txBuit.cuinarBuitText,

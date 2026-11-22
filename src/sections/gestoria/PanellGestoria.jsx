@@ -43,7 +43,7 @@ import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
 import { Camp, CampText, Casella, GrupCamps, Selector } from '../../components/PedraSeca/organismes/formulari.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../tractors/AprovacioEnLinia.jsx';
 import EnviamentGestoria from './enviament/EnviamentGestoria.jsx';
-import { tg, tf } from './i18nGestoria.js';
+import { tg, tf, tga } from './i18nGestoria.js';
 import { formatData } from './nucli/dates.js';
 import { formatImport } from './nucli/diners.js';
 import { maquetaFull } from './nucli/fullModel.js';
@@ -331,7 +331,7 @@ function CelEditable({ etiqueta, valor, tipus, mida, dubte, onCanvi }) {
  * abans de deixar-la passar a euros. onAplica(text) torna cert si s'ha pogut
  * aplicar; si no, l'error es diu al costat del camp.
  */
-function PasAEuros({ nomFila, onAplica, onCancella }) {
+function PasAEuros({ nomFila, onAplica, onCancella, idioma = 'ca' }) {
   const id = useId();
   const camp = useRef(null);
   const [text, setText] = useState('');
@@ -349,7 +349,7 @@ function PasAEuros({ nomFila, onAplica, onCancella }) {
         ref={camp}
         type="text"
         className="sdp-gestoria-panell__control"
-        aria-label={`Total en euros del càrrec, ${nomFila}`}
+        aria-label={tga(idioma, 'totalEurosCarrecAria', nomFila)}
         value={text}
         data-mida="curta"
         data-tipus="import"
@@ -370,8 +370,8 @@ function PasAEuros({ nomFila, onAplica, onCancella }) {
       {illegible ? (
         <span ref={adoptaEstilsDiferits} id={`${id}-error`} className="sdp-gestoria-panell__cel-error">No s’entén l’import: escriu-lo com 1.234,56.</span>
       ) : null}
-      <Boto varietat="primari" onClick={aplica} aria-label={`Aplica el total en euros, ${nomFila}`}>Aplica</Boto>
-      <Boto varietat="fantasma" onClick={onCancella} aria-label={`Cancel·la el pas a euros, ${nomFila}`}>Cancel·la</Boto>
+      <Boto varietat="primari" onClick={aplica} aria-label={tga(idioma, 'aplicaTotalEurosAria', nomFila)}>{tg(idioma, 'Aplica')}</Boto>
+      <Boto varietat="fantasma" onClick={onCancella} aria-label={tga(idioma, 'cancellaPasEurosAria', nomFila)}>{tg(idioma, 'Cancel·la')}</Boto>
     </>
   );
 }
@@ -392,7 +392,6 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
   const ingres = tipus === 'ingres';
   const sumes = totals(factures);
   const titol = tg(idioma, ingres ? 'Ingressos' : 'Despeses');
-  const altre = ingres ? 'despeses' : 'ingressos';
   const estrangeres = estrangeresPerFactura(incidencies);
   return (
     <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
@@ -409,7 +408,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
           {factures.length === 0 ? (
             <tr ref={adoptaEstilsDiferits}><td colSpan={COLUMNES.length + 2}>{tg(idioma, ingres ? 'Cap ingrés.' : 'Cap despesa.')}</td></tr>
           ) : factures.map((f, i) => {
-            const nomFila = `${ingres ? 'l’ingrés' : 'la despesa'} ${i + 1}${f.num ? ` («${f.num}»)` : ''}`;
+            const nomFila = tga(idioma, 'nomFilaFactura', ingres, i + 1, f.num);
             const baixes = Object.entries(f.confianca ?? {}).filter(([, nivell]) => nivell === 'baixa').map(([camp]) => ETIQUETES_CAMP[camp] ?? camp);
             /* IVA_ESTRANGER ix del «Revisa:»: la condició es diu en la seua pròpia línia. */
             const propies = incidencies.filter((inc) => inc.facturaId === f.id && inc.codi !== 'IVA_ESTRANGER');
@@ -426,7 +425,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                   return (
                     <td ref={adoptaEstilsDiferits} key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
                       <CelEditable
-                        etiqueta={`${tg(idioma, c.titol)}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
+                        etiqueta={tga(idioma, 'celEditableAria', tg(idioma, c.titol), ingres, i + 1)}
                         valor={valorDe(f, c)}
                         tipus={c.tipus}
                         mida={c.mida}
@@ -452,13 +451,14 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                     {enAltraMoneda(f) && convertint !== f.id ? (
                       <Boto varietat="secundari" data-accio="a-euros"
                         onClick={() => (totalsEditats[f.id] ? onEdita(f.id, 'moneda', MONEDA_DEL_FULL) : setConvertint(f.id))}
-                        aria-label={`Els imports ja són en euros, ${nomFila}`}>
-                        Els imports ja són en euros
+                        aria-label={tga(idioma, 'importsJaEnEurosAria', nomFila)}>
+                        {tga(idioma, 'importsJaEnEuros')}
                       </Boto>
                     ) : null}
                     {enAltraMoneda(f) && convertint === f.id ? (
                       <PasAEuros
                         nomFila={nomFila}
+                        idioma={idioma}
                         onCancella={() => {
                           setConvertint(null);
                           setTornaFocus(f.id);
@@ -471,8 +471,8 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
                       />
                     ) : null}
                     <Boto varietat="fantasma" onClick={() => onEdita(f.id, 'tipus', ingres ? 'despesa' : 'ingres')}
-                      aria-label={`Mou a ${altre} ${nomFila}`}>
-                      {`Mou a ${altre}`}
+                      aria-label={tga(idioma, 'mouAFacturesAria', ingres, nomFila)}>
+                      {tga(idioma, 'mouAFactures', ingres)}
                     </Boto>
                     <Boto varietat="secundari" onClick={() => onExclou(f.id)} aria-label={idioma === 'ca' ? `Exclou ${nomFila}` : `${tg(idioma, 'Exclou')} ${nomFila}`}>{tg(idioma, 'Exclou')}</Boto>
                   </div>
@@ -886,15 +886,15 @@ export default function PanellGestoria({
               <TaulaFactures tipus="despesa" factures={proposta.despeses} incidencies={incidencies} totalsEditats={g.totalsEditats}
                 onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} idioma={idioma} />
               {g.excloses.length > 0 ? (
-                <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-label="Factures excloses">
+                <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-label={tga(idioma, 'facturesExclosesAria')}>
                   <p className="sdp-gestoria-panell__nota">{`Excloses de la proposta (${g.excloses.length}): no aniran al full.`}</p>
                   <ul className="sdp-gestoria-panell__excloses">
                     {g.excloses.map((f) => (
                       <li ref={adoptaEstilsDiferits} key={f.id}>
                         <span>{`${f.num || 'Sense número'} · ${f.contrapart || 'sense contrapart'} · ${formatImport(f.total) || 'sense total'}`}</span>
                         <Boto varietat="fantasma" onClick={() => g.restauraFactura(f.id)}
-                          aria-label={`Torna a la proposta la factura ${f.num || 'sense número'}`}>
-                          Torna a la proposta
+                          aria-label={tga(idioma, 'tornaPropostaAria', f.num)}>
+                          {tga(idioma, 'tornaProposta')}
                         </Boto>
                       </li>
                     ))}

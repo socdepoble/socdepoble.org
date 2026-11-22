@@ -65,7 +65,8 @@ const CODI = [
   'src/sections/consola/govern/comunicacioGovern.js',
   'src/sections/consola/govern/governConsola.js',
   'src/sections/consola/govern/useGovern.js',
-  'src/sections/consola/govern/GovernConsola.jsx'
+  'src/sections/consola/govern/GovernConsola.jsx',
+  'src/sections/consola/i18nConsolaA11y.js'
 ];
 const PROVES = [
   'src/sections/consola/ConsolaSection.test.jsx',
@@ -101,7 +102,8 @@ const PROVES = [
   'src/sections/consola/govern/balancGovern.test.js',
   'src/sections/consola/govern/certificacions.test.js',
   'src/sections/consola/govern/comunicacioGovern.test.js',
-  'src/sections/consola/ConsolaSection.govern.test.jsx'
+  'src/sections/consola/ConsolaSection.govern.test.jsx',
+  'src/sections/consola/ConsolaA11y5Llengues.r32_32.test.jsx'
 ];
 const JSX = CODI.filter((f) => f.endsWith('.jsx'));
 const ESTIL_EN_LINIA = new RegExp(['\\ss', 'tyle=[{"]'].join(''));

@@ -25,8 +25,11 @@ export function nomFitxer(des, dies, format) {
  * El fitxer d'un model de full.
  * @returns {{ nom: string, tipus: string, dades: Uint8Array | string }}
  */
-export function exporta({ model, format, des, dies }) {
+export function exporta({ model, format, des, dies, fullaCsv = FULLA_CSV }) {
   const nom = nomFitxer(des, dies, format);
   if (format === 'xlsx') return { nom, tipus: TIPUS_MIME_XLSX, dades: creaXlsx(model) };
-  return { nom, tipus: TIPUS_MIME_CSV, dades: modelACsv(model, FULLA_CSV) };
+  const nomFulla = model?.fulles?.some((f) => f.nom === fullaCsv)
+    ? fullaCsv
+    : (fullaCsv === FULLA_CSV && model?.fulles?.length === 5 ? model.fulles[1].nom : fullaCsv);
+  return { nom, tipus: TIPUS_MIME_CSV, dades: modelACsv(model, nomFulla) };
 }

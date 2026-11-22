@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
+import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { Accions, Alerta, AreaText, Boto, Camp, CampText, Pila, Selector } from '../../components/PedraSeca/index.js';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { useAppAvaluada } from '../../apps/plataforma/PlataformaContext.jsx';
 import { textDelMotiu } from '../../apps/plataforma/PortalApps.jsx';
 import { carregaMercadona } from '../../data/menjarIBeure/mercadona.js';
@@ -36,6 +38,7 @@ export function MotorDeReceptaEditorial({ recepta, obra }) {
 /** Optional working layer; the book record is never edited or persisted here. */
 export default function MotorHoritzontalRecepta({ recepta }) {
   const navigate = useNavigate();
+  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
   const nevera = useAppAvaluada('nevera'), bar = useAppAvaluada('bar');
   const neveraDisponible = nevera?.estat === 'available', barDisponible = bar?.estat === 'available';
   const [ingredients, setIngredients] = useState(recepta.ingredients);
@@ -64,7 +67,7 @@ export default function MotorHoritzontalRecepta({ recepta }) {
   const actualitzaOferta = (index, camp, valor) => setSeleccions((prev) => ({ ...prev, [index]: { ...prev[index], oferta: { ...prev[index]?.oferta, [camp]: valor } } }));
   const actualitzaCompra = (index, camp, valor) => setSeleccions((prev) => ({ ...prev, [index]: { ...prev[index], compraParroquia: { ...prev[index]?.compraParroquia, [camp]: valor } } }));
   const opcionsProductes = [{ valor: '', etiqueta: 'Tria el producte que utilitzaràs' }, { valor: 'oferta-local', etiqueta: 'Pressupost de La Torre, cooperativa o altre proveïdor' }, ...(catalegParroquiaDisponible() ? [{ valor: 'compra-parroquia', etiqueta: 'Compra històrica de La Parròquia' }] : []), ...productes.filter((p) => `${nomProducteVisible(p.nom)} ${marcaVisible(p.marca)}`.toLocaleLowerCase('ca').includes(cerca.toLocaleLowerCase('ca'))).map((p) => ({ valor: p.id, etiqueta: [nomProducteVisible(p.nom), marcaVisible(p.marca), `${p.preuUnitari} €/ ${p.unitatPreuUnitari}`].filter(Boolean).join(' · ') }))];
-  return <section aria-label="Escandall i connexions de la recepta">
+  return <section aria-label={txPat.escandallConnexionsReceptaAria}>
     <Pila gap={4}>
       <h2>Escandall de la recepta</h2>
       <p>Tria un producte per a cada ingredient, confirma la quantitat i indica la minva. Els preus del catàleg base són orientatius i servixen per a estimar la cistella a la botiga del teu poble.</p>

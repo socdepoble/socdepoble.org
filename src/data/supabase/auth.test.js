@@ -425,11 +425,11 @@ test('261002 · un error llegint profiles no és «sense fila»: reserva i cap r
     expect(avis).toHaveBeenCalledTimes(1);
   } finally { avis.mockRestore(); m.user = { id: 'A' }; }
 });
-test('261002 · si la sessió canvia mentre es llig, no es repara cap compte', async () => {
+test('261002 · si la sessió canvia mentre es llig, no es repara ni es torna la reserva revocada', async () => {
   try {
     rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-5' };
-    m.request.mockImplementationOnce(async () => { m.user = { id: 'una-altra' }; return []; });
-    expect(await getProfile()).toMatchObject({ reserva: true, id: 'orfe-5' });
+    m.request.mockImplementationOnce(async () => { m.epoch++; m.user = { id: 'una-altra' }; return []; });
+    await expect(getProfile()).rejects.toMatchObject({ name: 'AbortError' });
     expect(rpc).not.toHaveBeenCalled();
     expect(rutes()).toHaveLength(1);
   } finally { m.user = { id: 'A' }; }

@@ -53,6 +53,7 @@ import { encapcalamentDeTargeta, EstatBuit, GraellaTargetes, MarcColumna, Navega
 import { ColumnaCataleg, useVistesEsquelet } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio, useParametresConsulta } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { articlePerId } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
@@ -119,7 +120,9 @@ export function ColumnaLlistaPerTemporada({ params }) {
   const vista = useVistaTemporada();
   const vistes = useVistesEsquelet(TEMPORADA);
   const llista = llistaVigent(params);
-  const titol = tx.perTemporadaTitol(llista.nom);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
+  const titol = tx.perTemporadaTitol(nomLlista);
   const filtres = [
     { valor: 'tot', text: tx.filtreTot },
     { valor: FILTRE_TEMPORADA, text: tx.filtreDeTemporada }
@@ -194,6 +197,8 @@ export function ColumnaDeTemporada({ params }) {
   const tx = textosVistaNevera(idioma);
   const { mes } = useVistaTemporada();
   const llista = llistaVigent(params);
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   /* REGLA D'OR 1 (261004) · La boina de cada suggeriment: l'article de la Nevera que hi
      correspon o, si encara no n'és cap, el calendari de temporada del projecte (autoria.js). */
   const suggeriments = suggerimentsDeTemporada(estat, llista.id, mes).map((suggeriment) => {
@@ -221,7 +226,7 @@ export function ColumnaDeTemporada({ params }) {
       onTria={(suggeriment) => (suggeriment.articleId
         ? accions.commuta(llista.id, suggeriment.articleId)
         : accions.afigPerNom(llista.id, suggeriment.nom))}
-      resum={{ etiqueta: llista.nom, comptador: llista.linies.length, textComptador: (n) => tx.textArticlesCount(n) }}
+      resum={{ etiqueta: nomLlista, comptador: llista.linies.length, textComptador: (n) => tx.textArticlesCount(n) }}
       primer={TEMPORADA.primer}
       tram={TEMPORADA.tram}
       textos={{ buit: txBuit.temporadaDetallBuit, buitText: null }}

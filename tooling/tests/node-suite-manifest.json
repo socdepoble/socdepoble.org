@@ -2563,6 +2563,26 @@
       "path": "tests/enxufe-wp72-r32-27.test.mjs",
       "suite": "primary",
       "reason": "R32.27: permisos Secrets API condicionals, límit de noms, memzero i desinstal·lació simple/multisite."
+    },
+    {
+      "path": "tests/enxufe-tellado-r32-29.test.mjs",
+      "suite": "primary",
+      "reason": "R32.29: salut WP, autoload explícit, memzero i degradació HTTP verificats amb PHP i fixtures temporals."
+    },
+    {
+      "path": "tests/reconcilia-torns-base-efimera-r32-29.test.mjs",
+      "suite": "primary",
+      "reason": "R32.29: caducitat administrativa sense inventari reconstruït, Git saludable, lock/CAS i traça auditable."
+    },
+    {
+      "path": "tooling/gates/tractor-tellado-r32-29.test.mjs",
+      "suite": "primary",
+      "reason": "R32.29: regressió de signatures PHP camuflat, redireccions HTTPS, Retry-After i transport bounded amb fixtures locals."
+    },
+    {
+      "path": "tooling/seo/favicon-seo.test.mjs",
+      "suite": "primary",
+      "reason": "R32.29: formats i dimensions reals de favicon, política local de 48 i comprovacions HTTP explícites."
     }
   ]
 }

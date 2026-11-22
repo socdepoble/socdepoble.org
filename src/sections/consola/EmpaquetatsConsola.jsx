@@ -19,6 +19,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, Carregant, EstatBuit, Insignia, MollaPa } from '../../components/PedraSeca';
 import { RUTA_CONSOLA, copyConsola } from './consolaPagines.js';
+import { tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 import { DestiVersions, Mono, Privat, PrivacitatConsola, TargetaConsola } from './peces.jsx';
 import {
   ENTRADETA_EMPAQUETATS, ETIQUETA_NAV_EMPAQUETATS, SEMAFOR, TITOL_EMPAQUETATS,
@@ -52,11 +53,13 @@ export function TargetaEmpaquetats({ font }) {
 
 export function SeccioEmpaquetats({ font }) {
   const id = useId();
+  const idioma = useIdiomaConsola();
   return (
     <section aria-labelledby={id}>
       <h2 id={id}>{TITOL_EMPAQUETATS}</h2>
       <p>{ENTRADETA_EMPAQUETATS}</p>
-      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={ETIQUETA_NAV_EMPAQUETATS}>
+      <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella}
+        aria-label={idioma === 'ca' ? ETIQUETA_NAV_EMPAQUETATS : tca(idioma, 'paginaEmpaquetatsNav')}>
         <TargetaEmpaquetats font={font} />
       </nav>
     </section>
@@ -69,6 +72,7 @@ export function SeccioEmpaquetats({ font }) {
    les pàgines de la Consola parla en H3. */
 function Plataforma({ p }) {
   const id = useId();
+  const idioma = useIdiomaConsola();
   const semafor = SEMAFOR[p.semafor];
   return (
     <section aria-labelledby={id}>
@@ -85,7 +89,7 @@ function Plataforma({ p }) {
               ? (p.alDia ? 'A la carpeta de builds, l’últim artefacte és el de la versió declarada.' : `A la carpeta de builds, l’últim artefacte és de la ${p.ultim.versio}${p.ultim.build ? `+${p.ultim.build}` : ''}, no de la versió declarada.`)
               : 'A la carpeta de builds, cap artefacte porta la versió al nom.'}
           </p>
-          <ul className="sdp-consola__evidencies" aria-label={`Artefactes de ${p.nom}, el més recent primer`}>
+          <ul className="sdp-consola__evidencies" aria-label={tca(idioma, 'artefactesDe', p.nom)}>
             {p.artefactes.map((a) => <li key={a.nom}><Mono>{a.nom}</Mono></li>)}
           </ul>
         </>
@@ -217,6 +221,7 @@ export function SeccioJarvis({
     }
   };
 
+  const idioma = useIdiomaConsola();
   const delProgres = estatDelProgres(progres);
   /* Els passos: els del progrés si n'hi ha; si no, els que va dir el corredor
      en arrancar; si no, els inicials dels canals que es veuen. */
@@ -225,7 +230,7 @@ export function SeccioJarvis({
     <section aria-labelledby={idTitol}>
       <h3 id={idTitol}>{TITOL_JARVIS}</h3>
       <p>{entradetaJarvis({ nativa })}</p>
-      <ul className="sdp-consola__estats" aria-label={ETIQUETA_CANALS}>
+      <ul className="sdp-consola__estats" aria-label={idioma === 'ca' ? ETIQUETA_CANALS : tca(idioma, 'estatCadaCanal')}>
         {canals.map((c) => (
           <li key={c.id}>
             <span>
@@ -258,7 +263,7 @@ export function SeccioJarvis({
           <Alerta to={delProgres.to}>{delProgres.text}</Alerta>
           {/* Àrbitre T1a-ARB-03 · Els títols ja porten «1/4»: la parella de
               classes de TargetaConsola (list-style: none), cap numeració doble. */}
-          <ol className="sdp-consola__evidencies sdp-consola__problemes" aria-label={ETIQUETA_PASSOS}>
+          <ol className="sdp-consola__evidencies sdp-consola__problemes" aria-label={idioma === 'ca' ? ETIQUETA_PASSOS : tca(idioma, 'passosPublicacio')}>
             {passos.map((p) => (
               <li key={p.id}>
                 <Insignia to={INSIGNIA_PAS[p.estat].to}>{INSIGNIA_PAS[p.estat].text}</Insignia> {p.titol}

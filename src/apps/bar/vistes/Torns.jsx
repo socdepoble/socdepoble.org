@@ -20,7 +20,9 @@ import { euros, horaCurta } from './vestits.js';
 const TIPUS_JSON = 'application/json';
 
 function dataCurta(moment) {
+  if (typeof moment !== 'string' || !moment.trim()) return '';
   const data = new Date(moment);
+  if (Number.isNaN(data.getTime())) return '';
   return `${data.getDate()}/${data.getMonth() + 1} · ${horaCurta(moment)}`;
 }
 
@@ -42,9 +44,9 @@ function Historial({ params, idioma = 'ca' }) {
     <ColumnaColleccions titol={tx.historialTorns} actiu={params?.torn || null}
       colleccions={torns.map((t) => ({
         id: t.id,
-        nom: `${dataCurta(t.obertA)} · ${t.obertPer}`,
+        nom: [dataCurta(t.obertA), t.obertPer].filter(Boolean).join(' · '),
         comptador: t.resum?.tiquets ?? 0,
-        secundari: t.estat === 'obert' ? tx.obertAra : tx.tancatALes(euros(t.resum.totalVendesCents), horaCurta(t.tancatA))
+        secundari: t.estat === 'obert' ? tx.obertAra : tx.tancatALes(euros(t.resum?.totalVendesCents ?? 0), horaCurta(t.tancatA))
       }))}
       hrefDe={(t) => ruta('torns', t.id)} textComptador={(n) => tx.nTiquets(n)}
       textos={{ buit: tx.capTornEncara, buitText: null }} avis={<AvisDeLaColumna />} />

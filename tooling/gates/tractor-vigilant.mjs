@@ -11,6 +11,54 @@ import { pathToFileURL } from 'node:url';
 // Un sol lexer i unes mateixes regles que la porta Tellado (R25.2-P01/P03, IDEA-266).
 import { avaluaPerimetreTellado, defectesPermisosWp, descodificaEntitatsHtml, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
 export const readOnly = true;
+// v1.2.19 · Gauntlet R1 (L2-02): textos i binaris tenen regla i pressupost propis.
+// Les dades comprimides contenen '<?=' per atzar (2^-24 per posició): 17 de 819 actius de public/.
+const ACTIU_TEXT = /\.(?:svg|txt|html?|css)$/i;
+const ACTIU_BINARI = /\.(?:png|jpe?g|gif|ico|webp|avif|bmp|pdf|woff2?)$/i;
+export const PRESSUPOST_ESTATIC = Object.freeze({
+  text: Object.freeze({ fitxers: 512, bytes: 8 * 1024 * 1024, perFitxer: 2 * 1024 * 1024 }),
+  binari: Object.freeze({ fitxers: 4096, bytes: 256 * 1024 * 1024, perFitxer: 2 * 1024 * 1024 }),
+});
+const ESPAI_PHP = new Set([0x20, 0x09, 0x0a, 0x0d]);
+const llegible = b => ESPAI_PHP.has(b) || (b >= 0x21 && b <= 0x7e);
+/** v1.2.19 · Gauntlet R1 (L2-02): obertura PHP plausible dins d'un actiu binari, en temps lineal.
+ * '<?php' compta seguit d'espai, salt de línia o final (l'obertura que PHP accepta). '<?=' compta
+ * si el seguix codi ASCII llegible fins a '?>', __halt_compiler o el final: el webshell d'IDAT
+ * '<?=$_GET[0]($_POST[1]);?>' continua detectat. Un byte no ASCII al mig ho evita: és heurística. */
+export function phpEnBinari(bytes) {
+  let cuaFallida = -1;
+  for (let i = bytes.indexOf('<?'); i !== -1; i = bytes.indexOf('<?', i + 2)) {
+    if ((bytes[i + 2] | 0x20) === 0x70 && (bytes[i + 3] | 0x20) === 0x68 && (bytes[i + 4] | 0x20) === 0x70
+      && (i + 5 === bytes.length || ESPAI_PHP.has(bytes[i + 5]))) return true;
+    if (bytes[i + 2] !== 0x3d || i < cuaFallida) continue;
+    let j = i + 3;
+    while (j < bytes.length && llegible(bytes[j])) j++;
+    const cua = bytes.toString('latin1', i + 3, j).toLowerCase();
+    if (cua.includes('?>') || cua.includes('__halt_compiler') || (j === bytes.length && cua.trim())) return true;
+    // Els '<?=' següents d'esta mateixa tirada en tenen un sufix: mateix veredicte, sense tornar-la a llegir.
+    cuaFallida = j;
+  }
+  return false;
+}
+/** Heurística estàtica: noms executables camuflats i PHP incrustat en actius.
+ * No executa res ni comprova si el motor PHP té pedaços per a PHP2Shell. */
+export function defectesFitxerEstatic(relative, bytes = null) {
+  const nom = path.posix.basename(relative);
+  const errors = [];
+  if (/\.(?:php\d*|phtml|pht|phar|phps|cgi|sh|py|pl)(?:[.;\s]|$)/i.test(nom)) errors.push('executable-static-name');
+  if (/^\.user\.ini$/i.test(nom)) errors.push('server-config-static');
+  // .htaccess també és configuració legítima de la SPA. Es marquen directives
+  // executables, no el nom del fitxer de rewrite que ja distribuïm.
+  if (bytes && /^\.htaccess$/i.test(nom)) {
+    const config = bytes.toString('utf8').replace(/^\s*#.*$/gm, '');
+    if (/^\s*(?:AddHandler|SetHandler|AddType)\b[^\r\n]*(?:php|cgi|exec)|^\s*php_(?:value|flag)\s+auto_(?:prepend|append)_file\b/im.test(config)) errors.push('server-config-execution');
+  }
+  if (bytes && ACTIU_TEXT.test(nom)) {
+    const text = bytes.toString('latin1').toLowerCase();
+    if (text.includes('<?php') || text.includes('<?=')) errors.push('php-in-static-bytes');
+  } else if (bytes && ACTIU_BINARI.test(nom) && phpEnBinari(bytes)) errors.push('php-in-static-bytes');
+  return errors;
+}
 const SENSIBLE = /(?:^|\/)(?:\.env[^/]*|\.git[^/]*|debug\.log|error_log|phpinfo\.php|secrets\.php|wp-config[^/]*\.php)$|\.(?:sql(?:\.gz)?|bak|old|orig|swp)$/i;
 const EXECUTABLE = /\.(php[0-9]?|phtml|phar|sh|py|pl|cgi)$/i;
 const NOU = new Set(['VIG-01','VIG-02','VIG-03','VIG-04','VIG-05','VIG-06','VIG-07','VIG-08','VIG-09','VIG-10','VIG-11','VB1','VB2','VB3','VB9','VB10','VC2']);
@@ -144,17 +192,33 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const root=fs.realpathSync(arrel);if(!fs.statSync(root).isDirectory()) throw new TypeError('Arrel invàlida.');
   const comprovacions=[],enllacos=[];
   const anota=(id,severitat,estat,files=[],proposta='')=>comprovacions.push({id,capa:id.startsWith('VA')?'A':id.startsWith('VC')?'C':'B',origen_tellado:ORIGEN,estat,severitat,avis:NOU.has(id),evidencia:files.map(f=>typeof f==='string'?{fitxer:f}:f),proposta});
-  const llig=rel=>{ const parts=rel.split('/');let cursor=root;
+  const lligBuffer=rel=>{ const parts=rel.split('/');let cursor=root;
     for(const part of parts) {cursor=path.join(cursor,part);if(!fs.existsSync(cursor)||fs.lstatSync(cursor).isSymbolicLink()) return null;}
     if(!fs.statSync(cursor).isFile() || fs.statSync(cursor).size>8*1024*1024) return null;
-    return fs.readFileSync(cursor,'utf8'); };
-  const lligBuffer=rel=>{const t=llig(rel);return t===null?null:fs.readFileSync(path.join(root,rel));};
+    return fs.readFileSync(cursor); };
+  const llig=rel=>lligBuffer(rel)?.toString('utf8')??null;
   const netPhp=new Map();const net=p=>{if(!netPhp.has(p))netPhp.set(p,netejaComentarisLineal(llig(p)||'','.php'));return netPhp.get(p);};
   const exposats=['public','dist','dist-natiu','wordpress-plugin/dist','wordpress-plugin/builds/directori'];
   const presents=exposats.map(p=>fitxers(root,p,enllacos)).filter(Boolean), tots=presents.flat();
-  for(const [id,filtra] of [['VIG-01',p=>SENSIBLE.test(p)],['VIG-02',p=>(p.startsWith('public/assets/')||p.startsWith('wordpress-plugin/dist/')||p.startsWith('wordpress-plugin/builds/directori/dist/'))&&EXECUTABLE.test(p)]]) {
+  for(const [id,filtra] of [['VIG-01',p=>SENSIBLE.test(p)],['VIG-02',p=>EXECUTABLE.test(p)||defectesFitxerEstatic(p).length>0]]) {
     const males=tots.filter(filtra);anota(id,'critica',males.length?'falla':presents.length?'ok':'no-mesurat',males,'Retirar la superfície del paquet en el carril autoritzat.');
   }
+  // v1.2.19 · Gauntlet R1 (L2-02): cada classe gasta el seu pressupost; la galeria no buida el dels textos.
+  const lectura={text:{fitxers:0,bytes:0,fora:0},binari:{fitxers:0,bytes:0,fora:0}};
+  const phpCamuflat=[];
+  for(const p of tots) {
+    if(!/\.(?:png|jpe?g|gif|ico|webp|avif|svg|bmp|txt|html?|css|pdf|woff2?)$|(?:^|\/)\.htaccess$/i.test(p)) continue;
+    const classe=ACTIU_BINARI.test(p)?'binari':'text', l=lectura[classe], max=PRESSUPOST_ESTATIC[classe];
+    const mida=fs.lstatSync(path.join(root,p)).size;
+    if(mida>max.perFitxer || l.bytes+mida>max.bytes || l.fitxers>=max.fitxers) {l.fora++;continue;}
+    const bytes=lligBuffer(p);if(!bytes) {l.fora++;continue;}
+    l.bytes+=bytes.length;l.fitxers++;
+    if(defectesFitxerEstatic(p,bytes).length) phpCamuflat.push(p);
+  }
+  const coberturaParcial=lectura.text.fora>0||lectura.binari.fora>0;
+  const resum=(nom,l,max)=>`${nom} ${l.fitxers} fitxers/${l.bytes} bytes, ${l.fora} sense llegir (límit ${max.fitxers}/${max.bytes/1048576}MiB)`;
+  anota('VIG-12','critica',phpCamuflat.length?'falla':coberturaParcial?'no-mesurat':presents.length?'ok':'no-mesurat',phpCamuflat,
+    `PHP camuflat: ${resum('textos',lectura.text,PRESSUPOST_ESTATIC.text)}; ${resum('binaris',lectura.binari,PRESSUPOST_ESTATIC.binari)}; 2MiB per fitxer. No certifica pedaços PHP ni absència de webshells.`);
   const php=(fitxers(root,'wordpress-plugin',enllacos)||[]).filter(p=>p.endsWith('.php'));
   const perillos=php.filter(p=>{const s=llig(p)||'';return /eval\s*\(\s*(?:base64_decode|gzinflate|str_rot13|gzuncompress)|assert\s*\(\s*\$_(?:POST|GET|REQUEST)|preg_replace\s*\(\s*['"][^'"\n]{0,200}\/e['"]|\$(?:[a-f0-9]{16,})\b|\b(?:create_function|shell_exec|passthru|proc_open|system|popen)\s*\(/i.test(s);});
   anota('VIG-03','critica',perillos.length?'falla':php.length?'ok':'no-mesurat',perillos,'Revisar manualment el PHP assenyalat; cap codi s’executa.');

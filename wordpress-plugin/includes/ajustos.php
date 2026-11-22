@@ -308,7 +308,7 @@ function socdepoble_enxufe_oblida_tenant_heretat() {
 		return;
 	}
 	unset( $opcio['tenantId'] );
-	update_option( SOCDEPOBLE_ENXUFE_OPCIO, $opcio );
+	update_option( SOCDEPOBLE_ENXUFE_OPCIO, $opcio, false );
 }
 add_action( 'admin_init', 'socdepoble_enxufe_oblida_tenant_heretat', 5 );
 
@@ -316,7 +316,19 @@ add_action( 'admin_init', 'socdepoble_enxufe_oblida_tenant_heretat', 5 );
  * Registra l'opció, la secció i els camps (API d'Ajustos: el nonce i la
  * capacitat els gestiona options.php).
  */
+/** La migració no altera valors ni crea opcions en obrir l'administració. */
+function socdepoble_enxufe_normalitza_autoload() {
+	// update_option no modifica el flag quan el valor és idèntic (WP 6.4+).
+	if ( function_exists( 'wp_set_option_autoload' ) && current_user_can( 'manage_options' ) ) {
+		wp_set_option_autoload( SOCDEPOBLE_ENXUFE_OPCIO, false );
+		wp_set_option_autoload( 'socdepoble_enxufe_canal', false );
+	}
+}
+// La primera alta per options.php també queda sense autoload immediatament.
+add_action( 'add_option_socdepoble_enxufe', 'socdepoble_enxufe_normalitza_autoload' );
+
 function socdepoble_enxufe_registra_ajustos() {
+	socdepoble_enxufe_normalitza_autoload();
 	register_setting(
 		'socdepoble_enxufe',
 		SOCDEPOBLE_ENXUFE_OPCIO,

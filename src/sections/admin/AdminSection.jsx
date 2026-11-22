@@ -17,6 +17,7 @@ import { FACETA_TAXONOMIA } from './facetaTaxonomiaModel.js';
 import { FacetaEstil, FACETA_ESTIL } from './FacetaEstil.jsx';
 import { usePobleAdministrat } from './pobleAdministrat.jsx';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { textosAdminA11y } from './i18nAdminA11y.js';
 
 /* MD (revisió) · La fletxa ← de la llista d'Usuaris i d'Entitats en estret. */
 const TORNAR_AL_TAULER = 'Tornar al Tauler';
@@ -109,6 +110,7 @@ function AdminSidebar({ activeTab, setActiveTab }) {
      General» porta als Indicadors (el detall). En mitja i en ample ja són a
      la vista i no canvia res. */
   const { mida, tancaPanells } = useAppGrid();
+  const txAdmin = textosAdminA11y({ t: useTraductorOpcional() });
   return (
     <aside className="notes-column">
       <AppGridColumn titol="Administració" />
@@ -116,7 +118,7 @@ function AdminSidebar({ activeTab, setActiveTab }) {
         <strong className="sdp-alerta__titol">Mode Administrador</strong>
       </div>
 
-      <div className="notes-column__body no-padding sdp-scrollable" role="navigation" aria-label="Menú d'administració">
+      <div className="notes-column__body no-padding sdp-scrollable" role="navigation" aria-label={txAdmin.menuAdministracioAria}>
         <button
           type="button"
           className={`univ-manager-facet-item ${activeTab === 'dashboard' ? 'univ-manager-facet-item--active' : ''}`}
@@ -199,10 +201,11 @@ function AdminDashboard() {
    Pàgina Universal sense barra blava (PaginaDelDetall). */
 function TornaALaLlista() {
   const { tornaDelDetall } = useAppGrid();
+  const txAdmin = textosAdminA11y({ t: useTraductorOpcional() });
   if (!tornaDelDetall) return null;
   return (
     <button type="button" className="app-grid-col-header__accio-icon" onClick={tornaDelDetall}
-      aria-label="Tornar a la llista" title="Tornar a la llista">
+      aria-label={txAdmin.tornarALaLlista} title={txAdmin.tornarALaLlista}>
       <ArrowLeft size={24} aria-hidden="true" focusable="false" />
     </button>
   );
@@ -223,9 +226,10 @@ function TornaALaLlista() {
    cap llista a què tornar ni cap AppGridShell (useAppGrid llançaria), així que
    sempre és a la vista i torna al Tauler. */
 function FletxaAlTauler({ onBack }) {
+  const etiqueta = tradueix(useTraductorOpcional(), PARELL_TORNAR_TAULER);
   return (
     <button type="button" className="app-grid-col-header__accio-icon" onClick={onBack}
-      aria-label={TORNAR_AL_TAULER} title={TORNAR_AL_TAULER}>
+      aria-label={etiqueta} title={etiqueta}>
       <ArrowLeft size={24} aria-hidden="true" focusable="false" />
     </button>
   );

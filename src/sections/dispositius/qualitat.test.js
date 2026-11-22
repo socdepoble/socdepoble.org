@@ -14,9 +14,10 @@ const DIR = 'src/sections/dispositius';
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
-const PRODUCCIO = [`${DIR}/DevicesSection.jsx`, `${DIR}/devicesRuntime.js`];
+const PRODUCCIO = [`${DIR}/DevicesSection.jsx`, `${DIR}/devicesRuntime.js`, `${DIR}/i18nDispositiusA11y.js`];
 const PROVES = [
   `${DIR}/DevicesSection.test.jsx`,
+  `${DIR}/DevicesSection.i18nA11y.r32_30b.test.jsx`,
   `${DIR}/devicesRuntime.test.js`,
   `${DIR}/__fixtures__/canalFals.js`,
   `${DIR}/qualitat.test.js`

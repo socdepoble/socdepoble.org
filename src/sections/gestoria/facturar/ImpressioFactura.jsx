@@ -43,7 +43,7 @@ import { Interruptor } from '../../../components/PedraSeca/organismes/formulari.
 import { RETOL_QR, modelDeFactura } from './nucli/impressio.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
-import { tf, tg } from '../i18nGestoria.js';
+import { tf, tg, tga } from '../i18nGestoria.js';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
 
 /** La classe de l'<html> mentre hi ha una factura per imprimir. */
@@ -67,16 +67,17 @@ function Part({ titol, persona }) {
 }
 
 /* El full de la factura: el mateix a la pantalla i en paper (la còpia per a imprimir en clona el node). */
-function FullFactura({ model, refFull }) {
+function FullFactura({ model, refFull, idioma = 'ca' }) {
   const { qr } = model;
   return (
-    <article ref={refFull} className="sdp-gestoria-factura__full" aria-label={`${model.titol} ${model.numero}`}>
+    <article ref={refFull} className="sdp-gestoria-factura__full"
+      aria-label={tga(idioma, 'fullFacturaAria', tg(idioma, model.titol), model.numero)}>
       <header ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__cap">
         {qr ? (
           <figure ref={adoptaEstilsDiferits} className="sdp-gestoria-factura__qr">
             <figcaption className="sdp-gestoria-factura__etiqueta">{RETOL_QR}</figcaption>
             <svg className="sdp-gestoria-factura__qr-dibuix" viewBox={`0 0 ${qr.costat} ${qr.costat}`} shapeRendering="crispEdges"
-              role="img" aria-label="Codi QR de cotejo de la factura a l’AEAT">
+              role="img" aria-label={tga(idioma, 'qrCotejoAria')}>
               <rect className="sdp-gestoria-factura__qr-paper" width={qr.costat} height={qr.costat} />
               <path className="sdp-gestoria-factura__qr-tinta" d={qr.d} />
             </svg>
@@ -233,7 +234,7 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
           </div>
         </details>
       </div>
-      {lectura.model ? <FullFactura model={lectura.model} refFull={full} /> : (
+      {lectura.model ? <FullFactura model={lectura.model} refFull={full} idioma={idioma} /> : (
         <Alerta to="error" viva={false} titol="Esta factura no es pot mostrar">
           <p ref={adoptaEstilsDiferits}>{lectura.error?.message ?? 'El registre no porta una factura que es puga imprimir.'}</p>
         </Alerta>

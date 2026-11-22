@@ -32,9 +32,11 @@ const PRODUCCIO = [
   `${DIR}/segonFactorModel.js`,
   `${DIR}/panellTraspasPublicacioModel.js`,
   `${DIR}/indicadorsAdminModel.js`,
+  `${DIR}/i18nAdminA11y.js`,
 ];
 const PROVES = [
   `${DIR}/AdminSection.test.jsx`,
+  `${DIR}/AdminSection.i18nA11y.r32_30b.test.jsx`,
   `${DIR}/IndicadorsAdmin.test.jsx`,
   `${DIR}/indicadors.test.js`,
   `${DIR}/SegonFactor.test.jsx`,

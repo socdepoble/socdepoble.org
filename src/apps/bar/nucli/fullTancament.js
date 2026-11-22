@@ -64,8 +64,9 @@ const dosXifres = (n) => String(n).padStart(2, '0');
 
 /** L'hora local d'un moment ISO ('HH:MM'): la del dispositiu que fa el tancament. */
 export function horaLocal(moment) {
+  if (typeof moment !== 'string' || !moment.trim()) return '';
   const data = new Date(moment);
-  return `${dosXifres(data.getHours())}:${dosXifres(data.getMinutes())}`;
+  return Number.isNaN(data.getTime()) ? '' : `${dosXifres(data.getHours())}:${dosXifres(data.getMinutes())}`;
 }
 
 /**

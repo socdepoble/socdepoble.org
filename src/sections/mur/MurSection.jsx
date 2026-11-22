@@ -41,6 +41,7 @@ import { RegioAlertesVigents } from './AlertaMunicipal.jsx';
    tesaurus) arriben amb carregaArticlesImportats() només en Mode Revisió. */
 import { CASOS_US_EDITORIALS, desaRevisioArticleImportat } from '../../utils/revisioEditorialWp.js';
 import { carregaArticlesImportats } from '../../utils/articlesImportatsMandros.js';
+import { textosMurA11y } from './i18nMurA11y.js';
 
 /* P1-64 (pla 261028_1526 §3.7.1; decisions 1 i 9 del Mestre, 261028) · El
    Mapa Fotogràfic es carrega en diferit, només quan s'obri la pestanya
@@ -71,13 +72,14 @@ class BarreraDelMapa extends Component {
   }
 }
 
-function MapaDeSempre({ t }) {
+function MapaDeSempre({ t, language = 'ca' }) {
   const [obert, setObert] = useState(false);
   const nativa = esAppNativa();
+  const txMur = textosMurA11y(language);
   if (obert) {
     return (
       <iframe
-        title="Mapa del territori"
+        title={txMur.titolMapaTerritori}
         src={buildMapEmbedUrl()}
         className="sdp-mapa-embed"
         loading="lazy"
@@ -142,6 +144,7 @@ export default function MurSection() {
   } = useMur();
   const { pageCopy, status: estatContingut, towns } = useCoreContent();
   const { t, language = 'ca' } = useUIActions();
+  const txMur = textosMurA11y(language);
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
@@ -364,7 +367,7 @@ export default function MurSection() {
               s'omple quan el directori confirma l'ajuntament. */}
           <RegioAlertesVigents activa={candidatsAlerta.length > 0} alertes={alertesVigents} />
           <PillToggle
-            etiqueta="Filtres del mur"
+            etiqueta={txMur.filtresMurAria}
             valor={isMapOpen ? 'mapa' : filterType}
             onCanvi={(v) => {
               if (v !== 'events') deixaElCalendari();
@@ -379,11 +382,11 @@ export default function MurSection() {
             /* Ordre del Mestre, 261118 · La pestanya es diu «Esdeveniments» per
                diferenciar-la del Calendari complet (/calendari): ací filtra només els actes. */
             opcions={[
-              { valor: 'all', text: 'Mostrar tot' },
+              { valor: 'all', text: txMur.filtreMostrarTot },
               { valor: 'sdp', text: 'Sóc de Poble' },
-              { valor: 'mercat', text: 'Mercat' },
+              { valor: 'mercat', text: txMur.filtreMercat },
               { valor: 'events', text: t('section.mur.filter.events', 'Esdeveniments') },
-              { valor: 'mapa', text: 'Mapa' },
+              { valor: 'mapa', text: txMur.filtreMapa },
             ]}
           />
 
@@ -400,10 +403,10 @@ export default function MurSection() {
             : <Carregant etiqueta={t('loading.content', 'Carregant contingut...')} />)}
 
           {modeRevisioWp && dadesRevisioWp.stats && (
-            <section className="sdp-mur-revisio-panel" aria-label="Mode Revisió d'Importació de WordPress" data-testid="mur-revisio-wordpress">
+            <section className="sdp-mur-revisio-panel" aria-label={txMur.revisioWpRegioAria} data-testid="mur-revisio-wordpress">
               <header className="sdp-mur-revisio-panel__header">
                 <h3>🔍 Revisió d&apos;Importació de socdepoble.net ({dadesRevisioWp.stats.total} articles · {dadesRevisioWp.stats.aprovats} aprovats · {dadesRevisioWp.stats.pendents} pendents)</h3>
-                <div className="sdp-mur-revisio-panel__filtres" role="group" aria-label="Filtra per cas d'ús editorial">
+                <div className="sdp-mur-revisio-panel__filtres" role="group" aria-label={txMur.filtraCasUsEditorialAria}>
                   <Boto
                     aria-pressed={filtreCasUsWp === 'tots'}
                     onClick={() => setFiltreCasUsWp('tots')}
@@ -484,7 +487,7 @@ export default function MurSection() {
               pobles per a posar al seu poble les fotos sense GPS. */}
           {isMapOpen && (
             <div className="sdp-camp">
-              <BarreraDelMapa recurs={<MapaDeSempre t={t} />}>
+              <BarreraDelMapa recurs={<MapaDeSempre t={t} language={language} />}>
                 <Suspense fallback={<Carregant etiqueta={t('section.mur.mapa.carregant', 'Carregant el mapa fotogràfic…')} />}>
                   <MapaFotografic items={displayedItems} pobles={towns} />
                 </Suspense>

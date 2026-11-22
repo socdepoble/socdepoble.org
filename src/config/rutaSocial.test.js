@@ -4,7 +4,7 @@
    del port del servidor (tooling/seo/social-edge.mjs). */
 import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { camiDeDocumentWiki, clauSocialDeRuta, idDeDocumentWiki } from './rutaSocial.js';
+import { camiDeDocumentWiki, canonitzaCami, clauSocialDeRuta, idDeDocumentWiki } from './rutaSocial.js';
 
 test.each([
   ['/projecte', '', '/projecte'],
@@ -48,4 +48,24 @@ test('l’id d’un document i la seua forma de camí', () => {
 test('sense cap import: el lligen les eines del build tal qual', () => {
   const font = readFileSync(new URL('./rutaSocial.js', import.meta.url), 'utf8');
   expect(font).not.toMatch(/^\s*import\s/m);
+});
+
+/* v1.2.19 · Gauntlet R2 de la v1.2.18 (L2R2-03) · Un àlies codificat té la clau (i el canonical) de la ruta neta. */
+test.each([
+  ['/merc%61t/oli', '/mercat/oli'],
+  ['/%6Dur/1', '/mur/1'],
+  ['/pob%6ces/sella', '/pobles/sella'],
+  ['/a%2fb', '/a%2Fb'],
+  ['/a%20b', '/a%20b'],
+  ['/mercat/%', '/mercat/%'],
+  ['/mercat/%zz', '/mercat/%zz'],
+  ['/p%C3%A0gina', '/p%C3%A0gina'],
+])('canonitzaCami(%s) = %s', (cami, esperat) => {
+  expect(canonitzaCami(cami)).toBe(esperat);
+});
+
+test('v1.2.19 · L2R2-03 · la clau social d\'un àlies codificat és la de la ruta neta, també a la Wiki', () => {
+  expect(clauSocialDeRuta('/merc%61t/oli/')).toBe('/mercat/oli');
+  expect(clauSocialDeRuta('/wikidepoble/%61bc')).toBe('/wikidepoble?item=abc');
+  expect(clauSocialDeRuta('/wikidepobl%65', '?item=abc')).toBe('/wikidepoble?item=abc');
 });

@@ -2,9 +2,11 @@ import { useId, useMemo, useState } from 'react';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import { SquareBadge } from '../../components/PedraSeca/organismes/SquareBadge.jsx';
 import { useNavigate } from '../../app/contexts/RouterContext';
+import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { useNotes } from '../notes/NotesContext';
 import { paramsDeLaNota } from '../notes/modeDesa.js';
 import FitxaDadesDoctoralsArbre from './FitxaDadesDoctoralsArbre.jsx';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import {
   AUTORIA_RENTONAR,
   obteCoordenadesArbreSingular
@@ -76,6 +78,7 @@ function FitxaArbreArxiuLaTorre({
   const baseId = useId();
   const navigate = useNavigate();
   const notesCtx = useNotes();
+  const txPat = textosPatrimoniA11y(useUIStateOpcional()?.language || 'ca');
   const [pestanya, setPestanya] = useState('viva');
   const [intervalAnys, setIntervalAnys] = useState(() => (
     INTERVALS_REVISIO_ANYS.includes(Number(intervalInicial))
@@ -206,7 +209,7 @@ function FitxaArbreArxiuLaTorre({
         </Alerta>
       ) : null}
 
-      <div className="sdp-arbre-cotes" role="group" aria-label="Cotes dendromètriques i estat longitudinal">
+      <div className="sdp-arbre-cotes" role="group" aria-label={txPat.cotesDendrometriquesAria}>
         <div className="sdp-arbre-cota">
           <span className="sdp-arbre-cota__etiqueta">Alçària total (2007)</span>
           <span className="sdp-arbre-cota__valor">{cotaVisible(dims.alcadaM, ' m')}</span>
@@ -236,7 +239,7 @@ function FitxaArbreArxiuLaTorre({
       <div
         className="sdp-arbre-fitxa__pestanyes"
         role="tablist"
-        aria-label="Seccions de la fitxa d’arbre singular"
+        aria-label={txPat.seccionsFitxaArbreAria}
       >
         {PESTANYES_FITXA.map((item) => {
           const activa = pestanya === item.id;
@@ -353,7 +356,7 @@ function FitxaArbreArxiuLaTorre({
           <p>
             Selecciona la cadència tècnica d’inspecció per calcular la pròxima revisió programada i l’evolució longitudinal (Δ) des de la línia base del 19 de maig de 2007:
           </p>
-          <div className="sdp-arbre-revisions__intervals" role="group" aria-label="Interval de revisió periòdica en anys">
+          <div className="sdp-arbre-revisions__intervals" role="group" aria-label={txPat.intervalRevisioAria}>
             {INTERVALS_REVISIO_ANYS.map((anys) => (
               <Boto
                 key={anys}
@@ -419,7 +422,7 @@ function FitxaArbreArxiuLaTorre({
             Projecció estructurada dels 24 camps de la fitxa d’inventari i inspecció del CIEF (versió 232), amb la Llei 4/2006 de Patrimoni Arbori Monumental de la Comunitat Valenciana com a marc (* camps obligatoris d’inspecció):
           </p>
           {revisions.length > 1 ? (
-            <div className="sdp-arbre-revisions__intervals" role="group" aria-label="Fita temporal projectada a la fitxa CIEF">
+            <div className="sdp-arbre-revisions__intervals" role="group" aria-label={txPat.fitaTemporalCiefAria}>
               {revisions.map((rev) => (
                 <Boto
                   key={rev.idRevisio}

@@ -12,6 +12,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/secrets-wp72.php';
+require_once __DIR__ . '/http-perimetre.php';
 
 /** La clau de DeepL amb la precedència única de secrets-wp72.php: la constant
  *  de wp-config.php mana si està definida (buida o amb un salt de línia
@@ -39,7 +40,7 @@ function socdepoble_enxufe_traduccio_proveidor_actiu() {
 	return 'apertium';
 }
 
-function socdepoble_enxufe_traduccio_error( $codi, $estat ) {
+function socdepoble_enxufe_traduccio_error( $codi, $estat, $retry_after = 0 ) {
 	// Codis estables per a la UI; mai el cos ni les credencials del proveïdor.
 	$missatges = array(
 		'limit' => __( 'Translation limit reached. Try again later.', 'socdepoble' ),
@@ -48,8 +49,26 @@ function socdepoble_enxufe_traduccio_error( $codi, $estat ) {
 		'proveidor' => __( 'The translation provider is unavailable. Try again later.', 'socdepoble' ),
 	);
 	$missatge = $missatges[ $codi ] ?? __( 'The translation request could not be accepted.', 'socdepoble' );
-	return new WP_Error( 'sdp_traduccio_' . $codi, $missatge, array( 'status' => $estat ) );
+	$data = array( 'status' => $estat );
+	if ( $retry_after > 0 ) {
+		$data['retry_after'] = max( 1, min( 86400, (int) $retry_after ) );
+	}
+	return new WP_Error( 'sdp_traduccio_' . $codi, $missatge, $data );
 }
+
+/** Només la nostra ruta: el WP_Error ja s'ha convertit en resposta REST. */
+function socdepoble_enxufe_traduccio_capcaleres_pausa( $resposta, $servidor, $peticio ) {
+	if ( '/socdepoble/v1/traduir' !== $peticio->get_route() || ! ( $resposta instanceof WP_REST_Response ) || 503 !== $resposta->get_status() ) {
+		return $resposta;
+	}
+	$data = $resposta->get_data();
+	if ( is_array( $data ) && is_string( $data['code'] ?? null ) && 0 === strpos( $data['code'], 'sdp_traduccio_' ) && isset( $data['data']['retry_after'] ) ) {
+		$resposta->header( 'Retry-After', (string) max( 1, min( 86400, (int) $data['data']['retry_after'] ) ) );
+		$resposta->header( 'Cache-Control', 'no-store' );
+	}
+	return $resposta;
+}
+add_filter( 'rest_post_dispatch', 'socdepoble_enxufe_traduccio_capcaleres_pausa', 10, 3 );
 
 function socdepoble_enxufe_traduccio_origen( $url ) {
 	$parts = wp_parse_url( $url );
@@ -233,6 +252,13 @@ function socdepoble_enxufe_traduccio_fallada( $resposta, $pausa ) {
 		return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
 	}
 	$status = wp_remote_retrieve_response_code( $resposta );
+	if ( 503 === $status ) {
+		$retry = socdepoble_enxufe_retry_after( $resposta['headers']['retry-after'] ?? '' );
+		if ( $retry ) {
+			set_transient( $pausa, array( 'status' => 503, 'fins' => time() + $retry ), $retry );
+			return socdepoble_enxufe_traduccio_error( 'proveidor', 503, $retry );
+		}
+	}
 	if ( 403 === $status || 429 === $status || 456 === $status ) {
 		set_transient( $pausa, $status, 60 );
 		if ( 403 === $status ) {
@@ -292,15 +318,50 @@ function socdepoble_enxufe_traduccio_deepl( $clau, $pendents, $desti, $format, $
 }
 
 /**
+ * v1.2.19 · Gauntlet R1 (L2-01) · Nom de la pausa d'un sol extrem d'Apertium:
+ * l'empremta del proveïdor i l'URL de l'extrem, amb HMAC (cap URL en clar).
+ */
+function socdepoble_enxufe_traduccio_pausa_extrem( $empremta, $url ) {
+	return 'sdp_tr_pause_' . hash_hmac( 'sha256', $empremta . '|' . $url, wp_salt( 'auth' ) );
+}
+
+/**
+ * v1.2.19 · Gauntlet R1 (L2-01) · Els extrems sense pausa de Retry-After, en
+ * ordre, i els segons fins que el primer dels pausats torne a estar lliure.
+ *
+ * @return array [ string[] extrems lliures, int segons d'espera o 0 ].
+ */
+function socdepoble_enxufe_traduccio_extrems_lliures( $extrems, $empremta ) {
+	$lliures = array();
+	$espera = 0;
+	foreach ( $extrems as $url ) {
+		$estat = get_transient( socdepoble_enxufe_traduccio_pausa_extrem( $empremta, $url ) );
+		$queda = is_array( $estat ) ? (int) ( $estat['fins'] ?? 0 ) - time() : 0;
+		if ( $queda > 0 ) {
+			$espera = $espera > 0 ? min( $espera, $queda ) : $queda;
+		} else {
+			$lliures[] = $url;
+		}
+	}
+	return array( $lliures, $espera );
+}
+
+/**
  * Apertium: una crida per text (l'APy només traduïx l'últim q d'una crida amb
  * diversos), i cada traducció es guarda en arribar: un reintent continua on
  * s'havia quedat. Si un extrem falla per transport o 5xx i n'hi ha un altre,
- * la resta de la petició va al següent. Passats els 30 s, 502 amb el que ja
- * s'haja guardat. El format sempre és explícit (C6): l'APy, sense format,
- * desformata el text pla com a HTML.
+ * la resta de la petició va al següent. Un 503 amb Retry-After pausa només
+ * l'extrem que l'envia (G10: també és un 5xx): si en queda un altre, la resta
+ * va al següent; si no, 503 amb l'espera més curta. Passats els 30 s, 502 amb
+ * el que ja s'haja guardat. El format sempre és explícit (C6): l'APy, sense
+ * format, desformata el text pla com a HTML.
  */
 function socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $pausa ) {
-	$extrems = $proveidor['extrems'];
+	// v1.2.19 · Gauntlet R1 (L2-01) · Els extrems en pausa no es criden.
+	list( $extrems, $espera ) = socdepoble_enxufe_traduccio_extrems_lliures( $proveidor['extrems'], $proveidor['empremta'] );
+	if ( ! $extrems ) {
+		return socdepoble_enxufe_traduccio_error( 'proveidor', 503, $espera );
+	}
 	$extrem = 0;
 	$traduits = array();
 	foreach ( $pendents as $id => $text ) {
@@ -311,6 +372,17 @@ function socdepoble_enxufe_traduccio_apertium( $proveidor, $pendents, $format, $
 				return socdepoble_enxufe_traduccio_error( 'proveidor', 502 );
 			}
 			$resposta = wp_remote_post( $extrems[ $extrem ], socdepoble_enxufe_traduccio_peticio( $queda, 'application/x-www-form-urlencoded; charset=UTF-8', $cos ) );
+			$retry = ! is_wp_error( $resposta ) && 503 === wp_remote_retrieve_response_code( $resposta ) ? socdepoble_enxufe_retry_after( $resposta['headers']['retry-after'] ?? '' ) : 0;
+			if ( $retry ) {
+				// v1.2.19 · Gauntlet R1 (L2-01) · La pausa és d'este extrem, mai de tot Apertium (cap pausa compartida).
+				set_transient( socdepoble_enxufe_traduccio_pausa_extrem( $proveidor['empremta'], $extrems[ $extrem ] ), array( 'status' => 503, 'fins' => time() + $retry ), $retry );
+				if ( ! isset( $extrems[ $extrem + 1 ] ) ) {
+					list( , $espera ) = socdepoble_enxufe_traduccio_extrems_lliures( $proveidor['extrems'], $proveidor['empremta'] );
+					return socdepoble_enxufe_traduccio_error( 'proveidor', 503, $espera > 0 ? min( $espera, $retry ) : $retry );
+				}
+				++$extrem;
+				continue;
+			}
 			$caigut = is_wp_error( $resposta ) || wp_remote_retrieve_response_code( $resposta ) >= 500;
 			if ( ! $caigut || ! isset( $extrems[ $extrem + 1 ] ) ) {
 				break;
@@ -526,7 +598,17 @@ function socdepoble_enxufe_traduir( $request ) {
 		$pausa = 'sdp_tr_pause_' . $empremta;
 		$estat_pausa = get_transient( $pausa );
 		if ( $estat_pausa ) {
+			if ( is_array( $estat_pausa ) && 503 === ( $estat_pausa['status'] ?? null ) ) {
+				return socdepoble_enxufe_traduccio_error( 'proveidor', 503, max( 1, (int) $estat_pausa['fins'] - time() ) );
+			}
 			return in_array( (int) $estat_pausa, array( 403, 502 ), true ) ? socdepoble_enxufe_traduccio_error( 'proveidor', 502 ) : socdepoble_enxufe_traduccio_error( 'limit', 429 );
+		}
+		if ( 'apertium' === $proveidor['nom'] ) {
+			// v1.2.19 · Gauntlet R1 (L2-01) · Amb tots els extrems d'esta llengua en pausa, 503 sense crida, ritme ni pressupost.
+			list( $lliures, $espera ) = socdepoble_enxufe_traduccio_extrems_lliures( $proveidor['extrems'], $empremta );
+			if ( ! $lliures ) {
+				return socdepoble_enxufe_traduccio_error( 'proveidor', 503, $espera );
+			}
 		}
 		$locks = array();
 		$pressupost = false;

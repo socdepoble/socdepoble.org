@@ -847,7 +847,8 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
                 poster={posterPropi}
                 controls
                 playsInline
-                preload="metadata"
+                /* v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Res de xarxa en repòs: el vídeo, en prémer «reproduir». */
+                preload="none"
               />
             </div>
           )

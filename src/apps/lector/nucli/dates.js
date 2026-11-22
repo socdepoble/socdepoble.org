@@ -101,7 +101,7 @@ function desfasDe(zona) {
     const signe = xifres[0] === '-' ? -1 : 1;
     const hores = Number(xifres.slice(1, 3));
     const minuts = xifres.length > 3 ? Number(xifres.slice(3, 5)) : 0;
-    return minuts > 59 ? NaN : signe * (hores * 60 + minuts);
+    return minuts > 59 ? NaN : (signe * (hores * 60 + minuts)) || 0;
   }
   const nom = zona.toLowerCase();
   if (Object.hasOwn(ZONES, nom)) return ZONES[nom];

@@ -14,6 +14,10 @@ import { rutaWorkspaceWp } from '../../../data/importacio/destinacionsWorkspaceW
 import { ETIQUETES_ESTAT_REVISIO_WP, desaRevisio, notificaRevisio, subscriu } from '../../../data/importacio/revisioImportacioWpStore.js';
 import { desplacaDinsApp, enfocaSenseSalt } from '../../../utils/desplacamentProxim.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../../apps/plataforma/lazyRoute.js';
+/* v1.2.19 · fusió · R32.30b (lot 03) porta els aria-label i placeholder d'este panell al diccionari diferit
+   del Perfil (5 llengües, el valencià byte a byte); el ref adoptaEstilsAdminTaxonomia de la v1.2.18 es queda a
+   cada etiqueta .sdp-admin-taxonomia__*: les dues coses viuen en la mateixa etiqueta. */
+import { textosPerfilA11y } from '../i18nPerfilA11y.js';
 import {
   CASOS_US_EDITORIALS,
   desaDestinacioArticleImportat,
@@ -51,6 +55,7 @@ export function BancImportacioEditorial() {
      (proves del banc) `t` és undefined i el helper torna al valencià de sempre. */
   const ui = useUIActionsOpcional();
   const t = ui?.t;
+  const txPerfil = textosPerfilA11y({ language: ui?.language, t });
   const potPublicar = Boolean(sessio?.currentUser?.id && sessio?.estat === 'dins');
   const publicacio = useProjeccionsCataleg({ enabled: potPublicar });
   const [versio, setVersio] = useState(0);
@@ -250,7 +255,7 @@ export function BancImportacioEditorial() {
   };
 
   return (
-    <article className="sdp-admin-importacio" aria-label="Importació i Revisió Editorial de WordPress i Blogger">
+    <article className="sdp-admin-importacio" aria-label={txPerfil.importacioRevisioEditorialAria}>
       {avisRevisio && <p role="status">{avisRevisio}</p>}
       {conflicteRevisio && <div role="alert">
         <p>Conflicte de revisió de l’article #{conflicteRevisio.wpId}.</p>
@@ -285,7 +290,7 @@ export function BancImportacioEditorial() {
         </p>
       </header>
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label="Resum d'importació i casos d'ús">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__kpis" aria-label={txPerfil.resumImportacioAria}>
         <div className="sdp-admin-kpi">
           <strong>{stats.total}</strong>
           <span>Articles WordPress</span>
@@ -304,7 +309,7 @@ export function BancImportacioEditorial() {
         </div>
       </section>
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Importador d'arxius XML WXR i Blogger">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={txPerfil.importadorXmlAria}>
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <div>
             <h3>📂 Ingesta d’arxius d’exportació (WP REST API · WordPress WXR .xml · Blogger Atom .xml)</h3>
@@ -334,7 +339,7 @@ export function BancImportacioEditorial() {
         {errorXml && <p role="alert">{errorXml}</p>}
       </section>
 
-      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label="Filtres del banc d'importació">
+      <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={txPerfil.filtresBancImportacioAria}>
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__toolbar">
           <Camp etiqueta="Cerca per títol, slug, ID de WordPress, poble o etiqueta">
             <CampText value={cerca} onChange={(e) => { setCerca(e.target.value); setPagina(1); }} />
@@ -400,7 +405,7 @@ export function BancImportacioEditorial() {
                 (.sdp-admin-taxonomia__grid) fa una columna a 375 px. Tota la targeta tria l'article;
                 les accions ràpides van a la ranura `accio`, germana del vel i damunt seu: el seu clic
                 no arriba al botó de la targeta i no canvia la tria. */}
-            <ul ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid sdp-admin-importacio__llista" aria-label="Articles importats">
+            <ul ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid sdp-admin-importacio__llista" aria-label={txPerfil.articlesImportatsAria}>
               {visibles.map((art) => {
                 const badgeEstat = ETIQUETA_ESTAT[art.estat_revisio] || ETIQUETA_ESTAT.pendent_admin;
                 const actiu = seleccionat?.wp_id === art.wp_id;
@@ -476,7 +481,7 @@ export function BancImportacioEditorial() {
             <aside
               ref={inspectorRef}
               className="sdp-admin-importacio__inspector"
-              aria-label="Inspector comparatiu d'article importat"
+              aria-label={txPerfil.inspectorArticleImportatAria}
             >
               <div className="sdp-admin-importacio__inspector-cap">
                 <h4
@@ -557,7 +562,7 @@ export function BancImportacioEditorial() {
                     if (baseEdicio.current?.id !== seleccionat.wp_id) baseEdicio.current = { id: seleccionat.wp_id, token: llegeixEstatRevisioEditorial().versions?.[String(seleccionat.wp_id)] ?? null };
                     setNotaEdicio(e.target.value);
                   }}
-                  placeholder="Anota què cal polir d'aquest article (ex. revisar galeria, separar en dos articles, millorar subtítol)..."
+                  placeholder={txPerfil.notaRevisioPlaceholder}
                 />
                 <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat">
                   <Link className="sdp-boto sdp-boto--primari" to={seleccionat.ruta_canonica}>

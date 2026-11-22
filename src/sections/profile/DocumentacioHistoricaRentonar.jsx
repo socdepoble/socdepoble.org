@@ -53,7 +53,7 @@ export default function DocumentacioHistoricaRentonar() {
       data-testid="documentacio-historica-rentonar"
     >
       <header lang={langDoc}>
-        <ul className="sp-card-labels" aria-label="Dades registrals d’El Rentonar">
+        <ul className="sp-card-labels" aria-label={textos.rentonarDadesRegistralsAria}>
           <li><Insignia to="info">{`Registre GVA ${FITXA_REGISTRAL_RENTONAR.numeroRegistre}`}</Insignia></li>
           <li><Insignia to="exit">{`Fundada el ${FITXA_REGISTRAL_RENTONAR.dataConstitucio}`}</Insignia></li>
           <li><Insignia to="neutre">{`CIF ${FITXA_REGISTRAL_RENTONAR.cifEntitat}`}</Insignia></li>

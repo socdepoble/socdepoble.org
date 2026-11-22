@@ -54,6 +54,7 @@ function home_url() { return 'https://host.example/subdirectory'; }
 function rest_url( $path = '' ) { return 'https://host.example/subdirectory/wp-json/' . $path; }
 function is_wp_error( $v ) { return $v instanceof WP_Error; }
 function add_action( $hook, $callback ) { if ( 'rest_api_init' === $hook ) { $callback(); } }
+function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) { /* El filtre REST es prova amb resposta real en enxufe-tellado-r32-29.php. */ }
 function register_rest_route( $namespace, $route, $opts ) { $GLOBALS['routes'][ $namespace . $route ] = $opts; }
 function get_transient( $k ) {
 	$v = $GLOBALS['transients'][ $k ]['value'] ?? false;
@@ -67,7 +68,9 @@ function wp_remote_retrieve_body( $r ) { return $r['body']; }
    (formulari, una crida per text, «spa:text») i l'extrem compatible amb
    LibreTranslate (JSON, clau opcional al cos, «de:text»). Cap traça porta
    cap clau. `fail` falla un extrem concret ('transport' o un estat HTTP) i
-   `cost` gasta segons simulats del termini de la petició en cada crida. */
+   `cost` gasta segons simulats del termini de la petició en cada crida.
+   v1.2.19 · Gauntlet R1 (L2-01) · `retryAfter` posa la capçalera Retry-After
+   a la resposta d'un extrem concret. */
 function wp_remote_post( $url, $args ) {
 	$body = is_array( $args['body'] ) ? $args['body'] : json_decode( $args['body'], true );
 	$trace = $args;
@@ -93,7 +96,8 @@ function wp_remote_post( $url, $args ) {
 	} else {
 		$bona = array( 'translations' => array_map( fn( $t ) => array( 'text' => $body['target_lang'] . ':' . $t, 'detected_source_language' => 'CA' ), $body['text'] ) );
 	}
-	return array( 'status' => is_int( $falla ) ? $falla : ( $pas['status'] ?? 200 ), 'body' => $pas['upstreamRaw'] ?? json_encode( $pas['upstream'] ?? $bona ) );
+	$capcaleres = isset( $pas['retryAfter'][ $url ] ) ? array( 'retry-after' => $pas['retryAfter'][ $url ] ) : array();
+	return array( 'status' => is_int( $falla ) ? $falla : ( $pas['status'] ?? 200 ), 'headers' => $capcaleres, 'body' => $pas['upstreamRaw'] ?? json_encode( $pas['upstream'] ?? $bona ) );
 }
 require $argv[1];
 foreach ( $cas['steps'] ?? array( array() ) as $ara ) {

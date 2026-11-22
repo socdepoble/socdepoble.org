@@ -301,6 +301,7 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError, idioma = 'ca' }) 
           entrades={entrades}
           avui={avui}
           senseData={senseData}
+          idioma={idioma}
           avisos={avisError}
           abansNavegacio={(
             <SelectorModeCalendari

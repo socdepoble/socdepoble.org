@@ -2873,3 +2873,5 @@ export function localitzaEstatCadenaGestoria(estat, idioma = 'ca') {
     text: tg(llengua, estat.text)
   };
 }
+
+export { tga } from './i18nGestoriaA11y.js';

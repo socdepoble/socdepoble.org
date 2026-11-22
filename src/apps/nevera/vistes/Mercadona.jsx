@@ -28,7 +28,10 @@ export function AvisCatalegMercadona({ dades, error }) {
   );
 }
 
-const euros = (centims) => `${(centims / 100).toFixed(2).replace('.', ',')} €`;
+const euros = (centims) => {
+  const net = Number.isFinite(centims) && centims !== 0 ? centims : 0;
+  return `${(net / 100).toFixed(2).replace('.', ',')} €`;
+};
 const nombre = (text) => /^\d+(?:[.,]\d{1,6})?$/.test(text) ? Number(text.replace(',', '.')) : null;
 
 /** Mateixa quantitat i dimensió; la data i el preu rural els aporta la persona. */
@@ -38,7 +41,8 @@ export function ComparadorMercadona({ producte }) {
   const [preu, setPreu] = useState('');
   const [quantitat, setQuantitat] = useState('1');
   const [unitat, setUnitat] = useState(producte.unitatPreuUnitari);
-  const [proveidor, setProveidor] = useState('La Torre / Cooperativa');
+  const [proveidorManual, setProveidorManual] = useState(null);
+  const proveidor = proveidorManual ?? tx.proveidorDefecte;
   const [data, setData] = useState('');
   const p = nombre(preu);
   const q = nombre(quantitat);
@@ -48,14 +52,14 @@ export function ComparadorMercadona({ producte }) {
     if (p === null || !/^\d+(?:[.,]\d{1,2})?$/.test(preu) || !(q > 0) || !data || !proveidor.trim()) {
       error = tx.errorComparador;
     } else {
-      try { resultat = comparaOfertaRural(producte, { preuCentims: Math.round(p * 100), quantitat: q, unitat, proveidor, data }); }
+      try { resultat = comparaOfertaRural(producte, { preuCentims: Math.round(p * 100) || 0, quantitat: q, unitat, proveidor, data }); }
       catch (motiu) { error = motiu.message; }
     }
   }
   return (
     <GrupCamps llegenda={tx.comparadorLlegenda}>
       <p>{tx.comparadorIntro(euros(producte.preuUnitariCentims), producte.unitatPreuUnitari)}</p>
-      <Camp etiqueta={tx.proveidorLocal}><CampText value={proveidor} maxLength={80} onChange={(event) => setProveidor(event.target.value)} /></Camp>
+      <Camp etiqueta={tx.proveidorLocal}><CampText value={proveidor} maxLength={80} onChange={(event) => setProveidorManual(event.target.value)} /></Camp>
       <Camp etiqueta={tx.preuOfertaLocal}><CampText value={preu} inputMode="decimal" onChange={(event) => setPreu(event.target.value)} /></Camp>
       <Camp etiqueta={tx.quantitatOferta}><CampText value={quantitat} inputMode="decimal" onChange={(event) => setQuantitat(event.target.value)} /></Camp>
       <Camp etiqueta={tx.unitatOferta}><Selector value={unitat} onChange={(event) => setUnitat(event.target.value)} opcions={['g', 'kg', 'ml', 'cl', 'l', 'u'].map((u) => ({ valor: u, etiqueta: u }))} /></Camp>

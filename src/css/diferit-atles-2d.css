@@ -1,0 +1,856 @@
+/* ==========================================================================
+   PEDRA SECA · ATLES 2D (FULL DIFERIT · Atles 2D a /disseny?categoria=atles-2d)
+   Ordre del Mestre del 21-11-2026 (23:28; pla 261121_2335, Carril 1, Tram 1, punt b): les cinc pàgines
+   d'estudi de l'Atles 2D dins del catàleg de Disseny, per a llegir-les a l'iPad. Només les munten
+   les pàgines de l'Atles (src/sections/disseny/cataleg/detalls/EspecimenAtles2d*.jsx i atles2dComu.jsx),
+   que l'adopten amb useFullDiferit(…, 'atles-2d', …) abans del primer pintat: 0 B a l'arrencada.
+   Tot ix dels tokens (--sdp-*): el tema clar, el fosc, el Bancal i el Mode Sènior hi arriben sols.
+   Les amplades que només sap el JavaScript (la barra apilada i la d'afinitat) arriben com a
+   propietats locals (--atles-columnes, --atles-fraccio) escrites per usePropietatsCss: cap style=.
+   Cap taula ni graella no eixampla la pàgina: les amples es desplacen dins de la seua caixa.
+   ========================================================================== */
+@layer components {
+  /* ── Arrel i blocs ── */
+  .sdp-atles {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-8);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-atles :where(p, li, dd, td, th, h2, h3, h4) {
+    overflow-wrap: break-word;
+  }
+
+  .sdp-atles :where(code) {
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-atles__bloc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__bloc > :where(h2, h3, p, ul, ol) {
+    margin: 0;
+  }
+
+  .sdp-atles__bloc > :where(p) {
+    max-inline-size: var(--sdp-measure);
+  }
+
+  .sdp-atles__meta,
+  .sdp-atles__suau,
+  .sdp-atles__recompte {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__etiqueta {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .sdp-atles__mono {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    overflow-wrap: anywhere;
+  }
+
+  /* ── Avisos de marc ── */
+  .sdp-atles__avis,
+  .sdp-atles__datacio,
+  .sdp-atles__proposta {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    max-inline-size: var(--sdp-measure);
+  }
+
+  .sdp-atles__avis {
+    border-inline-start: 4px solid var(--sdp-error-text);
+  }
+
+  .sdp-atles__proposta {
+    border-style: dashed;
+    border-color: var(--sdp-vora-control);
+  }
+
+  /* v1.2.19 · Gauntlet R2 (L4R2-04): la data i la versió de les dades, a la vista i no només al peu. */
+  .sdp-atles__datacio {
+    border-inline-start: 4px solid var(--sdp-info-text);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* ── Xifres ── */
+  .sdp-atles__xifres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-atles__xifra {
+    display: grid;
+    gap: var(--sdp-space-1);
+    align-content: start;
+    min-inline-size: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-atles__xifra-n {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h3);
+    font-weight: var(--sdp-pes-extra);
+    line-height: var(--sdp-leading-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__xifra-t {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-atles__xifra-d {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* ── Graelles de fitxes ── */
+  .sdp-atles__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__graella--ampla {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  }
+
+  /* Cap fitxa no imposa la seua paraula més llarga a la graella (Mode Sènior a 360 px). */
+  .sdp-atles__graella > *,
+  .sdp-atles__cap > * {
+    min-inline-size: 0;
+  }
+
+  .sdp-atles :where(h2, h3) {
+    overflow-wrap: anywhere;
+  }
+
+  /* Una sola columna que pot encongir-se fins a l'amplada del contenidor: la paraula més llarga d'una
+     fitxa (un nom, una ruta) es partix abans que eixamplar la columna (Mode Sènior a 360 px). */
+  .sdp-atles__fitxa,
+  .sdp-atles__targeta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-2);
+    align-content: start;
+    min-inline-size: 0;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-atles__fitxa > :where(h3, h4, p, ul, ol, dl, blockquote) {
+    margin: 0;
+  }
+
+  /* Dins d'una fitxa o d'una targeta, el títol és el d'una peça, no el d'una secció de la pàgina:
+     més menut i sense el filet del h3 editorial (la vora ja és la de la fitxa). */
+  .sdp-atles__fitxa :where(h3),
+  .sdp-atles__targeta :where(h3) {
+    margin: 0;
+    padding-block-end: 0;
+    border-block-end: 0;
+    font-size: var(--sdp-fluid-h5);
+  }
+
+  .sdp-atles__fitxa :where(ul:not([class])) {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+  }
+
+  .sdp-atles__fitxa[aria-current="true"] {
+    border-color: var(--sdp-accio);
+    box-shadow: 0 0 0 2px var(--sdp-accio);
+  }
+
+  .sdp-atles__fitxa:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+
+  .sdp-atles__targeta {
+    color: var(--sdp-text-cos);
+    text-decoration: none;
+  }
+
+  /* v1.2.19 · Gauntlet R2 (L4R2-06): el ressalt de passar per damunt només amb un ratolí de veres (Fase B):
+     al Safari tàctil de l'iPad, un :hover fora de la guarda es queda enganxat després del toc. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-atles__targeta:hover {
+      border-color: var(--sdp-accio);
+      background: var(--sdp-accio-subtil);
+    }
+  }
+
+  .sdp-atles__targeta > :where(h3, p) {
+    margin: 0;
+  }
+
+  .sdp-atles__targeta-icona {
+    font-size: var(--sdp-text-h3);
+    line-height: 1;
+  }
+
+  .sdp-atles__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__id {
+    color: var(--sdp-accio-text);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+  }
+
+  /* ── Barra apilada i llegenda ── */
+  .sdp-atles__apilada {
+    display: grid;
+    grid-template-columns: var(--atles-columnes, 1fr);
+    block-size: var(--sdp-space-5);
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-atles__segment { display: block; min-inline-size: 0; }
+  .sdp-atles__segment--exit { background: var(--sdp-exit-text); }
+  .sdp-atles__segment--avis { background: var(--sdp-avis-text); }
+  .sdp-atles__segment--error { background: var(--sdp-error-text); }
+  .sdp-atles__segment--info { background: var(--sdp-info-text); }
+  .sdp-atles__segment--neutre { background: var(--sdp-text-suau); }
+
+  .sdp-atles__llegenda {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__llegenda > li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  /* ── Filtres ── */
+  .sdp-atles__filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sdp-space-3) var(--sdp-space-4);
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__filtres > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .sdp-atles__filtres .sdp-pindola {
+    justify-content: flex-start;
+  }
+
+  .sdp-atles__filtres .sdp-camp {
+    margin: 0;
+  }
+
+  /* ── Veïns ── */
+  .sdp-atles__perfil-cap {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__inicial {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: var(--sdp-touch-min);
+    block-size: var(--sdp-touch-min);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: var(--sdp-pes-extra);
+  }
+
+  .sdp-atles__cita {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-3);
+    border-inline-start: 3px solid var(--sdp-vora-control);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-atles__xips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-atles__xip,
+  .sdp-atles__sev {
+    display: inline-block;
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: 1.6;
+  }
+
+  .sdp-atles__sev--p0 {
+    border-color: var(--sdp-text-titol);
+    background: var(--sdp-text-titol);
+    color: var(--sdp-fons-targeta);
+  }
+
+  /* ── Llistes de definició de les fitxes ── */
+  .sdp-atles__dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-1);
+    margin: 0;
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-atles__dl > div {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, max-content) minmax(0, 1fr);
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__dl :where(dt) {
+    color: var(--sdp-text-suau);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-atles__dl :where(dd) {
+    margin: 0;
+    min-inline-size: 0;
+  }
+
+  .sdp-atles__dl--apilada > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  /* ── Gràfic d'afinitat ── */
+  .sdp-atles__grafic {
+    display: grid;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Dues línies per fila: el nom sencer dalt i, davall, la barra amb la nota. La barra té tota l'amplada
+     de la columna també a l'iPad, on el detall del catàleg fa uns 300-450 px. */
+  .sdp-atles__grafic-fila,
+  .sdp-atles__grafic-eix {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 3.5em;
+    grid-template-areas: "nom nom" "pista valor";
+    align-items: center;
+    gap: var(--sdp-space-1) var(--sdp-space-3);
+  }
+
+  .sdp-atles__grafic-fila {
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch-min);
+    padding: var(--sdp-space-2);
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  /* v1.2.19 · Gauntlet R2 (L4R2-06): la mateixa guarda de la Fase B que la targeta. Al tàctil, la fila
+     triada ja la marca l'anell d'aria-pressed: sense la guarda, el toc li sumava el fons enganxat. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-atles__grafic-fila:hover {
+      background: var(--sdp-accio-subtil);
+    }
+  }
+
+  .sdp-atles__grafic-fila[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
+  }
+
+  .sdp-atles__grafic-nom {
+    grid-area: nom;
+    min-inline-size: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-atles__grafic-pista {
+    grid-area: pista;
+    position: relative;
+    block-size: var(--sdp-space-4);
+    border-inline-start: 1px solid var(--sdp-vora-control);
+    background:
+      repeating-linear-gradient(to right, transparent 0, transparent calc(20% - 1px), var(--sdp-vora) calc(20% - 1px), var(--sdp-vora) 20%),
+      var(--sdp-fons-subtil);
+  }
+
+  .sdp-atles__grafic-barra {
+    position: absolute;
+    inset-block: 2px;
+    inset-inline-start: 0;
+    inline-size: calc(var(--atles-fraccio, 0) * 100%);
+    border-radius: 0 var(--sdp-radi-s) var(--sdp-radi-s) 0;
+    background: var(--sdp-accio);
+  }
+
+  .sdp-atles__grafic-barra--orkut { background: var(--sdp-accio-forta); }
+  .sdp-atles__grafic-barra--anti { background: var(--sdp-error-text); }
+
+  .sdp-atles__grafic-valor {
+    grid-area: valor;
+    color: var(--sdp-text-titol);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__grafic-eix {
+    grid-template-areas: "pista valor";
+    padding-inline: var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-atles__grafic-eix > span:first-child {
+    grid-area: pista;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Fitxes de xarxa ── */
+  .sdp-atles__nota {
+    flex: none;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h3);
+    font-weight: var(--sdp-pes-extra);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__anti {
+    display: block;
+    color: var(--sdp-error-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-extra);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .sdp-atles__eslogan {
+    font-style: italic;
+  }
+
+  .sdp-atles__llista-si,
+  .sdp-atles__llista-no {
+    display: grid;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-atles__llista-si > li::before {
+    content: "✓ ";
+    color: var(--sdp-exit-text);
+    font-weight: var(--sdp-pes-extra);
+  }
+
+  .sdp-atles__llista-no > li::before {
+    content: "✕ ";
+    color: var(--sdp-error-text);
+    font-weight: var(--sdp-pes-extra);
+  }
+
+  /* ── Taules amples: es desplacen dins de la seua regió (Taula) i no partixen les paraules ── */
+  .sdp-atles__taula-ampla :where(table) {
+    min-inline-size: 44rem;
+  }
+
+  /* ── Mapa 2D (12 × 5) ──
+     La caixa de la graella és un contenidor: a l'iPad vertical (una caixa d'uns 25rem) la capçalera de
+     fila s'aprima i les entitats passen al nom curt, perquè es vegen més columnes. La vista «Per entitat»
+     és l'alternativa sense desplaçament lateral. */
+  .sdp-atles__mapa {
+    container-type: inline-size;
+  }
+
+  .sdp-atles__mapa :where(table) {
+    min-inline-size: 52rem;
+    table-layout: fixed;
+  }
+
+  .sdp-atles__nom-curt {
+    display: none;
+  }
+
+  /* Amb table-layout: fixed manen les capçaleres: es parteixen en línies i no trepitgen la veïna. */
+  .sdp-atles__mapa :where(th) {
+    white-space: normal;
+    overflow-wrap: break-word;
+    vertical-align: bottom;
+  }
+
+  /* v1.2.19 · Gauntlet R2 (L4R2-01): la cantonada «Dimensió» va enganxada com la columna de les dimensions.
+     Sense això, en desplaçar la graella (iPad, 360 px) la capçalera d'una entitat quedava damunt de la columna
+     enganxada i en semblava el títol. Opaca i per damunt de les capçaleres de fila (z-index 1), que passen
+     per davall d'ella en el desplaçament vertical de la caixa. */
+  .sdp-atles__mapa :where(thead th:first-child) {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    inline-size: 12rem;
+    background: var(--sdp-taula-capcalera-fons);
+  }
+
+  /* PS-03: la capçalera de fila porta el fons de capçalera de tota taula (i és opaca: va enganxada). */
+  .sdp-atles__mapa :where(th[scope="row"]) {
+    vertical-align: middle;
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    inline-size: 12rem;
+    background: var(--sdp-taula-capcalera-fons);
+    font-size: var(--sdp-text-meta);
+  }
+
+  @container (max-width: 34rem) {
+    .sdp-atles__mapa :where(table) {
+      min-inline-size: 44rem;
+    }
+
+    .sdp-atles__mapa :where(thead th:first-child, th[scope="row"]) {
+      inline-size: 7.5rem;
+    }
+
+    /* v1.2.19 · Gauntlet R2 (L4R2-02): a la caixa estreta, cap nom curt no es partix a mitja paraula. Amb el
+       farciment de tota taula (12 px per costat) i la capçalera de columna a mida de cos, a l'iPad quedaven
+       93 px útils i «Ajuntament» (96 px) i «estructurades» (98 px) es tallaven sense guionet. Totes les
+       capçaleres a mida de metadada (14 px) i amb 8 px per costat: les paraules més llargues hi caben.
+       L'overflow-wrap: break-word de dalt es queda com a darrer recurs (Mode Sènior, lletra del sistema
+       gran): abans partir una paraula que trepitjar la columna veïna. */
+    .sdp-atles__mapa :where(th) {
+      padding-inline: var(--sdp-space-2);
+      font-size: var(--sdp-text-meta);
+    }
+
+    .sdp-atles__mapa .sdp-atles__nom-llarg {
+      display: none;
+    }
+
+    .sdp-atles__mapa .sdp-atles__nom-curt {
+      display: inline;
+    }
+  }
+
+  .sdp-atles__mapa :where(td) {
+    padding: var(--sdp-space-1);
+  }
+
+  .sdp-atles__cel {
+    display: grid;
+    gap: var(--sdp-space-1);
+    justify-items: start;
+    align-content: center;
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch-min);
+    padding: var(--sdp-space-2);
+    border: 1px solid currentColor;
+    border-radius: var(--sdp-radi-s);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-snug);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .sdp-atles__cel--fet { background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
+  .sdp-atles__cel--mitges { background: var(--sdp-avis-fons); color: var(--sdp-avis-text); }
+  .sdp-atles__cel--falta { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
+  .sdp-atles__cel--na { background: var(--sdp-fons-subtil); color: var(--sdp-text-suau); }
+  /* v1.2.19 · Gauntlet R2 (L4R2-05): fora del ressalt, la cel·la s'aplana en compte d'esvair-se. Una opacitat
+     de 0,32 deixava a 1,7:1 el text de 51 botons que continuen oberts al visor (no són inactius: WCAG 1.4.3).
+     Ara perd el color de l'estat (fons subtil i vora puntejada) però el text, el glif i el nom de l'estat
+     es lligen igual (text suau sobre fons subtil, AAA en clar i en fosc). El lector de pantalla ho sap pel
+     text amagat «fora del filtre». */
+  .sdp-atles__cel--apagada {
+    border-style: dashed;
+    border-color: var(--sdp-vora-control);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-atles__cel--apagada .sdp-atles__cel-marca {
+    border-style: dashed;
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-atles__cel[aria-pressed="true"] {
+    outline: 3px solid var(--sdp-text-titol);
+    outline-offset: 1px;
+  }
+
+  .sdp-atles__cel-glif { font-size: var(--sdp-text-small); line-height: 1; }
+
+  /* Vista «Per entitat»: la cel·la diu primer la seua dimensió. */
+  .sdp-atles__cel-dimensio {
+    font-size: var(--sdp-text-small);
+    font-weight: var(--sdp-pes-extra);
+  }
+
+  .sdp-atles__cel-marca {
+    padding: 0 var(--sdp-space-1);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-semi);
+  }
+
+  .sdp-atles__detall {
+    border-inline-start: 4px solid var(--sdp-accio);
+  }
+
+  .sdp-atles__evidencies {
+    display: grid;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ── Motor d'estudis ── */
+  .sdp-atles__fase--sintetica {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: var(--sdp-vora-control);
+  }
+
+  .sdp-atles__fase--humana {
+    border-width: 2px;
+    border-color: var(--sdp-text-titol);
+  }
+
+  .sdp-atles__passos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: atles-pas;
+  }
+
+  .sdp-atles__passos > li {
+    counter-increment: atles-pas;
+  }
+
+  .sdp-atles__passos > li::before {
+    content: "Pas " counter(atles-pas);
+    color: var(--sdp-accio-text);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-extra);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .sdp-atles__dos-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: var(--sdp-space-6);
+    align-items: start;
+  }
+
+  .sdp-atles__mobil {
+    inline-size: min(100%, 21rem);
+    margin-inline: auto;
+    overflow: hidden;
+    border: 10px solid var(--sdp-fons-roca);
+    border-radius: 32px;
+    background: var(--sdp-fons-app);
+    box-shadow: var(--sdp-ombra-2);
+  }
+
+  .sdp-atles__mobil-barra {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    background: var(--sdp-fons-roca);
+    color: var(--sdp-sobre-roca);
+    font-size: var(--sdp-text-meta);
+    font-weight: var(--sdp-pes-negreta);
+  }
+
+  .sdp-atles__mobil-cos {
+    display: grid;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-atles__mobil-marca {
+    color: var(--sdp-error-text);
+    font-weight: var(--sdp-pes-negreta);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .sdp-atles__mobil-targeta {
+    display: grid;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-atles__mobil-targeta > :where(h4) {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-atles__mobil-targeta--sint {
+    border-style: dashed;
+  }
+
+  .sdp-atles__mobil-fila {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-atles__mobil-fila > :where(b) {
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-atles__mobil-boto {
+    display: grid;
+    place-items: center;
+    min-block-size: var(--sdp-touch-min);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    font-weight: var(--sdp-pes-negreta);
+    text-align: center;
+  }
+
+  .sdp-atles__semafor {
+    display: inline-flex;
+    gap: var(--sdp-space-1);
+  }
+
+  .sdp-atles__llum {
+    inline-size: 12px;
+    block-size: 12px;
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: 50%;
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-atles__llum--verd {
+    border-color: var(--sdp-exit-text);
+    background: var(--sdp-exit-text);
+  }
+
+  /* ── Fonts i traçabilitat ── */
+  /* Llei de llistes: el <ul> i l'<ol> conserven els marcadors, així que van en bloc i l'aire el
+     posa el marge entre elements, no un gap. */
+  .sdp-atles__peu {
+    display: block;
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+  }
+
+  .sdp-atles__peu > li + li {
+    margin-block-start: var(--sdp-space-2);
+  }
+
+  .sdp-atles__font {
+    min-inline-size: 11rem;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    overflow-wrap: anywhere;
+  }
+}

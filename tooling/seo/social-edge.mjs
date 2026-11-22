@@ -10,6 +10,13 @@ import { ATRIBUT_SSR, CAP_SOCIAL_BASE } from '../../src/config/imatgeSocial.js';
 export const SOCIAL_SLOT = '<!--SDP_SOCIAL_HEAD-->';
 const SCHEMA = 'sdp.social-manifest.v1';
 const ID_WIKI = /^[a-zA-Z0-9_-]{1,180}$/;
+/* v1.2.19 · Gauntlet R2 de la v1.2.18 (L2R2-03) · La mateixa forma canònica del camí que canonitzaCami de
+   src/config/rutaSocial.js (RFC 3986 §6.2.2): la %XX d'un no reservat es descodifica i la resta passa a majúscula. */
+const NO_RESERVAT = /^[A-Za-z0-9\-._~]$/;
+const canonitzaCami = cami => String(cami).replace(/%([0-9A-Fa-f]{2})/g, (tros, hex) => {
+  const caracter = String.fromCharCode(Number.parseInt(hex, 16));
+  return NO_RESERVAT.test(caracter) ? caracter : `%${hex.toUpperCase()}`;
+});
 const own = (o, key) => o && Object.hasOwn(o, key);
 const escape = value => String(value).replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -36,7 +43,7 @@ export function socialAgent(ua = '') {
    Mestre) és el mateix document que ?item=<id>. */
 export function routeKey(input) {
   const url = new URL(input);
-  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+  const pathname = canonitzaCami(url.pathname.replace(/\/+$/, '') || '/');
   const cami = /^\/wikidepoble\/([^/]+)$/.exec(pathname);
   if (cami) return ID_WIKI.test(cami[1]) ? `/wikidepoble?item=${cami[1]}` : pathname;
   if (pathname === '/wikidepoble' && url.searchParams.has('item')) {

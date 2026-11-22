@@ -34,6 +34,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Download, History, Plus, RotateCcw, Save, Tags, Trash2, X } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, Boto, Camp, CampText, Carregant, EstatBuit, Selector, Taula } from '../../components/PedraSeca/index.js';
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { textosAdminA11y } from './i18nAdminA11y.js';
 import { adminDesaPersonalitzacio, adminHistorialPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
@@ -79,8 +81,10 @@ function Bloc({ titol, children }) {
   );
 }
 
-/* Les llistes de valors de sèrie: les de sempre (fixes) i les afegides pel poble. */
-function LlistaDeSerie({ nom, singular, fixes, valors, onAfig, onLleva, ocupat }) {
+/* Les llistes de valors de sèrie: les de sempre (fixes) i les afegides pel poble.
+   v1.2.19 · Gauntlet R1 (L3-01) · nomAria i singularAria arriben ja traduïts per a
+   les plantilles d'aria-label; nom i singular, en valencià, per al text visible. */
+function LlistaDeSerie({ nom, singular, nomAria = nom, singularAria = singular, fixes, valors, onAfig, onLleva, ocupat, txAdmin }) {
   const [nou, setNou] = useState('');
   const afig = (e) => {
     e.preventDefault();
@@ -93,11 +97,11 @@ function LlistaDeSerie({ nom, singular, fixes, valors, onAfig, onLleva, ocupat }
     <>
       <p className="sdp-camp__ajuda">De sèrie, sempre: {fixes.join(', ')}.</p>
       {valors.length ? (
-        <ul className="sdp-superadmin-llista" aria-label={`${nom} afegides`}>
+        <ul className="sdp-superadmin-llista" aria-label={txAdmin.llistaAfegidesAria(nomAria)}>
           {valors.map((valor) => (
             <li key={valor}>
               <span>{valor}</span>
-              <Boto varietat="fantasma" icona={X} onClick={() => onLleva(valor)} disabled={ocupat} aria-label={`Llevar la ${singular} ${valor}`}>Llevar</Boto>
+              <Boto varietat="fantasma" icona={X} onClick={() => onLleva(valor)} disabled={ocupat} aria-label={txAdmin.llevarValorSerieAria(singularAria, valor)}>{txAdmin.llevar}</Boto>
             </li>
           ))}
         </ul>
@@ -113,6 +117,7 @@ function LlistaDeSerie({ nom, singular, fixes, valors, onAfig, onLleva, ocupat }
 }
 
 export function FacetaTaxonomia({ onBack = null, ambit = null }) {
+  const txAdmin = textosAdminA11y({ t: useTraductorOpcional() });
   const [ambCapacitat] = useState(ambCapacitatPersonalitzacio);
   const global = useCoreContent();
   const { status, pageCopy, personalitzacio, refresh } = ambit?.contingut ?? global;
@@ -251,7 +256,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
           </Alerta>
         ) : null}
 
-        <div className="sdp-superadmin-taxonomia__accions" role="group" aria-label="Accions de la taxonomia">
+        <div className="sdp-superadmin-taxonomia__accions" role="group" aria-label={txAdmin.accionsTaxonomiaAria}>
           <Boto varietat="primari" icona={Save} onClick={() => desa(payloadDe(esborrany), 'desa')} disabled={treballant} carregant={ocupat === 'desa'}>Desar</Boto>
           <Boto varietat="secundari" icona={History} onClick={obriHistorial} disabled={treballant || Boolean(historial?.carregant)}>Historial</Boto>
           <Boto varietat="secundari" icona={Download} onClick={exporta} disabled={treballant}>Exporta JSON</Boto>
@@ -275,8 +280,8 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
                           <td>{registre.autor || ''}</td>
                           <td>
                             <Boto varietat="secundari" icona={RotateCcw} onClick={() => restaura(registre)} disabled={treballant}
-                              carregant={ocupat === `restaura:${registre.versio}`} aria-label={`Restaurar la versió ${registre.versio}`}>
-                              Restaurar
+                              carregant={ocupat === `restaura:${registre.versio}`} aria-label={txAdmin.restaurarVersioAria(registre.versio)}>
+                              {txAdmin.restaurar}
                             </Boto>
                           </td>
                         </tr>
@@ -288,11 +293,13 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
         ) : null}
 
         <Bloc titol="Categories de sèrie del Bloc">
-          <LlistaDeSerie nom="Categories" singular="categoria" fixes={CATEGORIES_BASE} valors={esborrany.categories} ocupat={treballant}
+          <LlistaDeSerie nom="Categories" singular="categoria" nomAria={txAdmin.categoriesNom} singularAria={txAdmin.categoriaSingular}
+            fixes={CATEGORIES_BASE} valors={esborrany.categories} ocupat={treballant} txAdmin={txAdmin}
             onAfig={(text) => afigValor('categories', text)} onLleva={(text) => llevaValor('categories', text)} />
         </Bloc>
         <Bloc titol="Etiquetes de sèrie del Bloc">
-          <LlistaDeSerie nom="Etiquetes" singular="etiqueta" fixes={ETIQUETES_BASE} valors={esborrany.etiquetes} ocupat={treballant}
+          <LlistaDeSerie nom="Etiquetes" singular="etiqueta" nomAria={txAdmin.etiquetesNom} singularAria={txAdmin.etiquetaSingular}
+            fixes={ETIQUETES_BASE} valors={esborrany.etiquetes} ocupat={treballant} txAdmin={txAdmin}
             onAfig={(text) => afigValor('etiquetes', text)} onLleva={(text) => llevaValor('etiquetes', text)} />
         </Bloc>
 
@@ -301,7 +308,7 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
           return (
             <Bloc key={key} titol={`Pàgina «${pagina.titol}»`}>
               {pagina.labels.length ? (
-                <ul className="sp-card-labels" aria-label={`Previsualització de les etiquetes de ${pagina.titol}`}>
+                <ul className="sp-card-labels" aria-label={txAdmin.previsualitzacioEtiquetesAria(pagina.titol)}>
                   {pagina.labels.map((label, i) => (
                     <li key={`${i}-${label.className}`} className={`sp-card-label ${label.className}`}>{label.text.trim() || '…'}</li>
                   ))}
@@ -318,15 +325,15 @@ export function FacetaTaxonomia({ onBack = null, ambit = null }) {
                       onChange={(e) => canviaEtiqueta(key, i, { className: e.target.value })} />
                   </Camp>
                   <Boto varietat="perill" icona={Trash2} onClick={() => llevaEtiqueta(key, i)} disabled={treballant}
-                    aria-label={`Llevar l’etiqueta ${i + 1} de ${pagina.titol}`}>
-                    Llevar
+                    aria-label={txAdmin.llevarEtiquetaPaginaAria(i + 1, pagina.titol)}>
+                    {txAdmin.llevar}
                   </Boto>
                 </div>
               ))}
               <div className="sdp-superadmin-taxonomia__accions">
                 <Boto varietat="secundari" icona={Plus} onClick={() => afigEtiqueta(key)} disabled={treballant}
-                  aria-label={`Afegir una etiqueta a ${pagina.titol}`}>
-                  Afegir etiqueta
+                  aria-label={txAdmin.afegirEtiquetaPaginaAria(pagina.titol)}>
+                  {txAdmin.afegirEtiqueta}
                 </Boto>
               </div>
             </Bloc>

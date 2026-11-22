@@ -14,6 +14,7 @@ import { DRETS_QUE_DINEM } from '../text/pageContent.dretsPatrimoni.js';
 import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
 import { candidatsReceptaQueDinem } from '../../data/menjarIBeure/candidatsAlergens.js';
 import { etiquetaDApartat, RUTA_DEL_RECEPTARI } from './cercaReceptes.js';
+import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 
 /* Onada R14 + Onada R17 (AH-R17-05, AH-R17-06) · /receptes/:slug: la pàgina pròpia d'una recepta del llibre
@@ -96,6 +97,7 @@ function BlocsDeText({ blocs, llista }) {
    selecció; l'enllaç continua anant al receptari (la ?fitxa= se'n va) i obrint-se en una pestanya nova. */
 export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
   const { t, language } = useUIActions();
+  const txPat = textosPatrimoniA11y(language);
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const proposta = useMemo(() => candidatsReceptaQueDinem(recepta, receptaPerSlug), [recepta]);
   const [filtre, setFiltre] = useState(null);
@@ -197,8 +199,8 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
           </section>
         )}
         {MotorDeLaRecepta && (
-          <section aria-label="Prepara una compra amb esta recepta">
-            <Boto aria-expanded={calculaCompra} onClick={() => setCalculaCompra(actual => !actual)}>Calcula i prepara la compra</Boto>
+          <section aria-label={txPat.preparaCompraReceptaAria}>
+            <Boto aria-expanded={calculaCompra} onClick={() => setCalculaCompra(actual => !actual)}>{txPat.calculaIPreparaCompra}</Boto>
             {calculaCompra && (
               <Suspense fallback={null}>
                 <MotorDeLaRecepta key={recepta.slug} recepta={recepta} obra={obra} />

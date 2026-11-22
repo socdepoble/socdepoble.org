@@ -1,7 +1,7 @@
 import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
+import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend, caducitatJwt, MARGE_RENOVACIO_MS, capturaSessio } from '../identitat.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
@@ -121,16 +121,42 @@ const ambSenyal = (promesa, signal) => (!signal ? promesa : new Promise((resolve
   promesa.then(resolve, reject).finally(() => signal.removeEventListener('abort', talla));
 }));
 
+/* L'espera és del consumidor; avortar-la no cancel·la el refresc compartit.
+   El then consumix també un rebuig tardà després de liquidar esta petició.
+   v1.2.19 · fusió · De Codex R32.29 (camí post-401, amb el controller de la petició). El preflight
+   continua amb ambSenyal i el signal de qui crida (L2-02).
+   v1.2.19 · Gauntlet R1 (L1-02) · El temporitzador es para abans d'esperar: el controller només l'avorta
+   el signal de qui crida, la mateixa regla als dos camins. */
+function esperaRefresc(promesa, signal) {
+  return new Promise((resolve, reject) => {
+    const acaba = (handler, value) => { signal.removeEventListener('abort', avorta); handler(value); };
+    const avorta = () => acaba(reject, signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError'));
+    Promise.resolve(promesa).then(value => acaba(resolve, value), error => acaba(reject, error));
+    signal.addEventListener('abort', avorta, { once: true });
+    if (signal.aborted) avorta();
+  });
+}
+
 export async function request(path, config = {}, options = {}) {
   let epoch = versioSessio;
   const actor = actorDesat();
-  const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false, anonim = false } = options;
+  const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false, anonim = false, senseSessio = false } = options;
+  // L'entrada de sessió canvia en eixir/reentrar, però no en renovar el JWT.
+  // Una lectura pública anònima no ha utilitzat la identitat de la pestanya.
+  /* v1.2.19 · Gauntlet R1 (L1-01) · `senseSessio`: la petició no va en nom de la sessió d'esta pestanya
+     (/verify i el PUT de «Desa» de R2: token d'un sol ús, sessió privada). Sense guarda d'entrada, però
+     amb les capçaleres i les galetes de sempre (no és `anonim`). La vigència la decidix qui crida. */
+  const comprovaSessio = anonim || senseSessio ? null : capturaSessio();
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
   const controller = new AbortController();
   let timedOut = false;
   let timeoutId;
   const avorta = () => controller.abort();
+  const comprova = () => {
+    if (controller.signal.aborted) throw controller.signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError');
+    comprovaSessio?.();
+  };
   signal?.addEventListener('abort', avorta);
   try {
     if (signal?.aborted) {
@@ -158,26 +184,62 @@ export async function request(path, config = {}, options = {}) {
     }
     /* v1.2.17 · Gauntlet R1 (L2-02) · El temporitzador s'arma després de la renovació preventiva
        (fins a 12 s pròpies a auth.js): timeoutMs és per al fetch, com en el reintent post-401. */
-    timeoutId = setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-    }, timeoutMs);
+    const arma = (ms) => { timeoutId = setTimeout(() => { timedOut = true; controller.abort(); }, ms); };
+    /* v1.2.19 · Gauntlet R1 (L1-02) · El termini, per a reprendre el temps que li quede al fetch després
+       d'una renovació post-401 sense reintent.
+       v1.2.19 · Gauntlet R2 (L1R2-01) · Amb un rellotge monotònic: si l'hora del sistema salta durant el
+       fetch (un telèfon que corregix l'hora en tornar la xarxa), el cos del 401 no queda sense topall ni es
+       talla a zero. */
+    const ara = () => globalThis.performance?.now?.() ?? Date.now();
+    const termini = ara() + timeoutMs;
+    arma(timeoutMs);
+    /* v1.2.19 · fusió · La guarda d'entrada de Codex R32.29 va després del preflight: una entrada nova
+       del mateix UUID que un callback presenta com a renovació passa la C14 (època + 1, mateix actor),
+       però no esta comprovació, i no s'envia res. */
+    comprova();
     /* Anònima: tampoc cap galeta, encara que el servidor de dades compartira l'origen (idea del kit de Codex, 261101). */
     const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers, { anonim }),
       ...(anonim ? { credentials: 'omit' } : {}), signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
+    comprova();
     if (!response.ok) {
       /* Una lectura anònima (T2) no renova mai la sessió: no l'ha feta servir. */
-      if (response.status === 401 && !anonim && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await renovaDesDe(config, epoch)) {
-        /* C14: el reintent només val per a la sessió que ha produït ESTA renovació.
-           desaSessio() de la renovació incrementa la versió exactament una vegada i
-           conserva l'actor; qualsevol altre salt (logout, canvi d'usuari, nova entrada
-           del mateix usuari) vol dir que l'acció pertany a una sessió que ja no existix. */
-        if (versioSessio !== epoch + 1 || actorDesat() !== actor) throw sessioCanviada();
-        /* v1.2.17 · Gauntlet R1 (L2-01) · Un token que ja naix dins del marge tampoc no es torna a renovar abans. */
-        recordaSiNaixACaducar(config);
-        return request(path, config, { ...options, _isRetry: true });
+      if (response.status === 401 && !anonim && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/')) {
+        /* v1.2.19 · fusió · renovaDesDe (v1.2.17, L2-01: deixa l'època i l'hora de la renovació) dins de
+           l'espera cancel·lable de Codex R32.29.
+           v1.2.19 · Gauntlet R1 (L1-02) · La regla del preflight (L2-02): la renovació no es menja el temps
+           del fetch. El temporitzador es para abans d'esperar-la; el controller ja només l'avorta el signal
+           de qui crida, i l'espera només la talla eixe. El reintent porta el seu temporitzador propi. */
+        clearTimeout(timeoutId);
+        const restant = Math.min(timeoutMs, Math.max(0, termini - ara()));
+        const renovada = await esperaRefresc(renovaDesDe(config, epoch), controller.signal).catch((error) => {
+          /* v1.2.19 · Gauntlet R1 (L1-02) · El topall propi de la renovació (12 s a auth.js) avorta sense
+             que qui crida ho demane: és temps esgotat (TimeoutError), no una cancel·lació silenciosa. */
+          if (error?.name === 'AbortError' && !controller.signal.aborted) timedOut = true;
+          throw error;
+        });
+        /* v1.2.19 · fusió · (L2-03) La renovació ha fallat i ha buidat la pestanya: el 401 de sempre,
+           el mateix que dona el preflight, sense llegir el cos de la sessió que ja no existix. Sense
+           esta excepció, la guarda d'entrada el convertiria en AbortError i la vista no sabria que
+           la sessió ha caducat. Un altre actor o una entrada nova continuen sent AbortError (C14). */
+        if (!renovada && versioSessio !== epoch && actorDesat() === null && !controller.signal.aborted) throw sessioCaducada();
+        // El refresc compartit pot acabar després de cancel·lar esta petició.
+        // Tant true com false han de respectar el controller i l'entrada originals.
+        comprova();
+        if (renovada) {
+          /* C14: el reintent només val per a la sessió que ha produït ESTA renovació.
+             desaSessio() de la renovació incrementa la versió exactament una vegada i
+             conserva l'actor; qualsevol altre salt (logout, canvi d'usuari, nova entrada
+             del mateix usuari) vol dir que l'acció pertany a una sessió que ja no existix. */
+          if (versioSessio !== epoch + 1 || actorDesat() !== actor) throw sessioCanviada();
+          /* v1.2.17 · Gauntlet R1 (L2-01) · Un token que ja naix dins del marge tampoc no es torna a renovar abans. */
+          recordaSiNaixACaducar(config);
+          return request(path, config, { ...options, _isRetry: true });
+        }
+        /* v1.2.19 · Gauntlet R1 (L1-02) · Sense reintent: el cos del 401 té el temps que li quedava al fetch. */
+        arma(restant);
       }
       const text = await response.text();
+      comprova();
       const failure = new ErrorSupabase(`Supabase ${response.status}: ${text || 'Error desconegut.'}`, response.status);
       // Preserve bounded protocol codes for retry decisions, never store a
       // server message in a durable queue or infer authority from arbitrary text.
@@ -198,7 +260,9 @@ export async function request(path, config = {}, options = {}) {
     }
     if (response.status === 204) return null;
     const json = await response.json(); // F06: Esperar que descarregue tot el cos abans del finally
+    comprova();
     options.onResponseMetadata?.({ contentRange: response.headers.get('content-range') });
+    comprova();
     return json;
   } catch (err) {
     if (timedOut) {

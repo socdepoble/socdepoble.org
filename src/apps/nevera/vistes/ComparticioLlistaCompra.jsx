@@ -22,6 +22,7 @@ import {
   PREFIX_FRAGMENT_COMPARTIDA, enllacLlistaCompartida, exportaLlistaCompra, importaLlistaCompra,
   serialitzaLlistaCompartida
 } from '../nucli/index.js';
+import { nomLlistaVisible } from '../mercadona.js';
 import { COMPRA } from './constants.js';
 import { useVistaNevera } from './context.js';
 
@@ -216,7 +217,7 @@ const TEXTOS = Object.freeze({
 });
 
 /* Una llista rebuda: una casella per article (totes triades) i l'acció explícita d'afegir. */
-function PrevisualitzacioRebuda({ paquet, llista, textos, potEscriure, onAfig, onDescarta }) {
+function PrevisualitzacioRebuda({ paquet, nomLlista, textos, idioma = 'ca', potEscriure, onAfig, onDescarta }) {
   const [exclosos, setExclosos] = useState(() => new Set());
   const triades = paquet.linies.filter((_, index) => !exclosos.has(index));
   const commuta = (index, triada) => setExclosos((actuals) => {
@@ -226,8 +227,10 @@ function PrevisualitzacioRebuda({ paquet, llista, textos, potEscriure, onAfig, o
     return nous;
   });
   return (
-    <GrupCamps llegenda={textos.rebuda(paquet.titol, paquet.linies.length)}>
-      <p>{textos.triaRebuda(llista.nom)}</p>
+    /* v1.2.19 · Gauntlet R1 (L3-02, verificador D) · El títol rebut també passa per nomLlistaVisible: la llista de la botiga
+       viatja amb el nom canònic i qui la rep fora del valencià la llig en la seua llengua. */
+    <GrupCamps llegenda={textos.rebuda(nomLlistaVisible(paquet.titol, idioma), paquet.linies.length)}>
+      <p>{textos.triaRebuda(nomLlista)}</p>
       {paquet.linies.map((linia, index) => (
         <Casella
           key={linia.articleId || `nom:${linia.nom}`}
@@ -238,7 +241,7 @@ function PrevisualitzacioRebuda({ paquet, llista, textos, potEscriure, onAfig, o
       ))}
       <Botonera etiqueta={textos.rep}>
         <Boto varietat="primari" disabled={!potEscriure || triades.length === 0} onClick={() => onAfig({ ...paquet, linies: triades })}>
-          {textos.afig(llista.nom)}
+          {textos.afig(nomLlista)}
         </Boto>
         <Boto onClick={onDescarta}>{textos.descarta}</Boto>
       </Botonera>
@@ -250,6 +253,8 @@ export function ComparticioLlistaCompra({ llista }) {
   const { estat, accions, mode, llegit, ruta, descarrega } = useVistaNevera();
   const { idioma } = useClosaAplicacio();
   const textos = Object.hasOwn(TEXTOS, idioma) ? TEXTOS[idioma] : TEXTOS.ca;
+  /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
+  const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const { pathname, search, hash } = useLocation();
   const { basename = '' } = useRouter();
   const navigate = useNavigate();
@@ -324,8 +329,8 @@ export function ComparticioLlistaCompra({ llista }) {
 
   const errorDe = (on) => (error?.on === on ? textos.errors[error.codi] : null);
   const textAvis = !avis ? null
-    : avis.tipus === 'resultat' ? textos.resultat(avis.resum, llista.nom)
-      : avis.tipus === 'noEscriu' ? textos.noEscriu : textos[avis.tipus](llista.nom);
+    : avis.tipus === 'resultat' ? textos.resultat(avis.resum, nomLlista)
+      : avis.tipus === 'noEscriu' ? textos.noEscriu : textos[avis.tipus](nomLlista);
 
   return (
     <>
@@ -336,9 +341,10 @@ export function ComparticioLlistaCompra({ llista }) {
       ) : null}
       {rebuda ? (
         <PrevisualitzacioRebuda
+          idioma={idioma}
           key={rebuda.clau}
           paquet={rebuda.paquet}
-          llista={llista}
+          nomLlista={nomLlista}
           textos={textos}
           potEscriure={potEscriure}
           onAfig={afig}
@@ -357,7 +363,7 @@ export function ComparticioLlistaCompra({ llista }) {
       </Botonera>
       {obert ? (
         <div id={idPanell}>
-          <GrupCamps llegenda={textos.llegenda(llista.nom)}>
+          <GrupCamps llegenda={textos.llegenda(nomLlista)}>
             <Botonera etiqueta={textos.envia}>
               <Boto icona={Link2} disabled={buida} onClick={copiaEnllac}>{textos.copia}</Boto>
               <Boto icona={Download} disabled={buida} onClick={descarregaFitxer}>{textos.descarrega}</Boto>

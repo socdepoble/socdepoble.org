@@ -219,14 +219,26 @@ async function completaPobleDeLAlta(fila, user, config) {
 export async function getProfile(config = {}) {
   const user = getCurrentUser();
   if (!user) return null;
-  if (esModeLocal(config)) return (await perfilsLocals()).getProfile(user);
+  /* La reserva només és vàlida dins de l’entrada original, també si el
+     transport o la reparació fallen després d’eixir i tornar amb el mateix UUID. */
+  const current = capturaSessio();
+  if (esModeLocal(config)) {
+    const perfils = await perfilsLocals();
+    current();
+    return perfils.getProfile(user);
+  }
   const ruta = `/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`;
   try {
     const rows = await request(ruta, config);
+    current();
     /* Pla 261018_1605 (Tasca 0, D7; ordre del Mestre, 18-10-2026) · La fila de
        la persona pilot porta les dades canòniques on no en porta cap
        (hidrataPerfilPersonaPilot només omple buits); qualsevol altra, tal qual. */
-    if (rows?.[0]) return hidrataPerfilPersonaPilot(await completaPobleDeLAlta(rows[0], user, config), user);
+    if (rows?.[0]) {
+      const fila = await completaPobleDeLAlta(rows[0], user, config);
+      current();
+      return hidrataPerfilPersonaPilot(fila, user);
+    }
     /* Ordre del Mestre (261002) · SENSE FILA no és cap error: és una persona
        orfe (el trigger d'alta no la va poder crear, o l'alta per correu no ha
        passat mai per una entrada explícita) i el cercador no la troba. Es
@@ -235,14 +247,20 @@ export async function getProfile(config = {}) {
     if (Array.isArray(rows) && getCurrentUser()?.id === user.id && !altesReparades.has(user.id)) {
       altesReparades.add(user.id);
       const reparada = await Promise.resolve()
-        .then(() => reparaAlta(config))
+        .then(() => { current(); return reparaAlta(config); })
         .then(() => true, (error) => { avisaAlta(error); return false; });
+      current();
       if (reparada && getCurrentUser()?.id === user.id) {
         const reparades = await request(ruta, config);
+        current();
         if (reparades?.[0]) return hidrataPerfilPersonaPilot(reparades[0], user);
       }
     }
-  } catch (error) { console.warn('[supabase] Avís consultant profiles:', error?.message); }
+  } catch (error) {
+    current();
+    if (error?.name === 'AbortError') throw error;
+    console.warn('[supabase] Avís consultant profiles:', error?.message);
+  }
   /* Fila de RESERVA, feta amb la sessió: no porta bio, lema ni presentació. `reserva`
      ho diu perquè cap editor la prenga per la de veres i hi trepitge els camps.
      Només per als errors (també una reparació que falla o que no deixa fila).
@@ -1039,9 +1057,10 @@ async function definixAmbEnllac(enllac, contrasenya, config) {
          arriba al servidor, el token ja s'ha gastat. Avortar-ne la resposta
          perquè la sessió d'abans d'esta pestanya caduca o canvia pel camí el
          cremaria sense deixar cap sessió per al reintent. El topall de la
-         petició continua, més generós (TOPALL_DESA_MS). */
+         petició continua, més generós (TOPALL_DESA_MS).
+         v1.2.19 · Gauntlet R1 (L1-01) · Ni la guarda d'entrada de request(): `senseSessio`. */
       const result = await request('/auth/v1/verify', config, {
-        method: 'POST', timeoutMs: TOPALL_DESA_MS, body: { type: TIPUS_RECUPERACIO, token_hash: enllac.tokenHash }
+        method: 'POST', timeoutMs: TOPALL_DESA_MS, senseSessio: true, body: { type: TIPUS_RECUPERACIO, token_hash: enllac.tokenHash }
       }).catch((error) => { throw siCaducat(enllac, traduixErrorDeVerificacio(error)); });
       if (!result?.access_token || !result?.user?.id) {
         /* El token s'ha gastat sense sessió: l'enllaç ja no val i la pantalla
@@ -1063,9 +1082,10 @@ async function definixAmbEnllac(enllac, contrasenya, config) {
        quan arriba al servidor, la contrasenya ja és la nova, i avortar-ne la
        resposta deixava un AbortError en anglés a la pantalla i un reintent que
        rebia same_password. Qui deixa l'enllaç pel camí el talla igual (la
-       vigència, davall); qui canvia la sessió d'esta pestanya, també (l'intent). */
+       vigència, davall); qui canvia la sessió d'esta pestanya, també (l'intent).
+       v1.2.19 · Gauntlet R1 (L1-01) · Ni la guarda d'entrada de request(): `senseSessio`. */
     const usuari = await request('/auth/v1/user', config, {
-      method: 'PUT', timeoutMs: TOPALL_DESA_MS,
+      method: 'PUT', timeoutMs: TOPALL_DESA_MS, senseSessio: true,
       headers: { Authorization: `Bearer ${sessio.access_token}` }, body: { password: contrasenya }
     }).catch((error) => { throw siCaducat(enllac, traduixErrorDeContrasenyaNova(error)); });
     if (!usuari || usuari.error) {

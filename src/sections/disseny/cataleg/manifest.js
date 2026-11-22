@@ -8,8 +8,13 @@ export const CATALOG_CATEGORIES = [
   { id: 'superposicions', label: 'Diàlegs i calaixos', order: 40, icon: '🗂️' },
   { id: 'retroalimentacio', label: 'Estats i avisos', order: 50, icon: '🔔' },
   { id: 'navegacio', label: 'Navegació', order: 60, icon: '🧭' },
-  { id: 'inventari', label: 'Inventari', order: 70, icon: '📦' },
-  { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' }
+  /* Atles 2D (ordre del Mestre del 21-11-2026, 23:28; pla 261121_2335, Carril 1, Tram 1, punt a) · la
+     carpeta es diu «Recursos»; l'id continua sent 'inventari' perquè cap URL
+     (?categoria=inventari&item=inventari-global) no es trenque. */
+  { id: 'inventari', label: 'Recursos', order: 70, icon: '📦' },
+  { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' },
+  /* Atles 2D (mateixa ordre, punt b; integrat el 22-11-2026) · les cinc pàgines d'estudi de l'Atles. */
+  { id: 'atles-2d', label: 'Atles 2D', order: 90, icon: '🗺️' }
 ];
 
 /* Ordre del Mestre (261007) · «Substitueix el maó genèric (🧱) per emojis
@@ -80,7 +85,11 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'barra-reproductor-veu': '🎧'
   }),
   inventari: Object.freeze({ global: '🗃️' }),
-  emoticones: Object.freeze({ xl: '🌻' })
+  emoticones: Object.freeze({ xl: '🌻' }),
+  /* Atles 2D (ordre del Mestre del 21-11-2026; pla 261121_2335) · una pàgina per vista de la maqueta. */
+  'atles-2d': Object.freeze({
+    presentacio: '🧭', 'poble-virtual': '🏘️', 'xarxes-mon': '🌍', 'mapa-entitats': '📐', 'motor-estudis': '🔬'
+  })
 });
 
 /* Un espècimen del catàleg. L'id és `categoria-slug` i el carregador,
@@ -673,3 +682,26 @@ CATALOG_ITEMS.push(especimen('fonaments', 'respiracio-botons', 'Respiració late
 CATALOG_ITEMS.push(especimen('retroalimentacio', 'banda-beta-micro-app', 'Banda de fase beta (micro-apps)', 'BandaBetaMicroApp', ['molecula', 'avis', 'beta'], 'Franja superior serena i contextual en 5 llengües per a les micro-apps en proves: avís beta net per defecte i clàusula sobre Verifactu / AEAT només en eines amb avisBeta fiscal al manifest.', 'beta proves verifactu aeat gestoria bar nevera salut genealogia lector microapp'));
 
 CATALOG_ITEMS.push(especimen('retroalimentacio', 'acollida-foraster-xat', 'Benvinguda del Foraster al Xat', 'AcollidaForasterXat', ['molecula', 'avis', 'xat'], 'La targeta de qui aterra sense sessió a /xat: el títol i les dues línies del Mestre (IDEA-313) en 5 llengües, un sol «Entrar» i una ✕ que la tanca i ho recorda.', 'foraster xat acollida benvinguda onboarding'));
+
+/* Atles 2D (ordre del Mestre del 21-11-2026 a les 23:28; pla 261121_2335, Carril 1, Tram 1, punt b; integrat
+   el 22-11-2026) · Les cinc pàgines de l'Atles 2D, en l'ordre de lectura: la presentació i les quatre vistes de
+   la maqueta ATLES_2D_SOC_DE_POBLE_MERCAT_I_ENTITATS.html. Ací només hi ha les fitxes (títol, emoji i textos
+   curts): les dades (dades/atles2dDades.js) i les pàgines (detalls/EspecimenAtles2d*.jsx) es carreguen a
+   demanda des de detailRegistry.jsx. L'id és 'atles-2d-<slug>' i la URL, /disseny?categoria=atles-2d&item=<id>. */
+CATALOG_ITEMS.push(
+  especimen('atles-2d', 'presentacio', 'Atles 2D de Sóc de Poble · Presentació i marc comú', 'Xifres globals, congelació d’Orkut, les quatre vistes i les fonts', ['atles', 'estudi', 'fonts'],
+    'L’obertura comuna de l’Atles 2D: per què Orkut continua congelat al codi, les quatre xifres globals, les targetes que porten a les quatre pàgines d’estudi i d’on ix cada dada. Tot és lectura: cap mecànica social nova.',
+    'atles 2d presentacio marc comu orkut congelat xifres fonts tracabilitat mercat entitats'),
+  especimen('atles-2d', 'poble-virtual', '1. El poble virtual (Assaig a la Plaça)', 'Rondes, veïns sintètics i dolors amb filtres', ['atles', 'estudi', 'veïns'],
+    'Les rondes d’«Assaig a la Plaça», els veïns sintètics amb selector, tots els dolors amb filtres d’estat, gravetat (P0–P3), ronda, veí i cerca lliure, les mètriques i les discrepàncies entre fonts (Llei 0).',
+    'assaig placa poble virtual rondes veins sintetics dolors gravetat p0 p1 p2 p3 metriques discrepancies llei 0'),
+  especimen('atles-2d', 'xarxes-mon', '2. Xarxes del món (Orkut i 11 referents rurals)', 'Gràfic d’afinitat, fitxes completes i Orkut peça per peça', ['atles', 'estudi', 'xarxes'],
+    'Les xarxes per a pobles que ha estudiat Gemini, puntuades de 0 a 10 per la seua afinitat amb Sóc de Poble: el gràfic, el cercador i l’ordenació, cada fitxa amb el que adoptem en sala neta i el que rebutgem (Nextdoor com a anti-model), i la taula d’Orkut peça per peça.',
+    'xarxes mon orkut nextdoor front porch forum panneaupocket intramuros nebenan karrot hylo fedivers afinitat sala neta'),
+  especimen('atles-2d', 'mapa-entitats', '3. Mapa 2D de les 5 entitats (60 cel·les)', 'Usuari, Empresa, Grup, Poble i Ajuntament en una graella 12 × 5', ['atles', 'estudi', 'entitats'],
+    'Les cinc pàgines d’entitat en dues dimensions: el resum de cada entitat, la graella de dotze dimensions per cinc entitats amb el filtre d’estat i «Només les corregides», el visor de cada cel·la amb l’evidència fitxer:línia, l’estatut propi de l’Ajuntament (city_hall) i les rutes reals.',
+    'mapa 2d entitats usuari empresa grup poble ajuntament city_hall graella cel·les corregides evidencia rutes'),
+  especimen('atles-2d', 'motor-estudis', '4. Motor d’estudis de mercat (Proposta funcional)', 'Fase 1 simulada, Fase 2 humana i maqueta mòbil', ['atles', 'proposta', 'mercat'],
+    'Una proposta per a decidir, sense cap línia al producte: la Fase 1 simulada i la Fase 2 de contrast humà real, el recorregut en quatre passos, els principis ètics, el fonament tècnic que ja tenim, les preguntes per al Mestre i una maqueta mòbil amb un exemple inventat.',
+    'motor estudis mercat proposta fase 1 fase 2 contrast huma sintetic principis etics maqueta mobil preguntes mestre')
+);

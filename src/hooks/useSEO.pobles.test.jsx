@@ -80,6 +80,9 @@ test.each(['/pob%6Ces/sella', '/%70obles/sella', '/poblaci%6F/sella'])('%s (àli
   }
   vista.rerender(<Pagina carregada metadata={contrastat} />);
   expect(robots()).toBeUndefined();
+  /* v1.2.19 · Gauntlet R2 de la v1.2.18 (L2R2-03) · I el canonical apunta a la ruta neta, no a l'àlies. */
+  expect(canonical().getAttribute('href')).toMatch(new RegExp(`${ruta.replace('%6C', 'l').replace('%70', 'p').replace('%6F', 'o')}$`));
+  expect(canonical().getAttribute('href')).not.toContain('%');
   expect(routeAllowsIndex(ruta, { content: 'Plantilla genèrica del poble' })).toBe(false);
   expect(routeAllowsIndex(ruta, contrastat)).toBe(true);
 });

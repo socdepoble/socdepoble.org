@@ -31,6 +31,7 @@ import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 import { curt, dataLocal } from './consolaContent.js';
+import { tca, useIdiomaConsola } from './i18nConsolaA11y.js';
 import {
   LLINDAR_SATURACIO, RUTA_CONSOLA, copyConsola, etiquetesPols, fontLlegible, liniesDescartades, plural,
   problemesPols, recompteArtefactes, saturat
@@ -100,6 +101,7 @@ function DiariIllegible({ icona }) {
    scroll vertical és el de la pàgina. */
 function PanellRebuts({ dades, locale, onVeure }) {
   const { rebuts } = dades;
+  const idioma = useIdiomaConsola();
   const xifres = <XifresDelPols vista="pols/rebuts" dades={dades} locale={locale} />;
   if (!fontLlegible(dades, 'diari')) return <>{xifres}<DiariIllegible icona={Receipt} /></>;
   if (rebuts.length === 0) {
@@ -135,8 +137,8 @@ function PanellRebuts({ dades, locale, onVeure }) {
                 <td>{r.protocols.length ? <Privat>{r.protocols.map((p) => p.split('/').pop()).join(', ')}</Privat> : '—'}</td>
                 <td>{r.fonts.length}</td>
                 <td>
-                  <Boto varietat="fantasma" onClick={() => onVeure(r)} aria-label={`Veure les fonts del rebut de ${quan} (${plural(r.fonts.length, 'font', 'fonts')})`}>
-                    Veure fonts
+                  <Boto varietat="fantasma" onClick={() => onVeure(r)} aria-label={tca(idioma, 'veureFontsRebut', quan, r.fonts.length)}>
+                    {tca(idioma, 'veureFonts')}
                   </Boto>
                 </td>
               </tr>
@@ -288,6 +290,7 @@ function SenseConsola({ id, consola, locale }) {
  */
 export function PaginaPanellPols({ id, consola, locale = 'ca-ES', privat = false, peu = null }) {
   const navigate = useNavigate();
+  const idioma = useIdiomaConsola();
   const [rebutObert, setRebutObert] = useState(null);
   const copy = copyConsola();
   const panell = panellPols(id);
@@ -300,11 +303,12 @@ export function PaginaPanellPols({ id, consola, locale = 'ca-ES', privat = false
   );
 
   if (!panell) {
+    const titolNoTrobat = tca(idioma, 'panellNoTrobat');
     return (
-      <PaginaApp title="Panell no trobat" subtitle="El pols del cervell"
+      <PaginaApp title={titolNoTrobat} subtitle="El pols del cervell"
         lead="Esta adreça no correspon a cap panell del pols: els tres panells són al pols del cervell."
         author={AUTOR} {...quan} onBack={tornar}>
-        {molla('Panell no trobat')}
+        {molla(titolNoTrobat)}
         <EstatBuit icona={SearchX} titol="Cap panell amb este nom">
           <Link to={RUTA_POLS}>Torna al pols del cervell</Link> per a vore els tres panells.
         </EstatBuit>

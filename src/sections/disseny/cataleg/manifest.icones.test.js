@@ -56,6 +56,24 @@ test('la taula no porta cap espècimen que no existisca, i les categories conser
   expect(sobrants).toEqual([]);
   expect(CATALOG_CATEGORIES.map((categoria) => [categoria.id, categoria.icon])).toEqual([
     ['fonaments', '🧱'], ['estructura', '📐'], ['formularis', '📝'], ['superposicions', '🗂️'],
-    ['retroalimentacio', '🔔'], ['navegacio', '🧭'], ['inventari', '📦'], ['emoticones', '🌻']
+    ['retroalimentacio', '🔔'], ['navegacio', '🧭'], ['inventari', '📦'], ['emoticones', '🌻'], ['atles-2d', '🗺️']
   ]);
+});
+
+/* Atles 2D (ordre del Mestre del 21-11-2026; pla 261121_2335, Carril 1, Tram 1) · La carpeta «Inventari» es diu
+   «Recursos» sense canviar d'id (les URL ?categoria=inventari continuen valent), i la carpeta nova de l'Atles porta
+   les seues cinc pàgines en l'ordre de lectura, cadascuna amb el seu emoji (cap no fa defecte a Safari 16). */
+test('Atles 2D · «Recursos» conserva l’id inventari i la carpeta atles-2d porta les cinc pàgines del pla', () => {
+  const perId = Object.fromEntries(CATALOG_CATEGORIES.map((categoria) => [categoria.id, categoria]));
+  expect(perId.inventari).toMatchObject({ label: 'Recursos', order: 70, icon: '📦' });
+  expect(perId['atles-2d']).toEqual({ id: 'atles-2d', label: 'Atles 2D', order: 90, icon: '🗺️' });
+  const atles = CATALOG_ITEMS.filter((item) => item.categoryIds[0] === 'atles-2d');
+  expect(atles.map((item) => [item.id, item.icon, item.detailKey])).toEqual([
+    ['atles-2d-presentacio', '🧭', 'atles-2d/presentacio'],
+    ['atles-2d-poble-virtual', '🏘️', 'atles-2d/poble-virtual'],
+    ['atles-2d-xarxes-mon', '🌍', 'atles-2d/xarxes-mon'],
+    ['atles-2d-mapa-entitats', '📐', 'atles-2d/mapa-entitats'],
+    ['atles-2d-motor-estudis', '🔬', 'atles-2d/motor-estudis']
+  ]);
+  expect(['🗺️', '🧭', '🏘️', '🌍', '📐', '🔬'].map(defecte)).toEqual([null, null, null, null, null, null]);
 });

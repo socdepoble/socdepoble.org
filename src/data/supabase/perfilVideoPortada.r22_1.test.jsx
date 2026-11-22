@@ -184,7 +184,7 @@ describe('R22.1 · Peça 2 · Vídeo Principal + Portada: camps, DTO, updateOrga
     ).rejects.toBeInstanceOf(ErrorColumnaAbsent);
   });
 
-  test('ProfileSection i TargetaViva pinten el reproductor <video poster={hero_url} controls playsInline preload="metadata"> a la UniversalCard', () => {
+  test('ProfileSection i TargetaViva pinten el reproductor <video poster={hero_url} controls playsInline preload="none"> a la UniversalCard', () => {
     const dir = render(
       <ProfileSection
         agents={[{
@@ -207,7 +207,8 @@ describe('R22.1 · Peça 2 · Vídeo Principal + Portada: camps, DTO, updateOrga
     expect(videoDirectori.hasAttribute('controls')).toBe(true);
     expect(videoDirectori.hasAttribute('playsinline')).toBe(true);
     // R22.1 (r221-text-10) · El títol ho promet: es prova.
-    expect(videoDirectori.getAttribute('preload')).toBe('metadata');
+    // v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Cap petició de xarxa en repòs: el vídeo, en prémer «reproduir».
+    expect(videoDirectori.getAttribute('preload')).toBe('none');
 
     cleanup();
     const viva = render(
@@ -228,6 +229,7 @@ describe('R22.1 · Peça 2 · Vídeo Principal + Portada: camps, DTO, updateOrga
     expect(videoViva.getAttribute('poster')).toBe(PORTADA_PROPIA);
     expect(videoViva.hasAttribute('controls')).toBe(true);
     expect(videoViva.hasAttribute('playsinline')).toBe(true);
-    expect(videoViva.getAttribute('preload')).toBe('metadata');
+    // v1.2.19 · P0-CONSOLA-ZERO (Mestre, 22-11-2026 00:02) · Cap petició de xarxa en repòs: el vídeo, en prémer «reproduir».
+    expect(videoViva.getAttribute('preload')).toBe('none');
   });
 });

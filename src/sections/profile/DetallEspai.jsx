@@ -20,6 +20,7 @@ import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
 import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
 import { textosModeSenior } from '../../config/textosModeSenior.js';
+import { textosPerfilA11y } from './i18nPerfilA11y.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -150,6 +151,9 @@ export function DetallAplicacio({ aplicacio }) {
      hooks es queden incondicionals; sense bloc, ningú escriu res. */
   const arrelPerfilRef = useRef(null);
   useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
+  const t = useTraductorOpcional();
+  const estatUI = useEstatUISegur();
+  const txPerfil = textosPerfilA11y({ language: estatUI?.language, t });
   const alPanell = aplicacio?.panell !== null;
   const id = aplicacio?.panell || aplicacio?.id;
   const [activa, setActiva] = useState(() => estaAlPanell(id));
@@ -197,7 +201,7 @@ export function DetallAplicacio({ aplicacio }) {
 
         {/* Onada 10 (261010) · Només per a les utilitats amb targeta al Panell. */}
         {alPanell ? (
-          <Bloc titol="Ajustos de l'Usuari">
+          <Bloc titol={txPerfil.ajustosUsuariTitol}>
             <p className="perfil-compte__text">
               Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
             </p>
