@@ -378,8 +378,8 @@ export const wikiManifest = {
         "identitat"
       ],
       "date": "2026-11-20T02:47:25+01:00",
-      "updated": "2026-11-20T02:47:25+01:00",
-      "revisions": 1,
+      "updated": "2026-11-23T23:43:09+01:00",
+      "revisions": 2,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -396,8 +396,8 @@ export const wikiManifest = {
           "identitat"
         ],
         "date": "2026-11-20T02:47:25+01:00",
-        "updated": "2026-11-20T02:47:25+01:00",
-        "revisions": 1,
+        "updated": "2026-11-23T23:43:09+01:00",
+        "revisions": 2,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -1249,8 +1249,8 @@ export const wikiManifest = {
       "categoryId": "folder:02_saber/architecture",
       "tags": [],
       "date": "2026-11-01T00:52:20+01:00",
-      "updated": "2026-11-20T22:12:36+01:00",
-      "revisions": 20,
+      "updated": "2026-11-23T23:43:09+01:00",
+      "revisions": 21,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -1262,8 +1262,8 @@ export const wikiManifest = {
         "status": "esborrany",
         "description": "Inventari verificable del port i requisits d'allotjament Model B",
         "date": "2026-11-01T00:52:20+01:00",
-        "updated": "2026-11-20T22:12:36+01:00",
-        "revisions": 20,
+        "updated": "2026-11-23T23:43:09+01:00",
+        "revisions": 21,
         "mur": false,
         "origenEditorial": {
           "date": "git",
