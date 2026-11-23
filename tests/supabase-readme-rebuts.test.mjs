@@ -18,7 +18,7 @@ const fila = (versio) => taula.find((f) => f.versio === versio);
 
 // Rebuts d'una lectura de la base (no narratives del manifest com el «70/70»).
 // Onada v1.2.13 · També la postverificació 10/10 del Super-Bundle R32.14 que el Mestre va executar a producció el 19-11-2026.
-const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE/;
+const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE|REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES/;
 // NO aplicades que el bolcat del 13-11-2026 confirma o contradiu: cada una ho cita.
 const NO_APLICADES_DEL_BOLCAT = [
   '2610061448', '2610061450', '2610081400', '2610081543', '2610101900', '2611110010',
@@ -73,8 +73,9 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   for (const [ordre, versio, fitxer] of R3242) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
-    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
-    assert.match(fila(versio).estat, /NO aplicada/, versio);
+    // v1.2.23 · T2 · Aplicades a producció la nit del 23 al 24-11-2026 per l'integrador, amb el rebut de les sondes.
+    assert.equal(declarat.get(versio), 'declarada_aplicada', versio);
+    assert.match(fila(versio).estat, /^Aplicada a producció la nit del 23 al 24-11-2026 .*12d34bc46.*REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES\.json/, versio);
   }
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
@@ -147,6 +148,6 @@ test('tota vinyeta d’una fila declarada aplicada que encara diu «NO aplicada�
     while (j < linies.length && !/^(- |#)/.test(linies[j])) j += 1;
     const text = linies.slice(i, j).join(' ').replace(/\s+/g, ' ');
     if (!/NO aplicada|no acreditat/.test(text)) continue;
-    assert.match(text, /Estat vigent: aplicada a producció (?:segons el bolcat del 13-11-2026|el 19-11-2026)/, `vinyeta de ${f.versio}`);
+    assert.match(text, /Estat vigent: aplicada a producció (?:segons el bolcat del 13-11-2026|el 19-11-2026|la nit del 23 al 24-11-2026 \(T2 de la v1\.2\.23)/, `vinyeta de ${f.versio}`);
   }
 });

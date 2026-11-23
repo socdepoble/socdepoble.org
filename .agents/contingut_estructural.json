@@ -152,9 +152,9 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "dc8811248cc36d4b70daa5753f8a65f51546002e7ac3d073ed58708d111bf8f2",
-      "html": 186467,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "sha256": "43ed7eadb88cc554c2576e9c029a57e828b08942e42102c9f56fb8af0225ac5f",
+      "html": 186438,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439; delegació autònoma de MarIA): paràgraf del servidor de la crònica FITA_V1223 posat al dia després del T2 (127 a 131 aplicades la nit del 23 al 24-11-2026 amb les sondes en verd); pendent de lectura humana",
       "data": "2026-11-23"
     },
     "wikidepoble": {

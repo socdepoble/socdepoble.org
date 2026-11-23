@@ -7350,22 +7350,21 @@ describe('Onada v1.2.23 · Crònica d’obertura en les cinc llengües: el lloc 
     }
   });
 
-  /* v1.2.23 · C · El paràgraf del servidor, a soles. Quan s'escriu, els cinc canvis (127 a 131) són al repositori i cap no
-     està aplicat (supabase/README.md). v1.2.23 · R2A-06 (Gauntlet R2) · S'apliquen a producció al T2 de la v1.2.23,
-     després del commit A, i les aplica l'integrador (supabase/README.md, L6-03). Llavors un commit posterior canvia
-     SERVIDOR_V1223 de pageContent.r10.js, esta prova i, al README, l'estat de les files 127 a 131, que esta prova llig. */
-  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1223): cinc canvis preparats que, quan s’escriu, no s’han aplicat', () => {
-    const SERVIDOR_SENSE_APLICAR_V1223 = {
-      ca: ['no canvia res', 'servidor de Sóc de Poble', 'cinc canvis', 'no s’han aplicat'],
-      es: ['no cambia nada', 'servidor de Sóc de Poble', 'cinco cambios', 'no se han aplicado'],
-      en: ['changes nothing', 'Sóc de Poble server', 'five prepared changes', 'have not been applied'],
-      eu: ['ez du ezer aldatzen', 'Sóc de Pobleren zerbitzari', 'bost aldaketa', 'aplikatu gabe'],
-      gl: ['non cambia nada', 'servidor de Sóc de Poble', 'cinco cambios', 'non se aplicaron']
+  /* v1.2.23 · C · El paràgraf del servidor, a soles. v1.2.23 · R2A-06 (Gauntlet R2) i T2 · Les cinc migracions (127 a 131)
+     les ha aplicades a producció l'integrador la nit del 23 al 24-11-2026, després del commit A (12d34bc46), amb les
+     sondes en verd; el README les declara aplicades amb el rebut, i esta prova ho llig. */
+  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1223): cinc canvis aplicats la nit del 23 al 24-11-2026, amb les comprovacions en verd', () => {
+    const SERVIDOR_APLICAT_V1223 = {
+      ca: ['cinc canvis', 'servidor de Sóc de Poble', 'aplicaren la nit del 23 al 24 de novembre de 2026', 'en verd', 'sense ells'],
+      es: ['cinco cambios', 'servidor de Sóc de Poble', 'aplicaron la noche del 23 al 24 de noviembre de 2026', 'en verde', 'sin ellos'],
+      en: ['five changes', 'Sóc de Poble server', 'applied on the night of 23 to 24 November 2026', 'all green', 'without them'],
+      eu: ['bost aldaketak', 'Sóc de Pobleren zerbitzari', '2026ko azaroaren 23tik 24rako gauean aplikatu ziren', 'berdean', 'haiek gabe'],
+      gl: ['cinco cambios', 'servidor de Sóc de Poble', 'foron aplicados a noite do 23 ao 24 de novembro de 2026', 'en verde', 'sen eles']
     };
-    for (const [llengua, frases] of Object.entries(SERVIDOR_SENSE_APLICAR_V1223)) {
+    for (const [llengua, frases] of Object.entries(SERVIDOR_APLICAT_V1223)) {
       const pla = text(`<p>${SERVIDOR_V1223[llengua]}</p>`);
       for (const frase of frases) expect(pla, `${llengua} · ${frase}`).toContain(frase);
-      expect(pla, llengua).not.toMatch(/23-11-2026|aplicats el|aplicados el|applied on|aplikatu ziren|aplicáronse|aplicados en/);
+      expect(pla, llengua).not.toMatch(/no canvia res|no s’han aplicat|no se han aplicado|have not been applied|aplikatu gabe|non se aplicaron/);
       expect(FITA_V1223[llengua][3], llengua).toBe(SERVIDOR_V1223[llengua]);
     }
     const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
@@ -7382,7 +7381,9 @@ describe('Onada v1.2.23 · Crònica d’obertura en les cinc llengües: el lloc 
     for (const [fila, nom] of [127, 128, 129, 130, 131].map((n, i) => [n, cinc[i]])) {
       const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
       expect(linia, String(fila)).toContain(`\`${nom}\``);
-      expect(linia, String(fila)).toContain('NO aplicada');
+      expect(linia, String(fila)).toContain('Aplicada a producció la nit del 23 al 24-11-2026');
+      expect(linia, String(fila)).toContain('REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES.json');
+      expect(linia, String(fila)).not.toContain('NO aplicada');
     }
     // Aplicar la 129 no encén la visibilitat del Mur per a qui no té compte: ho decidix la bandera del build.
     expect(llegix('src/data/supabase/content.js')).toContain("const negociaVisibilitatMur = () => import.meta.env?.VITE_SDP_MUR_VISIBILITAT === '1';");

@@ -1,0 +1,22 @@
+{
+  "id": "58507405-4caf-403f-97d6-cbee117fccea",
+  "session": "7f4ba960-4f1e-4ec5-bbbc-021488dbd7a2",
+  "operationId": "v1223-governanca-1795475148122",
+  "claim": "7f4ba960-4f1e-4ec5-bbbc-021488dbd7a2:governance-write",
+  "planHash": "89b7b19eda76db00d09882c30fb152a0860a3d45b7a5711f7cf22c8e7e6efb4f",
+  "beforeSeal": "5fa8fd8861781cb6e1e3e9328032139cc5806b247bbb48a1d1d55b331a8be118",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "a8eccb5a84ab3a838b32b373bfc7e16e14fc6ce8a348c0bb0a5b6461fa48bf63",
+      "after": "fa1ac75e66726979f3e510451dbaf4e18fa3e3bbcd26df4bf885d1a8878ce3f9"
+    },
+    {
+      "path": "tooling/gates/fixtures/produccio-v1223/REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES.json",
+      "before": null,
+      "after": "5797dd48db037ae6cabb5f8cb8308f87d123d37b3ac0e8f96d975f6ddfa06635"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351"
+}

@@ -1,0 +1,26 @@
+{
+ "esquema": "sdp.rebut-t2.v1223",
+ "projecte": "adjlvwtxhpclgmnsvwpm (Producció)",
+ "data": "2026-11-24 (nit del 23 al 24, hora de València)",
+ "commit": "12d34bc46ac3ba1c9f42b91a6a9669186f46ecb1",
+ "font": "raw.githubusercontent.com/socdepoble/socdepoble.org/12d34bc46…/supabase/migrations/",
+ "migracions": [
+  {"n": 127, "fitxer": "20261122160000_r3242_ajuntament_acreditacio_institucional.sql", "sha256": "1d7145966548be2986c653cf2f1ad2861a7c9cc23812a78c6b3050d741213dca", "bytes": 974483, "dialeg": "RLS (taules private) → Run without RLS, bytes exactes"},
+  {"n": 128, "fitxer": "20261122160200_r32_42_xat_ubicacio_dos_decimals.sql", "sha256": "ce45516f5607dc857e24d1e6bc7ae4d3d285484c0ac68f3032e84b3ec43785fe", "bytes": 3092, "dialeg": "destructive → Run query"},
+  {"n": 129, "fitxer": "20261122160300_r32_42_mur_visibilitat_publica.sql", "sha256": "dc507246891caeed9ad00b66a236f8771ee6443aef54d40b0b26d0567459cdee", "bytes": 2654, "dialeg": "destructive (drop de la signatura v1.2.22) → Run query"},
+  {"n": 130, "fitxer": "20261122230000_r3244_edicio_propia_i_page_revisions.sql", "sha256": "5b5631c3dcc79a25c600f430f36eab836aec9932bfd6966fe853b47ea439b788", "bytes": 35837, "dialeg": "destructive → Run query"},
+  {"n": 131, "fitxer": "20261123010000_r3246_quota_owner_id.sql", "sha256": "f704d3995c9f7173c849a8f01e74ebabbe4184d80dbebde9737857dbd5269bc4", "bytes": 1594, "dialeg": "cap"}
+ ],
+ "previes": {"00": "0 files", "01": {"verd": true, "pendents": 0}, "02": {"verd": true, "estat_131": "pendent", "rpc6_oid": 112937, "xat_neteja_oid": 110757, "xat_neteja_acl": "{postgres=X/postgres}", "ubicacions_guardades": 0, "ubicacions_a_arrodonir": 0, "ubicacions_invalides": 0, "acl_per_defecte_extra": [], "city_hall_existents": 0, "pobles_oberts": 44}},
+ "posteriors": {
+  "10": {"verd": true, "checks": 12, "info": {"city_hall_sembrats": 34, "city_hall_claimed": 0, "city_hall_per_regularitzar": 0}},
+  "11": {"verd": true, "checks": 7, "ubicacions_guardades": 0},
+  "12": {"verd": true, "checks": 10, "rpc6_oid": 112937, "rpc7_acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres}"},
+  "13": {"verd": true, "checks": 8},
+  "14": {"verd": true, "checks": 4, "oid": 110757, "acl": "{postgres=X/postgres}"},
+  "15": {"verd": true, "seccions": {"mur": 0, "mercat": 0, "events": 0, "multimedia": 0}, "mateixes_files": true, "dto_minim": true}
+ },
+ "postgrest": {"llig_mur_public_v7": 200, "llig_mur_public": 200},
+ "cent_per_cent_verd": true,
+ "visibilitat_mur": "VITE_SDP_MUR_VISIBILITAT=1 als builds de la v1.2.23"
+}
