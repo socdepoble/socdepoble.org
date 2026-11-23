@@ -39,7 +39,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const titols = () => screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+const titols = () => screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
 /* L'HTML sense els ids de useId, que canvien d'un muntatge a l'altre. */
 const dom = (container) => container.firstChild.outerHTML.replace(/:r[0-9a-z]+:/g, ':id:');
 
@@ -49,7 +49,7 @@ test('amb la moderació, el bloc dels bloquejos va darrere del consentiment i da
   await waitFor(() => expect(m.estatBaixa).toHaveBeenCalled());
   expect(titols()).toEqual(['Les meues dades', 'Consentiment', 'Persones i entitats bloquejades', 'Donar-se de baixa']);
   /* El títol és el del bloc: la llista no en posa cap altre. */
-  expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 4 })).toBeNull();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desbloqueja Pepa' })); });
   expect(valor.desbloqueja).toHaveBeenCalledWith({ tipus: 'persona', id: 'pepa', nom: 'Pepa' });
 });

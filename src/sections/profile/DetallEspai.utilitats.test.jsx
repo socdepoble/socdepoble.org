@@ -134,7 +134,7 @@ describe('DetallAplicacio · l’id del Panell (aplicacions.js, camp `panell`)',
   test.each([['gestoria'], ['lector-rss'], ['snippet']])('Onada 10 · %s té targeta al Panell: la fitxa pinta «Ajustos de l’Usuari» amb el seu botó', (id) => {
     expect(perId(id).panell).not.toBeNull();
     render(<DetallAplicacio aplicacio={perId(id)} />);
-    expect(screen.getByRole('heading', { level: 2, name: AJUSTOS })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: AJUSTOS })).toBeTruthy();
     expect(screen.getAllByRole('button', { name: /Panell de Control/ }).map((boto) => boto.textContent)).toEqual([OCULTAR]);
   });
 
@@ -153,7 +153,7 @@ describe('DetallAplicacio · l’id del Panell (aplicacions.js, camp `panell`)',
       /* La pàgina hi és, amb el seu estat honest. */
       expect(screen.getByRole('heading', { level: 1, name: aplicacio.nom }), String(desada)).toBeTruthy();
       expect(screen.getByText('Pendent de connectar en este node'), String(desada)).toBeTruthy();
-      expect(screen.queryByRole('heading', { level: 2, name: AJUSTOS }), String(desada)).toBeNull();
+      expect(screen.queryByRole('heading', { level: 3, name: AJUSTOS }), String(desada)).toBeNull();
       expect(screen.queryByRole('button', { name: /Panell de Control/ }), String(desada)).toBeNull();
       expect(screen.queryByText(/Panell de Control/), String(desada)).toBeNull();
       /* Pintar la fitxa no ha escrit res, i el llegat és on era. */

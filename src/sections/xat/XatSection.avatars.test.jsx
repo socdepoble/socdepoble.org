@@ -386,7 +386,7 @@ test('front A · la foto pujada de la persona es resol pel port i va al peu del 
   munta({ ...ambSessio(), joAvatar: PUJADA_JO });
   await waitFor(() => expect(caresDe(rail()).Javi).toBe(PUJADA_JO_RESOLTA));
   expect(mocks.resol).toHaveBeenCalledWith(PUJADA_JO, expect.anything());
-  expect(screen.getByRole('button', { name: 'Tu: ajustos' }).querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe(PUJADA_JO_RESOLTA);
+  expect(screen.getByRole('button', { name: 'Javi: Amb qui actues?' }).querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe(PUJADA_JO_RESOLTA);
   capImatgeTrencada();
 });
 
@@ -407,7 +407,7 @@ test('front C + R21.8 · amb entitatActiva, el peu porta el logo de l’entitat 
   ambLaBaseDelPaquet();
   mocks.threadId = 'f-pepa';
   munta({ ...ambSessio(), joAvatar: PUJADA_JO, entitatActiva: SDP_ACTIVA });
-  const boto = screen.getByRole('button', { name: 'Tu: ajustos (actues com a Sóc de Poble)' });
+  const boto = screen.getByRole('button', { name: 'Sóc de Poble: Amb qui actues?' });
   const avatar = boto.querySelector('.sdp-avatar');
   expect(avatar.getAttribute('title')).toBe('Sóc de Poble');
   expect(avatar.classList.contains('sdp-xat-avatar--quadrat')).toBe(true);
@@ -465,6 +465,23 @@ test('sense sessió, a l’aterratge, la parella del peu (Entrar i Registrar-se)
   const acces = document.querySelector('.sdp-xat-acces');
   expect(peuDAccesAlCos()).toBe(acces.parentElement);
   expect(acces.parentElement.previousElementSibling).toBe(llista());
+});
+
+/* v1.2.23 · IDEA-323 / IDEA-327 v2 (ordre del Mestre 261123) · Sense sessió no hi
+   ha identitat activa: el peu del rail és el de la v1.2.22, «Tu: ajustos», que
+   obri el full d'Ajustos i no navega enlloc. No és cap tercer «Entrar» amagat:
+   el contracte d'L1-07 (dos «Entrar», dalt) continua igual. */
+test('v1.2.23 · sense sessió, el peu del rail diu «Tu: ajustos», obri els Ajustos i no hi afig cap «Entrar»', () => {
+  munta(senseSessio());
+  expect(screen.getAllByRole('button', { name: 'Entrar' })).toHaveLength(2);
+  expect(within(rail()).queryByRole('button', { name: /Amb qui actues\?/ })).toBeNull();
+  const peu = within(rail()).getByRole('button', { name: 'Tu: ajustos' });
+  expect(peu.getAttribute('aria-haspopup')).toBe('dialog');
+  mocks.navigate.mockClear();
+  fireEvent.click(peu);
+  expect(screen.getByRole('dialog', { name: 'Ajustos' })).toBeTruthy();
+  expect(screen.queryByRole('dialog', { name: 'Amb qui actues?' })).toBeNull();
+  expect(mocks.navigate).not.toHaveBeenCalled();
 });
 
 /* P1-54 · Cap rastre de l'accés: ni la parella, ni «Descarrega l'App», ni el

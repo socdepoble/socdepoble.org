@@ -17,7 +17,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn() 
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('./components/ClosCaXat.jsx', () => ({
   default: ({ middleColumn, rightColumn }) => <div>{middleColumn}{rightColumn}</div>,
-  BotoObriRail: () => null
+  BotoObriRail: () => null,
+  BotoTitolSeccioXat: () => null
 }));
 vi.mock('./components/PanellInicialMobil.jsx', () => ({ default: () => null }));
 vi.mock('../../components/layout/AppGridColumn.jsx', () => ({ default: () => null }));

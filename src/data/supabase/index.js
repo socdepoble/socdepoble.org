@@ -9,6 +9,14 @@
 export * from './runtime.js';
 export * from './admin.js';
 export * from './content.js';
+/* R32.44 · Encendre només després del rebut de 20261122230000. Cap sondeig remot a l'arrencada. */
+import { desaPublicacioPropia as desaPropiaAmbServidor } from './publicacionsPropies.js';
+import * as revisionsPaginesAmbServidor from './revisionsPagines.js';
+export const desaPublicacioPropia = import.meta.env.VITE_SDP_EDICIO_PROPIA_CAS === '1' ? desaPropiaAmbServidor : undefined;
+const ambRevisionsPagines = import.meta.env.VITE_SDP_REVISIONS_PAGINES === '1';
+export const llistaRevisionsPagina = ambRevisionsPagines ? revisionsPaginesAmbServidor.llistaRevisionsPagina : undefined;
+export const desaRevisioPagina = ambRevisionsPagines ? revisionsPaginesAmbServidor.desaRevisioPagina : undefined;
+export const restauraRevisioPagina = ambRevisionsPagines ? revisionsPaginesAmbServidor.restauraRevisioPagina : undefined;
 export { revocaPublicacioMur, drenaRevocacionsMur, encuaRevocacioNotaMur, destroy } from './copublicacioMur.js';
 export * from './organizations.js';
 export * from './auth.js';

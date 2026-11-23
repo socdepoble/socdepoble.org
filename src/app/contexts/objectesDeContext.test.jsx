@@ -63,6 +63,10 @@ const PROPIETARIS = Object.freeze({
     'src/app/contexts/RouterContext.jsx': ['RouteParamsContext', 'RouterContext', 'RouterPrefixContext']
   },
   'src/sections/xat/objectesDeContext.js': { 'src/sections/xat/XatContext.jsx': ['XatContext'] },
+  /* v1.2.23 · costura objectes de context (ordre del Mestre 261123) · La closca
+     del xat simplificada (IDEA-327 v2, kit Gemini R32.46) porta el seu context:
+     viu a l'objectesDeContext.js de la seua carpeta, com els altres. */
+  'src/sections/xat/components/objectesDeContext.js': { 'src/sections/xat/components/ClosCaXat.jsx': ['ClosCaXatContext'] },
   'src/sections/mur/objectesDeContext.js': { 'src/sections/mur/MurContext.jsx': ['MurContext'] },
   'src/sections/multimedia/objectesDeContext.js': { 'src/sections/multimedia/MultimediaContext.jsx': ['MultimediaContext'] },
   'src/sections/notes/objectesDeContext.js': {

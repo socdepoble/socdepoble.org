@@ -1,14 +1,22 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import '../../../../tests/helpers/diccionaris.js';
+import { createTranslator } from '../../../config/i18n.js';
 
 /* T43 (ordre del Mestre, 260928) · la identitat de la barra negra amb el
    botó i el calaix de veres; la sessió, la identitat i els mitjans simulats. */
 /* Revisió del Gauntlet 261017 (ID4) · `estat` és el de useSession
    ('comprovant' | 'dins' | 'fora'); undefined, com abans d'esta prova. */
+/* v1.2.23 · R2E-04 (Gauntlet R2) · `t` és el traductor de la interfície; null
+   (cap UIProvider), com abans d'esta prova. */
 const m = vi.hoisted(() => ({
   user: null, identitat: null, senseSessio: false, senseIdentitat: false, estat: undefined,
-  logout: vi.fn(), preparaEixida: vi.fn(),
+  logout: vi.fn(), preparaEixida: vi.fn(), t: null,
+}));
+vi.mock('../../../app/contexts/UIContext', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useUIActionsOpcional: () => (m.t ? { t: m.t } : null),
 }));
 /* Prompt 261014_0400 (ordre del Mestre) · La simulació calca el contracte de
    veres dels dos mòduls: sense proveïdor, l'estricte llança amb el seu missatge
@@ -52,6 +60,7 @@ const FORN = { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: nul
 
 afterEach(cleanup);
 beforeEach(() => {
+  m.t = null;
   m.senseSessio = false;
   m.senseIdentitat = false;
   m.estat = undefined;
@@ -93,6 +102,71 @@ test('el calaix és germà del header, sense estils en línia; triar crida setAc
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Forn de la Torre/ })); });
   expect(m.identitat.setActor).toHaveBeenCalledWith('entitat', 'o-1');
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+/* v1.2.23 · R2E-04 (Gauntlet R2) · El calaix que obri la barra negra parla la
+   llengua de la interfície sencer, com el que obri el peu del rail del Xat
+   (ClosCaXat.jsx): el títol, la descripció, el nom de la llista, «Activa» i el
+   rol de cada fila, no només «Idioma del sistema» i «Eixir». Els textos fixos
+   són els de textosCalaixIdentitats.js (un tros diferit); els rols, les claus
+   section.perfil.* dels diccionaris. COOP no porta cap rol conegut. */
+const COOP = { tipus: 'entitat', id: 'o-2', nom: 'Cooperativa del Comtat', avatar: null };
+const IDENTITATS_R2E_04 = () => [{ ...PERSONA, activa: true }, { ...FORN, activa: false }, { ...COOP, activa: false }];
+const LITERALS_CA_R2E_04 = ['Amb qui actues?', 'Tria amb quina identitat', 'Pots canviar quan vullgues', 'Organització'];
+
+test.each([
+  ['en', {
+    titol: 'Who are you acting as?',
+    descripcio: 'Choose which identity you want to publish and edit as. You can switch whenever you like.',
+    llista: 'Identities', activa: 'Active', rols: ['Person', 'Owner', 'Organisation'], idioma: 'System language', eixir: 'Sign out of Sóc de Poble',
+  }],
+  ['es', {
+    titol: '¿Con quién actúas?',
+    descripcio: 'Elige con qué identidad quieres publicar y editar. Puedes cambiar cuando quieras.',
+    llista: 'Identidades', activa: 'Activa', rols: ['Persona', 'Propietario', 'Organización'], idioma: 'Idioma del sistema', eixir: 'Salir de Sóc de Poble',
+  }],
+  ['eu', {
+    titol: 'Norekin ari zara?',
+    descripcio: 'Aukeratu zein identitaterekin argitaratu eta editatu nahi duzun. Nahi duzunean alda dezakezu.',
+    llista: 'Identitateak', activa: 'Aktiboa', rols: ['Pertsona', 'Jabea', 'Erakundea'], idioma: 'Sistemaren hizkuntza', eixir: 'Irten Sóc de Pobletik',
+  }],
+  ['gl', {
+    titol: 'Con quen actúas?',
+    descripcio: 'Escolle con que identidade queres publicar e editar. Podes cambiar cando queiras.',
+    llista: 'Identidades', activa: 'Activa', rols: ['Persoa', 'Propietario', 'Organización'], idioma: 'Idioma do sistema', eixir: 'Saír de Sóc de Poble',
+  }],
+])('R2E-04 · en %s, el calaix «Amb qui actues?» de la barra negra parla tot ell la llengua de la interfície', async (codi, x) => {
+  m.t = createTranslator(codi);
+  m.identitat.identitats = IDENTITATS_R2E_04();
+  render(<Barra onNavega={vi.fn()} />);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Pepa Soler/ })); });
+  const dialeg = await screen.findByRole('dialog', { name: x.titol });
+  expect(within(dialeg).getByText(x.descripcio)).toBeTruthy();
+  const files = within(within(dialeg).getByRole('list', { name: x.llista })).getAllByRole('button');
+  expect(files.map((fila) => fila.querySelector('.sdp-calaix-identitats__rol').textContent)).toEqual(x.rols);
+  expect(files[0].getAttribute('aria-current')).toBe('true');
+  expect(within(files[0]).getByText(x.activa)).toBeTruthy();
+  expect(within(dialeg).getByRole('button', { name: x.idioma })).toBeTruthy();
+  expect(within(dialeg).getByRole('button', { name: x.eixir })).toBeTruthy();
+  for (const literal of LITERALS_CA_R2E_04) expect(dialeg.textContent, literal).not.toContain(literal);
+  expect(within(dialeg).queryByRole('list', { name: 'Identitats' })).toBeNull();
+});
+
+/* v1.2.23 · R2E-04 (Gauntlet R2) · Llei del Píxel · En valencià, amb el
+   traductor de veres, el calaix és el de sempre, lletra per lletra, i s'obri
+   en el mateix clic, sense esperar cap tros. */
+test('R2E-04 · en valencià, el calaix de la barra negra és el de sempre i s’obri en el mateix clic', () => {
+  m.t = createTranslator('ca');
+  m.identitat.identitats = IDENTITATS_R2E_04();
+  render(<Barra onNavega={vi.fn()} />);
+  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat, idioma o eixir' })); });
+  const dialeg = screen.getByRole('dialog', { name: 'Amb qui actues?' });
+  expect(within(dialeg).getByText('Tria amb quina identitat vols publicar i editar. Pots canviar quan vullgues.')).toBeTruthy();
+  const files = within(within(dialeg).getByRole('list', { name: 'Identitats' })).getAllByRole('button');
+  expect(files.map((fila) => fila.querySelector('.sdp-calaix-identitats__rol').textContent)).toEqual(['Persona', 'Propietari', 'Organització']);
+  expect(within(files[0]).getByText('Activa')).toBeTruthy();
+  expect(within(dialeg).getByRole('button', { name: 'Idioma del sistema' })).toBeTruthy();
+  expect(within(dialeg).getByRole('button', { name: 'Eixir de Sóc de Poble' })).toBeTruthy();
 });
 
 /* Encàrrec 261018_1220 (Tasca 1, ordre del Mestre: «en clicar la identitat

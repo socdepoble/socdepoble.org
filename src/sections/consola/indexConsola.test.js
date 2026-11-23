@@ -86,27 +86,26 @@ const deLaSala = (index) => index.fills.filter((f) => IDS_PAGINES.includes(f.id)
 const pla = (trossos) => (trossos ?? []).map((s) => s.text ?? s.fort ?? s.mono ?? s.enllac).join('');
 
 describe('la jerarquia', () => {
-  test('un sol node arrel en H2, amb el títol i el text de l’índex, sense ruta', () => {
+  test('un sol node arrel en H3, amb el títol i el text de l’índex, sense ruta', () => {
     const index = indexConsola();
     expect(index).toHaveLength(1);
     const [a] = index;
     expect(a.id).toBe(ID_INDEX);
-    expect(a.nivell).toBe(2);
+    expect(a.nivell).toBe(3);
     expect(a.titol).toBe(TITOL_INDEX);
     expect(a.text).toBe(TEXT_INDEX);
     expect(a.ruta).toBeNull();
     for (const n of nodesDeLIndex(index)) expect(Object.keys(n)).toEqual(expect.arrayContaining(CAMPS));
   });
 
-  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.3) · L'article recorre el
-     tauler sencer, en el seu ordre: «Com es llig la Consola» (l'H3 just
+  /* Ordre del Mestre, 30-10-2026 (/consola, punt 2.3) + IDEA-319 · L'article recorre el
+     tauler sencer, en el seu ordre: «Com es llig la Consola» (l'H4 just
      darrere de l'entradeta), el Govern del Mestre, les nou pàgines, Sóc de Poble en
-     xifres i els empaquetats. Derogat EN PART: «les nou pàgines i Sóc de Poble en
-     xifres tancant» (Onada 11). */
-  test('els H3: «Com es llig la Consola», el Govern del Mestre, les nou pàgines en l’ordre d’IDS_PAGINES, «Sóc de Poble en xifres» i els empaquetats', () => {
+     xifres i els empaquetats. */
+  test('els H4: «Com es llig la Consola», el Govern del Mestre, les nou pàgines en l’ordre d’IDS_PAGINES, «Sóc de Poble en xifres» i els empaquetats', () => {
     const a = arrel();
     expect(ids(a.fills)).toEqual([ID_INTRO, ID_GOVERN, ...IDS_PAGINES, ID_MAS, ID_EMPAQUETATS]);
-    expect(a.fills.every((f) => f.nivell === 3)).toBe(true);
+    expect(a.fills.every((f) => f.nivell === 4)).toBe(true);
     expect(pagina(a, ID_INTRO).titol).toBe(TITOL_INTRO);
     expect(pagina(a, ID_INTRO).ruta).toBeNull();
     expect(pagina(a, ID_GOVERN).ruta).toBeNull();
@@ -127,15 +126,15 @@ describe('la jerarquia', () => {
     }
   });
 
-  test('nodesDeLIndex aplana en l’ordre del document: l’H2, i cada H3 seguit dels seus H4', () => {
+  test('nodesDeLIndex aplana en l’ordre del document: l’H3, i cada H4 seguit dels seus H5', () => {
     const index = indexConsola(MAPA, CONSOLA);
     const plans = nodesDeLIndex(index);
-    expect(plans[0].nivell).toBe(2);
-    let nivellAnterior = 2;
+    expect(plans[0].nivell).toBe(3);
+    let nivellAnterior = 3;
     for (const n of plans.slice(1)) {
-      expect([3, 4]).toContain(n.nivell);
-      // Un H4 només pot vindre darrere d'un H3 o d'un altre H4, mai directament de l'H2.
-      if (n.nivell === 4) expect(nivellAnterior).toBeGreaterThanOrEqual(3);
+      expect([4, 5]).toContain(n.nivell);
+      // Un H5 només pot vindre darrere d'un H4 o d'un altre H5, mai directament de l'H3.
+      if (n.nivell === 5) expect(nivellAnterior).toBeGreaterThanOrEqual(4);
       nivellAnterior = n.nivell;
     }
     expect(plans).toHaveLength(1 + index[0].fills.reduce((n, f) => n + 1 + f.fills.length, 0));
@@ -143,13 +142,13 @@ describe('la jerarquia', () => {
 });
 
 describe('el pols', () => {
-  test('els tres panells en H4, en ordre, amb la ruta de rutaPanell i l’entradilla; després, les xifres de la seua vista', () => {
+  test('els tres panells en H5, en ordre, amb la ruta de rutaPanell i l’entradilla; després, les xifres de la seua vista', () => {
     const pols = pagina(arrel(), 'pols');
     const panells = pols.fills.slice(0, IDS_PANELLS.length);
     expect(ids(panells)).toEqual(IDS_PANELLS.map((id) => `pols/${id}`));
     for (const [i, id] of IDS_PANELLS.entries()) {
       const p = panellPols(id);
-      expect(panells[i].nivell).toBe(4);
+      expect(panells[i].nivell).toBe(5);
       expect(panells[i].titol).toBe(p.titol);
       expect(panells[i].ruta).toBe(rutaPanell(id));
       expect(panells[i].ruta).toBe(p.ruta);
@@ -187,7 +186,7 @@ describe('sense Mapa ni consola.json', () => {
     expect(ids(mas.fills)).toEqual(SLUGS_XIFRES);
     expect(mas.fills.map((x) => x.titol)).toEqual(xifresDeLaGraella().map((x) => x.titol));
     for (const x of mas.fills) {
-      expect(x.nivell).toBe(4);
+      expect(x.nivell).toBe(5);
       expect(x.titol).not.toMatch(/\d/);
       expect(x.ruta).toBe(rutaXifra(x.id));
     }
@@ -223,7 +222,7 @@ describe('amb el Mapa i consola.json de prova', () => {
     // Els arnesos, davall de la xifra que els compta; les tasques, en el seu H4 de família (davant hi ha els candats).
     expect(actors.fills.find((n) => n.id === 'agents').membres.definicio.length).toBeGreaterThan(0);
     const tasques = actors.fills.find((n) => n.id === 'familia/tasca');
-    expect(tasques.nivell).toBe(4);
+    expect(tasques.nivell).toBe(5);
     expect(tasques.ruta).toBeNull();
     expect(tasques.text).toContain('Una tasca programada és una faena que launchd llança sola');
     expect(actors.fills.find((n) => n.id === 'llocs-del-sol').membres.llista.map((m) => m.id)).toEqual(['lloc-wiki-de-poble-04-escriptori']);
@@ -237,9 +236,9 @@ describe('amb el Mapa i consola.json de prova', () => {
     expect(pagina(a, ID_MAS).fills.map((x) => x.titol)).toEqual(xifresDeLaGraella(MAPA).map((x) => x.titol));
   });
 
-  test('cada H4 d’una xifra té pàgina pròpia amb les fonts d’ara (el viceversa) i la ruta de rutaXifra; cada peça de la llista, també', () => {
+  test('cada H5 d’una xifra té pàgina pròpia amb les fonts d’ara (el viceversa) i la ruta de rutaXifra; cada peça de la llista, també', () => {
     const ambPagina = targetesDeLaConsola(MAPA, CONSOLA);
-    const deXifra = (x) => x.nivell === 4 && !/^(pols|govern|empaquetats|familia)\//.test(x.id);
+    const deXifra = (x) => x.nivell === 5 && !/^(pols|govern|empaquetats|familia)\//.test(x.id);
     const nodes = nodesDeLIndex(indexConsola(MAPA, CONSOLA));
     for (const n of nodes.filter(deXifra)) {
       expect(ambPagina.has(n.id), n.id).toBe(true);
@@ -426,16 +425,16 @@ const EMPAQUETATS = {
 const ambTot = () => indexConsola(MAPA, CONSOLA, 'ca-ES', { govern: GOVERN, empaquetats: EMPAQUETATS, ara: ARA });
 
 describe('la redacció didàctica', () => {
-  test('cada H3 i cada H4 fa els tres moviments: què és, què diuen ara les dades i què queda; els H3, també en paraules planes', () => {
+  test('cada H4 i cada H5 fa els tres moviments: què és, què diuen ara les dades i què queda; els H4, també en paraules planes', () => {
     for (const index of [indexConsola(), ambTot()]) {
-      for (const n of nodesDeLIndex(index).filter((x) => x.nivell > 2)) {
+      for (const n of nodesDeLIndex(index).filter((x) => x.nivell > 3)) {
         expect(n.text.length, n.id).toBeGreaterThan(20);
         expect(pla(n.diu).length, n.id).toBeGreaterThan(10);
         expect(pla(n.queda).length, n.id).toBeGreaterThan(10);
         // Cada moviment obri amb unes paraules en negreta: es pot llegir a salts de vista.
         expect(n.diu[0].fort, n.id).toBeTruthy();
         expect(n.queda[0].fort, n.id).toBeTruthy();
-        if (n.nivell === 3) {
+        if (n.nivell === 4) {
           expect(n.explica.length, n.id).toBeGreaterThan(0);
           for (const p of n.explica) {
             expect(pla(p).length, n.id).toBeGreaterThan(80);

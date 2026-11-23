@@ -35,6 +35,7 @@ import { esPaginaVisible } from '../../config/systemPages.js';
 import { HERO_PER_DEFECTE } from '../../config/imatgeSocial.js';
 import { PAGE_COPY } from './pageContent.js';
 import { paginaPerAppNativa } from './perAppNativa.js';
+import { revisaPaginaSistema } from '../../data/revisionsEditorialsDelNavegador.js';
 
 /** Rutes de kind 'text' que no pinta TextSection: mai es resolen ací. */
 export const RUTES_SENSE_PAGINA_DE_TEXT = Object.freeze(['/disseny', '/connectar', '/control', '/realitat']);
@@ -161,5 +162,5 @@ export function paginaDeRuta(ruta, { pageCopy, pages, nativa = esAppNativa() } =
     ? pages.find((p) => p && (String(p.slug) === pageKey || String(p.id) === pageKey)) || null
     : null;
   const page = propia(pageCopy, pageKey) || delSlug || propia(PAGE_COPY, pageKey);
-  return page ? { pageKey, page: paginaPerAppNativa(page, { nativa }) } : null;
+  return page ? { pageKey, page: paginaPerAppNativa(revisaPaginaSistema(pageKey, page), { nativa }) } : null;
 }

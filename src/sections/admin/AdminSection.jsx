@@ -324,7 +324,7 @@ function AdminUsersManager({ onBack }) {
       renderDetail={({ item }) => (item ? (
          <PaginaDelDetall titol="Detall de l'Usuari">
            <div className="perfil-detall-buit">
-             <h2>{item.data.email}</h2>
+             <h3>{item.data.email}</h3>
              <p className="sdp-camp__ajuda">ID: {item.data.id}</p>
              <p>Alta: {item.data.created_at}</p>
              <p>Últim accés: {item.data.last_sign_in_at}</p>
@@ -375,7 +375,7 @@ function AdminCompaniesManager({ onBack }) {
       renderDetail={({ item }) => (item ? (
          <PaginaDelDetall titol="Detall de l'Entitat">
            <div className="perfil-detall-buit">
-             <h2>{item.data.name}</h2>
+             <h3>{item.data.name}</h3>
              <p className="sdp-camp__ajuda">ID: {item.data.id} / Slug: {item.data.slug}</p>
              <p>Alta: {item.data.created_at}</p>
              <p>{item.data.description}</p>

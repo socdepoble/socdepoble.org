@@ -634,7 +634,8 @@ export async function xifraAesGcm(cripto, clau, { dades, aad = BUIT } = {}) {
   return { iv, xifrat };
 }
 
-/** Desxifra AES-256-GCM. XIFRAT_MANIPULAT si la clau, l'IV, l'AAD o el xifrat no són els d'origen. */
+/** Desxifra AES-256-GCM. XIFRAT_MANIPULAT si el sobre no autentica; una
+ *  fallada operativa de WebCrypto conserva la causa i no acredita manipulació. */
 export async function desxifraAesGcm(cripto, clau, { xifrat, aad = BUIT, iv } = {}) {
   const subtle = subtleDe(cripto);
   exigixAes256(clau);
@@ -643,8 +644,13 @@ export async function desxifraAesGcm(cripto, clau, { xifrat, aad = BUIT, iv } = 
   if (!esBytes(iv) || iv.length !== BYTES_IV || !esBytes(xifrat) || xifrat.length < BYTES_ETIQUETA) throw manipulat();
   try {
     return new Uint8Array(await subtle.decrypt(paramsAead(iv, aad), clau, xifrat));
-  } catch {
-    throw manipulat();
+  } catch (error) {
+    /* Amb IV de 96 bits, etiqueta de 128 i un xifrat complet, OperationError
+       és la fallada d'autenticació de GCM. Una clau amb usos incorrectes,
+       TypeError, cancel·lació o motor indisponible no són eixa prova.
+       El nom és estable entre realms; el missatge localitzat no ho és. */
+    if (error?.name === 'OperationError') throw manipulat();
+    throw error;
   }
 }
 

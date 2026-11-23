@@ -6,6 +6,7 @@ import { lecturesPubliques, subscriuLecturesPubliques } from './lecturesPublique
 import { esElementPublic } from '../components/universal/traduccio/visibilitatTraduible.js';
 import { senseHtmlCru } from '../sections/mercat/etiquetesMercat.js';
 import { formataPreuMercat } from '../sections/mercat/preuMercat.js';
+import { preuInicialDelProducte } from '../sections/mercat/variacionsDeProducte.js';
 import { acteAEsdeveniment, esActeDelCalendari } from '../sections/mur/agendaMur.js';
 import { llegixDataHora } from '../utils/esdeveniment.js';
 
@@ -77,7 +78,7 @@ export function capturaLecturaPublica({ finestra, sessio = getSessionState, font
     const text = elements.map(item => {
       const acte = ruta === 'calendari' || esActeDelCalendari(item) ? acteAEsdeveniment(item) : null;
       return [pla(item.title || item.name || item.nom), pla(item.subtitle || item.summary || item.lead),
-        pla(item.description || item.content), formataPreuMercat(item.price),
+        pla(item.description || item.content), ruta === 'mercat' ? preuInicialDelProducte(item) : formataPreuMercat(item.price),
         ...(acte ? liniesDeLActe(acte, item, pla) : [pla(item.date || item.data)])]
         .filter(Boolean).join('\n');
     }).join('\n\n').slice(0, 80000);

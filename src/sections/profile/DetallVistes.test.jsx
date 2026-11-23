@@ -97,7 +97,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const bloc = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+const bloc = (titol) => screen.getByRole('heading', { level: 3, name: titol }).closest('section');
 const targeta = () => bloc('Vista targeta').querySelector('article.sp-card.sdp-targeta-viva-carta');
 /* Onada 11 (261010; prompt 261010_1730, tasca 3) · el paper s'analitza amb
    DOMParser i es mira el text dels h1: cap literal de marcatge a la prova. */
@@ -107,7 +107,7 @@ const titolsH1 = (paper) => [...paperDom(paper).querySelectorAll('h1')].map((h) 
 test('dos blocs dins d’una pàgina de context: «Vista A4 / PDF» i «Vista targeta», en este ordre', () => {
   render(<DetallVistes identitat={jo} />);
   expect(screen.getByRole('heading', { level: 1, name: 'Les vistes' })).toBeTruthy();
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Vista A4 / PDF', 'Vista targeta']);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Vista A4 / PDF', 'Vista targeta']);
   expect(m.pagina).toMatchObject({ chrome: 'context', layout: 'contained' });
   expect(bloc('Vista A4 / PDF').closest('.perfil-compte')).not.toBeNull();
 });

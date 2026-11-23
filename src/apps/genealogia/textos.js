@@ -500,7 +500,7 @@ const ES = {
   'camp.cognom2': 'Apellido materno (segundo apellido)',
   'camp.malnom': 'Apodo de la persona',
   'camp.casa': 'Casa («Ca …»)',
-  'camp.lloc': 'Lugar (masía, partida o pueblo)',
+  'camp.lloc': 'Lugar (mas, partida o pueblo)',
   'camp.ofici': 'Oficio',
   'camp.difunta': 'Ya ha fallecido',
   'camp.naixement': 'Nacimiento',

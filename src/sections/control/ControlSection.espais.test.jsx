@@ -97,7 +97,7 @@ function pinta() {
 }
 const ubicacio = () => screen.getByTestId('ubicacio').textContent;
 
-const seccioDe = (nom) => screen.queryByRole('heading', { level: 2, name: nom })?.closest('section') ?? null;
+const seccioDe = (nom) => screen.queryByRole('heading', { level: 3, name: nom })?.closest('section') ?? null;
 const targetesDe = (seccio) => (seccio ? [...seccio.querySelectorAll('.sdp-card-grid > article.sp-card')] : []);
 const titolDe = (targeta) => targeta.querySelector('.sp-card-title').textContent;
 const sensePunt = (text) => text.replace(/\.$/, '');
@@ -132,7 +132,7 @@ afterEach(() => {
 test('els dos espais existixen, en ordre entre «Publica al poble» i «Maquinària i Sistema», amb la seua entradeta', () => {
   pinta();
   const ordre = [
-    screen.getByRole('heading', { level: 2, name: 'Publica al poble' }).closest('section'),
+    screen.getByRole('heading', { level: 3, name: 'Publica al poble' }).closest('section'),
     seccioDe('Economia i Empresa'),
     seccioDe('La llar'),
     seccioDe('Maquinària i Sistema')
@@ -231,8 +231,8 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap al seu perfil, 
     const imatge = targeta.querySelector('img.sp-card-media');
     expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], titol).toEqual([plugin.imatge, plugin.imatgeAlt]);
     /* El cos sencer i visible: títol, subtítol i entradeta. */
-    expect(within(targeta).getByRole('heading', { level: 3, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
-    expect(within(targeta).getByRole('heading', { level: 4 }).textContent, titol).toBe(sensePunt(plugin.subtitol));
+    expect(within(targeta).getByRole('heading', { level: 4, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
+    expect(targeta.querySelector('h4.sp-card-subtitle').textContent, titol).toBe(sensePunt(plugin.subtitol));
     expect(targeta.querySelector('p.sp-card-text').textContent, titol).toBe(plugin.entradilla);
     /* Tota la targeta porta a la seua pàgina, amb el nom del títol. */
     const enllac = targeta.querySelector('a.sp-card-link-overlay');

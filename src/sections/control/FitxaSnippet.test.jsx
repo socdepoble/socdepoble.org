@@ -73,10 +73,10 @@ test('la fitxa explica què és, com funciona en 3 passos, què necessita i la p
   render(<FitxaSnippet />);
   expect(document.querySelector('[data-titol="pagina"]').textContent).toBe('Snippet');
   expect(document.querySelector('[data-subtitol="pagina"]').textContent).toBe('Desa qualsevol web d’un clic');
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent))
     .toEqual(['Què és', 'Com funciona', 'Què necessites', 'Privacitat']);
 
-  const seccio = (nom) => screen.getByRole('heading', { level: 2, name: nom }).closest('section');
+  const seccio = (nom) => screen.getByRole('heading', { level: 3, name: nom }).closest('section');
   expect(seccio('Què és').textContent).toMatch(/botó al teu navegador/);
   expect(seccio('Què és').textContent).toMatch(/arriba al teu Bloc de notes de Sóc de Poble/);
   expect(seccio('Què és').textContent).toMatch(/es desa com una nota teua que podràs editar/);
@@ -162,7 +162,7 @@ test('un .zip d’un altre origen s’obri en una pestanya nova', () => {
 test('amb un .zip, «Com funciona» explica com carregar-lo desempaquetat abans de fer-lo servir', () => {
   estat.capa = { snippetChromeUrl: 'https://poble.test/extensio/snippet.zip' };
   render(<FitxaSnippet />);
-  const passos = within(screen.getByRole('heading', { level: 2, name: 'Com funciona' }).closest('section'))
+  const passos = within(screen.getByRole('heading', { level: 3, name: 'Com funciona' }).closest('section'))
     .getAllByRole('listitem').map((li) => li.textContent);
   expect(passos).toHaveLength(4);
   expect(passos[0]).toMatch(/^Descarrega el Snippet amb el botó d’esta pàgina i descomprimix el fitxer/);

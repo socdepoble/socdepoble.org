@@ -413,7 +413,7 @@ export function PanellGestorLocal({
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-arxiu-local" aria-labelledby={idTitol}>
       <header className="sdp-arxiu-local__capcalera">
-        <h2 id={idTitol}>{tr(T.titol)}</h2>
+        <h3 id={idTitol}>{tr(T.titol)}</h3>
         <p>{tr(T.entradeta)}</p>
       </header>
       {cos}

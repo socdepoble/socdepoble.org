@@ -1,3 +1,4 @@
+import { CAMINS } from '../lib/arrel.mjs';
 /** Frozen SOURCE authority:15 reviewed paths,4 existing preimages. */
 export const R9_AUTHORITY_FROZEN=true;
 export const FROZEN_PATHS_R9=Object.freeze([
@@ -19,8 +20,8 @@ export const FROZEN_PATHS_R9=Object.freeze([
 ]);
 export const BASELINE_R8_EXTRA_PREIMAGE_PINS_R9=Object.freeze({
   ".gitignore":Object.freeze({"sha256":"31191a5250e8bb24c13781e579e6933b5eb0ea927baea7c4f9dca44dc692d675","mode":420}),
-  "_wiki_de_poble/02_saber/00_index_maquina.md":Object.freeze({"sha256":"abc0e45361c851a3eb1df6940948b31f75ccc82829d2dccb61f96f6c2934842f","mode":420}),
-  "_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md":Object.freeze({"sha256":"10cc51864da18382a2ef58b4aaac6a2839f61264cf9fa45a8ea121e59e8feab4","mode":420}),
+  [`${CAMINS.wiki}/02_saber/00_index_maquina.md`]:Object.freeze({"sha256":"abc0e45361c851a3eb1df6940948b31f75ccc82829d2dccb61f96f6c2934842f","mode":420}),
+  [`${CAMINS.wiki}/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md`]:Object.freeze({"sha256":"10cc51864da18382a2ef58b4aaac6a2839f61264cf9fa45a8ea121e59e8feab4","mode":420}),
   "package.json":Object.freeze({"sha256":"73202768ca8e11695fe2e4178a5bfee7f079cbceabc2b385f137ee2001cd6ee9","mode":420}),
   "public/rag-index.json":Object.freeze({"sha256":"14160276f64a2d8891665f65ed91dc62b07efc61da59b4a5712117e37816bf7c","mode":420}),
   "src/data/local/README.md":Object.freeze({"sha256":"92589e2298db16fc9ec61f0c296698f20a4983dcddfdfa14f4f811a88520f2eb","mode":420}),

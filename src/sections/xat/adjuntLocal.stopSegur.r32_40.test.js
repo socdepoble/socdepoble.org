@@ -40,7 +40,7 @@ describe('Onada R32.40 · gravaVeu · Alliberament garantit de tracks davant Inv
     expect(track2.stop).toHaveBeenCalledOnce();
   });
 
-  test('als 5 minuts (MAX_VEU_MS) si recorder.stop() llança InvalidStateError amb àudio ja gravat, conserva la nota i tanca el micròfon sense excepció', async () => {
+  test('als 5 minuts, stop que llança tanca el micròfon immediatament i conserva bytes en error recuperable després del deadline', async () => {
     vi.useFakeTimers();
     const track = { stop: vi.fn() };
 
@@ -68,14 +68,25 @@ describe('Onada R32.40 · gravaVeu · Alliberament garantit de tracks davant Inv
     RecorderInterromputAmbDades.ultim.onstart?.();
     RecorderInterromputAmbDades.ultim.ondataavailable?.({ data: new Blob(['veu-iaia']) });
 
+    const resultat = vi.fn();
+    gravacio.resultat.then(nota => resultat({ nota }), error => resultat({ error }));
     await vi.advanceTimersByTimeAsync(MAX_VEU_MS);
-    const nota = await gravacio.resultat;
-    expect(nota).toMatchObject({ tipus: 'veu', aturada: 'temps' });
-    expect(nota.fitxer.size).toBe(8);
     expect(track.stop).toHaveBeenCalledOnce();
+    expect(resultat).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(resultat).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(resultat).toHaveBeenCalledOnce();
+    const { error } = resultat.mock.calls[0][0];
+    expect(error).toMatchObject({ code: 'gravacio', motiu: 'stop', recuperable: true,
+      recuperacio: { tipus: 'veu', aturada: 'temps', duradaMs: null } });
+    expect(error.recuperacio.fitxer.size).toBe(8);
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
-  test('atura() manual amb InvalidStateError i cap byte gravat rebutja amb codi gravacio i tanca el micròfon', async () => {
+  test('atura() manual amb InvalidStateError i cap byte tanca el micròfon i rebutja al deadline sense recuperació fictícia', async () => {
+    vi.useFakeTimers();
     const track = { stop: vi.fn() };
 
     class RecorderBuitTrencat {
@@ -98,8 +109,17 @@ describe('Onada R32.40 · gravaVeu · Alliberament garantit de tracks davant Inv
       }
     });
 
+    const resultat = vi.fn();
+    gravacio.resultat.then(nota => resultat({ nota }), error => resultat({ error }));
     expect(() => gravacio.atura()).not.toThrow();
-    await expect(gravacio.resultat).rejects.toMatchObject({ code: 'gravacio' });
     expect(track.stop).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(resultat).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(resultat).toHaveBeenCalledOnce();
+    expect(resultat.mock.calls[0][0]).toMatchObject({ error: { code: 'gravacio', motiu: 'stop', recuperable: false } });
+    expect(resultat.mock.calls[0][0].error).not.toHaveProperty('recuperacio');
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -5,7 +5,8 @@ import { compressImage } from '../../../../utils/imageUtils.js';
 import { fitxerDeDataUrl, tipusReal } from '../../../../utils/pujadaImatge.js';
 import { validaFitxerImatge } from '../../../../hooks/useHeroImageHandler.js';
 import {
-  ajustaPrecisioGps, errorExifNoConservable, esNoConservable, exifCapEnFormat, exifPublicable, teUbicacioOData,
+  ajustaPrecisioGps, errorExifNoConservable, esNoConservable, exifCapEnFormat, exifPublicable, incrustaEnDataUrl,
+  preparaTiffTriat, teUbicacioOData,
 } from '../../enquadrament/exifIncrustat.js';
 import { PRECISIONS, PRECISIO_PER_DEFECTE_PUBLICACIO, geolocalitzacio } from '../../enquadrament/geolocalitzacio.js';
 import { FORMAT_JPEG, FORMAT_WEBP, netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
@@ -36,7 +37,12 @@ import { VideoEditorialNode } from './videoEditorial.js';
    mateix (Llei del Píxel). En llegir, un valor que no té la forma esperada
    no entra al node (null). Les fotos enganxades o arrossegades de fora
    continuen sempre netes i sense cap d'estos atributs (transformPastedHTML és
-   síncron); vegeu senseRegistreDeFoto per a l'enganxat intern. */
+   síncron); vegeu senseRegistreDeFoto per a l'enganxat intern.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · L'ordre «/» Imatge conserva de
+   sèrie (la pregunta de DocumentEditor és ara l'interruptor «Amaga el lloc»
+   apagat, amb l'avís del Mestre; també al cos del Perfil). Les imatges
+   enganxades o arrossegades del porta-retalls NO es toquen (decisió anterior):
+   continuen netes sempre, sense pregunta ni registre. */
 const FORMA_COORDENADA = /^-?\d{1,3}(?:\.\d{1,7})?$/;
 const FORMA_CAPTURA = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?$/;
 const VALORS_PRECISIO = new Set(PRECISIONS.map((p) => p.valor));
@@ -241,10 +247,27 @@ async function triaDeLexif(original, demanaExif) {
 
 /* La compressió de sempre del cos; amb l'EXIF triat, el WebP (o, si el canvas
    no en sap, el JPEG) que el pot portar. Si no hi cap, l'avís: mai neta en
-   silenci. */
-async function comprimixDelCos(original, tria) {
+   silenci.
+   v1.2.23 · costura privacitat del cos del Perfil (IDEA-331, ordre del Mestre 261123) ·
+   Amb `triatEnPujar` (el cos del Perfil, que puja directe a l'espai públic
+   sense la promoció de les Notes), la foto ix del canvas neta i s'hi incrusta
+   la MATEIXA tria que la promoció deixa a les Notes (storage.js · ambExifTriat):
+   el bloc amb la ubicació ja arrodonida a la precisió (ajustaPrecisioGps) i,
+   d'eixe, només la ubicació i la data (preparaTiffTriat). Mai el bloc sencer:
+   ni la marca, el model, el número de sèrie ni el nom de qui té la càmera.
+   L'avís de l'interruptor diu eixa tria (CasellaExif · exifTriat). Si no s'hi
+   pot posar, l'avís de sempre i res inserit. Sense, el camí de les Notes. */
+async function comprimixDelCos(original, tria, triatEnPujar = false) {
   const base = { maxSize: 1200, format: FORMAT_WEBP, quality: 0.8 };
   if (!tria) return compressImage(original, base);
+  if (triatEnPujar) {
+    let net = await compressImage(original, base);
+    if (tipusReal(net) !== FORMAT_WEBP) net = await compressImage(original, { ...base, format: FORMAT_JPEG });
+    const bloc = preparaTiffTriat(ajustaPrecisioGps(tria.exif.tiff, tria.precisio));
+    const ambTria = bloc ? incrustaEnDataUrl(net, bloc) : null;
+    if (!ambTria) throw new Error(errorExifNoConservable(tria.exif));
+    return ambTria;
+  }
   const ambExif = { ...base, conservaExif: true, original, precisio: tria.precisio };
   let dataUrl = await compressImage(original, ambExif);
   if (tipusReal(dataUrl) !== FORMAT_WEBP) dataUrl = await compressImage(original, { ...ambExif, format: FORMAT_JPEG });
@@ -284,6 +307,12 @@ async function comprimixDelCos(original, tria) {
  *        res. Conservada, la foto porta l'EXIF (amb la ubicació ja arrodonida)
  *        i el node, els data-* de SdpImage. Sense la funció, o una foto sense
  *        res a conservar, el camí de sempre: cap pregunta i la foto neta.
+ * @param {boolean} [opcions.exifTriatEnPujar] v1.2.23 · costura privacitat del
+ *        cos del Perfil (IDEA-331, ordre del Mestre 261123) · Només amb
+ *        demanaExif: la foto conservada porta ja la tria de la còpia pública
+ *        (preparaTiffTriat: la ubicació arrodonida i la data), no el bloc
+ *        sencer (comprimixDelCos). És el cos que puja directe a l'espai públic
+ *        (el Perfil). Sense, el camí de les Notes, que tria la promoció.
  *
  * O4-CLAUDE-2 (ordre del Mestre, 261102 21:38) · L'ordre «/» Subtargeta hi és
  * sempre, darrere del Divisor: el node és a totes les extensions riques. Els
@@ -294,6 +323,7 @@ async function comprimixDelCos(original, tria) {
  */
 export function creaOrdres({
   onImageUpload = null, ambTargetes = false, onToast = null, ambEmojis = false, obreEmojis = null, demanaExif = null,
+  exifTriatEnPujar = false,
 } = {}) {
   const avisa = typeof onToast === 'function' ? (missatge) => onToast(missatge, 'error') : null;
   const ambOrdreEmoji = ambEmojis && typeof obreEmojis === 'function';
@@ -428,7 +458,7 @@ export function creaOrdres({
             avisa?.(tria.avis);
             return;
           }
-          const dataUrl = await comprimixDelCos(original, tria);
+          const dataUrl = await comprimixDelCos(original, tria, exifTriatEnPujar === true);
 
           let src = dataUrl;
           if (typeof onImageUpload === 'function') {
@@ -473,6 +503,10 @@ export function creaOrdres({
  * l'esquema és el de sempre.
  * P1-64 (pla 261028_1526 §3.1.1) · `demanaExif` (opcional i estable) arriba a
  * l'ordre «/» Imatge (creaOrdres). Sense, la crida de sempre.
+ * v1.2.23 · costura privacitat del cos del Perfil (IDEA-331, ordre del Mestre
+ * 261123) · `exifTriatEnPujar` (true, constant) arriba a creaOrdres només amb
+ * demanaExif: la foto conservada puja ja amb la tria de la còpia pública.
+ * Sense, la crida de sempre.
  * P1-59 (a) (guàrdia nocturna 261030) · `placeholderCos` (un text no buit,
  * estable) afig el text fantasma del cos buit (placeholderCos.js): una
  * decoració, cap node. Sense, les extensions de sempre.
@@ -491,10 +525,11 @@ export function creaOrdres({
  */
 export function extensionsRiques({
   onImageUpload = null, ambTargetes = false, onToast = null, obreEmojis = null, demanaExif = null, placeholderCos = null,
-  guiaCos = null,
+  guiaCos = null, exifTriatEnPujar = false,
 } = {}) {
   const ambEmojis = typeof obreEmojis === 'function';
   const ambExif = typeof demanaExif === 'function';
+  const ambExifTriatEnPujar = ambExif && exifTriatEnPujar === true;
   const ambPlaceholder = typeof placeholderCos === 'string' && placeholderCos.trim() !== '';
   const ambGuia = blocsDeGuia(guiaCos?.blocs).length > 0;
   return [
@@ -511,6 +546,7 @@ export function extensionsRiques({
     SlashMenu.configure({
       ordres: creaOrdres({
         onImageUpload, ambTargetes, onToast, ...(ambEmojis ? { ambEmojis, obreEmojis } : {}), ...(ambExif ? { demanaExif } : {}),
+        ...(ambExifTriatEnPujar ? { exifTriatEnPujar } : {}),
       })
     }),
     Subtargeta,

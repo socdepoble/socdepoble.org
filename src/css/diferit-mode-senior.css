@@ -31,7 +31,6 @@
     margin: 0;
     color: var(--sdp-text-cos);
     text-align: center;
-    max-inline-size: var(--sdp-measure);
     overflow-wrap: break-word;
   }
 
@@ -153,6 +152,25 @@
   :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sp-card:not(.sp-card--action):not(.sdp-cataleg-workspace__rajola .sp-card) .sp-card-body :where(p, li, .sp-card-text) {
     font-size: 1.125rem;
     line-height: 1.6;
+  }
+
+  /* v1.2.23 · L3-04 (Gauntlet R1) · Amb l'arrel de 359 px o menys, el títol d'una targeta amb insígnia lateral (preu,
+     data o pròpia: UniversalCard hi posa sempre .has-aside) baixa a --sdp-text-h6, 20 px (modules.css, bloc R32.10,
+     perquè no es talle al costat del quadrat), i el subtítol del Mode Bancal també en fa 20: empataven. El subtítol i l'h2
+     del cos d'eixes targetes baixen a 1.1875rem (19 px): 20 > 19 > 18 px. A 360 px o més, i sense insígnia, res no canvia
+     (24 > 20 > 18 px). El :is() d'ací pesa (0,3,0), més que el de dalt (0,1,1). */
+  @container sdp-arrel (max-width: 359px) {
+    :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sp-card:not(.sp-card--action):not(.sdp-cataleg-workspace__rajola .sp-card) :is(.sp-card-body.has-aside .sp-card-subtitle, .sp-card-body.has-aside h2) {
+      font-size: 1.1875rem;
+    }
+  }
+
+  @supports not (container-type: inline-size) {
+    @media (max-width: 359px) {
+      :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) .sp-card:not(.sp-card--action):not(.sdp-cataleg-workspace__rajola .sp-card) :is(.sp-card-body.has-aside .sp-card-subtitle, .sp-card-body.has-aside h2) {
+        font-size: 1.1875rem;
+      }
+    }
   }
 
   :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(

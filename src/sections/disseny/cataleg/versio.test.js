@@ -18,7 +18,12 @@
    «Pla 261016 (Bloc…», i la guarda no els veia. Ara reconeix també «gauntlet
    aammdd» i «pla aammdd», sense distingir majúscules, amb el parèntesi
    opcional davant de la data i sense exigir el «_»: cobrix més, mai menys
-   («pla 261013_» continua casant). */
+   («pla 261013_» continua casant).
+   v1.2.23 · K5 (ordre del Mestre 261123) · Els comentaris de la v1.2.23 citen
+   la seua ordre com «(ordre del Mestre 261123)», i els d'abans com «(ordre del
+   Mestre, 260928)», sense «pla» ni «gauntlet» ni la data dd-mm-aaaa: la guarda
+   no els veia. Ara reconeix també «ordre del Mestre aammdd», amb la coma
+   opcional i sense distingir majúscules. Cobrix més, mai menys. */
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -54,13 +59,14 @@ const escapa = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const nomenat = (nom, text) => new RegExp(`(^|[^A-Za-z0-9_])${escapa(nom)}([^A-Za-z0-9_]|$)`).test(text);
 
 /** Les marques d'una ordre del dia `dia` ('AAAA-MM-DD'): «dd-mm-aaaa» i, sense
- *  distingir majúscules, «pla aammdd» o «gauntlet aammdd», amb el parèntesi opcional. */
+ *  distingir majúscules, «pla aammdd», «gauntlet aammdd» o «ordre del Mestre aammdd»
+ *  (amb la coma opcional), amb el parèntesi opcional. */
 function marquesDelDia(dia) {
   const [any, mes, diaDelMes] = dia.split('-');
   const aammdd = `${any.slice(2)}${mes}${diaDelMes}`;
   return [
     new RegExp(escapa(`${diaDelMes}-${mes}-${any}`)),
-    new RegExp(`(^|[^A-Za-z0-9_])(pla|gauntlet)\\s*\\(?${aammdd}`, 'i')
+    new RegExp(`(^|[^A-Za-z0-9_])(pla|gauntlet|ordre del mestre,?)\\s*\\(?${aammdd}`, 'i')
   ];
 }
 const citaElDia = (codi, dia) => marquesDelDia(dia).some((marca) => marca.test(codi));
@@ -90,6 +96,11 @@ describe('la versió arreplega el que s’ha tocat el seu dia', () => {
     ['Bloc 3.4 del Gauntlet (261016) · Cap editor', true],
     ['/* Pla 261016 (Bloc 3.1; ordre del Mestre)', true],
     ['GAUNTLET 261016', true],
+    /* v1.2.23 · K5 (ordre del Mestre 261123) · La forma de les ordres de la v1.2.23 i la d'abans, amb coma. */
+    ['v1.2.23 · K5 (ordre del Mestre 261016) ·', true],
+    ['T39 (ordre del Mestre, 261016) ·', true],
+    ['(ordre del Mestre 261015)', false],
+    ['desordre del Mestre 261016', false],
     ['Gauntlet 261015 (Bloc 1)', false],
     ['pla 261013_1405', false],
     ['la plantilla 261016', false],

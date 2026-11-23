@@ -71,16 +71,16 @@ function SeccioCanalsEmpaquetatsTaxonomia({ empaquetats }) {
   const pagina = PAGINA_BRAIN_TAXONOMIA;
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>{TITOL_CANALS_EMPAQUETATS_TAXONOMIA}</h2>
+      <h3 id={id}>{TITOL_CANALS_EMPAQUETATS_TAXONOMIA}</h3>
       <p>{ENTRADETA_EMPAQUETATS}</p>
       <nav
         className="sdp-card-grid sdp-consola__graella sdp-consola__graella--canals"
         onKeyDown={gestionaTeclaGraella}
         aria-label={idioma === 'ca' ? ETIQUETA_NAV_CANALS_EMPAQUETATS_TAXONOMIA : tca(idioma, 'canalsEmpaquetatsTaxonomia')}
       >
-        <TargetaEmpaquetats font={empaquetats} />
-        <TargetaConsola icona={Network} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead} a={pagina.ruta} creat={copyConsola().date} />
-        <TargetaBotiguesConsola />
+        <TargetaEmpaquetats font={empaquetats} headingLevel="h4" />
+        <TargetaConsola icona={Network} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead} a={pagina.ruta} creat={copyConsola().date} headingLevel="h4" />
+        <TargetaBotiguesConsola headingLevel="h4" />
       </nav>
     </section>
   );
@@ -303,7 +303,8 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
               problemes={problemesPagina(p.id, fonts)}
               creat={dataDelCopy()}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
-              etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)} />
+              etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)}
+              headingLevel="h4" />
           );
         })}
       </nav>
@@ -353,7 +354,7 @@ function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = fals
       <AvisInstantania consola={consola} mapa={mapa} govern={govern} locale={locale} />
       <AlertaVigilancia mapa={mapa.mapa} />
       <SeccioGovern govern={govern} ara={ara} ambImatges={ambImatges} />
-      <h2>{TITOL_SALA_MAQUINES}</h2>
+      <h3>{TITOL_SALA_MAQUINES}</h3>
       <ConsolaTauler consola={consola} mapa={mapa} cimRef={cimRef} ambImatges={ambImatges} alertaFora ara={ara} />
     </>
   );

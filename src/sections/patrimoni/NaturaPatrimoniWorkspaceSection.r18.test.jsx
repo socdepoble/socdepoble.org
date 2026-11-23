@@ -321,7 +321,7 @@ test('R21.7 · la prestatgeria multipoble mostra una targeta Pedra Seca per muni
     exemplars: [{ ...primer, nom: 'Carrasca Grossa' }]
   };
   const { container } = munta({ llibres: [...LLIBRES_ARBRES_MONUMENTALS, segon] });
-  expect(screen.getByRole('heading', { name: 'Catàlegs municipals disponibles', level: 2 })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Catàlegs municipals disponibles', level: 3 })).toBeTruthy();
   expect(container.querySelectorAll('.sdp-card-grid article.sp-card')).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Obri el catàleg: Benifallim' }));
   expect(await screen.findByRole('heading', { name: 'Portada de Benifallim', level: 1 })).toBeTruthy();

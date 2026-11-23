@@ -77,7 +77,7 @@ function obriElFull() {
       rightColumn={<div />}
     />
   );
-  const boto = within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Tu: ajustos' });
+  const boto = within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Ajustos del xat' });
   boto.focus();
   fireEvent.click(boto);
 }

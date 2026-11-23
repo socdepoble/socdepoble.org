@@ -209,7 +209,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     retiraDelMur = null, potRetirarDelMur = false, retiradaPendentDeNota = null,
     /* v1.2.20 · Gauntlet R1 (L2-01) · Un embolcall que escriu només en memòria (PublicacioEditable, la
        revisió d'una pàgina WP) ho declara: l'estat visible no hi pot anunciar cap desat. */
-    desatEnMemoria = false
+    desatEnMemoria = false,
+    edicioDirecta = false
   } = useNotes();
   // D-7 · Fora d'IdentitatProvider, la reserva anònima de només lectura (useIdentitatOReserva.js).
   const { actorId, actor, memberships } = useIdentitatOReserva();
@@ -844,7 +845,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
        de resultat de xarxa. */
     const bloqueig = bloqueigDeNota({
       foraster: senseSessio || esSandbox,
-      modeLocal: modeLocalNota,
+      modeLocal: modeLocalNota && !modeTraduccioNomesLocal,
       publicada: Boolean(notaEnEdicio?.isPublished),
       /* T71b · el mateix motiu que publishNote en mode compartir. */
       connexio: citaOrigen,
@@ -861,7 +862,8 @@ export default function NotesEditor({ activeNote, onToast = null }) {
         || llistaDePobles(llocPublicatConegut)[0]
         || pobleIdPublicat)
       : null;
-    const rutaPublicada = idPublicatNota ? getSectionItemPath(seccioNota, idPublicatNota) : null;
+    const rutaPublicada = notaEnEdicio?.deLaPublicacio?.ruta
+      || (idPublicatNota ? getSectionItemPath(seccioNota, idPublicatNota) : null);
     const visibilitat = {
       enLinia: true,
       /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
@@ -990,7 +992,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          (P4: es crea amb la primera tecla) s'obrin en edició, com una nota
          sense text: no hi ha res a llegir. La plantilla vella del cos
          (LLAVORS_NOTA) no compta com a text. */
-      obriEnRepos: Boolean(notaEnEdicio) && !esSandbox && !esPreparada && teContingut({
+      obriEnRepos: Boolean(notaEnEdicio) && !esSandbox && !esPreparada && !edicioDirecta && teContingut({
         title: notaEnEdicio.title, subtitle: notaEnEdicio.subtitle,
         lead: notaEnEdicio.lead, content: notaEnEdicio.content
       }, LLAVORS_NOTA),
@@ -1026,7 +1028,10 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       showDarkLogoUpload: true,
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028, decisió 8) · El cos d'una
          publicació: l'ordre «/» Imatge pregunta si es conserven la ubicació i la
-         data de la foto (DocumentEditor · fotosDePublicacio). El Perfil no. */
+         data de la foto (DocumentEditor · fotosDePublicacio).
+         v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El cos del Perfil també ho
+         pregunta (PerfilEditor: fotosDePublicacio i exifTriatEnPujar), amb el mateix
+         avís i l'interruptor «Amaga el lloc»; ja no és només de les Notes. */
       fotosDePublicacio: true,
       /* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H) · «🎴 Proposa Card» a la
          barra d'eines: el títol, el subtítol i l'entradilla des de les primeres
@@ -1155,7 +1160,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, desament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent, escriu, nomesLectura, tornDePublicacio, idiomaRevisor, dataMode, desatEnMemoria]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, desaCarpeta, desaValors, documents, CATEGORIES_BASE, ETIQUETES_BASE, estatDesament, desament, dataNomesAlDispositiu, publicacioAlDia, targetes, canalEmojis, asseguraNormes, memoriaOral, ambAmbit, fitxaDAmbit, obriClassificacio, documentDePrevisualitzacio, desaAmbit, errorsAmbit, peticioAmbit, peticioAmbitAtesa, scopeKey, ranuraRevisio, idPublicatNota, seccioNota, pobleIdPublicat, llocPublicatConegut, modeLocalNota, modeTraduccioNomesLocal, edicioDirecta, retirable, retiraDelMur, potRetirarDelMur, senseFilaDeNota, retiradaPendent, escriu, nomesLectura, tornDePublicacio, idiomaRevisor, dataMode, desatEnMemoria]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

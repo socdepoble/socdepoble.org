@@ -32,7 +32,10 @@ const rows124=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.ver
 const rows125=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261119143000')<=0);
 // v1.2.22 · el 126 de la v1.2.17 es fixa fins a 20261121090000; el complet real passa a 129 amb les tres R32.42.
 const rows126=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261121090000')<=0);
-const rows129=creaPlaMigracions().migrations;
+// v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · El 129 es fixa fins a 20261122160300 (amb els bytes nous de
+// 20261122160000 i 20261122160300); el complet real passa a 131 amb 20261122230000 (R32.44) i 20261123010000 (R32.46).
+const rows129=creaPlaMigracions().migrations.filter(row=>comparaVersions(row.version,'20261122160300')<=0);
+const rows131=creaPlaMigracions().migrations;
 // El 120 del kit R32.5 de Codex: els 119 d'R32.2 més 20261117140000, sense 20261117150000.
 const kitR325=rows121.filter(row=>row.version!=='20261117150000');
 const r32=new Set(['20261116170000','20261116170100','20261116170200']);
@@ -77,7 +80,21 @@ const PIN124='124:8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a9612
 const PIN125='125:f09f94686782ea28b4ae500ce21567994670f53d1b91782246a0b4d841e56dc7';
 const PIN126='126:595c69b52d28713884c9af3d802dc1f1a3a47853e2d8eb180e65f53b51be3e51';
 // v1.2.22 · 129 calculat des dels bytes reals del catàleg (el 126 de la v1.2.17 més les tres R32.42, NO aplicades).
-const PIN129='129:75dab97bc68995d76540d0cf705f8a8f7f7bd75841e6934a1c31f4e176fc065b';
+// v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · Recalculat: el 129 de la v1.2.22 (75dab97b) no el tenia cap base
+// i deixa de valer. El 131 és el complet real amb R32.44 i R32.46 (NO aplicades).
+// v1.2.23 · R2D-02 (Gauntlet R2) · 20261122160000 canvia de bytes (el nom públic de l'ajuntament sembrat) i el 129 es
+// recalcula; el 7e3d0a4b d'abans no el tenia cap base i deixa de valer.
+const PIN129='129:04b61ce71c4579476fa4f550c0d38b788f159fc05ae01eeae96c60cc312e246a';
+const PIN129_ABANS_GAUNTLET_R2='129:7e3d0a4bd86d34fd31b94942a6a06aee24fb70d7b40177b405098f0c594a1207';
+const PIN129_V1222='129:75dab97bc68995d76540d0cf705f8a8f7f7bd75841e6934a1c31f4e176fc065b';
+// v1.2.23 · L4-03, L6-01 i L6-02 (Gauntlet R1) · La 130 s'esmena en el lloc (cap base no l'havia aplicada): FK en cascada
+// de page_revisions, sostre d'octets i exportació. El 131 es recalcula des dels bytes nous i el d'abans (56779e00) deixa de valer.
+// v1.2.23 · R2F-01, R2D-03 i R2D-04 (Gauntlet R2) · La 130 torna a esmenar-se en el lloc (embolcall de l'exportació a
+// nivell superior, òrfenes de laboratori i sostre de 50 MiB només de revisions de publicacions) i, amb la 127 nova, el
+// 131 es recalcula; el 3a3fb97f del Gauntlet R1 deixa de valer.
+const PIN131='131:c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe';
+const PIN131_GAUNTLET_R1='131:3a3fb97f508ea4c8ed2cfac837d3eef202354260187886c39557b1f016c183ee';
+const PIN131_ABANS_GAUNTLET_R1='131:56779e0011dcd81eae82be9c19314f18b813c7a43c122e608bc5ae8c80c3c330';
 // Perfil 120 del kit R32.5 de Codex, calculat sobre la v1.2.5 (sense 20261117150000): no és canònic.
 const PIN_EXPERIMENTAL_120='120:3e45e1da922cb8a51c43ae23504b4e279eae11f0db7f1046b1f31156800edb85';
 // Perfil experimental del kit R32 de Codex, calculat amb la versió anterior de 20261116170000: no és canònic.
@@ -160,17 +177,37 @@ test('R32.25 adds only its disabled urgent and D24 migration, preserves exact125
 test('v1.2.22 · R32.42 adds only its institutional, two-decimal location and public Mur migrations, preserves exact126 and pins exact129',()=>{
  // Ordenades per versió: la prova no depén de l'ordre topològic d'ordre_desplegament.json.
  const added=rows129.filter(row=>!rows126.some(previous=>previous.version===row.version)).sort((a,b)=>comparaVersions(a.version,b.version));
+ // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · Les tres SHA de R32.42 amb els bytes de la v1.2.23.
  assert.deepEqual(added.map(({version,file,sha256})=>[version,file,sha256]),[
-  ['20261122160000','20261122160000_r3242_ajuntament_acreditacio_institucional.sql','b2d96bd25836c71864344b16608839e87e4005d4cd33b275ec8364dace390769'],
+  // v1.2.23 · R2D-02 (Gauntlet R2) · Els bytes nous de 20261122160000.
+  ['20261122160000','20261122160000_r3242_ajuntament_acreditacio_institucional.sql','1d7145966548be2986c653cf2f1ad2861a7c9cc23812a78c6b3050d741213dca'],
   ['20261122160200','20261122160200_r32_42_xat_ubicacio_dos_decimals.sql','ce45516f5607dc857e24d1e6bc7ae4d3d285484c0ac68f3032e84b3ec43785fe'],
-  ['20261122160300','20261122160300_r32_42_mur_visibilitat_publica.sql','9b8af76f107e06e0f2e67b138f0e97ec360e70689f2c2ea9064b7dfcf2d73d06']
+  ['20261122160300','20261122160300_r32_42_mur_visibilitat_publica.sql','dc507246891caeed9ad00b66a236f8771ee6443aef54d40b0b26d0567459cdee']
  ]);
  assert.equal(rows129.length,129);assert.equal(`129:${ledgerHash(rows129)}`,PIN129);
- assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126,PIN129]);
+ assert.equal(pins.includes(PIN129_V1222),false);
+ assert.equal(pins.includes(PIN129_ABANS_GAUNTLET_R2),false);
 });
 
-test('the real installer accepts 114,116,119,120,121,123,124,125,126,129 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
- for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+test('v1.2.23 · R32.44 i R32.46 afigen només les seues dues migracions, conserven el 129 exacte i fixen el complet exacte 131',()=>{
+ const added=rows131.filter(row=>!rows129.some(previous=>previous.version===row.version)).sort((a,b)=>comparaVersions(a.version,b.version));
+ assert.deepEqual(added.map(({version,file,sha256})=>[version,file,sha256]),[
+  // v1.2.23 · R2F-01, R2D-03 i R2D-04 (Gauntlet R2) · Els bytes nous de 20261122230000.
+  ['20261122230000','20261122230000_r3244_edicio_propia_i_page_revisions.sql','5b5631c3dcc79a25c600f430f36eab836aec9932bfd6966fe853b47ea439b788'],
+  ['20261123010000','20261123010000_r3246_quota_owner_id.sql','f704d3995c9f7173c849a8f01e74ebabbe4184d80dbebde9737857dbd5269bc4']
+ ]);
+ assert.equal(rows131.length,131);assert.equal(`131:${ledgerHash(rows131)}`,PIN131);
+ assert.deepEqual(pins,[...oldPins,PIN119,PIN120,PIN121,PIN123,PIN124,PIN125,PIN126,PIN129,PIN131]);
+ assert.equal(pins.includes(PIN131_ABANS_GAUNTLET_R1),false);
+ assert.equal(pins.includes(PIN131_GAUNTLET_R1),false);
+});
+
+test('the real installer accepts 114,116,119,120,121,123,124,125,126,129,131 and rejects exact-count drift, the R32.5 kit 120 and every 117 profile',async()=>{
+ for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129,rows131])assert.equal(await verificaEsquemaPosseNodeZero({db:{query:async()=>ready(entries)}}),true);
+ // v1.2.23 · el 131 exacte; un byte, un recompte o un 130 intermedi (només R32.44 o només R32.46) no s'accepten, ni el 129 de la v1.2.22.
+ const corrupt131=structuredClone(rows131);corrupt131.find(row=>row.version==='20261123010000').sha256='0'.repeat(64);
+ for(const state of[ready(corrupt131),{...ready(rows131),migrations:129},{...ready(rows129),migrations:131},{...ready(rows129),migrationLedgerSha256:PIN129_V1222.split(':')[1]},{...ready(rows131),migrationLedgerSha256:PIN131_ABANS_GAUNTLET_R1.split(':')[1]},{...ready(rows131),migrationLedgerSha256:PIN131_GAUNTLET_R1.split(':')[1]},{...ready(rows129),migrationLedgerSha256:PIN129_ABANS_GAUNTLET_R2.split(':')[1]}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
+ for(const omet of[['20261122230000'],['20261123010000']])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>ready(rows131.filter(row=>!omet.includes(row.version)))}}),/posse_schema_drift/);
  // v1.2.22 · el 129 exacte; un byte, un recompte o un 127/128 intermedi (només un dels dos lots R32.42) no s'accepten.
  const corrupt129=structuredClone(rows129);corrupt129.find(row=>row.version==='20261122160300').sha256='0'.repeat(64);
  for(const state of[ready(corrupt129),{...ready(rows129),migrations:126},{...ready(rows126),migrations:129}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
@@ -198,7 +235,7 @@ test('PostgreSQL evaluates the actual install guard for both preserved and full 
     await db.exec('truncate node0.schema_migrations');
     for(const {version,file,sha256} of entries)await db.query('insert into node0.schema_migrations values($1,$2,$3)',[version,file,sha256]);
   };
-  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129]){
+  for(const entries of[historical,base116,rows,rows120,rows121,rows123,rows124,rows125,rows126,rows129,rows131]){
     await carrega(entries);
     await db.exec(guard);
     assert.equal((await db.query('select count(*)::int n from node0.schema_migrations')).rows[0].n,entries.length);

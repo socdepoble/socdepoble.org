@@ -106,7 +106,16 @@ export const PRECOMMIT_INCLUDE = Object.freeze([
      /consola cap a un motor de traducció, pels dos transports del Traductor Sobirà. La ruta
      real, uns 2 s. La guarda estàtica (PAGINES_PRIVADES) i la fitxa de la Consola dins de la
      Wiki entren pel nom (*.seguretat.test.*). */
-  'src/sections/consola/ConsolaSection.traduccio.test.jsx'
+  'src/sections/consola/ConsolaSection.traduccio.test.jsx',
+  /* v1.2.23 · IDEA-331 i L2-01 (Gauntlet R2, R2F-04) · La frontera nova de la ubicació a la interfície: «Amaga el
+     lloc» al xat, al cos de les Notes i del Perfil i a la casella de l'enquadrament, i les imatges d'identitat de
+     «Multimèdia» sempre netes. La part de dades (xatMultimedia.geolocPerDefecte.idea331) ja entra per src/data/**.
+     Uns 5 s (90 casos). */
+  'src/sections/profile/fotoNetaDIdentitat.test.js',
+  'src/sections/profile/PerfilEditor.cosUbicacio.idea331.test.jsx',
+  'src/sections/xat/components/ControlsAdjunt.geolocPerDefecte.idea331.test.jsx',
+  'src/components/universal/DocumentEditor.ubicacioPerDefecte.idea331.test.jsx',
+  'src/components/universal/enquadrament/CasellaExif.ubicacioPerDefecte.idea331.test.jsx'
 ]);
 
 /* La suite principal en fa servir 2 (vite.config.js: no satura els imports del catàleg); esta, que

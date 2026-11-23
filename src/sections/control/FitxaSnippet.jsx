@@ -139,7 +139,7 @@ export function FitxaSnippet({ vistaRef }) {
     >
       <div ref={vistaRef} className="content-wrapper">
         <section>
-          <h2>{tx.queEsTitol}</h2>
+          <h3>{tx.queEsTitol}</h3>
           <p>
             {tx.queEsA}<strong>{tx.queEsFort1}</strong>{tx.queEsB}
             <strong>{tx.queEsFort2}</strong>{tx.queEsC}
@@ -152,14 +152,14 @@ export function FitxaSnippet({ vistaRef }) {
         </div>
 
         <section>
-          <h2>{tx.comFuncionaTitol}</h2>
+          <h3>{tx.comFuncionaTitol}</h3>
           <ol>
             {passos.map((pas) => <li key={pas}>{pas}</li>)}
           </ol>
         </section>
 
         <section>
-          <h2>{tx.queNecessitesTitol}</h2>
+          <h3>{tx.queNecessitesTitol}</h3>
           <ul>
             <li><strong>{tx.reqChromeFort}</strong>{tx.reqChromeResta}</li>
             <li>{tx.reqComptePre}<strong>{tx.reqCompteFort}</strong>{tx.reqComptePost}</li>
@@ -167,7 +167,7 @@ export function FitxaSnippet({ vistaRef }) {
         </section>
 
         <section>
-          <h2>{tx.privacitatTitol}</h2>
+          <h3>{tx.privacitatTitol}</h3>
           <p>
             {tx.priv1A}<strong>{tx.priv1Fort1}</strong>{tx.priv1B}<strong>{tx.priv1Fort2}</strong>{tx.priv1C}
           </p>

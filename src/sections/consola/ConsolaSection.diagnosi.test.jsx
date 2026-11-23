@@ -149,8 +149,8 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: el Diagnòstic 
   expect(despres(screen.getByRole('region', { name: TITOL_INDEX }), regio)).toBe(true);
   for (const t of document.querySelectorAll('article.sp-card')) expect(despres(t, regio)).toBe(true);
   expect(regio.querySelector('article, button, .sp-card, details, img')).toBeNull();
-  // Un sol H2, el títol; cap altra capçalera a dins.
-  expect([...regio.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => [h.tagName, h.textContent])).toEqual([['H2', TITOL_DIAGNOSI]]);
+  // Un sol H3, el títol; cap altra capçalera a dins.
+  expect([...regio.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => [h.tagName, h.textContent])).toEqual([['H3', TITOL_DIAGNOSI]]);
   // L'accés ràpid: les nou pàgines, en l'ordre del tauler, cada una amb el seu títol.
   const acces = screen.getByRole('navigation', { name: ETIQUETA_ACCES });
   expect(acces.className).toBe('sdp-consola__acces');

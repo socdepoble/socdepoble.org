@@ -192,6 +192,10 @@ export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
 
 export const appendSectionSubmissionNetworkOnly = asseguraMetode('appendSectionSubmissionNetworkOnly');
+export const desaPublicacioPropia = asseguraMetode('desaPublicacioPropia');
+export const llistaRevisionsPagina = asseguraMetode('llistaRevisionsPagina');
+export const desaRevisioPagina = asseguraMetode('desaRevisioPagina');
+export const restauraRevisioPagina = asseguraMetode('restauraRevisioPagina');
 export const updateNote = mutacioDeNota('updateNote', args => args[1]?.isPublished === false);
 export const revocaPublicacioMur = asseguraMetode('revocaPublicacioMur');
 export const drenaRevocacionsMur = asseguraMetode('drenaRevocacionsMur');

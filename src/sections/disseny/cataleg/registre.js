@@ -79,6 +79,7 @@ export const REGISTRE = [
   { nom: 'CommentIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
   { nom: 'ShareIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
   { nom: 'PinIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'EditIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
   // Estructura. La closca no és cap component: és el JSX d'App.jsx (barra
   // lateral, barra negra, main i navegació mòbil) i l'espècimen n'és l'anatomia.
   // El Divisor (àtom <hr>) i AppGridResizer (vora entre columnes) són dues peces:

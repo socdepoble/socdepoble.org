@@ -145,13 +145,16 @@ function bytesDeDataUrl(data) {
    que fa el transport; si en canvia, és un error de codificació ací, abans
    de cap xarxa. Uns bytes que el netejador no entén continuen com abans: el
    transport els veta amb el mateix codi. */
-function blobCanonic(data, tiff, { imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp }) {
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El punt fix és el del netejador que toca: imatgeAmbUbicacio quan
+   el contingut conserva el lloc (per defecte) i imatgeSenseUbicacio quan la persona l'amaga. El transport torna a
+   fer la mateixa comparació amb el mateix netejador (supabase/xatMultimedia.js). */
+function blobCanonic(data, tiff, { canonic, incrustaEnJpeg, incrustaEnWebp }) {
   const { mime, bytes } = bytesDeDataUrl(data);
-  const net = imatgeSenseUbicacio(bytes);
+  const net = canonic(bytes);
   if (!net) return new Blob([bytes], { type: mime });
   if (net.format !== mime) throw errorAdjuntXat('foto-codificacio');
   const amb = (tiff && (mime === 'image/jpeg' ? incrustaEnJpeg : incrustaEnWebp)(net.bytes, tiff)) || net.bytes;
-  const fix = imatgeSenseUbicacio(amb);
+  const fix = canonic(amb);
   if (fix?.format !== mime || fix.bytes.length !== amb.length || fix.bytes.some((b, i) => b !== amb[i])) throw errorAdjuntXat('foto-codificacio');
   return new Blob([amb], { type: mime });
 }
@@ -185,16 +188,39 @@ function ambMimeLocal(fitxer) {
   return mime && mime !== fitxer.type ? fitxer.slice(0, fitxer.size, mime) : fitxer;
 }
 
-/* El GPS només viatja al DTO consentit, mai dins del raster. La data i la
-   càmera es reconstruïxen amb llista blanca; l'opt-out lleva tot l'EXIF.
-   Sempre per davall del sostre client. Preservem els tres
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123, deroga el «GPS només al DTO» de R32.8) · Per defecte el raster
+   conserva l'EXIF blanc (orientació a 1, data i càmera) I el GPS de l'original (latitud, longitud i altitud), a més
+   del DTO consentit (2 decimals) que pinta el xip del mapa. Si el bloc de l'original no es pot conservar però la
+   inspecció prèvia n'ha rescatat el lloc (`coordenades`, llegides ABANS de comprimir), el GPS es fa de nou amb
+   eixes coordenades (tiffDeCoordenades): la compressió no el perd. Només l'opt-out («Amaga el lloc») lleva tot
+   l'EXIF. Sempre per davall del sostre client. Preservem els tres
    primers intents de captures; després abaixem qualitat i costat amb una
    cerca finita (màxim 15 recodificacions, inclòs el canvi WebP → JPEG).
-   Si no hi cap o no es pot codificar, no es retorna mai l'original. */
-async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio = true }) {
-  const { exifPublicable, preparaTiffSenseUbicacio, imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp } = await import('../../components/universal/enquadrament/exifIncrustat.js');
-  const exifCanonic = { imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp };
-  const tiff = conservaUbicacio !== false ? preparaTiffSenseUbicacio((await exifPublicable(fitxer))?.tiff) : null;
+   Si no hi cap o no es pot codificar, no es retorna mai l'original.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Gauntlet R1 del carril A (P1 i P2) · El fitxer només porta el GPS
+   que l'avís ensenya: el de `coordenades` (la inspecció prèvia). Un GPS IFD que l'inspector no llig (sense
+   referències N/S/E/W, en minúscula, segons = 60) no ix en silenci: sense coordenades el bloc és el de
+   preparaTiffSenseUbicacio (data i càmera, cap GPS), i un GPS que no coincidix amb les coordenades es fa de nou amb
+   elles. imatgeAmbLloc torna { imatge, lloc }: `lloc` és el punt { lat, lng } que el fitxer porta de veres (l'avís el
+   pinta sencer), o null; imatgeRecodificada, només la imatge. */
+const MARGE_LLOC = 1e-7;
+const mateixLloc = (a, b) => Boolean(a && b) && Math.abs(a.lat - b.lat) <= MARGE_LLOC && Math.abs(a.lng - b.lng) <= MARGE_LLOC;
+async function imatgeAmbLloc(fitxer, { signal, comprimeix, conservaUbicacio = true, coordenades = null }) {
+  const [{ analitzaTiff, exifPublicable, preparaTiffAmbUbicacio, preparaTiffSenseUbicacio, imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp },
+    { imatgeAmbUbicacio, tiffDeCoordenades }] = await Promise.all([import('../../components/universal/enquadrament/exifIncrustat.js'),
+    import('../../components/universal/enquadrament/exifAmbUbicacio.js')]);
+  const conserva = conservaUbicacio !== false;
+  const exifCanonic = { canonic: conserva ? imatgeAmbUbicacio : imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp };
+  let tiff = null;
+  let lloc = null;
+  if (conserva) {
+    const publicable = (await exifPublicable(fitxer))?.tiff;
+    tiff = coordenades ? preparaTiffAmbUbicacio(publicable) : preparaTiffSenseUbicacio(publicable);
+    if (coordenades && !mateixLloc(analitzaTiff(tiff)?.gps, coordenades)) tiff = tiffDeCoordenades(coordenades) ?? preparaTiffSenseUbicacio(publicable);
+    const gps = analitzaTiff(tiff)?.gps;
+    if (coordenades && mateixLloc(gps, coordenades)) lloc = { lat: gps.lat, lng: gps.lng };
+    else if (gps) throw errorAdjuntXat('foto-codificacio');
+  }
   if (signal?.aborted) throw abortat();
   const primers = esCapturaDePantalla(fitxer) ? COSTATS_CAPTURA : [COSTAT_FOTO];
   const intents = [
@@ -232,12 +258,17 @@ async function imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio
     }
     if (signal?.aborted) throw abortat();
     const imatge = blobCanonic(String(data), tiff, exifCanonic);
-    if (imatge.size < MAXIM_ADJUNT_XAT.imatge) return imatge;
+    if (imatge.size < MAXIM_ADJUNT_XAT.imatge) return { imatge, lloc };
   }
   throw errorAdjuntXat('foto-mida');
 }
+const imatgeRecodificada = async (fitxer, opcions) => (await imatgeAmbLloc(fitxer, opcions)).imatge;
 
-/** El lloc es rescata de l’original abans de tocar píxels o contenidors. */
+/** El lloc es rescata de l’original abans de tocar píxels o contenidors.
+ * v1.2.23 · IDEA-331 (ordre del Mestre 261123) · conservaUbicacio és true per defecte: la foto i el vídeo (també
+ * l'MP4/MOV d'iPhone amb so) conserven l'EXIF i el GPS. Queda derogat el bloqueig per defecte de L4-04: un vídeo que
+ * el navegador no pot netejar ix tal com és, i la interfície ho diu abans de publicar. Només amb
+ * conservaUbicacio: false es neteja, i si no es pot netejar no ix (l'avís de cada camí). */
 export async function preparaAdjunt(fitxer, {
   signal, conservaUbicacio = true, onProgresCompressio,
   comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo,
@@ -257,7 +288,10 @@ export async function preparaAdjunt(fitxer, {
     ? normalitzaUbicacioXat({ lat: inspeccio.coordenades.lat, lng: inspeccio.coordenades.lng }) : null;
   let resultat;
   if (imatge) {
-    resultat = { fitxer: await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: conserva }), tipus: 'imatge', duradaMs: null };
+    const { imatge: recodificada, lloc } = await imatgeAmbLloc(fitxer, { signal, comprimeix, conservaUbicacio: conserva,
+      coordenades: conserva ? inspeccio?.coordenades ?? null : null });
+    // v1.2.23 · IDEA-331 · Gauntlet R1 del carril A (P2) · El punt que el fitxer porta de veres, per a l'avís.
+    resultat = { fitxer: recodificada, tipus: 'imatge', duradaMs: null, ...(lloc ? { llocDelFitxer: lloc } : {}) };
   } else {
     const duradaMs = await lligDurada(fitxer, { signal });
     if (signal?.aborted) throw abortat();
@@ -267,9 +301,25 @@ export async function preparaAdjunt(fitxer, {
     if (!(reduit?.fitxer instanceof Blob) || !reduit.fitxer.size) throw errorAdjuntXat('video-compressio');
     let preparat = reduit.fitxer;
     let net = reduit.comprimit === true;
-    // MP4/MOV tenen un sanejador acreditable sense tocar mostres. WebM
-    // manté l'admissió de sempre; no se li atribuïx una neteja no observada.
-    if (!net && (!conserva || /^video\/(mp4|quicktime)$/.test(preparat.type))) {
+    let llocDelFitxer = null;
+    /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Gauntlet R1 del carril A (P2) · El vídeo que no s'ha
+       recomprimit és l'original i porta el seu lloc. El que el navegador ha recomprimit (MediaRecorder: Chrome,
+       Android) ix en un contenidor nou sense lloc: s'hi torna a escriure el rescatat abans de comprimir
+       (moov/udta/©xyz, ubicacioMp4.js, un tros diferit). Si el contenidor no ho admet (WebM, o un MP4 que no
+       s'entén), el vídeo continua sense el lloc dins i només el DTO el situa al mapa: l'avís ho diu. */
+    if (conserva && inspeccio?.coordenades) {
+      if (!net) llocDelFitxer = { lat: inspeccio.coordenades.lat, lng: inspeccio.coordenades.lng };
+      else {
+        const { ambUbicacioMp4 } = await import('../../utils/ubicacioMp4.js');
+        const amb = await ambUbicacioMp4(preparat, inspeccio.coordenades, { signal, maximBytes: MAXIM_ADJUNT_XAT.video });
+        if (signal?.aborted) throw abortat();
+        if (amb) { preparat = amb.fitxer; net = false; llocDelFitxer = amb.lloc; }
+      }
+    }
+    /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el vídeo no es neteja: el que no s'ha recomprimit
+       (el fallback de WebKit a l'iPhone, sense captureStream) ix amb el seu GPS i la interfície ho diu. Només
+       l'opt-out passa pel sanejador; MP4/MOV en tenen un d'acreditable sense tocar mostres, WebM no. */
+    if (!net && !conserva) {
       const netejat = await netejaVideo(preparat, { signal });
       // v1.2.22 · Gauntlet R1 (L4-04) · Un MP4/MOV que no es pot acreditar té el seu avís (video-no-acreditable).
       // Gauntlet R2 (M2-02) · Si el navegador no l'ha pogut comprimir (motiuFallback), la causa és el camí, no el
@@ -278,9 +328,10 @@ export async function preparaAdjunt(fitxer, {
         throw errorAdjuntXat('video-no-acreditable-navegador', { motiuFallback: reduit.motiuFallback });
       }
       if (!netejat.net) throw errorAdjuntXat(/^video\/(mp4|quicktime)$/.test(preparat.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');
-      if (netejat.net) { preparat = netejat.fitxer; net = true; }
+      preparat = netejat.fitxer; net = true;
     }
-    resultat = { fitxer: preparat, tipus: 'video', duradaMs, senseUbicacio: net, videoComprimit: reduit.comprimit === true };
+    resultat = { fitxer: preparat, tipus: 'video', duradaMs, senseUbicacio: net, videoComprimit: reduit.comprimit === true,
+      ...(reduit.motiuFallback ? { motiuFallback: reduit.motiuFallback } : {}), ...(llocDelFitxer ? { llocDelFitxer } : {}) };
   }
   if (signal?.aborted) throw abortat();
   comprovaMida(resultat.fitxer);
@@ -288,19 +339,27 @@ export async function preparaAdjunt(fitxer, {
     ubicacioVerificada: Boolean(inspeccio?.completa), ...(ubicacio ? { ubicacio } : {}) };
 }
 
-/** Només abans del primer intent d’enviament; una altra càrrega rep un ID nou. */
+/** Només abans del primer intent d’enviament; una altra càrrega rep un ID nou.
+ * v1.2.23 · IDEA-331 · És l'interruptor «Amaga el lloc» / «Publicar sense geolocalització»: lleva tot l'EXIF i el GPS.
+ * Un vídeo que el navegador no pot netejar no es torna brut: rebutja amb l'avís del seu camí i la interfície no
+ * l'envia mentre la persona no tria conservar el lloc o cancel·lar. */
 export async function amagaUbicacioAdjunt(adjunt, { signal, comprimeix = compressImage, netejaVideo = senseUbicacioVideo } = {}) {
   if (signal?.aborted) throw abortat();
   let fitxer = adjunt.fitxer;
   if (adjunt.tipus === 'imatge') fitxer = await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: false });
   else if (adjunt.tipus === 'video' && !adjunt.senseUbicacio) {
     const netejat = await netejaVideo(fitxer, { signal });
-    if (!netejat.net) throw errorAdjuntXat(/^video\/(mp4|quicktime)$/.test(fitxer.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');
+    if (!netejat.net) {
+      const mp4 = /^video\/(mp4|quicktime)$/.test(fitxer.type);
+      throw errorAdjuntXat(mp4 && adjunt.motiuFallback ? 'video-no-acreditable-navegador' : mp4 ? 'video-no-acreditable' : 'ubicacio-no-eliminable',
+        mp4 && adjunt.motiuFallback ? { motiuFallback: adjunt.motiuFallback } : {});
+    }
     fitxer = netejat.fitxer;
   }
   if (signal?.aborted) throw abortat();
   const resultat = { ...adjunt, fitxer, id: crypto.randomUUID(), conservaUbicacio: false, senseUbicacio: true };
   delete resultat.ubicacio;
+  delete resultat.llocDelFitxer;
   return resultat;
 }
 
@@ -322,9 +381,16 @@ const MARGE_VEU_BYTES = 100_000;
 /* XAT-07 · El sostre de temps d'una nota de veu: la interfície en compta el
    que queda i avisa abans d'arribar-hi. */
 export const MAX_VEU_MS = 300_000;
+const ESPERA_STOP_VEU_MS = 1_500;
 
 /** Una gravació, un resultat; tots els tracks s'aturen en cancel·lar o acabar.
- *  Si s'atura sola, el resultat ho diu: `aturada` 'temps' (MAX_VEU_MS) o 'mida' (prop dels 3 MB). */
+ *  Si s'atura sola, el resultat ho diu: `aturada` 'temps' (MAX_VEU_MS) o 'mida' (prop dels 3 MB).
+ *  Un error del còdec o l'absència d'onstop rebutja amb `recuperacio.fitxer` si hi ha bytes:
+ *  són incomplets, amb `duradaMs: null`; `duradaCapturaMs` només és el temps de captura.
+ *  v1.2.23 · X2 (Gauntlet R1) · Ací no és cap nota: la interfície (veuRecuperada de ControlsAdjunt.jsx) pot promoure
+ *  eixe prefix a nota preparada amb `duradaMs = max(1, round(duradaCapturaMs))`, i el port en torna a validar el
+ *  contenidor abans de pujar-lo (validaFitxerMedia, o validaContenidorMedia en xifrat): uns bytes tallats a mig tros
+ *  (una caixa o un element incomplet) no ixen. */
 export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, Recorder = globalThis.MediaRecorder } = {}) {
   const mimeType = mimeDeGravacio(Recorder);
   if (!mimeType || !mediaDevices?.getUserMedia) throw errorAdjuntXat('sense-gravacio');
@@ -332,7 +398,10 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   let stream;
   try { stream = await mediaDevices.getUserMedia({ audio: true }); }
   catch (error) { throw errorDelMicro(error, { delSistema: true }); }
+  const tracksTancats = new Set();
   const tancaTracks = () => stream.getTracks().forEach((track) => {
+    if (tracksTancats.has(track)) return;
+    tracksTancats.add(track);
     try { track.stop(); } catch { /* WebView/SO ja havia tancat el track */ }
   });
   if (signal?.aborted) { tancaTracks(); throw abortat(); }
@@ -340,11 +409,13 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   try { recorder = new Recorder(stream, { mimeType, audioBitsPerSecond: 64_000 }); }
   catch (error) { tancaTracks(); throw errorDelMicro(error); }
   let resolve, reject, acabat = false, bytes = 0, aturada = null;
+  let esperaStop = null, stopDemanat = false, fi = null, errorGravacio = null, motiuError = null;
   const chunks = [];
   let inici = Date.now();
   const resultat = new Promise((resol, rebutja) => { resolve = resol; reject = rebutja; });
   const aturaRecorderSegur = () => {
-    if (recorder.state === 'inactive') return { aturat: false, error: null };
+    if (recorder.state === 'inactive' || stopDemanat) return { aturat: false, error: null };
+    stopDemanat = true;
     try {
       recorder.stop();
       return { aturat: true, error: null };
@@ -354,33 +425,48 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
   };
   const neteja = () => {
     clearTimeout(timer);
+    clearTimeout(esperaStop);
     signal?.removeEventListener('abort', cancella);
     recorder.onstart = recorder.ondataavailable = recorder.onstop = recorder.onerror = null;
     aturaRecorderSegur();
     tancaTracks();
   };
   const falla = (error) => { if (acabat) return; acabat = true; neteja(); reject(error); };
-  const resolAmbChunksAcumulatsOError = (errorFallback) => {
+  const acaba = (motiu = null) => {
     if (acabat) return;
     const fitxer = new Blob(chunks, { type: mimeType.split(';')[0] });
-    if (!fitxer.size) { falla(errorFallback); return; }
+    const duradaCapturaMs = Math.max(1, (fi ?? Date.now()) - inici);
+    if (motiu || errorGravacio) {
+      falla(errorAdjuntXat('gravacio', { cause: errorGravacio, motiu: motiuError || motiu, recuperable: Boolean(fitxer.size),
+        ...(fitxer.size ? { recuperacio: Object.freeze({ id: crypto.randomUUID(), fitxer, tipus: 'veu',
+          duradaMs: null, duradaCapturaMs, incompleta: true, ...(aturada ? { aturada } : {}) }) } : {}) }));
+      return;
+    }
+    if (!fitxer.size) { falla(errorAdjuntXat('gravacio-buida')); return; }
     acabat = true;
     neteja();
-    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: Math.max(1, Date.now() - inici), ...(aturada ? { aturada } : {}) });
+    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: duradaCapturaMs, ...(aturada ? { aturada } : {}) });
   };
   const cancella = () => falla(abortat());
   const atura = () => {
-    if (acabat || recorder.state === 'inactive') return;
+    if (acabat || esperaStop !== null) return;
+    fi = Date.now();
+    // Alguns WebViews no emeten onstop: l'espera no pot deixar el micro obert.
+    esperaStop = setTimeout(() => acaba('onstop-absent'), ESPERA_STOP_VEU_MS);
     const { error } = aturaRecorderSegur();
-    if (error && !acabat) resolAmbChunksAcumulatsOError(errorDelMicro(error));
+    if (error && !acabat) {
+      errorGravacio ??= error;
+      motiuError ??= 'stop';
+      // El state pot anar endarrerit: apaguem el micro i encara rebem el final.
+      tancaTracks();
+    }
   };
   /* XAT-07 · Abans s'aturava sense dir res: ara el resultat porta el motiu i
      la interfície ho avisa. */
   const aturaSola = (motiu) => {
-    if (acabat || recorder.state === 'inactive') return;
+    if (acabat || esperaStop !== null) return;
     aturada = motiu;
-    const { error } = aturaRecorderSegur();
-    if (error && !acabat) resolAmbChunksAcumulatsOError(errorDelMicro(error));
+    atura();
   };
   // Cinc minuts eviten mantindre el micròfon o la memòria indefinidament.
   const timer = setTimeout(() => aturaSola('temps'), MAX_VEU_MS);
@@ -396,15 +482,13 @@ export async function gravaVeu({ signal, mediaDevices = navigator.mediaDevices, 
     // Prop del sostre de la veu (3 MB), la gravació s'atura sola i la nota es conserva.
     if (bytes > MAXIM_ADJUNT_XAT.veu - MARGE_VEU_BYTES) aturaSola('mida');
   };
-  recorder.onerror = () => falla(errorAdjuntXat('gravacio'));
-  recorder.onstop = () => {
-    if (acabat) return;
-    const fitxer = new Blob(chunks, { type: mimeType.split(';')[0] });
-    if (!fitxer.size) { falla(errorAdjuntXat('gravacio-buida')); return; }
-    acabat = true;
-    neteja();
-    resolve({ id: crypto.randomUUID(), fitxer, tipus: 'veu', duradaMs: Math.max(1, Date.now() - inici), ...(aturada ? { aturada } : {}) });
+  recorder.onerror = (event) => {
+    errorGravacio ??= errorAdjuntXat('gravacio', { cause: event?.error });
+    motiuError = 'onerror';
+    // Després d'error encara poden arribar les últimes dades i onstop (W3C).
+    atura();
   };
+  recorder.onstop = () => acaba();
   signal?.addEventListener('abort', cancella, { once: true });
   try { recorder.start(1000); } catch (error) { falla(errorDelMicro(error)); }
   return { atura, cancella, resultat };

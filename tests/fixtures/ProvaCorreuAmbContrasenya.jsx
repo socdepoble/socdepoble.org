@@ -1,13 +1,14 @@
-/** Review-only email proof form. Token is an explicit in-memory prop supplied
- * by the route; this component never reads a URL, cookie, storage or clipboard.
+/** Node0 test fixture; no production route imports this prototype.
+ * Token is an explicit in-memory prop supplied by the test harness;
+ * this component never reads a URL, cookie, storage or clipboard.
  * onConfirma(token,password,metadata,{signal}) is wired to the neutral optional
  * email-proof capability. No effect submits a request and success never logs in.
  */
 import { useEffect, useRef, useState } from 'react';
-import { useUIStateOpcional } from '../../app/contexts/UIContext';
-import { VERSIO_POLITICA_PRIVACITAT as VERSION, RUTA_POLITICA_PRIVACITAT } from '../../config/politicaPrivacitat.js';
-import { normalitzaNfcSeguraUi } from '../../utils/normalitzaEntradaUi.js';
-import { textosOnboardingExtra } from './i18nOnboardingExtra.js';
+import { useUIStateOpcional } from '../../src/app/contexts/UIContext';
+import { VERSIO_POLITICA_PRIVACITAT as VERSION, RUTA_POLITICA_PRIVACITAT } from '../../src/config/politicaPrivacitat.js';
+import { normalitzaNfcSeguraUi } from '../../src/utils/normalitzaEntradaUi.js';
+import { textosOnboardingExtra } from '../../src/sections/onboarding/i18nOnboardingExtra.js';
 
 function useIdiomaProvaCorreu() {
   try {

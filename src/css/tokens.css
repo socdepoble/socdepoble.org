@@ -785,10 +785,10 @@
   --sdp-xat-autor-6: #ffd6c2;
 }
 
-/* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · ≥ 10:1 AAA) ═════════
+/* ═══ MODE SÈNIOR · LECTURA GRAN (P1-80 / IDEA-252 · AAA ≥ 7:1) ═════════
    Preferència persistent d'1 sol toc (data-sdp-senior="true") per a gent gran
    i baixa visió. Eleva tots els parells de text i controls d'acció primària a
-   un contrast mínim >= 10:1 tant en clar com en fosc sobre targeta, app i fons
+   un contrast mínim AAA >= 7:1 tant en clar com en fosc (>= 10:1 fins a IDEA-328 v2) sobre targeta, app i fons
    subtil, conserva les ombres canòniques i desactiva l'escala de premut.
    v1.2.22 · IDEA-323.4 · DOL-31 (Gauntlet R1, L2-03) · El Mode Bancal encén alhora este atribut i data-contrast="bancal".
    Per això els dos blocs Sènior van ARA davant dels del Bancal: amb la mateixa especificitat, en l'estat combinat guanya

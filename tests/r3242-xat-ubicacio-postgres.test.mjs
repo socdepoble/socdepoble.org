@@ -73,7 +73,13 @@ test('R32.42 DOL-55: migració repetida, passat i RPC de client antic arrodonits
     await t.test('RPC pública opt-in transporta el flag sense retirar fitxes ni ampliar dades privades', async () => {
       const murSql=fs.readFileSync(new URL('../supabase/migrations/20261122160300_r32_42_mur_visibilitat_publica.sql',import.meta.url),'utf8');
       const old=(await db.query("select oid,pronargdefaults from pg_proc where oid='public.llig_mur_public(uuid,text,integer,timestamptz,uuid,boolean)'::regprocedure")).rows[0];
+      // v1.2.23 · L4-10 (ordre del Mestre 261123) · Una base amb la sobrecàrrega de la v1.2.22 (mateix nom, boolean
+      // primer) la perd en aplicar la migració; la RPC6 conserva OID i defaults.
+      await db.query(`create function public.llig_mur_public(p_inclou_visibilitat boolean,p_tenant_id uuid default null,p_section_id text default null,
+        p_limit integer default 200,p_before_created_at timestamptz default null,p_before_id uuid default null,p_nomes_projeccions boolean default false)
+        returns setof jsonb language sql stable as $$ select '{}'::jsonb where false $$`);
       await db.query(murSql);await db.query(murSql);
+      assert.equal((await db.query("select to_regprocedure('public.llig_mur_public(boolean,uuid,text,integer,timestamptz,uuid,boolean)') is null as absent")).rows[0].absent,true);
       assert.deepEqual((await db.query("select oid,pronargdefaults from pg_proc where oid='public.llig_mur_public(uuid,text,integer,timestamptz,uuid,boolean)'::regprocedure")).rows[0],old);
       for(const [index,section,flags] of [[0,'mercat',{mostrarAlMur:false}],[1,'mercat',{mostrarAlMur:true}],[2,'events',{ocultarDelMur:true}],[3,'events',{ocultarDelMur:false}],[4,'mur',{}]]) {
         await actor(db,"insert into public.section_submissions(id,tenant_id,section_id,title,description,payload,visibility,moderation_state,owner_user_id) values($1,$2,$3,'Pública','Cos públic',$4::jsonb,'public','visible',$5)",
@@ -83,7 +89,7 @@ test('R32.42 DOL-55: migració repetida, passat i RPC de client antic arrodonits
       try {
         for(const section of ['mercat','events']) {
           const legacy=(await db.query('select * from public.llig_mur_public(p_tenant_id=>$1,p_section_id=>$2)',[TOWN,section])).rows;
-          const rows=(await db.query('select public.llig_mur_public(p_inclou_visibilitat=>true,p_tenant_id=>$1,p_section_id=>$2) as item',[TOWN,section])).rows.map(r=>r.item);
+          const rows=(await db.query('select public.llig_mur_public_v7(p_inclou_visibilitat=>true,p_tenant_id=>$1,p_section_id=>$2) as item',[TOWN,section])).rows.map(r=>r.item);
           assert.equal(legacy.length,2);assert.equal(rows.length,2);
           assert.deepEqual(rows.map(r=>r.id),legacy.map(r=>r.id));
           assert.deepEqual(rows.map(r=>r.mostrar_al_mur).sort(),[false,true]);
@@ -91,15 +97,31 @@ test('R32.42 DOL-55: migració repetida, passat i RPC de client antic arrodonits
           // La fitxa de cada secció continua accessible; el client sols filtra la projecció del Mur.
         }
       } finally { await db.query('reset role'); }
-      const overload=(await db.query("select pronargdefaults,proargnames[1] as discriminador,has_function_privilege('anon',oid,'execute') as acces from pg_proc where oid='public.llig_mur_public(boolean,uuid,text,integer,timestamptz,uuid,boolean)'::regprocedure")).rows[0];
-      assert.equal(overload.pronargdefaults,6);assert.equal(overload.discriminador,'p_inclou_visibilitat');assert.equal(overload.acces,true);
+      const rpc7=(await db.query(`select pronargdefaults,proargnames[1] as discriminador,prosecdef,proconfig,
+        has_function_privilege('anon',oid,'execute') as anon,has_function_privilege('authenticated',oid,'execute') as authenticated,
+        has_function_privilege('service_role',oid,'execute') as service_role,
+        exists(select 1 from aclexplode(proacl) a where a.grantee=0) as public_execute
+        from pg_proc where oid='public.llig_mur_public_v7(boolean,uuid,text,integer,timestamptz,uuid,boolean)'::regprocedure`)).rows[0];
+      assert.deepEqual(rpc7,{pronargdefaults:6,discriminador:'p_inclou_visibilitat',prosecdef:true,proconfig:['search_path=""'],
+        anon:true,authenticated:true,service_role:false,public_execute:false});
+      // v1.2.23 · L4-10 · Cap sobrecàrrega: un sol llig_mur_public (la RPC6) i un sol llig_mur_public_v7; la crida
+      // posicional amb el primer paràmetre sense tipus ja no és ambigua (42725).
+      assert.deepEqual((await db.query(`select p.proname,count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public' and p.proname in ('llig_mur_public','llig_mur_public_v7') group by p.proname order by p.proname`)).rows,
+        [{proname:'llig_mur_public',n:1},{proname:'llig_mur_public_v7',n:1}]);
+      await db.query('set role anon');
+      try {
+        const rpc6Posicional=(await db.query('select count(*)::int n from public.llig_mur_public($1)',[TOWN])).rows[0].n;
+        assert.ok(rpc6Posicional>=4,String(rpc6Posicional));
+        assert.equal((await db.query('select count(*)::int n from public.llig_mur_public_v7(true,$1)',[TOWN])).rows[0].n,rpc6Posicional);
+      } finally { await db.query('reset role'); }
     });
     await t.test('foraster autenticat renegocia públic amb JWT i conserva bloquejos', async () => {
       const town2=id(2), foraster=id(99);
       await db.query("insert into public.towns(id,slug,name) values($1,'r3242-other','Altre poble sintètic')",[town2]);
       await db.query('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)',
         [foraster,`${foraster}@example.invalid`,{full_name:'Foraster sintètic',tenant_id:town2,accepta_rgpd:true,rgpd:true}]);
-      const llig = async () => (await actor(db,'select public.llig_mur_public(p_inclou_visibilitat=>true,p_tenant_id=>$1,p_section_id=>\'mercat\') as item',[TOWN],'authenticated',foraster)).rows.map(r=>r.item);
+      const llig = async () => (await actor(db,'select public.llig_mur_public_v7(p_inclou_visibilitat=>true,p_tenant_id=>$1,p_section_id=>\'mercat\') as item',[TOWN],'authenticated',foraster)).rows.map(r=>r.item);
       const envelope=(await actor(db,'select public.llig_mur_membres(p_tenant_id=>$1,p_section_id=>\'mercat\') as dto',[TOWN],'authenticated',foraster)).rows[0].dto;
       assert.equal(envelope.lectura,'public');assert.ok(envelope.files.every(r=>!Object.hasOwn(r,'mostrar_al_mur')));
       assert.deepEqual((await llig()).map(r=>r.mostrar_al_mur).sort(),[false,true]);

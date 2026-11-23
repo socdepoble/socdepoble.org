@@ -50,11 +50,11 @@ const FI = FI_MARCA >= 0 ? FI_MARCA : CSS_CONNECTAR.length;
 const BLOC = CSS_CONNECTAR.slice(INICI, FI);
 const NOVES = regles(BLOC);
 
-describe('Llei del Píxel · les regles de sempre no canvien', () => {
-  test('la base .sdp-connectar continua estreta i centrada, amb el mateix ritme', () => {
+describe('Llei del Píxel · les regles de sempre i l’amplada 100 % canònica IDEA-319', () => {
+  test('la base .sdp-connectar ocupa el 100 % sense --sdp-measure i manté el mateix ritme', () => {
     expect(declaracions(una('.sdp-connectar').cos)).toEqual({
-      display: 'flex', 'flex-direction': 'column', gap: 'var(--sdp-space-8)', 'max-width': 'var(--sdp-measure)',
-      'margin-inline': 'auto', 'padding-bottom': 'var(--sdp-space-16)'
+      display: 'flex', 'flex-direction': 'column', gap: 'var(--sdp-space-8)', width: '100%',
+      'padding-bottom': 'var(--sdp-space-16)'
     });
   });
 
@@ -100,10 +100,10 @@ describe('les regles noves', () => {
     expect(una('.page-title-logo').cos).toBe('width: min(100%, 600px); min-width: min(100%, 260px);');
   });
 
-  test('C8 · la llegenda i les píndoles del selector, centrades a les targetes; cap línia centrada més llarga que la mesura', () => {
+  test('C8 · la llegenda i les píndoles del selector, centrades a les targetes; els paràgrafs ocupen el 100 % (IDEA-319)', () => {
     expect(una('.sdp-connectar__targeta .sdp-variants__llegenda').cos).toBe('margin-inline: auto;');
     expect(una('.sdp-connectar__targeta .sdp-variants__pindoles').cos).toBe('justify-content: center;');
-    expect(una('.sdp-connectar__targeta--directa p').cos).toBe('max-inline-size: var(--sdp-measure);');
+    expect(una('.sdp-connectar__targeta--directa p').cos).toBe('max-inline-size: 100%;');
   });
 
   test('C7 · la fitxa compacta és flex i fa salt de línia', () => {

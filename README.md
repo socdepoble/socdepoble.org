@@ -37,7 +37,7 @@ Cada carpeta de `src/` té una responsabilitat i les portes en vigilen les front
 
 ### Port neutral de backend
 
-`src/data/backendPort.js` accepta **qualsevol adaptador que complisca el contracte** de `src/data/contracte.js` i el segella en arrencar (`freezeImplementation`). El contracte té **32 operacions de nucli** (`CONTRACTE_NUCLI`) i **57 capacitats opcionals** (`CAPACITATS`), 165 mètodes en total.
+`src/data/backendPort.js` accepta **qualsevol adaptador que complisca el contracte** de `src/data/contracte.js` i el segella en arrencar (`freezeImplementation`). El contracte té **32 operacions de nucli** (`CONTRACTE_NUCLI`) i **64 capacitats opcionals** (`CAPACITATS`) amb 152 mètodes, 184 mètodes en total (`CONTRACTE_BACKEND`).
 
 - **Validació:** una capacitat s'oferix sencera o no s'oferix; un nucli incomplet o una capacitat parcial rebutgen l'adaptador.
 - **Lectures principals:** les de contingut, Mur, Multimèdia i Notes porten un temps màxim de 15 s, es poden cancel·lar i es validen per forma abans d'arribar a la interfície.
@@ -147,7 +147,7 @@ Una **porta** és un programa que s'executa sol i bloqueja un commit o una integ
 1. `tooling/gates/frontissa-contingut.mjs`, `porta-taxonomia.mjs --staged` i `porta-plantilla-viva.mjs --staged`.
 2. `tooling/gates/git-staged.mjs`, que materialitza **l'arbre preparat** en un directori temporal i hi executa els passos següents.
 3. `porta-documents.mjs --staged` i `tancament.mjs --check`.
-4. `run-portes.mjs --nomes-portes`: 61 portes, ESLint inclòs (`npm run lint`, amb `--max-warnings=0`).
+4. `run-portes.mjs --nomes-portes`: 68 portes, ESLint inclòs (`npm run lint`, amb `--max-warnings=0`).
 5. `teclat-superficies.mjs`, proves de teclat sobre components reals.
 6. `npm run test:precommit`: escaneig de secrets literals, una selecció de Vitest i les proves Node de seguretat, migracions i documental.
 
@@ -155,11 +155,11 @@ Els límits de temps per pas són de 120 s, 600 s per a les portes i 300 s per a
 
 ### Cadena completa i integració contínua
 
-`tooling/gates/run-portes.mjs` (`npm run porta`) declara **65 passos**: 61 portes i 4 bateries de proves.
+`tooling/gates/run-portes.mjs` (`npm run porta`) declara **72 passos**: 68 portes i 4 bateries de proves.
 
-- **`--nomes-portes`:** les 61 portes, sense bateries.
-- **`--cens`:** 60 portes sense parar a la primera roja; omet la Porta Build perquè pot escriure l'arbre.
-- **`--diagnostic`:** 10 portes de només lectura; no autoritza cap commit ni desplegament.
+- **`--nomes-portes`:** les 68 portes, sense bateries.
+- **`--cens`:** 67 portes sense parar a la primera roja; omet la Porta Build perquè pot escriure l'arbre.
+- **`--diagnostic`:** 17 portes de només lectura; no autoritza cap commit ni desplegament.
 - **`.github/workflows/wiki-integrity.yml`:** en cada push a `main` o `master` i en cada PR, executa `npm run test:ci`, `porta-documents.mjs`, `npm run porta -- --nomes-portes` i `npm run lint`.
 - **`.github/workflows/sdp_lock_ci.yml`:** executa `npm run gate`, la cadena completa, en push i PR a `main`.
 
@@ -203,7 +203,7 @@ Un sol codi font genera quatre artefactes. Les ordres de build són a `package.j
 
 ### Connector WordPress i el seu sostre d'arrencada
 
-El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.30 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
+El connector (`wordpress-plugin/socdepoble-enxufe.php`, versió 1.1.31 en este arbre, AGPL-3.0-or-later) **no porta lògica de l'app**: traduïx els ajustos de WordPress al marcatge universal `<soc-de-poble>` i carrega `dist/soc-de-poble.standalone.js`.
 
 - **Aïllament:** l'element munta l'app dins d'un Shadow DOM tancat (`attachShadow({ mode: 'closed' })` a `src/PedraSecaEmbed.jsx`).
 - **Federació:** instal·lar el connector no convertix el WordPress en un node del Fedivers (`wordpress-plugin/readme.txt`).

@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.22",
+  "version": "1.2.23",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -138,6 +138,7 @@
     "porta:conformitat-federacio": "node tooling/gates/conformitat-federacio.mjs --json",
     "porta:economia-arrencada": "node tooling/gates/tractor-economia-arrencada.mjs --json",
     "porta:imatges-enquadrament": "node tooling/gates/tractor-imatges-enquadrament.mjs --json",
+    "porta:duplicats": "node tooling/gates/tractor-duplicats-public.mjs",
     "porta:egress": "node tooling/gates/tractor-anti-factura-egress.mjs",
     "seo:compila-mapa-301": "node tooling/seo/mapa-redireccions-301.mjs",
     "dades:calcula": "node tooling/domain/calcula-dades.mjs",

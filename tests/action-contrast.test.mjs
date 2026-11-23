@@ -25,7 +25,7 @@ const rule=selector=>{
 for(const mode of ['light','dark']){
   const map=mode==='light'?base:{...base,...declarations(tokens.slice(dark))};
   for(const [selector,hover] of [
-    ['.sdp-boto--primari',':hover:not(:disabled)'],['.btn-secondary',':hover:not(:disabled)'],
+    ['.sdp-boto--primari',':hover:not(:disabled)'],
     ['.pill--primary',':hover'],['.sdp-paginacio__num[aria-current="page"]',null],['.btn-connectar',':hover:not(:disabled)']
   ]){
     for(const state of hover?['normal','hover']:['normal'])test(`${mode} ${selector} ${state}: text d’acció supera AA`,()=>{

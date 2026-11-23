@@ -32,11 +32,7 @@
     "coneguts": []
   },
   "LLEI_08_SUBARBRE_ORFE": {
-    "max": 3,
-    "coneguts": [
-      "src/components/PedraSeca/hooks/useTraduccioTargeta.js",
-      "src/sections/onboarding/ProvaCorreuAmbContrasenya.jsx",
-      "src/sections/onboarding/correuBenvinguda.js"
-    ]
+    "max": 0,
+    "coneguts": []
   }
 }

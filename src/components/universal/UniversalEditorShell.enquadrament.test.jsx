@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { ETIQUETA_CONSERVA_EXIF } from './enquadrament/exifIncrustat.js';
+import { ETIQUETA_AMAGA_LLOC } from './enquadrament/DialegEnquadrament.jsx';
 import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 /* T46 (ordre del Mestre, 260928) · el re-enquadrament dins de la closca. La
@@ -256,15 +256,20 @@ test('T46 · amb el diàleg tancat, la closca té els fills de sempre', () => {
    les Notes oferix la casella «Conserva la ubicació i la data de la foto»
    quan la foto en porta, marcada de sèrie, i la tria arriba a compressImage.
    Les fotos de dalt («x») no en porten: cap casella i la crida de sempre. */
-const CASELLA = { name: new RegExp(ETIQUETA_CONSERVA_EXIF) };
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADES A POSTA: les fotos
+   d'estes proves porten GPS, i la casella marcada de sèrie és ara l'interruptor
+   «Amaga el lloc» apagat de sèrie (role="switch", checked = !conservaExif), amb
+   l'avís del Mestre. L'invariant és el mateix: de sèrie, compressImage rep
+   conservaExif; un toc, la crida neta de sempre. */
+const INTERRUPTOR = { name: new RegExp(ETIQUETA_AMAGA_LLOC) };
 const ambGps = () => new File([jpegAmbExif({ exif: dataOriginal('2017:05:14 10:22:33'), gps: gpsTorre() })], 'arbre.jpg', { type: 'image/jpeg' });
 
-test('Bloc 1.2 · una foto amb GPS: la casella, marcada de sèrie, fa que compressImage reba conservaExif i l’original', async () => {
+test('Bloc 1.2 · una foto amb GPS: l’interruptor «Amaga el lloc», apagat de sèrie, fa que compressImage reba conservaExif i l’original', async () => {
   const vista = closca();
   const fitxer = ambGps();
   await tria(vista.container, fitxer);
-  const casella = await within(vista.getByRole('dialog', DIALEG)).findByRole('checkbox', CASELLA);
-  expect(casella.checked).toBe(true);
+  const casella = await within(vista.getByRole('dialog', DIALEG)).findByRole('switch', INTERRUPTOR);
+  expect(casella.checked).toBe(false);
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   const exportat = await dobles.exportaRetall.mock.results[0].value;
   // P1-64 · Amb una ubicació, també la precisió de sèrie (l'exacta, decisió 8 del Mestre 261028).
@@ -281,22 +286,23 @@ test('P1-64 · la precisió triada al diàleg del hero arriba a compressImage', 
   const fitxer = ambGps();
   await tria(vista.container, fitxer);
   const dialeg = vista.getByRole('dialog', DIALEG);
-  await within(dialeg).findByRole('checkbox', CASELLA);
+  await within(dialeg).findByRole('switch', INTERRUPTOR);
   fireEvent.click(within(dialeg).getByRole('radio', { name: 'Només el poble' }));
   expect(within(dialeg).getByText(/^Es desarà: 38\.59, -0\.42 \(uns 1\.000 m\)\./)).toBeTruthy();
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   expect(dobles.compressImage.mock.calls[0][1]).toMatchObject({ conservaExif: true, original: fitxer, precisio: 'poble' });
 });
 
-test('Bloc 1.2 · desmarcada, la crida de sempre (la foto ix neta); sense EXIF, ni casella', async () => {
+test('Bloc 1.2 · «Amaga el lloc» encés, la crida de sempre (la foto ix neta); sense EXIF, ni casella ni interruptor', async () => {
   const vista = closca();
   await tria(vista.container, ambGps());
-  fireEvent.click(await within(vista.getByRole('dialog', DIALEG)).findByRole('checkbox', CASELLA));
+  fireEvent.click(await within(vista.getByRole('dialog', DIALEG)).findByRole('switch', INTERRUPTOR));
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   expect(dobles.compressImage.mock.calls.map(([, o]) => o)).toEqual([{ maxSize: 1200, format: 'image/webp', quality: 0.8 }]);
   await tria(vista.container, foto());
   await act(async () => {});
   expect(within(vista.getByRole('dialog', DIALEG)).queryByRole('checkbox')).toBeNull();
+  expect(within(vista.getByRole('dialog', DIALEG)).queryByRole('switch')).toBeNull();
 });
 
 /* Gauntlet 261016 (Bloc 1, Llei del Quadrat; pla §0.1.1) · La capçalera i la
@@ -447,7 +453,8 @@ const reobriCapcalera = async (blob) => {
   fireEvent.click(vista.container.querySelector('img.sdp-hero__imatge'));
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: 'Enquadrar' })); });
   const dialeg = vista.getByRole('dialog', DIALEG);
-  const casella = await within(dialeg).findByRole('checkbox', CASELLA);
+  const casella = await within(dialeg).findByRole('switch', INTERRUPTOR);
+  expect(casella.checked).toBe(false);
   return { vista, dialeg, casella };
 };
 
@@ -473,7 +480,7 @@ test('R16a · només la precisió, amb el marc igual: també puja la foto nova i
   expect(vista.onSaveField.mock.calls).toEqual([['heroImage', `${CURT}#sdp-crop=format=16%3A9&zoom=1.5&cx=0.4&cy=0.6`, 'd1']]);
 });
 
-test('R16a · el camí invers: desmarcar la casella puja la foto sencera neta, amb el marc', async () => {
+test('R16a · el camí invers: encendre «Amaga el lloc» puja la foto sencera neta, amb el marc', async () => {
   const { vista, casella } = await reobriCapcalera(jpegGps(gpsTorre()));
   fireEvent.click(casella);
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });

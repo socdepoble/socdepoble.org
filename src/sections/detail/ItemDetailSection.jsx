@@ -17,6 +17,7 @@ import { QuadreAssistenciaEsdeveniment } from './QuadreAssistenciaEsdeveniment.j
    del disparador de la portada, que detailSectionMeta.jsx ja porta. */
 import { CosAmbVisor } from './VisorDePublicacio.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
+import { useEdicioEnLloc } from '../../hooks/useEdicioEnLloc.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
@@ -296,7 +297,7 @@ function DetallDElement() {
     );
   }
 
-  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} chrome="full" plaTraduccio={plaTraduccio} language={language} />;
+  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} notes={notes} chrome="full" plaTraduccio={plaTraduccio} language={language} />;
 }
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina d'un element ja
@@ -305,9 +306,16 @@ function DetallDElement() {
    (VistaDelPoble, davall). És el mateix codi que vivia al final de
    DetallDElement, mogut sense canvis. `senseXat`: el cos sense el botó blau
    del xat (renderBody de Pobles) i la barra blava sense «Comentar». */
-function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = false, plaTraduccio = null, language = 'ca' }) {
+function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, chrome, senseXat = false, plaTraduccio = null, language = 'ca' }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const edicio = useEdicioEnLloc({
+    tipus: 'publicacio',
+    sectionId,
+    item,
+    notes,
+    enContext: chrome === 'context' || senseXat
+  });
   /* Gauntlet R32.14 · L'objectiu de l'avís LSSI passa per les exclusions de la moderació. */
   const moderacio = useModeracio();
   /* Ordre E del Mestre (261007, prompt 261007_1628) · El logotip que la
@@ -416,6 +424,7 @@ function PaginaDelDetall({ section, sectionId, item, pagina, chrome, senseXat = 
          és la mateixa comunitat on ja s'és (UniversalPage: onComment={false}
          vol dir «sense botó»). La ruta no hi passa cap prop nova. */
       {...(senseXat ? { onComment: false } : null)}
+      {...(edicio.editarVisible ? { showEdit: true, onEdit: edicio.onEdit, editLabel: edicio.editLabel } : null)}
     >
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
           incrustades del cos, sincronitzades amb el seu original. */}

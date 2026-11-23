@@ -1090,6 +1090,22 @@ export function PerfilEditor({ identitat }) {
          No és cap llavor: no s'escriu ni es desa (placeholderCos.js). Les
          organitzacions i els agents, cap clau nova. */
       ...(mena === 'persona' && potEditar ? { placeholderCos: tradueix(t, T.placeholderCos) } : null),
+      /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El cos de la fitxa és contingut
+         propi: l'ordre «/» Imatge conserva de sèrie la ubicació i les dades de la foto,
+         amb l'avís del Mestre i l'interruptor «Amaga el lloc» (DocumentEditor ·
+         fotosDePublicacio). L'avatar, el logotip i la capçalera d'una persona
+         continuen nets (identitat).
+         v1.2.23 · costura privacitat del cos del Perfil · La foto puja directa a
+         l'espai públic (uploadMedia → carpeta avatars, organitzacions o agents), sense
+         cap promoció que tríe: exifTriatEnPujar fa que l'ordre «/» Imatge hi pose ja la
+         tria de les Notes (la ubicació arrodonida i la data), mai el bloc sencer
+         (la marca, el model, el número de sèrie o un nom). L'avís és el de les Notes.
+         v1.2.23 · L2-01 (Gauntlet R1) · «Arrodonida» vol dir a la precisió triada a la
+         pregunta: de sèrie, l'exacta (PRECISIO_PER_DEFECTE_PUBLICACIO). Per això
+         «Multimèdia» no posa cap d'estes fotos d'avatar ni de capçalera sense llegir-la
+         (DetallMultimedia · fotoNetaDIdentitat.js). */
+      fotosDePublicacio: true,
+      exifTriatEnPujar: true,
       /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el
          botó únic de T35 («Editar capçalera i avatar» i el seu diàleg): la
          capçalera té el seu botó, «Capçalera», que diu ABANS de triar què

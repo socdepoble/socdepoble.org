@@ -433,18 +433,18 @@ function deXifra(x, ctx, bloc) {
   const explicada = ctx.explicades.get(x.slug);
   if (!explicada) ctx.explicades.set(x.slug, bloc);
   return {
-    ...node(x.slug, 4, x.titol, x.ruta, explicada ? `És la mateixa xifra del bloc «${explicada}», que ja l’explica.` : x.entradetaMarcada),
+    ...node(x.slug, 5, x.titol, x.ruta, explicada ? `És la mateixa xifra del bloc «${explicada}», que ja l’explica.` : x.entradetaMarcada),
     titolPrivat: x.titolPrivat ?? null,
     diu: ambFont ? araDeXifra(x, ctx.noms.get(x.slug) ?? null) : diuSenseFont(estat, x),
     queda: quedaDeTargeta({ etiquetes: x.etiquetes, problemes: x.problemes, ambFont, estat, deFont: deNomDeFont(x) })
   };
 }
 
-/* Un panell del pols com a H4: les mètriques de la seua coberta (cobertesPols) o per què no n'hi ha. */
+/* Un panell del pols com a H5: les mètriques de la seua coberta (cobertesPols) o per què no n'hi ha. */
 function dePanell(p, dades, estat, ara) {
   const coberta = cobertesPols(dades, estat)[p.id];
   return {
-    ...node(`pols/${p.id}`, 4, p.titol, p.ruta, p.entradilla),
+    ...node(`pols/${p.id}`, 5, p.titol, p.ruta, p.entradilla),
     titolPrivat: null,
     diu: coberta.metriques ? [f('Ara mateix'), t(': '), ...enumera(coberta.metriques), t('.')] : [f('Ara mateix'), t(`: ${minuscula(coberta.senseMesura)}.`)],
     queda: quedaDeTargeta({
@@ -516,11 +516,11 @@ function membresDe(familia, peces, p, pare) {
   };
 }
 
-/* Una família sense cap xifra que la compte, com a H4 propi (sense pàgina pròpia: les seues peces en tenen). */
+/* Una família sense cap xifra que la compte, com a H5 propi (sense pàgina pròpia: les seues peces en tenen). */
 function nodeFamilia(familia, peces, p) {
   const [un, molts] = NOMS_FAMILIA[familia.id] ?? ['peça', 'peces'];
   return {
-    ...node(`familia/${familia.id}`, 4, plural(peces.length, un, molts), null, familia.entradeta.join(' ')),
+    ...node(`familia/${familia.id}`, 5, plural(peces.length, un, molts), null, familia.entradeta.join(' ')),
     titolPrivat: null,
     diu: [f('Ara mateix'), t(` hi ha ${plural(peces.length, un, molts)}: `), ...recompteDeMembres(peces), t('.')],
     queda: onEsTracten(peces, p),
@@ -634,7 +634,7 @@ function nodeIntro({ fonts, vista, govern, empaquetats, locale, ara }) {
         t(': '), ...enumera(vigilancia, quinAvis), t('. El detall és a '), a(salut.title, salut.ruta), t('.')]
       : [])];
   return {
-    ...node(ID_INTRO, 3, TITOL_INTRO, null, INTRO),
+    ...node(ID_INTRO, 4, TITOL_INTRO, null, INTRO),
     subtitol: null,
     explica: [ambEnllacos(publicada() ? INTRO_FONTS_PUBLICADA : INTRO_FONTS), trossosMarcats(INTRO_SEMAFOR), introEstats()],
     diu,
@@ -756,7 +756,7 @@ function diuGovernPublicat(estat, ambElla) {
 
 function nodeGovern(govern, vista) {
   const fills = paginesGovern().map((p) => ({
-    ...node(`govern/${p.id}`, 4, p.title, p.ruta, p.lead), titolPrivat: null, ...cobertaGovern(p.id, govern, vista)
+    ...node(`govern/${p.id}`, 5, p.title, p.ruta, p.lead), titolPrivat: null, ...cobertaGovern(p.id, govern, vista)
   }));
   const resums = vista ? resumsExecutius(vista) : null;
   const r = vista ? recompteVist(vista.files) : null;
@@ -766,7 +766,7 @@ function nodeGovern(govern, vista) {
      totes les files fetes i segellades i cap P1 oberta; si no, què queda. I
      sense matriu, per què: es llig, l'última lectura ha fallat o no n'hi ha. */
   return {
-    ...node(ID_GOVERN, 3, TITOL_GOVERN, null, TEXT_GOVERN, fills),
+    ...node(ID_GOVERN, 4, TITOL_GOVERN, null, TEXT_GOVERN, fills),
     subtitol: null,
     explica: [trossosMarcats(publicada() ? PLA_GOVERN_PUBLICADA : PLA_GOVERN)],
     diu: resums ? [f('Ara mateix'), t(`: ${resums.general.join(' ')}`)]
@@ -813,7 +813,7 @@ function nodeEmpaquetats(empaquetats) {
        dades, per què, segons l'estat de la lectura. Derogat: «declara X.
        Declara X, …» i «Sense semàfor». */
     return {
-      ...node(`empaquetats/${base.id}`, 4, base.nom, pagina.ruta, QUE_ES_PLATAFORMA[base.id]),
+      ...node(`empaquetats/${base.id}`, 5, base.nom, pagina.ruta, QUE_ES_PLATAFORMA[base.id]),
       titolPrivat: null,
       diu: !p ? (estat === 'loading' ? [f('Encara es carrega'), t(': la versió declarada arriba amb els empaquetats.')]
         : estat === 'error' ? [f('Sense dades'), t(': l’última lectura dels empaquetats ha fallat.')]
@@ -829,7 +829,7 @@ function nodeEmpaquetats(empaquetats) {
   const foraDelPas = comparables.filter((p) => p.semafor !== 'alineat').map((p) => p.nom);
   const etiqueta = pitjor(coberta.etiquetes);
   return {
-    ...node(ID_EMPAQUETATS, 3, TITOL_EMPAQUETATS, RUTA_EMPAQUETATS, ENTRADETA_EMPAQUETATS, fills),
+    ...node(ID_EMPAQUETATS, 4, TITOL_EMPAQUETATS, RUTA_EMPAQUETATS, ENTRADETA_EMPAQUETATS, fills),
     subtitol: pagina.subtitle,
     explica: [trossosMarcats(PLA_EMPAQUETATS)],
     diu: valor
@@ -867,7 +867,7 @@ function nodeMas(ctx) {
   const roges = perTo('error');
   const taronja = perTo('avis');
   return {
-    ...node(ID_MAS, 3, TITOL_MAS, null, TEXT_MAS, fills),
+    ...node(ID_MAS, 4, TITOL_MAS, null, TEXT_MAS, fills),
     subtitol: null,
     explica: [ambEnllacos(PLA_MAS)],
     diu: fonts.mapa
@@ -911,7 +911,7 @@ export function indexConsola(mapa = null, dades = null, locale = 'ca-ES', extres
     noms: new Map(Object.keys(GRUPS_XIFRES).flatMap((grup) => xifresDeGrup(grup)).map((x) => [x.slug, x.titol]))
   };
   const pagines = paginesConsola().map((p) => ({
-    ...node(p.id, 3, p.title, p.ruta, p.lead, fillsDePagina(p, ctx)),
+    ...node(p.id, 4, p.title, p.ruta, p.lead, fillsDePagina(p, ctx)),
     subtitol: p.subtitle,
     explica: [ambEnllacos(PLA[p.id])],
     diu: diuDePagina(p, fonts, locale),
@@ -924,7 +924,7 @@ export function indexConsola(mapa = null, dades = null, locale = 'ca-ES', extres
     nodeMas(ctx),
     nodeEmpaquetats(empaquetats)
   ];
-  return [node(ID_INDEX, 2, TITOL_INDEX, null, TEXT_INDEX, fills)];
+  return [node(ID_INDEX, 3, TITOL_INDEX, null, TEXT_INDEX, fills)];
 }
 
 /** Tots els nodes de l'índex, aplanats en l'ordre del document (per a provar-lo i per a l'Índex de secció). */

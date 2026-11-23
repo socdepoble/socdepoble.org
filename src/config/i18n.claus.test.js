@@ -117,20 +117,6 @@ const CLAUS = {
   'section.notes.compartir': {
     ca: 'Compartir', es: 'Compartir', en: 'Share', eu: 'Partekatu', gl: 'Compartir'
   },
-  'section.control.ajustosXat.titol': {
-    ca: 'Ajustos del xat',
-    es: 'Ajustes del chat',
-    en: 'Chat settings',
-    eu: 'Txataren ezarpenak',
-    gl: 'Axustes do chat'
-  },
-  'section.control.ajustosXat.subtitol': {
-    ca: 'Amplària de les columnes i preferències del xat',
-    es: 'Anchura de las columnas y preferencias del chat',
-    en: 'Column width and chat preferences',
-    eu: 'Zutabeen zabalera eta txataren hobespenak',
-    gl: 'Largura das columnas e preferencias do chat'
-  },
   'section.control.porta.publicar': {
     ca: 'Publicar', es: 'Publicar', en: 'Publish', eu: 'Argitaratu', gl: 'Publicar'
   },

@@ -171,7 +171,7 @@ describe('Onada R29 · Calcs del basc a totes les pàgines de PAGE_COPY', () => 
    queda per a un lloc físic del camp que el valencià anomena «mas» (punt 1 del Mode Rural: «al bancal, a la
    serra o al mas»). La llista és tancada: una aparició nova als diccionaris o a PAGE_COPY fa fallar la prova. */
 const MASIA = /(?<!\p{L})mas(?:ia|ía|ies|ías)(?!\p{L})/iu;
-const MASIA_LLOC_FISIC = ['es · section.control.rural.punt1'];
+const MASIA_LLOC_FISIC = [];
 
 describe('Onada R29 · VOC-R29-04 · «masia» només per a un lloc físic de la llista tancada', () => {
   test('cap «masia» ni «masía» als cinc diccionaris ni a PAGE_COPY fora de la llista', () => {

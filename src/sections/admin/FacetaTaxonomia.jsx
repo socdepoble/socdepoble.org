@@ -70,12 +70,12 @@ function descarregaJson(dades, nom) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/* Un bloc de la faceta: una secció amb el seu H2, que és també el seu nom accessible. */
+/* Un bloc de la faceta: una secció amb el seu H3, que és també el seu nom accessible. */
 function Bloc({ titol, children }) {
   const id = useId();
   return (
     <section className="sdp-superadmin-bloc" aria-labelledby={id}>
-      <h2 id={id} className="sdp-superadmin-bloc__titol">{titol}</h2>
+      <h3 id={id} className="sdp-superadmin-bloc__titol">{titol}</h3>
       {children}
     </section>
   );

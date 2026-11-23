@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.30
+Stable tag: 1.1.31
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.31 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.23 de Sóc de Poble, la que explica la seua pàgina «Versions»: les fotos i els vídeos que es publiquen conserven el lloc on es van fer, si el fitxer el porta dins, amb un avís i un toc a «Amaga el lloc» per a llevar-lo, el que és teu s'edita amb «Editar» des de la mateixa pàgina, el menú del Xat és més senzill i el menú de l'esquerra diu la versió que tens.
+* **Veu i preus:** si el telèfon talla una gravació de veu, o la gravació falla, la veu que ja s'havia recollit es queda per a escoltar-la abans de decidir si s'envia, i la cerca dona el preu d'un producte igual que el Mercat.
+
 = 1.1.30 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.22 de Sóc de Poble, la que explica la seua pàgina «Versions»: qui entra al Xat sense compte i sense un poble declarat veu les tres converses del projecte, el logotip es veu més gran a la barra de dalt i un sol Mode Bancal posa d'un toc la lletra gran i el màxim contrast.
 * **Mur:** qui entra al Mur d'un poble amb el seu compte i n'és membre ja no hi veu els actes ni els productes que tenen apagat «Mostrar també al Mur», que continuen al Calendari, al Mercat i a la seua fitxa; qui no té compte, o no n'és membre, encara els hi veu.
@@ -278,6 +282,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.31 =
+Visor al dia amb la versió 1.2.23 de Sóc de Poble: fotos i vídeos amb el lloc que porten dins i «Amaga el lloc» per a llevar-lo, «Editar» des de la pàgina, un menú del Xat més senzill i la versió al menú.
 
 = 1.1.30 =
 Visor al dia amb la versió 1.2.22 de Sóc de Poble: el Xat de qui encara no té compte amb les tres converses del projecte, un logotip més gran i un sol Mode Bancal amb la lletra gran i el màxim contrast.

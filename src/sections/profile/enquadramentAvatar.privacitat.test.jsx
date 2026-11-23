@@ -55,7 +55,7 @@ import DetallAjust from './DetallAjust.jsx';
 import { useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import {
-  AJUDA_CONSERVA_UBICACIO, AVIS_GPS_ELIMINAT_PERFIL, DialegEnquadrament,
+  AVIS_GPS_ELIMINAT_PERFIL, AVIS_UBICACIO_AMAGADA, AVIS_UBICACIO_CONSERVADA, DialegEnquadrament, ETIQUETA_AMAGA_LLOC,
 } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { llegixExif, teExif } from '../../components/universal/enquadrament/exif.js';
 import { ETIQUETA_CONSERVA_EXIF, extreuTiff, preparaTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
@@ -89,6 +89,13 @@ const SORTIDA_RETALL = concatena(SOI, APP0_JFIF, Uint8Array.of(0xff, 0xfe, 0x00,
 const MARCA_EXIF = [0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
 const RETALLADOR = { name: 'Enquadrar l’avatar' };
 const CASELLA = { name: new RegExp(ETIQUETA_CONSERVA_EXIF) };
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADES A POSTA: amb GPS, la
+   casella marcada de sèrie és l'interruptor «Amaga el lloc» apagat de sèrie
+   (role="switch", checked = !conservaExif) i l'avís és el literal del Mestre. Les
+   guardes «cap casella» de les fotos d'identitat amb GPS miren també que no hi
+   haja cap interruptor: si no, un control nou passaria per davall. L'avatar, el
+   logotip i la capçalera d'una persona continuen nets i sense res (P1-64). */
+const INTERRUPTOR = { name: new RegExp(ETIQUETA_AMAGA_LLOC) };
 
 const aBase64 = (bytes) => btoa(String.fromCharCode(...bytes));
 function deDataUrl(url) {
@@ -201,6 +208,7 @@ test('P1-64 · l’avatar i la capçalera d’una persona pugen nets, sense case
     const dialeg = screen.getByRole('dialog', { name: finestra });
     expect(await within(dialeg).findByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeTruthy();
     expect(within(dialeg).queryByRole('checkbox'), forma).toBeNull();
+    expect(within(dialeg).queryByRole('switch'), forma).toBeNull();
     await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
     expect(dobles.exportaRetall, forma).toHaveBeenCalledTimes(1);
     await esperaPujades(onImageUpload, 1, esperaNet);
@@ -220,18 +228,20 @@ test('P1-64 · una foto d’identitat sense GPS (només la data): cap avís, ni 
   const dialeg = screen.getByRole('dialog', { name: 'Retalla la foto' });
   expect(within(dialeg).queryByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeNull();
   expect(within(dialeg).queryByRole('checkbox')).toBeNull();
+  expect(within(dialeg).queryByRole('switch')).toBeNull();
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
   await esperaPujades(onImageUpload, 1, esperaNet);
   expect(onError).not.toHaveBeenCalled();
 });
 
-test('Bloc 1.2 · la capçalera d’una organització o d’un agent continua amb la casella marcada de sèrie: puja el canvas amb l’EXIF publicable, mai l’original', async () => {
+test('Bloc 1.2 · la capçalera d’una organització o d’un agent conserva de sèrie («Amaga el lloc» apagat i l’avís del Mestre): puja el canvas amb l’EXIF publicable, mai l’original', async () => {
   const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/organitzacions/a.webp');
   await obriFitxa('heroImage', 'capcalera', onImageUpload);
   const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
-  const casella = await within(dialeg).findByRole('checkbox', CASELLA);
-  expect(casella.checked).toBe(true);
-  expect(within(dialeg).getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+  const casella = await within(dialeg).findByRole('switch', INTERRUPTOR);
+  expect(casella.checked).toBe(false);
+  expect(within(dialeg).queryByRole('checkbox', CASELLA)).toBeNull();
+  expect(within(dialeg).getByText(new RegExp(`^${AVIS_UBICACIO_CONSERVADA}`))).toBeTruthy();
   expect(within(dialeg).queryByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeNull();
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
   expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
@@ -239,13 +249,14 @@ test('Bloc 1.2 · la capçalera d’una organització o d’un agent continua am
   await esperaPujades(onImageUpload, 1, esperaAmbExif);
 });
 
-test('Bloc 1.2 · amb la casella desmarcada, la capçalera d’una organització puja neta; el logotip no té casella i puja net', async () => {
+test('Bloc 1.2 · amb «Amaga el lloc» encés (un toc), la capçalera d’una organització puja neta; el logotip no té casella i puja net', async () => {
   for (const [camp, forma, finestra] of [['heroImage', 'capcalera', 'Retalla la capçalera']]) {
     const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
     await obriFitxa(camp, forma, onImageUpload);
     const dialeg = screen.getByRole('dialog', { name: finestra });
-    await act(async () => { fireEvent.click(await within(dialeg).findByRole('checkbox', CASELLA)); });
-    expect(within(dialeg).getByRole('checkbox', CASELLA).checked).toBe(false);
+    await act(async () => { fireEvent.click(await within(dialeg).findByRole('switch', INTERRUPTOR)); });
+    expect(within(dialeg).getByRole('switch', INTERRUPTOR).checked).toBe(true);
+    expect(within(dialeg).getByText(AVIS_UBICACIO_AMAGADA)).toBeTruthy();
     await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
     await esperaPujades(onImageUpload, 1, esperaNet);
     cleanup();
@@ -254,6 +265,7 @@ test('Bloc 1.2 · amb la casella desmarcada, la capçalera d’una organització
   await obriFitxa('logoImage', 'logotip', onImageUpload);
   const dialeg = screen.getByRole('dialog', { name: 'Retalla el logotip' });
   expect(within(dialeg).queryByRole('checkbox')).toBeNull();
+  expect(within(dialeg).queryByRole('switch')).toBeNull();
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
   await esperaPujades(onImageUpload, 1, esperaNet);
 });
@@ -279,6 +291,7 @@ test('P1-64 · DetallAjust: l’avatar puja net, sense casella, i la línia d’
   const retallador = screen.getByRole('dialog', RETALLADOR);
   expect(await within(retallador).findByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeTruthy();
   expect(within(retallador).queryByRole('checkbox')).toBeNull();
+  expect(within(retallador).queryByRole('switch')).toBeNull();
   await desaRetall();
   await esperaPujades(pujaMitja, 1, esperaNet);
   expect(screen.getByText(/Imatge pujada\./).textContent).toBe(`Imatge pujada. Ara dóna-li a Guardar. ${AVIS_GPS_ELIMINAT_PERFIL}`);
@@ -303,6 +316,7 @@ test('K3 · T46 sense la casella (el contracte d’abans): el diàleg torna l’
   render(<CapcaleraT46 font={font} onImageUpload={onImageUpload} rebut={rebut} />);
   await act(async () => {});
   expect(screen.queryByRole('checkbox')).toBeNull();
+  expect(screen.queryByRole('switch')).toBeNull();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desar l’enquadrament' })); });
   // El camí T46 de veres: el mateix File, amb el seu EXIF, arriba al pare...
   expect(rebut).toHaveLength(1);

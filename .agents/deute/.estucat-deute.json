@@ -8,8 +8,6 @@
     "src/css/diferit-mapa-fotografic.css::leaflet-zoom-animated",
     "src/css/diferit-mapa-fotografic.css::leaflet-fade-anim",
     "src/css/diferit-mapa-fotografic.css::leaflet-tile",
-    "src/css/diferit-mapa-fotografic.css::leaflet-popup",
-    "src/css/components.css::btn-secondary",
-    "src/css/components.css::btn-taronja-fort"
+    "src/css/diferit-mapa-fotografic.css::leaflet-popup"
   ]
 }

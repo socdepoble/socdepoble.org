@@ -88,7 +88,7 @@ export function DetallVistes({ identitat }) {
         <Bloc titol={tradueix(t, TEXTOS_DETALL_VISTES.targetaTitol)}>
           <p className="perfil-compte__text">{AVISOS_TARGETA_VIVA.perfil.vista}</p>
           <div className="perfil-vistes__targeta">
-            <TargetaViva document={fitxa} autor={autor} etiquetes={etiquetes} avis={AVISOS_TARGETA_VIVA.perfil} />
+            <TargetaViva document={fitxa} autor={autor} etiquetes={etiquetes} avis={AVISOS_TARGETA_VIVA.perfil} headingLevel="h4" />
           </div>
         </Bloc>
       </div>

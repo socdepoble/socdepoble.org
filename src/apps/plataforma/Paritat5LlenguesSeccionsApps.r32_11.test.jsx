@@ -25,7 +25,7 @@ import { TEXTOS_BUIT_NEVERA, TEXTOS_VISTA_NEVERA } from '../nevera/i18nNevera.js
 import { TEXTOS_SALUT } from '../salut/i18nSalut.js';
 
 import { FitxaSnippet } from '../../sections/control/FitxaSnippet.jsx';
-import { ProvaCorreuAmbContrasenya } from '../../sections/onboarding/ProvaCorreuAmbContrasenya.jsx';
+import { ProvaCorreuAmbContrasenya } from '../../../tests/fixtures/ProvaCorreuAmbContrasenya.jsx';
 import BotiguesSistema from '../../sections/botigues/BotiguesSistema.jsx';
 
 import AppLector from '../lector/AppLector.jsx';

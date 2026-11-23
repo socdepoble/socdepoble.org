@@ -283,7 +283,7 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     expect(blocs()).toEqual(['alergens']);
     const alergens = container.querySelector('section[data-bloc="alergens"]');
     expect(alergens.textContent).toContain('Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.');
-    expect(within(alergens).getByRole('heading', { level: 3, name: 'Proposta assistida · Pendent de validació humana' })).toBeTruthy();
+    expect(within(alergens).getByRole('heading', { level: 4, name: 'Proposta assistida · Pendent de validació humana' })).toBeTruthy();
     // Vídeo: només el bloc del vídeo (la façana); el heroImage d'UniversalPage roman dalt.
     fireEvent.click(within(grup).getByRole('tab', { name: 'Vídeo' }));
     expect(blocs()).toEqual(['video']);
@@ -371,7 +371,7 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
     for (const r of [ambVideoILamina, senseVideoNiNotes, senseLamina]) {
       const { container, unmount } = detall(r.slug);
       await screen.findByRole('tablist', { name: 'Tria què vols vore' });
-      expect(container.querySelector('section[data-estat="pendent_validacio_humana"] h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
+      expect(container.querySelector('section[data-estat="pendent_validacio_humana"] h4').textContent).toBe('Proposta assistida · Pendent de validació humana');
       expect(container.textContent).not.toMatch(PROHIBIT);
       unmount();
     }
@@ -402,7 +402,7 @@ describe('/receptes/:slug · ReceptaDetailSection', () => {
       expect(screen.queryByRole('button', { name: 'Calcula i prepara la compra' })).toBeNull();
       expect(container.querySelector('[aria-label="Prepara una compra amb esta recepta"]')).toBeNull();
       const proposta = container.querySelector('section[data-estat="pendent_validacio_humana"]');
-      expect(proposta.querySelector('h3').textContent).toBe('Proposta assistida · Pendent de validació humana');
+      expect(proposta.querySelector('h4').textContent).toBe('Proposta assistida · Pendent de validació humana');
       expect(proposta.querySelectorAll('li[data-alergen]')).toHaveLength(14);
       expect(container.textContent).not.toMatch(PROHIBIT);
       expect(container.textContent).not.toMatch(/Mercadona/i);
@@ -423,7 +423,7 @@ describe('RV-01/RV-02 · la proposta d’al·lèrgens de la fitxa, en les cinc l
     await screen.findByRole('tablist', { name: DICCIONARIS[llengua]['patrimoni.receptes.filtre'] });
     const panell = container.querySelector('section[data-estat="pendent_validacio_humana"]');
     expect(panell.getAttribute('lang')).toBe(llengua);
-    expect(within(panell).getByRole('heading', { level: 3 }).textContent).toBe(t.etiqueta);
+    expect(within(panell).getByRole('heading', { level: 4 }).textContent).toBe(t.etiqueta);
     expect(panell.querySelector('li[data-alergen="cacauets"]').textContent).toContain(`${t.noms.cacauets}: ${matriu.ingredient}`);
     expect(panell.querySelector('li[data-alergen="gluten"]').textContent).toBe(`${t.noms.gluten}: ${matriu['no-declarat']}`);
     expect(panell.textContent).toContain(matriu.completa);
@@ -493,7 +493,7 @@ describe('RV-01/RV-02 · la proposta d’al·lèrgens de la fitxa, en les cinc l
    la Noto Sans del repositori, 102,5 px a 16 px i 89,7 px a 14 px. L'etiqueta va al sòl de mida (--sdp-text-meta) i,
    si un dia no hi cap, parteix dins del quadrat. El quadrat no canvia de mida. */
 describe('P3-3 · l’etiqueta del quadrat-botó cap dins del quadrat', () => {
-  const css = readFileSync(`${process.cwd()}/src/css/modules.css`, 'utf8');
+  const css = readFileSync(`${process.cwd()}/src/css/diferit-receptes.css`, 'utf8');
   const regla = (selector) => css.match(new RegExp(`\\n\\s*${selector.replace(/[.[\]"=]/g, '\\$&')} \\{([^}]*)\\}`))?.[1] ?? '';
   test('font al sòl de mida, amplada màxima del quadrat i partició dins', () => {
     const text = regla('.sdp-recepta__quadrat-text');

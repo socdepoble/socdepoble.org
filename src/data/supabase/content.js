@@ -1,4 +1,5 @@
 import { esTokenPublicacio, ordreTokenPublicacio } from '../publicacionsCas.js';
+import { desaPublicacioPropia as desaPublicacioBetaCas } from './publicacionsPropies.js';
 import { capturaSessio } from '../identitat.js';
 import { marcaFilesEditorials } from '../editorialPublicada.js';
 import { aplicaRevisionsSeed, marcaFontRevisioSeed } from '../seedRevisions.js';
@@ -98,13 +99,17 @@ async function lligPublicacionsAnteriors(tenant, section, limit, config, { befor
   return { rows, elements: rows.map(row => elementDeFila(row, section)), complet: esCompletaPerRang(rows, contentRange) };
 }
 
-/* v1.2.22 · Integració (costura de Codex R32.42 lot 03; Gauntlet R1, L4-05; CDP r1) · La RPC7 de llig_mur_public
-   (p_inclou_visibilitat) només la té un servidor amb la migració 20261122160300_r32_42_mur_visibilitat_publica.sql, que
-   esta versió no aplica a producció. Negociar-la contra el servidor d'ara costava quatre 404 per càrrega de pàgina (una
-   per secció del Mur) a tots els visitants (CDP r1: 332 respostes 404 en 83 escenaris), i tres peticions per secció al
-   foraster autenticat. Fins que s'aplique la migració, el build només la negocia amb la bandera literal
-   VITE_SDP_MUR_VISIBILITAT=1, que Vite plega com VITE_SDP_IAIA_SERVIDOR (supabase/index.js). Sense la bandera, la RPC6 de
-   sempre: cap petició nova i cap flag mostrar_al_mur inventat (murPublic.js només el copia si el servidor el dona). */
+/* v1.2.22 · Integració (costura de Codex R32.42 lot 03; Gauntlet R1, L4-05; CDP r1) · La RPC7 del Mur públic
+   (llig_mur_public_v7 des de la v1.2.23, L4-10; p_inclou_visibilitat) només la té un servidor amb la migració
+   20261122160300_r32_42_mur_visibilitat_publica.sql, que la v1.2.22 no aplicava a producció. Negociar-la contra aquell
+   servidor costava quatre 404 per càrrega de pàgina (una per secció del Mur) a tots els visitants (CDP r1: 332 respostes
+   404 en 83 escenaris), i tres peticions per secció al foraster autenticat. Per això el build només la negocia amb
+   VITE_SDP_MUR_VISIBILITAT exactament '1'. Sense la bandera, la RPC6 de sempre: cap petició nova i cap flag
+   mostrar_al_mur inventat (murPublic.js només el copia si el servidor el dona). */
+/* v1.2.23 · costura bandera del Mur · L'integrador aplica a Producció les migracions 127-131 (T2), esta inclosa (fila
+   129 de supabase/README.md), i la bandera entra a BANDERES_DE_CAPACITAT (tooling/vite/banderes-de-capacitat.mjs): els
+   builds web, natiu i WP la pleguen com a literal '1' o '', igual que VITE_SDP_IAIA_SERVIDOR (supabase/index.js), també
+   en l'accés opcional d'ací baix. Aplicar la migració no encén la bandera: la RPC7 continua sent opt-in del build. */
 const negociaVisibilitatMur = () => import.meta.env?.VITE_SDP_MUR_VISIBILITAT === '1';
 
 async function lligPublicacions(tenant, section, limit, config, { before = null, signal } = {}) {
@@ -117,9 +122,10 @@ async function lligPublicacions(tenant, section, limit, config, { before = null,
     const opts = { signal: senyal, ...(membres || ambSessio ? {} : { anonim: true }) };
     if (membres) return request(`/rest/v1/rpc/llig_mur_membres?${params}`, config, opts);
     if (!negociaVisibilitatMur()) return request(`/rest/v1/rpc/llig_mur_public?${params}`, config, opts);
-    // RPC7: discriminador obligatori, sis opcions amb defaults. RPC6 continua inequívoca.
+    // v1.2.23 · L4-10 (ordre del Mestre 261123) · La RPC7 té nom propi, llig_mur_public_v7: cap sobrecàrrega de la RPC6.
+    // Discriminador obligatori, sis opcions amb defaults; un servidor sense la migració respon PGRST202 i es torna a la RPC6.
     const publics = new URLSearchParams(params); publics.set('p_inclou_visibilitat', 'true');
-    try { return await request(`/rest/v1/rpc/llig_mur_public?${publics}`, config, opts); }
+    try { return await request(`/rest/v1/rpc/llig_mur_public_v7?${publics}`, config, opts); }
     catch (error) { if (!esRpcAbsent(error)) throw error; sessionGuard(); }
     return request(`/rest/v1/rpc/llig_mur_public?${params}`, config, opts);
   };
@@ -264,7 +270,8 @@ async function publicaCasGeneral(input, config) {
     check();
     if (esRpcAbsent(error)) throw Object.assign(new Error('El servidor encara no té el CAS general: conserva l’esborrany i l’operació.', { cause: error }), { codi: CODI_ESQUEMA_ABSENT, status: 404 });
     if (/SDP-PUB-CAS-006/.test(error?.message ?? '')) throw Object.assign(new Error('El CAS general encara no té contracte per a conservar estos drets: conserva l’esborrany.', { cause: error }), { codi: 'drets-cas-no-disponibles' });
-    if (error?.postgrestCode === '40001' || /SDP-PUB-CAS-003/.test(error?.message ?? '')) throw Object.assign(new Error('La publicació ha canviat: conserva l’esborrany i recarrega.', { cause: error }), { codi: 'conflicte-versio' });
+    /* v1.2.23 · L4-02 (Gauntlet R1) · runtime.js desa el SQLSTATE a `sqlstate`; `postgrestCode` només porta PGRST###. */
+    if (error?.sqlstate === '40001' || error?.postgrestCode === '40001' || /SDP-PUB-CAS-003/.test(error?.message ?? '')) throw Object.assign(new Error('La publicació ha canviat: conserva l’esborrany i recarrega.', { cause: error }), { codi: 'conflicte-versio' });
     throw error;
   }
   check();
@@ -281,6 +288,14 @@ async function publicaCasGeneral(input, config) {
     payload, createdAt: ack.created_at, updatedAt: ack.updated_at, operationId: sub.operationId, replay: ack.replay };
 }
 export async function appendSectionSubmissionNetworkOnly(submission, config = {}) {
+  // Entrada explícita per al contracte R32.44; el caller conserva token i operationId.
+  if (submission?.casBeta === true) {
+    /* v1.2.23 · L4-05 i L6-06 (Gauntlet R1) · La mateixa bandera que la capacitat edicioPublicacionsPropies (index.js):
+       sense VITE_SDP_EDICIO_PROPIA_CAS=1 cap petició a la RPC de la 130 i cap caiguda al CAS general, que canviaria la
+       semàntica del titular. L'esborrany i l'operació queden en mans del caller. */
+    if (import.meta.env.VITE_SDP_EDICIO_PROPIA_CAS !== '1') throw Object.assign(new Error('L’edició pròpia encara no està disponible: conserva l’esborrany i l’operació.'), { codi: 'no-disponible' });
+    return desaPublicacioBetaCas(submission, config);
+  }
   if (submission && Object.hasOwn(submission, 'expectedUpdatedAt')) return publicaCasGeneral(submission, config);
   const { hasSupabaseConfig, tenantId, runtimeDataMode } = getResolvedConfig(config);
   /* T2 · En mode de proves la publicació no viatja: ho diu sense cap petició,

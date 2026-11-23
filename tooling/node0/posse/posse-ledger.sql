@@ -47,6 +47,14 @@ DO $guard$ BEGIN
 -- 20261121090000 queda preparada i push_poble_actiu=no per defecte; cap desplegament automàtic.
 -- v1.2.22 (lots 02 i 03 de Codex R32.42) conserva els 18 perfils revisats, amb el 126 de la v1.2.17 com a històric,
 -- i afig el complet exacte 129 amb 20261122160000, 20261122160200 i 20261122160300 (NO aplicades). Cap 127 ni 128.
+-- v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123): 20261122160000 i 20261122160300 canvien de bytes (cap base no
+-- tenia el 129 d'abans, 75dab97b, que deixa de valer); el 129 es recalcula fins a 20261122160300 (7e3d0a4b) i s'afig
+-- el complet exacte 131 amb 20261122230000 (R32.44) i 20261123010000 (R32.46), NO aplicades. Cap 130.
+-- v1.2.23 · L4-03, L6-01 i L6-02 (Gauntlet R1) · 20261122230000 s'esmena en el lloc (cap base no l'havia aplicada) i el
+-- 131 es recalcula (3a3fb97f); el d'abans (56779e00) deixa de valer.
+-- v1.2.23 · R2F-01, R2D-03 i R2D-04 (Gauntlet R2) · 20261122230000 torna a esmenar-se en el lloc (cap base no l'havia
+-- aplicada) i 20261122160000 canvia de bytes per R2D-02 (Gauntlet R2): el 129 es recalcula (04b61ce7) i el 131 també
+-- (c279b24d); el 7e3d0a4b i el 3a3fb97f d'abans deixen de valer.
 -- POSSE_MIGRATION_PINS_BEGIN
 (76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
 (77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
@@ -67,7 +75,8 @@ DO $guard$ BEGIN
 (124,'8446cad1c497adbc31a4903d9161479ba1eef081de6445cbe148fb615a961277'),
 (125,'f09f94686782ea28b4ae500ce21567994670f53d1b91782246a0b4d841e56dc7'),
 (126,'595c69b52d28713884c9af3d802dc1f1a3a47853e2d8eb180e65f53b51be3e51'),
-(129,'75dab97bc68995d76540d0cf705f8a8f7f7bd75841e6934a1c31f4e176fc065b')
+(129,'04b61ce71c4579476fa4f550c0d38b788f159fc05ae01eeae96c60cc312e246a'),
+(131,'c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

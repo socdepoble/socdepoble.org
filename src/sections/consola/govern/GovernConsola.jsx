@@ -154,7 +154,7 @@ export function SeccioGovern({ govern, ara = Date.now(), ambImatges = false }) {
   const derivat = derivaGovern(govern, ara);
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>{TITOL_GOVERN}</h2>
+      <h3 id={id}>{TITOL_GOVERN}</h3>
       <p>{ENTRADETA_GOVERN}</p>
       <nav className="sdp-card-grid sdp-consola__graella"
         aria-label={idioma === 'ca' ? ETIQUETA_NAV_GOVERN : tca(idioma, 'paginesGovern')}>
@@ -164,7 +164,8 @@ export function SeccioGovern({ govern, ara = Date.now(), ambImatges = false }) {
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle} entradilla={p.lead}
               {...(ambImatges ? miniaturaDePagina(p.id) : {})}
               metriques={coberta.metriques} dada={coberta.dada} etiquetes={coberta.etiquetes} a={p.ruta}
-              creat={copyConsola().date} generat={p.id === 'certificacio' ? null : derivat.vista?.at ?? null} />
+              creat={copyConsola().date} generat={p.id === 'certificacio' ? null : derivat.vista?.at ?? null}
+              headingLevel="h4" />
           );
         })}
       </nav>

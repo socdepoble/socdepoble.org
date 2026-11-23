@@ -45,6 +45,27 @@ function quotesDe(servei) {
   if (!desades) { desades = new Map(); QUOTES_DESADES.set(servei, desades); }
   return desades;
 }
+/* v1.2.23 · X2 (ordre del Mestre 261123) · La crònica R32.41 diu que, si el telèfon talla la gravació, «es guarda la
+   veu que ja s'havia recollit». Des del kit Codex R32.44, gravaVeu (adjuntLocal.js) no la resol com una nota: rebutja
+   amb l'error 'gravacio' i la porta a `recuperacio` (incompleta, duradaMs null, duradaCapturaMs = el rellotge de la
+   captura). Ací torna a ser, com a la v1.2.22, la nota preparada: es pot escoltar i, si la persona vol, enviar.
+   Es pot enviar, i no només escoltar: la durada és la de la captura arrodonida a un enter positiu (validaAdjuntXat i
+   el `durada_ms > 0` de l'àudio al servidor, que la declara el client), el mateix rellotge que una nota sencera
+   (`acaba` d'adjuntLocal.js), i el reproductor la canvia per la real quan el navegador la sap (AdjuntXat.jsx,
+   duradaReal). La crònica R32.17 («un fitxer tallat … no s'envia») continua certa: el port torna a validar el
+   contenidor abans de pujar-lo (validaFitxerMedia a data/supabase/xatMultimedia.js, validaContenidorMedia a
+   data/xatMultimediaXifrat.js), i uns bytes tallats a mig tros no ixen. Només viatja la forma d'una nota sencera
+   ({ id, fitxer, tipus, duradaMs }): ni `incompleta` ni `duradaCapturaMs` no arriben al port. */
+function veuRecuperada(error) {
+  const recuperada = error?.code === 'gravacio' ? error.recuperacio : null;
+  if (recuperada?.tipus !== 'veu' || !(recuperada.fitxer instanceof Blob) || !recuperada.fitxer.size) return null;
+  const captura = Number(recuperada.duradaCapturaMs);
+  if (!Number.isFinite(captura) || captura <= 0) return null;
+  return {
+    adjunt: { id: recuperada.id || crypto.randomUUID(), fitxer: recuperada.fitxer, tipus: 'veu', duradaMs: Math.max(1, Math.round(captura)) },
+    aturada: recuperada.aturada ?? null
+  };
+}
 
 export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFitxerRef = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, children = null }) {
   const t = traductorAdjunt(tProp);
@@ -62,6 +83,12 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const [intentQuota, setIntentQuota] = useState(0);
   const [error, setError] = useState(null);
   const [preparat, setPreparat] = useState(null);
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · { id, error }: la persona ha demanat «Amaga el lloc» per a eixe
+     preparat i no s'ha pogut netejar (un vídeo amb so que el navegador no sap netejar). No s'envia brut fins que tria
+     «Conserva el lloc» o cancel·la. */
+  const [llocNoAmagat, setLlocNoAmagat] = useState(null);
+  /* { idAmagat, original }: el preparat amb el lloc, per a tornar-hi amb «Conserva el lloc» després d'amagar-lo. */
+  const ambLlocRef = useRef(null);
   const [url, setUrl] = useState(null);
   // null, 'tria' (preparant la foto o el vídeo) o 'grava' (el micròfon).
   const [ocupat, setOcupat] = useState(null);
@@ -116,8 +143,9 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     revisioContext.current += 1;
     lecturaQuotaRef.current += 1;
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
-    operacio.current = null; pujadaRef.current = null; intentEnviamentRef.current = null;
+    operacio.current = null; pujadaRef.current = null; intentEnviamentRef.current = null; ambLlocRef.current = null;
     setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setProgresCompressio(null); setError(null); setPeu(''); setDeCompartir(false);
+    setLlocNoAmagat(null);
     /* P1-66 · L'error de la quota es queda fins que arriba una lectura nova:
        «Torna-ho a provar» (al menú del +) no fa desaparéixer el + ni li pren
        el focus mentre es torna a llegir. */
@@ -213,7 +241,9 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     operacio.current?.abort(); gravadora.current?.cancella(); gravadora.current = null;
     pujadaRef.current = null;
     intentEnviamentRef.current = null;
+    ambLlocRef.current = null;
     setPreparat(null); setGravant(false); setOcupat(null); setPujant(false); setProgres(null); setProgresCompressio(null); setError(null); setPeu(''); setDeCompartir(false);
+    setLlocNoAmagat(null);
   };
   const descartaPendent = async (id) => {
     if (pujadaRef.current) return;
@@ -245,6 +275,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     operacio.current?.abort();
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'tria';
+    ambLlocRef.current = null;
     if (ambPeu) setDeCompartir(true);
     setOcupat('tria'); setError(null); setProgresCompressio(null);
     const onProgresCompressio = fraccio => {
@@ -266,19 +297,38 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     finally { if (viu.current && operacio.current === controller) { setOcupat(null); setProgresCompressio(null); } }
     return estat;
   };
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · L'interruptor d'un toc: «Amaga el lloc» (Publicar sense
+     geolocalització) lleva l'EXIF i el GPS del preparat; «Conserva el lloc» hi torna. Si no es pot netejar, l'avís
+     del camí i el preparat no s'envia brut (llocNoAmagat) fins que la persona tria conservar-lo o cancel·la. */
   const amagaLloc = async () => {
-    if (!preparat?.ubicacio || pujadaRef.current || pujant || ocupat || intentEnviamentRef.current === preparat.id) return;
+    if (!preparat || preparat.tipus === 'veu' || preparat.conservaUbicacio === false || pujadaRef.current || pujant || ocupat
+      || intentEnviamentRef.current === preparat.id) return;
     operacio.current?.abort();
     const controller = new AbortController(); operacio.current = controller;
-    setOcupat('ubicacio'); setError(null);
+    const ambLloc = preparat;
+    setOcupat('ubicacio'); setError(null); setLlocNoAmagat(null);
     try {
-      const net = await amagaUbicacioAdjunt(preparat, { signal: controller.signal });
-      if (viu.current && operacio.current === controller && !controller.signal.aborted) accepta(net);
+      const net = await amagaUbicacioAdjunt(ambLloc, { signal: controller.signal });
+      if (viu.current && operacio.current === controller && !controller.signal.aborted) {
+        ambLlocRef.current = { idAmagat: net.id, original: ambLloc };
+        accepta(net);
+      }
     } catch (e) {
-      if (viu.current && operacio.current === controller && !controller.signal.aborted && e?.name !== 'AbortError') setError(e);
+      if (viu.current && operacio.current === controller && !controller.signal.aborted && e?.name !== 'AbortError') {
+        setError(e); setLlocNoAmagat({ id: ambLloc.id, error: e });
+      }
     } finally {
       if (viu.current && operacio.current === controller) setOcupat(null);
     }
+  };
+  const conservaLloc = () => {
+    if (!preparat || pujadaRef.current || pujant || ocupat || intentEnviamentRef.current === preparat.id) return;
+    if (llocNoAmagat?.id === preparat.id) { setLlocNoAmagat(null); setError(null); return; }
+    const desat = ambLlocRef.current;
+    if (preparat.conservaUbicacio !== false || desat?.idAmagat !== preparat.id) return;
+    ambLlocRef.current = null;
+    setError(null);
+    accepta(desat.original);
   };
   const tancaAvis = (event) => {
     const boto = event.currentTarget;
@@ -344,6 +394,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     callaVeuActiva();
     const controller = new AbortController(); operacio.current = controller;
     origen.current = 'grava';
+    ambLlocRef.current = null;
     setOcupat('grava'); setError(null);
     try {
       const control = await gravaVeu({ signal: controller.signal });
@@ -352,11 +403,29 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       // El motiu d'una aturada sola és per a avisar ací: no viatja amb l'adjunt.
       const { aturada: motiu, ...adjunt } = await control.resultat;
       if (viu.current && !controller.signal.aborted) { accepta(adjunt); setAturada(motiu ? { id: adjunt.id, motiu } : null); }
-    } catch (e) { if (viu.current && !controller.signal.aborted) setError(e); }
+    } catch (e) {
+      if (viu.current && !controller.signal.aborted) {
+        /* v1.2.23 · X2 (ordre del Mestre 261123) · La veu recollida abans del tall queda preparada (veuRecuperada),
+           i l'avís de l'error, «No hem pogut acabar la gravació.», diu a la vista que la gravació s'ha tallat. Si no
+           cap a la quota, l'avís és el de la quota (SDP-XAT-020), com amb una nota sencera: és el que impedix
+           guardar-la, i no es perd. */
+        const recuperada = veuRecuperada(e);
+        let avis = e;
+        if (recuperada) {
+          try {
+            accepta(recuperada.adjunt);
+            setAturada(recuperada.aturada ? { id: recuperada.adjunt.id, motiu: recuperada.aturada } : null);
+          } catch (errorQuota) { avis = errorQuota; }
+        }
+        setError(avis);
+      }
+    }
     finally { if (viu.current && operacio.current === controller) { setOcupat(null); setGravant(false); gravadora.current = null; } }
   };
   const envia = async ({ text: textPrincipal = '' } = {}) => {
     if (!preparat || pujadaRef.current || pujant || ocupat) return null;
+    // v1.2.23 · IDEA-331 · Ha demanat amagar el lloc i no s'ha pogut: no s'envia brut, es torna a dir per què.
+    if (llocNoAmagat?.id === preparat.id) { setError(llocNoAmagat.error); return null; }
     const principal = preparat.tipus === 'veu' ? '' : String(textPrincipal);
     const text = preparat.tipus === 'veu' ? '' : [deCompartir ? peu.trim() : '', principal.trim()].filter(Boolean).join('\n\n');
     if (text.length > LIMIT_TEXT) {
@@ -432,7 +501,20 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
      `capture` obri la càmera; a l'escriptori seria el mateix selector. */
   const tactil = Boolean(globalThis.matchMedia?.(CONSULTA_TACTIL)?.matches);
   const ubicacio = Number.isFinite(preparat?.ubicacio?.lat) && Number.isFinite(preparat?.ubicacio?.lng) ? preparat.ubicacio : null;
-  const avisUbicacio = preparat?.tipus === 'video' && !preparat.senseUbicacio && !ubicacio;
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Abans de publicar, la persona veu si el contingut conserva el
+     lloc i té l'interruptor d'un toc. Sense coordenades llegides, un vídeo que no s'ha recomprimit i que la inspecció
+     no ha pogut acreditar del tot (WebM, una pista opaca) també pot portar-lo: ho diu i deixa amagar-lo. */
+  const amagat = preparat?.conservaUbicacio === false;
+  const avisUbicacio = preparat?.tipus === 'video' && !amagat && !preparat.senseUbicacio && !ubicacio && preparat.ubicacioVerificada !== true;
+  /* v1.2.23 · IDEA-331 · Gauntlet R1 del carril A (P2) · L'avís pinta el punt que el fitxer porta de veres
+     (llocDelFitxer, cinc decimals: el punt exacte), no el DTO arrodonit. Sense lloc dins del fitxer (un vídeo
+     recomprimit en un contenidor que no l'admet), només el DTO el situa al mapa, i l'avís ho diu (dos decimals). */
+  const llocDelFitxer = !amagat && preparat?.senseUbicacio !== true && Number.isFinite(preparat?.llocDelFitxer?.lat)
+    && Number.isFinite(preparat?.llocDelFitxer?.lng) ? preparat.llocDelFitxer : null;
+  const graus = (valor, decimals) => new Intl.NumberFormat(locale, { maximumFractionDigits: decimals }).format(valor);
+  const potConservarLloc = amagat && ambLlocRef.current?.idAmagat === preparat?.id;
+  const llocBloquejat = Boolean(preparat && llocNoAmagat?.id === preparat.id);
+  const filaLloc = amagat ? potConservarLloc : Boolean(ubicacio || llocDelFitxer || avisUbicacio);
   const haIntentatEnviar = preparat && intentEnviamentRef.current === preparat.id;
   const percentatge = (fraccio) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(fraccio);
   const minuts = String(MAX_VEU_MS / 60_000);
@@ -490,27 +572,43 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent?.isComposing) { e.preventDefault(); botons.primari.current?.click(); } }} />
         </label>
       ) : null}
-      {ubicacio ? <>
-        {/* R32.8 · Codex (semàntica: neteja real del fitxer, reintent idempotent) + Gemini (píndola amb MapPin). */}
+      {filaLloc ? <>
+        {/* R32.8 · Codex (semàntica: neteja real del fitxer, reintent idempotent) + Gemini (píndola amb MapPin).
+            v1.2.23 · IDEA-331 · L'avís diu que el contingut conserva el lloc; la píndola és l'interruptor: «Amaga el
+            lloc» (el rètol llarg, «Publicar sense geolocalització», al title) i, amagat o no amagable, «Conserva el lloc». */}
         <div className="sdp-xat-adjunts__fila sdp-xat-ubicacio-control">
-          <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat" id={idAvis}>
+          {/* v1.2.23 · L1-03 (Gauntlet R1) · Regió viva: el resultat de l'interruptor («Ubicació amagada», o l'avís de
+              conservar en tornar) s'anuncia, sense cap text nou. */}
+          <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat" id={idAvis} role="status">
             <MapPin size={16} aria-hidden="true" focusable="false" />
-            <span>{t('section.xat.adjunts.ubicacioInclosa', '📍 S’inclourà la ubicació on s’ha fet ({lat}°, {lng}°)')
-              .replace('{lat}', new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(ubicacio.lat))
-              .replace('{lng}', new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(ubicacio.lng))}</span>
+            <span>{amagat ? t('section.xat.ubicacio.amagada', 'Ubicació amagada')
+              : llocDelFitxer ? t('section.xat.adjunts.ubicacioConservada', 'Este contingut conserva la ubicació per a situar-lo al territori ({lat}°, {lng}°)')
+                .replace('{lat}', graus(llocDelFitxer.lat, 5)).replace('{lng}', graus(llocDelFitxer.lng, 5))
+                : ubicacio ? t('section.xat.adjunts.ubicacioNomesMapa', 'Este contingut conserva la ubicació aproximada per a situar-lo al territori ({lat}°, {lng}°): el fitxer no la porta dins.')
+                  .replace('{lat}', graus(ubicacio.lat, 2)).replace('{lng}', graus(ubicacio.lng, 2))
+                  : t('section.xat.adjunts.videoUbicacio', 'Este vídeo s’envia tal com és: si el mòbil hi va guardar la ubicació, qui el reba la podrà vore.')}</span>
           </p>
-          <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" disabled={pujant || Boolean(ocupat) || haIntentatEnviar}
+          {/* Gauntlet R1 del carril A · Dos rètols al mateix lloc de l'arbre: React conserva el node en canviar.
+              v1.2.23 · L1-03 (Gauntlet R1) · El focus només es conserva si el botó no es desactiva mentre amaga: un botó
+              enfocat que passa a disabled el perd. Mentre amaga és aria-disabled (amagaLloc i conservaLloc ja ixen amb
+              `ocupat`), i el resultat l'anuncia l'avís (role=status). */}
+          {amagat || llocBloquejat ? <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria"
+            disabled={pujant || (Boolean(ocupat) && ocupat !== 'ubicacio') || haIntentatEnviar} aria-disabled={ocupat === 'ubicacio' || undefined}
             title={haIntentatEnviar ? t('section.xat.adjunts.ubicacioFixada', 'El primer intent pot haver arribat al servidor. El reintent conserva la mateixa ubicació.') : undefined}
-            onClick={amagaLloc}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>
+            onClick={conservaLloc}>{t('section.xat.adjunts.conservaLloc', 'Conserva el lloc')}</button>
+            : <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria"
+              disabled={pujant || (Boolean(ocupat) && ocupat !== 'ubicacio') || haIntentatEnviar} aria-disabled={ocupat === 'ubicacio' || undefined}
+              title={haIntentatEnviar ? t('section.xat.adjunts.ubicacioFixada', 'El primer intent pot haver arribat al servidor. El reintent conserva la mateixa ubicació.')
+                : t('section.xat.adjunts.publicaSenseGeolocalitzacio', 'Publicar sense geolocalització')}
+              onClick={amagaLloc}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>}
         </div>
         {haIntentatEnviar ? <p className="sdp-xat-adjunts__avis">{t('section.xat.adjunts.ubicacioFixada', 'El primer intent pot haver arribat al servidor. El reintent conserva la mateixa ubicació.')}</p> : null}
-      </> : preparat?.conservaUbicacio === false ? (
+      </> : amagat ? (
         <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat">
           <MapPin size={16} aria-hidden="true" focusable="false" />
           <span>{t('section.xat.ubicacio.amagada', 'Ubicació amagada')}</span>
         </p>
       ) : null}
-      {avisUbicacio ? <p className="sdp-xat-adjunts__avis" id={idAvis}>{t('section.xat.adjunts.videoUbicacio', 'Este vídeo s’envia tal com és: si el mòbil hi va guardar la ubicació, qui el reba la podrà vore.')}</p> : null}
       {ocupat === 'tria' && progresCompressio !== null ? <p className="sdp-xat-adjunts__progres">
         <progress max="1" value={progresCompressio} aria-label={t('section.xat.adjunts.progresCompressio', 'Progrés de la compressió del vídeo')} />
       </p> : null}
@@ -533,7 +631,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const primari = gravant
     ? { clau: 'atura', etiqueta: t('section.xat.adjunts.atura', 'Atura la gravació'), icona: Square, onClick: () => gravadora.current?.atura() }
     : preparat
-      ? { clau: 'envia', etiqueta: pujant ? t('section.xat.adjunts.enviant', 'Enviant…') : t('section.xat.adjunts.envia', 'Envia el fitxer'), icona: Send, onClick: envia, ariaDisabled: pujant || Boolean(ocupat), ocupat: pujant || Boolean(ocupat), descritPer: avisUbicacio || ubicacio ? idAvis : undefined }
+      ? { clau: 'envia', etiqueta: pujant ? t('section.xat.adjunts.enviant', 'Enviant…') : t('section.xat.adjunts.envia', 'Envia el fitxer'), icona: Send, onClick: envia, ariaDisabled: pujant || Boolean(ocupat), ocupat: pujant || Boolean(ocupat), descritPer: filaLloc ? idAvis : undefined }
       : quota && potGravar && !ocupat
         ? { clau: 'grava', etiqueta: t('section.xat.adjunts.grava', 'Grava àudio'), icona: Mic, onClick: grava, nomesBuit: true, ariaDisabled: pujant }
         : null;

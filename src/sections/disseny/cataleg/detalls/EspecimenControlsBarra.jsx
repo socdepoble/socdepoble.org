@@ -6,6 +6,9 @@ import {
   ActionControl, IconButton, DateTimeControl, SelectorDataHora, BotoComentar, MenuComentar, UniversalCard,
   BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IaiaIcon
 } from '../../../../components/PedraSeca/index.js';
+/* v1.2.23 · integració (porta C1/C2 del Catàleg) · EditIcon és la icona del botó «Editar» de la BarraBlava
+   (edició des de la pàgina, Gemini R32.44); la mostra la pren de l'àtom, com BarraBlava.jsx. */
+import { EditIcon } from '../../../../components/PedraSeca/atoms/icones.jsx';
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · el rellotge viu no és a la façana:
    l'importa PaginaApp, i ací per la seua ruta (porta del catàleg, C2). */
 import { RellotgeViu } from '../../../../components/PedraSeca/atoms/RellotgeViu.jsx';
@@ -562,6 +565,7 @@ export default function EspecimenControlsBarra() {
         <span title="CommentIcon"><CommentIcon className="icon" /></span>
         <span title="ShareIcon"><ShareIcon className="icon" /></span>
         <span title="PinIcon"><PinIcon className="icon" /></span>
+        <span title="EditIcon"><EditIcon className="icon" /></span>
       </div>
     </Especimen>
     </>

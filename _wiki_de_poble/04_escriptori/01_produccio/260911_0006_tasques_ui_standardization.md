@@ -25,3 +25,8 @@ L'objectiu principal és universalitzar el codi de les targetes (per exemple, le
 - Revisar totes les instàncies on es creen targetes manualment.
 - Actualitzar `src/components/ui/UniversalCard.jsx` (o crear un nou component) per acceptar variants (`variant="action" | "info" | "onboarding"`).
 - Aplicar la mateixa lògica CSS a les alineacions dels títols.
+
+
+## Vincles
+
+- [[llibre_blanc_produccio_pedra_seca]]

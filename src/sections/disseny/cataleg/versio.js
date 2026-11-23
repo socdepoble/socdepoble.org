@@ -15,7 +15,55 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: dades/atles2dDades.js, manifest.js, detalls/atles2dComu.jsx i
+ * Darrera posada al dia: manifest.js i detalls/EspecimenIdentitat.jsx, 2026-11-23T23:04:02+01:00, v1.2.23 · integració
+ * (necessitats de G6 i G7 del Gauntlet R2): la descripció de Composició ja no diu «amplada de lectura» sinó «contenidor a
+ * tota l’amplada» (R2E-07), i el contracte de CalaixIdentitats diu que el Xat i la barra negra (useIdentitatDeLaBarra)
+ * passen els textos fixos en la llengua de la interfície (R2E-04); només esta mostra pinta el valencià de sempre.
+ * Versió anterior: detalls/EspecimenComposicio.jsx, 2026-11-23T22:42:46+01:00, v1.2.23 · R2E-07 (Gauntlet R2,
+ * grup G7): l'espècimen de Composició ja no diu que Centre és l'amplada de lectura ni que el paràgraf no passa mai de
+ * l'amplada de lectura. Des de R32.47 (lot 01 de Gemini) .sdp-centre és width: 100% amb box-sizing: border-box i no
+ * aplica --sdp-measure (components.css): la fila Centre del contracte diu «Contenidor neutre a tota l’amplada de la
+ * columna», el títol de la mostra és «Centre (amplada completa)» i el paràgraf diu que el contenidor ocupa tota l’amplada.
+ * Versió anterior: detalls/EspecimenXatRail.jsx i detalls/EspecimenIdentitat.jsx, 2026-11-23T20:21:44+01:00, v1.2.23 ·
+ * L5-02, L5-05 i L5-06 (Gauntlet R1, carril XR): el contracte de CalaixIdentitats a l'espècimen d'identitat nomena les props
+ * noves dels textos fixos del calaix (etiquetaTitol, etiquetaDescripcio, etiquetaLlista, etiquetaActiva i etiquetaRol), que
+ * el Xat passa en la llengua del peu; la barra negra i la mostra continuen en valencià. L'espècimen del rail del Xat ja no passa onAlterna a RailXat, que no el llig des de la R32.46 (el plec és del títol
+ * «Xats ▸», BotoTitolSeccioXat), i el contracte de RailXat ja no el nomena. La descripció i la capçalera ja no diuen que
+ * el Control del xat s'obri des d'una targeta «Ajustos del xat» del Panell de Control, que no existix: el Control del
+ * xat (/control-xat) no té cap entrada visible i només s'hi arriba per l'adreça.
+ * Versió anterior: registre.js i detalls/EspecimenControlsBarra.jsx, 2026-11-23T19:58:31+01:00, v1.2.23 · integració (portes C1 i
+ * C2 del Catàleg): el registre compta EditIcon (PedraSeca/atoms/icones.jsx, pàgina fonaments), la icona del botó
+ * «Editar» de la BarraBlava que ha portat l'edició des de la pàgina (Gemini R32.44), i la fila d'icones de l'espècimen
+ * dels controls de barra la mostra darrere de PinIcon.
+ * Versió anterior: detalls/EspecimenEnquadrament.jsx, 2026-11-23T19:21:58+01:00, v1.2.23 · Carril T, segona
+ * passada (ordre del Mestre del 23-11-2026, IDEA-331): la fila ofereixConservarExif diu ara que l'avís «Este contingut
+ * conserva la ubicació per a situar-lo al territori.» és tota la descripció de l'interruptor «Amaga el lloc»
+ * (aria-describedby) i que, si la foto també porta la data, la diu una línia a banda just davall: «També es publicarà
+ * la data de la foto.». Producció ja no afig la data dins de l'avís (CasellaExif, DialegEnquadrament.jsx).
+ * Versió anterior: detalls/EspecimenEnquadrament.jsx, 2026-11-23T18:36:28+01:00, v1.2.23 · Carril T (ordre del
+ * Mestre del 23-11-2026, IDEA-331): l'espècimen del retallador diu l'interruptor de producció. La fila
+ * ofereixConservarExif del contracte afig que, amb una ubicació que es pot conservar, la casella és l'interruptor
+ * «Amaga el lloc» (role="switch", apagat de sèrie; nom llarg «Publicar sense geolocalització») amb l'avís «Este
+ * contingut conserva la ubicació per a situar-lo al territori.» i, si la foto també porta la data, «També es publicarà
+ * la data de la foto.»; encés, «Ubicació amagada» i la foto ix neta; i que qui desa abans que acabe la lectura llig
+ * «Esta foto porta dades que es publicarien amb ella. Revisa «Amaga el lloc» i torna a desar.». La descripció ja no
+ * diu que la casella «Conserva la ubicació i la data de la foto» conserva de sèrie la ubicació: ho fa l'interruptor,
+ * i la casella queda per a les fotos que només porten la data. Els textos són les constants de DialegEnquadrament.jsx.
+ * Versió anterior: manifest.js, detalls/EspecimenDretsAutor.jsx, detalls/EspecimenXat.jsx,
+ * detalls/EspecimenXatAjustos.jsx i detalls/EspecimenXatRail.jsx, 2026-11-23T17:17:15+01:00, v1.2.23 · Carril K5 (ordre
+ * del Mestre del 23-11-2026): el Catàleg torna a dir el que fa producció. La nota d'accessibilitat de Drets d'autor diu
+ * que el títol de la vista és un h3 (IDEA-319, R32.47 de Gemini, CopyrightPage.jsx). L'espècimen del rail del Xat passa
+ * onIdentitats a RailXat com ClosCaXat (IDEA-327 v2) i un selector «Sessió de la mostra» ensenya els dos peus: amb
+ * sessió, el selector d'identitat «{nom}: Amb qui actues?», que obri el calaix, on l'«Eixir» pregunta abans si queden
+ * canvis sense desar (preparaEixida); sense sessió (el Foraster, sense id ni nom), «Tu: ajustos»; i en tots dos la fila
+ * «Ajustos del xat», que obri el full. L'espècimen del full «Ajustos» i el manifest (xat-rail i xat-ajustos) diuen que
+ * l'obri eixa fila i que «Tu» al peu és el peu sense sessió. La mostra de la ubicació del Xat ensenya l'avís i
+ * l'interruptor de producció (IDEA-331, ControlsAdjunt.jsx): «Este contingut conserva la ubicació per a situar-lo al
+ * territori (38,5892°, -0,4214°)» amb la icona MapPin, «Amaga el lloc» (title «Publicar sense geolocalització») i, amagat,
+ * «Ubicació amagada» amb «Conserva el lloc», en lloc del text de R32.8 «📍 S’inclourà la ubicació on s’ha fet», que ja
+ * no existix; el contracte de ControlsAdjunt ho diu. Cap espècimen del Catàleg descriu el Mode Bancal amb «10:1»: el del
+ * Panell llig la descripció de textosModeSenior.js.
+ * Versió anterior: dades/atles2dDades.js, manifest.js, detalls/atles2dComu.jsx i
  * detalls/EspecimenAtles2dPobleVirtual.jsx, 2026-11-22T22:44:34+01:00, v1.2.22 · Gauntlet R2 (M4-03, M4-05, M4-06 i
  * M4-07): l'evidència de DOL-31 cita el bloc «MODE BANCAL» de tokens.css pel nom, i no el tram 810-817, que el mateix
  * canvi ha donat al Mode Sènior; la fila de rutes_reals de l'Ajuntament separa la línia de 8749aa810 (App.jsx:1348) de
@@ -469,4 +517,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-22T22:44:34+01:00';
+export const VERSIO_CATALEG = '2026-11-23T23:04:02+01:00';

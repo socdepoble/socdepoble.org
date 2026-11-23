@@ -16,6 +16,10 @@ import { candidatsReceptaQueDinem } from '../../data/menjarIBeure/candidatsAlerg
 import { etiquetaDApartat, RUTA_DEL_RECEPTARI } from './cercaReceptes.js';
 import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssReceptes from '../../css/diferit-receptes.css?inline';
+
+const adoptaEstilsReceptes = (node) => { if (node) adoptaFullDiferit(node, 'receptes', cssReceptes); };
 
 /* Onada R14 + Onada R17 (AH-R17-05, AH-R17-06) · /receptes/:slug: la pàgina pròpia d'una recepta del llibre
    «Què dinem?» (ItemDetailSection la carrega en un tros diferit quan sectionId és 'receptes').
@@ -84,7 +88,7 @@ function heroDeRecepta(recepta, lamina, tr, obra) {
 function BlocsDeText({ blocs, llista }) {
   return blocs.map((bloc, i) => (
     <div key={`${i}-${bloc.titol ?? ''}`}>
-      {bloc.titol && <h3 lang="ca">{bloc.titol}</h3>}
+      {bloc.titol && <h4 lang="ca">{bloc.titol}</h4>}
       {llista
         ? <ul lang="ca">{bloc.linies.map((linia, j) => <li key={`${j}-${linia}`}>{linia}</li>)}</ul>
         : <div lang="ca">{bloc.linies.map((linia, j) => <p key={`${j}-${linia}`}>{linia}</p>)}</div>}
@@ -140,7 +144,7 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
       copyright={COPYRIGHT_QUE_DINEM}
       labels={[{ text: etiquetaDApartat(tr, recepta.apartat), className: 'sdp-badge-category' }]}
     >
-      <div className="sdp-recepta">
+      <div ref={adoptaEstilsReceptes} className="sdp-recepta">
         <p>
           {tr('patrimoni.receptes.situacio', 'Recepta {n} de «{llibre}», pàgina {pagina}', { n: recepta.numero, llibre: obra.titol, pagina: recepta.pagina })}
           {' · '}
@@ -167,35 +171,35 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
         </p>
         {visible('ingredients') && (
           <section aria-label={noms.ingredients} data-bloc="ingredients">
-            <h2>{noms.ingredients}</h2>
+            <h3>{noms.ingredients}</h3>
             <BlocsDeText blocs={recepta.ingredients} llista />
           </section>
         )}
         {visible('elaboracio') && (
           <section aria-label={noms.elaboracio} data-bloc="elaboracio">
-            <h2>{noms.elaboracio}</h2>
+            <h3>{noms.elaboracio}</h3>
             <BlocsDeText blocs={recepta.preparacio} llista={false} />
           </section>
         )}
         {recepta.notes.length > 0 && visible('notes') && (
           <section aria-label={noms.notes} data-bloc="notes">
-            <h2>{noms.notes}</h2>
+            <h3>{noms.notes}</h3>
             <ul lang="ca">{recepta.notes.map((nota, i) => <li key={`${i}-${nota}`}>{nota}</li>)}</ul>
           </section>
         )}
         {recepta.youtubeId && visible('video') && (
           <section aria-label={noms.video} data-bloc="video">
-            <h2>{noms.video}</h2>
+            <h3>{noms.video}</h3>
             <VideoEditorial id={recepta.youtubeId} title={tr('patrimoni.receptes.titolVideo', 'Elaboració de «{titol}»', { titol: recepta.titol })} />
           </section>
         )}
         {visible('alergens') && (
           <section aria-label={noms.alergens} data-bloc="alergens">
-            <h2>{noms.alergens}</h2>
+            <h3>{noms.alergens}</h3>
             <Alerta to="avis" viva={false}>
               {tr('patrimoni.receptes.alergens', 'Al·lèrgens no revisats: consulta la llista d’ingredients; si tens una al·lèrgia, pregunta-ho a qui cuina.')}
             </Alerta>
-            <CandidatsAlergens proposta={proposta} llengua={language} escandall={false} />
+            <CandidatsAlergens proposta={proposta} llengua={language} escandall={false} nivell="h4" />
           </section>
         )}
         {MotorDeLaRecepta && (
@@ -208,7 +212,7 @@ export function PaginaDeRecepta({ recepta, onTornaAlReceptari }) {
             )}
           </section>
         )}
-        <CreditsQueDinem tr={tr} nivell="h2" />
+        <CreditsQueDinem tr={tr} nivell="h3" />
       </div>
     </UniversalPage>
   );

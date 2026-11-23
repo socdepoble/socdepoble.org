@@ -110,6 +110,10 @@
  *         no publica res a cegues: si la lectura porta un EXIF per a la
  *         casella, no es desa; la casella apareix, marcada, amb AVIS_REVISA_EXIF,
  *         i és el segon clic el que desa. Si no porta res, es desa com abans.
+ *         v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Si la lectura porta
+ *         una ubicació que es pot conservar, el que apareix és l'interruptor
+ *         «Amaga el lloc» (apagat) i l'avís el nomena: AVIS_REVISA_LLOC. La
+ *         mecànica (no desar, i desar al segon clic) no canvia.
  *   exifTriat (false) · Gauntlet R22 (ronda 4) · La destinació publica la
  *     tria de preparaTiffTriat (exifIncrustat.js), no el bloc sencer: el
  *     fitxer privat de les Notes, que ix al Mur per promoteToPublic
@@ -202,6 +206,27 @@
  *     · Una imatge d'abans, ja retallada i sense fragment, s'obri tal com és
  *       (en «Original»): no es torna a retallar, i desar-la amb un marc nou
  *       només hi afig el fragment.
+ *
+ * v1.2.23 · IDEA-331 (ordre del Mestre 261123) · «Tot contingut conserva les
+ * dades EXIF i GPS per defecte […] informant de manera clara i visible l'autor
+ * abans de publicar […] i oferint l'interruptor exprés d'1 toc». Quan la foto
+ * porta una ubicació que es pot conservar (teUbicacio i no NO_CONSERVABLE),
+ * CasellaExif ja no pinta «Conserva la ubicació i la data de la foto» marcada:
+ * pinta el mateix control de Pedra Seca (Casella, un sol toc) com a
+ * interruptor (role="switch") que es diu «Amaga el lloc», apagat de sèrie, amb
+ * el nom llarg «Publicar sense geolocalització» al nom accessible i al title,
+ * i l'avís literal del Mestre («Este contingut conserva la ubicació per a
+ * situar-lo al territori.») com a ajuda visible (aria-describedby); encés,
+ * l'ajuda diu «Ubicació amagada». La mecànica no canvia: conservaExif és true
+ * de sèrie, un toc el passa a false i la foto ix neta ({ conservaExif: false },
+ * com la casella desmarcada); el que es desa, les píndoles de la precisió i
+ * la línia «Es desarà» són els d'abans. Les fotos sense ubicació (només la
+ * data o la càmera) i les que no es poden conservar mantenen la casella
+ * d'abans, lletra per lletra (Llei del Píxel). Queden fora, sempre netes i
+ * sense interruptor (decisió anterior del Mestre, P1-64 decisió 7, que esta
+ * ordre no toca): l'avatar i el logotip d'identitat (FORMES de
+ * useEnquadramentImatge: conservaExif false, avisaGpsEliminat) i les imatges
+ * enganxades o arrossegades al text (richText/extensions, transformPastedHTML).
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Film, Minus, Plus, Trash2, Upload } from 'lucide-react';
@@ -216,9 +241,10 @@ import {
 } from './enquadrament.js';
 import { llegixMetadadesImatge, senseDades } from './exif.js';
 import {
-  errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, precisioDeGps, teData, teExifPerConservar,
-  teUbicacio,
+  ERROR_EXIF_NO_CONSERVABLE, errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, precisioDeGps, teData,
+  teExifPerConservar, teUbicacio,
 } from './exifIncrustat.js';
+import { ERROR_PRESSUPOST_EXIF } from '../../../utils/pujadaImatge.js';
 import {
   PRECISIONS, PRECISIO_PER_DEFECTE, PRECISIO_PER_DEFECTE_PUBLICACIO, errorUbicacio, geolocalitzacio, llegixCoordenada,
   precisionsTraduides, textUbicacio,
@@ -226,6 +252,7 @@ import {
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
 import { comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
 import { TEXTOS_UBICACIO, UbicacioImatge } from './UbicacioImatge.jsx';
+import { TEXTOS_AMAGA_LLOC, textosAmagaLloc, useLlenguaDelTextOpcional } from './i18nAmagaLloc.js';
 import {
   ambEnquadrament, enquadramentNet, llevaEnquadrament, mateixEnquadrament, separaEnquadrament,
 } from '../../../utils/enquadramentUrl.js';
@@ -254,13 +281,56 @@ export const didacticaDeForma = (forma, t) => (forma ? [etiquetaDeForma(forma, t
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
 export const ERROR_EXPORTA = 'No s’ha pogut preparar la imatge enquadrada. Torna-ho a provar.';
-/* Gauntlet 261016 (Bloc 1.2) · L'avís de la casella: què es publica si es deixa marcada. */
-export const AJUDA_CONSERVA_UBICACIO = 'Si la deixes marcada, la ubicació es publicarà amb la foto.';
+/* Gauntlet 261016 (Bloc 1.2) · L'avís de la casella: què es publica si es deixa marcada.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Una foto amb ubicació ja no té
+   casella sinó l'interruptor «Amaga el lloc», i el seu avís és el literal del
+   Mestre (AVIS_UBICACIO_CONSERVADA): «Si la deixes marcada, la ubicació…» ja no
+   es pinta enlloc i ha eixit, amb la seua clau, dels cinc diccionaris. */
+export const AVIS_UBICACIO_CONSERVADA = 'Este contingut conserva la ubicació per a situar-lo al territori.';
+/* v1.2.23 · IDEA-331 · L'interruptor d'un toc: el rètol curt, el nom llarg i
+   l'estat encés. Els tres textos són els del xat (ControlsAdjunt.jsx), amb les
+   seues claus (section.xat.*): el mateix text, una sola clau per llengua. */
+export const ETIQUETA_AMAGA_LLOC = 'Amaga el lloc';
+export const ETIQUETA_PUBLICA_SENSE_GEOLOCALITZACIO = 'Publicar sense geolocalització';
+export const AVIS_UBICACIO_AMAGADA = 'Ubicació amagada';
 export const AJUDA_CONSERVA_DATA = 'Si la deixes marcada, la data es publicarà amb la foto.';
 /* Gauntlet 261016 (Codex, 02:26) · Una foto que només porta la càmera. */
 export const AJUDA_CONSERVA_CAMERA = 'Si la deixes marcada, les dades de la càmera es publicaran amb la foto.';
 /* Gauntlet 261016 (Bloc B, P3) · Qui ha desat abans de veure la casella: no es desa encara. */
 export const AVIS_REVISA_EXIF = 'Esta foto porta dades que es publicarien amb ella. Revisa la casella i torna a desar.';
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El mateix avís quan el control
+   que apareix és l'interruptor «Amaga el lloc» (una ubicació que es pot
+   conservar), i la línia que diu, davall de l'interruptor apagat, que la data
+   també es publica quan la foto la porta. Els textos viuen al diccionari diferit
+   del mòdul (i18nAmagaLloc.js, +0 B a l'arrencada); ací, el valencià de sempre
+   (AVIS_REVISA_LLOC, darrere de TEXTOS_ENQUADRAMENT: hi posa el rètol del seu parell). */
+export const AJUDA_TAMBE_DATA = TEXTOS_AMAGA_LLOC.ca.tambeData;
+/* v1.2.23 · IDEA-331 (Gauntlet R1, pendent T) · Una foto amb una ubicació que es pot conservar té
+   l'interruptor; la resta, la casella. v1.2.23 · L2-03 (Gauntlet R1) · S'exporta per al cos de DocumentEditor. */
+export const teInterruptorDeLloc = (dades) => teUbicacio(dades) && !esNoConservable(dades);
+/* v1.2.23 · L2-03 (Gauntlet R1) · La pujada rebutja la foto amb l'interruptor apagat (es conserva) perquè la
+   ubicació i la data no hi caben (ERROR_PRESSUPOST_EXIF) o no s'hi poden posar (ERROR_EXIF_NO_CONSERVABLE). Eixos
+   avisos demanen desmarcar «Conserva la ubicació i la data de la foto», una casella que no es veu: en eixe cas, i
+   només en eixe, l'avís diu que s'encenga l'interruptor, amb el seu rètol `lloc` (i18nAmagaLloc.js, en la llengua
+   de la interfície). Qualsevol altre missatge, o la casella d'abans a la vista, torna tal qual. Pura. */
+const avisAmbInterruptor = (missatge, { idioma, lloc }) => {
+  const clau = missatge === ERROR_PRESSUPOST_EXIF ? 'pressupostLloc'
+    : missatge === ERROR_EXIF_NO_CONSERVABLE ? 'noConservableLloc' : null;
+  return clau ? omple(textosAmagaLloc(idioma)[clau], { lloc }) : missatge;
+};
+export function avisDeRebuigAmbInterruptor(missatge, { dades, conserva, idioma, lloc } = {}) {
+  if (!conserva || !teInterruptorDeLloc(dades)) return missatge;
+  return avisAmbInterruptor(missatge, { idioma, lloc });
+}
+/* v1.2.23 · L2-03 (Gauntlet R2) · El mateix avís quan la finestra ja s'ha tancat (Escape a mitja pujada) i qui puja
+   només té la tria que el diàleg ha enviat (metadades.exif), no la lectura. desaImatge només hi posa `precisio` amb
+   conservaExif true quan la foto té una ubicació que es pot conservar (ambUbicacio, i un EXIF no conservable ja no
+   arriba a pujar): és a dir, quan el control a la vista era l'interruptor «Amaga el lloc», apagat. Sense `precisio`
+   (la casella d'abans, o una tria neta), el missatge tal qual. Pura. */
+export function avisDeRebuigDeLaTria(missatge, tria, { idioma, lloc } = {}) {
+  const ambInterruptor = tria?.conservaExif === true && Object.hasOwn(tria, 'precisio');
+  return ambInterruptor ? avisAmbInterruptor(missatge, { idioma, lloc }) : missatge;
+}
 /* P1-64 (Mestre 261028, decisió 7) · L'avís literal del Mestre: només quan la foto d'identitat portava GPS. */
 export const AVIS_GPS_ELIMINAT_PERFIL = '🔒 Per la teua privacitat, s\'han eliminat les dades GPS de la foto de perfil';
 /* P1-64 · Les píndoles de la precisió (nom accessible del grup) i la línia del que es desarà. */
@@ -290,11 +360,15 @@ function dadesDeLaCamera(dades, t, partsCamera = PARTS_CAMERA) {
    Gauntlet R22 (ronda 4) · Amb `triat` (exifTriat), el que publica
    preparaTiffTriat: amb la ubicació o la data, cap dada de la càmera
    (TRIA_UBICACIO_I_DATA); sense, només la marca i el model (TRIA_CAMERA) i,
-   si no n'hi ha cap, que les de la càmera no es publicaran. */
+   si no n'hi ha cap, que les de la càmera no es publicaran.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Amb ubicació, la base és
+   l'avís literal del Mestre (l'ajuda de l'interruptor «Amaga el lloc»
+   apagat); la cua de la càmera no canvia. La data no s'hi afig: la diu una
+   línia a banda (CasellaExif, AJUDA_TAMBE_DATA). */
 function ajudaConservaExif(dades, t, triat = false) {
   if (esNoConservable(dades)) return errorExifNoConservable(dades, t);
   if (teUbicacio(dades) || teData(dades)) {
-    const base = tradueix(t, teUbicacio(dades) ? TEXTOS_ENQUADRAMENT.exifAjudaUbicacio : TEXTOS_ENQUADRAMENT.exifAjudaData);
+    const base = tradueix(t, teUbicacio(dades) ? TEXTOS_ENQUADRAMENT.ubicacioConservada : TEXTOS_ENQUADRAMENT.exifAjudaData);
     const camera = triat ? '' : dadesDeLaCamera(dades, t);
     return camera ? `${base} ${omple(tradueix(t, TEXTOS_ENQUADRAMENT.exifTambeCamera), { camera })}` : base;
   }
@@ -313,21 +387,47 @@ function ajudaConservaExif(dades, t, triat = false) {
  * …» amb el punt ja arrodonit. Sense `onPrecisio`, només la casella: el DOM
  * de sempre. Gauntlet R22 (ronda 4) · `exifTriat`: la destinació publica la
  * tria de preparaTiffTriat i l'avís ho diu (ajudaConservaExif).
+ * v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Amb una ubicació que es pot
+ * conservar, la mateixa Casella és l'interruptor «Amaga el lloc» (role
+ * "switch", checked = !conserva): apagat de sèrie, l'avís literal del Mestre;
+ * encés, «Ubicació amagada». `conserva` i `onConserva` diuen el mateix que
+ * abans (true: es conserva). Sense ubicació, o si no es pot conservar, la
+ * casella d'abans.
+ * v1.2.23 · IDEA-331 · Carril T (ordre del Mestre 261123) · L'interruptor no
+ * nomena la data, i la data es publica (el bloc sencer o la tria
+ * TRIA_UBICACIO_I_DATA). Si la foto la porta i l'interruptor està apagat, una
+ * línia a banda, just davall, ho diu (AJUDA_TAMBE_DATA, en la llengua de la
+ * interfície). No va dins de l'ajuda: la descripció de l'interruptor
+ * (aria-describedby) és el literal del Mestre tot sol, i ho fixen les proves de
+ * la Llei 0 de les Notes, del cos del Perfil i de DocumentEditor.
  */
 export function CasellaExif({
   dades, conserva, onConserva, precisio = PRECISIO_PER_DEFECTE_PUBLICACIO, onPrecisio = null, desactivat = false, exifTriat = false,
 }) {
   const id = useId();
   const t = useTraductorOpcional();
+  const idioma = useLlenguaDelTextOpcional();
   const precisions = useMemo(() => precisionsTraduides(t), [t]);
   const ambPrecisio = typeof onPrecisio === 'function' && conserva && teUbicacio(dades);
   const triada = precisions.find((p) => p.valor === precisio) || precisions[0];
   const punt = ambPrecisio && dades.gps ? geolocalitzacio({ lat: dades.gps.lat, lng: dades.gps.lng, precisio: triada.valor, origen: 'exif' }) : null;
   const idLinia = `${id}-desara`;
+  const ambInterruptor = teInterruptorDeLloc(dades);
+  const rotulCurt = tradueix(t, TEXTOS_ENQUADRAMENT.amagaLloc);
+  const rotulLlarg = tradueix(t, TEXTOS_ENQUADRAMENT.publicaSenseGeolocalitzacio);
   return (
     <>
-      <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t, exifTriat === true)}
-        checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
+      {ambInterruptor ? (
+        <Casella role="switch" etiqueta={rotulCurt} aria-label={`${rotulCurt} (${rotulLlarg})`} title={rotulLlarg}
+          ajuda={conserva ? ajudaConservaExif(dades, t, exifTriat === true) : tradueix(t, TEXTOS_ENQUADRAMENT.ubicacioAmagada)}
+          checked={!conserva} disabled={desactivat} onChange={(ev) => onConserva?.(!ev.target.checked)} />
+      ) : (
+        <Casella etiqueta={etiquetaConservaExif(dades, t)} ajuda={ajudaConservaExif(dades, t, exifTriat === true)}
+          checked={conserva} disabled={desactivat} onChange={(ev) => onConserva?.(ev.target.checked)} />
+      )}
+      {ambInterruptor && conserva && teData(dades) ? (
+        <p ref={adoptaEstilsDiferits} id={`${id}-data`} className="sdp-camp__ajuda">{textosAmagaLloc(idioma).tambeData}</p>
+      ) : null}
       {ambPrecisio ? (
         <fieldset ref={adoptaEstilsDiferits} className="sdp-enquadrament__formats" role="radiogroup" aria-labelledby={`${id}-llegenda`}
           aria-describedby={idLinia} disabled={desactivat}>
@@ -434,7 +534,11 @@ export const TEXTOS_ENQUADRAMENT = Object.freeze({
   errorFitxer: Object.freeze(['editor.enquadrament.errorFitxer', ERROR_CARREGA_FITXER]),
   errorUrl: Object.freeze(['editor.enquadrament.errorUrl', ERROR_CARREGA_URL]),
   errorExporta: Object.freeze(['editor.enquadrament.errorExporta', ERROR_EXPORTA]),
-  exifAjudaUbicacio: Object.freeze(['editor.enquadrament.exifAjudaUbicacio', AJUDA_CONSERVA_UBICACIO]),
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · L'avís i l'interruptor d'una foto amb ubicació. */
+  ubicacioConservada: Object.freeze(['editor.enquadrament.ubicacioConservada', AVIS_UBICACIO_CONSERVADA]),
+  amagaLloc: Object.freeze(['section.xat.adjunts.amagaLloc', ETIQUETA_AMAGA_LLOC]),
+  publicaSenseGeolocalitzacio: Object.freeze(['section.xat.adjunts.publicaSenseGeolocalitzacio', ETIQUETA_PUBLICA_SENSE_GEOLOCALITZACIO]),
+  ubicacioAmagada: Object.freeze(['section.xat.ubicacio.amagada', AVIS_UBICACIO_AMAGADA]),
   exifAjudaData: Object.freeze(['editor.enquadrament.exifAjudaData', AJUDA_CONSERVA_DATA]),
   exifAjudaCamera: Object.freeze(['editor.enquadrament.exifAjudaCamera', AJUDA_CONSERVA_CAMERA]),
   exifTambeCamera: Object.freeze(['editor.enquadrament.exifTambeCamera', 'També es publicaran les dades de la càmera: {camera}.']),
@@ -448,6 +552,8 @@ export const TEXTOS_ENQUADRAMENT = Object.freeze({
   llistaI: Object.freeze(['editor.enquadrament.llistaI', 'i']),
   precisioLlegenda: Object.freeze(['editor.enquadrament.precisioLlegenda', LLEGENDA_PRECISIO]),
 });
+/* v1.2.23 · IDEA-331 · L'avís de revisar amb l'interruptor, en valencià: el rètol és la reserva del seu parell. */
+export const AVIS_REVISA_LLOC = omple(TEXTOS_AMAGA_LLOC.ca.revisaLloc, { lloc: tradueix(null, TEXTOS_ENQUADRAMENT.amagaLloc) });
 
 /* Onada 4, T3a · Un límit o un HEIC tenen el seu avís; la resta, el de sempre. */
 const missatgeCarrega = (err, font, t) => missatgeLimit(err?.codi, t)
@@ -515,6 +621,8 @@ export function DialegEnquadrament({
   const tRef = useRef(t);
   tRef.current = t;
   const text = (parell) => tradueix(t, parell);
+  /* v1.2.23 · IDEA-331 · La llengua dels textos diferits de l'interruptor (i18nAmagaLloc.js). */
+  const idioma = useLlenguaDelTextOpcional();
   /* Les formes amb el nom en la llengua de la interfície (una etiqueta pròpia del pare es respecta). */
   const formatsVistos = useMemo(
     () => (typeof t === 'function' ? formats.map((f) => ({ ...f, etiqueta: etiquetaDeForma(f, t) })) : formats),
@@ -1147,6 +1255,8 @@ export function DialegEnquadrament({
     const metadades = { geolocalitzacio: ubicacio, dataCaptura: geo.actiu ? geo.dataCaptura : null };
     setErrorDesat(null);
     setDesant(true);
+    /* v1.2.23 · L2-03 (Gauntlet R1) · La lectura, fora del try: el catch la necessita per a dir el control que es veu. */
+    let llegit = null;
     try {
       /* Gauntlet 261016 (Bloc 1.2) · La tria de l'EXIF. Si la lectura de
          l'original encara no ha acabat, s'espera: la tria de sèrie no depén
@@ -1157,7 +1267,7 @@ export function DialegEnquadrament({
          per a ella, tampoc: ix la casella (marcada de sèrie) i l'avís, i desa
          el segon clic. L'original és d'on s'ha llegit (el File o el blob). */
       const lectura = lecturaDeLaFont();
-      const llegit = lectura ? await lectura.promesa : null;
+      llegit = lectura ? await lectura.promesa : null;
       if (avisaGpsEliminat) {
         /* P1-64 · Identitat: sempre neta, sense casella ni AVIS_REVISA_EXIF; qui
            puja sap si hi havia una ubicació per a dir-ho després. */
@@ -1166,7 +1276,12 @@ export function DialegEnquadrament({
       } else if (teExifPerConservar(llegit)) {
         if (!casellaVista) {
           if (muntatRef.current && fontRef.current === font) setExifOriginal(llegit);
-          fallaDesat(text(TEXTOS_ENQUADRAMENT.exifRevisa));
+          /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · L'avís nomena el control
+             que apareix: l'interruptor «Amaga el lloc» o, sense ubicació que es
+             puga conservar, la casella d'abans. */
+          fallaDesat(teInterruptorDeLloc(llegit)
+            ? omple(textosAmagaLloc(idioma).revisaLloc, { lloc: text(TEXTOS_ENQUADRAMENT.amagaLloc) })
+            : text(TEXTOS_ENQUADRAMENT.exifRevisa));
           return;
         }
         if (conservaExif && esNoConservable(llegit)) {
@@ -1237,7 +1352,14 @@ export function DialegEnquadrament({
       await onDesa?.(fitxer, info, metadades);
       if (errorVideo) fallaDesat(errorVideo?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
     } catch (err) {
-      fallaDesat(err?.message || text(TEXTOS_ENQUADRAMENT.errorExporta));
+      /* v1.2.23 · L2-03 (Gauntlet R1) · Amb l'interruptor «Amaga el lloc» apagat (la tria que s'ha enviat
+         conservava la ubicació), un rebuig de la ubicació i la data diu que s'encenga l'interruptor, no que es
+         desmarque una casella que no es veu (avisDeRebuigAmbInterruptor). La resta, el missatge de sempre. */
+      fallaDesat(err?.message
+        ? avisDeRebuigAmbInterruptor(err.message, {
+          dades: llegit, conserva: metadades.exif?.conservaExif === true, idioma, lloc: text(TEXTOS_ENQUADRAMENT.amagaLloc),
+        })
+        : text(TEXTOS_ENQUADRAMENT.errorExporta));
     } finally {
       if (muntatRef.current) setDesant(false);
     }

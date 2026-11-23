@@ -158,7 +158,7 @@ async function obriPerPantalla() {
 
 async function llig() {
   fireEvent.change(screen.getByLabelText('Tria els extractes del banc de tot el període'), { target: { files: [fitxer('moviments.csv', CSV)] } });
-  await screen.findByRole('heading', { level: 2, name: 'La foto del director financer' }, { timeout: 5000 });
+  await screen.findByRole('heading', { level: 3, name: 'La foto del director financer' }, { timeout: 5000 });
 }
 
 const textDe = (container) => container.textContent;
@@ -166,7 +166,7 @@ const textDe = (container) => container.textContent;
 function senseRes(container) {
   expect(screen.queryByLabelText('Tria els extractes del banc de tot el període')).toBeNull();
   expect(screen.queryByText('Cal aprovar el tractor')).toBeNull();
-  expect(screen.queryByRole('heading', { level: 2, name: 'La foto del director financer' })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: 'La foto del director financer' })).toBeNull();
   expect(screen.queryByRole('list', { name: 'Les teues regles' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Mostra les xifres' })).toBeNull();
   expect(textDe(container)).not.toMatch(/€|forn de prova|Import amagat|Xifra amagada/);
@@ -197,7 +197,7 @@ describe('la porta del cofre', () => {
     const porta = screen.getByRole('region', { name: 'Cofre xifrat' });
     expect(within(porta).queryByRole('heading', { name: 'La foto del director financer' })).toBeNull();
     const gestio = screen.getByRole('region', { name: 'Còpies i claus del cofre' });
-    const foto = screen.getByRole('heading', { level: 2, name: 'La foto del director financer' });
+    const foto = screen.getByRole('heading', { level: 3, name: 'La foto del director financer' });
     expect(porta.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(foto.compareDocumentPosition(gestio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   }, RECORREGUT);
@@ -272,7 +272,7 @@ describe('el bloqueig buida l’estat', () => {
     await screen.findByRole('heading', { level: 1, name: 'Caixa real' });
     fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
     /* Sense esperar res: la porta es pinta oberta de seguida, amb el contingut. */
-    expect(screen.getByRole('heading', { level: 2, name: 'La foto del director financer' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'La foto del director financer' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Obri el cofre' })).toBeNull();
     expect(cofre.obert).toBe(true);
   }, RECORREGUT);

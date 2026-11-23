@@ -20,3 +20,14 @@ test('el consens d’isoglosses només s’activa amb una declaració de despleg
   }
   assert.equal(defineDeLesBanderes({ VITE_SDP_CONSENS_ISOGLOSSES: '1' })['import.meta.env.VITE_SDP_CONSENS_ISOGLOSSES'], '"1"');
 });
+
+/* v1.2.23 · costura bandera del Mur · La RPC7 del Mur públic (llig_mur_public_v7, migració 20261122160300)
+   només es negocia amb VITE_SDP_MUR_VISIBILITAT exactament '1' (src/data/supabase/content.js). La bandera es
+   plega a literal en els tres builds; qualsevol altre valor compta com a apagat i deixa la lectura en la RPC6. */
+test('la visibilitat del Mur només s’activa amb una declaració de desplegament exacta', () => {
+  assert.ok(BANDERES_DE_CAPACITAT.includes('VITE_SDP_MUR_VISIBILITAT'));
+  for (const valor of [undefined, '', 'true', ' 1', 'yes', '0']) {
+    assert.equal(defineDeLesBanderes({ VITE_SDP_MUR_VISIBILITAT: valor })['import.meta.env.VITE_SDP_MUR_VISIBILITAT'], '""');
+  }
+  assert.equal(defineDeLesBanderes({ VITE_SDP_MUR_VISIBILITAT: '1' })['import.meta.env.VITE_SDP_MUR_VISIBILITAT'], '"1"');
+});

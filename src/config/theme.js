@@ -221,7 +221,7 @@ export function subscriuContrastSistema(alCanviar) {
  *   · true  → data-sdp-senior="true" a l'arrel de presentació (<html> a
  *             socdepoble.org, :host a <soc-de-poble>, .sdp-root en un amfitrió
  *             ordinari): dianes d'acció primària >= 56x56 px (3.5rem), escalat
- *             tipogràfic fluid i contrast reforçat >= 10:1 AAA en clar i fosc.
+ *             tipogràfic fluid i contrast AAA >= 7:1 en clar i fosc (v1.2.23 · D-V1223-TEXT-BANCAL: el pitjor parell és el taronja de marca #FF7300 amb pedra-900, 7,12:1).
  * Si l'emmagatzematge falla (mode privat o quota), la preferència es conserva
  * en memòria cau durant tota la sessió i avisa totes les instàncies obertes. */
 export const SENIOR_KEY = 'sdp-senior';

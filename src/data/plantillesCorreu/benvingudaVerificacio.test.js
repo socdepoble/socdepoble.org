@@ -41,4 +41,21 @@ describe('benvingudaVerificacio · IDEA-72 / AH-11 (plantilla multilingüe des d
     expect(correu.urlConfirmacio).toBe('https://socdepoble.org/registre');
     expect(validaUrlConfirmacio('javascript:alert(1)')).toBe('https://socdepoble.org/registre');
   });
+
+  test.each(LLENGUES_CORREU)('R32.45 · canònic %s: poble i usuari escapats, URL sense esquema actiu i signatura institucional', llengua => {
+    const correu = generaCorreuBenvinguda({ nom: '<script>canari</script>', poble: '<img src=x onerror=canari>', usuari: '<b>canari</b>', urlConfirmacio: 'javascript:canari', llengua });
+    expect(correu.html).not.toContain('<script>');
+    expect(correu.html).not.toContain('<img');
+    expect(correu.html).not.toContain('<b>canari</b>');
+    expect(correu.html).toContain('&lt;script&gt;canari&lt;/script&gt;');
+    expect(correu.html).toContain('&lt;img src=x onerror=canari&gt;');
+    expect(correu.html).toContain('&lt;b&gt;canari&lt;/b&gt;');
+    expect(correu.html).not.toContain('javascript:');
+    expect(correu.text).toContain(REMITENT_CORREU_CANONIC);
+    expect(correu.html).toContain(`lang="${llengua}"`);
+  });
+
+  test('R32.45 · llengua desconeguda usa el canònic valencià', () => {
+    expect(generaCorreuBenvinguda({ llengua: 'xx' }).llengua).toBe('ca');
+  });
 });

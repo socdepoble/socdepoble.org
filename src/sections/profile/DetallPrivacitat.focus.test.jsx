@@ -52,7 +52,7 @@ const CAL_V2 = { versioVigent: 'v2', url: '/legal', textSha256: null, calReconse
 const ACCEPTAT_V2 = { ...CAL_V2, calReconsentir: false,
   consentiments: [{ tipus: 'rgpd_acepta', accio: 'atorga', versio: 'v2', al: '2026-10-01T10:00:00Z' }] };
 const deferred = () => { let resolve; const promise = new Promise((s) => { resolve = s; }); return { promise, resolve }; };
-const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+const seccio = (titol) => screen.getByRole('heading', { level: 3, name: titol }).closest('section');
 /* T11-02 (Gemini, Tall 11; marató 261101_2143) · L'error es diu amb el genèric de cada acció, mai amb el
    text del port: el doble rebutja amb «Sense xarxa», i la vista no l'ha de pintar. */
 const GENERIC = Object.freeze({

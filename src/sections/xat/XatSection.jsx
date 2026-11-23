@@ -59,9 +59,9 @@
  *     (?comunitat=) i cap conversa, en lloc del document hi viu la pàgina
  *     viva de la comunitat (ColumnaDretaDeLaComunitat): la fitxa pública de
  *     l'entitat o la pàgina del poble. En obrir-ne un grup o un canal, el xat.
- *     Els ajustos del xat viuen a /control-xat, i s'hi arriba des de la
- *     targeta «Ajustos del xat» del Panell de Control (/control): «Novetats»
- *     del rail està amagada (D16) i la roda de «Menú» només replega el rail.
+ *     Els ajustos del xat són al full «Ajustos» (FullAjustos), que obri la
+ *     fila «Ajustos del xat» del rail. El Control del xat (/control-xat) només
+ *     s'obri per l'adreça: «Novetats» del rail està amagada (D16).
  *   · Sense sessió, «Entrar» (i el ?sobre= en remot) porten a l'entrada amb
  *     rutaDEntrada (T4): /registre?mode=entrar&tornar=<la ruta del Xat>.
  *   · L'àmbit el marca `ambitEstable` d'useXat() (ARQ-H01: backend + persona
@@ -111,7 +111,7 @@ import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx'
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 /* Ordre del Mestre (261007) · La pàgina destacada de la columna dreta: es tria a paginaDestacada.js. */
 import { paginaDestacada, rutaDeLaPaginaDestacada } from './paginaDestacada.js';
-import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
+import ClosCaXat, { BotoTitolSeccioXat, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
 import VistaEnConstruccio from './components/VistaEnConstruccio.jsx';
 import { textosDeVista } from './components/vistaEnConstruccioModel.js';
@@ -1792,7 +1792,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     else cercaRef.current?.focus();
   };
 
-  const titolLlista = t('section.xat.llista.titol', 'Converses');
+  const titolLlista = t('section.xat.llista.titol', 'Xats');
   const etiquetaCerca = t('section.xat.cerca', 'Cerca converses');
   /* T4 · Qui entra des del Xat hi torna, a la mateixa ruta i consulta. */
   const rutaActual = rutaAmbConsulta(pathname, params);
@@ -1969,14 +1969,12 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     capcalera = (
       <AppGridColumn
         esDark={true}
-        titol={t('section.xat.comunitats.titol', 'Comunitats')}
-        icona={Users}
         esquerra={(
           <>
-            <BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />
             <button ref={tornaFitxaRef} type="button" className="sdp-xat-icona" onClick={tornaDeLaComunitat} aria-label={t('section.xat.tornaConverses', 'Torna a les converses')}>
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
             </button>
+            <BotoTitolSeccioXat titol={t('section.xat.comunitats.titol', 'Comunitats')} icona={Users} />
           </>
         )}
       />
@@ -1985,11 +1983,8 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     capcalera = (
       <AppGridColumn
         esDark={true}
-        titol={t(TEXTOS_ARXIVA.safata[0], TEXTOS_ARXIVA.safata[1])}
-        icona={Archive}
         esquerra={(
           <>
-            <BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />
             <button
               ref={tornaArxivatsRef}
               type="button"
@@ -1999,6 +1994,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
             >
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
             </button>
+            <BotoTitolSeccioXat titol={t(TEXTOS_ARXIVA.safata[0], TEXTOS_ARXIVA.safata[1])} icona={Archive} />
           </>
         )}
       />
@@ -2007,7 +2003,6 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     capcalera = (
       <CapcaleraLlista
         titol={titolLlista}
-        titolRail={t('section.xat.rail.menu', 'Menú')}
         etiquetaNova={t('section.xat.novaConversaAria', 'Nova conversa')}
         onNova={() => setDialegNou(true)}
         refNova={botoNovaRef}
@@ -2036,7 +2031,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
         onObriFil={obriFilDeLaVista}
         onObriComunitat={obriComunitatDeLaVista}
         onNova={() => showToast(t('section.xat.vista.comunitats.nova', "Les comunitats naixen de la Pàgina Universal d'una entitat o d'un poble: obri la seua pàgina i prem «Comentar»."), 'info')}
-        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+        esquerra={<BotoTitolSeccioXat titol={titolVista || t('section.xat.rail.comunitats', 'Comunitats')} icona={Users} />}
         carregant={status !== 'ready' && !threads.length}
         locale={locale}
         t={t}
@@ -2054,7 +2049,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
       <MultimediaDeLaClosca
         titol={titolVista}
         icona={entradaVista.Icona}
-        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+        esquerra={<BotoTitolSeccioXat titol={titolVista} icona={entradaVista.Icona} />}
         fils={threads}
         missatgesPerFil={getThreadMessages}
         onObriFil={obriFilDeLaVista}
@@ -2073,7 +2068,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
         {...textos}
         titol={titolVista}
         icona={entradaVista.Icona}
-        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+        esquerra={<BotoTitolSeccioXat titol={titolVista} icona={entradaVista.Icona} />}
         onEnConstruccio={() => showToast(avisInert, 'info')}
         t={t}
       />
@@ -2311,7 +2306,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
    19.11.50 i 19.12.18): a la dreta, el «+» rodó blau (nom accessible «Nova
    conversa», que App.test.jsx exigix). És la fila 1 de la graella, alineada
    amb la capçalera de la conversa. En estret i en mitjà, la closca del Xat no
-   pinta pestanyes (modules.css, .sdp-xat): el primer botó és BotoObriRail,
+   pinta pestanyes (modules.css, .sdp-xat): el primer botó és BotoTitolSeccioXat («Xats ▸»),
    que obri el rail. El títol no es centra com a la referència: AppGridColumn
    el posa darrere de `esquerra` a tota la graella (sdp-app-grid-shell §2) i
    centrar-lo voldria tocar la capçalera compartida.
@@ -2327,15 +2322,13 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
    Gauntlet 261030 (cicle 3) · Oberta, aria-controls anomena també la fila de
    píndoles (`idPindoles`), que l'Ordre 0 posa dins del desplegament. */
 function CapcaleraLlista({
-  titol, titolRail, etiquetaNova, onNova, refNova = null,
+  titol, etiquetaNova, onNova, refNova = null,
   etiquetaCerca, cercaOberta = false, idCerca, idPindoles, onLupa, refLupa = null
 }) {
   return (
     <AppGridColumn
       esDark={true}
-      titol={titol}
-      icona={MessageCircle}
-      esquerra={<BotoObriRail etiqueta={titolRail} />}
+      esquerra={<BotoTitolSeccioXat titol={titol} icona={MessageCircle} />}
     >
       <button
         ref={refLupa}

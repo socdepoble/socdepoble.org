@@ -106,7 +106,7 @@ const titol = () => within(full()).getByRole('heading', { level: 2 }).textConten
 const fila = (nom) => within(full()).getByRole('button', { name: new RegExp(`^${nom}`) });
 
 function obriDesDelPeu() {
-  const boto = within(rail()).getByRole('button', { name: 'Tu: ajustos' });
+  const boto = within(rail()).getByRole('button', { name: 'Ajustos del xat' });
   boto.focus();
   fireEvent.click(boto);
   return boto;
@@ -117,13 +117,13 @@ test('els presets de l’amplària són els d’AppGridShell (una sola llista pe
   expect(RUTES_AJUSTOS.perfil).toBe(RUTA_PERFIL);
 });
 
-test('«Tu» al peu del rail obri el full amb el focus al cercador; la X el tanca i el focus hi torna', () => {
+test('«Ajustos del xat» al rail obri el full amb el focus al cercador; la X el tanca i el focus hi torna', () => {
   pinta();
   expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
   const peu = rail().querySelector('.sdp-xat-rail-peu');
-  const tu = within(peu).getByRole('button', { name: 'Tu: ajustos' });
-  expect(tu.getAttribute('aria-haspopup')).toBe('dialog');
-  expect(within(tu).getByText('Tu')).toBeTruthy();
+  const identitat = within(peu).getByRole('button', { name: 'Javi Llinares: Amb qui actues?' });
+  expect(identitat.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(within(identitat).getByText('Javi Llinares')).toBeTruthy();
   /* El llapis continua portant al perfil. */
   expect(within(peu).getByRole('button', { name: 'Edita el perfil' })).toBeTruthy();
 
@@ -139,7 +139,7 @@ test('«Tu» al peu del rail obri el full amb el focus al cercador; la X el tanc
 
   fireEvent.click(within(full()).getByRole('button', { name: 'Tanca els ajustos' }));
   expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
-  expect(document.activeElement).toBe(within(rail()).getByRole('button', { name: 'Tu: ajustos' }));
+  expect(document.activeElement).toBe(within(rail()).getByRole('button', { name: 'Ajustos del xat' }));
 });
 
 test('Onada R28 · en un dispositiu tàctil (iPhone) el full s’obri sense enfocar el cercador: el teclat en pantalla no tapa els ajustos', () => {
@@ -167,12 +167,12 @@ test('Onada R28 · en un dispositiu tàctil (iPhone) el full s’obri sense enfo
   }
 });
 
-test('amb el rail plegat, l’avatar del peu obri el full', () => {
+test('amb el rail plegat, el botó «Ajustos del xat» del rail obri el full', () => {
   pinta({ railObert: false });
-  const avatar = within(rail()).getByRole('button', { name: 'Tu: ajustos' });
-  expect(avatar.classList.contains('sdp-workspace-rail__boto')).toBe(true);
+  const boto = within(rail()).getByRole('button', { name: 'Ajustos del xat' });
+  expect(boto.classList.contains('sdp-workspace-rail__boto')).toBe(true);
   expect(within(rail()).queryByRole('button', { name: 'Edita el perfil' })).toBeNull();
-  fireEvent.click(avatar);
+  fireEvent.click(boto);
   expect(titol()).toBe('Ajustos');
 });
 
@@ -499,16 +499,16 @@ test('ARBITRATGE R3: en estret (el disparador queda dins del rail tancat), Escap
 /* Safari (macOS i iOS) no enfoca un botó en fer-hi clic: el Dialeg obri amb
    el focus al <body> i no té cap disparador on tornar. Després de navegar de
    pressa i d'Escape, la closca (onRetornFocus) el porta a «Tu», no al <body>. */
-test('ARBITRATGE R3: obert amb un clic que no enfoca (Safari), Escape després de navegar porta el focus a «Tu», no al <body>', async () => {
+test('ARBITRATGE R3: obert amb un clic que no enfoca (Safari), Escape després de navegar porta el focus a «Ajustos del xat», no al <body>', async () => {
   pinta();
   document.activeElement?.blur?.();
   expect(document.activeElement).toBe(document.body);
-  const tu = within(rail()).getByRole('button', { name: 'Tu: ajustos' });
-  fireEvent.click(tu);
+  const ajustos = within(rail()).getByRole('button', { name: 'Ajustos del xat' });
+  fireEvent.click(ajustos);
   navegaDePressa();
   escape();
   expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
-  expect(document.activeElement).toBe(tu);
+  expect(document.activeElement).toBe(ajustos);
   await deixaAssentar();
-  expect(document.activeElement).toBe(tu);
+  expect(document.activeElement).toBe(ajustos);
 });

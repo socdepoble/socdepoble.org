@@ -19,7 +19,8 @@ vi.mock('./components/ClosCaXat.jsx', async () => {
   const { default: AppGridShell } = await import('../../components/layout/AppGridShell.jsx');
   return {
     default: ({ middleColumn, rightColumn }) => <AppGridShell middleColumn={middleColumn} rightColumn={rightColumn} />,
-    BotoObriRail: () => null
+    BotoObriRail: () => null,
+    BotoTitolSeccioXat: () => null
   };
 });
 import XatControlSection from './XatControlSection.jsx';

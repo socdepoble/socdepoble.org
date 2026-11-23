@@ -7,6 +7,13 @@
     "90_historic", "90_arxiu_historic",
     "bot",
     "src/sections/*/fitxes/*.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_auditoria_aparador.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_consol_vendes.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_detectiu_poble.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_enllac_torn.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_estructural.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_policia_disseny.md",
+    "src/sections/tractors/sentinelles/fitxes/sentinella_triturador_financer.md",
     "public/md",
     "dist-natiu", "android/app/src/main/assets/public", "ios/App/App/public"
   ],

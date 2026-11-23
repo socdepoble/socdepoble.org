@@ -22,7 +22,7 @@ const INSIGNIES = Object.freeze({
 });
 
 /**
- * Un pas numerat: una targeta amb el títol (h2), la insígnia del seu estat i el cos.
+ * Un pas numerat: una targeta amb el títol (h3), la insígnia del seu estat i el cos.
  * `insignia` ({ to, text }) substituïx la de l'estat quan el pas en diu una altra cosa.
  */
 export function Pas({ numero, titol, estat, insignia = null, idioma = 'ca', children }) {
@@ -32,7 +32,7 @@ export function Pas({ numero, titol, estat, insignia = null, idioma = 'ca', chil
     <li ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__pas" data-estat={estat}>
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
-          <h2 id={idTitol} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h2>
+          <h3 id={idTitol} className="sdp-gestoria-panell__titol">{`${numero}. ${titol}`}</h3>
           <Insignia to={marca.to}>{tg(idioma, marca.text)}</Insignia>
         </div>
         <div className="sdp-gestoria-panell__cos">{children}</div>

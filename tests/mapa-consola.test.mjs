@@ -323,10 +323,12 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   // 13-11-2026), la Porta Cobertura Social (llig el Router i construïx el manifest social en memòria: sense xarxa ni escriptura).
   // R31 incorpora Coherència editorial viva com a pas de lectura real; el
   // denominador del diagnòstic l'ha de comptar sense convertir-lo en N/A.
+  // v1.2.23 · L4-09 (ordre del Mestre 261123) · la Porta Duplicats Públics entra a la cadena com a pas de només lectura.
+  // v1.2.23 · L4-01 i L8-07 (Gauntlet R1) · la Porta Maquetació Canònica (IDEA-319) entra a la cadena com a pas de només lectura.
   assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
     'Consola neta (motor; imatges com a dependència explícita)',
     'Integritat del LEDGER', 'Contracte documental', 'Protecció anti-factura egress', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva',
-    'Conformitat federació pública', 'Economia documental d’arrencada', 'Integritat d’imatges i enquadrament'],
+    'Conformitat federació pública', 'Economia documental d’arrencada', 'Integritat d’imatges i enquadrament', 'Porta Duplicats Públics', 'Porta Maquetació Canònica (IDEA-319)'],
   'els passos readOnly de run-portes.mjs');
   assert.equal(fonts.cadenaPortes.total, PASSOS_DIAGNOSTIC.length, 'els passos readOnly de run-portes.mjs');
   const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });

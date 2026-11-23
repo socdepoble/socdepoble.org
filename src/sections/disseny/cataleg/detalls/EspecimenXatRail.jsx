@@ -15,16 +15,29 @@
  * demostració del catàleg no toca les preferències del rail de l'app.
  *
  * D16 (260930): «Novetats» és amagada (amagada: true a ENTRADES_RAIL) i el
- * rail no la pinta; el Control del xat s'obri des del Panell de Control.
+ * rail no la pinta. v1.2.23 · L5-06 (Gauntlet R1) · El Control del xat
+ * (/control-xat) no té cap entrada visible: el Panell de Control no hi porta
+ * cap targeta (ControlSection.jsx) i només s'hi arriba per l'adreça.
  * D17: la vista Telefonades porta el seu avís propi (textosDeVista).
  *
  * Revisió adversarial 260930 (P2) · El peu és el de producció: RailXat rep
  * `onAjustos`, i «Tu: ajustos» (l'avatar i «Tu» desplegat; l'avatar plegat)
  * diu a l'avís que obriria el full. Sense onAjustos es pintava el peu
  * d'abans, que ja no existix a l'app.
+ *
+ * v1.2.23 · K5 (ordre del Mestre 261123) · Amb IDEA-327 v2 (ClosCaXat.jsx), el
+ * peu de producció depén de la sessió. Amb sessió és el selector d'identitat:
+ * l'avatar i el nom de la identitat activa, «{nom}: Amb qui actues?», obri el
+ * calaix CalaixIdentitats, i el seu «Eixir» pregunta abans si queden canvis sense
+ * desar (preparaEixida); el full «Ajustos» s'obri des de la fila «Ajustos del
+ * xat» del menú. Sense sessió (el Foraster) el peu continua sent «Tu: ajustos».
+ * L'espècimen passa onIdentitats a RailXat com ClosCaXat (ordre del Mestre del
+ * 23-11-2026) i un selector «Sessió de la mostra» ensenya els dos peus; per
+ * defecte, el de la sessió, el que veu qui té compte.
  */
 import { useMemo, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
+import { PillToggle } from '../../../../components/PedraSeca/index.js';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import { ENTRADES_RAIL, RailXat, entradaDeVista } from '../../../xat/components/ClosCaXat.jsx';
 import VistaEnConstruccio from '../../../xat/components/VistaEnConstruccio.jsx';
@@ -35,6 +48,14 @@ import { mostraDelXat } from './EspecimenXatLlista.jsx';
 const t = (clau, alternativa) => alternativa;
 const noop = () => {};
 const AMPLE = Object.freeze({ mida: 'ample', setPanellObert: noop, panellObert: null });
+
+/* v1.2.23 · K5 (ordre del Mestre 261123) · Els dos peus de producció: amb
+   sessió (onIdentitats, el selector d'identitat) i sense (el Foraster, que no
+   porta ni id ni nom: l'avatar és el de «Tu», com a XatContext sense sessió). */
+const SESSIONS = Object.freeze([
+  Object.freeze({ valor: 'amb', text: 'Amb sessió' }),
+  Object.freeze({ valor: 'sense', text: 'Sense sessió (el Foraster)' })
+]);
 
 /* Les vistes de la columna central, en l'ordre del rail. */
 const VISTES = Object.freeze(['telefonades', 'multimedia', 'destacats']);
@@ -62,7 +83,7 @@ export function activaDeRuta(ruta) {
   return { activa: 'converses', comunitatActiva: null };
 }
 
-function Rail({ plegat, etiqueta, comunitats, setAvis }) {
+function Rail({ plegat, etiqueta, comunitats, ambSessio, setAvis }) {
   const [estat, setEstat] = useState({ activa: 'comunitats', comunitatActiva: null });
   const ves = (ruta) => {
     setEstat(activaDeRuta(ruta));
@@ -74,14 +95,16 @@ function Rail({ plegat, etiqueta, comunitats, setAvis }) {
         <RailXat
           {...estat}
           plegat={plegat}
-          onAlterna={() => setAvis(plegat ? 'Expandir: el rail es desplegaria.' : 'Replegar: el rail es plegaria.')}
           titol="Menú"
           t={t}
           comunitats={comunitats}
-          joId="jo"
-          joNom="Javi Llinares"
+          joId={ambSessio ? 'jo' : null}
+          joNom={ambSessio ? 'Javi Llinares' : null}
           onVes={ves}
           onAjustos={() => setAvis('Obriria el full «Ajustos».')}
+          onIdentitats={ambSessio
+            ? () => setAvis('Obriria el calaix «Amb qui actues?»: la identitat, l’idioma i «Eixir de Sóc de Poble», que abans pregunta si queden canvis sense desar.')
+            : null}
           recordaSeccions={false}
         />
       </AppGridContext.Provider>
@@ -91,13 +114,15 @@ function Rail({ plegat, etiqueta, comunitats, setAvis }) {
 
 export default function EspecimenXatRail() {
   const [avis, setAvis] = useState('Prem una entrada del rail o un control de les vistes.');
+  const [sessio, setSessio] = useState(SESSIONS[0].valor);
+  const ambSessio = sessio === 'amb';
   const { comunitats, fils } = useMemo(() => mostraDelXat(), []);
 
   return (
     <Especimen id="xat-rail" nom="Xat · rail i vistes" fitxer="src/sections/xat/components/ClosCaXat.jsx (RailXat) · VistaEnConstruccio.jsx · VistaMultimedia.jsx"
-      descripcio="El menú de l’esquerra del Xat, amb el patró de missatgeria que la gent ja coneix: Xats, Comunitats, Telefonades i Contingut multimèdia; la secció plegable «Més» amb Destacats; la secció plegable «Comunitats» amb les comunitats (avatar quadrat); i, al peu, «Tu» (l’avatar propi i el nom en un sol botó), que obri el full «Ajustos», i el llapis «Edita el perfil», que porta al perfil. Plegat, les mateixes entrades en el mateix ordre, i l’avatar del peu obri el full «Ajustos». «Novetats» està amagada (D16): l’entrada es conserva, però el rail no la pinta i el Control del xat s’obri des de la targeta «Ajustos del xat» del Panell de Control. Cada entrada obri una vista de la columna central. Telefonades i Destacats encara no fan res: la seua vista ho diu, i Telefonades amb el seu avís propi (D17). Contingut multimèdia ja funciona (ordre del Mestre del 261004): el control segmentat canvia de pestanya; Enllaços mostra les URL dels missatges carregats, agrupades per mes, amb el domini, l’avís de domini enganyós i el botó que obri la conversa; Fitxers i Documents diuen que els adjunts arriben amb F1. La lupa, Ordena i Selecciona encara no fan res."
+      descripcio="El menú de l’esquerra del Xat, amb el patró de missatgeria que la gent ja coneix: Xats, Comunitats, Telefonades i Contingut multimèdia; la secció plegable «Més» amb Destacats; la secció plegable «Comunitats» amb les comunitats (avatar quadrat); la fila «Ajustos del xat», que obri el full «Ajustos»; i, al peu, la identitat activa (l’avatar i el nom en un sol botó), que obri el calaix «Amb qui actues?», on l’«Eixir» pregunta abans si queden canvis sense desar, i el llapis «Edita el perfil», que porta al perfil. Sense sessió (el Foraster) el peu és «Tu», que obri el full «Ajustos». Plegat, les mateixes entrades en el mateix ordre, l’engranatge d’«Ajustos del xat» i l’avatar del peu, que fa el mateix que desplegat. «Novetats» està amagada (D16): l’entrada es conserva, però el rail no la pinta, i el Control del xat (/control-xat) no té cap entrada visible: només s’hi arriba per l’adreça. Cada entrada obri una vista de la columna central. Telefonades i Destacats encara no fan res: la seua vista ho diu, i Telefonades amb el seu avís propi (D17). Contingut multimèdia ja funciona (ordre del Mestre del 261004): el control segmentat canvia de pestanya; Enllaços mostra les URL dels missatges carregats, agrupades per mes, amb el domini, l’avís de domini enganyós i el botó que obri la conversa; Fitxers i Documents diuen que els adjunts arriben amb F1. La lupa, Ordena i Selecciona encara no fan res."
       contracte={[
-        ['RailXat', '{ activa, comunitatActiva?, plegat, onAlterna, titol, t, comunitats?, joId?, joNom?, onVes?, onAjustos?, recordaSeccions? }', "'converses' · recordaSeccions: true", "activa: 'converses', 'control', 'comunitat' o l’id d’una vista; onVes substituïx la navegació; onAjustos(boto): el peu obri el full «Ajustos» (sense ell, el peu d’abans); recordaSeccions: false no desa les seccions (el catàleg). Llig la mida d’AppGridShell (useAppGrid)."],
+        ['RailXat', '{ activa, comunitatActiva?, plegat, titol, t, comunitats?, joId?, joNom?, joAvatar?, entitatActiva?, onVes?, onAjustos?, onIdentitats?, recordaSeccions? }', "'converses' · recordaSeccions: true", "activa: 'converses', 'control', 'comunitat' o l’id d’una vista; onVes substituïx la navegació; onAjustos(boto): la fila «Ajustos del xat» obri el full «Ajustos»; onIdentitats(boto): el peu és el selector d’identitat, «{nom}: Amb qui actues?» (ClosCaXat el passa només amb sessió i obri CalaixIdentitats); sense onIdentitats, el peu «Tu: ajustos» obri el full (sense cap dels dos, el peu d’abans); recordaSeccions: false no desa les seccions (el catàleg). Llig la mida d’AppGridShell (useAppGrid)."],
         ['ENTRADES_RAIL', '{ id, accio, Icona, clau, text, seccio?, amagada? }[]', '—', "accio: 'converses' (/xat), 'control' (/control-xat, commutador) o 'vista' (/xat?vista=<id>). amagada: el rail no la pinta (Novetats, D16)."],
         ['clauSeccio(id)', "'mes' | 'comunitats'", '—', 'La preferència de cada secció plegable (getVal/setVal), com la del rail. La secció que conté l’entrada activa s’obri en arribar-hi, sense tocar la preferència.'],
         ['VistaEnConstruccio', '{ titol, icona?, icones?, subtitol?, accio?, segments?, cerca?, descripcio?, esquerra?, onEnConstruccio?, t }', '—', 'La columna central d’una vista sense lògica: controls inerts (aria-disabled) i la targeta «En construcció». icones: botons d’icona de la fila de títol ({ etiqueta, Icona }).'],
@@ -110,17 +135,18 @@ export default function EspecimenXatRail() {
         'Les seccions són botons amb aria-expanded i aria-controls; el nom diu «Secció …» perquè no es confonga amb l’entrada «Comunitats». Plegades, el contingut és hidden.',
         'Si la persona plega la secció on és l’entrada activa, la capçalera porta el marcador blanc i el nom diu «…, amb la pàgina actual».',
         'Fora d’ample, triar una entrada torna el focus al botó que obri el rail, també quan la tria canvia la fila de títol de la columna central.',
-        'El botó del peu es diu «Tu: ajustos» (comença pel que es veu) i porta aria-haspopup="dialog".',
+        'El botó del peu comença pel que es veu i porta aria-haspopup="dialog": amb sessió, «{nom}: Amb qui actues?»; sense sessió, «Tu: ajustos». La fila «Ajustos del xat» també porta aria-haspopup="dialog".',
         'Els controls de les vistes en construcció es poden enfocar i llegir (aria-disabled, no disabled) i, en prémer-los, diuen «En construcció».',
         'Contingut multimèdia: el control segmentat és un grup de commutadors amb aria-pressed; cada enllaç i el botó de la seua conversa són dos controls germans (mai un <a> dins d’un <button>), de var(--sdp-touch) d’alt; l’avís de domini enganyós és role="note".'
       ]}
       fes={['Totes les icones i els avatars del rail, de 24 i sobre l’eix de 28.', 'Dir què hi haurà en cada vista en construcció i que encara no està disponible.', 'Dir sempre que Contingut multimèdia només veu les converses obertes en esta sessió.']}
       noFacis={['Un toast de «pendent» en lloc de la vista: l’esquelet de navegació ha de ser el de la captura.', 'Copiar el verd d’una marca aliena: el rail és crom fosc.', 'Previsualitzar els enllaços (imatge i títol de la pàgina): demanaria un servidor intermediari.']}>
+      <PillToggle etiqueta="Sessió de la mostra" valor={sessio} onCanvi={setSessio} opcions={SESSIONS} />
       <h4>Desplegat: seccions «Més» i «Comunitats» i el peu</h4>
-      <Rail plegat={false} etiqueta="Rail desplegat de mostra" comunitats={comunitats} setAvis={setAvis} />
+      <Rail plegat={false} etiqueta="Rail desplegat de mostra" comunitats={comunitats} ambSessio={ambSessio} setAvis={setAvis} />
 
       <h4>Plegat: només icones</h4>
-      <Rail plegat={true} etiqueta="Rail plegat de mostra" comunitats={comunitats} setAvis={setAvis} />
+      <Rail plegat={true} etiqueta="Rail plegat de mostra" comunitats={comunitats} ambSessio={ambSessio} setAvis={setAvis} />
 
       <h4>Vistes de la columna central</h4>
       {VISTES.map((id) => {

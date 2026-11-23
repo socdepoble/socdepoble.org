@@ -99,3 +99,21 @@ test('CLI JSON retorna0/1 sobre fixtures explícites i rebutja opcions desconegu
   const red = run([]); assert.equal(red.status, 1); assert.equal(JSON.parse(red.stdout).issues[0].code, 'DP1');
   assert.equal(run(['--force']).status, 1);
 });
+// v1.2.23 · L4-09 (ordre del Mestre 261123) · La porta existia i passava, però cap cadena l'executava: ni `npm run porta`,
+// ni el hook (run-portes --nomes-portes), ni el diagnòstic del Mapa. Ara hi és una vegada, amb el seu script.
+test('v1.2.23 · L4-09 · la porta corre a la cadena: porta, hook, diagnòstic i cens, amb script porta:duplicats', async () => {
+  const { passos, seleccionaPassos } = await import('./run-portes.mjs');
+  const arrel = fileURLToPath(new URL('../..', import.meta.url));
+  const esDuplicats = pas => pas.cmd === 'node' && pas.args?.[0] === 'tooling/gates/tractor-duplicats-public.mjs';
+  assert.equal(passos.filter(esDuplicats).length, 1, 'un sol pas a la cadena');
+  const pas = passos.find(esDuplicats);
+  assert.deepEqual([pas.script, pas.readOnly, pas.prova, pas.potMutar], ['porta:duplicats', true, undefined, undefined]);
+  const pkg = JSON.parse(fs.readFileSync(path.join(arrel, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts['porta:duplicats'], 'node tooling/gates/tractor-duplicats-public.mjs');
+  for (const mode of [{}, { nomesPortes: true }, { diagnostic: true }, { cens: true }]) {
+    assert.equal(seleccionaPassos(mode).filter(esDuplicats).length, 1, JSON.stringify(mode));
+  }
+  // La porta que vigila les portes la veu a la cadena (no se n'avalua el verd global: depén de l'arbre sencer).
+  const cadena = spawnSync(process.execPath, ['tooling/gates/tractor-cadena.mjs', '--json'], { cwd: arrel, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  assert.ok(JSON.parse(cadena.stdout).cadena.includes('tractor-duplicats-public.mjs'), cadena.stderr);
+});

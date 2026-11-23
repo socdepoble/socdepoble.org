@@ -24,6 +24,7 @@ import {
 import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { AMBITS, esFitxaDAmbit, normalitzaEstat, rutaDAmbit, textCercable } from '../../utils/publicacioUniversal.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
+import { preuInicialDelProducte } from '../mercat/variacionsDeProducte.js';
 import { normalizePublicationDate } from '../../utils/publicationDateControl.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
@@ -767,7 +768,7 @@ export function deProducte(producte) {
     tipus: 'mercat',
     id: producte?.id,
     titol: producte?.title,
-    meta: [producte?.price, venedor, producte?.population],
+    meta: [preuInicialDelProducte(producte), venedor, producte?.population],
     extracte: primerText(producte?.subtitle, producte?.summary, producte?.description),
     detall: producte?.description,
     cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population, ...cosDAmbit(producte)],

@@ -68,7 +68,7 @@ describe('GestorMultimediaLocal (interfície Pedra Seca)', () => {
     ]);
 
     render(<GestorMultimediaLocal cens={cens} entorn={{}} />);
-    expect(screen.getByRole('heading', { level: 2, name: 'Gestor d’arxius locals' })).not.toBeNull();
+    expect(screen.getByRole('heading', { level: 3, name: 'Gestor d’arxius locals' })).not.toBeNull();
     expect(screen.getByRole('button', { name: 'Vincular carpeta local' })).not.toBeNull();
 
     const input = screen.getByTestId('input-carpeta-multimedia-local');

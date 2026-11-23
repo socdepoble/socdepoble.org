@@ -125,6 +125,9 @@ export const CAPACITATS = Object.freeze({
   edicioEditorial: Object.freeze(['adminActualitzaPublicacioEditorial']),
   /* P1-75 · Revisions vigents per peça; CAS 0 inicia, autoria autoritativa al servidor. */
   revisionsLlavor: Object.freeze(['loadSeedRevisions', 'desaRevisioSeed']),
+  /* R32.44 · Contractes opcionals explícits. CAS propi i historial privat amb restauració append-only. */
+  edicioPublicacionsPropies: Object.freeze(['desaPublicacioPropia']),
+  revisionsPagines: Object.freeze(['llistaRevisionsPagina', 'desaRevisioPagina', 'restauraRevisioPagina']),
   /* P1-75 · Campanyes públiques d'una peça de patrimoni, en ordre d'any descendent.
      La versió 0 crea, una versió positiva confirma l'edició o la baixa. L'autoria és interna. */
   revisionsPatrimoni: Object.freeze(['llistaRevisionsPatrimoni', 'desaRevisioPatrimoni', 'esborraRevisioPatrimoni']),
@@ -949,8 +952,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    Foraster sense amfitrió amb els tres actors del projecte, el logotip més gran a la barra negra, l'accés del Xat sense
    el segon rètol de benvinguda, un sol Mode Bancal (DOL-31), les decisions del Motor d'estudis a l'Atles, els lots 02 i
    03 de Codex R32.42 (Ajuntament i privadesa de la ubicació i del Mur, amb les migracions encara sense aplicar) i 02 i 03
-   de R32.43 (Sentinella i duplicats de public), i el connector WordPress 1.1.30. */
-export const VERSIO_CLIENT_NATIU = 27;
+   de R32.43 (Sentinella i duplicats de public), i el connector WordPress 1.1.30.
+   Onada v1.2.23 · IDEA-331, IDEA-333 i els huit kits (prompt 261123_1439, pla 261123_1246) · Versió unificada 1.2.23
+   amb el build 28: les fotos i els vídeos conserven el lloc per defecte amb l'interruptor «Amaga el lloc», la versió
+   viva al menú de /versions, el text cert del Mode Bancal, els kits de Codex R32.44, R32.45 i R32.46 i de Gemini
+   R32.42, R32.44, R32.45, R32.46 i R32.47, i el connector WordPress 1.1.31. */
+export const VERSIO_CLIENT_NATIU = 28;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

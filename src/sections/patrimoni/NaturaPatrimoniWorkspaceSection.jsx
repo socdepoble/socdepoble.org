@@ -157,7 +157,7 @@ export default function NaturaPatrimoniWorkspaceSection({
       if (item?.arbre) return <PaginaFitxaArbre key={item.id} item={item} textos={textos} onClose={onClose} />;
       if (llibreActiu) return <PortadaDelLlibre key={llibreActiu.id} llibre={llibreActiu} textos={textos} />;
       const prestatgeriaMultipoble = <section className="sdp-prose" aria-labelledby="sdp-arbres-catalegs-municipals">
-        <h2 id="sdp-arbres-catalegs-municipals">{textos.catalegsMunicipals}</h2>
+        <h3 id="sdp-arbres-catalegs-municipals">{textos.catalegsMunicipals}</h3>
         <p>{textos.introMultipoble}</p>
         <div className="sdp-card-grid">
           {llibres.map(llibreItem => {
@@ -167,7 +167,7 @@ export default function NaturaPatrimoniWorkspaceSection({
             return (
               <UniversalCard
                 key={llibreItem.id}
-                headingLevel="h3"
+                headingLevel="h4"
                 title={llibreItem.titol}
                 subtitle={`${llibreItem.poble} · ${recompte}`}
                 body={llibreItem.fontDoctoral?.autoriaTecnica || llibreItem.autoria?.nom || undefined}

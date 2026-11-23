@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { ACTIUS_PATRIMONIALS_LEGITIMS, ZIP_OPENDATA_CANONIC, validaManifestActius, sha256 } from '../lib/actius-patrimonials-legitims.mjs';
 import { llegeixZipNodeZero } from '../node0/paquet-opendata-node0.mjs';
 import { auditaAnonim, auditaCapcaleres, auditaBlindatge, main, parseArgs, LIMITS } from './tractor-sentinella-blindatge.mjs';
+import { escanejaLiterals } from './literals-secrets-node0.mjs';
 
 const ANON = 'sb_publishable_' + 'TEST_ONLY_PUBLIC_FIXTURE_123456';
 const CONFIG = { supabaseUrl: 'https://project.supabase.co', publishableKey: ANON };
@@ -408,4 +409,105 @@ test('v1.2.22 · L4-03 · la passada d’integritat de public té topall propi i
   local = (await auditaBlindatge({ root })).localSecrets;
   assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT'); assert.deepEqual(local.findings, []);
   assert.equal(local.coverage.literals.status, 'ok'); assert.equal(local.coverage.staticBinaries.status, 'unknown');
+});
+
+// v1.2.23 · L4-03b (ordre del Mestre 261123) · Els JS de més de 2 MiB del build (el tros de pageContent.r10) donaven
+// 'fail' per la mida. Ara es lligen per blocs (només els JS de dist/): un text net dona 'ok', un secret a la costura d'un
+// bloc continua sent fallada amb la línia exacta, i un fitxer gros que no és text continua bloquejant (R32.43).
+const jsGran = (cos = '') => {
+  // Un caràcter de dos bytes just damunt de la costura del primer bloc: el descodificador ha de cosir-lo.
+  const parts = ['/* ' + 'x'.repeat(LIMITS.streamBlockBytes - 4) + 'à */\n', cos];
+  const linia = 'export const t={a:"Text de pàgina vàlid",b:[1,2,3]};\n';
+  let mida = Buffer.byteLength(parts.join(''));
+  while (mida <= LIMITS.localFileBytes + 65536) { parts.push(linia); mida += Buffer.byteLength(linia); }
+  return parts.join('');
+};
+const escriuGran = (root, rel, contingut) => {
+  const desti = path.join(root, rel); fs.mkdirSync(path.dirname(desti), { recursive: true }); fs.writeFileSync(desti, contingut);
+  return fs.statSync(desti).size;
+};
+
+test('v1.2.23 · L4-03b · un JS de build > 2 MiB net es llig sencer per blocs i dona ok, no fail', async t => {
+  const root = fixture(t), mida = escriuGran(root, 'dist/assets/pageContent.r10-sintetic.js', jsGran());
+  assert.ok(mida > LIMITS.localFileBytes && mida > LIMITS.localBinaryFileBytes);
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'ok'); assert.equal(local.code, undefined); assert.deepEqual(local.findings, []);
+  assert.deepEqual(local.coverage, { literals: { status: 'ok', files: 1, bytes: mida }, staticBinaries: { status: 'ok', files: 0, bytes: 0 } });
+  assert.deepEqual(local.blockScanned, { files: 1, bytes: mida });
+});
+
+test('v1.2.23 · L4-03b · els secrets a les costures dels blocs es troben amb la línia exacta i sense el valor', async t => {
+  const root = fixture(t), linia = 'export const t={a:"Text de pàgina vàlid",b:[1,2,3]};\n';
+  const secret = 'sb_secret_' + 'Q7'.repeat(20), jwtCos = Buffer.from(JSON.stringify({ role: 'service' + '_role' })).toString('base64url');
+  const jwt = `eyJhbGciOiJIUzI1NiJ9.${jwtCos}.${'s'.repeat(40)}`;
+  const parts = []; let mida = 0;
+  const posa = text => { parts.push(text); mida += Buffer.byteLength(text); };
+  // Cada costura de bloc queda dins d'un secret (comença 20 bytes abans): una clau de Supabase i un JWT de rol elevat.
+  for (const [costura, valor] of [[LIMITS.streamBlockBytes, `const a="${secret}";\n`], [2 * LIMITS.streamBlockBytes, `const b="${jwt}";\n`]]) {
+    while (mida + Buffer.byteLength(linia) < costura - 100) posa(linia);
+    posa(' '.repeat(costura - 20 - 'const a="'.length - mida));
+    posa(valor);
+  }
+  while (mida <= 2 * LIMITS.streamBlockBytes + 4096) posa(linia);
+  posa(`const c="${secret}";`); // l'última línia, sense salt final
+  const text = parts.join(''), midaFitxer = escriuGran(root, 'dist/assets/gran.js', text), bytes = Buffer.from(text);
+  for (const [costura, agulla] of [[LIMITS.streamBlockBytes, secret], [2 * LIMITS.streamBlockBytes, jwt]]) {
+    const inici = bytes.indexOf(agulla);
+    assert.ok(inici < costura && costura < inici + agulla.length, `la costura ${costura} cau dins del secret`);
+  }
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  const esperat = escanejaLiterals(text, 'dist/assets/gran.js').map(f => `${f.ruleId}:${f.line}`).sort();
+  assert.equal(esperat.length, 3);
+  assert.deepEqual(local.findings.map(f => `${f.ruleId}:${f.line}`).sort(), esperat, 'per blocs = escaneig sencer');
+  assert.equal(local.status, 'fail'); assert.deepEqual(local.blockScanned, { files: 1, bytes: midaFitxer });
+  assert.equal(JSON.stringify(local).includes(secret), false); assert.equal(JSON.stringify(local).includes(jwtCos), false);
+});
+
+test('v1.2.23 · L4-03b · un .js gros que no és text, o per damunt del sostre, continua sent fallada bloquejant', async t => {
+  const root = fixture(t);
+  // UTF-8 invàlid passat el primer bloc i cap byte nul: no és text encara que comence com un JS.
+  const contingut = Buffer.concat([Buffer.from(jsGran()), Buffer.alloc(4096, 0xff)]);
+  escriuGran(root, 'dist/assets/binari-camuflat.js', contingut);
+  let local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.coverage.literals.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.ok(local.findings.some(f => f.ruleId === 'static-file-oversize-unregistered' && f.path === 'dist/assets/binari-camuflat.js'));
+  fs.rmSync(path.join(root, 'dist', 'assets', 'binari-camuflat.js'));
+  // El sostre es prova dins de dist/: a public/ el fitxer ja cauria per R32.43 sense arribar a mirar-lo.
+  const gros = path.join(root, 'dist', 'assets', 'sostre.js'); fs.writeFileSync(gros, ''); fs.truncateSync(gros, LIMITS.localStreamFileBytes + 1);
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.deepEqual(local.blockScanned, { files: 0, bytes: 0 }, 'per damunt del sostre no es llig');
+  assert.ok(local.findings.some(f => f.ruleId === 'static-file-oversize-unregistered' && f.path === 'dist/assets/sostre.js'));
+});
+
+// v1.2.23 · L4-03b (ordre del Mestre 261123) · Gauntlet: l'excepció és només per als JS del build. Un text gros vàlid (UTF-8 i
+// sense bytes nuls, perquè no el tombe la detecció de binaris) i no registrat continua bloquejant a public/ i amb altres extensions.
+test('v1.2.23 · L4-03b · fora dels JS de dist/, un text gros vàlid i no registrat continua sent fallada bloquejant (R32.43)', async t => {
+  const root = fixture(t), cos = jsGran();
+  // v1.2.23 · costura Porta Arrel A5 (ordre del Mestre 261123) · el JSON de public/ és de la fixture temporal, no del
+  // repositori: es compon per segments perquè la Porta Arrel no el llija com a configuració citada inexistent.
+  const fora = [['public', 'gran.json'].join('/'), 'public/gran.js', 'public/assets/gran.svg', 'dist/gran.json', 'dist/assets/gran.css', 'dist/assets/gran.svg', 'dist/index.html'];
+  for (const rel of fora) escriuGran(root, rel, cos);
+  const dins = escriuGran(root, 'dist/assets/net-AbCdEfGh.js', cos);
+  const esperat = rels => rels.map(rel => `static-file-oversize-unregistered@${rel}`).sort();
+  let local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.equal(local.coverage.literals.status, 'fail'); assert.equal(local.coverage.staticBinaries.status, 'fail');
+  assert.deepEqual(local.findings.map(f => `${f.ruleId}@${f.path}`).sort(), esperat(fora));
+  assert.deepEqual(local.blockScanned, { files: 1, bytes: dins }, 'només el JS del build es llig per blocs');
+  // Sense dist/, public/ és la base de l'escaneig principal i tampoc no hi ha excepció.
+  fs.rmSync(path.join(root, 'dist'), { recursive: true });
+  local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'fail'); assert.deepEqual(local.blockScanned, { files: 0, bytes: 0 });
+  assert.deepEqual(local.findings.map(f => `${f.ruleId}@${f.path}`).sort(), esperat(fora.filter(rel => rel.startsWith('public/'))));
+});
+
+test('v1.2.23 · L4-03b · esgotar el pressupost dels textos grans és inconclús, mai verd ni fallada inventada', async t => {
+  const root = fixture(t), cos = jsGran();
+  for (let i = 0; i <= LIMITS.localStreamFiles; i++) escriuGran(root, `dist/assets/c${String(i).padStart(2, '0')}.js`, cos);
+  fs.writeFileSync(path.join(root, 'dist', 'menut.js'), 'export const publicValue = 1;');
+  const local = (await auditaBlindatge({ root })).localSecrets;
+  assert.equal(local.status, 'unknown'); assert.equal(local.code, 'LOCAL_LIMIT'); assert.deepEqual(local.findings, []);
+  assert.equal(local.blockScanned.files, LIMITS.localStreamFiles);
+  // Els textos menuts es lligen primer i no perden pressupost; els grans que no s'han llegit deixen tot dues cobertures inconcluses.
+  assert.equal(local.coverage.literals.files, LIMITS.localStreamFiles + 1);
+  assert.equal(local.coverage.literals.status, 'unknown'); assert.equal(local.coverage.staticBinaries.status, 'unknown');
 });

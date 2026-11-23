@@ -33,6 +33,9 @@
 
 .sdp-mapa__titol {
   margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
   font-size: var(--sdp-text-h4);
   line-height: var(--sdp-leading-titol);
   color: var(--sdp-text-titol);

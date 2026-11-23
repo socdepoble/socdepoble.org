@@ -14,6 +14,7 @@ export const TEXTOS_BARRA = Object.freeze({
   traduir: Object.freeze(['pagina.barra.traduir', 'Traduir']),
   comentar: Object.freeze(['pagina.barra.comentar', 'Comentar']),
   compartir: Object.freeze(['pagina.barra.compartir', 'Compartir']),
+  editar: Object.freeze(['pagina.barra.editar', 'Editar']),
   /* El nom de la regió de la barra taronja (<section aria-label>). */
   autoria: Object.freeze(['pagina.barra.autoria', 'Autoria i data']),
   /* Onada R19 · Noms accessibles de la co-publicació multi-entitat registrada. */

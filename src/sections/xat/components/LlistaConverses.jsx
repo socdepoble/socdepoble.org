@@ -117,7 +117,7 @@ export default function LlistaConverses({
           {t('section.xat.seleccio.pista', 'Mantín premuda una conversa, fes clic amb el botó dret o prem Maj+F10 per a seleccionar xats.')}
         </p>
       ) : null}
-      <ul className={peu ? 'sdp-xat-llista sdp-xat-llista--amb-peu' : 'sdp-xat-llista'} aria-label={t('section.xat.llista.titol', 'Converses')}>
+      <ul className={peu ? 'sdp-xat-llista sdp-xat-llista--amb-peu' : 'sdp-xat-llista'} aria-label={t('section.xat.rail.converses', 'Converses')}>
         {llista.map((fila) => (
           <li key={fila.clau} data-clau={fila.clau} data-canals={fila.canals ? fila.canals.map((c) => c.id).join(' ') : undefined}>
             {fila.tipus === 'poble' ? (

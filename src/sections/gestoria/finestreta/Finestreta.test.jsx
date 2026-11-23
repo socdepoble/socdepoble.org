@@ -130,7 +130,7 @@ async function lligPapers() {
   const casella = await screen.findByRole('checkbox', { name: `Llig-lo: ${RUTES.opac}` }, { timeout: 5000 });
   fireEvent.click(casella);
   fireEvent.click(screen.getByRole('button', { name: 'Llig els 2 papers' }));
-  await screen.findByRole('heading', { level: 2, name: 'Propostes per revisar' }, { timeout: 5000 });
+  await screen.findByRole('heading', { level: 3, name: 'Propostes per revisar' }, { timeout: 5000 });
   return llista;
 }
 
@@ -210,8 +210,8 @@ describe('les portes', () => {
     expect(await screen.findByText('Cal aprovar el tractor', {}, { timeout: 5000 })).toBeTruthy();
     expect(screen.queryByLabelText(ETIQUETA_CARPETA)).toBeNull();
     /* La fitxa i la Finestreta són codi del tractor: sense l'aprovació, tampoc es pinten. */
-    expect(screen.queryByRole('heading', { level: 2, name: 'La teua fitxa' })).toBeNull();
-    expect(screen.queryByRole('heading', { level: 2, name: 'Finestreta' })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: 'La teua fitxa' })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: 'Finestreta' })).toBeNull();
   });
 });
 
@@ -240,7 +240,7 @@ describe('de la carpeta a la fitxa', () => {
     expect(llista.some((f) => f.arrayBuffer.mock.calls.length)).toBe(false);
     fireEvent.click(screen.getByRole('checkbox', { name: `Llig-lo: ${RUTES.opac}` }));
     fireEvent.click(screen.getByRole('button', { name: 'Llig els 2 papers' }));
-    await screen.findByRole('heading', { level: 2, name: 'Propostes per revisar' }, { timeout: 5000 });
+    await screen.findByRole('heading', { level: 3, name: 'Propostes per revisar' }, { timeout: 5000 });
     expect(llista.map((f) => f.arrayBuffer.mock.calls.length)).toEqual([1, 1, 0]);
 
     /* Amb l'ull tancat, cap valor és al DOM. */
@@ -421,7 +421,7 @@ describe('de la carpeta a la fitxa', () => {
     /* Els papers diuen un altre nom que el confirmat: «Confirma este» i «Rebutja’l» a la fitxa, i les propostes. */
     fireEvent.click(casella);
     fireEvent.click(screen.getByRole('button', { name: 'Llig els 2 papers' }));
-    await screen.findByRole('heading', { level: 2, name: 'Propostes per revisar' }, { timeout: 5000 });
+    await screen.findByRole('heading', { level: 3, name: 'Propostes per revisar' }, { timeout: 5000 });
     expect(screen.getByRole('button', { name: 'Confirma este: valor nou de Nom' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Rebutja’l: valor nou de Nom' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Confirma Primer cognom' })).toBeTruthy();
@@ -560,7 +560,7 @@ describe('[DEFECTE] deute previ conegut', () => {
     fireEvent.change(screen.getByLabelText(ETIQUETA_CARPETA), { target: { files: [fitxer(RUTES.vida, `${VIDA_LABORAL}\nUna línia de més`)] } });
     await screen.findByRole('button', { name: 'Llig el paper' }, { timeout: 5000 });
     /* El DEFECTE: les propostes de la carpeta d'abans continuen a la pantalla. */
-    expect(screen.getByRole('heading', { level: 2, name: 'Propostes per revisar' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Propostes per revisar' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mostra les dades' }));
     const vida = paperDe('NIF o NIE', RUTES.vida);

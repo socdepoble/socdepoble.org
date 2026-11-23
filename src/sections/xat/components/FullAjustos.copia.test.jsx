@@ -207,7 +207,7 @@ test('dins de ClosCaXat: Tu › Xats › Còpia de seguretat › Comprova una c�
   });
   setVal(CLAU_RAIL, 'obert');
   render(<ClosCaXat middleTitle="Xats" middleColumn={<aside className="sdp-workspace-column" aria-label="Xats"><PanellInicialMobil /><BotoObriRail etiqueta="Menú" /></aside>} rightColumn={<div />} />);
-  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Tu: ajustos' }));
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Ajustos del xat' }));
   const full = screen.getByRole('dialog', { name: 'Ajustos' });
   const filaDelFull = (nom) => within(full).getByRole('button', { name: new RegExp(`^${nom}`) });
   fireEvent.click(filaDelFull('Xats'));

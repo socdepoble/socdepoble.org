@@ -397,8 +397,10 @@ export function restauraNoms(traduit, protegit) {
  * l'acte, per EventCard), TargetaDelMercat i la targeta incrustada d'un
  * original resolt (SincronitzacioTargetes · propsDeLOriginal); la resta de
  * targetes no porten mode i el motor no hi refusa res. El Traduir de la
- * pàgina (useTraduccioPagina) i useTraduccioTargeta tenen la guarda a la
- * vista (translate="no", blocsTraduibles i extreuCampsTargeta). El valor es
+ * pàgina (useTraduccioPagina) i el Traduir de la targeta (UniversalCard, amb
+ * la prop `modeTraduccio`) tenen la guarda a la vista (translate="no" i
+ * blocsTraduibles); v1.2.23 · L4-06 (Gauntlet R1) · useTraduccioTargeta i
+ * extreuCampsTargeta ja no existixen (R32.45 els va retirar). El valor es
  * llig una sola vegada, també si ve heretat (Object.create): s'avalua com a
  * propietat pròpia d'un registre nou. El pis mínim del contracte per a qui
  * només té el mode (translationMode.js · allowsMachineTranslation), demanat amb import() només

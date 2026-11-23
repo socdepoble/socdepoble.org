@@ -1,0 +1,104 @@
+/* Onada R32.45 · Full diferit del receptari «Què dinem?» (ReceptaDetailSection.jsx i ReceptesWorkspaceSection.jsx).
+   Traslladat literalment de src/css/modules.css dins de @layer components per alliberar marge d'arrencada al paquet
+   de WordPress sense canviar ni un sol píxel del receptari. */
+@layer components {
+  .sdp-recepta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-recepta__capcalera {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-recepta__lamina {
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .sdp-recepta__lamina img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--sdp-radi-g);
+  }
+
+  .sdp-recepta__quadrats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-recepta__quadrats .sp-card-calendar-badge {
+    float: none;
+    margin: 0;
+    width: 96px;
+    height: 96px;
+    gap: var(--sdp-space-1);
+    border: none;
+    border-radius: 0;
+    background-color: var(--sdp-fons-app);
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-recepta__quadrats button.sp-card-calendar-badge:hover {
+      background-color: var(--sdp-fons-subtil);
+      color: var(--sdp-text-titol);
+    }
+    .sdp-recepta__quadrats button.sp-card-calendar-badge[aria-pressed="true"]:hover,
+    .sdp-recepta__quadrats button.sp-card-calendar-badge[aria-selected="true"]:hover {
+      background-color: var(--sdp-accio-subtil);
+      color: var(--sdp-accio-text);
+    }
+  }
+
+  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
+  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
+    background-color: var(--sdp-accio-subtil);
+    color: var(--sdp-accio-text);
+    box-shadow: inset 0 0 0 2px var(--sdp-accio);
+  }
+
+  .sdp-recepta__quadrat-icona {
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  .sdp-recepta__quadrats .sdp-fitxa-emoji-xl {
+    font-size: calc(var(--sdp-fitxa-mida) * 7 / 16);
+    line-height: 1;
+  }
+
+  .sdp-recepta__quadrat-text {
+    max-width: 100%;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    color: currentColor;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  .sdp-recepta__ajuda {
+    text-align: center;
+    color: var(--sdp-text-suau);
+  }
+
+  @media (forced-colors: active) {
+    .sdp-recepta__quadrats .sp-card-calendar-badge {
+      border: 2px solid ButtonText;
+    }
+    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
+    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
+      border-color: Highlight;
+    }
+  }
+}

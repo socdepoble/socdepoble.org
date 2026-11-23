@@ -23,6 +23,10 @@ export const LIMITS = Object.freeze({ requestsPerCycle: 16, bytesPerCycle: 2 * 1
   configBytes: 16384, localFileBytes: 2 * 1024 * 1024, localBytes: 8 * 1024 * 1024,
   localEntries: 4096, localFiles: 512, localBinaryFileBytes: PRESSUPOST_ESTATIC.binari.perFitxer,
   localBinaryBytes: PRESSUPOST_ESTATIC.binari.bytes, localBinaryFiles: PRESSUPOST_ESTATIC.binari.fitxers,
+  // v1.2.23 · L4-03b (ordre del Mestre 261123) · Els JS de més de 2 MiB del build, dins de dist/ (el tros de pageContent.r10,
+  // insigniaBetaOberta…), es lligen per blocs, amb memòria fitada i sostre i pressupost propis. El dels textos menuts no canvia.
+  localStreamFileBytes: 16 * 1024 * 1024, localStreamBytes: 64 * 1024 * 1024, localStreamFiles: 16,
+  streamBlockBytes: 1024 * 1024, streamOverlapChars: 64 * 1024,
   findings: 64, outputBytes: 131072 });
 const OWN = ['https://socdepoble.org', 'https://socdepoble.cat'];
 const SEO_BROWSER_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -96,6 +100,47 @@ function sourceBytes(file, max) {
     return bytes.subarray(0, size);
   } finally { fs.closeSync(fd); }
 }
+/* v1.2.23 · L4-03b (ordre del Mestre 261123) · Lectura per blocs d'un JS gros del build, sense carregar-lo sencer.
+ * Cada finestra és la cua de l'anterior més un bloc nou. La cua comença almenys `streamOverlapChars` abans d'on
+ * la finestra anterior ha deixat d'escanejar: tota coincidència de fins a 64 Ki caràcters (clau privada, JWT,
+ * assignació de credencial…) cau sencera en alguna finestra. Els talls busquen un signe de puntuació per no partir
+ * cap testimoni; si no en troben, un tall només pot afegir una troballa conservadora (tancat per defecte), mai amagar-ne.
+ * Un byte nul o UTF-8 invàlid vol dir que no és text: qui crida ho tracta com un binari gros no registrat (R32.43). */
+const TALL = /[;,(){}[\]<>=:!?&|*/%^~@#$]/;
+const tallaEnrere = (text, desde) => {
+  for (let k = desde, min = Math.max(1, desde - 2048); k >= min; k--) if (TALL.test(text[k - 1])) return k;
+  return desde;
+};
+function textPerBlocs(file, relative, informa) {
+  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+  try {
+    const before = fs.fstatSync(fd);
+    if (!before.isFile() || before.nlink !== 1 || before.size > LIMITS.localStreamFileBytes) fail('LOCAL_LIMIT');
+    const bloc = Buffer.alloc(LIMITS.streamBlockBytes), decoder = new TextDecoder('utf-8', { fatal: true });
+    let llegits = 0, cua = '', liniesAbans = 0;
+    for (;;) {
+      const n = fs.readSync(fd, bloc, 0, bloc.length, null);
+      llegits += n;
+      if (llegits > before.size) fail('UNSAFE_SOURCE');
+      const tros = bloc.subarray(0, n);
+      if (tros.includes(0)) return { text: false, bytes: llegits };
+      let nou;
+      try { nou = decoder.decode(tros, { stream: n > 0 }); } catch { return { text: false, bytes: llegits }; }
+      const finestra = cua + nou, fi = n ? tallaEnrere(finestra, finestra.length) : finestra.length;
+      const escanejat = finestra.slice(0, fi);
+      informa(escanejaLiterals(escanejat, relative).map(f => ({ ...f, line: f.line + liniesAbans })),
+        defectesFitxerEstatic(relative, Buffer.from(escanejat)));
+      if (!n) break;
+      const tall = tallaEnrere(finestra, Math.max(0, fi - LIMITS.streamOverlapChars));
+      for (let i = finestra.indexOf('\n'); i !== -1 && i < tall; i = finestra.indexOf('\n', i + 1)) liniesAbans++;
+      cua = finestra.slice(tall);
+    }
+    const after = fs.fstatSync(fd), named = fs.lstatSync(file);
+    if (llegits !== before.size || before.ino !== after.ino || before.size !== after.size || before.mtimeMs !== after.mtimeMs
+      || before.ctimeMs !== after.ctimeMs || named.isSymbolicLink() || named.ino !== after.ino || named.dev !== after.dev) fail('UNSAFE_SOURCE');
+    return { text: true, bytes: llegits };
+  } finally { fs.closeSync(fd); }
+}
 function readConfig(root, relative) {
   if (typeof relative !== 'string' || path.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(p => !p || p === '.' || p === '..' || /^\.env/i.test(p))) fail('INVALID_CONFIG');
   let current = root;
@@ -109,6 +154,9 @@ function scanPublic(root) {
   const approved = new Map(ACTIUS_PATRIMONIALS_LEGITIMS.map(asset => [asset.path, asset]));
   const censusCache = new Map(), approvedPaths = new Set();
   const textual = relative => /\.(?:[cm]?js|json|html|css|txt|xml|webmanifest|svg)$|(?:^|\/)\.htaccess$/i.test(relative);
+  // v1.2.23 · L4-03b (ordre del Mestre 261123) · L'excepció de mida només cobrix els trossos JS del build (dist/). public/
+  // (també la seua passada d'integritat) i la resta d'extensions textuals conserven R32.43 sencera: grossos i fora del manifest, bloquegen.
+  const jsDelBuild = relative => relative.startsWith('dist/') && /\.[cm]?js$/i.test(relative);
   // Els noms de fitxer també són entrada no fiable; no publiquem credencials
   // reconegudes ni segments opacs, i mai calculem un hash del valor ocultat.
   const reportPath = relative => relative.split('/').map(segment => (
@@ -146,6 +194,9 @@ function scanPublic(root) {
     const asset = approved.get(canonical), zip = /^(?:public|dist)\/opendata\//.test(relative) && /\.zip$/i.test(relative);
     // Una extensió .js/.svg no acredita text: cap fitxer gros no registrat pot ocultar un binari.
     if (stat.size > LIMITS.localBinaryFileBytes && !asset) {
+      // v1.2.23 · L4-03b (ordre del Mestre 261123) · Un JS del build gros dins del sostre ja no falla per la mida: es llig per blocs
+      // i s'hi verifica que és text. Fora de dist/, amb una altra extensió, fora del sostre o si no és text, continua bloquejant.
+      if (!integrityOnly && jsDelBuild(relative) && stat.size <= LIMITS.localStreamFileBytes) { candidates.push({ relative, size: stat.size, asset, zip }); return; }
       read.staticBinaries.failed = true;
       if (textual(relative)) read.literals.failed = true;
       add([{ ruleId: zip ? 'opendata-zip-outside-manifest' : textual(relative) ? 'static-file-oversize-unregistered' : 'static-binary-unregistered', path: relative, line: 1 }]);
@@ -161,6 +212,8 @@ function scanPublic(root) {
   // v1.2.19 · Gauntlet R1 (L2-02): dos pressupostos; els literals tenen la cobertura de la v1.2.18
   // encara que la galeria esgote el seu.
   const read = { literals: { files: 0, bytes: 0, partial: false }, staticBinaries: { files: 0, bytes: 0, partial: false } };
+  // v1.2.23 · L4-03b (ordre del Mestre 261123) · JS del build llegits per blocs: també compten a coverage.literals.
+  const blocs = { files: 0, bytes: 0 };
   const coverage = () => Object.fromEntries(Object.entries(read).map(([k, v]) => [k, { status: v.failed ? 'fail' : v.partial ? 'unknown' : 'ok', files: v.files, bytes: v.bytes }]));
   try {
     walk(base);
@@ -178,9 +231,23 @@ function scanPublic(root) {
       }
     }
     // Primer els textos: una galeria gran no ha d'amagar els literals dels JS.
-    candidates.sort((a,b)=>Number(textual(b.relative))-Number(textual(a.relative))||a.relative.localeCompare(b.relative));
+    // v1.2.23 · L4-03b (ordre del Mestre 261123) · Els JS grans del build van darrere dels textos menuts: no en gasten el pressupost.
+    const perBlocs = c => jsDelBuild(c.relative) && !c.asset && c.size > LIMITS.localFileBytes;
+    const rang = c => !textual(c.relative) ? 2 : perBlocs(c) ? 1 : 0;
+    candidates.sort((a,b)=>rang(a)-rang(b)||a.relative.localeCompare(b.relative));
     for (const {relative,size,asset,zip} of candidates) {
       const text = textual(relative), r = text ? read.literals : read.staticBinaries;
+      if (perBlocs({ relative, size, asset })) {
+        // Sense pressupost no hi ha veredicte: inconclús per als literals i per als binaris, mai verd ni fallada inventada.
+        if (blocs.files >= LIMITS.localStreamFiles || blocs.bytes + size > LIMITS.localStreamBytes) { r.partial = read.staticBinaries.partial = partial = true; continue; }
+        const vistes = new Set();
+        const llegit = textPerBlocs(path.join(root, relative), relative, (literals, defectes) => add([
+          ...defectes.map(ruleId => ({ ruleId, path: relative, line: 1 })), ...literals,
+        ].filter(f => !vistes.has(`${f.ruleId}:${f.line}`) && vistes.add(`${f.ruleId}:${f.line}`))));
+        r.files++; r.bytes += llegit.bytes; files++; bytes += llegit.bytes; blocs.files++; blocs.bytes += llegit.bytes;
+        if (!llegit.text) { r.failed = read.staticBinaries.failed = true; add([{ ruleId: 'static-file-oversize-unregistered', path: relative, line: 1 }]); }
+        continue;
+      }
       const max = text ? { files: LIMITS.localFiles, bytes: LIMITS.localBytes, file: LIMITS.localFileBytes }
         : { files: LIMITS.localBinaryFiles, bytes: LIMITS.localBinaryBytes, file: LIMITS.localBinaryFileBytes };
       // Una entrada legítima no s'exclou: es llig sencera dins del pressupost global existent.
@@ -199,11 +266,11 @@ function scanPublic(root) {
       add(defectesFitxerEstatic(relative,content).map(ruleId=>({ruleId,path:relative,line:1})));
       if (text) add(escanejaLiterals(content.toString('utf8'), relative));
     }
-    return { status: findings.length ? 'fail' : partial ? 'unknown' : 'ok', root: base, files, bytes, findings, ...(partial?{code:'LOCAL_LIMIT'}:{}), coverage: coverage(), integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
+    return { status: findings.length ? 'fail' : partial ? 'unknown' : 'ok', root: base, files, bytes, findings, ...(partial?{code:'LOCAL_LIMIT'}:{}), coverage: coverage(), blockScanned: { ...blocs }, integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
   }
   catch (error) {
     for (const r of Object.values(read)) r.partial = true;
-    return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), coverage: coverage(), integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
+    return { status: findings.length ? 'fail' : 'unknown', root: base, files, bytes, findings, code: safeCode(error), coverage: coverage(), blockScanned: { ...blocs }, integrity: { approvedBinaries: approvedPaths.size }, exhaustive: false };
   }
 }
 

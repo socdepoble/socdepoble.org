@@ -62,11 +62,15 @@ for(const [name,script,args] of scripts)test(`${name}: evidència efímera no al
 test('visibility private continua validada i els documents no desapareixen per reduir F5',t=>{
  const root=fixture(t);
  const first='_wiki_de_poble/02_saber/privat_a.md',second='_wiki_de_poble/02_saber/privat_b.md';
- const body=visibility=>`---\ntype: document\nstatus: esborrany\ndescription: Document privat de prova\nvisibility: ${visibility}\ncore: true\n---\n# Privat\n`;
+ const body=visibility=>`---\ntype: document\nstatus: esborrany\ndescription: Document privat de prova\nvisibility: ${visibility}\ncore: true\nlang: ca\n---\n# Privat\n`;
  put(root,first,body('private'));put(root,second,body('private'));
  const report=scan(root,'tooling/wiki/tractor-frontmatter.mjs',[]).report;
  assert.equal(report.fallades.F5.some(x=>x.clau==='visibility'),false);
- assert.ok(report.fallades.F5.some(x=>x.clau==='core'),'la mètrica F5 continua activa per a altres claus');
+ // v1.2.23 · costura corpus-scope (ordre del Mestre 261123) · el kit R32.45 (tractor-frontmatter.mjs, F5) trau
+ // `core` booleà de F5: és una bandera operativa (absent = plugin), no entropia editorial. L'afirmació «F5
+ // continua activa per a altres claus» es reapunta a `lang`, una clau opcional de l'esquema amb un sol valor.
+ assert.equal(report.fallades.F5.some(x=>x.clau==='core'),false,'core booleà queda fora de F5 des del kit R32.45');
+ assert.ok(report.fallades.F5.some(x=>x.clau==='lang'),'la mètrica F5 continua activa per a altres claus');
  assert.ok(report.fallades.F9.some(x=>x.n===first),'el document privat continua auditat per altres defectes');
  assert.match(fs.readFileSync(path.join(root,first),'utf8'),/visibility: private/);
  put(root,second,body('publicat_per_error'));

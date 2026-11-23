@@ -208,7 +208,7 @@ test.each(IDIOMES_CONTROL)('control-06 · h2, entradetes i accions globals amb c
   const [giny] = ginys;
   const tx = TEXTOS_SALUT_DISPOSITIU[idioma];
   expect(Object.hasOwn(TEXTOS_SALUT_DISPOSITIU, idioma)).toBe(true);
-  expect([...giny.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([tx.titolSeccio]);
+  expect([...giny.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([tx.titolSeccio]);
   expect([...giny.querySelectorAll('p.lead')].map((p) => p.textContent)).toEqual([tx.entradetaSeccio]);
   const botonsLocals = () => within(giny).getAllByRole('button').map((b) => b.textContent.trim());
   const botoPrincipal = () => giny.dataset.estatUi === 'error' ? tx.botoReintentar : tx.botoAlliberar;
@@ -219,12 +219,12 @@ test.each(IDIOMES_CONTROL)('control-06 · h2, entradetes i accions globals amb c
 
   const espais = ESPAIS_PLUGINS.map((espai) => TEXTOS_ESPAIS_PLUGINS[idioma]?.[espai.id] ?? espai);
   const titolsDelsEspais = new Set(espais.map((espai) => espai.titol));
-  const h2 = [...document.querySelectorAll('.content-wrapper h2')]
+  const h3 = [...document.querySelectorAll('.content-wrapper h3')]
     .filter((h) => !giny.contains(h))
     .map((h) => h.textContent)
     .filter((text) => !titolsDelsEspais.has(text));
-  expect(h2.length).toBeGreaterThan(0);
-  expect(h2.filter((text) => !/^⟦.+⟧$/.test(text))).toEqual([]);
+  expect(h3.length).toBeGreaterThan(0);
+  expect(h3.filter((text) => !/^⟦.+⟧$/.test(text))).toEqual([]);
   const entradetesDelsEspais = new Set(espais.map((espai) => espai.entradeta));
   const leads = [...document.querySelectorAll('.content-wrapper section > p.lead')]
     .filter((p) => !giny.contains(p))
@@ -250,7 +250,7 @@ test('control-06 · cada text nou es demana amb la seua clau i la reserva d’ab
     expect(estat.demanades, clau).toContainEqual([clau, reserva]);
   }
   /* Llei del Píxel · En valencià, el text d'abans: els h2, les entradetes i els botons. */
-  expect(screen.getByRole('heading', { level: 2, name: TEXTOS_PANELL[0][1] })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 3, name: TEXTOS_PANELL[0][1] })).toBeTruthy();
   expect(screen.getByText(TEXTOS_PANELL[1][1], { selector: 'p.lead' })).toBeTruthy();
   expect(screen.getByRole('button', { name: TEXTOS_PANELL[2][1] })).toBeTruthy();
   expect(screen.getByRole('button', { name: TEXTOS_PANELL[3][1] })).toBeTruthy();

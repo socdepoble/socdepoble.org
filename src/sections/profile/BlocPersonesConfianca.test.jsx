@@ -41,11 +41,11 @@ describe('bandera encesa (sonda)', () => {
     expect(serveiXifratXat).toHaveBeenCalledWith(m.backend);
   });
 
-  test('el recompte: un bloc amb el seu títol (h2), «Tens 2…» i «En falta 1…»', async () => {
+  test('el recompte: un bloc amb el seu títol (h3), «Tens 2…» i «En falta 1…»', async () => {
     m.servei = { contactesVerificats: vi.fn(async () => 2) };
     render(<BlocPersonesConfianca />);
     expect(screen.getByRole('region', { name: 'Persones de confiança' })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: 'Persones de confiança' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Persones de confiança' })).toBeTruthy();
     expect(await screen.findByText('Tens 2 contactes amb el número de seguretat verificat. En falta 1 per a arribar a tres.')).toBeTruthy();
     expect(m.servei.contactesVerificats).toHaveBeenCalledTimes(1);
     /* Gauntlet T7b-G02/G08 · La capacitat del contracte decidix si la recuperació és activa (avui, mai). */

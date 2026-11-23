@@ -204,7 +204,7 @@ test('261008 · «Les vistes» porta la targeta de la fitxa fora de l’editor, 
   const pagina = detall(container);
   expect(within(pagina).getByRole('heading', { level: 1, name: 'Les vistes' })).toBeTruthy();
   expect(pagina.querySelector('.sdp-editor-document')).toBeNull();
-  const carta = within(pagina).getByRole('heading', { level: 2, name: 'Vista targeta' }).closest('section').querySelector('article.sdp-targeta-viva-carta');
+  const carta = within(pagina).getByRole('heading', { level: 3, name: 'Vista targeta' }).closest('section').querySelector('article.sdp-targeta-viva-carta');
   expect(carta.querySelector('.sp-card-title').textContent).toBe('Javi Llinares');
   expect(carta.querySelector('.sp-card-subtitle').textContent).toBe('Llaurador');
   expect(carta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');

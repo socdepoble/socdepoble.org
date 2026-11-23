@@ -43,7 +43,7 @@ Cap component visual (`src/components/`, `src/sections/`, `src/pages/` ni `src/a
 El mòdul `src/data/contracte.js` declara de forma explícita:
 
 - **Operacions obligatòries del nucli (`CONTRACTE_NUCLI`):** **32 mètodes** indispensables perquè l'aplicació arrenque.
-- **Capacitats opcionals (`CAPACITATS`):** **62 capacitats** agrupades per domini funcional, que sumen **180 mètodes totals** a `CONTRACTE_BACKEND`.
+- **Capacitats opcionals (`CAPACITATS`):** **64 capacitats** agrupades per domini funcional, amb **152 mètodes** opcionals; sumats als 32 del nucli, `CONTRACTE_BACKEND` reunix **184 mètodes totals**.
 - **Atomicitat i segellat:** en iniciar l'aplicació, `backendPort.js` valida que l'adaptador actiu implemente les 32 operacions de nucli i que cada capacitat opcional declarada estiga implementada al 100 % (cap capacitat parcial s'admet), congelant l'adaptador en memòria amb `freezeImplementation`.
 
 ### 2.2 Adaptadors verificats i kit de conformitat
@@ -94,7 +94,7 @@ El backend PostgreSQL a `supabase/migrations/` protegeix cada fila mitjançant p
 
 ### 4.2 Arquitectura Online-First i emmagatzematge al navegador (`src/config/storage.js`)
 
-Sóc de Poble opera sota una arquitectura **Online-First**: les dades comunitàries resideixen al servidor de Sóc de Poble, mentre que el navegador gestiona de forma explícita i acotada (`src/config/storage.js`) les preferències d'interfície (llengua, tema, contrast i Mode Sènior), les respostes personals d'assistència al calendari (`rsvp-esdeveniments-v1`), la cua d'operacions quan la connexió mòbil s'interromp temporalment en entorns rurals i les bases IndexedDB pròpies de cada eina personal.
+Sóc de Poble opera sota una arquitectura **Online-First**: les dades comunitàries resideixen al servidor de Sóc de Poble, mentre que el navegador gestiona de forma explícita i acotada (`src/config/storage.js`) les preferències d'interfície (llengua, tema, contrast i Mode Bancal), les respostes personals d'assistència al calendari (`rsvp-esdeveniments-v1`), la cua d'operacions quan la connexió mòbil s'interromp temporalment en entorns rurals i les bases IndexedDB pròpies de cada eina personal.
 
 ## 5. Arquitectura d'estils Pedra Seca, internacionalització i accessibilitat AAA
 
@@ -110,19 +110,19 @@ El sistema visual **Pedra Seca** utilitza CSS estàndard sense preprocessadors n
 
 La interfície suporta íntegrament **valencià (`ca`), castellà (`es`), anglés (`en`), basc (`eu`) i gallec (`gl`)** (`src/config/i18n.js`). Només l'idioma per defecte (`ca`) viatja en l'arrencada inicial; els diccionaris restants i els diccionaris modulars de cada eina o vista (`i18n*.js`) es carreguen com a trossos asíncrons independents.
 
-### 5.3 Mode Sènior (`data-sdp-senior="true"`), contrast AAA i pantalles estretes
+### 5.3 Mode Bancal (`data-sdp-senior="true"` + `data-contrast="bancal"`), contrast AAA i pantalles estretes
 
 Per garantir l'ús quotidià per part de persones grans i usuaris amb baixa visió en dispositius mòbils:
 
 - Els tres nivells de text semàntic (`títol`, `cos`, `suau`) mantenen un contrast mínim verificat **`>= 7:1` (WCAG 2.2 AAA)** sobre les superfícies declarades (`src/css/tokens.contracte.test.js`).
-- El **Mode Sènior / Lectura Gran** (`src/config/theme.js` + `src/css/diferit-mode-senior.css`), activable d'un sol toc al Perfil, al Panell de Control i a L'Avisador, aplica `data-sdp-senior="true"` a l'arrel de presentació (document o host del Web Component), elevant el contrast efectiu a **`>= 10:1` AAA** en tema clar i fosc, ampliant l'escala tipogràfica de **Noto Sans** i garantint dianes d'acció primària de **`>= 56 × 56 px`** (`>= 48 × 48 px` en mode estàndard).
+- El **Mode Bancal · Sol i Lletra Gran** (`src/config/theme.js`, `src/css/tokens.css` i `src/css/diferit-mode-senior.css`), activable d'un sol toc al Perfil, al Panell de Control i a L'Avisador, posa alhora `data-sdp-senior="true"` i `data-contrast="bancal"` (DOL-31) a l'arrel de presentació (document o host del Web Component). Garantix un contrast **AAA (`>= 7:1`)** dels tokens de text sobre les superfícies i els fons d'acció, en tema clar i fosc i amb el taronja de marca `#FF7300`, mesurat per `src/config/textosModeSenior.veritatBancal.v1223.test.js`; amplia l'escala tipogràfica de **Noto Sans** (la prosa d'article, de 20 a 23 px) i, a les targetes, fixa la jerarquia **Títol > Subtítol > Paràgraf** de **24 > 20 > 18 px** (amb insígnia lateral, com el preu o la data, **20 > 19 > 18 px** quan l'aplicació fa 359 px d'ample o menys); i garantix dianes d'acció primària de **`>= 56 × 56 px`** (`>= 48 × 48 px` en mode estàndard).
 - Totes les vistes públiques i la documentació de la Wiki (`P0-128`, lectura 100 % vertical sense taules amples de tres o més columnes) es verifiquen sense desbordament horitzontal des d'amplàries de **320 px** i **359 px**.
 
 ## 6. Verificació contínua i reproducció per a auditors externs
 
 Qualsevol equip tècnic extern pot verificar l'estat complet del repositori en local amb Node `^22.20.0 || ^24.12.0 || >=25.0.0` i `npm ci`:
 
-- **Portes estructurals i d'arquitectura (`61` portes):** `npm run porta -- --nomes-portes` i `npm run lint` (`--max-warnings=0`).
+- **Portes estructurals i d'arquitectura (`68` passos):** `npm run porta -- --nomes-portes` executa els passos de `passos` (`tooling/gates/run-portes.mjs`) que no són bateries de proves, el linter inclòs (`npm run lint`, `--max-warnings=0`).
 - **Coherència de requisits i vocabulari:** `npm run porta:psicopatia`, `npm run porta:frontissa`, `npm run porta:adaptadors` i `npm run porta:enxufe`.
 - **Bateries de proves unitàries i d'integració:** `npm run test:ci` (suites Node de `tooling/tests/node-suite-manifest.json` més el conjunt complet de Vitest).
 - **Verificació física del connector WordPress i sostres de pes:** `npm run build:web`, `node tooling/gates/pressupost-paquet.mjs` i `node --test tests/standalone-build.test.mjs`.

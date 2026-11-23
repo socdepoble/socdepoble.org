@@ -56,10 +56,10 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "2f496c3309cec98671540b7334e928f980fd92c8686fc5a2c44d7e027d1add50",
-      "html": 10413,
-      "aprovat_per": "Claude v1.2.13 (Carril 1), per l'encàrrec autònom del Mestre Javi del 20-11-2026 00:11 (prompt 261120_0016: integrar R32.15, R32.16 i R32.17 i desplegar v1.2.13), text de Gemini R32.15 lot_03 contrastat; pendent de lectura humana",
-      "data": "2026-11-19"
+      "sha256": "84ea0959a38931c0e380f1bf2c063a87e73c455c6c66ace89aeb315eb851ad4a",
+      "html": 10415,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "data": "2026-11-23"
     },
     "drets-autor": {
       "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
@@ -68,16 +68,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "983d5a3eb342af8910101d4f81a33ee7d9b18e737eff0b0d332326673c3c0edc",
+      "sha256": "7a3693f86cc60383a2c054377a3a4ff1245032a7eb15fe751c064dd541fc09d0",
       "html": 21957,
-      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
-      "data": "2026-11-20"
+      "aprovat_per": "Codex GPT-6, encàrrec directe del Mestre R32.44 C1 (prompt/pla 261122_2227): cens mecànic de 2 capacitats i 4 mètodes nous, casos i absències locals contrastats; pendent de lectura humana",
+      "data": "2026-11-22"
     },
     "fediversity": {
-      "sha256": "1607e13f9d36ebbf1096849ab89e63a448aec21154cc48bfe866a2b773569b85",
-      "html": 66972,
-      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
-      "data": "2026-11-20"
+      "sha256": "378d8fc0d17d263e04e7782cc1c35b9ee7af45244300bbf945da3707090d4ad3",
+      "html": 67048,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "data": "2026-11-23"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +104,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "8ba2bb86a4f426f03c5764b5e4c18f42905230838b11a7ed3bee8d23ab9b7f18",
-      "html": 30207,
-      "aprovat_per": "Codex R32.19: cens, data i noms de les dues capacitats del port, per ordre explícita del Mestre (prompt i pla 2026-11-20 13:02); pendent de lectura humana",
-      "data": "2026-11-20"
+      "sha256": "aacb9f91ce0c1892da84a44c43b09f132f7ba1ef911c9ae9fb8a9a795ec719fe",
+      "html": 30210,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "data": "2026-11-23"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -122,10 +122,10 @@
       "data": "2026-11-19"
     },
     "publicar_mapa": {
-      "sha256": "14420b6cf28a3cf1f93dc0a25e634bba12ac63b92f2377e9fb9ebbb2ed2b8046",
-      "html": 1631,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "e36f3439422a65b5d5ada30b468de1718e978383e5c4158fb1666b46b59c9f1c",
+      "html": 1728,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "data": "2026-11-23"
     },
     "receptes": {
       "sha256": "2acee564513d0f22332ac828b60602e85c20845550ae0c02c16d890ebe8b01b7",
@@ -152,10 +152,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "357eb70223e07125f010126173389a069d37e869a146e0b3f34608ba3b9f7edc",
-      "html": 178205,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.22), per ordre del Mestre Javi (prompt 261122_1835 i ajustos en calent IDEA-326, IDEA-328, IDEA-329 i IDEA-330; 22-11-2026): crònica FITA_R32_42 de la v1.2.22 build 27 (Onades R32.42 i R32.43: oliveres al Banc de Llavors, Xat de qui arriba amb tres actors, un sol Mode Bancal amb el taronja de marca i Títol > Subtítol > Paràgraf a les targetes, logotip més gran, la IAIA en cercle blau, icones més grans al mòbil, un sol logotip al menú del mòbil que comença per CONTROL, decisions del Motor d'estudis, una sola benvinguda, vídeos del telèfon sense el lloc a dins i les peces amb el Mur apagat; WP 1.1.30) i capçalera amb el connector que serveix WordPress.org (1.1.29). Contrastat amb el codi i corregit per les dues rondes del Gauntlet (lents i verificadors escèptics); pendent de lectura humana (Gauntlet R2, M3-04), 2026-11-22.",
-      "data": "2026-11-22"
+      "sha256": "dc8811248cc36d4b70daa5753f8a65f51546002e7ac3d073ed58708d111bf8f2",
+      "html": 186467,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
+      "data": "2026-11-23"
     },
     "wikidepoble": {
       "sha256": "c7892d0e58181409d5fa8338d5c9cf22c96467346ea77e52c54971558f08ab33",

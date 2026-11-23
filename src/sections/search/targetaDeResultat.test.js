@@ -71,7 +71,7 @@ test('un poble i un producte: la imatge damunt i la meta en etiquetes, sense boi
   const poble = propsDeTargetaDeResultat(dePoble({ id: 'tibi', title: 'Tibi', comarca: "L'Alcoià", population: '1.700 hab', image_url: '/assets/tibi.jpg' }));
   expect([poble.mainHref, poble.imageUrl, poble.labels, poble.author, poble.location]).toEqual(['/pobles/tibi', '/assets/tibi.jpg', ["L'Alcoià", '1.700 hab'], 'Autoria no indicada', 'Tibi']);
   const producte = propsDeTargetaDeResultat(deProducte({ id: 'mac', title: 'Mac Mini', price: '900 €', author_name: 'Javi Llinares', images: ['/assets/mac.jpg'] }));
-  expect([producte.mainHref, producte.imageUrl, producte.labels]).toEqual(['/mercat/mac', '/assets/mac.jpg', ['900 €', 'Javi Llinares']]);
+  expect([producte.mainHref, producte.imageUrl, producte.labels]).toEqual(['/mercat/mac', '/assets/mac.jpg', ['900,00 €', 'Javi Llinares']]);
 });
 
 test('la font editorial conserva dia sol i nom/poble reals, sense convertir el rànquing en una data inventada', () => {

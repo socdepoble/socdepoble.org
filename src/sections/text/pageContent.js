@@ -155,12 +155,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.22 · Connector WordPress v1.1.29 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.23 · Connector WordPress v1.1.30 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.22 · WP v1.1.29", "className": "sdp-badge-system" },
+      { "text": "v1.2.23 · WP v1.1.30", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],
@@ -465,11 +465,11 @@ export const PAGE_COPY = {
     "date": "2026-10-03T22:45:00+02:00",
     "title": "Publicar al Mapa",
     "subtitle": "Si tens coses que vols geolocalitzar, este és el lloc.",
-    "lead": "Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar desmarcant «Conserva la ubicació i la data de la foto». Les imatges que poses dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d'altres pàgines i pobles.",
+    "lead": "Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar d'un sol toc amb «Amaga el lloc» (si la foto només porta la data, o el lloc no es pot conservar, desmarcant «Conserva la ubicació i la data de la foto»). Les imatges que enganxes dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d'altres pàgines i pobles.",
     "image": "/assets/ui/plugins/mapa_vinyeta.webp",
     "imageAlt": "Llauradors en un bancal intentant clavar la punxa del mapa de geolocalització",
     "labels": [],
-    "html": "\n      <h5>Un espai per a situar-nos al territori</h5>\n      <p>El <strong>mapa de la comarca</strong> és l'eina perfecta per a marcar aquells <strong>camins, fonts, assuts</strong> o <strong>llocs d'interès</strong> que vols compartir amb la resta del veïnat. Siga un avís d'un <strong>camí tallat</strong>, una <strong>troballa patrimonial</strong> o un <strong>punt de trobada</strong>, ací pots deixar la teua <strong>petjada digital</strong> sobre el terreny.</p>\n\n      <h5>La privacitat sempre per davant</h5>\n      <p>Sabem que la teua ubicació és <strong>informació sensible</strong>. Per eixe motiu, quan puges una foto que porta la ubicació o la data, el sistema <strong>t'ho diu</strong> abans de publicar-la: de manera predeterminada <strong>les conserva dins de la foto</strong>, per al <strong>mapa del patrimoni</strong> del poble, i les pots <strong>llevar d'un sol toc</strong> desmarcant <strong>«Conserva la ubicació i la data de la foto»</strong>. Les imatges que poses <strong>dins del text es netegen sempre</strong> de manera automàtica.</p>\n\n      <h5>Visibilitat oberta</h5>\n      <p>Has de tindre en compte que, en <strong>fixar un punt</strong> al mapa, la teua publicació serà <strong>visible i geolocalitzable</strong> tant des del nostre poble com des d'<strong>altres pàgines connectades</strong> a la xarxa. Fes-ho servir amb <strong>prudència i estima</strong> per la terra, <strong>evitant</strong> assenyalar <strong>domicilis privats</strong> sense permís i compartint informació útil per a <strong>cuidar el nostre terme</strong>.</p>\n"
+    "html": "\n      <h5>Un espai per a situar-nos al territori</h5>\n      <p>El <strong>mapa de la comarca</strong> és l'eina perfecta per a marcar aquells <strong>camins, fonts, assuts</strong> o <strong>llocs d'interès</strong> que vols compartir amb la resta del veïnat. Siga un avís d'un <strong>camí tallat</strong>, una <strong>troballa patrimonial</strong> o un <strong>punt de trobada</strong>, ací pots deixar la teua <strong>petjada digital</strong> sobre el terreny.</p>\n\n      <h5>La privacitat sempre per davant</h5>\n      <p>Sabem que la teua ubicació és <strong>informació sensible</strong>. Per eixe motiu, quan puges una foto que porta la ubicació o la data, el sistema <strong>t'ho diu</strong> abans de publicar-la: de manera predeterminada <strong>les conserva dins de la foto</strong>, per al <strong>mapa del patrimoni</strong> del poble, i les pots <strong>llevar d'un sol toc</strong> amb <strong>«Amaga el lloc»</strong> (si només porta la data, o el lloc no es pot conservar, desmarcant <strong>«Conserva la ubicació i la data de la foto»</strong>). Les imatges que enganxes <strong>dins del text es netegen sempre</strong> de manera automàtica.</p>\n\n      <h5>Visibilitat oberta</h5>\n      <p>Has de tindre en compte que, en <strong>fixar un punt</strong> al mapa, la teua publicació serà <strong>visible i geolocalitzable</strong> tant des del nostre poble com des d'<strong>altres pàgines connectades</strong> a la xarxa. Fes-ho servir amb <strong>prudència i estima</strong> per la terra, <strong>evitant</strong> assenyalar <strong>domicilis privats</strong> sense permís i compartint informació útil per a <strong>cuidar el nostre terme</strong>.</p>\n"
   },
   "vehicle_compartit": {
     "date": "2026-10-03T22:45:00+02:00",
@@ -994,7 +994,7 @@ PAGE_COPY.projecte.html = PAGE_COPY.projecte.html.replace(
   `${BLOC_PROJECTE_R32_10.ca}\n      <h3>Les quatre infografies històriques</h3>`,
 );
 PAGE_COPY.disseny.html += BLOC_DISSENY_R32_10.ca;
-/* Onada R32.15 · Lot 03 · Mode Sènior (56 px + 10:1 AAA), Wiki vertical P0-128, 100 % eines en 5 llengües i connector < 10 MiB. */
+/* Onada R32.15 · Lot 03 · Mode Sènior (56 px + AAA; 10:1 a l'R32.15, hui ≥ 7:1), Wiki vertical P0-128, 100 % eines en 5 llengües i connector < 10 MiB. */
 PAGE_COPY.disseny.html += BLOC_DISSENY_R32_15.ca;
 /* P0-77 / IDEA-208 (R16-P) · Què és propi i què hem adaptat, i què fa la data de cada targeta del Mur. */
 PAGE_COPY.disseny.html += BLOC_DISSENY_R16P.ca;

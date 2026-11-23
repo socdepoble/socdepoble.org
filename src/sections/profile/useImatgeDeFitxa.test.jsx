@@ -21,7 +21,7 @@ import {
   ACCEPT_FOTO, ERROR_PES_FOTO, ERROR_TIPUS_FOTO, PES_MAXIM_FOTO,
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
-import { ERROR_PRESSUPOST } from '../../utils/pujadaImatge.js';
+import { ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF } from '../../utils/pujadaImatge.js';
 import { UIActionsContext } from '../../app/contexts/objectesDeContext.js';
 import { createTranslator } from '../../config/i18n.js';
 import CA from '../../config/idiomes/ca.js';
@@ -29,7 +29,8 @@ import EN from '../../config/idiomes/en.js';
 import ES from '../../config/idiomes/es.js';
 import EU from '../../config/idiomes/eu.js';
 import GL from '../../config/idiomes/gl.js';
-import { ETIQUETA_CONSERVA_EXIF } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { ETIQUETA_AMAGA_LLOC } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { TEXTOS_AMAGA_LLOC } from '../../components/universal/enquadrament/i18nAmagaLloc.js';
 import { gpsTorre, jpegAmbExif } from '../../../tests/helpers/jpegProva.js';
 
 const MB = 1024 * 1024;
@@ -428,6 +429,26 @@ describe('Escape a mitja pujada', () => {
     expect(vista.onDesat).not.toHaveBeenCalled();
     expect(screen.getByRole('status').textContent).toBe('quiet');
   });
+
+  /* v1.2.23 · L2-03 (Gauntlet R2) · La capçalera d'una organització o d'un agent amb una foto amb GPS: el control a
+     la vista és l'interruptor «Amaga el lloc», apagat. Si la pujada la rebutja perquè la ubicació i la data no hi
+     caben amb la finestra ja tancada, l'avís de fora diu que s'encenga l'interruptor (el mateix que diria el diàleg),
+     no que es desmarque «Conserva la ubicació i la data de la foto», una casella que no s'hi veia. */
+  test('v1.2.23 · L2-03 (Gauntlet R2) · amb l’interruptor «Amaga el lloc» apagat, el rebuig de fora diu que s’encenga', async () => {
+    const { onImageUpload, estat } = pujadaPendent();
+    const vista = munta({ onImageUpload });
+    await tria(vista, new File([jpegAmbExif({ gps: gpsTorre() })], 'gps.jpg', { type: 'image/jpeg' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    expect((await within(dialeg).findByRole('switch', { name: new RegExp(ETIQUETA_AMAGA_LLOC) })).checked).toBe(false);
+    await guardaIEscapa('Retalla la capçalera');
+    await waitFor(() => expect(onImageUpload).toHaveBeenCalledTimes(1));
+    await act(async () => { estat.rebutja(new Error(ERROR_PRESSUPOST_EXIF)); });
+    const esperat = TEXTOS_AMAGA_LLOC.ca.pressupostLloc.replace('{lloc}', ETIQUETA_AMAGA_LLOC);
+    await waitFor(() => expect(vista.onError).toHaveBeenCalledWith(esperat));
+    expect(vista.onError).toHaveBeenCalledTimes(1);
+    expect(vista.onError).not.toHaveBeenCalledWith(ERROR_PRESSUPOST_EXIF);
+    expect(vista.onDesaCamp).not.toHaveBeenCalled();
+  });
 });
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -768,7 +789,9 @@ describe('P0-80 · el viatge d’anada i tornada de la capçalera', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ajusta' }));
     await act(async () => {});
     const dialeg = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
-    await within(dialeg).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+    /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA: amb GPS, la casella
+       marcada és l'interruptor «Amaga el lloc» apagat (es conserva de sèrie). */
+    expect((await within(dialeg).findByRole('switch', { name: new RegExp(ETIQUETA_AMAGA_LLOC) })).checked).toBe(false);
     act(() => { fireEvent.click(within(dialeg).getByRole('radio', { name: 'Només el poble' })); });
     act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Apropar' })); });
     await guarda('Retalla la capçalera');

@@ -66,7 +66,13 @@ export const ERRORS_ADJUNT_XAT = Object.freeze({
   'video-mida': 'El vídeo preparat encara supera 20 MB. Tria un clip més curt.',
   'video-compressio-temps': 'El vídeo s’ha quedat aturat mentre es preparava. Torna-ho a provar amb esta pantalla oberta.',
   'ubicacio-invalida': 'La ubicació del fitxer no és vàlida. Torna a preparar-lo.',
-  'ubicacio-no-admesa': 'S’ha enviat sense la ubicació: el servidor de Sóc de Poble encara no l’admet.',
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Un servidor sense la RPC4 només perd el DTO (el xip del mapa). El
+     text ja no diu «sense la ubicació».
+     v1.2.23 · L1-02 (Gauntlet R1) · El fitxer porta el lloc només si l'avís previ ho ha dit (llocDelFitxer,
+     ubicacioConservada). En el cas «només el mapa» (avís ubicacioNomesMapa: un vídeo recomprimit en WebM, o en un MP4
+     on no s'ha pogut reescriure el ©xyz) el contingut queda sense cap lloc, i este avís continua sent exacte: l'únic
+     lloc era el del mapa. */
+  'ubicacio-no-admesa': 'S’ha enviat sense marcar el lloc al mapa: el servidor de Sóc de Poble encara no ho admet.',
   'ubicacio-no-eliminable': 'Este navegador no ha pogut amagar la ubicació del vídeo. Tria un MP4 o prova-ho amb un altre navegador.',
   /* v1.2.22 · Gauntlet R1 (L4-04, L5-03) · Un MP4 o MOV que el sanejador de Codex R32.42 no pot acreditar (una pista de
      dades opaca, un uuid desconegut, un moov comprimit) no s'envia, triï el que triï la persona, i no s'arregla «triant
@@ -78,7 +84,10 @@ export const ERRORS_ADJUNT_XAT = Object.freeze({
      capturable, per exemple un element <video> sense captureStream amb un vídeo que porta so; error; temps o mida); si
      comprimix, el mateix fitxer ix en un contenidor nou i s'envia. Eixe camí té el seu avís,
      video-no-acreditable-navegador, que no promet cap eixida: un altre vídeo del mateix telèfon fa el mateix recorregut,
-     i un altre navegador pot no saber descodificar-lo. */
+     i un altre navegador pot no saber descodificar-lo.
+     v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Deroga el «triï el que triï» de L4-04: per defecte el vídeo
+     conserva el lloc i ix tal com és. Estos dos avisos queden per a quan la persona demana «Amaga el lloc» i el vídeo
+     no es pot netejar (no s'envia brut), per al reenviament i per al transport d'una entrada sense lloc. */
   'video-no-acreditable': 'No podem comprovar que este vídeo no porte dins el lloc on es va gravar i, per a protegir-te, no l’enviem. Prova-ho amb un altre vídeo.',
   'video-no-acreditable-navegador': 'Este aparell o navegador no ha pogut preparar el vídeo per a enviar-lo sense el lloc on es va gravar i, per a protegir-te, no l’enviem.',
   foto: 'No hem pogut preparar la foto.',

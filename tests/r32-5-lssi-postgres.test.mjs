@@ -132,12 +132,12 @@ test('R32.5 LSSI · PostgreSQL real, catàleg complet, RLS, quota i retirada cau
   });
   await t.test('decisió humana atòmica: amaga projecció pública, conserva original i registra motiu', async () => {
     const before = (await db.query('select payload,created_at from public.section_submissions where id=$1', [PUBLIC])).rows[0];
-    // v1.2.22 · R32.42 (20261122160300) afig la RPC7 llig_mur_public(boolean,uuid,…): una crida posicional amb un
-    // paràmetre sense tipus ja és ambigua (42725). La RPC6 es crida amb nom, com fa PostgREST, i la retirada
-    // cautelar també ha d'amagar la fila a la RPC7, la que el client v1.2.22 demana primer amb VITE_SDP_MUR_VISIBILITAT=1.
+    // v1.2.22 · R32.42 (20261122160300) afig la RPC7. v1.2.23 · L4-10 (ordre del Mestre 261123) · La RPC7 es diu
+    // llig_mur_public_v7 i ja no és cap sobrecàrrega de la RPC6. La RPC6 es crida amb nom, com fa PostgREST, i la retirada
+    // cautelar també ha d'amagar la fila a la RPC7, la que el client demana primer amb VITE_SDP_MUR_VISIBILITAT=1.
     const visible = () => actor(null, 'select * from public.llig_mur_public(p_tenant_id=>$1)', [TOWN]);
     const visible7 = async () => (await actor(null,
-      'select public.llig_mur_public(p_inclou_visibilitat=>true,p_tenant_id=>$1) as item', [TOWN])).map(r => r.item);
+      'select public.llig_mur_public_v7(p_inclou_visibilitat=>true,p_tenant_id=>$1) as item', [TOWN])).map(r => r.item);
     assert.ok((await visible()).some(r => r.id === PUBLIC));
     assert.ok((await visible7()).some(r => r.id === PUBLIC && r.mostrar_al_mur === true));
     await assert.rejects(actor(ADMIN, "select public.admin_revisa_denuncia_lssi($1,'retirada','  ','pendent')", [denuncia]), error('22023'));

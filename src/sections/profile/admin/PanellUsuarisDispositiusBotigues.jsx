@@ -1,43 +1,25 @@
 /**
- * PanellUsuarisDispositiusBotigues.jsx — R13-C7 (ordre del Mestre, 08-11-2026) · El 7é apartat
- * d'«🛡️ Administració del sistema», just davall d'«📦 Empaquetats i Desplegament»: «👥 Usuaris,
- * Dispositius i Botigues (Google i Apple)». Es carrega diferit (React.lazy a PerfilShell.jsx): ni el
- * panell ni les seues dades no entren a l'entrada del web.
- *
- *   1. Usuaris i dispositius connectats: un botó centrat demana al servidor els recomptes de persones
- *      amb sessió activa per camí (src/data/resumSessionsDispositius.js). Sense dades, el panell diu la
- *      causa (la migració o el port pendents, el segon factor, la xarxa) i no mostra cap xifra; amb
- *      dades, una taula per camí (24 hores, 7 dies i 14 dies) amb l'hora de la consulta. Mai noms ni
- *      correus: només recomptes.
- *   2. Els dos botons oficials, sempre centrats: l'App Store (la fitxa pública) i Google Play (l'enllaç
- *      del pas 1 dels verificadors, perquè encara no hi ha fitxa pública).
- *   3. La guia dels tres passos per als verificadors d'Android i el botó que copia el missatge per al
- *      grup de WhatsApp (si el navegador no deixa copiar, el text queda a la vista per a copiar-lo a mà).
- * Dins de l'app d'iOS (regla 2.3.10) s'amaga tot el que nomena Android o Google Play.
+ * PanellUsuarisDispositiusBotigues.jsx — R13-C7 + R32.45 (paritat completa en 5 llengües
+ * `ca`, `es`, `en`, `eu`, `gl` amb regla 2.3.10 d'Apple `nativaIos` intacta).
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Alerta, AreaText, Boto, Camp, Carregant, Insignia } from '../../../components/PedraSeca/index.js';
 import { useLlenguaDeLaUI } from '../useLlenguaDeLaUI.js';
-/* El port sencer com a valor (com RestauradorOpenData): l'entrada ja n'exporta l'espai de noms i el mètode es
-   busca en temps d'execució. Importar-ne una funció a part obligaria l'entrada a exportar-la (+9 B). */
 import * as port from '../../../data/backendPort.js';
 import { consultaResumSessionsDispositius } from '../../../data/resumSessionsDispositius.js';
-import { ADRECA_VERIFICADORS_GOOGLE_PLAY, PASSOS_VERIFICADOR_GOOGLE_PLAY, URL_FITXA_APP_STORE } from './assistentBotigues.js';
+import { ADRECA_VERIFICADORS_GOOGLE_PLAY, URL_FITXA_APP_STORE } from './assistentBotigues.js';
 import PanellSessionsDetall from './PanellSessionsDetall.jsx';
 import { esAppNativaIos } from './appNativaIos.js';
 import {
-  APP_STORE, MISSATGE_WHATSAPP_VERIFICADORS, NOTA_PAS_1_GOOGLE_PLAY, NOTA_RECOMPTES, NOTA_VERIFICADORS, TEXT_BOTO_CONSULTA,
-  TEXT_ESTAT_INICIAL, copiaAlPortaretalls, filesDelResum, textErrorResum
+  APP_STORE,
+  copiaAlPortaretalls,
+  filesDelResum
 } from './usuarisDispositiusBotigues.js';
 import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import { textosAdminEntitats } from './i18nAdminEntitats.js';
 
-/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
-   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
-   Porta Vocabulari i el tractor de fulls diferits). */
 const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
-
 const consultaDelPort = (config) => consultaResumSessionsDispositius(port, config);
 
 const horaDeLaConsulta = (iso, locale = 'ca-ES') => {
@@ -48,49 +30,48 @@ const horaDeLaConsulta = (iso, locale = 'ca-ES') => {
   }
 };
 
-/* La taula del resum: una fila per camí i la dels totals; cap xifra que no vinga del servidor. */
-function TaulaDelResum({ resum, nativaIos, locale = 'ca-ES' }) {
+function TaulaDelResum({ resum, nativaIos, tx }) {
   const files = filesDelResum(resum, { nativaIos });
   const androidApp = files.find((f) => f.cami === 'app_android');
   return (
     <>
       <table className="sdp-admin-table" data-testid="taula-usuaris-dispositius">
         <caption>
-          Persones distintes amb sessió activa · consulta de les <time dateTime={resum.consultatA}>{horaDeLaConsulta(resum.consultatA, locale)}</time>
+          {tx.taulaCaptionPrefix}
+          <time dateTime={resum.consultatA}>{horaDeLaConsulta(resum.consultatA, tx.locale)}</time>
         </caption>
         <thead>
           <tr>
-            <th scope="col">Camí</th>
-            <th scope="col">24 hores</th>
-            <th scope="col">7 dies</th>
-            <th scope="col">14 dies</th>
+            <th scope="col">{tx.colCami}</th>
+            <th scope="col">{tx.col24h}</th>
+            <th scope="col">{tx.col7d}</th>
+            <th scope="col">{tx.col14d}</th>
           </tr>
         </thead>
         <tbody>
           {files.map((f) => (
             <tr key={f.cami} data-testid={`fila-cami-${f.cami}`}>
-              <th scope="row">{f.titol}</th>
+              <th scope="row">{tx.caminsTitols?.[f.cami] || f.titol}</th>
               <td>{f.persones24h}</td>
               <td>{f.persones7d}</td>
               <td>{f.persones14d}</td>
             </tr>
           ))}
           <tr data-testid="fila-cami-total">
-            <th scope="row"><strong>Persones distintes (tots els camins)</strong></th>
+            <th scope="row"><strong>{tx.filaTotal}</strong></th>
             <td><strong>{resum.total.persones24h}</strong></td>
             <td><strong>{resum.total.persones7d}</strong></td>
             <td><strong>{resum.total.persones14d}</strong></td>
           </tr>
         </tbody>
       </table>
-      <p className="sdp-muted">{NOTA_RECOMPTES}</p>
-      {androidApp ? <p className="sdp-muted" data-testid="nota-verificadors">{NOTA_VERIFICADORS}</p> : null}
+      <p className="sdp-muted">{tx.notaRecomptes}</p>
+      {androidApp ? <p className="sdp-muted" data-testid="nota-verificadors">{tx.notaVerificadors}</p> : null}
     </>
   );
 }
 
-/* 1 · Els usuaris i els dispositius connectats, a demanda. */
-function UsuarisIDispositius({ consulta, nativaIos, locale = 'ca-ES' }) {
+function UsuarisIDispositius({ consulta, nativaIos, tx }) {
   const idTitol = useId();
   const [estat, setEstat] = useState({ fase: 'inicial' });
   const peticio = useRef(0);
@@ -119,51 +100,48 @@ function UsuarisIDispositius({ consulta, nativaIos, locale = 'ca-ES' }) {
   const carregant = estat.fase === 'carregant';
   return (
     <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="usuaris-dispositius-connectats">
-      <h3 id={idTitol}>👥 Usuaris i dispositius connectats</h3>
+      <h3 id={idTitol}>{tx.connectatsTitol}</h3>
       <p className="sdp-muted">
-        {nativaIos
-          ? `Quantes persones han entrat des de l’app de l’App Store (v${APP_STORE.versio} · ${APP_STORE.id}), des de Safari o des de l’escriptori.`
-          : `Quantes persones han entrat des de l’app de l’App Store (v${APP_STORE.versio} · ${APP_STORE.id}) o des de Safari, des de l’app d’Android de Google Play o des de Chrome, i des de l’escriptori.`}
+        {nativaIos ? tx.connectatsIntroIos : tx.connectatsIntroWeb}
       </p>
       <div className="sdp-admin-actions-inline">
         <Boto varietat="primari" onClick={consultar} carregant={carregant} data-testid="boto-consulta-usuaris-dispositius">
-          {TEXT_BOTO_CONSULTA}
+          {tx.botoConsultaAra}
         </Boto>
       </div>
       <div aria-live="polite" data-testid="estat-usuaris-dispositius" data-fase={estat.fase}>
-        {estat.fase === 'inicial' ? <p className="sdp-muted sdp-paragraf-centrat">{TEXT_ESTAT_INICIAL}</p> : null}
+        {estat.fase === 'inicial' ? <p className="sdp-muted sdp-paragraf-centrat">{tx.estatInicial}</p> : null}
         {carregant ? <Carregant /> : null}
-        {estat.fase === 'error' ? <Alerta to="avis" viva={false}>{textErrorResum(estat.codi)}</Alerta> : null}
-        {estat.fase === 'dades' ? <TaulaDelResum resum={estat.resum} nativaIos={nativaIos} locale={locale} /> : null}
+        {estat.fase === 'error' ? <Alerta to="avis" viva={false}>{tx.errorResum(estat.codi)}</Alerta> : null}
+        {estat.fase === 'dades' ? <TaulaDelResum resum={estat.resum} nativaIos={nativaIos} tx={tx} /> : null}
       </div>
     </section>
   );
 }
 
-/* 3 · La guia dels verificadors d'Android i el missatge per al grup de WhatsApp. */
-function GuiaVerificadorsAndroid({ navegador }) {
+function GuiaVerificadorsAndroid({ navegador, tx }) {
   const idTitol = useId();
   const [copia, setCopia] = useState('res');
   const copiar = useCallback(() => {
     setCopia('copiant');
-    copiaAlPortaretalls(MISSATGE_WHATSAPP_VERIFICADORS, navegador).then((fet) => setCopia(fet ? 'fet' : 'a-ma'));
-  }, [navegador]);
+    copiaAlPortaretalls(tx.missatgeWhatsapp, navegador).then((fet) => setCopia(fet ? 'fet' : 'a-ma'));
+  }, [navegador, tx.missatgeWhatsapp]);
   return (
     <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-labelledby={idTitol} data-testid="guia-verificadors-android">
-      <h3 id={idTitol}>Guia visual de 3 passos per als verificadors d’Android</h3>
+      <h3 id={idTitol}>{tx.guiaAndroidTitol}</h3>
       <ol className="sdp-admin-botiga-detall__passos">
-        {PASSOS_VERIFICADOR_GOOGLE_PLAY.map((pas) => <li key={pas}>{pas}</li>)}
+        {tx.passosAndroid.map((pas) => <li key={pas}>{pas}</li>)}
       </ol>
       <div className="sdp-admin-actions-inline sdp-admin-actions-inline--separat">
         <Boto onClick={copiar} carregant={copia === 'copiant'} data-testid="boto-copia-missatge-whatsapp">
-          Copia el missatge per al grup de WhatsApp
+          {tx.botoCopiaWhatsapp}
         </Boto>
       </div>
       <div aria-live="polite" data-testid="estat-copia-whatsapp" data-copia={copia}>
-        {copia === 'fet' ? <p className="sdp-paragraf-centrat">Missatge copiat: enganxa’l al grup de WhatsApp.</p> : null}
+        {copia === 'fet' ? <p className="sdp-paragraf-centrat">{tx.copiatWhatsapp}</p> : null}
         {copia === 'a-ma' ? (
-          <Camp etiqueta="Este navegador no ha deixat copiar: selecciona el missatge i copia’l a mà">
-            <AreaText readOnly value={MISSATGE_WHATSAPP_VERIFICADORS} files={10} onFocus={(e) => e.currentTarget.select()} />
+          <Camp etiqueta={tx.copiaAMaEtiqueta}>
+            <AreaText readOnly value={tx.missatgeWhatsapp} files={10} onFocus={(e) => e.currentTarget.select()} />
           </Camp>
         ) : null}
       </div>
@@ -171,11 +149,6 @@ function GuiaVerificadorsAndroid({ navegador }) {
   );
 }
 
-/**
- * @param {{ consulta?: (config: object) => Promise<object>, nativaIos?: boolean, navegador?: Navigator }} props
- *   consulta: la funció de dades (per defecte, la del port); nativaIos: dins de l'app d'iOS (per defecte,
- *   esAppNativaIos()); navegador: on es llig navigator.clipboard (per defecte, el global).
- */
 export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDelPort, nativaIos: nativaIosProp, navegador } = {}) {
   const llenguaUI = useLlenguaDeLaUI();
   const tx = textosAdminEntitats(llenguaUI);
@@ -186,31 +159,31 @@ export default function PanellUsuarisDispositiusBotigues({ consulta = consultaDe
       <header ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__header">
         <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__badges">
           <Insignia to="info">{`🍎 App Store v${APP_STORE.versio} · ${APP_STORE.id}`}</Insignia>
-          {nativaIos ? null : <Insignia to="neutre">🤖 Google Play: prova tancada amb verificadors</Insignia>}
+          {nativaIos ? null : <Insignia to="neutre">{tx.badgeGooglePlay}</Insignia>}
         </div>
       </header>
 
-      <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} locale={tx.locale} />
+      <UsuarisIDispositius consulta={consulta} nativaIos={nativaIos} tx={tx} />
       <PanellSessionsDetall nativaIos={nativaIos} />
 
       <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={tx.descarreguesOficialsRegio} data-testid="botons-oficials-botigues">
-        <h3>📲 Descàrregues oficials</h3>
+        <h3>{tx.descarreguesTitol}</h3>
         <div className="sdp-admin-actions-inline">
           <a className="sdp-boto sdp-boto--marca sdp-boto--apple sdp-boto--gran" href={URL_FITXA_APP_STORE}
             target="_blank" rel="noopener noreferrer" data-testid="boto-descarrega-app-store">
-            🍎 Descarrega a l’App Store
+            {tx.botoAppStore}
           </a>
           {nativaIos ? null : (
             <a className="sdp-boto sdp-boto--marca sdp-boto--google sdp-boto--gran" href={ADRECA_VERIFICADORS_GOOGLE_PLAY}
               target="_blank" rel="noopener noreferrer" data-testid="boto-descarrega-google-play">
-              ▶️ Descarrega a Google Play Beta
+              {tx.botoGooglePlay}
             </a>
           )}
         </div>
-        {nativaIos ? null : <p className="sdp-muted sdp-paragraf-centrat" data-testid="nota-pas-1-google-play">{NOTA_PAS_1_GOOGLE_PLAY}</p>}
+        {nativaIos ? null : <p className="sdp-muted sdp-paragraf-centrat" data-testid="nota-pas-1-google-play">{tx.notaPas1GooglePlay}</p>}
       </section>
 
-      {nativaIos ? null : <GuiaVerificadorsAndroid navegador={navegador} />}
+      {nativaIos ? null : <GuiaVerificadorsAndroid navegador={navegador} tx={tx} />}
     </article>
   );
 }

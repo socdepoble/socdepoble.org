@@ -11,10 +11,15 @@ import { etiquetaEnllacosDImatge } from '../detail/etiquetaEnllacosDImatge.js';
 import { propsDePaginaDeText } from './paginaDeText.js';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
-import { Suspense, useContext, useMemo } from 'react';
+import { Suspense, useContext, useMemo, useSyncExternalStore } from 'react';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { localitzaPagina } from './pageContent.r10.js';
 import { planTraduccioPagina } from './planTraduccioPagina.js';
+import {
+  revisaPaginaSistema,
+  subscriuRevisionsEditorials,
+  versioRevisionsEditorials
+} from '../../data/revisionsEditorialsDelNavegador.js';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada R29 · R29-RUT-01 i R29-RUT-04 · Dos accessoris de la pàgina: amb lazyRoute i, en pintar-los,
@@ -23,6 +28,7 @@ const AparadorFediversity = lazyRoute(() => import('./AparadorFediversity.jsx'))
 const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx').then((m) => ({ default: m.ConsolaIncrustada })));
 const CreditsComunitatS23 = lazyRoute(() => import('./CreditsComunitatS23.jsx'));
 import { useSEO } from '../../hooks/useSEO';
+import { useEdicioEnLloc } from '../../hooks/useEdicioEnLloc.js';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 /* Pla 261027_1154 (P1-61) · La imatge del <head>: el selector únic i la base
@@ -124,11 +130,23 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
     esPaginaDelContext ? undefined : { recursTipus: 'pagina', recursId: pageKey || '' }
   );
   const publicadorsEfectius = esPaginaDelContext ? copublicacio.publicadorsRegistrats : publicadorsRegistrats ?? publicadorsDelPort;
+  const versioRevisions = useSyncExternalStore(
+    subscriuRevisionsEditorials,
+    versioRevisionsEditorials,
+    versioRevisionsEditorials
+  );
   /* R51 (P0-46 / IDEA-177) · Una pàgina que declara el seu translation_mode es
      pinta segons el pla del contracte (planTraduccioPagina.js); sense, el camí
-     de sempre (localitzaPagina), byte a byte. */
+     de sempre (localitzaPagina), byte a byte.
+     R32.44 · IDEA-324 · Si hi ha una revisió humana desada per a `sistema:<pageKey>`,
+     es solapa reactivament damunt sense perdre etiquetes canòniques ni cap widget React fill. */
   const plaR51 = useMemo(() => planTraduccioPagina(original, language), [original, language]);
-  const page = useMemo(() => paginaPerAppNativa(plaR51 ? plaR51.pagina : localitzaPagina(original, language, pageKey)), [plaR51, original, language, pageKey]);
+  const page = useMemo(() => {
+    void versioRevisions;
+    const base = plaR51 ? plaR51.pagina : localitzaPagina(original, language, pageKey);
+    const revisada = pageKey ? revisaPaginaSistema(pageKey, base) : base;
+    return paginaPerAppNativa(revisada);
+  }, [plaR51, original, language, pageKey, versioRevisions]);
   const contentLanguage = page.contentLanguage || 'ca';
   const etiquetaExtra = typeof etiquetaFinal === 'function' ? etiquetaFinal(t) : etiquetaFinal;
   /* Pla 261027_1154 (P1-61), Fase 1 (ordre del Mestre, 261027) · Abans, la
@@ -165,6 +183,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      (XatSection.jsx), que només es remunta amb el títol o la descripció: la
      pestanya perdia «(N) Xat» i l'og:image era la foto del document. */
   const enContext = page.chrome === 'context';
+  const edicio = useEdicioEnLloc({ tipus: 'pagina', pageKey, enContext });
   useSEO({
     title: seo.title,
     description: seo.description,
@@ -200,6 +219,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {...(etiquetaPeuDePagina ? { etiquetaPeuDePagina } : null)}
       {...(onConnect ? { onConnect } : null)}
       {...(objecte ? { objecte } : null)}
+      {...(edicio.editarVisible ? { showEdit: true, onEdit: edicio.onEdit, editLabel: edicio.editLabel } : null)}
       {...(plaR51 && !plaR51.traduccio ? { traduccio: false } : null)}
     >
       {plaR51?.tipus === 'error' ? (

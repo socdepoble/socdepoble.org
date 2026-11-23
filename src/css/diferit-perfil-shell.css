@@ -150,6 +150,9 @@
 
 .perfil-compte__titol {
   margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
 }
 
 .perfil-compte__text {

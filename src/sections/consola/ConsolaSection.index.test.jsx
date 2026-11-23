@@ -123,7 +123,7 @@ const ambFonts = () => { fonts.mapa = MAPA; fonts.consola = CONSOLA; };
 const index = () => screen.getByRole('region', { name: TITOL_INDEX });
 const h1 = () => document.querySelector('h1')?.textContent;
 /* Les capçaleres d'un contenidor, en l'ordre del document: nivell, text i l'enllaç del títol si en porta. */
-const capcaleres = (dins) => [...dins.querySelectorAll('h2, h3, h4')]
+const capcaleres = (dins) => [...dins.querySelectorAll('h3, h4, h5')]
   .map((h) => [h.tagName.toLowerCase(), h.textContent, h.querySelector('a')?.getAttribute('href') ?? null]);
 const esperades = () => nodesDeLIndex(indexConsola(fonts.mapa, fonts.consola)).map((n) => [`h${n.nivell}`, n.titol, n.ruta]);
 
@@ -159,17 +159,17 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’índex ve d
     for (const li of ul.children) expect(li.querySelector('a[href^="/consola/xifres/"]'), li.textContent).not.toBeNull();
   }
   if (amb) expect(regio.querySelectorAll('ul').length).toBeGreaterThan(0);
-  // L'H2 i la seua entradeta centrada, i just darrere, un H3 (lliçó 261030 de sdp-universal-page).
-  expect(regio.querySelector('h2').nextElementSibling.className).toBe('lead');
-  expect(regio.querySelector('p.lead').nextElementSibling.firstElementChild.tagName).toBe('H3');
-  // Un sol H2 (el títol), i els H3 i H4 en l'ordre de la jerarquia, amb el títol enllaçat a la seua ruta.
+  // L'H3 i la seua entradeta centrada, i just darrere, un H4 (lliçó 261030 de sdp-universal-page + IDEA-319).
+  expect(regio.querySelector('h3').nextElementSibling.className).toBe('lead');
+  expect(regio.querySelector('p.lead').nextElementSibling.firstElementChild.tagName).toBe('H4');
+  // Un sol H3 (el títol), i els H4 i H5 en l'ordre de la jerarquia, amb el títol enllaçat a la seua ruta.
   const dada = esperades();
   expect(capcaleres(regio)).toEqual(dada);
-  expect(capcaleres(regio).filter(([n]) => n === 'h2')).toHaveLength(1);
-  expect(capcaleres(regio).filter(([n]) => n === 'h3')).toHaveLength(paginesConsola().length + 4);
+  expect(capcaleres(regio).filter(([n]) => n === 'h3')).toHaveLength(1);
+  expect(capcaleres(regio).filter(([n]) => n === 'h4')).toHaveLength(paginesConsola().length + 4);
   // Cap títol amb ruta sense enllaç; i cap enllaç de paràgraf porta enlloc que no siga un títol de l'índex.
   const rutes = new Set(dada.map(([, , ruta]) => ruta).filter(Boolean));
-  for (const h of regio.querySelectorAll('h3, h4')) {
+  for (const h of regio.querySelectorAll('h4, h5')) {
     const fila = dada.find(([n, titol]) => n === h.tagName.toLowerCase() && titol === h.textContent);
     expect(Boolean(h.querySelector('a')), h.textContent).toBe(Boolean(fila?.[2]));
   }
@@ -177,27 +177,27 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’índex ve d
   for (const href of delsParagrafs) expect(rutes.has(href), href).toBe(true);
   // Cada pàgina: el títol enllaçat a la seua ruta, el «per a què», l'entradeta del copy i el cos didàctic.
   for (const p of paginesConsola()) {
-    const h3 = [...regio.querySelectorAll('h3')].find((h) => h.textContent === p.title);
-    expect(h3.querySelector('a').getAttribute('href')).toBe(p.ruta);
-    expect(h3.nextElementSibling.className).toBe('sdp-consola__index-peraque');
-    expect(h3.nextElementSibling.textContent).toBe(p.subtitle);
-    if (p.lead) expect(h3.nextElementSibling.nextElementSibling.textContent).toBe(p.lead);
+    const h4 = [...regio.querySelectorAll('h4')].find((h) => h.textContent === p.title);
+    expect(h4.querySelector('a').getAttribute('href')).toBe(p.ruta);
+    expect(h4.nextElementSibling.className).toBe('sdp-consola__index-peraque');
+    expect(h4.nextElementSibling.textContent).toBe(p.subtitle);
+    if (p.lead) expect(h4.nextElementSibling.nextElementSibling.textContent).toBe(p.lead);
     // Darrere, paraules planes, què diuen ara les dades i què queda: tres paràgrafs més, cada un amb negretes.
     const cos = [];
-    for (let el = h3.nextElementSibling.nextElementSibling.nextElementSibling; el && el.tagName === 'P'; el = el.nextElementSibling) cos.push(el);
+    for (let el = h4.nextElementSibling.nextElementSibling.nextElementSibling; el && el.tagName === 'P'; el = el.nextElementSibling) cos.push(el);
     expect(cos.length, p.id).toBe(3);
     for (const el of cos) expect(el.querySelector('strong'), p.id).not.toBeNull();
   }
-  // Cada targeta (H4): què és, què diuen ara les dades i què queda, en tres paràgrafs.
-  for (const h4 of regio.querySelectorAll('h4')) {
-    const cos = [h4.nextElementSibling, h4.nextElementSibling?.nextElementSibling, h4.nextElementSibling?.nextElementSibling?.nextElementSibling];
-    expect(cos.map((el) => el?.tagName), h4.textContent).toEqual(['P', 'P', 'P']);
+  // Cada targeta (H5): què és, què diuen ara les dades i què queda, en tres paràgrafs.
+  for (const h5 of regio.querySelectorAll('h5')) {
+    const cos = [h5.nextElementSibling, h5.nextElementSibling?.nextElementSibling, h5.nextElementSibling?.nextElementSibling?.nextElementSibling];
+    expect(cos.map((el) => el?.tagName), h5.textContent).toEqual(['P', 'P', 'P']);
     expect(cos[0].textContent.length).toBeGreaterThan(20);
     expect(cos[1].querySelector('strong')).not.toBeNull();
     expect(cos[2].querySelector('strong')).not.toBeNull();
   }
   // Sense fonts, cap número a l'índex de les targetes (el nom de cada xifra i prou).
-  if (!amb) for (const h4 of regio.querySelectorAll('h4')) expect(h4.textContent).not.toMatch(/\d/);
+  if (!amb) for (const h5 of regio.querySelectorAll('h5')) expect(h5.textContent).not.toMatch(/\d/);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -223,7 +223,7 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’Índex no p
   expect(regio.querySelectorAll('img')).toHaveLength(0);
   expect(document.querySelector('.sdp-consola__index-imatge')).toBeNull();
   // L'entradeta va just darrere de l'H2, i darrere ve el primer H3: cap imatge entremig.
-  expect(regio.querySelector('h2').nextElementSibling.className).toBe('lead');
+  expect(regio.querySelector('h3').nextElementSibling.className).toBe('lead');
   /* Gauntlet 261030 (P1Y, vinyetes-1024-jpg-a-miniatures) · Les vinyetes de
      1024 px de la Consola i del Cervell es pinten amb la seua bessona .webp;
      la taula (i el SEO) continuen nomenant el .jpg. La resta, tal qual. */
@@ -256,7 +256,7 @@ test('els panells del pols i les peces del Mapa són a l’índex, amb la ruta d
      peça de família que marca alguna cosa és un element de llista (li a), no
      un H4; Claude Code, amb el seu candat acreditat, no en marca cap i ja no
      hi és (sí Codex, sense candats, i el lloc del sòl sense lector). */
-  const enllacos = [...index().querySelectorAll('h4 a, li a')].map((a) => a.getAttribute('href'));
+  const enllacos = [...index().querySelectorAll('h5 a, li a')].map((a) => a.getAttribute('href'));
   for (const id of ['carrega', 'rebuts', 'skills']) expect(enllacos).toContain(rutaPanell(id));
   for (const slug of ['arnes-codex', 'cadencia-dia', 'tasques-sense-llancador', 'registres-de-consum', 'torns-caducats']) {
     expect(enllacos).toContain(rutaXifra(slug));
@@ -270,25 +270,25 @@ test('els panells del pols i les peces del Mapa són a l’índex, amb la ruta d
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('navegar des de l’índex: una pàgina (H3), un panell del pols i una xifra (H4) obrin la seua pàgina, i la molla torna', async () => {
+test('navegar des de l’índex: una pàgina (H4), un panell del pols i una xifra (H5) obrin la seua pàgina, i la molla torna', async () => {
   ambFonts();
   await obri('/consola');
   const molla = () => within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' });
 
-  // Ordre del Mestre, 30-10-2026 · el títol (H3) i el paràgraf de què queda porten a la mateixa pàgina.
-  fireEvent.click(index().querySelector('h3 a[href="/consola/calendari"]'));
+  // Ordre del Mestre, 30-10-2026 + IDEA-319 · el títol (H4) i el paràgraf de què queda porten a la mateixa pàgina.
+  fireEvent.click(index().querySelector('h4 a[href="/consola/calendari"]'));
   expect(window.location.pathname).toBe('/consola/calendari');
   expect(h1()).toBe('Calendari de processos');
   fireEvent.click(molla());
   expect(window.location.pathname).toBe('/consola');
 
-  fireEvent.click(index().querySelector(`h4 a[href="${rutaPanell('rebuts')}"]`));
+  fireEvent.click(index().querySelector(`h5 a[href="${rutaPanell('rebuts')}"]`));
   expect(window.location.pathname).toBe(rutaPanell('rebuts'));
   expect(h1()).toBe('Rebuts');
   fireEvent.click(molla());
   expect(window.location.pathname).toBe('/consola');
 
-  const xifra = index().querySelector(`h4 a[href="${rutaXifra('skills')}"]`);
+  const xifra = index().querySelector(`h5 a[href="${rutaXifra('skills')}"]`);
   const titol = xifra.textContent;
   fireEvent.click(xifra);
   expect(window.location.pathname).toBe(rutaXifra('skills'));
@@ -296,22 +296,20 @@ test('navegar des de l’índex: una pàgina (H3), un panell del pols i una xifr
   expect(errors).not.toHaveBeenCalled();
 });
 
-/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Darrere de
-   l'Índex ve el Diagnòstic de Sóc de Poble, amb el seu H2 i cap altra capçalera.
-   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (front F): l'Índex
-   «al final» de l'Índex de secció (Onada 11). */
-test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de l’índex, en ordre; i, al final, el Diagnòstic de Sóc de Poble', async () => {
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) + IDEA-319 · Darrere de
+   l'Índex ve el Diagnòstic de Sóc de Poble, amb el seu H3 i cap altra capçalera. */
+test('l’Índex de secció de la barra blava recull l’H3, els H4 i els H5 de l’índex, en ordre; i, al final, el Diagnòstic de Sóc de Poble', async () => {
   ambFonts();
   await obri('/consola');
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
   const dialeg = screen.getByRole('dialog', { name: 'Taula de continguts' });
   const entrades = [...dialeg.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
-  const inici = entrades.findIndex(([classe, text]) => classe === 'toc-item toc-level-2' && text === TITOL_INDEX);
+  const inici = entrades.findIndex(([classe, text]) => classe === 'toc-item toc-level-3' && text === TITOL_INDEX);
   expect(inici).toBeGreaterThan(0);
-  const fi = entrades.findIndex(([classe], i) => i > inici && classe === 'toc-item toc-level-2');
+  const fi = entrades.findIndex(([classe], i) => i > inici && classe === 'toc-item toc-level-3');
   expect(fi).toBeGreaterThan(inici);
   expect(entrades.slice(inici, fi)).toEqual(esperades().map(([nivell, titol]) => [`toc-item toc-level-${nivell.slice(1)}`, titol]));
-  expect(entrades.slice(fi)).toEqual([['toc-item toc-level-2', TITOL_DIAGNOSI]]);
+  expect(entrades.slice(fi)).toEqual([['toc-item toc-level-3', TITOL_DIAGNOSI]]);
   expect(errors).not.toHaveBeenCalled();
 });
 

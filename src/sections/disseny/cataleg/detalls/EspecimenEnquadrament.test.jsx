@@ -164,3 +164,17 @@ it('Directiva 261024 · el contracte diu la capçalera de forma lliure (1.200 pe
   expect(screen.getByRole('button', { name: 'Capçalera de forma lliure (1.200 pel costat llarg)' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: /Capçalera quadrada|16:9/ })).toBeNull();
 });
+
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Carril T · La fila ofereixConservarExif i la descripció deien
+   només la casella «Conserva la ubicació i la data de la foto» marcada: amb una ubicació, producció pinta
+   l'interruptor «Amaga el lloc» (CasellaExif, DialegEnquadrament.jsx). El text es fixa lletra per lletra, sense
+   les constants del codi: si el codi canvia l'avís i el catàleg no, esta prova cau. La data no va dins de
+   l'avís (la descripció de l'interruptor és el literal del Mestre tot sol): la diu una línia a banda. */
+it('IDEA-331 · el contracte diu l’interruptor «Amaga el lloc», l’avís del Mestre, la línia de la data i l’avís de revisar', () => {
+  const { container } = munta();
+  const text = container.textContent;
+  expect(text).toContain('v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Amb una ubicació que es pot conservar, la casella és l’interruptor «Amaga el lloc» (role="switch", apagat de sèrie; nom llarg «Publicar sense geolocalització», al nom accessible i al title) amb l’avís «Este contingut conserva la ubicació per a situar-lo al territori.», que és tota la seua descripció (aria-describedby), i, si la foto també porta la data, una línia a banda just davall, «També es publicarà la data de la foto.»; encés, «Ubicació amagada» i la foto ix neta ({ conservaExif: false }).');
+  expect(text).toContain('Qui desa abans que acabe la lectura d’una foto amb ubicació llig «Esta foto porta dades que es publicarien amb ella. Revisa «Amaga el lloc» i torna a desar.».');
+  expect(text).toContain('Si la foto porta la ubicació, es conserva de sèrie i l’interruptor «Amaga el lloc» la lleva d’un toc');
+  expect(text).not.toContain('la casella «Conserva la ubicació i la data de la foto» les conserva de sèrie');
+});

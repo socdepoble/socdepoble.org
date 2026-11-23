@@ -44,7 +44,7 @@ export function DiagnosiConsola({ fonts = {}, locale = 'ca-ES', ara }) {
   const text = diagnosiTextual(fonts, { ara, locale, privat });
   return (
     <section className="sdp-consola__diagnosi" aria-labelledby={id}>
-      <h2 id={id}>{TITOL_DIAGNOSI}</h2>
+      <h3 id={id}>{TITOL_DIAGNOSI}</h3>
       <nav className="sdp-consola__acces" aria-label={ETIQUETA_ACCES}>
         <ul>
           {accesRapid().map((p) => <li key={p.id}><Link to={p.ruta}>{p.titol}</Link></li>)}

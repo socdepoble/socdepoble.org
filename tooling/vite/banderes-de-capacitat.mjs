@@ -11,6 +11,11 @@
  *   VITE_SDP_CONSENS_ISOGLOSSES=1  consens del joc «D'on parles?» (capacitat
  *                             consensIsoglosses; migracions R23 de la RPC
  *                             resum_consens_isoglosses_poble i de les seues taules)
+ *   VITE_SDP_MUR_VISIBILITAT=1  v1.2.23 · costura bandera del Mur · la RPC7 del Mur
+ *                             públic (llig_mur_public_v7, migració 20261122160300);
+ *                             src/data/supabase/content.js la llig amb
+ *                             `import.meta.env?.VITE_SDP_MUR_VISIBILITAT === '1'`,
+ *                             i el define literal també plega eixe accés opcional
  *
  * En compilar, este connector les definix com a literals ('1' o ''), perquè el
  * codi que les mira (`import.meta.env.VITE_SDP_… === '1'`) es plegue i Rollup
@@ -21,7 +26,10 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
 
-export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU', 'VITE_SDP_COPUBLICACIO', 'VITE_SDP_CONSENS_ISOGLOSSES']);
+/* v1.2.23 · costura bandera del Mur · VITE_SDP_MUR_VISIBILITAT entra a la llista: els builds web, natiu i WP la
+   pleguen com a literal ('1' o ''), igual que les altres, en lloc de deixar-la a l'objecte import.meta.env del build.
+   Apagada, negociaVisibilitatMur queda `() => false` i la lectura pública del Mur va directa a la RPC6. */
+export const BANDERES_DE_CAPACITAT = Object.freeze(['VITE_SDP_XAT_RITME', 'VITE_SDP_IAIA_SERVIDOR', 'VITE_SDP_PUSH_NATIU', 'VITE_SDP_COPUBLICACIO', 'VITE_SDP_CONSENS_ISOGLOSSES', 'VITE_SDP_MUR_VISIBILITAT']);
 
 /** Els valors tal com els veu Vite: els .env de envDir i l'entorn del procés. */
 export function valorsDeLesBanderes(config = {}, mode = 'production') {

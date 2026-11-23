@@ -6,12 +6,13 @@ import { ESTAT_CANDIDATS_ALERGENS, vesteixCandidatsAlergens } from '../../../uti
  * «—» means the substance does not appear in the recipe text.
  * The literal book or source text keeps lang="ca". `escandall` shows the costing
  * line only where a costing exists (the Bar); the public recipe page omits it. */
-export function CandidatsAlergens({ proposta, llengua = 'ca', escandall = true }) {
+export function CandidatsAlergens({ proposta, llengua = 'ca', escandall = true, nivell = 'h3' }) {
   if (!proposta || proposta.estat !== ESTAT_CANDIDATS_ALERGENS || !Array.isArray(proposta.alergens)) return null;
   const v = vesteixCandidatsAlergens(proposta, llengua);
+  const Titol = nivell === 'h4' ? 'h4' : 'h3';
   return (
     <section aria-label={v.ariaLabel} data-estat={ESTAT_CANDIDATS_ALERGENS} data-cobertura={v.cobertura} lang={v.llengua}>
-      <h3>{v.etiqueta}</h3>
+      <Titol>{v.etiqueta}</Titol>
       <p role="note">{v.llegenda}</p>
       <p>
         {v.textCobertura}

@@ -909,8 +909,12 @@ test('el readme del directori declara el servidor de mitjans en lloc del canal p
      fixa la història publicada des de la 1.1.10. El límit de WordPress.org continua sent el de
      paraules per secció.
      Onada v1.2.17 (WP 1.1.25): de 40 a 44 KB, com enxufe-plugin.test.mjs (41.423 B amb les notes de la
-     1.1.25 a la font). */
-  assert.ok(Buffer.byteLength(amb) < 45056, 'el readme del directori continua dins del límit');
+     1.1.25 a la font).
+     v1.2.23 · C (ordre del Mestre 261123) (WP 1.1.31): de 44 a 48 KB, el sostre que enxufe-plugin.test.mjs posa a la
+     font des de la v1.2.22. Esta variant en feia 44.976 B amb les notes de la 1.1.30 (80 de marge), i les notes
+     obligatòries de la 1.1.31 (Changelog i Upgrade Notice) la porten a 45.867 B: no hi caben sense esborrar història
+     publicada. El límit de WordPress.org continua sent el de paraules per secció. */
+  assert.ok(Buffer.byteLength(amb) < 49152, 'el readme del directori continua dins del límit');
 });
 
 /* Gauntlet 261030, cicle 3 (vq-wordpress-readme-sense-wikimedia) · El panell

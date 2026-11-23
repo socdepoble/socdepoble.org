@@ -299,7 +299,16 @@
     "tests/r3242-ajuntament-sql.test.mjs",
     "tests/r3242-xat-ubicacio-postgres.test.mjs",
     "tests/cartograf-som-de-poble.test.mjs",
-    "tooling/gates/tractor-duplicats-public.test.mjs"
+    "tooling/gates/tractor-duplicats-public.test.mjs",
+    "tests/portes-cadena-maquetacio-canonica.test.mjs",
+    "tests/r3244-edicio-propia-revisions-pglite.test.mjs",
+    "tests/tractor-maquetacio-canonica.test.mjs",
+    "tests/frontmatter-r3245.test.mjs",
+    "tests/genera-resum-l0-l1.test.mjs",
+    "tests/r3246-identitat-privacitat-pglite.test.mjs",
+    "tests/r3246-storage-quotes-orfes-pglite.test.mjs",
+    "tests/r3246-contractes-taules-pglite.test.mjs",
+    "tooling/gates/sentinella-edicions-humanes.test.mjs"
   ],
   "files": [
     {
@@ -2617,6 +2626,51 @@
       "path": "tooling/gates/tractor-duplicats-public.test.mjs",
       "suite": "primary",
       "reason": "R32.43 lot 03: registre congelat de grups duplicats de public/ (hash, mida i rutes exactes) i casos adversaris."
+    },
+    {
+      "path": "tests/portes-cadena-maquetacio-canonica.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.23 · L4-01 i L8-07 (Gauntlet R1): la Maquetació canònica (IDEA-319) és a la cadena de portes una vegada, la Porta Cadena la veu, passa amb 0 infraccions i el README diu les xifres de run-portes.mjs."
+    },
+    {
+      "path": "tests/tractor-maquetacio-canonica.test.mjs",
+      "suite": "primary",
+      "reason": "R32.43 substituïx el Lot 01 R32.42: regressió AST de maquetació canònica, prefiltre i precisió; integrar els lots R32.42 02/03 i els tres lots R32.43 abans del cens conjunt."
+    },
+    {
+      "path": "tests/r3244-edicio-propia-revisions-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.44: catàleg complet PGlite, permisos d'edició pròpia personal i d'entitat, CAS, historial append-only, restauració i denegacions adversàries. Integrar els tres lots C1 abans del cens conjunt."
+    },
+    {
+      "path": "tests/frontmatter-r3245.test.mjs",
+      "suite": "primary",
+      "reason": "R32.45: excepció semàntica core, fitxes runtime acreditades i regressions negatives de metadades."
+    },
+    {
+      "path": "tests/genera-resum-l0-l1.test.mjs",
+      "suite": "primary",
+      "reason": "R32.45: índex privat L0/L1, L2 immutable, decisions amb ubicació, determinisme i fallades tancades."
+    },
+    {
+      "path": "tests/r3246-identitat-privacitat-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.46 C3 QA: conformitat funcional d'identitat, edició pròpia, acreditació institucional i privacitat amb PGlite obligatori."
+    },
+    {
+      "path": "tests/r3246-storage-quotes-orfes-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.46 C3 QA: invariants d'emmagatzematge, còmput de quota, confirmació de purga i regressió C3-F01 amb PGlite obligatori."
+    },
+    {
+      "path": "tests/r3246-contractes-taules-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.46 C3 QA: contractes de taules i configuració del catàleg, integritat de dades i cobertura funcional declarada amb PGlite obligatori."
+    },
+    {
+      "path": "tooling/gates/sentinella-edicions-humanes.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.23 · Gemini R32.44 (IDEA-324a): sentinella Humà → IAIA que compara edicions humanes amb PAGE_COPY; fixtures portables."
     }
   ]
 }

@@ -108,7 +108,8 @@ export const Costat = ({ children, width = '250px', gap = 4, reversed = false, c
 
 /**
  * Centre (Center / Wrapper)
- * Contenidor per centrar contingut amb una amplada màxima (measure editorial).
+ * Contenidor neutre a tota l'amplada (width: 100%, box-sizing: border-box). Des de R32.47 no aplica --sdp-measure.
+ * v1.2.23 · R2E-07 (Gauntlet R2) · Abans deia «amplada màxima (measure editorial)», que ja no és cert (components.css).
  */
 export const Centre = ({ children, className = '', ...props }) => {
   return (

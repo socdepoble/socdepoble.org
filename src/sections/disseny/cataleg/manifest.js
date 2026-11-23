@@ -228,7 +228,7 @@ const ESTRUCTURA = [
     'Dues peces que compartien nom: el Divisor, àtom de Pedra Seca que separa blocs, i AppGridResizer, la vora arrossegable entre columnes d’AppGridShell, que es mou també amb el teclat.',
     'splitter redimensionador'),
   especimen('estructura', 'composicio', 'Composició', 'Pila · Fila · Graella · Costat · Centre · Superficie', ['plantilla', 'contenidor'],
-    'Els contenidors de maquetació de Pedra Seca: apilar, posar en fila, graella fluida, barra lateral amb contingut, amplada de lectura i superfície. Els espais són sempre de l’escala --sdp-space-N.',
+    'Els contenidors de maquetació de Pedra Seca: apilar, posar en fila, graella fluida, barra lateral amb contingut, contenidor a tota l’amplada i superfície. Els espais són sempre de l’escala --sdp-space-N.',
     'stack row grid sidebar center surface'),
   especimen('estructura', 'barra-eines', 'Barra d’eines de l’editor', 'UniversalToolbar · no és la barra blava', ['organisme', 'editor'],
     'La barra d’eines de l’editor: encapçalaments (H3, H4, H5, H6 i H2), Negreta, Cursiva i les dues llistes; a «⋯» (Més eines), Ratllat, Citació i Divisor; Borrar i Publicar. És muda: només rep l’estat i les accions. Per davall de 500px d’ample, «⋯» obri totes les eines.',
@@ -293,10 +293,12 @@ const NAVEGACIO = [
   especimen('navegacio', 'tornar-dalt', 'Tornar a dalt', 'PedraSeca/atoms/BotoTornarADalt.jsx', ['atom', 'mobil', 'scroll'],
     'Botó redó i suau que porta a dalt el que s’està llegint. En compacte la closca el pinta damunt de «Pobles» quan el visor ha baixat més d’una pantalla i les barres es veuen.',
     'tornar dalt pujar amunt scroll inici fletxa boto flotant pobles'),
-  /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri. */
+  /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri.
+     v1.2.23 · K5 (ordre del Mestre 261123) · IDEA-327 v2: la fila «Ajustos del
+     xat» obri el full i, amb sessió, el peu és el selector «Amb qui actues?». */
   especimen('navegacio', 'xat-rail', 'Xat · rail i vistes', 'RailXat · VistaEnConstruccio', ['organisme', 'xat', 'rail'],
-    'El menú de l’esquerra del Xat, amb el patró de missatgeria que la gent ja coneix, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',
-    'menu xats novetats comunitats telefonades multimedia destacats tu perfil en construccio marcador')
+    'El menú de l’esquerra del Xat, amb el patró de missatgeria que la gent ja coneix, desplegat i plegat, amb les seccions «Més» i «Comunitats», la fila «Ajustos del xat» i el peu amb l’avatar i el nom de la identitat activa, que obri el calaix «Amb qui actues?» (sense sessió, «Tu», que obri els Ajustos); i les vistes que encara no fan res i ho diuen.',
+    'menu xats novetats comunitats telefonades multimedia destacats tu perfil en construccio marcador ajustos del xat identitat amb qui actues calaix eixir foraster')
 ];
 
 const RETROALIMENTACIO = [
@@ -351,9 +353,11 @@ const SUPERPOSICIONS = [
     'El diàleg del «+» del Xat: el cercador, «Nou grup» i «Nova comunitat» amb el panell honest, els contactes freqüents i la gent del poble per lletres.',
     'nova conversa padro contactes frequents nou grup nova comunitat tu mateix'),
   /* Torn 260930 (T1) · el full «Ajustos» del Xat, amb l'anatomia habitual dels
-     ajustos de missatgeria (Gauntlet 261017, Bloc 3.1: cap marca aliena). */
+     ajustos de missatgeria (Gauntlet 261017, Bloc 3.1: cap marca aliena).
+     v1.2.23 · K5 (ordre del Mestre 261123) · IDEA-327 v2: l'obri la fila
+     «Ajustos del xat»; «Tu» al peu, només sense sessió. */
   especimen('superposicions', 'xat-ajustos', 'Xat · Ajustos', 'FullAjustos · CosAjustos (T1)', ['organisme', 'xat', 'dialeg'],
-    'El full que obri «Tu» al peu del rail del Xat: un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, amb l’anatomia habitual dels ajustos de missatgeria. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
+    'El full que obri la fila «Ajustos del xat» del rail del Xat (sense sessió, també «Tu» al peu): un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, amb l’anatomia habitual dels ajustos de missatgeria. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
     'ajustos tu perfil compte privacitat aparenca tema llengua amplaria columnes preferits destacats ajuda en construccio'),
   /* Pla 261101_1246 (T7 · S7; P1-12 pas 17 i IDEA-48) · maqueta darrere de la bandera E2EE apagada. */
   especimen('superposicions', 'xat-seguretat', 'Xat · Xifratge i número de seguretat', 'CosSeguretatXat · CosPersonesConfianca · AvisClauCanviada (P1-12, IDEA-48)', ['organisme', 'xat', 'dialeg', 'maqueta'],

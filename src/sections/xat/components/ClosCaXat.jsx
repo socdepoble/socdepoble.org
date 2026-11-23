@@ -1,87 +1,51 @@
 /**
  * ClosCaXat.jsx — la closca compartida del Xat i del Control del xat
- * (pla 260927_0055 §4.D, DEC-02): un AppGridShell amb el rail esquerre,
- * plegat per defecte com la barra estreta de les apps de missatgeria
- * d'escriptori i recordat amb getVal/setVal (CLAU_RAIL).
+ * (IDEA-327 v2 · Onada R32.46): un AppGridShell amb el rail esquerre simplificat,
+ * sense fila superior «⚙️ Menú» ni icones separades `[|>]` / `[<|]`.
  *
- * El rail seguix el menú principal del patró estàndard de missatgeria (ordre
- * innegociable del Mestre, 260927 vesprada; captura de referència 19.11.50,
- * onada 3B; Gauntlet 261017, Bloc 3.1: sense cap marca aliena):
- *   · Xats, Comunitats, Telefonades i Contingut multimèdia, en eixe ordre i
- *     amb les mateixes icones («Novetats» continua a ENTRADES_RAIL, però
- *     amagada: D16, vegeu «Destins»);
- *   · la secció plegable «Més», amb Destacats;
- *   · la secció plegable «Comunitats», amb les comunitats de
- *     useXat().comunitats (avatar QUADRAT i nom; la del poble de l'amfitrió,
- *     amb la cara del poble, com a la llista: useCaraDelPoble), que obrin la
- *     seua fitxa (/xat?comunitat=<id>, FitxaComunitat);
- *   · al peu, fix, l'avatar propi, «Tu» i el llapis «Edita el perfil»
- *     (/el-meu-perfil). Pla 261014_1450 (fronts A i C): l'avatar és la cara
- *     de la barra negra, el logo de l'entitat activa o la foto de la persona.
- * L'estat plegat o desplegat de cada secció es recorda com el del rail
- * (clauSeccio); la secció que conté l'entrada activa s'obri en arribar-hi,
- * sense tocar la preferència, i si la persona la plega estant-hi, la
- * capçalera ho diu. Plegat, el rail porta les mateixes entrades en el mateix
- * ordre (Destacats inclòs), les comunitats com a icones d'avatar quadrat i
- * l'avatar propi al peu; les seccions no hi tenen capçalera.
+ *   · Capçalera clicable unificada (`BotoTitolSeccioXat`): `[Icona + Nom de la secció activa + ▸]`
+ *     (`💬 Xats ▸`, `👥 Comunitats ▸`, `📞 Telefonades ▸`, `🖼️ Contingut multimèdia ▸`),
+ *     que desplega el menú lateral cap a la dreta i el torna a plegar (`◂` obert).
+ *   · Fila explícita «⚙️ Ajustos del xat» en les 5 llengües dins del menú lateral,
+ *     que obri `FullAjustos`.
+ *   · Peu esquerre amb l'avatar i nom de la identitat activa (`Javi`, `Sóc de Poble`,
+ *     `El Rentonar`) que obri directament el selector global `CalaixIdentitats`
+ *     («Amb qui actues?») canviant la identitat en tot el sistema.
+ *     (v1.2.23 · X2 (ordre del Mestre 261123) · `ClosCaXat` només passa
+ *     `onIdentitats` amb una identitat activa (amb SessionProvider, quan hi
+ *     ha sessió); sense, `RailXat` conserva el peu «Tu: ajustos» → FullAjustos.
+ *     `EspecimenXatRail` fa el mateix: li'l passa amb la sessió de la mostra i
+ *     ensenya els dos peus.)
+ * v1.2.23 · L5-02 (Gauntlet R1) · El calaix parla la llengua del peu: títol,
+ * descripció, llista, «Activa» i rols (textosCalaixIdentitats.js i rols.js).
+ * v1.2.23 · L5-01 (Gauntlet R1) · Triar una altra identitat remunta el Xat
+ * (XatSection.jsx: XatWorkspace porta la clau `ambitEstable`, amb l'actor):
+ * el rail nou torna el focus al seu peu (`retornIdentitatPendent`).
  *
- * Destins (onada 3B, decisió del Mestre, 260928): «Xats» porta a /xat; les
- * vistes (Comunitats, Telefonades, Contingut multimèdia i Destacats), a
- * /xat?vista=<id>, que XatSection pinta a la columna central. Telefonades,
- * Contingut multimèdia i Destacats encara no tenen lògica: s'hi pinta
- * VistaEnConstruccio, que ho diu. «Novetats» obria el Control del xat
- * (/control-xat) com a commutador (excepció de l'onada 3B). D16 (ordre del
- * Mestre, 260930): «Novetats» s'amaga amb `amagada: true`. L'entrada es
- * conserva perquè el canvi siga reversible i `activa='control'` continue
- * sent vàlida; el Control del xat s'obri des de la targeta «Ajustos del
- * xat» del Panell de Control (/control) i la ruta no canvia. Cap entrada
- * avisa amb un toast de «pendent».
- * La capçalera del rail es diu «Menú» i porta la roda dentada (ordre del
- * Mestre, 18:35).
- *
- * Torn 260930 (T1, captures 20.47.21 i 20.48.41): el peu obri el full
- * «Ajustos» (FullAjustos), com «Tú» a la referència de missatgeria.
- * Desplegat, l'avatar i «Tu» són un sol botó; el llapis continua portant a
- * /el-meu-perfil (el lot de captures no mostra on porta el de la referència).
- * Plegat, l'avatar del peu obri
- * el full. La closca munta el full UNA sola vegada, dins d'AppGridShell (hi
- * llig la mida i els presets de les columnes). Fora d'ample, obrir-lo tanca
- * abans el panell lliscant del rail, com qualsevol tria del rail, i en
- * tancar-lo el focus torna al botó que obri el rail (el «Tu» ja és inert).
- * RailXat sense `onAjustos` conserva el peu d'abans: sense full, l'avatar
- * plegat porta al perfil. El catàleg del rail (EspecimenXatRail) li'n passa
- * un de mostra des de la revisió adversarial 260930: ensenya el peu de
- * producció.
- *
- * Les dos seccions munten exactament el mateix rail: canvia només l'entrada
- * activa (`activa`, i `comunitatActiva` per a la fitxa oberta) i el que va a
- * les columnes central i dreta. AppGridShell ja porta els separadors
- * redimensionables en mode ample (requisit del Mestre per a l'iPad, acta
- * 260927_0230).
- *
- * Graella (ordre del Mestre, 260927 nit: «una graella ben quadrada»): totes
- * les icones del rail fan 24, com la roda de «Menú» i com la barra
- * principal, i cauen sobre el mateix eix a 28px de la vora tant plegat com
- * desplegat; les files desplegades van a sang, sense radi ni separació,
- * calcant .nav-item de la barra principal (modules.css, .sdp-xat-rail-llista).
- * Els avatars de les comunitats i el propi fan 24 (Avatar xs) i ocupen la
- * cel·la de la icona: l'eix no es mou.
- *
- * En estret i en mitjà (ordre del Mestre, 260927 vesprada) el Xat no usa les
- * pestanyes de la closca: cada columna porta el seu propi control a la fila
- * de títol, com a les apps de missatgeria. El rail és un panell lliscant que
- * sempre es desplega amb etiquetes (BotoObriRail l'obri des de la fila de títol de la
- * columna central i el seu propi botó el tanca), perquè un rail de 56px
- * centrat dins d'un panell de 260 o de 375px quedava perdut.
+ * v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · T47 C01: l'«Eixir» del
+ * calaix del xat pregunta abans (`preparaEixida`), com la barra negra
+ * (useIdentitatDeLaBarra.js) i «Tanca la sessió» de FullAjustos (EixidaSegura.jsx).
+ * Si queden canvis que el servidor encara no té, l'avís d'EixidaSegura ho diu
+ * dins del calaix; si el logout falla, l'error, i no es navega.
+ * v1.2.23 · IDEA-323 / IDEA-327 v2 (ordre del Mestre 261123) · Sense sessió no hi
+ * ha identitat activa: el peu del Foraster és el de la v1.2.22 («Tu: ajustos» →
+ * FullAjustos) i no promet cap selector que no s'obri.
  */
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  ChevronDown, CircleDashed, Image as ImageIcon, MessageCircle, PanelLeftOpen, Pencil, Phone, Settings, Star, Users
+  ChevronDown, CircleDashed, Image as ImageIcon, MessageCircle, Pencil, Phone, Settings, Star, Users
 } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
-import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
+import CalaixIdentitats, { ETIQUETA_EIXIR_CALAIX, ETIQUETA_IDIOMA_CALAIX } from '../../../components/universal/identitat/CalaixIdentitats.jsx';
+import { codiDeLlengua } from '../../../components/universal/identitat/codiDeLlengua.js';
+import { rolDeLaIdentitat as rolDelCalaix, textosCalaixIdentitats } from '../../../components/universal/identitat/textosCalaixIdentitats.js';
+/* v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · Pes 0: FullAjustos.jsx ja
+   importa EixidaSegura.jsx estàticament dins d'este mateix tros diferit del xat. */
+import { AvisEixidaDelCalaix, ErrorEixidaDelCalaix } from '../../../components/universal/EixidaSegura.jsx';
 import CaraXat from './CaraXat.jsx';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
+import { useIdentitatOpcional } from '../../../app/contexts/IdentitatContext.jsx';
+import { useSessioOpcional } from '../../../app/contexts/SessionContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
 import { getVal, setVal } from '../../../config/storage.js';
 import { columnaPlegadaDe, desaColumnaPlegada } from '../../../components/universal/workspace/persistenciaColumnesUI.js';
@@ -90,6 +54,7 @@ import { useCaraDelPoble } from '../usePobleAmfitrio.js';
 import { comunitatsAmbCaraDelPoble } from '../pobleAmfitrio.js';
 import { caraDeComunitat } from '../caraDeSocDePoble.js';
 import FullAjustos from './FullAjustos.jsx';
+import { ClosCaXatContext } from './objectesDeContext.js';
 
 export const CLAU_RAIL = 'sdp-xat-rail';
 
@@ -101,19 +66,14 @@ export const RUTA_PERFIL = '/el-meu-perfil';
 
 const CAP = Object.freeze([]);
 
+/* v1.2.23 · costura objectes de context (ordre del Mestre 261123) · El context
+   de la closca viu a ./objectesDeContext.js: este mòdul és ascendent de l'App
+   i exporta constants, i cap createContext no hi pot viure
+   (src/app/contexts/objectesDeContext.test.jsx). Mateix objecte, mateix ús. */
+
 /* Controls que poden rebre el focus en obrir el rail. */
 const ENFOCABLES = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/* Retorn del focus després d'una tria al rail fora d'ample (estret i mitjà).
-   Triar-hi una entrada tanca el panell i, sovint, desmunta el BotoObriRail
-   que l'havia obert: una vista o una comunitat canvien la fila de títol de
-   la columna central (un altre component), i passar del Xat al Control del
-   xat, o a l'inrevés, munta una closca nova. El botó vell ja no pot tornar
-   el focus i el nou naix amb el panell ja tancat: el focus es quedava dins
-   del rail, que passa a `inert`, i el navegador l'enviava a <body>. La tria
-   deixa esta marca i el BotoObriRail que la troba (el mateix, si no s'ha
-   desmuntat, o el nou) la recull. Caduca de pressa: només val per al canvi
-   que la tria acaba de provocar, mai per a una càrrega posterior. */
 const VIDA_RETORN = 1000;
 let retornPendent = 0;
 function marcaRetornFocus() {
@@ -125,11 +85,31 @@ function recullRetornFocus() {
   return viu;
 }
 
-/* Les sis entrades del menú del patró de missatgeria, en el seu ordre i amb la
-   seua icona de lucide. `accio`: 'converses' (/xat), 'control' (el Control
-   del xat, commutador) o 'vista' (/xat?vista=<id>). `seccio` 'mes': viu dins
-   de la secció plegable «Més» del rail desplegat. `amagada`: l'entrada es
-   conserva però el rail no la pinta, ni plegat ni desplegat (D16, Novetats). */
+/* v1.2.23 · L5-01 (Gauntlet R1) · Triar una altra identitat al calaix canvia
+   l'actor i XatSection remunta el Xat sencer (la clau `ambitEstable` porta
+   l'actor): el botó del peu que havia obert el calaix desapareix amb la closca
+   vella i el focus queia a <body>. La closca que tria ho marca ací, i el rail
+   que es munta tot seguit (RailXat) torna el focus al seu peu. Si no hi ha
+   remunt (la identitat que ja era activa), torna el focus la closca de sempre
+   (retornaFocusAlDisparador).
+   v1.2.23 · L5-01 (Gauntlet R1) · I en eixe cas la mateixa microtasca esborra
+   la marca (oblidaRetornIdentitat): un altre rail que es munte abans d'1 s
+   (VIDA_RETORN) no l'hereta. Amb remunt, el rail nou ja l'ha recollida abans:
+   setActor és una actualització síncrona i React la buida abans d'esta
+   microtasca. */
+let retornIdentitatPendent = 0;
+function marcaRetornIdentitat() {
+  retornIdentitatPendent = Date.now();
+}
+function oblidaRetornIdentitat() {
+  retornIdentitatPendent = 0;
+}
+function recullRetornIdentitat() {
+  const viu = retornIdentitatPendent > 0 && Date.now() - retornIdentitatPendent < VIDA_RETORN;
+  retornIdentitatPendent = 0;
+  return viu;
+}
+
 export const ENTRADES_RAIL = Object.freeze([
   { id: 'xats', accio: 'converses', Icona: MessageCircle, clau: 'section.xat.rail.xats', text: 'Xats' },
   { id: 'novetats', accio: 'control', Icona: CircleDashed, clau: 'section.xat.rail.novetats', text: 'Novetats', amagada: true },
@@ -148,7 +128,6 @@ export const entradaDeVista = (id) => ENTRADES_RAIL.find((e) => e.accio === 'vis
 /** La ruta d'una vista de la columna central. */
 export const rutaDeVista = (id) => `/xat?vista=${encodeURIComponent(String(id))}`;
 
-/* Les entrades que el rail pinta: les amagades (D16) queden fora. */
 const PRINCIPALS = ENTRADES_RAIL.filter((e) => !e.seccio && !e.amagada);
 const DE_MES = ENTRADES_RAIL.filter((e) => e.seccio === 'mes' && !e.amagada);
 
@@ -158,12 +137,31 @@ function railPlegatInicial() {
   return getVal(CLAU_RAIL, 'plegat') !== 'obert';
 }
 
-/* Les seccions naixen desplegades, com a la captura. */
 function seccionsInicials() {
   return {
     mes: getVal(clauSeccio('mes'), 'obert') !== 'plegat',
     comunitats: getVal(clauSeccio('comunitats'), 'obert') !== 'plegat'
   };
+}
+
+/* v1.2.23 · L5-05 (Gauntlet R1) · La llengua de l'avís d'eixida i del calaix
+   és la del text que es pinta: codiDeLlengua, el mateix mòdul que la barra
+   negra (useIdentitatDeLaBarra.js), en lloc d'una còpia. */
+
+function retornaFocusAlDisparador(origenRef) {
+  const origen = origenRef.current;
+  if (!origen) return;
+  /* v1.2.23 · L5-01 (Gauntlet R1) · Un disparador desconnectat és d'una closca
+     que ja no hi és (remunt en canviar d'identitat): la seua arrel és el
+     subarbre despenjat, no el document, i res d'ell no es pot enfocar. Ho fa
+     el rail nou (recullRetornIdentitat). */
+  if (!origen.isConnected) return;
+  const arrel = origen.getRootNode();
+  const actiu = arrel.activeElement;
+  const perdut = !actiu || actiu === document.body || actiu.isConnected === false || Boolean(actiu.closest?.('[inert]'));
+  if (!perdut) return;
+  if (origen.isConnected && !origen.closest('[inert]')) { origen.focus(); return; }
+  origen.closest('.app-grid-shell')?.querySelector('.sdp-xat-obri-rail')?.focus();
 }
 
 export default function ClosCaXat({
@@ -175,12 +173,12 @@ export default function ClosCaXat({
   rightColumn
 }) {
   const { t } = useUIActions();
+  const navigate = useNavigate();
+  const sessio = useSessioOpcional();
+  const identitatCtx = useIdentitatOpcional();
   const {
     comunitats: comunitatsDelXat = CAP, joId = null, joNom = null, joAvatar = null, entitatActiva = null
   } = useXat();
-  /* Onada 3 (AV, revisió) · El rail porta la mateixa cara del poble que la
-     llista, la fitxa i la vista Comunitats (XatSection): amb sessió, el
-     servidor no en dona cap a la comunitat del poble (pobleAmfitrio.js). */
   const { poble, cara } = useCaraDelPoble();
   const comunitats = useMemo(
     () => comunitatsAmbCaraDelPoble(comunitatsDelXat, poble, cara),
@@ -189,16 +187,14 @@ export default function ClosCaXat({
   const [plegat, setPlegat] = useState(railPlegatInicial);
 
   const alterna = useCallback(() => {
-    const seguent = !plegat;
-    setVal(CLAU_RAIL, seguent ? 'plegat' : 'obert');
-    desaColumnaPlegada('xat', 'left', seguent);
-    setPlegat(seguent);
-  }, [plegat]);
+    setPlegat((previ) => {
+      const seguent = !previ;
+      setVal(CLAU_RAIL, seguent ? 'plegat' : 'obert');
+      desaColumnaPlegada('xat', 'left', seguent);
+      return seguent;
+    });
+  }, []);
 
-  /* Torn 260930 (T1) · El full «Ajustos». `origenAjustos` és el botó del peu
-     que l'ha obert: en tancar-lo sense navegar, si el Dialeg no hi ha pogut
-     tornar el focus (fora d'ample el rail lliscant ja és tancat i inert), va
-     al botó que obri el rail de la fila de títol, que és a l'abast. */
   const [ajustosObert, setAjustosObert] = useState(false);
   const origenAjustos = useRef(null);
   const obriAjustos = useCallback((origen) => {
@@ -206,75 +202,224 @@ export default function ClosCaXat({
     setAjustosObert(true);
   }, []);
   const tancaAjustos = useCallback(() => setAjustosObert(false), []);
-  const retornaFocus = useCallback(() => {
-    const origen = origenAjustos.current;
-    if (!origen) return;
-    const arrel = origen.getRootNode();
-    const actiu = arrel.activeElement;
-    const perdut = !actiu || actiu === document.body || actiu.isConnected === false || Boolean(actiu.closest?.('[inert]'));
-    if (!perdut) return;
-    if (origen.isConnected && !origen.closest('[inert]')) { origen.focus(); return; }
-    origen.closest('.app-grid-shell')?.querySelector('.sdp-xat-obri-rail')?.focus();
+  const retornaFocusAjustos = useCallback(() => retornaFocusAlDisparador(origenAjustos), []);
+
+  const [identitatsObert, setIdentitatsObert] = useState(false);
+  const [eixint, setEixint] = useState(false);
+  /* v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · T47 C01 · Els canvis que
+     queden sense desar (l'avís, dins del calaix) i si el logout ha fallat. */
+  const [pendentsEixida, setPendentsEixida] = useState(null);
+  const [errorEixida, setErrorEixida] = useState(false);
+  /* El botó «Eixir de Sóc de Poble» que ha obert l'avís: «No eixir encara» hi torna el focus. */
+  const obridorEixida = useRef(null);
+  const llengua = codiDeLlengua(t);
+  const origenIdentitats = useRef(null);
+  /* v1.2.23 · L5-02 (Gauntlet R1) · El calaix en la llengua del peu. Els rols,
+     amb les claus de sempre del Perfil (rols.js · PARELLS_ROL): en valencià,
+     les mateixes etiquetes que CalaixIdentitats pinta sense traductor. */
+  const textosCalaix = textosCalaixIdentitats(llengua);
+  const rolDeLaIdentitat = useCallback((identitat) => rolDelCalaix(t, identitat), [t]);
+
+  const identitatsCalaix = useMemo(() => {
+    if (Array.isArray(identitatCtx?.identitats) && identitatCtx.identitats.length > 0) {
+      return identitatCtx.identitats;
+    }
+    const base = [];
+    if (joId || joNom) {
+      base.push({
+        tipus: 'persona',
+        id: joId || 'persona-local',
+        nom: joNom || t('section.xat.rail.tu', 'Tu'),
+        avatar: joAvatar || null,
+        rol: 'persona',
+        activa: !entitatActiva
+      });
+    }
+    if (entitatActiva?.id) {
+      base.push({
+        tipus: 'entitat',
+        id: entitatActiva.id,
+        nom: entitatActiva.nom,
+        avatar: entitatActiva.avatar || null,
+        rol: entitatActiva.rol || 'admin',
+        activa: true
+      });
+    }
+    return base;
+  }, [identitatCtx?.identitats, joId, joNom, joAvatar, entitatActiva, t]);
+
+  /* v1.2.23 · IDEA-323 / IDEA-327 v2 (ordre del Mestre 261123) · El peu és el
+     selector d'identitat només quan n'hi ha una d'activa. Amb SessionProvider
+     (l'App sempre en porta), quan hi ha una persona dins; sense proveïdor (un
+     muntatge aïllat), quan el xat ja en porta una. El Foraster (remot sense
+     sessió) i el convidat de la llavor tenen el peu de la v1.2.22. */
+  const ambIdentitat = sessio ? Boolean(sessio.currentUser) : identitatsCalaix.length > 0;
+
+  /* v1.2.23 · L5-05 (Gauntlet R1) · Com la barra negra (useIdentitatDeLaBarra.js):
+     si la identitat activa se'n va amb el calaix obert, es tanca i s'oblida
+     l'eixida a mig fer. */
+  useEffect(() => {
+    if (ambIdentitat) return;
+    setIdentitatsObert(false);
+    setPendentsEixida(null);
+    setErrorEixida(false);
+    setEixint(false);
+  }, [ambIdentitat]);
+
+  const oblidaEixida = useCallback(() => {
+    setPendentsEixida(null);
+    setErrorEixida(false);
+  }, []);
+
+  const obriIdentitats = useCallback((origen) => {
+    origenIdentitats.current = origen || null;
+    oblidaEixida();
+    setIdentitatsObert(true);
+  }, [oblidaEixida]);
+
+  const tancaIdentitats = useCallback(() => {
+    setIdentitatsObert(false);
+    oblidaEixida();
+    queueMicrotask(() => retornaFocusAlDisparador(origenIdentitats));
+  }, [oblidaEixida]);
+
+  const triaIdentitat = useCallback((tipus, id) => {
+    marcaRetornIdentitat();
+    identitatCtx?.setActor?.(tipus, id);
+    setIdentitatsObert(false);
+    oblidaEixida();
+    queueMicrotask(() => {
+      retornaFocusAlDisparador(origenIdentitats);
+      oblidaRetornIdentitat();
+    });
+  }, [identitatCtx, oblidaEixida]);
+
+  const vesIdioma = useCallback(() => {
+    setIdentitatsObert(false);
+    oblidaEixida();
+    navigate('/traduccions');
+  }, [navigate, oblidaEixida]);
+
+  /* v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · T47 C01 · Tanca la
+     sessió (eixidaDeVeres: l'intent final i l'oblit de la cua). Si falla, ho
+     diu dins del calaix i no navega. */
+  const confirmaEixir = useCallback(async () => {
+    setErrorEixida(false);
+    setEixint(true);
+    try {
+      await sessio?.logout?.();
+    } catch {
+      setEixint(false);
+      setErrorEixida(true);
+      return;
+    }
+    setPendentsEixida(null);
+    setEixint(false);
+    setIdentitatsObert(false);
+    navigate('/registre', { replace: true });
+  }, [sessio, navigate]);
+
+  /* v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · T47 C01 · Abans d'eixir,
+     preparaEixida: si queda res que el servidor encara no té, l'avís i cap
+     logout; «Eixir igualment» és l'única porta a confirmaEixir. */
+  const demanaEixir = useCallback(async (event) => {
+    const boto = event?.currentTarget;
+    obridorEixida.current = typeof boto?.focus === 'function' ? boto : null;
+    if (eixint) return;
+    setErrorEixida(false);
+    setEixint(true);
+    let queden = [];
+    if (typeof sessio?.preparaEixida === 'function') {
+      try { queden = await sessio.preparaEixida(); } catch { queden = []; }
+    }
+    if (Array.isArray(queden) && queden.length) {
+      setEixint(false);
+      setPendentsEixida(queden);
+      return;
+    }
+    await confirmaEixir();
+  }, [eixint, sessio, confirmaEixir]);
+
+  /* «No eixir encara» desmunta l'avís amb el focus a dins: torna a «Eixir de Sóc de Poble». */
+  const noEixirEncara = useCallback(() => {
+    setPendentsEixida(null);
+    const boto = obridorEixida.current;
+    if (boto?.isConnected) boto.focus();
   }, []);
 
   const titolRail = t('section.xat.rail.menu', 'Menú');
+  const valorContext = useMemo(() => ({
+    railPlegat: plegat,
+    alternaRail: alterna
+  }), [plegat, alterna]);
 
   return (
-    <AppGridShell
-      aria-label={t('section.xat.closca', 'Espai del xat')}
-      className="sdp-workspace sdp-xat"
-      leftTitle={titolRail}
-      middleTitle={middleTitle}
-      leftIcon={Settings}
-      middleIcon={middleIcon}
-      leftCollapsed={plegat}
-      leftColumn={(
-        <RailXat
-          activa={activa}
-          comunitatActiva={comunitatActiva}
-          plegat={plegat}
-          onAlterna={alterna}
-          titol={titolRail}
-          t={t}
-          comunitats={comunitats}
-          joId={joId}
-          joNom={joNom}
-          joAvatar={joAvatar}
-          entitatActiva={entitatActiva}
-          onAjustos={obriAjustos}
+    <ClosCaXatContext.Provider value={valorContext}>
+      <AppGridShell
+        aria-label={t('section.xat.closca', 'Espai del xat')}
+        className="sdp-workspace sdp-xat"
+        leftTitle={titolRail}
+        middleTitle={middleTitle}
+        leftIcon={Settings}
+        middleIcon={middleIcon}
+        leftCollapsed={plegat}
+        leftColumn={(
+          <RailXat
+            activa={activa}
+            comunitatActiva={comunitatActiva}
+            plegat={plegat}
+            titol={titolRail}
+            t={t}
+            comunitats={comunitats}
+            joId={joId}
+            joNom={joNom}
+            joAvatar={joAvatar}
+            entitatActiva={entitatActiva}
+            onAjustos={obriAjustos}
+            onIdentitats={ambIdentitat ? obriIdentitats : null}
+          />
+        )}
+        middleColumn={middleColumn}
+        rightColumn={rightColumn}
+      >
+        <FullAjustos obert={ajustosObert} onTanca={tancaAjustos} onRetornFocus={retornaFocusAjustos} />
+        <CalaixIdentitats
+          obert={identitatsObert}
+          onTanca={tancaIdentitats}
+          identitats={identitatsCalaix}
+          onTria={triaIdentitat}
+          onIdioma={vesIdioma}
+          onEixir={demanaEixir}
+          eixint={eixint}
+          avisEixida={pendentsEixida ? (
+            <AvisEixidaDelCalaix
+              pendents={pendentsEixida}
+              llengua={llengua}
+              eixint={eixint}
+              onNoEixir={noEixirEncara}
+              onEixir={confirmaEixir}
+            />
+          ) : null}
+          errorEixida={errorEixida ? <ErrorEixidaDelCalaix llengua={llengua} /> : null}
+          etiquetaIdioma={t('topbar.identitat.idioma', ETIQUETA_IDIOMA_CALAIX)}
+          etiquetaEixir={t('topbar.identitat.eixir', ETIQUETA_EIXIR_CALAIX)}
+          etiquetaTitol={textosCalaix.titol}
+          etiquetaDescripcio={textosCalaix.descripcio}
+          etiquetaLlista={textosCalaix.llista}
+          etiquetaActiva={textosCalaix.activa}
+          etiquetaRol={rolDeLaIdentitat}
         />
-      )}
-      middleColumn={middleColumn}
-      rightColumn={rightColumn}
-    >
-      <FullAjustos obert={ajustosObert} onTanca={tancaAjustos} onRetornFocus={retornaFocus} />
-    </AppGridShell>
+      </AppGridShell>
+    </ClosCaXatContext.Provider>
   );
 }
 
 /* ─────────────────────────────── El rail ─────────────────────────────── */
 
-/**
- * El rail. Muntat dins de la closca: llig la mida amb useAppGrid(). En ample
- * té les dos variants (plegat amb icones, desplegat amb etiquetes) que tria
- * el Mestre amb el botó de replegar. En estret i en mitjà sempre va
- * desplegat i, en triar-hi una entrada, el panell es tanca: en estret torna
- * la llista ('middle'); en mitjà, les dos columnes (null).
- *
- * No llig cap context de dades: `comunitats`, `joId`, `joNom`, `joAvatar` i
- * `entitatActiva` (pla 261014_1450, fronts A i C) arriben per props
- * (ClosCaXat els pren d'useXat()), i `onVes(ruta)` substituïx la
- * navegació (el catàleg de disseny la fa local). Així es pot pintar al
- * catàleg dins d'un AppGridContext. `recordaSeccions` (per defecte, sí)
- * desa l'estat de les seccions amb getVal/setVal; el catàleg el passa a
- * false perquè una demostració no canvie el rail de l'app de la persona.
- * `onAjustos(boto)` (torn 260930, T1): el peu obri el full «Ajustos»; rep el
- * botó premut, on ha de tornar el focus. Sense ell, el peu d'abans.
- */
 export function RailXat({
-  activa = 'converses', comunitatActiva = null, plegat = false, onAlterna, titol, t,
+  activa = 'converses', comunitatActiva = null, plegat = false, titol, t,
   comunitats = CAP, joId = null, joNom = null, joAvatar = null, entitatActiva = null,
-  onVes = null, recordaSeccions = true, onAjustos = null
+  onVes = null, recordaSeccions = true, onAjustos = null, onIdentitats = null
 }) {
   const { mida, setPanellObert } = useAppGrid();
   const navigate = useNavigate();
@@ -282,17 +427,13 @@ export function RailXat({
   const ves = onVes || navigate;
   const ample = mida === 'ample';
   const controlObert = activa === 'control';
-  const etiquetaTanca = t('section.xat.rail.tancaMenu', 'Tanca el menú');
   const etiquetaPerfil = t('section.xat.rail.editaPerfil', 'Edita el perfil');
   const etiquetaMes = t('section.xat.rail.mes', 'Més');
   const etiquetaComunitats = t('section.xat.rail.comunitats', 'Comunitats');
+  const etiquetaAjustosDelXat = t('section.xat.rail.ajustosDelXat', 'Ajustos del xat');
   const nomJo = joNom || t('section.xat.rail.tu', 'Tu');
-  const collapseBtnRef = useRef(null);
-  const expandBtnRef = useRef(null);
-  const plegatPrevi = useRef(plegat);
+  const nomIdentitatActiva = entitatActiva?.nom || nomJo;
   const llistaComunitats = Array.isArray(comunitats) ? comunitats : CAP;
-  /* La secció que conté l'entrada activa: Destacats viu a «Més», i la
-     comunitat oberta, a «Comunitats». */
   const conteMes = DE_MES.some((e) => e.id === activa);
   const conteComunitat = activa === 'comunitat' && comunitatActiva != null
     && llistaComunitats.some((c) => String(c.fil.id) === String(comunitatActiva));
@@ -301,16 +442,6 @@ export function RailXat({
     return { mes: inicials.mes || conteMes, comunitats: inicials.comunitats || conteComunitat };
   });
 
-  useEffect(() => {
-    const canvi = plegatPrevi.current !== plegat;
-    plegatPrevi.current = plegat;
-    if (ample && canvi) (plegat ? expandBtnRef : collapseBtnRef).current?.focus();
-  }, [ample, plegat]);
-
-  /* L'estat actual no es pot quedar amagat: en arribar a una entrada que viu
-     dins d'una secció plegada, la secció s'obri en esta sessió, sense tocar
-     la preferència desada. Si la persona la torna a plegar, és decisió seua:
-     la capçalera ho diu (SeccioRail, `actual`). */
   const obriPer = conteMes ? 'mes' : (conteComunitat ? `comunitats:${comunitatActiva}` : '');
   useEffect(() => {
     if (!obriPer) return;
@@ -322,21 +453,36 @@ export function RailXat({
     setPanellObert?.(mida === 'estret' ? 'middle' : null);
   }, [mida, setPanellObert]);
 
+  /* v1.2.23 · L5-01 (Gauntlet R1) · El rail d'una closca nova després de triar
+     identitat (recullRetornIdentitat, dalt): si el focus s'ha perdut, al botó
+     del peu; si el peu és dins del rail tancat (fora d'ample), al botó que obri
+     el rail, com retornaFocusAlDisparador. Només en muntar. */
+  const refRail = useRef(null);
+  useLayoutEffect(() => {
+    if (!recullRetornIdentitat()) return;
+    const rail = refRail.current;
+    if (!rail) return;
+    const actiu = rail.getRootNode().activeElement;
+    if (actiu && actiu !== document.body && actiu.isConnected && !actiu.closest?.('[inert]')) return;
+    const peu = rail.querySelector('.sdp-xat-rail-peu .sdp-xat-ajustos-entrada, .sdp-xat-rail-peu .sdp-workspace-rail__boto');
+    if (peu && !peu.closest('[inert]')) { peu.focus(); return; }
+    rail.closest('.app-grid-shell')?.querySelector('.sdp-xat-obri-rail')?.focus();
+  }, []);
+
+  const alTeclatRail = (event) => {
+    if (!ample && event.key === 'Escape' && !event.defaultPrevented) {
+      event.preventDefault();
+      marcaRetornFocus();
+      tancaRail();
+    }
+  };
+
   const alternaSeccio = (id) => {
     const obert = !seccions[id];
     if (recordaSeccions) setVal(clauSeccio(id), obert ? 'obert' : 'plegat');
     setSeccions((previ) => ({ ...previ, [id]: obert }));
   };
 
-  /* «Xats» porta a /xat: amb una conversa, una vista o una fitxa oberta les
-     deixa, i ja sent a la llista no afig cap entrada a l'historial. /xat i
-     /xat/ID són la mateixa instància (RouterContext conserva l'element): el
-     rail s'aparta des d'ací. «Novetats» era un commutador (ordre del Mestre,
-     260927): obria el Control i, premuda, el tancava. Des de D16 està
-     amagada; el codi es conserva per si es torna a mostrar. Una vista o una comunitat
-     que ja és la de la columna tampoc no repetix l'historial. Fora d'ample,
-     la tria deixa la marca de retorn del focus (marcaRetornFocus) per al
-     BotoObriRail de la columna, llevat del perfil, que ix del Xat. */
   const aLaLlista = pathname === '/xat';
   const tria = (fn, { retorn = true } = {}) => () => {
     if (!ample) {
@@ -351,17 +497,20 @@ export function RailXat({
   const obertaEs = (id) => activa === 'comunitat' && comunitatActiva != null && String(comunitatActiva) === String(id);
   const vesAComunitat = (id) => { if (!aLaLlista || !obertaEs(id)) ves(`/xat?comunitat=${encodeURIComponent(String(id))}`); };
   const vesAlPerfil = () => ves(RUTA_PERFIL);
-  /* Torn 260930 (T1) · El full «Ajustos»: fora d'ample, la tria tanca abans
-     el panell del rail. Sense marca de retorn: el focus el pren el full i,
-     en tancar-lo, la closca el torna (ClosCaXat, retornaFocus). */
-  /* Pla 261014_1450 (front C) · Amb una entitat activa, el nom accessible diu
-     amb qui actues; continua començant per «Tu», el que es veu (WCAG 2.5.3). */
+
   const etiquetaAjustos = entitatActiva?.nom
     ? t('section.xat.ajustos.obriComEntitat', 'Tu: ajustos (actues com a {nom})').replace('{nom}', entitatActiva.nom)
     : t('section.xat.ajustos.obri', 'Tu: ajustos');
+  const etiquetaIdentitat = t('section.xat.rail.ambQuiActues', '{nom}: Amb qui actues?').replace('{nom}', nomIdentitatActiva);
+
   const obriAjustos = (e) => {
     const boto = e.currentTarget;
     tria(() => onAjustos(boto), { retorn: false })();
+  };
+
+  const obriSelectorIdentitat = (e) => {
+    const boto = e.currentTarget;
+    tria(() => onIdentitats(boto), { retorn: false })();
   };
 
   const accio = (entrada) => {
@@ -370,9 +519,6 @@ export function RailXat({
     return tria(() => vesAVista(entrada.id));
   };
 
-  /* Estat accessible de cada entrada: la de la vista oberta marca la pàgina
-     actual; «Novetats» és commutador i diu si el Control està obert (amagada
-     des de D16: al Control del xat cap entrada visible marca la pàgina). */
   const estat = (entrada) => {
     if (entrada.accio === 'control') {
       return { 'aria-pressed': controlObert ? 'true' : 'false', 'aria-current': controlObert ? 'page' : undefined };
@@ -382,24 +528,14 @@ export function RailXat({
   };
 
   const nomDe = (comunitat) => comunitat.fil?.name || comunitat.fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
-  /* Gauntlet 261022_0225 (XAT-3) · La comunitat de Sóc de Poble porta el
-     logo oficial, com a la llista (caraDeSocDePoble.js). */
   const avatarDe = (comunitat) => (
     <CaraXat nom={nomDe(comunitat)} src={caraDeComunitat(comunitat.fil)} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
   );
-  /* Pla 261014_1450 (fronts A i C) · La cara del peu és la de la barra negra:
-     amb una entitat activa, el SEU logo (mai la foto de la persona,
-     useIdentitatDeLaBarra.js), quadrat com les comunitats; si no, la foto de
-     la persona. Passa per CaraXat, com les comunitats: una foto pujada
-     ('sdp-media://…') la resol el port (Avatar sol la descartaria i pintaria
-     les inicials). Sense foto, el mateix Avatar de sempre (Llei del Píxel). */
   const avatarPropi = entitatActiva
     ? <CaraXat nom={entitatActiva.nom || nomJo} src={entitatActiva.avatar} mida="xs" llavor={entitatActiva.id} alt="" className="sdp-xat-avatar--quadrat" />
     : <CaraXat nom={nomJo} src={joAvatar} mida="xs" llavor={joId} alt="" />;
 
   if (ample && plegat) {
-    /* La barra estreta de les apps de missatgeria: només les icones, en el mateix
-       ordre, just davall del botó d'expandir; al peu, l'avatar propi. */
     const botoPlegat = (entrada) => {
       const etiqueta = t(entrada.clau, entrada.text);
       return (
@@ -411,8 +547,8 @@ export function RailXat({
       );
     };
     return (
-      <aside className="sdp-workspace-column" aria-label={titol}>
-        <AppGridColumn variant="collapsed" esDark={true} titol={titol} icona={Settings} onReplega={onAlterna} controls="app-grid-sidebar" expandBtnRef={expandBtnRef}>
+      <aside ref={refRail} className="sdp-workspace-column" aria-label={titol}>
+        <div className="app-grid-col-header app-grid-col-header--collapsed app-grid-col-header--dark">
           <nav className="sdp-workspace-rail" aria-label={titol}>
             <ul className="sdp-workspace-rail__grup">{PRINCIPALS.map(botoPlegat)}</ul>
             <ul className="sdp-workspace-rail__grup" aria-label={etiquetaMes}>{DE_MES.map(botoPlegat)}</ul>
@@ -437,9 +573,29 @@ export function RailXat({
                 })}
               </ul>
             ) : null}
+            {onAjustos ? (
+              <ul className="sdp-workspace-rail__grup">
+                <li>
+                  <button
+                    type="button"
+                    className="sdp-workspace-rail__boto"
+                    aria-label={etiquetaAjustosDelXat}
+                    title={etiquetaAjustosDelXat}
+                    aria-haspopup="dialog"
+                    onClick={obriAjustos}
+                  >
+                    <Settings size={24} aria-hidden="true" focusable="false" />
+                  </button>
+                </li>
+              </ul>
+            ) : null}
           </nav>
           <div className="sdp-xat-rail-peu sdp-xat-rail-peu--plegat">
-            {onAjustos ? (
+            {onIdentitats ? (
+              <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaIdentitat} title={etiquetaIdentitat} aria-haspopup="dialog" onClick={obriSelectorIdentitat}>
+                {avatarPropi}
+              </button>
+            ) : onAjustos ? (
               <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaAjustos} title={etiquetaAjustos} aria-haspopup="dialog" onClick={obriAjustos}>
                 {avatarPropi}
               </button>
@@ -449,7 +605,7 @@ export function RailXat({
               </button>
             )}
           </div>
-        </AppGridColumn>
+        </div>
       </aside>
     );
   }
@@ -468,18 +624,10 @@ export function RailXat({
     );
   };
 
+  const teBotoPeu = Boolean(onIdentitats || onAjustos);
+
   return (
-    <aside className="sdp-workspace-column" aria-label={titol}>
-      <AppGridColumn
-        esDark={true}
-        titol={titol}
-        icona={Settings}
-        replegaTotaCapcalera
-        collapseBtnRef={collapseBtnRef}
-        controls="app-grid-sidebar"
-        etiquetaReplega={ample ? null : etiquetaTanca}
-        onReplega={ample ? onAlterna : tancaRail}
-      />
+    <aside ref={refRail} className="sdp-workspace-column" aria-label={titol} onKeyDown={alTeclatRail}>
       <nav className="sdp-workspace-column__body" aria-label={titol}>
         <ul className="sdp-xat-rail-llista">{PRINCIPALS.map(filaDesplegada)}</ul>
         <SeccioRail etiqueta={etiquetaMes} obert={seccions.mes} actual={conteMes} onAlterna={() => alternaSeccio('mes')} t={t}>
@@ -504,11 +652,26 @@ export function RailXat({
             </ul>
           </SeccioRail>
         ) : null}
-      </nav>
-      <div className={onAjustos ? 'sdp-xat-rail-peu sdp-xat-rail-peu--ajustos' : 'sdp-xat-rail-peu'}>
         {onAjustos ? (
-          /* L'avatar i «Tu» en un sol botó, com el «Tú» de la referència: el nom
-             accessible comença per «Tu», el que es veu (WCAG 2.5.3). */
+          <ul className="sdp-xat-rail-llista">
+            <li>
+              <button type="button" className="sdp-workspace-nav-item" aria-haspopup="dialog" onClick={obriAjustos}>
+                <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
+                  <Settings size={24} aria-hidden="true" focusable="false" />
+                </span>
+                <span className="sdp-workspace-nav-item__label">{etiquetaAjustosDelXat}</span>
+              </button>
+            </li>
+          </ul>
+        ) : null}
+      </nav>
+      <div className={teBotoPeu ? 'sdp-xat-rail-peu sdp-xat-rail-peu--ajustos' : 'sdp-xat-rail-peu'}>
+        {onIdentitats ? (
+          <button type="button" className="sdp-xat-ajustos-entrada" aria-label={etiquetaIdentitat} title={etiquetaIdentitat} aria-haspopup="dialog" onClick={obriSelectorIdentitat}>
+            {avatarPropi}
+            <span className="sdp-xat-rail-peu__nom">{nomIdentitatActiva}</span>
+          </button>
+        ) : onAjustos ? (
           <button type="button" className="sdp-xat-ajustos-entrada" aria-label={etiquetaAjustos} title={etiquetaAjustos} aria-haspopup="dialog" onClick={obriAjustos}>
             {avatarPropi}
             <span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>
@@ -527,18 +690,6 @@ export function RailXat({
   );
 }
 
-/* Una secció plegable del rail desplegat («Més», «Comunitats»): la capçalera
-   és un botó amb el xebró i aria-expanded; el nom accessible diu «Secció …»
-   perquè no es confonga amb l'entrada «Comunitats» de dalt. Plegada, el seu
-   contingut queda `hidden`: fora de la vista, del focus i del lector.
-
-   El xebró va dins d'una cel·la de var(--sdp-touch), com el llapis del peu:
-   amb el mateix coixí final (var(--sdp-space-2)) els dos cauen sobre el
-   mateix eix vertical, com a la captura 19.11.50.
-
-   `actual`: la secció conté l'entrada activa. Si està plegada (la persona
-   l'ha plegada estant-hi), la capçalera porta el marcador blanc de la fila
-   activa i el nom accessible ho diu, perquè l'estat actual no desaparega. */
 function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children }) {
   const idCos = useId();
   const marca = Boolean(actual) && !obert;
@@ -565,32 +716,11 @@ function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children })
   );
 }
 
-/* ───────────────────── El botó que obri el rail (fila 1) ─────────────────── */
+/* ───────────── Capçalera clicable amb nom de secció i fletxa `▸` / `◂` ───────────── */
 
-/* En estret i en mitjà, a l'esquerra de la fila de títol de la columna
-   central (Converses, una vista o Control del xat): obri el menú del rail. En
-   ample no es pinta. Muntat dins de la closca, llig la mida amb useAppGrid().
-
-   Focus de teclat. En estret, obrir el rail fa `inert` la columna on viu
-   este botó: el focus passa a la primera entrada del rail. En tancar-lo
-   (des de la creu del rail, en triar-hi una entrada o des d'ací mateix en
-   mitjà), si el focus s'ha quedat al rail o ha caigut a <body>, torna al
-   botó quan la columna és a l'abast (sempre en mitjà; en estret, quan torna
-   la llista). Si la tria ha canviat la fila de títol (una vista, una
-   comunitat o l'altra secció del Xat), este botó és nou i naix amb el panell
-   ja tancat: el que el porta al focus és la marca que deixa la tria
-   (recullRetornFocus).
-
-   T6 · aria-controls="app-grid-sidebar": és el botó desplegable del rail.
-   data-obri-columna el declara obridor de la closca: la guarda de focus
-   d'AppGridShell només tria els controls que porten les dues marques (el
-   RailXat de mostra del catàleg també porta l'aria-controls); quan el panell
-   es tanca amb el focus a dins, ella l'hi porta abans que este efecte arribe.
-   El focus es llig a l'arrel del botó (en el Shadow DOM tancat de
-   l'encastat, document.activeElement és l'amfitrió), i el que ha quedat
-   dins d'un [inert] també es dona per perdut. */
-export function BotoObriRail({ etiqueta }) {
+export function BotoTitolSeccioXat({ titol, etiqueta, icona: Icona = MessageCircle }) {
   const { mida, panellObert, setPanellObert } = useAppGrid();
+  const closcaCtx = useContext(ClosCaXatContext);
   const ref = useRef(null);
   const enfocaRail = useRef(false);
   const panellPrevi = useRef(panellObert);
@@ -610,8 +740,6 @@ export function BotoObriRail({ etiqueta }) {
       return;
     }
     if (mida !== 'mitja' && panellObert !== 'middle') return;
-    /* Recull la marca sempre que la columna és a l'abast: la tria ja ha fet
-       el seu efecte, i una marca vella no ha de robar el focus més tard. */
     const triat = recullRetornFocus();
     if (previ !== 'left' && !triat) return;
     const arrel = ref.current?.getRootNode?.() || document;
@@ -621,28 +749,46 @@ export function BotoObriRail({ etiqueta }) {
     if (perdut) ref.current?.focus();
   }, [mida, panellObert]);
 
-  if (mida === 'ample') return null;
+  if (mida === 'ample' && !closcaCtx) return null;
 
-  const obert = panellObert === 'left';
+  const obert = mida === 'ample'
+    ? !closcaCtx.railPlegat
+    : panellObert === 'left';
+
   const alterna = () => {
+    if (mida === 'ample') {
+      closcaCtx?.alternaRail?.();
+      return;
+    }
     enfocaRail.current = !obert;
     if (obert) setPanellObert(mida === 'estret' ? 'middle' : null);
-    else setPanellObert('left');
+    else {
+      /* Quan l'amplària de la columna força el pas d'ample a mitjà o s'obri en tauleta/mòbil,
+         deixem el rail desat com a obert si es commuta i obrim el panell esquerre. */
+      setPanellObert('left');
+    }
   };
+
+  const textVisible = titol ?? etiqueta ?? 'Xats';
 
   return (
     <button
       ref={ref}
       type="button"
-      className="sdp-xat-icona sdp-xat-obri-rail"
-      aria-label={etiqueta}
-      title={etiqueta}
+      className="sdp-xat-titol-seccio sdp-xat-obri-rail"
       aria-expanded={obert}
       aria-controls="app-grid-sidebar"
       data-obri-columna=""
       onClick={alterna}
     >
-      <PanelLeftOpen size={24} aria-hidden="true" focusable="false" />
+      {Icona ? <Icona size={24} aria-hidden="true" focusable="false" /> : null}
+      <span className="app-grid-col-header__titol">{textVisible}</span>
+      <span className="sdp-xat-titol-seccio__fletxa" aria-hidden="true">{obert ? '◂' : '▸'}</span>
     </button>
   );
+}
+
+/** Àlies de compatibilitat per a consumidors interns dels tests del Xat. */
+export function BotoObriRail({ etiqueta, titol, icona = MessageCircle }) {
+  return <BotoTitolSeccioXat titol={titol ?? etiqueta} icona={icona} />;
 }

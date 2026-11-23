@@ -15,7 +15,9 @@ import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { BotoTornarADalt } from '../components/PedraSeca/atoms/BotoTornarADalt.jsx';
-import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
+import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER, rotolDeLaSeccio } from '../config/sections';
+/* v1.2.23 · IDEA-333 (ordre del Mestre 261123) · La versió viva del rètol de /versions al menú lateral. */
+import { VERSIO_SISTEMA } from '../config/versio.js';
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from '../config/navigation.js';
 import { IAIA_ID } from '../data/identitatsSeed.js';
 import { getSectionLabels } from '../config/i18n';
@@ -241,21 +243,27 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
   useEffect(() => { if (sistemaActiu) setSistemaObert(true); }, [sistemaActiu]);
   const enllac = (section, classeExtra = '') => {
     const Icon = section.icon;
-    const labels = section.kind === 'gestoria'
+    const traduides = section.kind === 'gestoria'
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, language);
+    /* v1.2.23 · IDEA-333 (ordre del Mestre 261123) · El rètol de /versions porta la versió viva («Versions · v1.2.23»,
+       VERSIO_SISTEMA de config/versio.js, mai un literal): la resta d'entrades, l'etiqueta traduïda tal qual. Amb el
+       rail plegat de pantalla gran (56 px, sense rètol visible) el mateix text és el seu title; cap altra entrada en
+       porta, com fins ara. */
+    const rotol = rotolDeLaSeccio(section, traduides.label, VERSIO_SISTEMA);
+    const titolDelRail = section.versioViva === true && isDesktopSidebarClosed && !isCompact ? rotol : undefined;
     const pinta = (nomAccessible, insignia) => (
-      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={nomAccessible} onClick={() => { if (isCompact) toggleSidebar(); }}>
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} transicio className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={nomAccessible} title={titolDelRail} onClick={() => { if (isCompact) toggleSidebar(); }}>
         <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
-          {labels.label}
+          {rotol}
         </span>
         {insignia}
       </NavLink>
     );
     return section.id === 'xat'
-      ? <AmbNoLlegitsDelXat key={section.id} etiqueta={labels.label} t={t}>{pinta}</AmbNoLlegitsDelXat>
-      : pinta(labels.label, null);
+      ? <AmbNoLlegitsDelXat key={section.id} etiqueta={rotol} t={t}>{pinta}</AmbNoLlegitsDelXat>
+      : pinta(rotol, null);
   };
 
   return (

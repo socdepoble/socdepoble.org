@@ -20,3 +20,8 @@ Tal i com s'ha observat amb eines com Obsidian, Raindrop o Google Keep, per a fa
 - **Decisió diferida**: Des del propi Bloc de Notes, l'usuari podrà decidir si guarda eixa informació com a apunts privats, la transforma en una "Card" pública o la publica directament a la xarxa.
 
 *Aquesta tasca queda registrada a l'agenda per a les fases posteriors al desplegament del MVP.*
+
+
+## Vincles
+
+- [[00_full_de_ruta]]

@@ -34,7 +34,7 @@ export default function ProjeccionsEnSuperficie({ desti }) {
   const rows = useTextCanonicCataleg(files, ui?.language);
   const lecturaFallida = publicacio.error && publicacio.error.desatLocal !== true;
   if (!rows.length && !lecturaFallida) return null;
-  return <section aria-label={t[0]}><h2>{t[0]}</h2>
+  return <section aria-label={t[0]}><h3>{t[0]}</h3>
     {lecturaFallida ? <p role="status">{t[2]}</p> : null}
     {rows.length ? <div className="sdp-card-grid">{rows.map(item => {
       const row = projeccioCatalegDe(item);
@@ -42,7 +42,7 @@ export default function ProjeccionsEnSuperficie({ desti }) {
       const ruta = rutaDeFitxaCataleg(row.font);
       const objecte = objecteDeProjeccioCataleg(item, publicacio.ownerId, autoriaReferencia);
       return <UniversalCard key={item.id} title={row.font.title} subtitle={row.font.subtitle}
-        body={row.font.lead} headingLevel="h3" hasFooter={false} showShare={false}
+        body={row.font.lead} headingLevel="h4" hasFooter={false} showShare={false}
         labels={row.pendent ? [t[1]] : []} {...(objecte ? { objecte, ambModeracio: true, className: 'sdp-referencia-cataleg' } : null)}
         onMainClick={ruta ? () => navega(ruta) : undefined} />;
     })}</div> : null}

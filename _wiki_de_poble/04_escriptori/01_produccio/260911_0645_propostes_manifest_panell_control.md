@@ -114,3 +114,8 @@ tags:
 | **Economia Local** | `Oficis de Poble` · `Mercat de Proximitat` | Directori / Mur (`#oficis`, `#mercat`) |
 
 Aquestes 8 targetes transformen el Panell de Control en l'autèntica **central d'acció rural** somiada en el Manifest de Poble de 2022.
+
+
+## Vincles
+
+- [[260911_0006_tasques_ui_standardization]]

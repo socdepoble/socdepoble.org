@@ -530,9 +530,9 @@ describe('textos, privacitat i visor', () => {
   test('el títol de la zona ix dels pobles de la llavor, sense cap crida a la xarxa', async () => {
     await munta();
     await pinta(() => mapa.setView([38.5925, -0.419], 14, { animate: false }));
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('La Torre de les Maçanes · rodalia');
+    expect(screen.getByRole('heading', { level: 3 }).textContent).toBe('La Torre de les Maçanes · rodalia');
     await pinta(() => mapa.setView([38.5925, -0.419], 9, { animate: false }));
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe("L'Alacantí");
+    expect(screen.getByRole('heading', { level: 3 }).textContent).toBe("L'Alacantí");
     expect(fetchEspia).not.toHaveBeenCalled();
   });
 

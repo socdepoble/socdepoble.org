@@ -56,7 +56,7 @@ function pinta(identitat = jo, extra = {}) {
   props = { identitat, guardarAjust: vi.fn(async () => undefined), pujaMitja: vi.fn(), ...extra };
   return render(<DetallCompte {...props} />);
 }
-const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+const seccio = (titol) => screen.getByRole('heading', { level: 3, name: titol }).closest('section');
 
 beforeEach(() => {
   for (const f of [m.navigate, m.logout, m.estatBaixa, m.estatConsentiment, m.exporta, m.toast]) f.mockReset();
@@ -71,7 +71,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de superadministració» abans de «Tancar sessió»; el botó porta a /admin', () => {
   m.sessio = { esSuperadmin: true, nivell: 'aal1', calSegonFactor: true };
   pinta();
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  const titols = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
   // Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, després de l'estat.
   // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
   expect(titols).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
@@ -88,20 +88,20 @@ test('Onada 11 · sense ser superadmin, o sense sessió, el compte és el d’ab
   m.sessio = { esSuperadmin: false, nivell: 'aal1', calSegonFactor: false };
   pinta();
   // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
   expect(screen.queryByText('el segon factor, en línia')).toBeNull();
   cleanup();
   m.sessio = { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false };
   pinta(forn);
   // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte».
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
   expect(screen.queryByText('el segon factor, en línia')).toBeNull();
 });
 
 test('la persona veu els ajustos del compte i no els de la fitxa', () => {
   pinta();
   expect(screen.getByRole('heading', { level: 1, name: 'El compte' })).toBeTruthy();
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  const titols = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
   // Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, després de l'estat.
   // Expectativa actualitzada a propòsit: Pla 261018_1605, Tasca 2 (l’ajust «Poble» de la persona, al compte).
   expect(titols).toEqual(['Poble', 'Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
@@ -133,7 +133,7 @@ test('261016 · amb una baixa en curs, els drets de sèrie es veuen però no es 
   expect(within(bloc).getByText(/baixa en curs/)).toBeTruthy();
   cleanup();
   pinta(forn);
-  expect(screen.queryByRole('heading', { level: 2, name: DRETS_NOTES })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: DRETS_NOTES })).toBeNull();
 });
 
 test('una contrasenya de menys de 10 caràcters no s’envia', async () => {
@@ -254,7 +254,7 @@ test('261018 · la persona veu els seus pobles i n’afig un del catàleg; es de
 
 test('una organització mostra el poble, el correu, l’identificador i les accions pendents', () => {
   pinta(forn);
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  const titols = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
   /* T43 (ordre del Mestre, 260928) · el correu opcional de l'organització;
      grup C (ordre del Mestre, 261008) · el poble, abans. */
   // Expectativa actualitzada a propòsit: P1-11 (pla 261024_2230, T5B-03): «Membres» viu a la vista «Membres i connexions» (lloc 'membres'), fora d'«El compte».
@@ -269,7 +269,7 @@ test('una organització mostra el poble, el correu, l’identificador i les acci
   pinta(forn, { lloc: 'membres' });
   expect(screen.getByRole('heading', { level: 1, name: 'Membres i connexions' })).toBeTruthy();
   expect(screen.getByText('Qui forma part de Forn i el veïnat connectat amb l’entitat.')).toBeTruthy();
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Membres']);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Membres']);
   expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
   expect(within(seccio('Membres')).getByText('Aquesta acció encara no està implementada en aquesta versió.')).toBeTruthy();
 });
@@ -282,7 +282,7 @@ test('P1-11 · el lead de «Membres i connexions» apostrofa davant de vocal (de
 test('P1-11 · una persona no té vista de membres: amb lloc «membres», el seu compte de sempre', () => {
   pinta(jo, { lloc: 'membres' });
   expect(screen.getByRole('heading', { level: 1, name: 'El compte' })).toBeTruthy();
-  expect(screen.queryByRole('heading', { level: 2, name: 'Membres' })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: 'Membres' })).toBeNull();
 });
 
 /* ── T43 · el correu opcional de l'organització ── */
@@ -505,7 +505,7 @@ test('grup C · amb ambMembres i el context del Perfil, «Membres» pinta la ges
   expect(m.perfil.llistaMembres).toHaveBeenCalledWith('O', expect.objectContaining({ signal: expect.any(AbortSignal) }));
   vista.unmount();
   pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
-  expect(screen.queryByRole('heading', { level: 2, name: 'Membres' })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: 'Membres' })).toBeNull();
   const eixir = within(seccio('Eixir de l’organització')).getByRole('button', { name: 'Eixir de l’organització' });
   expect(eixir.disabled).toBe(false);
   fireEvent.click(eixir);

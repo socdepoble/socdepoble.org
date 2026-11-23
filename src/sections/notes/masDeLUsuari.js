@@ -35,8 +35,12 @@ import { SECTION_ID_PER_AMBIT } from '../../utils/publicacioUniversal.js';
 
 /* La carpeta «Altres notes» del catàleg (appSeed.js · NOTE_FOLDERS_SEED). */
 export const CARPETA_ALTRES = 'f-notes';
-export const CARPETA_PER_SECCIO = Object.freeze({ mur: 'f-mur', mercat: 'f-mercat', events: 'f-events', multimedia: 'f-media' });
-export const ETIQUETA_SECCIO = Object.freeze({ mur: 'Mur', mercat: 'Mercat', events: 'Esdeveniments', multimedia: 'Multimèdia' });
+export const CARPETA_PER_SECCIO = Object.freeze({
+  mur: 'f-mur', mercat: 'f-mercat', events: 'f-events', multimedia: 'f-media', sistema: 'f-sistema'
+});
+export const ETIQUETA_SECCIO = Object.freeze({
+  mur: 'Mur', mercat: 'Mercat', events: 'Esdeveniments', multimedia: 'Multimèdia', sistema: 'Sistema'
+});
 /* Poliment de F4 (revisió de la Marató 2230) · Una secció sense nom al
    catàleg (les `fonts` genèriques) no pinta el seu id cru a la fitxa: porta
    l'etiqueta neutra. */
@@ -92,7 +96,10 @@ function dataCurta(valor, locale) {
 export function publicacioComANota(item, seccio, { locale = 'ca-ES' } = {}) {
   const data = item.date || item.publish_date || item.created_at || null;
   const titol = extractPlainText(String(item.title || item.name || ''), Infinity).trim() || 'Publicació';
-  const resum = extractPlainText(String(item.summary || item.subtitle || item.post_subtitle || item.description || ''), 240).trim();
+  const resum = extractPlainText(
+    String(item.summary || item.subtitle || item.post_subtitle || item.entradilla || item.lead || item.description || ''),
+    240
+  ).trim();
   /* F4 · Un mitjà porta el fitxer a `src` (mediaContent.js; el normalitza
      mapejadorSeccions.js). L'últim de la cadena, i només si és una
      imatge: un vídeo no es pinta com a portada. Poliment de F4 · Només a
@@ -125,7 +132,7 @@ export function publicacioComANota(item, seccio, { locale = 'ca-ES' } = {}) {
    /projecte, /page/xat…), com la seua targeta del Mur; mai a /mur/:id. Només
    una ruta de l'app (esRutaInterna, la mateixa defensa de TargetaDelMur). */
 function rutaDeLaPublicacio(item, seccio) {
-  if (item.isSystem && esRutaInterna(item.mainHref)) return item.mainHref;
+  if ((item.isSystem || item.isSystemPage) && esRutaInterna(item.mainHref)) return item.mainHref;
   return getSectionItemPath(seccio, item.id);
 }
 

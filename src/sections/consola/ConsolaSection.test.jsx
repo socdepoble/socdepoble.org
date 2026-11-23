@@ -150,14 +150,14 @@ function targetesExplicatives(contenidor = document, { perA = true, ambImatge = 
       expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
     }
     // Títol, subtítol («per a…» al tauler i al pols) i entradilla.
-    expect(t.querySelector('h3.sp-card-title')).not.toBeNull();
+    expect(t.querySelector(':is(h3, h4).sp-card-title')).not.toBeNull();
     if (perA) expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
     else expect(t.querySelector('h4.sp-card-subtitle').textContent.length).toBeGreaterThan(5);
     expect(t.querySelector('.sp-card-text > p').textContent.length).toBeGreaterThan(20);
     // Peu blau només quan hi ha acció: cap peu buit. I és el de la barra blava, amb el verb canònic.
     expect(Boolean(t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(esClicable(t));
     if (esClicable(t)) {
-      const titol = t.querySelector('h3').textContent;
+      const titol = t.querySelector('.sp-card-title').textContent;
       expect([...t.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
         .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
     }
@@ -173,7 +173,7 @@ const textDeLaPastilla = (pastilla) => [...pastilla.querySelectorAll('span')].ma
 /** Les etiquetes de cada targeta d'un contenidor, pel títol de la targeta. */
 function etiquetesPerTargeta(contenidor) {
   return Object.fromEntries([...contenidor.querySelectorAll('article.sp-card')].map((t) => [
-    t.querySelector('h3').textContent,
+    t.querySelector('.sp-card-title').textContent,
     [...t.querySelectorAll('.sp-card-label')].map((l) => `${l.textContent}:${[...l.classList].find((c) => c.startsWith('sdp-insignia--'))?.slice(14) ?? '?'}`)
   ]));
 }
@@ -203,7 +203,9 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
      empaquetats (EmpaquetatsConsola.jsx), amb la seua targeta. Expectativa
      actualitzada a propòsit: «Sóc de Poble en xifres» just davant de l'Índex. */
   expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
-    .toEqual(['Manteniment de la IAIA', 'Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Canals, empaquetats i taxonomia', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
+    .toEqual(['Manteniment de la IAIA']);
+  expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent))
+    .toEqual(['Govern del Mestre', 'La sala de màquines de la Consola', 'Sóc de Poble en xifres', 'Canals, empaquetats i taxonomia', 'Índex de la Consola', 'Diagnòstic de Sóc de Poble']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
@@ -239,7 +241,7 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   // sistema continuen sent targetes, amb el seu nom i cap número inventat.
   const xifres = screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   expect(targetesExplicatives(xifres, { perA: false })).toHaveLength(10);
-  expect([...xifres.querySelectorAll('h3')].map((h) => h.textContent).join(' ')).not.toMatch(/\d/);
+  expect([...xifres.querySelectorAll('.sp-card-title')].map((h) => h.textContent).join(' ')).not.toMatch(/\d/);
   expect([...xifres.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(SLUGS.map((s) => `/consola/xifres/${s}`));
   capXifraSolta();
 });
@@ -296,7 +298,7 @@ test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades,
    estats de dins de la seua pàgina, el que falla primer al capdavant. */
 const estatsPerTargeta = (nav) => Object.fromEntries([...nav.querySelectorAll('article.sp-card')].map((t) => {
   const llista = t.querySelector('.sdp-consola__estats');
-  return [t.querySelector('h3').textContent, llista
+  return [t.querySelector('.sp-card-title').textContent, llista
     ? [...llista.querySelectorAll('.sdp-insignia')].map((i) => `${i.textContent}:${[...i.classList].find((c) => c.startsWith('sdp-insignia--')).slice(14)}`)
     : null];
 }));
@@ -333,7 +335,7 @@ test('T3 · /consola amb Mapa: cada coberta desglossa la seua pàgina, el més g
    portant a la seua pàgina (ordre del Mestre, 261004). */
 const problemesPerTargeta = (contenidor) => Object.fromEntries([...contenidor.querySelectorAll('article.sp-card')].map((t) => {
   const llista = t.querySelector('.sdp-consola__problemes');
-  return [t.querySelector('h3').textContent, llista ? [...llista.children].map((li) => li.textContent) : null];
+  return [t.querySelector('.sp-card-title').textContent, llista ? [...llista.children].map((li) => li.textContent) : null];
 }));
 
 test('Onada 6 · /consola amb Mapa: cada targeta diu quins problemes té, a la vista i sense deixar de ser clicable', async () => {
@@ -368,7 +370,7 @@ test('Onada 6 · /consola amb Mapa: cada targeta diu quins problemes té, a la v
   // Totes continuen portant a la seua pàgina.
   expect([...nav.querySelectorAll('article.sp-card')].every(esClicable)).toBe(true);
   // I «Sóc de Poble en xifres» també: la xifra de les òrfenes diu quina.
-  const xifres = screen.getByRole('heading', { level: 2, name: 'Sóc de Poble en xifres' }).closest('section');
+  const xifres = screen.getByRole('heading', { level: 3, name: 'Sóc de Poble en xifres' }).closest('section');
   expect(problemesPerTargeta(xifres)['1 skill òrfena']).toEqual(['mitjana core-identitat · orfe']);
 });
 
@@ -480,7 +482,7 @@ test('/consola amb Mapa: cada xifra de Sóc de Poble és una targeta pura amb bo
   expect(xifres.querySelector('.sdp-card-grid').className).toBe('sdp-card-grid sdp-consola__graella');
   // El títol porta la xifra i el que compta; una mesura absent (el Mapa de la
   // prova no porta salut) ho diu, mai és un zero.
-  expect(targetes.map((t) => [t.querySelector('h3').textContent, t.querySelector('h4').textContent])).toEqual([
+  expect(targetes.map((t) => [t.querySelector('h4.sp-card-title').textContent, t.querySelector('h4.sp-card-subtitle').textContent])).toEqual([
     ['2 skills', 'Al cens del Mapa de Sóc de Poble'],
     ['1 agent', 'Arnesos que conversen amb el Mestre'],
     ['2 skills opaques', 'Sense entrades ni eixides declarades'],
@@ -495,7 +497,7 @@ test('/consola amb Mapa: cada xifra de Sóc de Poble és una targeta pura amb bo
     ['1 skill òrfena', '0 skills fantasma: nomenades i sense carpeta al disc']
   ]);
   for (const t of targetes) {
-    const titol = t.querySelector('h3').textContent;
+    const titol = t.querySelector('h4.sp-card-title').textContent;
     // L'entradeta diu què compta, d'on ix (el fitxer o el generador) i per què importa: tres frases.
     const entradeta = t.querySelector('.sp-card-text > p').textContent;
     expect(entradeta.split(/(?<=\.) /).length, titol).toBeGreaterThanOrEqual(3);
@@ -536,7 +538,7 @@ test('261004 · Sóc de Poble en xifres: les anomalies del Mapa amb mesura (LEDG
   await screen.findByText('Dades no disponibles en este entorn');
   const xifres = screen.getByRole('region', { name: 'Sóc de Poble en xifres' });
   const perTitol = Object.fromEntries([...xifres.querySelectorAll('article')].map((t) => [
-    t.querySelector('h3').textContent, t.querySelector('h4').textContent]));
+    t.querySelector('h4.sp-card-title').textContent, t.querySelector('h4.sp-card-subtitle').textContent]));
   expect(perTitol).toMatchObject({
     '2 avisos alts': 'Severitat alta: cal actuar',
     '10 línies del LEDGER per revisar': '8 segells fòssils · 2 línies mal formades',
@@ -547,7 +549,7 @@ test('261004 · Sóc de Poble en xifres: les anomalies del Mapa amb mesura (LEDG
   });
   // Cada una porta a la seua pàgina pròpia, amb un slug que no depén de la xifra.
   expect(Object.fromEntries([...xifres.querySelectorAll('article')].map((t) => [
-    t.querySelector('h3').textContent, t.querySelector('a.sp-card-link-overlay').getAttribute('href')]))).toMatchObject({
+    t.querySelector('h4.sp-card-title').textContent, t.querySelector('a.sp-card-link-overlay').getAttribute('href')]))).toMatchObject({
     '166 torns caducats': '/consola/xifres/torns-caducats',
     '10 línies del LEDGER per revisar': '/consola/xifres/linies-ledger',
     '5 skills fora del segell': '/consola/xifres/skills-fora-del-segell'
@@ -562,7 +564,7 @@ test('/consola amb Mapa: les mètriques del tauler són h5, en l’ordre del res
   await screen.findByText('Dades no disponibles en este entorn');
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
   const perTargeta = Object.fromEntries([...nav.querySelectorAll('article.sp-card')].map((t) => [
-    t.querySelector('h3').textContent,
+    t.querySelector('h4.sp-card-title').textContent,
     [...t.querySelectorAll('.sdp-consola__metriques > h5.sdp-consola__metrica')].map((h) => h.textContent)
   ]));
   expect(perTargeta['Explorador del cervell']).toEqual(['3 nodes', '0 arestes']);

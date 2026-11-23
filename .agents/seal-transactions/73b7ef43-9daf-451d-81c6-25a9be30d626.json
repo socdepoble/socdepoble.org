@@ -1,0 +1,17 @@
+{
+  "id": "73b7ef43-9daf-451d-81c6-25a9be30d626",
+  "session": "21a53750-57d8-4aa4-9986-bf8663cc22fe",
+  "operationId": "v1223-governanca-1795473709413",
+  "claim": "21a53750-57d8-4aa4-9986-bf8663cc22fe:governance-write",
+  "planHash": "6a7b7ff45c354be4503a4c6b3ad25309ea6149218cc7219cd595065ccd62626a",
+  "beforeSeal": "671ab1670bf145ed73ad5057656fd9d2f540f1b1cc8eb5fd6b05782a15c6ec25",
+  "files": [
+    {
+      "path": "tooling/wiki/wiki-baseline.lock.json",
+      "before": "712298755d8ec010a9cec6601b89056d72cd455eb3c19be318ffe7199d10cbc4",
+      "after": "c7865f257c0f2ff6efc6c3de3514f278fe3e4bb9f08edb87caa8024147a2271d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351"
+}

@@ -102,7 +102,7 @@ function FitxaApp({ app, idioma, llenguaInterficie, onApaga }) {
         <Icona size={28} strokeWidth={2.1} focusable="false" />
       </span>
       <div className="sdp-app-fitxa__cos">
-        <h2 className="sdp-app-fitxa__titol">{titol}</h2>
+        <h3 className="sdp-app-fitxa__titol">{titol}</h3>
         <p className="sdp-app-fitxa__estat">
           <Insignia to={TO_ESTAT[estat]}>{etiquetaEstatApp(estat, llenguaInterficie)}</Insignia>
           {enProves ? <>{' '}<span className="sdp-insignia-beta-oberta">{textBetaOberta(llenguaInterficie)}</span></> : null}
@@ -155,7 +155,7 @@ export function PortalApps({ esSuperadmin = false }) {
       <div ref={portalAppsRef} className="sdp-app-portal">
         {esSuperadmin ? (
           <section className="sdp-app-portal__testers" aria-labelledby="sdp-app-portal-testers-titol">
-            <h2 id="sdp-app-portal-testers-titol" className="sdp-app-portal__testers-titol">{tx.testersTitol}</h2>
+            <h3 id="sdp-app-portal-testers-titol" className="sdp-app-portal__testers-titol">{tx.testersTitol}</h3>
             <p className="sdp-app-portal__testers-text">
               {tx.testersCos}
             </p>

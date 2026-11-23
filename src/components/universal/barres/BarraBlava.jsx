@@ -67,7 +67,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import {
-  BackIcon, ForwardIcon, IndexIcon, TranslateIcon, ShareIcon,
+  BackIcon, EditIcon, ForwardIcon, IndexIcon, TranslateIcon, ShareIcon,
 } from '../../PedraSeca/atoms/icones.jsx';
 import { ActionControl, IconButton } from '../../PedraSeca/atoms/controls.jsx';
 import { BotoComentar } from '../../PedraSeca/organismes/Comentar.jsx';
@@ -81,8 +81,10 @@ export { TEXTOS_COMENTAR } from '../../PedraSeca/organismes/textosComentar.js';
 export function BarraBlava({
   onBack, onForward, onIndex,
   traduirVisible = false, comentarVisible = false, compartirVisible = false, connectarVisible = false,
-  onTranslate, onComment, onShare, onConnect,
+  editarVisible = false,
+  onTranslate, onComment, onShare, onConnect, onEdit = null,
   connectLabel = 'Connectar',
+  editLabel = null,
   comentarXat = null,
   /* Onada 8 (261009) · el nom de l'autor de «En privat» (useAccions). */
   comentarPrivatAmb = null,
@@ -121,8 +123,15 @@ export function BarraBlava({
   /* T7 · P1-22 · El nom de cada botó, en la llengua de la interfície. */
   const t = useTraductorOpcional();
   const nom = (clau) => tradueix(t, TEXTOS_BARRA[clau]);
+  const mostraEditar = Boolean(editarVisible && typeof onEdit === 'function');
+  const botoConnectar = connectarVisible ? (
+    <ActionControl className={`btn-connectar sp-card-connect ${inoperativa}`.trim()} label={connectLabel} onClick={clicDe('connectar', onConnect)} ariaDisabled={ariaInoperatiu}>
+      <span className="sp-card-connect-text">{connectLabel}</span>
+      <span className="sp-card-connect-plus" aria-hidden="true">+</span>
+    </ActionControl>
+  ) : null;
   return (
-    <header className="bar-blue">
+    <header className={mostraEditar ? 'bar-blue bar-blue--amb-editar' : 'bar-blue'}>
       <div className="bar-blue-left">
         {onBack && (
           <IconButton label={nom('arrere')} onClick={onBack} className="bar-blue-left__arrere" presentation>
@@ -170,12 +179,14 @@ export function BarraBlava({
           </IconButton>
         )}
       </div>
-      {connectarVisible && (
-        <ActionControl className={`btn-connectar sp-card-connect ${inoperativa}`.trim()} label={connectLabel} onClick={clicDe('connectar', onConnect)} ariaDisabled={ariaInoperatiu}>
-          <span className="sp-card-connect-text">{connectLabel}</span>
-          <span className="sp-card-connect-plus" aria-hidden="true">+</span>
-        </ActionControl>
-      )}
+      {mostraEditar ? (
+        <div className="bar-blue-right">
+          <IconButton label={editLabel || nom('editar')} onClick={onEdit} className="bar-blue-right__editar" presentation>
+            <EditIcon className="icon" />
+          </IconButton>
+          {botoConnectar}
+        </div>
+      ) : botoConnectar}
     </header>
   );
 }

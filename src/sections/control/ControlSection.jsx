@@ -4,9 +4,9 @@
  * D3 (ordre del Mestre, 260930): cap targeta porta a una ruta que no existix.
  * «Gestoria de Poble» no té secció i diu «EN OBRES» sense clic, com les
  * altres; «Missatges per a dubtes» obri el Xat (/xat). D16: «Novetats» s'ha
- * amagat del rail del Xat i la targeta «Ajustos del xat» és ara l'entrada al
- * Control del xat (/control-xat). Porta el mateix dibuix que la capçalera
- * d'eixa pàgina (CircleDashed): el que toques és el que s'obri.
+ * amagat del rail del Xat. El Panell no porta cap targeta «Ajustos del xat»: el
+ * Control del xat (/control-xat) no té cap entrada visible i només s'hi arriba
+ * per l'adreça.
  *
  * CU (Onada 3, 261003) · Les Utilitats guanyen el Snippet, l'única amb fitxa
  * de detall (des de R16-W1 viu a «Maquinària i Sistema»: vegeu el paràgraf
@@ -243,6 +243,7 @@ function TargetaDeDesti({ desti, t }) {
   return (
     <UniversalCard
       title={contingut.titol}
+      headingLevel="h4"
       subtitle={contingut.subtitol}
       body={contingut.entradilla}
       imageUrl={contingut.imatge || undefined}
@@ -294,6 +295,7 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
   return (
     <UniversalCard
       title={titol}
+      headingLevel="h4"
       subtitle={subtitol}
       body={entradilla || undefined}
       imageUrl={imatge}
@@ -330,7 +332,7 @@ function EspaiDelPanell({ espai, idioma, visibles }) {
   const textos = TEXTOS_ESPAIS_PLUGINS[idioma]?.[espai.id] ?? espai;
   return (
     <section>
-      <h2>{textos.titol}</h2>
+      <h3>{textos.titol}</h3>
       <p className="lead">{textos.entradeta}</p>
       <div className="sdp-card-grid">
         {plugins.map((plugin) => (
@@ -558,7 +560,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         <LiniaVersioInstallada llengua={idioma} />
         <ControlModeSenior llengua={idioma} />
         <section aria-labelledby={idDestins}>
-          <h2 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h2>
+          <h3 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h3>
           {/* P5 · Les targetes de doble acció, en la graella de sempre (destinsControl.js):
               les sis de 2245 i, des del 261004, Treball i Habitatge. */}
           <div className="sdp-card-grid" onClick={obriPaginaDeTargeta}>
@@ -581,7 +583,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             el Lector RSS i el Snippet, i davant, amb la curadoria cultural encesa,
             «La IAIA Sabuda». */}
         <section className="sdp-control-maquinaria">
-          <h2>{t('section.control.maquinaria.titol', 'Maquinària i Sistema')}</h2>
+          <h3>{t('section.control.maquinaria.titol', 'Maquinària i Sistema')}</h3>
 
           {/* R16b · L'entradeta diu el que hi ha: el Lector RSS i el Snippet per defecte, i La IAIA
               Sabuda només amb la curadoria cultural (per això «com»). Cap targeta és un panell

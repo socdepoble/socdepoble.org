@@ -158,7 +158,7 @@ export default function Aprendre({ baralla: barallaProp = BARALLA_GESTORIA, maga
 
   return (
     <section aria-labelledby={idTitol}>
-      <h2 id={idTitol}>{baralla.titol}</h2>
+      <h3 id={idTitol}>{baralla.titol}</h3>
       <Alerta to="info" viva={false}>{baralla.avis}</Alerta>
       <p>{tf(idioma, 'leitnerIntro', intervals)}</p>
       {avis ? <Alerta to="avis">{tg(idioma, avis)}</Alerta> : null}
@@ -174,7 +174,7 @@ export default function Aprendre({ baralla: barallaProp = BARALLA_GESTORIA, maga
                 <strong>{actual.titol}</strong> <Insignia to="neutre">{etiquetaCaixa(estatActual, idioma)}</Insignia>
               </p>
               <p>{tf(idioma, 'faseDe', fase + 1, FASES.length)}</p>
-              <h3 ref={titolFase} tabIndex={-1}>{tg(idioma, FASES[fase])}</h3>
+              <h4 ref={titolFase} tabIndex={-1}>{tg(idioma, FASES[fase])}</h4>
 
               {fase === FASE.concepte ? (
                 <>
@@ -240,7 +240,7 @@ export default function Aprendre({ baralla: barallaProp = BARALLA_GESTORIA, maga
             </article>
           ) : (
             <>
-              <h3 ref={titolFase} tabIndex={-1}>{tg(idioma, 'Repàs fet per hui')}</h3>
+              <h4 ref={titolFase} tabIndex={-1}>{tg(idioma, 'Repàs fet per hui')}</h4>
               <p>
                 {proxim === null
                   ? tg(idioma, 'No hi ha cap repàs programat.')

@@ -203,7 +203,7 @@ describe('la navegació i els mòduls', () => {
     const { closca } = munta();
     vesAlModul('Full trimestral');
     expect(h1(closca)).toBe('Full trimestral');
-    const primer = await screen.findByRole('heading', { level: 2, name: '1. Aprovació dels tractors' });
+    const primer = await screen.findByRole('heading', { level: 3, name: '1. Aprovació dels tractors' });
     expect(within(primer.closest('section')).getByText('Cal aprovar el tractor de factures')).toBeTruthy();
     expect(within(primer.closest('section')).getAllByText('Pendent')).toHaveLength(2);
   });
@@ -274,7 +274,7 @@ describe('la persona de la sessió', () => {
     expect(screen.queryByText('Titular d’esta pàgina')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Configura el titular' })).toBeNull();
     /* El nom de la persona no és cap títol: l'Índex no el pot escriure a l'adreça. */
-    expect([...closca.querySelectorAll('h1, h2, h3')].map((h) => h.textContent).join(' ')).not.toMatch(/Pepa|Soler|Inventat/);
+    expect([...closca.querySelectorAll('h1, h2, h3, h4')].map((h) => h.textContent).join(' ')).not.toMatch(/Pepa|Soler|Inventat/);
   });
 
   test('la sessió mana sobre el fitxer de l’empresa, també a la pàgina d’una targeta i després d’«Oblida les dades»', async () => {
@@ -708,7 +708,7 @@ describe('les accions privades de la barra i del peu', () => {
     /* Dins de la pàgina de la targeta: abans del detall, al mateix contenidor que «La xifra». */
     const pagina = closca.querySelector('.sdp-gestoria-closca__pagina');
     expect(pagina.contains(avis)).toBe(true);
-    expect(avis.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'La xifra' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(avis.compareDocumentPosition(screen.getByRole('heading', { level: 3, name: 'La xifra' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(h1(closca)).toBe('Caixa real');
     expect(ruta()).toBe(RUTA);
     expect(share).not.toHaveBeenCalled();
@@ -936,7 +936,7 @@ describe('el Quadre de comandament (abans, la Cabina d’Avió)', () => {
     expect(h1(closca)).toBe('Caixa real');
     expect(document.activeElement).toBe(closca.querySelector('header.page-title > h1'));
     fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
-    expect(screen.getByRole('heading', { level: 2, name: QUADRE })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: QUADRE })).toBeTruthy();
     expect(premuda()).toEqual([QUADRE]);
     /* Els Bancs no tenen Quadre: hi veuen la comprimida, i la tria es conserva per al Tauler. */
     vesAlModul('Bancs');
@@ -949,7 +949,7 @@ describe('el Quadre de comandament (abans, la Cabina d’Avió)', () => {
     expect(premuda()).toEqual(['Vista comprimida']);
     vesAlModul('Tauler d’Inici');
     expect(premuda()).toEqual([QUADRE]);
-    expect(screen.getByRole('heading', { level: 2, name: QUADRE })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: QUADRE })).toBeTruthy();
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(closca.querySelectorAll('[style]')).toHaveLength(0);
     expect(ruta()).toBe(RUTA);
@@ -993,10 +993,10 @@ describe('el Quadre de comandament (abans, la Cabina d’Avió)', () => {
     const { closca } = munta({ hrefFull: '/app/gestoria/full' });
     await screen.findByText('Cal aprovar el tractor');
     fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
-    const quadre = screen.getByRole('heading', { level: 2, name: QUADRE }).closest('section');
-    const seccions = [...quadre.querySelectorAll('h3')].map((h) => h.textContent);
+    const quadre = screen.getByRole('heading', { level: 3, name: QUADRE }).closest('section');
+    const seccions = [...quadre.querySelectorAll('h4')].map((h) => h.textContent);
     expect(seccions.slice(-2)).toEqual(['Factures que falten', 'Plantilla Gestoria']);
-    const seccio = (nom) => within(quadre).getByRole('heading', { level: 3, name: nom }).closest('section');
+    const seccio = (nom) => within(quadre).getByRole('heading', { level: 4, name: nom }).closest('section');
     expect(within(seccio('Factures que falten')).getByText(/^Analitza el trimestre al Full trimestral/)).toBeTruthy();
     const plantilla = within(seccio('Plantilla Gestoria'));
     expect(plantilla.getByText('Encara no hi ha cap full generat')).toBeTruthy();
@@ -1011,7 +1011,7 @@ describe('el Quadre de comandament (abans, la Cabina d’Avió)', () => {
     munta();
     await screen.findByText('Cal aprovar el tractor');
     fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
-    const plantilla = within(screen.getByRole('heading', { level: 3, name: 'Plantilla Gestoria' }).closest('section'));
+    const plantilla = within(screen.getByRole('heading', { level: 4, name: 'Plantilla Gestoria' }).closest('section'));
     expect(plantilla.getByText('Encara no hi ha cap full generat')).toBeTruthy();
     expect(plantilla.queryByRole('button', { name: 'Obri el Full trimestral' })).toBeNull();
   });
@@ -1204,21 +1204,21 @@ describe('el cable del Full trimestral cap al Tauler (ordre del Mestre, 261012)'
     /* La factura sintètica no té cap incidència d'alta severitat: n'hi ha prou amb la revisió. */
     expect(screen.queryByRole('checkbox', { name: /Genera-la igualment/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Genera el full' }));
-    const fitxers = (await screen.findByRole('heading', { level: 3, name: 'Fitxers generats' }, { timeout: 10000 })).closest('section');
+    const fitxers = (await screen.findByRole('heading', { level: 4, name: 'Fitxers generats' }, { timeout: 10000 })).closest('section');
     const nomGenerat = [...fitxers.querySelectorAll('code')].map((c) => c.textContent).find((nom) => nom.endsWith('.xlsx'));
     expect(nomGenerat).toBe('2026-FACTURACIO-Taller_de_Prova_-_3T.xlsx');
     expect(descarrega).not.toHaveBeenCalled();
 
     vesAlModul('Tauler d’Inici');
     fireEvent.click(within(screen.getByRole('group', { name: 'Vista del panell' })).getByRole('button', { name: QUADRE }));
-    const plantilla = screen.getByRole('heading', { level: 3, name: 'Plantilla Gestoria' }).closest('section');
+    const plantilla = screen.getByRole('heading', { level: 4, name: 'Plantilla Gestoria' }).closest('section');
     expect(within(plantilla).getByText(nomGenerat).tagName).toBe('CODE');
     expect(within(plantilla).getByText('El full generat del 3T de 2026: és el que es descarrega i s’adjunta.')).toBeTruthy();
     expect(within(plantilla).getByText('Full amagat')).toBeTruthy();
     expect(plantilla.querySelector('table')).toBeNull();
     expect(serialitzat(plantilla)).not.toMatch(/€|\d,\d{2}|7777777777/);
     /* «Factures que falten» ja parla del Full: el seu trimestre, no el que mira la capçalera. */
-    const falten = screen.getByRole('heading', { level: 3, name: 'Factures que falten' }).closest('section');
+    const falten = screen.getByRole('heading', { level: 4, name: 'Factures que falten' }).closest('section');
     expect(within(falten).getByText(/^Del Full del 3T 2026, amb els extractes que has triat\./)).toBeTruthy();
     fireEvent.click(within(plantilla).getByRole('button', { name: 'Descarrega l’XLSX' }));
     expect(descarrega).toHaveBeenCalledTimes(1);
@@ -1245,7 +1245,7 @@ describe('l’Escàner Local', () => {
     fitxerDeCarpeta('02_Facturacio/2026_Bancs/moviments_compte.n43', N43),
     fitxerDeCarpeta('01_Identitat_Legal/Persona/document_escanejat.pdf', 'PDF-PROVA-IDENTITAT')
   ];
-  const radiografia = () => screen.queryByRole('heading', { level: 2, name: 'Radiografia de la carpeta' });
+  const radiografia = () => screen.queryByRole('heading', { level: 3, name: 'Radiografia de la carpeta' });
 
   test('el mòdul és el panell de l’Escàner, no «en obres»; sense la signatura, «Cal aprovar el tractor» i cap selector', async () => {
     const { closca } = munta({ modulActiu: 'escaner' });
@@ -1277,7 +1277,7 @@ describe('l’Escàner Local', () => {
        atribut), i la pista cap a la seua vista. Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): la línia
        d'estat del selector de Pedra Seca (CampFitxer, nomsVisibles={false}) ja només diu el recompte de la carpeta
        triada en l'alternativa webkitdirectory, i la comprovació torna a ser la closca sencera. */
-    expect(screen.getByRole('heading', { level: 2, name: 'Extractes per al Tauler' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Extractes per al Tauler' })).toBeTruthy();
     expect(closca.textContent).not.toMatch(/document_escanejat/);
     expect(serialitzat(closca)).not.toMatch(/document_escanejat/);
     expect(screen.getByLabelText('Tria la carpeta arrel').closest('.sdp-camp-fitxer').querySelector('.sdp-camp-fitxer__estat').textContent)

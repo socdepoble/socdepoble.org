@@ -55,7 +55,7 @@ function pinta(identitat = jo, extra = {}) {
   props = { identitat, config, onPerfilCanviat: vi.fn(), onSessioTancada: vi.fn(), ...extra };
   return render(<DetallPrivacitat {...props} />);
 }
-const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+const seccio = (titol) => screen.getByRole('heading', { level: 3, name: titol }).closest('section');
 
 beforeEach(() => {
   m.caps = new Set();
@@ -70,7 +70,7 @@ test('amb les dues capacitats, tres blocs en ordre: dades, consentiment i baixa'
   m.caps = new Set(['compte', 'consentiment']);
   pinta();
   expect(screen.getByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeTruthy();
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  const titols = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
   expect(titols).toEqual(['Les meues dades', 'Consentiment', 'Donar-se de baixa']);
   await within(seccio('Donar-se de baixa')).findByRole('button', { name: 'Donar-me de baixa' });
   expect(screen.getByText('Pep')).toBeTruthy();
@@ -87,7 +87,7 @@ test('només «consentiment»: ni dades ni baixa, i cap crida a la baixa', async
 
 test('sense capacitats, cap bloc ni cap crida al servidor, i ho diu', () => {
   pinta();
-  expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
   expect(screen.getByText('Este node encara no oferix cap d’estes opcions.')).toBeTruthy();
   expect(m.estatBaixa).not.toHaveBeenCalled();
   expect(m.estatConsentiment).not.toHaveBeenCalled();
@@ -96,7 +96,7 @@ test('sense capacitats, cap bloc ni cap crida al servidor, i ho diu', () => {
 test('FEDI-07 · en desenvolupament la mostra local es pot obrir sense activar el xifratge dels xats', async () => {
   expect(import.meta.env.DEV).toBe(true);
   pinta();
-  const titol = await screen.findByRole('heading', { level: 2, name: 'Prova local de xifratge' });
+  const titol = await screen.findByRole('heading', { level: 3, name: 'Prova local de xifratge' });
   const laboratori = within(titol.closest('section'));
   expect(laboratori.getByRole('button', { name: 'Inicia la prova local' })).toBeTruthy();
   expect(laboratori.getByText(/no envia res a ningú, no activa el xifratge dels xats/)).toBeTruthy();
@@ -397,7 +397,7 @@ describe('TE-01 · en castellà', () => {
     pintaEnCastella();
     expect(screen.getByRole('heading', { level: 1, name: 'Privacidad y datos' })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeNull();
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja', 'Portabilidad federada', 'Prueba local de cifrado']);
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja', 'Portabilidad federada', 'Prueba local de cifrado']);
     await screen.findByRole('button', { name: 'Cancelar la baja' });
     const data = dataLlegible(pendent.purgaPrevistaAl, 'es-ES');
     expect(data).not.toBe(dataLlegible(pendent.purgaPrevistaAl));

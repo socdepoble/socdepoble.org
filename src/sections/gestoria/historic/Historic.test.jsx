@@ -48,7 +48,7 @@ test('R32.4 · l’escenari que desborda conserva l’estimació base i es recup
   const selector = await screen.findByLabelText('Tria els extractes del banc de tot el període');
   const triat = fitxer('limit_sintetic.csv', 'Fecha,F. valor,Concepto,Importe,Saldo\n2025-01-02,2025-01-02,TRANSFERENCIA SINTETICA,90071992547409.87,90071992547409.87');
   fireEvent.change(selector, { target: { files: [triat] } });
-  await screen.findByRole('heading', { level: 2, name: 'La foto del director financer' });
+  await screen.findByRole('heading', { level: 3, name: 'La foto del director financer' });
   fireEvent.change(screen.getByLabelText('Facturació (% de canvi)'), { target: { value: '100' } });
   expect(screen.getByText('No s’han pogut calcular els impostos')).toBeTruthy();
   expect(screen.getByText(/massa gran per a calcular-lo amb precisió/)).toBeTruthy();
@@ -123,7 +123,7 @@ async function llegit(opcions = {}) {
   const selector = await screen.findByLabelText('Tria els extractes del banc de tot el període');
   const triat = fitxer('moviments.csv', CSV);
   fireEvent.change(selector, { target: { files: [triat] } });
-  await screen.findByRole('heading', { level: 2, name: 'La foto del director financer' }, { timeout: 5000 });
+  await screen.findByRole('heading', { level: 3, name: 'La foto del director financer' }, { timeout: 5000 });
   return { ...vista, triat };
 }
 const textDe = (container) => container.textContent;
@@ -204,7 +204,7 @@ describe('la lectura', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mostra les xifres' }));
     await waitFor(() => expect(textDe(container)).toContain('1.882,50 €'));
     fireEvent.click(screen.getByRole('button', { name: 'Oblida les dades' }));
-    await waitFor(() => expect(screen.queryByRole('heading', { level: 2, name: 'La foto del director financer' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('heading', { level: 3, name: 'La foto del director financer' })).toBeNull());
     expect(textDe(container)).not.toContain('1.882,50');
     expect(screen.getByRole('button', { name: 'Mostra les xifres' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByText('Encara no hi ha cap extracte')).toBeTruthy();
@@ -214,7 +214,7 @@ describe('la lectura', () => {
     await llegit();
     fireEvent.click(screen.getByRole('button', { name: 'Caixa real' }));
     await screen.findByRole('heading', { level: 1, name: 'Caixa real' });
-    expect(screen.getByRole('heading', { level: 2, name: 'D’on ix' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'D’on ix' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'El detall de Caixa real' })).toBeTruthy();
   });
 });
@@ -273,8 +273,8 @@ describe('revisar i regles', () => {
 describe('simulacions i llibre', () => {
   test('els impostos de cada any, amb l’etiqueta [NO VERIFICAT]; un escenari en mostra la diferència', async () => {
     const { container } = await llegit();
-    expect(screen.getByRole('heading', { level: 3, name: 'Els impostos de 2025' })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 3, name: 'Els impostos de 2026' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Els impostos de 2025' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Els impostos de 2026' })).toBeTruthy();
     expect(screen.getAllByText('[NO VERIFICAT] estimació per a revisar amb la gestoria').length).toBeGreaterThan(0);
     expect(screen.queryByRole('region', { name: 'El que canvia amb l’escenari' })).toBeNull();
     fireEvent.change(screen.getByLabelText('Facturació (% de canvi)'), { target: { value: '10' } });
@@ -425,7 +425,7 @@ describe('la boina: el titular de la sessió i el rellotge viu', () => {
     expect(screen.getAllByText('Pepa Soler').length).toBeGreaterThan(1);
     expect(textDe(container)).not.toContain('Titular sense configurar');
     /* El nom no va mai a cap encapçalament: l'Índex de la barra blava els escriu a la URL. */
-    for (const encapcalament of container.querySelectorAll('h1, h2, h3')) expect(encapcalament.textContent).not.toContain('Pepa Soler');
+    for (const encapcalament of container.querySelectorAll('h1, h2, h3, h4')) expect(encapcalament.textContent).not.toContain('Pepa Soler');
     fireEvent.click(screen.getByRole('button', { name: 'Caixa real' }));
     await screen.findByRole('heading', { level: 1, name: 'Caixa real' });
     expect(nomDeLaBoina(container)).toBe('Pepa Soler');

@@ -104,7 +104,7 @@ export function PlantillaGestoria({ full = null, visible = false, descarrega = d
       {correuObert ? (
         <div ref={adoptaEstilsDiferits} id={idCorreu}>
           <EnviamentGestoria key={entregables.empremtes.xlsx} any={full.any} t={full.t} adjunts={adjunts}
-            inicials={{ nom: full.titular ?? '' }} nivellTitol={4} descarrega={descarrega} idioma={idioma} />
+            inicials={{ nom: full.titular ?? '' }} nivellTitol={5} descarrega={descarrega} idioma={idioma} />
         </div>
       ) : null}
     </>

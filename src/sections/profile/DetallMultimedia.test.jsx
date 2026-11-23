@@ -30,6 +30,8 @@ vi.mock('../../data/backendPort.js', () => ({
   getRuntimeDataMode: () => m.mode,
   llistaElsMeusMitjans: (...args) => m.llista(...args),
   esborraElMeuMitja: (...args) => m.esborra(...args),
+  /* v1.2.23 · L2-01 (Gauntlet R1) · La guarda d'identitat resol la referència pel port, com la miniatura. */
+  resolveAsset: async (ref) => `https://fitxers.test/${String(ref).replace('sdp-media://', '')}`,
 }));
 /* Un hook per cel·la: la referència opaca es «resol» a una URL de prova. */
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
@@ -79,6 +81,8 @@ import { ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsS
 import { oblidaMetadades } from '../multimedia/useMetadadesFoto.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { elementDeFilaPublicada, mergeById } from '../../data/mapejadorSeccions.js';
+import { TEXTOS_FOTO_NETA_IDENTITAT } from './i18nFotoNetaIdentitat.js';
+import { JPEG_NET, WEBP_NET, unix } from '../../../tests/helpers/mitjansPublicsNets.js';
 
 /* Correcció F2 de la revisió · La miniatura pinta la URL del port només si és
    dels nostres (esFontImatgePropia): l'origen del servidor de fitxers de
@@ -118,6 +122,57 @@ const fitxers = () => within(graella()).getAllByRole('listitem').map(fitxerDe);
 const targetaDeFitxer = (nom) => within(graella()).getAllByRole('listitem').find((li) => fitxerDe(li) === nom);
 const esperaFitxer = (nom) => waitFor(() => expect(targetaDeFitxer(nom)).toBeTruthy());
 const idsDescrits = (boto) => (boto.getAttribute('aria-describedby') || '').split(' ').filter(Boolean);
+/* v1.2.23 · L2-01 (Gauntlet R1) · La guarda d'identitat de «Posa com a…» (fotoNetaDIdentitat.js) llig la foto
+   sencera, amb un fetch sense Range; el visor (useMetadadesFoto) la demana amb Range i continua sense xarxa. `perUrl`
+   torna els bytes de cada adreça (de sèrie, un WebP net de veres) o null (la xarxa falla). Torna el fetch simulat. */
+function servixFotos(perUrl = () => WEBP_NET) {
+  const simulat = vi.fn(async (url, opcions = {}) => {
+    if (opcions?.headers?.Range) throw new Error('sense xarxa');
+    const bytes = perUrl(String(url));
+    if (!bytes) throw new Error('sense xarxa');
+    return { ok: true, status: 200, headers: { get: () => null }, arrayBuffer: async () => bytes.slice().buffer };
+  });
+  vi.stubGlobal('fetch', simulat);
+  return simulat;
+}
+/* Un WebP net amb un tros EXIF al final (on el posa la pujada) i un JPEG amb un APP1 «Exif» abans de l'escaneig: el
+   bloc porta un GPS IFD (GPSLatitudeRef), com les fotos del cos del Perfil i les còpies del Mur des de la v1.2.23. */
+const TIFF_GPS = Uint8Array.of(73, 73, 42, 0, 8, 0, 0, 0, 1, 0, 37, 136, 4, 0, 1, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0,
+  1, 0, 1, 0, 2, 0, 2, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0);
+function webpAmbGps() {
+  const tros = unix(Uint8Array.from('EXIF', (c) => c.charCodeAt(0)), Uint8Array.of(TIFF_GPS.length, 0, 0, 0), TIFF_GPS);
+  const bytes = unix(WEBP_NET, tros);
+  new DataView(bytes.buffer).setUint32(4, bytes.length - 8, true);
+  return bytes;
+}
+const jpegAmbGps = () => unix(JPEG_NET.subarray(0, 2),
+  Uint8Array.of(0xff, 0xe1, (TIFF_GPS.length + 8) >>> 8, (TIFF_GPS.length + 8) & 255), Uint8Array.from('Exif\0\0', (c) => c.charCodeAt(0)), TIFF_GPS,
+  JPEG_NET.subarray(2));
+/* v1.2.23 · L2-01 (Gauntlet R2) · Els bytes EXACTES d'ImageIO, el codificador del canvas de WebKit (Safari i l'app
+   d'iOS): el JPEG porta un APP1 «Exif» de dimensions i un APP13 amb l'IPTC buit; el PNG, un eXIf de dimensions. Són
+   els mateixos de fotoNetaDIdentitat.test.js (sha256 95a9447a… i ef02c88e…). */
+const deBase64 = (b64) => Uint8Array.from(Buffer.from(b64, 'base64'));
+const JPEG_IMAGEIO = deBase64(
+  '/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAQK' +
+  'ADAAQAAAABAAAAMAAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgAMABA' +
+  'AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicR' +
+  'QygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SV' +
+  'lpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAA' +
+  'ABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJico' +
+  'KSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8' +
+  'jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAgICAgICAwICAwQDAwMEBQQEBAQFBwUFBQUFBwgHBwcHBwcICAgICAgICAoKCgoK' +
+  'CgsLCwsLDQ0NDQ0NDQ0NDf/bAEMBAgICAwMDBgMDBg0JBwkNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ' +
+  '0NDf/dAAQABP/aAAwDAQACEQMRAD8A8Looor4s/ncKKKKACiiigAooooA//9DwusS8u7iK4dI3woxgYHoPatuubv8A/j7k/D+Qr8vz+rOnh4yp' +
+  'yad+mnRn1f0OOHMpzrjTFYXOcLTr01hpyUakIzipKrRSklJNXs2r72bXUPt93/z0/Qf4VZs7u4luESR8qc5GB6H2rKq5Yf8AH3H+P8jXzeCxuI' +
+  'liKcZVHa66vuf3d4p+FnBeE4LzfFYXKMNCpDDV5RlGhSUoyVKbUotRummrprVPVHSUUUV+gH+LwUUUUAf/0fC6xLy0uJbh3jTKnGDkeg9626K/' +
+  'P8bgoYqCp1G7XvofCeFXirm3h/m1TOcmp051J03TaqKTjyuUJNpRnB3vBdbWvp25v7Bd/wDPP9R/jVmztLiK4R5Ewozk5HofetuivPpZBh6c41' +
+  'It3TvuunyP2biP6Y/GmdZTismxWFwyp16c6cnGFVSUZxcW4t1mr2el01fdMKKKK9w/kwKKKKAP/9k=');
+const PNG_IMAGEIO = deBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6AB' +
+  'AAMAAAABAAEAAKACAAQAAAABAAAAQKADAAQAAAABAAAAMAAAAAC/g6J/AAAAv0lEQVRoBe2YwQ3DMAwDnaIbZY6s0TkyR9fIHJkpBTqBHiJAgee3' +
+  'QNDU0Q9v+3k8K/i8gu/+vzoBQEB4AlQgHIAFARAQngAVCAeAR5AKUIHwBKhAOADrXQ3g+t7V0dLc8dlLc+ohKqBO2F0fAtw3pPYHAeqE3fUhwH1D' +
+  'an8QoE7YXR8C3Dek9gcB6oTd9SHAfUNqfxCgTthdP56A8p+gyx9eN1HxBBBAN1LT9CBg2sa6/UJAd6LT9CBg2sa6/f4AMqgGSS/iFGwAAAAASUVO' +
+  'RK5CYII=');
 
 beforeEach(() => {
   /* El visor llig l'EXIF de la foto oberta: cap xarxa a les proves. */
@@ -604,6 +659,9 @@ describe('Pla 261018_1605 · Tasca 4 · la foto desada, protegida amb un esborra
 
 describe('Pla 261018_1605 · Tasca 4 · posar-la d’avatar o de capçalera', () => {
   test('«Posa com a avatar» descarta l’esborrany de la cua i després desa avatar_url; «Posa com a capçalera», hero_url', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     const autodesament = { ambit: 'ambit-de-prova', context: CONFIG };
     m.perfil.autodesament = autodesament;
     const descarta = vi.spyOn(cuaDesament, 'descarta');
@@ -625,6 +683,9 @@ describe('Pla 261018_1605 · Tasca 4 · posar-la d’avatar o de capçalera', ()
   });
 
   test('si el desat falla, el motiu es diu en línia', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     m.perfil.guardarCampPerfil.mockRejectedValue(new Error('Sense xarxa'));
     m.llista.mockResolvedValue([mitja('nova.webp')]);
     pinta();
@@ -668,6 +729,9 @@ describe('Pla 261018_1605 · Tasca 4 · posar-la d’avatar o de capçalera', ()
   });
 
   test('si en posar-la d’avatar el botó queda desactivat, el focus continua a la mateixa targeta', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     m.llista.mockResolvedValue([mitja('altra.webp'), mitja('nova.webp')]);
     const { rerender } = pinta();
     await esperaFitxer('nova.webp');
@@ -826,6 +890,9 @@ describe('Relleu del Pla 2000 · una organització: les fotos de la seua fitxa i
   });
 
   test('«Posa com a logotip» desa logo_url i «Posa com a capçalera», hero_url, a l’organització, després de descartar l’esborrany de la cua', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     m.perfil.autodesament = { ambit: 'ambit-org', context: CONFIG };
     const descarta = vi.spyOn(cuaDesament, 'descarta');
     pinta();
@@ -855,6 +922,9 @@ describe('Relleu del Pla 2000 · una organització: les fotos de la seua fitxa i
 
 describe('Relleu del Pla 2000 · un agent IA: el seu id o un àlies declarat al catàleg', () => {
   test('les de l’agent (id i slug del catàleg) i les seues de la fitxa; mai les d’un altre agent ni les d’una persona amb el mateix id', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     m.mediaItems = [
       { id: 'a1', src: '/assets/iaia/a1.jpg', title: 'La IAIA a la fresca', author_agent_id: IAIA_ID },
       { id: 'a2', src: '/assets/iaia/a2.jpg', title: 'La IAIA al Mas', authorAgentId: 'iaia-maria' },
@@ -974,6 +1044,9 @@ describe('Relleu del Pla 2000 · el visor complet de l’Arxiu, amb les accions 
   });
 
   test('«Posa com a avatar» des del visor desa la columna; el focus es queda al visor', async () => {
+    /* v1.2.23 · L2-01 (Gauntlet R1) · REAPUNTADA A POSTA: la guarda d'identitat llig la foto abans de desar-la; esta
+       foto és neta de veres (servixFotos: un WebP sense cap bloc), i l'invariant és el d'abans. */
+    servixFotos();
     m.llista.mockResolvedValue([mitja('nova.webp')]);
     const { rerender } = pinta();
     await esperaFitxer('nova.webp');
@@ -1074,5 +1147,123 @@ describe('Relleu del Pla 2000 · el visor complet de l’Arxiu, amb les accions 
     expect(visor().querySelector('img.sdp-visor__imatge').getAttribute('src')).toBe('/assets/forn/forn-al-mati.jpg');
     expect(fila('Publicat a').querySelector('a').getAttribute('href')).toBe('/mur/forn');
     expect(within(fila('Accions')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Posa com a logotip', 'Posa com a capçalera']);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   v1.2.23 · L2-01 (Gauntlet R1) · L'avatar i el logotip (de qualsevol mena) i la capçalera d'una persona van sempre
+   nets (P1-64, decisió 7 del Mestre). Des de la v1.2.23 les fotos del cos del Perfil pugen a l'espai públic amb la
+   ubicació i la data (IDEA-331) i ixen a «Multimèdia» com a pujades; abans ja hi eren les còpies del Mur (notes/) i
+   les capçaleres d'entitat amb les dades de la càmera. «Posa com a…» llig la foto (fotoNetaDIdentitat.js) i, si porta
+   un bloc de metadades o no s'ha pogut comprovar, no desa res ni toca l'esborrany: l'avís diu on pujar-la neta.
+   ═══════════════════════════════════════════════════════════════════ */
+describe('v1.2.23 · L2-01 · una imatge d’identitat va sempre neta, també des de «Multimèdia»', () => {
+  const AVIS = TEXTOS_FOTO_NETA_IDENTITAT.ca;
+  const urlDe = (nom, carpeta = 'avatars') => `https://fitxers.test/mitjans/${TENANT}/${UID}/${carpeta}/${nom}`;
+
+  test('una foto del cos del Perfil amb el GPS (WebP): «Posa com a avatar» i «Posa com a capçalera» no desen res, no toquen l’esborrany i ho diuen', async () => {
+    m.perfil.autodesament = { ambit: 'ambit-de-prova', context: CONFIG };
+    const descarta = vi.spyOn(cuaDesament, 'descarta');
+    const fetch = servixFotos((url) => (url === urlDe('cos.webp') ? webpAmbGps() : null));
+    m.llista.mockResolvedValue([mitja('cos.webp')]);
+    pinta();
+    await esperaFitxer('cos.webp');
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('cos.webp')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(fetch).toHaveBeenCalledWith(urlDe('cos.webp'), expect.objectContaining({ credentials: 'same-origin' }));
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(descarta).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.avatar);
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('cos.webp')).getByRole('button', { name: 'Posa com a capçalera' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(descarta).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.capcalera);
+    // Cap botó no queda bloquejat: es pot triar una altra foto.
+    expect(within(targetaDeFitxer('cos.webp')).getByRole('button', { name: 'Posa com a avatar' }).disabled).toBe(false);
+  });
+
+  test('una còpia del Mur (notes/, un JPEG amb un APP1 «Exif»), la costura que ja venia de la v1.2.22: tampoc no es posa d’avatar', async () => {
+    const nom = 'sdp-net-v1-abc.jpg';
+    servixFotos((url) => (url === urlDe(nom, 'notes') ? jpegAmbGps() : null));
+    m.llista.mockResolvedValue([{ ...mitja(nom), ref: `sdp-media://mitjans/${TENANT}/${UID}/notes/${nom}`, ruta: `${TENANT}/${UID}/notes/${nom}`, carpeta: 'notes', tipus: 'image/jpeg' }]);
+    pinta();
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Posa com a avatar' })).toHaveLength(1));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.avatar);
+  });
+
+  test('fail-closed: si la foto no es pot llegir, no es posa i es diu que no s’ha pogut comprovar', async () => {
+    servixFotos(() => null);
+    m.llista.mockResolvedValue([mitja('nova.webp')]);
+    pinta();
+    await esperaFitxer('nova.webp');
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('nova.webp')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.noComprovada);
+  });
+
+  test('v1.2.23 · L2-01 (Gauntlet R2) · una foto de Safari o de l’iPhone (el JPEG i el PNG d’ImageIO) es posa d’avatar i de capçalera, com en la v1.2.22', async () => {
+    const fetch = servixFotos((url) => {
+      if (url === urlDe('safari.jpg')) return JPEG_IMAGEIO;
+      return url === urlDe('iphone.png') ? PNG_IMAGEIO : null;
+    });
+    m.llista.mockResolvedValue([mitja('safari.jpg', { tipus: 'image/jpeg' }), mitja('iphone.png', { tipus: 'image/png' })]);
+    pinta();
+    await esperaFitxer('safari.jpg');
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('safari.jpg')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(fetch).toHaveBeenCalledWith(urlDe('safari.jpg'), expect.objectContaining({ credentials: 'same-origin' }));
+    expect(m.perfil.guardarCampPerfil).toHaveBeenCalledWith('avatar_url', ref('safari.jpg'), 'jo');
+    expect(screen.getByRole('status').textContent).toBe('Ja és el teu avatar.');
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('iphone.png')).getByRole('button', { name: 'Posa com a capçalera' })); });
+    expect(m.perfil.guardarCampPerfil).toHaveBeenLastCalledWith('hero_url', ref('iphone.png'), 'jo');
+    expect(screen.getByRole('status').textContent).toBe('Ja és la teua capçalera.');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  test('v1.2.23 · L2-01 (Gauntlet R2) · un format que la guarda no entén (GIF) no es posa, i l’avís no promet que tornar-ho a provar servisca', async () => {
+    servixFotos((url) => (url === urlDe('vella.gif') ? Uint8Array.from('GIF89a\u0001\u0000\u0001\u0000\u0000\u0000', (c) => c.charCodeAt(0)) : null));
+    m.llista.mockResolvedValue([mitja('vella.gif', { tipus: 'image/gif' })]);
+    pinta();
+    await esperaFitxer('vella.gif');
+    await act(async () => { fireEvent.click(within(targetaDeFitxer('vella.gif')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.noComprovable);
+    expect(screen.getByRole('alert').textContent).not.toMatch(/Torna-ho a provar/);
+  });
+
+  test('des del visor, la mateixa guarda: la foto amb el GPS no es posa d’avatar', async () => {
+    servixFotos((url) => (url === urlDe('cos.webp') ? webpAmbGps() : null));
+    m.llista.mockResolvedValue([mitja('cos.webp')]);
+    pinta();
+    await esperaFitxer('cos.webp');
+    act(() => obridorDe(targetaDeFitxer('cos.webp')).click());
+    await act(async () => { fireEvent.click(within(fila('Accions')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert', { hidden: true }).textContent).toBe(AVIS.avatar);
+  });
+
+  test('una organització: el logotip amb dades no es posa; la capçalera, que no és identitat, es desa com abans sense llegir la foto', async () => {
+    const font = 'https://fitxers.test/mitjans/t/u/organitzacions/cap.webp';
+    m.mediaItems = [{ id: 'm-cap', src: font, title: 'La capçalera amb càmera', author_org_id: 'O' }];
+    identitat = forn();
+    m.perfil.identitats = [pep(), identitat];
+    const fetch = servixFotos((url) => (url === font ? webpAmbGps() : null));
+    pinta();
+    await act(async () => { fireEvent.click(within(targetaAmb('La capçalera amb càmera')).getByRole('button', { name: 'Posa com a logotip' })); });
+    expect(m.perfil.guardarCampPerfil).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toBe(AVIS.logotip);
+    fetch.mockClear();
+    await act(async () => { fireEvent.click(within(targetaAmb('La capçalera amb càmera')).getByRole('button', { name: 'Posa com a capçalera' })); });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(m.perfil.guardarCampPerfil).toHaveBeenCalledWith('hero_url', font, 'O');
+  });
+
+  test('la foto del compte de Google de la sessió no és nostra: es posa d’avatar com abans i no es demana mai', async () => {
+    m.perfil.usuari = usuariDePep({ identities: [{ provider: 'google', identity_data: { avatar_url: FOTO_GOOGLE } }] });
+    const fetch = servixFotos(() => null);
+    pinta();
+    await act(async () => { fireEvent.click(within(targetaDe('Foto del compte de Google')).getByRole('button', { name: 'Posa com a avatar' })); });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(m.perfil.guardarCampPerfil).toHaveBeenCalledWith('avatar_url', FOTO_GOOGLE, 'jo');
   });
 });

@@ -71,7 +71,7 @@ describe('el portal /app és una Pàgina Universal de sistema', () => {
     const llista = article.querySelector('.sdp-app-portal > ul.sdp-app-portal__llista');
     expect(llista).not.toBeNull();
     expect(article.querySelector('.page-intro').compareDocumentPosition(llista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(llista).getByRole('heading', { level: 2, name: 'La Prova' })).toBeTruthy();
+    expect(within(llista).getByRole('heading', { level: 3, name: 'La Prova' })).toBeTruthy();
     expect(carrega).not.toHaveBeenCalled();
   });
 
@@ -96,7 +96,7 @@ describe('el portal /app és una Pàgina Universal de sistema', () => {
     });
     const panell = container.querySelector('section.sdp-app-portal__testers');
     expect(panell).not.toBeNull();
-    expect(within(panell).getByRole('heading', { level: 2, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
+    expect(within(panell).getByRole('heading', { level: 3, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
     expect(within(panell).getByRole('link', { name: /socdepoble-testers/i }).getAttribute('href'))
       .toBe('https://groups.google.com/g/socdepoble-testers');
     expect(within(panell).getByRole('link', { name: /Proves a Google Play/i }).getAttribute('href'))

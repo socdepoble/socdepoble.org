@@ -106,7 +106,7 @@ export default function VistaComunitats({
 
   return (
     <>
-      <AppGridColumn esDark={true} titol={titol} icona={Users} esquerra={esquerra}>
+      <AppGridColumn esDark={true} titol={esquerra ? null : titol} icona={esquerra ? null : Users} esquerra={esquerra}>
         <button type="button" className="sdp-xat-nova" aria-label={etiquetaNova} title={etiquetaNova} onClick={onNova}>
           <Plus size={24} aria-hidden="true" focusable="false" />
         </button>

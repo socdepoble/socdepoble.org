@@ -12,6 +12,10 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { etiquetaDApartat } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 import { COPYRIGHT_QUE_DINEM, PaginaDeRecepta } from './ReceptaDetailSection.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssReceptes from '../../css/diferit-receptes.css?inline';
+
+const adoptaEstilsReceptes = (node) => { if (node) adoptaFullDiferit(node, 'receptes', cssReceptes); };
 
 export const ID_LLIBRE_QUE_DINEM = 'que-dinem';
 export const PORTADA_LLIBRE_QUE_DINEM = '/assets/uploads/patrimoni/portada_que_dinem_muro.webp';
@@ -58,11 +62,11 @@ function PortadaLlibreQueDinem({ tr, onTorna }) {
       copyright={COPYRIGHT_QUE_DINEM}
       labels={[{ text: `${obra.lloc} · ${obra.any}`, className: 'sdp-badge-category' }]}
     >
-      <div className="sdp-recepta">
+      <div ref={adoptaEstilsReceptes} className="sdp-recepta">
         <p lang="ca">
           Tria un apartat a la primera columna o qualsevol de les <strong>{RECEPTES_QUE_DINEM.length} receptes</strong> a la segona columna per obrir-ne la fitxa completa amb la seua adreça compartible.
         </p>
-        <CreditsQueDinem tr={tr} nivell="h2" />
+        <CreditsQueDinem tr={tr} nivell="h3" />
       </div>
     </UniversalPage>
   );

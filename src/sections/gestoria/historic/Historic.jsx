@@ -218,12 +218,12 @@ function PortaHistoric({ h, onObreTractors, onOblida, idioma = 'ca' }) {
   );
 }
 
-/* Una secció amb el seu títol (h2). */
+/* Una secció amb el seu títol (h3). */
 function Seccio({ titol, children, ajuda, idioma = 'ca' }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, titol)}</h2>
+      <h3 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, titol)}</h3>
       {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__nota">{ajuda}</p> : null}
       {children}
     </section>

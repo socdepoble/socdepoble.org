@@ -147,7 +147,7 @@ test('el portal /app es pinta dins de la closca amb la barra de Sóc de Poble', 
     expect(await screen.findByRole('heading', { level: 1, name: 'Apps' })).toBeTruthy();
     const nav = await principal();
     expect(within(nav).getByRole('button', { name: 'Panell de control' })).toBeTruthy();
-    for (const app of APPS_INTERNES) expect(screen.getByRole('heading', { level: 2, name: titolDe(app.titol) })).toBeTruthy();
+    for (const app of APPS_INTERNES) expect(screen.getByRole('heading', { level: 3, name: titolDe(app.titol) })).toBeTruthy();
   });
 });
 

@@ -260,6 +260,9 @@ export function UniversalPage(props) {
       onTranslate={handleTranslate}
       onComment={senseComentar ? undefined : props.onComment}
       showComment={senseComentar ? false : (props.showComment ?? config.showComment)}
+      showEdit={props.showEdit === true && typeof props.onEdit === 'function'}
+      onEdit={typeof props.onEdit === 'function' ? props.onEdit : null}
+      editLabel={props.editLabel ?? null}
       onShare={handleShare}
       onDateTime={handleDateTime}
       dateTimeLabel={nomPastilla}

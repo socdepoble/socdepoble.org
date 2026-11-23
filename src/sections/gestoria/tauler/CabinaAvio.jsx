@@ -238,13 +238,13 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
   const { cabina } = dades;
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina" aria-labelledby={`${id}-cabina`}>
-      <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">{tg(idioma, 'Quadre de comandament')}</h2>
+      <h3 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">{tg(idioma, 'Quadre de comandament')}</h3>
       <AvisosComptes avisos={dades.avisos ?? []} idioma={idioma} />
       <p className="sdp-gestoria-cabina__nota">{cabina.referencia}</p>
       {cabina.avisFrescor ? <Alerta to="avis" viva={false} titol={tg(idioma, 'Extractes antics')}>{cabina.avisFrescor}</Alerta> : null}
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-instruments`}>
-        <h3 id={`${id}-instruments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Instruments')}</h3>
+        <h4 id={`${id}-instruments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Instruments')}</h4>
         <dl className="sdp-gestoria-cabina__instruments">
           {cabina.instruments.map((instrument) => (
             <Instrument key={instrument.id} instrument={instrument} visible={visible} onObri={onObri} idioma={idioma} />
@@ -254,14 +254,14 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-flux`}>
-        <h3 id={`${id}-flux`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Flux de caixa per mes')}</h3>
+        <h4 id={`${id}-flux`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Flux de caixa per mes')}</h4>
         <p className="sdp-gestoria-cabina__nota">{cabina.notaFlux}</p>
         <GrafiquesFlux mesos={cabina.mesos} maxim={cabina.maxim} visible={visible} idioma={idioma} />
         {cabina.mesos.length ? <TaulaFlux mesos={cabina.mesos} visible={visible} idioma={idioma} /> : null}
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-venciments`}>
-        <h3 id={`${id}-venciments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Venciments')}</h3>
+        <h4 id={`${id}-venciments`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Venciments')}</h4>
         {cabina.venciments.length ? (
           <div ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__venciments">
             {cabina.venciments.map((v) => (
@@ -275,12 +275,12 @@ export function CabinaAvio({ dades, visible = false, onObri, falten = null, plan
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-falten`}>
-        <h3 id={`${id}-falten`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Factures que falten')}</h3>
+        <h4 id={`${id}-falten`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Factures que falten')}</h4>
         <FacturesQueFalten falten={falten} visible={visible} idioma={idioma} />
       </section>
 
       <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-plantilla`}>
-        <h3 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Plantilla Gestoria')}</h3>
+        <h4 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">{tg(idioma, 'Plantilla Gestoria')}</h4>
         {plantilla ?? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-cabina__nota">{tg(idioma, 'El full de la gestoria el prepara el Full trimestral.')}</p>}
       </section>
     </section>

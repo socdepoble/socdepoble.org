@@ -333,7 +333,7 @@ describe('el Quadre de comandament: «Factures que falten» i «Plantilla Gestor
     const cabina = pinta({ plantilla: <p>Node de la plantilla de prova</p> });
     const ultima = [...cabina.querySelectorAll('.sdp-gestoria-cabina__bloc')].at(-1);
     expect(within(ultima).getByText('Node de la plantilla de prova')).toBeTruthy();
-    expect(within(ultima).getByRole('heading', { level: 3 }).textContent).toBe('Plantilla Gestoria');
+    expect(within(ultima).getByRole('heading', { level: 4 }).textContent).toBe('Plantilla Gestoria');
   });
 });
 

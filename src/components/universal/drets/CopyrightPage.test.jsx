@@ -15,13 +15,13 @@ const pinta = (props = {}) => {
 };
 const desar = (ui) => ui.getByRole('button', { name: 'Desar autoria' });
 
-test('és una secció amb nom (h2, no h1) i el focus va al títol en obrir', () => {
+test('és una secció amb nom (h3 canònic IDEA-319, no h1/h2) i el focus va al títol en obrir', () => {
   const { container, ui } = pinta();
   const seccio = container.querySelector('section.sdp-drets');
-  const titol = ui.getByRole('heading', { level: 2, name: 'Drets d’autor' });
+  const titol = ui.getByRole('heading', { level: 3, name: 'Drets d’autor' });
   expect(seccio.getAttribute('aria-labelledby')).toBe(titol.id);
   expect(document.activeElement).toBe(titol);
-  expect(container.querySelector('h1')).toBeNull();
+  expect(container.querySelector('h1, h2')).toBeNull();
 });
 
 test('CC BY-SA desa el codi sense cap casella', () => {

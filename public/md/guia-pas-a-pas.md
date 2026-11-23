@@ -27,9 +27,9 @@ Al [Xat](https://socdepoble.org/xat) obris **converses directes** amb veïns, ca
 
 Les eines personals i d'associació —[El Rebost i La Nevera](https://socdepoble.org/plugin/rebost), el quadern quotidià [Salut · Cuidant dels Nostres](https://socdepoble.org/plugin/salut), [El Bar](https://socdepoble.org/plugin/tpv), l'[Arbre Genealògic](https://socdepoble.org/plugin/genealogia) amb frase de pas i el [Lector de notícies](https://socdepoble.org/plugin/rss)— funcionen en **proves obertes** guardant les dades de treball **al teu dispositiu**. En particular, la [Gestoria de Poble](https://socdepoble.org/plugin/gestoria) prepara un **esborrany trimestral** net per lliurar-lo a la teua **gestoria humana**, sense enviar res a l'AEAT ni substituir **cap programa fiscal homologat** ni **cap assessorament professional**.
 
-### Activar el Mode Sènior i conéixer els límits de l'Avisador
+### Activar el Mode Bancal i conéixer els límits de l'Avisador
 
-Des del [Perfil](https://socdepoble.org/el-meu-perfil), del [Panell de Control](https://socdepoble.org/control) i de [L'Avisador](https://socdepoble.org/plugin/avisador) pots encendre d'**un sol toc** el **Mode Sènior (Lectura Gran)**, que amplia el cos de **Noto Sans**, garantix dianes d'almenys **56 × 56 píxels** i eleva el contrast real a **10:1 AAA** sense talls a **320 i 359 píxels**. Quan uses [L'Avisador](https://socdepoble.org/plugin/avisador), recorda sempre que **només funciona amb la sessió oberta**, l'aplicació en marxa i el Xat disponible, i que **no substituïx el 112** ni la teleassistència.
+Des del [Perfil](https://socdepoble.org/el-meu-perfil), del [Panell de Control](https://socdepoble.org/control) i de [L'Avisador](https://socdepoble.org/plugin/avisador) pots encendre d'**un sol toc** el **Mode Bancal**, que amplia el cos de **Noto Sans**, garantix dianes d'almenys **56 × 56 píxels** i eleva el contrast real a **AAA (≥ 7:1)** sense talls a **320 i 359 píxels**. Quan uses [L'Avisador](https://socdepoble.org/plugin/avisador), recorda sempre que **només funciona amb la sessió oberta**, l'aplicació en marxa i el Xat disponible, i que **no substituïx el 112** ni la teleassistència.
 
 ## Vincles
 

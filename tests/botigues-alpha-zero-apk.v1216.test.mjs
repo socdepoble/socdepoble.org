@@ -218,7 +218,14 @@ test('v1.2.16 · iOS i preflight: alpha no és d\'iOS (TestFlight és el canal i
 /* ───────────── publica-tot.mjs: alpha i ZERO APK ───────────── */
 
 test('v1.2.16 · publica-tot: el pla d\'alpha puja l\'AAB a la pista alpha amb --desplega, iOS va a TestFlight (intern) i cap pas d\'APK', () => {
-  const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.16', build: '21', plataforma: 'totes', canal: 'alpha', env: NO_HI_ES });
+  /* v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · L'anunci de TestFlight a ard.json només entra al pla
+     amb la ronda amb Beta Testers oberta (SDP_RONDA_BETA_TESTERS=1): «TestFlight sí» es prova amb la ronda oberta, i
+     sense la variable el pla no el proposa. La pujada d'iOS a TestFlight (intern) hi és sempre.
+     v1.2.23 · L8-09 (Gauntlet R1) · La ronda va a l'entorn que rep resumOmnicanal(), no a process.env. */
+  const tancat = publica.resumOmnicanal(ARREL, { versio: '1.2.16', build: '21', plataforma: 'totes', canal: 'alpha', env: NO_HI_ES });
+  const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.16', build: '21', plataforma: 'totes', canal: 'alpha', env: { ...NO_HI_ES, SDP_RONDA_BETA_TESTERS: '1' } });
+  assert.ok(tancat.passos.some((pas) => pas.ordre === 'node scripts/botigues/puja-ios.mjs --versio 1.2.16 --build 21 --canal intern --compila'), 'ronda tancada: la pujada d\'iOS hi és');
+  assert.ok(!tancat.passos.some((pas) => pas.ordre.includes('--sincronitza-proves')), 'ronda tancada: cap anunci de TestFlight');
   const ordres = resum.passos.map((pas) => pas.ordre);
   assert.ok(ordres.includes('node scripts/botigues/publica-tot.mjs --versio 1.2.16 --build 21 --plataforma android --canal alpha --compila'), ordres.join('\n'));
   assert.ok(ordres.includes('node scripts/botigues/puja-android.mjs --versio 1.2.16 --build 21 --canal alpha --desplega --confirma=<«sí» del Mestre>'), ordres.join('\n'));

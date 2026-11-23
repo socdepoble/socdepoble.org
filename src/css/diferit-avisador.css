@@ -61,7 +61,7 @@
   .sdp-avisador__nota {
     margin-block: var(--sdp-space-3) 0;
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
   }
 
   /* Persones de confiança: títol i comptador a la mateixa fila quan hi caben. */
@@ -193,7 +193,7 @@
     grid-column: 1 / -1;
     margin: var(--sdp-space-1) 0 0;
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
   }
 
   .sdp-avisador__batec {

@@ -661,6 +661,7 @@ export function UniversalWorkspace({
   detailClassName = '',
   className = '',
   columnesInicials,
+  forcaColumnesInicials = false,
   inclouDescendents = false,
   compacte = false,
   mestreDetall = false,
@@ -759,7 +760,7 @@ export function UniversalWorkspace({
     mestreDetall && typeof mestreDetall === 'object' ? mestreDetall.clau : null,
     clauEspaiDeWorkspaceKey(model.workspaceKey)
   );
-  const persisteixColumnes = !compacte && espaiColumnes !== ESPAI_COMU;
+  const persisteixColumnes = !compacte && !forcaColumnesInicials && espaiColumnes !== ESPAI_COMU;
   const alAlternarColumna = useCallback((columna, plegada) => {
     if (persisteixColumnes) desaColumnaPlegada(espaiColumnes, columna, plegada);
   }, [persisteixColumnes, espaiColumnes]);

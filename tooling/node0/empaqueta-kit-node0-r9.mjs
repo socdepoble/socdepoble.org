@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { CAMINS } from '../lib/arrel.mjs';
 /** R9 CAS derived from reviewed R8 FD staging/publisher.
  * Sealed R3/R4/R5/R6/R7/R8 inputs are authenticated, never executed. */
 import fs from 'node:fs';
@@ -59,7 +60,7 @@ const fail=code=>{throw new Error(code);};
 const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
 const state=value=>value?{sha256:value.sha256,mode:value.mode}:null;
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
-const EXTRA_TARGETS_R9=new Set([".gitignore","_wiki_de_poble/02_saber/00_index_maquina.md","_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md","package.json","public/rag-index.json","tooling/gates/literals-secrets-node0.mjs","tooling/seo/build-social-manifest.test.mjs","tooling/seo/projeccio-publica.test.mjs","tooling/seo/publicacions-federades.test.mjs","tooling/tests/node-suite-manifest.json","tooling/tests/run-node-tests.mjs","tooling/vite/instantania-consola.test.mjs","scripts/node0/servidorNodePoble.mjs"]);
+const EXTRA_TARGETS_R9=new Set([".gitignore",`${CAMINS.wiki}/02_saber/00_index_maquina.md`,`${CAMINS.wiki}/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md`,"package.json","public/rag-index.json","tooling/gates/literals-secrets-node0.mjs","tooling/seo/build-social-manifest.test.mjs","tooling/seo/projeccio-publica.test.mjs","tooling/seo/publicacions-federades.test.mjs","tooling/tests/node-suite-manifest.json","tooling/tests/run-node-tests.mjs","tooling/vite/instantania-consola.test.mjs","scripts/node0/servidorNodePoble.mjs"]);
 const scope=name=>['src/','tests/','tooling/node0/'].some(prefix=>name.startsWith(prefix))||EXTRA_TARGETS_R9.has(name);
 function relative(value){
   if(typeof value!=='string'||!value||value.length>4096||value!==value.normalize('NFC')||value.startsWith('/')||value.includes('\\')||/[\p{Cc}\p{Cf}\u2028\u2029]/u.test(value))fail('invalid_path');

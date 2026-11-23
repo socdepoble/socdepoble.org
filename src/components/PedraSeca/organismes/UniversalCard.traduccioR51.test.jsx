@@ -46,6 +46,23 @@ const pinta = (extra) => render(
 ).container;
 const botoTraduir = (arrel) => arrel.querySelector('[aria-label="Traduir Fira de l’Oli"]');
 
+/* R32.45 · Oracle de privadesa transferit del hook latent retirat a la
+   targeta que sí que pinta el producte. No es connecta cap mòdul orfe. */
+test.each([
+  { objecte: { visibility: 'private' } },
+  ...['nota', 'carpeta', 'categoria', 'etiqueta'].map(tipus => ({ objecte: { tipus, id: 'privat', titol: 'Privat' } })),
+  { traduccio: false }
+])('targeta real protegida %j: render vàlid, cap petició de traducció ni menú', props => {
+  const arrel = pinta(props);
+  expect(arrel.querySelector('.sp-card-title')?.textContent).toBe('Fira de l’Oli');
+  const boto = botoTraduir(arrel);
+  if (boto) act(() => boto.click());
+  expect(arrel.querySelector('[role="menu"]')).toBeNull();
+  expect(motor.tradueix).not.toHaveBeenCalled();
+  expect(motor.comprovaPagina).not.toHaveBeenCalled();
+  expect(mocks.tradueixTot).not.toHaveBeenCalled();
+});
+
 test.each([
   ['none', 'none'],
   ['la revisada', 'curated_5_langs'],

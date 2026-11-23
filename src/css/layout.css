@@ -402,7 +402,11 @@ header.bar-black {
 
 /* Botó logo: només visible en mòbil (obri la sidebar) o en escriptori tancat */
 .mobile-logo-wrapper { display: none; cursor: pointer; }
-.mobile-logo-wrapper img { width: 130px; height: auto; max-width: 130px; object-fit: contain; }
+/* v1.2.23 · L3-10 (ordre del Mestre 261123) · Un únic tram: el logotip de la barra negra fa 38 px d'alt a tot el compacte
+   (300×78 → 146×38, el d'IDEA-323.2), no només fins a 480 px. Abans ací feia 130 px d'ample (130×34) i, de 480 a 481 px,
+   el logotip minvava 16 px d'un salt. Els dos blocs ≤ 480 px de davall continuen manant (height: auto amb el sostre de
+   38 px i max-width: 100%): fins on hi cap, el mateix 146×38; més estret, baixa sencer. Ho mesura logotipSenseSalt.l3_10.capes.test.js. */
+.mobile-logo-wrapper img { width: auto; height: 38px; max-width: 100%; object-fit: contain; }
 
 
 /* T20 (ordre del Mestre, 260927 nit) · Dos packs i un botó, no tres grups a

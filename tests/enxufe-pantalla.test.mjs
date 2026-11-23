@@ -305,7 +305,10 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   /* Onada v1.2.21 · La 1.1.29 obri ara el registre (el visor de la 1.2.21 i les lectures amb límit de R32.36), i la
      1.1.28 continua darrere, íntegra. */
   /* Onada v1.2.22 · La 1.1.30 obri ara el registre (el visor de la 1.2.22), i la 1.1.29 continua darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.30</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.22 de Sóc de Poble'), 'v1.2.22: la 1.1.30 obri el registre');
+  /* v1.2.23 · C (ordre del Mestre 261123) · La 1.1.31 obri ara el registre (el visor de la 1.2.23), i la 1.1.30 continua
+     darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.31</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.23 de Sóc de Poble'), 'v1.2.23: la 1.1.31 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.30</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.22 de Sóc de Poble'), 'v1.2.23: la 1.1.30 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.29</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.21 de Sóc de Poble'), 'v1.2.22: la 1.1.29 es queda al registre');
   assert.ok(changelog.includes('<li><strong>Lectures amb límit:</strong> el connector llig els seus fitxers locals'), 'v1.2.21: la 1.1.29 diu els límits de lectura');
   assert.ok(changelog.includes('</ul><h4>1.1.28</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.20 de Sóc de Poble'), 'v1.2.21: la 1.1.28 es queda al registre');

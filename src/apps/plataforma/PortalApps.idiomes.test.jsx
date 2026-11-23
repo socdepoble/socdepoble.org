@@ -91,7 +91,7 @@ describe('D11 · PortalApps en les 5 llengües oficials (ca, es, en, eu, gl)', (
 
     const panell = container.querySelector('section.sdp-app-portal__testers');
     expect(panell).not.toBeNull();
-    expect(within(panell).getByRole('heading', { level: 2, name: tx.testersTitol })).toBeTruthy();
+    expect(within(panell).getByRole('heading', { level: 3, name: tx.testersTitol })).toBeTruthy();
     expect(panell.querySelector('.sdp-app-portal__testers-text').textContent).toBe(tx.testersCos);
     expect(within(panell).getByRole('link', { name: tx.testersGrup })).toBeTruthy();
     expect(within(panell).getByRole('link', { name: tx.testersAdmin })).toBeTruthy();

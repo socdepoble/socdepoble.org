@@ -7,7 +7,12 @@ import { Llinatge } from '../Llinatge.jsx';
    registre i cap espècimen no els pintava: la porta no els veia. Les caixes
    de mostra només fan visible l'espai; el que es prova és el contenidor.
    IDEA-26 i IDEA-27 (ordre del Mestre, 261025) · El seté, Accions: el bloc
-   dels botons, que va sempre després del text que els explica. */
+   dels botons, que va sempre després del text que els explica.
+   v1.2.23 · R2E-07 (Gauntlet R2) · Centre ja no és l'amplada de lectura: des
+   de R32.47 (lot 01 de Gemini) .sdp-centre és width: 100% amb box-sizing:
+   border-box i no aplica --sdp-measure (components.css). La fila del
+   contracte, el títol i el paràgraf de la mostra diuen això, i no que el
+   paràgraf no passa mai de l'amplada de lectura. */
 
 const CAIXES = Object.freeze(['Tomaques', 'Pebreres', 'Albergínies']);
 const caixes = (noms = CAIXES) => noms.map((nom) => <div key={nom} className="sdp-especimen__caixa">{nom}</div>);
@@ -24,7 +29,7 @@ export default function EspecimenComposicio() {
           ['Fila', '{ gap = 4, wrap = true, align = "center", justify = "flex-start", as, className }', '—', 'Fills de costat; salten de línia si no caben.'],
           ['Graella', '{ gap = 4, columns = "auto", minWidth = "300px", as, className }', '—', 'Amb columns="auto", tantes columnes com càpiguen de minWidth; amb un número, columnes fixes.'],
           ['Costat', '{ width = "250px", gap = 4, reversed = false, className }', '—', 'Dos fills: el primer fa de barra lateral de width; reversed la passa a la dreta.'],
-          ['Centre', '{ className }', '—', 'Centrat amb l’amplada de lectura (--sdp-measure).'],
+          ['Centre', '{ className }', '—', 'Contenidor neutre a tota l’amplada de la columna; des de R32.47 no aplica --sdp-measure.'],
           ['Superficie', '{ eleva = 1, radi = "m", as, className }', '—', 'Fons de superfície, ombra de token (1–3) i radi de token.'],
           ['Accions', '{ as = "div", className, ref }', '—', 'Els botons, després del text que els explica: centrats, a 12px entre ells i a 24px del text de dalt i del de baix.'],
         ]}
@@ -48,9 +53,9 @@ export default function EspecimenComposicio() {
           <div className="sdp-especimen__caixa">Barra lateral</div>
           <div className="sdp-especimen__caixa">Contingut principal, que ocupa la resta de l’amplada.</div>
         </Costat>
-        <h4>Centre (amplada de lectura)</h4>
+        <h4>Centre (amplada completa)</h4>
         <Centre>
-          <p className="sdp-especimen__caixa">Un paràgraf de lectura no passa mai de l’amplada de lectura, encara que la columna siga molt ampla: així la vista no es perd en saltar de línia.</p>
+          <p className="sdp-especimen__caixa">El contenidor ocupa tota l’amplada de la columna: des de R32.47 ja no s’hi aplica la mesura de lectura (--sdp-measure).</p>
         </Centre>
         <h4>Superficie (eleva 1, 2 i 3)</h4>
         <Fila gap={4}>

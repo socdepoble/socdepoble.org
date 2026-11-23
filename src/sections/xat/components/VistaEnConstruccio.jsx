@@ -48,7 +48,7 @@ const noop = () => {};
  */
 export function FilaDeTitolVista({ titol, icona = null, icones = CAP, accio = null, esquerra = null, inert }) {
   return (
-    <AppGridColumn esDark={true} titol={titol} icona={icona} esquerra={esquerra}>
+    <AppGridColumn esDark={true} titol={esquerra ? null : titol} icona={esquerra ? null : icona} esquerra={esquerra}>
       {(icones || CAP).map(({ etiqueta, Icona }) => (
         <button key={etiqueta} type="button" className="sdp-xat-icona sdp-xat-inert" aria-label={etiqueta} title={etiqueta} {...inert}>
           <Icona size={24} aria-hidden="true" focusable="false" />

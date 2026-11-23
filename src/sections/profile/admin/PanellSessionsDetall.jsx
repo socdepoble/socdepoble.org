@@ -4,17 +4,14 @@ import { useLlenguaDeLaUI } from '../useLlenguaDeLaUI.js';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import * as port from '../../../data/backendPort.js';
 import { codiDErrorResumSessions } from '../../../data/resumSessionsDispositius.js';
-import { MIGRACIO_DETALL_SESSIONS } from '../../../data/sessionsDispositius.js';
-import { CAMINS_PANELL, textErrorResum } from './usuarisDispositiusBotigues.js';
+import { CAMINS_PANELL } from './usuarisDispositiusBotigues.js';
 import cssAdminTaxonomia from '../../../css/diferit-admin-taxonomia.css?inline';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import { textosAdminEntitats } from './i18nAdminEntitats.js';
 
-/* v1.2.18 · Sostre d'arrencada (Gauntlet R1, L5-01) · Els fills .sdp-admin-taxonomia__* viatgen en un full diferit:
-   cada etiqueta que en porta una classe l'adopta abans de pintar amb este ref estable (clau literal per a la
-   Porta Vocabulari i el tractor de fulls diferits). */
 const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 const consultaDelPort = (entrada, config) => port.adminLlistaSessionsDispositius(entrada, config);
+
 export default function PanellSessionsDetall({ consulta = consultaDelPort, nativaIos = false }) {
   const llenguaUI = useLlenguaDeLaUI();
   const tx = textosAdminEntitats(llenguaUI);
@@ -41,24 +38,87 @@ export default function PanellSessionsDetall({ consulta = consultaDelPort, nativ
       if (numero === generacio.current && error.name !== 'AbortError') setEstat({ fase: 'error', codi: codiDErrorResumSessions(error) });
     }
   };
-  const camins = CAMINS_PANELL.filter(c => !(nativaIos && c.nomenaAltres));
+  const camins = CAMINS_PANELL
+    .filter((c) => !(nativaIos && c.nomenaAltres))
+    .map((c) => ({ ...c, titolLocalitzat: tx.caminsTitols?.[c.cami] || c.titol }));
   const dadesVisibles = estat.actor === usuariId ? estat.dades : null;
-  const files = dadesVisibles?.files.filter(f => !(nativaIos && ['app_android','web_android'].includes(f.cami))) ?? [];
-  return <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={tx.directoriSessionsRegio}>
-    <h3>Directori d’usuaris i dispositius</h3>
-    <p>Persones i dispositius amb activitat en els últims 14 dies. Consulta restringida a superadmin amb segon factor; cada consulta queda registrada al servidor. Només hi apareixen comptes amb consentiment vigent i sense baixa demanada, amb el correu emmascarat. El canal és una estimació del navegador; no es mostra cap token, adreça IP, agent complet ni identificador de sessió o de persona.</p>
-    <form onSubmit={consultaAra}>
-      <Camp etiqueta="Filtra per nom o àlies"><CampText value={cerca} maxLength={120} onChange={e => setCerca(e.target.value)} /></Camp>
-      <Camp etiqueta="Filtra per dispositiu"><Selector value={cami} onChange={e => setCami(e.target.value)} opcions={[{ valor: 'tots', etiqueta: 'Tots els dispositius' }, ...camins.map(c => ({ valor: c.cami, etiqueta: c.titol }))]} /></Camp>
-      <div className="sdp-admin-actions-inline"><Boto type="submit" carregant={estat.fase === 'carregant'}>Consulta el directori</Boto></div>
-    </form>
-    <div aria-live="polite">
-      {estat.fase === 'inicial' ? <p>Encara no s’ha consultat el directori.</p> : null}
-      {estat.fase === 'error' ? <Alerta to="avis">{estat.codi === 'sense-migracio' ? `El directori requerix la migració ${MIGRACIO_DETALL_SESSIONS}, encara pendent de verificació al servidor.` : textErrorResum(estat.codi)}</Alerta> : null}
-      {estat.fase === 'dades' && dadesVisibles ? <>
-        <p>{nativaIos ? `${files.length} combinacions de persona i dispositiu visibles en esta consulta.` : `${files.length} de ${estat.dades.total} combinacions de persona i dispositiu coincidents.`} Es mostren com a màxim 200 combinacions per consulta; concreta els filtres per buscar-ne més. Hora: <time dateTime={estat.dades.consultatA}>{new Date(estat.dades.consultatA).toLocaleString(tx.locale)}</time>.</p>
-        {files.length ? <div className="sdp-admin-sessions"><table className="sdp-admin-table"><caption>Usuaris i dispositius amb activitat recent</caption><thead><tr><th scope="col">Usuari</th><th scope="col">Dispositiu</th><th scope="col">Última activitat</th></tr></thead><tbody>{files.map(f => <tr key={f.clau}><td>{f.nom || 'Nom no informat'}<br />{f.correuMascarat ?? 'Correu no disponible'}</td><td>{camins.find(c => c.cami === f.cami)?.titol}<br /><small>{f.sessions === 1 ? '1 sessió' : `${f.sessions} sessions`}</small></td><td><time dateTime={f.activitat}>{new Date(f.activitat).toLocaleString(tx.locale)}</time></td></tr>)}</tbody></table></div> : <p>No hi ha sessions que coincidisquen amb estos filtres.</p>}
-      </> : null}
-    </div>
-  </section>;
+  const files = dadesVisibles?.files.filter((f) => !(nativaIos && ['app_android', 'web_android'].includes(f.cami))) ?? [];
+  return (
+    <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__panel" aria-label={tx.directoriSessionsRegio}>
+      <h3>{tx.sessionsTitol}</h3>
+      <p>{tx.sessionsIntro}</p>
+      <form onSubmit={consultaAra}>
+        <Camp etiqueta={tx.sessionsFiltraNom}>
+          <CampText value={cerca} maxLength={120} onChange={(e) => setCerca(e.target.value)} />
+        </Camp>
+        <Camp etiqueta={tx.sessionsFiltraDispositiu}>
+          <Selector
+            value={cami}
+            onChange={(e) => setCami(e.target.value)}
+            opcions={[
+              { valor: 'tots', etiqueta: tx.sessionsTotsDispositius },
+              ...camins.map((c) => ({ valor: c.cami, etiqueta: c.titolLocalitzat }))
+            ]}
+          />
+        </Camp>
+        <div className="sdp-admin-actions-inline">
+          <Boto type="submit" carregant={estat.fase === 'carregant'}>{tx.sessionsBotoConsulta}</Boto>
+        </div>
+      </form>
+      <div aria-live="polite">
+        {estat.fase === 'inicial' ? <p>{tx.sessionsInicial}</p> : null}
+        {estat.fase === 'error' ? (
+          <Alerta to="avis">
+            {estat.codi === 'sense-migracio' ? tx.sessionsSenseMigracio : tx.errorResum(estat.codi)}
+          </Alerta>
+        ) : null}
+        {estat.fase === 'dades' && dadesVisibles ? (
+          <>
+            <p>
+              {nativaIos ? tx.sessionsResumIos(files.length) : tx.sessionsResumWeb(files.length, estat.dades.total)}
+              {' '}
+              {tx.sessionsMaximNota}
+              {' '}
+              <time dateTime={estat.dades.consultatA}>{new Date(estat.dades.consultatA).toLocaleString(tx.locale)}</time>.
+            </p>
+            {files.length ? (
+              <div className="sdp-admin-sessions">
+                <table className="sdp-admin-table">
+                  <caption>{tx.sessionsCaption}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{tx.sessionsColUsuari}</th>
+                      <th scope="col">{tx.sessionsColDispositiu}</th>
+                      <th scope="col">{tx.sessionsColActivitat}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {files.map((f) => (
+                      <tr key={f.clau}>
+                        <td>
+                          {f.nom || tx.sessionsNomNoInformat}
+                          <br />
+                          {f.correuMascarat ?? tx.sessionsCorreuNoDisponible}
+                        </td>
+                        <td>
+                          {camins.find((c) => c.cami === f.cami)?.titolLocalitzat}
+                          <br />
+                          <small>{tx.sessionsNombre(f.sessions)}</small>
+                        </td>
+                        <td>
+                          <time dateTime={f.activitat}>{new Date(f.activitat).toLocaleString(tx.locale)}</time>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p>{tx.sessionsCapCoincidencia}</p>
+            )}
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
 }

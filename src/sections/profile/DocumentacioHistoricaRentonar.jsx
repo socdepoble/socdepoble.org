@@ -86,7 +86,7 @@ export default function DocumentacioHistoricaRentonar() {
           <li><Insignia to="exit">{`Fundada el ${FITXA_REGISTRAL_RENTONAR.dataConstitucio}`}</Insignia></li>
           <li><Insignia to="neutre">{`CIF ${FITXA_REGISTRAL_RENTONAR.cifEntitat}`}</Insignia></li>
         </ul>
-        <h2>Arxiu Històric i Constitutiu d’El Rentonar (1994–2026)</h2>
+        <h3>Arxiu Històric i Constitutiu d’El Rentonar (1994–2026)</h3>
         <p className="sdp-muted">
           {FITXA_REGISTRAL_RENTONAR.denominacioOficial} · Memòria viva de defensa forestal, custòdia etnobotànica i
           patrimoni públic de La Torre de les Maçanes.
@@ -126,7 +126,7 @@ export default function DocumentacioHistoricaRentonar() {
         <div id="panel-rentonar-historia" role="tabpanel" aria-labelledby="tab-rentonar-historia">
           <div lang={langDoc}>
             <div className="sdp-subtargeta">
-              <h3>Fitxa registral i institucional pública</h3>
+              <h4>Fitxa registral i institucional pública</h4>
               {/* Onada R29 · Encaix local de la fitxa a mòbil (modules.css). */}
               <dl className="sdp-rentonar-doc__fitxa">
                 <dt>Denominació estatutària</dt>
@@ -146,10 +146,10 @@ export default function DocumentacioHistoricaRentonar() {
               </dl>
             </div>
 
-            <h3>Cronologia documental (1994–2026)</h3>
+            <h4>Cronologia documental (1994–2026)</h4>
             {CRONOLOGIA_HISTORICA_RENTONAR.map((fita) => (
               <article key={fita.id} className="sdp-subtargeta">
-                <h4>{fita.titol}</h4>
+                <h5>{fita.titol}</h5>
                 <p>{fita.periode}</p>
                 <p>{fita.resum}</p>
               </article>
@@ -175,7 +175,7 @@ export default function DocumentacioHistoricaRentonar() {
           <p className="sdp-muted">{ESTATUTS_VIGENTS_RENTONAR.marcLegal}</p>
 
           <div className="sdp-subtargeta">
-            <h3>Article 4 · Fins estatutaris</h3>
+            <h4>Article 4 · Fins estatutaris</h4>
             <ul>
               {ESTATUTS_VIGENTS_RENTONAR.finsArticle4.map((fi) => (
                 <li key={fi}>{fi}</li>
@@ -184,7 +184,7 @@ export default function DocumentacioHistoricaRentonar() {
           </div>
 
           <div className="sdp-subtargeta">
-            <h3>Article 5 · Activitats associatives</h3>
+            <h4>Article 5 · Activitats associatives</h4>
             <ul>
               {ESTATUTS_VIGENTS_RENTONAR.activitatsArticle5.map((act) => (
                 <li key={act}>{act.trim()}</li>
@@ -193,10 +193,10 @@ export default function DocumentacioHistoricaRentonar() {
           </div>
 
           <div className="sdp-subtargeta">
-            <h3>Capítols dels Estatuts</h3>
+            <h4>Capítols dels Estatuts</h4>
             {ESTATUTS_VIGENTS_RENTONAR.capitols.map((bloc) => (
               <Fragment key={bloc.capitol}>
-                <h4>{bloc.capitol}</h4>
+                <h5>{bloc.capitol}</h5>
                 <p>{bloc.contingut}</p>
               </Fragment>
             ))}
@@ -212,12 +212,12 @@ export default function DocumentacioHistoricaRentonar() {
             </Alerta>
 
             <div className="sdp-subtargeta">
-              <h3>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.titol}</h3>
+              <h4>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.titol}</h4>
               <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.subtitol}</p>
               <p>{PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.encapcalament}</p>
               {PLANTILLA_ACTA_ASSEMBLEA_RENTONAR.ordreDelDia.map((item) => (
                 <Fragment key={item.punt}>
-                  <h4>{item.punt}</h4>
+                  <h5>{item.punt}</h5>
                   <p>{item.acord}</p>
                 </Fragment>
               ))}

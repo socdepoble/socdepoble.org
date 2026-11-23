@@ -126,8 +126,8 @@ test.each(SLUGS_XIFRES)('/consola/xifres/%s: H1 = títol de la targeta, Sóc de 
   await screen.findAllByText('Sóc de Poble en xifres');
   const targeta = [...xifresDelTauler().querySelectorAll('article.sp-card')]
     .find((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href') === rutaXifra(slug));
-  const titol = targeta.querySelector('h3').textContent;
-  const subtitol = targeta.querySelector('h4').textContent;
+  const titol = targeta.querySelector('.sp-card-title').textContent;
+  const subtitol = targeta.querySelector('.sp-card-subtitle').textContent;
   const entradeta = targeta.querySelector('.sp-card-text > p').textContent;
   expect(titol).toBe(xifraDelMas(slug, MAPA).titol);
 

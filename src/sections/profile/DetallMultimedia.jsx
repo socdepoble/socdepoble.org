@@ -24,6 +24,10 @@ import {
   avatarDeLaBarraDeFitxa, avatarDeLaFitxa, deNom, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
 } from './fitxaDePerfil.js';
 import { textosPerfilA11y } from './i18nPerfilA11y.js';
+/* v1.2.23 · L2-01 (Gauntlet R1) · La guarda de les imatges d'identitat i els seus avisos en cinc llengües. */
+import { ESTAT_FOTO_IDENTITAT, esCampDIdentitat, revisaFotoDIdentitat } from './fotoNetaDIdentitat.js';
+import { quinaImatgeDIdentitat, textosFotoNetaIdentitat } from './i18nFotoNetaIdentitat.js';
+import { useLlenguaDeLaUI } from './useLlenguaDeLaUI.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    MULTIMÈDIA · les fotos de cada actor del Perfil, de veres
@@ -647,6 +651,8 @@ export function DetallMultimedia({ identitat, config }) {
   useFullDiferit(arrelPerfilRef, 'perfil-shell', cssPerfilShell);
   const t = useTraductorOpcional();
   const txPerfil = textosPerfilA11y({ t });
+  /* v1.2.23 · L2-01 (Gauntlet R1) · La llengua dels avisos de la guarda d'identitat (i18nFotoNetaIdentitat.js). */
+  const llengua = useLlenguaDeLaUI();
   const perfil = usePerfilOpcional();
   const { mediaItems } = useMultimedia();
   const dades = useMemo(() => identitat?.dades || {}, [identitat]);
@@ -824,13 +830,33 @@ export function DetallMultimedia({ identitat, config }) {
   }, [fiDePosa]);
 
   /* camp: 'logoImage' (l'avatar o el logotip) o 'heroImage' (la capçalera),
-     a la columna de la seua mena (valorPerDesar: CAMPS_FITXA). */
+     a la columna de la seua mena (valorPerDesar: CAMPS_FITXA).
+     v1.2.23 · L2-01 (Gauntlet R1) · Una imatge d'identitat (l'avatar o el logotip de qualsevol mena, la capçalera
+     d'una persona: esCampDIdentitat) va sempre neta. Abans de desar res, es lligen els bytes de la foto
+     (revisaFotoDIdentitat): si porta dades (la ubicació i la data d'una foto del cos del Perfil o d'una còpia del
+     Mur, les dades de la càmera d'una capçalera d'entitat…; Gauntlet R2: el bloc buit que posa ImageIO a les fotos de
+     Safari i de l'iPhone no compta), o si no s'ha pogut comprovar, no es desa ni es
+     toca l'esborrany, i l'avís diu on pujar-la perquè isca neta. La foto de Google de la sessió no és nostra: com
+     abans. La capçalera d'una organització o d'un agent no és identitat (conserva les dades per disseny). */
   const posa = useCallback(async (entrada, camp, { enVisor = false } = {}) => {
     if (!guardarCampPerfil || !identitat || !potEditar) return;
     setDesant(true);
     setMissatge(null);
     const avatar = camp === 'logoImage';
     try {
+      if (esCampDIdentitat(camp, mena)) {
+        const estat = await revisaFotoDIdentitat(entrada.font);
+        /* v1.2.23 · L2-01 (Gauntlet R2) · Només NETA i DE_FORA es desen (fail-closed). Una foto que no es podrà
+           comprovar mai (NO_COMPROVABLE) no diu «Torna-ho a provar», sinó que es puge des de la fitxa. */
+        if (estat !== ESTAT_FOTO_IDENTITAT.NETA && estat !== ESTAT_FOTO_IDENTITAT.DE_FORA) {
+          const avisos = textosFotoNetaIdentitat(llengua);
+          let avis = avisos.noComprovada;
+          if (estat === ESTAT_FOTO_IDENTITAT.AMB_DADES) avis = avisos[quinaImatgeDIdentitat(camp, mena)];
+          else if (estat === ESTAT_FOTO_IDENTITAT.NO_COMPROVABLE) avis = avisos.noComprovable;
+          if (muntat.current) setMissatge({ to: 'error', text: avis });
+          return;
+        }
+      }
       const { columna, valor } = valorPerDesar(mena, camp, entrada.font);
       /* L'esborrany del camp a la cua guanyaria a la tria: primer es descarta. */
       if (refCua) cuaDesament.descarta(refCua, camp);
@@ -852,7 +878,7 @@ export function DetallMultimedia({ identitat, config }) {
         setFiDePosa((n) => n + 1);
       }
     }
-  }, [guardarCampPerfil, identitat, potEditar, refCua, mena, textos]);
+  }, [guardarCampPerfil, identitat, potEditar, refCua, mena, textos, llengua]);
 
   const confirmaEsborrat = useCallback(async () => {
     /* Només la persona esborra, i només amb la comprovació d'ús del servidor. */

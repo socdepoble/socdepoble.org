@@ -205,7 +205,7 @@ export function BlocTargetes({
   if (!targetes.length) return null;
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__bloc" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-tauler__titol">{titol}</h2>
+      <h3 id={id} className="sdp-gestoria-tauler__titol">{titol}</h3>
       {vista === 'comprimida' ? (
         <TaulaComprimida titol={titol} targetes={targetes} visible={visible} onObri={onObri} idioma={idioma} />
       ) : (
@@ -457,7 +457,7 @@ export function PaginaTargeta({
       onBack={onTorna} refTitol={refTitol} {...barraPrivada(onAvis, idioma)}>
       {avis}
       <section ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-xifra`}>
-        <h2 id={`${id}-xifra`}>{tg(idioma, 'La xifra')}</h2>
+        <h3 id={`${id}-xifra`}>{tg(idioma, 'La xifra')}</h3>
         <p className="sdp-gestoria-tauler__xifra"><Xifra xifra={targeta.xifra} visible={visible} idioma={idioma} /></p>
         {targeta.xifra ? null : <p ref={adoptaEstilsDiferits}>{targeta.senseXifra}</p>}
       </section>
@@ -482,7 +482,7 @@ export function PaginaTargeta({
         </ul>
       ) : null}
       <section className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-font`}>
-        <h2 id={`${id}-font`}>{tg(idioma, 'D’on ix')}</h2>
+        <h3 id={`${id}-font`}>{tg(idioma, 'D’on ix')}</h3>
         <p>{targeta.font}</p>
       </section>
     </PaginaApp>

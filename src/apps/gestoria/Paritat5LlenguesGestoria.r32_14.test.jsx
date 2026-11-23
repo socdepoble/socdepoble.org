@@ -117,11 +117,11 @@ describe('Onada R32.14 · T2 (D03 · T3-UI-03) · Gestoria interna 100 % en les 
       externalConfig: { language: lang }
     });
     expect(await screen.findByRole('heading', { level: 1, name: h1Esperat })).toBeTruthy();
-    expect(await screen.findByRole('heading', { level: 2, name: blocEsperat })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 3, name: blocEsperat })).toBeTruthy();
 
     const botoCabina = screen.getByRole('button', { name: cabinaEsperada });
     fireEvent.click(botoCabina);
-    expect(await screen.findByRole('heading', { level: 2, name: cabinaEsperada })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 3, name: cabinaEsperada })).toBeTruthy();
 
     if (lang !== 'ca') {
       for (const fuita of FUITES_VALENCIANES) {
@@ -177,11 +177,11 @@ describe('Onada R32.14 · T2 (D03 · T3-UI-03) · Gestoria interna 100 % en les 
         perfil={{ llig: async () => ({ config: null, llegat: null, copia: null }) }}
       />
     );
-    expect(await screen.findByRole('heading', { level: 2, name: `1. ${TEXTOS_FACTURACIO[lang].pas1}` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: `2. ${TEXTOS_FACTURACIO[lang].pas2}` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: `3. ${TEXTOS_FACTURACIO[lang].pas3}` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: `4. ${TEXTOS_FACTURACIO[lang].pas4}` })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: `5. ${TEXTOS_FACTURACIO[lang].pas5}` })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 3, name: `1. ${TEXTOS_FACTURACIO[lang].pas1}` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `2. ${TEXTOS_FACTURACIO[lang].pas2}` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `3. ${TEXTOS_FACTURACIO[lang].pas3}` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `4. ${TEXTOS_FACTURACIO[lang].pas4}` })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: `5. ${TEXTOS_FACTURACIO[lang].pas5}` })).toBeTruthy();
     if (lang !== 'ca') {
       for (const fuita of FUITES_VALENCIANES) expect(rFact.container.textContent).not.toContain(fuita);
     }

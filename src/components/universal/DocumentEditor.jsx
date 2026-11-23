@@ -44,8 +44,9 @@ import { buidaLlavorVerge, esLlavorVerge, llistaDeLlavors } from './richText/use
 /* Gauntlet 261101 · X-C-notes (C-09) · La guia del cos, pel traductor. */
 import { traduixGuia } from './richText/extensions/guiaCos.js';
 import { useUIActions } from '../../app/contexts/UIContext';
-/* P1-64 · La casella de l'EXIF d'una foto de publicació (la del hero) i la precisió de sèrie. */
-import { CasellaExif } from './enquadrament/DialegEnquadrament.jsx';
+/* P1-64 · La casella de l'EXIF d'una foto de publicació (la del hero) i la precisió de sèrie.
+   v1.2.23 · L2-03 (Gauntlet R1) · I l'avís d'un rebuig amb l'interruptor «Amaga el lloc» a la vista. */
+import { CasellaExif, TEXTOS_ENQUADRAMENT, avisDeRebuigAmbInterruptor } from './enquadrament/DialegEnquadrament.jsx';
 import { PRECISIO_PER_DEFECTE_PUBLICACIO } from './enquadrament/geolocalitzacio.js';
 /* T3.2 (marató 261101) · La fitxa de memòria oral de «Proposa Card». */
 import { FitxaMemoriaOral } from './FitxaMemoriaOral.jsx';
@@ -307,6 +308,23 @@ function campsQueTornen(actual, de, a) {
  *                            // del cos hi entra neta, com sempre. Sense la
  *                            // clau, la crida i el DOM de sempre. Les fotos
  *                            // enganxades o arrossegades entren sempre netes.
+ *                            // v1.2.23 · IDEA-331 (ordre del Mestre 261123) ·
+ *                            // DEROGAT «el text del Perfil no la porta»: el
+ *                            // cos del Perfil també la passa. Amb ubicació,
+ *                            // la casella és l'interruptor «Amaga el lloc»
+ *                            // (CasellaExif), apagat de sèrie, amb l'avís del
+ *                            // Mestre. Les enganxades continuen netes.
+ *   exifTriatEnPujar: Boolean // Opcional (v1.2.23 · costura privacitat del
+ *                            // cos del Perfil, IDEA-331). Només amb
+ *                            // fotosDePublicacio: les fotos del cos pugen
+ *                            // directes a l'espai públic (el Perfil, sense la
+ *                            // promoció de les Notes), i l'ordre «/» Imatge hi
+ *                            // posa ja la tria de la còpia pública
+ *                            // (preparaTiffTriat: la ubicació i la data, mai
+ *                            // la càmera, la sèrie ni un nom). L'avís de
+ *                            // l'interruptor és el de les Notes. Sense la
+ *                            // clau, el bloc preparat i la tria a la
+ *                            // promoció, com abans. No passa per ...rest.
  *   proposaCard: (contingut, { previsio }) => { motiu, camps, cos } // Opcional
  *                            // (IDEA-41, Mestre 261028; Bloc H). El motor pur
  *                            // del consumidor (el Bloc: sections/notes/
@@ -439,7 +457,8 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
   );
 }
 export function DocumentEditor({ adapter, onToast }) {
-  const { t } = useUIActions();
+  /* v1.2.23 · L2-03 (Gauntlet R1) · `language`, del mateix context d'accions: cap subscripció nova a l'estat de la UI. */
+  const { t, language } = useUIActions();
   const { 
     document, 
     updateLocal, 
@@ -493,6 +512,9 @@ export function DocumentEditor({ adapter, onToast }) {
     edicioAvancada = false,
     /* P1-64 (261028) · la pregunta de l'EXIF de les fotos del cos (false: netes, com sempre). */
     fotosDePublicacio = false,
+    /* v1.2.23 · costura privacitat del cos del Perfil (IDEA-331) · true: les fotos del
+       cos pugen ja amb la tria de la còpia pública (el Perfil). Sense, el d'abans. */
+    exifTriatEnPujar = false,
     /* IDEA-41 (261028) · el motor de «🎴 Proposa Card» (null: cap botó). */
     proposaCard = null,
     /* T3.2 (261101) · la fitxa de memòria oral del mateix clic (null: cap). */
@@ -539,9 +561,25 @@ export function DocumentEditor({ adapter, onToast }) {
      imatge). */
   const onToastRef = useRef(onToast);
   onToastRef.current = onToast;
+  /* v1.2.23 · L2-03 (Gauntlet R1) · La tria de l'última pregunta de l'EXIF del cos ({ dades, conserva }), la llengua
+     de la interfície i el traductor, per una ref (avisaDelCos és estable). Si l'ordre «/» Imatge avisa que la ubicació
+     i la data no es poden posar a la foto (ERROR_EXIF_NO_CONSERVABLE, richText/extensions) i la pregunta ensenyava
+     l'interruptor «Amaga el lloc» apagat, l'avís diu que s'encenga, no que es desmarque una casella que no s'hi veia
+     (avisDeRebuigAmbInterruptor). La tria es gasta amb el primer avís; qualsevol altre missatge, tal qual. */
+  const triaDelCosRef = useRef(null);
+  const idiomaRef = useRef(language);
+  idiomaRef.current = language;
+  const tRef = useRef(t);
+  tRef.current = t;
   const avisaDelCos = useCallback((missatge, tipus) => {
-    if (typeof onToastRef.current === 'function') onToastRef.current(missatge, tipus);
-    else console.warn(`[slash] ${missatge}`);
+    const tria = triaDelCosRef.current;
+    triaDelCosRef.current = null;
+    const text = tria ? avisDeRebuigAmbInterruptor(missatge, {
+      dades: tria.dades, conserva: tria.conserva, idioma: idiomaRef.current,
+      lloc: typeof tRef.current === 'function' ? tRef.current(...TEXTOS_ENQUADRAMENT.amagaLloc) : TEXTOS_ENQUADRAMENT.amagaLloc[1],
+    }) : missatge;
+    if (typeof onToastRef.current === 'function') onToastRef.current(text, tipus);
+    else console.warn(`[slash] ${text}`);
   }, []);
   /* P1-64 (pla 261028_1526 §3.1.1) · La pregunta de l'EXIF d'una foto del cos
      (l'ordre «/» Imatge): { exif, conserva, precisio } mentre és oberta, i la
@@ -558,6 +596,7 @@ export function DocumentEditor({ adapter, onToast }) {
   const demanaExifDelCos = useCallback((_original, exif) => new Promise((resol) => {
     preguntaExifRef.current?.(null);
     preguntaExifRef.current = resol;
+    triaDelCosRef.current = null;
     setPreguntaExif({ exif, conserva: true, precisio: PRECISIO_PER_DEFECTE_PUBLICACIO });
   }), []);
   useEffect(() => () => { preguntaExifRef.current?.(null); }, []);
@@ -570,7 +609,19 @@ export function DocumentEditor({ adapter, onToast }) {
      del cos) van al fitxer privat i ixen al Mur per la promoció, que només hi
      deixa la tria de preparaTiffTriat (storage.js · ambExifTriat): l'avís de
      la casella ho diu (exifTriat a la closca i a CasellaExif). La pregunta
-     del cos només s'obri amb fotosDePublicacio. */
+     del cos només s'obri amb fotosDePublicacio.
+     v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El cos del Perfil també conserva
+     de sèrie (PerfilEditor passa fotosDePublicacio), però les seues fotos pugen
+     directes a l'espai públic, sense cap promoció que tríe.
+     v1.2.23 · costura privacitat del cos del Perfil · Per això hi passa
+     `exifTriatEnPujar`: l'ordre «/» Imatge hi posa ja la tria (comprimixDelCos ·
+     preparaTiffTriat) i l'avís del cos és el mateix que a les Notes (exifTriat).
+     La capçalera de la closca d'un consumidor així no tria a la pujada (el
+     DialegEnquadrament hi posa el bloc preparat): el seu avís diu també la
+     càmera, com sense fotosDePublicacio. El Perfil té la seua capçalera
+     (onHeroEdit) i no hi passa mai. */
+  const exifTriatALaPujada = ambExifDelCos && exifTriatEnPujar === true;
+  const exifTriatDeLaClosca = ambExifDelCos && !exifTriatALaPujada;
   /* P1-59 (a) · El text fantasma del cos, només amb un text no buit (sense,
      cap clau nova a la crida). Un text, no un objecte: el memo no es refà. */
   const textFantasma = typeof placeholderCos === 'string' && placeholderCos.trim() ? placeholderCos : null;
@@ -604,10 +655,11 @@ export function DocumentEditor({ adapter, onToast }) {
       onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos,
       ...(ambEmojis ? { obreEmojis: obreEmojisDelCos } : {}),
       ...(ambExifDelCos ? { demanaExif: demanaExifDelCos } : {}),
+      ...(exifTriatALaPujada ? { exifTriatEnPujar: true } : {}),
       ...(textFantasma ? { placeholderCos: textFantasma } : {}),
       ...(guiaDelCos ? { guiaCos: guiaDelCos } : {}),
     }),
-    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, demanaExifDelCos, textFantasma, guiaDelCos],
+    [uploadMedia, ambTargetes, avisaDelCos, ambEmojis, obreEmojisDelCos, ambExifDelCos, exifTriatALaPujada, demanaExifDelCos, textFantasma, guiaDelCos],
   );
 
   const desaLocal = useCallback(
@@ -1338,7 +1390,7 @@ export function DocumentEditor({ adapter, onToast }) {
       formattedDate={document.formattedDate}
       labels={labels || []}
       onImageUpload={uploadMedia}
-      exifTriat={ambExifDelCos}
+      exifTriat={exifTriatDeLaClosca}
       onLocalChange={desaLocal}
       onSaveField={desaCamp}
       onToast={onToast}
@@ -1469,7 +1521,11 @@ export function DocumentEditor({ adapter, onToast }) {
           accions={(
             <>
               <Boto varietat="secundari" onClick={() => respostaExif(null)}>{t('editor.imatge.exif.cancela', 'Cancel·lar')}</Boto>
-              <Boto varietat="primari" onClick={() => respostaExif({ conserva: preguntaExif.conserva, precisio: preguntaExif.precisio })}>
+              <Boto varietat="primari" onClick={() => {
+                // v1.2.23 · L2-03 (Gauntlet R1) · La tria que s'envia, per a dir bé un rebuig (avisaDelCos).
+                triaDelCosRef.current = { dades: preguntaExif.exif, conserva: preguntaExif.conserva };
+                respostaExif({ conserva: preguntaExif.conserva, precisio: preguntaExif.precisio });
+              }}>
                 {t('editor.imatge.exif.inserir', 'Inserir')}
               </Boto>
             </>

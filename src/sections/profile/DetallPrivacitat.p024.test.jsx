@@ -159,7 +159,7 @@ describe('P0-24 (D06/D10): Invariants de revisió d’App Store i Google Play a 
     );
 
     expect(screen.getByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeTruthy();
-    const titolsSeccio = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    const titolsSeccio = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(titolsSeccio).toEqual(['Les meues dades', 'Consentiment', 'Donar-se de baixa']);
 
     expect(

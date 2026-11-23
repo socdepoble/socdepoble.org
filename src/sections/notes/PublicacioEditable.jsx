@@ -1,102 +1,152 @@
 /**
- * PublicacioEditable.jsx — P0-25 / IDEA-96 (Onada R6, Bloc 1; ordre del
- * Mestre) · Una publicació pròpia del Mur o de l'agenda oberta al Bloc de
- * Notes s'edita viva: el mateix editor de notes (NotesEditor: TipTap,
- * «Edició avançada» i el selector amb «Actualitzar al Mur»), sense el peu
- * «Ja publicat al Mur».
- *
- * Obrir-la no crea res: l'editor escriu en una nota en memòria
- * (publicacioEditable.js · notaDeLaPublicacio), i el Bloc no s'omple de notes
- * buides. «Actualitzar al Mur» fa servir el camí de sempre:
- *  · en seed o local, el publishNote de sempre, que ho rebutja amb el motiu
- *    del mode de proves (res creat ni enviat);
- *  · una fila del Mur amb id de servidor s'adopta: una nota nova (creaNota),
- *    lligada a la fila (updateNote: publishedSubmissionId, isPublished) i
- *    publicada amb publishNote, que fa l'upsert amb el MATEIX id. Cap
- *    duplicat: la publicació virtual ix del Bloc (publicadesDesDeNotes) i la
- *    selecció passa a la nota, que ja és la peça editable;
- *  · la llavor editorial (sense UUID) o un acte (P0-25, Onada R6, Bloc 2):
- *    una revisió editorial al navegador (data/revisionsEditorials.js) amb els
- *    camps canviats, que el Mur, l'agenda, el detall i les rutes dedicades
- *    pinten a l'instant. Cap nota creada ni cap fila escrita.
- * Les guardes de publishNote (només lectura, signatura aliena i, per a una
- * fila, canvi de secció: NotesContext · rebuigDePublicacio) van ABANS
- * d'adoptar o de desar: un rebuig no deixa cap nota lligada.
+ * PublicacioEditable.jsx — P0-25 / IDEA-96 + R32.44 / R32.45 (IDEA-324 v3 i
+ * edició completa per a Beta Testers) · Una publicació pròpia del Mur, del
+ * Mercat, dels Esdeveniments/Calendari, de les verticals o una pàgina de
+ * Sistema oberta al Bloc de Notes s'edita viva a NotesEditor, amb confirmació
+ * de retorn d'identitat d'1 clic («Vols tornar a ser Javi?») quan s'ha commutat
+ * automàticament de perfil per entrar a editar.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { escriuSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
+import { esRutaInterna } from '../../config/navigation.js';
 import { useNotes, ValorDeNotes } from './NotesContext.jsx';
 import NotesEditor from './NotesEditor.jsx';
+import { HistorialRevisionsBar } from './HistorialRevisionsBar.jsx';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { CLAUS_BLOC } from './modeDesa.js';
 import { nouIdDeNota } from './notaPreparada.js';
 import { ErrorPublicacio } from './visibilitatNota.js';
 import { ErrorIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
-import { avisDeLaRevisioEditorial, desaRevisioEditorialAmbServidor, rebutjadaPelServidor } from '../../data/revisionsEditorials.js';
+import {
+  avisDeLaRevisioEditorial,
+  desaRevisioEditorialAmbServidor,
+  rebutjadaPelServidor,
+  revisaElement
+} from '../../data/revisionsEditorials.js';
+import {
+  llegixCanviIdentitatEdicio,
+  netejaCanviIdentitatEdicio
+} from '../../data/retornIdentitatEdicio.js';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import {
-  avisRevisioDesada, campsDeLAdopcio, campsDeLaRevisio, esFilaActualitzable, esRevisioEditorial, motiuNoActualitzable, motiuPublicacioDAltri,
+  avisRevisioDesada,
+  campsDeLAdopcio,
+  campsDeLaRevisio,
+  esFilaActualitzable,
+  esRevisioEditorial,
+  motiuNoActualitzable,
+  motiuPublicacioDAltri,
   notaDeLaPublicacio
 } from './publicacioEditable.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 
+function useSetActorSegur() {
+  try {
+    return useIdentitatOpcional()?.setActor ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function useIdiomaUISegur() {
+  try {
+    const ui = useUIStateOpcional();
+    return ui?.llenguaDelText || ui?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 export function PublicacioEditable({ item }) {
   const base = useNotes();
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { showToast } = useToast();
-  /* D-R6-1 (Bloc 3) · Qui signa i si és superadmin, per a la guarda dels actes. */
   const { actor } = useIdentitatOReserva();
+  const setActor = useSetActorSegur();
+  const idioma = useIdiomaUISegur();
   const { esSuperadmin } = useSuperadminEstable();
   const inicial = useMemo(() => notaDeLaPublicacio(item), [item]);
-  /* L'esborrany, per publicació: una altra publicació oberta torna a partir
-     de la seua; una recàrrega de la font (mateix id) no el xafa.
-     Revisió final R16a (carril FA) · `alMur` és la nota que el Mur té segur:
-     en obrir-la, la mateixa que s'edita (ix de la publicació); després, la
-     que ha enviat l'última publicació que ha acabat bé. */
-  const [estat, setEstat] = useState(() => ({ clau: inicial.id, nota: inicial, alMur: inicial }));
-  if (estat.clau !== inicial.id) setEstat({ clau: inicial.id, nota: inicial, alMur: inicial });
+
+  const [estat, setEstat] = useState(() => ({ clau: inicial.id, nota: inicial, alMur: inicial, versioEditor: 0 }));
+  if (estat.clau !== inicial.id) setEstat({ clau: inicial.id, nota: inicial, alMur: inicial, versioEditor: 0 });
   const nota = estat.clau === inicial.id ? estat.nota : inicial;
-  /* Revisió final R16a (carril FA) · El verd «Publicat» de l'editor vol dir
-     que el Mur té esta versió. Cada canvi fa una nota nova (escriu): qualsevol
-     edició que no ha passat per una publicació bona la deixa «pendent». */
+  const versioEditor = estat.clau === inicial.id ? estat.versioEditor : 0;
   const alDia = estat.clau === inicial.id ? estat.nota === estat.alMur : true;
   const viva = useRef(nota);
   viva.current = nota;
-  /* La nota adoptada ({ id, revision, lligada }): un reintent no en crea cap altra.
-     Onada R29 · R29-CV-02 · Per publicació (la clau és l'id de la publicació oberta): la instància es
-     reutilitza en triar-ne una altra, i una adopció a mitges d'A (creada però no lligada) no pot
-     lligar-se mai a B ni sobreescriure's amb el seu contingut. Tornar a A la recupera. */
   const adoptades = useRef(new Map());
+
+  const retornCru = params?.get?.('retorn') || '';
+  const retornValid = retornCru && esRutaInterna(retornCru) ? retornCru : '';
+  const canviIdentitat = useMemo(
+    () => (retornValid ? llegixCanviIdentitatEdicio({ retorn: retornValid, notaId: inicial.id }) : null),
+    [retornValid, inicial.id]
+  );
+  const [confirmantRetorn, setConfirmantRetorn] = useState(false);
+
+  const surtARetorn = useCallback((restauraAnterior) => {
+    if (restauraAnterior && canviIdentitat?.anterior && typeof setActor === 'function') {
+      if (canviIdentitat.anterior.tipus === 'persona') {
+        setActor('persona');
+      } else if (canviIdentitat.anterior.id) {
+        setActor('entitat', canviIdentitat.anterior.id);
+      }
+    }
+    netejaCanviIdentitatEdicio();
+    setConfirmantRetorn(false);
+    if (retornValid) {
+      navigate(retornValid);
+    }
+  }, [canviIdentitat, setActor, retornValid, navigate]);
+
+  const demanaTornar = useCallback(() => {
+    if (!retornValid) return;
+    if (canviIdentitat?.anterior) {
+      setConfirmantRetorn(true);
+      return;
+    }
+    navigate(retornValid);
+  }, [retornValid, canviIdentitat, navigate]);
 
   const escriu = useCallback((id, camp, valor) => {
     if (String(id) !== viva.current.id) return;
-    /* Revisió final R16a (carril FA) · Tornar a escriure el mateix valor no és
-       cap edició: ni nota nova ni botó «pendent». */
     if (Object.is(viva.current[camp], valor)) return;
     const nova = { ...viva.current, [camp]: valor, ...(camp === 'heroImage' ? { coverImage: valor || undefined } : null) };
     viva.current = nova;
     setEstat((previ) => (previ.clau === nova.id ? { ...previ, nota: nova } : previ));
   }, []);
 
+  const restauraDesDeHistorial = useCallback(() => {
+    const { seccio, item: publicacio, baseCanonica } = item?.data || {};
+    const fontBase = baseCanonica || publicacio;
+    if (!seccio || !fontBase) return;
+    const actualitzat = revisaElement(seccio, fontBase);
+    const notaRestaurada = notaDeLaPublicacio({
+      ...item,
+      data: { ...item.data, item: actualitzat }
+    });
+    viva.current = notaRestaurada;
+    setEstat((previ) => ({
+      clau: notaRestaurada.id,
+      nota: notaRestaurada,
+      alMur: notaRestaurada,
+      versioEditor: (previ.versioEditor || 0) + 1
+    }));
+  }, [item]);
+
   const publica = useCallback(async (doc, opcions) => {
-    /* El document visible (també els canvis que encara no han passat pel canal). */
     const actual = doc && String(doc.id) === viva.current.id ? { ...viva.current, ...doc } : viva.current;
-    // D-7 · Amb la reserva de només lectura, res (publishNote rebutja igual).
     if (base?.nomesLectura) throw new ErrorIdentitatDeLectura();
     if (esRevisioEditorial(item)) {
-      /* La signatura aliena, com publishNote; una revisió no canvia de secció.
-         D-B4-1 (Bloc 4; decisió de MarIA) · Una revisió conserva l'autoria:
-         el superadmin estable la pot fer sobre una peça d'altri, del Mur o de
-         l'agenda; un usuari ordinari, no. */
       const rebuig = base?.rebuigDePublicacio?.(actual, { seccio: false, esSuperadmin });
       if (rebuig) throw rebuig;
-      /* D-R6-1 (Bloc 3) · La de publishNote no troba mai un acte (ni una peça
-         fora de la finestra carregada): ací, amb la peça oberta i la mateixa
-         funció pura. */
       const motiuAlie = motiuPublicacioDAltri(item, { actor, config: base?.config, esSuperadmin, t: base?.t });
       if (motiuAlie) {
         showToast(motiuAlie, 'info');
@@ -104,18 +154,21 @@ export function PublicacioEditable({ item }) {
       }
       const { seccio, item: publicacio } = item.data;
       const camps = campsDeLaRevisio(inicial, actual);
-      /* R12 (B4-S1) · Primer al navegador, sempre; al servidor només si el backend
-         anuncia edicioEditorial i qui desa és superadmin (revisionsEditorials.js). */
+      const autorNom = actor?.nom || publicacio?.author_name || 'Sóc de Poble';
       const resultat = Object.keys(camps).length
-        ? await desaRevisioEditorialAmbServidor(seccio, publicacio, camps, { esSuperadmin, config: base?.config })
+        ? await desaRevisioEditorialAmbServidor(seccio, publicacio, camps, { esSuperadmin, config: base?.config, autorNom })
         : null;
       if (resultat && !resultat.desada) {
         const motiu = motiuNoActualitzable(item, base?.t);
         showToast(motiu, 'info');
         throw new ErrorPublicacio(motiu);
       }
-      showToast(resultat?.desti === 'servidor' || rebutjadaPelServidor(resultat) ? avisDeLaRevisioEditorial(resultat, base?.t) : avisRevisioDesada(base?.t),
-        rebutjadaPelServidor(resultat) ? 'info' : 'success');
+      showToast(
+        resultat?.desti === 'servidor' || rebutjadaPelServidor(resultat)
+          ? avisDeLaRevisioEditorial(resultat, base?.t)
+          : avisRevisioDesada(base?.t, seccio, idioma),
+        rebutjadaPelServidor(resultat) ? 'info' : 'success'
+      );
       return true;
     }
     if (MODES_LOCALS.has(base?.config?.dataMode)) {
@@ -128,7 +181,14 @@ export function PublicacioEditable({ item }) {
     }
     if (typeof base?.creaNota !== 'function' || typeof base?.updateNote !== 'function') return false;
     /* Les guardes de publishNote abans d'adoptar: un rebuig no deixa cap nota lligada. */
-    const rebuig = base?.rebuigDePublicacio?.(actual);
+    const rebuig = typeof base?.rebuigDePublicacio === 'function'
+      ? base.rebuigDePublicacio(actual)
+      : (() => {
+        const motiuAlieFila = motiuPublicacioDAltri(item, { actor, config: base?.config, esSuperadmin: false, t: base?.t });
+        if (!motiuAlieFila) return null;
+        showToast(motiuAlieFila, 'info');
+        return new ErrorPublicacio(motiuAlieFila);
+      })();
     if (rebuig) throw rebuig;
     const { creacio, lligam } = campsDeLAdopcio(actual);
     const clauAdopcio = inicial.id;
@@ -143,76 +203,87 @@ export function PublicacioEditable({ item }) {
       const desada = await base.updateNote(id, lligam, revision);
       adoptada = { id, revision: desada?.revision ?? revision + 1, lligada: true };
       adoptades.current.set(clauAdopcio, adoptada);
-      /* La cua de desat ha de partir de la revisió lligada, encara que la
-         llista viva no porte la nota fins a la pintada següent. */
       if (base.scopeKey) bgSaveManager.setRevision(base.scopeKey, id, adoptada.revision);
     }
     const { id, revision } = adoptada;
-    /* La publicació virtual ja ix del Bloc: la selecció passa a la nota. */
     setParams(escriuSeleccio(params, { item: id }, CLAUS_BLOC), { replace: true });
     const payloadNota = { ...actual, id, revision, publishedSubmissionId: actual.publishedSubmissionId, isPublished: true };
     return opcions?.poble ? base.publishNote(payloadNota, opcions) : base.publishNote(payloadNota);
-  }, [actor, base, esSuperadmin, inicial, item, params, setParams, showToast]);
+  }, [actor, base, esSuperadmin, idioma, inicial, item, params, setParams, showToast]);
 
-  /* Revisió final R16a (carril FA) · Només una publicació que acaba bé (cap
-     error ni `false`) diu que el Mur té la nota enviada. Si mentrestant s'ha
-     tornat a editar, la nota ja és una altra i el botó continua «pendent». */
   const publicaIMarca = useCallback(async (doc, opcions) => {
     const enviada = viva.current;
     const resultat = opcions?.poble ? await publica(doc, opcions) : await publica(doc);
-    if (resultat) setEstat((previ) => (previ.clau === enviada.id ? { ...previ, alMur: enviada } : previ));
+    if (resultat) {
+      setEstat((previ) => (previ.clau === enviada.id ? { ...previ, alMur: enviada } : previ));
+      if (retornValid) {
+        if (canviIdentitat?.anterior) {
+          setConfirmantRetorn(true);
+        } else {
+          navigate(retornValid);
+        }
+      }
+    }
     return resultat;
-  }, [publica]);
+  }, [publica, retornValid, canviIdentitat, navigate]);
 
-  /* R51 (P0-46 / IDEA-177), fase A · El mode de traducció d'una publicació
-     oberta només el canvia qui la signa o el superadmin estable: la mateixa
-     guarda pura de signatura aliena (motiuPublicacioDAltri). Amb motiu,
-     NotesEditor el mostra desactivat i el diu. */
   const motiuModeTraduccio = useMemo(
     () => motiuPublicacioDAltri(item, { actor, config: base?.config, esSuperadmin, t: base?.t }),
     [item, actor, base?.config, base?.t, esSuperadmin]
   );
-  /* R51V-02 · Una revisió editorial (la llavor, un acte) no pot portar el
-     mode de traducció (revisionsEditorials i l'RPC tenen llista blanca): el
-     selector diu que només es guarda en este dispositiu. Una fila del Mur,
-     sí: viatja al payload amb «Actualitzar al Mur». */
   const modeTraduccioNomesLocal = esRevisioEditorial(item);
+  const edicioDirecta = params?.get?.('plegades') === '1' || Boolean(retornValid);
+
+  const retornIdentitat = useMemo(() => {
+    if (!canviIdentitat?.anterior) return null;
+    return {
+      anteriorNom: canviIdentitat.anterior.nom,
+      actualNom: actor?.nom || canviIdentitat.desti?.nom || 'Sóc de Poble',
+      confirmant: confirmantRetorn,
+      onDemanaTornar: retornValid ? demanaTornar : null,
+      onTornaAAnterior: () => surtARetorn(true),
+      onQuedatComActual: () => surtARetorn(false)
+    };
+  }, [canviIdentitat, actor?.nom, confirmantRetorn, retornValid, demanaTornar, surtARetorn]);
 
   const valor = useMemo(() => (base ? {
     ...base,
     motiuModeTraduccio,
     modeTraduccioNomesLocal,
+    edicioDirecta,
     setLocalNoteField: escriu,
     saveNoteField: (id, camp, nou) => {
       escriu(id, camp, nou);
       return Promise.resolve(true);
     },
-    /* v1.2.20 · Gauntlet R1 (L2-01) · Esta nota viu només en memòria fins a «Actualitzar al Mur»:
-       NotesEditor no hi pot dir «desat com a esborrany privat» ni «Còpia local». */
     desatEnMemoria: true,
     publishNote: publicaIMarca,
-    /* Revisió final R16a (carril FA) · La nota en memòria no passa per la cua
-       de desat: si el Mur la té ho diu esta peça, no el gestor (NotesEditor). */
     versioAlMur: (doc) => (doc?.id != null && String(doc.id) === nota.id ? alDia : null),
     compartirNota: null,
     canviaEstatPublicacio: undefined,
     mouNota: undefined,
     esborraNota: undefined,
     potEsborrar: false,
-    /* F03-UI · Verificació R21 (P1) · La retirada del Mur va per una nota
-       (updateNote({ isPublished: false }) i el trigger de public.notes), i
-       esta nota en memòria no en té cap al servidor: cap retirada d'ací.
-       potRetirarDelMur es queda el del Bloc perquè NotesEditor diga el motiu
-       cert ('senseNota') en lloc de «encara no té contracte». */
     retiraDelMur: undefined,
     retiradaPendentDeNota: undefined
-  } : null), [base, escriu, publicaIMarca, motiuModeTraduccio, modeTraduccioNomesLocal, nota.id, alDia]);
+  } : null), [base, escriu, publicaIMarca, motiuModeTraduccio, modeTraduccioNomesLocal, edicioDirecta, nota.id, alDia]);
 
   if (!valor) return null;
+  const { seccio, item: publicacio } = item?.data || {};
+  const clauEditor = versioEditor > 0 ? `${nota.id}:${versioEditor}` : nota.id;
   return (
-    <ValorDeNotes value={valor}>
-      <NotesEditor key={nota.id} activeNote={nota} />
-    </ValorDeNotes>
+    <HistorialRevisionsBar
+      actiu={modeTraduccioNomesLocal}
+      seccio={seccio}
+      itemId={publicacio?.id != null ? String(publicacio.id) : ''}
+      autorNom={actor?.nom || null}
+      onRestaura={restauraDesDeHistorial}
+      retornIdentitat={retornIdentitat}
+    >
+      <ValorDeNotes value={valor}>
+        <NotesEditor key={clauEditor} activeNote={nota} />
+      </ValorDeNotes>
+    </HistorialRevisionsBar>
   );
 }
 

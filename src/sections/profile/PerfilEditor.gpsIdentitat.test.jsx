@@ -11,6 +11,18 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
    o d'un agent conserva la casella. I el text del Perfil no demana mai l'EXIF
    d'una foto del cos (DocumentEditor · fotosDePublicacio). Els mocks són els
    de PerfilEditor.imatges.test.jsx; la lectura de l'EXIF és la de veres.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA A POSTA: «el text
+   del Perfil no demana mai l'EXIF» ja NO és cert. El cos de la fitxa és
+   contingut propi i conserva de sèrie, amb l'avís i l'interruptor «Amaga el
+   lloc»: PerfilEditor passa fotosDePublicacio (les extensions reben
+   demanaExif). Amb GPS, la casella marcada de la capçalera d'una entitat és
+   l'interruptor «Amaga el lloc» apagat. La capçalera d'una persona continua
+   d'identitat: neta i sense res.
+   v1.2.23 · costura privacitat del cos del Perfil · El cos puja directe a
+   l'espai públic: PerfilEditor passa exifTriatEnPujar, i les extensions el
+   reben, perquè la foto hi pose ja la tria de les Notes (la ubicació i la
+   data), mai la càmera, la sèrie ni un nom. Els bytes, de punta a punta des
+   del Perfil, a PerfilEditor.cosUbicacio.idea331.test.jsx.
    ═══════════════════════════════════════════════════════════════════ */
 
 const m = vi.hoisted(() => ({ perfil: null, updateProfile: null, updateOrganization: null, showToast: null }));
@@ -60,7 +72,7 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 
 import { PerfilEditor } from './PerfilEditor.jsx';
-import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { AVIS_GPS_ELIMINAT_PERFIL, ETIQUETA_AMAGA_LLOC } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { ETIQUETA_CONSERVA_EXIF } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { dataOriginal, gpsTorre, jpegAmbExif, orientacio } from '../../../tests/helpers/jpegProva.js';
 import { oblidaEntitatDelProjecte } from '../../config/navigation.js';
@@ -109,12 +121,14 @@ async function triaLaCapcalera(identitat) {
   return screen.getByRole('dialog', { name: 'Retalla la capçalera' });
 }
 const casella = (dialeg) => within(dialeg).queryByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+const interruptor = (dialeg) => within(dialeg).queryByRole('switch', { name: new RegExp(ETIQUETA_AMAGA_LLOC) });
 
 describe('P1-64 · la capçalera de la fitxa: identitat només per a la persona', () => {
   test('persona: cap casella, l’avís literal; desada neta (cap conservaExif) i l’avís també en un toast', async () => {
     const dialeg = await triaLaCapcalera(jo);
     expect(await within(dialeg).findByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeTruthy();
     expect(casella(dialeg)).toBeNull();
+    expect(interruptor(dialeg)).toBeNull();
     fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Retalla la capçalera' })).toBeNull());
     // P0-80 · Actualitzada a posta: la foto sencera, neta, amb el marc al fragment.
@@ -124,18 +138,21 @@ describe('P1-64 · la capçalera de la fitxa: identitat només per a la persona'
     expect(m.showToast).toHaveBeenCalledWith(AVIS_GPS_ELIMINAT_PERFIL, 'info');
   });
 
-  test.each([['una organització', org], ['un agent', agent]])('%s: la casella hi és (marcada) i cap avís de perfil', async (_cas, identitat) => {
+  test.each([['una organització', org], ['un agent', agent]])('%s: l’interruptor «Amaga el lloc» hi és (apagat: es conserva) i cap avís de perfil', async (_cas, identitat) => {
     const dialeg = await triaLaCapcalera(identitat);
-    await waitFor(() => expect(casella(dialeg)).not.toBeNull());
-    expect(casella(dialeg).checked).toBe(true);
+    await waitFor(() => expect(interruptor(dialeg)).not.toBeNull());
+    expect(interruptor(dialeg).checked).toBe(false);
     expect(within(dialeg).queryByText(AVIS_GPS_ELIMINAT_PERFIL)).toBeNull();
   });
 });
 
-describe('P1-64 · el text del Perfil no demana l’EXIF de les fotos del cos', () => {
-  test.each([['la persona', jo], ['una organització', org], ['un agent', agent]])('%s: les extensions no reben cap demanaExif', (_cas, identitat) => {
+describe('v1.2.23 · IDEA-331 · el text del Perfil demana l’EXIF de les fotos del cos (conserva de sèrie)', () => {
+  test.each([['la persona', jo], ['una organització', org], ['un agent', agent]])('%s: les extensions reben demanaExif i exifTriatEnPujar (la tria de les Notes, mai el bloc sencer)', (_cas, identitat) => {
     render(<PerfilEditor identitat={identitat} />);
     expect(dobles.extensions).toHaveBeenCalled();
-    for (const [opcions] of dobles.extensions.mock.calls) expect(Object.hasOwn(opcions ?? {}, 'demanaExif'), identitat.nom).toBe(false);
+    for (const [opcions] of dobles.extensions.mock.calls) {
+      expect(typeof opcions?.demanaExif, identitat.nom).toBe('function');
+      expect(opcions?.exifTriatEnPujar, identitat.nom).toBe(true);
+    }
   });
 });

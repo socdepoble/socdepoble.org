@@ -100,6 +100,14 @@ export const passos = [
   { nom: 'Conformitat federació pública', cmd: 'node', args: ['tooling/gates/conformitat-federacio.mjs', '--json'], script: 'porta:conformitat-federacio', readOnly: true },
   { nom: 'Economia documental d’arrencada', cmd: 'node', args: ['tooling/gates/tractor-economia-arrencada.mjs', '--json'], script: 'porta:economia-arrencada', readOnly: true },
   { nom: 'Integritat d’imatges i enquadrament', cmd: 'node', args: ['tooling/gates/tractor-imatges-enquadrament.mjs', '--json'], script: 'porta:imatges-enquadrament', readOnly: true },
+  /* v1.2.23 · L4-09 (ordre del Mestre 261123) · Duplicats de public/assets congelats (R32.43) per bytes, SHA-256 i rutes.
+     Existia i passava, però cap cadena l'executava. Només llig (hashos per streaming); sense xarxa ni escriptura. */
+  { nom: 'Porta Duplicats Públics', cmd: 'node', args: ['tooling/gates/tractor-duplicats-public.mjs'], script: 'porta:duplicats', readOnly: true },
+  /* v1.2.23 · L4-01 i L8-07 (Gauntlet R1) · Maquetació canònica (IDEA-319, Codex R32.44, lot 01). Existia i passava amb 0
+     infraccions, però cap cadena l'executava i la Porta Cadena no la veia òrfena (ix per process.exitCode). Sense script
+     a package.json: es crida amb node, com la Higiene de paquets, i la Porta Cadena la compta per l'ordre. Anàlisi
+     estàtica (cap mòdul de l'aplicació s'importa ni s'executa); sense xarxa ni escriptura. Ix amb 1 si ok és false. */
+  { nom: 'Porta Maquetació Canònica (IDEA-319)', cmd: 'node', args: ['tooling/gates/tractor-maquetacio-canonica.mjs'], readOnly: true },
   { nom: 'Porta Olivera', cmd: 'node', args: ['tooling/gates/porta-olivera.mjs', '--informe'], script: 'porta:olivera' },
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },

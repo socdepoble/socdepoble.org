@@ -121,17 +121,21 @@ describe('Onada R32.10 · Lot 02 · Selector d’idioma per a visitants sense se
 
   test('les pàgines editorials (/projecte i /page/node-zero) mostren el peu d’idioma accessible en 1 toc', async () => {
     await muntaVisitant('/projecte', { width: 360, language: 'en' });
+    /* v1.2.23 · costura temps d'espera (ordre del Mestre 261123) · /projecte arriba per un import() de pageContent
+       (≈1 MB de font, amb pageContent.r10.js), TextSection i PeuEditorialIdioma (TextRouteAmbCopiaLocal d'App.jsx):
+       1000 ms no basten amb la màquina carregada. Mateix límit que App.appsLocals.test.jsx dona a les rutes
+       diferides; les assercions no canvien (Llei 0). */
     const peu = await waitFor(() => {
       const node = document.querySelector('section.sdp-pagina-peu .sdp-peu-editorial-idioma');
       expect(node).not.toBeNull();
       return node;
-    });
+    }, { timeout: 8000 });
     expect(peu.textContent).toContain('System language');
     expect(peu.textContent).toContain('English');
     const accio = within(peu).getByRole('link', { name: 'Choose a language' });
     expect(accio.getAttribute('href')).toBe('/traduccions');
     fireEvent.click(accio);
-    await waitFor(() => expect(window.location.pathname).toBe('/traduccions'));
+    await waitFor(() => expect(window.location.pathname).toBe('/traduccions'), { timeout: 8000 });
   });
 
   test('jerarquia CSS <= 400px i <= 359px: el subtítol d’apartat mai supera el títol i les targetes amb quadrat redueixen escalat sense inline styles', () => {

@@ -27,20 +27,27 @@ beforeEach(()=>{vi.clearAllMocks();mock.urlAdjuntXat.mockResolvedValue('https://
 afterEach(()=>vi.unstubAllGlobals());
 const text = async blob => new TextDecoder('latin1').decode(await blob.arrayBuffer());
 
-test.each(['©xyz','loci','meta'])('iPhone %s: saneja bytes originals, offsets intactes i JSON aproximat consentit', async tag => {
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el vídeo de l'iPhone conserva el seu lloc (tal com és);
+   només «Amaga el lloc» el saneja, amb els offsets intactes i sense tocar l'original. */
+test.each(['©xyz','loci','meta'])('iPhone %s: per defecte conserva el lloc; l’opt-out saneja bytes originals amb offsets intactes', async tag => {
   const brut=original(box(tag,ascii(ISO))), abans=await text(brut);
-  const adjunt=await preparaAdjunt(brut,{lligDurada:async()=>1000,comprimeixVideo:async fitxer=>({fitxer,comprimit:false})});
+  const opcions={lligDurada:async()=>1000,comprimeixVideo:async fitxer=>({fitxer,comprimit:false})};
+  const conservat=await preparaAdjunt(brut,opcions);
+  expect(conservat).toMatchObject({senseUbicacio:false,conservaUbicacio:true});expect(await text(conservat.fitxer)).toContain(ISO);
+  const adjunt=await preparaAdjunt(brut,{...opcions,conservaUbicacio:false});
   expect(adjunt.senseUbicacio).toBe(true);expect(await text(adjunt.fitxer)).not.toContain(ISO);
   expect(adjunt.fitxer.size).toBe(brut.size);expect(await text(brut)).toBe(abans);
 });
 
-test('pista QuickTime meta opaca: bloqueig honest amb conservació activada, opt-out i reenviament', async()=>{
+test('pista QuickTime meta opaca: ix amb el lloc per defecte; bloqueig honest amb opt-out i en reenviar', async()=>{
   const brut=timed();
   expect((await senseUbicacioVideo(brut)).net).toBe(false);
   /* v1.2.22 · Gauntlet R2 (M2-02) · En triar-lo, el bloqueig ve del fallback del navegador (motiuFallback) i l'avís és el
-     del navegador; en reenviar, el sanejador mira el fitxer desat i l'avís és el del fitxer. */
-  for(const conservaUbicacio of [true,false]) await expect(preparaAdjunt(brut,{conservaUbicacio,lligDurada:async()=>1000,
-    comprimeixVideo:async fitxer=>({fitxer,comprimit:false,motiuFallback:'video-audio-no-capturable'})})).rejects.toMatchObject({code:'video-no-acreditable-navegador'});
+     del navegador; en reenviar, el sanejador mira el fitxer desat i l'avís és el del fitxer.
+     v1.2.23 · IDEA-331 · Deroga el bloqueig per defecte de L4-04: conservant el lloc, el vídeo ix tal com és. */
+  const opcions={lligDurada:async()=>1000,comprimeixVideo:async fitxer=>({fitxer,comprimit:false,motiuFallback:'video-audio-no-capturable'})};
+  await expect(preparaAdjunt(brut,opcions)).resolves.toMatchObject({fitxer:brut,senseUbicacio:false,conservaUbicacio:true});
+  await expect(preparaAdjunt(brut,{...opcions,conservaUbicacio:false})).rejects.toMatchObject({code:'video-no-acreditable-navegador'});
   vi.stubGlobal('fetch',vi.fn(async()=>({ok:true,blob:async()=>brut})));
   await expect(pont().lligBlob(missatge,{})).rejects.toMatchObject({code:'video-no-acreditable'});
 });

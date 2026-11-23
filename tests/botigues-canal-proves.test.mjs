@@ -6,6 +6,12 @@
    --corregeix-ard) i només amb l'evidència del registre de pujades de puja-ios.mjs.
    Onada v1.2.16 (ordre del Mestre 261121: ZERO APK fora de botiga) · L'anunci de l'APK directe
    (apkDirectBuild + apkSha256) es refusa i els anuncis heretats es retiren en escriure.
+   v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · Fins a l'inici formal de la ronda amb Beta Testers,
+   --sincronitza-proves es refusa i el pla d'iOS no proposa el pas de TestFlight: els casos que escriuen o que
+   llegeixen el pas obrin la ronda amb SDP_RONDA_BETA_TESTERS=1, i un cas propi prova el refús sense la variable.
+   v1.2.23 · L8-09 (Gauntlet R1) · La variable va a l'entorn que reben main() i resumOmnicanal() (ambRonda), no a
+   process.env: un cas propi prova que el process.env obert no obri un entorn injectat tancat, ni al revés.
+   Ha d'anar d'acord amb RONDA_BETA_TESTERS_OBERTA de src/config/ardSenseTestFlight.v1223.seguretat.test.js.
    Cap xarxa, cap eina real, cap fitxer del repositori: tot en mkdtemp. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -47,6 +53,31 @@ async function ambPantalla(fes) {
     process.stdout.write = eixida;
     process.stderr.write = errada;
   }
+}
+
+/* v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · L'entorn amb SDP_RONDA_BETA_TESTERS=valor (valor null:
+   sense la variable). v1.2.23 · L8-09 (Gauntlet R1) · Un entorn nou per a main() i resumOmnicanal(): process.env no es
+   toca, i la ronda és la de l'entorn que reben. */
+function ambRonda(env, valor = '1') {
+  const sense = { ...env };
+  delete sense.SDP_RONDA_BETA_TESTERS;
+  return valor === null ? sense : { ...sense, SDP_RONDA_BETA_TESTERS: valor };
+}
+
+/* v1.2.23 · L8-09 (Gauntlet R1) · Només per al cas que prova que process.env no mana: el posa durant la prova i el
+   torna com estava ABANS de la primera crida. */
+const rondaOriginal = new WeakMap();
+function rondaDelProces(t, valor) {
+  if (!rondaOriginal.has(t)) {
+    const abans = process.env.SDP_RONDA_BETA_TESTERS;
+    rondaOriginal.set(t, abans);
+    t.after(() => {
+      if (abans === undefined) delete process.env.SDP_RONDA_BETA_TESTERS;
+      else process.env.SDP_RONDA_BETA_TESTERS = abans;
+    });
+  }
+  if (valor === null) delete process.env.SDP_RONDA_BETA_TESTERS;
+  else process.env.SDP_RONDA_BETA_TESTERS = valor;
 }
 
 test('v1.2.7 · sincronitzaManifestProves: TestFlight i latestBuild, sense tocar les botigues públiques; v1.2.16 · cap APK', () => {
@@ -243,7 +274,7 @@ test('v1.2.7 · publica-tot --sincronitza-proves: sola, amb versió explícita, 
   const inicial = `${JSON.stringify({ version: VERSIO, androidBuild: 1, iosBuild: 1, entries: [{ identifier: 'x', version: VERSIO }] }, null, 2)}\n`;
   fs.writeFileSync(manifest, inicial);
   fs.writeFileSync(manifestDist, inicial);
-  const env = entornDe({ SDP_BUILDS_DIR: esc.builds });
+  const env = ambRonda(entornDe({ SDP_BUILDS_DIR: esc.builds }));
   const ordre = (args, mes = {}) => ambPantalla(() => publica.main(args, { env, manifest, manifestDist, ...mes }));
 
   // Les combinacions que no valen: res escrit.
@@ -263,10 +294,10 @@ test('v1.2.7 · publica-tot --sincronitza-proves: sola, amb versió explícita, 
     assert.match(r.vist, motiu, args.join(' '));
   }
   // Les guardes pures paren abans de llegir l'entorn: una altra versió, un build per damunt del sostre.
-  let r = await ordre(['--sincronitza-proves', '--versio', '99.0.0', '--build-testflight', String(build)], { env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  let r = await ordre(['--sincronitza-proves', '--versio', '99.0.0', '--build-testflight', String(build)], { env: ambRonda({ SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') }) });
   assert.equal(r.codi, e.EIXIDA.ARBRE);
   assert.match(r.vist, /no és la de package\.json/);
-  r = await ordre(['--sincronitza-proves', '--versio', VERSIO, '--build-testflight', String(MAXIM + 1)], { env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  r = await ordre(['--sincronitza-proves', '--versio', VERSIO, '--build-testflight', String(MAXIM + 1)], { env: ambRonda({ SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') }) });
   assert.equal(r.codi, e.EIXIDA.ARBRE);
   assert.match(r.vist, /passa de VERSIO_CLIENT_NATIU/);
   assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, 'res escrit');
@@ -295,7 +326,7 @@ test('v1.2.7 · publica-tot --sincronitza-proves: sola, amb versió explícita, 
     const rev = escenari({ registre: [pujadaDe('produccio', build - 1), pujadaDe('intern', build)] });
     const unic = path.join(rev.fora, 'ard.json');
     fs.writeFileSync(unic, inicial);
-    const envRev = entornDe({ SDP_BUILDS_DIR: rev.builds });
+    const envRev = ambRonda(entornDe({ SDP_BUILDS_DIR: rev.builds }));
     const tf = ['--sincronitza-proves', '--versio', VERSIO, '--build-testflight', String(build)];
     r = await ambPantalla(() => publica.main(tf, { env: envRev, manifest: unic, manifestDist: null }));
     assert.equal(r.codi, e.EIXIDA.ARBRE, r.vist);
@@ -310,9 +341,79 @@ test('v1.2.7 · publica-tot --sincronitza-proves: sola, amb versió explícita, 
 });
 
 test('v1.2.7 · el pla en sec d\'iOS diu el pas de TestFlight després de la pujada', () => {
-  const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.7', build: '12', plataforma: 'ios', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.7', build: '12', plataforma: 'ios', env: ambRonda({ SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') }) });
   assert.deepEqual(resum.passos.map((pas) => pas.ordre.split(' --versio')[0]), [
     'node scripts/botigues/puja-ios.mjs', 'node scripts/botigues/publica-tot.mjs --sincronitza-proves'
   ]);
   assert.match(resum.passos[1].ordre, /--build-testflight 12$/);
+});
+
+/* v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · Sense la ronda oberta: refús abans de cap guarda,
+   res escrit (ni public/ ni dist/), cap lectura de l'entorn; i el pla d'iOS no proposa el pas de TestFlight. */
+test('v1.2.23 · D-V1223-BOTO-BETA-OCULT · sense SDP_RONDA_BETA_TESTERS=1, --sincronitza-proves es refusa i el pla no anuncia TestFlight', { skip: SENSE_REPOSITORI }, async () => {
+  assert.ok(VERSIO, 'package.json');
+  const build = MAXIM;
+  const esc = escenari({ registre: [{ plataforma: 'ios', canal: 'intern', versio: VERSIO, build: String(build), sha256: null, commit: null, data: '2026-11-23T12:00:00Z' }] });
+  const manifest = path.join(esc.fora, 'ard.json');
+  const manifestDist = path.join(esc.fora, 'ard-dist.json');
+  const inicial = `${JSON.stringify({ version: VERSIO, androidBuild: 1, iosBuild: 1, entries: [{ identifier: 'x', version: VERSIO }] }, null, 2)}\n`;
+  fs.writeFileSync(manifest, inicial);
+  fs.writeFileSync(manifestDist, inicial);
+  const env = entornDe({ SDP_BUILDS_DIR: esc.builds });
+  const tf = ['--sincronitza-proves', '--versio', VERSIO, '--build-testflight', String(build)];
+  // Absent, buida o qualsevol valor que no siga exactament «1»: la ronda continua tancada.
+  for (const valor of [null, '', '0', 'true', 'si', ' 1']) {
+    const r = await ambPantalla(() => publica.main(tf, { env: ambRonda(env, valor), manifest, manifestDist }));
+    assert.equal(r.codi, e.EIXIDA.US, `SDP_RONDA_BETA_TESTERS=${valor}`);
+    assert.match(r.vist, /D-V1223-BOTO-BETA-OCULT \(ordre del Mestre 261123\) · la ronda amb Beta Testers no és oberta: testflightIosBuild no s'escriu a ard\.json/);
+    assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, 'public/: res escrit');
+    assert.equal(fs.readFileSync(manifestDist, 'utf8'), inicial, 'dist/: res escrit');
+  }
+  // El refús va abans de les guardes: tampoc no llig un entorn absent.
+  const r = await ambPantalla(() => publica.main(tf, { env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') }, manifest, manifestDist }));
+  assert.equal(r.codi, e.EIXIDA.US);
+  assert.doesNotMatch(r.vist, /entorn/i);
+  // El pla d'iOS: la pujada sí, l'anunci de TestFlight no.
+  const resum = publica.resumOmnicanal(ARREL, { versio: '1.2.7', build: '12', plataforma: 'ios', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  assert.deepEqual(resum.passos.map((pas) => pas.ordre.split(' --versio')[0]), ['node scripts/botigues/puja-ios.mjs']);
+  assert.ok(!resum.passos.some((pas) => /--sincronitza-proves|testflightIosBuild/.test(`${pas.ordre} ${pas.accio}`)), 'cap anunci de TestFlight al pla');
+  assert.deepEqual(fs.readdirSync(path.join(ARREL, 'public', '.well-known')).filter((nom) => nom.endsWith('.tmp')), [], 'cap temporal al repositori');
+});
+
+/* v1.2.23 · L8-09 (Gauntlet R1) · El pany de TestFlight és el de l'entorn que reben main() i resumOmnicanal(), no el de
+   process.env: amb process.env obert i un entorn injectat sense la variable, el pla no anuncia TestFlight i
+   --sincronitza-proves es refusa sense escriure res; amb process.env tancat i l'entorn injectat obert, el pla l'anuncia. */
+test('v1.2.23 · L8-09 · la ronda de Beta Testers es llig de l\'entorn injectat, no de process.env', { skip: SENSE_REPOSITORI }, async (t) => {
+  const NO_HI_ES = { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') };
+  const anunciaTestFlight = (resum) => resum.passos.some((pas) => /--sincronitza-proves|testflightIosBuild/.test(`${pas.ordre} ${pas.accio}`));
+  const pla = (env) => publica.resumOmnicanal(ARREL, { versio: '1.2.7', build: '12', plataforma: 'ios', env });
+  const esc = escenari({ registre: [{ plataforma: 'ios', canal: 'intern', versio: VERSIO, build: String(MAXIM), sha256: null, commit: null, data: '2026-11-23T12:00:00Z' }] });
+  const manifest = path.join(esc.fora, 'ard.json');
+  const manifestDist = path.join(esc.fora, 'ard-dist.json');
+  const inicial = `${JSON.stringify({ version: VERSIO, androidBuild: 1, iosBuild: 1, entries: [{ identifier: 'x', version: VERSIO }] }, null, 2)}\n`;
+  fs.writeFileSync(manifest, inicial);
+  fs.writeFileSync(manifestDist, inicial);
+  const tf = ['--sincronitza-proves', '--versio', VERSIO, '--build-testflight', String(MAXIM)];
+
+  // El pla en sec de main (--json) passa el seu entorn a resumOmnicanal: el mateix pany.
+  const plaDeMain = async (env) => {
+    const sortida = await ambPantalla(() => publica.main(['--versio', '1.2.7', '--build', '12', '--plataforma', 'ios', '--json'], { env }));
+    return JSON.parse(sortida.vist);
+  };
+
+  rondaDelProces(t, '1');
+  assert.equal(anunciaTestFlight(pla(ambRonda(NO_HI_ES, null))), false, 'process.env obert, entorn injectat tancat: el pla no anuncia TestFlight');
+  assert.equal(anunciaTestFlight(await plaDeMain(ambRonda(NO_HI_ES, null))), false, 'main --json: tampoc');
+  const r = await ambPantalla(() => publica.main(tf, { env: ambRonda(entornDe({ SDP_BUILDS_DIR: esc.builds }), null), manifest, manifestDist }));
+  assert.equal(r.codi, e.EIXIDA.US, r.vist);
+  assert.match(r.vist, /la ronda amb Beta Testers no és oberta/);
+  assert.equal(fs.readFileSync(manifest, 'utf8'), inicial, 'public/: res escrit');
+  assert.equal(fs.readFileSync(manifestDist, 'utf8'), inicial, 'dist/: res escrit');
+
+  rondaDelProces(t, null);
+  assert.equal(anunciaTestFlight(pla(ambRonda(NO_HI_ES))), true, 'process.env tancat, entorn injectat obert: el pla anuncia TestFlight');
+  assert.equal(anunciaTestFlight(await plaDeMain(ambRonda(NO_HI_ES))), true, 'main --json: també');
+  const oberta = await ambPantalla(() => publica.main(tf, { env: ambRonda(entornDe({ SDP_BUILDS_DIR: esc.builds })), manifest, manifestDist }));
+  assert.equal(oberta.codi, e.EIXIDA.BE, oberta.vist);
+  assert.equal(JSON.parse(fs.readFileSync(manifest, 'utf8')).testflightIosBuild, MAXIM);
 });

@@ -41,13 +41,19 @@ test(`R32.42 ajuntament · ${engine} · ${process.env.SDP_R3242_BOOTSTRAP||'node
   assert.equal(Number((await db.query('select count(*) n from private.ajuntament_municipis_ine')).rows[0].n),8132);
   assert.deepEqual((await db.query('select claimed,created_by,municipi_ine,description from public.organizations where id=$1',[H])).rows[0],{claimed:false,created_by:null,municipi_ine:'03132',description:'Fitxa municipal pendent d’acreditació oficial'});
   assert.equal(Number((await db.query('select count(*) n from public.organization_memberships where organization_id=$1',[H])).rows[0].n),0);
+  // v1.2.23 · R2D-02 (Gauntlet R2) · El nom sembrat contrau i minusculitza l'article i s'apostrofa davant de vocal,
+  // com nomDeLaGent: ningú no el pot esmenar fins a l'acreditació.
+  assert.equal((await db.query('select name from public.organizations where id=$1',[H])).rows[0].name,'Ajuntament de la Torre de les Maçanes');
+  assert.equal((await db.query("select name from public.organizations where tenant_id=$1 and kind='city_hall'",[T2])).rows[0].name,"Ajuntament d'Alfafara");
   assert.equal(Number((await db.query('select count(*) n from public.organizations where tenant_id=$1',[T3])).rows[0].n),0);
   const directory=(await ask(db,null,'select claimed,municipi_ine from public.organization_directory where id=$1',[H],'anon')).rows[0];assert.deepEqual(directory,{claimed:false,municipi_ine:'03132'});
  });
  await t.test('cap autoalta, canvi de tipus, claimed, auditoria ni RPC genèrica',async()=>{
   await assert.rejects(ask(db,A,"insert into public.organizations(tenant_id,slug,name,kind,created_by)values($1,'usurpacio','Oficina falsa','city_hall',$2)",[T,A]),/row-level security|permission denied/);
   for(const sql of["update public.organizations set claimed=true where id=$1","select * from private.ajuntament_auditoria where organization_id=$1"] ) await assert.rejects(ask(db,A,sql,[H]),/permission denied/);
-  await assert.rejects(ask(db,A,'select public.sollicita_reclamacio($1,$2)',[H,evidence]),/SDP-AJT-020/);
+  // v1.2.23 · M3-01 (ordre del Mestre 261123) · El missatge porta «sollutia» en lloc de l'errata «sollicitia».
+  await assert.rejects(ask(db,A,'select public.sollicita_reclamacio($1,$2)',[H,evidence]),/SDP-AJT-020: usa sollutia acreditació institucional/);
+  assert.equal(migration.includes('sollicitia'),false);
   await assert.rejects(ask(db,A,'select public.sollicita_acreditacio_ajuntament($1,$2)',[H,evidence]),/SDP-AJT-005/);
  });
  await t.test('domini vinculat a ajuntament, revisió AAL2 i correu autèntic confirmat',async()=>{
@@ -69,6 +75,9 @@ test(`R32.42 ajuntament · ${engine} · ${process.env.SDP_R3242_BOOTSTRAP||'node
   assert.equal((await db.query('select claimed from public.organizations where id=$1',[H])).rows[0].claimed,false);
   assert.equal((await ask(db,A,'select public.pot_signar_com_organitzacio($1,$2) x',[H,T])).rows[0].x,false);
   await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,true)',[ca]),/SDP-AJT-020/);
+  // v1.2.23 · M3-01 · Una sol·licitud institucional tampoc no es rebutja per la via genèrica: no perd l'evidència.
+  await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,false)',[ca]),/SDP-AJT-020/);
+  assert.equal((await db.query('select estat from public.organization_claims where id=$1',[ca])).rows[0].estat,'pendent');
   await assert.rejects(ask(db,A,'select public.resol_acreditacio_ajuntament($1,true,$2)',[ca,evidence]),/SDP-AJT-010/);
  });
  await t.test('canvi del correu després de sol·licitar invalida aprovació',async()=>{
@@ -172,11 +181,25 @@ test(`R32.42 ajuntament · ${engine} · reclamació genèrica anterior a la migr
   await db.exec("set test.aal='aal2'");
   for(const o of orgs) await ask(db,B,'select public.registra_domini_ajuntament($1,$2,$3)',[o,'ajuntament.example',evidence]);
   const estat=async c=>(await db.query('select estat from public.organization_claims where id=$1',[c])).rows[0].estat;
-  await t.test('sense tancar abans, cap RPC no la resol i bloqueja l’acreditació de la mateixa persona',async()=>{
+  // v1.2.23 · M3-01 (ordre del Mestre 261123) · Sense tancar-la abans, la via genèrica no l'aprova mai, però una
+  // superadmin la pot rebutjar amb rastre; després, la mateixa persona pot demanar l'acreditació institucional.
+  await t.test('sense tancar abans, la via genèrica no l’aprova, una superadmin la rebutja amb rastre i l’acreditació continua',async()=>{
    await assert.rejects(ask(db,A,'select public.sollicita_acreditacio_ajuntament($1,$2)',[orgs[0],evidence]),/idx_claims_una_pendent/);
-   await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,false)',[oberta]),/SDP-AJT-020/);
+   await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,true)',[oberta]),/SDP-AJT-020/);
    await assert.rejects(ask(db,B,'select public.resol_acreditacio_ajuntament($1,false,$2)',[oberta,evidence]),/SDP-AJT-012/);
+   await assert.rejects(ask(db,A,'select public.resol_reclamacio($1,false)',[oberta]),/SDP-CLAIM-010/);
    assert.equal(await estat(oberta),'pendent');
+   assert.equal(Number((await db.query("select count(*) n from public.organization_memberships where organization_id=$1",[orgs[0]])).rows[0].n),0);
+   await ask(db,B,'select public.resol_reclamacio($1,false)',[oberta]);
+   assert.equal(await estat(oberta),'rebutjada');
+   assert.deepEqual((await db.query("select actor_id,accio from private.ajuntament_auditoria where claim_id=$1",[oberta])).rows,[{actor_id:B,accio:'reclamacio_generica_rebutjada'}]);
+   assert.equal((await db.query('select claimed from public.organizations where id=$1',[orgs[0]])).rows[0].claimed,false);
+   await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,false)',[oberta]),/SDP-CLAIM-011/);
+   const nova=(await ask(db,A,'select (public.sollicita_acreditacio_ajuntament($1,$2)).id id',[orgs[0],evidence])).rows[0].id;
+   await assert.rejects(ask(db,B,'select public.resol_reclamacio($1,false)',[nova]),/SDP-AJT-020/);
+   await ask(db,B,'select public.resol_acreditacio_ajuntament($1,true,$2)',[nova,evidence]);
+   assert.equal((await db.query('select claimed from public.organizations where id=$1',[orgs[0]])).rows[0].claimed,true);
+   assert.deepEqual((await db.query("select user_id from public.organization_memberships where organization_id=$1 and role='owner'",[orgs[0]])).rows,[{user_id:A}]);
   });
   await t.test('tancada abans amb la sentència del README, l’acreditació institucional continua',async()=>{
    const nova=(await ask(db,A,'select (public.sollicita_acreditacio_ajuntament($1,$2)).id id',[orgs[1],evidence])).rows[0].id;

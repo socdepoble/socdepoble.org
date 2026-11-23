@@ -136,7 +136,7 @@
 
   .sdp-safata-lssi__ajuda {
     margin: 0;
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
     color: var(--sdp-text-suau);
   }
 

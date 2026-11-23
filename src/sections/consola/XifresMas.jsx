@@ -90,7 +90,7 @@ function textos(xifra, privat) {
  * (el Mapa o consola.json); `creat`, la del copy de la Consola: a la
  * pastilla mana la més recent (T51).
  */
-export function TargetaXifra({ xifra, generat = null, creat = copyConsola().date }) {
+export function TargetaXifra({ xifra, generat = null, creat = copyConsola().date, headingLevel = 'h3' }) {
   const privat = useContext(PrivacitatConsola);
   const { titol, subtitol } = textos(xifra, privat);
   return (
@@ -98,16 +98,16 @@ export function TargetaXifra({ xifra, generat = null, creat = copyConsola().date
       entradilla={<Entradeta marcada={xifra.entradetaMarcada} />}
       imatge={xifra.imatge} imatgeAlt={xifra.imatgeAlt} etiquetes={xifra.etiquetes ?? undefined}
       problemes={xifra.problemes ?? undefined}
-      creat={creat} generat={generat} a={xifra.ruta} />
+      creat={creat} generat={generat} a={xifra.ruta} headingLevel={headingLevel} />
   );
 }
 
 /** Una graella de targetes de xifra, la de les targetes explicatives de la Consola. */
-export function GraellaXifres({ xifres, generat = null }) {
+export function GraellaXifres({ xifres, generat = null, headingLevel = 'h3' }) {
   if (!xifres.length) return null;
   return (
     <div className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella}>
-      {xifres.map((x) => <TargetaXifra key={x.slug} xifra={x} generat={generat} />)}
+      {xifres.map((x) => <TargetaXifra key={x.slug} xifra={x} generat={generat} headingLevel={headingLevel} />)}
     </div>
   );
 }
@@ -121,8 +121,8 @@ export function XifresMas({ mapa = null }) {
   const id = useId();
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>Sóc de Poble en xifres</h2>
-      <GraellaXifres xifres={xifresDeLaGraella(mapa)} generat={mapa?.generat ?? null} />
+      <h3 id={id}>Sóc de Poble en xifres</h3>
+      <GraellaXifres xifres={xifresDeLaGraella(mapa)} generat={mapa?.generat ?? null} headingLevel="h4" />
     </section>
   );
 }

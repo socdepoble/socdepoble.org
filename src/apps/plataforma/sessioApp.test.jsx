@@ -921,7 +921,7 @@ describe('la forma i la tornada', () => {
   test('el portal /app pinta el panell de verificadors només amb el booleà esSuperadmin de la sessió', async () => {
     m.sessio = { ...SESSIO_DINS, esSuperadmin: true };
     muntaPlataforma('/app', { registre: registreAmb(AMB_SESSIO), entorn: ENTORN_OBERT });
-    expect(await screen.findByRole('heading', { level: 2, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 3, name: 'Gestió de verificadors i botigues' })).toBeTruthy();
     expect(m.lecturesSessio).toBeGreaterThan(0);
     cleanup();
     m.sessio = SESSIO_DINS;

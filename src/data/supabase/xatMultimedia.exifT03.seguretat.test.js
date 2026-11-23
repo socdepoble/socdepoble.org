@@ -39,14 +39,16 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-test.each(['image/jpeg', 'image/webp'])('DOL-55: %s envia només lloc aproximat al RPC i cap GPS als bytes pujats', async mime => {
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el fitxer conserva el GPS de l'original (el Mestre ho
+   mana, amb l'avís abans de publicar); el DTO del mapa continua arrodonit a 2 decimals (DOL-55). */
+test.each(['image/jpeg', 'image/webp'])('DOL-55 + IDEA-331: %s envia el lloc aproximat al RPC i conserva el GPS als bytes pujats', async mime => {
   const original = fotoGps(); const hashOriginal = await sha(original);
   const adjunt = await preparaAdjunt(original, { comprimeix: compressorRaster(original, mime) });
   expect(adjunt.ubicacio).toEqual(LLOC_APROXIMAT);
   const resultat = await publicaAdjuntXat(FIL, adjunt);
   const pujat = fetch.mock.calls[0][1].body;
   expect(pujat.type).toBe(mime);
-  expect(await gps(pujat)).toBeNull();
+  expect(await gps(pujat)).toMatchObject(LLOC);
   expect(await gps(original)).toMatchObject(LLOC);
   expect(await sha(original)).toBe(hashOriginal);
   expect(m.rpc.mock.calls.find(([nom]) => nom === 'xat_publica_adjunt')[1].p_ubicacio).toEqual(LLOC_APROXIMAT);
@@ -99,9 +101,10 @@ test.each([
   await expect(publicaAdjuntXat(FIL, adjunt)).resolves.toMatchObject({ id: adjunt.id });
   const pujat = await bytes(fetch.mock.calls[0][1].body);
   expect(conte(pujat, 'Photoshop 3.0')).toBe(false);
-  expect(await gps(fetch.mock.calls[0][1].body)).toBeNull();
   const tiffPujat = extreuTiff(pujat);
   if (conservaUbicacio && !amaga) {
+    // v1.2.23 · IDEA-331 · Conservar el lloc el deixa també dins del fitxer.
+    expect(await gps(fetch.mock.calls[0][1].body)).toMatchObject(LLOC);
     // L'EXIF blanc de l'original (data i càmera) arriba sencer; el de WebKit, no.
     const exif = llegixExif(concatena(SOI, app1Exif(tiffPujat)), { ambCamera: true });
     expect(exif.dataCaptura).toBe('2017-05-14T10:22:33+02:00');
@@ -109,6 +112,7 @@ test.each([
     expect(conte(tiffPujat, 'CAMERA-SINTETICA')).toBe(true);
     expect(m.rpc.mock.calls.find(([nom]) => nom === 'xat_publica_adjunt')[1].p_ubicacio).toEqual(LLOC_APROXIMAT);
   } else {
+    expect(await gps(fetch.mock.calls[0][1].body)).toBeNull();
     expect(tiffPujat).toBeNull();
     expect(m.rpc.mock.calls.find(([nom]) => nom === 'xat_publica_adjunt')[1].p_ubicacio ?? null).toBeNull();
   }
@@ -123,7 +127,7 @@ test('v1.2.20 · L1-01: una captura PNG a WebKit (WebP → PNG → JPEG) passa l
   expect(extreuTiff(pujat)).toBeNull();
 });
 
-test.each(['image/jpeg', 'image/webp'])('EXIF_T03: %s puja bytes sense GPS abans del fallback RPC3 i conserva ubicació JSON consentida', async mime => {
+test.each(['image/jpeg', 'image/webp'])('EXIF_T03 + IDEA-331: %s puja bytes amb el GPS conservat abans del fallback RPC3 i conserva ubicació JSON consentida', async mime => {
   const original = fotoGps(), hashOriginal = await sha(original);
   expect(await gps(original)).toMatchObject(LLOC);
   const adjunt = await preparaAdjunt(original, { comprimeix: compressorRaster(original, mime) });
@@ -137,8 +141,8 @@ test.each(['image/jpeg', 'image/webp'])('EXIF_T03: %s puja bytes sense GPS abans
   expect(resultat.ubicacioNoAdmesa).toBe(true);
   expect(fetch).toHaveBeenCalledOnce();
   const pujat = fetch.mock.calls[0][1].body;
-  expect(await gps(pujat)).toBeNull();
-  expect(await gps(adjunt.fitxer)).toBeNull();
+  expect(await gps(pujat)).toMatchObject(LLOC);
+  expect(await gps(adjunt.fitxer)).toMatchObject(LLOC);
   const exif = llegixExif(concatena(SOI, app1Exif(extreuTiff(await bytes(pujat)))), { ambCamera: true });
   expect(exif.dataCaptura).toBe('2017-05-14T10:22:33+02:00');
   expect(exif.camera.marca).toBe('CAMERA-SINTETICA');
@@ -187,7 +191,7 @@ test('EXIF_T03: un ACK antic amb lloc després del fallback no activa l’avís 
   expect(fetch).toHaveBeenCalledOnce();
 });
 
-test('EXIF_T03: resposta perduda després de pujar permet reintentar el mateix binari net i ID sense duplicar bytes', async () => {
+test('EXIF_T03: resposta perduda després de pujar permet reintentar el mateix binari i ID sense duplicar bytes', async () => {
   const original = fotoGps();
   const adjunt = await preparaAdjunt(original, { comprimeix: compressorRaster(original, 'image/webp') });
   fetch.mockImplementation(async (_url, p) => p.method === 'GET' ? new Response(adjunt.fitxer, { headers: { 'Content-Type': adjunt.fitxer.type } }) : { ok: true, status: 200 });
@@ -199,7 +203,8 @@ test('EXIF_T03: resposta perduda després de pujar permet reintentar el mateix b
   });
   await expect(publicaAdjuntXat(FIL, adjunt)).rejects.toMatchObject({ code: 'xarxa' });
   await expect(publicaAdjuntXat(FIL, adjunt)).resolves.toMatchObject({ id: adjunt.id, metadades: { ubicacio: LLOC_APROXIMAT } });
-  expect(fetch.mock.calls.filter(([, p]) => p.method === 'POST')).toHaveLength(1); expect(await gps(fetch.mock.calls[0][1].body)).toBeNull();
+  // v1.2.23 · IDEA-331 · El mateix binari: el que conserva el GPS (per defecte).
+  expect(fetch.mock.calls.filter(([, p]) => p.method === 'POST')).toHaveLength(1); expect(await gps(fetch.mock.calls[0][1].body)).toMatchObject(LLOC);
 });
 
 test('EXIF_T03: avortar una lectura binària pendent rebutja immediatament i ignora la lectura tardana', async () => {
@@ -238,11 +243,14 @@ function videoGps() {
   return new Blob([base.subarray(0, start), caixa('moov', base.subarray(start + 8, end), caixa('udta', xyz)), caixa('mdat', 'MOSTRES-SINTETIQUES')], { type: 'video/mp4' });
 }
 
-test('EXIF_T03 vídeo: MP4 conegut es saneja abans de pujar, manté mostres/mida i GPS consentit al DTO', async () => {
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el vídeo ix tal com és (amb el seu ©xyz) i el DTO
+   arrodonit; un servidor sense la RPC4 el publica sense DTO i sense tornar a exigir-lo net. Amb «Amaga el lloc», el
+   sanejador acreditable i ni ©xyz als bytes ni DTO. */
+test('EXIF_T03 + IDEA-331 vídeo: per defecte l’MP4 conserva el GPS als bytes i al DTO, també amb el fallback RPC3', async () => {
   const original = videoGps(); const hashOriginal = await sha(original);
   const adjunt = await preparaAdjunt(original, { lligDurada: async () => 4000, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
-  expect(adjunt).toMatchObject({ ubicacio: LLOC_APROXIMAT, senseUbicacio: true });
-  expect(adjunt.fitxer.size).toBe(original.size);
+  expect(adjunt).toMatchObject({ ubicacio: LLOC_APROXIMAT, senseUbicacio: false, conservaUbicacio: true });
+  expect(adjunt.fitxer).toBe(original);
   m.rpc.mockImplementation(async (nom, p) => {
     if (nom === 'xat_reserva_adjunt') return { ruta: p.p_id, pujat: false };
     if (p.p_ubicacio) throw Object.assign(new Error('PGRST202'), { status: 404 });
@@ -250,7 +258,22 @@ test('EXIF_T03 vídeo: MP4 conegut es saneja abans de pujar, manté mostres/mida
   });
   await expect(publicaAdjuntXat(FIL, adjunt)).resolves.toMatchObject({ ubicacioNoAdmesa: true });
   const pujat = new TextDecoder().decode(await bytes(fetch.mock.calls[0][1].body));
+  expect(pujat).toContain(COORD_VIDEO); expect(pujat).toContain('MOSTRES-SINTETIQUES');
+  expect(await sha(original)).toBe(hashOriginal);
+});
+
+test('EXIF_T03 vídeo: amb «Amaga el lloc» l’MP4 conegut es saneja abans de pujar, manté mostres/mida i no porta DTO', async () => {
+  const original = videoGps(); const hashOriginal = await sha(original);
+  const adjunt = await preparaAdjunt(original, { conservaUbicacio: false, lligDurada: async () => 4000, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
+  expect(adjunt).toMatchObject({ senseUbicacio: true, conservaUbicacio: false });
+  expect(adjunt).not.toHaveProperty('ubicacio');
+  expect(adjunt.fitxer.size).toBe(original.size);
+  m.rpc.mockImplementation(async (nom, p) => nom === 'xat_reserva_adjunt' ? { ruta: p.p_id, pujat: false }
+    : { id: p.p_id, fil_id: FIL, seq: 1, tipus: 'video', metadades: {} });
+  await expect(publicaAdjuntXat(FIL, adjunt)).resolves.toMatchObject({ id: adjunt.id });
+  const pujat = new TextDecoder().decode(await bytes(fetch.mock.calls[0][1].body));
   expect(pujat).not.toContain(COORD_VIDEO); expect(pujat).toContain('MOSTRES-SINTETIQUES');
+  expect(m.rpc.mock.calls.find(([nom]) => nom === 'xat_publica_adjunt')[1]).not.toHaveProperty('p_ubicacio');
   expect(await sha(original)).toBe(hashOriginal);
 });
 
@@ -269,7 +292,8 @@ test('EXIF_T03 vídeo: legacy GPS amb bandera falsa no publica via RPC3 ni afirm
 test.each(['reserva-pujada', '409', 'XHR409'])('EXIF_T03 delta: %s amb GPS remot antic i Blob local net del mateix ID no es publica', async via => {
   // Objecte remot legacy deliberadament incomplet; no passa per la pujada.
   const original = fotoGps({}, IMATGE);
-  const net = await preparaAdjunt(original, { comprimeix: compressorRaster(original, 'image/jpeg') });
+  // v1.2.23 · IDEA-331 · El Blob local net és el de l'opt-out: per defecte ara conservaria el GPS.
+  const net = await preparaAdjunt(original, { comprimeix: compressorRaster(original, 'image/jpeg'), conservaUbicacio: false });
   const antic = await bytes(original);
   const remot = new Blob([antic.subarray(0, antic.length - 2), new Uint8Array(net.fitxer.size - original.size), antic.subarray(antic.length - 2)], { type: original.type });
   expect(remot.size).toBe(net.fitxer.size); expect(await gps(remot)).toMatchObject(LLOC); expect(await gps(net.fitxer)).toBeNull();

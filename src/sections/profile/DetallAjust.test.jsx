@@ -495,7 +495,7 @@ test('261016 · sense drets desats, la píndola diu «Elegir drets d’autor» i
   expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
   fireEvent.click(pindola);
   const vista = vistaDrets();
-  expect(document.activeElement).toBe(within(vista).getByRole('heading', { level: 2, name: 'Drets d’autor' }));
+  expect(document.activeElement).toBe(within(vista).getByRole('heading', { level: 3, name: 'Drets d’autor' }));
   expect(within(vista).getByRole('button', { name: 'Tornar al compte' })).toBeTruthy();
   expect(vista.querySelector('.sdp-drets__intro').textContent)
     .toBe('Tria amb quins drets naixen les teues notes noves. Res no canvia fins que prems «Desar autoria».');

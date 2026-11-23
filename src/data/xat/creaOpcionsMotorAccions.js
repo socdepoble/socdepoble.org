@@ -76,7 +76,12 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
       mutaFils(previs => previs.map(f => f.id === desti.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
       return [definitiu];
     },
-    enviaAdjunt: (...args) => entornAccions.current.sendChatMedia(...args),
+    /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El lloc el conserva qui publica, informat abans de publicar. Qui
+       reenvia no és l'autor: la còpia reenviada ix sense GPS.
+       v1.2.23 · L1-01 (Gauntlet R1) · Sense GPS, però no sense EXIF: una foto conserva l'orientació, la data i la
+       càmera de TRIA_SENSE_UBICACIO (com abans de la IDEA-331, quan es reenviava l'original desat, que ja les
+       portava), i el transport l'acredita com a punt fix d'imatgeSenseUbicacio (supabase/xatMultimedia.js). */
+    enviaAdjunt: (desti, adjunt, ...resta) => entornAccions.current.sendChatMedia(desti, { ...adjunt, conservaUbicacio: false }, ...resta),
     lligBlob: async (m, { signal }) => {
       // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
       const { MAXIM_ADJUNT_XAT, MIME_XAT } = await import('../xatMultimedia.js');
@@ -110,6 +115,15 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
         const net = await senseUbicacioVideo(original, { signal });
         if (!net.net) throw (await import('../xatMultimedia.js')).errorAdjuntXat('video-no-acreditable');
         return net.fitxer;
+      }
+      if (m.tipus === 'imatge') {
+        /* v1.2.23 · IDEA-331 · Des de la IDEA-331 la foto desada porta el GPS de qui l'ha publicada: la còpia per a
+           reenviar es neteja al contenidor (sense recodificar), sense mutar l'original. */
+        const { imatgeSenseUbicacio } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+        const net = imatgeSenseUbicacio(new Uint8Array(await original.arrayBuffer()));
+        if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+        if (!net || net.format !== meta.mime) throw (await import('../xatMultimedia.js')).errorAdjuntXat('foto-codificacio');
+        return new Blob([net.bytes], { type: meta.mime });
       }
       return original;
     }

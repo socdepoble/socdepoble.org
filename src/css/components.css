@@ -30,7 +30,7 @@
   .sdp-fila { display: flex; flex-direction: row; }
   .sdp-graella { display: grid; }
   .sdp-costat { display: grid; }
-  .sdp-centre { margin-inline: auto; max-width: var(--sdp-measure); box-sizing: content-box; }
+  .sdp-centre { margin-inline: auto; width: 100%; box-sizing: border-box; }
   .sdp-paragraf-centrat { text-align: center; }
   .sdp-nota-suau { color: var(--sdp-text-suau); }
   /* Separació vertical dels grups d'accions de l'administració (abans style en línia). */
@@ -775,11 +775,6 @@
   color: var(--sdp-sobre-accent);
 }
 
-.btn-secondary {
-  background: var(--sdp-accio-control);
-  color: var(--sdp-sobre-accio);
-}
-
 .btn-danger {
   background: var(--sdp-error);
   color: var(--sdp-sobre-color);
@@ -790,10 +785,6 @@
   .btn-primary:hover:not(:disabled) {
     background: var(--sdp-accent-hover);
     color: var(--sdp-sobre-accent);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background: var(--sdp-accio-control-hover);
   }
 
   .btn-danger:hover:not(:disabled) {
@@ -1885,40 +1876,6 @@ time.sp-card-calendar-badge:active {
   line-height: 1;
 }
 
-.btn-taronja-fort {
-  background: var(--sdp-crom-realc);
-  color: var(--sdp-sobre-accent);
-  font-weight: 700;
-  border: none;
-  height: auto;
-  padding: 0 var(--sdp-space-5);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--sdp-radi-boto);
-  font-size: var(--sdp-text-meta);
-  line-height: var(--sdp-leading-snug);
-  cursor: pointer;
-  transition: background-color var(--sdp-t);
-  white-space: normal;
-  min-height: var(--sdp-space-12);
-  max-inline-size: 100%;
-}
-
-/* Fase C (pla 261004_0050) · cap hover engrandix: fora l'escala d'1,02.
-   El retorn és el vel del crom, i només amb ratolí. */
-@media (hover: hover) and (pointer: fine) {
-  .btn-taronja-fort:hover {
-    background: var(--sdp-crom-hover);
-  }
-}
-
-.btn-taronja-fort.active {
-  background: var(--sdp-accent);
-}
-
-
-
 .pill {
   display: inline-flex;
   align-items: center;
@@ -2210,8 +2167,17 @@ header.bar-blue {
 .bar-blue-left { grid-column: 1; justify-self: start; }
 .bar-blue .sp-card-actions { grid-column: 2; justify-self: center; }
 .bar-blue .btn-connectar.sp-card-connect { grid-column: 3; justify-self: end; }
+.bar-blue-right {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-1);
+}
+.bar-blue-right__editar { flex: 0 0 auto; }
 .bar-blue-left .sp-card-action,
-.bar-blue .sp-card-actions .sp-card-action {
+.bar-blue .sp-card-actions .sp-card-action,
+.bar-blue-right .sp-card-action {
   width: var(--sdp-touch);
   min-width: var(--sdp-touch);
   height: var(--sdp-touch);
@@ -2245,6 +2211,11 @@ header.bar-blue { container-type: inline-size; }
    sobreeixia (la columna de l'editor de Notes en pantalles d'uns 1000). La
    paraula consulta la caixa de contingut de la barra (sense el coixí de 32):
    només torna a partir de 513px de barra, i hi cap (mesurat, 261004). */
+@container (max-width: 560px) {
+  .bar-blue--amb-editar .sp-card-connect-text { display: none; }
+  .bar-blue--amb-editar .sp-card-connect-plus { display: inline; }
+  .bar-blue--amb-editar .btn-connectar.sp-card-connect { width: var(--sdp-touch-comode); padding: 0; }
+}
 @container (max-width: 480px) {
   .bar-blue .sp-card-connect-text { display: none; }
   .bar-blue .sp-card-connect-plus { display: inline; }
@@ -2253,6 +2224,10 @@ header.bar-blue { container-type: inline-size; }
      8 + 144 + 8 + 144 + 8 + 48 + 8 = 368px de barra (dues separacions, una
      per cada frontera de la graella de tres columnes). */
   header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }
+}
+@container (max-width: 416px) {
+  header.bar-blue.bar-blue--amb-editar { gap: 0; padding: 0; }
+  .bar-blue--amb-editar .bar-blue-right { gap: 0; }
 }
 /* T20 · per davall de 368px de barra: packs a tocar, sense coixí, i el «+»
    a la cel·la de 48 com les icones: 144 + 144 + 48 = 336px.
@@ -2271,6 +2246,16 @@ header.bar-blue { container-type: inline-size; }
     min-width: var(--sdp-touch);
     height: var(--sdp-touch);
     min-height: var(--sdp-touch);
+  }
+}
+@container (max-width: 383px) {
+  .bar-blue--amb-editar .bar-blue-left .sp-card-action,
+  .bar-blue--amb-editar .sp-card-actions .sp-card-action,
+  .bar-blue--amb-editar .bar-blue-right .sp-card-action,
+  .bar-blue--amb-editar .btn-connectar.sp-card-connect {
+    width: calc(var(--sdp-touch) - var(--sdp-space-1));
+    min-width: calc(var(--sdp-touch) - var(--sdp-space-1));
+    padding-inline: 0;
   }
 }
 /* PS-04 (B7, marató 261101) · Per davall de 336px de barra (el detall amb el
@@ -4861,7 +4846,7 @@ section.bar-orange[data-copublicacio="composta"] {
   .anatomia__nota,
   .anatomia__avis {
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
   }
 
   /* ── Control lliscant ── */
@@ -5034,7 +5019,7 @@ section.bar-orange[data-copublicacio="composta"] {
 
   .anatomia__pendent {
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
   }
 
   .anatomia__veu {
@@ -5052,7 +5037,7 @@ section.bar-orange[data-copublicacio="composta"] {
 
   .anatomia__sensevideo {
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
   }
 
   .anatomia__documental iframe {
@@ -5069,7 +5054,7 @@ section.bar-orange[data-copublicacio="composta"] {
   .anatomia__nota-peca {
     margin: 0 0 var(--sdp-space-2);
     color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-text-small);
     line-height: 1.6;
   }
 

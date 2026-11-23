@@ -151,7 +151,7 @@ test('el recorregut sencer no ix de l’ordinador i, en bloquejar-se, no deixa r
   fireEvent.click(screen.getByRole('button', { name: 'Obri el cofre' }));
   fireEvent.change(await screen.findByLabelText('Tria els extractes del banc de tot el període', {}, { timeout: 5000 }),
     { target: { files: [fitxer('moviments.csv', CSV)] } });
-  await screen.findByRole('heading', { level: 2, name: 'La foto del director financer' }, { timeout: 5000 });
+  await screen.findByRole('heading', { level: 3, name: 'La foto del director financer' }, { timeout: 5000 });
   fireEvent.click(screen.getByRole('button', { name: 'Mostra les xifres' }));
 
   /* Una regla enviada i un esborrany sense enviar. */

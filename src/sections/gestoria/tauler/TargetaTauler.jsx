@@ -164,6 +164,7 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
           onCommuta={() => setVisible((abans) => !abans)} />
       ) : null}
       squareBadge={quadratDe(targeta, visible, idioma)}
+      headingLevel="h4"
       title={targeta.titol}
       subtitle={targeta.subtitol}
       body={(

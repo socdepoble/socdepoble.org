@@ -32,7 +32,14 @@ import { VERSIO_FORMAT, exportaMunicipiOpenData } from '../../data/exportaMunici
 import { webcrypto } from 'node:crypto';
 import { VIGENCIA_ALERTA_MS } from '../mur/alertesMunicipals.js';
 import { PAGE_COPY } from './pageContent.js';
-import { localitzaPagina } from './pageContent.r10.js';
+import { FITA_V1223, SERVIDOR_V1223, localitzaPagina } from './pageContent.r10.js';
+/* v1.2.23 · C (ordre del Mestre 261123) · La crònica de la v1.2.23 cita el rètol viu del menú (IDEA-333) i els textos de
+   l'edició in situ (Gemini R32.44 i R32.45), els del codi. */
+import { SECTIONS, rotolDeLaSeccio } from '../../config/sections.js';
+import { textosEdicioSistema } from '../notes/i18nEdicioSistema.js';
+/* v1.2.23 · R2A-02 (Gauntlet R2) · «Amb qui actues?» es veu com a títol del calaix que obri el peu del rail del Xat (el
+   peu només pinta el nom, o «Tu»): la crònica el cita d'ací. */
+import { textosCalaixIdentitats } from '../../components/universal/identitat/textosCalaixIdentitats.js';
 import { textosCalendariRsvp } from '../calendari/i18nCalendariRsvp.js';
 import { TEXTOS_BENVINGUDA_FORASTER } from '../xat/components/acollidaForasterXatModel.js';
 import { TEXTOS_MODE_SENIOR } from '../../config/textosModeSenior.js';
@@ -110,8 +117,10 @@ const CONNECTOR_PUBLICAT = '1.1.12';
    Onada v1.2.19 · Ara la 1.1.26 (SVN r3815792, v1.2.18), la mateixa que diu la crònica R32.33.
    Onada v1.2.20 · Ara la 1.1.27 (SVN r3816052, v1.2.19), la mateixa que diu la crònica R32.34.
    Onada v1.2.21 · Ara la 1.1.28 (SVN r3816118, v1.2.20), la mateixa que diu la crònica R32.41.
-   Onada v1.2.22 · Ara la 1.1.29 (SVN r3816946, v1.2.21), la mateixa que diu la crònica de les Onades R32.42 i R32.43. */
-const CONNECTOR_A_WPORG = '1.1.29';
+   Onada v1.2.22 · Ara la 1.1.29 (SVN r3816946, v1.2.21), la mateixa que diu la crònica de les Onades R32.42 i R32.43.
+   v1.2.23 · C (ordre del Mestre 261123) · Ara la 1.1.30 (SVN r3817249, v1.2.22), la mateixa que diu la crònica de la
+   v1.2.23 (FITA_V1223). */
+const CONNECTOR_A_WPORG = '1.1.30';
 const RUTES = llegix('src/app/App.jsx');
 
 /* Un bloc d'entrega: del seu <h3> fins al <h3> següent (o fins al final). */
@@ -489,8 +498,25 @@ const INICIS_R32_42 = {
   eu: '2026ko azaroaren 22a, gaua · R32.42 eta R32.43 olatuak',
   gl: '22 de novembro de 2026, noite · Ondas R32.42 e R32.43'
 };
-const desDeR32_41 = (cos) => (Object.values(INICIS_R32_42).some((inici) => cos.startsWith(`<h3>${inici}`))
+/* v1.2.23 · C (ordre del Mestre 261123) · La crònica de la v1.2.23 (versió 1.2.23, build 28) obri /versions, davant de les
+   Onades R32.42 i R32.43. desDeR32_42 lleva el seu bloc quan obri la pàgina; les proves de les R32.42 i R32.43 lligen
+   /versions des d'ací. */
+const TITOL_FITA_V1223 = '23 de novembre de 2026 · El lloc de les fotos a la vista, «Editar» des de la pàgina i la versió al menú';
+const fitaV1223Bloc = blocDe(TITOL_FITA_V1223);
+const INICIS_V1223 = {
+  ca: '23 de novembre de 2026 · El lloc de les fotos a la vista',
+  es: '23 de noviembre de 2026 · El lugar de las fotos a la vista',
+  en: '23 November 2026 · Photo locations in plain sight',
+  eu: '2026ko azaroaren 23a · Argazkien lekua agerian',
+  gl: '23 de novembro de 2026 · O lugar das fotos á vista'
+};
+const desDeR32_42 = (cos) => (Object.values(INICIS_V1223).some((inici) => cos.startsWith(`<h3>${inici}`))
   ? cos.slice(cos.indexOf('<h3>', 4)) : cos);
+/* v1.2.23 · C (ordre del Mestre 261123) · Abans lleva també el bloc de la v1.2.23 (desDeR32_42), que ara obri la pàgina. */
+const desDeR32_41 = (cos) => {
+  const resta = desDeR32_42(cos);
+  return Object.values(INICIS_R32_42).some((inici) => resta.startsWith(`<h3>${inici}`)) ? resta.slice(resta.indexOf('<h3>', 4)) : resta;
+};
 /* Onada v1.2.22 · Abans lleva també el bloc de les Onades R32.42 i R32.43 (desDeR32_41), que ara obri la pàgina. */
 const desDeR32_34 = (cos) => {
   const resta = desDeR32_41(cos);
@@ -638,6 +664,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
       // Onada v1.2.17 · La crònica de les Onades R32.25 i R32.26 obri la pàgina, davant de R32.21–R32.24, sense cap número vX.Y.Z al títol.
       // Onada v1.2.18 · La crònica de les Onades R32.27 i R32.28 obri la pàgina, davant de R32.25 i R32.26, sense cap número vX.Y.Z al títol.
       // Onada v1.2.19 · La crònica de les Onades R32.29 a R32.33 obri la pàgina, davant de R32.27 i R32.28, sense cap número vX.Y.Z al títol.
+      // v1.2.23 · C · La crònica de la v1.2.23 obri la pàgina, davant de R32.42 i R32.43, sense cap número vX.Y.Z al títol.
+      TITOL_FITA_V1223,
       // Onada v1.2.22 · La crònica de les Onades R32.42 i R32.43 obri la pàgina, davant de R32.41, sense cap número vX.Y.Z al títol.
       TITOL_FITA_R32_42,
       // Onada v1.2.21 · La crònica de l'Onada R32.41 obri la pàgina, davant de R32.34, sense cap número vX.Y.Z al títol.
@@ -741,7 +769,8 @@ describe('Onada 6 · /versions sense llistes: h3 + obertura + h4 amb prefix i pa
     // Onada v1.2.20 · I la crònica R32.34: trenta-nou en total.
     // Onada v1.2.21 · I la crònica R32.41: quaranta en total.
     // Onada v1.2.22 · I la crònica de les Onades R32.42 i R32.43: 41.
-    expect(entregues).toHaveLength(41);
+    // v1.2.23 · C · I la crònica de la v1.2.23: 42.
+    expect(entregues).toHaveLength(42);
     for (const entrega of entregues) {
       const titol = entrega.match(/^<h3>([^<]+)<\/h3>/)[1];
       expect(entrega, titol).toMatch(/^<h3>[^<]+<\/h3>\n {6}<p>/);
@@ -836,7 +865,8 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
     /* Onada v1.2.20 · I de la 1.2.19 a la 1.2.20: la crònica de l'Onada R32.34 ho explica. */
     /* Onada v1.2.21 · I de la 1.2.20 a la 1.2.21: la crònica de l'Onada R32.41 ho explica. */
     /* Onada v1.2.22 · I de la 1.2.21 a la 1.2.22: la crònica de les Onades R32.42 i R32.43 ho explica. */
-    expect(PAQUET.version).toBe('1.2.22');
+    /* v1.2.23 · C · I de la 1.2.22 a la 1.2.23: la crònica de la v1.2.23 (FITA_V1223) ho explica. */
+    expect(PAQUET.version).toBe('1.2.23');
     expect(TITOL_110).toContain('· v1.1.0 (');
     /* Gauntlet O6 (VER-02/VER-03) · El connector del títol és el publicat a WordPress.org, que no pot ser més nou
        que el del repositori (la capçalera del connector). Onada R21 · El repositori ja porta la 1.1.13 i el títol
@@ -876,15 +906,16 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
   /* Onada v1.2.20 · I a la 1.2.20 amb el build 25 (la crònica R32.34), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.21 · I a la 1.2.21 amb el build 26 (la crònica R32.41), el mateix número que VERSIO_CLIENT_NATIU. */
   /* Onada v1.2.22 · I a la 1.2.22 amb el build 27 (la crònica de les Onades R32.42 i R32.43), el mateix número que VERSIO_CLIENT_NATIU. */
-  test('la versió de les apps d’ara és la 1.2.22, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
+  /* v1.2.23 · C · I a la 1.2.23 amb el build 28 (la crònica de la v1.2.23), el mateix número que VERSIO_CLIENT_NATIU. */
+  test('la versió de les apps d’ara és la 1.2.23, unificada amb package.json, i l’entrada conserva el build d’aquell dia, el 2', () => {
     const gradle = llegix('android/app/build.gradle');
     const pbx = llegix('ios/App/App.xcodeproj/project.pbxproj');
-    expect(gradle).toMatch(/versionName "1\.2\.22"/);
-    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.22']));
-    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.22']));
+    expect(gradle).toMatch(/versionName "1\.2\.23"/);
+    expect([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1])).toEqual(expect.arrayContaining(['1.2.23']));
+    expect(new Set([...pbx.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]))).toEqual(new Set(['1.2.23']));
     const build = gradle.match(/versionCode (\d+)/)[1];
     expect(new Set([...pbx.matchAll(/CURRENT_PROJECT_VERSION = (\d+);/g)].map((m) => m[1]))).toEqual(new Set([build]));
-    expect(build).toBe('27');
+    expect(build).toBe('28');
     expect(String(VERSIO_CLIENT_NATIU)).toBe(build);
     expect(pla).toContain('el número de build de les apps, el 2, no canvia');
   });
@@ -965,7 +996,11 @@ describe('Onada 6 · l’entrada de la 1.1.0, la primera i honesta', () => {
        l'Administració del sistema del Perfil (PanellCromIntegrat), sense calaix. */
     expect(existsSync(resolve(process.cwd(), 'src/components/universal/PanellCrom.jsx'))).toBe(false);
     expect(llegix('src/sections/profile/admin/PanellsAdministracioSistema.jsx')).toContain('export function PanellCromIntegrat()');
-    expect(llegix('src/components/universal/identitat/CalaixIdentitats.jsx')).toContain('titol="Amb qui actues?"');
+    /* v1.2.23 · L5-02 (Gauntlet R1) · REAPUNTADA: el títol del calaix arriba per props (el Xat el passa traduït). El
+       mateix invariant viu: per defecte, «Amb qui actues?», i és el títol del Dialeg. */
+    const calaixIdentitats = llegix('src/components/universal/identitat/CalaixIdentitats.jsx');
+    expect(calaixIdentitats).toContain("etiquetaTitol = 'Amb qui actues?',");
+    expect(calaixIdentitats).toContain('titol={etiquetaTitol}');
   });
 
   test('O7 · connector 1.1.12 publicat: la capçalera i el text actual concorden', () => {
@@ -1046,7 +1081,8 @@ describe('Gauntlet 2 261101 · /versions té l’entrada honesta de l’1 de nov
     // Onada v1.2.19 · La crònica R32.33, una posició més.
     // Onada v1.2.20 · La crònica R32.34, una posició més. Onada v1.2.21 · I la R32.41, una altra.
     // Onada v1.2.22 · I la de les Onades R32.42 i R32.43, una altra.
-    expect(titols[37]).toMatch(/^1 de novembre de 2026 · v/);
+    // v1.2.23 · C · I la de la v1.2.23, una altra.
+    expect(titols[38]).toMatch(/^1 de novembre de 2026 · v/);
     expect(entrega261101).toMatch(/^<h3>1 de novembre de 2026 · v1\.0\.3 \(build pendent de desplegar\) · Connector WordPress v1\.1\.10<\/h3>\n {6}<p>/);
     expect(titolsH4(entrega261101)).toEqual([
       'Novetat · Connector a WordPress.org (wordpress.org/plugins/socdepoble)', 'Novetat · Alertes municipals al Mur',
@@ -1123,8 +1159,9 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
        entrades velles són història i no es reescriuen quan es publica una versió nova. No pot ser més nova que
        la del connector. Onada v1.2.17 · Els títols nous no porten número: es llig del cos de la crònica R32.26.
        Onada v1.2.18 · I ara, de la R32.28. Onada v1.2.19 · I ara, de la R32.33. Onada v1.2.20 · I ara, de la R32.34.
-       Onada v1.2.21 · I ara, de la R32.41. Onada v1.2.22 · I ara, de les Onades R32.42 i R32.43. */
-    const darreraPublicada = text(fitaR32_42Bloc).match(/publicat a WordPress\.org és la (\d+\.\d+\.\d+)/)?.[1];
+       Onada v1.2.21 · I ara, de la R32.41. Onada v1.2.22 · I ara, de les Onades R32.42 i R32.43.
+       v1.2.23 · C · I ara, de la crònica de la v1.2.23. */
+    const darreraPublicada = text(fitaV1223Bloc).match(/publicat a WordPress\.org és la (\d+\.\d+\.\d+)/)?.[1];
     expect(publicada).toBe(darreraPublicada);
     expect(noMesNova(publicada, CONNECTOR), `${publicada} ≤ ${CONNECTOR}`).toBe(true);
   });
@@ -1176,9 +1213,14 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
    cada peça que es pot derivar del codi se'n deriva. */
 /* Onada R21 (COMMIT 5) · Amb R21.1 v1+v2, revocacioPublicacions és al contracte i l'adaptador local no l'oferix: entra a
    l'inventari d'ara (com a pageContent.fediversity.test.js), i el rebut de l'1 de novembre continua sense nomenar-la. */
+/* v1.2.23 · costura Llei 0 de /versions · El kit Codex R32.44 posa edicioPublicacionsPropies i revisionsPagines al
+   contracte i l'adaptador local no les oferix: entren a l'inventari d'ara (com a pageContent.fediversity.test.js), i el
+   rebut de l'1 de novembre continua sense nomenar-les. */
 test('R32.13 · l’inventari local actual no reescriu el rebut històric de l’1 de novembre', () => {
-  expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+  expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
   expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda/);
+  expect(entregaAssalt).not.toContain('edicioPublicacionsPropies');
+  expect(entregaAssalt).not.toContain('revisionsPagines');
   expect(entregaAssalt).not.toContain('revocacioPublicacions');
   expect(entregaAssalt).not.toContain('ackCrdtRural');
   expect(entregaAssalt).not.toContain('denunciesDiligents');
@@ -1216,7 +1258,8 @@ describe('Assalt 10/10 · /versions té l’entrada honesta de la tarda de l’1
     // Onada v1.2.19 · La crònica R32.33, una posició més.
     // Onada v1.2.20 · La crònica R32.34, una posició més. Onada v1.2.21 · I la R32.41, una altra.
     // Onada v1.2.22 · I la de les Onades R32.42 i R32.43, una altra.
-    expect(titols[36]).toMatch(/^1 de novembre de 2026, tarda · /);
+    // v1.2.23 · C · I la de la v1.2.23, una altra.
+    expect(titols[37]).toMatch(/^1 de novembre de 2026, tarda · /);
     expect(entregaAssalt).toMatch(/^<h3>1 de novembre de 2026, tarda · v1\.0\.4 \(build pendent de desplegar\) · Connector WordPress v(\d+\.\d+\.\d+) al repositori<\/h3>\n {6}<p>/);
     expect(titolsH4(entregaAssalt).map((t) => t.split(' · ')[0])).toEqual([
       ...Array(6).fill('Novetat'), ...Array(12).fill('Millora'), ...Array(3).fill('Correcció')
@@ -3639,7 +3682,10 @@ describe('Onada R32.4 · Crònica d’obertura en les cinc llengües amb l’idi
     expect(RUTES).not.toContain("aria-label={t('nav.idioma', 'Idioma')}");
     // Gemini · El calaix «Amb qui actues?» porta l'idioma i l'eixida, amb el text de cada llengua.
     const calaix = llegix('src/components/universal/identitat/CalaixIdentitats.jsx');
-    expect(calaix).toContain('titol="Amb qui actues?"');
+    /* v1.2.23 · L5-02 (Gauntlet R1) · REAPUNTADA: el títol arriba per props; per defecte continua sent «Amb qui
+       actues?» (la barra negra en valencià no en passa cap) i és el que rep el Dialeg. */
+    expect(calaix).toContain("etiquetaTitol = 'Amb qui actues?',");
+    expect(calaix).toContain('titol={etiquetaTitol}');
     expect(calaix).toContain('onClick={onIdioma}');
     expect(calaix).toContain('onClick={onEixir}');
     // v1.2.6 · Els rètols del peu del calaix viuen als diccionaris (claus topbar.identitat.*), fora de l'entrada del connector.
@@ -3893,9 +3939,19 @@ describe('Onades R32.5 i R32.6 · Crònica d’obertura en les cinc llengües am
     /* R32.11 · La ubicació consentida es conserva estructurada; el binari
        no conserva GPS encara que un node antic només admeta RPC3. Data i
        càmera es reconstruïxen amb llista blanca. La crònica és històrica. */
+    /* v1.2.23 · costura Llei 0 de /versions · IDEA-331 (ordre del Mestre 261123) deroga el binari sense GPS per defecte:
+       la foto conserva ara dins del fitxer el GPS que l'avís ensenya (preparaTiffAmbUbicacio dins d'imatgeAmbLloc) i la
+       crònica de la v1.2.23 ho conta. El fet d'esta crònica («comprimides i sense dades d'ubicació») continua cert en
+       el camí de l'opt-out, que és on es fixa: el compressor mai no porta l'EXIF de l'original (conservaExif: false);
+       sense coordenades llegides el bloc és el de preparaTiffSenseUbicacio (data i càmera, cap GPS); «Amaga el lloc»
+       recodifica amb conservaUbicacio: false i el punt fix d'imatgeSenseUbicacio, sense cap bloc; i la pujada acredita
+       eixos bytes abans de reservar. El comportament el prova xatMultimedia.geolocPerDefecte.idea331.test.js. */
     expect(adjunt).toContain('conservaExif: false');
-    expect(adjunt).toContain('preparaTiffSenseUbicacio');
-    expect(llegix('src/data/supabase/xatMultimedia.js')).toContain('await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal)');
+    expect(adjunt).toContain('tiff = coordenades ? preparaTiffAmbUbicacio(publicable) : preparaTiffSenseUbicacio(publicable);');
+    expect(adjunt).toContain('const exifCanonic = { canonic: conserva ? imatgeAmbUbicacio : imatgeSenseUbicacio, incrustaEnJpeg, incrustaEnWebp };');
+    expect(adjunt).toContain("if (adjunt.tipus === 'imatge') fitxer = await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: false });");
+    expect(llegix('src/data/supabase/xatMultimedia.js')).toContain("if (tipus === 'imatge' && (senseLloc || !ubicacio)) await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);");
+    expect(llegix('src/data/supabase/xatMultimedia.geolocPerDefecte.idea331.test.js')).toContain("describe('IDEA-331 (c) · amb «Amaga el lloc» no queda cap GPS ni cap EXIF'");
     expect(llegix('src/sections/xat/components/Compositor.peuPrincipal.r32_6.test.jsx')).toContain('Retorn i submit, amb foto preparada, envien el fitxer i el principal sense missatge de text separat');
     expect(llegix('src/sections/xat/components/Compositor.peuPrincipal.r32_6.test.jsx')).toContain('dos enviaments abans de repintar i Retorn mentre puja només fan una crida');
     expect(llegix('src/sections/xat/XatContext.mediaR326.test.jsx')).toContain('un canvi d’actor liquida el port que ignora abort i rebutja l’ACK tardà');
@@ -4147,7 +4203,10 @@ describe('Onades R32.7, R32.8 i R32.9 · Crònica d’obertura en les cinc lleng
     expect(portMultimedia).toContain('if (error?.status === 404 || /PGRST20[25]|esquema requerit/.test(text)) return noDisponible();');
     expect(r328).toContain('create or replace function public.xat_publica_adjunt(p_id uuid,p_text text,p_resposta_a uuid,p_ubicacio jsonb)');
     const controls = llegix('src/sections/xat/components/ControlsAdjunt.jsx');
-    expect(controls).toContain('disabled={pujant || Boolean(ocupat) || haIntentatEnviar}');
+    /* v1.2.23 · L1-03 (Gauntlet R1) · REAPUNTADA: el botó continua desactivat després del primer intent
+       (haIntentatEnviar); mentre amaga el lloc és aria-disabled, perquè el focus no es perda. */
+    expect(controls).toContain("disabled={pujant || (Boolean(ocupat) && ocupat !== 'ubicacio') || haIntentatEnviar}");
+    expect(controls).toContain("aria-disabled={ocupat === 'ubicacio' || undefined}");
     // Llei 0 · Les marques de la bombolla: aquell dia Conversa les guardava en estat local i XatSection no li passava cap
     // acció del motor. Onada v1.2.10 (README de Gemini R32.12) · La frase ja no descriu el codi d'ara: des de la R32.11
     // (lot 02 de Gemini), XatSection passa les accions del motor de XatContext (ho fixa la crònica R32.10, R32.11 i
@@ -4193,9 +4252,18 @@ describe('Onades R32.7, R32.8 i R32.9 · Crònica d’obertura en les cinc lleng
        l'ha pogut comprimir (motiuFallback; Gauntlet R2, M2-02) i amb video-no-acreditable en la resta de casos. Un WebM
        amb el lloc conservat s'admet sense comprovar, com abans. El fet de la crònica («Amaga el lloc»: o net o error)
        continua sent cert. */
+    /* v1.2.23 · costura Llei 0 de /versions · IDEA-331 (ordre del Mestre 261123) · La guarda de preparaAdjunt ja no és
+       incondicional: només corre amb l'opt-out (if (!net && !conserva)); per defecte el vídeo ix tal com és i l'avís ho
+       diu abans de publicar. «Amaga el lloc» és ara una meitat de l'interruptor (l'altra, «Conserva el lloc», dos
+       rètols al mateix lloc de l'arbre) i continua cridant amagaUbicacioAdjunt, que o neteja o rebutja amb l'avís del
+       camí: el fet de la crònica (el lloc per defecte i «Amaga el lloc» que neteja el fitxer) continua cert. */
+    expect(adjunt).toContain('if (!net && !conserva) {');
     expect(adjunt).toContain("throw errorAdjuntXat('video-no-acreditable-navegador', { motiuFallback: reduit.motiuFallback });");
     expect(adjunt).toContain("if (!netejat.net) throw errorAdjuntXat(/^video\\/(mp4|quicktime)$/.test(preparat.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');");
+    expect(adjunt).toContain("throw errorAdjuntXat(mp4 && adjunt.motiuFallback ? 'video-no-acreditable-navegador' : mp4 ? 'video-no-acreditable' : 'ubicacio-no-eliminable',");
     expect(controls).toContain("onClick={amagaLloc}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>");
+    expect(controls).toContain("onClick={conservaLloc}>{t('section.xat.adjunts.conservaLloc', 'Conserva el lloc')}</button>");
+    expect(controls).toContain('const net = await amagaUbicacioAdjunt(ambLloc, { signal: controller.signal });');
     // Els WebM sense durada: un sol salt al final dins del mateix temps límit.
     expect(adjunt).toContain('if (element.duration === Infinity) {');
     // L'avís d'error amb la creu i el focus que torna a un botó.
@@ -4440,11 +4508,24 @@ describe('Onades R32.10, R32.11 i R32.12 · Crònica d’obertura en les cinc ll
     for (const fitxer of ['src/apps/lector/i18nLector.js', 'src/apps/nevera/i18nNevera.js', 'src/apps/salut/i18nSalut.js']) expect(llegix(fitxer).length, fitxer).toBeGreaterThan(0);
     expect(llegix('src/apps/genealogia/AppGenealogia.jsx')).toContain('titols={titolsGenealogia(idioma)}');
     // Les fotos: el fitxer, sense el lloc; la data i la càmera, per llista blanca; i la comprovació abans de pujar.
+    /* v1.2.23 · costura Llei 0 de /versions · IDEA-331 (ordre del Mestre 261123) deroga «el fitxer no el porta mai»:
+       per defecte la foto porta dins del fitxer el GPS que l'avís ensenya (TRIA_AMB_UBICACIO: la mateixa llista blanca
+       de data i càmera, més el GPS IFD) i la pujada acredita eixe punt fix (comprovaImatgeAmbUbicacio). La crònica és
+       d'aquella entrega; la de la v1.2.23 conta la derogació. Continua cert, i es fixa ací: la data i la càmera passen
+       per llista blanca (TRIA_SENSE_UBICACIO, també dins de TRIA_AMB_UBICACIO); sense coordenades llegides, cap GPS al
+       bloc; amb «Amaga el lloc», cap EXIF; i abans de reservar, la comprovació dels bytes sense GPS (opt-out o sense
+       el DTO que la persona ha vist) o amb el GPS vist. */
     const adjunt = llegix('src/sections/xat/adjuntLocal.js');
     expect(adjunt).toContain('conservaExif: false');
-    expect(adjunt).toContain('preparaTiffSenseUbicacio');
-    expect(llegix('src/components/universal/enquadrament/exifIncrustat.js')).toContain('export const preparaTiffSenseUbicacio = entrada => preparaTiffAmbTria(entrada, TRIA_SENSE_UBICACIO);');
-    expect(llegix('src/data/supabase/xatMultimedia.js')).toContain('await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal)');
+    expect(adjunt).toContain('tiff = coordenades ? preparaTiffAmbUbicacio(publicable) : preparaTiffSenseUbicacio(publicable);');
+    expect(adjunt).toContain("if (adjunt.tipus === 'imatge') fitxer = await imatgeRecodificada(fitxer, { signal, comprimeix, conservaUbicacio: false });");
+    const exifIncrustat = llegix('src/components/universal/enquadrament/exifIncrustat.js');
+    expect(exifIncrustat).toContain('export const preparaTiffSenseUbicacio = entrada => preparaTiffAmbTria(entrada, TRIA_SENSE_UBICACIO);');
+    expect(exifIncrustat).toMatch(/const TRIA_AMB_UBICACIO = Object\.freeze\(\{\s+ifd0: TRIA_SENSE_UBICACIO\.ifd0,\s+exif: TRIA_SENSE_UBICACIO\.exif,/);
+    const multimediaFotos = llegix('src/data/supabase/xatMultimedia.js');
+    expect(multimediaFotos).toContain("if (tipus === 'imatge' && (senseLloc || !ubicacio)) await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);");
+    expect(multimediaFotos).toContain("else if (tipus === 'imatge') await comprovaImatgeAmbUbicacio(fitxer, comprova, config.signal);");
+    expect(multimediaFotos.indexOf('await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal)')).toBeLessThan(multimediaFotos.indexOf("crida('xat_reserva_adjunt'"));
     // Els estils de cinc parts, en fulls diferits que es carreguen des del component que els usa.
     const consumidorsDe = (full) => readdirSync(resolve(process.cwd(), 'src'), { recursive: true })
       .filter((f) => /\.jsx?$/.test(f) && !/\.test\./.test(f) && llegix(`src/${f}`).includes(`${full}?inline`));
@@ -4928,7 +5009,9 @@ describe('Onades R32.14 i R32.15 · Crònica d’obertura en les cinc llengües 
     // Onada v1.2.20 · I davant de la R32.33, la R32.34 (desDeR32_33 la lleva).
     // Onada v1.2.21 · I davant de la R32.34, la R32.41 (desDeR32_34 la lleva).
     // Onada v1.2.22 · I davant de la R32.41, les Onades R32.42 i R32.43 (desDeR32_41 la lleva).
-    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_R32_42}</h3>`)).toBe(true);
+    // v1.2.23 · C · I davant de les R32.42 i R32.43, la de la v1.2.23 (desDeR32_42 la lleva).
+    expect(html.trimStart().startsWith(`<h3>${TITOL_FITA_V1223}</h3>`)).toBe(true);
+    expect(desDeR32_42(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_42}</h3>`)).toBe(true);
     expect(desDeR32_41(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_41}</h3>`)).toBe(true);
     expect(desDeR32_34(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_34}</h3>`)).toBe(true);
     expect(desDeR32_33(html.trimStart()).startsWith(`<h3>${TITOL_FITA_R32_33}</h3>`)).toBe(true);
@@ -6663,17 +6746,65 @@ describe('Onada R32.41 · Crònica d’obertura en les cinc llengües: l’Atles
     // El micròfon: la parada segura de la gravació de veu, al costat de la canonicalització de la v1.2.20.
     const adjunt = llegix('src/sections/xat/adjuntLocal.js');
     expect(adjunt).toContain('const aturaRecorderSegur = () => {');
-    expect(adjunt).toContain('if (error && !acabat) resolAmbChunksAcumulatsOError(errorDelMicro(error));');
+    /* v1.2.23 · costura Llei 0 de /versions · El kit Codex R32.44 (aprovat) reescriu la gravadora i
+       resolAmbChunksAcumulatsOError ja no hi és. Si stop() llança (el telèfon ja havia tallat la gravació), atura()
+       apaga el micròfon al moment (tancaTracks) i espera onstop un màxim d'ESPERA_STOP_VEU_MS; després acaba(motiu)
+       rebutja amb un error 'gravacio' que porta la veu recollida a recuperacio.fitxer (incompleta, durada null: mai una
+       nota normal). La primera meitat del fet («el micròfon es tanca igualment») continua certa i es fixa ací; la
+       gravadora conserva els bytes. Que la veu arribe a la persona ho fixa la prova següent (troballa). */
+    expect(adjunt).toMatch(/const \{ error \} = aturaRecorderSegur\(\);\s+if \(error && !acabat\) \{\s+errorGravacio \?\?= error;\s+motiuError \?\?= 'stop';\s+\/\/[^\n]*\n\s+tancaTracks\(\);/);
+    expect(adjunt).toContain('const ESPERA_STOP_VEU_MS = 1_500;');
+    expect(adjunt).toContain("esperaStop = setTimeout(() => acaba('onstop-absent'), ESPERA_STOP_VEU_MS);");
+    expect(adjunt).toContain("...(fitxer.size ? { recuperacio: Object.freeze({ id: crypto.randomUUID(), fitxer, tipus: 'veu',");
+    expect(llegix('src/sections/xat/adjuntLocal.stopSegur.r32_40.test.js')).toContain('als 5 minuts, stop que llança tanca el micròfon immediatament i conserva bytes en error recuperable després del deadline');
+    expect(llegix('src/sections/xat/adjuntLocal.recuperacio.r32_44.test.js')).toContain('F01 · stop que llança després d’onerror tanca pistes però encara rep les dades finals');
     expect(adjunt).toContain('try { track.stop(); } catch');
-    // Llei 0 · Un error de gravació del sistema (onerror) encara perd la nota: la crònica només parla d'aturar-la.
-    expect(adjunt).toContain("recorder.onerror = () => falla(errorAdjuntXat('gravacio'));");
+    // Llei 0 · Un error de gravació del sistema (onerror): la crònica R32.41 només parla d'aturar-la.
+    /* v1.2.23 · costura Llei 0 de /versions · Des de Codex R32.44, onerror no falla al moment: anota l'error, passa per
+       atura() i espera les últimes dades; el resultat és el mateix error amb recuperacio. Des del carril X2 de la
+       v1.2.23, grava() de ControlsAdjunt.jsx la deixa preparada també en este cas (ControlsAdjunt.veuTallada.x2.test.jsx),
+       i la crònica R32.41 continua sense parlar-ne. */
+    expect(adjunt).toContain("errorGravacio ??= errorAdjuntXat('gravacio', { cause: event?.error });");
+    expect(adjunt).toContain("motiuError = 'onerror';");
+    expect(adjunt).not.toContain("recorder.onerror = () => falla(errorAdjuntXat('gravacio'));");
     // El servidor: res nou; la política, la 2.5; el xifrat, apagat; cap migració nova.
     expect(llegix('src/config/politicaPrivacitat.js')).toContain("export const VERSIO_POLITICA_PRIVACITAT = '2.5';");
     expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
     const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
     /* v1.2.22 · Les migracions de Codex R32.42 són de la versió següent: la R32.41 en continua sense cap (R32.35 a R32.41). */
     expect(migracions.some((nom) => /r32_(?:3[5-9]|4[01])(?!\d)/i.test(nom))).toBe(false);
-    expect(migracions.filter((nom) => !/^2026112216\d{4}_r3?2_?42_/i.test(nom))).toHaveLength(126);
+    /* v1.2.23 · costura Llei 0 de /versions · Les de Codex R32.44 (20261122230000_r3244_) i R32.46
+       (20261123010000_r3246_) també són de versions següents: fora de R32.42 a R32.49, el catàleg continua en 126. */
+    expect(migracions.filter((nom) => !/_r3?2_?4[2-9]_/i.test(nom))).toHaveLength(126);
+  });
+
+  /* v1.2.23 · costura Llei 0 de /versions · TROBALLA. La segona meitat del fet («es guarda la veu que ja s'havia
+     recollit») ja no és certa a la pantalla. En la v1.2.22, resolAmbChunksAcumulatsOError resolia la gravació amb la veu
+     recollida i ControlsAdjunt la deixava preparada per a escoltar-la i enviar-la. Des del kit Codex R32.44, gravaVeu la
+     rebutja dins d'un error 'gravacio' (recuperacio.fitxer, durada null, incompleta) i grava() de ControlsAdjunt.jsx
+     només en fa setError(e): cap codi fora de les proves no llig eixa recuperacio, i la persona veu «No hem pogut acabar
+     la gravació.» sense la nota.
+     v1.2.23 · costura Llei 0 de /versions (verificació K1, P2) · Abans, esta prova buscava `.recuperacio` dins de
+     grava(), i un mutant que no fa res (`void e?.recuperacio`) la feia verda. Ara es reapunta, com les altres proves
+     d'esta crònica, a la prova de comportament que ho fixa de punta a punta: pageContent.versions.veuR32_41.test.jsx,
+     amb la gravadora de veres (un MediaRecorder que llança en stop()) i la pantalla de veres. La veu ha d'arribar per a
+     escoltar-la o desar-la, amb els mateixos bytes. v1.2.23 · X2 (ordre del Mestre 261123) · Eixa prova ja és verda:
+     grava() recull e.recuperacio (veuRecuperada de ControlsAdjunt.jsx) i la veu torna a ser la nota preparada, per a
+     escoltar-la i enviar-la. Ací es fixa que existix, que no simula la gravadora ni la pantalla i que ningú no la salta
+     ni la marca com a fallada esperada. */
+  test('Llei 0 · R32.41 · la veu recollida abans que el telèfon talle la gravació arriba a la persona', () => {
+    const ruta = 'src/sections/text/pageContent.versions.veuR32_41.test.jsx';
+    expect(existsSync(resolve(process.cwd(), ruta)), ruta).toBe(true);
+    const prova = llegix(ruta);
+    expect(prova).toContain("test.each([\n    ['el gravador encara envia onstop', true],\n    ['el gravador ja no envia onstop', false]\n  ])('R32.41 · la veu recollida abans del tall arriba a la persona, per a escoltar-la o desar-la (%s)'");
+    expect(prova).toContain("])('R32.41 · el micròfon es tanca igualment (%s)'");
+    expect(prova).toContain('textos.some((text) => text.startsWith(VEU_ABANS_DEL_TALL))');
+    expect(prova).toContain("stop() { throw new DOMException('El telèfon ja ha tallat la gravació', 'InvalidStateError'); }");
+    // La gravadora i la pantalla, de veres: ni gravaVeu ni ControlsAdjunt no es simulen.
+    expect(prova).not.toMatch(/vi\.mock\(\s*['"][^'"]*(?:adjuntLocal|ControlsAdjunt|Compositor)/);
+    expect(prova).toContain("import ControlsAdjunt from '../xat/components/ControlsAdjunt.jsx';");
+    // Llei 0: cap drecera per a fer verd.
+    expect(prova).not.toMatch(/\b(?:test|it|describe)\.(?:fails|skip|todo|only|skipIf|runIf)\b/);
   });
 });
 
@@ -6709,18 +6840,19 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
   /* Els dos avisos del vídeo diuen, en cada llengua, que no s'envia (la crònica: «no s’envia i un avís ho diu»). */
   const NO_ENVIEM_R32_42 = { ca: 'no l’enviem', es: 'no lo enviamos', en: 'we do not send it', eu: 'ez dugu bidaltzen', gl: 'non o enviamos' };
   const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
-  /* La versió i el build d'ara, els del codi (package.json i VERSIO_CLIENT_NATIU). */
+  /* v1.2.23 · C (ordre del Mestre 261123) · La versió i el build d'aquella entrega, literals (el codi ja és la 1.2.23,
+     build 28). */
   const VERSIO_R32_42 = {
-    ca: `versió ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, es: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`,
-    en: `version ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`, eu: `${PAQUET.version} bertsiora (${VERSIO_CLIENT_NATIU}. builda)`,
-    gl: `versión ${PAQUET.version} (build ${VERSIO_CLIENT_NATIU})`
+    ca: 'versió 1.2.22 (build 27)', es: 'versión 1.2.22 (build 27)', en: 'version 1.2.22 (build 27)', eu: '1.2.22 bertsiora (27. builda)',
+    gl: 'versión 1.2.22 (build 27)'
   };
   /* El connector publicat a WordPress.org quan s'escriu (SVN r3816946, v1.2.21): història, literal. */
   const CONNECTOR_PUBLICAT_R32_42 = '1.1.29';
   const NO_BOTIGUES_R32_42 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
     eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
-  const CONNECTOR_NO_PUBLICAT_R32_42 = { ca: `la ${CONNECTOR} del repositori`, es: `la ${CONNECTOR} del repositorio`,
-    en: `${CONNECTOR} in the repository`, eu: `biltegiko ${CONNECTOR}`, gl: `a ${CONNECTOR} do repositorio` };
+  /* v1.2.23 · C · Literal: la 1.1.30 era la del repositori quan es va escriure (ara és la publicada). */
+  const CONNECTOR_NO_PUBLICAT_R32_42 = { ca: 'la 1.1.30 del repositori', es: 'la 1.1.30 del repositorio',
+    en: '1.1.30 in the repository', eu: 'biltegiko 1.1.30', gl: 'a 1.1.30 do repositorio' };
   const NO_PUBLICAT_R32_42 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
     eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
   const SERVIDOR_R32_42 = { ca: 'servidor de Sóc de Poble', es: 'servidor de Sóc de Poble', en: 'Sóc de Poble server',
@@ -6752,18 +6884,19 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
      només dins del seu apartat (MUR_R32_42 sobre senseApartatMur). La RPC7 del visitant continua sense nomenar-se. */
   const PROMESES_FALSES_R32_42 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|homolog|certified|garantit|garantizado|guaranteed|bermatu|garantido|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%|xifrat|cifrad|encrypt|zifratu|dos decimals|dos decimales|two decimals|bi hamartar|dous decimais|Ajuntament|Ayuntamiento|Town Hall|Udaletxe|Concello|Sentinella|duplicat|duplicad|duplicate|bikoiz|podrà llançar|ja pot llançar|ya puede lanzar|can already/i;
   const blocR32_42 = (llengua) => {
-    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    const cos = desDeR32_42(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
     return cos.slice(0, cos.indexOf('<h3>', 4));
   };
 
   test('obri /versions en ca, es, en, eu i gl, davant de la R32.41, sense vX.Y.Z al títol, amb densitat de negretes, rutes vives i 2.3.10', () => {
     expect(TITOL_FITA_R32_42).not.toMatch(/ · v\d+\.\d+\.\d+/);
     expect(fitaR32_42Bloc.startsWith(`<h3>${TITOL_FITA_R32_42}</h3>`)).toBe(true);
-    expect(html.trimStart().startsWith(fitaR32_42Bloc)).toBe(true);
+    // v1.2.23 · C · La crònica de la v1.2.23 obri la pàgina i les R32.42 i R32.43 la seguixen (desDeR32_42).
+    expect(desDeR32_42(html.trimStart()).startsWith(fitaR32_42Bloc)).toBe(true);
     expect(interns(fitaR32_42Bloc)).toEqual(['/xat', '/disseny?categoria=atles-2d']);
     expect(interns(fitaR32_42Bloc).every(rutaExistix)).toBe(true);
     for (const [llengua, iniciTitol] of Object.entries(INICIS_R32_42)) {
-      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      const cos = desDeR32_42(localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart());
       expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
       const bloc = blocR32_42(llengua);
       // L'ordre de /versions: R32.42 i R32.43 → R32.41 → R32.34 (la resta la proven les cròniques d'abans).
@@ -6806,7 +6939,8 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
       expect(pla, llengua).toContain(DECISIO_MESTRE_R32_42[llengua]);
       expect(pla, llengua).toContain(AVISOS_APAGATS_R32_42[llengua]);
       expect(pla, llengua).toContain(POLITICA_R32_42[llengua]);
-      expect(pla.match(FRASE_PUBLICAT_R32_42[llengua])?.[1], llengua).toBe(CONNECTOR_A_WPORG);
+      // v1.2.23 · C · La d'aquella entrega, literal (CONNECTOR_A_WPORG ja és la 1.1.30).
+      expect(pla.match(FRASE_PUBLICAT_R32_42[llengua])?.[1], llengua).toBe(CONNECTOR_PUBLICAT_R32_42);
       if (llengua !== 'ca') expect(pla, llengua).toContain(AVIS_LLENGUA_ATLES_R32_42[llengua]);
       expect(pla, llengua).toContain(PROPOSTA_R32_42[llengua]);
       expect(pla, llengua).toContain('Atles 2D');
@@ -6846,15 +6980,12 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
   });
 
   test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, oliveres, Xat de qui arriba, Mode Bancal, logotip, Motor, benvinguda, vídeos, Mur dels membres i servidor sense aplicar', async () => {
-    expect(PAQUET.version).toBe('1.2.22');
-    expect(VERSIO_CLIENT_NATIU).toBe(27);
-    expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
-    expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
-    expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
+    /* v1.2.23 · C (ordre del Mestre 261123) · La versió d'aquella entrega és història: el contracte i el registre del
+       connector la conserven (el codi ja és la 1.2.23, build 28, i el connector la 1.1.31; la crònica de la v1.2.23
+       fixa les d'ara). */
     expect(llegix('src/data/contracte.js')).toContain('Versió unificada 1.2.22 amb el build 27');
-    expect(CONNECTOR).toBe('1.1.30');
-    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.30$/m);
     expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.30 =$/m);
+    expect(noMesNova('1.1.30', CONNECTOR), `1.1.30 ≤ ${CONNECTOR}`).toBe(true);
     expect(noMesNova(CONNECTOR_PUBLICAT_R32_42, CONNECTOR), `${CONNECTOR_PUBLICAT_R32_42} ≤ ${CONNECTOR}`).toBe(true);
     // Les oliveres: una quarta font del Banc de Llavors, tres varietats amb la pàgina del document i cap calendari.
     const banc = await import('../../data/patrimoni/bancLlavors.js');
@@ -6898,9 +7029,23 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
     expect(llegix('src/sections/xat/XatSection.jsx')).not.toContain("<p>{t('section.xat.sessio.calEntrar'");
     expect(llegix('src/sections/xat/components/DialegNovaConversa.jsx')).toContain('section.xat.sessio.calEntrar');
     // Els vídeos: la guarda incondicional, la comprovació abans de pujar i en reenviar, i la còpia neta per a reenviar.
+    /* v1.2.23 · costura Llei 0 de /versions · IDEA-331 (ordre del Mestre 261123) deroga «ixen sense el lloc dins del
+       fitxer» per defecte: el vídeo conserva el lloc i l'avís ho diu abans de publicar; la crònica de la v1.2.23 ho
+       conta. La guarda de preparaAdjunt i la comprovació abans de reservar queden per a l'opt-out («Amaga el lloc») o per a
+       una entrada que declara senseUbicacio. Una sola comprovació a la pujada, deliberada: el fallback RPC3 (un node
+       que no admet p_ubicacio) ja només lleva el DTO, perquè el vídeo ja pujat conserva el lloc que la persona ha vist.
+       La còpia neta en reenviar i l'avís quan no es pot acreditar, amb l'opt-out, continuen certs. */
+    expect(llegix('src/sections/xat/adjuntLocal.js')).toContain('if (!net && !conserva) {');
     expect(llegix('src/sections/xat/adjuntLocal.js')).toContain("if (!netejat.net) throw errorAdjuntXat(/^video\\/(mp4|quicktime)$/.test(preparat.type) ? 'video-no-acreditable' : 'ubicacio-no-eliminable');");
     const multimedia = llegix('src/data/supabase/xatMultimedia.js');
-    expect(multimedia.match(/await comprovaVideoSenseUbicacio\(fitxer, comprova, config\.signal\)/g)).toHaveLength(2);
+    expect(multimedia.match(/await comprovaVideoSenseUbicacio\(fitxer, comprova, config\.signal\)/g)).toHaveLength(1);
+    expect(multimedia).toContain('const senseLloc = entrada.conservaUbicacio === false || entrada.senseUbicacio === true;');
+    expect(multimedia).toContain("if (senseLloc && tipus === 'video' && /^video\\/(mp4|quicktime)$/.test(fitxer.type)) await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);");
+    expect(multimedia.indexOf('await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal)')).toBeLessThan(multimedia.indexOf("crida('xat_reserva_adjunt'"));
+    const fallbackRpc3 = multimedia.slice(multimedia.indexOf("try { m = primera(await crida('xat_publica_adjunt', params, config)); }"),
+      multimedia.indexOf("m = primera(await crida('xat_publica_adjunt', sense, config));"));
+    expect(fallbackRpc3).toContain('delete sense.p_ubicacio;');
+    expect(fallbackRpc3).not.toContain('comprovaVideoSenseUbicacio');
     expect(llegix('src/data/xat/creaOpcionsMotorAccions.js')).toContain('const net = await senseUbicacioVideo(original, { signal });');
     // Gauntlet R1 (L5-09 i L4-04) · El filtre real dels formats del telèfon, l'avís propi i la còpia neta en reenviar.
     for (const f of ['src/sections/xat/adjuntLocal.js', 'src/data/supabase/xatMultimedia.js', 'src/data/xat/creaOpcionsMotorAccions.js']) {
@@ -6958,6 +7103,439 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
       '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql',
       '20261122160300_r32_42_mur_visibilitat_publica.sql'
     ]);
-    expect(migracions).toHaveLength(129);
+    expect(migracions).toHaveLength(131); // v1.2.23 · R32.44 (130) i R32.46 (131) porten el catàleg a 131
+  });
+});
+
+/* v1.2.23 · C (ordre del Mestre 261123) · La crònica de la v1.2.23 (versió 1.2.23, build 28) obri /versions, davant de les
+   Onades R32.42 i R32.43. La prova llig el bloc, les regles de les cròniques (2.3.10, negretes, el mateix nombre de
+   negretes per paràgraf en les cinc llengües, rutes vives, cap terme tècnic, cap «10:1» del Bancal, cap «masia») i, amb
+   Llei 0, el consumidor de cada fet a l'arbre (pageContent.r10.js, comentari de FITA_V1223). El paràgraf del servidor
+   (SERVIDOR_V1223) té la seua prova a soles. v1.2.23 · R2A-06 (Gauntlet R2) · Quan l'integrador aplique les cinc
+   migracions (T2 de la v1.2.23, després del commit A; supabase/README.md), es canvien eixa constant, eixa prova i
+   l'estat de les files 127 a 131 del README, que la prova llig. */
+describe('Onada v1.2.23 · Crònica d’obertura en les cinc llengües: el lloc de les fotos i els vídeos, la versió al menú, «Editar» des de la pàgina, el menú del Xat, el Mode Bancal, el logotip, la veu i el preu, amb Llei 0', () => {
+  const PREFIXOS_V1223 = {
+    ca: [...Array(4).fill('Novetat'), ...Array(6).fill('Millora'), ...Array(2).fill('Correcció')],
+    es: [...Array(4).fill('Novedad'), ...Array(6).fill('Mejora'), ...Array(2).fill('Corrección')],
+    en: [...Array(4).fill('New'), ...Array(6).fill('Improvement'), ...Array(2).fill('Fix')],
+    eu: [...Array(4).fill('Berritasuna'), ...Array(6).fill('Hobekuntza'), ...Array(2).fill('Zuzenketa')],
+    gl: [...Array(4).fill('Novidade'), ...Array(6).fill('Mellora'), ...Array(2).fill('Corrección')]
+  };
+  const DICCIONARIS = { ca: CA, es: ES, en: EN, eu: EU, gl: GL };
+  /* La versió i el build d'esta entrega, literals: la crònica següent els conservarà com a història. */
+  const VERSIO_V1223 = { ca: 'versió 1.2.23 (build 28)', es: 'versión 1.2.23 (build 28)', en: 'version 1.2.23 (build 28)',
+    eu: '1.2.23 bertsiora (28. builda)', gl: 'versión 1.2.23 (build 28)' };
+  /* El connector publicat a WordPress.org quan s'escriu (SVN r3817249, v1.2.22) i el del repositori, sense publicar. */
+  const CONNECTOR_PUBLICAT_V1223 = '1.1.30';
+  const CONNECTOR_NO_PUBLICAT_V1223 = { ca: 'la 1.1.31 del repositori', es: 'la 1.1.31 del repositorio', en: '1.1.31 in the repository',
+    eu: 'biltegiko 1.1.31', gl: 'a 1.1.31 do repositorio' };
+  const NO_BOTIGUES_V1223 = { ca: 'no consta a cap botiga', es: 'no consta en ninguna tienda', en: 'not listed in any store',
+    eu: 'ez dago inongo dendatan', gl: 'non consta en ningunha tenda' };
+  const NO_PUBLICAT_V1223 = { ca: 'encara no s’ha publicat', es: 'todavía no se ha publicado', en: 'has not been published yet',
+    eu: 'ez da oraindik argitaratu', gl: 'aínda non se publicou' };
+  const FRASE_PUBLICAT_V1223 = {
+    ca: /publicat a WordPress\.org és la (\d+\.\d+\.\d+)/, es: /publicado en WordPress\.org es la (\d+\.\d+\.\d+)/,
+    en: /published on WordPress\.org is (\d+\.\d+\.\d+)/, eu: /WordPress\.org-en argitaratutako WordPress konektorea (\d+\.\d+\.\d+) da/,
+    gl: /publicado en WordPress\.org é a (\d+\.\d+\.\d+)/
+  };
+  /* Llei 0 · Els avisos de les apps no estan encesos (VITE_SDP_PUSH_NATIU) i la política és la 2.5, que encara no conta
+     «Amaga el lloc»: posar-la al dia és una decisió del Mestre. */
+  const AVISOS_APAGATS_V1223 = { ca: 'no estan encesos', es: 'no están encendidos', en: 'not switched on', eu: 'ez daude piztuta',
+    gl: 'non están acesos' };
+  const POLITICA_V1223 = { ca: 'versió 2.5', es: 'versión 2.5', en: 'version 2.5', eu: '2.5 bertsioan', gl: 'versión 2.5' };
+  const DECISIO_MESTRE_V1223 = { ca: 'decisió del Mestre', es: 'decisión del Mestre', en: 'the Mestre’s decision',
+    eu: 'Mestreren erabaki', gl: 'decisión do Mestre' };
+  /* Llei 0 · Les cròniques d'abans que deien «sense el lloc» parlen del seu dia: la nova ho diu en les cinc llengües. */
+  const DEROGA_V1223 = { ca: 'parlen del seu dia', es: 'hablan de su día', en: 'speak of their own day',
+    eu: 'beren egunaz hitz egiten dute', gl: 'falan do seu día' };
+  /* Llei 0 · La veu recuperada s'escolta abans de decidir si s'envia (el port continua validant el contenidor, R32.17). */
+  const ESCOLTA_ABANS_V1223 = { ca: 'abans de decidir si l’envies', es: 'antes de decidir si la envías',
+    en: 'before deciding whether to send it', eu: 'bidali ala ez erabaki aurretik', gl: 'antes de decidir se a envías' };
+  /* Llei 0 · Les pàgines del sistema només es desen al navegador (revisionsEditorialsDelNavegador.js). */
+  const NOMES_NAVEGADOR_V1223 = { ca: 'només en este navegador', es: 'solo en este navegador', en: 'only in this browser',
+    eu: 'nabigatzaile honetan bakarrik', gl: 'só neste navegador' };
+  /* v1.2.23 · C (Gauntlet R1) · La prosa de cada apartat, fixada amb el seu consumidor (Llei 0). Cada frase l'ha fet
+     caure una mutació del text (Gauntlet R1):
+     · 1 · «nets sempre» en masculí plural (noms coordinats de gèneres diferents) i la guarda de Multimèdia (L2-01:
+       DetallMultimedia.jsx, fotoNetaDIdentitat.js): una foto ja pujada amb dades, o que no es pot comprovar, no es posa;
+       v1.2.23 · C (Gauntlet R1) · amb un lloc que no es pot conservar, la casella d'abans (L2-05: CasellaExif,
+       teInterruptorDeLloc, editor.enquadrament.exifEtiqueta); i la costura de Multimèdia no és nova (L2-01: a la
+       v1.2.22, posa() ja desava la referència tal qual i les còpies promogudes del Mur en podien portar dades);
+     · 2 · el title del rail plegat (App.jsx; en gallec, «día», amb el hiat tònic, com el «dío» del mateix bloc);
+     · 3 · la superadmin també veu «Editar» als actes d'altri i a algunes publicacions (useEdicioEnLloc.js);
+     · 6 · les fitxes: dues línies de títol i una d'entradilla amb el·lipsi (src/css/modules.css);
+     · 8 · el logotip: a la tauleta, tan gran com al mòbil (src/css/layout.css, un sol tram);
+     · 10 · el títol de la veu: respecte de la v1.2.22, només és nou el cas que falla (onerror);
+     · 11 · el preu: coma decimal i la variant que obri la fitxa (indexCerca.js, lecturaPublicaOffline.js). */
+  const NETS_V1223 = { ca: 'ixen sempre nets', es: 'salen siempre limpios', en: 'always leave clean',
+    eu: 'beti garbi ateratzen dira', gl: 'saen sempre limpos' };
+  const MULTIMEDIA_V1223 = {
+    ca: ['una foto ja pujada per a l’avatar, el logotip o la capçalera del perfil', 'no es pot comprovar', 'no es posa i un avís ho diu'],
+    es: ['una foto ya subida para el avatar, el logotipo o la cabecera del perfil', 'no se puede comprobar', 'no se pone y un aviso lo dice'],
+    en: ['a photo already uploaded for the avatar, the logo or the profile header', 'it cannot be checked', 'it is not set and a notice says so'],
+    eu: ['Lehendik igotako argazki bat avatarrerako, logotiporako edo profileko goibururako', 'ezin bada egiaztatu', 'ez da jartzen eta abisu batek esaten du'],
+    gl: ['unha foto xa subida para o avatar, o logotipo ou a cabeceira do perfil', 'non se pode comprobar', 'non se pon e un aviso dío']
+  };
+  /* v1.2.23 · C (Gauntlet R1) · L2-05 · Amb un lloc que no es pot conservar (ESTAT_EXIF.NO_CONSERVABLE) no hi ha
+     interruptor ni l'avís literal del Mestre: es veu la casella d'abans, amb el rètol editor.enquadrament.exifEtiqueta
+     (DialegEnquadrament.jsx, teInterruptorDeLloc i CasellaExif). */
+  const NO_CONSERVABLE_V1223 = { ca: 'si el lloc no es pot conservar, es veu en canvi la casella',
+    es: 'si el lugar no se puede conservar, se ve en cambio la casilla', en: 'if the location cannot be kept, the',
+    eu: 'kokapena ezin bada gorde,', gl: 'se o lugar non se pode conservar, vese no seu canto a caixa' };
+  /* v1.2.23 · C (Gauntlet R1) · L2-01 · La costura ja venia de la v1.2.22 (posa() desava la referència tal qual; les
+     còpies promogudes del Mur i les capçaleres d'entitat, fotoNetaDIdentitat.js) i la v1.2.23 l'eixampla (el text del
+     Perfil puja amb el lloc). v1.2.23 · R2A-05 (Gauntlet R2) · La crònica ho diu amb els dos exemples que la persona
+     pot haver vist, i ja no conta en condicional el que hauria passat sense la guarda (ningú no ho veu). */
+  const COSTURA_V1223 = {
+    ca: ['Fins ara es posava tal com era', 'una còpia d’una foto del Mur o la capçalera d’una entitat'],
+    es: ['Hasta ahora se ponía tal cual', 'una copia de una foto del Muro o la cabecera de una entidad'],
+    en: ['Until now it was set as it was', 'a copy of a Wall photo or an organisation’s header'],
+    eu: ['Orain arte bere horretan jartzen zen', 'Hormako argazki baten kopia edo erakunde baten goiburua'],
+    gl: ['Ata agora poñíase tal cal', 'unha copia dunha foto do Muro ou a cabeceira dunha entidade']
+  };
+  const CONTRAFACTUAL_V1223 = /hauria passat|habría pasado|would now have happened|gertatuko zatekeen|tería pasado/;
+  /* v1.2.23 · R2A-01 (Gauntlet R2) · El lloc es conserva si el fitxer el porta dins: a Android 10+ (sense
+     ACCESS_MEDIA_LOCATION) la galeria el pot llevar abans i llavors no hi ha cap avís. L'obertura i l'apartat del Xat ho
+     diuen en les cinc llengües, i el changelog del connector també. */
+  const CONDICIO_LLOC_V1223 = { ca: 'si el fitxer el porta dins', es: 'si el archivo lo lleva dentro', en: 'when the file carries it',
+    eu: 'fitxategiak barruan badarama', gl: 'se o ficheiro o leva dentro' };
+  /* v1.2.23 · R2A-03 (Gauntlet R2) · Si el perfil havia canviat, en actualitzar primer pregunta (dins del Bloc de notes)
+     i només després torna a la pàgina (PublicacioEditable.jsx, publicaIMarca i surtARetorn); i el perfil canvia al de
+     qui signa la peça, l'entitat o la persona (useEdicioEnLloc.js). */
+  const ORDRE_RETORN_V1223 = { ca: 'primer et pregunta', es: 'primero te pregunta', en: 'it first asks', eu: 'lehenik',
+    gl: 'primeiro pregúntache' };
+  const QUI_SIGNA_V1223 = { ca: 'al de qui la signa, eixa entitat o tu', es: 'al de quien la firma, esa entidad o tú',
+    en: 'to whoever signs it, that organisation or you', eu: 'sinatzen duenera aldatzen du, erakunde hori edo zu',
+    gl: 'ao de quen a asina, esa entidade ou ti' };
+  const PUNTER_V1223 = { ca: 'la diu quan hi passes el punter', es: 'la dice cuando pasas el puntero',
+    en: 'shows it when you hover the pointer', eu: 'erakuslea gainetik pasatzean esaten du', gl: 'día cando pasas o punteiro' };
+  const ADMINISTRA_V1223 = {
+    ca: 'qui administra el sistema, però, el veu als actes i en algunes publicacions',
+    es: 'quien administra el sistema, sin embargo, lo ve en los actos y en algunas publicaciones',
+    en: 'whoever administers the system, though, sees it on events and on some posts',
+    eu: 'sistema administratzen duenak, ordea, ekitaldietan eta argitalpen batzuetan ikusten du',
+    gl: 'quen administra o sistema, porén, veo nos actos e nalgunhas publicacións'
+  };
+  const FITXES_V1223 = {
+    ca: ['dues línies com a molt', 'una sola línia', 'punts suspensius'], es: ['dos líneas como mucho', 'una sola línea', 'puntos suspensivos'],
+    en: ['two rows at most', 'a single row', 'an ellipsis'], eu: ['gehienez bi lerrotan', 'lerro bakarra', 'eten-puntuekin'],
+    gl: ['dúas liñas como moito', 'unha soa liña', 'puntos suspensivos']
+  };
+  const LOGOTIP_V1223 = { ca: 'es veu tan gran com al mòbil', es: 'se ve tan grande como en el móvil', en: 'it looks as big as on a phone',
+    eu: 'mugikorrean bezain handia ikusten da', gl: 'vese tan grande como no móbil' };
+  const TITOL_VEU_V1223 = { ca: 'Correcció · Si la gravació de veu falla, la veu es queda per a escoltar-la',
+    es: 'Corrección · Si la grabación de voz falla, la voz se queda para escucharla', en: 'Fix · If a voice recording fails, the voice stays to be heard',
+    eu: 'Zuzenketa · Ahots-grabazioak huts egiten badu, ahotsa entzuteko geratzen da', gl: 'Corrección · Se a gravación de voz falla, a voz queda para escoitala' };
+  const PREU_V1223 = { ca: ['coma decimal', 'la variant que obri la seua fitxa'], es: ['coma decimal', 'la variante que abre su ficha'],
+    en: ['decimal comma', 'the variant its page opens with'], eu: ['koma hamartarrarekin', 'bere fitxak irekitzen duen aldaerarena'],
+    gl: ['coma decimal', 'a variante que abre a súa ficha'] };
+  const arrel = (llengua, retol) => (llengua === 'eu' ? retol.replace(/(ak|a)$/, '') : retol);
+  /* Llei 0 · Cap promesa de temps ni de percentatge, cap «garantit», res del que depén de les migracions sense aplicar
+     (els dos decimals al servidor, l'Ajuntament, la visibilitat del Mur per a qui no té compte) ni de les eines sense
+     pantalla (la Sentinella, els duplicats), cap «10:1» del Bancal i cap «geolocation» (legal.ubicacioFotos, T11-05). */
+  const PROMESES_FALSES_V1223 = /24 hores|24 horas|24 hours|24 ordu|sincronitz|sincroniz|will sync|sinkroniza|ja publicada|ya publicada|already published|argitaratuta dago|xa publicada|homolog|certified|garantit|garantizado|guaranteed|bermatu|garantido|més ràpid|más rápid|faster|azkarrago|máis rápid|\d+\s?%|xifrat|cifrad|encrypt|zifratu|dos decimals|dos decimales|two decimals|bi hamartar|dous decimais|Ajuntament|Ayuntamiento|Town Hall|Udaletxe|Concello|Sentinella|duplicat|duplicad|duplicate|bikoiz|podrà llançar|ja pot llançar|ya puede lanzar|can already|\bgeolocation\b/i;
+  const DEU_A_U = /(?<![\d,.])10:1(?!\d)/;
+  const blocV1223 = (llengua) => {
+    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    return cos.slice(0, cos.indexOf('<h3>', 4));
+  };
+  const paragrafs = (bloc) => [...bloc.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+  const negretes = (p) => (p.match(/<strong>/g) ?? []).length;
+
+  test('obri /versions en ca, es, en, eu i gl, davant de les R32.42 i R32.43, sense vX.Y.Z al títol, amb densitat i paritat de negretes, rutes vives i 2.3.10', () => {
+    expect(TITOL_FITA_V1223).not.toMatch(/ · v\d+\.\d+\.\d+/);
+    expect(fitaV1223Bloc.startsWith(`<h3>${TITOL_FITA_V1223}</h3>`)).toBe(true);
+    expect(html.trimStart().startsWith(fitaV1223Bloc)).toBe(true);
+    expect(interns(fitaV1223Bloc)).toEqual(['/xat', '/notes']);
+    expect(interns(fitaV1223Bloc).every(rutaExistix)).toBe(true);
+    expect(Object.keys(FITA_V1223)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
+    const negretesCa = paragrafs(blocV1223('ca')).map(negretes);
+    for (const [llengua, iniciTitol] of Object.entries(INICIS_V1223)) {
+      const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+      expect(cos.startsWith(`<h3>${iniciTitol}`), llengua).toBe(true);
+      const bloc = blocV1223(llengua);
+      expect(bloc.startsWith(`<h3>${FITA_V1223[llengua][0]}</h3>`), llengua).toBe(true);
+      // L'ordre de /versions: v1.2.23 → R32.42 i R32.43 → R32.41 (la resta la proven les cròniques d'abans).
+      expect(cos.startsWith(`<h3>${INICIS_R32_42[llengua]}`, bloc.length), llengua).toBe(true);
+      expect(desDeR32_42(cos), llengua).toBe(cos.slice(bloc.length));
+      expect(desDeR32_41(cos).startsWith(`<h3>${INICIS_R32_41[llengua]}`), llengua).toBe(true);
+      expect(interns(bloc), llengua).toEqual(interns(fitaV1223Bloc));
+      expect(titolsH4(bloc).map((t) => t.split(' · ')[0])).toEqual(PREFIXOS_V1223[llengua]);
+      expect(apartats(bloc), llengua).toHaveLength(12);
+      expect(bloc.match(/[^\s>]<a |<\/a>[^\s,.:]/g), llengua).toBeNull();
+      const pla = text(bloc);
+      expect(PLATAFORMA_ALIENA.test(pla), llengua).toBe(false);
+      expect(/Google|Apple|App Store|iPhone|iPad|TestFlight|Android|\bPlay\b|\bAPK\b|\bAAB\b|F-Droid|Safari|Chrome|Firefox|TikTok|\bLINE\b|Twitter|\bX\.com\b|YouTube|GitHub|WhatsApp|Facebook|Instagram|Orkut|Nextdoor|QuickTime|\bMP4\b/i.test(pla), llengua).toBe(false);
+      expect(/\bdesplegad[ae]s?\b|\bdesplegat|en producció|en producción|in production|\bactivad[ao]\b|\bactivat\b|aviat|pròximament|properament|IDEA-\d|P\d-\d|D-R\d|D-v\d|DOL-\d|D-ATLES|\bB\d{1,2}[abc]?\b|torn_|mas[i]a|sobir/i.test(pla), llengua).toBe(false);
+      expect(/\bdel poble\b|\bdel pueblo\b|\bdo pobo\b|La Torre|Gent de la Torre/i.test(pla), llengua).toBe(false);
+      expect(/\bCSS\b|\bJS\b|\bHTML\b|\bHMR\b|Tarjan|\bCAS\b|\bRPC\b|\bSQL\b|\bLSSI\b|\bOAuth\b|Supabase|PostgreSQL|\bCDP\b|frontmatter|aria-|\bWCAG\b|bytes?\b|WebView|\bE2EE\b|VAPID|\bpush\b|IndexedDB|localStorage|Enxufe|Frontissa|\b301\b|\b403\b|Node 0|feed|chrome|\bh[1-6]\b|measure|disallowed|\bpx\b|\bGPS\b|metadad|metadat|\bIVIA\b|\bPDF\b|SHA-256|migraci/i.test(pla), llengua).toBe(false);
+      expect(PROMESES_FALSES_V1223.test(pla), llengua).toBe(false);
+      expect(DEU_A_U.test(pla), llengua).toBe(false);
+      // L'obertura: versió, botigues i connector, el servidor (SERVIDOR_V1223, a soles) i els avisos amb la política.
+      expect(pla, llengua).toContain(VERSIO_V1223[llengua]);
+      expect(pla).not.toContain('1.2.22');
+      expect(pla, llengua).toContain(NO_BOTIGUES_V1223[llengua]);
+      expect(pla).toContain(CONNECTOR_PUBLICAT_V1223);
+      expect(pla, llengua).toContain(CONNECTOR_NO_PUBLICAT_V1223[llengua]);
+      expect(pla, llengua).toContain(NO_PUBLICAT_V1223[llengua]);
+      expect(pla).toContain('WordPress.org');
+      expect(pla.match(FRASE_PUBLICAT_V1223[llengua])?.[1], llengua).toBe(CONNECTOR_A_WPORG);
+      const ps = paragrafs(bloc);
+      // Quatre paràgrafs d'obertura i dotze apartats; el tercer és, sencer, el del servidor (SERVIDOR_V1223).
+      expect(ps, llengua).toHaveLength(16);
+      expect(ps[2], llengua).toBe(SERVIDOR_V1223[llengua]);
+      expect(pla, llengua).toContain(AVISOS_APAGATS_V1223[llengua]);
+      expect(pla, llengua).toContain(POLITICA_V1223[llengua]);
+      expect(pla, llengua).toContain(DECISIO_MESTRE_V1223[llengua]);
+      /* Els rètols que la crònica cita són els de la interfície de cada llengua, cadascun a l'apartat del seu fet (un
+         rètol que només sobreviu en un altre apartat no val: ho va mostrar una mutació del rètol en anglés). */
+      const d = DICCIONARIS[llengua];
+      const versions = SECTIONS.find((s) => s.id === 'versions');
+      const cites = (...retols) => retols.map((retol) => `«${retol}»`);
+      const PER_APARTAT = [
+        [0, [...cites(d['section.xat.adjunts.amagaLloc']), DEROGA_V1223[llengua], CONDICIO_LLOC_V1223[llengua]]],
+        [1, [...cites(d['section.xat.adjunts.amagaLloc'], d['editor.enquadrament.ubicacioConservada'], d['editor.enquadrament.exifEtiqueta']),
+          NO_CONSERVABLE_V1223[llengua], NETS_V1223[llengua], ...MULTIMEDIA_V1223[llengua], ...COSTURA_V1223[llengua]]],
+        [2, [...cites(d['nav.sistema'], rotolDeLaSeccio(versions, d['nav.versions'], '1.2.23')), PUNTER_V1223[llengua]]],
+        [3, [...cites(d['pagina.barra.editar']), ADMINISTRA_V1223[llengua], ORDRE_RETORN_V1223[llengua], QUI_SIGNA_V1223[llengua]]],
+        [4, [...cites(d['pagina.barra.editar'], d['section.notes.carpeta.sistema'], textosEdicioSistema(llengua).historialDesfer), NOMES_NAVEGADOR_V1223[llengua]]],
+        /* v1.2.23 · R2A-02 (Gauntlet R2) · REAPUNTADA: «{nom}: Amb qui actues?» i «Tu: ajustos» són l'aria-label i el
+           title del botó del peu, no el que s'hi veu. Es citen el títol visible del calaix que obri
+           (textosCalaixIdentitats) i el «Tu» que pinta el peu sense compte (section.xat.rail.tu). */
+        [5, cites(d['section.xat.llista.titol'], d['section.xat.rail.ajustosDelXat'], textosCalaixIdentitats(llengua).titol, d['section.xat.rail.tu'])],
+        [6, FITXES_V1223[llengua]],
+        [7, [arrel(llengua, TEXTOS_MODE_SENIOR[llengua].xipCurt), 'AAA', '(≥ 7:1)']],
+        [8, [LOGOTIP_V1223[llengua]]],
+        [9, cites(d['section.control.maquinaria.titol'])],
+        [10, [...cites(d['section.xat.adjunts.error.gravacio'].replace(/\.$/, '')), ESCOLTA_ABANS_V1223[llengua]]],
+        [11, PREU_V1223[llengua]]
+      ];
+      const cossos = apartats(bloc).map((a) => text(`<p>${a.cos}</p>`));
+      for (const [index, frases] of PER_APARTAT) {
+        for (const frase of frases) expect(cossos[index], `${llengua} · apartat ${index} · ${frase}`).toContain(frase);
+      }
+      // v1.2.23 · C (Gauntlet R1) · El títol de la veu no promet més del que és nou respecte de la v1.2.22.
+      expect(titolsH4(bloc)[10], llengua).toBe(TITOL_VEU_V1223[llengua]);
+      // v1.2.23 · R2A-01 (Gauntlet R2) · L'obertura condiciona el lloc al que porta el fitxer, com l'apartat del Xat.
+      expect(text(`<p>${ps[0]}</p>`), llengua).toContain(CONDICIO_LLOC_V1223[llengua]);
+      // v1.2.23 · R2A-05 (Gauntlet R2) · Cap fet contrafactual («hauria passat»): la crònica conta el que es veu.
+      expect(pla, llengua).not.toMatch(CONTRAFACTUAL_V1223);
+      // v1.2.23 · R2A-02 (Gauntlet R2) · L'aria-label del peu no es cita com si es veiera.
+      expect(pla, llengua).not.toContain(`«${d['section.xat.ajustos.obri']}»`);
+      expect(text(bloc), llengua).not.toMatch(/limpias|saen sempre limpas|\bdia cando\b/);
+      for (const clau of ['nav.xat', 'nav.notes', 'nav.mur', 'nav.mercat', 'nav.disseny', 'nav.perfil']) {
+        expect(pla, `${llengua} · ${clau}`).toContain(arrel(llengua, d[clau]));
+      }
+      expect(pla, llengua).toContain(arrel(llengua, TEXTOS_MODE_SENIOR[llengua].xipCurt));
+      expect(pla, llengua).toContain('AAA');
+      expect(pla, llengua).toContain('(≥ 7:1)');
+      expect(pla, llengua).toContain(DEROGA_V1223[llengua]);
+      expect(pla, llengua).toContain(ESCOLTA_ABANS_V1223[llengua]);
+      expect(pla, llengua).toContain(NOMES_NAVEGADOR_V1223[llengua]);
+      // La densitat de negretes de cada paràgraf i el mateix nombre per paràgraf que en valencià.
+      expect(ps.map(negretes), llengua).toEqual(negretesCa);
+      const segmentador = new Intl.Segmenter(llengua, { granularity: 'word' });
+      for (const p of ps) {
+        const w = [...segmentador.segment(p.replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        const n = negretes(p);
+        const [min, max] = w >= 40 ? [6, 8] : w >= 25 ? [5, 7] : w >= 12 ? [2, 4] : [1, 3];
+        expect(n >= min && n <= max, `${llengua}: ${n} negretes per a ${w} paraules (${min}–${max}): «${p.replace(/<[^>]+>/g, '').slice(0, 60)}…»`).toBe(true);
+      }
+      for (const m of bloc.matchAll(/<strong>([\s\S]*?)<\/strong>/g)) {
+        const w = [...segmentador.segment(m[1].replace(/<[^>]+>/g, ''))].filter((x) => x.isWordLike).length;
+        expect(w >= 1 && w <= 6, `${llengua} · negreta de ${w} paraules: «${m[1]}»`).toBe(true);
+      }
+      expect(bloc, llengua).not.toMatch(/<h([34])>(?:(?!<\/h\1>)[\s\S])*<strong>/);
+    }
+  });
+
+  /* v1.2.23 · C · El paràgraf del servidor, a soles. Quan s'escriu, els cinc canvis (127 a 131) són al repositori i cap no
+     està aplicat (supabase/README.md). v1.2.23 · R2A-06 (Gauntlet R2) · S'apliquen a producció al T2 de la v1.2.23,
+     després del commit A, i les aplica l'integrador (supabase/README.md, L6-03). Llavors un commit posterior canvia
+     SERVIDOR_V1223 de pageContent.r10.js, esta prova i, al README, l'estat de les files 127 a 131, que esta prova llig. */
+  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1223): cinc canvis preparats que, quan s’escriu, no s’han aplicat', () => {
+    const SERVIDOR_SENSE_APLICAR_V1223 = {
+      ca: ['no canvia res', 'servidor de Sóc de Poble', 'cinc canvis', 'no s’han aplicat'],
+      es: ['no cambia nada', 'servidor de Sóc de Poble', 'cinco cambios', 'no se han aplicado'],
+      en: ['changes nothing', 'Sóc de Poble server', 'five prepared changes', 'have not been applied'],
+      eu: ['ez du ezer aldatzen', 'Sóc de Pobleren zerbitzari', 'bost aldaketa', 'aplikatu gabe'],
+      gl: ['non cambia nada', 'servidor de Sóc de Poble', 'cinco cambios', 'non se aplicaron']
+    };
+    for (const [llengua, frases] of Object.entries(SERVIDOR_SENSE_APLICAR_V1223)) {
+      const pla = text(`<p>${SERVIDOR_V1223[llengua]}</p>`);
+      for (const frase of frases) expect(pla, `${llengua} · ${frase}`).toContain(frase);
+      expect(pla, llengua).not.toMatch(/23-11-2026|aplicats el|aplicados el|applied on|aplikatu ziren|aplicáronse|aplicados en/);
+      expect(FITA_V1223[llengua][3], llengua).toBe(SERVIDOR_V1223[llengua]);
+    }
+    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
+    const cinc = migracions.filter((nom) => /_r3?2_?4[2-6]_/i.test(nom)).sort();
+    expect(cinc).toEqual([
+      '20261122160000_r3242_ajuntament_acreditacio_institucional.sql',
+      '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql',
+      '20261122160300_r32_42_mur_visibilitat_publica.sql',
+      '20261122230000_r3244_edicio_propia_i_page_revisions.sql',
+      '20261123010000_r3246_quota_owner_id.sql'
+    ]);
+    expect(migracions).toHaveLength(131);
+    const readme = llegix('supabase/README.md');
+    for (const [fila, nom] of [127, 128, 129, 130, 131].map((n, i) => [n, cinc[i]])) {
+      const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
+      expect(linia, String(fila)).toContain(`\`${nom}\``);
+      expect(linia, String(fila)).toContain('NO aplicada');
+    }
+    // Aplicar la 129 no encén la visibilitat del Mur per a qui no té compte: ho decidix la bandera del build.
+    expect(llegix('src/data/supabase/content.js')).toContain("const negociaVisibilitatMur = () => import.meta.env?.VITE_SDP_MUR_VISIBILITAT === '1';");
+  });
+
+  test('Llei 0 · cada fet té el seu consumidor a l’arbre: versió, connector, el lloc al Xat i fora, la versió al menú, «Editar», les pàgines del sistema, el menú del Xat, les fitxes, el Bancal, el logotip, la maquetació, la veu, el preu i la política', async () => {
+    // La versió i el connector: els del codi, i la publicada és la de la capçalera.
+    expect(PAQUET.version).toBe('1.2.23');
+    expect(VERSIO_CLIENT_NATIU).toBe(28);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).version).toBe(PAQUET.version);
+    expect(JSON.parse(llegix('public/.well-known/ard.json')).entries.every((e) => e.version === PAQUET.version)).toBe(true);
+    expect(JSON.parse(llegix('public/versio-viva.json')).versioSistema).toBe(PAQUET.version);
+    expect(llegix('src/data/contracte.js')).toMatch(/Versió unificada 1\.2\.23\s+amb el build 28/);
+    expect(CONNECTOR).toBe('1.1.31');
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^Stable tag: 1\.1\.31$/m);
+    expect(llegix('wordpress-plugin/readme.txt')).toMatch(/^= 1\.1\.31 =$/m);
+    expect(CONNECTOR_A_WPORG).toBe(CONNECTOR_PUBLICAT_V1223);
+    expect(noMesNova(CONNECTOR_PUBLICAT_V1223, CONNECTOR), `${CONNECTOR_PUBLICAT_V1223} ≤ ${CONNECTOR}`).toBe(true);
+    /* v1.2.23 · C (Gauntlet R1) · La publicada no és només una constant contra una altra: al changelog del connector és
+       l'entrada d'abans de la del repositori, la que porta el visor de la v1.2.22 (la que es va pujar a WordPress.org,
+       SVN r3817249), i la capçalera de /versions diu eixa mateixa. */
+    const changelogWp = llegix('wordpress-plugin/readme.txt').split('== Changelog ==')[1].split('== Upgrade Notice ==')[0];
+    expect([...changelogWp.matchAll(/^= (\d+\.\d+\.\d+) =$/gm)].slice(0, 2).map((m) => m[1])).toEqual([CONNECTOR, CONNECTOR_PUBLICAT_V1223]);
+    expect(changelogWp).toContain(`= ${CONNECTOR_PUBLICAT_V1223} =\n* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.22 de Sóc de Poble`);
+    expect(changelogWp).toContain(`= ${CONNECTOR} =\n* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió ${PAQUET.version} de Sóc de Poble`);
+    // v1.2.23 · R2A-01 (Gauntlet R2) · El changelog i l'Upgrade Notice del connector condicionen el lloc com la crònica.
+    expect(changelogWp).toContain(`conserven el lloc on es van fer, ${CONDICIO_LLOC_V1223.ca},`);
+    expect(llegix('wordpress-plugin/readme.txt').split('== Upgrade Notice ==')[1]).toContain(`= ${CONNECTOR} =\nVisor al dia amb la versió ${PAQUET.version} de Sóc de Poble: fotos i vídeos amb el lloc que porten dins i «Amaga el lloc»`);
+    expect(PAGE_COPY.versions.subtitle).toContain(`Connector WordPress v${CONNECTOR_PUBLICAT_V1223} a WordPress.org`);
+    // El lloc al Xat: conservat per defecte, l'avís amb el lloc, «Amaga el lloc» i, si amagar falla, no s'envia.
+    const adjunt = llegix('src/sections/xat/adjuntLocal.js');
+    expect(adjunt).toContain('signal, conservaUbicacio = true, onProgresCompressio,');
+    expect(adjunt).toContain('if (!net && !conserva) {');
+    const controls = llegix('src/sections/xat/components/ControlsAdjunt.jsx');
+    expect(controls).toContain("t('section.xat.adjunts.ubicacioConservada', 'Este contingut conserva la ubicació per a situar-lo al territori ({lat}°, {lng}°)')");
+    expect(controls).toContain("t('section.xat.adjunts.ubicacioNomesMapa'");
+    expect(controls).toContain("onClick={amagaLloc}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>");
+    expect(controls).toContain("if (llocNoAmagat?.id === preparat.id) { setError(llocNoAmagat.error); return null; }");
+    expect(llegix('src/data/xat/creaOpcionsMotorAccions.js')).toContain('{ ...adjunt, conservaUbicacio: false }');
+    for (const prova of ['src/sections/xat/components/ControlsAdjunt.geolocPerDefecte.idea331.test.jsx', 'src/data/supabase/xatMultimedia.geolocPerDefecte.idea331.test.js']) {
+      expect(existsSync(resolve(process.cwd(), prova)), prova).toBe(true);
+    }
+    // Les cròniques d'abans, història: la R32.42 continua dient el seu «sense el lloc».
+    expect(text(fitaR32_42Bloc)).toContain('sense el lloc');
+    // El mateix interruptor fora del Xat; nets sempre l'avatar, el logotip, la capçalera d'una persona i el que s'enganxa.
+    expect(llegix('src/components/universal/enquadrament/DialegEnquadrament.jsx')).toContain('<Casella role="switch"');
+    const perfil = llegix('src/sections/profile/PerfilEditor.jsx');
+    expect(perfil).toContain('fotosDePublicacio: true,');
+    expect(perfil).toContain('exifTriatEnPujar: true,');
+    expect(llegix('src/components/universal/enquadrament/useEnquadramentImatge.jsx')).toContain('conservaExif: false');
+    for (const prova of ['src/components/universal/DocumentEditor.ubicacioPerDefecte.idea331.test.jsx', 'src/sections/profile/PerfilEditor.cosUbicacio.idea331.test.jsx']) {
+      expect(existsSync(resolve(process.cwd(), prova)), prova).toBe(true);
+    }
+    /* v1.2.23 · L2-01 (Gauntlet R1) · «Nets sempre» també a Multimèdia: abans de posar d'avatar, de logotip o de capçalera
+       d'una persona una foto ja pujada, se'n lligen els bytes; només es desa si és neta (o de fora, la de la sessió), i si
+       no, un avís en la llengua de la interfície ho diu. */
+    const multimedia = llegix('src/sections/profile/DetallMultimedia.jsx');
+    expect(multimedia).toContain('const estat = await revisaFotoDIdentitat(entrada.font);');
+    expect(multimedia).toContain('if (estat !== ESTAT_FOTO_IDENTITAT.NETA && estat !== ESTAT_FOTO_IDENTITAT.DE_FORA) {');
+    expect(llegix('src/sections/profile/fotoNetaDIdentitat.js')).toContain("export const esCampDIdentitat = (camp, mena) => camp === 'logoImage' || (camp === 'heroImage' && mena === 'persona');");
+    const { TEXTOS_FOTO_NETA_IDENTITAT } = await import('../profile/i18nFotoNetaIdentitat.js');
+    expect(Object.keys(TEXTOS_FOTO_NETA_IDENTITAT)).toEqual(Object.keys(DICCIONARIS));
+    expect(existsSync(resolve(process.cwd(), 'src/sections/profile/fotoNetaDIdentitat.test.js'))).toBe(true);
+    // L'ajuda «Privacitat abans de publicar» de Publicar al Mapa diu «Amaga el lloc» en les cinc llengües.
+    expect(PAGE_COPY.publicar_mapa.html).toContain('<strong>«Amaga el lloc»</strong>');
+    /* v1.2.23 · L2-05 (Gauntlet R1) · REAPUNTADA A POSTA: «cap casella per desmarcar» no era cert. Una foto que només porta
+       la data, o amb un lloc que no es pot conservar, encara ensenya la casella d'abans (CasellaExif, teInterruptorDeLloc).
+       L'invariant viu: cada llengua nomena l'interruptor i, per a eixos casos, la casella amb el rètol del seu diccionari
+       (editor.enquadrament.exifEtiqueta), mai el rètol antic «Keep photo location». */
+    expect(PAGE_COPY.publicar_mapa.html).toContain(`<strong>«${CA['editor.enquadrament.exifEtiqueta']}»</strong>`);
+    for (const llengua of ['es', 'en', 'eu', 'gl']) {
+      const mapa = localitzaPagina(PAGE_COPY.publicar_mapa, llengua).html;
+      expect(mapa, llengua).toContain(DICCIONARIS[llengua]['section.xat.adjunts.amagaLloc']);
+      expect(mapa, llengua).toContain(DICCIONARIS[llengua]['editor.enquadrament.exifEtiqueta']);
+      expect(mapa, llengua).not.toMatch(/Keep photo location/i);
+    }
+    // La versió al menú: l'etiqueta traduïda i la versió viva, i només l'entrada de les versions.
+    expect(rotolDeLaSeccio(SECTIONS.find((s) => s.id === 'versions'), 'Versions', '1.2.23')).toBe('Versions · v1.2.23');
+    expect(SECTIONS.filter((s) => s.versioViva === true).map((s) => s.id)).toEqual(['versions']);
+    expect(llegix('src/app/App.jsx')).toContain('const rotol = rotolDeLaSeccio(section, traduides.label, VERSIO_SISTEMA);');
+    // «Editar» des de la pàgina: la barra blava, el canvi de perfil, la pregunta de tornada i la fitxa que es conserva.
+    expect(llegix('src/components/universal/barres/BarraBlava.jsx')).toContain("const mostraEditar = Boolean(editarVisible && typeof onEdit === 'function');");
+    const edicio = llegix('src/hooks/useEdicioEnLloc.js');
+    expect(edicio).toContain("mercat: 'f-mercat',");
+    expect(edicio).toContain("events: 'f-events',");
+    expect(edicio).toContain("t('pagina.barra.editantCom', 'Editant com a {nom}')");
+    expect(textosEdicioSistema('ca').preguntaRetorn).toBe('Vols tornar a ser {anterior}?');
+    expect(llegix('src/sections/notes/publicacioEditable.js')).toContain('function fitxaDeLaPublicacio(seccio, publicacio) {');
+    /* v1.2.23 · R2A-03 (Gauntlet R2) · El perfil canvia també cap a la persona (la publicació és teua i actuaves com a
+       entitat), i en actualitzar, si havia canviat, primer pregunta i només en respondre torna (surtARetorn). */
+    expect(edicio).toContain("? { tipus: 'persona', id: userId, nom: nomPersona }");
+    const editable = llegix('src/sections/notes/PublicacioEditable.jsx');
+    expect(editable).toMatch(/if \(retornValid\) \{\s*if \(canviIdentitat\?\.anterior\) \{\s*setConfirmantRetorn\(true\);\s*\} else \{\s*navigate\(retornValid\);/);
+    expect(editable).toContain('onTornaAAnterior: () => surtARetorn(true),');
+    // v1.2.23 · C (Gauntlet R1) · Qui administra el sistema també veu «Editar» als actes d'altri i a algunes publicacions.
+    expect(edicio).toContain("if (esSuperadmin === true && autor && (seccioNorm === 'events' || (seccioNorm === 'mur' && !UUID.test(String(item.id))))) {");
+    // L'edició pròpia del servidor (Codex R32.44) continua apagada: la crònica no en parla.
+    expect(llegix('src/data/supabase/index.js')).toContain("export const desaPublicacioPropia = import.meta.env.VITE_SDP_EDICIO_PROPIA_CAS === '1' ? desaPropiaAmbServidor : undefined;");
+    // v1.2.23 · L4-05 (Gauntlet R1) · I la segona entrada (casBeta) tampoc no crida la RPC de la 130 sense la bandera.
+    expect(llegix('src/data/supabase/content.js')).toContain("if (import.meta.env.VITE_SDP_EDICIO_PROPIA_CAS !== '1') throw");
+    // Les pàgines del sistema: la carpeta, el desfer i el navegador.
+    expect(llegix('src/sections/notes/carpetes.js')).toContain("export const CARPETA_SISTEMA = 'f-sistema';");
+    expect(llegix('src/sections/notes/NotesSection.jsx')).toContain("const PARELL_CARPETA_SISTEMA = Object.freeze(['section.notes.carpeta.sistema', 'Sistema']);");
+    expect(llegix('src/sections/notes/HistorialRevisionsBar.jsx')).toContain('<span>{tx.historialDesfer}</span>');
+    expect(textosEdicioSistema('ca').revisioSistemaDesada).toContain('en este navegador');
+    // El menú del Xat: el títol que obri el menú, la fila d'ajustos, el peu d'identitat i l'Eixir que pregunta.
+    const closca = llegix('src/sections/xat/components/ClosCaXat.jsx');
+    expect(closca).toContain('export function BotoTitolSeccioXat(');
+    expect(closca).toContain("t('section.xat.rail.ajustosDelXat', 'Ajustos del xat')");
+    expect(closca).toContain('onIdentitats={ambIdentitat ? obriIdentitats : null}');
+    /* v1.2.23 · R2A-02 (Gauntlet R2) · El que es veu al peu: el nom de la identitat activa o, sense compte, «Tu»; i el
+       títol del calaix que obri, en la llengua del Xat. */
+    expect(closca).toContain('<span className="sdp-xat-rail-peu__nom">{nomIdentitatActiva}</span>');
+    expect(closca).toContain(`<span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>`);
+    expect(closca).toContain('etiquetaTitol={textosCalaix.titol}');
+    expect(closca).toContain('try { queden = await sessio.preparaEixida(); } catch { queden = []; }');
+    expect(EN['section.xat.rail.ambQuiActues']).toBe('{nom}: Who are you acting as?');
+    for (const d of Object.values(DICCIONARIS)) expect(Object.hasOwn(d, 'section.xat.rail.tancaMenu')).toBe(false);
+    const { textosAvisEixida } = await import('../../components/universal/EixidaSegura.jsx');
+    for (const llengua of Object.keys(DICCIONARIS)) {
+      expect(text(blocV1223(llengua)), llengua).toContain(`«${textosAvisEixida(llengua).noEixir}»`);
+    }
+    // Les fitxes de les Notes: un títol de dues línies i una entradilla d'una amb el·lipsi.
+    const moduls = llegix('src/css/modules.css');
+    expect(moduls).toMatch(/\.sdp-bloc-list--notes \.sdp-gestor-fitxa__titol \{[^}]*max-block-size: calc\(2 \* 1\.3em\);/);
+    expect(moduls).toMatch(/\.sdp-bloc-list--notes \.sdp-gestor-fitxa__subtitol \{[^}]*text-overflow: ellipsis;/);
+    // El Mode Bancal: el text cert (AAA, 7:1 o més) a la descripció de les cinc llengües, i cap 10:1.
+    for (const [llengua, textos] of Object.entries(TEXTOS_MODE_SENIOR)) {
+      expect(textos.descripcio, llengua).toContain('(≥ 7:1)');
+      expect(DEU_A_U.test(textos.descripcio), llengua).toBe(false);
+    }
+    expect(llegix('src/sections/profile/DetallEspai.jsx')).toContain('<ControlModeSenior llengua={codiActiu} ambDescripcio');
+    expect(llegix('public/md/guia-pas-a-pas.md')).toContain('AAA (≥ 7:1)');
+    expect(existsSync(resolve(process.cwd(), 'src/config/textosModeSenior.veritatBancal.v1223.test.js'))).toBe(true);
+    // El logotip: un sol tram, sense el salt de 480 a 481.
+    expect(llegix('src/css/layout.css')).toContain('.mobile-logo-wrapper img { width: auto; height: 38px; max-width: 100%; object-fit: contain; }');
+    expect(existsSync(resolve(process.cwd(), 'src/css/logotipSenseSalt.l3_10.capes.test.js'))).toBe(true);
+    // La maquetació: el títol de secció canònic i cap mesura de columna als textos del Xat.
+    expect(llegix('src/sections/control/ControlSection.jsx')).toContain("<h3>{t('section.control.maquinaria.titol', 'Maquinària i Sistema')}</h3>");
+    expect(llegix('src/components/universal/drets/CopyrightPage.jsx')).toContain('className="sdp-drets__titol">Drets d’autor</h3>');
+    expect(llegix('src/sections/multimedia/GestorMultimediaLocal.jsx')).toContain('<h3 id={idTitol}>{tr(T.titol)}</h3>');
+    expect(moduls).not.toContain('--sdp-measure');
+    // La veu: la recuperació torna a ser la nota preparada, i la prova de comportament de la R32.41 ho fixa.
+    expect(controls).toContain('function veuRecuperada(error) {');
+    expect(controls).toContain('const recuperada = veuRecuperada(e);');
+    expect(llegix('src/sections/xat/components/ControlsAdjunt.veuTallada.x2.test.jsx')).toContain('amb la gravadora de veres, un error del sistema (onerror) també deixa la veu recollida');
+    // El preu: la cerca i la lectura sense cobertura, amb el preu inicial del Mercat.
+    expect(llegix('src/sections/search/indexCerca.js')).toContain('meta: [preuInicialDelProducte(producte), venedor, producte?.population],');
+    expect(llegix('src/pwa/lecturaPublicaOffline.js')).toContain("ruta === 'mercat' ? preuInicialDelProducte(item) : formataPreuMercat(item.price)");
+    // La política (2.5), que encara no conta «Amaga el lloc»; els avisos, apagats; el xifrat, apagat.
+    expect(llegix('src/config/politicaPrivacitat.js')).toContain("export const VERSIO_POLITICA_PRIVACITAT = '2.5';");
+    expect(llegix('src/sections/text/legalContent.js')).not.toContain('Amaga el lloc');
+    expect(llegix('src/natiu/avisosPushNatius.js')).toContain("const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';");
+    expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
   });
 });

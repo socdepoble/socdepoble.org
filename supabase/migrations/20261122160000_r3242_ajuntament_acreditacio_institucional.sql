@@ -2,6 +2,8 @@
 -- fins a verificació del domini i acreditació manual per superadmin AAL2.
 -- Font del sembrat: src/data/nomenclator/municipis_ine_2026_espanya.v1.json.
 -- Els noms ambigus no s'assignen automàticament. No toca ajuntaments existents.
+-- v1.2.23 · M3-01 (ordre del Mestre 261123) · resol_reclamacio pot rebutjar (mai aprovar) una reclamació genèrica
+-- d'un city_hall feta abans d'esta migració, amb rastre a private.ajuntament_auditoria; cap fila no es tanca sola.
 begin;
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
@@ -8179,8 +8181,20 @@ with candidats as (
  from public.towns t join private.ajuntament_municipis_ine i on t.name=any(i.noms)
  where t.is_open
 )
+-- v1.2.23 · R2D-02 (Gauntlet R2) · El nom públic segueix la regla de nomDeLaGent (src/sections/pobles/nomsDelPoble.js):
+-- l'article es contrau amb «de» i va en minúscula («del Campello», «de la Torre de les Maçanes», «de l'Alfàs del Pi»),
+-- i «de» s'apostrofa davant de vocal o de h més vocal («d'Alcoi», «d'Hondón»), però no davant d'una i o una u
+-- semivocals («de Iurreta», «de Huelva»). Les classes porten les majúscules i les minúscules explícites: no depenen
+-- de ~* ni de lower() en la col·lació C. Ningú no pot esmenar el nom fins a l'acreditació.
 insert into public.organizations(tenant_id,slug,name,kind,description,visibility,created_by,claimed,municipi_ine)
-select c.id,'ajuntament-'||c.ine,left('Ajuntament de '||c.nom,120),'city_hall',
+select c.id,'ajuntament-'||c.ine,left('Ajuntament '||case
+  when c.nom ~ '^[Ee]ls\s' then 'dels '||regexp_replace(c.nom,'^[Ee]ls\s+','')
+  when c.nom ~ '^[Ee]l\s' then 'del '||regexp_replace(c.nom,'^[Ee]l\s+','')
+  when c.nom ~ '^[Ll]es\s' then 'de les '||regexp_replace(c.nom,'^[Ll]es\s+','')
+  when c.nom ~ '^[Ll]a\s' then 'de la '||regexp_replace(c.nom,'^[Ll]a\s+','')
+  when c.nom ~ '^[Ll][''’]' then 'de l'''||regexp_replace(c.nom,'^[Ll][''’]\s*','')
+  when c.nom ~ '^[Hh]?[AEIOUÀÁÈÉÍÏÒÓÚÜaeiouàáèéíïòóúü]' and c.nom !~ '^[Hh]?([Ii][aeouàáèéòóúü]|[Uu][aeoàáèéòó])' then 'd'''||c.nom
+  else 'de '||c.nom end,120),'city_hall',
  'Fitxa municipal pendent d’acreditació oficial','public',null,false,c.ine
 from candidats c where c.total=1 and c.n=1
 and not exists(select 1 from public.organizations o where o.tenant_id=c.id and o.kind='city_hall')
@@ -8295,7 +8309,7 @@ begin
     raise exception 'SDP-CLAIM-000: cal sessió.' using errcode = '42501';
   end if;
 
-  if exists(select 1 from public.organizations where id=p_organization_id and kind='city_hall') then raise exception 'SDP-AJT-020: usa sollicitia acreditació institucional' using errcode='42501'; end if;
+  if exists(select 1 from public.organizations where id=p_organization_id and kind='city_hall') then raise exception 'SDP-AJT-020: usa sollutia acreditació institucional' using errcode='42501'; end if;
   select o.tenant_id into v_tenant
     from public.organizations o where o.id = p_organization_id;
   if v_tenant is null then
@@ -8331,7 +8345,7 @@ create or replace function public.resol_reclamacio(p_claim uuid, p_aprova boolea
 returns void
 language plpgsql security definer set search_path = ''
 as $$
-declare v_claim public.organization_claims;
+declare v_claim public.organization_claims; v_ajuntament boolean;
 begin
   if not (select private.es_superadmin()) then
     raise exception 'SDP-CLAIM-010: cal rol de superadmin.' using errcode = '42501';
@@ -8343,7 +8357,14 @@ begin
     raise exception 'SDP-CLAIM-011: reclamació inexistent o ja resolta.' using errcode = '22023';
   end if;
 
-  if exists(select 1 from public.organizations where id=v_claim.organization_id and kind='city_hall') then raise exception 'SDP-AJT-020: usa resolució institucional' using errcode='42501'; end if;
+  -- v1.2.23 · M3-01 (ordre del Mestre 261123) · Un city_hall només s'aprova per la via institucional
+  -- (resol_acreditacio_ajuntament). Una reclamació genèrica d'abans d'esta migració sí que es pot rebutjar,
+  -- perquè no quede pendent per sempre ni bloquege idx_claims_una_pendent; una sol·licitud institucional
+  -- (amb fila a private.ajuntament_acreditacions) no passa mai per ací, ni per a rebutjar-la.
+  v_ajuntament := exists(select 1 from public.organizations where id=v_claim.organization_id and kind='city_hall');
+  if v_ajuntament and (p_aprova is true or exists(select 1 from private.ajuntament_acreditacions a where a.claim_id=v_claim.id)) then
+    raise exception 'SDP-AJT-020: usa resolució institucional' using errcode='42501';
+  end if;
   if v_claim.user_id = (select auth.uid()) then
     raise exception 'SDP-CLAIM-012: no pots revisar la teua pròpia reclamació.' using errcode = '42501';
   end if;
@@ -8359,6 +8380,13 @@ begin
          resolta_per = (select auth.uid()),
          resolta_at  = now()
    where id = p_claim;
+
+  -- v1.2.23 · M3-01 (ordre del Mestre 261123) · El rebuig d'una reclamació genèrica d'un ajuntament queda al rastre.
+  if v_ajuntament then
+    insert into private.ajuntament_auditoria(organization_id,claim_id,actor_id,accio,evidencia)
+    values(v_claim.organization_id,v_claim.id,(select auth.uid()),'reclamacio_generica_rebutjada',
+      'Reclamació genèrica anterior a l’acreditació institucional, rebutjada per superadmin');
+  end if;
 end;
 $$;
 revoke execute on function public.resol_reclamacio(uuid, boolean) from public, anon;

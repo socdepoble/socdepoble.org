@@ -155,7 +155,15 @@ const FRONTERES = Object.freeze([
   'src/sections/multimedia/panellDeLaFoto.enllac.seguretat.test.js',
   // f4b (261030), B2: les rutes /__iaia (també govern.json, el Llibre Mestre) només responen al
   // mateix ordinador, encara que el servidor de desenvolupament escolte la xarxa (entra pel nom).
-  'src/sections/consola/consolaIaia.nomesLocal.seguretat.test.js'
+  'src/sections/consola/consolaIaia.nomesLocal.seguretat.test.js',
+  // v1.2.23 · IDEA-331 i L2-01 (Gauntlet R2, R2F-04) · el GPS es conserva de sèrie i «Amaga el lloc»
+  // l'elimina (xat, cos de les Notes i del Perfil, casella de l'enquadrament), i l'avatar i el logotip
+  // d'identitat de «Multimèdia» queden sempre nets.
+  'src/sections/profile/fotoNetaDIdentitat.test.js',
+  'src/sections/profile/PerfilEditor.cosUbicacio.idea331.test.jsx',
+  'src/sections/xat/components/ControlsAdjunt.geolocPerDefecte.idea331.test.jsx',
+  'src/components/universal/DocumentEditor.ubicacioPerDefecte.idea331.test.jsx',
+  'src/components/universal/enquadrament/CasellaExif.ubicacioPerDefecte.idea331.test.jsx'
 ]);
 
 describe('P1-26 · les fronteres de seguretat corren al pre-commit', () => {

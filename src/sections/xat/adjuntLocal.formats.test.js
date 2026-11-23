@@ -37,18 +37,25 @@ describe('formats que dona el selector del mòbil', () => {
     expect(comprimeix.mock.calls[0][1].maxSize).toBe(mime === 'image/png' ? 2048 : 1200);
   });
 
-  test.each([['MP4', 'video/mp4'], ['mov', 'video/quicktime'], ['webm', 'video/webm']])('type buit amb .%s conserva durada i exigix sanejament per a MP4/MOV', async (extensio, mime) => {
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el vídeo conserva el lloc i no passa pel sanejador;
+     amb «Amaga el lloc» (conservaUbicacio: false), l'MP4/MOV sí que hi passa amb el MIME inferit. */
+  test.each([['MP4', 'video/mp4'], ['mov', 'video/quicktime'], ['webm', 'video/webm']])('type buit amb .%s conserva durada i només l’opt-out exigix sanejament', async (extensio, mime) => {
     const lligDurada = vi.fn().mockResolvedValue(4000);
     const netejaVideo = vi.fn(async (fitxer) => ({ fitxer, net: true }));
     const comprimeix = comprimeixPetit();
-    const adjunt = await preparaAdjunt(new File(['video'], `record.${extensio}`), { comprimeix, lligDurada, netejaVideo, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) });
-    expect(adjunt).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: mime !== 'video/webm' });
+    const opcions = { comprimeix, lligDurada, netejaVideo, comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }) };
+    const adjunt = await preparaAdjunt(new File(['video'], `record.${extensio}`), opcions);
+    expect(adjunt).toMatchObject({ tipus: 'video', duradaMs: 4000, senseUbicacio: false, conservaUbicacio: true });
     expect(adjunt.fitxer.type).toBe(mime);
     expect(lligDurada.mock.calls[0][0].type).toBe(mime);
-    if (mime === 'video/webm') expect(netejaVideo).not.toHaveBeenCalled();
-    else expect(netejaVideo).toHaveBeenCalledOnce();
+    expect(netejaVideo).not.toHaveBeenCalled();
     expect(comprimeix).not.toHaveBeenCalled();
     expect(() => validaAdjuntXat(adjunt)).not.toThrow();
+    const amagat = await preparaAdjunt(new File(['video'], `record.${extensio}`), { ...opcions, conservaUbicacio: false });
+    expect(amagat).toMatchObject({ tipus: 'video', senseUbicacio: true, conservaUbicacio: false });
+    expect(netejaVideo).toHaveBeenCalledOnce();
+    expect(netejaVideo.mock.calls[0][0].type).toBe(mime);
+    expect(() => validaAdjuntXat(amagat)).not.toThrow();
   });
 
   test.each([

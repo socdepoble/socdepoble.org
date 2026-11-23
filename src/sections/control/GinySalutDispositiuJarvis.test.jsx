@@ -130,7 +130,7 @@ describe('IDEA-278 · GinySalutDispositiuJarvis (6 estats UI ECC, revelació in-
     /* 6 MB confirmats pel productor i encara sense netejar: «ready», no «empty». */
     await waitFor(() => expect(seccio.getAttribute('data-estat-ui')).toBe('ready'));
 
-    expect(screen.getByRole('heading', { level: 2, name: tx.titolSeccio })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: tx.titolSeccio })).toBeTruthy();
     expect(screen.getByText(tx.compartimentSagratTitol)).toBeTruthy();
 
     const botoRevisar = screen.getByRole('button', { name: tx.botoRevisar });

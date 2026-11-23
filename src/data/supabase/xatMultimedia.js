@@ -60,9 +60,14 @@ const primera = (valor) => Array.isArray(valor) ? valor[0] : valor;
 /* EXIF_T03 · La reserva i el seu objecte són immutables. Un adjunt antic
    amb GPS s'ha de preparar de nou (ID nou), abans de reservar: no podem
    substituir a cegues un objecte que Storage pot haver confirmat ja.
-   Ni senseUbicacio:true ni l'absència de p_ubicacio acrediten els bytes. */
-async function comprovaImatgeSenseUbicacio(fitxer, comprova, signal) {
-  const { imatgeSenseUbicacio } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+   Ni senseUbicacio:true ni l'absència de p_ubicacio acrediten els bytes.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el contingut conserva el lloc: els bytes han de ser el
+   punt fix d'imatgeAmbUbicacio (l'EXIF blanc amb el GPS, cap altra metadada). Amb «Amaga el lloc»
+   (conservaUbicacio: false) o una entrada que declara senseUbicacio, el d'imatgeSenseUbicacio, com sempre. */
+async function comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio = false } = {}) {
+  const canonic = ambUbicacio
+    ? (await import('../../components/universal/enquadrament/exifAmbUbicacio.js')).imatgeAmbUbicacio
+    : (await import('../../components/universal/enquadrament/exifIncrustat.js')).imatgeSenseUbicacio;
   comprova();
   let buffer;
   try {
@@ -84,7 +89,7 @@ async function comprovaImatgeSenseUbicacio(fitxer, comprova, signal) {
   }
   comprova();
   const bytes = new Uint8Array(buffer);
-  const net = imatgeSenseUbicacio(bytes);
+  const net = canonic(bytes);
   if (!net || net.format !== fitxer.type) throw errorAdjuntXat('foto-codificacio');
   /* v1.2.20 · Gauntlet R1 (L1-01) · Uns bytes que no són el punt fix del
      netejador són un problema de codificació, no un enviament repetit:
@@ -92,6 +97,10 @@ async function comprovaImatgeSenseUbicacio(fitxer, comprova, signal) {
      la foto no hi feia res. preparaAdjunt ja puja el punt fix (adjuntLocal.js). */
   if (net.bytes.length !== bytes.length || net.bytes.some((b, i) => b !== bytes[i])) throw errorAdjuntXat('foto-codificacio');
 }
+/* v1.2.23 · IDEA-331 · Gauntlet R1 del carril A (P1) · Els dos punts fixos, amb nom: sense GPS (opt-out, entrada sense
+   lloc o sense el DTO que l'avís ensenya) i amb el GPS que la persona ha vist. */
+const comprovaImatgeSenseUbicacio = (fitxer, comprova, signal) => comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio: false });
+const comprovaImatgeAmbUbicacio = (fitxer, comprova, signal) => comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio: true });
 
 /* El fallback antic no pot dir «sense la ubicació» d'un vídeo que només
    s'ha inspectat o que declara una bandera local. MP4/MOV: es comparen els
@@ -304,10 +313,15 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
     }
     comprova();
   }
-  if (tipus === 'imatge') await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
-  // R32.42: la ubicació consentida només viatja al DTO arrodonit.
-  // També els reenviaments i clients antics han d'acreditar els bytes abans de reservar.
-  if (tipus === 'video' && /^video\/(mp4|quicktime)$/.test(fitxer.type)) await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El fitxer conserva el lloc per defecte; el DTO arrodonit
+     (R32.42) continua sent el que pinta el mapa. Només l'opt-out (o una entrada que declara senseUbicacio, com els
+     reenviaments) ha d'acreditar uns bytes sense GPS abans de reservar. */
+  const senseLloc = entrada.conservaUbicacio === false || entrada.senseUbicacio === true;
+  /* Gauntlet R1 del carril A (P1) · Una foto que conserva el lloc porta també el DTO que la persona ha vist a l'avís.
+     Sense DTO no hi ha avís: els bytes han de ser el punt fix sense GPS (cap lloc en silenci). */
+  if (tipus === 'imatge' && (senseLloc || !ubicacio)) await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
+  else if (tipus === 'imatge') await comprovaImatgeAmbUbicacio(fitxer, comprova, config.signal);
+  if (senseLloc && tipus === 'video' && /^video\/(mp4|quicktime)$/.test(fitxer.type)) await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
   const reserva = primera(await crida('xat_reserva_adjunt', {
     p_id: id, p_fil_id: filId, p_bytes: fitxer.size, p_mime: fitxer.type, p_durada_ms: duradaMs ?? null
   }, config));
@@ -336,15 +350,17 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
      admet); l'etiqueta traduïda la pinta qui llig. */
   const params = { p_id: id, p_text: text, p_resposta_a: respostaA, ...(ubicacio ? { p_ubicacio: ubicacio } : {}) };
   /* Compatibilitat amb nodes que només tenen la RPC de tres arguments.
-     La foto ja ha acreditat bytes sense GPS abans de la reserva; llevar
-     p_ubicacio només lleva el DTO. Mai és una operació de sanejament binari. */
+     Llevar p_ubicacio només lleva el DTO. Mai és una operació de sanejament binari.
+     v1.2.23 · IDEA-331 · L1-02 (Gauntlet R1) · Llevar p_ubicacio no torna a exigir cap vídeo net. El fitxer ja pujat
+     porta el lloc només si preparaAdjunt l'hi ha deixat (llocDelFitxer), com diu l'avís previ. En el cas «només el
+     mapa» (senseUbicacio: true amb DTO) el contingut queda sense lloc, i ubicacioNoAdmesa ho comunica.
+     validaAdjuntXat només valida el DTO, no els bytes. */
   let ubicacioNoAdmesa = false;
   let m;
   try { m = primera(await crida('xat_publica_adjunt', params, config)); }
   catch (error) {
     if (!ubicacio || error?.code !== noDisponible().code) throw error;
     comprova();
-    if (tipus === 'video') await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
     const sense = { ...params };
     delete sense.p_ubicacio;
     m = primera(await crida('xat_publica_adjunt', sense, config));

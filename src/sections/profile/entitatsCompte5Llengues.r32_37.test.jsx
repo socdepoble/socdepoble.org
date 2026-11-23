@@ -46,7 +46,7 @@ describe('Onada R32.37 · i18nEntitatsCompte · paritat estructural en les 5 lle
     const casos = [
       ['ca', 'Nova organització', 'Empresa o negoci', 'Grup', 'Poble', 'Tria un poble…', 'Crear', 'Cancel·lar'],
       ['es', 'Nueva organización', 'Empresa o negocio', 'Grupo', 'Pueblo', 'Elige un pueblo…', 'Crear', 'Cancelar'],
-      ['en', 'New organisation', 'Business or cooperative', 'Group', 'Village', 'Choose a village…', 'Create', 'Cancel'],
+      ['en', 'New organisation', 'Company or business', 'Group', 'Village', 'Choose a village…', 'Create', 'Cancel'],
       ['eu', 'Erakunde berria', 'Enpresa edo negozioa', 'Taldea', 'Herria', 'Aukeratu herri bat…', 'Sortu', 'Utzi'],
       ['gl', 'Nova organización', 'Empresa ou negocio', 'Grupo', 'Vila', 'Escolle unha vila…', 'Crear', 'Cancelar'],
     ];

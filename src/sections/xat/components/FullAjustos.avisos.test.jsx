@@ -126,7 +126,7 @@ function obriNotificacions() {
     </aside>
   );
   render(<ClosCaXat middleTitle="Xats" middleColumn={middle} rightColumn={<div />} />);
-  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Tu: ajustos' }));
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Ajustos del xat' }));
   fireEvent.click(within(full()).getByRole('button', { name: /^Notificacions/ }));
   return full().querySelector('.sdp-xat-ajustos__cos');
 }

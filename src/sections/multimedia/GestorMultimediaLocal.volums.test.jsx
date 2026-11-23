@@ -189,7 +189,7 @@ describe('textos', () => {
       entorn={{ showDirectoryPicker: vi.fn() }}
     />);
     expect(await screen.findByRole('heading', { name: '⟦section.multimedia.local.diagnostic⟧' })).not.toBeNull();
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('⟦section.multimedia.local.titol⟧');
+    expect(screen.getByRole('heading', { level: 3, name: '⟦section.multimedia.local.titol⟧' })).not.toBeNull();
     expect(screen.getByRole('button', { name: '⟦section.multimedia.local.vincula⟧' })).not.toBeNull();
     const caminant = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     const solts = [];

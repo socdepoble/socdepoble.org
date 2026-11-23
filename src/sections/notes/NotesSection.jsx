@@ -1,9 +1,9 @@
 import { Suspense, useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { NotebookPen, Folder, SmilePlus } from 'lucide-react';
-import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitatOReserva } from '../../app/contexts/useIdentitatOReserva.js';
 import { esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
-import { useNotes, etiquetesDeNota } from './NotesContext';
+import { useNotes, ValorDeNotes, etiquetesDeNota } from './NotesContext';
 import { useMur } from '../mur/MurContext';
 import { usePaginesDelSistema } from '../mur/usePublicacionsDeLActor.js';
 import { useMultimedia } from '../multimedia/MultimediaContext.jsx';
@@ -19,14 +19,15 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { modeDeDadesResolt } from './autoriaNota.js';
-import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
+import { CARPETA_SISTEMA, iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
 import { useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
 import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 import { ID_NOTA_BENVINGUDA, KIND_TUTORIAL, NOTA_TUTORIAL, itemTutorial, portaLaNotaTutorial, tutorialRetirada } from './notaTutorial.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
-import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
+import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esAliesDelProjecte, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
+import { usePaginesSistemaDelBloc } from './paginesSistemaBloc.js';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
@@ -44,7 +45,18 @@ import {
 import { CanalAmbitContext } from '../../components/universal/ambits/canalAmbit.js';
 import { carpetaDeLAmbit } from '../../components/universal/ambits/carpetaAmbit.js';
 import { AMBITS } from '../../utils/publicacioUniversal.js';
+import { esRutaInterna } from '../../config/navigation.js';
 import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+
+const COLUMNES_PLEGADES_EDICIO = Object.freeze({ left: true, middle: true });
+
+function useNavigateSegur() {
+  try {
+    return useNavigate();
+  } catch {
+    return null;
+  }
+}
 
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
    ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
@@ -113,7 +125,8 @@ const ESTATS_PENDENTS = new Set(['loading', 'revalidating', 'error']);
 /* Grup E (261008) · La secció Mur també porta les pàgines del sistema, que
    arriben del contingut core: la seua font (murAmbPagines) espera el Mur i el
    core. Mercat i agenda continuen esperant només el Mur. */
-const FONT_DE_SECCIO = Object.freeze({ mur: 'murAmbPagines', mercat: 'mur', events: 'mur', multimedia: 'multimedia' });
+const PARELL_CARPETA_SISTEMA = Object.freeze(['section.notes.carpeta.sistema', 'Sistema']);
+const FONT_DE_SECCIO = Object.freeze({ mur: 'murAmbPagines', mercat: 'mur', events: 'mur', multimedia: 'multimedia', sistema: 'sistema' });
 const fontDe = (fonts, seccio) => (seccio == null ? null : fonts[FONT_DE_SECCIO[seccio]] ?? null);
 /* Els mateixos textos que l'espai de treball pinta quan carrega o falla
    (UniversalWorkspace · PARELLS_ETIQUETES_ESPAI loading, error i retry): les
@@ -359,20 +372,21 @@ function NotesSectionBase() {
      petició de l'espai de treball (requestKey) també, i el detall es quedava
      en «Carregant…» per sempre. Límit: una font que rebutjara dues vegades
      amb la mateixa instància d'error encara no canviaria res. */
-  const fontsDelMas = useMemo(() => ({
-    mur: { status: estatMur, error: errorMur, refresh: refrescaMur },
-    murAmbPagines: { status: estatFontMur, error: errorMur, refresh: refrescaMur },
-    multimedia: { status: estatMultimedia, error: errorMultimedia, refresh: refrescaMultimedia }
-  }), [estatMur, estatFontMur, errorMur, refrescaMur, estatMultimedia, errorMultimedia, refrescaMultimedia]);
-  /* Revisió del Gauntlet 261017 (ID6; relleu 3: una altra sessió mai no és
-     Javi) · Els àlies de l'actor, amb el mode de dades RESOLT
-     (modeDeDadesResolt, el mateix de NotesEditor, NotaFitxa i
-     usePublicacionsDeLActor), no amb el cru del paquet: un paquet 'seed' que
-     ja ha triat l'entrada real treballa en remot, i un compte qualsevol hi
-     heretava els àlies de la persona pilot (el Mac Mini de Javi eixia al seu
-     Bloc com a publicació pròpia). */
   const modeResolt = useMemo(() => modeDeDadesResolt(config), [config]);
   const alies = useMemo(() => aliesDeLActor(actor, { dataMode: modeResolt }), [actor, modeResolt]);
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigateSegur();
+  /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
+     espai de treball en mode compacte, sense cap ruta nova. */
+  const modeDesa = esModeDesa(params);
+  const plegadesUrl = !modeDesa && params.get('plegades') === '1';
+  const retornRaw = !modeDesa ? (params.get('retorn') || '') : '';
+  const retornValid = retornRaw && esRutaInterna(retornRaw) ? retornRaw : '';
+  /* R32.44 · IDEA-324 · Només l'entitat pilot Sóc de Poble disposa de la carpeta
+     Sistema (`f-sistema`) amb totes les pàgines de PAGE_COPY editables i amb historial. */
+  const esEntitatProjecte = useMemo(() => !modeDesa && esAliesDelProjecte(alies), [modeDesa, alies]);
+  const demanaSistemaUrl = params.get('carpeta') === CARPETA_SISTEMA
+    || Boolean(params.get('nota')?.startsWith('publicacio:sistema:'));
   const {
     status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote, desaNotaPreparada,
     informaError, obriConfiguracioNotes, refresh, canCreate, teSessio = false,
@@ -380,6 +394,18 @@ function NotesSectionBase() {
   } = notesContextValue || {
     status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
   };
+  const teCarpetaSistema = useMemo(() => {
+    if (!esEntitatProjecte) return false;
+    if (!Array.isArray(noteFolders) || !noteFolders.length || demanaSistemaUrl) return true;
+    return noteFolders.some((f) => String(f?.id) === CARPETA_ALTRES || String(f?.id) === CARPETA_SISTEMA);
+  }, [esEntitatProjecte, noteFolders, demanaSistemaUrl]);
+  const { items: paginesSistema, status: estatSistema } = usePaginesSistemaDelBloc(teCarpetaSistema, { forcat: demanaSistemaUrl });
+  const fontsDelMas = useMemo(() => ({
+    mur: { status: estatMur, error: errorMur, refresh: refrescaMur },
+    murAmbPagines: { status: estatFontMur, error: errorMur, refresh: refrescaMur },
+    multimedia: { status: estatMultimedia, error: errorMultimedia, refresh: refrescaMultimedia },
+    sistema: { status: estatSistema, error: null, refresh }
+  }), [estatMur, estatFontMur, errorMur, refrescaMur, estatMultimedia, errorMultimedia, refrescaMultimedia, estatSistema, refresh]);
   /* F4 (D2) · Les publicacions del Mur nascudes d'una nota pròpia: la peça és
      la nota (toWorkspaceNote la posa també a «Mur»), no una còpia de lectura.
      Poliment de F4 (revisió de la Marató 2230) · Cada tecla porta un array de
@@ -392,17 +418,17 @@ function NotesSectionBase() {
     .map((nota) => String(nota.publishedSubmissionId))
     .sort()), [notes]);
   const publicadesDesDeNotes = useMemo(() => new Set(JSON.parse(clauPublicades)), [clauPublicades]);
-  const publicacions = useMemo(
+  const publicacionsBase = useMemo(
     () => itemsPublicatsDe(
       { feedPosts: feedDelMas, marketItems: sortedMarketItems, events: sortedEvents, mediaItems },
       alies, { publicadesDesDeNotes }
     ),
     [feedDelMas, sortedMarketItems, sortedEvents, mediaItems, alies, publicadesDesDeNotes]
   );
-  const [params, setParams] = useSearchParams();
-  /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
-     espai de treball en mode compacte, sense cap ruta nova. */
-  const modeDesa = esModeDesa(params);
+  const publicacions = useMemo(
+    () => (paginesSistema.length ? [...publicacionsBase, ...paginesSistema] : publicacionsBase),
+    [publicacionsBase, paginesSistema]
+  );
   /* IDEA-61 (T0) · L'àmbit que demana la URL queda pendent fins que l'editor
      el consumix (canalAmbit): es captura en entrar i a cada canvi de la URL
      que en porte un (la ref distingix el canvi de la mateixa URL repintada).
@@ -463,10 +489,17 @@ function NotesSectionBase() {
   const carpetesDelServidor = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
   const carpetes = useMemo(() => {
     const base = opcionsDeCarpetes(carpetesDelServidor, t);
-    const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === String(extra.id)))
+    const ambSistema = teCarpetaSistema && !base.some((c) => c.id === CARPETA_SISTEMA)
+      ? (() => {
+        const entradaSistema = { id: CARPETA_SISTEMA, nom: tradueix(t, PARELL_CARPETA_SISTEMA), parentId: null };
+        const posMur = base.findIndex((c) => c.id === 'f-mur');
+        return posMur < 0 ? [entradaSistema, ...base] : [...base.slice(0, posMur + 1), entradaSistema, ...base.slice(posMur + 1)];
+      })()
+      : base;
+    const extres = carpetesLocals.filter((extra) => !ambSistema.some((c) => c.id === String(extra.id)))
       .map((extra) => ({ id: String(extra.id), nom: extra.nom, parentId: null }));
-    return extres.length ? [...base, ...extres] : base;
-  }, [carpetesDelServidor, t, carpetesLocals]);
+    return extres.length ? [...ambSistema, ...extres] : ambSistema;
+  }, [carpetesDelServidor, teCarpetaSistema, t, carpetesLocals]);
   /* Totes les entrades de la navegació (carpetes, categories i etiquetes):
      la nota preparada hi pertany (itemPreparadaBase) i, des de la revisió de
      F4 (R6c), són les que l'espai de treball reconeix en una ?carpeta=. */
@@ -487,11 +520,19 @@ function NotesSectionBase() {
      fins a l'entrada hi torna. Un enllaç amb nota o carpeta mana, com
      sempre. Al Snippet Curador no s'aplica. */
   const urlCrua = llegixSeleccio(params, CLAUS_URL);
+  const subIdPublicacio = urlCrua.item?.startsWith('publicacio:mur:')
+    ? urlCrua.item.slice('publicacio:mur:'.length)
+    : null;
+  const notaPropiaPublicada = subIdPublicacio
+    ? notes.find((n) => n?.isPublished && String(n.publishedSubmissionId) === subIdPublicacio) ?? null
+    : null;
   /* IDEA-61 (T0) · Amb un àmbit pendent i cap nota a la URL, l'entrada no és
      la Card tutorial: és la nota preparada, que rep la fitxa (itemDAmbit). */
   const ambitDEntrada = ambitPendent != null && !modeDesa && urlCrua.item == null;
   const entradaNua = !modeDesa && urlCrua.carpeta == null && urlCrua.item == null && !ambitDEntrada;
-  const enUrl = entradaNua ? { ...urlCrua, carpeta: ALL_CATEGORY_ID, item: ID_NOTA_BENVINGUDA } : urlCrua;
+  const enUrl = entradaNua
+    ? { ...urlCrua, carpeta: ALL_CATEGORY_ID, item: ID_NOTA_BENVINGUDA }
+    : (notaPropiaPublicada ? { ...urlCrua, item: String(notaPropiaPublicada.id) } : urlCrua);
 
   /* ── F4 (bloquejant de Codex, relleus 16, 17 i 21 de l'auditoria 261004_2240)
      · Una publicació triada és de la seua font, no del port de notes ────────
@@ -743,6 +784,22 @@ function NotesSectionBase() {
       && (!item || !candidates.some((candidate) => !esPreparada(candidate)));
   }, [modeDesa, preparada.id, fontsDelMas]);
 
+  const mirantTot = (categoriaActiva ?? enUrl.carpeta) === ALL_CATEGORY_ID;
+  const clausSistemaEditables = useMemo(
+    () => new Set(paginesSistema.map((p) => String(p.data?.item?.id ?? ''))),
+    [paginesSistema]
+  );
+  const publicacionsSenseDuplicatTot = useMemo(() => {
+    if (!esEntitatProjecte || !mirantTot || !clausSistemaEditables.size) return publicacions;
+    return publicacions.filter((pub) => {
+      if (pub.id === enUrl.item) return true;
+      if (pub.data?.seccio === 'mur' && pub.data?.item?.isSystem === true) {
+        return !clausSistemaEditables.has(String(pub.data.item.id));
+      }
+      return true;
+    });
+  }, [esEntitatProjecte, mirantTot, clausSistemaEditables, publicacions, enUrl.item]);
+
   const model = useMemo(() => {
     const grupCarpetes = {
       id: 'folders',
@@ -784,13 +841,13 @@ function NotesSectionBase() {
       items: [
         ...notes.map(note => toWorkspaceNote(
           String(note.id) === preparada.id ? { ...note, ...preparada.camps } : note, noteFolders)),
-        ...publicacions,
+        ...publicacionsSenseDuplicatTot,
         ...(conservada ? [conservada] : []),
         ...(itemDeTutorial ? [itemDeTutorial] : []),
         ...(itemPreparada ? [itemPreparada] : [])
       ]
     };
-  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, conservada, modeDesa, preparada.id, preparada.camps, itemDeTutorial, itemPreparada, t]);
+  }, [status, error, notesComplete, esperaCarpeta, triaPublicacio, resolveNote, resolPublicacio, workspaceKey, canAutoSelect, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacionsSenseDuplicatTot, conservada, modeDesa, preparada.id, preparada.camps, itemDeTutorial, itemPreparada, t]);
 
   /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
      no, la Safata d’Entrada) és la categoria activa del Workspace, i el
@@ -807,8 +864,29 @@ function NotesSectionBase() {
      benvinguda). El marcatge és el dels estats propis del detall. */
   /* Gauntlet 261016 (Bloc 3.9) · Sense la secció del peu: l'editor ja no
      llista el que l'actor té publicat (vegeu renderDetall). */
+  const edicioDirectaUrl = plegadesUrl || Boolean(retornValid);
+  const valorNotesAmbRetorn = useMemo(() => {
+    if (!edicioDirectaUrl || !notesContextValue) return notesContextValue;
+    return {
+      ...notesContextValue,
+      edicioDirecta: true,
+      publishNote: async (...args) => {
+        const resultat = await notesContextValue.publishNote(...args);
+        if (resultat && retornValid && typeof navigate === 'function') {
+          navigate(retornValid);
+        }
+        return resultat;
+      }
+    };
+  }, [edicioDirectaUrl, notesContextValue, retornValid, navigate]);
+
   const renderDetallBloc = useCallback((props) => {
-    if (!esperaCarpeta || props?.item) return renderDetall(props);
+    if (!esperaCarpeta || props?.item) {
+      const detall = renderDetall(props);
+      return edicioDirectaUrl && props?.item?.kind !== 'publicacio'
+        ? <ValorDeNotes value={valorNotesAmbRetorn}>{detall}</ValorDeNotes>
+        : detall;
+    }
     if (estatEntrada !== 'error') return <p role="status">{tradueix(t, TEXTOS_DETALL_PENDENT.carregant)}</p>;
     /* L'espai inicial del fragment és un node de text: el marcatge de sempre. */
     return (
@@ -819,7 +897,7 @@ function NotesSectionBase() {
           : null}
       </div>
     );
-  }, [esperaCarpeta, estatEntrada, refrescaEntrada, t]);
+  }, [esperaCarpeta, estatEntrada, refrescaEntrada, t, edicioDirectaUrl, valorNotesAmbRetorn]);
   /* Gauntlet 261101 · X-C-notes (C-02) · La fitxa de cada element; la Card
      «Bloc de notes» sap si és l'entrada nua (CardDeLEntrada). */
   const renderFitxaBloc = useCallback((props) => renderNota({ ...props, entradaNua }), [entradaNua]);
@@ -959,25 +1037,26 @@ function NotesSectionBase() {
       <ProveidorSincronitzacioTargetes>
       {/* IDEA-58: el Bloc hereta ↑ ↓ Home End i els rails del manejador comú. */}
       <UniversalWorkspace
-        key={modeDesa ? 'desa' : 'bloc'}
+        key={modeDesa ? 'desa' : (plegadesUrl ? 'bloc-plegades' : 'bloc')}
         model={model}
         initialSelection={modeDesa ? seleccioDesa : {
           categoryId: enUrl.carpeta ?? model.primeraCarpeta,
           /* IDEA-59 / P1-72 · L'entrada nua ja naix amb la Card triada: cap
              pintada intermèdia sense element. IDEA-61 · L'entrada amb ?ambit=
              i sense nota, amb la preparada. */
-          ...(entradaNua ? { itemId: enUrl.item } : itemDAmbit != null ? { itemId: itemDAmbit } : {})
+          ...(entradaNua ? { itemId: enUrl.item } : itemDAmbit != null ? { itemId: itemDAmbit } : (plegadesUrl && enUrl.item ? { itemId: enUrl.item } : {}))
         }}
         selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? itemDAmbit ?? undefined }}
         onSelectionChange={handleSelectionChange}
         compacte={modeDesa}
+        {...(plegadesUrl ? { columnesInicials: COLUMNES_PLEGADES_EDICIO, forcaColumnesInicials: true } : null)}
         /* MD (ordre del Mestre, 261003) · En mòbil, primer les carpetes; amb
            una nota a la URL d'entrada, l'editor, tret que siga la que hi
            havia quan la persona va deixar el Bloc (les tries escriuen ?nota=
            soles): llavors, el nivell on era (nivellMestreDetall.js). Al
            snippet no s'aplica. IDEA-59 / P1-72 · La URL crua: l'entrada nua
            (la Card a «Tot», derivada) comença per les CARPETES. */
-        mestreDetall={{ clau: 'notes', element: urlCrua.item ?? itemDAmbit }}
+        mestreDetall={plegadesUrl && (enUrl.item ?? itemDAmbit) ? 'detall' : { clau: 'notes', element: urlCrua.item ?? itemDAmbit }}
         inclouDescendents={true}
         onCreate={modeDesa ? undefined : onCreate}
         onCreateError={informaError}

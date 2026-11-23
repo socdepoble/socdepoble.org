@@ -217,7 +217,7 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-factura" aria-labelledby={idTitol}>
       <div className="sdp-gestoria-factura__barra">
-        <h3 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tf(idioma, 'facturaTitol', registre.numSerie)}</h3>
+        <h4 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tf(idioma, 'facturaTitol', registre.numSerie)}</h4>
         <div className="sdp-gestoria-panell__accions">
           <Boto varietat="primari" icona={Printer} onClick={imprimix} disabled={!lectura.model}>{tg(idioma, 'Imprimeix o desa en PDF')}</Boto>
           <Boto varietat="secundari" onClick={onTanca}>{tg(idioma, 'Tanca la factura')}</Boto>

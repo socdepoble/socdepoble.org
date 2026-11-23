@@ -11,7 +11,7 @@ import {creaPostgres} from '../postgres-node0.mjs';
 const schema=fs.readFileSync(new URL('./posse-ledger.sql',import.meta.url),'utf8');
 // Single pin source shared with direct SQL installation; never accept just a count.
 const migrationPins=schema.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)?.[1];
-const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125|126|129),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
+const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125|126|129|131),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
 // Two reviewed85 compositions exist (R54 and R15-A3). Preserve exact pair
 // identity instead of silently overwriting one hash in a count-keyed object.
 const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${count}:${hash}`));
@@ -34,7 +34,9 @@ const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${cou
 // R32.25: conserva125 i afig126 exacte amb la migració preparada, municipalapagat per defecte.
 // v1.2.22 · R32.42 (lots 02 i 03): conserva el 126 i afig el 129 exacte amb 20261122160000, 20261122160200 i
 // 20261122160300 (NO aplicades); dènou parells exactes i díhuit recomptes distints. Cap 127 ni 128 intermedi.
-if(migrationPairs.length!==19||expectedMigrationLedgers.size!==19||new Set(migrationPairs.map(([count])=>count)).size!==18)throw Error('posse_migration_pins_missing');
+// v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123): el 129 es recalcula (bytes nous de 20261122160000 i 20261122160300)
+// i s'afig el complet 131 amb 20261122230000 i 20261123010000 (NO aplicades); vint parells i dènou recomptes. Cap 130.
+if(migrationPairs.length!==20||expectedMigrationLedgers.size!==20||new Set(migrationPairs.map(([count])=>count)).size!==19)throw Error('posse_migration_pins_missing');
 const FUNCTION_NAMES=['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'];
 const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{
   const start=schema.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=schema.indexOf('AS $f$',start),end=schema.indexOf('$f$;',body+6);

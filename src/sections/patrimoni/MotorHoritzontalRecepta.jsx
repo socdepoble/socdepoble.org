@@ -69,7 +69,7 @@ export default function MotorHoritzontalRecepta({ recepta }) {
   const opcionsProductes = [{ valor: '', etiqueta: 'Tria el producte que utilitzaràs' }, { valor: 'oferta-local', etiqueta: 'Pressupost de La Torre, cooperativa o altre proveïdor' }, ...(catalegParroquiaDisponible() ? [{ valor: 'compra-parroquia', etiqueta: 'Compra històrica de La Parròquia' }] : []), ...productes.filter((p) => `${nomProducteVisible(p.nom)} ${marcaVisible(p.marca)}`.toLocaleLowerCase('ca').includes(cerca.toLocaleLowerCase('ca'))).map((p) => ({ valor: p.id, etiqueta: [nomProducteVisible(p.nom), marcaVisible(p.marca), `${p.preuUnitari} €/ ${p.unitatPreuUnitari}`].filter(Boolean).join(' · ') }))];
   return <section aria-label={txPat.escandallConnexionsReceptaAria}>
     <Pila gap={4}>
-      <h2>Escandall de la recepta</h2>
+      <h3>Escandall de la recepta</h3>
       <p>Tria un producte per a cada ingredient, confirma la quantitat i indica la minva. Els preus del catàleg base són orientatius i servixen per a estimar la cistella a la botiga del teu poble.</p>
       <p>Cost de compra domèstica amb impostos inclosos.{barDisponible && ' Per al marge empresarial utilitza els escandalls del Bar i confirma la base fiscal de la compra.'}</p>
       <p>Indica les racions originals i les que vols preparar abans de calcular. El llibre no les fixa per a totes les receptes.</p>
@@ -113,13 +113,13 @@ export default function MotorHoritzontalRecepta({ recepta }) {
         </Pila></details>;
       })}
       <p role="status">{!racionsConfirmades ? 'Confirma les racions originals i les que vols preparar; el cost encara no està calculat.' : !ingredients.length ? 'La transcripció dels ingredients està pendent; encara no es pot calcular cap cost total.' : resultat.estat === 'complet' ? `Cost total: ${euros(resultat.costTotalCents)}. Cost per ració: ${euros(resultat.costRacioCents)}.` : `Subtotal conegut: ${euros(resultat.costParcialCents)}. ${resultat.pendents} ingredients pendents; el cost total encara no es pot calcular.`}</p>
-      <h3>Al·lèrgens</h3>
+      <h4>Al·lèrgens</h4>
       {!resultat && <p>Sense revisar: les seleccions de producte encara no formen una revisió de la recepta.</p>}
       <p>• Ingredient · T Traça · ? Sense revisar. Cal revisar les etiquetes dels productes i la preparació del plat.</p>
       <ul>{Object.entries(resultat?.alergens || {}).map(([id, cell]) => <li key={id}>{cell.simbol} {NOMS_ALERGENS[id]}: {({ ingredient: 'ingredient declarat', traca: 'traça declarada', absent: 'absència revisada', desconegut: 'sense revisar' })[cell.estat]}</li>)}</ul>
       <Accions><Boto disabled={!neveraDisponible || !racionsConfirmades || !ingredients.length} onClick={() => { if (!neveraDisponible) return; try { const draft = creaEsborranyTrasllat(receptaDeTreball, { racions, racionsBase, seleccions }); navigate(`/app/nevera/llista/casa?recepta=${encodeURIComponent(recepta.slug)}&racions=${racions}`, { state: { trasllatRecepta: draft } }); } catch (e) { setError(e.message); } }}>Prepara la compra al Rebost</Boto>{barDisponible && <Link className="sdp-boto sdp-boto--secundari" to="/app/bar/escandalls">Obri els escandalls d’El Bar</Link>}</Accions>
       {!neveraDisponible && <p>La compra al Rebost no està disponible ací. {textDelMotiu(nevera?.motiu || 'no-compilada')} Pots continuar calculant el cost de la recepta.</p>}
-      <h3>Llavors i herbari</h3>
+      <h4>Llavors i herbari</h4>
       <p>Les coincidències de noms són pistes per a consultar les fonts. No acrediten identitat botànica ni comestibilitat.</p>
       <p>{connexions.llavors.length} varietats i {connexions.plantes.length} plantes per revisar.</p>
       <ul>{[...connexions.llavors, ...connexions.plantes].map((x) => <li key={x.id}>{x.nom} · {x.id} · {x.motiu}</li>)}</ul>

@@ -125,8 +125,11 @@ describe('R32.8 · Lot 01 + Lot 02 · Google Omnicanal, Geolocalització per Def
       target: { files: [new Blob(['video'], { type: 'video/mp4' })] }
     });
 
-    // Per defecte: ubicació activa i visible abans d'enviar (text i format de Codex R32.8, píndola de Gemini).
-    expect(await screen.findByText(/S’inclourà la ubicació on s’ha fet \(38,64°, -0,49°\)/)).toBeTruthy();
+    // Per defecte: ubicació activa i visible abans d'enviar (format de Codex R32.8, píndola de Gemini).
+    // v1.2.23 · IDEA-331 (ordre del Mestre 261123) · L'avís és el del Mestre: el contingut conserva la ubicació.
+    // Gauntlet R1 del carril A (P2) · Este vídeo s'ha recomprimit (senseUbicacio) i no porta el lloc dins: l'avís diu
+    // que només el DTO aproximat (dos decimals) el situa al mapa.
+    expect(await screen.findByText(/Este contingut conserva la ubicació aproximada per a situar-lo al territori \(38,64°, -0,49°\): el fitxer no la porta dins\./)).toBeTruthy();
     const botoAmaga = screen.getByRole('button', { name: 'Amaga el lloc' });
 
     // «Amaga el lloc» neteja el fitxer (identificador nou) i passa a «Ubicació amagada»; s'envia sense coordenades.

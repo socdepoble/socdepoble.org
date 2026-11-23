@@ -407,7 +407,7 @@ function reglesFulla(text) {
    columna o rail. */
 const BOTONS_ACCIO = [
   '.sdp-boto', '.sdp-alerta__tanca', '.sdp-dialeg__tanca', '.sdp-pista__boto', '.sdp-cataleg-nav__enllac',
-  '.btn', '.btn-taronja-fort', '.sp-card-action', '.btn-connectar', '.btn-date-time', '.btn-icon-orange',
+  '.btn', '.sp-card-action', '.btn-connectar', '.btn-date-time', '.btn-icon-orange',
   '.sdp-pindola', '.sdp-pindola__opcio', '.sdp-bloc-action', '.sdp-xat-nova',
   '.sdp-xat-icona', '.sdp-xat-carrega__boto', '.sdp-xat-bombolla__accio', '.sdp-xat-compositor__envia',
   '.sdp-copyright-selector', '.app-grid-col-header__accio',

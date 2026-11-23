@@ -321,9 +321,7 @@ export function FitxaWeb({ espai, item }) {
       }}
     >
       <div ref={adoptaEstilsDiferits} className="sdp-espai-multimedia__cos">
-        {/* H1 → H2 → h3 (Gauntlet 261029, cicle 1): sense etiqueta ni font no hi ha
-            subtítol; un h2 només per al lector (fora de l'Índex: sr-only) en fa les voltes. */}
-        {subtitol ? null : <h2 ref={adoptaEstilsDiferits} className="sr-only">{tr(E.publicada)}</h2>}
+        {/* IDEA-319 (R32.47) · Cap h2 com a children de UniversalPage: quan no hi ha subtítol, les seccions del cos arranquen directament en h3. */}
         <div className="sdp-arxiu-local__fila">
           <Boto icona={Maximize2} onClick={() => obriVisor(item)}>
             {t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa')}

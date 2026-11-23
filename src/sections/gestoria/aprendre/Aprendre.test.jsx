@@ -34,7 +34,7 @@ async function munta({ estats = [], baralla = BARALLA } = {}) {
   return { magatzem, desa, esborra, ...vista };
 }
 
-const fase = nom => screen.getByRole('heading', { level: 3, name: nom });
+const fase = nom => screen.getByRole('heading', { level: 4, name: nom });
 const boto = nom => screen.getByRole('button', { name: nom });
 const clica = nom => fireEvent.click(boto(nom));
 const pendentsHui = () => screen.getByText('Pendents hui:').textContent;
@@ -211,7 +211,7 @@ describe('progrés opcional i local', () => {
   test('magatzem={null}: el progrés només dura la sessió i la baralla per defecte funciona', async () => {
     render(<Aprendre magatzem={null} ara={ara} />);
     await screen.findByText('Pendents hui:');
-    expect(screen.getByRole('heading', { level: 2, name: 'Aprendre la gestoria' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Aprendre la gestoria' })).toBeTruthy();
     expect(screen.getByText('Contingut formatiu general; confirma-ho sempre amb la teua gestoria.')).toBeTruthy();
     expect(screen.getByText('El progrés només dura esta sessió: no es guarda enlloc.')).toBeTruthy();
     expect(fase('Concepte')).toBeTruthy();

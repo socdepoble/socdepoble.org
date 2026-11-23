@@ -18,7 +18,7 @@
     border-bottom: 1px solid var(--sdp-vora);
   }
 
-  .sdp-admin-taxonomia__header h2 {
+  .sdp-admin-taxonomia__header :is(h2, h3) {
     margin: 0;
     color: var(--sdp-text-titol);
   }
@@ -80,9 +80,9 @@
     min-width: 0;
   }
 
-  .sdp-admin-taxonomia__section h3,
-  .sdp-admin-taxonomia__panel h3,
-  .sdp-admin-taxonomia__simulador h3 {
+  .sdp-admin-taxonomia__section :is(h3, h4),
+  .sdp-admin-taxonomia__panel :is(h3, h4),
+  .sdp-admin-taxonomia__simulador :is(h3, h4) {
     margin: 0;
     color: var(--sdp-text-titol);
   }

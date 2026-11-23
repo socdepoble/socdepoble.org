@@ -155,7 +155,7 @@ describe('(c) la barra taronja a Usuaris i a Entitats, dins del detall', () => {
     fireEvent.click(within(llista).getByRole('button', { name: (n) => n.startsWith(nomFila) }));
     const detall = comprovaLaPaginaDelDetall(container, titol);
     const pagina = detall.querySelector('.sdp-universal-page-container');
-    expect(within(pagina).getByRole('heading', { level: 2 }).textContent).toBe(nomFila);
+    expect(within(pagina).getByRole('heading', { level: 3 }).textContent).toBe(nomFila);
     expect(pagina.querySelector(':scope > .content-wrapper .perfil-detall-buit')).not.toBeNull();
   });
 

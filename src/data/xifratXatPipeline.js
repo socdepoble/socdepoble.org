@@ -51,7 +51,8 @@ export const CODI_MOTOR = Object.freeze({
   numeroNoDirecte: 'numero-no-directe', senseClauAltre: 'sense-clau-altre', kidCanviat: 'kid-canviat',
   /* B2a (marató 261101_2143) · Canvis de clau (§4.4, CS-01, D-05 a). */
   clauCanviadaForta: 'clau-canviada-forta', clauPropiaAlarma: 'clau-propia-alarma',
-  clauNovaSenseConfirmar: 'clau-nova-sense-confirmar', historiaIncoherent: 'historia-incoherent'
+  clauNovaSenseConfirmar: 'clau-nova-sense-confirmar', historiaIncoherent: 'historia-incoherent',
+  clausNoDisponibles: 'claus-no-disponibles', contextNoDisponible: 'context-no-disponible'
 });
 /* Una fila tancada per un d'estos codis, d'un autor amb un canvi fort pendent, és de la clau nova sense confirmar. */
 const CODIS_CLAU_NOVA = new Set([CODI.kidNoFixat, CODI.epocaDesconeguda, 'epoca-saltada']);
@@ -117,7 +118,8 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
   const identitat = async (ci) => {
     let jo;
     try { jo = await magatzem.identitat(ci); } catch (error) {
-      throw bloquejat(CODI_MOTOR.clausBloquejades, 'Les claus del xat d’este aparell no es poden llegir: cal restaurar-les.', error);
+      if (esAmbitCanviat(error)) throw error;
+      throw errorMotor(CODI_MOTOR.clausNoDisponibles, 'Ara no es poden llegir les claus del xat d’este aparell.', { reintentable: true, encuable: false, cause: error });
     }
     if (!jo || typeof jo !== 'object') throw bloquejat(CODI_MOTOR.clausBloquejades, 'Encara no hi ha claus del xat en este aparell.');
     return jo;
@@ -360,7 +362,9 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     if (fallada !== null && !esAmbitCanviat(fallada) && fallada?.codi === CODI.epocaDesconeguda && typeof sincronitzaEpoques === 'function' && esEpocaPosterior(ctx, fila)) {
       try { await sincronitzaEpoques(); } catch (error) {
         if (esAmbitCanviat(error)) throw error;
-        /* El transport ha fallat: la fila queda tancada amb el seu codi, i el pròxim sondeig ho torna a provar. */
+        /* Un transport fallit no prova que la clau siga d'un altre aparell.
+           El pròxim sondeig torna a provar el context, sense guardar text. */
+        fallada = errorMotor(CODI_MOTOR.contextNoDisponible, 'Ara no es pot actualitzar el context del missatge.', { cause: error });
       }
       exigix();
       /* Un sol reintent, si l'època de la fila ja hi és amb una CK meua (l'haja aplicada esta
@@ -423,7 +427,7 @@ export function creaMotorXifrat({ cripto, impl, servei, magatzem, ara = () => Da
     let bloqueig = null;
     try { ctx = await contextDelFil({ fil, tipusFil, config, exigix }); } catch (error) {
       if (esAmbitCanviat(error)) throw error;
-      bloqueig = error?.codi ?? 'sense-context';
+      bloqueig = error?.codi ?? CODI_MOTOR.contextNoDisponible;
     }
     const resultat = [];
     /* C1 · Com a molt una resincronització per crida, encara que moltes files siguen de l'època nova. */

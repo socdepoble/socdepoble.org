@@ -56,7 +56,10 @@ afterEach(cleanup);
 async function obriAvis(nomBoto, nomEixir) {
   m.preparaEixida.mockResolvedValueOnce(PENDENTS);
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: nomBoto })); });
-  const dialeg = screen.getByRole('dialog');
+  /* v1.2.23 · R2E-04 (Gauntlet R2) · REAPUNTADA: en una llengua que no és el valencià el calaix s'obri quan
+     arriba el tros dels seus textos (useIdentitatDeLaBarra.js · preparaTextosCalaix). El mateix invariant: el
+     calaix s'obri amb el botó d'eixir en la llengua de la interfície. */
+  const dialeg = await screen.findByRole('dialog');
   const eixir = within(dialeg).getByRole('button', { name: nomEixir });
   await act(async () => { fireEvent.click(eixir); });
   return { dialeg, eixir };

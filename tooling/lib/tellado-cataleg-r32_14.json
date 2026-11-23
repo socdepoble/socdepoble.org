@@ -191,8 +191,8 @@
       "id": "TELLADO-R3214-11",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "05a3f13fb4e998e8be64ae99954fd7895e48e360c156b40b62612dac43c20e60",
-      "linia": 134,
+      "sha256": "4c02ffac32655f27342bc733de71ac1f5db3664e2446e047390fdd0d4dfb3964",
+      "linia": 143,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
       "embornal": "const resposta = await esperaAmbSenyal(fetch(`${supabaseUrl}/storage/v1/object/authenticated/${BUCKET}/${ruta}`, {",
@@ -207,14 +207,14 @@
       ],
       "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
       "certificaDesti": false,
-      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària. v1.2.22 · R32.42 lot 03 crida comprovaVideoSenseUbicacio per als MP4/MOV abans de xat_reserva_adjunt (línia 310) i el codi dels no acreditables passa a 'video-no-acreditable' (línies 103 i 107), tot fora del sink: sink, línia i set obligacions idèntics, cap xarxa nova; empremta re-revisada."
+      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària. v1.2.22 · R32.42 lot 03 crida comprovaVideoSenseUbicacio per als MP4/MOV abans de xat_reserva_adjunt (línia 310) i el codi dels no acreditables passa a 'video-no-acreditable' (línies 103 i 107), tot fora del sink: sink, línia i set obligacions idèntics, cap xarxa nova; empremta re-revisada. v1.2.23 · costura re-pin Tellado (ordre del Mestre 261123) · IDEA-331 (carril T3/T4, base 80228abca) afig comprovaImatgeCanonica/comprovaImatgeAmbUbicacio (punt fix amb GPS per defecte, sense GPS amb l'opt-out o senseUbicacio) abans de xat_reserva_adjunt i lleva la re-comprovació del vídeo en el retorn de compatibilitat sense p_ubicacio: tot fora del sink i sense xarxa nova (imports locals). El sink baixa de la línia 134 a la 143 per les 9 línies afegides damunt; embornal i set obligacions idèntics; empremta re-revisada. Límit: el canvi de privadesa (GPS conservat per defecte al Storage privat) és ordre del Mestre i no el certifica este catàleg. v1.2.23 · integració (Gauntlet R1, L1-02) · Només el comentari de publicaAdjuntXat (retorn de compatibilitat sense p_ubicacio) canvia: dues línies més de comentari després del sink, que continua a la línia 143; embornal i set obligacions idèntics; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-12",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "05a3f13fb4e998e8be64ae99954fd7895e48e360c156b40b62612dac43c20e60",
-      "linia": 247,
+      "sha256": "4c02ffac32655f27342bc733de71ac1f5db3664e2446e047390fdd0d4dfb3964",
+      "linia": 256,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
       "embornal": ": await fetch(url, { ...peticio, redirect: 'error' });",
@@ -229,7 +229,7 @@
       ],
       "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
       "certificaDesti": false,
-      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària. v1.2.22 · R32.42 lot 03 crida comprovaVideoSenseUbicacio per als MP4/MOV abans de xat_reserva_adjunt (línia 310) i el codi dels no acreditables passa a 'video-no-acreditable' (línies 103 i 107), tot fora del sink: sink, línia i set obligacions idèntics, cap xarxa nova; empremta re-revisada."
+      "revisio": "R32.15: mateix sink, línia i cinc obligacions de xarxa R32.14; dues obligacions addicionals de la porta binària. v1.2.22 · R32.42 lot 03 crida comprovaVideoSenseUbicacio per als MP4/MOV abans de xat_reserva_adjunt (línia 310) i el codi dels no acreditables passa a 'video-no-acreditable' (línies 103 i 107), tot fora del sink: sink, línia i set obligacions idèntics, cap xarxa nova; empremta re-revisada. v1.2.23 · costura re-pin Tellado (ordre del Mestre 261123) · IDEA-331 (carril T3/T4, base 80228abca): mateix canvi de xatMultimedia.js que TELLADO-R3214-11, fora del sink; el sink baixa de la línia 247 a la 256; embornal i set obligacions idèntics; empremta re-revisada. v1.2.23 · integració (Gauntlet R1, L1-02) · El mateix comentari de xatMultimedia.js que TELLADO-R3214-11, després del sink, que continua a la línia 256; embornal i set obligacions idèntics; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-13",
@@ -273,7 +273,7 @@
       "id": "TELLADO-R3214-15",
       "categoria": "transport-traduccio-amfitrio",
       "fontRevisada": "src/data/traductor.js",
-      "sha256": "c7cf6459db8e0ec0050825506899bd75b66b60bbbad55b9603aec370e2e3bbb5",
+      "sha256": "34147705373527f28fffc1f49c0cefa4eeef508937e6b364212265fe01f02de9",
       "linia": 244,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "window.fetch",
@@ -285,7 +285,8 @@
         "credentials: 'omit'"
       ],
       "limit": "La guarda de servei és runtime i la política de contingut la fixa exigixTraduccioPublica. No es comprova el proveïdor del servidor.",
-      "certificaDesti": false
+      "certificaDesti": false,
+      "revisio": "v1.2.23 · integració (Gauntlet R1, L4-06) · Només el comentari de restauraNoms/mode de traducció: useTraduccioTargeta i extreuCampsTargeta ja no existixen (R32.45). Dues línies més de comentari després del sink, que continua a la línia 244; embornal i obligacions idèntics; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-16",
@@ -310,8 +311,8 @@
       "id": "TELLADO-R3214-17",
       "categoria": "lectura-adjunt-autoritzat",
       "fontRevisada": "src/data/xat/creaOpcionsMotorAccions.js",
-      "sha256": "3c83ead1dfa41e448d16f19a30ccd9b867a05cbb0441dc5df4c8a68b03ecf718",
-      "linia": 86,
+      "sha256": "cd95d5ca86726debd6fa44357c646a3d3b9f69cf6cd20348e8b0e20c8337870e",
+      "linia": 91,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
       "embornal": "const resposta = await fetch(url, { signal, credentials: 'omit', redirect: 'error' });",
@@ -323,7 +324,7 @@
       ],
       "limit": "La URL arriba del backendPort, no és literal. Es conserven permisos de meta, omissió de galetes, no redirect i límit local.",
       "certificaDesti": false,
-      "revisio": "v1.2.22 · R32.42 lot 03 neteja el GPS de la còpia dels vídeos MP4/MOV que es reenvien, després del fetch i del límit de mida (senseUbicacioVideo; si no s'acredita, 'video-no-acreditable'; imports locals, sense xarxa nova): sink, línia 86 i quatre obligacions idèntics; empremta re-revisada."
+      "revisio": "v1.2.22 · R32.42 lot 03 neteja el GPS de la còpia dels vídeos MP4/MOV que es reenvien, després del fetch i del límit de mida (senseUbicacioVideo; si no s'acredita, 'video-no-acreditable'; imports locals, sense xarxa nova): sink, línia 86 i quatre obligacions idèntics; empremta re-revisada. v1.2.23 · costura re-pin Tellado (ordre del Mestre 261123) · IDEA-331 (carril T3/T4, base 80228abca): enviaAdjunt marca conservaUbicacio:false en reenviar i lligBlob neteja el GPS de la còpia de les imatges després del fetch i del límit de mida (imatgeSenseUbicacio, import local, sense xarxa nova). El sink baixa de la línia 86 a la 89; embornal i quatre obligacions idèntics; empremta re-revisada. v1.2.23 · integració (Gauntlet R1, L1-01) · Només el comentari d'enviaAdjunt (la còpia reenviada ix sense GPS però amb l'orientació, la data i la càmera de TRIA_SENSE_UBICACIO): dues línies més de comentari damunt del sink, que baixa de la línia 89 a la 91; embornal i quatre obligacions idèntics; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-18",
@@ -365,7 +366,7 @@
       "id": "TELLADO-R3214-20",
       "categoria": "consola-cami-constant",
       "fontRevisada": "src/sections/consola/EmpaquetatsConsola.jsx",
-      "sha256": "731630f31101b8d8e8cae3326a7d362769f59814fab6dccb0f067a2833002531",
+      "sha256": "45678adcbfdc055823db21ecff1092a81b23d3f019ded62a726a1ec407877da6",
       "linia": 177,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -378,13 +379,14 @@
         "ac.abort()"
       ],
       "limit": "Endpoints locals de la consola. La regla no executa ni autoritza el middleware de publicació.",
-      "certificaDesti": false
+      "certificaDesti": false,
+      "revisio": "v1.2.23 · costura re-pin Tellado (ordre del Mestre 261123) · kits v1.2.23 (8ecb873dc): TargetaEmpaquetats rep headingLevel i SeccioEmpaquetats passa de h2 a h3 (targeta h4), només jerarquia de capçaleres; cap línia afegida ni llevada, sink a la mateixa línia 177, cinc obligacions idèntiques, cap xarxa nova; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-21",
       "categoria": "consola-cami-constant",
       "fontRevisada": "src/sections/consola/EmpaquetatsConsola.jsx",
-      "sha256": "731630f31101b8d8e8cae3326a7d362769f59814fab6dccb0f067a2833002531",
+      "sha256": "45678adcbfdc055823db21ecff1092a81b23d3f019ded62a726a1ec407877da6",
       "linia": 207,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -397,7 +399,8 @@
         "ac.abort()"
       ],
       "limit": "Endpoints locals de la consola. La regla no executa ni autoritza el middleware de publicació.",
-      "certificaDesti": false
+      "certificaDesti": false,
+      "revisio": "v1.2.23 · costura re-pin Tellado (ordre del Mestre 261123) · kits v1.2.23 (8ecb873dc): mateix canvi de capçaleres que TELLADO-R3214-20; sink a la mateixa línia 207, cinc obligacions idèntiques, cap xarxa nova; empremta re-revisada."
     },
     {
       "id": "TELLADO-R3214-22",
@@ -676,6 +679,27 @@
       ],
       "limit": "El SW reenvia Request i reconstrueix recursos. El catàleg descriu el flux; no transforma els Requests en una prova de mateix origen ni amplia l'abast del worker.",
       "certificaDesti": false
+    },
+    {
+      "id": "TELLADO-R3214-37",
+      "categoria": "lectura-foto-identitat-propia",
+      "fontRevisada": "src/sections/profile/fotoNetaDIdentitat.js",
+      "sha256": "5083bf8b0322a6061836d0d5c99ee32495c3573c06f3d96cbd198adb70d2df76",
+      "linia": 259,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "fetch",
+      "embornal": "const resposta = await fetch(url, { signal, credentials: 'same-origin' });",
+      "requisits": [
+        "if (!esFontImatgePropia(font)) return { estat: ESTAT_FOTO_IDENTITAT.DE_FORA };",
+        "return esFontImatgePropia(neta) ? { url: neta } : { estat: ESTAT_FOTO_IDENTITAT.NO_COMPROVABLE };",
+        "credentials: 'same-origin'",
+        "declarada > MAX_BYTES_FOTO_IDENTITAT",
+        "bytes.length > MAX_BYTES_FOTO_IDENTITAT",
+        "setTimeout(() => { avorta(); resolPromesa(ESTAT_FOTO_IDENTITAT.NO_LLEGIBLE); }, temps);"
+      ],
+      "limit": "Lectura sencera, fins a MAX_BYTES_FOTO_IDENTITAT i amb sostre de temps (AbortController), d'una foto pròpia del Mas abans de posar-la d'avatar, logotip o capçalera: la URL l'ha validada esFontImatgePropia (directa o signada pel port de mitjans) i una font de fora no es llig mai. Sense redirect:'error': una redirecció fora de l'origen no porta galetes (credentials same-origin). No certifica el destí.",
+      "certificaDesti": false,
+      "revisio": "v1.2.23 · integració (Gauntlet R1, L2-01, carril PR) · Signatura nova: revisaFotoDIdentitat (src/sections/profile/fotoNetaDIdentitat.js) llig la foto de Multimèdia abans de «Posa com a avatar», «Posa com a logotip» o «Posa com a capçalera» per a rebutjar la que porta dades dins del fitxer. Revisada al codi: només fonts pròpies (esFontImatgePropia), data: sense xarxa, sostre de bytes declarat i real, temps límit, cap capçalera ni cos de petició, cap xarxa nova fora del Mas; sis obligacions."
     }
   ]
 }

@@ -72,8 +72,10 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     t.diagnostic(JSON.stringify({ version, connection: 'disposable Unix socket; listen_addresses empty', manualSHA }));
     const plan = creaPlaMigracions(), hydration = await preparaHidratacio();
     // v1.2.22 · R32.42 afig tres fonts NO aplicades (20261122160000, 20261122160200 i 20261122160300): 129 en total.
-    const R32_42 = ['20261122160000', '20261122160200', '20261122160300'];
-    assert.equal(plan.migrations.length, 129);
+    // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · R32.44 (20261122230000) i R32.46 (20261123010000), també NO
+    // aplicades, porten el catàleg a 131; es compten amb les tres R32.42 i les 126 d'abans no canvien.
+    const R32_42 = ['20261122160000', '20261122160200', '20261122160300', '20261122230000', '20261123010000'];
+    assert.equal(plan.migrations.length, 131);
     assert.equal(plan.migrations.filter(row => !R32_42.includes(row.version)).length, 126);
     assert.equal(plan.migrations.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
     assert.deepEqual(plan.migrations.filter(row => row.version === '20261121090000').map(({file,sha256})=>[file,sha256]),[['20261121090000_r32_25_push_directes_i_bandols.sql','2122eceeef44039f60c9cf6931043a5d7dcc1bfd4c1ae834d651743119315b36']]);
@@ -224,7 +226,7 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
       await db.query(manual);
       assert.deepEqual((await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows, receipts);
       const installed = (await db.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
-      assert.equal(installed.length, 129);
+      assert.equal(installed.length, 131);
       assert.equal(installed.filter(row => !R32_42.includes(row.version)).length, 126);
       assert.equal(installed.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
       assert.deepEqual(installed, [...plan.migrations].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))

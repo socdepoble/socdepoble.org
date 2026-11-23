@@ -100,8 +100,9 @@ test('l’adjunt usa URL autoritzada renovada, sense credencials ni redireccions
   const signal = new AbortController().signal;
   const fetch = vi.fn(async () => ({ ok: true, blob: async () => new Blob(['abc']) })); vi.stubGlobal('fetch', fetch);
   const m = { tipus: 'imatge', metadades: { adjunt: { id: 'adjunt', mime: 'image/jpeg' } } };
-  const blob = await opcions.lligBlob(m, { signal });
-  expect(blob.size).toBe(3); expect(blob.type).toBe('image/jpeg');
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · La còpia per a reenviar una foto es neteja al contenidor: uns bytes
+     que no són cap JPEG no es reenvien (la neteja de veres, a xatMultimedia.geolocPerDefecte.idea331.test.js). */
+  await expect(opcions.lligBlob(m, { signal })).rejects.toMatchObject({ code: 'foto-codificacio' });
   expect(mock.urlAdjuntXat).toHaveBeenCalledWith('adjunt', { tenantId: 'tenant-A', signal }, { renova: true });
   expect(fetch).toHaveBeenCalledWith('https://autoritzat.invalid/adjunt', { signal, credentials: 'omit', redirect: 'error' });
 });

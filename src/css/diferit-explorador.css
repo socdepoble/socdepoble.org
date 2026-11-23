@@ -252,7 +252,7 @@
   .sdp-explorador__detall-cap > *,
   .sdp-explorador__bloc > * { margin: 0; }
 
-  .sdp-explorador__detall > p { max-width: var(--sdp-measure); line-height: 1.6; }
+  .sdp-explorador__detall > p { line-height: 1.6; }
 
   /* Capçalera: tipus, nom (h3, §1.E de la pàgina universal) i què és. El
      nom no porta la ratlla editorial dels h3: dins de la targeta separaria

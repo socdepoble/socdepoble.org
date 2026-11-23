@@ -49,18 +49,18 @@ function comunitats() {
   return agrupaComunitats(fils);
 }
 
-function arbre({ mida = 'ample', plegat = false, setPanellObert = vi.fn(), onVes = null, onAlterna = vi.fn(), ...props } = {}) {
+/* v1.2.23 · L5-05 (Gauntlet R1) · Sense onAlterna: des de la R32.46 RailXat ja no el llig (el plec és de BotoTitolSeccioXat). */
+function arbre({ mida = 'ample', plegat = false, setPanellObert = vi.fn(), onVes = null, ...props } = {}) {
   return (
     <AppGridContext.Provider value={{ mida, setPanellObert }}>
-      <RailXat titol="Menú" t={t} plegat={plegat} onAlterna={onAlterna} onVes={onVes} joId="jo" joNom="Javi Llinares" {...props} />
+      <RailXat titol="Menú" t={t} plegat={plegat} onVes={onVes} joId="jo" joNom="Javi Llinares" {...props} />
     </AppGridContext.Provider>
   );
 }
 
 function pinta({ setPanellObert = vi.fn(), ...props } = {}) {
-  const onAlterna = vi.fn();
-  const vista = render(arbre({ setPanellObert, onAlterna, ...props }));
-  return { ...vista, onAlterna, setPanellObert };
+  const vista = render(arbre({ setPanellObert, ...props }));
+  return { ...vista, setPanellObert };
 }
 
 /* El nom que es llig: aria-label (plegat, seccions, llapis) o l'etiqueta de
@@ -249,18 +249,21 @@ test('amb el Control obert, una vista del rail porta al Xat', () => {
   expect(onVes).toHaveBeenLastCalledWith('/xat?vista=telefonades');
 });
 
-test('en estret sempre va desplegat i triar una entrada tanca el panell i torna la llista', () => {
+test('en estret sempre va desplegat, sense fila superior «Menú», i triar una entrada o Escape tanca el panell', () => {
   const setPanellObert = vi.fn();
   const onVes = vi.fn();
   const { container } = pinta({ mida: 'estret', plegat: true, setPanellObert, onVes, comunitats: comunitats() });
   expect(container.querySelector('.app-grid-col-header--collapsed')).toBeNull();
-  expect(within(container).getByRole('button', { name: 'Tanca el menú' })).toBeTruthy();
+  expect(within(container).queryByRole('button', { name: 'Tanca el menú' })).toBeNull();
   fireEvent.click(within(container).getByRole('button', { name: 'Destacats' }));
   expect(setPanellObert).toHaveBeenLastCalledWith('middle');
   expect(onVes).toHaveBeenLastCalledWith('/xat?vista=destacats');
   fireEvent.click(within(container).getByRole('button', { name: 'Edita el perfil' }));
   expect(setPanellObert).toHaveBeenCalledTimes(2);
   expect(onVes).toHaveBeenLastCalledWith('/el-meu-perfil');
+  fireEvent.keyDown(container.querySelector('aside.sdp-workspace-column'), { key: 'Escape' });
+  expect(setPanellObert).toHaveBeenCalledTimes(3);
+  expect(setPanellObert).toHaveBeenLastCalledWith('middle');
 });
 
 test('en mitjà, triar una entrada tanca el panell i deixa les dos columnes', () => {
@@ -492,24 +495,26 @@ function muntaEnOmbra(element) {
 test('T6 · BotoObriRail és el desplegable del rail: aria-controls="app-grid-sidebar" i aria-expanded segons el panell', () => {
   const setPanellObert = vi.fn();
   const { container, rerender } = render(ambBoto({ setPanellObert }));
-  const boto = within(container).getByRole('button', { name: 'Menú' });
+  const boto = within(container).getByRole('button', { name: /^Menú/ });
   expect(boto.getAttribute('aria-controls')).toBe('app-grid-sidebar');
   /* L'obridor de la closca: la guarda d'AppGridShell només tria estos. */
   expect(boto.hasAttribute('data-obri-columna')).toBe(true);
   expect(boto.getAttribute('aria-expanded')).toBe('false');
+  expect(boto.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('▸');
   fireEvent.click(boto);
   expect(setPanellObert).toHaveBeenLastCalledWith('left');
   rerender(ambBoto({ setPanellObert, panellObert: 'left' }));
   expect(boto.getAttribute('aria-expanded')).toBe('true');
+  expect(boto.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('◂');
   expect(boto.getAttribute('aria-controls')).toBe('app-grid-sidebar');
   fireEvent.click(boto);
   expect(setPanellObert).toHaveBeenLastCalledWith(null);
   rerender(ambBoto({ setPanellObert, mida: 'estret', panellObert: 'left' }));
   fireEvent.click(boto);
   expect(setPanellObert).toHaveBeenLastCalledWith('middle');
-  /* En ample no es pinta. */
+  /* Fora de ClosCaXat, en ample sense context de closca no es pinta. */
   rerender(ambBoto({ setPanellObert, mida: 'ample' }));
-  expect(within(container).queryByRole('button', { name: 'Menú' })).toBeNull();
+  expect(within(container).queryByRole('button', { name: /^Menú/ })).toBeNull();
 });
 
 test('T6 · en un Shadow DOM tancat, BotoObriRail llig el focus a la seua arrel: el que queda al rail tancat torna al botó', () => {
@@ -542,12 +547,29 @@ test('T6 · el focus que ha quedat dins d’un [inert] fora del rail també es d
 /* Revisió del T6 · El catàleg de Disseny pinta este rail dins del detall
    (EspecimenXatRail): la seua capçalera porta aria-controls="app-grid-sidebar",
    però no és cap obridor de la closca, i la guarda no l'ha de triar. */
-test('T6 · el rail, desplegat i plegat, no porta cap obridor de la closca (data-obri-columna)', () => {
+test('T6 · el rail, desplegat i plegat, no porta fila superior «Menú» ni cap obridor de la closca (data-obri-columna)', () => {
   for (const plegat of [false, true]) {
     const { container, unmount } = pinta({ plegat });
-    const capcalera = within(container).getByRole('button', { name: plegat ? 'Expandir Menú' : 'Replegar Menú' });
-    expect(capcalera.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    expect(within(container).queryByRole('button', { name: /Expandir Menú|Replegar Menú|Tanca el menú/ })).toBeNull();
     expect(container.querySelector('[data-obri-columna]')).toBeNull();
+    unmount();
+  }
+});
+
+test('IDEA-327 v2 · amb onAjustos i onIdentitats, el rail pinta «Ajustos del xat» i el peu mostra la identitat activa obrint «Amb qui actues?»', () => {
+  for (const plegat of [false, true]) {
+    const onAjustos = vi.fn();
+    const onIdentitats = vi.fn();
+    const { container, unmount } = pinta({ plegat, onAjustos, onIdentitats, joAvatar: FOTO, entitatActiva: SDP });
+    const botoAjustos = within(container).getByRole('button', { name: 'Ajustos del xat' });
+    fireEvent.click(botoAjustos);
+    expect(onAjustos).toHaveBeenCalledWith(botoAjustos);
+
+    const peu = peuDe(container, plegat);
+    const botoIdentitat = within(peu).getByRole('button', { name: 'Sóc de Poble: Amb qui actues?' });
+    if (!plegat) expect(within(botoIdentitat).getByText('Sóc de Poble')).toBeTruthy();
+    fireEvent.click(botoIdentitat);
+    expect(onIdentitats).toHaveBeenCalledWith(botoIdentitat);
     unmount();
   }
 });

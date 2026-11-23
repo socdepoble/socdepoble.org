@@ -56,6 +56,7 @@ import { execSync, spawnSync } from 'node:child_process';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { liveMarkdown, extractLinks, buildResolver, resolveLink, safeDecode } from './core/parse.mjs';
 import { CAMINS } from '../lib/arrel.mjs';
+import { confinedFile } from './lib/publication-policy.mjs';
 
 /* Vincle històric (B1 · 261101): l'arxivat de la porta Olivera reescriu `[[x]]` com
    `[[../90_arxiu_historic/x|x]]`. L'arxiu queda fora del resolutor (AGENTS §5), així que
@@ -223,6 +224,9 @@ function validaVincles(doc, resolver) {
     const r = resolveLink(links[0], doc, resolver);
     if (r.status === 'resolved' && r.doc.relPath !== doc.relPath) {
       valids++;
+    } else if (r.status === 'unresolved' && esNotaExterna(links[0].target, doc.relPath)) {
+      // Destí verificat fora de la còpia: és una referència, mai un node d'autoria.
+      if (!isDocumentArchive(esNotaExterna(links[0].target, doc.relPath))) valids++;
     } else if (r.status === 'unresolved' && esNotaArxivada(links[0].target, doc.relPath)) {
       // Vincle històric a una nota arxivada (al disc o, absent, ignorada per un .gitignore versionat): no és error ni compta com a nota viva.
     } else {
@@ -257,6 +261,48 @@ const mor = (msg, detall = []) => {
   for (const d of detall) console.error(`   ${d}`);
   process.exit(2);
 };
+
+/* Un clon pot ometre un original privat sense convertir-lo en nota absent.
+ * El catàleg és explícit i opcional: només noms, caixa exacta i lstat; mai
+ * llegim el cos ni afegim nodes a NODES/F1/L0. Sense el catàleg, la porta de
+ * producte conserva la resolució ordinària. Cap destí ambigu la substituïx. */
+function lligCatalegExtern(file) {
+  if (!file) return [];
+  try {
+    const absolute = path.resolve(file);
+    const safe = confinedFile(path.dirname(absolute), absolute);
+    if (!safe || fs.statSync(safe).size > 1024 * 1024) throw Error();
+    const catalog = JSON.parse(fs.readFileSync(safe, 'utf8'));
+    if (catalog.version !== 1 || typeof catalog.root !== 'string' || !path.isAbsolute(catalog.root)
+      || !Array.isArray(catalog.targets) || catalog.targets.length > 10000) throw Error();
+    const root = fs.realpathSync(catalog.root), seen = new Set();
+    for (const rel of catalog.targets) {
+      if (typeof rel !== 'string' || !rel.endsWith('.md') || rel.includes('\\')
+        || /[\u0000-\u001f\u007f]/.test(rel) || path.posix.normalize(rel) !== rel
+        || path.posix.isAbsolute(rel) || rel.split('/').some(p => !p || p === '.' || p === '..') || seen.has(rel)) throw Error();
+      let cursor = root;
+      for (const part of rel.split('/')) {
+        if (!fs.readdirSync(cursor).includes(part)) throw Error();
+        cursor = path.join(cursor, part);
+        if (fs.lstatSync(cursor).isSymbolicLink()) throw Error();
+      }
+      if (!fs.lstatSync(cursor).isFile()) throw Error();
+      seen.add(rel);
+    }
+    return [...seen].sort();
+  } catch { mor('Catàleg extern invàlid o destí absent; cap referència s’ha omés.'); }
+}
+const DESTINS_EXTERNS = lligCatalegExtern(ARG('cataleg-extern'));
+function esNotaExterna(target, source) {
+  const t = safeDecode(target).trim().replace(/\.md$/i, '');
+  const candidate = path.posix.normalize(path.posix.join(path.posix.dirname(source), t));
+  const exact = DESTINS_EXTERNS.filter(rel => {
+    const noExt = rel.slice(0, -3);
+    return t.startsWith('/') ? noExt === t.slice(1)
+      : noExt === t || noExt === candidate || (t.includes('/') ? noExt.endsWith(`/${t}`) : path.posix.basename(noExt) === t);
+  });
+  return exact.length === 1 && exact[0] !== source ? exact[0] : null;
+}
 
 /* ──────────────────────────── Esquema ──────────────────────────── */
 
@@ -592,9 +638,11 @@ for (const n of NODES) {
 /* F5 — entropia zero. Les obligatòries queden fora: `tipus` o `estat` poden
  * tindre legítimament un únic valor en un corpus jove. visibility és una
  * decisió d’accés explícita, encara que tots els documents siguen privats;
- * conserva totes les validacions d’esquema anteriors. */
+ * core és una bandera operativa: l'absència significa plugin, no un segon
+ * valor explícit que calga fabricar. Conserva tots els true i les
+ * validacions de tipus; no és entropia editorial redundant. */
 for (const [k, vals] of valsPerClau) {
-  if (REQ.includes(k) || k === 'visibility') continue;
+  if (REQ.includes(k) || k === 'visibility' || (k === 'core' && PROPS.core?.type === 'boolean')) continue;
   if (vals.size === 1 && (usPerClau.get(k) ?? 0) >= 2) {
     f.F5.push({ clau: k, usos: usPerClau.get(k), valor: [...vals][0] });
   }
@@ -641,7 +689,7 @@ if (ESTRICTE) {
 }
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ arrel: ARREL, documents: NODES.length, exempts: EXEMPTS.length, ...segell, compte, max, fallades: f }, null, 1));
+  console.log(JSON.stringify({ arrel: ARREL, documents: NODES.length, exempts: EXEMPTS.length, destinsExterns: DESTINS_EXTERNS, ...segell, compte, max, fallades: f }, null, 1));
 } else {
   const noms = {
     F1: 'OBLIGATÒRIA — falta una clau de `required`',

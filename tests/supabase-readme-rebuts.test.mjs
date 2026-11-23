@@ -49,11 +49,15 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   // R32.14 (19-11-2026); la resta de rebuts històrics es queden com eren, i l'empremta es torna a fixar.
   // v1.2.22 · R32.42 (lots 02 i 03) afig 20261122160000, 20261122160200 i 20261122160300 (files 127 a 129),
   // NO aplicades a Producció en esta versió: les 124 files històriques i la seua empremta no canvien.
-  assert.equal(taula.length, 129);
+  // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · R32.44 i R32.46 afigen 20261122230000 i 20261123010000
+  // (files 130 i 131), NO aplicades a Producció: les 124 files històriques i la seua empremta continuen igual.
+  assert.equal(taula.length, 131);
   const R3242 = [
     [127, '20261122160000', '20261122160000_r3242_ajuntament_acreditacio_institucional.sql'],
     [128, '20261122160200', '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql'],
-    [129, '20261122160300', '20261122160300_r32_42_mur_visibilitat_publica.sql']
+    [129, '20261122160300', '20261122160300_r32_42_mur_visibilitat_publica.sql'],
+    [130, '20261122230000', '20261122230000_r3244_edicio_propia_i_page_revisions.sql'],
+    [131, '20261123010000', '20261123010000_r3246_quota_owner_id.sql']
   ];
   const historic = taula.filter(f => !['20261119143000', '20261121090000', ...R3242.map(([, versio]) => versio)].includes(f.versio));
   assert.equal(historic.length, 124);

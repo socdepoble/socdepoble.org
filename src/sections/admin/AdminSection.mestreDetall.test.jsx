@@ -84,7 +84,7 @@ test('MD · a 375 px: primer la llista d’usuaris; triar-ne un obri el detall, 
   expect(panell(container)).toBe('');
   expect(obertes(container)).toEqual(['#app-grid-main']);
   const detall = container.querySelector('#app-grid-main');
-  expect(within(detall).getByRole('heading', { level: 2 }).textContent).toBe('maria@exemple.test');
+  expect(within(detall).getByRole('heading', { level: 3 }).textContent).toBe('maria@exemple.test');
   fireEvent.click(within(detall).getByRole('button', { name: 'Tornar a la llista' }));
   expect(panell(container)).toBe('middle');
   expect(document.activeElement).toBe(fitxa(llista, 'maria@exemple.test'));

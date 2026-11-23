@@ -1050,7 +1050,7 @@ test('readme 1.1.14: cap recuperació automàtica que el paquet no porta, i el r
      la forma del codi, no el requisit del readme: es comprova membres | RPC6 per defecte | RPC7 → RPC6 → lectura d'abans. */
   const llegixComAbans = /if \(membres\) return request\(`\/rest\/v1\/rpc\/llig_mur_membres\?\$\{params\}`, config, opts\);/.test(lectura)
     && /if \(!negociaVisibilitatMur\(\)\) return request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{params\}`, config, opts\);/.test(lectura)
-    && /try \{ return await request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{publics\}`, config, opts\); \}\n\s*catch \(error\) \{ if \(!esRpcAbsent\(error\)\) throw error; sessionGuard\(\); \}\n\s*return request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{params\}`, config, opts\);/.test(lectura)
+    && /try \{ return await request\(`\/rest\/v1\/rpc\/llig_mur_public_v7\?\$\{publics\}`, config, opts\); \}\n\s*catch \(error\) \{ if \(!esRpcAbsent\(error\)\) throw error; sessionGuard\(\); \}\n\s*return request\(`\/rest\/v1\/rpc\/llig_mur_public\?\$\{params\}`, config, opts\);/.test(lectura)
     && /\} catch \(error\) \{\n\s*if \(!esRpcAbsent\(error\)\) throw error;/.test(lectura)
     && /\} catch \(absent\) \{\n\s*if \(!esRpcAbsent\(absent\)\) throw absent;\n[\s\S]*?const anteriors = await lligPublicacionsAnteriors\([\s\S]*?return anteriors;/.test(lectura)
     && /`\/rest\/v1\/section_submissions\?select=/.test(anteriors) && !/llig_mur_/.test(anteriors);

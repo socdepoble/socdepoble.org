@@ -200,7 +200,7 @@ export function LaboratoriTaxonomiaDoctoral() {
       {/* FACETA 1 · GEOGRÀFICA */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta1') && (
         <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-1">
-          <h2 id="titol-faceta-1">Faceta 1 · Geogràfica (<code>On</code> — Pobles, Pedanies, Comarques i Paratges Naturals)</h2>
+          <h3 id="titol-faceta-1">Faceta 1 · Geogràfica (<code>On</code> — Pobles, Pedanies, Comarques i Paratges Naturals)</h3>
           <p>
             Les <strong>113 categories geogràfiques</strong> de <code>socdepoble.net</code> estaven estructurades en un arbre de 4-5 nivells (<code>Xarxa de Pobles → Província/Demarcació → Comarca → Poble → Pedania</code>). En <strong>Sóc de Poble</strong> passen a ser camps natius (<code>poble_id</code> des d’on es publica i <code>pobles_etiquetats</code> de quins pobles es parla), alliberant les categories temàtiques.
           </p>
@@ -255,16 +255,16 @@ export function LaboratoriTaxonomiaDoctoral() {
       {/* FACETA 2 · FUNCIONAL DEL SISTEMA */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta2') && (
         <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-2">
-          <h2 id="titol-faceta-2">Faceta 2 · Funcional del Sistema (<code>Què és</code> — Les 8 Verticals)</h2>
+          <h3 id="titol-faceta-2">Faceta 2 · Funcional del Sistema (<code>Què és</code> — Les 8 Verticals)</h3>
           <p>
             Separa la forma i la funció de cada publicació (crònica del Mur, producte del Mercat, esdeveniment del Calendari, punt del Mapa, cotxe compartit, animalets, oferta de treball o habitatge rural).
           </p>
           <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__grid">
             {FACETA_2_VERTICALS_SISTEMA.map((v) => (
               <div ref={adoptaEstilsAdminTaxonomia} key={v.id} className="sdp-card sdp-admin-taxonomia__card">
-                <h3>
+                <h4>
                   <span>{v.icona}</span> {v.nom}
-                </h3>
+                </h4>
                 <p>{v.descripcio}</p>
                 <Link to={v.ruta} className="sdp-boto sdp-boto--secundari">
                   Obrir {v.nom}
@@ -278,7 +278,7 @@ export function LaboratoriTaxonomiaDoctoral() {
       {/* FACETA 3 · CATEGORIES TEMÀTIQUES I SOCIALS TRONCALS */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta3') && (
         <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-3">
-          <h2 id="titol-faceta-3">Faceta 3 · Categories Temàtiques i Socials Troncals (<code>De què tracta</code> — 6 Categories Mares IA)</h2>
+          <h3 id="titol-faceta-3">Faceta 3 · Categories Temàtiques i Socials Troncals (<code>De què tracta</code> — 6 Categories Mares IA)</h3>
           <p>
             Un cop alliberades les categories de la geografia, la IA bibliotecària proposa aquestes <strong>6 Categories Mares Troncals</strong>. Pots activar-les o desactivar-les amb l’interruptor; l’estat queda guardat.
           </p>
@@ -291,7 +291,7 @@ export function LaboratoriTaxonomiaDoctoral() {
               return (
                 <div ref={adoptaEstilsAdminTaxonomia} key={cat.id} className="sdp-card sdp-admin-taxonomia__card" data-activa={String(activa)}>
                   <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__card-top">
-                    <h3>{cat.label}</h3>
+                    <h4>{cat.label}</h4>
                     <Interruptor
                       actiu={activa}
                       onCanvi={(val) => alternaCategoriaMare(cat.id, val)}
@@ -314,7 +314,7 @@ export function LaboratoriTaxonomiaDoctoral() {
       {/* FACETA 4 · TESAURUS D'ETIQUETES SKOS + SIMULADOR IA DELS 425 ARTICLES */}
       {(facetaActiva === 'totes' || facetaActiva === 'faceta4') && (
         <section ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__section" aria-labelledby="titol-faceta-4">
-          <h2 id="titol-faceta-4">Faceta 4 · Tesaurus d’Etiquetes (<code>Tags</code> SKOS) i Simulador IA dels 425 Articles</h2>
+          <h3 id="titol-faceta-4">Faceta 4 · Tesaurus d’Etiquetes (<code>Tags</code> SKOS) i Simulador IA dels 425 Articles</h3>
           <p>
             Ací tens les <strong>105 etiquetes reals de <code>socdepoble.net</code></strong> amb la seua Categoria Temàtica mare (<code>Broader Term</code>), les etiquetes relacionades (<code>Related Terms</code>) i els sinònims absorbits (<code>Use For</code>: <code>Aplec pel Territori</code> absorbeix <code>aplec-pel-territori-2</code> i <code>Aplecs</code>; <code>Posant en Valor els Recursos Locals</code> absorbeix <code>Recursos Locals</code>; <code>Reivindicant</code> absorbeix <code>Reivin</code>; <code>Arbres Monumentals</code> absorbeix <code>Arbres</code> i <code>Monumentals</code>).
           </p>
@@ -396,7 +396,7 @@ export function LaboratoriTaxonomiaDoctoral() {
           <hr className="sdp-divider" />
 
           <div ref={adoptaEstilsAdminTaxonomia} className="sdp-admin-taxonomia__simulador" aria-labelledby="titol-simulador-425">
-            <h3 id="titol-simulador-425">🤖 Simulador IA dels 425 Articles Reals de <code>socdepoble.net</code></h3>
+            <h4 id="titol-simulador-425">🤖 Simulador IA dels 425 Articles Reals de <code>socdepoble.net</code></h4>
             <p>
               Comprova com queden classificats cadascun dels <strong>425 articles reals</strong> amb la separació entre pobles detectats (Faceta 1), la Categoria Temàtica proposada per la IA (Faceta 3) i les etiquetes netes sense duplicats (Faceta 4).
             </p>

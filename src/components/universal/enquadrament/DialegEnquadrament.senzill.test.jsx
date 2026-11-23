@@ -10,9 +10,8 @@ vi.mock('./imatgeCanvas.js', () => ({
 }));
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { DialegEnquadrament, didacticaDeForma, etiquetaCurtaDeForma } from './DialegEnquadrament.jsx';
+import { DialegEnquadrament, ETIQUETA_AMAGA_LLOC, didacticaDeForma, etiquetaCurtaDeForma } from './DialegEnquadrament.jsx';
 import { FORMATS } from './enquadrament.js';
-import { ETIQUETA_CONSERVA_EXIF } from './exifIncrustat.js';
 import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../../tests/helpers/jpegProva.js';
 import {
   AJUDA_CAPCALERA_LLIURE, AJUDA_CAPCALERA_QUADRADA, AJUDA_RETALL, FORMES, configDeForma, costatDeSortida
@@ -308,7 +307,9 @@ describe('mode senzill · la forma de la capçalera', () => {
   test('capçalera: «Forma» amb tots els formats, el quadrat marcat, davall de la fila de zoom i abans de la casella de l’EXIF', async () => {
     const vista = munta({ forma: 'capcalera', font: fotoGps(), ofereixConservarExif: true });
     await carregat(vista);
-    const casella = await within(dialeg(vista)).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+    /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA: amb GPS, la casella de
+       l'EXIF és l'interruptor «Amaga el lloc» (role="switch"); el lloc al DOM és el mateix. */
+    const casella = await within(dialeg(vista)).findByRole('switch', { name: new RegExp(ETIQUETA_AMAGA_LLOC) });
     const grup = dialeg(vista).querySelector('fieldset');
     expect(grup.querySelector('legend').textContent).toBe('Forma');
     const formes = within(grup).getAllByRole('radio');

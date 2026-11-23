@@ -166,7 +166,7 @@ export { nomCurt, resumDeProblemes } from './resumProblemes.js';
    Derogat EN PART (Onada 6, requisit 9): «La ruta va en <Mono>» a la coberta. */
 export function TargetaConsola({
   icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, problemes, creat, generat, a, onObri, etiquetes,
-  imatge = null, imatgeAlt = ''
+  imatge = null, imatgeAlt = '', headingLevel = 'h3'
 }) {
   const navigate = useNavigate();
   const idioma = useIdiomaConsola();
@@ -195,6 +195,7 @@ export function TargetaConsola({
         ...(semafor ? { semafor: semafor.to } : null)
       }}
       title={titol}
+      headingLevel={headingLevel}
       subtitle={subtitol}
       body={(
         <>

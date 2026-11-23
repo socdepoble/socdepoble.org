@@ -79,7 +79,7 @@ function obriAparenca() {
       rightColumn={<div />}
     />
   );
-  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Tu: ajustos' }));
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Ajustos del xat' }));
   fireEvent.click(fila('Aparença'));
 }
 

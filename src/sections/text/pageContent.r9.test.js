@@ -227,7 +227,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.20 · La crònica de l'Onada R32.34 obri /versions, davant de la crònica R32.29 a R32.33.
     // Onada v1.2.21 · I la crònica de l'Onada R32.41 obri /versions, davant de la R32.34.
     // Onada v1.2.22 · I la crònica de les Onades R32.42 i R32.43 obri /versions, davant de la R32.41.
-    expect([...versions.querySelectorAll('h3')].slice(0, 34).map((h3) => h3.textContent)).toEqual([
+    // v1.2.23 · C (ordre del Mestre 261123) · I la crònica de la v1.2.23 obri /versions, davant de les R32.42 i R32.43.
+    expect([...versions.querySelectorAll('h3')].slice(0, 35).map((h3) => h3.textContent)).toEqual([
+      '23 de novembre de 2026 · El lloc de les fotos a la vista, «Editar» des de la pàgina i la versió al menú',
       '22 de novembre de 2026, nit · Onades R32.42 i R32.43 · Un Xat obert a tots els pobles, un logotip que es veu i un sol Mode Bancal',
       '22 de novembre de 2026, vesprada · Onada R32.41 · Les pàgines de l’Atles a tota l’amplada, un accés al Xat que cap en pantalles estretes i el mateix preu al Mur i al Mercat',
       '22 de novembre de 2026, matinada · Onada R32.34 · Lectura sense cobertura, fotos sense la posició amagada i notes que diuen on és cada text',
@@ -628,22 +630,30 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     const POSTERIORS_AL_TALL_14_11 = [
       'porta:coherencia-editorial', // Gemini R31, 16-11-2026
       'porta:conformitat-federacio', 'porta:economia-arrencada', 'porta:imatges-enquadrament', // Codex R32.11, 18-11-2026
-      'porta:egress' // Codex R32.13, 19-11-2026: preflight de Hosting, posterior al rebut històric
+      'porta:egress', // Codex R32.13, 19-11-2026: preflight de Hosting, posterior al rebut històric
+      'porta:duplicats' // v1.2.23 · L4-09 (ordre del Mestre 261123): duplicats de public/assets enfilats a la cadena
     ];
     const cens = seleccionaPassos({ cens: true });
     const declarades = passos.filter((pas) => !pas.prova);
     const ambMutacions = seleccionaPassos({ cens: true, ambMutacions: true });
     const proves = passos.filter((pas) => pas.prova);
     const tractorR329 = 'tooling/gates/tractor-consola-neta.mjs';
-    // R32.9 és posterior al tall i no altera la xifra històrica del 14-11.
-    const tall14_11 = declarades.filter((pas) => !POSTERIORS_AL_TALL_14_11.includes(pas.script) && pas.args?.[0] !== tractorR329);
+    /* v1.2.23 · L4-01 i L8-07 (Gauntlet R1) · La Maquetació canònica (IDEA-319, Codex R32.44) entra a la cadena sense
+       script de package.json (es crida amb node): es reconeix pel fitxer, com la de R32.9. */
+    const tractorIdea319 = 'tooling/gates/tractor-maquetacio-canonica.mjs';
+    const SENSE_SCRIPT_POSTERIORS = [tractorR329, tractorIdea319];
+    // R32.9 i IDEA-319 són posteriors al tall i no alteren la xifra històrica del 14-11.
+    const tall14_11 = declarades.filter((pas) => !POSTERIORS_AL_TALL_14_11.includes(pas.script) && !SENSE_SCRIPT_POSTERIORS.includes(pas.args?.[0]));
     expect(declarades).toContainEqual(expect.objectContaining({ args: [tractorR329, '--json'], readOnly: true }));
-    expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length + 1);
+    expect(declarades.filter((pas) => pas.args?.[0] === tractorIdea319)).toEqual([
+      expect.objectContaining({ cmd: 'node', args: [tractorIdea319], readOnly: true }),
+    ]);
+    expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length + SENSE_SCRIPT_POSTERIORS.length);
     expect(tall14_11).toHaveLength(60);
     expect(tall14_11).toContainEqual(expect.objectContaining({ nom: 'Porta Build', potMutar: true }));
-    expect(cens).toHaveLength(65);
-    expect(declarades).toHaveLength(66);
-    expect(ambMutacions).toHaveLength(66);
+    expect(cens).toHaveLength(67);
+    expect(declarades).toHaveLength(68);
+    expect(ambMutacions).toHaveLength(68);
     expect(ambMutacions).toEqual(declarades);
     expect(declarades.filter((pas) => !cens.includes(pas))).toEqual([
       expect.objectContaining({ nom: 'Porta Build', potMutar: true }),

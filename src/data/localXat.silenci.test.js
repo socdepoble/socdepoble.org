@@ -138,10 +138,12 @@ describe('l’adaptador local (conversesLocal)', () => {
       expect(teCapacitat('denunciesDiligents')).toBe(false);
       // R15 i R54 incorporen grups de servidor; el node local no els declara.
       // Les capacitats locals prèvies, push i silenci incloses, es conserven.
-      expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
+      // v1.2.23 · costura R32.44 · edicioPublicacionsPropies i revisionsPagines entren al contracte
+      // (62 → 64) només amb camí de servidor: el node local no les declara (absències 14 → 16).
+      expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(Object.keys(CAPACITATS)).toHaveLength(62);
+      expect(Object.keys(CAPACITATS)).toHaveLength(64);
     } finally {
       await a.destroy();
     }

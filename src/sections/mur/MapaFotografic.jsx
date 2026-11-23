@@ -992,9 +992,9 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
 
   return (
     <section className="sdp-mapa" ref={arrelRef} aria-labelledby={idTitol}>
-      <h2 id={idTitol} className="sdp-mapa__titol" aria-live="polite">
+      <h3 id={idTitol} className="sdp-mapa__titol" aria-live="polite">
         {vista.titol || tr('section.mur.mapa.totesLesFotos', 'Totes les fotos del Mur')}
-      </h2>
+      </h3>
       <div className="sdp-mapa__eines" role="toolbar" aria-label={tr('section.mur.mapa.eines', 'Controls del mapa')}>
         {nativa ? null : (
           <Boto aria-pressed={fons} onClick={commutaFons}>

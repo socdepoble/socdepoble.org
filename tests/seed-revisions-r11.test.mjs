@@ -108,7 +108,11 @@ test('P1-75: canonical SQL, author binding, current public revision and per-piec
         assert.equal((await pg.query("SELECT has_function_privilege($1,'private.exporta_les_meues_dades_base_r33()','EXECUTE') AS allowed", [role])).rows[0].allowed, false);
       }
       await assert.rejects(as(owner, 'SELECT private.exporta_les_meues_dades_base_r33()'), e => e.code === '42501');
-      assert.match((await pg.query("SELECT pg_get_functiondef('private.exporta_les_meues_dades_base_r33()'::regprocedure) AS body")).rows[0].body, /private\.exporta_federacio_v1/);
+      // v1.2.23 · L4-03 (Gauntlet R1) · 20261122230000 embolcalla la base per a exportar page_revisions: el cos canònic es
+      // conserva sencer a base_abans_r3244, també privat, i la base_r33 nova el crida.
+      assert.match((await pg.query("SELECT pg_get_functiondef('private.exporta_les_meues_dades_base_abans_r3244()'::regprocedure) AS body")).rows[0].body, /private\.exporta_federacio_v1/);
+      assert.match((await pg.query("SELECT pg_get_functiondef('private.exporta_les_meues_dades_base_r33()'::regprocedure) AS body")).rows[0].body, /private\.exporta_les_meues_dades_base_abans_r3244\(\)/);
+      for (const role of ['anon', 'authenticated', 'service_role']) assert.equal((await pg.query("SELECT has_function_privilege($1,'private.exporta_les_meues_dades_base_abans_r3244()','EXECUTE') AS allowed", [role])).rows[0].allowed, false);
     });
     await t.test('migration replay preserves revisions and source withdrawal removes public access', async () => {
       const before = (await pg.query('SELECT * FROM public.seed_revisions ORDER BY seed_id')).rows;

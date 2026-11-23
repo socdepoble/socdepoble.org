@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { DialegEnquadrament } from './DialegEnquadrament.jsx';
+import { DialegEnquadrament, ETIQUETA_AMAGA_LLOC } from './DialegEnquadrament.jsx';
 import { configDeForma } from './useEnquadramentImatge.jsx';
 import { ETIQUETA_CONSERVA_EXIF } from './exifIncrustat.js';
 import { ambEnquadrament, separaEnquadrament } from '../../../utils/enquadramentUrl.js';
@@ -179,7 +179,17 @@ describe('R16a · la precisió del GPS en re-enquadrar una adreça', () => {
     await carregat();
     return vista;
   };
-  const conservaVisible = (vista) => within(vista.getByRole('dialog')).findByRole('checkbox', CASELLA);
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA A POSTA: amb GPS, el
+     control ja no és la casella «Conserva la ubicació i la data de la foto»
+     marcada, sinó l'interruptor «Amaga el lloc» apagat (la mateixa Casella amb
+     role="switch"; apagat ⇔ es conserva). L'invariant de cada prova no canvia:
+     el control és visible abans de desar i un sol toc lleva la ubicació. */
+  const INTERRUPTOR = { name: new RegExp(ETIQUETA_AMAGA_LLOC) };
+  const conservaVisible = async (vista) => {
+    const interruptor = await within(vista.getByRole('dialog')).findByRole('switch', INTERRUPTOR);
+    expect(interruptor.checked).toBe(false);
+    return interruptor;
+  };
   const precisio = (vista, valor) => act(() => { fireEvent.click(radio(vista, valor)); });
 
   test('GPS exacte, «Només el poble» i un marc nou: es torna a codificar la foto SENCERA, amb la precisió i el marc', async () => {
@@ -265,7 +275,7 @@ describe('R16a · la precisió del GPS en re-enquadrar una adreça', () => {
     expect(metadades.exif.precisio).toBe(triada);
   });
 
-  test('el camí invers: desmarcar la casella (llevar la ubicació) torna a codificar la foto sencera, neta, encara que el marc no es moga', async () => {
+  test('el camí invers: encendre «Amaga el lloc» (llevar la ubicació) torna a codificar la foto sencera, neta, encara que el marc no es moga', async () => {
     const vista = await reobri(ambGpsExacte());
     fireEvent.click(await conservaVisible(vista));
     await desa(vista);
@@ -285,6 +295,7 @@ describe('R16a · la precisió del GPS en re-enquadrar una adreça', () => {
     const vista = await reobri(blob());
     await carregat();
     expect(Boolean(within(vista.getByRole('dialog')).queryByRole('checkbox', CASELLA))).toBe(ambCasella);
+    expect(within(vista.getByRole('dialog')).queryByRole('switch', INTERRUPTOR)).toBeNull();
     expect(radio(vista, 'poble')).toBeNull();
     await zoom(vista, 2);
     await desa(vista);
@@ -300,7 +311,8 @@ describe('sense `noDestructiu`, el contracte d’abans (l’avatar i el logotip)
     const blob = new Blob([jpegAmbExif({ gps: gpsTorre() })], { type: 'image/jpeg' });
     const vista = munta({ noDestructiu: false, font: BASE, ofereixConservarExif: true, imatge: { blob } });
     await carregat();
-    await within(vista.getByRole('dialog')).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_EXIF) });
+    // v1.2.23 · IDEA-331 · REAPUNTADA: amb GPS, l'interruptor «Amaga el lloc» apagat (es conserva).
+    expect((await within(vista.getByRole('dialog')).findByRole('switch', { name: new RegExp(ETIQUETA_AMAGA_LLOC) })).checked).toBe(false);
     expect(radio(vista, 'exacta').checked).toBe(true);
     await act(() => { fireEvent.click(radio(vista, 'poble')); });
     await desa(vista);

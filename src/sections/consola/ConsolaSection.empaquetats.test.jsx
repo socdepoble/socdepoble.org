@@ -123,7 +123,7 @@ describe('el tauler de /consola', () => {
     await obri('/consola');
     const seccio = screen.getByRole('region', { name: TITOL_CANALS_EMPAQUETATS_TAXONOMIA });
     expect(seccio.tagName).toBe('SECTION');
-    expect([...seccio.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_CANALS_EMPAQUETATS_TAXONOMIA]);
+    expect([...seccio.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([TITOL_CANALS_EMPAQUETATS_TAXONOMIA]);
     const despres = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(despres(screen.getByRole('region', { name: 'Sóc de Poble en xifres' }), seccio)).toBe(true);
     expect(despres(seccio, screen.getByRole('region', { name: 'Índex de la Consola' }))).toBe(true);
@@ -133,7 +133,7 @@ describe('el tauler de /consola', () => {
     expect(targetes).toHaveLength(3);
     const [t] = targetes;
     expect(t.className).toBe('sp-card sdp-consola__targeta');
-    expect(t.querySelector('h3.sp-card-title').textContent).toBe(paginaEmpaquetats().title);
+    expect(t.querySelector('h4.sp-card-title').textContent).toBe(paginaEmpaquetats().title);
     expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
     // La web és la font de la versió: no compta al recompte.
     expect(t.querySelector('.sdp-consola__dada').textContent).toBe(`v${VERSIO} · 3 de 3 al pas`);

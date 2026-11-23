@@ -265,11 +265,12 @@ describe('el camí sencer, sense xarxa', RECORREGUT, () => {
     expect(screen.getByText('Obrint el llibre de factures…')).toBeTruthy();
     expect(await screen.findByRole('heading', { name: '3. Factura nova' })).toBeTruthy();
     expect(screen.getByText(/Per a emetre factures, primer cal desar les dades de l’empresa/)).toBeTruthy();
-    // Un sol H2 per pas, i cap H1: el posa la pàgina de l'app.
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+    // Un sol H3 per pas, i cap H1 ni H2: els posa la pàgina de l'app.
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
       '1. Les dades de l’empresa', '2. Les factures d’abans', '3. Factura nova', '4. El llibre de factures', '5. Còpia del llibre'
     ]);
     expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
 
     await configura();
     // El resum del perfil, i la versió desada al seu magatzem (no al llibre). El NIF també és a «Qui factura?».
@@ -472,9 +473,9 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', RECORRE
     // servir el mateix estat: la vista no es remunta (la mateixa clau) i el focus no es mou (fireEvent no el posa al
     // botó): continua al títol, on l'ha posat l'obertura automàtica. Que la fila d'una factura DIFERENT porte el focus
     // al seu títol es comprova a PODER 1.
-    const oberta = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    const oberta = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 4 });
     fireEvent.click(boto('Mostra la factura A2026-0001'));
-    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 4 });
     expect(titol).toBe(oberta);
     expect(document.activeElement).toBe(titol);
     const vista = within(titol.closest('section'));
@@ -745,7 +746,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     omplLinia();
     await emet('A2026-0001');
     // Sense baixar al llibre: la factura emesa ja és oberta, amb el focus al seu títol.
-    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 4 });
     expect(document.activeElement).toBe(titol);
     expect(boto('Mostra la factura A2026-0001').getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(within(titol.closest('section')).getByRole('button', { name: 'Imprimeix o desa en PDF' }));
@@ -756,7 +757,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     omplClient();
     omplLinia({ concepte: 'Coca', quantitat: '1', preu: '10,00', iva: '10' });
     await emet('A2026-0002');
-    expect(await screen.findByRole('heading', { name: 'La factura A2026-0002', level: 3 })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'La factura A2026-0002', level: 4 })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'La factura A2026-0001' })).toBeNull();
     expect(document.querySelectorAll('.sdp-gestoria-factura')).toHaveLength(1);
     expect(document.body.querySelectorAll(':scope > .sdp-gestoria-factura-impresa')).toHaveLength(1);
@@ -775,7 +776,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     fireEvent.click(boto('Mostra la factura A2026-0002'));
     boto('Mostra la factura A2026-0001').focus();
     fireEvent.click(boto('Mostra la factura A2026-0001'));
-    const titolDeLaFila = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    const titolDeLaFila = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 4 });
     expect(document.activeElement).toBe(titolDeLaFila);
     expect(document.querySelectorAll('.sdp-gestoria-factura')).toHaveLength(1);
     expect(boto('Mostra la factura A2026-0002').getAttribute('aria-pressed')).toBe('false');
@@ -844,7 +845,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     await emet('A2026-0001');
     expect(desplegable('Detalls tècnics: l’XML de prova per a l’AEAT').open).toBe(false);
     // La factura: imprimir, davant; el QR (encés) i la menció VERI*FACTU (apagada), darrere.
-    const vista = within((await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 })).closest('section'));
+    const vista = within((await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 4 })).closest('section'));
     const delPaper = desplegable('Detalls tècnics: el QR i la menció VERI*FACTU');
     expect(delPaper.open).toBe(false);
     expect(within(delPaper).getAllByRole('switch').map((s) => s.getAttribute('aria-checked'))).toEqual(['true', 'false']);
@@ -934,7 +935,7 @@ describe('la factura en tres preguntes (Prompt 261014_1605, G1)', RECORREGUT, ()
     // La Factura nova, en tres preguntes; qui factura, del perfil i només per a llegir.
     await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
     const nova = pas('3. Factura nova');
-    const preguntes = nova.getAllByRole('heading', { level: 3 });
+    const preguntes = nova.getAllByRole('heading', { level: 4 });
     expect(preguntes.map((h) => h.textContent)).toEqual(['Qui factura?', 'A qui i què?', 'Revisa i emet']);
     expect(nova.getByText('Nom legal').nextElementSibling.textContent).toBe('Forn del Poble SL');
     expect(nova.getByText('NIF').nextElementSibling.textContent).toBe(CIF_EMISSOR);

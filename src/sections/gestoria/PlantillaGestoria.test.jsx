@@ -174,9 +174,9 @@ describe('el correu per a la gestoria', () => {
 
     fireEvent.click(prepara);
     expect(prepara.getAttribute('aria-expanded')).toBe('true');
-    const correu = screen.getByRole('heading', { level: 4, name: BOTO_CORREU }).closest('section');
+    const correu = screen.getByRole('heading', { level: 5, name: BOTO_CORREU }).closest('section');
     expect(document.getElementById(prepara.getAttribute('aria-controls')).contains(correu)).toBe(true);
-    expect(within(correu).getByRole('heading', { level: 5, name: 'Vista prèvia' })).toBeTruthy();
+    expect(within(correu).getByRole('heading', { level: 6, name: 'Vista prèvia' })).toBeTruthy();
     expect(within(correu).getByText(new RegExp(`^${NOM_XLSX.replace(/\./g, '\\.')} \\(`))).toBeTruthy();
     expect(within(correu).getByRole('textbox', { name: /Nom per a l'assumpte/ }).value).toBe(TITULAR);
     expect(within(correu).getByText(/Full del 3T de 2026\./)).toBeTruthy();
@@ -189,7 +189,7 @@ describe('el correu per a la gestoria', () => {
   test('la tercera aprovació continua intacta: sense revisar el full, el correu no descarrega res', () => {
     const { descarrega } = munta();
     fireEvent.click(boto(BOTO_CORREU));
-    const correu = screen.getByRole('heading', { level: 4, name: BOTO_CORREU }).closest('section');
+    const correu = screen.getByRole('heading', { level: 5, name: BOTO_CORREU }).closest('section');
     fireEvent.click(within(correu).getByRole('button', { name: 'Descarrega l\'esborrany (.eml)' }));
     expect(descarrega).not.toHaveBeenCalled();
     expect(within(correu).getByRole('checkbox', { name: /He revisat el full i l'adjunt/ }).checked).toBe(false);
@@ -200,7 +200,7 @@ describe('el correu per a la gestoria', () => {
     const { rerender } = render(<PlantillaGestoria full={CABLE} descarrega={descarrega} />);
     fireEvent.click(boto('Descarrega l’XLSX'));
     fireEvent.click(boto(BOTO_CORREU));
-    expect(screen.getByRole('heading', { level: 4, name: BOTO_CORREU })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 5, name: BOTO_CORREU })).toBeTruthy();
 
     rerender(<PlantillaGestoria full={{ ...CABLE, entregables: null }} descarrega={descarrega} />);
     expect(screen.getByText('Encara no hi ha cap full generat')).toBeTruthy();

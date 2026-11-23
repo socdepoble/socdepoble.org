@@ -16,7 +16,10 @@ import StarterKit from '@tiptap/starter-kit';
 import { creaOrdres, extensionsRiques } from './index.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
 import { ERROR_EXIF_NO_CONSERVABLE } from '../../enquadrament/exifIncrustat.js';
-import { dataOriginal, gpsTorre, jpegAmbExif } from '../../../../../tests/helpers/jpegProva.js';
+import { llegixExif } from '../../enquadrament/exif.js';
+import {
+  APP0_JFIF, IMATGE, SOI, TIPUS, concatena, dataOriginal, gpsTorre, jpegAmbExif,
+} from '../../../../../tests/helpers/jpegProva.js';
 
 const CURT = 'data:image/webp;base64,AAAA';
 const PNG = `data:image/png;base64,${btoa(String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13))}`;
@@ -132,6 +135,54 @@ describe('P1-64 · l’ordre «/» Imatge i l’EXIF de les fotos del cos', () =
     await ordreImatge({ onToast, demanaExif: async () => ({ conserva: true, precisio: 'poble' }) }).executa({ editor, range: RANG });
     expect(onToast).toHaveBeenCalledWith(ERROR_EXIF_NO_CONSERVABLE, 'error');
     expect(cadena.setImage).not.toHaveBeenCalled();
+  });
+});
+
+/* v1.2.23 · costura privacitat del cos del Perfil (IDEA-331, ordre del Mestre 261123) ·
+   Amb exifTriatEnPujar (el cos del Perfil, que puja directe a l'espai públic), la
+   foto conservada ix del canvas NETA (compressImage sense conservaExif) i porta la
+   tria de la còpia pública de les Notes: la ubicació arrodonida i la data, mai la
+   marca, el model, el número de sèrie ni el nom. Si no s'hi pot posar, l'avís. */
+describe('IDEA-331 · exifTriatEnPujar: la tria de la còpia pública ja a la pujada', () => {
+  const CANVAS_JPEG = `data:image/jpeg;base64,${btoa(String.fromCharCode(...concatena(SOI, APP0_JFIF, IMATGE)))}`;
+  const deDataUrl = (url) => Uint8Array.from(atob(url.slice(url.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+  const conteText = (bytes, text) => bytes.some((_, i) => [...text].every((c, k) => bytes[i + k] === c.charCodeAt(0)));
+  const fotoDeMobil = () => new File([jpegAmbExif({
+    ifd0: [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'NIKON' }, { tag: 0x0110, tipus: TIPUS.ASCII, valors: 'D850' }],
+    exif: [...dataOriginal('2017:05:14 10:22:33'), { tag: 0xa430, tipus: TIPUS.ASCII, valors: 'Pep Garcia' }, { tag: 0xa431, tipus: TIPUS.ASCII, valors: '0123456789' }],
+    gps: gpsTorre(),
+  })], 'mobil.jpg', { type: 'image/jpeg' });
+
+  test('conservada: compressImage neta, i el data URL porta el GPS arrodonit i la data, sense càmera, sèrie ni nom', async () => {
+    dobles.compressImage.mockResolvedValue(CANVAS_JPEG);
+    triaRa(fotoDeMobil());
+    const { editor, cadena } = editorFals();
+    await ordreImatge({ exifTriatEnPujar: true, demanaExif: async () => ({ conserva: true, precisio: '100m' }) }).executa({ editor, range: RANG });
+    expect(dobles.compressImage.mock.calls.every(([, o]) => o.conservaExif !== true && o.original === undefined)).toBe(true);
+    const { src, ...atributs } = cadena.setImage.mock.calls[0][0];
+    const bytes = deDataUrl(src);
+    expect(llegixExif(bytes, { ambCamera: true })).toMatchObject({ gps: { lat: 38.592, lng: -0.418 }, dataCaptura: '2017-05-14T10:22:33', camera: null });
+    for (const text of ['NIKON', 'D850', 'Pep Garcia', '0123456789']) expect(conteText(bytes, text), text).toBe(false);
+    expect(atributs).toEqual({ alt: 'mobil.jpg', lat: '38.592', lng: '-0.418', precisio: '100m', captura: '2017-05-14T10:22:33' });
+  });
+
+  test('un canvas que no fa cap format amb EXIF (PNG): l’avís i res inserit, mai neta en silenci', async () => {
+    dobles.compressImage.mockResolvedValue(PNG);
+    triaRa(fotoDeMobil());
+    const onToast = vi.fn();
+    const { editor, cadena } = editorFals();
+    await ordreImatge({ onToast, exifTriatEnPujar: true, demanaExif: async () => ({ conserva: true, precisio: 'exacta' }) }).executa({ editor, range: RANG });
+    expect(dobles.compressImage.mock.calls.map(([, o]) => o.format)).toEqual(['image/webp', 'image/jpeg']);
+    expect(onToast).toHaveBeenCalledWith(ERROR_EXIF_NO_CONSERVABLE, 'error');
+    expect(cadena.setImage).not.toHaveBeenCalled();
+  });
+
+  test('amagada (conserva false): la crida neta de sempre, igual que sense la clau', async () => {
+    triaRa(fotoDeMobil());
+    const { editor, cadena } = editorFals();
+    await ordreImatge({ exifTriatEnPujar: true, demanaExif: async () => ({ conserva: false, precisio: 'exacta' }) }).executa({ editor, range: RANG });
+    expect(dobles.compressImage.mock.calls.map(([, o]) => o)).toEqual([{ maxSize: 1200, format: 'image/webp', quality: 0.8 }]);
+    expect(cadena.setImage).toHaveBeenCalledWith({ src: CURT, alt: 'mobil.jpg' });
   });
 });
 

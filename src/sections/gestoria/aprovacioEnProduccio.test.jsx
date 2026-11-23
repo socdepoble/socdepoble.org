@@ -183,7 +183,7 @@ describe('CODEX-R24-12 · un navegador nou a la web publicada aprova el tractor 
     expect(avis.textContent).toContain('Gestoria · Escàner Local de la carpeta');
     await aprovaAci(avis, TRACTOR_ESCANER);
     const delTauler = await avisDeLaPorta('Per a abocar els extractes cal també el Tauler');
-    expect(screen.getByRole('heading', { level: 2, name: 'Tria la carpeta' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Tria la carpeta' })).toBeTruthy();
     await laPortaDeVeresHoAccepta(TRACTOR_ESCANER, { magatzem, entorn });
     await aprovaAci(delTauler, TRACTOR_TAULER);
     await waitFor(() => expect(screen.queryByText('Per a abocar els extractes cal també el Tauler')).toBeNull(), ESPERA);

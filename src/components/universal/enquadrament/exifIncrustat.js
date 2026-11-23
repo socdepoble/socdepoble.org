@@ -764,6 +764,19 @@ export function imatgeSenseUbicacio(entrada) {
   return { ...net, bytes };
 }
 
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · D-V1223-GEOLOC-PER-DEFECTE. Al xat, el contingut conserva per
+   defecte la ubicació DINS del fitxer: el GPS IFD (versió, latitud, longitud i altitud amb les seues referències, 0 a
+   6), a més de l'orientació (a 1), la data i la càmera de TRIA_SENSE_UBICACIO. Mai el MakerNote, els números de
+   sèrie, el nom de cap persona ni bytes orfes. Només «Amaga el lloc» (conservaUbicacio: false) publica sense bloc. */
+const TRIA_AMB_UBICACIO = Object.freeze({
+  ifd0: TRIA_SENSE_UBICACIO.ifd0,
+  exif: TRIA_SENSE_UBICACIO.exif,
+  gps: TRIA_UBICACIO_I_DATA.gps,
+});
+/** v1.2.23 · IDEA-331 · TIFF nou de data, càmera i GPS de l'original, sense MakerNote ni càrrega opaca; o null.
+ * El contenidor canònic i el GPS rescatat viuen a exifAmbUbicacio.js, un tros que només es demana en diferit. */
+export const preparaTiffAmbUbicacio = entrada => preparaTiffAmbTria(entrada, TRIA_AMB_UBICACIO);
+
 /* ─── La precisió de la ubicació (P1-64, pla 261028_1526 §3.1.1) ──────── */
 
 /* P1-64 (Mestre 261028, decisió 8) · La persona que conserva la ubicació d'una

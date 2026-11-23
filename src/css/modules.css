@@ -1071,7 +1071,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   text-align: center;
   background: var(--sdp-fons-subtil);
 }
-.sdp-route-error__titol { color: var(--sdp-error); }
+/* v1.2.23 · L3-01 (Gauntlet R1) · El títol és text: pinta --sdp-error-text, com .sdp-app-error. --sdp-error és el
+   senyal (vores i fons) i, damunt del subtil del Mode Bancal, fa 6,20:1 en clar i 2,29:1 en fosc; --sdp-error-text,
+   8,30:1 i 9,45:1. Ho mesura textosModeSenior.veritatBancal.v1223.test.js. */
+.sdp-route-error__titol { color: var(--sdp-error-text); }
 .sdp-route-error__reintent { margin-top: var(--sdp-space-4); }
 .sdp-error-pre {
   margin: var(--sdp-space-4) 0 0;
@@ -2187,8 +2190,9 @@ details[open] summary.accordion-header svg:last-child {
 
 /* ── 8. FAB (només escriptori) ─────────────────────────────────── */
 
+/* v1.2.23 · L3-01 (Gauntlet R1) · Text d'error: el token -text, com .sdp-text-exit (AAA en Bancal clar i fosc). */
 .sdp-text-error {
-  color: var(--sdp-error);
+  color: var(--sdp-error-text);
 }
 
 /* -- FASE 4 / TOC / XAT / ONBOARDING / PERFIL / CERCA -- */
@@ -2782,7 +2786,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .devices-panel__body .card__body p {
-  font-size: var(--sdp-text-meta);
+  font-size: var(--sdp-text-small);
   color: var(--sdp-text-suau);
   margin: 8px 0 0 0;
   text-align: center;
@@ -3280,27 +3284,33 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__titol {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
+    max-block-size: calc(2 * 1.3em);
     font-size: var(--sdp-ui-base);
     font-weight: 700;
+    line-height: 1.3;
   }
   .sdp-nota-fitxa__data {
     flex: none;
+    margin-inline-start: auto;
     font-size: var(--sdp-text-meta);
     font-variant-numeric: tabular-nums;
     color: var(--sdp-text-suau);
     white-space: nowrap;
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__subtitol {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    white-space: normal;
-    /* Sòl de 14px (abans --sdp-ui-sm, 13px). Dos línies de 14 × 1,3 i el
-       títol caben encara dins dels 86px de la fitxa (73,9px de text i coixí). */
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-block-size: 1.3em;
+    /* IDEA-325 · 1 línia completa amb el·lipsi: amb 2 línies completes de títol
+       (41,6px) + gap (4px) + 1 línia de subtítol (18,2px) + coixí (16px) = 79,8px,
+       la fitxa cap sencera dins dels 86px (--sdp-bloc-fitxa-mida) sense cap 3a
+       línia tallada horitzontalment. */
     font-size: var(--sdp-text-meta);
+    line-height: 1.3;
     color: var(--sdp-text-suau);
     font-weight: 400;
   }
@@ -3785,16 +3795,11 @@ details[open] summary.accordion-header svg:last-child {
     padding: var(--sdp-space-2) var(--sdp-space-4);
     border-radius: 0;
   }
-  /* La roda de «Menú» ocupa la mateixa cel·la que les icones de les files.
-     La regla general del Workspace (.app-grid-col-header__plec > svg) li
-     posa 12px de coixí a cada costat, calculats per a icones de 20, i
-     AppGridColumn en pinta de 24: la caixa fa 48 i l'eix cau a 40, dotze
-     píxels a la dreta de les icones del rail plegat. A la columna del rail
-     el coixí és 0 i la separació amb el títol, 16, la de les files. */
-  .sdp-xat .app-grid-column--left .app-grid-col-header__plec > svg { padding-inline: 0; }
-  .sdp-xat .app-grid-column--left .app-grid-col-header__plec { gap: var(--sdp-space-4); }
-  /* Rail plegat sense vora ni coixí de dalt. Al Xat no hi ha accions: davall
-     de la fila de «Menú» ve directament la primera entrada, i la vora i el
+  /* v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · Fora les dos regles de la roda de «Menú»
+     (.sdp-xat .app-grid-column--left .app-grid-col-header__plec): el rail ja no porta cap fila de
+     títol (ClosCaXat no hi munta AppGridColumn) i no casaven amb res. Cap píxel canvia. */
+  /* Rail plegat sense vora ni coixí de dalt. Al Xat no hi ha accions ni fila
+     de títol: la primera entrada ve directament dalt de tot, i la vora i el
      coixí de .sdp-workspace-rail (5px) la deixaven més avall que la de la
      barra principal plegada (layout.css, sense coixí de dalt). Sense ells, i
      sense gap a la capçalera plegada, cau a la mateixa fila. Des del prompt
@@ -3830,11 +3835,42 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-nova:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
   .sdp-xat .sdp-xat-obri-rail { color: var(--sdp-crom-actiu-fons); }
+  .sdp-xat .sdp-xat-titol-seccio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    min-width: 0;
+    max-inline-size: 100%;
+    margin: 0;
+    margin-inline-start: calc(-1 * var(--sdp-space-2));
+    padding: 0 var(--sdp-space-2);
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-crom-actiu-fons);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat .sdp-xat-titol-seccio:hover { background: var(--sdp-crom-hover); }
+  }
+  .sdp-xat .sdp-xat-titol-seccio:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
+  .sdp-xat-titol-seccio__fletxa {
+    flex: none;
+    color: var(--sdp-crom-text-suau);
+    font-size: var(--sdp-text-base);
+    line-height: 1;
+  }
   /* En estret i en mitjà el Xat no usa pestanyes de columna (ordre del
      Mestre, 260927 vesprada; des del MD, 261003, la closca ja no en pinta
      cap i la regla que les amagava ací s'ha retirat). Cada columna porta el
      seu control: el botó de la fila 1 obri el rail, la creu del rail el
-     tanca, i la fletxa de la conversa o de l'opció torna a la llista. */
+     tanca, i la fletxa de la conversa o de l'opció torna a la llista.
+     v1.2.23 · IDEA-327 v2 (ordre del Mestre 261123) · El rail ja no porta creu: el títol
+     clicable «Xats ▸» (.sdp-xat-titol-seccio) l'obri i el plega a totes les amplàries, i fora
+     d'«ample» també el tanquen Escape, el vel i qualsevol tria del rail. */
   /* La capçalera de l'opció oberta del Control del xat (fletxa d'arrere i
      títol) només té sentit en estret, on l'opció ocupa tota la pantalla; el
      títol del panell, que la repetiria, s'hi amaga. */
@@ -5688,8 +5724,7 @@ details[open] summary.accordion-header svg:last-child {
     padding: var(--sdp-space-6) var(--sdp-pad-contenidor);
   }
   .sdp-xat-control__panell {
-    max-width: var(--sdp-measure);
-    margin: 0 auto;
+    width: 100%;
     display: grid;
     gap: var(--sdp-space-4);
   }
@@ -6129,7 +6164,7 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-targeta);
     color: var(--sdp-text-cos);
   }
-  .sdp-xat-dialeg__panell > p { margin: 0; max-width: var(--sdp-measure); }
+  .sdp-xat-dialeg__panell > p { margin: 0; }
   .sdp-xat-dialeg__panell:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-dialeg__accions { display: grid; gap: var(--sdp-space-2); }
   /* T7 · P1-12 pas 17 (pla 261101_1246) · El número de seguretat (CosSeguretatXat): 12 grups de
@@ -6429,7 +6464,7 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-titol);
   }
   .sdp-xat-construccio__text,
-  .sdp-xat-construccio__avis { margin: 0; max-width: var(--sdp-measure); }
+  .sdp-xat-construccio__avis { margin: 0; }
   .sdp-xat-construccio__avis { color: var(--sdp-text-suau); }
 
   /* Contingut multimèdia operatiu (ordre del Mestre del 261004, prompt
@@ -6767,7 +6802,6 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-ajustos__nota {
     margin: 0;
     padding: 0 var(--sdp-space-4);
-    max-width: var(--sdp-measure);
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-meta);
     line-height: 1.4;
@@ -6786,7 +6820,6 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-pindola-push__text {
     margin: 0;
-    max-width: var(--sdp-measure);
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-meta);
     line-height: 1.4;
@@ -6916,7 +6949,7 @@ details[open] summary.accordion-header svg:last-child {
     text-align: center;
     color: var(--sdp-text-titol);
   }
-  .sdp-xat-ajustos__buit-text { margin: 0; max-width: var(--sdp-measure); color: var(--sdp-text-suau); }
+  .sdp-xat-ajustos__buit-text { margin: 0; color: var(--sdp-text-suau); }
   /* Pantalla completa: la capçalera i el cos s'aparten de les vores segures
      amb el mateix tall que la pantalla completa (dalt, «Estret»). */
 
@@ -7478,19 +7511,20 @@ details[open] summary.accordion-header svg:last-child {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-6);
   }
-  .sdp-consola__index > :is(h2, p.lead) {
+  .sdp-consola__index > :is(h3, p.lead) {
     grid-column: 1 / -1;
-    max-inline-size: 65ch;
-    margin-inline: auto;
     text-align: center;
   }
-  .sdp-consola__index > h2 { margin-top: 0; }
+  .sdp-consola__index > h3 {
+    margin-top: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
   .sdp-consola__index > p.lead { margin-bottom: var(--sdp-space-2); }
   .sdp-consola__index-pagina {
     margin-top: 0;
     padding-top: var(--sdp-space-4);
     border-top: 1px solid var(--sdp-vora);
-    max-inline-size: 65ch;
     min-inline-size: 0;
   }
   @media (min-width: 900px) {
@@ -7515,13 +7549,23 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-meta);
   }
-  .sdp-consola__index-pagina > h4 { margin-top: var(--sdp-space-4); }
+  .sdp-consola__index-pagina > h4 {
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-h3);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  .sdp-consola__index-pagina > h5 {
+    margin-top: var(--sdp-space-4);
+    color: var(--sdp-accent-titol);
+    font-size: var(--sdp-text-h4);
+  }
   .sdp-consola__index-peraque {
     margin: 0 0 var(--sdp-space-2);
     color: var(--sdp-text-suau);
     font-weight: 600;
   }
-  .sdp-consola__index :is(h2, h3, h4) {
+  .sdp-consola__index :is(h3, h4, h5) {
     scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
   /* Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski: el títol
@@ -7547,7 +7591,7 @@ details[open] summary.accordion-header svg:last-child {
      (base.css, U05). El premut és el de la prosa de tot el sistema
      (.sdp-prose a[href]:active). Derogat EN PART (Onada 12, punt 5): el
      premut de color --sdp-accent-text-hover i la seua transició. */
-  .sdp-consola__index :is(h3, h4) > a { color: inherit; }
+  .sdp-consola__index :is(h4, h5) > a { color: inherit; }
 
   /* Onada 12 (261011; ordres 261011_0130, punt 2) · LLEI VISUAL DEL QUADRAT:
      «Totes les imatges a la Consola s'han de visualitzar sempre de forma
@@ -8053,8 +8097,6 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-drets__cos,
   .sdp-drets__peu {
     width: 100%;
-    max-width: var(--sdp-measure);
-    margin-inline: auto;
     padding-inline: var(--sdp-space-4);
   }
   .sdp-drets__cap {
@@ -8064,7 +8106,7 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-3);
     padding-block: var(--sdp-space-6) var(--sdp-space-4);
   }
-  .sdp-drets__titol { margin: 0; font-size: var(--sdp-text-h2); line-height: 1.2; color: var(--sdp-text-titol); }
+  .sdp-drets__titol { margin: 0; font-size: var(--sdp-text-h3); line-height: 1.2; color: var(--sdp-text-titol); }
   .sdp-drets__titol:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-drets__intro,
   .sdp-drets__enllac,
@@ -9267,7 +9309,6 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-cos);
   }
   .sdp-llista-nodes__descripcio {
-    max-width: var(--sdp-measure);
     margin: var(--sdp-space-1) 0 0;
     color: var(--sdp-text-suau);
   }
@@ -9478,8 +9519,6 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-direction: column;
     gap: var(--sdp-space-4);
-    max-width: var(--sdp-measure);
-    margin-inline: auto;
     padding-block-end: var(--sdp-space-8);
   }
   .sdp-cerca__formulari { margin: 0; }
@@ -9620,7 +9659,6 @@ details[open] summary.accordion-header svg:last-child {
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
-    max-width: var(--sdp-measure);
     margin: 0;
     color: var(--sdp-text-cos);
     line-height: var(--sdp-leading-body);
@@ -9710,8 +9748,7 @@ details[open] summary.accordion-header svg:last-child {
   /* Els avisos en línia dels camps, davall de l'entradilla (UniversalEditorShell):
      la mesura del text de lectura i l'alerta canònica (.sdp-alerta--error). */
   .sdp-avisos-camps {
-    max-width: var(--sdp-measure);
-    margin: 0 auto var(--sdp-space-4);
+    margin: 0 0 var(--sdp-space-4);
     padding: 0;
     list-style: none;
   }
@@ -10329,8 +10366,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-assigna-emoji {
     display: grid;
     gap: var(--sdp-space-4);
-    max-inline-size: var(--sdp-measure);
-    margin-inline: auto;
+    inline-size: 100%;
     padding-block: var(--sdp-space-4);
   }
   .sdp-assigna-emoji__cap {
@@ -10425,12 +10461,10 @@ details[open] summary.accordion-header svg:last-child {
     display: grid;
     gap: var(--sdp-space-4);
     padding: var(--sdp-space-4);
-    max-inline-size: var(--sdp-measure);
   }
   .sdp-segon-factor {
     display: grid;
     gap: var(--sdp-space-3);
-    max-inline-size: var(--sdp-measure);
   }
   .sdp-segon-factor__inscripcio,
   .sdp-segon-factor__confirmacio,
@@ -10513,9 +10547,12 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-superadmin-bloc__titol {
     margin: 0;
+    padding: 0;
+    border: 0;
     color: var(--sdp-text-titol);
     font-size: var(--sdp-text-h5);
     line-height: 1.2;
+    text-align: left;
     overflow-wrap: anywhere;
   }
   .sdp-superadmin-etiqueta {
@@ -12282,109 +12319,6 @@ details[open] summary.accordion-header svg:last-child {
     align-items: center;
     gap: var(--sdp-space-1);
   }
-
-  /* ── Onada R14 · El receptari «Què dinem?» (ReceptaDetailSection.jsx, /receptes/:slug). La fila de
-     quadrats-botó és la pell del quadrat de les targetes (.sp-card-calendar-badge), sense flotar i a mida de
-     fila; el premut (aria-pressed) porta la vora i el fons de l'acció. La làmina del llibre fa uns 360 px d'ample:
-     es pinta a la seua mida i no s'estira (porta l'ample i l'alt de la WebP; height: auto conserva la proporció
-     quan la columna és més estreta). Onada R15 (P3-4) · Sense commutador: el vídeo és un bloc com els altres. ── */
-  .sdp-recepta {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-4);
-  }
-
-  .sdp-recepta__capcalera {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--sdp-space-3);
-  }
-
-  .sdp-recepta__lamina {
-    margin: 0;
-    max-width: 100%;
-  }
-
-  .sdp-recepta__lamina img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--sdp-radi-g);
-  }
-
-  .sdp-recepta__quadrats {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sdp-space-3);
-  }
-
-  .sdp-recepta__quadrats .sp-card-calendar-badge {
-    float: none;
-    margin: 0;
-    width: 96px;
-    height: 96px;
-    gap: var(--sdp-space-1);
-    border: none;
-    border-radius: 0;
-    background-color: var(--sdp-fons-app);
-    color: var(--sdp-text-titol);
-    cursor: pointer;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-recepta__quadrats button.sp-card-calendar-badge:hover {
-      background-color: var(--sdp-fons-subtil);
-      color: var(--sdp-text-titol);
-    }
-    .sdp-recepta__quadrats button.sp-card-calendar-badge[aria-pressed="true"]:hover,
-    .sdp-recepta__quadrats button.sp-card-calendar-badge[aria-selected="true"]:hover {
-      background-color: var(--sdp-accio-subtil);
-      color: var(--sdp-accio-text);
-    }
-  }
-
-  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
-  .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
-    background-color: var(--sdp-accio-subtil);
-    color: var(--sdp-accio-text);
-    box-shadow: inset 0 0 0 2px var(--sdp-accio);
-  }
-
-  .sdp-recepta__quadrat-icona {
-    font-size: 1.75rem;
-    line-height: 1;
-  }
-
-  /* Onada R17 · L'emoji XL de les pestanyes de la recepta, a 7/16 del costat de
-     la fitxa (42 de 96px). Dues classes: guanya a .sdp-fitxa-emoji-xl (66px) i a
-     .sdp-recepta__quadrat-icona, que són a la mateixa capa components. */
-  .sdp-recepta__quadrats .sdp-fitxa-emoji-xl {
-    font-size: calc(var(--sdp-fitxa-mida) * 7 / 16);
-    line-height: 1;
-  }
-
-  /* Onada R15 (P3-3) · L'etiqueta cap dins del quadrat en les cinc llengües. Amb 1rem (16 px), «Ingredientes» (es, gl)
-     feia 102,5 px en una caixa útil de 92 px (96 px menys la vora de 2 px) i eixia del quadrat. Al sòl de mida de
-     lletra (--sdp-text-meta, 14 px) en fa 89,7: hi cap amb 2,3 px de marge. I si un dia una etiqueta no hi cap, parteix
-     línia dins del quadrat (amb guionet on el navegador en sàpia) en lloc d'eixir-ne: max-width i overflow-wrap.
-     Onada R21.10 · Tinta semàntica AAA (>= 7:1 en clar i fosc) heretada del quadrat actiu o en repòs. */
-  .sdp-recepta__quadrat-text {
-    max-width: 100%;
-    font-size: var(--sdp-text-meta);
-    font-weight: 700;
-    line-height: 1.15;
-    text-align: center;
-    color: currentColor;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-  }
-
-  .sdp-recepta__ajuda {
-    text-align: center;
-    color: var(--sdp-text-suau);
-  }
 }
 
 /* R56 · Cos de Botigues: mateixes tres regles, ara dins del full canònic. */
@@ -13173,15 +13107,12 @@ details[open] summary.accordion-header svg:last-child {
      focus i no s'ha de trepitjar. */
   @media (forced-colors: active) {
     .sdp-rajola,
-    .sdp-workspace-llibres__tab,
-    .sdp-recepta__quadrats .sp-card-calendar-badge {
+    .sdp-workspace-llibres__tab {
       border: 2px solid ButtonText;
     }
     .sdp-rajola[aria-pressed="true"],
     .sdp-graella-articles__element--en-colleccio > .sdp-rajola,
-    .sdp-workspace-llibres__tab[aria-selected="true"],
-    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-pressed="true"],
-    .sdp-recepta__quadrats .sp-card-calendar-badge[aria-selected="true"] {
+    .sdp-workspace-llibres__tab[aria-selected="true"] {
       border-color: Highlight;
     }
   }

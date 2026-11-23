@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-11-22T22:39:49.206Z",
-  "hash": "d1223ed72a80f91714fbf38e741a85304fc01d0f35247eb0acbee11db5bd667c",
+  "timestamp": "2026-11-23T22:41:50.949Z",
+  "hash": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351",
   "filesCount": 45,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "a7a458a04613e2d5096b432b0381ec984276fde2ee05a97e9baabe320dcfdc0a",
@@ -27,7 +27,7 @@
     ".agents/skills/core-salfumant-radical/SKILL.md": "1fb8ebd467d5cecb69c97af81850b37d404745bb645b670e4cc5fca2a351a323",
     ".agents/skills/core-secretaria-auditoria/SKILL.md": "dcd10694d39463043e74dc9651fbd9eaed8a8923183ebf40e2ff5e6dc076abc8",
     ".agents/skills/core-seguretat-audit/SKILL.md": "8b47b97b09df2a6feda65feae764fa9509cf146fba7d123568f229ce909747bb",
-    ".agents/skills/core-sentinella-blindatge/SKILL.md": "fe707b4a47e24b4d66d9d4e1039c9cdcff3544ded8d3d8b25c2d7da8cfad098f",
+    ".agents/skills/core-sentinella-blindatge/SKILL.md": "61d174b9750a04e2a095f168b15ef6c2cc4849af7035c14bb3db35645e760150",
     ".agents/skills/core-taxonomia-estricta/SKILL.md": "e4fba5105c786a603c546925b289e7ae495cddb00d60972ffc4a1f129c680a27",
     ".agents/skills/core-tecniques-investigacio/SKILL.md": "4a4418d81c3a252c041f524e4a7822cd241a72ce6077ccff95dc8062962c69de",
     ".agents/skills/core-telemetria-huma/SKILL.md": "ebaa794731a8d9531a0b676d93fa57ca4b36acfa397e795b3cc69de0af832834",
@@ -49,5 +49,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d394e96ea749330bc5472e5a84e3420c1986f5894752807e68c60d84d8eff42e",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "983c3e56a5e450934b4f804385f25a2ef28431fe39a726257d890fb38a943ca3"
   },
-  "transaction": "3ff4fec7-4db5-4839-932e-a6a4b3228505"
+  "transaction": "73b7ef43-9daf-451d-81c6-25a9be30d626"
 }

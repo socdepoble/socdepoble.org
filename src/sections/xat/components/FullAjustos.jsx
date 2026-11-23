@@ -3,7 +3,8 @@
  * l'anatomia habitual dels ajustos de missatgeria (52 captures de referència
  * del Mestre, 20.47–21.05).
  *
- * «Tu» al peu del rail (o l'avatar, amb el rail plegat) l'obri. És un modal
+ * La fila «Ajustos del xat» del menú del rail l'obri (sense sessió, també
+ * «Tu» al peu del rail, o l'avatar amb el rail plegat). És un modal
  * CENTRAT de mida FIXA (480×640 a la captura: 30×40rem), amb una pila de
  * pàgines dins del MATEIX marc: navegar no el mou ni el canvia de mida, i una
  * pàgina curta no l'encongix. En estret ocupa tota la pantalla, com les
@@ -170,8 +171,10 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
   useEffect(() => { if (obert && !tactil) campRef.current?.focus(); }, [obert, tactil]);
 
   /* En tancar-lo sense navegar, el Dialeg ja ha tornat el focus a qui
-     l'havia obert. Si no ha pogut (fora d'ample, el «Tu» és dins del rail
-     lliscant, ja tancat i inert), ho decidix la closca. */
+     l'havia obert. Si no ha pogut (fora d'ample, la fila «Ajustos del xat» o
+     el «Tu» són dins del rail lliscant, ja tancat i inert), ho decidix la
+     closca. v1.2.23 · L5-06 (Gauntlet R1) · Amb sessió, el peu és el selector
+     d'identitat i el full s'obri des de la fila (ClosCaXat.jsx). */
   useEffect(() => {
     const previ = obertPrevi.current;
     obertPrevi.current = obert;

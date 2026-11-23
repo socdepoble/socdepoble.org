@@ -72,7 +72,7 @@ function ImpostosDeLAny({ any, visible, idioma = 'ca' }) {
   const r = any.renda;
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__any">
-      <h3 className="sdp-gestoria-historic__subtitol">{`Els impostos de ${any.any}`}</h3>
+      <h4 className="sdp-gestoria-historic__subtitol">{`Els impostos de ${any.any}`}</h4>
       <Taula titol={`Estimació trimestral de ${any.any}`} densa>
         <thead>
           <tr>
@@ -143,7 +143,7 @@ function Escenaris({ h, visible, idioma = 'ca' }) {
   };
   return (
     <div ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__any">
-      <h3 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Escenaris')}</h3>
+      <h4 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Escenaris')}</h4>
       <div className="sdp-gestoria-historic__graella">
         <Camp etiqueta={tg(idioma, 'Facturació (% de canvi)')} ajuda="10 vol dir facturar un 10 % més; -20, un 20 % menys." error={errors.facturacio || undefined}>
           <CampText tipus="number" step="1" min="-100" max="1000" defaultValue={facturacio} onChange={canvia('facturacio')} />
@@ -329,7 +329,7 @@ export function PanellSimulacio({ h, visible, idioma = 'ca' }) {
   const banc = h.banc;
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-historic__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, 'Simulacions d’impostos')}</h2>
+      <h3 id={id} className="sdp-gestoria-historic__titol">{tg(idioma, 'Simulacions d’impostos')}</h3>
       <Alerta to="avis" titol={tg(idioma, ETIQUETA_NO_VERIFICAT)} viva={false}>
         Calculat amb els moviments del banc i les suposicions de baix: cada despesa necessita la seua factura per a deduir-se, les entrades
         sense un altre origen conegut compten com a cobraments de clients (per prudència, l’estimació en pot eixir alta) i la renda només
@@ -350,7 +350,7 @@ export function PanellSimulacio({ h, visible, idioma = 'ca' }) {
       {/* La clau `carregada` torna a pintar els camps quan arriba la configuració desada. */}
       <Escenaris key={`escenari-${h.carregada}`} h={h} visible={visible} idioma={idioma} />
       <div className="sdp-gestoria-historic__any">
-        <h3 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Paràmetres i suposicions')}</h3>
+        <h4 className="sdp-gestoria-historic__subtitol">{tg(idioma, 'Paràmetres i suposicions')}</h4>
         <Suposits key={`suposits-${h.carregada}`} h={h} idioma={idioma} />
         {(h.simulacio?.anys ?? h.serie?.anys ?? []).map((any) => <ParametresDeLAny key={`${any.any}-${h.carregada}`} h={h} any={any.any} idioma={idioma} />)}
       </div>

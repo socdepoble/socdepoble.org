@@ -3,7 +3,8 @@ import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import {
   ACCEPT_FOTO, PES_MAXIM_FOTO, costatDeSortida, useEnquadramentImatge,
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
-import { TEXTOS_ENQUADRAMENT } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { TEXTOS_ENQUADRAMENT, avisDeRebuigDeLaTria } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { useLlenguaDelTextOpcional } from '../../components/universal/enquadrament/i18nAmagaLloc.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { AJUDA_IMATGE_PUJANT as AVIS_IMATGE_PUJANT, TEXTOS_CLOSCA } from '../../components/universal/UniversalEditorShell.jsx';
 import { ambEnquadrament } from '../../utils/enquadramentUrl.js';
@@ -139,6 +140,10 @@ export function useImatgeDeFitxa({
   const tRef = useRef(null);
   const t = useTraductorOpcional();
   tRef.current = t;
+  /* v1.2.23 · L2-03 (Gauntlet R2) · La llengua dels avisos de l'interruptor «Amaga el lloc» (i18nAmagaLloc.js), la
+     del text de la interfície, com la del diàleg: es diuen des d'un callback estable. */
+  const idiomaRef = useRef(undefined);
+  idiomaRef.current = useLlenguaDelTextOpcional();
   const desatRef = useRef(onDesat);
   desatRef.current = onDesat;
   /* La guarda de pujada: el ref mana (el gest pot arribar abans del render);
@@ -217,8 +222,16 @@ export function useImatgeDeFitxa({
         // P1-64 · Només si la foto portava GPS de veres (DialegEnquadrament, avisaGpsEliminat).
         if (info?.gpsEliminat === true) errorRef.current?.(tradueix(tRef.current, TEXTOS_ENQUADRAMENT.gpsEliminat), 'info');
       } catch (err) {
-        // Escape a mitja pujada: la finestra ja no hi és per a dir-ho.
-        if (!obertRef.current) errorRef.current?.(err?.message || tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE));
+        /* Escape a mitja pujada: la finestra ja no hi és per a dir-ho.
+           v1.2.23 · L2-03 (Gauntlet R2) · Si la tria enviada era l'interruptor «Amaga el lloc» apagat (la capçalera
+           d'una organització o d'un agent), el rebuig de la ubicació i la data diu que s'encenga, no que es desmarque
+           una casella que no s'hi veia (avisDeRebuigDeLaTria, el mateix text que diria el diàleg obert). */
+        if (!obertRef.current) {
+          const missatge = err?.message
+            ? avisDeRebuigDeLaTria(err.message, exif, { idioma: idiomaRef.current, lloc: tradueix(tRef.current, TEXTOS_ENQUADRAMENT.amagaLloc) })
+            : tradueix(tRef.current, PARELL_ERROR_DESAT_IMATGE);
+          errorRef.current?.(missatge);
+        }
         throw err;
       } finally {
         pujantRef.current = false;

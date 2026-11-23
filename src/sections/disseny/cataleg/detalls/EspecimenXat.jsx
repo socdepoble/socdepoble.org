@@ -41,8 +41,16 @@
  * la conversa és l'encapçalament de nivell 1, però ací van davall dels h4 de
  * l'espècimen. Sense, /disseny/fonaments/xat tenia quatre H1 (el de la pàgina
  * i tres de mostra). El píxel no canvia: el nom és el mateix <strong>.
+ *
+ * v1.2.23 · K5 (ordre del Mestre 261123) · IDEA-331 (ordre del Mestre del
+ * 23-11-2026): la mostra de la ubicació ensenya l'avís i l'interruptor de
+ * producció (ControlsAdjunt.jsx), amb les claus section.xat.adjunts.* i
+ * section.xat.ubicacio.amagada, la icona MapPin i l'interruptor d'un toc
+ * «Amaga el lloc» / «Conserva el lloc», en lloc del text de R32.8 («📍 S’inclourà
+ * la ubicació on s’ha fet»), que ja no existix a la interfície.
  */
 import { useCallback, useRef, useState } from 'react';
+import { MapPin } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Accions, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
@@ -572,6 +580,10 @@ function ConversaEspill11OpcionsDeMostra() {
 }
 
 const SERVEI_QUOTA_PLENA_MOSTRA = { teCapacitat: () => true, quotaXat: async () => ({ usats: 19_999_999, limit: 20_000_000 }) };
+/* v1.2.23 · K5 (ordre del Mestre 261123) · IDEA-331 · El punt que porta el fitxer de mostra (llocDelFitxer, a
+   ControlsAdjunt): l'avís el pinta amb cinc decimals com a màxim, en la llengua de la interfície. */
+const LLOC_DEL_FITXER_MOSTRA = Object.freeze({ lat: 38.5892, lng: -0.4214 });
+const grausDeMostra = (valor) => new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 5 }).format(valor);
 const MISSATGE_UBICACIO_SAFAREIG = Object.freeze({
   id: 'm-safareig-riu',
   seq: 70,
@@ -610,15 +622,23 @@ function UbicacioIAvisTancableDeMostra() {
                 </button>
               </div>
             ) : null}
-            <div className="sdp-xat-ubicacio-control">
-              <span className="sdp-xat-ubicacio-control__estat">
-                <span>{conserva ? '📍 S’inclourà la ubicació on s’ha fet (38,59°, -0,42°)' : '📍 Ubicació amagada'}</span>
-              </span>
-              {conserva ? (
-                <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria" onClick={() => setConserva(false)}>
-                  Amaga el lloc
-                </button>
-              ) : null}
+            {/* v1.2.23 · K5 (ordre del Mestre 261123) · IDEA-331 · La fila de producció (ControlsAdjunt.jsx):
+                l'avís diu que el contingut conserva el lloc i la píndola és l'interruptor, «Amaga el lloc» (el
+                rètol llarg, «Publicar sense geolocalització», al title) i, amagat, «Conserva el lloc». */}
+            <div className="sdp-xat-adjunts__fila sdp-xat-ubicacio-control">
+              <p className="sdp-xat-adjunts__avis sdp-xat-ubicacio-control__estat">
+                <MapPin size={16} aria-hidden="true" focusable="false" />
+                <span>{conserva
+                  ? t('section.xat.adjunts.ubicacioConservada', 'Este contingut conserva la ubicació per a situar-lo al territori ({lat}°, {lng}°)')
+                    .replace('{lat}', grausDeMostra(LLOC_DEL_FITXER_MOSTRA.lat)).replace('{lng}', grausDeMostra(LLOC_DEL_FITXER_MOSTRA.lng))
+                  : t('section.xat.ubicacio.amagada', 'Ubicació amagada')}</span>
+              </p>
+              {conserva
+                ? <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria"
+                  title={t('section.xat.adjunts.publicaSenseGeolocalitzacio', 'Publicar sense geolocalització')}
+                  onClick={() => setConserva(false)}>{t('section.xat.adjunts.amagaLloc', 'Amaga el lloc')}</button>
+                : <button type="button" className="sdp-xat-pindola sdp-xat-pindola--secundaria"
+                  onClick={() => setConserva(true)}>{t('section.xat.adjunts.conservaLloc', 'Conserva el lloc')}</button>}
             </div>
           </div>
           <ControlsAdjunt fil={FIL_PAGINA} servei={SERVEI_QUOTA_PLENA_MOSTRA} onEnvia={ENVIA_ADJUNT_DE_MOSTRA} t={t} locale={LOCALE}>
@@ -639,7 +659,7 @@ export default function EspecimenXat() {
         ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia?, primerDelGrup?, citat?, onVesACita?, onRespon?, ressaltat?, actorLlista?, onMutaLlista? }', 'primerDelGrup = true', 'Un <li data-missatge> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament. La cua i el nom, només a la primera del grup; amb respostaA, la cita dalt; «Respon» al menú si hi ha onRespon i el missatge és confirmat. Amb tipus \'llista_comu\' i una instantània a metadades.llista, el cos és la llista viva (actorLlista toca, onMutaLlista és el port); sense instantània, el text.'],
         ['TargetaLlistaComu', '{ llista, actor?, interactiva?, onMuta? }', 'interactiva = true', 'La llista viva d’«El Comú» dins de la bombolla (UniversalListCard, variant bombolla). Memoritzada: una tecla al compositor no la repinta. En el mode de selecció, interactiva = false i cap control.'],
         ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil?, barra?, onEscapa?, campRef?, adjunts? }', 'adjunts = null', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt. barra es pinta just damunt del camp; Escape crida onEscapa. Amb adjunts (el dona ControlsAdjunt), el + i el que fa el botó redó; sense, només envia text.'],
-        ['ControlsAdjunt', '{ fil, onEnvia, servei?, usuariId?, externalConfig?, actiu?, onTextOrfe?, t?, locale?, children(adjunts) }', 'actiu = true', 'Guarda l’estat de les fotos, els vídeos i les notes de veu i munta el Compositor (render-prop) sempre al mateix lloc. adjunts és null sense capacitat, sense la migració, sense quota llegida o amb actiu fals; la safata de damunt només ocupa lloc mentre hi ha un fitxer a mig fer.'],
+        ['ControlsAdjunt', '{ fil, onEnvia, servei?, usuariId?, externalConfig?, actiu?, onTextOrfe?, t?, locale?, children(adjunts) }', 'actiu = true', 'Guarda l’estat de les fotos, els vídeos i les notes de veu i munta el Compositor (render-prop) sempre al mateix lloc. adjunts és null sense capacitat, sense la migració, sense quota llegida o amb actiu fals; la safata de damunt només ocupa lloc mentre hi ha un fitxer a mig fer. Amb un fitxer que porta el lloc (IDEA-331), l’avís «Este contingut conserva la ubicació per a situar-lo al territori (lat°, lng°)» i l’interruptor d’un toc «Amaga el lloc» («Publicar sense geolocalització») / «Conserva el lloc»; el lloc va per defecte.'],
         ['SeparadorNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «1 missatge no llegit» o «{n} missatges no llegits».'],
         ['BotoBaixar', '{ nous, onBaixa, t }', '0', 'Botó redó «Baixa al final»; la pastilla ix amb nous > 0 («99+» per damunt de 99).'],
         ['BarraResposta', '{ missatge, onCancela, t }', '—', 'Autor («Tu» si és teu) i text a una línia; la ✕ «Cancel·la la resposta».'],

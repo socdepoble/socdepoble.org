@@ -50,7 +50,7 @@ import { Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
-import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
+import ClosCaXat, { BotoTitolSeccioXat } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
 import { RUTES_AJUSTOS } from './ajustosXat.js';
@@ -107,9 +107,7 @@ export default function XatControlSection() {
     <aside className="sdp-workspace-column" aria-label={titol}>
       <AppGridColumn
         esDark={true}
-        titol={titol}
-        icona={CircleDashed}
-        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+        esquerra={<BotoTitolSeccioXat titol={titol} icona={CircleDashed} />}
       />
       <FilaSegona />
       <div className="sdp-workspace-column__body">

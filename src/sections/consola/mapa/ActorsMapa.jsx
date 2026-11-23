@@ -62,7 +62,7 @@ export function ActorsMapa({ mapa }) {
           {senseCodex ? <> Codex tampoc: al Mapa no ha arribat cap <Mono>.codex/hooks.json</Mono>.</> : null}
         </p>
         <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen. DESCONEGUT vol dir que els candats estan declarats per a un client que els pot consumir, però Sóc de Poble encara no té cap evidència que salten.</p>
-        <GraellaXifres xifres={[...peces.recompte, ...peces.arnesos]} generat={mapa.generat} />
+        <GraellaXifres xifres={[...peces.recompte, ...peces.arnesos]} generat={mapa.generat} headingLevel="h4" />
         {peces.arnesos.length ? null : <EstatBuit icona={Bot} titol="Cap arnés al Mapa" />}
       </section>
 
@@ -70,7 +70,7 @@ export function ActorsMapa({ mapa }) {
         <h3>La memòria d’arrencada</h3>
         <p>El que s'ha carregat abans de la primera paraula. Un carregador que cap arnés no declara carregar només compta si algú el llig a mà.</p>
         {carregadors.length ? <>
-          <GraellaXifres xifres={peces.carregadors} generat={mapa.generat} />
+          <GraellaXifres xifres={peces.carregadors} generat={mapa.generat} headingLevel="h4" />
           <Taula titol="Què es carrega en arrencar" densa>
             <thead>
               <tr><th scope="col">Carregador</th><th scope="col">Carrega</th><th scope="col">Qui el carrega</th></tr>
@@ -95,7 +95,7 @@ export function ActorsMapa({ mapa }) {
           Els hooks intercepten cada eina de l'agent abans o després d'executar-se. Un candat
           sense consumidor acreditat és una promesa: està declarat, però ningú no demostra que salte.
         </p>
-        <GraellaXifres xifres={[...peces.recompteCandats, ...peces.candats]} generat={mapa.generat} />
+        <GraellaXifres xifres={[...peces.recompteCandats, ...peces.candats]} generat={mapa.generat} headingLevel="h4" />
         {peces.candats.length ? null : <EstatBuit icona={Lock} titol="Cap candat al Mapa" />}
       </section>
 
@@ -103,14 +103,14 @@ export function ActorsMapa({ mapa }) {
         <h3>El que corre sol</h3>
         <p>Les tasques que llança el rellotge del sistema (launchd), sense ningú davant. Les que el registre declara i ningú no llança, a part.</p>
         {peces.tasques.length
-          ? <GraellaXifres xifres={peces.tasques} generat={mapa.generat} />
+          ? <GraellaXifres xifres={peces.tasques} generat={mapa.generat} headingLevel="h4" />
           : <EstatBuit icona={Timer} titol="Res no corre sol">Cap tasca del Mapa té llançador: els agents només treballen mentre algú els parla.</EstatBuit>}
       </section>
 
       <section>
         <h3>El sòl</h3>
         <p>On treballen: els llocs on les peces deixen la faena o la lligen.</p>
-        <GraellaXifres xifres={[...peces.recompteSol, ...peces.sol]} generat={mapa.generat} />
+        <GraellaXifres xifres={[...peces.recompteSol, ...peces.sol]} generat={mapa.generat} headingLevel="h4" />
         {peces.sol.length ? null : <EstatBuit icona={FolderOpen} titol="Cap lloc declarat" />}
       </section>
     </>

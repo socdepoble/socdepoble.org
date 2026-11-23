@@ -41,13 +41,13 @@ import { resolvePageSlugPath } from '../../config/navigation.js';
  * targeta, que porta a la pàgina. `font` és la lectura de useFontDev
  * ({ estat, valor }).
  */
-export function TargetaEmpaquetats({ font }) {
+export function TargetaEmpaquetats({ font, headingLevel = 'h3' }) {
   const pagina = paginaEmpaquetats();
   const coberta = cobertaEmpaquetats(font.valor, font.estat);
   return (
     <TargetaConsola icona={Package} titol={pagina.title} subtitol={pagina.subtitle} entradilla={pagina.lead}
       dada={coberta.dada} etiquetes={coberta.etiquetes} a={pagina.ruta}
-      creat={copyConsola().date} generat={font.valor?.generat ?? null} />
+      creat={copyConsola().date} generat={font.valor?.generat ?? null} headingLevel={headingLevel} />
   );
 }
 
@@ -56,11 +56,11 @@ export function SeccioEmpaquetats({ font }) {
   const idioma = useIdiomaConsola();
   return (
     <section aria-labelledby={id}>
-      <h2 id={id}>{TITOL_EMPAQUETATS}</h2>
+      <h3 id={id}>{TITOL_EMPAQUETATS}</h3>
       <p>{ENTRADETA_EMPAQUETATS}</p>
       <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella}
         aria-label={idioma === 'ca' ? ETIQUETA_NAV_EMPAQUETATS : tca(idioma, 'paginaEmpaquetatsNav')}>
-        <TargetaEmpaquetats font={font} />
+        <TargetaEmpaquetats font={font} headingLevel="h4" />
       </nav>
     </section>
   );

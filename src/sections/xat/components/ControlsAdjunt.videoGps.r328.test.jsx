@@ -16,7 +16,8 @@ const t = (_, alternativa) => alternativa;
 const ORIGINAL = new File(['original'], 'clip.mp4', { type: 'video/mp4' });
 const FILE = new Blob(['preparat'], { type: 'video/mp4' });
 const LOCATION = { lat: 38.64, lng: -0.49 };
-const prepared = () => ({ id: 'primer-id', fitxer: FILE, tipus: 'video', duradaMs: 60_000, ubicacio: LOCATION, senseUbicacio: false });
+// v1.2.23 · IDEA-331 · Gauntlet R1 del carril A (P2) · L'original no recomprimit porta el seu lloc: preparaAdjunt en torna el punt (llocDelFitxer).
+const prepared = () => ({ id: 'primer-id', fitxer: FILE, tipus: 'video', duradaMs: 60_000, ubicacio: LOCATION, llocDelFitxer: { lat: 38.6412, lng: -0.4912 }, senseUbicacio: false });
 const deferred = () => { let resolve, reject; const promise = new Promise((r, j) => { resolve = r; reject = j; }); return { promise, resolve, reject }; };
 let servei;
 beforeEach(() => {
@@ -24,7 +25,7 @@ beforeEach(() => {
   servei = { teCapacitat: () => true, quotaXat: vi.fn().mockResolvedValue({ usats: 0, limit: 250_000_000 }) };
   m.prepara.mockResolvedValue(prepared());
   m.amaga.mockImplementation(async adjunt => {
-    const rest = { ...adjunt }; delete rest.ubicacio;
+    const rest = { ...adjunt }; delete rest.ubicacio; delete rest.llocDelFitxer;
     return { ...rest, id: 'nou-id-net', fitxer: new Blob(['net'], { type: 'video/mp4' }), senseUbicacio: true };
   });
   vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:fixture'), revokeObjectURL: vi.fn() });
@@ -91,7 +92,7 @@ test('píndola GPS i opt-out netegen el binari amb ID nou, conservant principal 
   const onEnvia = vi.fn().mockRejectedValue(new Error('Xarxa temporal'));
   render(<Barra onEnvia={onEnvia} />);
   await screen.findByRole('button', { name: 'Amaga el lloc' });
-  expect(screen.getByText(/S’inclourà la ubicació/)).toBeTruthy();
+  expect(screen.getByText(/Este contingut conserva la ubicació per a situar-lo al territori/)).toBeTruthy();
   fireEvent.click(hide());
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Amaga el lloc' })).toBeNull());
   expect(m.amaga).toHaveBeenCalledWith(expect.objectContaining({ id: 'primer-id', ubicacio: LOCATION }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
@@ -102,15 +103,22 @@ test('píndola GPS i opt-out netegen el binari amb ID nou, conservant principal 
   expect(Object.hasOwn(onEnvia.mock.calls[0][1], 'ubicacio')).toBe(false);
 });
 
-test('fallada de neteja conserva el preparat i tancar l’avís només lleva l’error', async () => {
-  m.amaga.mockRejectedValue(errorAdjuntXat('ubicacio-no-eliminable'));
+/* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Ha demanat amagar el lloc i el vídeo no es pot netejar: l'avís, i no
+   s'envia brut. La píndola passa a «Conserva el lloc»: tocar-la torna a la conservació (per defecte) i ja es pot enviar. */
+test('fallada de neteja: avís, no s’envia brut i «Conserva el lloc» torna a deixar enviar amb el lloc', async () => {
+  m.amaga.mockRejectedValue(errorAdjuntXat('video-no-acreditable-navegador'));
   const onEnvia = vi.fn().mockRejectedValue(new Error('Reintent'));
   render(<Barra onEnvia={onEnvia} />); await select(); await screen.findByRole('button', { name: 'Amaga el lloc' });
   fireEvent.click(hide()); await screen.findByRole('alert');
-  expect(screen.getByText(/S’inclourà la ubicació/)).toBeTruthy();
+  expect(screen.getByRole('alert').textContent).toContain('per a protegir-te, no l’enviem');
+  expect(screen.getByText(/Este contingut conserva la ubicació per a situar-lo al territori/)).toBeTruthy();
+  const conserva = screen.getByRole('button', { name: 'Conserva el lloc' });
   fireEvent.click(screen.getByRole('button', { name: 'Tanca l’avís' }));
   expect(screen.queryByRole('alert')).toBeNull(); expect(field().value).toBe('Text que es conserva');
-  expect(hide().disabled).toBe(false);
+  fireEvent.click(send()); await screen.findByRole('alert');
+  expect(onEnvia).not.toHaveBeenCalled();
+  fireEvent.click(conserva);
+  expect(screen.queryByRole('alert')).toBeNull(); expect(hide().disabled).toBe(false);
   fireEvent.click(send()); await screen.findByRole('alert');
   expect(onEnvia.mock.calls[0][1]).toMatchObject({ id: 'primer-id', fitxer: FILE, ubicacio: LOCATION });
 });
@@ -146,7 +154,7 @@ test('tancar l’avís respecta el focus alié i retorna al primari si el tenia 
   fireEvent.click(send()); await screen.findByRole('alert');
   const close = screen.getByRole('button', { name: 'Tanca l’avís' }); close.focus(); fireEvent.click(close);
   expect(document.activeElement).toBe(send()); expect(field().value).toBe('Text que es conserva');
-  expect(onEnvia.mock.calls[1][1]).toEqual(payload); expect(screen.getByText(/S’inclourà la ubicació/)).toBeTruthy();
+  expect(onEnvia.mock.calls[1][1]).toEqual(payload); expect(screen.getByText(/Este contingut conserva la ubicació per a situar-lo al territori/)).toBeTruthy();
   expect(servei.quotaXat).toHaveBeenCalledTimes(3);
 });
 
@@ -160,9 +168,24 @@ test('tancar amb teclat un avís de preparació torna al més i conserva text i 
   fireEvent.click(plus); expect(screen.getByText('0,0 de 250 MB del xat')).toBeTruthy();
 });
 
-test('vídeo sense coordenades i amb binari no verificat conserva l’avís honest', async () => {
-  const noLocation = prepared(); delete noLocation.ubicacio; m.prepara.mockResolvedValue(noLocation);
+/* v1.2.23 · IDEA-331 · Un vídeo no verificat pot portar el lloc: l'avís honest i també l'interruptor per a amagar-lo. */
+test('vídeo sense coordenades i amb binari no verificat conserva l’avís honest i l’interruptor', async () => {
+  const noLocation = prepared(); delete noLocation.ubicacio; delete noLocation.llocDelFitxer; m.prepara.mockResolvedValue(noLocation);
   render(<Barra />); await select(); await screen.findByRole('button', { name: 'Envia el fitxer' });
   expect(screen.getByText(/Este vídeo s’envia tal com és/)).toBeTruthy();
+  m.amaga.mockImplementationOnce(async adjunt => ({ ...adjunt, id: 'nou-id-net', fitxer: new Blob(['net'], { type: 'video/mp4' }), senseUbicacio: true, conservaUbicacio: false }));
+  fireEvent.click(hide());
+  expect(await screen.findByText('Ubicació amagada')).toBeTruthy();
+  expect(m.amaga).toHaveBeenCalledWith(expect.objectContaining({ id: 'primer-id' }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  // L'interruptor torna enrere en un toc: el mateix preparat, amb el mateix ID.
+  fireEvent.click(screen.getByRole('button', { name: 'Conserva el lloc' }));
+  expect(await screen.findByText(/Este vídeo s’envia tal com és/)).toBeTruthy();
+  expect(hide()).toBeTruthy();
+});
+
+test('un vídeo verificat sense coordenades no porta avís ni interruptor', async () => {
+  const net = prepared(); delete net.ubicacio; delete net.llocDelFitxer; net.ubicacioVerificada = true; m.prepara.mockResolvedValue(net);
+  render(<Barra />); await select(); await screen.findByRole('button', { name: 'Envia el fitxer' });
+  expect(screen.queryByText(/ubicació/)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Amaga el lloc' })).toBeNull();
 });

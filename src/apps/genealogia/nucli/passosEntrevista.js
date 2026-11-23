@@ -66,7 +66,7 @@ export const PASSOS_ENTREVISTA = Object.freeze([
     id: 'lloc', generacio: 'LLOC', tipus: 'text', opcional: true,
     pregunta: congela({
       ca: 'De quin mas, partida o poble concret és la família?',
-      es: '¿De qué masía, partida o pueblo concreto es la familia?',
+      es: '¿De qué mas, partida o pueblo concreto es la familia?',
       en: 'Which farmstead, rural district or village exactly does the family come from?',
       eu: 'Zein baserri, auzo edo herri zehatzetakoa da familia?',
       gl: 'De que casal, parroquia ou pobo concreto é a familia?'

@@ -15,7 +15,7 @@
  * carpetesDelBloc continua tornant les dades crues, que són les que es desen.
  */
 import {
-  CalendarDays, Folder, GalleryVerticalEnd, Inbox, LandPlot, MapPin, Newspaper, NotebookPen, ShoppingCart
+  CalendarDays, Folder, GalleryVerticalEnd, Inbox, LandPlot, Layers, MapPin, Newspaper, NotebookPen, ShoppingCart
 } from 'lucide-react';
 /* Gauntlet 261017 (WP7b, P2) · De carpetesSeed.js, la mateixa llavor que
    appSeed.js reexporta: importar-la d'appSeed portava PAGE_COPY al tros
@@ -23,6 +23,7 @@ import {
 import { NOTE_FOLDERS_SEED } from '../../data/carpetesSeed.js';
 
 export const CARPETA_CONNECTATS = 'f-connectats';
+export const CARPETA_SISTEMA = 'f-sistema';
 
 /** El nom visible de la Safata d’Entrada, tal com el porta la llavor. */
 export const NOM_CARPETA_CONNECTATS = NOTE_FOLDERS_SEED
@@ -30,6 +31,7 @@ export const NOM_CARPETA_CONNECTATS = NOTE_FOLDERS_SEED
 
 export const ICONA_CARPETA = Object.freeze({
   'f-mur': Newspaper,
+  [CARPETA_SISTEMA]: Layers,
   'f-mercat': ShoppingCart,
   'f-pobles': LandPlot,
   'f-media': GalleryVerticalEnd,

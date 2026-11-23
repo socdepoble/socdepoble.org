@@ -1302,6 +1302,10 @@ export const CASOS = Object.freeze([
   ...['adminLlistaUsuarisRegistrats','adminAssignaMembreOrganitzacio','adminConnectaUsuari'].map(metode=>cas({metode,capacitat:'administracioUsuaris',espera:'rebutja',titol:`R13: ${metode} rebutja arguments invàlids abans de qualsevol efecte`,arguments:ctx=>[{limit:0},ctx.config],comprova:error=>error?.name==='TypeError'?[]:['cal TypeError abans d’operar']})),
   cas({metode:'importaMunicipiOpenData',capacitat:'importacioPaquetMunicipal',espera:'rebutja',titol:'R13: un paquet municipal sense bytes ni SHA no s’importa',arguments:ctx=>[null,'',ctx.config],comprova:error=>error instanceof Error?[]:['cal rebutjar el paquet invàlid']}),
   ...['loadSeedRevisions', 'desaRevisioSeed'].map(metode => cas({ metode, capacitat: 'revisionsLlavor', espera: 'rebutja', titol: `P1-75: ${metode} rebutja dades malformades abans de qualsevol efecte`, arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('seed-invalid') })),
+  ...['edicioPublicacionsPropies', 'revisionsPagines'].flatMap(capacitat => CAPACITATS[capacitat].map(metode => cas({
+    metode, capacitat, espera: 'rebutja', titol: `R32.44: ${metode} rebutja DTO no primitiu abans del transport`,
+    arguments: ctx => [null, ctx.config], comprova: error => error?.name === 'TypeError' ? [] : ['cal TypeError abans d’operar']
+  }))),
   ...CAPACITATS.revisionsPatrimoni.map(metode => cas({
     metode, capacitat: 'revisionsPatrimoni', espera: 'rebutja',
     titol: `P1-75: ${metode} rebutja una campanya malformada abans de qualsevol efecte`,

@@ -46,16 +46,8 @@ import { useUbicacioApp } from '../../PedraSeca/hooks/useUbicacioApp.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { RUTA_PERFIL_PROPI, rutaEspaiDIdentitat } from '../../../config/navigation.js';
-
-function codiDeLlengua(t) {
-  if (typeof t !== 'function') return 'ca';
-  const mostra = t('section.xat.ajustos.tancaSessio', 'Tanca la sessió');
-  if (mostra === 'Cerrar sesión') return 'es';
-  if (mostra === 'Log out') return 'en';
-  if (mostra === 'Itxi saioa') return 'eu';
-  if (mostra === 'Pechar sesión') return 'gl';
-  return 'ca';
-}
+/* v1.2.23 · L5-05 (Gauntlet R1) · La mateixa regla que ClosCaXat.jsx, d'un sol mòdul. */
+import { codiDeLlengua } from './codiDeLlengua.js';
 
 /* Correcció de la revisió T1–T4 (260930) · La ruta de l'app, camí i consulta
    SENCERS, llegida en el clic com rutaActual (useAccions.js): en memòria,
@@ -104,14 +96,32 @@ const ambRecuperacio = () => ({ state: { [CLAU_RECUPERACIO_ESPAI]: ++recuperacio
    una càrrega fallida s'oblida perquè la següent ho torne a provar. L'eixida
    l'espera junt amb preparaEixida abans de pintar res: l'avís no apareix mai
    a mitges ni en una altra llengua. Si el tros no arriba i queden canvis, no
-   s'ix: sense avís, eixir els esborraria en silenci (T47). */
-let avisosEixida = null;
-const carregaAvisosEixida = () => {
-  avisosEixida ??= import('../EixidaSegura.jsx').catch((error) => {
-    avisosEixida = null;
+   s'ix: sense avís, eixir els esborraria en silenci (T47).
+   v1.2.23 · R2E-04 (Gauntlet R2) · El patró, d'una sola peça (`diferit`) per
+   als dos trossos de la barra: este i el dels textos del calaix (baix). */
+const diferit = (importa) => {
+  let promesa = null;
+  return () => (promesa ??= importa().catch((error) => {
+    promesa = null;
     throw error;
-  });
-  return avisosEixida;
+  }));
+};
+const carregaAvisosEixida = diferit(() => import('../EixidaSegura.jsx'));
+
+/* v1.2.23 · R2E-04 (Gauntlet R2) · El calaix «Amb qui actues?» de la barra
+   negra, en la llengua de la interfície sencer, com el del peu del rail del Xat
+   (ClosCaXat.jsx). Els textos fixos (títol, descripció, llista i «Activa») són
+   els de textosCalaixIdentitats.js, que viatja com a tros diferit: cap clau
+   nova a ca.js ni a l'arrencada. Es demana amb una persona dins quan la
+   interfície ja parla una llengua que no és el valencià, i en cada obertura;
+   com l'avís d'eixida, una càrrega fallida s'oblida perquè la següent ho torne
+   a provar. El valencià no espera res: són els valors de sempre de
+   CalaixIdentitats, que la barra no repetix. */
+const carregaTextosCalaix = diferit(() => import('./textosCalaixIdentitats.js'));
+/* L'estat del hook: el mòdul quan ha arribat, false si ha fallat (el calaix
+   s'obri amb el valencià) i null mentre no se sap. */
+const preparaTextosCalaix = (llengua, setTextos) => {
+  if (llengua !== 'ca') carregaTextosCalaix().then(setTextos, () => setTextos(false));
 };
 
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
@@ -132,6 +142,8 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
      peces d'EixidaSegura.jsx, quan el seu tros ja és en memòria (vegeu
      carregaAvisosEixida, dalt). */
   const [avisos, setAvisos] = useState(null);
+  /* v1.2.23 · R2E-04 (Gauntlet R2) · El tros dels textos del calaix (vegeu preparaTextosCalaix, dalt). */
+  const [textos, setTextos] = useState(null);
   /* Gauntlet R32.6 (PERFIL-02) · El botó «Eixir de Sóc de Poble» que ha obert
      l'avís. Viu a CalaixIdentitats, que no porta ref: el pren el clic. */
   const obridorEixida = useRef(null);
@@ -152,17 +164,25 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
 
   /* Amb una persona dins, el tros de l'avís d'eixida es precarrega després del
      primer pintat (una fallada no avisa: l'eixida ho torna a provar). Si la
-     sessió se'n va amb el calaix obert, es tanca. */
+     sessió se'n va amb el calaix obert, es tanca.
+     v1.2.23 · R2E-04 (Gauntlet R2) · I el tros dels textos del calaix, quan la
+     interfície ja no parla valencià: quan la persona l'obri, normalment ja és
+     en memòria. Un canvi de llengua sense sessió només torna a tancar el que ja
+     era tancat. */
   useEffect(() => {
     if (teSessio) {
       carregaAvisosEixida().catch(() => {});
+      preparaTextosCalaix(llengua, setTextos);
       return;
     }
     setObert(false);
     setPendentsEixida(null);
     setErrorEixida(null);
     setEixint(false);
-  }, [teSessio]);
+  }, [teSessio, llengua]);
+  /* v1.2.23 · R2E-04 (Gauntlet R2) · El calaix no s'obri a mitges: en una altra llengua espera el tros dels seus
+     textos, o la seua fallada (i aleshores, el valencià de sempre). */
+  const calaixObert = obert && (llengua === 'ca' || textos !== null);
 
   const tanca = useCallback(() => {
     setObert(false);
@@ -243,12 +263,15 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     avatar: teSessio ? actor?.avatar || null : null,
     llavor: teSessio ? actor?.id ?? null : null,
     entitat,
-    obert,
+    obert: calaixObert,
     perfil: directe,
     /* Gauntlet R32.6 (PERFIL-04) · El nom accessible del botó, en esta llengua. */
     llengua,
     etiquetaEntrar,
-    onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI, ambRecuperacio()) : () => setObert(true)
+    onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI, ambRecuperacio()) : () => {
+      preparaTextosCalaix(llengua, setTextos);
+      setObert(true);
+    }
   };
 
   const avisEixida = pendentsEixida && avisos ? createElement(avisos.AvisEixidaDelCalaix, {
@@ -256,7 +279,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   }) : null;
 
   const calaix = teSessio ? {
-    obert,
+    obert: calaixObert,
     onTanca: tanca,
     identitats,
     onTria: tria,
@@ -267,6 +290,10 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
        CalaixIdentitats pinta de sempre. */
     etiquetaIdioma: tradueix(t, ['topbar.identitat.idioma', ETIQUETA_IDIOMA_CALAIX]),
     etiquetaEixir: tradueix(t, ['topbar.identitat.eixir', ETIQUETA_EIXIR_CALAIX]),
+    /* v1.2.23 · R2E-04 (Gauntlet R2) i integració (pesDelNucli) · Els textos fixos i el rol de cada fila, d'una
+       peça des del tros (textosCalaixIdentitats.js · propsDelCalaix). Sense el tros (el valencià, o una càrrega
+       fallida), cap: CalaixIdentitats pinta els seus valors de sempre, rols inclosos. */
+    ...(textos ? textos.propsDelCalaix(llengua, t) : null),
     onIdioma: () => navega('/traduccions'),
     onEixir: demanaEixir,
     eixint,

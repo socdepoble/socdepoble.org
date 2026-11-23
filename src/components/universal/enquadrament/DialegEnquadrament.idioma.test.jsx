@@ -322,14 +322,24 @@ describe('la casella de l’EXIF (CasellaExif) i l’avís del GPS, dins de l’
     contingut: { ubicacio: true, data: true, marca: true, model: true, serie: true },
   });
 
-  test('es: l’etiqueta, l’avís amb les dades de la càmera, les píndoles de precisió i la línia del que es desarà', async () => {
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA A POSTA: amb ubicació, la
+     casella «Conserva la ubicación y la fecha de la foto» marcada és l'interruptor
+     «Ocultar el lugar» apagat, i l'avís és el literal del Mestre en castellà. La cua
+     de la càmera, les píndoles i la línia del que es desarà no canvien.
+     v1.2.23 · IDEA-331 · Carril T · La foto porta també la data, que es publica: la descripció és la de
+     sempre (el literal del Mestre i la cua de la càmera), i una línia a banda, just darrere de la casella,
+     ho diu en castellà (i18nAmagaLloc.js, diferit). */
+  test('es: l’interruptor, l’avís amb les dades de la càmera, les píndoles de precisió i la línia del que es desarà', async () => {
     const vista = muntaT46('es', { ofereixConservarExif: true, lectorExif: vi.fn(async () => lectura) });
     await carregat();
     const d = dialeg(vista);
-    const casella = within(d).getByRole('checkbox', { name: /Conserva la ubicación y la fecha de la foto/ });
+    const casella = within(d).getByRole('switch', { name: 'Ocultar el lugar (Publicar sin geolocalización)' });
+    expect(casella.checked).toBe(false);
     expect(document.getElementById(casella.getAttribute('aria-describedby')).textContent).toBe(
-      'Si la dejas marcada, la ubicación se publicará con la foto. También se publicarán los datos de la cámara: la marca, el modelo y el número de serie.',
+      'Este contenido conserva la ubicación para situarlo en el territorio. También se publicarán los datos de la cámara: la marca, el modelo y el número de serie.',
     );
+    const liniaData = casella.closest('.sdp-casella').nextElementSibling;
+    expect([liniaData.tagName, liniaData.textContent]).toEqual(['P', 'También se publicará la fecha de la foto.']);
     const precisio = within(d).getByRole('radiogroup', { name: 'Precisión de la ubicación' });
     expect(within(precisio).getAllByRole('radio').map((r) => r.labels[0].textContent)).toEqual(['Exacta', 'Unos 100 m', 'Solo el pueblo']);
     expect(within(d).getByText('Se guardará: 38.59190, -0.41840 (exacta). El punto de la foto, a un metro.')).toBeTruthy();
@@ -373,6 +383,9 @@ describe('la casella de l’EXIF (CasellaExif) i l’avís del GPS, dins de l’
     expect(vista.onDesa).not.toHaveBeenCalled();
   });
 
+  /* v1.2.23 · IDEA-331 · Carril T · REAPUNTADA A POSTA: la lectura porta una ubicació que es pot conservar,
+     i el control que apareix és l'interruptor «Hide the location»: l'avís el nomena, en anglés, amb el seu
+     rètol del diccionari (section.xat.adjunts.amagaLloc). «Review the checkbox» queda per a la casella. */
   test('en: desar abans de vore la casella demana revisar-la, en anglés', async () => {
     let resol;
     const lectorExif = vi.fn(() => new Promise((r) => { resol = r; }));
@@ -382,7 +395,10 @@ describe('la casella de l’EXIF (CasellaExif) i l’avís del GPS, dins de l’
     await act(async () => { fireEvent.click(within(d).getByRole('button', { name: 'Save the framing' })); });
     expect(within(d).queryByRole('alert')).toBeNull();
     await act(async () => { resol(lectura); });
-    expect(within(d).getByRole('alert').textContent).toBe(EN['editor.enquadrament.exifRevisa']);
+    expect(within(d).getByRole('alert').textContent)
+      .toBe(`This photo carries data that would be published with it. Review “${EN['section.xat.adjunts.amagaLloc']}” and save again.`);
+    expect(EN['section.xat.adjunts.amagaLloc']).toBe('Hide the location');
+    expect(within(d).getByRole('switch', { name: /Hide the location/ }).checked).toBe(false);
   });
 
   test('en: una foto d’identitat amb GPS diu que l’ha eliminat, en anglés', async () => {

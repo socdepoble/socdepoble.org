@@ -970,7 +970,16 @@ test('R32.3 · publica-tot: --sincronitza-ard va sol i amb versió explícita; -
 
   /* R32.3-PEIX-ARD · A producció, el pla omnicanal encadena --sincronitza-ard (Android i iOS) després de
      cada pujada i ABANS de «npm run build». v1.2.16 · Cap APK directe darrere del build. */
-  const totes = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'totes', canal: 'produccio', env: { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') } });
+  /* v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · El pas de TestFlight només entra al pla amb la ronda amb
+     Beta Testers oberta (SDP_RONDA_BETA_TESTERS=1): l'ordre «ARD d'iOS abans de l'anunci de TestFlight» es prova amb la
+     ronda oberta; amb la ronda tancada el pla no el proposa i la resta de l'ordre no canvia.
+     v1.2.23 · L8-09 (Gauntlet R1) · La ronda va a l'entorn que rep resumOmnicanal(), no a process.env. */
+  const senseEntorn = { SDP_BOTIGUES_ENV: path.join(TEMPORAL, 'no-hi-es.env') };
+  const totesTancat = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'totes', canal: 'produccio', env: senseEntorn });
+  const totes = publica.resumOmnicanal(ARREL, { versio: '1.2.5', build: '10', plataforma: 'totes', canal: 'produccio', env: { ...senseEntorn, SDP_RONDA_BETA_TESTERS: '1' } });
+  assert.ok(!totesTancat.passos.some((pas) => pas.ordre.includes('--sincronitza-proves')), 'ronda tancada: cap anunci de TestFlight');
+  assert.deepEqual(totesTancat.passos.map((pas) => pas.ordre), totes.passos.map((pas) => pas.ordre).filter((ordre) => !ordre.includes('--sincronitza-proves')),
+    'ronda tancada: el mateix pla sense el pas de TestFlight');
   const index = (re) => totes.passos.findIndex((pas) => re.test(pas.ordre));
   const iBuild = index(/^npm run build /);
   const iArdAndroid = index(/--sincronitza-ard --versio 1\.2\.5 --build 10$/);

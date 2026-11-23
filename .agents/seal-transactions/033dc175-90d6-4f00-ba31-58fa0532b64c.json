@@ -1,0 +1,102 @@
+{
+  "id": "033dc175-90d6-4f00-ba31-58fa0532b64c",
+  "session": "c106f198-a3a8-44d3-a43a-bf89e4ef3fd3",
+  "operationId": "v1223-governanca-1795473644752",
+  "claim": "c106f198-a3a8-44d3-a43a-bf89e4ef3fd3:governance-write",
+  "planHash": "dca5b41ce096dcf2542caa9eaf9be349fa2ab23647e69928a753c79d602e900a",
+  "beforeSeal": "1fb15b45ca1960a71d413b34907b596e15e88ce757c2bafa100191420b407189",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "2fd683688a20028906a7dd63c47725513a6c8a52311d256864f08df2df627cf3",
+      "after": "a8eccb5a84ab3a838b32b373bfc7e16e14fc6ce8a348c0bb0a5b6461fa48bf63"
+    },
+    {
+      "path": ".agents/deute/.estucat-deute.json",
+      "before": "c607d35966afc1821f1041c5b2dee0dad20b5f329849a442d331855b7073c556",
+      "after": "10d0330e8f267ee0d407d75e2399f46fa8d785d96f62332a3d9f5164a1b2d3a1"
+    },
+    {
+      "path": ".agents/deute/.frontmatter-deute.json",
+      "before": "7fbd75e25ed3421ed928379b6e1fbb81a70159747c4705312a0c658af70c0d4e",
+      "after": "b15812e459894c5034349b0d51a12860179378c3ea5d91b207277741af7abc35"
+    },
+    {
+      "path": ".agents/deute/.pedra-seca-deute.json",
+      "before": "bf172cbb36897660e60c03eb4e3f72dfa0dc1613ee5dcd0020a14eaa7e983744",
+      "after": "4eaa8784759d3d16cc0fe590f4f47b04bb81ba9ac6db4b0f172bd27bb516f511"
+    },
+    {
+      "path": ".agents/deute/.rutes-deute.json",
+      "before": "04ec8b49833b6ba466462a446e338bbfdfc790242e4e0724b7e72c890e99c113",
+      "after": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "be3cffa9ae08e3ce5337bd7642bb3d8664cccff457ffba30547ac137cb2f4765",
+      "after": "4634c1cd089d1f0ef28f5fe628396a57a2c2ed5fbb0576ca8e97cde877b82e94"
+    },
+    {
+      "path": "package.json",
+      "before": "5998afe8098a2caa10bcd9da73d383acd2c8c3ffa708afca2d1c453adea7eee2",
+      "after": "f072f8c4c56e617d5d2900e107c8872b8aca248d48ee193e1078147e40a53cd3"
+    },
+    {
+      "path": "scripts/botigues/publica-tot.mjs",
+      "before": "fd6b0c2bff64b89e1cb217868910cbc1d9c94a46b73bff3d7c7d4c4c6088cd01",
+      "after": "48d729933e12eae8e37a6fd41d501f01808dad969bc14a56e09edd78a1337ae0"
+    },
+    {
+      "path": "tooling/lib/tellado-cataleg-r32_14.json",
+      "before": "fbf235f8f221e030707dd357b758a521cd1e58218c82c39d43c68654421b18a7",
+      "after": "5b06c4f67d56b4283c5132e6040605c9756eb580d8f142e4a26b87590125d5e2"
+    },
+    {
+      "path": "tooling/lib/tellado-cataleg-r32_14.mjs",
+      "before": "cb5924d88f4b9848d3885b553a30a1c6674e55087c84f46c798d8bed966f18a4",
+      "after": "23aee92070918fc638a7a65a1b9811e72a781ab5607d8c7743a9446411fc9933"
+    },
+    {
+      "path": "tooling/node0/autoritat-preimatges-r8.mjs",
+      "before": "c23e0cd67c4bb70c1ba896a28252bcc5167b20ca3beffcbef71d694058e21719",
+      "after": "f259d52e88dbb37420afe81b4a4942677a65817dd4778776c5e6106d8a4f99ff"
+    },
+    {
+      "path": "tooling/node0/autoritat-preimatges-r9.mjs",
+      "before": "4e04784b6b67704356135340db347977ede465eb7d6706a5ee5c546dbfb76d03",
+      "after": "438587f5996f51969cfc5e33f85b6785b88f8c2e10b0d6b0bc7b5d5068cd56af"
+    },
+    {
+      "path": "tooling/node0/empaqueta-kit-node0-r8.mjs",
+      "before": "099a7865888be5a69b764b84cf0b65939c976a78055f78091d753d3d81f3f2d4",
+      "after": "5d16fa9e92358c5b862e315894341bf951068fdb397f5d8413fbca67f5759b04"
+    },
+    {
+      "path": "tooling/node0/empaqueta-kit-node0-r9.mjs",
+      "before": "fc5fa74df78e0f45bfac853bbe5d6c273918cecfbdb32153ea16dc0e73640fa3",
+      "after": "be148622d274da2cb53efedebfcb60b24d91d1a50a67574aa8321cabaa4d931c"
+    },
+    {
+      "path": "tooling/node0/manifest-mirall-staging.json",
+      "before": "bb9b15b86e4d83b8fa9956057609bbd50796bf6ac8d11836aafed062580f23f5",
+      "after": "75ff72fe22304c466dacac1498bc0d7115af799730f5fe8c62aca09006fec2a8"
+    },
+    {
+      "path": "tooling/node0/posse/instal-la-posse-node0.mjs",
+      "before": "e5651d972427db1c6c87bdee8cb4d171695b3306c27ff3b294d75e4ad9ba0970",
+      "after": "11535297b5ead0a8969507dc1c90e409ad5aee48b3bac0e52ad399c3d006b9af"
+    },
+    {
+      "path": "tooling/node0/posse/posse-ledger.sql",
+      "before": "d7261843ed4216f9856853fe9e3c461ab04c1f47b4c7a5d982848ecf0f847d17",
+      "after": "50fd57c109a0891d90ed11797ec4a804690dbeec9306ec87f59af532dcef145a"
+    },
+    {
+      "path": ".agents/skills/core-sentinella-blindatge/SKILL.md",
+      "before": "fe707b4a47e24b4d66d9d4e1039c9cdcff3544ded8d3d8b25c2d7da8cfad098f",
+      "after": "61d174b9750a04e2a095f168b15ef6c2cc4849af7035c14bb3db35645e760150"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351"
+}

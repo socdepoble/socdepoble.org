@@ -1,0 +1,82 @@
+{
+  "id": "b0aebee1-8a5d-4eac-bc8d-b14b4644e3dc",
+  "session": "b7be6c31-3fbc-4c1f-af08-d1d8c85592dc",
+  "operationId": "v1223-governanca-1795473658635",
+  "claim": "b7be6c31-3fbc-4c1f-af08-d1d8c85592dc:governance-write",
+  "planHash": "22648d4851c125b10f0245d57f960b8ddb72284812bf5bf0a47b2093010cfc0d",
+  "beforeSeal": "62456468f861f4d61889d55b8fda4678828878e54392a52fd9547505a76116bd",
+  "files": [
+    {
+      "path": "tooling/gates/__tests__/tellado-cataleg-r32_14.test.mjs",
+      "before": "9902e450fdeff2d47617118d8609cb5ecb2b473e7fa4ef1113cdd54e78520ea2",
+      "after": "65e24a5b1935db456d0d991fcfd923b0e11e27bae09a1fd7744d4130b8d8378e"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "defe39663e19d0151f1a8966e9effca2316014682d5de428d71d449671357b75",
+      "after": "7bf5c80708236f0601cad9befe0aaaa7c8dd9d984b1aced41b3b0d89e227056e"
+    },
+    {
+      "path": "tooling/gates/tractor-duplicats-public.test.mjs",
+      "before": "6b9d8fe851bd5c3901748b05269be64c0555eb1c2124d07159e1fbef2b41cbff",
+      "after": "e2faf637e382523473436ea392590b30c8daac760c7d0e0d9a253edf1b0b066c"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.mjs",
+      "before": "055a60fa37b72dbf3eed16df162b3e9eb8c4692b496e1fb85ca22e2a2fb5d424",
+      "after": "2b71321ad89bd783b0a05d6a24b548685501d9620f6f24cad441a050eca61414"
+    },
+    {
+      "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
+      "before": "e814da032e4930dd3b10cc7970ea30cc2e7fe5006ac768cc5cf4362db726c2f2",
+      "after": "fe2552815e45692c09e34ab77617bf8dd6fd06d4204fa6dfc79fad0f881ff7e3"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": "f17deaad105f6622e79552b090666cecf576b45f1967406b6d99a72e9a32035d",
+      "after": "050039d498ed7c98c40e602298f4f0767125dcf957148a72657678f738dd2633"
+    },
+    {
+      "path": "tooling/vite/banderes-de-capacitat.mjs",
+      "before": "f3b83918729c78029d9c771ccd8a71ee6a55214cd6e58f04cde01b957c156ba2",
+      "after": "485178181064e4032403697e560cb5c72f7b1ada9a74177c5729728dfa336798"
+    },
+    {
+      "path": "tooling/vite/banderes-de-capacitat.test.mjs",
+      "before": "0c5a16e6d59b0ca3985e2468f90c5aa70991f9653cdc97baf856f37da436e4ea",
+      "after": "2f4882e320a03688c62a9323314accde304d469f6e3c9e7f98a0591cf2b7029b"
+    },
+    {
+      "path": "tooling/wiki/frontmatter-abast.json",
+      "before": "abda0a7d5dbcdee42463a8198f3eb245303bc081ae6d0d54b768abc383ade6bd",
+      "after": "f290022218d6cb17a62e198870709c4e54986bd806dcb9f6ae9deb2736f67401"
+    },
+    {
+      "path": "tooling/wiki/tractor-frontmatter.mjs",
+      "before": "f967d06df1e2d77a57a56bb5e87f65850f10d5d172f400b633ece1c3adb8acb7",
+      "after": "33ffa8910ed16ce2a7f678cddd72a2b8b45a6f055d0db0a7743c3bfa1d075a9e"
+    },
+    {
+      "path": "tooling/brain/genera-resum-l0-l1.mjs",
+      "before": null,
+      "after": "ee2d088ce4a8447d02e41030e21f50bd8aacbc4b8153e6f8bb700a26c1a47ed0"
+    },
+    {
+      "path": "tooling/gates/sentinella-edicions-humanes.mjs",
+      "before": null,
+      "after": "ead5a56d3ec7cc4a3014975324bd2009a1041683fc37b7627004b64cb974d90a"
+    },
+    {
+      "path": "tooling/gates/sentinella-edicions-humanes.test.mjs",
+      "before": null,
+      "after": "ccad395b3bd2e2c722f115c52aab7f6c82e546776c4efbe0cdbb519d0afec99e"
+    },
+    {
+      "path": "tooling/gates/tractor-maquetacio-canonica.mjs",
+      "before": null,
+      "after": "f778e412ae746c7f46a844c8e26144ab66b0a9f931112b8c26289bd1285010bb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351"
+}

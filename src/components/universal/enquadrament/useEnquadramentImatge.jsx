@@ -44,6 +44,11 @@ import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujada
  * true). La capçalera d'una organització o d'un agent i les fotos de
  * publicació conserven la casella. Una `config` amb `avisGpsEliminat: true`
  * fa el mateix (el T46 de l'avatar, useEnquadramentAvatar).
+ * v1.2.23 · IDEA-331 (ordre del Mestre 261123) · La capçalera d'una entitat
+ * amb una ubicació mostra, en lloc de la casella, l'interruptor «Amaga el
+ * lloc» apagat i l'avís del Mestre (DialegEnquadrament · CasellaExif). La
+ * identitat NO es toca (decisió anterior, P1-64 decisió 7): l'avatar, el
+ * logotip i la capçalera d'una persona continuen nets i sense interruptor.
  *
  * CONTRACTE
  *   useEnquadramentImatge({ forma, onEnquadrat, onError, config?, identitat? })

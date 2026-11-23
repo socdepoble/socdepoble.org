@@ -48,6 +48,9 @@
  *       done (--sincronitza-ard --build-ios, i després esta ordre). I latestBuild, el més alt dels builds
  *       (també amb --sincronitza-ard). testflightIosBuild va a public/.well-known/ard.json i, si hi ha
  *       un build fet, a dist/.well-known/ard.json (la còpia que es desplega), tots dos o cap.
+ *       v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · Es refusa (eixida d'ús, res escrit)
+ *       mentre la ronda amb Beta Testers no és oberta: cal SDP_RONDA_BETA_TESTERS=1 a l'entorn, i el pla
+ *       d'iOS només proposa este pas amb la mateixa variable.
  *   La pujada d'Android és la de puja-android.mjs (API REST de Google Play, sense fastlane), i
  *   --desplega hi passa tal qual (només a la prova interna o a la tancada, alpha). El corredor Jarvis
  *   (--notes) no puja mai res a Google Play: no fabrica el «sí» del Mestre (Elefant R32.3).
@@ -205,12 +208,19 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
         ordre: `${ORDRE_SINCRONITZA_ARD} --versio ${v} --build-ios ${b}`
       });
     }
-    /* v1.2.7 · P0-123 · Les Apps de TestFlight s'assabenten del build nou pel manifest. */
-    anuncis.push({
-      plataforma: 'ios',
-      accio: 'Anunciar el build pujat a les Apps de TestFlight (testflightIosBuild a ard.json): després de la pujada de puja-ios.mjs --confirma, que l\'apunta al registre, i mai mentre un build de producció més baix espera l\'App Store (App Review); la web el publica en el desplegament següent',
-      ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-testflight ${b}`
-    });
+    /* v1.2.7 · P0-123 · Les Apps de TestFlight s'assabenten del build nou pel manifest.
+       v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · Només quan la ronda amb Beta Testers és oberta
+       (SDP_RONDA_BETA_TESTERS=1, d'acord amb RONDA_BETA_TESTERS_OBERTA de src/config/ardSenseTestFlight.v1223.seguretat.test.js):
+       fins aleshores el pla no proposa anunciar TestFlight a ard.json.
+       v1.2.23 · L8-09 (Gauntlet R1) · Es llig de l'entorn que rep el resum (`env`, per defecte process.env), no de
+       process.env: un entorn injectat sense la variable té la ronda tancada encara que el procés la porte. */
+    if (env.SDP_RONDA_BETA_TESTERS === '1') {
+      anuncis.push({
+        plataforma: 'ios',
+        accio: 'Anunciar el build pujat a les Apps de TestFlight (testflightIosBuild a ard.json): després de la pujada de puja-ios.mjs --confirma, que l\'apunta al registre, i mai mentre un build de producció més baix espera l\'App Store (App Review); la web el publica en el desplegament següent',
+        ordre: `${ORDRE_SINCRONITZA_PROVES} --versio ${v} --build-testflight ${b}`
+      });
+    }
   }
   const passos = [...natius, ...anuncis, ...web];
 
@@ -658,6 +668,12 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
   /* v1.2.7 · P0-123 · El canal de proves d'iOS, una ordre sola: després de puja-ios.mjs (TestFlight). Res
      s'escriu fins que totes les guardes passen. */
   if (opcions['sincronitza-proves']) {
+    /* v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · El botó/anunci públic de TestFlight queda ocult fins
+       a l'inici formal de la ronda amb Beta Testers: abans de cap guarda, sense llegir l'entorn ni tocar cap fitxer.
+       Obrir-la és SDP_RONDA_BETA_TESTERS=1, en el mateix canvi que posa RONDA_BETA_TESTERS_OBERTA a true.
+       v1.2.23 · L8-09 (Gauntlet R1) · La variable es llig de l'entorn de main (`env`, per defecte process.env), el
+       mateix que després carrega el fitxer d'entorn; continua sent abans de cap guarda i sense llegir cap fitxer. */
+    if (env.SDP_RONDA_BETA_TESTERS !== '1') return plega(EIXIDA.US, 'v1.2.23 · D-V1223-BOTO-BETA-OCULT (ordre del Mestre 261123) · la ronda amb Beta Testers no és oberta: testflightIosBuild no s\'escriu a ard.json');
     const admesos = new Set(['sincronitza-proves', 'versio', 'build-testflight', 'corregeix-ard']);
     const sobren = Object.keys(opcions).filter((nom) => !admesos.has(nom));
     if (sobren.length) return plega(EIXIDA.US, `--sincronitza-proves només va amb --versio, --build-testflight i --corregeix-ard (sobren: ${sobren.map((n) => `--${n}`).join(', ')})`);
@@ -760,7 +776,8 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
     return plega(EIXIDA.US, US);
   }
 
-  const resum = resumOmnicanal(arrel, { versio, build, canal, plataforma, push: Boolean(opcions.push) });
+  /* v1.2.23 · L8-09 (Gauntlet R1) · El pla rep l'entorn de main: el mateix per al preflight i per a la ronda de TestFlight. */
+  const resum = resumOmnicanal(arrel, { versio, build, canal, plataforma, push: Boolean(opcions.push), env });
 
   if (!opcions.compila && opcions.confirma === undefined) {
     if (opcions.json) {

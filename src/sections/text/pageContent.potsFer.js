@@ -11,9 +11,12 @@
    de seguretat: només amb la sessió oberta i Sóc de Poble en marxa.
    v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · IDEA-323.4 · L'interruptor d'un toc ja és el «Mode Bancal · Sol i
    Lletra Gran» (src/config/textosModeSenior.js): encés, posa la lletra gran, botons de 56 px i el màxim
-   contrast (≥ 10:1). Els passos de Traduccions, L'Avisador i el Panell en diuen el nom viu amb literals, no
+   contrast AAA (≥ 7:1). Els passos de Traduccions, L'Avisador i el Panell en diuen el nom viu amb literals, no
    amb una importació: este fitxer el carrega pageContent.js, i no hi portem textosModeSenior.js (la seua
-   capçalera el reserva a les superfícies diferides). Ho guarda modeBancalGuies.v1222.test.js. */
+   capçalera el reserva a les superfícies diferides). Ho guarda modeBancalGuies.v1222.test.js.
+   v1.2.23 · D-V1223-TEXT-BANCAL (ordre del Mestre 261123) · Els passos de Traduccions i del Panell diuen
+   «contrast màxim AAA (≥ 7:1)» en les cinc llengües: el «≥ 10:1» d'abans va deixar de ser cert amb IDEA-328 v2
+   (el taronja de marca #FF7300 amb pedra-900 al damunt, 7,12:1, és el pitjor parell del Mode Bancal). */
 export const RUTA_POTS_FER = '/page/tot-el-que-pots-fer';
 export const DATA_POTS_FER = '2026-11-19T00:04:47.000Z';
 export const IMATGE_POTS_FER = '/assets/uploads/brain/caricatura_socdepoble_portada.webp';
@@ -40,7 +43,7 @@ const TEXTOS = {
   ca: [
     [
       'Tria la teua llengua i la lectura còmoda',
-      'Sóc de Poble parla en <strong>valencià, castellà, anglés, basc i gallec</strong> des del primer moment. A Traduccions canvies l’idioma dels <strong>menús, avisos i botons</strong> amb <strong>un sol clic</strong>, i la preferència es desa en <strong>este navegador</strong> sense compte obligatori. Si preferixes <strong>lletra gran</strong>, botons de <strong>56 píxels</strong> i el <strong>màxim contrast (≥ 10:1)</strong>, també pots encendre el Mode Bancal.',
+      'Sóc de Poble parla en <strong>valencià, castellà, anglés, basc i gallec</strong> des del primer moment. A Traduccions canvies l’idioma dels <strong>menús, avisos i botons</strong> amb <strong>un sol clic</strong>, i la preferència es desa en <strong>este navegador</strong> sense compte obligatori. Si preferixes <strong>lletra gran</strong>, botons de <strong>56 píxels</strong> i el <strong>contrast màxim AAA (≥ 7:1)</strong>, també pots encendre el Mode Bancal.',
       'Obri Traduccions'
     ],
     [
@@ -100,14 +103,14 @@ const TEXTOS = {
     ],
     [
       'Totes les eines juntes i el Mode Bancal, al Panell',
-      'El <strong>Panell de Control</strong> reunix totes les seccions i les <strong>eines comunitàries</strong> en targetes clares: des d’ací obris també <strong>El Bar (TPV d’associacions)</strong>, l’<strong>Arbre Genealògic</strong> amb frase de pas i el <strong>Lector de notícies</strong> comarcal. A dalt del panell pots activar d’un sol toc el <strong>Mode Bancal · Sol i Lletra Gran</strong>, amb <strong>dianes de 56 píxels</strong> i el màxim contrast (≥ 10:1), i revisar l’espai local del dispositiu.',
+      'El <strong>Panell de Control</strong> reunix totes les seccions i les <strong>eines comunitàries</strong> en targetes clares: des d’ací obris també <strong>El Bar (TPV d’associacions)</strong>, l’<strong>Arbre Genealògic</strong> amb frase de pas i el <strong>Lector de notícies</strong> comarcal. A dalt del panell pots activar d’un sol toc el <strong>Mode Bancal · Sol i Lletra Gran</strong>, amb <strong>dianes de 56 píxels</strong> i el contrast màxim AAA (≥ 7:1), i revisar l’espai local del dispositiu.',
       'Obri el Panell de Control'
     ]
   ],
   es: [
     [
       'Elige tu idioma y la lectura cómoda',
-      'Sóc de Poble habla en <strong>valenciano, castellano, inglés, euskera y gallego</strong> desde el primer momento. En Traducciones cambias el idioma de los <strong>menús, avisos y botones</strong> con <strong>un solo clic</strong>, y la preferencia se guarda en <strong>este navegador</strong> sin cuenta obligatoria. Si prefieres <strong>letra grande</strong>, botones de <strong>56 píxeles</strong> y el <strong>máximo contraste (≥ 10:1)</strong>, también puedes activar el Modo Bancal.',
+      'Sóc de Poble habla en <strong>valenciano, castellano, inglés, euskera y gallego</strong> desde el primer momento. En Traducciones cambias el idioma de los <strong>menús, avisos y botones</strong> con <strong>un solo clic</strong>, y la preferencia se guarda en <strong>este navegador</strong> sin cuenta obligatoria. Si prefieres <strong>letra grande</strong>, botones de <strong>56 píxeles</strong> y el <strong>contraste máximo AAA (≥ 7:1)</strong>, también puedes activar el Modo Bancal.',
       'Abre Traducciones'
     ],
     [
@@ -167,14 +170,14 @@ const TEXTOS = {
     ],
     [
       'Todas las herramientas juntas y el Modo Bancal, en el Panel',
-      'El <strong>Panel de Control</strong> reúne todas las secciones y las <strong>herramientas comunitarias</strong> en tarjetas claras: desde allí abres también <strong>El Bar (TPV de asociaciones)</strong>, el <strong>Árbol Genealógico</strong> con frase de paso y el <strong>Lector de noticias</strong> comarcal. Arriba del panel puedes activar de un solo toque el <strong>Modo Bancal · Sol y Letra Grande</strong>, con <strong>dianas de 56 píxeles</strong> y el máximo contraste (≥ 10:1), y revisar el espacio local.',
+      'El <strong>Panel de Control</strong> reúne todas las secciones y las <strong>herramientas comunitarias</strong> en tarjetas claras: desde allí abres también <strong>El Bar (TPV de asociaciones)</strong>, el <strong>Árbol Genealógico</strong> con frase de paso y el <strong>Lector de noticias</strong> comarcal. Arriba del panel puedes activar de un solo toque el <strong>Modo Bancal · Sol y Letra Grande</strong>, con <strong>dianas de 56 píxeles</strong> y el contraste máximo AAA (≥ 7:1), y revisar el espacio local.',
       'Abre el Panel de Control'
     ]
   ],
   en: [
     [
       'Choose your language and comfortable reading',
-      'Sóc de Poble speaks <strong>Valencian, Spanish, English, Basque and Galician</strong> right from the start. In Translations you switch the language of <strong>menus, notices and buttons</strong> in a <strong>single click</strong>, and your choice stays saved in <strong>this browser</strong> without needing an account. If you prefer <strong>larger type</strong>, <strong>56-pixel buttons</strong> and <strong>maximum contrast (≥ 10:1)</strong>, you can also turn on Bancal Mode.',
+      'Sóc de Poble speaks <strong>Valencian, Spanish, English, Basque and Galician</strong> right from the start. In Translations you switch the language of <strong>menus, notices and buttons</strong> in a <strong>single click</strong>, and your choice stays saved in <strong>this browser</strong> without needing an account. If you prefer <strong>larger type</strong>, <strong>56-pixel buttons</strong> and <strong>maximum AAA contrast (≥ 7:1)</strong>, you can also turn on Bancal Mode.',
       'Open Translations'
     ],
     [
@@ -234,14 +237,14 @@ const TEXTOS = {
     ],
     [
       'All tools together and Bancal Mode on the Control Panel',
-      'The <strong>Control Panel</strong> gathers every section and <strong>community tool</strong> onto clear cards: from there you also launch <strong>The Bar (association POS)</strong>, the passphrase-protected <strong>Family Tree</strong> and the regional <strong>News Reader</strong>. Right at the top you can toggle <strong>Bancal Mode · Sun & Large Text</strong> in one tap, with <strong>56-pixel targets</strong> and maximum contrast (≥ 10:1), and inspect local storage.',
+      'The <strong>Control Panel</strong> gathers every section and <strong>community tool</strong> onto clear cards: from there you also launch <strong>The Bar (association POS)</strong>, the passphrase-protected <strong>Family Tree</strong> and the regional <strong>News Reader</strong>. Right at the top you can toggle <strong>Bancal Mode · Sun & Large Text</strong> in one tap, with <strong>56-pixel targets</strong> and maximum AAA contrast (≥ 7:1), and inspect local storage.',
       'Open the Control Panel'
     ]
   ],
   eu: [
     [
       'Aukeratu zure hizkuntza eta irakurketa erosoa',
-      'Sóc de Poblek <strong>valentziera, gaztelania, ingelesa, euskara eta galegoa</strong> hitz egiten ditu hasieratik. Itzulpenak atalean <strong>menu, ohar eta botoien</strong> hizkuntza <strong>klik bakarrean</strong> aldatzen duzu, eta hobespena <strong>nabigatzaile honetan</strong> gordetzen da konturik behar izan gabe. <strong>Letra handia</strong>, <strong>56 pixeleko botoiak</strong> eta <strong>kontraste handiena (≥ 10:1)</strong> nahiago badituzu, Bankal Modua ere piztu dezakezu.',
+      'Sóc de Poblek <strong>valentziera, gaztelania, ingelesa, euskara eta galegoa</strong> hitz egiten ditu hasieratik. Itzulpenak atalean <strong>menu, ohar eta botoien</strong> hizkuntza <strong>klik bakarrean</strong> aldatzen duzu, eta hobespena <strong>nabigatzaile honetan</strong> gordetzen da konturik behar izan gabe. <strong>Letra handia</strong>, <strong>56 pixeleko botoiak</strong> eta <strong>AAA kontraste handiena (≥ 7:1)</strong> nahiago badituzu, Bankal Modua ere piztu dezakezu.',
       'Ireki Itzulpenak'
     ],
     [
@@ -301,14 +304,14 @@ const TEXTOS = {
     ],
     [
       'Tresna guztiak batera eta Bankal Modua, Kontrol Panelean',
-      '<strong>Kontrol Panelak</strong> atal guztiak eta <strong>komunitateko tresnak</strong> txartel argietan biltzen ditu: hortik irekitzen dituzu <strong>Taberna (elkarteen TPVa)</strong>, pasaesaldidun <strong>Zuhaitz Genealogikoa</strong> eta eskualdeko <strong>Albiste-irakurgailua</strong> ere. Goialdean ukitu bakarrean piztu dezakezu <strong>Bankal Modua · Eguzkia eta Letra Handia</strong>, <strong>56 pixeleko dianekin</strong> eta kontraste handienarekin (≥ 10:1), eta gailuko tokiko espazioa ikuskatu.',
+      '<strong>Kontrol Panelak</strong> atal guztiak eta <strong>komunitateko tresnak</strong> txartel argietan biltzen ditu: hortik irekitzen dituzu <strong>Taberna (elkarteen TPVa)</strong>, pasaesaldidun <strong>Zuhaitz Genealogikoa</strong> eta eskualdeko <strong>Albiste-irakurgailua</strong> ere. Goialdean ukitu bakarrean piztu dezakezu <strong>Bankal Modua · Eguzkia eta Letra Handia</strong>, <strong>56 pixeleko dianekin</strong> eta AAA kontraste handienarekin (≥ 7:1), eta gailuko tokiko espazioa ikuskatu.',
       'Ireki Kontrol Panela'
     ]
   ],
   gl: [
     [
       'Escolle a túa lingua e a lectura cómoda',
-      'Sóc de Poble fala en <strong>valenciano, castelán, inglés, éuscaro e galego</strong> dende o primeiro momento. En Traducións cambias a lingua dos <strong>menús, avisos e botóns</strong> cun <strong>só clic</strong>, e a preferencia gárdase <strong>neste navegador</strong> sen conta obrigatoria. Se prefires <strong>letra grande</strong>, botóns de <strong>56 píxeles</strong> e o <strong>máximo contraste (≥ 10:1)</strong>, tamén podes activar o Modo Bancal.',
+      'Sóc de Poble fala en <strong>valenciano, castelán, inglés, éuscaro e galego</strong> dende o primeiro momento. En Traducións cambias a lingua dos <strong>menús, avisos e botóns</strong> cun <strong>só clic</strong>, e a preferencia gárdase <strong>neste navegador</strong> sen conta obrigatoria. Se prefires <strong>letra grande</strong>, botóns de <strong>56 píxeles</strong> e o <strong>contraste máximo AAA (≥ 7:1)</strong>, tamén podes activar o Modo Bancal.',
       'Abre Traducións'
     ],
     [
@@ -368,7 +371,7 @@ const TEXTOS = {
     ],
     [
       'Todas as ferramentas xuntas e o Modo Bancal, no Panel',
-      'O <strong>Panel de Control</strong> reúne todas as seccións e as <strong>ferramentas comunitarias</strong> en tarxetas claras: dende alí abres tamén <strong>O Bar (TPV de asociacións)</strong>, a <strong>Árbore Xenealóxica</strong> con frase de paso e o <strong>Lector de novas</strong> comarcal. Arriba do panel podes activar dun só toque o <strong>Modo Bancal · Sol e Letra Grande</strong>, con <strong>dianas de 56 píxeles</strong> e o máximo contraste (≥ 10:1), e revisar o espazo local.',
+      'O <strong>Panel de Control</strong> reúne todas as seccións e as <strong>ferramentas comunitarias</strong> en tarxetas claras: dende alí abres tamén <strong>O Bar (TPV de asociacións)</strong>, a <strong>Árbore Xenealóxica</strong> con frase de paso e o <strong>Lector de novas</strong> comarcal. Arriba do panel podes activar dun só toque o <strong>Modo Bancal · Sol e Letra Grande</strong>, con <strong>dianas de 56 píxeles</strong> e o contraste máximo AAA (≥ 7:1), e revisar o espazo local.',
       'Abre o Panel de Control'
     ]
   ]

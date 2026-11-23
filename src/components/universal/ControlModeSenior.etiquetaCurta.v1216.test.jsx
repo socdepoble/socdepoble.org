@@ -33,15 +33,23 @@ afterEach(() => {
    castellà; l'anglés en passa un caràcter («Bancal Mode», 11, contra «Large text», 10) i ho diu. La prova compta caràcters,
    no píxels: l'encaix a 320, 360, 390 i 414 px el mesura la sonda CDP (eines/cdp_v1222.mjs, escenaris «acces»). */
 const TOLERANCIA_XIP_CURT = Object.freeze({ ca: 0, es: 0, en: 1, eu: 0, gl: 0 });
-test.each(Object.entries(COMPLETES))('IDEA-323.4 · %s: el rètol complet és «%s», la descripció diu els 56 px i el ≥ 10:1, i el curt no passa l’antic més que la tolerància dita', (codi, complet) => {
+/* v1.2.23 · D-V1223-TEXT-BANCAL (ordre del Mestre 261123) · La descripció diu la veritat matemàtica del Mode Bancal:
+   AAA (≥ 7:1), cos de 18 px, la jerarquia Títol > Subtítol > Paràgraf i el taronja de marca, i cap «10:1». S'actualitza a
+   posta (abans «≥ 10:1»). La mesura dels tokens és a src/config/textosModeSenior.veritatBancal.v1223.test.js. */
+const TARONJA_MARCA = /* ALLOW_RAW_COLOR */ '#FF7300';
+test.each(Object.entries(COMPLETES))('IDEA-323.4 · %s: el rètol complet és «%s», la descripció diu els 56 px, l’AAA ≥ 7:1, els 18 px i el taronja de marca (cap 10:1), i el curt no passa l’antic més que la tolerància dita', (codi, complet) => {
   expect(TEXTOS_MODE_SENIOR[codi].xip).toBe(complet);
   expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain('56 px');
-  expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain('≥ 10:1');
+  expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain('AAA');
+  expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain('≥ 7:1');
+  expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain('18 px');
+  expect(TEXTOS_MODE_SENIOR[codi].descripcio).toContain(TARONJA_MARCA);
+  expect(TEXTOS_MODE_SENIOR[codi].descripcio).not.toContain('10:1');
   expect(TEXTOS_MODE_SENIOR[codi].xipCurt.length).toBeLessThanOrEqual(ANTIGUES_CURTES[codi].length + TOLERANCIA_XIP_CURT[codi]);
 });
 
-test('IDEA-323.4 · el literal valencià de la descripció és el de l’ordre', () => {
-  expect(TEXTOS_MODE_SENIOR.ca.descripcio).toBe('Lletra més gran, botons amples de 56 px i màxim contrast (≥ 10:1) per a llegir al sol o amb vista cansada.');
+test('v1.2.23 · D-V1223-TEXT-BANCAL · el literal valencià de la descripció és el de l’ordre del Mestre del 261123', () => {
+  expect(TEXTOS_MODE_SENIOR.ca.descripcio).toBe(`Lletra més gran (cos de 18 px i jerarquia Títol > Subtítol > Paràgraf), botons amples de 56 px, contrast màxim AAA (≥ 7:1) i el taronja de marca ${TARONJA_MARCA}, per a llegir al sol o amb vista cansada.`);
 });
 
 test('IDEA-323.4 · DOL-31 · fora d’UIProvider, un toc posa alhora la lletra gran i el contrast Bancal a l’arrel, i un altre els lleva', () => {

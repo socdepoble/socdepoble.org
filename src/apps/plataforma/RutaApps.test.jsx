@@ -196,7 +196,7 @@ describe('el portal /app', () => {
     muntaPlataforma('/app', { registre });
     expect(screen.getByRole('heading', { level: 1, name: 'Apps' })).toBeTruthy();
     const [prova, tancada] = screen.getAllByRole('listitem');
-    expect(within(prova).getByRole('heading', { level: 2, name: 'La Prova' })).toBeTruthy();
+    expect(within(prova).getByRole('heading', { level: 3, name: 'La Prova' })).toBeTruthy();
     expect(within(prova).getByText('Disponible')).toBeTruthy();
     expect(within(prova).getByRole('link', { name: 'Obri' }).getAttribute('href')).toBe('/app/prova/inici');
     expect(within(tancada).getByText('Apagada')).toBeTruthy();

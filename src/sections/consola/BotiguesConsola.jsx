@@ -9,14 +9,14 @@ import { BOTIGUES_SISTEMA_META as meta } from '../botigues/botiguesSistemaMeta.j
 
 const BotiguesSistema = lazy(() => import('../botigues/BotiguesSistema.jsx'));
 
-export function TargetaBotiguesConsola() {
-  return <TargetaConsola icona={Smartphone} titol={meta.title} subtitol={meta.subtitle} entradilla={meta.lead} creat={meta.creat} a={meta.ruta} imatge={meta.image} imatgeAlt={meta.imageAlt} />;
+export function TargetaBotiguesConsola({ headingLevel = 'h3' } = {}) {
+  return <TargetaConsola icona={Smartphone} titol={meta.title} subtitol={meta.subtitle} entradilla={meta.lead} creat={meta.creat} a={meta.ruta} imatge={meta.image} imatgeAlt={meta.imageAlt} headingLevel={headingLevel} />;
 }
 
 export function SeccioBotiguesConsola() {
   const idioma = useIdiomaConsola();
-  return <section aria-label={tca(idioma, 'botiguesIVerificadors')}><h2>Botigues i verificadors</h2><div className="sdp-card-grid">
-    <TargetaBotiguesConsola />
+  return <section aria-label={tca(idioma, 'botiguesIVerificadors')}><h3>Botigues i verificadors</h3><div className="sdp-card-grid">
+    <TargetaBotiguesConsola headingLevel="h4" />
   </div></section>;
 }
 

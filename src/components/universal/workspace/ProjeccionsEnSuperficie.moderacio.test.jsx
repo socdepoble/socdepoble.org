@@ -28,7 +28,7 @@ function valor(claus = new Set([clauDeBloqueig('persona', BLOQUEJADA)])) {
 }
 const pinta = (desti, context = valor()) => render(<MemoryRouter rutaInicial={`/${desti}`}>
   <ModeracioContext.Provider value={context}><ProjeccionsEnSuperficie desti={desti} /></ModeracioContext.Provider></MemoryRouter>);
-const titols = () => screen.queryAllByRole('heading', { level: 3 }).map(node => node.textContent);
+const titols = () => screen.queryAllByRole('heading', { level: 4 }).filter((node) => node.classList.contains('sp-card-title')).map((node) => node.textContent);
 
 beforeEach(async () => { m.rows = []; m.ownerId = JO; m.opcions = []; await Promise.all(['llavors', 'receptes'].map(font => carregaFitxesCanoniques(font, 'ca'))); });
 afterEach(cleanup);
@@ -60,7 +60,7 @@ describe('ProjeccionsEnSuperficie · moderació', () => {
     m.rows = [fila(VEINA, 'llavors', entrada.id, 'TEXT OFENSIU'), fila(VEINA, 'receptes', 'no-existix', 'ALTRE TEXT OFENSIU'),
       fila(VEINA, 'receptes', recepta.slug, 'TERCER TEXT OFENSIU')];
     const { container } = pinta('mur');
-    expect(await screen.findByRole('heading', { level: 3, name: entrada.nom })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 4, name: entrada.nom })).toBeTruthy();
     expect(titols()).toEqual([entrada.nom, recepta.titol]);
     expect(container.textContent).not.toMatch(/OFENSIU/);
     expect(container.textContent).toContain(font.autoria);

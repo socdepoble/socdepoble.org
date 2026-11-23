@@ -114,7 +114,8 @@ function ContenidorApp({ manifest, entrada }) {
      Una app amb dades personals (salut, financeres) no es deixa traduir pel
      navegador: la traducció de pàgina envia el text visible a un servei de
      fora (Onada 6, revisió de seguretat de la Gestoria). */
-  const enProves = manifest.origen === 'interna' && APPS_BETA.includes(manifest.id);
+  /* Onada R32.47 (IDEA-285) · Escut legal Beta per a tota micro-app del registre en proves, tant interna com compilada com a mòdul enxufable (sdp.modul.v1). */
+  const enProves = manifest.origen !== 'externa' && APPS_BETA.includes(manifest.id);
   return (
     <ProveidorApp manifest={manifest} fontSessio={useFontSessio} serveis={serveis} idioma={llenguaDelText}>
       <div ref={contenidorAppsRef} className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>

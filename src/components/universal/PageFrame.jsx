@@ -730,6 +730,9 @@ export function PageFrame({
      panell de lectura tant en mòbil com en escriptori. */
   veuLectura = true,
   fontSo = null,
+  showEdit = false,
+  onEdit = null,
+  editLabel = null,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -1164,11 +1167,14 @@ export function PageFrame({
           comentarVisible={comentarVisible}
           compartirVisible={compartirVisible}
           connectarVisible={connectarVisible}
+          editarVisible={!accionsInoperatives && Boolean(showEdit && typeof onEdit === 'function')}
           onTranslate={handleTranslate}
           onComment={handleComment}
           onShare={handleShare}
           onConnect={handleConnect}
+          onEdit={onEdit}
           connectLabel={connectLabel ?? tradueix(tAvis, PARELL_CONNECTAR)}
+          editLabel={editLabel}
           /* T63.2 · Inoperatiu (l'editor, T36) no porta enlloc: el nom no en promet cap xat. */
           comentarXat={accionsInoperatives ? null : comentarXat}
           comentarPrivatAmb={comentarPrivatAmb}

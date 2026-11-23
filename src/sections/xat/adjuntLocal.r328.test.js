@@ -51,16 +51,21 @@ describe('R32.8 · el lloc viatja abans de comprimir i només false explícit l�
     expect(compressor).toHaveBeenCalledOnce();
     await expect(preparaAdjunt(new Blob([gran, 'x'], { type: 'video/mp4' }), opcions())).rejects.toMatchObject({ code: 'video-mida-entrada' });
   });
-  test('fallback MP4 no deixa eixir original no sanejable, encara que conserve ubicació', async () => {
+  /* v1.2.23 · IDEA-331 (ordre del Mestre 261123, deroga el bloqueig per defecte de L4-04) · Per defecte l'original
+     del fallback ix tal com és, amb el seu lloc i sense passar pel sanejador. Només l'opt-out el bloqueja si no es
+     pot netejar. */
+  test('fallback MP4: per defecte l’original ix amb el lloc; amb opt-out no ix si no es pot netejar', async () => {
     const original = video();const fallback = async fitxer => ({ fitxer, comprimit: false, motiuFallback: 'video-compressio-no-disponible' });
     const netejaVideo = vi.fn(async fitxer => ({ fitxer, net: false }));
+    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo })).resolves.toMatchObject({
+      fitxer: original, senseUbicacio: false, conservaUbicacio: true, ubicacio: { lat: 38.64, lng: -0.49 }, motiuFallback: 'video-compressio-no-disponible' });
+    expect(netejaVideo).not.toHaveBeenCalled();
     // v1.2.22 · Gauntlet R1 (L4-04) · L'avís d'un MP4/MOV no acreditable és el seu propi.
     // Gauntlet R2 (M2-02) · En el fallback del navegador, l'avís és el del navegador i porta el motiu.
-    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo })).rejects.toMatchObject({ code: 'video-no-acreditable-navegador', motiuFallback: 'video-compressio-no-disponible' });
+    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo, conservaUbicacio: false })).rejects.toMatchObject({ code: 'video-no-acreditable-navegador', motiuFallback: 'video-compressio-no-disponible' });
     expect(netejaVideo).toHaveBeenCalledOnce();
-    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: fallback, netejaVideo, conservaUbicacio: false })).rejects.toMatchObject({ code: 'video-no-acreditable-navegador' });
     // Un compressor sense motiuFallback (el real sempre el dona amb comprimit:false) manté l'avís del fitxer.
-    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }), netejaVideo })).rejects.toMatchObject({ code: 'video-no-acreditable' });
+    await expect(preparaAdjunt(original, { ...opcions(), comprimeixVideo: async fitxer => ({ fitxer, comprimit: false }), netejaVideo, conservaUbicacio: false })).rejects.toMatchObject({ code: 'video-no-acreditable' });
   });
   test('cancel·lar durant inspecció no recodifica ni publica coords tardanes', async () => {
     const c = new AbortController();const encode = vi.fn(comprimeix);
@@ -82,7 +87,9 @@ describe('R32.8 · el lloc viatja abans de comprimir i només false explícit l�
 /* v1.2.22 · Gauntlet R2 (M2-02) · El mateix MOV de telèfon (vide + soun + una pista de metadades amb handler meta, com
    la mebx de l'iPhone), amb l'inspector i el sanejador reals. Si el navegador el comprimix, ix net en un contenidor nou;
    si no ha pogut (motiuFallback), no ix i l'avís és el del navegador, per a cada motiu de fallback que llista
-   compressioVideoClient.js. La política no canvia: un MP4/MOV que no es pot acreditar no s'envia. */
+   compressioVideoClient.js. La política no canvia: un MP4/MOV que no es pot acreditar no s'envia.
+   v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Ara només quan la persona ha demanat «Amaga el lloc»: per defecte ix
+   tal com és, amb el lloc, i la interfície ho diu abans de publicar. */
 describe('R2 · M2-02 · l’avís del vídeo no acreditable depén del camí', () => {
   const hdlr = (handler) => { const d = new Uint8Array(24); d.set(ascii(handler), 8); return box('hdlr', d); };
   const trak = (handler) => box('trak', box('mdia', hdlr(handler)));
@@ -104,12 +111,17 @@ describe('R2 · M2-02 · l’avís del vídeo no acreditable depén del camí', 
         .resolves.toMatchObject({ tipus: 'video', senseUbicacio: true, videoComprimit: true });
     }
   });
-  test.each(MOTIUS_FALLBACK)('fallback %s: el mateix MOV no ix, amb l’avís del navegador i el motiu al detall', async (motiu) => {
-    for (const conservaUbicacio of [true, false]) {
-      const error = await preparaAdjunt(movTelefon(), { conservaUbicacio, lligDurada: async () => 5000,
-        comprimeixVideo: async (fitxer) => ({ fitxer, comprimit: false, motiuFallback: motiu }) }).catch((e) => e);
-      expect(error).toMatchObject({ code: 'video-no-acreditable-navegador', motiuFallback: motiu, message: ERRORS_ADJUNT_XAT['video-no-acreditable-navegador'] });
-    }
+  /* v1.2.23 · IDEA-331 · Per defecte el mateix MOV ix tal com és (amb el lloc); amb «Amaga el lloc» no ix i l'avís és
+     el del navegador, també quan la persona l'amaga després de preparar-lo (amagaUbicacioAdjunt). */
+  test.each(MOTIUS_FALLBACK)('fallback %s: per defecte el MOV ix tal com és; amb opt-out no ix, amb l’avís del navegador', async (motiu) => {
+    const opcions = { lligDurada: async () => 5000, comprimeixVideo: async (fitxer) => ({ fitxer, comprimit: false, motiuFallback: motiu }) };
+    const mov = movTelefon();
+    const conservat = await preparaAdjunt(mov, opcions);
+    expect(conservat).toMatchObject({ fitxer: mov, tipus: 'video', senseUbicacio: false, conservaUbicacio: true, motiuFallback: motiu });
+    const error = await preparaAdjunt(movTelefon(), { ...opcions, conservaUbicacio: false }).catch((e) => e);
+    expect(error).toMatchObject({ code: 'video-no-acreditable-navegador', motiuFallback: motiu, message: ERRORS_ADJUNT_XAT['video-no-acreditable-navegador'] });
+    const despres = await amagaUbicacioAdjunt(conservat).catch((e) => e);
+    expect(despres).toMatchObject({ code: 'video-no-acreditable-navegador', motiuFallback: motiu });
   });
   test('l’avís del navegador és en les cinc llengües, el valencià és el del codi i no promet cap eixida', () => {
     const clau = CLAUS_ERROR_ADJUNT['video-no-acreditable-navegador'];

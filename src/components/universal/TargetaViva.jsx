@@ -83,7 +83,7 @@ const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
  * actual: és la fitxa triada de la llista (aria-current a UniversalCard) i,
  *   sense imatge, porta l'emoji XL al quadrat (ordre del Mestre, 261007).
  */
-export function TargetaViva({ document, autor = null, etiquetes, className, onMainClick, avis = AVIS_PREVISUALITZACIO, actual = false }) {
+export function TargetaViva({ document, autor = null, etiquetes, className, onMainClick, avis = AVIS_PREVISUALITZACIO, actual = false, headingLevel = 'h3' }) {
   const [avisObert, setAvisObert] = useState(false);
   const avisa = useCallback((event) => {
     event?.preventDefault?.();
@@ -115,6 +115,7 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
     <>
       <UniversalCard
         {...props}
+        headingLevel={headingLevel}
         imageUrl={imatge}
         videoUrl={videoSegur}
         avatarUrl={avatar}

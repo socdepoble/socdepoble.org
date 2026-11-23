@@ -217,7 +217,7 @@ describe('premut · tot el que es pot prémer respon, amb la transició en repò
      (a components, que guanya l'`a` i l'`a:hover` de base.css, en legacy), i
      el premut és el de la prosa de tot el sistema: l'Índex porta .sdp-prose. */
   test('els títols enllaçats de l’Índex: el color del seu títol en repòs, en passar-hi i en prémer; el premut, el de la prosa', () => {
-    const ENLLAC = '.sdp-consola__index :is(h3, h4) > a';
+    const ENLLAC = '.sdp-consola__index :is(h4, h5) > a';
     const regla = amb('modules.css', ENLLAC);
     expect(regla).toHaveLength(1);
     expect(regla[0].cos).toBe('color: inherit;');
@@ -376,7 +376,9 @@ describe('cap salt de maquetació · la imatge reserva el seu lloc', () => {
     const tokens = llig('src/css/tokens.css');
     expect(tokens).toMatch(/--sdp-accio-text[:]\s*var\(--sdp-secondary-700\);/);
     expect(tokens).toMatch(/--sdp-accent-titol[:]\s*var\(--sdp-primary-800\);/);
-    // Cap regla de l'Índex no pinta els seus títols d'un altre color.
-    expect(SUPERFICIE.filter((r) => r.prelud.startsWith('.sdp-consola__index') && /\bh[234]\b/.test(r.prelud) && de(r, 'color') && de(r, 'color') !== 'inherit').map(on)).toEqual([]);
+    // L'Índex dins UniversalPage promociona H3->H4 (pàgina, blau marí) i H4->H5 (subtítol, terracota) i no pinta cap altre títol.
+    expect(valor('modules.css', '.sdp-consola__index-pagina > h4', 'color')).toBe('var(--sdp-accio-text)');
+    expect(valor('modules.css', '.sdp-consola__index-pagina > h5', 'color')).toBe('var(--sdp-accent-titol)');
+    expect(SUPERFICIE.filter((r) => r.prelud.startsWith('.sdp-consola__index') && /\bh[2345]\b/.test(r.prelud) && de(r, 'color') && de(r, 'color') !== 'inherit' && !['.sdp-consola__index-pagina > h4', '.sdp-consola__index-pagina > h5'].includes(r.prelud)).map(on)).toEqual([]);
   });
 });

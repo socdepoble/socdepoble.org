@@ -302,7 +302,7 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
       data-testid="giny-salut-dispositiu-jarvis"
       data-estat-ui={estatUi}
     >
-      <h2 id={idSeccio}>{tx.titolSeccio}</h2>
+      <h3 id={idSeccio}>{tx.titolSeccio}</h3>
       <p className="lead">{tx.entradetaSeccio}</p>
 
       {/* Contenidors vius pre-existents al DOM per anunciar canvis i errors amb accessibilitat AAA */}
@@ -323,10 +323,10 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
         <article className="sdp-salut-dispositiu__targeta" aria-labelledby={idCapacitat}>
           <div className="sdp-salut-dispositiu__bloc-superior">
             <header className="sdp-salut-dispositiu__capcalera-targeta">
-              <h3 id={idCapacitat} className="sdp-salut-dispositiu__titol-targeta">
+              <h4 id={idCapacitat} className="sdp-salut-dispositiu__titol-targeta">
                 <HardDrive size={20} aria-hidden="true" focusable="false" />
                 <span>{tx.titolCapacitat}</span>
-              </h3>
+              </h4>
               <span className="sdp-salut-dispositiu__insignia" data-to={nivellEspai === 'neutre' ? undefined : nivellEspai}>
                 {etiquetaInsigniaEspai}
               </span>
@@ -371,10 +371,10 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
         <article className="sdp-salut-dispositiu__targeta">
           <div className="sdp-salut-dispositiu__bloc-superior">
             <header className="sdp-salut-dispositiu__capcalera-targeta">
-              <h3 className="sdp-salut-dispositiu__titol-targeta">
+              <h4 className="sdp-salut-dispositiu__titol-targeta">
                 <ShieldCheck size={20} aria-hidden="true" focusable="false" />
                 <span>{tx.titolNeteja}</span>
-              </h3>
+              </h4>
               <span className="sdp-salut-dispositiu__insignia" data-to="protegit">
                 <Lock size={14} aria-hidden="true" focusable="false" />
                 <span>{tx.insigniaProtegida}</span>

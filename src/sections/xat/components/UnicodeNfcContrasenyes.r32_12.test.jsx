@@ -9,7 +9,7 @@ import {
 } from '../../../utils/normalitzaEntradaUi.js';
 import { CosCopiaSeguretatXat } from './PaginaCopiaSeguretatXat.jsx';
 import CerimoniesXat from './CerimoniesXat.jsx';
-import { ProvaCorreuAmbContrasenya } from '../../onboarding/ProvaCorreuAmbContrasenya.jsx';
+import { ProvaCorreuAmbContrasenya } from '../../../../tests/fixtures/ProvaCorreuAmbContrasenya.jsx';
 import { ContrasenyaNovaStep } from '../../onboarding/RecuperacioSteps.jsx';
 import { proposaUsername, validaContrasenyaNova, validateRegistration } from '../../onboarding/onboardingModel.js';
 import { MemoryRouter } from '../../../app/contexts/RouterContext.jsx';

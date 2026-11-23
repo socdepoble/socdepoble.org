@@ -31,7 +31,7 @@ const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-system' }, {
 const pageCopyDeSerie = () => Object.fromEntries(SYSTEM_PAGES.map(({ key }) => [key, { ...PAGE_COPY[key], id: key }]));
 const core = (extra = {}) => ({ status: 'ready', pageCopy: pageCopyDeSerie(), personalitzacio: null, refresh: m.refresh, ...extra });
 
-const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
+const seccio = (titol) => screen.getByRole('heading', { level: 3, name: titol }).closest('section');
 const consola = () => seccio(`Pàgina «${PAGE_COPY.consola.title}»`);
 const desar = () => act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desar' })); });
 
@@ -80,7 +80,7 @@ test('sense la capacitat personalitzacio: l’estat buit «Este node no admet pe
 
 test('pinta un bloc per pàgina de SYSTEM_PAGES amb les etiquetes actuals (text i classe) i els blocs de sèrie', () => {
   render(<FacetaTaxonomia />);
-  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  const titols = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
   expect(titols.slice(0, 2)).toEqual(['Categories de sèrie del Bloc', 'Etiquetes de sèrie del Bloc']);
   expect(titols.slice(2)).toEqual(SYSTEM_PAGES.map(({ key }) => `Pàgina «${PAGE_COPY[key]?.title || key}»`));
   const bloc = consola();

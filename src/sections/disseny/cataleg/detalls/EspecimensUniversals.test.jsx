@@ -884,8 +884,14 @@ describe('Especímens del Xat · onada 3B', () => {
     for (const rail of [desplegat, plegat]) {
       expect(within(rail).getByRole('button', { name: 'Comunitats' }).getAttribute('aria-current')).toBe('page');
       /* Revisió adversarial 260930 · El peu de producció: «Tu» obri el full
-         «Ajustos» (EspecimenXatRail.test.jsx en prova la resta). */
-      expect(within(rail).getByRole('button', { name: 'Tu: ajustos' })).toBeTruthy();
+         «Ajustos» (EspecimenXatRail.test.jsx en prova la resta).
+         v1.2.23 · K5 (ordre del Mestre 261123) · Llei 0: el peu continua sent
+         el de producció, però des d'IDEA-327 v2 (ClosCaXat.jsx), amb sessió (el
+         cas per defecte de l'espècimen) és el selector d'identitat, i el full
+         «Ajustos» s'obri des de la fila «Ajustos del xat». «Tu: ajustos» és el
+         peu sense sessió (el Foraster), que EspecimenXatRail.test.jsx també fixa. */
+      expect(within(rail).getByRole('button', { name: 'Javi Llinares: Amb qui actues?' })).toBeTruthy();
+      expect(within(rail).getByRole('button', { name: 'Ajustos del xat' })).toBeTruthy();
       expect(within(rail).getByRole('button', { name: 'Sóc de Poble' })).toBeTruthy();
     }
     expect(within(desplegat).getByRole('button', { name: 'Secció Més' }).getAttribute('aria-expanded')).toBe('true');

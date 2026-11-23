@@ -367,12 +367,12 @@ function Origens({ fonts, paper }) {
   );
 }
 
-/* Una secció amb el seu títol (h2): cap títol porta dades. */
+/* Una secció amb el seu títol (h3): cap títol porta dades. */
 function Seccio({ titol, ajuda, idioma = 'ca', children }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__seccio" aria-labelledby={id}>
-      <h2 id={id} className="sdp-gestoria-finestreta__titol">{tg(idioma, titol)}</h2>
+      <h3 id={id} className="sdp-gestoria-finestreta__titol">{tg(idioma, titol)}</h3>
       {ajuda ? <p ref={adoptaEstilsDiferits} className="sdp-gestoria-finestreta__nota">{tg(idioma, ajuda)}</p> : null}
       {children}
     </section>

@@ -457,7 +457,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
       )}
 
       <section className="sdp-gestoria-escaner__seccio" aria-labelledby={idTria}>
-        <h2 id={idTria} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Tria la carpeta')}</h2>
+        <h3 id={idTria} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Tria la carpeta')}</h3>
         <Alerta to="info" viva={false} titol={tg(idioma, 'La carpeta no ix d’este ordinador')}>
           {tg(idioma, 'L’Escàner en llig el nom, la mida i la data de cada fitxer. Només en llig els bytes per a comparar els que tenen la mateixa mida (els duplicats) i els primers 4 kB dels extractes del banc. No llig mai la carpeta de la identitat ni l’arxiu, no mou ni esborra res i no guarda res.')}
         </Alerta>
@@ -489,7 +489,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
 
       {r ? (
         <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idRadiografia}>
-          <h2 id={idRadiografia} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Radiografia de la carpeta')}</h2>
+          <h3 id={idRadiografia} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Radiografia de la carpeta')}</h3>
           <p className="sdp-gestoria-escaner__nota">
             {`${plural(r.fitxers, 'fitxer classificat', 'fitxers classificats')} pel nom, la mida i la carpeta. Les dates dels noms són indicis: revisa-les. Les carpetes buides no es veuen.`}
           </p>
@@ -541,7 +541,7 @@ export function PanellEscaner({ escaner, tauler, dades = null, visible = false, 
 
       {r ? (
         <section ref={adoptaEstilsDiferits} className="sdp-gestoria-escaner__seccio" aria-labelledby={idExtractes}>
-          <h2 id={idExtractes} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Extractes per al Tauler')}</h2>
+          <h3 id={idExtractes} className="sdp-gestoria-escaner__titol">{tg(idioma, 'Extractes per al Tauler')}</h3>
           {resultat.extractes.length ? (
             <GrupCamps llegenda={tg(idioma, 'Els extractes que s’abocaran al Tauler')} className="sdp-gestoria-escaner__extractes">
               {resultat.extractes.map((f) => (

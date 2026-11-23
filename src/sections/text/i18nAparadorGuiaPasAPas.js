@@ -3,10 +3,12 @@
    QuadreDeComandament amb xifres reals, mostres visuals inerts i enllaços a les
    eines complementàries. Llei 35 (6-8 <strong> per paràgraf) i Llei 32 estrictes.
    v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · IDEA-323.4 · L'interruptor ja és el «Mode Bancal · Sol i Lletra
-   Gran»: encés, posa la lletra gran, botons de 56 px i el màxim contrast (≥ 10:1). La mostra de
+   Gran»: encés, posa la lletra gran, botons de 56 px i el contrast màxim AAA (≥ 7:1). La mostra de
    l'interruptor pinta el rètol viu de textosModeSenior.js (TEXTOS_MODE_SENIOR[llengua].xip). Este
    diccionari només l'importa AparadorGuiaPasAPas.jsx, un tros diferit (lazyRoute a PageDetailSection.jsx):
-   la importació no toca el tros d'arrencada. */
+   la importació no toca el tros d'arrencada.
+   v1.2.23 · D-V1223-TEXT-BANCAL (ordre del Mestre 261123) · La mostra diu «AAA ≥ 7:1», no «≥ 10:1»: és el
+   mínim real del Mode Bancal (pedra-900 sobre el taronja de marca #FF7300, 7,12:1, en clar i en fosc). */
 import { TEXTOS_MODE_SENIOR } from '../../config/textosModeSenior.js';
 
 export const CODIS_IDIOMA_GUIA_PAS_A_PAS = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
@@ -38,9 +40,9 @@ export const TEXTOS_APARADOR_GUIA = Object.freeze({
     mostraRsvpData: 'Dissabte 17 d’octubre · 10:00 – 11:30',
     mostraRsvpAvisTitol: 'Coincidència d’horari a la teua agenda:',
     mostraRsvpAvisCos: 'Coincidix en horari amb «Mercat de llavors», on també has marcat «Assistiré». La teua resposta es conserva igualment.',
-    mostraSeniorCaption: 'Mostra de lectura · Interruptor d’un sol toc del Mode Bancal (Sol i Lletra Gran: lletra gran, 56 px i màxim contrast ≥ 10:1).',
+    mostraSeniorCaption: 'Mostra de lectura · Interruptor d’un sol toc del Mode Bancal (Sol i Lletra Gran: lletra gran, 56 px i contrast màxim AAA ≥ 7:1).',
     mostraSeniorEtiqueta: TEXTOS_MODE_SENIOR.ca.xip,
-    mostraSeniorEstat: 'Actiu · 56 × 56 px · Contrast ≥ 10:1',
+    mostraSeniorEstat: 'Actiu · 56 × 56 px · Contrast AAA ≥ 7:1',
     einesExtraH3: 'Més eines obertes i documentació de Sóc de Poble',
     einesExtraParagraf:
       'A més dels tretze passos anteriors, des d’ací pots obrir directament <strong>El Bar (TPV d’associacions)</strong> per a barres populars sense tiquet fiscal, l’<strong>Arbre Genealògic</strong> amb xifrat opcional per frase de pas, el <strong>Lector de notícies</strong> comarcal, el teu <strong>Perfil personal i d’entitats</strong> i la <strong>Wiki de Poble</strong> en format de <strong>lectura vertical contínua</strong> sense <strong>cap taula ampla</strong>.',
@@ -78,9 +80,9 @@ export const TEXTOS_APARADOR_GUIA = Object.freeze({
     mostraRsvpData: 'Sábado 17 de octubre · 10:00 – 11:30',
     mostraRsvpAvisTitol: 'Coincidencia de horario en tu agenda:',
     mostraRsvpAvisCos: 'Coincide en horario con «Mercado de semillas», donde también has marcado «Asistiré». Tu respuesta se conserva igualmente.',
-    mostraSeniorCaption: 'Muestra de lectura · Interruptor de un solo toque del Modo Bancal (Sol y Letra Grande: letra grande, 56 px y máximo contraste ≥ 10:1).',
+    mostraSeniorCaption: 'Muestra de lectura · Interruptor de un solo toque del Modo Bancal (Sol y Letra Grande: letra grande, 56 px y contraste máximo AAA ≥ 7:1).',
     mostraSeniorEtiqueta: TEXTOS_MODE_SENIOR.es.xip,
-    mostraSeniorEstat: 'Activo · 56 × 56 px · Contraste ≥ 10:1',
+    mostraSeniorEstat: 'Activo · 56 × 56 px · Contraste AAA ≥ 7:1',
     einesExtraH3: 'Más herramientas abiertas y documentación de Sóc de Poble',
     einesExtraParagraf:
       'Además de los trece pasos anteriores, desde aquí puedes abrir directamente <strong>El Bar (TPV de asociaciones)</strong> para barras populares sin tique fiscal, el <strong>Árbol Genealógico</strong> con cifrado opcional por frase de paso, el <strong>Lector de noticias</strong> comarcal, tu <strong>Perfil personal y de entidades</strong> y la <strong>Wiki de Poble</strong> en formato de <strong>lectura vertical continua</strong> sin <strong>ninguna tabla ancha</strong>.',
@@ -118,9 +120,9 @@ export const TEXTOS_APARADOR_GUIA = Object.freeze({
     mostraRsvpData: 'Saturday 17 October · 10:00 – 11:30',
     mostraRsvpAvisTitol: 'Schedule overlap in your calendar:',
     mostraRsvpAvisCos: 'Overlaps in time with «Seed swap market», which you also marked as «Attending». Your response is kept either way.',
-    mostraSeniorCaption: 'Reading specimen · One-tap Bancal Mode switch (Sun & Large Text: large type, 56 px targets and maximum contrast ≥ 10:1).',
+    mostraSeniorCaption: 'Reading specimen · One-tap Bancal Mode switch (Sun & Large Text: large type, 56 px targets and maximum AAA contrast ≥ 7:1).',
     mostraSeniorEtiqueta: TEXTOS_MODE_SENIOR.en.xip,
-    mostraSeniorEstat: 'Active · 56 × 56 px · Contrast ≥ 10:1',
+    mostraSeniorEstat: 'Active · 56 × 56 px · Contrast AAA ≥ 7:1',
     einesExtraH3: 'Additional open tools and Sóc de Poble documentation',
     einesExtraParagraf:
       'Beyond the thirteen steps above, you can jump straight to <strong>The Bar (association POS)</strong> for community counters without fiscal receipts, the passphrase-protected <strong>Family Tree</strong>, the regional <strong>News Reader</strong>, your <strong>personal and organisation Profile</strong> and the <strong>Village Wiki</strong> formatted for <strong>continuous vertical reading</strong> without <strong>any wide tables</strong>.',
@@ -158,9 +160,9 @@ export const TEXTOS_APARADOR_GUIA = Object.freeze({
     mostraRsvpData: 'Urriak 17, larunbata · 10:00 – 11:30',
     mostraRsvpAvisTitol: 'Ordutegi-gainjartzea zure agendan:',
     mostraRsvpAvisCos: 'Ordutegian bat dator «Hazi-merkatua» ekitaldiarekin, eta han ere «Joango naiz» markatu duzu. Zure erantzuna berdin gordeko da.',
-    mostraSeniorCaption: 'Irakurketa-lagina · Ukitu bakarreko Bankal Moduaren etengailua (Eguzkia eta Letra Handia: letra handia, 56 px eta kontraste handiena ≥ 10:1).',
+    mostraSeniorCaption: 'Irakurketa-lagina · Ukitu bakarreko Bankal Moduaren etengailua (Eguzkia eta Letra Handia: letra handia, 56 px eta AAA kontraste handiena ≥ 7:1).',
     mostraSeniorEtiqueta: TEXTOS_MODE_SENIOR.eu.xip,
-    mostraSeniorEstat: 'Aktibo · 56 × 56 px · Kontrastea ≥ 10:1',
+    mostraSeniorEstat: 'Aktibo · 56 × 56 px · Kontrastea AAA ≥ 7:1',
     einesExtraH3: 'Tresna ireki gehiago eta Sóc de Pobleren dokumentazioa',
     einesExtraParagraf:
       'Aurreko hamahiru urratsez gain, hemendik zuzenean ireki ditzakezu <strong>Taberna (elkarteen TPVa)</strong> tiketa fiskalik gabeko txosnetarako, pasaesaldidun <strong>Zuhaitz Genealogikoa</strong>, eskualdeko <strong>Albiste-irakurgailua</strong>, zure <strong>Profil pertsonal eta elkartekoa</strong> eta <strong>Herriko Wikia</strong> <strong>irakurketa bertikal jarraituan</strong> antolatuta <strong>taula zabalik gabe</strong>.',
@@ -198,9 +200,9 @@ export const TEXTOS_APARADOR_GUIA = Object.freeze({
     mostraRsvpData: 'Sábado 17 de outubro · 10:00 – 11:30',
     mostraRsvpAvisTitol: 'Coincidencia de horario na túa axenda:',
     mostraRsvpAvisCos: 'Coincide en horario con «Mercado de sementes», onde tamén marcaches «Asistirei». A túa resposta consérvase igualmente.',
-    mostraSeniorCaption: 'Mostra de lectura · Interruptor dun só toque do Modo Bancal (Sol e Letra Grande: letra grande, 56 px e máximo contraste ≥ 10:1).',
+    mostraSeniorCaption: 'Mostra de lectura · Interruptor dun só toque do Modo Bancal (Sol e Letra Grande: letra grande, 56 px e contraste máximo AAA ≥ 7:1).',
     mostraSeniorEtiqueta: TEXTOS_MODE_SENIOR.gl.xip,
-    mostraSeniorEstat: 'Activo · 56 × 56 px · Contraste ≥ 10:1',
+    mostraSeniorEstat: 'Activo · 56 × 56 px · Contraste AAA ≥ 7:1',
     einesExtraH3: 'Máis ferramentas abertas e documentación de Sóc de Poble',
     einesExtraParagraf:
       'Ademais dos trece pasos anteriores, dende aquí podes abrir directamente <strong>O Bar (TPV de asociacións)</strong> para barras populares sen tícket fiscal, a <strong>Árbore Xenealóxica</strong> con cifrado opcional por frase de paso, o <strong>Lector de novas</strong> comarcal, o teu <strong>Perfil persoal e de entidades</strong> e a <strong>Wiki de Poble</strong> en formato de <strong>lectura vertical continua</strong> sen <strong>ningunha táboa ancha</strong>.',

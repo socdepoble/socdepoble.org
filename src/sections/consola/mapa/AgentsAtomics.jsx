@@ -61,7 +61,7 @@ export function AgentsAtomics({ mapa }) {
       {agents.length ? (
         <section>
           <h3>Agents atòmics a Sóc de Poble</h3>
-          <GraellaXifres xifres={[...recompte, ...agents]} generat={mapa.generat} />
+          <GraellaXifres xifres={[...recompte, ...agents]} generat={mapa.generat} headingLevel="h4" />
         </section>
       ) : <>
         <GraellaXifres xifres={recompte} generat={mapa.generat} />
@@ -78,7 +78,7 @@ export function AgentsAtomics({ mapa }) {
           Mestre són estes quatre peces; cada targeta diu com està hui i porta a la seua
           pàgina, i el detall de fons és, per este ordre, a les pàgines {paginesDeLesPeces()} de la Consola.
         </p>
-        <GraellaXifres xifres={peces} generat={mapa.generat} />
+        <GraellaXifres xifres={peces} generat={mapa.generat} headingLevel="h4" />
       </section>
     </>
   );

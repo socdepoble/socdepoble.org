@@ -75,7 +75,11 @@ test('T53 · la xarxa @media de 480px continua per als navegadors sense @contain
 test('T53 · les fletxes acosten el glif al llibre; la cel·la tàctil no canvia', () => {
   expect(components).toContain('.bar-blue-left .bar-blue-left__arrere .icon { margin-inline-start: var(--sdp-space-2); }');
   expect(components).toContain('.bar-blue-left .bar-blue-left__endavant .icon { margin-inline-end: var(--sdp-space-2); }');
-  expect(components).toContain('.bar-blue-left .sp-card-action, .bar-blue .sp-card-actions .sp-card-action { width: var(--sdp-touch); min-width: var(--sdp-touch); height: var(--sdp-touch); min-height: var(--sdp-touch); }');
+  /* v1.2.23 · costura barra blava (ordre del Mestre 261123) · El kit Gemini
+     R32.44 (IDEA-324b, el botó Editar a la barra blava) afig la tercera
+     columna .bar-blue-right a la mateixa regla de la cel·la tàctil: les
+     fletxes i el trio la conserven sencera, i la nova columna en pren la mateixa. */
+  expect(components).toContain('.bar-blue-left .sp-card-action, .bar-blue .sp-card-actions .sp-card-action, .bar-blue-right .sp-card-action { width: var(--sdp-touch); min-width: var(--sdp-touch); height: var(--sdp-touch); min-height: var(--sdp-touch); }');
 });
 
 test('T53 · la graella base no canvia: el trio continua centrat respecte a tota la barra (variant A)', () => {

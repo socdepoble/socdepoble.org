@@ -195,7 +195,7 @@ export function FormulariFactura({ f, idioma = 'ca' }) {
 
   return (
     <form ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" noValidate onSubmit={revisa}>
-      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Qui factura?')}</h3>
+      <h4 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Qui factura?')}</h4>
       <dl className="sdp-gestoria-panell__dades">
         <div><dt>{tg(idioma, 'Nom legal')}</dt><dd>{f.config.nom}</dd></div>
         <div><dt>{tg(idioma, 'NIF')}</dt><dd>{f.config.nif}</dd></div>
@@ -206,7 +206,7 @@ export function FormulariFactura({ f, idioma = 'ca' }) {
           : 'Són les dades de l’empresa del pas 1: es canvien allí.')}
       </p>
 
-      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'A qui i què?')}</h3>
+      <h4 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'A qui i què?')}</h4>
       <details className="sdp-gestoria-panell__documents" open={mesOpcionsObertes || mesOpcions.obertes}
         onToggle={(event) => setMesOpcionsObertes(event.currentTarget.open)}>
         <summary>{tg(idioma, mesOpcions.resum)}</summary>
@@ -302,7 +302,7 @@ export function FormulariFactura({ f, idioma = 'ca' }) {
         </Camp>
       ) : null}
 
-      <h3 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Revisa i emet')}</h3>
+      <h4 className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Revisa i emet')}</h4>
       <Camp etiqueta={tg(idioma, 'Data de la factura')} obligatori ajuda={tg(idioma, 'Com a molt, la d’avui.')}>
         <CampText tipus="date" value={formulari.dataExpedicio} min={f.config.facturacio.dataPas} max={f.dataDeHui()}
           onChange={(event) => posa('dataExpedicio', event.target.value)} />

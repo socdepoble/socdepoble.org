@@ -31,6 +31,7 @@ import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 import { RUTA_PERFIL_PROJECTE, resolvePageSlugPath } from '../../config/navigation.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { localitzaPagina } from '../text/pageContent.r10.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import fontApp from '../../app/App.jsx?raw';
 import { FONT_DELS_DICCIONARIS as fontI18n } from '../../../tests/helpers/diccionaris.js';
@@ -78,11 +79,16 @@ const TEXTOS_2245 = {
   ],
   /* Derogat per l'ordre del Mestre del Gauntlet 261016 (pla 261016_0015, §0.1.3:
      EXIF íntegre per defecte, amb opt-out): l'entradilla del Mapa ja no és la de
-     2245, sinó la de pageContent.js. Títol, subtítol i data no canvien. */
+     2245, sinó la de pageContent.js. Títol, subtítol i data no canvien.
+     v1.2.23 · IDEA-331 (ordre del Mestre 261123) · REAPUNTADA A POSTA: el control
+     ja no és la casella «Conserva la ubicació i la data de la foto», sinó
+     l'interruptor d'un toc «Amaga el lloc» (CasellaExif, DialegEnquadrament.jsx).
+     v1.2.23 · L2-05 (Gauntlet R1) · REAPUNTADA A POSTA: una foto que només porta la data, o amb un lloc que no es
+     pot conservar, encara ensenya la casella d'abans (CasellaExif · teInterruptorDeLloc), i l'entradilla ho diu. */
   mapa: [
     'Publicar al Mapa',
     'Si tens coses que vols geolocalitzar, este és el lloc.',
-    'Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar desmarcant «Conserva la ubicació i la data de la foto». Les imatges que poses dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d\'altres pàgines i pobles.'
+    'Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar d\'un sol toc amb «Amaga el lloc» (si la foto només porta la data, o el lloc no es pot conservar, desmarcant «Conserva la ubicació i la data de la foto»). Les imatges que enganxes dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d\'altres pàgines i pobles.'
   ],
   vehicle: [
     'Vehicle Compartit',
@@ -216,7 +222,11 @@ const COS_2245 = {
     ]
   ],
   /* Gauntlet 261016 (§0.1.3) · La negreta del segon paràgraf diu ara que la foto
-     conserva l'EXIF; els tres H5 i els tres paràgrafs continuen sent els de 2245. */
+     conserva l'EXIF; els tres H5 i els tres paràgrafs continuen sent els de 2245.
+     v1.2.23 · IDEA-331 (ordre del Mestre 261123) · La negreta del control és ara
+     «Amaga el lloc», l'interruptor d'un toc.
+     v1.2.23 · L2-05 (Gauntlet R1) · I, darrere, la de la casella que encara es veu amb una foto que només porta
+     la data o amb un lloc que no es pot conservar. */
   mapa: [
     ['Un espai per a situar-nos al territori', 'La privacitat sempre per davant', 'Visibilitat oberta'],
     [
@@ -232,6 +242,7 @@ const COS_2245 = {
       'les conserva dins de la foto',
       'mapa del patrimoni',
       'llevar d\'un sol toc',
+      '«Amaga el lloc»',
       '«Conserva la ubicació i la data de la foto»',
       'dins del text es netegen sempre',
       'fixar un punt',
@@ -530,6 +541,39 @@ describe('destinsControl · les pàgines de les targetes (PAGE_COPY)', () => {
       expect(resolvePageSlugPath(desti.pagina), desti.pagina).toBeNull();
       expect(pagina.date, desti.pagina).toBe(dataDe(desti.id)[2]);
       expect([desti.pagina, pagina.labels]).toEqual([desti.pagina, []]);
+    }
+  });
+
+  /* v1.2.23 · IDEA-331 · Carril T (ordre del Mestre 261123) · Verificador de la ronda 2 (P2): en es, en, eu
+     i gl, «Publicar al Mapa» deia que el lloc es lleva desmarcant «Conserva la ubicación y la fecha de la
+     foto» (o el seu equivalent), i en valencià ho deia la pàgina de pageContent.js. La pàgina de cada
+     llengua (localitzaPagina, pageContent.r10.js) nomena ara el control viu: l'interruptor «Amaga el lloc»,
+     amb el rètol del seu diccionari (section.xat.adjunts.amagaLloc) en negreta. Cap casella per desmarcar. */
+  /* v1.2.23 · L2-05 (Gauntlet R1) · REAPUNTADA A POSTA: «cap casella per desmarcar» no era cert. Una foto que només
+     porta la data, o amb un lloc que no es pot conservar, encara ensenya la casella d'abans (CasellaExif ·
+     teInterruptorDeLloc; DialegEnquadrament.exif.test.jsx la fixa). L'invariant viu: la pàgina nomena l'interruptor en
+     negreta amb el rètol del diccionari i, si parla de desmarcar, ho fa amb el rètol viu de la casella
+     (editor.enquadrament.exifEtiqueta) en negreta, mai amb un d'antic. En valencià (pageContent.js), a més, diu en quins
+     casos es veu la casella. */
+  test.each(SUPPORTED_LANGUAGES.map(({ code }) => code))('%s · IDEA-331 · L2-05 · «Publicar al Mapa» nomena l’interruptor «Amaga el lloc» i, si parla d’una casella, la viva', (llengua) => {
+    const pagina = localitzaPagina(PAGE_COPY.publicar_mapa, llengua);
+    expect(pagina.contentLanguage).toBe(llengua);
+    const cos = new DOMParser().parseFromString(sanitizeHtml(pagina.html), 'text/html').body;
+    const tr = createTranslator(llengua);
+    const rotul = tr('section.xat.adjunts.amagaLloc');
+    expect(rotul).not.toBe('section.xat.adjunts.amagaLloc');
+    const negretes = [...cos.querySelectorAll('strong')].map((negreta) => negreta.textContent);
+    expect(negretes.some((negreta) => negreta.includes(rotul)), llengua).toBe(true);
+    const text = `${pagina.lead} ${cos.textContent}`;
+    expect(text).not.toMatch(/Keep photo location and date/i);
+    if (/desmarc|untick|unchecking|desmarkatu|kendu marka|marka kendu/i.test(text)) {
+      const casella = tr('editor.enquadrament.exifEtiqueta');
+      expect(casella).not.toBe('editor.enquadrament.exifEtiqueta');
+      expect(negretes.some((negreta) => negreta.includes(casella)), llengua).toBe(true);
+    }
+    if (llengua === 'ca') {
+      expect(pagina.lead).toContain('(si la foto només porta la data, o el lloc no es pot conservar, desmarcant «Conserva la ubicació i la data de la foto»)');
+      expect(cos.textContent).toContain('(si només porta la data, o el lloc no es pot conservar, desmarcant «Conserva la ubicació i la data de la foto»)');
     }
   });
 });

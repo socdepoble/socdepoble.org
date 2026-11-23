@@ -1,12 +1,14 @@
 /* v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · IDEA-323.4 · El rebateig del «Mode Bancal» a les guies vives.
    L'interruptor d'un toc es diu «Mode Bancal · Sol i Lletra Gran» en les cinc llengües (TEXTOS_MODE_SENIOR,
-   src/config/textosModeSenior.js) i, encés, posa la lletra gran, botons de 56 px i el màxim contrast (≥ 10:1).
+   src/config/textosModeSenior.js) i, encés, posa la lletra gran, botons de 56 px i el contrast màxim AAA (≥ 7:1)
+   (v1.2.23 · D-V1223-TEXT-BANCAL, ordre del Mestre 261123: abans deia «≥ 10:1», que ja no és cert).
    Les dues guies vives de /page/tot-el-que-pots-fer (l'Aparador de la Guia pas a pas i «Tot el que pots fer»)
    han de dir eixe nom i no els vells («Mode Sènior», «Lectura Gran» i les seues traduccions).
    Fora d'esta prova queden, perquè són història: les cròniques datades (pageContent.r10.js, coherenciaEditorial*),
    els comentaris del codi i les claus internes (mostraSenior*, TEXTOS_MODE_SENIOR).
-   Pendent per a la v1.2.23 (en edició per una altra mà): public/md/guia-pas-a-pas.md i la seua còpia a
-   src/data/wikiManifest.js. */
+   v1.2.23 · costura K7 (ordre del Mestre 261123) · public/md/guia-pas-a-pas.md i la seua còpia a
+   src/data/wikiManifest.js ja diuen «Mode Bancal» i «AAA (≥ 7:1)»; el «10:1» a public/md el guarda
+   textosModeSenior.veritatBancal.v1223.test.js. */
 import { createElement } from 'react';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -57,14 +59,18 @@ describe('v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · Les guies vives anomenen el
     }
   });
 
-  test('la mostra de l’interruptor de l’Aparador diu, en cada llengua, el rètol complet viu i el contrast ≥ 10:1', () => {
+  /* v1.2.23 · D-V1223-TEXT-BANCAL (ordre del Mestre 261123) · AAA ≥ 7:1 i cap 10:1. S'actualitza a posta. */
+  test('la mostra de l’interruptor de l’Aparador diu, en cada llengua, el rètol complet viu i el contrast AAA ≥ 7:1 (cap 10:1)', () => {
     for (const codi of CODIS_IDIOMA_GUIA_PAS_A_PAS) {
       cleanup();
       const tx = textosAparadorGuia(codi);
       expect(tx.mostraSeniorEtiqueta, codi).toBe(TEXTOS_MODE_SENIOR[codi].xip);
       expect(tx.mostraSeniorCaption, codi).toContain(TEXTOS_MODE_SENIOR[codi].xipCurt);
-      expect(tx.mostraSeniorCaption, codi).toContain('≥ 10:1');
-      expect(tx.mostraSeniorEstat, codi).toContain('≥ 10:1');
+      expect(tx.mostraSeniorCaption, codi).toContain('AAA');
+      expect(tx.mostraSeniorCaption, codi).toContain('≥ 7:1');
+      expect(tx.mostraSeniorEstat, codi).toContain('AAA ≥ 7:1');
+      expect(tx.mostraSeniorCaption, codi).not.toContain('10:1');
+      expect(tx.mostraSeniorEstat, codi).not.toContain('10:1');
 
       const { container } = render(
         createElement(MemoryRouter, { rutaInicial: '/page/tot-el-que-pots-fer' },
@@ -74,6 +80,7 @@ describe('v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · Les guies vives anomenen el
       expect(mostra, codi).toBeTruthy();
       expect(mostra.textContent, codi).toContain(TEXTOS_MODE_SENIOR[codi].xip);
       expect(container.textContent, codi).not.toMatch(NOMS_VELLS);
+      expect(container.textContent, codi).not.toContain('10:1');
     }
   });
 
@@ -97,7 +104,8 @@ describe('v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · Les guies vives anomenen el
     }
   });
 
-  test('els passos de Traduccions, L’Avisador i el Panell diuen el nom viu; el del Panell, el rètol complet i el contrast', () => {
+  /* v1.2.23 · D-V1223-TEXT-BANCAL · El contrast dels passos de Traduccions i del Panell és AAA (≥ 7:1). S'actualitza a posta. */
+  test('els passos de Traduccions, L’Avisador i el Panell diuen el nom viu; el del Panell, el rètol complet i el contrast AAA (≥ 7:1)', () => {
     for (const codi of CODIS_IDIOMA_GUIA_PAS_A_PAS) {
       const { html } = localitzaPagina(PAGE_COPY[CLAU], codi, CLAU);
       const { xip, xipCurt } = TEXTOS_MODE_SENIOR[codi];
@@ -108,8 +116,11 @@ describe('v1.2.22 · Gauntlet R1 (L2-04 · L5-05) · Les guies vives anomenen el
       }
       const panell = pasAmbEnllac(html, '/control');
       expect(panell, codi).toContain(xip);
-      expect(panell, codi).toContain('≥ 10:1');
-      expect(pasAmbEnllac(html, '/traduccions'), codi).toContain('≥ 10:1');
+      expect(panell, codi).toContain('AAA');
+      expect(panell, codi).toContain('(≥ 7:1)');
+      expect(pasAmbEnllac(html, '/traduccions'), codi).toContain('AAA');
+      expect(pasAmbEnllac(html, '/traduccions'), codi).toContain('(≥ 7:1)');
+      expect(html, codi).not.toContain('10:1');
     }
   });
 });

@@ -17,6 +17,10 @@ import { Llinatge } from '../Llinatge.jsx';
    notes noves. La vista no és dins de cap document: porta les tres props
    opcionals de CopyrightPage (etiquetaTornar, introduccio i llegenda) amb els
    textos de l'ajust. Els altres casos no en porten cap: el DOM de sempre. */
+
+/* v1.2.23 · K5 (ordre del Mestre 261123) · El títol de la vista és un h3 des de
+   R32.47 de Gemini (IDEA-319, CopyrightPage.jsx:213): la nota d'accessibilitat
+   diu «h3», i no «h2». */
 const vistaDelCompte = (valor) => ({
   etiquetaTornar: 'Tornar al compte',
   introduccio: `Tria amb quins drets naixen les teues notes noves. Ara són «${valor}». Res no canvia fins que prems «Desar autoria».`,
@@ -67,7 +71,7 @@ export default function EspecimenDretsAutor() {
         ['BotoDretsAutor', '{ valor, triada?, onClick }', '—', 'El disparador (CopyrightSelector.jsx), amb data-sdp-drets (el destí del focus de l’editor). Sense triada, el marcatge de sempre, sense aria-haspopup: «Elegir drets d’autor». Amb triada (la llicència desada de veres, mai la reserva «© Sóc de Poble»), la píndola plena la mostra i es diu «Drets d’autor: X» (decisió del Mestre, 261008). A l’editor, la triada és document.copyright o, si l’adaptador porta la clau dretsTriats (el Perfil, on el copyright de lectura és el «© Nom» de sèrie), esta clau.'],
       ]}
       a11y={[
-        'En obrir, el focus va al títol (h2, tabIndex -1); en tancar, torna al botó que l’ha oberta i la pàgina recupera el scroll.',
+        'En obrir, el focus va al títol (h3, tabIndex -1); en tancar, torna al botó que l’ha oberta i la pàgina recupera el scroll.',
         'Escape, «Tornar al document» i «Cancel·lar» tornen sense desar.',
         'Ràdios natius dins d’un fieldset amb llegenda; cada llicència és una targeta sencera amb nom, explicació, exemple i permisos (sempre amb text).',
         'La closca amagada (display: none) ix de l’arbre d’accessibilitat: no queden controls invisibles al Tab.',

@@ -44,8 +44,13 @@
  * actor es fa al client: l'històric és una finestra, no l'historial sencer.
  * El contingut base (app_content) arriba sencer.
  */
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import {
+  revisaPaginaSistema,
+  subscriuRevisionsEditorials,
+  versioRevisionsEditorials
+} from '../../data/revisionsEditorialsDelNavegador.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useUIState } from '../../app/contexts/UIContext';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
@@ -197,7 +202,24 @@ function modeDeDades(config) {
 export function usePaginesDelSistema() {
   const core = useCoreContent();
   const language = useEstatDeLApp()?.language || 'ca';
-  const pageCopy = core?.pageCopy;
+  const versioRevisions = useSyncExternalStore(
+    subscriuRevisionsEditorials,
+    versioRevisionsEditorials,
+    versioRevisionsEditorials
+  );
+  const pageCopyRaw = core?.pageCopy;
+  const pageCopy = useMemo(() => {
+    void versioRevisions;
+    if (!pageCopyRaw || typeof pageCopyRaw !== 'object') return pageCopyRaw;
+    let canviat = false;
+    const nou = {};
+    for (const [clau, valor] of Object.entries(pageCopyRaw)) {
+      const rev = revisaPaginaSistema(clau, valor);
+      if (rev !== valor) canviat = true;
+      nou[clau] = rev;
+    }
+    return canviat ? nou : pageCopyRaw;
+  }, [pageCopyRaw, versioRevisions]);
   const targetes = useMemo(() => {
     const llista = targetesDeSistema(pageCopy, { language });
     return llista.length ? llista : CAP;

@@ -783,7 +783,7 @@ test('sense conversa la dreta mostra el document per defecte; amb conversa, nom�
   expect(dreta().querySelector('.sdp-xat-buit')).toBeNull();
   expect(dreta().querySelector('.sdp-xat-conversa')).toBeTruthy();
   /* Tornar a les converses (entrada «Xats» del rail) deselecciona. */
-  fireEvent.click(screen.getByRole('button', { name: 'Xats' }));
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Xats' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
 });
 
@@ -927,15 +927,14 @@ test('D16 · «Novetats» no és al rail del Xat ni al del Control del xat, i /c
   expect(within(rail).getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'))).toEqual([]);
 });
 
-test('el rail seguix el patró de missatgeria: les entrades en el seu ordre (sense Novetats, D16), capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
+test('el rail seguix el patró de missatgeria: les entrades en el seu ordre (sense Novetats, D16), sense fila superior «Menú», amb «Ajustos del xat» i la identitat activa al peu', () => {
   mocks.threadId = null;
   ambComunitat();
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
   const noms = within(sidebar).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
-  /* Torn 260930 (T1): plegat, l'avatar del peu obri el full «Ajustos»
-     («Tu: ajustos»); abans portava al perfil («Edita el perfil»). */
-  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Tu: ajustos']);
+  /* IDEA-327 v2 (R32.46): cap «Expandir Menú» a dalt; «Ajustos del xat» és fila explícita i el peu obri el selector d'identitat. */
+  expect(noms).toEqual(['Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Ajustos del xat', 'Javi: Amb qui actues?']);
   expect(screen.queryByRole('button', { name: /Configuració/ })).toBeNull();
   /* Plegat: la comunitat és una icona d'avatar QUADRAT; el peu, l'avatar propi. */
   const comunitat = within(sidebar).getByRole('button', { name: 'Sóc de Poble' });
@@ -983,32 +982,32 @@ test('3B · la vista oberta marca la seua entrada del rail i «Xats» la deixa',
    del svg: les sis icones del rail fan 24, com la roda de «Menú», en els dos
    estats, i la llista desplegada conserva la classe que ancora la CSS de la
    graella (modules.css, .sdp-xat-rail-llista) i el focus de BotoObriRail. */
-test('el rail porta icones de 24 com la roda de Menú, plegat i desplegat', () => {
+test('el rail porta icones de 24 plegat i desplegat, governat pel títol clicable «💬 Xats ▸»', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
+  const botoTitol = document.querySelector('#app-grid-list .sdp-xat-obri-rail');
   const mides = (arrel) => [...arrel.querySelectorAll('svg')].map((s) => `${s.getAttribute('width')}x${s.getAttribute('height')}`);
-  expect(mides(sidebar.querySelector('.app-grid-col-header__rail-top'))).toEqual(['24x24']);
-  /* D16: cinc icones plegat (Novetats és amagada). */
-  expect(mides(sidebar.querySelector('.sdp-workspace-rail'))).toEqual(Array(5).fill('24x24'));
+  expect(sidebar.querySelector('.app-grid-col-header__rail-top')).toBeNull();
+  /* D16 + IDEA-327 v2: cinc entrades + Ajustos del xat = sis icones de 24 plegat. */
+  expect(mides(sidebar.querySelector('.sdp-workspace-rail'))).toEqual(Array(6).fill('24x24'));
 
-  fireEvent.click(screen.getByRole('button', { name: 'Expandir Menú' }));
-  expect(mides(sidebar.querySelector('.app-grid-col-header__plec'))).toEqual(['24x24']);
-  /* Onada 3B · Les files de la llista principal (quatre des de D16, sense
-     Novetats) i Destacats dins de «Més», amb la mateixa graella. El xebró de
-     la secció també fa 24. */
-  const [llista, mes] = sidebar.querySelectorAll('.sdp-xat-rail-llista');
+  fireEvent.click(botoTitol);
+  expect(botoTitol.getAttribute('aria-expanded')).toBe('true');
+  const [llista, mes, ajustos] = sidebar.querySelectorAll('.sdp-xat-rail-llista');
   expect(llista.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(4);
   expect(mides(llista)).toEqual(Array(4).fill('24x24'));
   expect(mes.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(1);
   expect(mides(mes)).toEqual(['24x24']);
+  expect(ajustos.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(1);
+  expect(mides(ajustos)).toEqual(['24x24']);
   expect(mides(sidebar.querySelector('.sdp-xat-rail-seccio__cap'))).toEqual(['24x24']);
   /* L'estat del rail es recorda (setVal): es deixa plegat per a la prova següent. */
-  fireEvent.click(screen.getByRole('button', { name: 'Replegar Menú' }));
-  expect(screen.getByRole('button', { name: 'Expandir Menú' })).toBeTruthy();
+  fireEvent.click(botoTitol);
+  expect(botoTitol.getAttribute('aria-expanded')).toBe('false');
 });
 
-test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Converses s’arrossega i recorda l’amplària a %ipx (%s)', async (amplada, layout) => {
+test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Xats s’arrossega i recorda l’amplària a %ipx (%s)', async (amplada, layout) => {
   const ampladesAnteriors = getVal('sdp-grid-widths');
   const railAnterior = getVal('sdp-xat-rail');
   // AppGridShell conserva un menú vàlid (200–340px); 420 era sanejat a 260.
@@ -1020,7 +1019,7 @@ test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Converses s’arrosse
     const shell = document.querySelector('.app-grid-shell');
     expect(shell.dataset.layout).toBe(layout);
     expect(screen.queryByRole('separator', { name: 'Redimensionar Menú' })).toBeNull();
-    const divisor = screen.getByRole('separator', { name: 'Redimensionar Converses' });
+    const divisor = screen.getByRole('separator', { name: 'Redimensionar Xats' });
     const captura = vi.fn();
     const allibera = vi.fn();
     divisor.setPointerCapture = captura;
@@ -1044,14 +1043,14 @@ test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Converses s’arrosse
 
     unmount();
     render(<XatSection />);
-    expect(screen.getByRole('separator', { name: 'Redimensionar Converses' }).getAttribute('aria-valuenow')).toBe('450');
+    expect(screen.getByRole('separator', { name: 'Redimensionar Xats' }).getAttribute('aria-valuenow')).toBe('450');
     expect(document.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list')).toBe('450px');
     // El mateix separador universal també es governa amb el teclat.
-    fireEvent.keyDown(screen.getByRole('separator', { name: 'Redimensionar Converses' }), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByRole('separator', { name: 'Redimensionar Xats' }), { key: 'ArrowLeft' });
     expect(getVal('sdp-grid-widths').middle).toBe(434);
     // El límit preserva espai per a la conversa: menú plegat en ample,
     // menú superposat en mitjà, sense restar l'amplària desplegada desada.
-    fireEvent.keyDown(screen.getByRole('separator', { name: 'Redimensionar Converses' }), { key: 'End' });
+    fireEvent.keyDown(screen.getByRole('separator', { name: 'Redimensionar Xats' }), { key: 'End' });
     expect(getVal('sdp-grid-widths').middle).toBe(layout === 'ample' ? 520 : 480);
     expect(document.querySelector('.app-grid-shell').dataset.layout).toBe(layout);
   } finally {
@@ -1070,7 +1069,7 @@ test('en mòbil no hi ha divisor entre panells que s’alternen', () => {
   expect(screen.queryByRole('separator', { name: /Redimensionar/ })).toBeNull();
 });
 
-test('expandir el menú el manté obert quan l’amplària de Converses força el mode mitjà', () => {
+test('expandir el menú el manté obert quan l’amplària de Xats força el mode mitjà', () => {
   const ampladesAnteriors = getVal('sdp-grid-widths');
   const railAnterior = getVal('sdp-xat-rail');
   setVal('sdp-grid-widths', { left: 260, middle: 450 });
@@ -1080,14 +1079,15 @@ test('expandir el menú el manté obert quan l’amplària de Converses força e
     render(<XatSection />);
     const shell = document.querySelector('.app-grid-shell');
     expect(shell.dataset.layout).toBe('ample');
-    fireEvent.click(screen.getByRole('button', { name: 'Expandir Menú' }));
+    const botoTitol = document.querySelector('#app-grid-list .sdp-xat-obri-rail');
+    fireEvent.click(botoTitol);
     expect(shell.dataset.layout).toBe('mitja');
     expect(shell.dataset.panell).toBe('left');
     expect(document.getElementById('app-grid-sidebar').getAttribute('aria-hidden')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Xats' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Tanca el menú' }));
+    expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Xats' })).toBeTruthy();
+    fireEvent.click(botoTitol);
     expect(document.getElementById('app-grid-sidebar').getAttribute('aria-hidden')).toBe('true');
-    expect(screen.getByRole('separator', { name: 'Redimensionar Converses' })).toBeTruthy();
+    expect(screen.getByRole('separator', { name: 'Redimensionar Xats' })).toBeTruthy();
   } finally {
     cleanup();
     if (ampladesAnteriors == null) delVal('sdp-grid-widths');
@@ -1104,7 +1104,7 @@ test('el drag parteix de l’amplària visible quan la desada supera l’espai d
   try {
     render(<XatSection />);
     expect(document.querySelector('.app-grid-shell').dataset.layout).toBe('mitja');
-    const divisor = screen.getByRole('separator', { name: 'Redimensionar Converses' });
+    const divisor = screen.getByRole('separator', { name: 'Redimensionar Xats' });
     expect(divisor.getAttribute('aria-valuenow')).toBe('480');
     expect(getVal('sdp-grid-widths').middle).toBe(520);
     const pointer = (tipus, x) => {
@@ -1162,7 +1162,7 @@ test('la llista seguix el patró de missatgeria: títol sense «…», lupa i «
   expect(fila.querySelector('.sdp-xat-mes, .sdp-xat-menu-llista, [aria-haspopup="menu"]')).toBeNull();
   /* Ordre del DOM = ordre visual: títol, lupa i «+». La lupa és un botó
      d'icona de --sdp-touch (.sdp-xat-icona) sense cap menú darrere. */
-  const titol = within(fila).getByText('Converses');
+  const titol = within(fila).getByText('Xats');
   const lupa = within(fila).getByRole('button', { name: 'Cerca converses' });
   const abans = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
   expect(abans(titol, lupa)).toBe(true);
@@ -2404,18 +2404,19 @@ test('R21 f2 · «Nova conversa» amb el xat propi per confirmar: el «no» del 
    modules.css; jsdom no carrega CSS): la fila de títol obri el rail, el rail
    va sempre desplegat amb etiquetes (mai el de 56px d'icones, que quedava
    perdut dins del panell) i la seua creu el tanca. */
-test('en mode estret la fila de títol obri el rail desplegat i la creu del rail el tanca', async () => {
+test('en mode estret la fila de títol obri el rail desplegat («Xats ▸» -> «Xats ◂») i Escape el tanca amb retorn de focus', async () => {
   mocks.amplada = 375;
   mocks.threadId = null;
   render(<XatSection />);
   const closca = document.querySelector('.app-grid-shell');
   await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
   const rail = document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail');
-  /* El botó es diu com el panell que obri. */
-  expect(rail.getAttribute('aria-label')).toBe('Menú');
+  expect(rail.querySelector('.app-grid-col-header__titol')?.textContent).toBe('Xats');
+  expect(rail.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('▸');
   expect(rail.getAttribute('aria-expanded')).toBe('false');
   fireEvent.click(rail);
   expect(closca.getAttribute('data-panell')).toBe('left');
+  expect(rail.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('◂');
   const sidebar = document.getElementById('app-grid-sidebar');
   expect(sidebar.getAttribute('data-obert')).toBe('true');
   expect(sidebar.querySelector('.app-grid-col-header--collapsed')).toBeNull();
@@ -2423,10 +2424,8 @@ test('en mode estret la fila de títol obri el rail desplegat i la creu del rail
   /* La llista passa a `inert`: el focus entra a la primera entrada del rail. */
   expect(document.activeElement).toBe(within(sidebar).getByRole('button', { name: 'Xats' }));
 
-  /* Tota la pastilla del rail el tanca: també el text i amb retorn de focus. */
-  const tanca = within(sidebar).getByRole('button', { name: 'Tanca el menú' });
-  expect(tanca.querySelector('button')).toBeNull();
-  fireEvent.click(within(tanca).getByText('Menú'));
+  /* Escape dins del rail el tanca i retorna el focus al títol disparador. */
+  fireEvent.keyDown(sidebar.querySelector('aside.sdp-workspace-column'), { key: 'Escape' });
   expect(closca.getAttribute('data-panell')).toBe('middle');
   expect(document.activeElement).toBe(rail);
 });
@@ -2477,16 +2476,16 @@ test('en mode estret el Control del xat porta el botó del rail, cap fila buida 
   expect(dreta.querySelector('.sdp-xat-capcalera--opcio')).toBeNull();
 });
 
-test('en ample el Control del xat conserva la fila 2 i el rail plegat d\'icones, sense controls de mòbil', () => {
+test('en ample el Control del xat conserva la fila 2 i el rail plegat d\'icones, governat pel títol clicable', () => {
   render(<XatControlSection />);
   const llista = document.getElementById('app-grid-list');
   expect(llista.querySelector('.app-grid-col-header--dark-intens')).toBeTruthy();
-  expect(llista.querySelector('.sdp-xat-obri-rail')).toBeNull();
+  expect(llista.querySelector('.sdp-xat-obri-rail')).toBeTruthy();
   const sidebar = document.getElementById('app-grid-sidebar');
   expect(sidebar.querySelector('.app-grid-col-header--collapsed')).toBeTruthy();
   expect(sidebar.querySelector('.sdp-xat-rail-llista')).toBeNull();
   expect(screen.queryByRole('button', { name: 'Tanca el menú' })).toBeNull();
-  expect(screen.getByRole('button', { name: 'Expandir Menú' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Expandir Menú' })).toBeNull();
 });
 
 /* Mòbil: la closca del Xat ja no pinta pestanyes en estret (cada columna
@@ -2518,7 +2517,7 @@ test('en mode estret, la fletxa torna a la llista i des d\'ella es torna a la co
 
 /* Tauleta (mitjà): la mateixa fila de títol que en mòbil; el botó obri el
    rail desplegat, la creu del rail el tanca, i el focus torna al botó. */
-test('en mode mitjà la fila de títol obri el rail desplegat, la creu el tanca i el focus torna al botó', async () => {
+test('en mode mitjà la fila de títol obri el rail desplegat, Escape o el propi títol el tanca i el focus torna al botó', async () => {
   mocks.amplada = 820;
   mocks.threadId = null;
   render(<XatSection />);
@@ -2532,7 +2531,7 @@ test('en mode mitjà la fila de títol obri el rail desplegat, la creu el tanca 
   expect(sidebar.querySelector('.app-grid-col-header--collapsed')).toBeNull();
   expect(sidebar.contains(document.activeElement)).toBe(true);
 
-  fireEvent.click(within(sidebar).getByRole('button', { name: 'Tanca el menú' }));
+  fireEvent.keyDown(sidebar.querySelector('aside.sdp-workspace-column'), { key: 'Escape' });
   expect(closca.getAttribute('data-panell')).toBe('');
   expect(document.activeElement).toBe(rail);
 
@@ -2559,9 +2558,7 @@ function muntaXatEnOmbra(element) {
 }
 
 test.each([
-  ['mitjà', 820, 'Tanca el menú'],
   ['mitjà', 820, 'Xats'],
-  ['estret', 375, 'Tanca el menú'],
   ['estret', 375, 'Xats']
 ])('T6 · en %s (%i px) dins d’un Shadow DOM tancat, «%s» tanca el rail i el focus torna al botó del rail', async (_, amplada, nom) => {
   mocks.amplada = amplada;
@@ -2647,23 +2644,22 @@ test('?amb=<id> obri o crea la conversa amb eixa identitat i hi navega', async (
   expect(mocks.createThread).toHaveBeenCalledTimes(1);
 });
 
-test('en ample la fila de títol no porta el botó del rail', () => {
+test('en ample el títol clicable «Xats ▸ / ◂» desplega i replega el rail conservant el focus', () => {
   mocks.threadId = null;
   render(<XatSection />);
-  expect(document.querySelector('.sdp-xat-obri-rail')).toBeNull();
-});
-
-test('en ample el text de Menú replega tot el rail i conserva el focus entre els controls', () => {
-  render(<XatSection />);
-  fireEvent.click(screen.getByRole('button', { name: 'Expandir Menú' }));
-  const replega = screen.getByRole('button', { name: 'Replegar Menú' });
-  expect(document.activeElement).toBe(replega);
-  expect(replega.getAttribute('aria-expanded')).toBe('true');
-  expect(replega.querySelector('button')).toBeNull();
-  fireEvent.click(within(replega).getByText('Menú'));
-  const expandir = screen.getByRole('button', { name: 'Expandir Menú' });
-  expect(expandir.getAttribute('aria-expanded')).toBe('false');
-  expect(document.activeElement).toBe(expandir);
+  const botoTitol = document.querySelector('#app-grid-list .sdp-xat-obri-rail');
+  expect(botoTitol).toBeTruthy();
+  expect(botoTitol.getAttribute('aria-expanded')).toBe('false');
+  expect(botoTitol.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('▸');
+  botoTitol.focus();
+  fireEvent.click(botoTitol);
+  expect(botoTitol.getAttribute('aria-expanded')).toBe('true');
+  expect(botoTitol.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('◂');
+  expect(document.activeElement).toBe(botoTitol);
+  fireEvent.click(botoTitol);
+  expect(botoTitol.getAttribute('aria-expanded')).toBe('false');
+  expect(botoTitol.querySelector('.sdp-xat-titol-seccio__fletxa')?.textContent).toBe('▸');
+  expect(document.activeElement).toBe(botoTitol);
 });
 
 test('en mode estret primer es veu la llista i, amb conversa, la conversa', async () => {
@@ -2690,7 +2686,7 @@ test('la capçalera del Control del xat porta la icona de «Novetats» (CircleDa
   const rail = document.getElementById('app-grid-sidebar');
   expect(within(rail).queryByRole('button', { name: 'Novetats' })).toBeNull();
   const columna = screen.getByRole('complementary', { name: 'Control del xat' });
-  const capcalera = columna.querySelector('.app-grid-col-header__plec svg');
+  const capcalera = columna.querySelector('.sdp-xat-titol-seccio svg');
   expect(capcalera).toBeTruthy();
   expect(capcalera.getAttribute('class')).toMatch(/circle-dashed/);
   expect(columna.querySelector('.app-grid-col-header .lucide-settings')).toBeNull();
@@ -2754,14 +2750,15 @@ test('3B · rail desplegat: «Més» amb Destacats i «Comunitats» amb les comu
   expect(getVal('sdp-xat-rail-mes')).toBe('obert');
 }));
 
-test('3B · rail desplegat: el peu fix porta l’avatar propi, «Tu» i el llapis «Edita el perfil»', () => ambRailObert(() => {
+test('3B · rail desplegat: el peu fix porta l’avatar propi, el nom actiu («Amb qui actues?») i el llapis «Edita el perfil»', () => ambRailObert(() => {
   mocks.threadId = null;
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
   const peu = sidebar.querySelector('.sdp-xat-rail-peu');
   expect(peu.closest('nav')).toBeNull();
   expect(peu.querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi');
-  expect(within(peu).getByText('Tu')).toBeTruthy();
+  expect(within(peu).getByRole('button', { name: 'Javi: Amb qui actues?' })).toBeTruthy();
+  expect(within(peu).getByText('Javi')).toBeTruthy();
   const llapis = within(peu).getByRole('button', { name: 'Edita el perfil' });
   expect(llapis.querySelector('svg.lucide-pencil')).toBeTruthy();
   fireEvent.click(llapis);
@@ -2901,7 +2898,7 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   /* Captura 19.41.58: la cerca és una lupa a la fila de títol, amb ordenar i
      seleccionar; cap cercador en píndola. */
   expect(within(mm).queryByRole('searchbox')).toBeNull();
-  expect(within(mm.querySelector('.app-grid-col-header')).getAllByRole('button').map((b) => b.getAttribute('aria-label')))
+  expect(within(mm.querySelector('.app-grid-col-header__accions')).getAllByRole('button').map((b) => b.getAttribute('aria-label')))
     .toEqual(['Cerca', 'Ordena', 'Selecciona']);
   expect(within(mm).getByText('Contingut multimèdia de totes les converses')).toBeTruthy();
   const segments = within(mm).getByRole('group', { name: 'Tipus de contingut' });
@@ -2943,7 +2940,7 @@ test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conve
      l'entrada del rail a ClosCaXat), dins del plec del títol i no entre les accions. */
   const capcalera = columna.querySelector('.app-grid-col-header');
   expect(capcalera.querySelector('.app-grid-col-header__titol').textContent).toBe('Contingut multimèdia');
-  expect(capcalera.querySelectorAll('.app-grid-col-header__plec svg.lucide-image')).toHaveLength(1);
+  expect(capcalera.querySelectorAll('.sdp-xat-titol-seccio svg.lucide-image')).toHaveLength(1);
   expect(capcalera.querySelector('.app-grid-col-header__accions svg.lucide-image')).toBeNull();
   /* Fitxers, per defecte: l'avís cert dels adjunts F1 (xat-ux-a11y-06, 261104). */
   expect(within(columna).getByRole('region', { name: 'En construcció' }).textContent)

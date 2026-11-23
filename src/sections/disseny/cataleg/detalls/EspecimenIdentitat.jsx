@@ -49,6 +49,9 @@ export default function EspecimenIdentitat() {
         ['BotoIdentitatActiva.avatar', 'string | null', 'null', 'Logo o foto (també sdp-media://, que es resol). Una entitat no hereta mai la foto de la persona.'],
         ['CalaixIdentitats.identitats', '[{ tipus, id, nom, avatar, rol, activa }]', '[]', 'Les d’IdentitatContext; l’activa porta aria-current.'],
         ['CalaixIdentitats.onTria(tipus, id)', 'funció', '—', 'El pare crida setActor i tanca el calaix.'],
+        /* v1.2.23 · L5-02 (Gauntlet R1) · Les props noves dels textos fixos del calaix. */
+        ['CalaixIdentitats.etiquetaTitol · etiquetaDescripcio · etiquetaLlista · etiquetaActiva', 'string', '«Amb qui actues?» · la descripció · «Identitats» · «Activa»', 'Els textos fixos del calaix. El Xat (ClosCaXat) i la barra negra (useIdentitatDeLaBarra) els passen en la llengua de la interfície (textosCalaixIdentitats.js); esta mostra pinta el valencià de sempre.'],
+        ['CalaixIdentitats.etiquetaRol(identitat)', 'funció | null', 'null', 'El text del rol de cada fila. Sense ella, «Persona», el rol de rols.js o «Organització», en valencià; el Xat hi passa els rols traduïts (section.perfil.rol.*).'],
         ['TargetaAdministrar.estat', "'pot-connectar' | 'administres' | 'activant' | 'comprovant' | 'pendent' | 'rebutjada' | 'te-propietaria' | 'no-del-poble' | 'membre' | 'sense-sessio' | 'no-disponible'", '—', 'Ho calcula estatDeLAdministracio.'],
         ['TargetaAdministrar.errorLectura', 'Error | null', 'null', 'Error en LLEGIR les peticions pròpies: alerta «No s’ha pogut comprovar», mai «No s’ha pogut enviar».'],
       ]}

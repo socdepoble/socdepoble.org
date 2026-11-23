@@ -113,9 +113,9 @@ async function ambSignatura(manifest = TRACTOR_FACTURES) {
   return magatzem;
 }
 
-const pas = (n) => screen.getByRole('heading', { level: 2, name: new RegExp(`^${n}\\. `) }).closest('section');
+const pas = (n) => screen.getByRole('heading', { level: 3, name: new RegExp(`^${n}\\. `) }).closest('section');
 const ruta = () => screen.getByLabelText('Ruta').textContent;
-const primerPas = async () => within((await screen.findByRole('heading', { level: 2, name: '1. Aprovació dels tractors' })).closest('section'));
+const primerPas = async () => within((await screen.findByRole('heading', { level: 3, name: '1. Aprovació dels tractors' })).closest('section'));
 
 describe('la porta d’aprovació, endollada', () => {
   test('el catàleg real té empremta: cap font absent', () => {

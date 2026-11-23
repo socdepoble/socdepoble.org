@@ -168,7 +168,7 @@ describe('Onada R32.15 · T1 · Mode Sènior (P1-80 / IDEA-252) + <= 359 px', ()
     expect(xip.getAttribute('aria-checked')).toBe('true');
   });
 
-  test('contrast >= 10:1 AAA en clar i fosc, dianes >= 56x56 px (3.5rem), botons centrats i 0 selectors :has()', () => {
+  test('contrast AAA (>= 7:1 l\'accent viu, >= 10:1 el text principal) en clar i fosc, dianes >= 56x56 px (3.5rem), botons centrats i 0 selectors :has()', () => {
     const tokensCss = llig('src/css/tokens.css');
     const canonCss = llig('src/css/design-tokens.css');
     const componentsCss = llig('src/css/components.css');

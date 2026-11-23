@@ -66,7 +66,9 @@ export const SECTIONS = [
   { id: 'constitucio', path: '/constitucio', label: 'Constitució', shortLabel: 'Lleis', icon: ShieldCheck, kind: 'text', pageKey: 'constitucio' },
   { id: 'ia', path: '/anima', label: "L'ànima de la iaia", shortLabel: 'IAIA', icon: BrainCircuit, kind: 'text', pageKey: 'anima' },
   { id: 'roadmap', path: '/roadmap', label: 'Full de ruta', shortLabel: 'Ruta', icon: Route, kind: 'text', pageKey: 'roadmap' },
-  { id: 'versions', path: '/versions', label: 'Versions', shortLabel: 'Versions', icon: FileText, kind: 'text', pageKey: 'versions' },
+  /* v1.2.23 · IDEA-333 (ordre del Mestre 261123) · `versioViva`: el rètol del menú lateral (i el title del rail plegat)
+     porta darrere la versió viva, «Versions · v1.2.23» (rotolDeLaSeccio, ací baix). La ruta i la pàgina no canvien. */
+  { id: 'versions', path: '/versions', label: 'Versions', shortLabel: 'Versions', icon: FileText, kind: 'text', pageKey: 'versions', versioViva: true },
   { id: 'legal', path: '/legal', label: 'Legal i privacitat', shortLabel: 'Legal', icon: FileText, kind: 'text', pageKey: 'legal' },
   { id: 'connectar', path: '/connectar', label: 'Connectar', shortLabel: 'Conn', icon: Wifi, kind: 'text' },
   { id: 'control', path: '/control', label: 'Control', shortLabel: 'Control', icon: Settings, kind: 'text' },
@@ -80,5 +82,17 @@ export const SECTIONS = [
 ];
 
 export const DEFAULT_SECTION_PATH = '/xat';
+
+/* v1.2.23 · IDEA-333 (ordre del Mestre 261123) · El rètol d'una entrada del menú lateral: l'etiqueta traduïda tal qual
+   i, si la secció porta `versioViva`, « · v» i la versió (la xifra no es traduïx). La versió la passa qui pinta
+   (App.jsx, VERSIO_SISTEMA de config/versio.js): este fitxer no l'importa perquè node el carrega tal qual
+   (certifica-enllacos.mjs, tests/helpers/lleiT8Prova.js) i versio.js llig package.json per nom, que només Vite resol.
+   Sense versió (buida o no textual), l'etiqueta sola: mai «v» ni «undefined». */
+export const SEPARADOR_DE_VERSIO = ' · v';
+export function rotolDeLaSeccio(seccio, etiqueta, versio) {
+  const text = String(etiqueta ?? '');
+  if (seccio?.versioViva !== true || typeof versio !== 'string' || versio.trim() === '') return text;
+  return `${text}${SEPARADOR_DE_VERSIO}${versio.trim()}`;
+}
 
 

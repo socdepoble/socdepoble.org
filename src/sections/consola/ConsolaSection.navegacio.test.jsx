@@ -255,7 +255,7 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
   const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
   const entrades = [...index.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
   const titol = entrades.findIndex(([, text]) => text === 'El pols del cervell');
-  expect(entrades[titol][0]).toBe('toc-item toc-level-3');
+  expect(entrades[titol][0]).toBe('toc-item toc-level-4');
   // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
   expect(entrades.slice(titol + 2, titol + 5)).toEqual([
     ['toc-item toc-level-5', '1 registre de consum'],
@@ -263,11 +263,11 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
     // Ordre del Mestre, 261004 · «orfes» és paraula del Mapa: el pols diu «fora del manifest».
     ['toc-item toc-level-5', '1 skill (0 fora del manifest)']
   ]);
-  /* Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
-     Pla 261016_1530, Onada 0.5 · I 1 del Govern del Mestre: sense matriu, la
-     Certificació compta les decisions d'este navegador i les altres tres
-     targetes diuen per què no tenen mesura en paràgraf. Derogat EN PART: «20». */
-  expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(21);
+  /* Totes les mètriques del tauler (abans de l'Índex de la Consola, on les fitxes són H5):
+     3 del pols, 17 de les huit targetes del Mapa i 1 del Govern del Mestre = 21. */
+  const iniciIndex = entrades.findIndex(([classe, text]) => classe === 'toc-item toc-level-3' && text === 'Índex de la Consola');
+  expect(iniciIndex).toBeGreaterThan(titol);
+  expect(entrades.slice(0, iniciIndex).filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(21);
   expect(entrades.some(([classe, text]) => classe === 'toc-item toc-level-5' && text === '0 decisions apuntades en este navegador')).toBe(true);
   // T3 (ordre del Mestre, 260930) · la coberta desglossa estats sense capçaleres:
   // l'Índex no s'empastra, i sota les mètriques no hi penja res.
@@ -276,25 +276,25 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
   expect(errors).not.toHaveBeenCalled();
 });
 
-/* Revisió adversarial del carril F1 (problemes 2 i 9) · A l'Índex de secció i
+/* Revisió adversarial del carril F1 (problemes 2 i 9) + IDEA-319 · A l'Índex de secció i
    a la navegació per encapçalaments, el Govern del Mestre és un grup a part:
-   les seues quatre targetes pengen del seu H2, i les nou de la maquinària, de
-   l'H2 de la sala de màquines, no del govern. */
+   les seues quatre targetes (H4) pengen del seu H3, i les nou de la maquinària, de
+   l'H3 de la sala de màquines, no del govern. */
 test('a l’Índex de secció, les nou targetes de la maquinària no pengen del Govern del Mestre', async () => {
   render(<Aplicacio />);
   await esperaElTauler();
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
   const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
-  // L'H2 de què penja cada H3, la primera vegada que l'H3 apareix (l'Índex de la Consola repetix els títols de les pàgines).
+  // L'H3 de què penja cada H4 de targeta (saltant el subtítol H4 que comença per «Per a »), la primera vegada que apareix.
   const pareDe = new Map();
-  let h2 = null;
+  let h3 = null;
   for (const li of index.querySelectorAll('li')) {
-    if (li.className === 'toc-item toc-level-2') h2 = li.textContent;
-    else if (li.className === 'toc-item toc-level-3' && !pareDe.has(li.textContent)) pareDe.set(li.textContent, h2);
+    if (li.className === 'toc-item toc-level-3') h3 = li.textContent;
+    else if (li.className === 'toc-item toc-level-4' && !pareDe.has(li.textContent)) pareDe.set(li.textContent, h3);
   }
-  const h2s = [...index.querySelectorAll('li.toc-level-2')].map((li) => li.textContent);
-  expect(h2s).toContain(TITOL_GOVERN);
-  expect(h2s.indexOf(TITOL_SALA_MAQUINES)).toBe(h2s.indexOf(TITOL_GOVERN) + 1);
+  const h3s = [...index.querySelectorAll('li.toc-level-3')].map((li) => li.textContent);
+  expect(h3s).toContain(TITOL_GOVERN);
+  expect(h3s.indexOf(TITOL_SALA_MAQUINES)).toBe(h3s.indexOf(TITOL_GOVERN) + 1);
   for (const p of paginesGovern()) expect(pareDe.get(p.title), p.id).toBe(TITOL_GOVERN);
   for (const p of paginesConsola()) expect(pareDe.get(p.title), p.id).toBe(TITOL_SALA_MAQUINES);
   expect(errors).not.toHaveBeenCalled();

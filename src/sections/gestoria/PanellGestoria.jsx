@@ -395,7 +395,7 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
   const estrangeres = estrangeresPerFactura(incidencies);
   return (
     <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
-      <h3 ref={adoptaEstilsDiferits} id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
+      <h4 ref={adoptaEstilsDiferits} id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h4>
       <Taula titol={idioma === 'ca' ? `${titol} de la proposta` : titol} densa className="sdp-gestoria-panell__taula">
         <thead>
           <tr>
@@ -514,7 +514,7 @@ function Incidencies({ incidencies, idioma = 'ca' }) {
   const ambAltes = incidencies.some((inc) => inc.severitat === 'alta');
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
-      <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`Incidències (${incidencies.length})`}</h3>
+      <h4 id={idTitol} className="sdp-gestoria-panell__subtitol">{`Incidències (${incidencies.length})`}</h4>
       <p className="sdp-gestoria-panell__nota">{tg(idioma, 'Són indicis per a revisar, no veredictes fiscals: la paraula final és teua i de la teua gestoria.')}</p>
       {/* Un fet, no un veredicte: mai no es declara el trimestre «complet» (auditoria.js:6-7). */}
       {incidencies.length > 0 && !ambAltes ? (
@@ -527,7 +527,7 @@ function Incidencies({ incidencies, idioma = 'ca' }) {
         if (grup.del.length === 0) return null;
         return (
           <div ref={adoptaEstilsDiferits} key={grup.clau} className="sdp-gestoria-panell__grup">
-            <h4 className="sdp-gestoria-panell__grup-titol">{`${grup.titol} (${grup.del.length})`}</h4>
+            <h5 className="sdp-gestoria-panell__grup-titol">{`${grup.titol} (${grup.del.length})`}</h5>
             <ul className="sdp-gestoria-panell__incidencies">
               {grup.del.map((inc, i) => (
                 <li ref={adoptaEstilsDiferits} key={`${inc.codi}-${inc.facturaId ?? ''}-${inc.fitxer ?? ''}-${inc.mes ?? ''}-${inc.camp ?? ''}-${i}`}
@@ -606,7 +606,7 @@ function TaulaDocuments({ documents }) {
   );
 }
 
-/* Un pas numerat: secció amb títol h2 i la seua insígnia d'estat. */
+/* Un pas numerat: secció amb títol h3 i la seua insígnia d'estat. */
 function Pas({ numero, titol, estat, refTitol, idioma = 'ca', children }) {
   const idTitol = useId();
   const insignia = { fet: { to: 'exit', text: 'Fet' }, actiu: { to: 'info', text: 'Ara' }, bloquejat: { to: 'neutre', text: 'Encara no' } }[estat];
@@ -614,7 +614,7 @@ function Pas({ numero, titol, estat, refTitol, idioma = 'ca', children }) {
     <li ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__pas" data-estat={estat}>
       <section aria-labelledby={idTitol}>
         <div className="sdp-gestoria-panell__cap">
-          <h2 id={idTitol} ref={refTitol} tabIndex={-1} className="sdp-gestoria-panell__titol">{`${numero}. ${tg(idioma, titol)}`}</h2>
+          <h3 id={idTitol} ref={refTitol} tabIndex={-1} className="sdp-gestoria-panell__titol">{`${numero}. ${tg(idioma, titol)}`}</h3>
           <Insignia to={insignia.to}>{tg(idioma, insignia.text)}</Insignia>
         </div>
         <div className="sdp-gestoria-panell__cos">{children}</div>
@@ -902,7 +902,7 @@ export default function PanellGestoria({
                 </section>
               ) : null}
               <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idCorreu}>
-                <h3 id={idCorreu} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Creua amb el correu')}</h3>
+                <h4 id={idCorreu} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Creua amb el correu')}</h4>
                 <p>
                   {tg(idioma, 'Opcional. Amb una exportació del correu del trimestre (.mbox o .eml) es busquen les factures que t’han arribat per correu i no són a la carpeta. Només se’n lligen el remitent, l’assumpte, la data i el nom dels adjunts.')}
                 </p>
@@ -932,7 +932,7 @@ export default function PanellGestoria({
         <Pas numero={4} titol="Proposta del full" estat={estatPas(Boolean(entregables), Boolean(proposta))} idioma={idioma}>
           {proposta ? (
             <>
-              <h3 ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Vista prèvia del full')}</h3>
+              <h4 ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Vista prèvia del full')}</h4>
               {vista.full ? (
                 <VistaPreviaFull full={vista.full} titol={idioma === 'ca' ? `Vista prèvia del full del ${proposta.t}T de ${proposta.any}` : tg(idioma, 'Vista prèvia del full')} idioma={idioma} />
               ) : <Alerta to="error">{`No es pot maquetar el full: ${vista.error}`}</Alerta>}
@@ -961,7 +961,7 @@ export default function PanellGestoria({
               <ErrorDe {...errors} accions={['proposta', 'fitxers']} />
               {entregables ? (
                 <section ref={adoptaEstilsDiferits} className="sdp-gestoria-panell__bloc" aria-labelledby={idFitxers}>
-                  <h3 id={idFitxers} ref={refFitxers} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Fitxers generats')}</h3>
+                  <h4 id={idFitxers} ref={refFitxers} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{tg(idioma, 'Fitxers generats')}</h4>
                   <ul className="sdp-gestoria-panell__fitxers">
                     {FORMATS_ENTREGABLE.map((format) => (
                       <li ref={adoptaEstilsDiferits} key={format} className="sdp-gestoria-panell__fitxer-generat">
@@ -1001,7 +1001,7 @@ export default function PanellGestoria({
         <Pas numero={5} titol="Envia a la gestoria" estat={estatPas(false, Boolean(entregables))} idioma={idioma}>
           {entregables && proposta ? (
             <EnviamentGestoria key={entregables.empremtes.xlsx} any={proposta.any} t={proposta.t} adjunts={adjunts}
-              inicials={{ nom: proposta.titular }} nivellTitol={3} idioma={idioma} />
+              inicials={{ nom: proposta.titular }} nivellTitol={4} idioma={idioma} />
           ) : <p ref={adoptaEstilsDiferits}>{tg(idioma, 'Quan hages generat el full, ací podràs preparar el correu. L’enviament el fas sempre tu.')}</p>}
         </Pas>
       </ol>

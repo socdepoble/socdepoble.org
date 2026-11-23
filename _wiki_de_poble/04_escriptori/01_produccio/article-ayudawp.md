@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Captura HTML de l’article d’AyudaWP sobre comprovacions per a netejar un WordPress infectat.
+---
 Title: Live Content
 
 Description: Fetched live
@@ -1977,3 +1982,8 @@ var ml_account = ml('accounts', '537755', 'v5i3k9k0v3', 'load');
 <!-- Page cached by DietPress on 2026-10-06 09:35:59 UTC -->
 
 
+
+
+## Vincles
+
+- [[seguretat_execucio]]

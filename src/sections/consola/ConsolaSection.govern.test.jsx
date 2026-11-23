@@ -121,7 +121,7 @@ const navGovern = () => screen.getByRole('navigation', { name: ETIQUETA_NAV_GOVE
 const peu = () => document.querySelector('.sdp-consola__peu');
 const main = () => document.querySelector('main');
 const metriques = (targeta) => [...targeta.querySelectorAll('.sdp-consola__metriques > h5')].map((h) => h.textContent);
-const perTitol = (dins) => Object.fromEntries([...dins.querySelectorAll('article.sp-card')].map((t) => [t.querySelector('h3').textContent, t]));
+const perTitol = (dins) => Object.fromEntries([...dins.querySelectorAll('article.sp-card')].map((t) => [t.querySelector('h4.sp-card-title').textContent, t]));
 const files = (taula) => [...taula.querySelectorAll('tbody > tr')].map((tr) => tr.querySelector('th').textContent);
 /* La línia d'estat de cada selector de fitxers del peu (CampFitxer). */
 const estatsDelsSelectors = () => [...peu().querySelectorAll('.sdp-camp-fitxer__estat')].map((p) => p.textContent);
@@ -147,7 +147,7 @@ describe('el tauler de /consola', () => {
     const maquinaria = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
     expect(Boolean(s.compareDocumentPosition(maquinaria) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
     expect(s.contains(maquinaria)).toBe(false);
-    expect([...s.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
+    expect([...s.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
     /* Ordre del Mestre del 30-10-2026 (B1) · Expectativa actualitzada a
        propòsit: cada targeta del Govern porta la portada de la seua pàgina
        (la miniatura .webp d'imatgesConsola.js) al mitjà, i ja no la icona a la
@@ -184,7 +184,7 @@ describe('el tauler de /consola', () => {
        targetes: les nou ja no pengen de l'H2 del govern. Derogat: el separador
        (Divisor) que tancava la secció del govern. Cap alerta al tauler. */
     const sala = s.nextElementSibling;
-    expect(sala.tagName).toBe('H2');
+    expect(sala.tagName).toBe('H3');
     expect(sala.textContent).toBe(TITOL_SALA_MAQUINES);
     expect(sala.nextElementSibling).toBe(maquinaria);
     expect(main().querySelector('[role="separator"], hr')).toBeNull();
@@ -219,9 +219,9 @@ describe('el tauler de /consola', () => {
       await obri('/consola');
       const index = screen.getByRole('region', { name: 'Índex de la Consola' });
       for (const [titol, targeta] of Object.entries(perTitol(navGovern()))) {
-        const h4 = [...index.querySelectorAll('h4')].find((h) => h.textContent === titol);
-        expect(h4, titol).toBeTruthy();
-        const cos = [h4.nextElementSibling, h4.nextElementSibling.nextElementSibling, h4.nextElementSibling.nextElementSibling.nextElementSibling]
+        const h5 = [...index.querySelectorAll('h5')].find((h) => h.textContent === titol);
+        expect(h5, titol).toBeTruthy();
+        const cos = [h5.nextElementSibling, h5.nextElementSibling.nextElementSibling, h5.nextElementSibling.nextElementSibling.nextElementSibling]
           .map((p) => p.textContent).join(' ');
         for (const m of metriques(targeta)) expect(cos, `${titol}: ${m}`).toContain(m);
         /* Gauntlet 261030 (cicle 4, corrector de la Consola) · Expectativa
@@ -259,7 +259,7 @@ describe('el tauler de /consola', () => {
     fonts.govern = delServidor();
     await obri('/consola');
     const deLaConsola = [...navGovern().querySelectorAll('article.sp-card')].map((t) => [
-      t.querySelector('h3').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
+      t.querySelector('h4.sp-card-title').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
     ]);
     const sala = seccio().nextElementSibling;
     expect(sala.textContent).toBe(TITOL_SALA_MAQUINES);
@@ -272,16 +272,16 @@ describe('el tauler de /consola', () => {
     await waitFor(() => expect(metriques(perTitol(navGovern())['Estat dels requeriments'])).not.toEqual([]));
     const s = seccio();
     expect(s.tagName).toBe('SECTION');
-    expect([...s.querySelectorAll('h2')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
+    expect([...s.querySelectorAll('h3')].map((h) => h.textContent)).toEqual([TITOL_GOVERN]);
     const targetes = [...navGovern().querySelectorAll('article.sp-card')];
     expect(targetes).toHaveLength(4);
     expect(targetes.map((t) => [
-      t.querySelector('h3').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
+      t.querySelector('h4.sp-card-title').textContent, metriques(t), t.querySelector('a.sp-card-link-overlay').getAttribute('href')
     ])).toEqual(deLaConsola);
     expect(targetes.map((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href'))).toEqual(paginesGovern().map((p) => p.ruta));
-    // Darrere, l'H2 de la sala de màquines i les nou targetes, com a /consola, amb les 13 il·lustracions (4 govern + 9 sala de màquines).
+    // Darrere, l'H3 de la sala de màquines i les nou targetes, com a /consola, amb les 13 il·lustracions (4 govern + 9 sala de màquines).
     const maquinaria = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
-    expect(s.nextElementSibling.tagName).toBe('H2');
+    expect(s.nextElementSibling.tagName).toBe('H3');
     expect(s.nextElementSibling.textContent).toBe(TITOL_SALA_MAQUINES);
     expect(s.nextElementSibling.nextElementSibling).toBe(maquinaria);
     expect(s.contains(maquinaria)).toBe(false);

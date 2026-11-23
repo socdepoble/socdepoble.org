@@ -90,8 +90,9 @@ const pinta = (element, seccio = 'mur') => render(
 );
 
 describe('les peces pures', () => {
-  test('només el Mur i l’agenda s’editen; mai el Mercat, la Multimèdia ni una pàgina del sistema', () => {
+  test('només el Mur, l’agenda i els productes amb UUID/fitxa del Mercat s’editen; mai la Multimèdia, la llavor del Mercat ni una targeta mirall del sistema', () => {
     expect(esPublicacioEditable(publicacioComANota(FILA_MUR, 'mur'))).toBe(true);
+    expect(esPublicacioEditable(publicacioComANota({ id: UUID_FILA, title: 'Oli novell', price: '12 €' }, 'mercat'))).toBe(true);
     expect(esPublicacioEditable(publicacioComANota({ id: 'aplec-2023', title: 'Aplec' }, 'events'))).toBe(true);
     expect(esPublicacioEditable(publicacioComANota({ id: 'samarreta', title: 'S' }, 'mercat'))).toBe(false);
     expect(esPublicacioEditable(publicacioComANota({ id: 'foto', title: 'F', src: '/f.jpg' }, 'multimedia'))).toBe(false);
@@ -121,14 +122,15 @@ describe('les peces pures', () => {
     expect(campsDeLaRevisio({ title: 'A', content: '<p>x</p>', tags: ['a'] }, { title: 'A', content: '<p>y</p>', tags: ['a'] })).toEqual({ content: '<p>y</p>' });
   });
 
-  test('només una fila del Mur amb id de servidor s’actualitza', () => {
+  test('només una fila del Mur o del Mercat amb id de servidor s’actualitza', () => {
     expect(esFilaActualitzable(publicacioComANota(FILA_MUR, 'mur'))).toBe(true);
+    expect(esFilaActualitzable(publicacioComANota({ ...FILA_MUR, price: '9 €' }, 'mercat'))).toBe(true);
     expect(esFilaActualitzable(publicacioComANota(MANIFEST, 'mur'))).toBe(false);
     expect(esFilaActualitzable(publicacioComANota({ ...FILA_MUR }, 'events'))).toBe(false);
   });
 
-  /* D-B4-1 (Bloc 4; decisió de MarIA) · Una sola guarda per al Mur i l'agenda. */
-  test('D-B4-1 · Mur i agenda × superadmin i ordinari: la peça d’altri, només la revisa el superadmin', () => {
+  /* D-B4-1 (Bloc 4; decisió de MarIA) · Una sola guarda per al Mur, el Mercat editable i l'agenda. */
+  test('D-B4-1 · Mur, Mercat i agenda × superadmin i ordinari: la peça d’altri es bloqueja a l’usuari ordinari', () => {
     const actor = { id: 'persona-1', tipus: 'persona' };
     for (const [element, seccio] of [[APLEC_DALTRI, 'events'], [MANIFEST_DALTRI, 'mur']]) {
       const alie = publicacioComANota(element, seccio);
@@ -138,8 +140,9 @@ describe('les peces pures', () => {
       expect(motiuPublicacioDAltri(publicacioComANota({ ...element, author_user_id: 'persona-1', author_org_id: null }, seccio), { actor }), seccio).toBeNull();
     }
     expect(motiuPublicacioDAltri(publicacioComANota(APLEC, 'events'), { actor })).toBeNull();
-    // El Mercat no s'edita ací: la seua guarda és la de publishNote.
-    expect(motiuPublicacioDAltri(publicacioComANota({ ...FILA_MUR, author_entity_id: 'rentonar' }, 'mercat'), { actor })).toBeNull();
+    // R32.45 · El Mercat amb UUID s'edita ací i la guarda rebutja productes d'altri; la llavor sense UUID continua sent del lector.
+    expect(motiuPublicacioDAltri(publicacioComANota({ ...FILA_MUR, author_entity_id: 'rentonar', author_name: 'El Rentonar' }, 'mercat'), { actor })).toContain('El Rentonar');
+    expect(motiuPublicacioDAltri(publicacioComANota({ id: 'samarreta', author_entity_id: 'rentonar' }, 'mercat'), { actor })).toBeNull();
     // La pura compartida: un acte amb només `organizer` ja no diu «signant desconegut».
     expect(motiuSignaturaDAltri({ id: 'x', author_org_id: 'rentonar', organizer: 'La Colla' }, { actor })).toContain('La Colla');
     expect(motiuSignaturaDAltri({ id: 'x', author_org_id: 'rentonar', author_name: 42 }, { actor })).not.toContain('42');

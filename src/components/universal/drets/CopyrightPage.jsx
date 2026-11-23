@@ -210,7 +210,7 @@ export function CopyrightPage({
     <section className="sdp-drets" aria-labelledby={idTitol} onKeyDown={onKeyDown}>
       <header className="sdp-drets__cap">
         <Boto varietat="fantasma" icona={ArrowLeft} onClick={() => onTanca?.('tornar')}>{etiquetaTornar}</Boto>
-        <h2 id={idTitol} ref={titolRef} tabIndex={-1} className="sdp-drets__titol">Drets d’autor</h2>
+        <h3 id={idTitol} ref={titolRef} tabIndex={-1} className="sdp-drets__titol">Drets d’autor</h3>
         <p className="sdp-drets__intro">
           {introduccio ?? <>Tria qui pot usar esta obra i com. Ara té «{valor}». Res no canvia fins que prems «Desar autoria».</>}
         </p>

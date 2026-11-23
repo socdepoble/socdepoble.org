@@ -93,14 +93,21 @@ export function PublicacioFitxa({ item, active, onSelect }) {
   return (
     <button
       type="button"
-      className="sdp-gestor-fitxa"
+      className={`sdp-gestor-fitxa ${active ? 'is-active' : ''}`.trim()}
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
       <ItemMedia item={fitxa} titleFallback="Publicació" />
       <span className="sdp-gestor-fitxa__text">
-        <span className="sdp-gestor-fitxa__titol">{item.title}</span>
-        {item.subtitle ? <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span> : null}
+        <span className="sdp-nota-fitxa__capcalera">
+          <span className="sdp-gestor-fitxa__titol">{item.title}</span>
+          {item.subtitle ? (
+            <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
+              {item.subtitle}
+            </time>
+          ) : null}
+        </span>
+        {item.excerpt ? <span className="sdp-gestor-fitxa__subtitol">{item.excerpt}</span> : null}
       </span>
     </button>
   );

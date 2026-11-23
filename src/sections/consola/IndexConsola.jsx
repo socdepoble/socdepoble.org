@@ -43,9 +43,9 @@
  *  · Fora la miniatura repetida: cap imatge a l'Índex (la vinyeta de la
  *    Consola ja és la portada de /page/consola i de la seua targeta).
  *  · Estil de publicació de Sóc de Poble: l'article porta la classe de la
- *    prosa (sdp-prose) i la columna de lectura canònica, centrada (sdp-centre:
- *    --sdp-measure, el contenidor Centre de composicio), en lloc d'estirar
- *    les línies de punta a punta del monitor. L'H2 i la seua entradeta
+ *    prosa (sdp-prose). [v1.2.23 · R2E-07 (Gauntlet R2) · Fora la menció de
+ *    sdp-centre i --sdp-measure: l'article no porta sdp-centre, i des de
+ *    R32.47 .sdp-centre ja no aplica la mesura.] L'H2 i la seua entradeta
  *    (p.lead) van centrats; els H3, en el blau marí dels H3 i els H4, en el
  *    terracota dels H4, també quan porten enllaç (modules.css § CONSOLA).
  *  · Redacció didàctica: cada H3 i cada H4 pinta els tres moviments de la
@@ -125,16 +125,16 @@ function Membres({ membres, privat }) {
   );
 }
 
-/* Un bloc de l'índex (H3) amb les seues targetes (H4). */
+/* Un bloc de l'índex (H4) amb les seues targetes (H5). */
 function Pagina({ node, privat }) {
   return (
     <section className="sdp-consola__index-pagina">
-      <h3><Titol node={node} privat={privat} /></h3>
+      <h4><Titol node={node} privat={privat} /></h4>
       {node.subtitol && <p className="sdp-consola__index-peraque">{node.subtitol}</p>}
       <Moviments node={node} privat={privat} />
       {node.fills.map((peca) => (
         <Fragment key={peca.id}>
-          <h4><Titol node={peca} privat={privat} /></h4>
+          <h5><Titol node={peca} privat={privat} /></h5>
           <Moviments node={peca} privat={privat} />
           <Membres membres={peca.membres} privat={privat} />
         </Fragment>
@@ -157,7 +157,7 @@ export function IndexConsola({ fonts = {}, govern = null, empaquetats = null, lo
   });
   return (
     <section className="sdp-consola__index sdp-prose" aria-labelledby={id}>
-      <h2 id={id}>{arrel.titol}</h2>
+      <h3 id={id}>{arrel.titol}</h3>
       <p className="lead">{arrel.text}</p>
       {arrel.fills.map((pagina) => <Pagina key={pagina.id} node={pagina} privat={privat} />)}
     </section>

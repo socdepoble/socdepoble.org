@@ -76,6 +76,7 @@ export const CODI = Object.freeze({
   epocaForaDOrdre: 'epoca-fora-d-ordre', epocaConflicte: 'epoca-conflicte', epocaDesconeguda: 'epoca-desconeguda', senseEpoca: 'sense-epoca',
   sobreAbsent: 'sobre-absent', sobreInvalid: 'sobre-invalid', compromisInvalid: 'compromis-invalid',
   filaInvalida: 'fila-invalida', contingutInvalid: 'contingut-invalid', xifratManipulat: 'xifrat-manipulat', farcimentInvalid: 'farciment-invalid',
+  oberturaNoDisponible: 'obertura-no-disponible',
   carregaInvalida: 'carrega-invalida', franqueigInvalid: 'franqueig-invalid', repeticio: 'repeticio',
   adjuntInvalid: 'adjunt-invalid', adjuntManipulat: 'adjunt-manipulat', adjuntIncoherent: 'adjunt-incoherent',
   equipInvalid: 'equip-invalid', versioForaDOrdre: 'versio-fora-d-ordre',
@@ -851,7 +852,11 @@ export async function obriMissatge(cripto, { estat, fila, directori, purificador
     try {
       farcit = await pas(desxifraAesGcm(cripto, mk, { xifrat: f.ct, aad: capcalera, iv: f.iv }));
     } catch (error) {
-      throw embolcalla(error, CODI.xifratManipulat, 'El xifrat no supera la comprovació d’integritat amb esta capçalera.');
+      if (error?.name === 'AbortError' || esErrorProtocol(error)) throw error;
+      if (error?.codi === 'XIFRAT_MANIPULAT') {
+        throw errorProtocol(CODI.xifratManipulat, 'El xifrat no supera la comprovació d’integritat amb esta capçalera.', error);
+      }
+      throw errorProtocol(CODI.oberturaNoDisponible, 'El motor no ha pogut obrir el missatge xifrat.', error);
     }
     try {
       carrega = desfarceixCarrega(farcit);
@@ -944,7 +949,14 @@ export async function obriAdjunt(cripto, { fil, emissor, a, blob, vigent = null 
     try {
       farcit = await pas(desxifraAesGcm(cripto, kenc, { xifrat: blob.subarray(BYTES_IV), aad, iv: blob.subarray(0, BYTES_IV) }));
     } catch (error) {
-      throw embolcalla(error, CODI.adjuntManipulat, 'El blob no supera la comprovació d’integritat amb este fil i este emissor.');
+      /* v1.2.23 · L4-04 (Gauntlet R1) · La correcció R32.45 d'obriMissatge, també per als adjunts: només el GCM que no
+         autentica (XIFRAT_MANIPULAT) és manipulació. Una fallada operativa de WebCrypto (TypeError, InvalidAccessError,
+         UnknownError) no acredita res i és obertura-no-disponible; una cancel·lació passa intacta. */
+      if (error?.name === 'AbortError' || esErrorProtocol(error)) throw error;
+      if (error?.codi === 'XIFRAT_MANIPULAT') {
+        throw errorProtocol(CODI.adjuntManipulat, 'El blob no supera la comprovació d’integritat amb este fil i este emissor.', error);
+      }
+      throw errorProtocol(CODI.oberturaNoDisponible, 'El motor no ha pogut obrir l’adjunt xifrat.', error);
     }
     let bytes;
     try {

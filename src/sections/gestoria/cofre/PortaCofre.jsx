@@ -105,7 +105,7 @@ function Seccio({ titol, idioma = 'ca', children }) {
   const id = useId();
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre__seccio" aria-labelledby={id}>
-      <h3 id={id} className="sdp-gestoria-cofre__subtitol">{tg(idioma, titol)}</h3>
+      <h4 id={id} className="sdp-gestoria-cofre__subtitol">{tg(idioma, titol)}</h4>
       {children}
     </section>
   );
@@ -394,7 +394,7 @@ function GestioCofre({ c, idioma = 'ca' }) {
   return (
     <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={id}>
       <div className="sdp-gestoria-cofre__cap">
-        <h2 id={id} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Còpies i claus del cofre')}</h2>
+        <h3 id={id} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Còpies i claus del cofre')}</h3>
       </div>
       <Seccio titol="Còpia de seguretat xifrada" idioma={idioma}>
         <p className="sdp-gestoria-cofre__nota">
@@ -478,7 +478,7 @@ export default function PortaCofre({ cofre, descarrega, rellotge, idioma = 'ca',
     <>
       <section ref={adoptaEstilsDiferits} className="sdp-gestoria-cofre" aria-labelledby={idTitol}>
         <div className="sdp-gestoria-cofre__cap">
-          <h2 id={idTitol} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Cofre xifrat')}</h2>
+          <h3 id={idTitol} className="sdp-gestoria-cofre__titol">{tg(idioma, 'Cofre xifrat')}</h3>
           <Insignia to={marca.to}>{tg(idioma, marca.text)}</Insignia>
         </div>
         <AvisCofre avis={c.avis} zona="porta" onTanca={c.tancaAvis} />

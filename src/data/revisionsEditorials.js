@@ -32,6 +32,7 @@
 import { backendScope } from '../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from './identitat.js';
 import { capturaRevisioSeed } from './seedRevisions.js';
+import { _buidaHistorialRevisionsPerAProves, registraEntradaHistorial } from './historialRevisionsEditorials.js';
 /* Onada R30 · A4 · La meitat del navegador (el registre, els oients i el solapament) viu a
    revisionsEditorialsDelNavegador.js, una fulla que l'arrencada del paquet importa sense
    arrossegar l'escriptura al servidor ni seedRevisions.js. Ací se'n reexporta cada nom públic, amb
@@ -84,6 +85,7 @@ function canvisDelServidor(camps) {
 }
 
 function motiuSenseServidor({ seccio, element, config, esSuperadmin, teCapacitat }) {
+  if (!FILA_DE_SECCIO[seccio]) return 'sense-fila';
   if (!config || typeof config !== 'object' || MODES_DEL_NAVEGADOR.has(config.dataMode)) return 'mode-navegador';
   if (!teCapacitat('edicioEditorial')) return 'sense-rpc';
   if (esSuperadmin !== true) return 'sense-permis';
@@ -96,13 +98,13 @@ function motiuSenseServidor({ seccio, element, config, esSuperadmin, teCapacitat
  * Desa la revisió al navegador (sempre, abans de res) i, si el backend ho
  * permet, també al servidor amb la RPC editorial. No llança per un rebuig del
  * servidor: la revisió ja és al navegador i el resultat diu on ha quedat.
- * @param {'mur'|'events'} seccio
+ * @param {'mur'|'events'|'sistema'} seccio
  * @param {{ id: string, _editorialVersio?: number, _editorialClau?: string, _seedFontVersio?: number, _seedRevisioVersio?: number }} element la publicació tal com la llig el lector
  * @param {object} camps els camps de la nota (CAMPS_DE_LA_REVISIO)
- * @param {{ esSuperadmin?: boolean, config?: object|null, signal?: AbortSignal }} [opcions]
+ * @param {{ esSuperadmin?: boolean, config?: object|null, signal?: AbortSignal, autorNom?: string|null }} [opcions]
  * @returns {Promise<{ desada: boolean, desti: 'servidor'|'navegador'|null, motiu: string|null, versio?: number }>}
  */
-export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { esSuperadmin = false, config = null, signal = null } = {}) {
+export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { esSuperadmin = false, config = null, signal = null, autorNom = null } = {}) {
   // Captura abans d'importar el port o d'esperar la cua: qui crida pot
   // reutilitzar i mutar l'objecte de configuració mentrestant.
   config = config && { ...config };
@@ -119,9 +121,12 @@ export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { 
     if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
   };
   const id = element && typeof element === 'object' ? element.id : null;
+  const clauPrevia = normalitzaClau(seccio, id);
+  const campsAnteriors = clauPrevia ? carregaMapa().get(clauPrevia)?.camps ?? null : null;
   if (!desaRevisioEditorial(seccio, id, camps)) return { desada: false, desti: null, motiu: 'invalida' };
   const clau = normalitzaClau(seccio, id);
   const entradaLocal = carregaMapa().get(clau);
+  if (registraEntradaHistorial(clau, campsAnteriors, entradaLocal?.camps ?? null, autorNom)) notifica();
   const scope = `${entrada}:${config ? backendScope(config) : 'navegador'}:${clau}:editorial`;
   const enviada = Object.freeze({ ...(campsPerScope.get(scope) || {}), ...campsNets });
   campsPerScope.set(scope, enviada);
@@ -281,5 +286,6 @@ export function _reiniciaRevisionsEditorialsPerAProves() {
   campsConfirmatsPerScope.clear();
   entradaCache = null;
   enVol.clear();
+  _buidaHistorialRevisionsPerAProves();
   _buidaRevisionsDelNavegadorPerAProves();
 }

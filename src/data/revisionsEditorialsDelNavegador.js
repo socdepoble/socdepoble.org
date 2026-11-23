@@ -29,7 +29,7 @@ export function registraCapitolsWiki(fusiona) { fusionaCapitolsWiki = typeof fus
 import { esVisibleAlMur } from './visibilitatMur.js';
 
 const CLAU_STORAGE = 'publicacions.revisions.v1';
-const SECCIONS_VALIDES = Object.freeze(new Set(['mur', 'events']));
+const SECCIONS_VALIDES = Object.freeze(new Set(['mur', 'events', 'sistema']));
 /* Camp de la nota → claus de l'element, en l'ordre de lectura. */
 const CLAUS_DE_L_ELEMENT = Object.freeze({
   title: Object.freeze(['title', 'name']),
@@ -188,10 +188,52 @@ export const igual = (a, b) => (Array.isArray(a) && Array.isArray(b)
   ? a.length === b.length && a.every((valor, index) => valor === b[index])
   : a === b);
 
+const CLAUS_PAGINA_SISTEMA = Object.freeze({
+  title: 'title',
+  subtitle: 'subtitle',
+  lead: 'lead',
+  content: 'html',
+  heroImage: 'image',
+  logoImage: 'logo_image',
+  copyright: 'copyright',
+  icon: 'icon',
+  publishDate: 'date'
+});
+
+/** Solapa la revisió editorial d'una pàgina de Sistema (`sistema:<pageKey>`) sense mutar PAGE_COPY ni trencar referència si no canvia. */
+export function revisaPaginaSistema(pageKey, page) {
+  if (!page || typeof page !== 'object' || !pageKey) return page;
+  const clau = normalitzaClau('sistema', pageKey);
+  const camps = clau ? carregaMapa().get(clau)?.camps || null : null;
+  if (!camps) return page;
+  let canviat = false;
+  const nou = { ...page };
+  for (const [camp, valor] of Object.entries(camps)) {
+    const desti = CLAUS_PAGINA_SISTEMA[camp];
+    if (!desti || (camp === 'publishDate' && !valor)) continue;
+    if (!igual(page[desti], valor)) {
+      nou[desti] = Array.isArray(valor) ? [...valor] : valor;
+      canviat = true;
+    }
+    if (camp === 'content' && Object.prototype.hasOwnProperty.call(page, 'content') && !igual(page.content, valor)) {
+      nou.content = valor;
+      canviat = true;
+    }
+  }
+  if (!canviat) return page;
+  if (Object.prototype.hasOwnProperty.call(camps, 'content') && nou.contentLanguage && nou.contentLanguage !== 'ca') {
+    nou.contentLanguage = 'ca';
+  }
+  return nou;
+}
+
 /** L'element amb la seua revisió al damunt (un objecte nou) o el MATEIX element
  *  si no en té o ja la porta (aplicar-la dos voltes no canvia la identitat). */
 export function revisaElement(seccio, element) {
   if (!element || typeof element !== 'object' || element.id == null) return element;
+  if (String(seccio || '').trim().toLowerCase() === 'sistema') {
+    return revisaPaginaSistema(element.id, element);
+  }
   const clau = normalitzaClau(seccio, element.id);
   const entrada = clau ? carregaMapa().get(clau) : null;
   const camps = entrada?.camps || null;

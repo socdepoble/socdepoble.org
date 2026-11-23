@@ -348,7 +348,7 @@ test.each(['/control', '/utilitats'])('P0-63 · %s: «Compte i contrasenya» por
    Rebost; la graella «Utilitats i Connectors» es quedava buida i ja no es
    pinta: el Snippet tanca «Maquinària i Sistema», després del Lector RSS. */
 const SECCIONS_DUTILITATS = ['Economia i Empresa', 'La llar', 'Maquinària i Sistema'];
-const seccioDe = (nom) => screen.queryByRole('heading', { level: 2, name: nom })?.closest('section') ?? null;
+const seccioDe = (nom) => screen.queryByRole('heading', { level: 3, name: nom })?.closest('section') ?? null;
 const seccioDeMaquinaria = () => seccioDe('Maquinària i Sistema');
 const targetesDe = (seccio) => (seccio ? [...seccio.querySelectorAll('.sdp-card-grid > article.sp-card')] : []);
 const titolDeTargeta = (targeta) => targeta.querySelector('.sp-card-title').textContent;
@@ -447,7 +447,7 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
     /* L'enllaç de tota la targeta, amb el nom del títol. */
     const enllac = targeta.querySelector('a.sp-card-link-overlay');
     expect([enllac.getAttribute('href'), enllac.getAttribute('aria-label')], titol).toEqual([PAGINA_DUTILITAT.get(titol), titol]);
-    expect(within(targeta).getByRole('heading', { level: 3, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
+    expect(within(targeta).getByRole('heading', { level: 4, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
     /* El peu blau de P6: Traduir, Comentar i Compartir.
        Onada 8 (261009; revisió R3 derogada) · I Connectar, i el copyright
        cap a «Drets d'autor». Abans, sense Connectar ni copyright. */
@@ -462,7 +462,7 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
     const targeta = targetaDUtilitat(plugin.titol);
     const imatge = targeta.querySelector('img.sp-card-media');
     expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], plugin.id).toEqual([plugin.imatge, plugin.imatgeAlt]);
-    expect(within(targeta).getByRole('heading', { level: 4 }).textContent, plugin.id).toBe(sensePunt(plugin.subtitol));
+    expect(targeta.querySelector('h4.sp-card-subtitle').textContent, plugin.id).toBe(sensePunt(plugin.subtitol));
     expect(targeta.querySelector('p.sp-card-text').textContent, plugin.id).toBe(plugin.entradilla);
   });
   /* El Snippet, amb la seua il·lustració i el seu subtítol de sempre.
@@ -473,7 +473,7 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
      canviarà. Les decisions D1 i D6 no en diuen res. */
   const snippet = targetaDUtilitat('Snippet');
   expect(snippet.querySelector('img.sp-card-media').getAttribute('src')).toBe('/assets/nano_cards/snippet_nano_card.jpg');
-  expect(within(snippet).getByRole('heading', { level: 4 }).textContent).toBe('Extensió de Chrome per a desar webs al Bloc');
+  expect(snippet.querySelector('h4.sp-card-subtitle').textContent).toBe('Extensió de Chrome per a desar webs al Bloc');
   expect(snippet.querySelector('p.sp-card-text')).toBeNull();
 });
 
@@ -676,7 +676,7 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
    «Utilitats i Connectors (Plugins)», que ja no es pinta mai: l'asserció passava sempre. */
 const TESTIMONIS_DEL_PANELL = ['Economia i Empresa', 'Maquinària i Sistema'];
 const testimonisPintats = () => TESTIMONIS_DEL_PANELL
-  .filter((nom) => screen.queryByRole('heading', { level: 2, name: nom }) !== null);
+  .filter((nom) => screen.queryByRole('heading', { level: 3, name: nom }) !== null);
 
 test('CU · la targeta del Snippet obri la seua fitxa sobre la mateixa ruta, a /control i a /utilitats', () => {
   for (const ruta of ['/control', '/utilitats']) {
@@ -686,7 +686,7 @@ test('CU · la targeta del Snippet obri la seua fitxa sobre la mateixa ruta, a /
     fireEvent.click(screen.getByRole('link', { name: 'Snippet' }));
     expect(ubicacio(), ruta).toBe(`${ruta}?fitxa=snippet`);
     expect(document.querySelector('[data-titol="pagina"]').textContent, ruta).toBe('Snippet');
-    expect(screen.getByRole('heading', { level: 2, name: 'Què és' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Què és' })).toBeTruthy();
     expect(screen.getByText('Instal·la a Chrome').closest('.sdp-control-actions'), ruta).toBeTruthy();
     expect(testimonisPintats(), ruta).toEqual([]);
     cleanup();
@@ -808,11 +808,11 @@ const DATES_DALT = [...Array(6).fill(['22:45', '03/10/26']), ['01:10', '04/10/26
 /* Sense el punt final del text (llevaPuntFinal), com tota targeta. */
 const sensePunt = (text) => text.replace(/\.$/, '');
 
-test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre amb el seu h2, i cap és un enllaç sencer', () => {
+test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre amb el seu h3, i cap és un enllaç sencer', () => {
   pinta();
-  const h2 = screen.getByRole('heading', { level: 2, name: 'Publica al poble' });
-  const graella = h2.closest('section').querySelector('.sdp-card-grid');
-  expect(h2.closest('section').getAttribute('aria-labelledby')).toBe(h2.id);
+  const h3 = screen.getByRole('heading', { level: 3, name: 'Publica al poble' });
+  const graella = h3.closest('section').querySelector('.sdp-card-grid');
+  expect(h3.closest('section').getAttribute('aria-labelledby')).toBe(h3.id);
   expect(graella.className).toBe('sdp-card-grid');
   expect(targetesDeDalt().map(titolDe)).toEqual(TITOLS_DALT);
   expect(targetesDeDalt()).toHaveLength(DESTINS_CONTROL.length);
@@ -831,8 +831,8 @@ test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre a
     expect(targeta.querySelector('.sp-card-copyright__enllac').textContent, titol).toBe(COPYRIGHT_SDP);
     expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
     /* Títol, subtítol i entradilla visibles: els de la pàgina de la targeta. */
-    expect(within(targeta).getByRole('heading', { level: 3, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
-    expect(within(targeta).getByRole('heading', { level: 4 }).textContent, titol).toBe(sensePunt(pagina.subtitle));
+    expect(within(targeta).getByRole('heading', { level: 4, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
+    expect(targeta.querySelector('h4.sp-card-subtitle').textContent, titol).toBe(sensePunt(pagina.subtitle));
     expect(targeta.querySelector('p.sp-card-text').textContent, titol).toBe(pagina.lead);
     expect(targeta.querySelectorAll('.sp-card-body > .sp-card-portes > .sp-card-porta'), titol).toHaveLength(2);
   });
@@ -935,7 +935,7 @@ test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text lit
   ];
   for (const [posicio, titol, subtitol, nomPublicar, nomSaber, pagina, editor] of esperades) {
     const targeta = targetesDeDalt()[posicio];
-    expect(within(targeta).getByRole('heading', { level: 3, name: titol })).toBeTruthy();
+    expect(within(targeta).getByRole('heading', { level: 4, name: titol })).toBeTruthy();
     expect(targeta.querySelector('.sp-card-subtitle').textContent).toBe(subtitol);
     expect(targeta.querySelector('.sp-card-labels')).toBeNull();
     expect(within(targeta).queryByText('EN OBRES')).toBeNull();
@@ -1015,7 +1015,7 @@ test('P5 · les portes obertes: Publicar amb àmbit → /notes?ambit=… (IDEA-6
 test('P5 · en anglés, les portes es tradueixen i porten al mateix lloc; el contingut és el del Mestre', () => {
   estat.traductor = createTranslator('en');
   pinta();
-  expect(screen.getByRole('heading', { level: 2, name: 'Post to the village' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 3, name: 'Post to the village' })).toBeTruthy();
   expect(targetesDeDalt().map(titolDe)).toEqual(TITOLS_DALT);
   /* IDEA-61 i AH-04 · Tots els destins publiquen: enllaços traduïts cap a l'editor amb l'àmbit. */
   expect(screen.getByRole('link', { name: 'Publish: Shared Vehicle' }).getAttribute('href')).toBe('/notes?ambit=vehicle');
@@ -1295,7 +1295,7 @@ test('PRODUCCIO-02 · La IAIA Sabuda només és al Panell amb la curadoria cultu
     /* R16b · Una sola font: el títol i el subtítol són els de TEXTOS_IAIA_SABUDA, i cap
        llengua no els copia a ControlSection.jsx. */
     expect(titolDeTargeta(targeta)).toBe(TEXTOS_IAIA_SABUDA.ca.titol);
-    expect(within(targeta).getByRole('heading', { level: 4 }).textContent).toBe(TEXTOS_IAIA_SABUDA.ca.subtitol);
+    expect(targeta.querySelector('h4.sp-card-subtitle').textContent).toBe(TEXTOS_IAIA_SABUDA.ca.subtitol);
     /* R16b (tercera ronda) · El subtítol neutre de R16a: no afirma cap acció que el lead negue. */
     expect(TEXTOS_IAIA_SABUDA.ca.subtitol).toBe('Aportacions culturals amb curadoria humana');
     expect(Object.keys(TEXTOS_IAIA_SABUDA)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
@@ -1346,7 +1346,7 @@ test('PRODUCCIO-02 · La IAIA Sabuda només és al Panell amb la curadoria cultu
       const codi = llengua.split('-')[0];
       const pagina = codi === 'ca' ? font : font.translations[codi];
       expect([llengua, titolDeTargeta(deLaLlengua)]).toEqual([llengua, titol]);
-      expect([llengua, within(deLaLlengua).getByRole('heading', { level: 4 }).textContent]).toEqual([llengua, subtitol]);
+      expect([llengua, deLaLlengua.querySelector('h4.sp-card-subtitle').textContent]).toEqual([llengua, subtitol]);
       expect([llengua, deLaLlengua.querySelector('p.sp-card-text').textContent]).toEqual([llengua, pagina.lead]);
       expect([llengua, etiquetesDe(deLaLlengua)])
         .toEqual([llengua, [['IAIA', 'sp-card-label sdp-badge-category'], [etiqueta, 'sp-card-label sdp-badge-tag']]]);

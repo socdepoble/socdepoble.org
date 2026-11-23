@@ -249,8 +249,10 @@ test('un vídeo amb la ubicació sense netejar avisa abans del botó d’enviar'
   render(<Barra usuariId={m.user} fil={fil} servei={servei} onEnvia={vi.fn()} />);
   await tria();
   const envia = await screen.findByRole('button', { name: 'Envia el fitxer' });
-  const avis = screen.getByText(/si el mòbil hi va guardar la ubicació/);
+  // v1.2.23 · IDEA-331 · L'avís és el text de la fila del lloc, al costat de l'interruptor «Amaga el lloc».
+  const avis = screen.getByText(/si el mòbil hi va guardar la ubicació/).closest('p');
   expect(envia.getAttribute('aria-describedby')).toBe(avis.id);
+  expect(screen.getByRole('button', { name: 'Amaga el lloc' }).title).toBe('Publicar sense geolocalització');
 });
 test('un vídeo net no porta cap avís', async () => {
   m.preparaAdjunt.mockResolvedValueOnce({ id: 'video', tipus: 'video', duradaMs: 4000, senseUbicacio: true, fitxer: new Blob(['v'], { type: 'video/mp4' }) });

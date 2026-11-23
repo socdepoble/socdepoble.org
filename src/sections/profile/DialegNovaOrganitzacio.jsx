@@ -3,37 +3,35 @@ import { Dialeg, Boto, Camp, CampText, GrupOpcions, Selector } from '../../compo
 import { normalizeSlug, validateOrganization, readableBackendError } from '../onboarding/onboardingModel.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { useLlenguaDeLaUI } from './useLlenguaDeLaUI.js';
-import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
+import { ERROR_SENSE_POBLE, pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
 import { opcionsDePoble, usePerfilOpcional } from './PerfilContext.jsx';
 import { poblePrincipal } from './fitxaDePerfil.js';
 import { normalitzaCodiIdiomaEntitats, textosEntitatsCompte } from './i18nEntitatsCompte.js';
 
-/**
- * Crear una organització des del Perfil (I10). Abans el botó «NOVA ORG»
- * creava «Organització nova» sense preguntar res; ara es tria nom i tipus.
- *
- * Ordre del Mestre (261008) · «Un grup no té per què pertànyer a cap
- * empresa»: el camp «Empresa mare» ja no existix i «Grup» sempre s'oferix.
- * El servidor ja accepta un grup sense mare (2610081400) i el domini només
- * envia la mare si en ve una (organizations.js).
- *
- * L'identificador es deriva del nom fins que la persona el toca. Els errors
- * del servidor van al camp que toca: l'identificador repetit, a
- * «Identificador»; la resta, damunt del formulari.
- *
- * Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha de
- * portar el seu poble») · «Poble» és obligatori: el selector de sempre del
- * poble d'una organització (opcionsDePoble, el de «El compte», amb els pobles
- * del contingut core), que naix amb el poble de qui la crea si en té. Sense
- * poble no s'envia res; el domini i l'adaptador també l'exigixen
- * (data/pobleOrganitzacio.js).
- *
- * Pla 261018_1605 (Tasca 2, D5; ordre del Mestre, 18-10-2026) · Una persona
- * pot ser de més d'un poble ('A · B', el primer el principal): l'organització
- * nova naix NOMÉS amb el principal (poblePrincipal), mai amb la cadena sencera.
- *
- * `onCrea(dades)` és una promesa: si falla, el diàleg continua obert.
- */
+function localitzaErrorsValidacio(nous, tx, codiIdioma) {
+  if (codiIdioma === 'ca') return nous;
+  const traduits = { ...nous };
+  if (traduits.name) traduits.name = tx.errorNomLlargaria;
+  if (traduits.slug) traduits.slug = tx.errorSlugFormat;
+  if (traduits.description) traduits.description = tx.errorDescripcioLlargaria;
+  if (traduits.town_name) {
+    traduits.town_name = traduits.town_name === ERROR_SENSE_POBLE
+      ? tx.errorSensePoble
+      : tx.errorPobleMassaLlarg;
+  }
+  return traduits;
+}
+
+function localitzaErrorServidor(text, tx, codiIdioma) {
+  const esSlug = /identificador|duplicate|unique|slug/i.test(text);
+  if (codiIdioma === 'ca') {
+    return esSlug ? { slug: text } : { general: text };
+  }
+  if (esSlug) return { slug: tx.errorSlugOcupat };
+  if (text === 'S’ha produït un error inesperat.') return { general: tx.errorGeneral };
+  return { general: text };
+}
+
 export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
   const llenguaUI = useLlenguaDeLaUI();
   const codiIdioma = normalitzaCodiIdiomaEntitats(llenguaUI);
@@ -41,7 +39,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
   const { towns } = useCoreContent();
   const pobleDeLaPersona = usePerfilOpcional()?.identitats?.find((identitat) => identitat.mena === 'persona')?.dades?.town_name;
   const [nom, setNom] = useState('');
-  const [slug, setSlug] = useState(null); // null = derivat del nom
+  const [slug, setSlug] = useState(null);
   const [kind, setKind] = useState('company');
   const [poble, setPoble] = useState(() => poblePrincipal(pobleDeLaPersona));
   const [errors, setErrors] = useState({});
@@ -69,8 +67,9 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
     } catch (error) {
       nous.town_name = error.message;
     }
-    setErrors(nous);
-    if (Object.keys(nous).length) return;
+    const localitzats = localitzaErrorsValidacio(nous, tx, codiIdioma);
+    setErrors(localitzats);
+    if (Object.keys(localitzats).length) return;
 
     enviant.current = true;
     setDesant(true);
@@ -79,7 +78,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
     } catch (err) {
       if (err?.name === 'AbortError') return;
       const text = readableBackendError(err);
-      setErrors(/identificador/i.test(text) ? { slug: text } : { general: text });
+      setErrors(localitzaErrorServidor(text, tx, codiIdioma));
     } finally {
       enviant.current = false;
       setDesant(false);
@@ -103,8 +102,6 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
         </>
       )}
     >
-      {/* Sense classe: la que duia no existia a cap full (Porta Vocabulari) i
-          els Camp de Pedra Seca ja porten el seu espaiat. */}
       <form onSubmit={envia} noValidate aria-busy={desant}>
         {errors.general ? <p role="alert" className="sdp-camp__error">{errors.general}</p> : null}
         <Camp etiqueta={tx.nom} error={errors.name} obligatori>

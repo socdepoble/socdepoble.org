@@ -194,10 +194,10 @@ function munta({ estatTractors = ESTAT_APROVAT, entorn, descarrega = vi.fn(), on
 }
 
 const boto = (nom) => screen.getByRole('button', { name: nom });
-const pas = (n) => screen.getByRole('heading', { level: 2, name: new RegExp(`^${n}\\. `) }).closest('section');
+const pas = (n) => screen.getByRole('heading', { level: 3, name: new RegExp(`^${n}\\. `) }).closest('section');
 const status = () => screen.getAllByRole('status').find((el) => el.classList.contains('sdp-gestoria-panell__avis'));
-/* Un grup d'incidències pel títol (h4), o null. */
-const grupDe = (nom) => screen.queryByRole('heading', { level: 4, name: nom })?.closest('.sdp-gestoria-panell__grup') ?? null;
+/* Un grup d'incidències pel títol (h5), o null. */
+const grupDe = (nom) => screen.queryByRole('heading', { level: 5, name: nom })?.closest('.sdp-gestoria-panell__grup') ?? null;
 /* La cel·la d'una fila de la taula de revisió sota la columna que porta eixe títol. */
 function celDe(regio, numFila, titol) {
   const titols = [...regio.querySelectorAll('thead th')].map((th) => th.textContent);
@@ -233,7 +233,7 @@ async function generat(opcions) {
   fireEvent.click(screen.getByRole('checkbox', { name: /He revisat la proposta/ }));
   fireEvent.click(screen.getByRole('checkbox', { name: /Genera-la igualment/ }));
   fireEvent.click(boto('Genera el full'));
-  await screen.findByRole('heading', { level: 3, name: 'Fitxers generats' });
+  await screen.findByRole('heading', { level: 4, name: 'Fitxers generats' });
   return muntat;
 }
 
@@ -297,7 +297,7 @@ describe('pas 2: carpeta i trimestre', () => {
 
   test('l’anàlisi porta el focus a la revisió i ho anuncia', async () => {
     await analitzat();
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: '3. Revisió' })));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3, name: '3. Revisió' })));
     expect(status().textContent).toMatch(/^Anàlisi del 3T de 2026 acabada/);
     expect(obteAprovacio).toHaveBeenLastCalledWith('gestoria.factures');
   });
@@ -307,7 +307,7 @@ describe('pas 3: revisió', () => {
   test('incidències per severitat, documents, cobertura i taules editables', async () => {
     await analitzat();
     const revisio = within(pas(3));
-    expect(revisio.getByRole('heading', { level: 4, name: /^Severitat alta/ })).toBeTruthy();
+    expect(revisio.getByRole('heading', { level: 5, name: /^Severitat alta/ })).toBeTruthy();
     expect(revisio.getAllByText('Falta una factura mensual').length).toBeGreaterThan(0);
     expect(revisio.getByText('Correu no revisat', { selector: '.sdp-alerta__titol' })).toBeTruthy();
     expect(revisio.queryByText(/complet\b/)).toBeNull();
@@ -624,7 +624,7 @@ describe('pas 4 i 5: la proposta, els fitxers i el correu', () => {
     expect(genera.disabled).toBe(false);
     expect(within(pas(5)).queryByRole('heading', { name: 'Prepara el correu per a la gestoria' })).toBeNull();
     fireEvent.click(genera);
-    const fitxers = await proposta.findByRole('heading', { level: 3, name: 'Fitxers generats' });
+    const fitxers = await proposta.findByRole('heading', { level: 4, name: 'Fitxers generats' });
     await waitFor(() => expect(document.activeElement).toBe(fitxers));
     expect(proposta.getByText(NOM_XLSX)).toBeTruthy();
     expect(proposta.getByText('Generat amb estes incidències acceptades:')).toBeTruthy();
@@ -640,10 +640,11 @@ describe('pas 4 i 5: la proposta, els fitxers i el correu', () => {
     await proposta.findByText(`Desat a «2026_3T/${NOM_XLSX}».`);
 
     const envia = within(pas(5));
-    /* regressio-02: dins del pas 5 (h2), el títol del correu és h3 i la vista prèvia, h4. Abans fixava un h2 germà dels passos. */
+    /* regressio-02: dins del pas 5 (h3), el títol del correu és h4 i la vista prèvia, h5. Abans fixava un h2 germà dels passos. */
     expect(envia.queryByRole('heading', { level: 2, name: 'Prepara el correu per a la gestoria' })).toBeNull();
-    expect(envia.getByRole('heading', { level: 3, name: 'Prepara el correu per a la gestoria' })).toBeTruthy();
-    expect(envia.getByRole('heading', { level: 4, name: 'Vista prèvia' })).toBeTruthy();
+    expect(envia.queryByRole('heading', { level: 3, name: 'Prepara el correu per a la gestoria' })).toBeNull();
+    expect(envia.getByRole('heading', { level: 4, name: 'Prepara el correu per a la gestoria' })).toBeTruthy();
+    expect(envia.getByRole('heading', { level: 5, name: 'Vista prèvia' })).toBeTruthy();
     expect(envia.getByRole('textbox', { name: /Nom per a l'assumpte/ }).value).toBe(TITULAR);
     expect(envia.getByText(new RegExp(`^${NOM_XLSX} \\(`))).toBeTruthy();
   });
@@ -690,7 +691,7 @@ describe('el cable cap al Quadre de comandament: titular i entregables', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: /He revisat la proposta/ }));
     fireEvent.click(screen.getByRole('checkbox', { name: /Genera-la igualment/ }));
     fireEvent.click(boto('Genera el full'));
-    await screen.findByRole('heading', { level: 3, name: 'Fitxers generats' });
+    await screen.findByRole('heading', { level: 4, name: 'Fitxers generats' });
     await waitFor(() => expect(darrer(onFactures).entregables).not.toBeNull());
     const ambFull = darrer(onFactures);
     expect(ambFull).toMatchObject({ any: 2026, t: 3, titular: TITULAR });
@@ -743,16 +744,17 @@ describe('desenxufa', () => {
 });
 
 describe('accessibilitat bàsica', () => {
-  test('cinc passos en una llista ordenada, títols h2 i cap h1', async () => {
+  test('cinc passos en una llista ordenada, títols h3 i cap h1 ni h2 fora de diàleg', async () => {
     const { container } = await analitzat();
     const passos = container.querySelector('ol.sdp-gestoria-panell__passos');
     expect(within(passos).getAllByRole('listitem').filter((li) => li.parentElement === passos)).toHaveLength(5);
-    expect([...passos.querySelectorAll(':scope > li > section > div > h2')].map((h) => h.textContent)).toEqual([
+    expect([...passos.querySelectorAll(':scope > li > section > div > h3')].map((h) => h.textContent)).toEqual([
       '1. Aprovació dels tractors', '2. Carpeta i trimestre', '3. Revisió', '4. Proposta del full', '5. Envia a la gestoria'
     ]);
     expect(container.querySelector('h1')).toBeNull();
+    expect([...container.querySelectorAll('h2')].filter((h) => !h.closest('dialog'))).toEqual([]);
     for (const h of passos.querySelectorAll(':scope > li > section')) {
-      expect(h.getAttribute('aria-labelledby')).toBe(h.querySelector('h2').id);
+      expect(h.getAttribute('aria-labelledby')).toBe(h.querySelector('h3').id);
     }
   });
 

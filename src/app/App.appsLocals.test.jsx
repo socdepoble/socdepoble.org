@@ -515,10 +515,15 @@ test('sense sessió i en un build (DEV false), /app/gestoria entra per la Factur
    cita per nom. La secció i el seu h2 es conserven: les assercions no canvien.
    R16-W1 · El TPV del Bar ha passat a «Economia i Empresa» (registrePlugins.js,
    camp `espai`): «Maquinària i Sistema» porta el Lector RSS i el Snippet, i La
-   IAIA Sabuda només amb la curadoria cultural encesa (ControlSection.jsx). */
+   IAIA Sabuda només amb la curadoria cultural encesa (ControlSection.jsx).
+   v1.2.23 · costura maquetació canònica (ordre del Mestre 261123) · El kit
+   Gemini R32.42 (IDEA-319, maquetació canònica h3/h4) baixa els títols de
+   secció del Panell d'h2 a h3 (ControlSection.jsx, EspaiDelPanell i
+   PanellControl; les seues proves ja ho diuen). La secció
+   .sdp-control-maquinaria i el seu títol es conserven: només canvia el nivell. */
 test('sense sessió, /control continua sense guarda: es pinta el Panell, com abans', async () => {
   await munta('/control', async () => {
-    const maquinaria = await screen.findByRole('heading', { level: 2, name: 'Maquinària i Sistema' }, { timeout: 8000 });
+    const maquinaria = await screen.findByRole('heading', { level: 3, name: 'Maquinària i Sistema' }, { timeout: 8000 });
     expect(maquinaria.closest('section')?.classList.contains('sdp-control-maquinaria')).toBe(true);
     expect(screen.getByRole('button', { name: 'Eixir de poble' })).toBeTruthy();
     const barra = screen.getByRole('navigation', { name: 'Navegació principal' });

@@ -3,7 +3,12 @@
    les seues notes) i les tres props opcionals de quan la vista no és dins
    d'un document (etiquetaTornar, introduccio i llegenda). Els altres casos
    conserven els textos de sempre. Sense h1, sense style= i sense cap avís de
-   React. */
+   React.
+   v1.2.23 · K5 (ordre del Mestre 261123) · Des de R32.47 de Gemini (IDEA-319:
+   seccions en h3, cap h2 al cos), el títol «Drets d’autor» de CopyrightPage és
+   un h3, i no un h2 (CopyrightPage.jsx:213 i la seua prova). Les tres cerques
+   del títol passen al nivell 3: l'invariant és el mateix, la vista porta un
+   títol amb nom dins de la seua secció, i continua sense cap h1. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter } from '../../../../app/contexts/RouterContext.jsx';
@@ -54,7 +59,7 @@ it('«El compte» pinta la vista amb l’avís del compte i les tres props opcio
     .toEqual(['Nota amb herència', 'Nota sense herència', 'Fitxa del Perfil', 'Foraster', 'El compte']);
   obriElCas('El compte');
   expect(screen.getByRole('button', { name: 'El compte' }).getAttribute('aria-pressed')).toBe('true');
-  const vista = screen.getByRole('heading', { level: 2, name: 'Drets d’autor' }).closest('section');
+  const vista = screen.getByRole('heading', { level: 3, name: 'Drets d’autor' }).closest('section');
   expect(within(vista).getByRole('button', { name: 'Tornar al compte' })).toBeTruthy();
   expect(within(vista).queryByRole('button', { name: 'Tornar al document' })).toBeNull();
   expect(vista.querySelector('.sdp-drets__intro').textContent)
@@ -62,7 +67,7 @@ it('«El compte» pinta la vista amb l’avís del compte i les tres props opcio
   expect(within(vista).getByRole('group', { name: 'Tria els drets de sèrie de les teues notes' })).toBeTruthy();
   expect(within(vista).getByText('Les teues notes noves naixen amb estos drets')).toBeTruthy();
   act(() => { fireEvent.click(within(vista).getByRole('button', { name: 'Tornar al compte' })); });
-  expect(screen.queryByRole('heading', { level: 2, name: 'Drets d’autor' })).toBeNull();
+  expect(screen.queryByRole('heading', { level: 3, name: 'Drets d’autor' })).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Elegir drets d\'autor' }));
 });
 
@@ -70,7 +75,7 @@ it('els altres casos no porten cap prop opcional: els textos de sempre de dins d
   munta();
   for (const cas of ['Nota amb herència', 'Fitxa del Perfil', 'Foraster']) {
     obriElCas(cas);
-    const vista = screen.getByRole('heading', { level: 2, name: 'Drets d’autor' }).closest('section');
+    const vista = screen.getByRole('heading', { level: 3, name: 'Drets d’autor' }).closest('section');
     expect(within(vista).getByRole('button', { name: 'Tornar al document' })).toBeTruthy();
     expect(vista.querySelector('.sdp-drets__intro').textContent)
       .toBe('Tria qui pot usar esta obra i com. Ara té «© Sóc de Poble». Res no canvia fins que prems «Desar autoria».');
