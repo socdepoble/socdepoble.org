@@ -184,8 +184,9 @@ export function BarraTaronja({
           ) : null}
           <div
             className={['sp-card-avatar', 'sp-card-avatar--fallback', avatar && 'sp-card-avatar--amagat'].filter(Boolean).join(' ')}
+            aria-hidden="true"
           >
-            <UserRound size={24} />
+            <UserRound size={24} aria-hidden="true" focusable="false" />
           </div>
           <div className="sp-card-author-info">
             <div className="sp-card-author-name">{nomEfectiu}</div>

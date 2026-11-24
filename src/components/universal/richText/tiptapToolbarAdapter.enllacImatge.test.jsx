@@ -109,7 +109,13 @@ function barraAmbImatge({ href = null } = {}) {
   const barraDe = () => <UniversalRichTextToolbar state={llegeixEstat(editor)} exec={(id, valor) => executa(editor, id, valor)} onPublish={() => {}} />;
   const vista = render(barraDe());
   const obri = () => {
+    /* v1.2.24 · costura R32.75 · R32.57 (U-DIS-02) ja no torna el focus a un
+       disparador dins d'un [hidden], com el navegador. En ample, el botó és a la
+       segona fila: primer «Més eines», com ho fa la persona. */
+    const mes = within(vista.container).getByRole('button', { name: 'Més eines' });
+    if (mes.getAttribute('aria-expanded') !== 'true') fireEvent.click(mes);
     const boto = vista.container.querySelector('[data-eina="enllacImatge"]');
+    expect(boto.closest('[hidden]')).toBeNull();
     boto.focus();
     fireEvent.click(boto);
     return boto;

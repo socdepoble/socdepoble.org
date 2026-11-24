@@ -329,7 +329,7 @@ describe('historial per cursor i marques', () => {
     await loadMissatges('fil', { ...REMOT, abansDeSeq: 40, limit: 20 });
     expect(client.rpc).toHaveBeenLastCalledWith('xat_historial', { p_fil_id: 'fil', p_abans_de_seq: 40, p_limit: 20 });
     await loadMissatges('fil', { ...REMOT, despresDeSeq: 40 });
-    expect(client.rpc).toHaveBeenLastCalledWith('xat_nous', { p_fil_id: 'fil', p_despres_de_seq: 40 });
+    expect(client.rpc).toHaveBeenLastCalledWith('xat_nous', { p_fil_id: 'fil', p_despres_de_seq: 40, p_limit: 50 });
   });
   it('rebutja un límit o un cursor invàlid sense cridar el servidor', async () => {
     await expect(loadMissatges('fil', { ...REMOT, limit: 101 })).rejects.toMatchObject({ code: 'SDP-XAT-009' });

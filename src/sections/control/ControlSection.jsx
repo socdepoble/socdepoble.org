@@ -187,19 +187,21 @@
  * porta la insígnia a la web pròpia.
  */
 import {
-  KeyRound,
-  LogOut,
-  MessageSquare
+  ChevronRight,
+  MessageSquare,
+  UserRound,
 } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
-import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
+import { Link, useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import * as notificationModul from '../../components/universal/NotificationContext.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { COPYRIGHT_SDP, encapcalamentDeTargeta } from '../../components/universal/editorial.js';
-import { Alerta, UniversalButton, UniversalCard } from '../../components/PedraSeca';
+import { Alerta, UniversalCard } from '../../components/PedraSeca';
 import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
-import { useUIActions } from '../../app/contexts/UIContext';
+import * as uiContextModul from '../../app/contexts/UIContext';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssControlPeu from '../../css/diferit-control-peu.css?inline';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 import { CLAU_FITXA, DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
@@ -211,16 +213,24 @@ import { ESPAIS_PLUGINS, PLUGINS, TEXTOS_ESPAIS_PLUGINS, etiquetesAmbEstat, plug
 import { TEXTOS_MODE_RURAL } from './textosModeRural.js';
 import { TEXTOS_RESTAURADOR } from '../pobles/restauradorOpenDataModel.js';
 import { RUTA_COMPTE } from '../../config/rutaEntrada.js';
-import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada v1.2.7 · P0-123 · «Instal·lada al dispositiu · Última publicada» (cinc llengües, fora dels diccionaris). */
 import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstallada.jsx';
 import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
+import ControlModeHumaPur from '../../components/universal/ControlModeHumaPur.jsx';
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
+import { esModeHumaPur } from '../realitat/nivellIaia.js';
+import useNivellIaia from '../realitat/useNivellIaia.js';
+import {
+  RUTA_XAT_JAVI_LLAVOR,
+  llegixModeDadesControl,
+  resolDestiXatJavi,
+  resolTextosPeuControl,
+} from './textosPeuControl.js';
 /* Onada R29 · R29-RUT-01 · Amb lazyRoute: un tros que no arriba dona LazyRouteError i la barrera de la
    ruta oferix «Recarrega l’aplicació» (el lazy nu de React donava un reintent fals). */
 const ModeRural = lazyRoute(() => import('./ModeRural.jsx'));
 const FitxaOpenData = lazyRoute(() => import('./FitxaOpenData.jsx'));
-/* Onada R32 · IDEA-278 · Giny Bento de Salut de l'Aparell i Emmagatzematge Local (diferit, 0 B a l'entrada WP). */
-const GinySalutDispositiuJarvis = lazyRoute(() => import('./GinySalutDispositiuJarvis.jsx'));
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
    contingut de la seua pàgina i les dues portes. Sense il·lustració, la
@@ -334,7 +344,7 @@ function EspaiDelPanell({ espai, idioma, visibles }) {
     <section>
       <h3>{textos.titol}</h3>
       <p className="lead">{textos.entradeta}</p>
-      <div className="sdp-card-grid">
+      <div className="sdp-card-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
         {plugins.map((plugin) => (
           <TargetaDUtilitat
             key={plugin.id}
@@ -445,10 +455,28 @@ const FITXA_MODE_RURAL = 'mode-rural';
 const FITXA_OPENDATA = 'opendata';
 const FITXES = new Set([FITXA_SNIPPET, FITXA_MODE_RURAL, FITXA_OPENDATA]);
 
+function useConfigExternaSegura() {
+  try {
+    if (typeof uiContextModul.useUIStateOpcional === 'function') return uiContextModul.useUIStateOpcional()?.externalConfig ?? null;
+    if (typeof uiContextModul.useUIState === 'function') return uiContextModul.useUIState()?.externalConfig ?? null;
+  } catch {
+    /* Fora de UIProvider */
+  }
+  return null;
+}
+
+function useToastSegur() {
+  try {
+    return notificationModul.useToast?.()?.showToast ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ControlSection() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { t } = useUIActions();
+  const { t } = uiContextModul.useUIActions();
   /* control-03 (261104) · La vista pintada: '' és el Panell. Abans només es
      recolocava el Snippet (un booleà); ara, qualsevol fitxa. */
   const demanada = params.get(CLAU_FITXA);
@@ -483,25 +511,28 @@ export default function ControlSection() {
 
 function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   /* R16b (tercera ronda) · La llengua de la interfície, de useUIActions: UIProvider hi posa la
      mateixa `language` que a l'estat (UIContext.jsx), i el Panell ja en llig `t`. */
-  const { t, language } = useUIActions();
+  const { t, language } = uiContextModul.useUIActions();
+  const externalConfig = useConfigExternaSegura();
+  const showToast = useToastSegur();
   const idioma = String(language || 'ca').toLowerCase().split('-')[0];
   const textosNodrir = (TEXTOS_CONTROL[idioma] || TEXTOS_CONTROL.ca).nodrirIaia;
-  /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
-     eixida que «Tancar sessió»: la de SessionContext, que primer envia el
-     pendent i després oblida els esborranys d'este dispositiu. C01 · Si
-     queda res que el servidor no té, ho diu abans i la persona decidix.
-     Ordre del Mestre 260930 (P2) · Sense recàrrega: a WordPress,
-     window.location.reload() recarregava la pàgina sencera de l'amfitrió.
-     Tancar la sessió ja mou la generació del servei i els proveïdors de la
-     persona es buiden per àmbit (el mateix que «Tanca la sessió» dels
-     Ajustos del Xat, FullAjustos.jsx). */
-  const despresDEixir = useCallback(() => {
-    navigate('/registre', { replace: true });
-  }, [navigate]);
-  const eixida = useEixidaSegura({ despres: despresDEixir });
+  const txPeu = resolTextosPeuControl({ language, t });
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
+
+  const peuRef = useRef(null);
+  useFullDiferit(peuRef, 'control-peu', cssControlPeu);
+
+  const ubicacioActual = `${pathname}${search ? `?${search}` : ''}`;
+  const ubicacioRef = useRef(ubicacioActual);
+  ubicacioRef.current = ubicacioActual;
+  const muntatRef = useRef(true);
+  useEffect(() => {
+    muntatRef.current = true;
+    return () => { muntatRef.current = false; };
+  }, []);
 
   /* Les Utilitats que la persona ha llevat del Panell (DetallEspai.jsx escriu
      la preferència). Es llig en muntar el Panell i, si canvia mentre és a la
@@ -515,6 +546,13 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
 
   /* P5 · El títol de la graella, per a lector: les targetes h3 pengen d'un h2. */
   const idDestins = useId();
+  const idPeu = useId();
+  const idSdpNom = useId();
+  const idSdpDetall = useId();
+  const idJaviNom = useId();
+  const idJaviDetall = useId();
+  const idPerfilNom = useId();
+  const idPerfilDetall = useId();
   /* W4-09 · El xat corporatiu: en llavor, el xat de la llavor; en remot,
      l'entitat resolta pel port. Sense entitat o amb error, avís honest.
      Ordre del Mestre (261007, correcció C2) · Ja no és el Comentar propi del
@@ -524,6 +562,36 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
      esperar cap clic) i no en fa cap de pròpia. */
   const xatSocDePoble = useXatSocDePobleResolt();
   const senseXatSocDePoble = xatSocDePoble.estat === 'absent' || xatSocDePoble.estat === 'error';
+
+  const obriXatSocDePoble = useCallback(() => {
+    const { href, avis, resol } = xatSocDePoble;
+    if (href) {
+      navigate(href);
+      return;
+    }
+    if (avis) showToast?.(avis);
+    if (typeof resol !== 'function') return;
+    const onEra = ubicacioRef.current;
+    resol().then((xat) => {
+      const vigent = xat?.darrera !== false && muntatRef.current && ubicacioRef.current === onEra;
+      if (!vigent) return;
+      if (xat?.href) navigate(xat.href);
+      else if (xat?.avis && xat.avis !== avis) showToast?.(xat.avis);
+    });
+  }, [xatSocDePoble, navigate, showToast]);
+
+  const obriXatJavi = useCallback(() => {
+    const mode = llegixModeDadesControl(externalConfig);
+    if (mode === 'seed' || mode === 'local') {
+      navigate(RUTA_XAT_JAVI_LLAVOR);
+      return;
+    }
+    const onEra = ubicacioRef.current;
+    resolDestiXatJavi({ externalConfig }).then((desti) => {
+      if (!muntatRef.current || ubicacioRef.current !== onEra) return;
+      navigate(desti);
+    });
+  }, [externalConfig, navigate]);
 
   /* AH-04 · Fer clic sobre el cos, la imatge o el títol d'una targeta de
      publicació (fora de la boina, les portes i el peu) obri la seua pàgina
@@ -559,11 +627,12 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         {/* Onada v1.2.7 · P0-123 · La versió instal·lada i la publicada, d'un cop d'ull. */}
         <LiniaVersioInstallada llengua={idioma} />
         <ControlModeSenior llengua={idioma} />
+        <ControlModeHumaPur llengua={idioma} />
         <section aria-labelledby={idDestins}>
           <h3 id={idDestins} className="sdp-sr-only">{t(...TEXTOS_PORTES.titol)}</h3>
           {/* P5 · Les targetes de doble acció, en la graella de sempre (destinsControl.js):
               les sis de 2245 i, des del 261004, Treball i Habitatge. */}
-          <div className="sdp-card-grid" onClick={obriPaginaDeTargeta}>
+          <div className="sdp-card-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella} onClick={obriPaginaDeTargeta}>
             {DESTINS_CONTROL.map((desti) => (
               <TargetaDeDesti key={desti.id} desti={desti} t={t} />
             ))}
@@ -592,8 +661,8 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
             {t('section.control.maquinaria.lead', 'Altres eines de la plataforma, com el Lector RSS i el Snippet, l’extensió de Chrome per a desar webs al Bloc.')}
           </p>
 
-          <div className="sdp-card-grid">
-            {!ambCuradoriaCultural() ? null : (
+          <div className="sdp-card-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
+            {modeHumaPur || !ambCuradoriaCultural() ? null : (
               <TargetaDUtilitat
                 titol={textosNodrir.titol}
                 subtitol={textosNodrir.subtitol}
@@ -635,59 +704,92 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           </div>
         </section>
 
-        <BarreraDelTrosAccessori>
-          <Suspense fallback={null}>
-            <GinySalutDispositiuJarvis idioma={idioma} />
-          </Suspense>
-        </BarreraDelTrosAccessori>
+        {/* IDEA-341 · Peu sobri de «Filet pur i dur» Pedra Seca: elecció directa entre
+            Sóc de Poble i Javi Llinares al Xat, més accés net a El meu perfil. */}
+        <section
+          ref={peuRef}
+          className="sdp-control-peu"
+          aria-labelledby={idPeu}
+          data-testid="control-peu-filet-pur"
+        >
+          <h3 id={idPeu}>{txPeu.titol}</h3>
+          <p className="lead">{txPeu.subtitol}</p>
 
-        <div className="sdp-control-actions">
-          {/* control-03 (261104) · Com la targeta del Snippet, els dos botons
-              recorden on era el Panell abans d'obrir la seua fitxa. */}
-          <UniversalButton onClick={() => { abansDeLaFitxa(); navigate('/control?fitxa=mode-rural'); }} variant="secondary" className="sdp-btn-ample">
-            {t(...TEXTOS_MODE_RURAL.titol)}
-          </UniversalButton>
-          <UniversalButton onClick={() => { abansDeLaFitxa(); navigate('/control?fitxa=opendata'); }} variant="secondary" className="sdp-btn-ample">
-            {t(...TEXTOS_RESTAURADOR.titol)}
-          </UniversalButton>
-          {/* D3 · El fil '0001' no existix (els id són UUID): obri el Xat. */}
-          <UniversalButton
-            onClick={() => navigate('/xat')}
-            variant="primary"
-            icon={<MessageSquare size={18} />}
-            className="sdp-btn-ample"
-          >
-            {t('section.control.dubtes', 'Missatges per a dubtes')}
-          </UniversalButton>
+          <div className="sdp-control-peu__marc">
+            <ul role="list" className="sdp-control-peu__llista">
+              <li className="sdp-control-peu__item">
+                <button
+                  type="button"
+                  className="sdp-control-peu__fila"
+                  aria-labelledby={idSdpNom}
+                  aria-describedby={idSdpDetall}
+                  onClick={obriXatSocDePoble}
+                  data-testid="control-peu-escriure-socdepoble"
+                >
+                  <span className="sdp-control-peu__cos">
+                    <span className="sdp-control-peu__icona" aria-hidden="true">
+                      <MessageSquare size={20} focusable="false" />
+                    </span>
+                    <span className="sdp-control-peu__textos">
+                      <span id={idSdpNom} className="sdp-control-peu__nom">{txPeu.socDePobleNom}</span>
+                      <span id={idSdpDetall} className="sdp-control-peu__detall">{txPeu.socDePobleDetall}</span>
+                    </span>
+                  </span>
+                  <span className="sdp-control-peu__fletxa" aria-hidden="true">
+                    <ChevronRight size={18} focusable="false" />
+                  </span>
+                </button>
+              </li>
 
-          {/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · La contrasenya viu a
-              «El compte» del Perfil: qui la busca ací (per a entrar a l'App
-              mòbil amb correu i contrasenya) hi va d'un toc. Sense sessió, la
-              barrera del Perfil (RequireAuth) porta a l'entrada amb tornada, i
-              en entrar s'aterra al compte (rutaEntrada.js, RUTA_COMPTE).
-              UniversalButton és Boto (PedraSeca/index.js): la clau 🔑 va per
-              `icona`, la seua API; `icon` i `variant` no hi arriben. */}
-          <UniversalButton
-            onClick={() => navigate(RUTA_COMPTE)}
-            varietat="secundari"
-            icona={KeyRound}
-            className="sdp-btn-ample"
-          >
-            {t('section.control.compte', 'Compte i contrasenya')}
-          </UniversalButton>
+              <li className="sdp-control-peu__item">
+                <button
+                  type="button"
+                  className="sdp-control-peu__fila"
+                  aria-labelledby={idJaviNom}
+                  aria-describedby={idJaviDetall}
+                  onClick={obriXatJavi}
+                  data-testid="control-peu-escriure-javi"
+                >
+                  <span className="sdp-control-peu__cos">
+                    <span className="sdp-control-peu__icona" aria-hidden="true">
+                      <MessageSquare size={20} focusable="false" />
+                    </span>
+                    <span className="sdp-control-peu__textos">
+                      <span id={idJaviNom} className="sdp-control-peu__nom">{txPeu.javiNom}</span>
+                      <span id={idJaviDetall} className="sdp-control-peu__detall">{txPeu.javiDetall}</span>
+                    </span>
+                  </span>
+                  <span className="sdp-control-peu__fletxa" aria-hidden="true">
+                    <ChevronRight size={18} focusable="false" />
+                  </span>
+                </button>
+              </li>
 
-          <UniversalButton
-            variant="ghost"
-            icon={<LogOut size={18} />}
-            onClick={eixida.demana}
-            disabled={eixida.ocupat || Boolean(eixida.avis)}
-            className="sdp-btn-ample"
-          >
-            {t('section.control.eixir', 'Eixir de poble')}
-          </UniversalButton>
-        </div>
-        {eixida.avis}
-        {eixida.error ? <p className="sdp-camp__error" role="alert">{eixida.error}</p> : null}
+              <li className="sdp-control-peu__item">
+                <Link
+                  to={RUTA_COMPTE}
+                  className="sdp-control-peu__fila"
+                  aria-labelledby={idPerfilNom}
+                  aria-describedby={idPerfilDetall}
+                  data-testid="control-peu-perfil-compte"
+                >
+                  <span className="sdp-control-peu__cos">
+                    <span className="sdp-control-peu__icona" aria-hidden="true">
+                      <UserRound size={20} focusable="false" />
+                    </span>
+                    <span className="sdp-control-peu__textos">
+                      <span id={idPerfilNom} className="sdp-control-peu__nom">{txPeu.perfilNom}</span>
+                      <span id={idPerfilDetall} className="sdp-control-peu__detall">{txPeu.perfilDetall}</span>
+                    </span>
+                  </span>
+                  <span className="sdp-control-peu__fletxa" aria-hidden="true">
+                    <ChevronRight size={18} focusable="false" />
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </section>
       </div>
     </UniversalPage>
   );

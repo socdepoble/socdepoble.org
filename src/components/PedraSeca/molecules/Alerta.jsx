@@ -34,7 +34,13 @@ export function Alerta({ to = 'info', titol, children, accions = null, onTanca =
         {accions ? <div className="sdp-alerta__accions">{accions}</div> : null}
       </div>
       {onTanca ? (
-        <button type="button" className="sdp-alerta__tanca" onClick={onTanca} aria-label={tradueix(t, TANCA_AVIS)}>
+        <button
+          type="button"
+          className="sdp-alerta__tanca"
+          onClick={onTanca}
+          aria-label={tradueix(t, TANCA_AVIS)}
+          title={tradueix(t, TANCA_AVIS)}
+        >
           <X size={20} aria-hidden="true" focusable="false" />
         </button>
       ) : null}

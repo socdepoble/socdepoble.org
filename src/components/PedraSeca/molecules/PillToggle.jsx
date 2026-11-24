@@ -17,6 +17,20 @@
  *  · Actiu = blau (--sdp-accio) amb text blanc (--sdp-sobre-accio). (El taronja
  *    passa a ser secundari, per petició del Mestre)
  */
+export function gestionaTeclaPindoles(e, vertical = false) {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  const { key, currentTarget, target } = e;
+  const d = key === (vertical ? 'ArrowDown' : 'ArrowRight') ? 1 : key === (vertical ? 'ArrowUp' : 'ArrowLeft') ? -1 : 0;
+  if (!d && key !== 'Home' && key !== 'End') return;
+  const items = [...currentTarget.querySelectorAll('a[href],button:not(:disabled)')];
+  const i = items.indexOf(target);
+  if (i < 0 || items.length < 2) return;
+  e.preventDefault();
+  const dest = items[key === 'Home' ? 0 : key === 'End' ? items.length - 1 : (i + d + items.length) % items.length];
+  dest.focus();
+  dest.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+}
+
 export function PillToggle({
   opcions = [],
   valor,
@@ -30,6 +44,7 @@ export function PillToggle({
       role="group"
       aria-label={etiqueta}
       className={['sdp-pindola', className].filter(Boolean).join(' ')}
+      onKeyDown={gestionaTeclaPindoles}
     >
       {opcions.map((opcio) => (
         <button

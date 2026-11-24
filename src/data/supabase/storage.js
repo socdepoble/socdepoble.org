@@ -441,9 +441,12 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
    resta de noms (també els de pujades antigues) es resolen igual que abans.
    Una referència que no passa es torna tal qual, com quan la signatura falla:
    les peces que la pinten descarten el que torna encara opac. */
-const CARACTER_QUE_MOU_LA_URL = /[%?#\\\u0000-\u001f\u007f]/;
+const CARACTER_QUE_MOU_LA_URL = /[%?#\\\u0000-\u001f\u007f-\u009f\p{Cf}\u2028\u2029]/u;
 const segmentNet = (segment) => segment !== '' && segment !== '.' && segment !== '..' && !CARACTER_QUE_MOU_LA_URL.test(segment);
 const camiNet = (cami) => !cami.endsWith(' ') && cami.split('/').every(segmentNet);
+/* R32.87 · Peix 1 (Gemini Neon) · Només es resolen els dos cubells de mitjans del contracte. Un
+   sdp-media://<altre_cubell>/… es torna tal qual (opac), com un camí brut: no construïx cap URL pública arbitrària. */
+const CUBELLS_RESOLUBLES = new Set(['mitjans', 'mitjans_privats']);
 
 /**
  * Resol un actiu (asset) a la seua URL real (pública o firmada temporal).
@@ -460,7 +463,7 @@ const resolAssetSenseMarc = async (ref, config = {}) => {
 
   const bucket = pathPart.substring(0, slashIndex);
   const path = pathPart.substring(slashIndex + 1);
-  if (!segmentNet(bucket) || !camiNet(path)) return ref;
+  if (!segmentNet(bucket) || !camiNet(path) || !CUBELLS_RESOLUBLES.has(bucket)) return ref;
 
   const vigent = capturaSessio();
   const propietari = usuariDeSessio()?.id ?? null;
@@ -719,7 +722,7 @@ function instantIso(valor) {
 }
 
 const midaDe = (metadata) => [metadata.size, metadata.contentLength]
-  .find((valor) => Number.isInteger(valor) && valor >= 0) ?? null;
+  .find((valor) => Number.isSafeInteger(valor) && valor >= 0) ?? null;
 
 // L'eTag de Storage ve entre cometes ("…"): sense elles, o null.
 const etagDe = (valor) => (typeof valor === 'string' && valor.replace(/"/g, '').trim()) || null;

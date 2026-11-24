@@ -356,6 +356,8 @@ export function InstalaLaPwa({ instalacio, lloc = 'dalt' }) {
                 key={canal.id}
                 className={classeDeBotiga(canal)}
                 href={canal.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={etiquetaNeta ? undefined : textosBotigues.canalReserva}
               >
                 {canal.id === 'app-store' ? <LogotipApple /> : null}

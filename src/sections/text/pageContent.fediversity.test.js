@@ -698,8 +698,8 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
       expect(absents).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
-      expect(oferides).toHaveLength(48);
-      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(47);
+      expect(oferides).toHaveLength(50);
+      expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(48);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');
       expect(fet).toContain('els seus '+CASOS.filter(c=>absents.includes(c.capacitat)).length+' casos s’ometen en local');
@@ -965,12 +965,14 @@ describe('Gauntlet 2 · el comentari del desplegament i el registre de canvis', 
     expect(comentari).toContain('el correu a NLnet ha d\'anar després');
   });
 
-  test('«El registre de canvis és a Versions»: /versions porta l’entrega de l’1 de novembre, pendent de desplegar', () => {
+  test('«El registre de canvis és a Versions»: /versions porta l’entrega de l’1 de novembre, pendent de desplegar', async () => {
     expect(textDe([doc.body])).toContain('El registre de canvis és a Versions');
     /* O6 (ordre del Mestre, prompt 261102_1532; prova posada al dia a propòsit) · L'entrega de l'1 de
        novembre porta ara la seua numeració pròpia, v1.0.3 (abans, totes deien v1.0.0); continua
-       pendent de desplegar i amb el connector 1.1.10. */
-    expect(PAGE_COPY.versions.html).toContain('<h3>1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
+       pendent de desplegar i amb el connector 1.1.10.
+       IDEA-332 · Es conserva íntegra a l'arxiu històric diferit (pageContent.versionsHistoric.js). */
+    const { obtePaginaVersionsCompleta } = await import('./pageContent.versionsHistoric.js');
+    expect(obtePaginaVersionsCompleta(PAGE_COPY.versions, 'ca').html).toContain('<h3>1 de novembre de 2026 · v1.0.3 (build pendent de desplegar) · Connector WordPress v1.1.10</h3>');
   });
 
   /* Gauntlet O7-9, ronda 2 (PC-03, O8-PORT-03, O89-RURAL-12; ordre del Mestre 261103_0522) · El pilot

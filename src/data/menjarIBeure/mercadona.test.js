@@ -1,3 +1,4 @@
+import {textFixture,jsonFixture,receiptFixture} from '../../../tests/fixtures/fontsSintetiquesC6.mjs';
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -44,7 +45,14 @@ describe('catàleg Mercadona: reconciliació amb els ids que ja viuen a les llis
     expect(() => { primer.preuCentims = 0; }).toThrow();
   });
 
-  test.runIf(Boolean(process.env.SDP_MERCADONA_CSV))('regeneració byte a byte des del CSV original autoritzat', () => {
+  test('regeneració des de font disponible; fixture sintètica explícita si l’original falta', () => {
+    if(!process.env.SDP_MERCADONA_CSV){
+      const expected=jsonFixture('catalog.expected.json'),result=importaMercadona(textFixture('catalog.synthetic.csv'),{publicats:expected.publicats});
+      expect(result.productes).toHaveLength(2);result.productes.forEach((row,i)=>expect(row).toMatchObject(expected.complets[i]));
+      expect(serialitzaMercadona(result)).toContain('mer-infusio-de-prova');
+      expect(()=>importaMercadona(textFixture('catalog.synthetic.csv').replace('1,25','1,26'),{publicats:expected.publicats})).toThrow();
+      receiptFixture('mercadona-import-reconciliation');return;
+    }
     const generat = importaMercadona(readFileSync(process.env.SDP_MERCADONA_CSV));
     expect(serialitzaMercadona(generat)).toBe(readFileSync('src/data/menjarIBeure/mercadona.generated.js', 'utf8'));
     expect(generat.metadades.sha256).toBe('641ea7f83fe5d7e925889dbfff2bf0895edf459b1550de65409ef6af29a1f526');

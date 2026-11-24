@@ -65,6 +65,7 @@ import {
 import { arrelComprovada, llegixClauPlay, preflight } from './preflight.mjs';
 import { ESTATS_PLAY, PISTES, consultaLlancament, netejaText, main as pujaAndroid } from './puja-android.mjs';
 import { main as pujaIos } from './puja-ios.mjs';
+import { ascDisponible, clientAsc, consultaAppStore } from './app-store-connect.mjs';
 import { VERSIO_CLIENT_NATIU } from './versio-client.mjs';
 import { CANALS_JARVIS, recullEmpaquetats } from '../../tooling/vite/consola-iaia.mjs';
 import { inspeccionaHigienePaquets } from '../../tooling/gates/tractor-higiene-paquets.mjs';
@@ -91,6 +92,10 @@ const ADMESOS = Object.freeze({
   'sincronitza-proves': false,
   'build-testflight': true,
   'build-apk': true,
+  'espera-valid': false,
+  'notes-fitxer': true,
+  'prepara-revisio': false,
+  'envia-revisio': false,
   ajuda: false
 });
 
@@ -196,12 +201,17 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
   if (plataformes.includes('ios')) {
     natius.push({
       plataforma: 'ios',
-      accio: `Arxivar, exportar i verificar IPA (${v}+${b}) per a App Store Connect / TestFlight (${canalIos}${alpha ? ': la prova tancada d\'iOS és TestFlight' : ''})`,
+      accio: produccio ? `Arxivar, exportar i verificar IPA (${v}+${b}) per a l'App Store pública d'iPhone i iPad`
+        : `Arxivar, exportar i verificar IPA (${v}+${b}) per a App Store Connect / TestFlight (${canalIos}${alpha ? ': la prova tancada d\'iOS és TestFlight' : ''})`,
       ordre: `node scripts/botigues/puja-ios.mjs --versio ${v} --build ${b} --canal ${canalIos} --compila`
     });
     /* R32.3-PEIX-ARD · Només a producció, i abans de l'anunci de TestFlight, que no avança mentre un
        build de producció més baix espera l'App Store. */
     if (produccio) {
+      natius.push({ plataforma: 'ios', accio: 'Pujar l’IPA verificat a App Store Connect amb la confirmació del seu rebut; la pujada encara no el publica.',
+        ordre: `node scripts/botigues/puja-ios.mjs --versio ${v} --build ${b} --canal produccio --confirma=produccio:${v}+${b}@<sha12>` });
+      natius.push({ plataforma: 'ios', accio: 'Amb el rebut de pujada, preparar AFTER_APPROVAL, notes i captures iPhone/iPad i enviar a App Store Review amb confirmació del mateix SHA.',
+        ordre: `node scripts/botigues/puja-ios.mjs --versio ${v} --build ${b} --canal produccio --espera-valid --notes-fitxer <notes.json> --envia-revisio --confirma=produccio:${v}+${b}@<sha12>` });
       anuncis.push({
         plataforma: 'ios',
         accio: `Quan Apple publique el build ${b} a l'App Store (la pujada de producció ha de ser al registre de pujades; que Apple ja el dona es comprova a App Store Connect), anunciar-lo a les Apps de l'App Store (iosBuild a public/.well-known/ard.json) ABANS de «npm run build» i del desplegament web`,
@@ -214,7 +224,7 @@ export function resumOmnicanal(arrel, { versio, build, canal = CANALS.INTERN, pl
        fins aleshores el pla no proposa anunciar TestFlight a ard.json.
        v1.2.23 · L8-09 (Gauntlet R1) · Es llig de l'entorn que rep el resum (`env`, per defecte process.env), no de
        process.env: un entorn injectat sense la variable té la ronda tancada encara que el procés la porte. */
-    if (env.SDP_RONDA_BETA_TESTERS === '1') {
+    if (!produccio && env.SDP_RONDA_BETA_TESTERS === '1') {
       anuncis.push({
         plataforma: 'ios',
         accio: 'Anunciar el build pujat a les Apps de TestFlight (testflightIosBuild a ard.json): després de la pujada de puja-ios.mjs --confirma, que l\'apunta al registre, i mai mentre un build de producció més baix espera l\'App Store (App Review); la web el publica en el desplegament següent',
@@ -412,7 +422,7 @@ export function escriuManifestVersio({
  * `consulta` és consultaLlancament (les proves hi passen les adreces locals). Mai llança.
  * @returns {Promise<{ codi:number, problemes:string[], avisos:string[] }>}
  */
-export async function comprovaDisponibilitat({ arrel, valors = {}, androidBuild = null, iosBuild = null, consulta = consultaLlancament, opcionsPlay = {} }) {
+export async function comprovaDisponibilitat({ arrel, valors = {}, androidBuild = null, iosBuild = null, versio = null, consulta = consultaLlancament, opcionsPlay = {}, consultaAsc = consultaAppStore, opcionsAsc = {} }) {
   const problemes = [];
   const avisos = [];
   let codi = EIXIDA.BE;
@@ -451,7 +461,21 @@ export async function comprovaDisponibilitat({ arrel, valors = {}, androidBuild 
       else if (!entrades.some((e) => e.plataforma === 'ios' && e.canal === CANALS.PRODUCCIO && e.build === String(iosBuild))) {
         mal(EIXIDA.ARBRE, `el build ${iosBuild} d'iOS no és al registre de pujades de producció: l'App d'iOS obri l'App Store, i TestFlight (intern) no hi compta`);
       } else {
-        avisos.push(`el build ${iosBuild} d'iOS és al registre de producció: comprova a App Store Connect que Apple ja el dona a l'App Store abans de desplegar la web`);
+        if (ascDisponible(valors)) {
+          try {
+            const client = opcionsAsc.client ?? clientAsc({ ...opcionsAsc, valors, arrel });
+            const paquet = String(valors.SDP_APP_ID ?? '').trim();
+            const apps = await client.request('GET', `/v1/apps?filter[bundleId]=${encodeURIComponent(paquet)}`);
+            const exactes = apps.data?.filter((a) => a.attributes?.bundleId === paquet);
+            if (exactes?.length !== 1) throw new Error();
+            const v = versio ?? entrades.find((e) => e.plataforma === 'ios' && e.canal === CANALS.PRODUCCIO && e.build === String(iosBuild))?.versio;
+            const estat = await consultaAsc({ client, appId: exactes[0].id, versio: v, build: String(iosBuild) });
+            if (estat.readyForSale === true) avisos.push(`App Store Connect confirma READY_FOR_SALE per al build ${iosBuild} d'iOS.`);
+            else mal(EIXIDA.ARBRE, `App Store Connect encara no confirma READY_FOR_SALE per al build ${iosBuild}: ard.json no canvia mentre Apple revisa o prepara la publicació.`);
+          } catch { mal(EIXIDA.EXTERNA, 'App Store Connect no ha pogut confirmar la disponibilitat pública; cap build iOS no s’anuncia sense evidència.'); }
+        } else if (['SDP_ASC_KEY_ID', 'SDP_ASC_ISSUER_ID', 'SDP_ASC_KEY_PATH'].some((k) => String(valors[k] ?? '').trim())) {
+          mal(EIXIDA.FALTA, 'La configuració ASC és parcial: calen les tres variables per verificar READY_FOR_SALE; ard.json no canvia.');
+        } else avisos.push(`el build ${iosBuild} d'iOS és al registre de producció: comprova a App Store Connect que Apple ja el dona a l'App Store abans de desplegar la web`);
       }
     }
   }
@@ -649,7 +673,7 @@ export async function correProtocolJarvis({ arrel, notes, canals, sec = false, s
  *   Només per a les proves: l'entorn (SDP_BOTIGUES_ENV), les opcions del client de Google Play (adreces locals) i la
  *   ruta d'un ard.json temporal (i la de la seua còpia de dist/, per a --sincronitza-proves).
  */
-export async function main(argv = process.argv.slice(2), { env = process.env, play = {}, manifest = null, manifestDist = null } = {}) {
+export async function main(argv = process.argv.slice(2), { env = process.env, play = {}, asc = {}, manifest = null, manifestDist = null } = {}) {
   const { opcions, errors } = analitzaArguments(argv, ADMESOS);
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/publica-tot.mjs ${US.slice(4)}\n`);
@@ -730,7 +754,7 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
     const assaig = escriuManifestVersio({ arrel, versio: opcions.versio, ...builds, corregeix, cami, sec: true });
     if (assaig.codi !== EIXIDA.BE) return plega(assaig.codi, `${assaig.error}: ard.json no canvia`);
     // 2. La botiga ja el dona? Google Play per l'API (només lectura) i el registre de producció d'iOS.
-    const disponible = await comprovaDisponibilitat({ arrel, valors, ...builds, opcionsPlay: play });
+    const disponible = await comprovaDisponibilitat({ arrel, valors, ...builds, versio: opcions.versio, opcionsPlay: play, opcionsAsc: asc });
     for (const avis of disponible.avisos) process.stdout.write(`  · ${net(avis)}\n`);
     if (disponible.codi !== EIXIDA.BE) return plega(disponible.codi, 'ard.json no canvia: l’App avisaria d’un build que la botiga encara no dona.', disponible.problemes.map(net));
     // 3. Ara sí, l'escriptura (atòmica).
@@ -746,7 +770,7 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
 
   // Camí del corredor Jarvis (--notes, --canals, --sec)
   if (opcions.notes !== undefined || opcions.canals !== undefined || opcions.sec) {
-    if (['versio', 'build', 'plataforma', 'canal', 'compila', 'confirma', 'push', 'desplega', 'json'].some((nom) => opcions[nom] !== undefined)) {
+    if (['versio', 'build', 'plataforma', 'canal', 'compila', 'confirma', 'push', 'desplega', 'json', 'espera-valid', 'notes-fitxer', 'prepara-revisio', 'envia-revisio'].some((nom) => opcions[nom] !== undefined)) {
       return plega(EIXIDA.US, 'No es poden mesclar les opcions del corredor --notes/--canals/--sec amb les de versió i plataforma.');
     }
     const notes = String(opcions.notes ?? '').trim();
@@ -779,7 +803,11 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
   /* v1.2.23 · L8-09 (Gauntlet R1) · El pla rep l'entorn de main: el mateix per al preflight i per a la ronda de TestFlight. */
   const resum = resumOmnicanal(arrel, { versio, build, canal, plataforma, push: Boolean(opcions.push), env });
 
-  if (!opcions.compila && opcions.confirma === undefined) {
+  const revisio = opcions['prepara-revisio'] || opcions['envia-revisio'];
+  if ((revisio || opcions['espera-valid'] || opcions['notes-fitxer'] !== undefined) && (plataforma !== 'ios' || canal !== CANALS.PRODUCCIO || !revisio || opcions.compila)) {
+    return plega(EIXIDA.US, 'Les opcions de revisió ASC exigeixen --plataforma ios --canal produccio i --prepara-revisio o --envia-revisio, sense --compila.');
+  }
+  if (!opcions.compila && opcions.confirma === undefined && !revisio) {
     if (opcions.json) {
       process.stdout.write(`${JSON.stringify(resum, null, 2)}\n`);
     } else {
@@ -818,8 +846,10 @@ export async function main(argv = process.argv.slice(2), { env = process.env, pl
   if (opcions.desplega) argumentsNatius.push('--desplega');
   if (opcions.compila) argumentsNatius.push('--compila');
   if (opcions.confirma !== undefined) argumentsNatius.push(`--confirma=${opcions.confirma}`);
+  for (const nom of ['espera-valid', 'prepara-revisio', 'envia-revisio']) if (opcions[nom]) argumentsNatius.push(`--${nom}`);
+  if (opcions['notes-fitxer'] !== undefined) argumentsNatius.push('--notes-fitxer', opcions['notes-fitxer']);
   /* v1.2.16 · Només l'AAB (Android) o l'IPA (iOS): cap APK directe al costat (MOTIU_APK_APAGAT). */
-  return (plataforma === 'ios' ? pujaIos : pujaAndroid)(argumentsNatius);
+  return plataforma === 'ios' ? (revisio ? pujaIos(argumentsNatius, { env, asc }) : pujaIos(argumentsNatius)) : pujaAndroid(argumentsNatius);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

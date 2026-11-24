@@ -20,6 +20,8 @@ const specs = [{reader:'manifest',cap:64*1024,text:manifest},{reader:'inventory'
 function run(cas) {
   // Args poden superar ARG_MAX: el runner envia JSON per stdin, sense fitxers de cache.
   const r = spawnSync(php,['-d','display_errors=stderr',path.join(import.meta.dirname,'fixtures/enxufe-r3236-limits.php'),root],{input:JSON.stringify(cas),encoding:'utf8',maxBuffer:12*1024*1024,timeout:10000});
+  assert.ifError(r.error);
+  assert.equal(r.signal,null,`PHP signal ${r.signal}; reader=${cas.reader}; missing=${!!cas.missing}; open_fails=${!!cas.open_fails}; read_fails=${!!cas.read_fails}`);
   assert.equal(r.status,0,r.stderr || r.stdout); return JSON.parse(r.stdout);
 }
 function input(spec,text=spec.text,extra={}) { return {reader:spec.reader,contents:[text],hash:sha(text),module_exists:true,...extra}; }

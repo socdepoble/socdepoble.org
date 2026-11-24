@@ -989,7 +989,8 @@ test('R32.3 · publica-tot: --sincronitza-ard va sol i amb versió explícita; -
   assert.ok(iArdIos >= 0 && iArdIos < iBuild, `ARD d'iOS (${iArdIos}) abans de npm run build (${iBuild})`);
   assert.ok(index(/puja-android\.mjs/) < iArdAndroid, 'després de la pujada a Google Play');
   assert.ok(index(/puja-ios\.mjs/) < iArdIos, 'després de la pujada a l\'App Store');
-  assert.ok(iArdIos < index(/--build-testflight 10$/), 'abans de l\'anunci de TestFlight');
+  // R32.78 · IDEA-346: producció anuncia només l’App Store pública, també amb la ronda oberta.
+  assert.equal(index(/--build-testflight 10$/), -1, 'producció no anuncia TestFlight encara amb la ronda oberta');
   assert.equal(totes.passos.filter((pas) => /--publica-apk|--build-apk/.test(pas.ordre)).length, 0, 'cap APK directe');
   assert.match(totes.passos[iArdAndroid].accio, /pista production/);
   /* Revisió adversarial · ard.json és versionat: escriure'l deixa l'arbre brut i el preflight de
@@ -997,7 +998,14 @@ test('R32.3 · publica-tot: --sincronitza-ard va sol i amb versió explícita; -
      va darrere del primer anunci. I el connector WordPress, com abans, després del pas web. */
   const iPrimerAnunci = totes.passos.findIndex((pas) => /--sincronitza-(ard|proves)/.test(pas.ordre));
   const natius = totes.passos.map((pas, i) => (/--compila|puja-(android|ios)\.mjs/.test(pas.ordre) ? i : -1)).filter((i) => i >= 0);
-  assert.equal(natius.length, 3, 'compila Android, puja Android, compila iOS');
+  assert.equal(natius.length, 5, 'compila Android, puja Android, compila iOS, puja IPA confirmat i envia App Store Review');
+  // R32.78 · IDEA-346: pujada confirmada i revisió AFTER_APPROVAL també van abans de qualsevol anunci.
+  const passosIos = totes.passos.filter((pas) => /puja-ios\.mjs/.test(pas.ordre));
+  assert.equal(passosIos.length, 3, 'compilació, pujada i revisió d’iOS són passos explícits');
+  assert.match(passosIos[0].ordre, /--compila$/);
+  assert.match(passosIos[1].ordre, /--canal produccio --confirma=produccio:1\.2\.5\+10@<sha12>$/);
+  assert.match(passosIos[2].ordre, /--espera-valid --notes-fitxer <notes\.json> --envia-revisio --confirma=produccio:1\.2\.5\+10@<sha12>$/);
+  assert.match(passosIos[2].accio, /AFTER_APPROVAL/);
   assert.ok(natius.every((i) => i < iPrimerAnunci), `cap pas natiu (${natius}) després del primer anunci (${iPrimerAnunci})`);
   assert.ok(index(/npm run build:wp /) > iBuild, 'el connector WordPress, després del pas web');
   assert.equal(totes.passos.filter((pas) => pas.ordre.includes('npm run build ')).length, 1, 'un sol build web');

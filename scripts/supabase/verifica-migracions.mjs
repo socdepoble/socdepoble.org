@@ -8,7 +8,8 @@
  *   node scripts/supabase/verifica-migracions.mjs [--arrel <dir>] [--aplicades <fitxer>] [--empremtes <fitxer>]…
  *                                                 [--pla] [--format text|json] [--estricte] [--ajuda]
  *
- * Només llig: supabase/migrations/*.sql, supabase/README.md, supabase/ordre_desplegament.json i, per a una
+ * Només llig: supabase/migrations/*.sql, supabase/README.md, supabase/ordre_desplegament.json,
+ * supabase/exempcions_historiques.json i, per a una
  * porta de client, el fitxer que nomena el JSON (com a text, mai importat). No es connecta a cap base, no
  * obri cap procés i no escriu cap fitxer: tot ix per l'eixida estàndard. Cap consulta que emet escriu:
  * cada una passa nomesLectura() amb el catàleg de volatilitat de les funcions de les migracions.
@@ -21,6 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const ESQUEMA_INFORME = 'sdp.verifica-migracions.v1';
 export const ESQUEMA_ORDRE = 'sdp.ordre-desplegament.v1';
+export const ESQUEMA_EXEMPCIONS = 'sdp.exempcions-historiques-migracions.v1';
 export const LIMIT_EVIDENCIA = 1024 * 1024;
 /** L'arrel on viu el script instal·lat: scripts/supabase/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -28,6 +30,8 @@ export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.m
 const DIR_MIGRACIONS = 'supabase/migrations';
 const FITXER_README = 'supabase/README.md';
 const FITXER_ORDRE = 'supabase/ordre_desplegament.json';
+const FITXER_EXEMPCIONS = 'supabase/exempcions_historiques.json';
+const CODIS_ESTRICTES = new Set(['A-IDEMPOTENCIA', 'A-DECLARA-IDEMPOTENT', 'A-SENSE-TRANSACCIO', 'A-SENSE-CONSULTES']);
 
 /* ───────────────────────── 1. Lèxic SQL (lineal) ───────────────────────── */
 
@@ -913,6 +917,44 @@ function clausAdmeses(obj, admeses, on) {
   for (const k of Object.keys(obj)) if (!admeses.includes(k)) throw new Error(`${on}: clau desconeguda «${k}»`);
 }
 
+/** Excepcions puntuals: bytes SQL i diagnòstic exactes, sense comodins ni estats remots inventats. */
+export function llegixExempcions(text) {
+  const json = JSON.parse(text);
+  const claus = (obj, noms, on) => {
+    clausAdmeses(obj, noms, on);
+    for (const nom of noms) if (!Object.hasOwn(obj, nom)) throw new Error(`${on}: falta ${nom}`);
+  };
+  const textPle = (valor, on) => {
+    if (typeof valor !== 'string' || !valor.trim()) throw new Error(`${on}: cal text no buit`);
+  };
+  claus(json, ['esquema', 'auditoria', 'exempcions'], 'exempcions');
+  if (json.esquema !== ESQUEMA_EXEMPCIONS) throw new Error('exempcions: esquema desconegut');
+  textPle(json.auditoria, 'auditoria');
+  if (!Array.isArray(json.exempcions)) throw new Error('exempcions: cal una llista');
+  const fitxers = new Set();
+  for (const [i, e] of json.exempcions.entries()) {
+    const on = `exempcions[${i}]`;
+    claus(e, ['fitxer', 'sha256', 'diagnostics'], on);
+    if (typeof e.fitxer !== 'string' || !RE_NOM_FITXER.test(e.fitxer)) throw new Error(`${on}: fitxer de migració invàlid`);
+    if (fitxers.has(e.fitxer)) throw new Error(`${on}: fitxer repetit`);
+    fitxers.add(e.fitxer);
+    if (typeof e.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(e.sha256)) throw new Error(`${on}: SHA-256 invàlid`);
+    if (!Array.isArray(e.diagnostics) || !e.diagnostics.length) throw new Error(`${on}: cal almenys un diagnòstic`);
+    const diagnostics = new Set();
+    for (const [j, d] of e.diagnostics.entries()) {
+      const aci = `${on}.diagnostics[${j}]`;
+      claus(d, ['codi', 'linia', 'missatge', 'motiu', 'mesura'], aci);
+      if (!CODIS_ESTRICTES.has(d.codi)) throw new Error(`${aci}: codi no exemptable`);
+      if (d.linia !== null && (!Number.isSafeInteger(d.linia) || d.linia < 1)) throw new Error(`${aci}: línia invàlida`);
+      for (const nom of ['missatge', 'motiu', 'mesura']) textPle(d[nom], `${aci}.${nom}`);
+      const clau = JSON.stringify([d.codi, d.linia, d.missatge]);
+      if (diagnostics.has(clau)) throw new Error(`${aci}: diagnòstic repetit`);
+      diagnostics.add(clau);
+    }
+  }
+  return json;
+}
+
 function versioValida(v, on, versions) {
   if (typeof v !== 'string' || !RE_VERSIO.test(v)) throw new Error(`${on}: versió no vàlida «${v}»`);
   if (versions && !versions.has(v)) throw new Error(`${on}: la versió ${v} no té fitxer a supabase/migrations`);
@@ -1327,7 +1369,10 @@ export function verifica(opcions = {}) {
   for (const c of readme.cadenes) {
     if (versions.has(c.abans) && versions.has(c.despres) && posM(c.abans) > posM(c.despres)) err('E-ORDRE-README', FITXER_README, c.linia, `el README demana ${c.abans} abans de ${c.despres} i l'ordre calculat no ho respecta (falta la restricció a ordre_desplegament.json?)`);
   }
-  for (const inv of ord.inversions) avis('A-INVERSIO-ALFABETICA', FITXER_ORDRE, null, `${inv.abans} va abans de ${inv.despres}: supabase db push no la respectaria; aplica a mà en l'ordre del pla`);
+  // Conserva totes les parelles lèxiques en JSON; agrupa només les causades pels dos formats de data.
+  const inversionsMixtes = ord.inversions.filter((inv) => comparaVersions(inv.abans, inv.despres) <= 0);
+  if (inversionsMixtes.length) avis('A-ORDRE-MIXT', FITXER_ORDRE, null, `${inversionsMixtes.length} parelles amb ordre lèxic diferent del cronològic pels formats de 10 i 14 dígits; supabase db push no respectaria el pla: aplica a mà en l'ordre calculat (detall complet a inversions del JSON)`);
+  for (const inv of ord.inversions.filter((x) => comparaVersions(x.abans, x.despres) > 0)) avis('A-INVERSIO-ALFABETICA', FITXER_ORDRE, null, `${inv.abans} va abans de ${inv.despres}: supabase db push no la respectaria; aplica a mà en l'ordre del pla`);
 
   // 13.6 Usos d'objectes (dependències inferides)
   const proveidor = new Map();
@@ -1539,10 +1584,38 @@ export function verifica(opcions = {}) {
     return { ...p, posicio: pos.get(`p:${p.id}`), comprovacioResultat: comprovacio };
   });
 
-  // 13.14 --estricte
+  // 13.14 Exempcions històriques auditades. Els avisos continuen visibles en els dos modes.
+  const exempcionsHistoriques = { fitxer: FITXER_EXEMPCIONS, auditoria: null, declarades: 0, aplicades: [] };
+  const camiExempcions = path.join(arrel, FITXER_EXEMPCIONS);
+  if (fs.existsSync(camiExempcions)) {
+    let manifest = null;
+    try {
+      const st = fs.lstatSync(camiExempcions);
+      if (!st.isFile() || st.size > LIMIT_EVIDENCIA) throw new Error('cal un fitxer regular de fins a 1 MiB, sense enllaç simbòlic');
+      manifest = llegixExempcions(fs.readFileSync(camiExempcions, 'utf8'));
+    } catch (e) { err('E-EXEMPCIONS-JSON', FITXER_EXEMPCIONS, null, e.message); }
+    if (manifest) {
+      exempcionsHistoriques.auditoria = manifest.auditoria;
+      for (const e of manifest.exempcions) {
+        exempcionsHistoriques.declarades += e.diagnostics.length;
+        const m = migracions.find((x) => x.fitxer === e.fitxer);
+        if (!m) { err('E-EXEMPCIO-ABSENT', FITXER_EXEMPCIONS, null, `migració exempta absent: ${e.fitxer}`); continue; }
+        if (m.sha256 !== e.sha256) { err('E-EXEMPCIO-DERIVA', fitxerDe(e.fitxer), null, `bytes SQL divergents de l'exempció ${manifest.auditoria}: esperat ${e.sha256}, trobat ${m.sha256}`); continue; }
+        for (const d of e.diagnostics) {
+          const candidats = avisos.filter((a) => a.fitxer === fitxerDe(e.fitxer) && a.codi === d.codi && a.linia === d.linia && a.missatge === d.missatge);
+          if (candidats.length === 1) {
+            const exempcio = { auditoria: manifest.auditoria, sha256: e.sha256, motiu: d.motiu, mesura: d.mesura };
+            candidats[0].exempcioHistorica = exempcio;
+            exempcionsHistoriques.aplicades.push({ fitxer: fitxerDe(e.fitxer), codi: d.codi, linia: d.linia, ...exempcio });
+          } else if (m.pendent) err('E-EXEMPCIO-DIAGNOSTIC', FITXER_EXEMPCIONS, null, `${e.fitxer}: ${d.codi} ja no coincidix exactament amb el diagnòstic auditat; revisa la declaració`);
+        }
+      }
+    }
+  }
+
+  // 13.15 --estricte: una exempció vàlida només evita la promoció del seu diagnòstic exacte.
   if (opcions.estricte) {
-    const promou = new Set(['A-IDEMPOTENCIA', 'A-DECLARA-IDEMPOTENT', 'A-SENSE-TRANSACCIO', 'A-SENSE-CONSULTES']);
-    for (let i = avisos.length - 1; i >= 0; i--) if (promou.has(avisos[i].codi) && avisos[i].pendent) errors.push({ ...avisos.splice(i, 1)[0], promogut: true });
+    for (let i = avisos.length - 1; i >= 0; i--) if (CODIS_ESTRICTES.has(avisos[i].codi) && avisos[i].pendent && !avisos[i].exempcioHistorica) errors.push({ ...avisos.splice(i, 1)[0], promogut: true });
   }
 
   const evidencia = { tipus: ambEvidencia ? [registre && 'registre', evEmpremtes.perVersio.size && 'empremtes', evEmpremtes.sonda.size && 'sonda'].filter(Boolean).join('+') : 'cap', versions: registre ? registre.versions : [], registreBuit: registre ? registre.buit : null };
@@ -1562,6 +1635,7 @@ export function verifica(opcions = {}) {
     ordre: ord.ordre,
     portes,
     inversions: ord.inversions,
+    exempcionsHistoriques,
     sufixDeclarat: sufix,
     blocsReadme: blocs.map((b) => ({ linia: b.linia, sql: b.sql, valid: b.valid, tipus: /to_regclass\('supabase_migrations\.schema_migrations'\)/i.test(b.sql) ? 'registre' : /from\s+supabase_migrations\.schema_migrations/i.test(b.sql) ? 'versions' : /\bAS\s+te_/i.test(b.sql) ? 'sonda' : 'altre' })),
     consultaEmpremtes: empremtes.sql,
@@ -1586,17 +1660,19 @@ function descripcioEvidencia(informe) {
   return parts.join(' + ');
 }
 
-const linia = (x) => `${x.codi} ${x.fitxer ?? '-'}${x.linia ? `:${x.linia}` : ''} ${x.missatge}`;
+const linia = (x) => `${x.codi} ${x.fitxer ?? '-'}${x.linia ? `:${x.linia}` : ''} ${x.missatge}${x.exempcioHistorica ? ` [exempció auditada ${x.exempcioHistorica.auditoria}; SHA-256 ${x.exempcioHistorica.sha256}]` : ''}`;
 
 export function formataText(informe) {
   const out = [];
   const ms = informe.migracions;
   const comp = (k) => ms.filter((m) => m.estatDeclarat === k).length;
   out.push(`Migracions: ${ms.length} fitxers · declarades aplicades ${comp('declarada_aplicada')} · NO aplicades ${comp('declarada_no_aplicada')} · no acreditades ${comp('desconegut')}`);
-  out.push(`Ordre: ${informe.ordre.length} passos (${informe.portes.length} portes) · inversions de l'ordre alfabètic: ${informe.inversions.map((i) => `${i.abans}→${i.despres}`).join(', ') || 'cap'}`);
+  const cronologiques = informe.inversions.filter((i) => comparaVersions(i.abans, i.despres) > 0);
+  out.push(`Ordre: ${informe.ordre.length} passos (${informe.portes.length} portes) · inversions cronològiques: ${cronologiques.map((i) => `${i.abans}→${i.despres}`).join(', ') || 'cap'} · parelles lèxiques: ${informe.inversions.length} (detall al JSON)`);
   const ver = (k) => ms.filter((m) => m.idempotencia.veredicte === k).map((m) => m.versio);
   out.push(`Idempotència: repetibles ${ver('repetible').length} · falla neta ${ver('no_repetible_falla_neta').join(', ') || 'cap'} · risc parcial ${ver('risc_parcial').join(', ') || 'cap'}`);
   out.push(`Empremtes automàtiques: ${informe.cobertura.ambEmpremta} de ${informe.cobertura.total} versions`);
+  if (informe.exempcionsHistoriques.declarades) out.push(`Exempcions històriques: ${informe.exempcionsHistoriques.aplicades.length} diagnòstics vigents de ${informe.exempcionsHistoriques.declarades} declarats (${informe.exempcionsHistoriques.auditoria}; els avisos es conserven)`);
   if (informe.errors.length) { out.push('', 'Errors:'); for (const e of informe.errors) out.push(`  ${linia(e)}`); }
   if (informe.avisos.length) { out.push('', 'Avisos:'); for (const a of informe.avisos) out.push(`  ${linia(a)}`); }
   out.push('', `Verificador de migracions: ${informe.errors.length} errors, ${informe.avisos.length} avisos (estat remot: ${descripcioEvidencia(informe)})`);
@@ -1644,6 +1720,7 @@ export function formataPla(informe) {
     out.push(`## Pas ${pas++} · ${m.fitxer}`, '');
     const estat = m.pas.estat === 'recomanat_declarat' ? `declarada NO aplicada (README; recomanat només com a declarat)${m.columnaSonda ? `. Confirma-ho al Pas 0: columna ${m.columnaSonda}` : m.empremta ? '. Confirma-ho al Pas 0: fila d\'empremtes' : '. Confirma-ho amb la consulta «Abans»'}` : `${m.estat} (${m.font})`;
     out.push(`- Estat: ${estat}.`);
+    for (const e of informe.exempcionsHistoriques.aplicades.filter((x) => x.fitxer === `${DIR_MIGRACIONS}/${m.fitxer}`)) out.push(`- Exempció històrica ${e.auditoria} (${e.codi}): ${e.motiu} Mesura abans d'aplicar: ${e.mesura}`);
     const dec = m.dependencies.filter((d) => d.origen === 'declarada').map((d) => d.versio);
     const inf = m.dependencies.filter((d) => d.origen === 'inferida' && ms.get(d.versio)?.pas && ms.get(d.versio).pas.estat !== 'bloquejat').map((d) => d.versio);
     out.push(`- Depén de (declarat): ${dec.join(', ') || 'res declarat'} · Necessita (inferit, pendent): ${inf.join(', ') || 'cap'}.`);
@@ -1682,8 +1759,9 @@ export function formataPla(informe) {
 const AJUDA = `Ús: node scripts/supabase/verifica-migracions.mjs [--arrel <dir>] [--aplicades <fitxer>] [--empremtes <fitxer>]…
                                               [--pla] [--format text|json] [--estricte] [--ajuda]
 
-Verificador estàtic de supabase/migrations (P0-05 · P0-21). Llig els fitxers .sql, supabase/README.md
-i supabase/ordre_desplegament.json; no es connecta a cap base, no obri cap procés i no escriu res.
+Verificador estàtic de supabase/migrations (P0-05 · P0-21). Llig els fitxers .sql, supabase/README.md,
+supabase/ordre_desplegament.json i supabase/exempcions_historiques.json; no es connecta a cap base,
+no obri cap procés i no escriu res.
 
   --arrel <dir>          arrel del repositori (per defecte, la del script)
   --aplicades <fitxer>   resultat de «select version, name from supabase_migrations.schema_migrations
@@ -1692,7 +1770,7 @@ i supabase/ordre_desplegament.json; no es connecta a cap base, no obri cap proc�
                          (CSV o JSON; es pot repetir)
   --pla                  imprimix el pla de només lectura per al Mestre (Markdown)
   --format text|json     informe en text (per defecte) o JSON (excloent amb --pla)
-  --estricte             promou a error els avisos de les migracions pendents
+  --estricte             promou a error els avisos pendents sense exempció històrica exacta i auditada
 Eixida: 0 sense errors, 1 amb errors, 2 ús incorrecte.
 `;
 

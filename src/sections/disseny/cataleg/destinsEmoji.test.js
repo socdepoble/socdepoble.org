@@ -248,7 +248,7 @@ describe('destinsDelSistema', () => {
        «Candidatura Europea NLnet · NGI Fediversity», ara l'última de
        SYSTEM_PAGES, darrere de Descàrregues. */
     const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'descarregues', 'la-iaia-sabuda', 'fediversity', 'dispositius', 'anima', 'fedivers'];
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'reconeixements', 'descarregues', 'la-iaia-sabuda', 'cada-cosa-al-seu-lloc', 'fediversity', 'dispositius', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);
@@ -259,7 +259,7 @@ describe('destinsDelSistema', () => {
     const glifs = Object.fromEntries(destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe).map((desti) => [desti.id, desti.glif]));
     expect(glifs).toMatchObject({
       'sistema:projecte': FileText, 'sistema:constitucio': ShieldCheck, 'sistema:roadmap': Route, 'sistema:notes': NotebookPen,
-      'sistema:xat': GLIF_DOCUMENT, 'sistema:drets-autor': GLIF_DOCUMENT, 'sistema:anima': BrainCircuit, 'sistema:fedivers': Network,
+      'sistema:xat': GLIF_DOCUMENT, 'sistema:drets-autor': GLIF_DOCUMENT, 'sistema:reconeixements': GLIF_DOCUMENT, 'sistema:anima': BrainCircuit, 'sistema:fedivers': Network,
       /* Onada 8 (261009) · /page/cervell no té entrada a la barra: el document. */
       'sistema:cervell': GLIF_DOCUMENT,
       /* 261026_2126 · /page/descarregues tampoc no en té: el document. */

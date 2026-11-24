@@ -12,9 +12,9 @@ const font = s => fs.readFileSync(path.join(ROOT, s.fontRevisada), 'utf8');
 const net = (text, s) => netejaComentarisLineal(text, path.extname(s.fontRevisada));
 const observacio = s => ({ tipus: s.tipus, regla: s.regla, linia: s.linia, fitxer: 'src/qualsevol_nom.js' });
 
-test('R32.14 · catàleg exacte de 37 signatures (36 de R32.14 i la 37 de la v1.2.23, L2-01), IDs únics, límits i cap certificació de destí', () => {
-  assert.equal(CATALEG_TELLADO_R3214.length, 37);
-  assert.equal(new Set(CATALEG_TELLADO_R3214.map(s=>s.id)).size, 37);
+test('R32.14 · catàleg exacte de 38 signatures (35 de R32.14, la 37 de la v1.2.23, L2-01, la 38 de la v1.2.24 i la 39 del joc R32.86; la 32 es va retirar amb F4D/P08-04), IDs únics, límits i cap certificació de destí', () => {
+  assert.equal(CATALEG_TELLADO_R3214.length, 38);
+  assert.equal(new Set(CATALEG_TELLADO_R3214.map(s=>s.id)).size, 38);
   assert.ok(CATALEG_TELLADO_R3214.every(s=>s.certificaDesti===false && s.limit.length>50));
 });
 for (const s of CATALEG_TELLADO_R3214) {
@@ -45,12 +45,12 @@ test('R32.14 · nom, línia, nom de variable i fragments de guarda no són una e
   }
 });
 
-test('R32.14 · repo: 37 catalogades, 0 pendents i 0 infraccions; els 36 desconeguts originals, la lectura de la foto d’identitat (v1.2.23) i el veredicte es conserven', () => {
+test('R32.14 · repo: 38 catalogades, 0 pendents i 0 infraccions; els 35 desconeguts originals vius, la lectura de la foto d’identitat (v1.2.23), la Caixa d’Estat dels Canals (v1.2.24), la importació del joc (R32.86) i el veredicte es conserven', () => {
   const r=avaluaPerimetreTellado(ROOT);
   assert.equal(r.totalInfraccions,0);
-  assert.equal(r.totalDesconeguts,37);
+  assert.equal(r.totalDesconeguts,38);
   assert.equal(r.veredicte,'desconegut');
-  assert.equal(r.catalegDinamic.cobertes,37);
+  assert.equal(r.catalegDinamic.cobertes,38);
   assert.equal(r.catalegDinamic.pendents,0);
   assert.equal(r.catalegDinamic.certificaZeroExfiltracio,false);
 });
@@ -70,8 +70,8 @@ test('R32.14 · nou sink extern no queda silenciat; conservació del desconegut 
 test('R32.14 · Vigilant exposa el catàleg amb estat informa, sense verd de destí', () => {
   const r=analitzaVigilant(ROOT), c=r.comprovacions.find(x=>x.id==='VIG-11');
   assert.equal(c.estat,'informa');assert.equal(c.avis,true);
-  assert.equal(r.catalegDinamic.cobertes,37);
-  assert.match(c.proposta,/37 destins\/signatures continuen desconeguts/);
+  assert.equal(r.catalegDinamic.cobertes,38);
+  assert.match(c.proposta,/38 destins\/signatures continuen desconeguts/);
 });
 
 test('R32.14 · cost lineal: font adversarial de 8 MiB, molts tokens repetits sense backtracking', () => {

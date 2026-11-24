@@ -676,9 +676,12 @@ async function closcaDesada(cami) {
     if (!recursos) return null;
     const desats = await caches.open(MEMORIA_RECURSOS);
     for (const recurs of recursos) {
-      if (!(await desats.match(new URL(recurs, self.location.origin).href, { ignoreVary: true }))) return null;
+      const urlRecurs = new URL(recurs, self.location.origin).href;
+      const resposta = await desats.match(urlRecurs, { ignoreVary: true });
+      if (!resposta || !esRespostaGuardable(descriuResposta(resposta, urlRecurs))) return null;
     }
-    return (await memoria.match(clau, { ignoreVary: true })) || null;
+    const resposta = await memoria.match(clau, { ignoreVary: true });
+    return resposta && esCloscaGuardable(descriuResposta(resposta, url)) ? resposta : null;
   } catch {
     return null;
   }
@@ -789,7 +792,9 @@ async function escalfa(pla) {
   let falten = 0;
   for (const cami of pla.recursos) {
     const peticio = new Request(new URL(cami, origen).href);
-    if (await memoria.match(peticio)) continue;
+    const desada = await memoria.match(peticio);
+    if (desada && esRespostaGuardable(descriuResposta(desada, peticio.url))) continue;
+    if (desada) await memoria.delete(peticio);
     let resposta = null;
     if (!senseXarxa) {
       try {

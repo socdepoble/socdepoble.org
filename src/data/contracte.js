@@ -118,7 +118,7 @@ export const CAPACITATS = Object.freeze({
      RPC/taules esperades: el servei pot conservar un estat local identificat.
      El port no fabrica cap confirmació ni absorbeix denegacions o errors. */
   xatAccionsMissatge: Object.freeze([
-    'carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi'
+    'carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi', 'eliminaPerATothom'
   ]),
   carpetesNotes: Object.freeze(['creaCarpetaNotes']),
   /* R12: patch d'un element existent d'app_content; whole-row version CAS, superadmin+aal2 al servidor. */
@@ -133,6 +133,10 @@ export const CAPACITATS = Object.freeze({
   revisionsPatrimoni: Object.freeze(['llistaRevisionsPatrimoni', 'desaRevisioPatrimoni', 'esborraRevisioPatrimoni']),
   sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
+  copiaCompte: Object.freeze(['llegixCopiaCompte']),
+  // Returns an inactive business candidate, not a complete injectable backend.
+  // Its excluded APIs are absent; no live session, Xat or remote authority changes.
+  restauracioCompte: Object.freeze(['restauraCopiaCompte']),
   /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat
      (ADR-2026-11-PAGINACIO-SECCIONS). Opcional a posta: un backend sense ella
      continua sent vàlid, loadMur torna la primera pàgina com sempre i la
@@ -956,8 +960,12 @@ export const LIMIT_DADES_OBERTES = 5000;
    Onada v1.2.23 · IDEA-331, IDEA-333 i els huit kits (prompt 261123_1439, pla 261123_1246) · Versió unificada 1.2.23
    amb el build 28: les fotos i els vídeos conserven el lloc per defecte amb l'interruptor «Amaga el lloc», la versió
    viva al menú de /versions, el text cert del Mode Bancal, els kits de Codex R32.44, R32.45 i R32.46 i de Gemini
-   R32.42, R32.44, R32.45, R32.46 i R32.47, i el connector WordPress 1.1.31. */
-export const VERSIO_CLIENT_NATIU = 28;
+   R32.42, R32.44, R32.45, R32.46 i R32.47, i el connector WordPress 1.1.31.
+   Onada v1.2.24 · App Store pública sense TestFlight i deute zero (prompt i pla 261124_1323) · Versió unificada 1.2.24
+   amb el build 29: la pàgina de Reconeixements primera al Mur, «Elimina per a tothom» sense límit d'hora al Xat,
+   compartir que sempre respon, la benvinguda sense rètol de proves (App Review 2.1a), els kits de Codex R32.74 i
+   R32.78 i de Gemini R32.75, R32.79, R32.81 i R32.85b, i el connector WordPress 1.1.32. */
+export const VERSIO_CLIENT_NATIU = 29;
 
 export const CONTRACTE_BACKEND = Object.freeze([
   ...CONTRACTE_NUCLI,

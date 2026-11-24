@@ -9,9 +9,9 @@
  * tornar a importar el mateix full no duplica res (nucli/importacio.js).
  * En una pestanya de només lectura no es pot importar.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
-import { Alerta, Boto, Camp, CampText, GrupCamps, Pila, Taula } from '../../../components/PedraSeca/index.js';
+import { Accions, Alerta, Boto, Camp, CampText, GrupCamps, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import {
   errorLlegirFitxerSalut, etiquetaDataSalut, propostaImportacioTraduida, textErrorSalut, tipusSalutTraduit
@@ -55,6 +55,7 @@ export function ImportarFull() {
   const [missatge, setMissatge] = useState(null);
   const [versio, setVersio] = useState(0);
   const [desant, setDesant] = useState(false);
+  const desantRef = useRef(false);
   const { persona, ofsetDe, apunts: existents } = salut;
   const propostaCrua = useMemo(() => (triat ? proposaApunts({
     llibre: triat.llibre, dates, persona, ofsetDe, fitxer: triat.nom, existents
@@ -86,6 +87,8 @@ export function ImportarFull() {
   };
   const posaData = (i, data) => setDates((abans) => Object.assign([...abans], { [i]: data }));
   const afig = async () => {
+    if (desantRef.current) return;
+    desantRef.current = true;
     setDesant(true);
     try {
       const informe = await salut.importa({ persona, apunts: proposta.apunts, jornades: [], periodes: [], valoracions: [] }, 'afegir');
@@ -95,8 +98,10 @@ export function ImportarFull() {
       setMissatge({ to: 'exit', text: tx.fetImportarFull(informe.afegits, informe.duplicats) });
     } catch (error) {
       setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
+    } finally {
+      desantRef.current = false;
+      setDesant(false);
     }
-    setDesant(false);
   };
 
   const n = proposta ? proposta.apunts.length : 0;
@@ -156,11 +161,15 @@ export function ImportarFull() {
             {n > 0 ? (
               <p>{tx.horesAproximadesText}</p>
             ) : null}
-            <Boto varietat="primari" icona={Upload} disabled={salut.nomesLectura || desant || n === 0} onClick={afig}>{tx.afigApuntsBoto(tx.apuntsCount(n))}</Boto>
+            <Accions>
+              <Boto varietat="primari" icona={Upload} carregant={desant} disabled={salut.nomesLectura || desant || n === 0} onClick={afig}>{tx.afigApuntsBoto(tx.apuntsCount(n))}</Boto>
+            </Accions>
           </Pila>
         ) : null}
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-        <EnllacBoto a={ruta('copia')}>{tx.tornaACopiaIEsborrat}</EnllacBoto>
+        <Accions>
+          <EnllacBoto a={ruta('copia')}>{tx.tornaACopiaIEsborrat}</EnllacBoto>
+        </Accions>
       </Pila>
     </MarcSalut>
   );

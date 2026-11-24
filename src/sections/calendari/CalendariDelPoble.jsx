@@ -42,6 +42,7 @@
 import { useMemo } from 'react';
 import { Link } from '../../app/contexts/RouterContext';
 import { useUIStateOpcional } from '../../app/contexts/UIContext';
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import {
   NavegacioPeriode, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana
 } from '../../components/PedraSeca/index.js';
@@ -100,7 +101,7 @@ function TargetesDeDavall({ visibles, buit, recompte }) {
       <h4 role="status">
         {visibles.length ? recompte(visibles.length) : buit}
       </h4>
-      <div className="sdp-card-grid">
+      <div className="sdp-card-grid" data-graella-teclat="" onKeyDown={gestionaTeclaGraella}>
         {visibles.map((entrada) => (entrada.agenda
           ? <TargetaDeLAgenda key={entrada.clau} entrada={entrada} />
           : <TargetaDelMur key={entrada.clau} item={entrada.item} esdeveniment={entrada.acte} />))}

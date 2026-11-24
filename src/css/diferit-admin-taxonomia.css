@@ -161,4 +161,93 @@
     gap: var(--sdp-space-2);
     justify-content: center;
   }
+
+  .sdp-admin-status-ok {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 600;
+  }
+
+  .sdp-admin-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  .sdp-admin-kpi strong {
+    font-size: var(--sdp-text-h3);
+    color: var(--sdp-text-titol);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-admin-kpi span {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-admin-botiga-detall {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--sdp-space-4);
+    align-items: start;
+    margin-block: var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+  }
+
+  @container (max-width: 47rem) {
+    .sdp-admin-botiga-detall {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .sdp-admin-botiga-detall__qr {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-admin-botiga-detall__info {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-2);
+    overflow-wrap: break-word;
+  }
+
+  .sdp-admin-botiga-detall__url {
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .sdp-admin-botiga-detall__passos {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-4);
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-admin-sessions {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sdp-admin-sessions table {
+    table-layout: fixed;
+  }
+
+  .sdp-admin-sessions th,
+  .sdp-admin-sessions td {
+    overflow-wrap: anywhere;
+  }
 }

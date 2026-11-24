@@ -19,7 +19,7 @@
     },
     {
       "path": "src/config/systemPages.js",
-      "sha256": "0e69b45e30e1f8b460fba70247f8d55f8d7a81b1e7ab7133a092a229c60d28d9"
+      "sha256": "008711809e1cd8fe6d7990dd8014d1bf4f839705a84fd1bb82be60118b1a20e7"
     },
     {
       "path": "src/data/activitypub.js",
@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "ee3bcf282b8cf5cd985b538f85e329ed50861338389a80162ae0d42bb3023220"
+      "sha256": "a91a5286f58650e1dee8fea25687f825858995f32c80beef3822cfbe400f4567"
     },
     {
       "path": "src/data/contracteAvisos.js",

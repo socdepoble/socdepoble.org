@@ -13,9 +13,13 @@ test('R29: la purga antiga no desactiva la partició nova de la mateixa persona 
   } });
   const purga = cua.purgaAmbit(AMBIT);
   cua.canviaAmbitActiu(AMBIT);
-  await cua.encua({ filId: FIL, client_msg_id: MISSATGE, text: 'Sessió nova' });
+  // La partició nova és usable de seguida, però el seu ACK de disc espera
+  // l'oblit pendent: confirmar-lo abans permetria que l'esborrat el perdera.
+  const pendent = cua.encua({ filId: FIL, client_msg_id: MISSATGE, text: 'Sessió nova' });
+  expect(cua.llistaMissatges()).toHaveLength(1);
   completa();
   await purga;
+  expect(await pendent).toMatchObject({ persistitLocal: true });
   expect(cua.obteAmbitActiu()).toBe(AMBIT);
   expect(cua.llistaMissatges()).toHaveLength(1);
   await expect(cua.drenaPendents(async (_fil, payload) => ({ id: payload.client_msg_id, seq: 1 }))).resolves.toHaveLength(1);

@@ -4,7 +4,7 @@ import { useLocation, useRouter } from '../app/contexts/RouterContext';
 import { registerSeo } from './seoHead.js';
 import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
 import { origenPublic } from '../config/origenPublic.js';
-import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
+import { CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocialBase.js';
 import { clauSocialDeRuta } from '../config/rutaSocial.js';
 import { pobleAllowsIndex, tramsDeRuta } from '../config/publicationPolicy.js';
 

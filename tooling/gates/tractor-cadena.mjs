@@ -68,6 +68,8 @@ const CADENA = 'porta';
  * ningú se n'adone.
  */
 const EXCUSES = new Map([
+  ['porta:alergens-unanimitat', 'Contracte de corpus extern: només llig el checkpoint explícit --file; --strict exigix estudi validat, --partial no acredita cobertura completa. Sense corpus no certifica estudi. La regressió determinista primary tests/verifica-alergens-unanimitat.test.mjs comprova validat, absent, pendent, entrada malformada, UTF-8, límits, SHA i refús --strict.'],
+  ['porta:radiografia-supabase-viu', 'Contracte offline amb motor PGlite extern explícit SDP_PGLITE_MODULE i captura observada opcional --snapshot. Sense captura només acredita auditoria local, mai Producció. Les regressions primary tests/r3252-radiografia-snapshot.test.mjs i tests/r3252-radiografia-pglite.test.mjs comproven esquema, límits, deriva, ACL i refusos; test:node:all --strict-pglite exigix el motor.'],
   ['porta:baseline', 'Inicialització: genera baselines de deute. Es corre a mà una vegada, no a cada commit.'],
   ['porta:matrix', 'Consulta de context i encaminament, no validador; l’autoritat es comprova en cada torn.'],
   ['porta:segella:update', 'Mutació manual amb reconciliació explícita i evidència; la cadena executa porta:segella en mode verificació.'],

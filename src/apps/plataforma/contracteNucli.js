@@ -56,6 +56,12 @@
  *           R2 L3R2-06: un mòdul les pot cridar per a qualsevol espai). Només s'afigen
  *           noms: un mòdul de '^1.0' a '^1.7' continua valent, i els mòduls nous
  *           demanen ^1.8.
+ *   1.9.0 · v1.2.24 (costura R32.75 · R32.53 de Gemini): IconesAlergens a Pedra Seca,
+ *           les icones dels al·lèrgens que el diàleg de Receptes de la Nevera pinta
+ *           al costat del text. Una peça de pintar (només useState), sense backend
+ *           ni context, que el nucli ja portava dins per UniversalTPV. Només s'afig
+ *           un nom: un mòdul de '^1.0' a '^1.8' continua valent, i els mòduls nous
+ *           demanen ^1.9.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -63,7 +69,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.8.0';
+export const VERSIO_NUCLI = '1.9.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -118,6 +124,9 @@ const PEDRA_SECA_V1 = Object.freeze([
   ['molecules/Botonera.jsx', ['Botonera']],
   /* Nucli1.5.0: assisted review UI; no certified allergen claim. */
   ['molecules/CandidatsAlergens.jsx', ['CandidatsAlergens']],
+  /* Nucli 1.9.0 (v1.2.24, costura R32.75): les icones dels al·lèrgens del
+     diàleg de Receptes de la Nevera (R32.53 de Gemini). */
+  ['molecules/IconesAlergens.jsx', ['IconesAlergens']],
   ['organismes/AfegitRapid.jsx', ['AfegitRapid']],
   ['organismes/BarraResum.jsx', ['BarraResum']],
   ['organismes/DetallArticle.jsx', ['DetallArticle']],

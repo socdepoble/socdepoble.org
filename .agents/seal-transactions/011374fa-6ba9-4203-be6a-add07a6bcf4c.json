@@ -1,0 +1,23 @@
+{
+  "session": "4cd52997-0549-49b6-b9fa-443b97a04d54",
+  "operationId": "frontissa-aprova",
+  "planHash": "e8bb0b38fe8e65ca72ea404e5f7850f7e9c5492bcd3f626f826b01ef98ef6fa2",
+  "beforeSeal": "1cc092ba15cd4506ddadaefa1b86f17f708544c79b0def8707a5e8cbbcde73cc",
+  "kind": "frontissa-agent",
+  "action": "aprova",
+  "key": "fediversity",
+  "actor": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+  "reason": "v1.2.24 build 29: empremta de «fediversity» revisada al candidat 2edd686c (R32.75/R32.79/R32.85b/R32.86 i bump), aprovada per delegació explícita del Mestre",
+  "acceptaRetall": false,
+  "id": "011374fa-6ba9-4203-be6a-add07a6bcf4c",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "7ec404c7b85ce53c92bf2638c82c73c023581f53258b8e7c394f3e5ddabdf6fe",
+      "after": "cdca285e56a94f4ea2ac9d762867958fd1b6cb0be8209f5da4eb261fc4ba02e7"
+    }
+  ],
+  "claim": "4cd52997-0549-49b6-b9fa-443b97a04d54:governance-write",
+  "afterSeal": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
+  "state": "accepted"
+}

@@ -1,0 +1,2 @@
+Handle,REF,Nombre,Categoria,Descripción,Vendido por peso,Opción 1 nombre,Opción 1 valor,Opción 2 nombre,Opción 2 valor,Opción 3 nombre,Opción 3 valor,Coste,Codigo de barras,REF del componente,Cantidad del componente,Seguir el Inventario,Disponibles para la venta [Botiga],Precio [Botiga],En inventario [Botiga],Existencias bajas [Botiga],"modificador - ""Llet""","impuesto - ""IVA"" (10%)","impuesto - ""IVA"" (21%)"
+beguda-prova,991,Beguda de prova,Cafeteria,,N,,,,,,,0.40,,,,N,Y,1.25,,,N,Y,N

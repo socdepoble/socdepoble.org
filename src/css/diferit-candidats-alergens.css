@@ -1,0 +1,153 @@
+/* Onada v1.2.23+ (R32.53) · IDEA-336 · Jerarquia i escaneig visual Pedra Seca per a CandidatsAlergens.
+   Full diferit adoptat per CandidatsAlergens.jsx (0 B al tros d'arrencada del connector de WordPress). */
+@layer components {
+  .sdp-candidats-alergens {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-superficie);
+    min-inline-size: 0;
+  }
+
+  .sdp-candidats-alergens__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    text-wrap: balance;
+  }
+
+  .sdp-candidats-alergens__llegenda,
+  .sdp-candidats-alergens__cobertura,
+  .sdp-candidats-alergens__escandall {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: 1.5;
+  }
+
+  .sdp-candidats-alergens__llista {
+    list-style: none;
+    margin: var(--sdp-space-1) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-candidats-alergens__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border-radius: var(--sdp-radi-s);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-inline-size: 0;
+  }
+
+  .sdp-candidats-alergens__item--present {
+    border: 2px solid var(--sdp-error);
+    background: var(--sdp-error-fons);
+  }
+
+  .sdp-candidats-alergens__item--traca {
+    border: 2px solid var(--sdp-avis);
+    background: var(--sdp-avis-fons);
+  }
+
+  .sdp-candidats-alergens__item--desconegut {
+    border-style: dashed;
+    border-color: var(--sdp-vora-control);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-candidats-alergens__item--absent {
+    border-color: var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-candidats-alergens__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-inline-size: 0;
+  }
+
+  .sdp-candidats-alergens__nom {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    overflow-wrap: break-word;
+  }
+
+  .sdp-candidats-alergens__item--absent .sdp-candidats-alergens__nom {
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+  }
+
+  .sdp-candidats-alergens__estat {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.3;
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-candidats-alergens__estat--present {
+    border-color: var(--sdp-error);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-error-text);
+  }
+
+  .sdp-candidats-alergens__estat--traca {
+    border-color: var(--sdp-avis);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-avis-text);
+  }
+
+  .sdp-candidats-alergens__estat--desconegut {
+    border-color: var(--sdp-vora-control);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+  }
+
+  .sdp-candidats-alergens__estat--absent {
+    border-color: var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+  }
+
+  .sdp-candidats-alergens__detall {
+    border-block-start: 1px solid var(--sdp-vora);
+    padding-block-start: var(--sdp-space-2);
+  }
+
+  .sdp-candidats-alergens__resum {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--sdp-touch);
+    cursor: pointer;
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  /* v1.2.24 · costura R32.75 · Llei de llistes: una llista amb marcadors no suma gap ni flex; l'aire entre ítems
+     el dona el marge del li de base.css (4px). Abans, dins del flex, el gap de 4px se sumava al marge i en feia 8. */
+  .sdp-candidats-alergens__evidencies {
+    margin: var(--sdp-space-2) 0 0;
+    padding-inline-start: var(--sdp-space-4);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+}

@@ -24,11 +24,12 @@
  * · L'editor del Bloc de Notes ja no en porta cap («Ja publicat al Mur» fora
  * de la vista d'edició).
  */
-import { useUIActions } from '../../app/contexts/UIContext';
+import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { Alerta, Boto, Carregant, GraellaTargetes } from '../../components/PedraSeca/index.js';
 import { SlotErrorBoundary } from '../../components/universal/workspace/SlotErrorBoundary.jsx';
 import { TargetaDelMercat } from '../mercat/TargetaDelMercat.jsx';
 import { EstatErrorDades } from './EstatErrorDades.jsx';
+import { resolOffline } from './i18nEstatErrorHumana.js';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
 import { textosDeLHistoric, usePublicacionsDeLActor, useVeuHistoric } from './usePublicacionsDeLActor.js';
 
@@ -47,6 +48,25 @@ function useTraductor() {
   } catch {
     return undefined;
   }
+}
+
+function useIdiomaOpcional() {
+  try {
+    const estat = useUIState();
+    return estat?.language || estat?.externalConfig?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
+function textosHistoricOffline(seccio, base, idioma) {
+  if (!base || idioma === 'ca' || !seccio) return base;
+  return {
+    titol: base.titol ? resolOffline(base.titol, `section.notes.historic.${seccio}.titol`, idioma) : base.titol,
+    buit: resolOffline(base.buit, `section.notes.historic.${seccio}.buit`, idioma),
+    carregant: resolOffline(base.carregant, 'section.notes.historic.carregant', idioma),
+    error: resolOffline(base.error, 'section.notes.historic.error', idioma)
+  };
 }
 
 /* La targeta canònica de cada secció. Revisió adversarial del 261007 · La
@@ -69,14 +89,15 @@ const targetaDe = (seccio, varietatPorta = 'primari') => ({ id, item, esdevenime
  */
 export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'ready', error = null, refresh = null, nivell = 'h2', textos: textosPropis = null, varietatPorta = 'primari' }) {
   const t = useTraductor();
-  const textos = textosPropis || textosDeLHistoric(seccio, t);
+  const idioma = useIdiomaOpcional();
+  const textos = textosPropis || textosHistoricOffline(seccio, textosDeLHistoric(seccio, t), idioma);
   if (!textos) return null;
   const Titol = NIVELLS.has(nivell) ? nivell : 'h2';
   const llista = Array.isArray(elements) ? elements : CAP;
   let cos;
   if (estat === 'error') cos = <EstatErrorDades titol={textos.error} error={error} onReintenta={refresh} />;
   else if (PENDENTS.has(estat) && !llista.length) cos = <Carregant etiqueta={textos.carregant} />;
-  else if (!llista.length) cos = <p role="status">{textos.buit}</p>;
+  else if (!llista.length) cos = <p role="status" className="sdp-paragraf-centrat">{textos.buit}</p>;
   else cos = <GraellaTargetes elements={llista}>{targetaDe(seccio, varietatPorta)}</GraellaTargetes>;
   return (
     <>
@@ -93,15 +114,22 @@ export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'rea
    Onada 6 · Exportada, amb els `textos` propis de qui la munta (la pestanya
    d'un poble); sense, els de l'històric de la secció. */
 export function FalladaDeLHistoric({ seccio, t, nivell, reinicia, textos: textosPropis = null }) {
-  const textos = textosPropis || textosDeLHistoric(seccio, t);
+  const idioma = useIdiomaOpcional();
+  const textos = textosPropis || textosHistoricOffline(seccio, textosDeLHistoric(seccio, t), idioma);
   if (!textos) return null;
   const tradueix = typeof t === 'function' ? t : (_clau, reserva) => reserva;
   const Titol = NIVELLS.has(nivell) ? nivell : 'h2';
+  const textReintenta = resolOffline(tradueix('common.reintenta', 'Torna-ho a provar'), 'common.reintenta', idioma);
+  const textFallada = resolOffline(
+    tradueix('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.'),
+    'section.notes.historic.fallada',
+    idioma
+  );
   return (
     <>
       {textos.titol ? <Titol>{textos.titol}</Titol> : null}
-      <Alerta to="error" titol={textos.error} accions={<Boto onClick={reinicia}>{tradueix('common.reintenta', 'Torna-ho a provar')}</Boto>}>
-        {tradueix('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.')}
+      <Alerta to="error" titol={textos.error} accions={<Boto onClick={reinicia}>{textReintenta}</Boto>}>
+        {textFallada}
       </Alerta>
     </>
   );

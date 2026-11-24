@@ -26,13 +26,13 @@ export function imatgeMercadonaSegura(valor) {
 }
 
 /** Manté els ids publicats; una deriva demana revisar el tall. */
-export function importaMercadona(bytes) {
+export function importaMercadona(bytes, { publicats = PRODUCTES } = {}) {
   const files = llegixCsv(bytes, { delimitador: ',' });
   if (JSON.stringify(files[0]) !== JSON.stringify(COLUMNES)) throw new TypeError('El CSV no conserva les 14 columnes esperades.');
-  const { productes, avisos } = importaProductes(bytes, { publicats: PRODUCTES, delimitador: ',' });
-  if (JSON.stringify(productes) !== JSON.stringify(PRODUCTES)) throw new TypeError('El CSV ha canviat respecte dels ids publicats: cal revisar el tall.');
+  const { productes, avisos } = importaProductes(bytes, { publicats: publicats, delimitador: ',' });
+  if (JSON.stringify(productes) !== JSON.stringify(publicats)) throw new TypeError('El CSV ha canviat respecte dels ids publicats: cal revisar el tall.');
   const pendents = new Map();
-  for (const fila of PRODUCTES) {
+  for (const fila of publicats) {
     const k = clau(fila);
     if (!pendents.has(k)) pendents.set(k, []);
     pendents.get(k).push(fila);
@@ -75,10 +75,10 @@ export function importaMercadona(bytes) {
       filaFont: index + 2, font: 'mer', tall: FONT.tall
     });
   });
-  if (productesComplets.length !== PRODUCTES.length || [...pendents.values()].some((restants) => restants.length)) {
+  if (productesComplets.length !== publicats.length || [...pendents.values()].some((restants) => restants.length)) {
     throw new TypeError('La reconciliació no conserva tots els productes publicats.');
   }
-  const ordre = new Map(PRODUCTES.map(([id], index) => [id, index]));
+  const ordre = new Map(publicats.map(([id], index) => [id, index]));
   productesComplets.sort((a, b) => ordre.get(a.id) - ordre.get(b.id));
   return {
     metadades: {

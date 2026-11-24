@@ -121,10 +121,14 @@ const normalizeText = (value) =>
 const firstAsset = (value) => (Array.isArray(value) ? value[0] || null : value || null);
 const buildSearchText = (parts) => normalizeText(parts.map(textDelPayload).filter(Boolean).join(' '));
 
+const RE_URL_CONTROL_O_BARRA_INVERSA = /[\\\u0000-\u001f\u007f-\u009f\u2028\u2029]/;
+const RE_DATA_IMATGE_SEGURA = /^data:image\/(?:png|jpeg|jpg|webp|gif|avif|bmp|x-icon|vnd\.microsoft\.icon)(?:;[^,]*)?,/i;
+
 function validaUrl(url) {
   if (typeof url !== 'string') return null;
   const s = url.trim();
-  if (s.startsWith('data:image/')) return s;
+  if (!s || RE_URL_CONTROL_O_BARRA_INVERSA.test(s)) return null;
+  if (/^data:/i.test(s)) return RE_DATA_IMATGE_SEGURA.test(s) ? s : null;
   if (s.startsWith('//')) return null; // Bloquejar protocol-relative (Z audit)
   if (s.startsWith('/') || s.startsWith('./')) return s;
   try {
@@ -319,6 +323,7 @@ export function mapSectionSubmissionToItem(submission) {
       ...(baseItem.town_name ? { town_name: netejaText(baseItem.town_name) } : {}),
       imageSrc: validaUrl(baseItem.imageSrc || firstAsset(baseItem.image_url || baseItem.image || baseItem.avatar_url)),
       image_url: validaUrl(baseItem.image_url || baseItem.image || baseItem.imageSrc),
+      ...(Object.hasOwn(baseItem, 'image') ? { image: validaUrl(baseItem.image) } : {}),
       searchText: netejaText(baseItem.searchText || buildSearchText([
         baseItem.title, baseItem.post_subtitle, baseItem.description, baseItem.content,
         baseItem.author, baseItem.town_name, baseItem.tag, baseItem.sectionId

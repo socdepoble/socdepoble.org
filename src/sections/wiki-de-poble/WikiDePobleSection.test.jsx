@@ -46,21 +46,24 @@ const obri = (itemId) => { fixture.itemId = itemId; fixture.search = `?item=${it
 const pindoles = (arrel) => [...arrel.querySelectorAll('.page-title-labels > li')]
   .map((li) => [li.textContent, li.className.replace('sp-card-label ', '')]);
 
-test('un sol h1: el «# » puja a la capçalera i la resta de nivells passen a h3,h4,h5,h6,h6', () => {
+test('un sol h1: el «# » puja a la capçalera i la resta de nivells passen a h3,h4,h5,h6,h6 purs sense classe falsa', () => {
   render(<WikiDePobleSection />);
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Nivell 1');
   const headings = document.querySelectorAll('.sdp-prose :is(h1,h2,h3,h4,h5,h6)');
   expect([...headings].map(node => node.tagName)).toEqual(['H3', 'H4', 'H5', 'H6', 'H6']);
-  expect([...headings].map(node => node.className)).toEqual(['h2', 'h3', 'h4', 'h5', 'h6']);
+  expect([...headings].map(node => node.className)).toEqual(['', '', '', '', '']);
 });
 
-test('sense «# » inicial, l’H1 és el títol del manifest i la prosa conserva la democió', () => {
+test('sense «# » inicial, l’H1 és el títol del manifest i la prosa emet h3 i h4 purs', () => {
   fixture.content = '## Nivell 2\n\n### Nivell 3';
   try {
     render(<WikiDePobleSection />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Wiki de Poble');
-    expect([...document.querySelectorAll('.sdp-prose h3.h2, .sdp-prose h4.h3')].map(node => node.textContent)).toEqual(['Nivell 2', 'Nivell 3']);
+    expect([...document.querySelectorAll('.sdp-prose h3, .sdp-prose h4')].map(node => [node.tagName, node.className, node.textContent])).toEqual([
+      ['H3', '', 'Nivell 2'],
+      ['H4', '', 'Nivell 3']
+    ]);
   } finally {
     fixture.content = Array.from({ length: 6 }, (_, i) => `${'#'.repeat(i + 1)} Nivell ${i + 1}`).join('\n\n');
   }
@@ -78,29 +81,29 @@ test('capçalera editorial: H1 i H2 sense punt, entradilla extreta i la prosa no
   expect(prosa.textContent).not.toContain('Entradilla');
   expect(prosa.textContent).not.toContain('Arquitectura tècnica');
   expect(prosa.querySelector('p.lead')).toBeNull();
-  expect(prosa.querySelector('h3.h2').textContent).toBe('Primera secció');
+  expect(prosa.querySelector('h3').textContent).toBe('Primera secció');
+  expect(prosa.querySelector('h3').className).toBe('');
   // La descripció ja és l'H2: el quadre ISO no la repetix.
   expect([...arrel.querySelectorAll('.sdp-wiki-iso th')].map(th => th.textContent)).not.toContain('Descripció');
 });
 
-/* O7 · Gauntlet WC-05 · El kit passava el Quadre ISO a h3: el títol conservava
-   la pell, però l'Índex (PageFrame pren el nivell del tag) en pujava l'entrada
-   a toc-level-3. Cap ordre del Mestre ho demana (Llei del Píxel): continua
-   sent l'h4 de sempre, amb l'entrada de l'Índex a toc-level-4. */
-test('O7 · el Quadre ISO continua sent h4 i l’Índex el manté a toc-level-4', () => {
+/* IDEA-344 (ordre directa del Mestre, 261124) · El Quadre de Comandament ISO
+   puja d'h4 a h3 per obrir el cos sense cap salt H2 -> H4, alineat a l'inici
+   i entrant a l'Índex de PageFrame com a toc-level-3 al costat de les altres seccions H3. */
+test('IDEA-344 · el Quadre ISO és h3 pur i l’Índex el situa a toc-level-3', () => {
   const root = obri('doc_llarg');
-  const iso = screen.getByRole('heading', { name: 'Quadre de Comandament ISO', level: 4 });
+  const iso = screen.getByRole('heading', { name: 'Quadre de Comandament ISO', level: 3 });
   expect(iso.className).toBe('');
   const headings = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6')];
   expect(headings.map(h => [h.tagName, h.textContent])).toEqual([
     ['H1', 'Arquitectura tècnica unificada'], ['H2', 'Descripció del document'],
-    ['H4', 'Quadre de Comandament ISO'], ['H3', 'Primera secció']
+    ['H3', 'Quadre de Comandament ISO'], ['H3', 'Primera secció']
   ]);
   fireEvent.click(root.querySelector('button[aria-label="Índex de secció"]'));
   expect([...document.querySelectorAll('.toc-nav li')].map(li => [li.className, li.textContent])).toEqual([
     ['toc-item toc-level-1', 'Arquitectura tècnica unificada'],
     ['toc-item toc-level-2', 'Descripció del document'],
-    ['toc-item toc-level-4', 'Quadre de Comandament ISO'],
+    ['toc-item toc-level-3', 'Quadre de Comandament ISO'],
     ['toc-item toc-level-3', 'Primera secció']
   ]);
 });

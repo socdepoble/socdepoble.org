@@ -234,4 +234,51 @@ describe('P1-24 · la IAIA de /legal és la IAIA del codi', () => {
     expect(informe.falles).toEqual([]);
     expect(informe.ok).toBe(true);
   });
+
+  test('IDEA-340 (R32.61) · /page/reconeixements i la projecció de /legal unifiquen §23 + §23.bis + blog.google i laboratoris en 5 llengües amb Llei 32, Llei 35 i enllaços certificats', async () => {
+    const { PAGE_COPY } = await import('./pageContent.js');
+    const { CREDITS_RECONEIXEMENTS_5_LLENGUES } = await import('./reconeixementsCredits5L.js');
+    const { BLOC_TARGETA_RECONEIXEMENTS_LEGAL } = await import('./projeccioLecturaLegal.js');
+    const llengues = ['ca', 'es', 'en', 'eu', 'gl'];
+    expect(Object.keys(CREDITS_RECONEIXEMENTS_5_LLENGUES)).toEqual(llengues);
+    const urls = new Set();
+
+    const validaFragment = (etiqueta, fragment, paragrafsEsperats) => {
+      expect(fragment, `${etiqueta}: zero table`).not.toMatch(/<table\b/i);
+      const textNet = pla(fragment);
+      expect(textNet, `${etiqueta} Llei 32 zero sobirà`).not.toMatch(/\b(?:sobir[àa]|sobirans|sobiranes|soberan[oa]s?|sovereign|burujabe\w*)\b/i);
+      expect(textNet, `${etiqueta} Llei 32 zero servidor del poble`).not.toMatch(/\b(?:el servidor del poble|el servidor del pueblo|the village server|herriko zerbitzaria|o servidor da vila)\b/i);
+      expect(textNet, `${etiqueta} Llei 32 zero La Masia`).not.toMatch(/\bLa Masia\b/i);
+
+      const paragrafs = [...fragment.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+      expect(paragrafs.length, `${etiqueta} nombre de paràgrafs`).toBe(paragrafsEsperats);
+      for (const [idx, p] of paragrafs.entries()) {
+        const strongs = [...p.matchAll(/<strong>([\s\S]*?)<\/strong>/g)];
+        expect(strongs.length, `${etiqueta} p[${idx}] Llei 35 6-8 strong`).toBeGreaterThanOrEqual(6);
+        expect(strongs.length, `${etiqueta} p[${idx}] Llei 35 6-8 strong`).toBeLessThanOrEqual(8);
+      }
+      for (const [, titol] of fragment.matchAll(/<h[34]>([^<]+)<\/h[34]>/g)) {
+        const t = titol.trim();
+        expect(t === t.toUpperCase() && /[A-ZÀ-Ü]/.test(t), `${etiqueta} H3/H4 caixa natural: ${t}`).toBe(false);
+      }
+      for (const m of fragment.matchAll(/href="([^"]+)"/g)) {
+        urls.add(m[1]);
+      }
+    };
+
+    validaFragment('projeccioLecturaLegal', BLOC_TARGETA_RECONEIXEMENTS_LEGAL, 1);
+    for (const lang of llengues) {
+      validaFragment(`obertura:${lang}`, PAGE_COPY.reconeixements.translations[lang].html, 2);
+      validaFragment(`cataleg:${lang}`, CREDITS_RECONEIXEMENTS_5_LLENGUES[lang], 9);
+    }
+
+    const informe = JSON.parse(
+      execFileSync(process.execPath, ['tooling/gates/certifica-enllacos.mjs', '--json', '--arrel', ARREL, ...urls], {
+        cwd: ARREL,
+        encoding: 'utf8'
+      })
+    );
+    expect(informe.falles).toEqual([]);
+    expect(informe.ok).toBe(true);
+  });
 });

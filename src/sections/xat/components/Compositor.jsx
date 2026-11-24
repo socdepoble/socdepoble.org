@@ -705,6 +705,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
     e.preventDefault();
     adjunts.triaFitxer(fitxer);
   };
+  const etiquetaEmoticones = t('section.xat.emoticones.etiqueta', 'Emoticones');
+  const etiquetaPrimari = accio ? accio.etiqueta : t('section.xat.compositor.envia', 'Envia');
   return (
     <form
       ref={formulari}
@@ -717,6 +719,7 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
         type="button"
         className="sdp-xat-compositor__adjunta"
         aria-label={etiquetaBotoMenu}
+        title={etiquetaBotoMenu}
         aria-haspopup="menu"
         aria-expanded={menuObert}
         aria-controls={menuObert ? ID_MENU_ADJUNTS : undefined}
@@ -768,7 +771,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
         <button
           type="button"
           className="sdp-xat-compositor__emojis"
-          aria-label={t('section.xat.emoticones.etiqueta', 'Emoticones')}
+          aria-label={etiquetaEmoticones}
+          title={etiquetaEmoticones}
           aria-haspopup="dialog"
           aria-expanded={obert}
           aria-controls={obert ? ID_EMOTICONES : undefined}
@@ -831,7 +835,8 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef,
         type={accio ? 'button' : 'submit'}
         className="sdp-xat-compositor__envia"
         data-accio={accio?.clau}
-        aria-label={accio ? accio.etiqueta : t('section.xat.compositor.envia', 'Envia')}
+        aria-label={etiquetaPrimari}
+        title={etiquetaPrimari}
         aria-disabled={accio?.ariaDisabled || undefined}
         aria-busy={accio?.ocupat || undefined}
         aria-describedby={accio?.descritPer}

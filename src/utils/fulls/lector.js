@@ -40,14 +40,13 @@
  * lligen mai. Les relacions es reconeixen pel final del seu tipus
  * ('/worksheet', '/styles'…), que val per a l'OOXML de transició i l'estricte.
  * Límits: 20 MiB de fitxer, 64 MiB d'XML descomprimit i 200.000 cel·les.
- * XML sense DOM: expressions regulars sobre un format que escriuen màquines,
- * amb el prefix d'espai de noms opcional. Deute declarat: amb un XML malmés a
- * propòsit (moltes etiquetes <c>, <si> o <v> sense tancar) el temps d'anàlisi
- * creix amb el quadrat de la part, i cap dels límits l'atura; cal un
- * analitzador per posicions (indexOf). JS pur: sense DOM ni React.
+ * XML sense DOM: els fragments OOXML es recorren per posicions, amb
+ * comentaris/CDATA opacs i rebuig dels delimitadors sense tancar. No és un
+ * validador general d'esquemes XML. JS pur: sense DOM ni React.
  */
 import { lletraColumna, partsData } from './model.js';
 import { llegeixZip } from './zip.js';
+import { elementsXml, senseComentarisXml } from './xmlParts.js';
 
 const LIMIT_BYTES = 20 * 1024 * 1024;
 const LIMIT_EIXIDA = 64 * 1024 * 1024;
@@ -133,9 +132,11 @@ export function atributs(text) {
 
 /* El text de text enriquit (<si>, <is>): els <t> seguits, sense la fonètica (<rPh>). */
 function textRic(xml) {
-  const net = xml.includes('rPh') ? xml.replace(/<(?:\w+:)?rPh\b[\s\S]*?<\/(?:\w+:)?rPh>/g, '') : xml;
+  const parts=[];let pos=0;
+  if(xml.includes('rPh'))for(const token of elementsXml(xml,'rPh')){parts.push(xml.slice(pos,token.inici));pos=token.fi;}
+  parts.push(xml.slice(pos));const net=parts.join('');
   let text = '';
-  for (const m of net.matchAll(/<(?:\w+:)?t\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?t>)/g)) text += textOoxml(m[1] ?? '');
+  for (const m of elementsXml(net,'t')) text += textOoxml(m.cos ?? '');
   return text;
 }
 
@@ -143,7 +144,7 @@ function textRic(xml) {
 function textDe(bytes) {
   const codificacio = bytes[0] === 0xff && bytes[1] === 0xfe ? 'utf-16le' : bytes[0] === 0xfe && bytes[1] === 0xff ? 'utf-16be' : 'utf-8';
   const text = new TextDecoder(codificacio).decode(bytes);
-  return text.includes('<!--') ? text.replace(/<!--[\s\S]*?-->/g, '') : text;
+  return senseComentarisXml(text);
 }
 
 /* ── El paquet: relacions i parts ──────────────────────────────────────── */
@@ -168,8 +169,8 @@ function relsDe(part) {
 /* Les relacions internes d'una part, amb el destí ja resolt. */
 function relacions(xml, base) {
   const llista = [];
-  for (const m of (xml ?? '').matchAll(/<(?:\w+:)?Relationship\b([^>]*?)\/?>/g)) {
-    const a = atributs(m[1]);
+  for (const m of elementsXml(xml ?? '', 'Relationship',{oberts:['Relationship']})) {
+    const a = atributs(m.atributs);
     if (a.TargetMode === 'External' || !a.Target) continue;
     llista.push({ id: a.Id, tipus: a.Type ?? '', desti: resolDesti(base, a.Target) });
   }
@@ -205,12 +206,23 @@ function llegixParts(bytes, noms, pressupost) {
    Fora: el text entre cometes, els caràcters escapats, els de farciment
    (_x, *x) i els claudàtors que no són de temps transcorregut ([Red], [$-403]…);
    només compta la primera secció. Una «m» sense hores ni segons és el mes. */
+function llevaClaudatorsNoTemporals(codi) {
+  const parts=[];let pos=0,inici=codi.indexOf('[');
+  while(inici!==-1) {
+    const fi=codi.indexOf(']',inici+1);
+    if(fi===-1)break;
+    parts.push(codi.slice(pos,inici));
+    const bloc=codi.slice(inici,fi+1);
+    if(/^\[[hms]+\]$/i.test(bloc))parts.push(bloc);
+    pos=fi+1;inici=codi.indexOf('[',pos);
+  }
+  parts.push(codi.slice(pos));return parts.join('');
+}
 function classeDeCodi(codi) {
-  const net = codi
+  const net = llevaClaudatorsNoTemporals(codi
     .replace(/"[^"]*"/g, '')
     .replace(/\\./g, '')
-    .replace(/[_*]./g, '')
-    .replace(/\[(?![hms]+\])[^\]]*\]/gi, '')
+    .replace(/[_*]./g, ''))
     .split(';')[0]
     .toLowerCase()
     .trim();
@@ -237,15 +249,15 @@ function estils(xml) {
   const propis = new Map();
   const perEstil = [];
   if (!xml) return perEstil;
-  const formats = /<(?:\w+:)?numFmts\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?numFmts>)/.exec(xml);
-  for (const m of (formats?.[1] ?? '').matchAll(/<(?:\w+:)?numFmt\b([^>]*?)\/?>/g)) {
-    const a = atributs(m[1]);
+  const formats = elementsXml(xml,'numFmts').next().value;
+  for (const m of elementsXml(formats?.cos ?? '', 'numFmt',{oberts:['numFmt']})) {
+    const a = atributs(m.atributs);
     const id = Number(a.numFmtId);
     if (Number.isInteger(id) && typeof a.formatCode === 'string') propis.set(id, a.formatCode);
   }
-  const bloc = /<(?:\w+:)?cellXfs\b[^>]*>([\s\S]*?)<\/(?:\w+:)?cellXfs>/.exec(xml);
-  for (const m of bloc ? bloc[1].matchAll(/<(?:\w+:)?xf\b([^>]*?)\/?>/g) : []) {
-    const id = Number(atributs(m[1]).numFmtId ?? 0);
+  const bloc = elementsXml(xml,'cellXfs').next().value;
+  for (const m of elementsXml(bloc?.cos ?? '', 'xf',{oberts:['xf']})) {
+    const id = Number(atributs(m.atributs).numFmtId ?? 0);
     if (propis.has(id)) perEstil.push({ codi: propis.get(id), classe: classeDeCodi(propis.get(id)) });
     else perEstil.push({ codi: FORMATS_PREDEFINITS.get(id) ?? 'General', classe: classePredefinida(id) });
   }
@@ -368,8 +380,8 @@ function valorDe(t, v, interior, format, context, lloc) {
       return text === '' ? { tipus: 'buit', valor: null } : { tipus: 'text', valor: text };
     }
     case 'inlineStr': {
-      const is = /<(?:\w+:)?is\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?is>)/.exec(interior);
-      const text = is && is[1] !== undefined ? textRic(is[1]) : '';
+      const is = elementsXml(interior,'is').next().value;
+      const text = is?.cos !== undefined ? textRic(is.cos) : '';
       return text === '' ? { tipus: 'buit', valor: null } : { tipus: 'text', valor: text };
     }
     case 'str': {
@@ -393,22 +405,22 @@ function valorDe(t, v, interior, format, context, lloc) {
 /* Les cel·les i les combinacions de l'XML d'una fulla. Les files i les
    cel·les sense referència (r és opcional) seguixen l'anterior. */
 function llegixFulla(xml, nom, context) {
-  const dades = /<(?:\w+:)?sheetData\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?sheetData>)/.exec(xml);
-  const cos = dades?.[1] ?? '';
+  const dades = elementsXml(xml,'sheetData').next().value;
+  const cos = dades?.cos ?? '';
   const celles = [];
   const mestres = new Map();
   let fila = 0;
   let col = -1;
-  for (const m of cos.matchAll(/<(?:\w+:)?row\b([^>]*?)\/?>|<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
-    if (m[1] !== undefined) {
-      const r = Number(atributs(m[1]).r);
+  for (const m of elementsXml(cos,['row','c'],{oberts:['row']})) {
+    if (m.nom === 'row') {
+      const r = Number(atributs(m.atributs).r);
       fila = Number.isInteger(r) && r >= 1 && r <= MAX_FILES_FULL ? r : fila + 1;
       col = -1;
       continue;
     }
     context.celles += 1;
     if (context.celles > context.maxCelles) throw new RangeError(`El llibre passa de ${milers(context.maxCelles)} cel·les: és massa gran per a llegir-lo ací.`);
-    const a = atributs(m[2]);
+    const a = atributs(m.atributs);
     if (a.r !== undefined) {
       const lloc = cellaDe(a.r);
       if (!lloc) throw new TypeError(`Referència de cel·la que no és vàlida a la fulla «${nom}»: ${a.r}`);
@@ -419,14 +431,14 @@ function llegixFulla(xml, nom, context) {
       if (col >= MAX_COLUMNES_FULL) throw new TypeError(`Massa columnes a la fulla «${nom}».`);
     }
     const ref = `${lletraColumna(col)}${fila}`;
-    const interior = m[3] ?? '';
+    const interior = m.cos ?? '';
     const format = context.formats[Number(a.s ?? 0)] ?? context.formats[0] ?? GENERAL;
-    const v = /<(?:\w+:)?v\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?v>)/.exec(interior);
-    const f = /<(?:\w+:)?f\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?f>)/.exec(interior);
+    const v = elementsXml(interior,'v').next().value;
+    const f = elementsXml(interior,'f').next().value;
     let formula = null;
     if (f) {
-      const af = atributs(f[1]);
-      formula = f[2] === undefined ? '' : desescapa(f[2]);
+      const af = atributs(f.atributs);
+      formula = f.cos === undefined ? '' : desescapa(f.cos);
       if (af.t === 'shared' && af.si !== undefined) {
         if (formula !== '') mestres.set(af.si, { formula, fila, col });
         else if (mestres.has(af.si)) {
@@ -435,12 +447,12 @@ function llegixFulla(xml, nom, context) {
         }
       }
     }
-    const { tipus, valor } = valorDe(a.t ?? 'n', v ? v[1] ?? '' : null, interior, format, context, `${nom}!${ref}`);
+    const { tipus, valor } = valorDe(a.t ?? 'n', v ? v.cos ?? '' : null, interior, format, context, `${nom}!${ref}`);
     celles.push({ fila, col, ref, tipus, valor, formula, format: format.codi });
   }
   const combinacions = [];
-  for (const m of xml.matchAll(/<(?:\w+:)?mergeCell\b([^>]*?)\/?>/g)) {
-    const rang = rangDe(atributs(m[1]).ref);
+  for (const m of elementsXml(xml,'mergeCell',{oberts:['mergeCell']})) {
+    const rang = rangDe(atributs(m.atributs).ref);
     if (rang) combinacions.push(rang);
   }
   return { nom, combinacions, celles };
@@ -501,11 +513,11 @@ export function llegixLlibre(bytes, opcions = {}) {
   const xmlLlibre = delLlibre(partLlibre);
   if (xmlLlibre === null || !/<(?:\w+:)?workbook\b/.test(xmlLlibre)) throw new TypeError('No és un llibre XLSX: falta el llibre de fulls dins del paquet.');
   const relsLlibre = relacions(delLlibre(relsDe(partLlibre)), partLlibre);
-  const propietats = /<(?:\w+:)?workbookPr\b([^>]*?)\/?>/.exec(xmlLlibre);
-  const date1904 = propietats ? ['1', 'true'].includes(atributs(propietats[1]).date1904) : false;
+  const propietats = elementsXml(xmlLlibre,'workbookPr',{oberts:['workbookPr']}).next().value;
+  const date1904 = propietats ? ['1', 'true'].includes(atributs(propietats.atributs).date1904) : false;
   const fulles = [];
-  for (const m of xmlLlibre.matchAll(/<(?:\w+:)?sheet\b([^>]*?)\/?>/g)) {
-    const a = atributs(m[1]);
+  for (const m of elementsXml(xmlLlibre,'sheet',{oberts:['sheet']})) {
+    const a = atributs(m.atributs);
     const relacio = a.id === undefined ? null : relsLlibre.find((r) => r.id === a.id);
     if (relacio && esDeTipus(relacio, 'worksheet')) fulles.push({ nom: a.name ?? '', part: relacio.desti });
   }
@@ -516,7 +528,7 @@ export function llegixLlibre(bytes, opcions = {}) {
   const xmlCadenes = cadenes.map(part).filter((x) => x !== null).join('');
   const context = {
     date1904,
-    cadenes: [...xmlCadenes.matchAll(/<(?:\w+:)?si\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?si>)/g)].map((m) => textRic(m[1] ?? '')),
+    cadenes: [...elementsXml(xmlCadenes,'si')].map((m) => textRic(m.cos ?? '')),
     formats: estils(estil.map(part).filter((x) => x !== null).join('')),
     celles: 0,
     maxCelles

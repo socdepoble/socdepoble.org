@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Banknote, CreditCard, Wallet } from 'lucide-react';
 import {
-  Alerta, BarraResum, Boto, Fila, LiniesColleccio, PillToggle, TeclatNumeric
+  Accions, Alerta, BarraResum, Boto, LiniesColleccio, PillToggle, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { useParametresConsulta } from '../../plataforma/index.js';
 import { totals } from '../nucli/comanda.js';
@@ -83,7 +83,7 @@ function Cobrament({ params, idioma = 'ca' }) {
   const resum = (
     <BarraResum etiqueta={t.pagatCents > 0 ? tx.pendentEtiqueta : tx.aCobrar} comptador={comanda.linies.filter((l) => l.estat !== 'anullada').length}
       textComptador={textLiniesPerIdioma(idioma)} total={euros(pendent)} textTotal={tx.pendentEtiqueta}
-      accio={pendent > 0 && !altre ? { text: tx.exacteEfectiu(euros(pendent)), desactivada: !ven, onClick: () => cobraEfectiu(pendent) } : null} />
+      accio={pendent > 0 && !altre ? { text: tx.exacteEfectiu(euros(pendent)), desactivada: ocupat || !ven, onClick: () => cobraEfectiu(pendent) } : null} />
   );
   return (
     <Columna titol={tx.cobra} torna={torna} eines={resum}>
@@ -92,14 +92,14 @@ function Cobrament({ params, idioma = 'ca' }) {
       <PillToggle etiqueta={tx.metodePagament} valor={metode} onCanvi={triaMetode} opcions={metodesPagament(tx)} />
       {metode === 'efectiu' ? (
         <>
-          <Fila gap={2}>
+          <Accions>
             {suggerimentsEfectiu(pendent).map((cents) => (
               <Boto key={cents} mida="gran" disabled={ocupat || !ven} onClick={() => cobraEfectiu(cents)}>{euros(cents)}</Boto>
             ))}
-          </Fila>
+          </Accions>
           <TeclatNumeric mode="import" etiqueta={tx.lliurat} valor={lliurat} onCanvi={setLliurat}
             onAccepta={(cents) => { if (cents > 0) cobraEfectiu(cents); }}
-            textAccepta={lliurat >= pendent ? tx.cobraITornaCanvi : tx.cobraImportPart} desactivat={pendent <= 0 || !ven} />
+            textAccepta={lliurat >= pendent ? tx.cobraITornaCanvi : tx.cobraImportPart} desactivat={ocupat || pendent <= 0 || !ven} />
           {lliurat > 0 ? (
             lliurat >= pendent
               ? <BarraResum etiqueta={tx.canvi} comptador={0} textComptador={() => ''} total={euros(lliurat - pendent)} textTotal={tx.canvi} />
@@ -111,11 +111,13 @@ function Cobrament({ params, idioma = 'ca' }) {
           <Alerta to="info" viva={false} titol={metode === 'targeta' ? tx.cobraAmbDatafon : tx.unAltreMetode}>
             {tx.avisTpvNoCobra}
           </Alerta>
-          <TeclatNumeric mode="import" etiqueta={tx.importEtiqueta} valor={importAltre} maxim={pendent} onCanvi={setImportTargeta} desactivat={!ven} />
-          <Boto varietat="primari" ple mida="gran" disabled={ocupat || !ven || importAltre < 1 || importAltre > pendent}
-            onClick={() => paga({ metode, importCents: importAltre }, () => setImportTargeta(null))}>
-            {metode === 'targeta' ? tx.datafonHaCobrat(euros(importAltre)) : tx.anotaCobrats(euros(importAltre))}
-          </Boto>
+          <TeclatNumeric mode="import" etiqueta={tx.importEtiqueta} valor={importAltre} maxim={pendent} onCanvi={setImportTargeta} desactivat={ocupat || !ven} />
+          <Accions>
+            <Boto varietat="primari" ple mida="gran" carregant={ocupat} disabled={ocupat || !ven || importAltre < 1 || importAltre > pendent}
+              onClick={() => paga({ metode, importCents: importAltre }, () => setImportTargeta(null))}>
+              {metode === 'targeta' ? tx.datafonHaCobrat(euros(importAltre)) : tx.anotaCobrats(euros(importAltre))}
+            </Boto>
+          </Accions>
         </>
       )}
     </Columna>
@@ -185,20 +187,22 @@ function Divisio({ params, idioma = 'ca' }) {
           <LiniesColleccio etiqueta={tx.unitatsASeparar}
             linies={vives.map((l) => ({ id: l.id, articleId: l.producteId, quantitat: seleccio[l.id] || 0, nom: l.nomCongelat, detall: tx.deQuantitat(l.quantitat) }))}
             onSuma={(linia) => canvia(linia, 1)} onResta={(linia) => canvia(linia, -1)} />
-          <Boto varietat="primari" ple disabled={ocupat || !ven || triades.length === 0 || comanda.pagaments.length > 0} onClick={separa}>{tx.separaICobra}</Boto>
+          <Accions>
+            <Boto varietat="primari" ple carregant={ocupat} disabled={ocupat || !ven || triades.length === 0 || comanda.pagaments.length > 0} onClick={separa}>{tx.separaICobra}</Boto>
+          </Accions>
           {comanda.pagaments.length > 0 ? <Alerta to="info" viva={false}>{tx.comandaPagamentsPartsIguals}</Alerta> : null}
         </>
       ) : (
         <>
-          <TeclatNumeric mode="quantitat" etiqueta={tx.partsEtiqueta} unitat={tx.partsUnitat} maxim={MAX_PARTS} valor={parts} onCanvi={setParts} />
+          <TeclatNumeric mode="quantitat" etiqueta={tx.partsEtiqueta} unitat={tx.partsUnitat} maxim={MAX_PARTS} valor={parts} onCanvi={setParts} desactivat={ocupat || !ven} />
           {avisParts ? <Alerta to="info" viva={false}>{avisParts}</Alerta> : null}
           <LiniesColleccio etiqueta={tx.partsQueQueden}
             linies={pla.map((importCents, i) => ({ id: `part-${seguent + i}`, articleId: 'part', quantitat: 1, nom: tx.partNom(seguent + i), valor: euros(importCents) }))} />
           {pla.length ? (
-            <Fila gap={2}>
-              <Boto varietat="primari" disabled={ocupat || !ven} onClick={() => pagaPart('efectiu')}>{tx.partEnEfectiu(seguent, euros(pla[0]))}</Boto>
-              <Boto disabled={ocupat || !ven} onClick={() => pagaPart('targeta')}>{tx.partAmbTargeta(seguent)}</Boto>
-            </Fila>
+            <Accions>
+              <Boto varietat="primari" carregant={ocupat} disabled={ocupat || !ven} onClick={() => pagaPart('efectiu')}>{tx.partEnEfectiu(seguent, euros(pla[0]))}</Boto>
+              <Boto carregant={ocupat} disabled={ocupat || !ven} onClick={() => pagaPart('targeta')}>{tx.partAmbTargeta(seguent)}</Boto>
+            </Accions>
           ) : null}
         </>
       )}

@@ -117,13 +117,15 @@ export function iniciaActualitzacioWeb({
     let publicada = null;
     let proper = null;
     let recarregant = false;
+    let tallRec = null, reiniciRec = null;
 
     /* P0123-05 · Cert si es pot recarregar: sense estat pendent, o si la persona accepta perdre'l. Com a la
        recuperació, una resposta que no és funció o una excepció compten com a pendent; i no poder
        preguntar és un no. */
-    const potRecarregar = () => {
-      let pendent;
-      try { pendent = typeof tePendents !== 'function' || Boolean(tePendents()); } catch { pendent = true; }
+    const estatPendent = () => {
+      try { return typeof tePendents !== 'function' || Boolean(tePendents()); } catch { return true; }
+    };
+    const potRecarregar = (pendent = estatPendent()) => {
       if (!pendent) return true;
       let codi = null;
       try { codi = llengua(); } catch { codi = null; }
@@ -132,23 +134,26 @@ export function iniciaActualitzacioWeb({
 
     /* El toc: el worker en espera (si n'hi ha), amb un tall, i la recàrrega. Una sola vegada. */
     const recarrega = () => {
-      if (recarregant) return;
-      if (!potRecarregar()) return;
+      if (tancat || recarregant) return;
+      const pendentAlToc = estatPendent();
+      if (!potRecarregar(pendentAlToc)) return;
       recarregant = true;
       const torna = () => {
+        // A new draft during worker preparation was not covered by the click.
+        if (tancat || !pendentAlToc && !potRecarregar()) { recarregant = false; return; }
         try { finestra.location.reload(); } catch { recarregant = false; return; }
         // Una recàrrega cancel·lada (beforeunload) deixa la pàgina viva: passat el tall, el botó torna a anar.
-        try { rellotge.setTimeout(() => { recarregant = false; }, esperaWorker); } catch { recarregant = false; }
+        try { reiniciRec = rellotge.setTimeout(() => { reiniciRec = null; recarregant = false; }, esperaWorker); } catch { recarregant = false; }
       };
-      let temporitzador = null;
-      const tall = new Promise((resolve) => { temporitzador = rellotge.setTimeout(resolve, esperaWorker); });
+      const tall = new Promise((resolve) => { tallRec = rellotge.setTimeout(resolve, esperaWorker); });
       const prepara = Promise.resolve()
-        .then(() => (typeof preparaWorker === 'function' ? preparaWorker({ vigent: () => !tancat }) : null))
+        .then(() => (!tancat && typeof preparaWorker === 'function' ? preparaWorker({ vigent: () => !tancat }) : null))
         .catch(() => null);
       Promise.race([prepara, tall]).then(() => {
-        try { rellotge.clearTimeout(temporitzador); } catch { /* res */ }
+        try { rellotge.clearTimeout(tallRec); } catch { /* res */ }
+        tallRec = null;
         torna();
-      });
+      }, () => { recarregant = false; });
     };
     try { fixaRecarrega?.(recarrega); } catch { /* sense recarregador, la barra recarrega com sempre */ }
 
@@ -212,6 +217,8 @@ export function iniciaActualitzacioWeb({
         if (tancat) return;
         tancat = true;
         programa(0);
+        for (const timer of [tallRec, reiniciRec]) try { rellotge.clearTimeout(timer); } catch { /* res */ }
+        tallRec = reiniciRec = null;
         try {
           document.removeEventListener('visibilitychange', enTornarVisible);
           finestra.removeEventListener('online', enTornarLaXarxa);

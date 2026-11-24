@@ -99,11 +99,18 @@ export const ERROR_PRESSUPOST_EXIF = `La foto pesa massa amb la ubicació i la d
 /** Gauntlet 261016 (Codex, 02:26) · El mateix, d'una foto que només porta la càmera (la casella diu una altra cosa). */
 export const ERROR_PRESSUPOST_EXIF_CAMERA = `La foto pesa massa amb les dades de la càmera; desmarca «${ETIQUETA_CONSERVA_CAMERA}» o prova amb una altra foto.`;
 /**
+ * P08-04 · El que es diu quan un data URL no es pot llegir per a fer-ne el
+ * fitxer (no és un data URL en base64, o el base64 és trencat): no es puja res.
+ */
+export const ERROR_FOTO_ILLEGIBLE = 'No s’ha pogut llegir la foto per a pujar-la; prova amb una altra foto.';
+/**
  * Els avisos de la foto que qui puja ha de mostrar tal qual (no són errors de
- * connexió): el pressupost i l'EXIF que no hi cap o que no es pot conservar.
+ * connexió): el pressupost, l'EXIF que no hi cap o que no es pot conservar, i
+ * la foto que no es pot llegir (P08-04: ja no es toca la xarxa).
  */
 export const AVISOS_DE_LA_FOTO = Object.freeze([
   ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF, ERROR_PRESSUPOST_EXIF_CAMERA, ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA,
+  ERROR_FOTO_ILLEGIBLE,
 ]);
 /** El missatge és un dels AVISOS_DE_LA_FOTO? */
 export const esAvisDeLaFoto = (missatge) => AVISOS_DE_LA_FOTO.includes(missatge);
@@ -111,17 +118,23 @@ const errorPressupostExif = (dades) => (teUbicacioOData(dades) ? ERROR_PRESSUPOS
 
 const EXTENSIONS = Object.freeze({ [FORMAT_JPEG]: 'jpg', [FORMAT_PNG]: 'png', [FORMAT_WEBP]: 'webp' });
 
-/* Els 12 primers bytes d'un data URL en base64 (16 caràcters), els que
-   necessita formatImatge. Res més es descodifica. */
-function primersBytes(dataUrl) {
+/* Els bytes d'un data URL en base64, descodificats ací amb atob (el patró de
+   fotoNetaDIdentitat.js: data: sense xarxa); `caracters`, si hi és, en limita
+   el cos. null si no és un data URL en base64 o si el base64 és trencat. */
+function bytesDelBase64(dataUrl, caracters) {
   const coma = dataUrl.indexOf(',');
   if (coma < 0 || !/;base64$/i.test(dataUrl.slice(0, coma))) return null;
+  const fi = caracters === undefined ? dataUrl.length : coma + 1 + caracters;
   try {
-    return Uint8Array.from(atob(dataUrl.slice(coma + 1, coma + 17)), (c) => c.charCodeAt(0));
+    return Uint8Array.from(atob(dataUrl.slice(coma + 1, fi)), (c) => c.charCodeAt(0));
   } catch {
     return null;
   }
 }
+
+/* Els 12 primers bytes d'un data URL en base64 (16 caràcters), els que
+   necessita formatImatge. Res més es descodifica. */
+const primersBytes = (dataUrl) => bytesDelBase64(dataUrl, 16);
 
 /**
  * El tipus real d'una imatge comprimida: el dels bytes (formatImatge) i, si
@@ -140,10 +153,20 @@ export function tipusReal(dataUrl, blob) {
  * Un data URL comprimit tornat a File per a pujar-lo: `nomBase` amb
  * l'extensió del tipus real, i eixe tipus (tipusReal). Els bytes són els del
  * data URL, sense tocar.
+ *
+ * P08-04 (peix 8, la CSP de WordPress) · Sense fetch(dataUrl): un fetch a
+ * una URL data: el governa connect-src, i amb la CSP d'un amfitrió que no hi
+ * porta `data:` el navegador el bloquejava i cap foto es pujava. Ara el
+ * base64 es descodifica ací (bytesDelBase64) i el blob porta el tipus de la
+ * capçalera del data URL, el mateix que tornava el fetch. El canvas sempre
+ * en fa en base64: el que no ho és, o un base64 trencat, llança
+ * Error(ERROR_FOTO_ILLEGIBLE).
  */
 export async function fitxerDeDataUrl(dataUrl, nomBase) {
-  const resposta = await fetch(dataUrl);
-  const blob = await resposta.blob();
+  const bytes = typeof dataUrl === 'string' && /^data:/i.test(dataUrl) ? bytesDelBase64(dataUrl) : null;
+  if (!bytes) throw new Error(ERROR_FOTO_ILLEGIBLE);
+  const tipusDeLaCapcalera = dataUrl.slice(5, dataUrl.indexOf(',')).split(';')[0].trim().toLowerCase();
+  const blob = new Blob([bytes], { type: tipusDeLaCapcalera });
   const tipus = tipusReal(dataUrl, blob);
   return new File([blob], `${nomBase}.${EXTENSIONS[tipus]}`, { type: tipus });
 }

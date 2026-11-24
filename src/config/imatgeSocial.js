@@ -1,3 +1,5 @@
+import {ORIGEN_SOCIAL_PER_DEFECTE,CAP_SOCIAL_BASE,ATRIBUT_SSR,MARQUES,MARQUES_SVG_ANTIGUES,HERO_PER_DEFECTE} from './imatgeSocialBase.js';
+export {ORIGEN_SOCIAL_PER_DEFECTE,CAP_SOCIAL_BASE,ATRIBUT_SSR,MARQUES,MARQUES_SVG_ANTIGUES,HERO_PER_DEFECTE};
 import { prefixMitjansPublics, esReferenciaMitjaPrivada } from '../data/backendProtocolPublic.js';
 /**
  * imatgeSocial.js — Pla 261027_1154 (P1-61) · La imatge social d'una pàgina
@@ -99,12 +101,9 @@ import { prefixMitjansPublics, esReferenciaMitjaPrivada } from '../data/backendP
 /** Pla 261027_1154 (P1-61) · L'origen públic de producció. El mateix
  *  ORIGEN_PUBLIC_PER_DEFECTE de config/origenPublic.js, escrit ací en literal
  *  perquè esta fulla no importa res: una prova en fixa la igualtat. */
-export const ORIGEN_SOCIAL_PER_DEFECTE = 'https://socdepoble.org';
 
-const congela = (objecte) => {
-  for (const valor of Object.values(objecte)) if (valor && typeof valor === 'object') congela(valor);
-  return Object.freeze(objecte);
-};
+
+
 
 /**
  * Pla 261027_1154 (P1-61), OG-1 · El <head> genèric: el que porta index.html
@@ -113,24 +112,12 @@ const congela = (objecte) => {
  * origen: qui l'escriu al <head> el fa absolut amb l'origen públic. Congelat
  * sencer: ningú no el pot canviar per a la ruta següent.
  */
-export const CAP_SOCIAL_BASE = congela({
-  title: 'Sóc de Poble',
-  description: 'Portal de pobles connectats',
-  ogType: 'website',
-  twitterCard: 'summary_large_image',
-  image: {
-    url: '/assets/system/ui/og-socdepoble-1200x630.png',
-    type: 'image/png',
-    width: '1200',
-    height: '630',
-    alt: 'Logotip de Sóc de Poble, Portal de Pobles Connectats, sobre el mapa verd'
-  }
-});
+
 
 /** Pla 261027_1154 (P1-61) · La marca que posarà el port del servidor a cada
  *  node que escriga al <head>: seoHead sabrà així que el head servit ja ve
  *  particularitzat i no el prendrà com a base. index.html no la porta. */
-export const ATRIBUT_SSR = 'data-sdp-ssr';
+
 
 /* ── Reserves: es pinten, però no són la imatge de cap pàgina ──────── */
 
@@ -141,11 +128,7 @@ export const ATRIBUT_SSR = 'data-sdp-ssr';
    Pla 261027_1154 (P1-61) · Abans vivien a components/universal/
    UniversalUtils.js, que ara els importa d'ací amb els mateixos valors:
    el selector social els reconeix sense arrossegar React ni el resolutor. */
-export const MARQUES = Object.freeze({
-  avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
-  clar: '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png',
-  fosc: '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png'
-});
+
 
 /* Onada 8 (261009) · Els logotips d'abans, en SVG, amb la mateixa clau que
    el seu PNG. Els SVG continuen a public/: els porten supabase/seed.sql i
@@ -154,11 +137,7 @@ export const MARQUES = Object.freeze({
    una fila amb l'SVG tornaria a pintar la marca com a avatar redó.
    Pla 261027_1154 (P1-61) · Mogut ací des d'UniversalUtils.js, que el
    continua exportant amb el mateix nom. */
-export const MARQUES_SVG_ANTIGUES = Object.freeze({
-  avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-  clar: '/assets/system/ui/logo-socdepoble-rect-negre.svg',
-  fosc: '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
-});
+
 
 /* Onada 3 (P2) · La reserva viu a public/, que és el que viatja al paquet.
    Abans apuntava a /assets/img/, que només servix el servidor de dev (des de
@@ -168,7 +147,7 @@ export const MARQUES_SVG_ANTIGUES = Object.freeze({
    (sections/text/paginaDeText.js, que la importa d'ací): es pinta quan la
    pàgina no en porta cap de pròpia, i per això no és mai la seua imatge
    social. */
-export const HERO_PER_DEFECTE = '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png';
+
 
 /**
  * Pla 261027_1154 (P1-61) · Les imatges que compten com a «cap imatge»: les
@@ -183,7 +162,7 @@ export const HERO_PER_DEFECTE = '/assets/uploads/brain/hero_panoramic_rural_view
  * public/ (la marca a la pantalla d'inici i a la pestanya): Firebase les
  * servix, però són el logotip, no la imatge de cap pàgina.
  */
-export const IMATGES_DE_RESERVA = Object.freeze([
+export const IMATGES_DE_RESERVA = /*#__PURE__*/ Object.freeze([
   MARQUES.avatar,
   '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.webp',
   MARQUES.clar,
@@ -226,7 +205,8 @@ export const IMATGES_DE_RESERVA = Object.freeze([
    la meitat de bytes a l'entrada del paquet, on queden pocs bytes de marge sota el sostre. */
 const SUFIX_VARIANT_SOCIAL = '-social-1200x630.jpg';
 const variantSocialDe = (original) => `${original.replace(/\.[A-Za-z0-9]+$/, '')}${SUFIX_VARIANT_SOCIAL}`;
-export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
+const mapaVariantsSocials = (llista) => Object.freeze(Object.fromEntries(llista.map((original) => [original, variantSocialDe(original)])));
+export const VARIANTS_SOCIALS = /*#__PURE__*/ mapaVariantsSocials([
   '/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png',
   '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
   '/assets/nano_cards/drets_autor_comic.jpg',
@@ -285,6 +265,7 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   '/assets/notes/bloc_notes_vintage.jpg',
   '/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png',
   '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png',
+  '/assets/nano_cards/cada_cosa_al_seu_lloc_nano_card.jpg',
   '/assets/ui/plugins/mapa_vinyeta.webp',
   '/assets/ui/plugins/treball_vinyeta.webp',
   '/assets/ui/plugins/habitatge_vinyeta.webp',
@@ -306,6 +287,7 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
   /* v1.2.8 · Gemini R32.9 (lot 03) dona /consola/agents la vinyeta snippet_nano_card.jpg (581 KB); la variant
      social l'ha generada tria-imatge-seo.mjs · generaVariantSocial1200x630 (282 KB). */
   '/assets/nano_cards/snippet_nano_card.jpg',
+  '/assets/nano_cards/reconeixements_nano_card.jpg',
   '/assets/nano_cards/govern_requeriments_nano_card.jpg',
   '/assets/nano_cards/govern_balanc_nano_card.jpg',
   '/assets/nano_cards/govern_certificacio_nano_card.jpg',
@@ -341,8 +323,14 @@ export const VARIANTS_SOCIALS = Object.freeze(Object.fromEntries([
      1024x1024 i 536 KB (lot_03 de Gemini R32.26; la bessona .webp hi arriba per ambVariantSocial).
      Mateixa convenció (tria-imatge-seo.mjs · generaVariantSocial1200x630) amb posicioY 0,55 (les quatre
      cares, el gat i els llibres sencers): JPEG baseline, 272 474 B, sense APP1. */
-  '/assets/ui/plugins/wikidepoble_vinyeta.jpg'
-].map((original) => [original, variantSocialDe(original)])));
+  '/assets/ui/plugins/wikidepoble_vinyeta.jpg',
+  /* v1.2.24 · Gemini R32.81 (G17 · Certificació OpenGraph Pre-Beta) · Les dos portades WebP > 300 KB
+     de PAGE_COPY que el client (TextSection · metadadesDePagina) servia sense variant JPEG < 300 KB:
+     la guia pas a pas (/page/tot-el-que-pots-fer, 373 KB WebP) i La IAIA Sabuda (/page/la-iaia-sabuda,
+     377 KB WebP). Retall 1200×630 JPEG baseline (SOF0), ≤ 300 000 B i sense APP1/EXIF. */
+  '/assets/uploads/brain/caricatura_socdepoble_portada.webp',
+  '/assets/ui/plugins/nodrir_la_iaia_vinyeta.webp'
+]);
 
 /* L'esquema d'una referència ('https', 'sdp-media', 'data'…), en minúscules, o
    null si és un camí. Una lletra de disc de Windows ('c:/…') també en dona un,

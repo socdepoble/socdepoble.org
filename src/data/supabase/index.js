@@ -25,7 +25,7 @@ export { registraDenunciaPublica, adminSafataDenuncies, adminRevisaDenuncia } fr
 export * from './xat.js';
 /* P0-122 · El servei distingix SQL absent d'una denegació real i conserva
    l'estat local explícit; l'adaptador exposa les cinc operacions juntes. */
-export { carregaAccionsMissatges, alternaReaccio, alternaDestacat, alternaFixat, eliminaPerAMi } from './xatAccions.js';
+export { carregaAccionsMissatges, alternaReaccio, alternaDestacat, alternaFixat, eliminaPerAMi, eliminaPerATothom } from './xatAccions.js';
 /* Sanejament R15 (B2 · P1-01, R15-REG-05, Q-06) · El ritme del xat (RPC xat_ritme i
    xat_presencia, migracions 2611080430/0431/0432) i la IAIA amb servidor (funció
    iaia) NO són a la producció de Supabase. L'adaptador només anuncia eixes

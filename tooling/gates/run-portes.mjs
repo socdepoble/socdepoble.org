@@ -32,6 +32,7 @@ const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
    no es demana --amb-mutacions. El Llaurador i el Teixit no en porten: només escriuen amb
    --escriu i --baseline, i --lock-token no el llig cap eina. */
 export const passos = [
+  { nom: 'Contracte sense dependència IA', cmd: 'node', args: ['tooling/gates/tractor-zero-dependencia-ia.mjs'], script: 'porta:sense-ia', readOnly: true },
   {nom:'Contracte de plantilles',cmd:'node',args:['tooling/gates/porta-plantilles.mjs'],readOnly:true,script:'porta:plantilles'},
   {nom:'Autoritat i arrencada',cmd:'node',args:['tooling/gates/porta-autoritat.mjs'],readOnly:true},
   {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true,script:'porta:segella'},

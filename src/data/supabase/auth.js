@@ -114,7 +114,13 @@ if (typeof window !== 'undefined') window.addEventListener('sdp:auth-change', ()
   }
 });
 export const refrescaSessio = refreshSession;
-configuraRefrescSessio(refreshSession);
+export const refrescSessioEnCurs = (config = {}) => {
+  if (!esBackendDeSessio(config)) return null;
+  const resolved = getResolvedConfig(config);
+  const key = JSON.stringify([versioSessio, resolved.supabaseUrl, resolved.supabaseAnonKey]);
+  return renovacioEnCurs?.key === key ? renovacioEnCurs.promise : null;
+};
+configuraRefrescSessio(refreshSession, refrescSessioEnCurs);
 
 /* El JWT desat encara val més enllà del marge (o és opac, o no n'hi ha): es pot enviar tal qual. */
 const jwtEnviable = () => { const exp = caducitatJwt(); return exp === null || exp - Date.now() > MARGE_RENOVACIO_MS; };
@@ -419,6 +425,36 @@ async function desaElMeuUsername(valor, config = {}) {
   return filaDUsername(resposta, user.id);
 }
 
+/* Només compartim una escriptura mentres està en curs: mai una memòria d'ACK.
+   Una configuració desconeguda (senyals, fetch, accessors…) conserva el camí
+   independent. El topall limita memòria; no rebutja ni descarta cap petició. */
+const perfilsEnCurs = new Map();
+const CONFIG_PERFIL_COMPARTIBLE = new Set([
+  'backendId', 'backendUrl', 'backend_url', 'supabaseUrl', 'supabaseAnonKey',
+  'tenantId', 'tenant_id', 'dataMode',
+]);
+function opcionsPerfilEnCurs(config) {
+  try {
+    if (!config || ![Object.prototype, null].includes(Object.getPrototypeOf(config))) return null;
+    const opcions = [];
+    for (const k of Reflect.ownKeys(config)) {
+      const d = Object.getOwnPropertyDescriptor(config, k);
+      if (!CONFIG_PERFIL_COMPARTIBLE.has(k) || !d || !Object.hasOwn(d, 'value')
+        || (d.value !== null && typeof d.value !== 'string')) return null;
+      opcions.push([k, d.value]);
+    }
+    return opcions.sort(([a], [b]) => a.localeCompare(b));
+  } catch { return null; } // Inspecció opcional: una configuració opaca no es compartix.
+}
+function clauPerfilEnCurs(config, opcions, updates, userId) {
+  if (!opcions) return null;
+  const camps = Object.entries(updates);
+  if (!camps.length || camps.some(([, v]) => v !== null && !['string', 'boolean'].includes(typeof v))) return null;
+  const c = getResolvedConfig(config);
+  return JSON.stringify([versioSessio, userId, c.supabaseUrl, c.supabaseAnonKey,
+    c.tenantId, c.runtimeDataMode, opcions, camps]);
+}
+
 export async function updateProfile(entrada, config = {}) {
   /* P1-68 · L'identificador va per la seua RPC; la resta, pel PATCH de sempre. */
   if (entrada && typeof entrada === 'object' && Object.hasOwn(entrada, 'username')) {
@@ -442,6 +478,7 @@ export async function updateProfile(entrada, config = {}) {
   }
   const updates = ambIconNormalitzat(entrada);
   const current = capturaSessio();
+  const opcionsCompartibles = opcionsPerfilEnCurs(config);
   const capturedConfig = { ...config };
   if (esModeLocal(capturedConfig)) {
     const local = await perfilsLocals();
@@ -471,53 +508,76 @@ export async function updateProfile(entrada, config = {}) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
   }
 
-  /* Primer el perfil i, només si confirma la fila, la còpia de GoTrue. Una fila que
-     la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
-     desquadrat amb un canvi que el perfil no té. */
-  current();
-  let rows;
-  const descartats = [];
-  for (;;) {
-    try {
-      rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
-        { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
-      break;
-    } catch (error) {
-      const absent = errorDeColumnaAbsent(error, safeUpdates);
-      if (!absent) throw error;
-      /* APP-D1 · Amb més camps al cos, la resta es desa igual: el PATCH no ha
-         escrit res (PostgREST valida les columnes abans d'executar) i es torna
-         a enviar sense la columna que el servidor diu que no té, com fa
-         columnesOpcionals a Notes; com a molt un reintent per columna i qui
-         crida rep campsNoDesats. Sola, o sense nom de columna, l'error de sempre. */
-      if (!absent.columna || Object.keys(safeUpdates).length < 2) throw absent;
-      const { [absent.columna]: fora, ...resta } = safeUpdates;
-      void fora;
-      safeUpdates = resta;
-      descartats.push(absent.columna);
-      current();
+  const key = clauPerfilEnCurs(capturedConfig, opcionsCompartibles, safeUpdates, user.id);
+  const fetchActual = globalThis.fetch;
+  const pendent = key && perfilsEnCurs.get(key);
+  if (pendent && pendent.fetch === fetchActual) {
+    const fila = await pendent.promesa;
+    current();
+    // El DTO prové de JSON; cada consumidor rep la seua còpia, també els avisos.
+    return JSON.parse(JSON.stringify(fila));
+  }
+  const desa = async () => {
+    /* Primer el perfil i, només si confirma la fila, la còpia de GoTrue. Una fila que
+       la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
+       desquadrat amb un canvi que el perfil no té. */
+    current();
+    let rows;
+    const descartats = [];
+    for (;;) {
+      try {
+        rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
+          { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+        break;
+      } catch (error) {
+        const absent = errorDeColumnaAbsent(error, safeUpdates);
+        if (!absent) throw error;
+        /* APP-D1 · Amb més camps al cos, la resta es desa igual: el PATCH no ha
+           escrit res (PostgREST valida les columnes abans d'executar) i es torna
+           a enviar sense la columna que el servidor diu que no té, com fa
+           columnesOpcionals a Notes; com a molt un reintent per columna i qui
+           crida rep campsNoDesats. Sola, o sense nom de columna, l'error de sempre. */
+        if (!absent.columna || Object.keys(safeUpdates).length < 2) throw absent;
+        const { [absent.columna]: fora, ...resta } = safeUpdates;
+        void fora;
+        safeUpdates = resta;
+        descartats.push(absent.columna);
+        current();
+      }
     }
+    current();
+    if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
+      throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
+    }
+    /* Només del que la fila ha confirmat: un camp descartat no arriba a GoTrue. */
+    const metadata = {};
+    for (const k of CAMPS_METADATA) {
+      if (safeUpdates[k] !== undefined) metadata[k] = safeUpdates[k];
+    }
+    /* Esborrar la foto també lleva la `picture` que Google deixa a user_metadata
+       (a GoTrue, un null esborra la clau): si no, la barra hi tornaria a caure. */
+    if (Object.hasOwn(metadata, 'avatar_url') && !metadata.avatar_url) metadata.picture = null;
+    /* Només lema, presentació o capçalera: GoTrue no hi té res a veure. */
+    const ambMetadata = Object.keys(metadata).length > 0;
+    const authUser = ambMetadata
+      ? await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: metadata } })
+      : null;
+    current();
+    if (ambMetadata) actualitzaUsuariSessio({ ...metadata, ...(authUser || {}) });
+    return ambDescartats(rows[0], descartats);
+  };
+  if (!key || perfilsEnCurs.size >= 32) return desa();
+  let resol, rebutja;
+  const promesa = new Promise((resolve, reject) => { resol = resolve; rebutja = reject; });
+  const registre = { fetch: fetchActual, promesa };
+  perfilsEnCurs.set(key, registre);
+  // Registrar abans de dispatch evita també una reentrada síncrona del transport.
+  desa().then(resol, rebutja);
+  try {
+    return await registre.promesa;
+  } finally {
+    if (perfilsEnCurs.get(key) === registre) perfilsEnCurs.delete(key);
   }
-  current();
-  if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
-    throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
-  }
-  /* Només del que la fila ha confirmat: un camp descartat no arriba a GoTrue. */
-  const metadata = {};
-  for (const k of CAMPS_METADATA) {
-    if (safeUpdates[k] !== undefined) metadata[k] = safeUpdates[k];
-  }
-  /* Esborrar la foto també lleva la `picture` que Google deixa a user_metadata
-     (a GoTrue, un null esborra la clau): si no, la barra hi tornaria a caure. */
-  if (Object.hasOwn(metadata, 'avatar_url') && !metadata.avatar_url) metadata.picture = null;
-  /* Només lema, presentació o capçalera: GoTrue no hi té res a veure. */
-  const ambMetadata = Object.keys(metadata).length > 0;
-  const authUser = ambMetadata
-    ? await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: metadata } })
-    : null;
-  current();
-  if (ambMetadata) actualitzaUsuariSessio({ ...metadata, ...(authUser || {}) });
-  return ambDescartats(rows[0], descartats);
 }
 
 export async function updateUserPassword(password, config = {}) {
@@ -1253,6 +1313,7 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
   const jwt = scope && getEfimer(CLAU_ORIGEN, null) !== 'amfitrio' ? jwtPerBackend(destination) : null;
   // Invalidar abans del primer await: una resposta tardana no restaura la sessió.
   esborraSessio({ abast });
+  const epocaSortida = versioSessio;
   /* R · Eixir de veres també oblida la recuperació en curs, la marca i l'enllaç
      pendent (també qui ix des de l'amfitrió, sense passar per SessionContext).
      Buidar només la pestanya, no: la sessió continua a les altres. */
@@ -1261,8 +1322,11 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
      el Realtime. revoca() usa fetch i la configuració, no el client. */
   const revocacio = jwt ? revoca(destination, jwt, scope) : null;
   await tancaRealtime();
-  resetClient();
-  emetCanvi(null);
+  // El tancament d'A no invalida un client ni anuncia l'eixida d'una entrada nova.
+  if (versioSessio === epocaSortida) {
+    resetClient();
+    emetCanvi(null);
+  }
   if (revocacio) await esperaAmbTopall(revocacio, ESPERA_REVOCACIO_MS);
 }
 

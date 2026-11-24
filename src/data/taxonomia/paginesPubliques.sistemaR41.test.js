@@ -74,6 +74,8 @@ const PAGES=[
  ['cervell','tecnologia-lliure','Node 0'],
  ['xat','comunitat-rural','Associacionisme'],
  ['drets-autor','patrimoni-cultura','Documentació'],
+ // v1.2.24 · costura R32.75 · IDEA-340 · /page/reconeixements, «Reconeixements i fonts d'inspiració»: la Notícia #1 del Mur.
+ ['reconeixements','tecnologia-lliure','Projecte Sóc de Poble'],
  ['descarregues','tecnologia-lliure','Documentació'],
  ['fediversity','tecnologia-lliure','NGI Fediversity'],
  ['node-zero','tecnologia-lliure','Node 0'],
@@ -88,13 +90,18 @@ const PAGES=[
  ['receptes','patrimoni-cultura','Patrimoni'],
  ['dispositius','tecnologia-lliure','Documentació'],
  // IDEA-287 · /page/tot-el-que-pots-fer, la guia pas a pas de les eines.
- ['tot-el-que-pots-fer','comunitat-rural','Documentació']
+ ['tot-el-que-pots-fer','comunitat-rural','Documentació'],
+ // R32.86 · IDEA-348 · /cada-cosa-al-seu-lloc, el joc públic de les 600 publicacions.
+ ['cada-cosa-al-seu-lloc','tecnologia-lliure','Patrimoni']
 ];
 // P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
 // Publicació vigent: 15 documents del sistema amb La IAIA Sabuda (P0-64) + 5 de patrimoni, amb el receptari «Què dinem?» (R16).
 // P0-51 / IDEA-182 conserva Anatomia rural fora de les targetes del Mur.
-const PUBLISHED_20=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','descarregues','la-iaia-sabuda','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals','receptes'];
+// v1.2.24 · costura R32.75 · IDEA-340 · 16 documents del sistema amb Reconeixements i fonts d'inspiració: 21 en total.
+const PUBLISHED_21=['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','reconeixements','descarregues','la-iaia-sabuda','fediversity','herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals','receptes',
+ // R32.86 · IDEA-348 · el joc públic «Cada cosa al seu lloc» també és targeta del sistema.
+ 'cada-cosa-al-seu-lloc'];
 
 function assertClassification(labels,key,category,requiredTag,language){
  expect(Array.isArray(labels)).toBe(true);
@@ -135,10 +142,11 @@ const sentinels=()=>({
 });
 
 describe('R41 independent public-page contract',()=>{
- it('R32.9 + IDEA-287: 35 public keys (27 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
-  expect(PAGES).toHaveLength(27);expect(ACTION_PAGES).toHaveLength(8);
+ // v1.2.24 · costura R32.75 · IDEA-340 · R32.75 porta /page/reconeixements: 28 classificades, 36 claus.
+ it('R32.9 + IDEA-287 + IDEA-340 + IDEA-348: 37 public keys (29 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
+  expect(PAGES).toHaveLength(29);expect(ACTION_PAGES).toHaveLength(8);
   expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
-  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(35);
+  const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(37);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
   expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
  });
@@ -224,8 +232,9 @@ describe('R41 independent public-page contract',()=>{
   const cards=targetesDeSistema(copy,{nativa:false,language});
   // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta, ni al Mur
   // (targetesMur.js) ni al Panell de Control (ControlSection.jsx): només en té amb la bandera. En queden 19.
-  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_20.filter(key=>key!=='la-iaia-sabuda').sort());
-  expect(cards).toHaveLength(19);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('la-iaia-sabuda');
+  // v1.2.24 · costura R32.75 · IDEA-340 · Amb Reconeixements i fonts d'inspiració, 20. R32.86 · Amb el joc, 21.
+  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_21.filter(key=>key!=='la-iaia-sabuda').sort());
+  expect(cards).toHaveLength(21);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('la-iaia-sabuda');
   for(const card of cards){
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);

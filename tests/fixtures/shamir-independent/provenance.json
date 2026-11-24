@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/privy-io/shamir-secret-sharing",
+  "commit": "73bbf04da63532a57a29353715183c6051d23c2c",
+  "version": "0.0.4",
+  "sha256_source": "f5096daf3155502c27d0b7a703fa61e0bf26fda348f2a2f216872bf49498e050",
+  "date": "2026-11-01",
+  "command": "node b2_e2ee_shamir/oracle/regenera.mjs CHECKOUT_INTEGRAT DIRECTORI_NOU",
+  "source_transform": "Només substitució CSPRNG per seqüència determinista de QA i transpilació TypeScript→ESM; aritmètica independent intacta.",
+  "reproduced_byte_identical": [
+    "reference.mjs",
+    "vectors.json"
+  ]
+}

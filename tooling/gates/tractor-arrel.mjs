@@ -30,7 +30,7 @@
  *   A4 · Tota porta de `tooling/gates/` té punt d'entrada CLI (arranca de veres)
  *   A5 · Tot fitxer de configuració citat pel tooling existix on el cita
  *
- * Zero dependències. Fail-closed.
+ * Parser JavaScript ja declarat al projecte. Fail-closed.
  *
  * ÚS
  *   node tooling/gates/tractor-arrel.mjs
@@ -40,6 +40,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { parse } from '@babel/parser';
 import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
 const JSON_OUT = process.argv.includes('--json');
@@ -167,58 +168,203 @@ if (pkg) {
  *   · guarda d'entrada directa:  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
  *   · eixida explícita:          process.exit(...)  fora d'una funció exportada
  */
-const RE_ENTRADA = [
-  /import\.meta\.url\s*===/,
-  /^\s*(?:await\s+)?(?:main|run|principal|arrenca)\s*\(\s*\)\s*;?\s*$/m,
-  /^\s*process\.exit\s*\(/m,
-  /pathToFileURL\s*\(\s*(?:fs\.realpathSync\s*\(\s*)?process\.argv\[1\]\s*\)/,
-  /^try\s*\{[\s\S]*?^}\s*catch\s*\(/m,
-];
-
-// Helpers importats no són portes CLI. La classificació és explícita i verificable:
-// no s'aplica a un fitxer nou només perquè exporte una funció.
-const BIBLIOTEQUES_A4 = new Map([
-  ['tooling/gates/mutation-policy.mjs', {consumer: 'tooling/gates/hooks-local.mjs', importPath: './mutation-policy.mjs', exports: ['mutationPath', 'knownRead']}],
-]);
-function bibliotecaDeclarada(file, text) {
-  const declaration = BIBLIOTEQUES_A4.get(file);
-  if (!declaration) return false;
-  const consumer = llegeix(R(declaration.consumer));
-  const imported = consumer.match(/import\s*\{([^}]+)\}\s*from\s*['"]\.\/mutation-policy\.mjs['"]/);
-  const usedAsCLI = Object.values(pkg?.scripts || {}).some(command => command.includes(file));
-  return !usedAsCLI && imported && declaration.exports.every(name =>
-    new RegExp(`export\\s+function\\s+${name}\\b`).test(text) && new RegExp(`\\b${name}\\b`).test(imported[1]));
+// L'AST separa sintaxi executable de comentaris, fixtures i cossos mai cridats.
+// No executem cap porta per a descobrir-la: una porta pot tindre efectes laterals.
+function programa(text) {
+  try { return parse(text, {sourceType: 'unambiguous', plugins: ['jsx'], createImportExpressions: true}).program; }
+  catch { return null; }
 }
-function entradaCanonica(text) {
-  return /import\s*\{[^}]*\besMain\b[^}]*\}\s*from\s*['"][^'"]*lib\/arrel\.mjs['"]/.test(text)
-    && /if\s*\(\s*esMain\s*\(\s*import\.meta\.url\s*\)\s*\)/.test(text);
-}
-
-function registraProvesNode(text) {
-  const bindings=[];
-  for(const match of text.matchAll(/^\s*import\s+(?:([\w$]+)|\{([^}]+)\})\s+from\s*['"]node:test['"]/gm)) {
-    if(match[1])bindings.push(match[1]);
-    for(const part of (match[2]||'').split(',')) {
-      const named=/^\s*(?:test|it|describe)(?:\s+as\s+([\w$]+))?\s*$/.exec(part);
-      if(named)bindings.push(named[1]||part.trim());
-    }
+function visita(node, fn) {
+  if (!node || typeof node !== 'object') return;
+  if (typeof node.type === 'string') fn(node);
+  for (const [key, value] of Object.entries(node)) {
+    if (['loc', 'start', 'end', 'extra', 'comments', 'tokens', 'errors'].includes(key)) continue;
+    if (Array.isArray(value)) for (const child of value) visita(child, fn);
+    else if (value && typeof value === 'object') visita(value, fn);
   }
-  return bindings.some(name=>new RegExp('^\\s*'+name.replace(/[$]/g,'\\$&')+'\\s*\\(','m').test(text));
+}
+const esFuncio = node => /^(?:Function|ArrowFunction|ObjectMethod|ClassMethod|ClassPrivateMethod)/.test(node?.type || '');
+function booleaConstant(node) {
+  if (!node) return null;
+  if (['BooleanLiteral', 'StringLiteral', 'NumericLiteral'].includes(node.type)) return Boolean(node.value);
+  if (node.type === 'NullLiteral') return false;
+  if (node.type === 'UnaryExpression' && node.operator === '!') { const value = booleaConstant(node.argument); return value === null ? null : !value; }
+  if (node.type === 'LogicalExpression') {
+    const a = booleaConstant(node.left), b = booleaConstant(node.right);
+    if (node.operator === '&&') return a === false || b === false ? false : a === true && b === true ? true : null;
+    if (node.operator === '||') return a === true || b === true ? true : a === false && b === false ? false : null;
+  }
+  return null;
+}
+function visitaExecutada(node, fn) {
+  if (!node || typeof node !== 'object' || esFuncio(node)) return;
+  if (node.type === 'IfStatement' && booleaConstant(node.test) !== null) { visitaExecutada(booleaConstant(node.test) ? node.consequent : node.alternate, fn); return; }
+  if (typeof node.type === 'string') fn(node);
+  for (const [key, value] of Object.entries(node)) {
+    if (['loc', 'start', 'end', 'extra', 'comments', 'tokens', 'errors'].includes(key)) continue;
+    if (Array.isArray(value)) for (const child of value) visitaExecutada(child, fn);
+    else if (value && typeof value === 'object') visitaExecutada(value, fn);
+  }
+}
+function algun(node, predicate) { let found = false; visita(node, n => { found ||= predicate(n); }); return found; }
+function membre(node, name) {
+  return node?.type === 'MemberExpression' && ((!node.computed && node.property.name === name)
+    || node.computed && node.property.value === name);
+}
+function argvPrimer(node) {
+  return node?.type === 'MemberExpression' && node.computed && node.property.value === 1
+    && membre(node.object, 'argv') && node.object.object?.name === 'process';
+}
+function metaUrl(node) { return membre(node, 'url') && node.object?.type === 'MetaProperty' && node.object.meta.name === 'import'; }
+function identitatCli(node) {
+  return node?.type === 'BinaryExpression' && ['===', '=='].includes(node.operator)
+    && ((algun(node.left, argvPrimer) && algun(node.right, metaUrl)) || (algun(node.right, argvPrimer) && algun(node.left, metaUrl)));
+}
+function cridesDeNode(ast) {
+  const bindings = new Set();
+  for (const n of ast.body) if (n.type === 'ImportDeclaration' && n.source.value === 'node:test') {
+    for (const s of n.specifiers) if (s.type === 'ImportDefaultSpecifier' || ['test', 'it', 'describe'].includes(s.imported?.name)) bindings.add(s.local.name);
+  }
+  return ast.body.some(n => n.type === 'ExpressionStatement' && n.expression.type === 'CallExpression' && bindings.has(n.expression.callee.name));
+}
+function entradaCli(ast) {
+  if (!ast) return false;
+  const canonical = new Set(), writes = new Map(), aliases = new Set(), guardFunctions = new Set();
+  const callable = new Set(ast.body.filter(n => n.type === 'FunctionDeclaration').map(n => n.id?.name));
+  for (const n of ast.body) if (n.type === 'VariableDeclaration' && n.kind === 'const') {
+    for (const d of n.declarations) if (d.id.type === 'Identifier' && algun(d.init, metaUrl)) aliases.add(d.id.name);
+  }
+  for (const n of ast.body) if (n.type === 'ImportDeclaration' && /(?:^|\/)lib\/arrel\.mjs$/.test(n.source.value)) {
+    for (const s of n.specifiers) if (s.imported?.name === 'esMain') canonical.add(s.local.name);
+  }
+  const canonicalCall = n => n?.type === 'CallExpression' && canonical.has(n.callee?.name) && n.arguments.length === 1 && metaUrl(n.arguments[0]);
+  const identity = n => identitatCli(n) || canonicalCall(n) || n?.type === 'BinaryExpression' && ['===', '=='].includes(n.operator)
+    && ((algun(n.left, argvPrimer) && algun(n.right, x => x.type === 'Identifier' && aliases.has(x.name)))
+      || (algun(n.right, argvPrimer) && algun(n.left, x => x.type === 'Identifier' && aliases.has(x.name))));
+  const remember = (name, expression, at) => { if (!writes.has(name)) writes.set(name, []); writes.get(name).push({expression, at}); };
+  visitaExecutada(ast, n => {
+    if (n.type === 'VariableDeclarator' && n.id.type === 'Identifier') remember(n.id.name, n.init, n.end);
+    if (n.type === 'AssignmentExpression' && n.left.type === 'Identifier') remember(n.left.name, n.operator === '=' ? n.right : null, n.end);
+    if (n.type === 'UpdateExpression' && n.argument.type === 'Identifier') remember(n.argument.name, null, n.end);
+  });
+  function guarda(n, at = n?.start ?? Infinity, seen = new Set()) {
+    if (!n || booleaConstant(n) === false) return false;
+    if (identity(n)) return true;
+    if (n.type === 'LogicalExpression') {
+      if (n.operator === '&&') return booleaConstant(n.left) !== false && booleaConstant(n.right) !== false
+        && (guarda(n.left, at, seen) || guarda(n.right, at, seen));
+      if (n.operator === '||') return [n.left, n.right].filter(x => booleaConstant(x) !== false).every(x => guarda(x, at, seen));
+      return false;
+    }
+    if (n.type === 'UnaryExpression' && n.operator === '!' && n.argument.type === 'UnaryExpression' && n.argument.operator === '!') return guarda(n.argument.argument, at, seen);
+    if (n.type === 'CallExpression' && guardFunctions.has(n.callee?.name)) return !(writes.get(n.callee.name) || []).some(w => w.at < at);
+    if (n.type === 'Identifier' && !seen.has(n.name)) {
+      const previous = (writes.get(n.name) || []).filter(w => w.at < at).at(-1);
+      return previous ? guarda(previous.expression, previous.at, new Set([...seen, n.name])) : false;
+    }
+    return false;
+  }
+  for (const n of ast.body) if (n.type === 'FunctionDeclaration') {
+    let returnsIdentity = false, otherReturn = false;
+    visitaExecutada(n.body, x => {
+      if (x.type !== 'ReturnStatement' || booleaConstant(x.argument) === false) return;
+      const proved = guarda(x.argument, x.start);
+      returnsIdentity ||= proved; otherReturn ||= !proved;
+    });
+    if (returnsIdentity && !otherReturn) guardFunctions.add(n.id.name);
+  }
+  const activitat = n => {
+    let active = false;
+    visitaExecutada(n, x => {
+      active ||= x.type === 'CallExpression' || x.type === 'AssignmentExpression' && membre(x.left, 'exitCode') && x.left.object?.name === 'process';
+    });
+    return active;
+  };
+  function sentencia(n) {
+    if (!n || esFuncio(n) || n.type.startsWith('Export')) return false;
+    if (n.type === 'IfStatement') {
+      if (booleaConstant(n.test) !== null) return sentencia(booleaConstant(n.test) ? n.consequent : n.alternate);
+      let exits = false;
+      visitaExecutada(n.consequent, x => { exits ||= x.type === 'CallExpression' && membre(x.callee, 'exit') && x.callee.object?.name === 'process'; });
+      return guarda(n.test) && activitat(n.consequent) || exits || sentencia(n.alternate);
+    }
+    if (n.type === 'TryStatement') {
+      let invoked = false;
+      visitaExecutada(n.block, x => { invoked ||= x.type === 'CallExpression' && (x.callee.object?.name === 'console'
+        || membre(x.callee, 'write') && ['stdout', 'stderr'].some(stream => membre(x.callee.object, stream) && x.callee.object.object?.name === 'process')
+        || membre(x.callee, 'exit') && x.callee.object?.name === 'process'
+        || callable.has(x.callee.name) && !guardFunctions.has(x.callee.name)); });
+      return invoked;
+    }
+    if (n.type === 'BlockStatement') return n.body.some(sentencia);
+    if (n.type !== 'ExpressionStatement') return false;
+    const e = n.expression.type === 'AwaitExpression' ? n.expression.argument : n.expression;
+    if (e.type !== 'CallExpression') return false;
+    return (['main', 'run', 'principal', 'arrenca'].includes(e.callee.name) || callable.has(e.callee.name))
+      || membre(e.callee, 'exit') && e.callee.object?.name === 'process';
+  }
+  return ast.body.some(sentencia);
+}
+
+// Cada rol no-CLI té consumidor i API verificables. Cap directori s'exclou.
+const BIBLIOTEQUES_A4 = new Map([
+  ['tooling/gates/mutation-policy.mjs', {consumer: 'tooling/gates/hooks-local.mjs', exports: ['mutationPath', 'knownRead']}],
+  ['tooling/gates/zero-ia-endpoints.mjs', {consumer: 'tooling/gates/tractor-zero-dependencia-ia.mjs', exports: ['classificaEndpoint']}],
+  ['tooling/gates/lib/cataleg-unanimitat.mjs', {consumer: 'tooling/gates/verifica-alergens-unanimitat.mjs', exports: ['CATALEG_UNANIMITAT', 'FONTS_CATALEG_UNANIMITAT']}],
+  ['tooling/gates/lib/r3254-migracio132.mjs', {consumer: 'tooling/gates/prepara-migracio132-r3254.mjs', exports: ['preparaMigracio132']}],
+  ['tooling/gates/lib/radiografia-local.mjs', {consumer: 'tooling/gates/verifica-radiografia-supabase-viu.mjs', exports: ['auditLocal']}],
+  ['tooling/gates/lib/radiografia-snapshot.mjs', {consumer: 'tooling/gates/verifica-radiografia-supabase-viu.mjs', exports: ['readSnapshot', 'compareSnapshots', 'projectSnapshot', 'sha256']}],
+  ['tooling/gates/fixtures/zero-ia.vitest.config.mjs', {consumer: 'tooling/gates/tractor-zero-dependencia-ia.test.mjs', role: 'config'}],
+  ['tooling/gates/fixtures/zero-ia-outage.mjs', {consumer: 'tooling/gates/tractor-zero-dependencia-ia.test.mjs', role: 'preload'}],
+]);
+function exportsDeclarats(ast) {
+  const names = new Set();
+  for (const n of ast.body) if (n.type === 'ExportNamedDeclaration') {
+    if (n.declaration?.id?.name) names.add(n.declaration.id.name);
+    for (const d of n.declaration?.declarations || []) if (d.id.type === 'Identifier') names.add(d.id.name);
+    for (const s of n.specifiers || []) names.add(s.exported.name || s.exported.value);
+  }
+  return names;
+}
+function referenciaImport(ast, from, target) {
+  let found = false;
+  visita(ast, n => {
+    const source = n.type === 'ImportDeclaration' || n.type === 'ImportExpression' ? n.source : n.type === 'CallExpression' && n.callee.type === 'Import' ? n.arguments[0] : null;
+    if (source?.type === 'StringLiteral' && source.value.startsWith('.') && path.posix.normalize(path.posix.join(path.posix.dirname(from), source.value)) === target) found = true;
+  });
+  return found;
+}
+function bibliotecaDeclarada(file, ast) {
+  const d = BIBLIOTEQUES_A4.get(file);
+  if (!d || !ast) return false;
+  const consumer = programa(llegeix(R(d.consumer)));
+  if (!consumer) return false;
+  if (d.role === 'config') {
+    const config = ast.body.some(n => n.type === 'ExportDefaultDeclaration' && n.declaration.type === 'CallExpression' && n.declaration.callee.name === 'defineConfig');
+    return config && algun(consumer, n => n.type === 'ArrayExpression' && n.elements.some((x, i) => x?.value === '--config' && n.elements[i + 1]?.value === file));
+  }
+  if (d.role === 'preload') {
+    let consumed = false;
+    visita(consumer, n => {
+      if (n.type !== 'TemplateLiteral' || n.expressions.length) return;
+      const embedded = programa(n.quasis.map(q => q.value.cooked).join(''));
+      consumed ||= embedded !== null && referenciaImport(embedded, 'fixture.mjs', file);
+    });
+    return consumed && ast.body.some(n => n.type === 'ExpressionStatement' && n.expression.type === 'CallExpression' && n.expression.callee.name === 'syncBuiltinESMExports');
+  }
+  const names = exportsDeclarats(ast);
+  return d.exports.every(name => names.has(name)) && referenciaImport(consumer, d.consumer, file);
 }
 for (const abs of fitxers(CAMINS.portes)) {
-  const r = rel(abs);
-  const text = senseComentaris(llegeix(abs));
-  if (/\.test\.(?:mjs|cjs|js)$/.test(r)) {
-    const invocat=Object.values(pkg?.scripts||{}).some(command=>String(command).includes(r));
-    // Una fixture no necessita CLI. Si npm la presenta com a script,
-    // cal una entrada real o registres Node:test, no sols el sufix del nom.
-    if(!invocat||registraProvesNode(text))continue;
-  }
-  if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
-  if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {
-    anota('A4', r, 'no té punt d\'entrada CLI: Node l\'importaria i eixiria amb codi 0',
-      'afig un bloc final: if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) { … }');
-  }
+  const r = rel(abs), text = llegeix(abs);
+  const ast = programa(text);
+  const invocat = Object.values(pkg?.scripts || {}).some(command => String(command).includes(r));
+  if (/\.test\.(?:mjs|cjs|js)$/.test(r) && !invocat) continue;
+  if (!ast) { anota('A4', r, 'sintaxi JavaScript no analitzable', 'corregix la sintaxi; no s’acredita cap entrada'); continue; }
+  const library = BIBLIOTEQUES_A4.has(r);
+  const valid = library ? !invocat && bibliotecaDeclarada(r, ast) : entradaCli(ast) || /\.test\.(?:mjs|cjs|js)$/.test(r) && cridesDeNode(ast);
+  if (!valid) anota('A4', r, library ? 'rol no-CLI sense consumidor/API acreditats, o invocat com a CLI' : 'no té punt d’entrada CLI executable acreditat',
+    'declara el consumidor real o una guarda d’identitat amb execució; un literal o una funció sense crida no són entrada');
 }
 
 /* ═══════════════════════ A5 · Configuracions citades existents ═══════════════════════ */
@@ -254,7 +400,8 @@ for (const abs of [...fitxers(CAMINS.portes), ...fitxers(CAMINS.cervell), ...fit
   const vistos = new Set();
   for (const m of text.matchAll(RE_CONFIG)) {
     const cami = m[1];
-    if (vistos.has(cami) || SALTA_A5.test(cami) || GENERAT_A5.test(cami) || ESTAT_TRANSITORI_A5.has(cami)) continue;
+    if (vistos.has(cami) || SALTA_A5.test(cami) || GENERAT_A5.test(cami) || ESTAT_TRANSITORI_A5.has(cami)
+      || r === 'tooling/gates/frontissa-contingut.mjs' && cami === '.agents/' + 'TORN_ACTIU.json') continue;
     vistos.add(cami);
     if (!cami.includes('/')) continue;
     if (/deute|baseline|lock|manifest|index|snapshot/i.test(path.basename(cami))) continue;

@@ -55,6 +55,59 @@ const GRUPS = [
   ] }
 ];
 
+
+/* Són composicions d'exemple, no fitxes d'un proveïdor ni d'una cuina real.
+   Una dada pendent es conserva desconeguda: una llista buida no diu «sense».
+   Classificació: Reglament (UE) 1169/2011, Annex II; dossier R32.51. */
+const NOTES_ALERGENS = {
+  'cafe-sol': 'Cafè sol; sense dades del proveïdor ni de la preparació.',
+  tallat: 'Base de cafè i llet: llet declarada; altres components pendents.',
+  'cafe-llet': 'Base de cafè i llet: llet declarada. Sense lactosa continua sent llet; la beguda vegetal requerix etiqueta pròpia.',
+  carajillo: 'Cafè amb anís, conyac o rom, etiqueta pendent. Exempció del destil·lat limitada: no cobrix crema, ametla, sulfits ni altres afegits; cap absència certificada.',
+  infusio: 'Planta o mescla d’infusió desconeguda: cal identificar-la i revisar l’envàs.',
+  xocolata: 'Base de xocolata calenta amb llet; preparat de cacau i possibles altres components o traces pendents d’etiqueta.',
+  'torrada-tomaca': 'Base de pa de blat i tomaca: gluten. Opció de pa sense gluten pendent de producte i preparació; no es certifica absència.',
+  'torrada-formatge': 'Base de pa de blat i formatge: gluten i llet. Pa alternatiu i preparació pendents.',
+  'entrepa-truita': 'Base de pa de blat i truita amb ou: gluten i ous; altres components i preparació pendents.',
+  'entrepa-llom': 'Base de pa de blat i llom: gluten; adob, salses i preparació pendents.',
+  'entrepa-vegetal': 'Base d’exemple de pa de blat i maionesa amb ou: gluten i ous. El nom vegetal no acredita composició del farcit ni absència de peix o altres grups.',
+  olives: 'Olives de preparació desconeguda: salmorra, farcit i possibles sulfits pendents d’etiqueta.',
+  'patates-picants': 'Creïlles amb salsa picant de formulació desconeguda. Salsa, espessidors i ús de fregidora pendents de revisió; al·lèrgens i traces desconeguts, sense traces inventades.',
+  calamars: 'Base de calamars arrebossats amb blat: mol·luscs i gluten; arrebossat complet i fregidora pendents.',
+  croquetes: 'Base d’exemple amb blat, llet i ou: gluten, llet i ous; farcit i fregidora pendents.',
+  'plat-del-dia': 'Plat del dia de composició oberta: recepta, ingredients i preparació desconeguts.',
+  flam: 'Base d’exemple de flam amb ou i llet: ous i llet; altres components pendents.',
+  fruita: 'Fruita del temps sense espècie ni preparació confirmades: dades pendents.',
+  aigua: 'Aigua de producte i servei sense fitxa confirmada: dades pendents.',
+  'refresc-cola': 'Refresc de cola sense marca ni etiqueta confirmada: components i traces pendents.',
+  'refresc-taronja': 'Refresc de taronja sense marca ni etiqueta confirmada: components i traces pendents.',
+  suc: 'Suc de fruita sense marca ni etiqueta confirmada: composició i possibles sulfits pendents.',
+  'cervesa-barril': 'Cervesa d’exemple elaborada amb cereal amb gluten; formulació i servei pendents.',
+  'cervesa-ampolla': 'Cervesa d’exemple elaborada amb cereal amb gluten; etiqueta concreta pendent.',
+  'cervesa-sense': 'Cervesa sense alcohol d’exemple amb cereal amb gluten; sense alcohol no vol dir sense gluten.',
+  'vi-negre': 'Vi negre d’exemple amb sulfits declarats per damunt del llindar de l’Annex II.12; etiqueta real pendent.',
+  'vi-blanc': 'Vi blanc d’exemple amb sulfits declarats per damunt del llindar de l’Annex II.12; etiqueta real pendent.',
+  cava: 'Cava d’exemple amb sulfits declarats per damunt del llindar de l’Annex II.12; etiqueta real pendent.',
+  'ginebra-tonica': 'Ginebra i tònica de marques desconegudes. L’exempció del destil·lat no certifica la mescla ni els components afegits.',
+  'licor-herbes': 'Licor d’herbes de formulació desconeguda: crema, ametla, sulfits i altres afegits requerixen etiqueta; cap absència deduïda de l’alcohol.',
+  varis: 'Producte de preu obert sense identitat alimentària: composició desconeguda.',
+  'pa-barra': 'Base d’exemple de pa de blat: gluten; altres ingredients i traces de forn pendents de proveïdor.',
+  ous: 'Ous de gallina de l’exemple: ous; subministrament i preparació pendents.',
+  oli: 'Oli d’oliva de l’exemple; fitxa del proveïdor i preparació pendents.',
+  creilles: 'Creïlles de l’exemple; subministrament i preparació pendents.',
+  'cafe-gra': 'Cafè en gra de l’exemple; fitxa del proveïdor i preparació pendents.',
+  llet: 'Llet de l’exemple: llet; subministrament i preparació pendents.'
+};
+function declaracioAlergens(id, alergens) {
+  return {
+    fontAlergens: `Reglament (UE) 1169/2011, Annex II; llavor sintètica d’exemple. ${NOTES_ALERGENS[id]}`,
+    abastAlergens: 'composició base sintètica; sense certificació del proveïdor, variants, modificadors ni preparació real',
+    alergens: [...alergens],
+    tracesAlergens: [],
+    alergensAbsents: []
+  };
+}
+
 let ordre = 0;
 /* Un producte d'exemple: variants [[id, nom, preu, cost?]]. */
 function producte(id, nom, categoriaId, variants, extra = {}) {
@@ -75,7 +128,8 @@ function producte(id, nom, categoriaId, variants, extra = {}) {
     actiu: true,
     ordre,
     exemple: true,
-    ...extra
+    ...extra,
+    ...declaracioAlergens(id, extra.alergens || [])
   };
 }
 
@@ -120,7 +174,7 @@ const INGREDIENTS = [
   { id: 'creilles', nom: 'Creïlles', unitatBase: 'g', formatCompra: { quantitat: 5000, preuCents: 500 }, minvaPercent: 20, alergens: [] },
   { id: 'cafe-gra', nom: 'Cafè en gra', unitatBase: 'g', formatCompra: { quantitat: 1000, preuCents: 1800 }, minvaPercent: 0, alergens: [] },
   { id: 'llet', nom: 'Llet', unitatBase: 'ml', formatCompra: { quantitat: 1000, preuCents: 100 }, minvaPercent: 0, alergens: ['llet'] }
-];
+].map((ingredient) => ({ ...ingredient, ...declaracioAlergens(ingredient.id, ingredient.alergens) }));
 
 const ESCANDALLS = [
   { id: 'entrepa-truita', producteId: 'entrepa-truita', racions: 1, altresCostosCents: 10, objectiuFoodCostPercent: 30,

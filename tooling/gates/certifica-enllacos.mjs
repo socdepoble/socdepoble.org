@@ -210,11 +210,13 @@ async function carregaContextArbre(arrel) {
     rutesSeccions,
     federacioFitxers,
     rewritesFirebase,
+    opendataEmesos,
     recursosOpendata,
     rutesDinamiques: router.dinamiques,
     rutesComodi:router.comodins,
     resolConsola,
-    seccions: new Set(SECTIONS.map(s => s.id)),
+    // ItemDetailSection (:sectionId/:itemId) resol també 'events' (esdeveniments) i 'receptes' («Què dinem?»).
+    seccions: new Set([...SECTIONS.map(s => s.id), 'events', 'receptes']),
     wikiIds
   };
 }
@@ -260,6 +262,9 @@ export function verificaRutaContraArbre(urlORuta, ctx) {
     const teCopy = Object.hasOwn(ctx.PAGE_COPY, slug);
     const canonica = ctx.resolvePageSlugPath(slug);
     if (!teCopy && !canonica) {
+      if (ctx.rutesSeccions?.has(cami)) {
+        return { ok: true, tipus: 'spa-ruta', cami, detall: `Ruta declarada a App (${cami})` };
+      }
       const disponibles = Object.keys(ctx.PAGE_COPY).join(', ');
       return {
         ok: false,
@@ -280,7 +285,8 @@ export function verificaRutaContraArbre(urlORuta, ctx) {
   if (cami.startsWith('/opendata/')) {
     const rel = cami.slice('/opendata/'.length);
     const camiFisic = path.join(ctx.arrel, 'public/opendata', rel);
-    if (!fitxerPublicSegur(ctx.arrel, camiFisic)) {
+    const emesPerBuild = ctx.opendataEmesos?.has(rel) === true;
+    if (!emesPerBuild && !fitxerPublicSegur(ctx.arrel, camiFisic)) {
       return {
         ok: false,
         codi: 'OPENDATA_404',
@@ -296,7 +302,12 @@ export function verificaRutaContraArbre(urlORuta, ctx) {
         motiu: `El recurs ${cami} existeix però no figura a public/opendata/manifest.json`
       };
     }
-    return { ok: true, tipus: 'opendata', cami, detall: `public/opendata/${rel} verificat al manifest` };
+    return {
+      ok: true,
+      tipus: 'opendata',
+      cami,
+      detall: emesPerBuild ? `Emés per opendataPublica (${rel}) i verificat al manifest` : `public/opendata/${rel} verificat al manifest`
+    };
   }
 
   // 3. Rutes de federació: /.well-known/*, /nodeinfo/*, /ap/*

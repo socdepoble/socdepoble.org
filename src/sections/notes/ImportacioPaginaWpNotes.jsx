@@ -87,7 +87,9 @@ function EsborranyWp({ pagina, base, sessio, ambit, authority }) {
       <p>{createdId ? 'L’intent continua al Bloc de notes amb el seu UUID estable.' : 'Esborrany en memòria: no s’ha creat cap nota.'} <Link to="/notes">Torna al Bloc de notes</Link></p>
       <p role="status">{approved && publisher.estaAprovat() ? 'Estat de revisió: aprovat.' : 'Estat de revisió: pendent_admin.'} {pagina.imatgesPendents.length} imatges pendents de còpia pròpia verificada.</p>
       <p>Revisa l’autoria, els drets, les dates originals i tot el contingut abans d’aprovar. Les imatges pendents impedixen aprovar i publicar.</p>
-      <button type="button" className="sdp-boto sdp-boto--secundari" disabled={!pagina.publicable || busy || Boolean(createdId)} onClick={aprova}>Aprova esta revisió</button>
+      <div className="sdp-accions">
+        <button type="button" className="sdp-boto sdp-boto--secundari" disabled={!pagina.publicable || busy || Boolean(createdId)} onClick={aprova}>Aprova esta revisió</button>
+      </div>
       {message && <p role="status">{message}</p>}
       {createdId && <p><Link to={`/notes?nota=${encodeURIComponent(createdId)}`}>Recupera l’esborrany d’este intent al Bloc</Link>. Si la creació no s’ha confirmat, la nota podria no existir. El Bloc consultarà el servidor abans de continuar; este importador no crearà cap altre UUID.</p>}
     </div>

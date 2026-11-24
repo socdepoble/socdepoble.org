@@ -696,6 +696,7 @@ function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children })
   const nom = marca
     ? t('section.xat.rail.seccioActual', 'Secció {nom}, amb la pàgina actual')
     : t('section.xat.rail.seccio', 'Secció {nom}');
+  const etiquetaSeccio = nom.replace('{nom}', etiqueta);
   return (
     <div className="sdp-xat-rail-seccio">
       <button
@@ -703,7 +704,8 @@ function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children })
         className={marca ? 'sdp-xat-rail-seccio__cap sdp-xat-rail-seccio__cap--actual' : 'sdp-xat-rail-seccio__cap'}
         aria-expanded={obert}
         aria-controls={idCos}
-        aria-label={nom.replace('{nom}', etiqueta)}
+        aria-label={etiquetaSeccio}
+        title={etiquetaSeccio}
         onClick={onAlterna}
       >
         <span className="sdp-xat-rail-seccio__nom">{etiqueta}</span>
@@ -778,6 +780,7 @@ export function BotoTitolSeccioXat({ titol, etiqueta, icona: Icona = MessageCirc
       className="sdp-xat-titol-seccio sdp-xat-obri-rail"
       aria-expanded={obert}
       aria-controls="app-grid-sidebar"
+      title={textVisible}
       data-obri-columna=""
       onClick={alterna}
     >

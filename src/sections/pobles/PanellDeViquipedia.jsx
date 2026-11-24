@@ -258,7 +258,18 @@ export function FontsTerritorials({ poble }) {
   const { fotos, article, qid, dades, absents, excepcions } = construeixModelFontsTerritorials(poble, tx);
   return <details className="sdp-prose">
     <summary>{tx.sumari}</summary>
-    <dl>{dades.map(([nom, valor]) => <div key={nom}><dt>{nom}</dt><dd>{valor}</dd></div>)}</dl>
+    {dades.length ? (
+      <table className="sdp-taula-prosa">
+        <tbody>
+          {dades.map(([nom, valor]) => (
+            <tr key={nom}>
+              <th scope="row">{nom}</th>
+              <td>{valor}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : null}
     {poble.parent_poble_nom ? <p>{tx.nucliDe(poble.parent_poble_nom)}</p> : null}
     <p>{article ? <><Font url={article}>{tx.articleReferencia}</Font>{tx.textCcBySa}</> : null}
       {qid ? <><Font url={`https://www.wikidata.org/wiki/${qid}`}>Wikidata {qid}</Font>{tx.dadesCc0}</> : null}</p>

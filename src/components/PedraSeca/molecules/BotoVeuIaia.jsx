@@ -17,6 +17,8 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Boto } from '../atoms/Boto.jsx';
 import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js';
 import { useUIStateOpcional } from '../../../app/contexts/UIContext';
+import { esModeHumaPur } from '../../../sections/realitat/nivellIaia.js';
+import useNivellIaia from '../../../sections/realitat/useNivellIaia.js';
 
 const CODI_VEU_AVORTADA = 'VEU_AVORTADA';
 const CODI_VEU_NO_DISPONIBLE = 'VEU_NO_DISPONIBLE';
@@ -42,6 +44,7 @@ function useLlenguaOpcional() {
 export function BotoVeuIaia({ text, idioma, privat = true, varietat = 'secundari', className, ...rest }) {
   const t = useTraductorOpcional();
   const llenguaDeLaInterficie = useLlenguaOpcional();
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
   const [parlant, setParlant] = useState(false);
   const [fallada, setFallada] = useState(null);
   const [servei, setServei] = useState(null);
@@ -52,6 +55,7 @@ export function BotoVeuIaia({ text, idioma, privat = true, varietat = 'secundari
 
   useEffect(() => {
     viu.current = true;
+    if (modeHumaPur) return () => { viu.current = false; };
     import('../../../services/veuIaiaService.js').then((modul) => {
       serveiRef.current = modul;
       if (viu.current) setServei(modul);
@@ -60,7 +64,15 @@ export function BotoVeuIaia({ text, idioma, privat = true, varietat = 'secundari
       viu.current = false;
       if (meua.current) serveiRef.current?.atura();
     };
-  }, []);
+  }, [modeHumaPur]);
+
+  useEffect(() => {
+    if (!modeHumaPur || !meua.current) return;
+    meua.current = null;
+    serveiRef.current?.atura();
+    setParlant(false);
+    setFallada(null);
+  }, [modeHumaPur]);
 
   /* V-02 · Si el text canvia mentre parla, la veu calla i el botó torna a
      repòs: no es llig un text que ja no és el de la pàgina. */
@@ -96,6 +108,8 @@ export function BotoVeuIaia({ text, idioma, privat = true, varietat = 'secundari
       if (viu.current) setParlant(false);
     }
   }, [servei, parlant, text, idioma, llenguaDeLaInterficie, privat]);
+
+  if (modeHumaPur) return null;
 
   /* V-06 · Si el servei lazy no ha pogut carregar-se, és una fallada, no un
      navegador sense veu. */

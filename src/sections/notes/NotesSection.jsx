@@ -887,13 +887,21 @@ function NotesSectionBase() {
         ? <ValorDeNotes value={valorNotesAmbRetorn}>{detall}</ValorDeNotes>
         : detall;
     }
-    if (estatEntrada !== 'error') return <p role="status">{tradueix(t, TEXTOS_DETALL_PENDENT.carregant)}</p>;
-    /* L'espai inicial del fragment és un node de text: el marcatge de sempre. */
+    if (estatEntrada !== 'error') return <p role="status" className="sdp-paragraf-centrat">{tradueix(t, TEXTOS_DETALL_PENDENT.carregant)}</p>;
+    /* L'espai inicial del fragment és un node de text; botó centrat (Llei 9) i diana >= 48px.
+       v1.2.24 · costura R32.75 · R32.75 va llevar el fragment i, amb ell, l'espai:
+       el text de l'avís quedava «…les dades.Reintentar». Entre dos blocs no es pinta. */
     return (
-      <div role="alert">
-        {tradueix(t, TEXTOS_DETALL_PENDENT.error)}
+      <div role="alert" className="sdp-paragraf-centrat">
+        <p>{tradueix(t, TEXTOS_DETALL_PENDENT.error)}</p>
         {typeof refrescaEntrada === 'function'
-          ? <> <button type="button" onClick={refrescaEntrada}>{tradueix(t, TEXTOS_DETALL_PENDENT.reintenta)}</button></>
+          ? (
+            <> <div className="sdp-accions">
+              <button type="button" className="sdp-boto sdp-boto--secundari" onClick={refrescaEntrada}>
+                {tradueix(t, TEXTOS_DETALL_PENDENT.reintenta)}
+              </button>
+            </div></>
+          )
           : null}
       </div>
     );

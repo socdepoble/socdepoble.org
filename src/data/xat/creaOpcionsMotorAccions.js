@@ -4,6 +4,7 @@ import {
   alternaDestacat as destacatAlPort,
   alternaFixat as fixatAlPort,
   eliminaPerAMi as eliminaAlPort,
+  eliminaPerATothom as eliminaPerATothomAlPort,
   urlAdjuntXat
 } from '../backendPort.js';
 import { capturaSessio, entradaSessio } from '../identitat.js';
@@ -18,7 +19,8 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
     port: {
       carregaAccionsMissatges: (...args) => carregaAccionsAlPort(...args),
       alternaReaccio: (...args) => reaccioAlPort(...args), alternaDestacat: (...args) => destacatAlPort(...args),
-      alternaFixat: (...args) => fixatAlPort(...args), eliminaPerAMi: (...args) => eliminaAlPort(...args)
+      alternaFixat: (...args) => fixatAlPort(...args), eliminaPerAMi: (...args) => eliminaAlPort(...args),
+      eliminaPerATothom: (...args) => eliminaPerATothomAlPort(...args)
     },
     obteContext: () => {
       const e = entornAccions.current;
@@ -39,6 +41,10 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
       return null;
     },
     onCanvi: setEstatAccions,
+    onEliminaConfirmada: rebut => {
+      mutaMissatges(previs => ({ ...previs, [rebut.filId]: (previs[rebut.filId] || []).map(m => m.id === rebut.missatgeId
+        ? { ...m, esborrat: true, esborratAl: rebut.esborratAl, text: '', xifrat: null, metadades: {} } : m) }));
+    },
     creaPrivat: id => entornAccions.current.creaFil(id),
     obreFil: id => entornAccions.current.obriFil(id),
     enviaText: async (desti, text, opcions) => {
@@ -78,9 +84,8 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
     },
     /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El lloc el conserva qui publica, informat abans de publicar. Qui
        reenvia no és l'autor: la còpia reenviada ix sense GPS.
-       v1.2.23 · L1-01 (Gauntlet R1) · Sense GPS, però no sense EXIF: una foto conserva l'orientació, la data i la
-       càmera de TRIA_SENSE_UBICACIO (com abans de la IDEA-331, quan es reenviava l'original desat, que ja les
-       portava), i el transport l'acredita com a punt fix d'imatgeSenseUbicacio (supabase/xatMultimedia.js). */
+       C11 · La còpia final respecta l'opt-out estricte: cap EXIF ni GPS.
+       L'original continua intacte; si cal recodificar, s'usa la preparació compartida. */
     enviaAdjunt: (desti, adjunt, ...resta) => entornAccions.current.sendChatMedia(desti, { ...adjunt, conservaUbicacio: false }, ...resta),
     lligBlob: async (m, { signal }) => {
       // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
@@ -118,12 +123,21 @@ export function creaOpcionsMotorAccions({ entornAccions, filsRef, desmuntat, mod
       }
       if (m.tipus === 'imatge') {
         /* v1.2.23 · IDEA-331 · Des de la IDEA-331 la foto desada porta el GPS de qui l'ha publicada: la còpia per a
-           reenviar es neteja al contenidor (sense recodificar), sense mutar l'original. */
-        const { imatgeSenseUbicacio } = await import('../../components/universal/enquadrament/exifIncrustat.js');
+           reenviar es neteja abans de marcar-la conservaUbicacio:false, sense mutar l'original. */
+        const { imatgeSenseUbicacio, extreuTiff } = await import('../../components/universal/enquadrament/exifIncrustat.js');
         const net = imatgeSenseUbicacio(new Uint8Array(await original.arrayBuffer()));
         if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
         if (!net || net.format !== meta.mime) throw (await import('../xatMultimedia.js')).errorAdjuntXat('foto-codificacio');
-        return new Blob([net.bytes], { type: meta.mime });
+        let copia = new Blob([net.bytes], { type: meta.mime });
+        if (extreuTiff(net.bytes) !== null) {
+          const { amagaUbicacioAdjunt } = await import('../../sections/xat/adjuntLocal.js');
+          copia = (await amagaUbicacioAdjunt({ tipus: 'imatge', fitxer: copia }, { signal })).fitxer;
+          if (extreuTiff(new Uint8Array(await copia.arrayBuffer())) !== null) {
+            throw (await import('../xatMultimedia.js')).errorAdjuntXat('foto-codificacio');
+          }
+        }
+        if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
+        return copia;
       }
       return original;
     }

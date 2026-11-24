@@ -16,13 +16,16 @@ function getDB() {
   if (typeof indexedDB === 'undefined') return Promise.resolve(null);
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
+    let acabada = false;
     request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
     request.onsuccess = () => {
+      if (acabada) { request.result.close(); return; }
+      acabada = true;
       request.result.onversionchange = () => request.result.close();
       resolve(request.result);
     };
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('El magatzem d’esborranys està bloquejat.'));
+    request.onerror = () => { acabada = true; reject(request.error); };
+    request.onblocked = () => { acabada = true; reject(new Error('El magatzem d’esborranys està bloquejat.')); };
   });
 }
 
@@ -35,14 +38,16 @@ export async function mutateDraft(key, transform) {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const request = store.get(key);
-      let result;
+      let result, failure;
       request.onsuccess = () => {
-        result = transform(request.result || {});
-        if (result == null) store.delete(key);
-        else store.put(result, key);
+        try {
+          result = transform(request.result || {});
+          if (result == null) store.delete(key);
+          else store.put(result, key);
+        } catch (error) { failure = error; tx.abort(); }
       };
       tx.oncomplete = () => resolve(result);
-      tx.onerror = tx.onabort = () => reject(tx.error || new Error('Esborrany no desat.'));
+      tx.onerror = tx.onabort = () => reject(failure || tx.error || new Error('Esborrany no desat.'));
     });
   } finally { db.close(); }
 }

@@ -54,6 +54,18 @@ export const getVal = (key, fallback = null) => {
   }
 };
 
+/** Lectura amb estat per a read/modify/write: una capa il·legible no és una
+ * clau absent. El caller no ha de reescriure un mapa que no ha pogut llegir. */
+export const getValAmbEstat = (key) => {
+  if (!isBrowser) return { disponible: false, valor: null };
+  try {
+    const raw = window.localStorage.getItem(PREFIX + key);
+    if (raw === null) return { disponible: true, present: false, valor: null };
+    try { return { disponible: true, present: true, valor: JSON.parse(raw), jsonValid: true }; }
+    catch { return { disponible: true, present: true, valor: raw, jsonValid: false }; }
+  } catch { return { disponible: false, valor: null }; }
+};
+
 /** Torna true només si el valor ha quedat escrit (D1, 260926): el registre de
  *  sessió ha de saber si la quota l'ha deixat a mitges. Els callers antics ignoren el retorn. */
 export const setVal = (key, value) => {
@@ -76,6 +88,42 @@ export const delVal = (key) => {
     return false;
   }
 };
+
+/** Narrow, bounded enumeration for immutable editorial operation logs. */
+export function getOperacionsEditorials(prefix) {
+  const items = []; let chars = 0;
+  try {
+    if (!isBrowser || !['publicacions.revisions.ops.v1.', 'publicacions.revisions.histops.v1.'].includes(prefix)) return { disponible: false, items, chars };
+    const web = window.localStorage, full = PREFIX + prefix, length = web.length;
+    if (!Number.isSafeInteger(length) || length < 0 || length > 4096 || typeof web.key !== 'function') return { disponible: false, items, chars };
+    for (let i = 0; i < length; i++) {
+      const key = web.key(i);
+      if (typeof key !== 'string' || !key.startsWith(full)) continue;
+      const raw = web.getItem(key);
+      if (typeof raw !== 'string' || items.length >= 1024 || (chars += raw.length + key.length) > 4 * 1024 * 1024) return { disponible: false, items, chars };
+      items.push([key.slice(PREFIX.length), raw]);
+    }
+    return { disponible: web.length === length, items, chars };
+  } catch { return { disponible: false, items, chars }; }
+}
+
+/** Exact raw bytes are used only by the immutable editorial protocol. */
+const clauEditorial = key => typeof key === 'string' && key.length <= 200
+  && ['publicacions.revisions.ops.v1.', 'publicacions.revisions.histops.v1.'].some(prefix => key.startsWith(prefix));
+export function getTextOperacioEditorial(key) {
+  if (!isBrowser || !clauEditorial(key)) return { disponible: false, text: null };
+  try { return { disponible: true, text: window.localStorage.getItem(PREFIX + key) }; }
+  catch { return { disponible: false, text: null }; }
+}
+/** Byte precondition on immutable records, not a general Web Storage CAS. */
+export function retiraOperacioEditorialSiIgual(key, text) {
+  if (!isBrowser || !clauEditorial(key) || typeof text !== 'string') return false;
+  try {
+    if (window.localStorage.getItem(PREFIX + key) !== text) return false;
+    window.localStorage.removeItem(PREFIX + key);
+    return window.localStorage.getItem(PREFIX + key) === null;
+  } catch { return false; }
+}
 
 /* ═══════════════════════ CAPA EFÍMERA ═══════════════════════
  * Afegida per l'auditoria 260829, per al verificador PKCE.

@@ -3,9 +3,11 @@ import path from 'node:path';
 import { ROOT, segura, font } from '../../tooling/brain/cataleg_skills.mjs';
 import { verificaEmissio } from '../../tooling/brain/context_documental.mjs';
 import { comprovaDestins } from '../../tooling/brain/destins_canonics.mjs';
+import { esMain } from '../../tooling/lib/arrel.mjs';
+import { EINES_ESCRIPTURA_ANTIGRAVITY, fragmentsDEscriptura } from '../../tooling/lib/tool-dialect.mjs';
 
 const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
-const WRITES = new Set(['write_to_file', 'replace_file_content', 'multi_replace_file_content']);
+const WRITES = new Set(EINES_ESCRIPTURA_ANTIGRAVITY);
 const RESERVED = new Set(['SKILL.md', 'LEDGER.md', 'ESTAT.md', 'AGENTS.md', 'BIOS.md', 'BASELINE.md',
   'PROFILE.md', 'BOOTSTRAP.md', 'PROTOCOL_PETORRETA.md', '00_INDEX_ESCRIPTORI.md', '00_index_escriptori.md',
   'REGISTRE_CODI.md', '.gitkeep']);
@@ -27,7 +29,7 @@ export function decide(payload, root = ROOT) {
       : answer('ask', 'Efectes de shell no modelats: cal autorització explícita de l’arnés');
   }
   if (!WRITES.has(call.name) && call.name !== 'create_directory') return answer('deny', 'Eina no reconeguda');
-  const targets = [args.TargetFile, args.AbsolutePath, args.DirectoryPath].filter(v => v !== undefined);
+  const targets = [args.TargetFile, args.Path, args.AbsolutePath, args.DirectoryPath].filter(v => v !== undefined);
   if (!targets.length || targets.some(v => typeof v !== 'string' || !v.trim())) return answer('deny', 'Destí absent o invàlid');
   const absolute = targets.map(v => path.resolve(root, v));
   if (new Set(absolute).size !== 1) return answer('deny', 'Diversos destins incompatibles');
@@ -45,7 +47,7 @@ export function decide(payload, root = ROOT) {
   if (['.zip', '.tar', '.gz', '.tgz'].includes(ext)) return answer('deny', 'Paquet comprimit fora del contracte');
   if (/\.abans-\d{6}$|\.(bak|old|orig|tmp|copy)$|^(prova|test|tmp|temp|scratch|borrador)[-_.]|\bcopy\b|\(\d+\)\./i.test(base))
     return answer('deny', 'Còpia o fitxer de treball fora de lloc');
-  if (base === 'LEDGER.md' && (call.name !== 'write_to_file' || args.Overwrite))
+  if (base === 'LEDGER.md' && ((call.name !== 'write_to_file' && call.name !== 'write_file') || args.Overwrite))
     return answer('ask', 'Cal comprovar que el canvi només afig al LEDGER');
   if (parts.length === 1 && !base.startsWith('.') && !RESERVED.has(base) && !CODE.has(ext))
     return answer('deny', 'Document de treball fora de l’escriptori');
@@ -55,8 +57,7 @@ export function decide(payload, root = ROOT) {
     if (!RESERVED.has(base) && !THERMO.test(base)) return answer('deny', 'Nom termodinàmic invàlid');
   }
   if (ext === '.css') {
-    const fragments = [args.CodeContent, args.ReplacementContent,
-      ...(Array.isArray(args.ReplacementChunks) ? args.ReplacementChunks.map(c => c.ReplacementContent) : [])];
+    const fragments = fragmentsDEscriptura(args);
     if (fragments.some(s => typeof s === 'string' && s.includes('!important'))) return answer('deny', 'Invariant CSS !important');
   }
   if (WRITES.has(call.name) && ext === '.md' && within(rel, '_wiki_de_poble')) {
@@ -80,5 +81,7 @@ export function decide(payload, root = ROOT) {
   }
   return answer('allow', `Ruta conforme: ${rel}`);
 }
-try { console.log(JSON.stringify(decide(JSON.parse(fs.readFileSync(0, 'utf8'))))); }
-catch (e) { console.log(JSON.stringify(answer('deny', e.message))); }
+if (esMain(import.meta.url)) {
+  try { console.log(JSON.stringify(decide(JSON.parse(fs.readFileSync(0, 'utf8'))))); }
+  catch (e) { console.log(JSON.stringify(answer('deny', e.message))); }
+}

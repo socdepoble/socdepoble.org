@@ -25,12 +25,13 @@
  */
 import { ChefHat, CircleDashed, Plus, Refrigerator, ShoppingBasket } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
-import { Alerta, Boto } from '../../../components/PedraSeca/index.js';
+import { Alerta, Boto, GrupCamps, IconesAlergens } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosBuitNevera, textosVistaNevera } from '../i18nNevera.js';
 import { nomLlistaVisible } from '../mercadona.js';
 import { receptaPerId } from '../nucli/index.js';
+import { llistaNomsAlergens, resumAlergensRecepta } from './alergensVistaRecepta.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { autoriaDArticle } from './autoria.js';
 import { CASA, RECEPTES_VISTA } from './constants.js';
@@ -95,12 +96,43 @@ export function ColumnaReceptes({ params }) {
         ambNota: false,
         textAccepta: tx.dAcord,
         contingutDe: (article) => {
-          const textos = textosDeRecepta(receptaPerId(article.id));
+          const recepta = receptaPerId(article.id);
+          const textos = textosDeRecepta(recepta);
+          const alergens = resumAlergensRecepta(recepta);
           return textos ? (
             <>
               <AvisNevera />
               <p>{textos.ingredients}</p>
               {textos.opcionals ? <p>{textos.opcionals}</p> : null}
+              {alergens ? (
+                <GrupCamps llegenda={tx.alergensReceptaTitol}>
+                  {alergens.obligatoris.length > 0 ? (
+                    <p>
+                      <strong>{tx.alergensConteLabel}</strong>{' '}
+                      {llistaNomsAlergens(alergens.obligatoris, tx)}
+                    </p>
+                  ) : null}
+                  {alergens.obligatoris.length > 0 ? (
+                    <IconesAlergens alergens={alergens.obligatoris} mida="mitjana" etiqueta={tx.alergensIconesConte} />
+                  ) : null}
+                  {alergens.opcionalsOTraces.length > 0 ? (
+                    <p>
+                      <strong>{tx.alergensOpcionalLabel}</strong>{' '}
+                      {llistaNomsAlergens(alergens.opcionalsOTraces, tx)}
+                    </p>
+                  ) : null}
+                  {alergens.opcionalsOTraces.length > 0 ? (
+                    <IconesAlergens alergens={alergens.opcionalsOTraces} mida="xicoteta" etiqueta={tx.alergensIconesOpcional} />
+                  ) : null}
+                  {alergens.obligatoris.length === 0 && alergens.opcionalsOTraces.length === 0 ? (
+                    <p>{tx.alergensCapDirecte}</p>
+                  ) : null}
+                  {alergens.teLlentilla ? <p>{tx.alergensNotaLlentilla}</p> : null}
+                  {alergens.tePinyo ? <p>{tx.alergensNotaPinyo}</p> : null}
+                  {alergens.teElaborats ? <p>{tx.alergensNotaElaborats}</p> : null}
+                  <p>{tx.alergensAvisEtiqueta}</p>
+                </GrupCamps>
+              ) : null}
               <p>{textos.nota}</p>
             </>
           ) : null;

@@ -9,9 +9,9 @@
  * Si un valor és possible però poc versemblant (més de 800 ml d'una vegada),
  * es demana revisar-lo abans de desar-lo.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-  Alerta, Boto, Camp, CampText, Fila, Pila
+  Accions, Alerta, Boto, Camp, CampText, Fila, Pila
 } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import { textErrorSalut, tipusSalutTraduit, tradueixValidacioSalut } from '../i18nSalut.js';
@@ -65,10 +65,22 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
   const [avisos, setAvisos] = useState({});
   const [errorDesat, setErrorDesat] = useState(null);
   const [desant, setDesant] = useState(false);
+  const desantRef = useRef(false);
   const ambPassos = Boolean(pas) && tipus === 'conducta';
 
   const posa = (clau, valor) => {
     setAvisos({});
+    setErrorDesat(null);
+    setErrors((prev) => {
+      if (!prev[clau] && !(clau === 'data' && (prev.moment || prev.ofsetMin))) return prev;
+      const net = { ...prev };
+      delete net[clau];
+      if (clau === 'data' || clau === 'hora') {
+        delete net.moment;
+        delete net.ofsetMin;
+      }
+      return net;
+    });
     setValors((abans) => {
       const nou = { ...abans, [clau]: valor };
       /* Escriure un volum vol dir que s'ha mesurat; esborrar-lo, que no. */
@@ -97,6 +109,7 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
 
   const desa = async (event) => {
     event.preventDefault();
+    if (desantRef.current || desant) return;
     if (!darrerPas) {
       seguent();
       return;
@@ -113,6 +126,7 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
       setAvisos(validacio.avisos);
       return;
     }
+    desantRef.current = true;
     setDesant(true);
     setErrorDesat(null);
     try {
@@ -121,6 +135,7 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
     } catch (error) {
       setErrorDesat(textErrorSalut(error, idioma));
     } finally {
+      desantRef.current = false;
       setDesant(false);
     }
   };
@@ -151,16 +166,16 @@ export function FormulariApunt({ tipus, inicial = null, pas = null, onPas, onDes
           </Alerta>
         ) : null}
         {errorDesat ? <Alerta to="error">{errorDesat}</Alerta> : null}
-        <Fila gap={2}>
+        <Accions>
           {ambPassos && !primerPas ? (
-            <Boto varietat="secundari" onClick={() => onPas?.(PASSOS_CONDUCTA[PASSOS_CONDUCTA.indexOf(pas) - 1])}>{tx.arrere}</Boto>
+            <Boto varietat="secundari" disabled={desant} onClick={() => onPas?.(PASSOS_CONDUCTA[PASSOS_CONDUCTA.indexOf(pas) - 1])}>{tx.arrere}</Boto>
           ) : null}
-          <Boto varietat="primari" mida="gran" tipus="submit" carregant={desant} disabled={salut.nomesLectura}>
+          <Boto varietat="primari" mida="gran" tipus="submit" carregant={desant} disabled={desant || salut.nomesLectura}>
             {darrerPas ? tx.desa : tx.seguent}
           </Boto>
-          {onCancela ? <Boto varietat="fantasma" onClick={onCancela}>{tx.cancella}</Boto> : null}
+          {onCancela ? <Boto varietat="fantasma" disabled={desant} onClick={onCancela}>{tx.cancella}</Boto> : null}
           {accions}
-        </Fila>
+        </Accions>
       </Pila>
     </form>
   );

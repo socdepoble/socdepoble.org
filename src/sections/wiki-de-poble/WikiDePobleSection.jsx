@@ -387,10 +387,11 @@ function WikiDetail({ item }) {
               fila (scope="row"). Cap selector en depén: 0 px. El nom va en
               aria-label i no en un id de l'h4: l'Índex de la pàgina posa el
               seu id als encapçalaments que no en tenen. */}
-          {/* O7 · Gauntlet WC-05 · Continua sent h4: PageFrame pren el nivell
-              de l'Índex del tag, i un h3 hi pujava l'entrada (sense sagnat,
-              pes 600, color de títol). Canviar-lo és decisió del Mestre. */}
-          <h4>Quadre de Comandament ISO</h4>
+          {/* IDEA-344 (ordre directa del Mestre, 261124) · El cos sota l'H2 +
+              Entradilla comença sempre en H3: el Quadre de Comandament ISO puja
+              a <h3> pur alineat a l'inici i entra a l'Índex a toc-level-3, al
+              mateix nivell semàntic que la resta de seccions <h3> del document. */}
+          <h3>Quadre de Comandament ISO</h3>
           <table aria-label="Quadre de Comandament ISO">
             <tbody>
               <tr>

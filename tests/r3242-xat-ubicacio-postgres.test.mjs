@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
+import { cosMigracio, creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
+
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { projecta132PerFixture } from './fixtures/r3278-cataleg-parcial.mjs';
 
 const FILE = '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql';
 const id = n => `32420000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -19,11 +23,19 @@ async function actor(db, sql, params = [], role = 'authenticated', who = A) {
 test('R32.42 DOL-55: migració repetida, passat i RPC de client antic arrodonits', { timeout: 240000 }, async t => {
   const { startLocalPostgres } = await import(process.env.SDP_R3242_ENGINE === 'pglite'
     ? './fixtures/r32_25-pglite-pg.mjs' : './fixtures/r3242-privacitat-postgres-local.mjs');
-  const cluster = await startLocalPostgres(), db = cluster.db;
+  const cluster = await startLocalPostgres({ dataRoot: join(tmpdir(), 'sdp-r3242-native') }), db = cluster.db;
   try {
     const plan = creaPlaMigracions(); await db.query(plan.bootstrap);
     for (const m of plan.migrations.filter(m => !m.file.includes('r32_42') && !m.file.includes('r3242'))) {
-      try { await db.query('begin'); await db.query(m.body); await db.query('commit'); }
+      let body = m.body;
+      if (m.file === '20261123180000_r3252_indexs_suport_fk_verificats.sql') {
+        const partial = await projecta132PerFixture(db, { absentRelations: ['private.ajuntament_auditoria', 'private.ajuntament_dominis_oficials'] });
+        assert.deepEqual(partial.report.omittedRelations, ['private.ajuntament_auditoria', 'private.ajuntament_dominis_oficials']);
+        assert.equal(partial.report.deploymentOrLedger, false);
+        t.diagnostic(JSON.stringify(partial.report));
+        body = cosMigracio(partial.sql);
+      }
+      try { await db.query('begin'); await db.query(body); await db.query('commit'); }
       catch (e) { await db.query('rollback'); throw new Error(`${m.file}: ${e.message}`, { cause: e }); }
     }
     await db.query("insert into public.towns(id,slug,name) values($1,'r3242-synthetic','Poble sintètic R32.42')", [TOWN]);
@@ -129,6 +141,6 @@ test('R32.42 DOL-55: migració repetida, passat i RPC de client antic arrodonits
       await actor(db,"insert into public.bloquejos(bloquejat_tipus,bloquejat_persona) values('persona',$1)",[A],'authenticated',foraster);
       assert.equal((await llig()).length,0);
     });
-    t.diagnostic(`Motor ${process.env.SDP_R3242_ENGINE || 'PostgreSQL natiu'}; catàleg complet i RPC real; clúster tancat en finally.`);
+    t.diagnostic(`Motor ${process.env.SDP_R3242_ENGINE || 'PostgreSQL natiu'}; fixture pre-R32.42 parcial explícita, sense ledger de desplegament, i RPC real; clúster tancat en finally.`);
   } finally { await cluster.close(); }
 });

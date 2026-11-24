@@ -29,11 +29,15 @@
  * ÚS
  *   node tooling/gates/frontissa-contingut.mjs                 # comprova (exit 1 si falla)
  *   node tooling/gates/frontissa-contingut.mjs --json
- *   node tooling/gates/frontissa-contingut.mjs --inicia --per NOM
- *   node tooling/gates/frontissa-contingut.mjs --aprova CLAU --per NOM [--accepta-retall]
- *   node tooling/gates/frontissa-contingut.mjs --retira CLAU --per NOM
+ *   node tooling/gates/frontissa-contingut.mjs --inicia --per NOM --motiu "..."
+ *   node tooling/gates/frontissa-contingut.mjs --aprova CLAU --per NOM --motiu "..." [--accepta-retall]
+ *   node tooling/gates/frontissa-contingut.mjs --retira CLAU --per NOM --motiu "..."
  *
- * Les tres últimes escriuen dins de .agents/: són decisions humanes. El diff
+ *   Via agent: afegix --pla --session ID per a revisar/vincular el pla sense escriure;
+ *   després executa la mateixa ordre amb --session ID --rebut CAMÍ (sense --pla).
+ *
+ * Les tres últimes usen CAS durable i auditoria; en TTY sense sessió activa no
+ * requerixen IA. Via agent: --session ID [--rebut CAMÍ] i claim Reflex. El diff
  * del registre és el que es revisa abans de fusionar.
  */
 import fs from 'node:fs';
@@ -41,6 +45,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
+import {readState, safePath, durableMutation, digest} from '../lib/mutacio-durable.mjs';
 
 export const REGISTRE = '.agents/contingut_estructural.json';
 export const ESQUEMA_REGISTRE = 'sdp.contingut.v1';
@@ -78,21 +83,51 @@ export async function carregaContingut(arrel) {
   return { PAGE_COPY, requerides };
 }
 
-export function llegeixRegistre(arrel) {
-  const fitxer = path.join(arrel, REGISTRE);
-  if (!fs.existsSync(fitxer)) return null;
-  const r = JSON.parse(fs.readFileSync(fitxer, 'utf8'));
-  if (r?.schema !== ESQUEMA_REGISTRE || !r.claus || typeof r.claus !== 'object') {
-    throw new Error(`${REGISTRE} no és un registre ${ESQUEMA_REGISTRE}`);
+export function validaRegistre(r) {
+  if (r?.schema !== ESQUEMA_REGISTRE || !r.claus || Array.isArray(r.claus) || typeof r.claus !== 'object'
+    || Object.keys(r).some(k => !['schema', 'claus'].includes(k))) throw new Error(`${REGISTRE} no és un registre ${ESQUEMA_REGISTRE}`);
+  for (const [key, value] of Object.entries(r.claus)) {
+    if (!clauValida(key) || !value || !/^[a-f0-9]{64}$/.test(value.sha256 || '') || !Number.isSafeInteger(value.html) || value.html < 0
+      || typeof value.aprovat_per !== 'string' || !value.aprovat_per.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(value.data || '')
+      || Object.keys(value).some(k => !['sha256', 'html', 'aprovat_per', 'data'].includes(k))) throw new Error(`Entrada de registre invàlida: ${key}`);
   }
   return r;
 }
-
-function escriuRegistre(arrel, registre) {
-  const ordenat = Object.fromEntries(Object.keys(registre.claus).sort().map((k) => [k, registre.claus[k]]));
-  const fitxer = path.join(arrel, REGISTRE);
-  fs.mkdirSync(path.dirname(fitxer), { recursive: true });
-  fs.writeFileSync(fitxer, `${JSON.stringify({ schema: ESQUEMA_REGISTRE, claus: ordenat }, null, 2)}\n`);
+function clauValida(value) { return typeof value === 'string' && /^[a-zA-Z0-9_-]+$/.test(value) && !['__proto__', 'prototype', 'constructor'].includes(value); }
+function textExplicit(value, name) {
+  if (typeof value !== 'string' || !value.trim() || value.length > 4096 || /[\x00-\x1f\x7f]/.test(value)) throw new Error(`Cal ${name} explícit i no buit`);
+  return value.trim();
+}
+/** Also applied by the generic executor: its registry target cannot bypass the policy. */
+export function validaMutacioRegistre(before, content, meta) {
+  const next = validaRegistre(JSON.parse(content));
+  if (!meta || Object.keys(meta).some(k => !['action', 'key', 'actor', 'reason', 'acceptaRetall'].includes(k)) || !['inicia', 'aprova', 'retira'].includes(meta.action) || typeof meta.acceptaRetall !== 'boolean') throw new Error('Pla Frontissa incomplet');
+  textExplicit(meta.actor, '--per'); textExplicit(meta.reason, '--motiu');
+  if (meta.action === 'inicia') {
+    if (before !== null || meta.key !== null || meta.acceptaRetall) throw new Error('CAS d’inici invàlid');
+    if (Object.values(next.claus).some(v => v.aprovat_per !== meta.actor)) throw new Error('Actor divergent');
+    return;
+  }
+  if (before === null || !clauValida(meta.key)) throw new Error('CAS Frontissa invàlid');
+  const previous = validaRegistre(JSON.parse(before)), key = meta.key;
+  const expectedKeys = new Set(Object.keys(previous.claus));
+  if (meta.action === 'aprova') expectedKeys.add(key); else expectedKeys.delete(key);
+  if (Object.keys(next.claus).length !== expectedKeys.size || Object.keys(next.claus).some(k => !expectedKeys.has(k))) throw new Error('Conjunt de claus divergent');
+  for (const k of expectedKeys) if (k !== key && JSON.stringify(previous.claus[k]) !== JSON.stringify(next.claus[k])) throw new Error('Canvi alié a la clau aprovada');
+  if (meta.action === 'retira') {
+    if (!Object.hasOwn(previous.claus, key) || meta.acceptaRetall) throw new Error('Retirada invàlida');
+  } else {
+    if (next.claus[key].aprovat_per !== meta.actor) throw new Error('Actor divergent');
+    if (retall(previous.claus[key], next.claus[key]) >= RETALL_MAXIM && !meta.acceptaRetall) throw new Error('Retall sense --accepta-retall i --motiu');
+  }
+}
+export function llegeixRegistre(arrel) {
+  const state = readState(arrel, REGISTRE);
+  return state.bytes === null ? null : validaRegistre(JSON.parse(state.bytes));
+}
+function serialitzaRegistre(registre) {
+  const claus = Object.fromEntries(Object.keys(registre.claus).sort().map(k => [k, registre.claus[k]]));
+  return `${JSON.stringify({schema: ESQUEMA_REGISTRE, claus}, null, 2)}\n`;
 }
 
 /** Retall relatiu de l'HTML respecte del registrat (0 si no ha minvat). */
@@ -108,7 +143,7 @@ export function comprova({ PAGE_COPY, requerides }, registre) {
   let correctes = 0;
   if (!claus) {
     errors.push({ clau: null, codi: 'registre-absent',
-      missatge: `Falta ${REGISTRE}: sense empremtes només es comprova la presència. Inicia'l amb --inicia --per NOM (decisió humana).` });
+      missatge: `Falta ${REGISTRE}: sense empremtes només es comprova la presència. Inicia'l amb --inicia --per NOM --motiu "..." (decisió humana).` });
   }
   for (const clau of obligatories) {
     const valor = PAGE_COPY?.[clau];
@@ -139,60 +174,116 @@ export function comprova({ PAGE_COPY, requerides }, registre) {
   return { valid: errors.length === 0, requerides: obligatories.length, correctes: claus ? correctes : null, errors };
 }
 
-function opcio(argv, nom) {
-  const i = argv.indexOf(`--${nom}`);
-  return i === -1 ? null : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : '');
-}
-
-export async function executa(argv, arrel = arrelSegura()) {
-  const contingut = await carregaContingut(arrel);
-  const registre = llegeixRegistre(arrel);
-  const per = opcio(argv, 'per');
-  const avui = new Date().toISOString().slice(0, 10);
-
-  if (argv.includes('--inicia')) {
-    if (registre) throw new Error(`${REGISTRE} ja existix; usa --aprova per a cada canvi.`);
-    if (!per) throw new Error('--inicia necessita --per NOM (qui aprova l’estat actual).');
-    const absents = contingut.requerides.filter((k) => contingut.PAGE_COPY[k] === undefined);
-    if (absents.length) throw new Error(`No s’inicia un registre amb claus absents: ${absents.join(', ')}`);
-    const claus = Object.fromEntries(contingut.requerides.map((k) =>
-      [k, { ...empremta(contingut.PAGE_COPY[k]), aprovat_per: per, data: avui }]));
-    escriuRegistre(arrel, { claus });
-    return { accio: 'inicia', claus: Object.keys(claus).length };
-  }
-
-  const aprova = opcio(argv, 'aprova');
-  if (aprova !== null) {
-    if (!aprova || !per) throw new Error('Ús: --aprova CLAU --per NOM');
-    if (!registre) throw new Error(`Falta ${REGISTRE}; primer --inicia.`);
-    const valor = contingut.PAGE_COPY[aprova];
-    if (valor === undefined) throw new Error(`La clau «${aprova}» no existix a PAGE_COPY: no hi ha res a aprovar. ${RECUPERACIO}`);
-    const actual = empremta(valor);
-    const r = retall(registre.claus[aprova], actual);
-    if (r >= RETALL_MAXIM && !argv.includes('--accepta-retall')) {
-      throw new Error(`La clau «${aprova}» ha perdut el ${Math.round(r * 100)}% de l'HTML. Si és volgut, repeteix amb --accepta-retall.`);
+function opcions(argv) {
+  const out = {}, values = new Set(['aprova', 'retira', 'per', 'motiu', 'session', 'rebut', 'arrel']);
+  const flags = new Set(['inicia', 'accepta-retall', 'json', 'pla']);
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i], equal = arg.indexOf('='), name = arg.slice(2, equal < 0 ? undefined : equal);
+    if (!arg.startsWith('--') || (!values.has(name) && !flags.has(name)) || Object.hasOwn(out, name)) throw new Error(`Opció desconeguda o ambigua: ${arg}`);
+    if (flags.has(name)) { if (equal >= 0) throw new Error(`Bandera ambigua: ${arg}`); out[name] = true; }
+    else {
+      const value = equal < 0 ? argv[++i] : arg.slice(equal + 1);
+      if (!value || value.startsWith('--')) throw new Error(`Falta valor de --${name}`);
+      out[name] = value;
     }
-    registre.claus[aprova] = { ...actual, aprovat_per: per, data: avui };
-    escriuRegistre(arrel, registre);
-    return { accio: 'aprova', clau: aprova, sha256: actual.sha256 };
+  }
+  const actions = ['inicia', 'aprova', 'retira'].filter(k => Object.hasOwn(out, k));
+  if (actions.length > 1) throw new Error('Ordres ambigües: només una ordre de mutació');
+  if (!actions.length && Object.keys(out).some(k => !['json', 'arrel'].includes(k))) throw new Error('Opcions de mutació sense ordre');
+  if (actions.length) {
+    if (out.json) throw new Error('--json és només de comprovació');
+    if (out.pla && (!out.session || out.rebut)) throw new Error('--pla necessita --session i no admet --rebut');
+    if (out['accepta-retall'] && !out.aprova) throw new Error('--accepta-retall només amb --aprova');
+    out.per = textExplicit(out.per, '--per'); out.motiu = textExplicit(out.motiu, '--motiu');
+    if (out.aprova && !clauValida(out.aprova) || out.retira && !clauValida(out.retira)) throw new Error('Clau no autoritzada');
+  }
+  return Object.freeze(out);
+}
+function contextAgent(arrel, snapshot) {
+  if (snapshot.automated) return {agent: true, session: null};
+  const active = readState(arrel, '.sdp-reflex/active.json');
+  if (active.bytes) {
+    const marker = JSON.parse(active.bytes);
+    if (!/^[a-f0-9-]{36}$/.test(marker.sessionId || '')) throw new Error('Marcador de sessió invàlid');
+    const receipt = JSON.parse(readState(arrel, `.sdp-reflex/sessions/${marker.sessionId}.json`).bytes);
+    if (receipt.sessionId !== marker.sessionId || !['sealed', 'consumed', 'open'].includes(receipt.status)) throw new Error('Estat de sessió invàlid');
+    const expiry = Date.parse(receipt.leaseExpiresAt || receipt.openExpiresAt);
+    if (!Number.isFinite(expiry)) throw new Error('Caducitat de sessió invàlida');
+    if (receipt.status !== 'consumed' && expiry > snapshot.now) return {agent: true, session: marker.sessionId};
+  }
+  if (readState(arrel, '.agents/TORN_ACTIU.json').bytes) return {agent: true, session: null};
+  const turns = safePath(arrel, '.agents/runtime/turns');
+  if (fs.existsSync(turns)) for (const name of fs.readdirSync(turns)) {
+    if (!/^torn_[a-f0-9-]{36}\.json$/.test(name)) throw new Error('Nom de torn invàlid');
+    const turn = JSON.parse(readState(arrel, `.agents/runtime/turns/${name}`).bytes);
+    if (!['opened', 'context_loaded', 'planned', 'verified', 'closed'].includes(turn.state) || !Number.isFinite(Date.parse(turn.expiresAt))) throw new Error('Estat de torn invàlid');
+    if (turn.state !== 'closed' && Date.parse(turn.expiresAt) > snapshot.now) return {agent: true, session: null};
+  }
+  return {agent: !snapshot.tty, session: null};
+}
+// Only internal tests supply authorize/session. The real CLI always uses real TTY/Reflex.
+export async function executa(argv, arrel = arrelSegura(), dependencies = {}) {
+  const invocation = Object.freeze([...argv]);
+  const config = opcions(invocation);
+  const snapshot = Object.freeze({tty: process.stdin.isTTY === true && process.stdout.isTTY === true, now: Date.now(),
+    automated: ['CI', 'SDP_AGENT', 'SDP_SESSION', 'SDP_TURN_ID', 'CODEX_THREAD_ID', 'CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT', 'GEMINI_CLI'].some(k => Boolean(process.env[k]) && process.env[k] !== 'false' && process.env[k] !== '0')});
+  const injectedAuthorize = dependencies.authorize, injectedSession = dependencies.session;
+  arrel = fs.realpathSync(arrel);
+  if (config.arrel && fs.realpathSync(config.arrel) !== arrel) throw new Error('Arrel de la invocació divergent');
+  const initialContext = config.inicia || config.aprova || config.retira ? contextAgent(arrel, snapshot) : null;
+  const before = readState(arrel, REGISTRE);
+  const registre = before.bytes === null ? null : validaRegistre(JSON.parse(before.bytes));
+  const contingut = await carregaContingut(arrel);
+  const avui = new Date(snapshot.now).toISOString().slice(0, 10);
+  let result;
+  if (config.inicia) {
+    if (registre) throw new Error(`${REGISTRE} ja existix; usa --aprova per a cada canvi.`);
+    const absents = contingut.requerides.filter(k => !Object.hasOwn(contingut.PAGE_COPY, k));
+    if (absents.length) throw new Error(`No s’inicia un registre amb claus absents: ${absents.join(', ')}`);
+    result = {accio: 'inicia', claus: contingut.requerides.length};
+  } else if (config.aprova) {
+    if (!registre) throw new Error(`Falta ${REGISTRE}; primer --inicia.`);
+    if (!Object.hasOwn(contingut.PAGE_COPY, config.aprova)) throw new Error(`La clau «${config.aprova}» no existix a PAGE_COPY: no hi ha res a aprovar. ${RECUPERACIO}`);
+    const actual = empremta(contingut.PAGE_COPY[config.aprova]);
+    if (retall(registre.claus[config.aprova], actual) >= RETALL_MAXIM && !config['accepta-retall']) throw new Error(`La clau «${config.aprova}» ha perdut HTML. Si és volgut, repeteix amb --accepta-retall i --motiu.`);
+    registre.claus[config.aprova] = {...actual, aprovat_per: config.per, data: avui};
+    result = {accio: 'aprova', clau: config.aprova, sha256: actual.sha256};
+  } else if (config.retira) {
+    if (!registre || !Object.hasOwn(registre.claus, config.retira)) throw new Error(`La clau «${config.retira}» no és al registre.`);
+    if (contingut.requerides.includes(config.retira)) throw new Error(`La clau «${config.retira}» encara la demana un consumidor: primer lleva-la del consumidor.`);
+    delete registre.claus[config.retira]; result = {accio: 'retira', clau: config.retira};
+  } else {
+    const result = comprova(contingut, registre);
+    if (readState(arrel, '.agents/runtime/mutation.pending.json').bytes !== null) {
+      result.valid = false; result.errors.push({clau: null, codi: 'operacio-incompleta', missatge: 'Mutació pendent: revisa preimatges, bytes i auditoria abans de reconciliar.'});
+    }
+    return result;
   }
 
-  const retira = opcio(argv, 'retira');
-  if (retira !== null) {
-    if (!retira || !per) throw new Error('Ús: --retira CLAU --per NOM');
-    if (!registre?.claus[retira]) throw new Error(`La clau «${retira}» no és al registre.`);
-    if (contingut.requerides.includes(retira)) throw new Error(`La clau «${retira}» encara la demana un consumidor: primer lleva-la del consumidor.`);
-    delete registre.claus[retira];
-    escriuRegistre(arrel, registre);
-    return { accio: 'retira', clau: retira };
+  const next = config.inicia ? {claus: Object.fromEntries(contingut.requerides.map(k => [k, {...empremta(contingut.PAGE_COPY[k]), aprovat_per: config.per, data: avui}]))} : registre;
+  const content = serialitzaRegistre(next), meta = Object.freeze({action: result.accio, key: result.clau || null, actor: config.per, reason: config.motiu, acceptaRetall: Boolean(config['accepta-retall'])});
+  validaMutacioRegistre(before.bytes?.toString('utf8') ?? null, content, meta);
+  const makePlan = session => ({schema: 'sdp.mutation.v1', session, operationId: `frontissa-${result.accio}`, frontissa: meta, files: [{path: REGISTRE, before: before.hash, content}]});
+  if (config.pla) { const plan = makePlan(config.session); return {plan, planDigest: digest(JSON.stringify(plan))}; }
+  const currentContext = contextAgent(arrel, snapshot);
+  const context = {agent: initialContext.agent || currentContext.agent, session: initialContext.session || currentContext.session};
+  let transaction;
+  if (context.agent || config.session || config.rebut || injectedAuthorize || injectedSession) {
+    const session = config.session || injectedSession || context.session;
+    if (!session) throw new Error('Via agent/automatitzada: cal --session i rebut Reflex; la via humana sense IA necessita TTY sense sessió activa.');
+    const {executeMutation, reflexAuthorization} = await import('./executor-mutacio.mjs');
+    const plan = makePlan(session);
+    transaction = await executeMutation(arrel, plan, injectedAuthorize || reflexAuthorization(arrel, plan, config.rebut));
+  } else {
+    transaction = await durableMutation(arrel, [{path: REGISTRE, before: before.hash, content}], {metadata: {kind: 'frontissa-human', ...meta, invocation}});
   }
-
-  return comprova(contingut, registre);
+  return {...result, transaction: transaction.id, before: before.hash, after: digest(content)};
 }
 
 async function main() {
   const argv = process.argv.slice(2);
   const r = await executa(argv);
+  if (r.plan) { console.log(JSON.stringify(r, null, 2)); return; }
   if (r.accio) {
     console.log(`✅ [Frontissa] ${r.accio}${r.clau ? ` · ${r.clau}` : ''}${r.claus ? ` · ${r.claus} claus` : ''}`);
     return;

@@ -55,7 +55,7 @@ function etiquetaRespostaXat(intencio, tr, tx) {
   return '';
 }
 
-export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat = null, actesCalendari = [] }) {
+export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat = null, actesCalendari = [], amagaTitol = false }) {
   const arrelRef = useRef(null);
   useFullDiferit(arrelRef, 'esdeveniments', cssEsdeveniments);
 
@@ -178,18 +178,22 @@ export function QuadreAssistenciaEsdeveniment({ item, badge = null, objecteXat =
       <div className="sdp-quadre-esdeveniment__cap">
         {badge ? <SquareBadge badge={badge} /> : null}
         <div className="sdp-quadre-esdeveniment__resum">
-          <p className="sdp-quadre-esdeveniment__titol">{titolActe}</p>
-          {datesText ? (
-            <p className="sdp-quadre-esdeveniment__meta">
-              <CalendarCheck2 size={16} aria-hidden="true" />{' '}
-              <strong>{datesText}</strong>
-            </p>
-          ) : null}
-          {llocText ? (
-            <p className="sdp-quadre-esdeveniment__meta">
-              <MapPin size={16} aria-hidden="true" />{' '}
-              <span>{llocText}</span>
-            </p>
+          {!amagaTitol ? <h3 className="sdp-quadre-esdeveniment__titol">{titolActe}</h3> : null}
+          {datesText || llocText ? (
+            <div className="sdp-quadre-esdeveniment__pindoles">
+              {datesText ? (
+                <p className="sdp-quadre-esdeveniment__meta">
+                  <CalendarCheck2 size={16} aria-hidden="true" />{' '}
+                  <strong>{datesText}</strong>
+                </p>
+              ) : null}
+              {llocText ? (
+                <p className="sdp-quadre-esdeveniment__meta">
+                  <MapPin size={16} aria-hidden="true" />{' '}
+                  <span>{llocText}</span>
+                </p>
+              ) : null}
+            </div>
           ) : null}
           <div className="sdp-quadre-esdeveniment__insignies">
             {tipusActe ? <Insignia to="info">{tipusActe}</Insignia> : null}

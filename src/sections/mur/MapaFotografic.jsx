@@ -274,11 +274,11 @@ function creaMotor({ L, element, tr: traductor, enVista, enAvisDelFons, enObriFo
     const apropa = tr('editor.enquadrament.apropa', 'Apropar');
     const allunya = tr('editor.enquadrament.allunya', 'Allunyar');
     if (botoZoomMes) {
-      botoZoomMes.title = apropa;
+      botoZoomMes.removeAttribute('title');
       botoZoomMes.setAttribute('aria-label', apropa);
     }
     if (botoZoomMenys) {
-      botoZoomMenys.title = allunya;
+      botoZoomMenys.removeAttribute('title');
       botoZoomMenys.setAttribute('aria-label', allunya);
     }
   }
@@ -883,6 +883,7 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
   const idLliscador = useId();
   const idEtiqueta = useId();
   const idAjuda = useId();
+  const idRecollocaAjuda = useId();
 
   useLayoutEffect(() => {
     adoptaFulls(arrelRef.current);
@@ -992,28 +993,30 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
 
   return (
     <section className="sdp-mapa" ref={arrelRef} aria-labelledby={idTitol}>
-      <h3 id={idTitol} className="sdp-mapa__titol" aria-live="polite">
+      <h3 id={idTitol} className="sdp-mapa__titol">
         {vista.titol || tr('section.mur.mapa.totesLesFotos', 'Totes les fotos del Mur')}
       </h3>
-      <div className="sdp-mapa__eines" role="toolbar" aria-label={tr('section.mur.mapa.eines', 'Controls del mapa')}>
+      <div className="sdp-mapa__eines sdp-fila--centrada" role="toolbar" aria-label={tr('section.mur.mapa.eines', 'Controls del mapa')}>
         {nativa ? null : (
           <Boto aria-pressed={fons} onClick={commutaFons}>
             {fons ? tr('section.mur.mapa.ocultaMapa', 'Ocultar mapa') : tr('section.mur.mapa.voreMapa', 'Vore mapa')}
           </Boto>
         )}
-        <Boto onClick={() => motorRef.current?.recolloca()} disabled={!llest}
-          title={tr('section.mur.mapa.recollocaAjuda', 'Torna les targetes que has mogut al seu lloc automàtic')}>
+        <Boto onClick={() => motorRef.current?.recolloca()} disabled={!llest} aria-describedby={idRecollocaAjuda}>
           {tr('section.mur.mapa.recolloca', 'Recol·locar grups')}
         </Boto>
+        <span id={idRecollocaAjuda} className="sdp-sr-only">
+          {tr('section.mur.mapa.recollocaAjuda', 'Torna les targetes que has mogut al seu lloc automàtic')}
+        </span>
         <Boto onClick={() => motorRef.current?.vesATot()} disabled={!llest}>{tr('section.mur.mapa.voreTot', 'Vore tot')}</Boto>
         <Boto onClick={() => motorRef.current?.vesAlPoble()} disabled={!llest}>{tr('section.mur.mapa.vorePoble', 'Vore el poble')}</Boto>
       </div>
       {/* L'agrupació, abans del mapa: amb el teclat s'hi arriba sense travessar
           totes les targetes (fins a 60, amb quatre botons cada una). */}
       <div className="sdp-mapa__agrupacio" role="group" aria-labelledby={idEtiqueta}>
-        <div className="sdp-mapa__agrupacio-cap">
+        <div className="sdp-mapa__agrupacio-cap sdp-fila--centrada">
           <label id={idEtiqueta} className="sdp-mapa__etiqueta" htmlFor={idLliscador}>{tr('section.mur.mapa.agrupacio', 'Agrupació per distància')}</label>
-          <output className="sdp-mapa__valor" htmlFor={idLliscador} aria-live="polite">{textDelValor}</output>
+          <output className="sdp-mapa__valor" htmlFor={idLliscador} aria-live="off">{textDelValor}</output>
           <Boto aria-pressed={!manual} onClick={() => setLlindarManual(null)}>{tr('section.mur.mapa.segonsElZoom', 'Segons el zoom')}</Boto>
         </div>
         <input id={idLliscador} className="sdp-mapa__lliscador" type="range" min={0} max={9} step={1}
@@ -1025,7 +1028,7 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
           <span>{etiquetaDistancia(Infinity, t)}</span>
           <span>{etiquetaDistancia(0, t)}</span>
         </div>
-        <p id={idAjuda} className="sdp-mapa__ajuda" aria-live="polite">{tr(ajuda.clau, ajuda.reserva, ajuda.valors)}</p>
+        <p id={idAjuda} className="sdp-mapa__ajuda">{tr(ajuda.clau, ajuda.reserva, ajuda.valors)}</p>
       </div>
       <p className="sdp-mapa__estat" role="status">{[textDelEstat, textDelRetall, textDelFons].filter(Boolean).join(' · ')}</p>
       <div ref={llencRef} className="sdp-mapa__llenc" role="region"
@@ -1040,10 +1043,10 @@ export default function MapaFotografic({ items, pobles = null, onMapa = null }) 
         {tr('section.mur.mapa.llegenda.linies', 'Línia contínua: l’ordre de les fotos d’una publicació, no els carrers exactes. Línia discontínua: de la targeta al seu punt.')}
       </p>
       {dades.fotos.length ? null : (
-        <p className="sdp-mapa__avis">{tr('section.mur.mapa.buit', 'Encara no hi ha cap foto del Mur amb lloc. Les fotos amb GPS i les de publicacions amb poble apareixeran ací.')}</p>
+        <p className="sdp-mapa__avis sdp-paragraf-centrat" role="status">{tr('section.mur.mapa.buit', 'Encara no hi ha cap foto del Mur amb lloc. Les fotos amb GPS i les de publicacions amb poble apareixeran ací.')}</p>
       )}
       {dades.pendents.length ? (
-        <p className="sdp-mapa__avis">
+        <p className="sdp-mapa__avis sdp-paragraf-centrat">
           {dades.pendents.length === 1
             ? tr('section.mur.mapa.unaPendent', '1 foto pendent d’ubicar: no porta GPS ni poble.')
             : tr('section.mur.mapa.pendents', '{n} fotos pendents d’ubicar: no porten GPS ni poble.', { n: dades.pendents.length })}

@@ -38,6 +38,9 @@
  * llibre porta la base, l'IVA, la retenció i el període, i resumDelLlibre en
  * filtra un període amb els seus totals (les anul·lades fora i les
  * rectificatives amb el seu signe).
+ * v1.2.24 · P06-09: el preu d'una línia es llig amb la regla de l'ajuda del camp
+ * (la coma, la dels cèntims), i el que pot ser de milers o de cèntims es
+ * pregunta en lloc d'endevinar-ho (llegixPreu).
  * Sense DOM, React ni xarxa.
  */
 import { ESQUEMA_CONFIG_EMPRESA, emissorDe, llegixConfigEmpresa, validaConfigEmpresa } from '../../facturacio/configEmpresa.js';
@@ -332,6 +335,36 @@ export function llegixQuantitat(text) {
   return valor > 0 ? valor : null;
 }
 
+/* v1.2.24 · P06-09 · El preu d'una línia, com l'escriu la persona, en cèntims. La regla és la de l'ajuda del
+   camp («En euros, amb coma per als cèntims: 12,50»):
+     · la coma és la dels cèntims, amb una o dues xifres: «12,5» i «12,50» són 12,50 €;
+     · el punt és de milers davant de la coma («1.234,56») o en grups de tres («1.234.567»), com l'espai
+       («12 500»); sense coma i amb una o dues xifres darrere, és el de la calculadora: «1234.56», «2.5»;
+     · el que pot voler dir dues coses no s'endevina, es pregunta:
+         - tres xifres o més darrere d'una coma («12,500», «1,459», «0,125»): no són cèntims, i en valencià la
+           coma mai no és de milers;
+         - un sol punt, sense coma, amb tres xifres o més darrere («12.500», «1.459»): pot ser de milers o el
+           de la calculadora.
+   La lectura la seguix fent parseImport (l'analitzador dels extractes, que no es toca). Ací només es para el que
+   ell endevinava: «12,500» eren 12.500,00 € i «1,459» (el litre de gasoil), 1.459,00 €, en silenci, i «0,125»
+   s'arredonia a 0,13 €. Una factura emesa va encadenada al llibre i només es corregix amb una rectificativa. */
+const DUBTE_COMA = /,\d{3}/;
+const DUBTE_PUNT = /\.\d{3}/;
+
+/* El preu de la línia n (comptada des d'1) en cèntims, o l'error en llenguatge planer. */
+function llegixPreu(text, n) {
+  const t = net(text);
+  const preu = parseImport(t);
+  if (preu === null) return { preu, error: `Línia ${n}: el preu no s’entén; escriu-lo amb coma per als cèntims, com 12,50.` };
+  if (DUBTE_COMA.test(t)) {
+    return { preu: null, error: `Línia ${n}: darrere de la coma van els cèntims, amb dues xifres, i este preu en porta més. Si són cèntims, escriu-lo com 12,50; si són milers, com 12.500,00.` };
+  }
+  if (!t.includes(',') && t.split('.').length === 2 && DUBTE_PUNT.test(t)) {
+    return { preu: null, error: `Línia ${n}: no se sap si el punt d’este preu és de milers o de cèntims. Escriu-lo amb la coma dels cèntims: com 12.500,00 si són milers, o com 12,50 si són cèntims.` };
+  }
+  return { preu, error: null };
+}
+
 /* La clau d'una factura del llibre al formulari de la F3. */
 export const clauDeFactura = ({ numSerie, dataExpedicio }) => `${numSerie}|${dataExpedicio}`;
 const deClau = (clau) => {
@@ -487,8 +520,8 @@ export function dadesDeFactura(formulari, registres = []) {
   const linies = (Array.isArray(formulari?.linies) ? formulari.linies : []).map((l, i) => {
     const quantitat = llegixQuantitat(l.quantitat);
     if (quantitat === null) errors.push(`Línia ${i + 1}: la quantitat ha de ser un número més gran que zero (per exemple 1 o 2,5).`);
-    const preuUnitari = parseImport(net(l.preu));
-    if (preuUnitari === null) errors.push(`Línia ${i + 1}: el preu no s’entén; escriu-lo amb coma per als cèntims, com 12,50.`);
+    const { preu: preuUnitari, error: errorDelPreu } = llegixPreu(l.preu, i + 1);
+    if (errorDelPreu) errors.push(errorDelPreu);
     const exempta = typeof l.tipusIva === 'string' && l.tipusIva.startsWith('E');
     return { concepte: net(l.concepte), quantitat, preuUnitari, ...(exempta ? { exempcio: l.tipusIva } : { tipusIva: Number(l.tipusIva) }) };
   });

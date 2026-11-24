@@ -5,6 +5,7 @@ import {
   METADADES_INSTITUCIONALS_261104,
   obteFitesArquitectura261104,
 } from '../../data/fitesArquitectura261104.js';
+import { esEnllacExtern, relEnllacExtern } from '../../utils/enllacosExterns.js';
 
 /**
  * Converteix marcat bàsic de negretes (`**text**`) i codi en línia (`` `codi` ``)
@@ -92,11 +93,20 @@ export default function CroniquesFites261104({ idiomaForcat = null }) {
             <div>
               <h5>{etiquetaVincles}</h5>
               <ul>
-                {fita.enllacosCanonics.map((url) => (
-                  <li key={url}>
-                    <a href={url}>{url}</a>
-                  </li>
-                ))}
+                {fita.enllacosCanonics.map((url) => {
+                  const extern = esEnllacExtern(url);
+                  return (
+                    <li key={url}>
+                      <a
+                        href={url}
+                        target={extern ? '_blank' : undefined}
+                        rel={extern ? relEnllacExtern({ editorial: true }) : undefined}
+                      >
+                        {url}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </article>

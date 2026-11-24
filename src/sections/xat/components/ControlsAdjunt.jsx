@@ -545,7 +545,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       aria-label={activa ? t('section.xat.adjunts.grup', 'Adjunts del xat') : undefined} ref={contenidor}>
       {error ? <div className="sdp-xat-adjunts__fila">
         <p role="alert">{textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))}</p>
-        <button type="button" className="sdp-xat-icona" onClick={tancaAvis} aria-label={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')}><X size={20} aria-hidden="true" focusable="false" /></button>
+        <button type="button" className="sdp-xat-icona" onClick={tancaAvis} aria-label={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')} title={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')}><X size={20} aria-hidden="true" focusable="false" /></button>
       </div> : null}
       {quota?.pendents?.length ? <div role="group" aria-label={t('section.xat.adjunts.pendents', 'Fitxers pendents d’enviar')}>
         <p>{t('section.xat.adjunts.pendentsText', 'Tens fitxers que no s’han arribat a enviar. Pots descartar-los per recuperar espai.')}</p>
@@ -560,7 +560,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
           {/* XAT-07 · role=timer no és una regió viva que parle: els avisos van a la de baix. */}
           {gravant ? <span className="sdp-xat-adjunts__rellotge" role="timer"><span className="sdp-nomes-lector">{t('section.xat.adjunts.tempsGravacio', 'Temps de gravació')} </span>{tempsDeVeu(segonsGravats * 1000)}</span> : null}
           <button type="button" className="sdp-xat-icona sdp-xat-adjunts__cancella" ref={botons.cancella} onClick={descarta}
-            aria-label={t('section.xat.adjunts.cancella', 'Cancel·la')}><X size={20} aria-hidden="true" focusable="false" /></button>
+            aria-label={t('section.xat.adjunts.cancella', 'Cancel·la')} title={t('section.xat.adjunts.cancella', 'Cancel·la')}><X size={20} aria-hidden="true" focusable="false" /></button>
         </div>
       ) : null}
       {preparat && deCompartir && preparat.tipus !== 'veu' ? (

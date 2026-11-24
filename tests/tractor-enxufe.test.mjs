@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 test('E4 exclou mocks de proves però bloqueja la mateixa assignació en producte', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-enxufe-'));
@@ -38,6 +39,51 @@ function arrelDeProves() {
   };
   return { root, escriu, infraccions, neteja: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
+
+test('E4 · helper IDB inert només amb consumidors de prova; importació productiva, glob i efecte de mòdul es refusen', () => {
+  const a = arrelDeProves();
+  const helper = 'src/sections/notes/__fixtures__/idbMemoriaTest.js';
+  const source = 'export function installa(){Object.defineProperty(globalThis,"indexedDB",{});}\n';
+  try {
+    a.escriu(helper, source);
+    assert.equal(a.infraccions('E4').length, 1, 'el directori i el nom sols no acrediten una prova');
+    a.escriu('src/consumer.test.js', `import './sections/notes/__fixtures__/idbMemoriaTest.js';`);
+    assert.deepEqual(a.infraccions('E4'), []);
+    for (const consumer of [
+      `import './sections/notes/__fixtures__/idbMemoriaTest.js';`,
+      `export const load=()=>import('./sections/notes/__fixtures__/idbMemoriaTest.js');`,
+      `export {installa} from '@/sections/notes/__fixtures__/idbMemoriaTest.js';`,
+      `const fixtures=import.meta.glob('./sections/notes/**/*.js');`,
+      `import './sections/notes/__fixtures__/idbMemoriaTest.js?v=1';`,
+      `import './sections/notes/__fixtures__/idbMemoriaTest.js#v';`,
+      `import './sections/notes/__fixtures__/%69dbMemoriaTest.js';`,
+      ...(fs.existsSync(path.join(a.root, 'src/sections/notes/__fixtures__/IDBMEMORIAtest.js')) ? [`import './sections/notes/__fixtures__/IDBMEMORIAtest.js';`] : []),
+      `import './consumer.test.js';`,
+      `const fixtures=import.meta['glob']('./sections/notes/**/*.js');`,
+      `import ${JSON.stringify(pathToFileURL(path.join(a.root, helper)).href)};`
+    ]) {
+      a.escriu('src/consumer.js', consumer);
+      assert.equal(a.infraccions('E4').length, 1, consumer);
+    }
+    fs.unlinkSync(path.join(a.root, 'src/consumer.js'));
+    a.escriu('src/consumer.ts', `import './sections/notes/__fixtures__/idbMemoriaTest.js';`);
+    assert.equal(a.infraccions('E4').length, 1, 'els consumidors TypeScript també són producte');
+    fs.unlinkSync(path.join(a.root, 'src/consumer.ts'));
+    a.escriu(helper, `${source}Object.defineProperty(globalThis,"indexedDB",{});`);
+    assert.equal(a.infraccions('E4').length, 2, 'els efectes de mòdul no són un doble inert');
+    a.escriu(helper, source);
+    a.escriu('src/other.js', 'Object.defineProperty(globalThis,"indexedDB",{});');
+    assert.equal(a.infraccions('E4').length, 1, 'cap altre mòdul hereta el permís');
+    fs.unlinkSync(path.join(a.root, 'src/other.js'));
+    a.escriu('support.js', source);
+    fs.unlinkSync(path.join(a.root, helper));
+    fs.symlinkSync(path.join(a.root, 'support.js'), path.join(a.root, helper));
+    assert.ok(a.infraccions('E4').some(issue => issue.detall.includes('simbòlic')));
+    fs.unlinkSync(path.join(a.root, helper));
+    fs.linkSync(path.join(a.root, 'support.js'), path.join(a.root, helper));
+    assert.ok(a.infraccions('E4').some(issue => issue.detall.includes('hardlink')));
+  } finally { a.neteja(); }
+});
 
 test('E1 veu el SDK del proveïdor importat pel nom del paquet fora de les zones d’adaptador', () => {
   const a = arrelDeProves();

@@ -7,6 +7,7 @@ import { ROOT, options } from '../documental/cli.mjs';
 import { protectedPath, relativePath, humanZone, parseDocument } from '../documental/core.mjs';
 import { suggeriment } from '../wiki/plantilles.mjs';
 import { validateDocument } from '../documental/turns.mjs';
+import { camiDeArgs, contingutCompletDeArgs } from '../lib/tool-dialect.mjs';
 
 function replace(base, oldText, newText, all=false) {
   if (typeof oldText!=='string' || !oldText || typeof newText!=='string') throw new Error('Edició sense text original/resultant');
@@ -19,16 +20,20 @@ export function normalitza(payload, root=ROOT) {
   const ti=payload.tool_input, ta=payload.toolArgs;
   if (!ti && !ta) throw new Error('Dialecte de hook desconegut');
   const dialecte=ti?'claude':'antigravity';
-  const fitxer=ti?.file_path||ti?.notebook_path||ta?.TargetFile;
+  const fitxer=camiDeArgs(ti)||camiDeArgs(ta);
   if (!fitxer) throw new Error('Operació sense ruta; usa la porta final per a shell/Bash');
   if (humanZone(relativePath(root,fitxer,cwd))) throw new Error('Zona de producció humana protegida');
   if (!protectedPath(root,fitxer,cwd)) return {dialecte,fitxer,fora:true};
   const rel=relativePath(root,fitxer,cwd);
   if(humanZone(rel)) throw new Error('Zona de producció humana protegida');
   let contingut;
-  if(typeof ti?.content==='string') contingut=ti.content;
-  else if(typeof ta?.CodeContent==='string') contingut=ta.CodeContent;
-  else {
+  const complet = contingutCompletDeArgs(ti) ?? contingutCompletDeArgs(ta);
+  if(typeof complet==='string') contingut=complet;
+  else if(ta && typeof ta.Content==='string' && ta.Append===true) {
+    const abs=path.join(root,rel);
+    const previ=fs.existsSync(abs)?fs.readFileSync(abs,'utf8'):'';
+    contingut=previ+ta.Content;
+  } else {
     contingut=fs.readFileSync(path.join(root,rel),'utf8');
     if(ti) contingut=replace(contingut,ti.old_string,ti.new_string,ti.replace_all===true);
     else if(Array.isArray(ta.ReplacementChunks)) {
@@ -38,6 +43,8 @@ export function normalitza(payload, root=ROOT) {
         if(chunk.StartLine!==undefined || chunk.EndLine!==undefined) throw new Error('Edició per línies no suportada; envia el document complet');
         contingut=replace(contingut,chunk.TargetContent,chunk.ReplacementContent,chunk.AllowMultiple===true);
       }
+    } else if(typeof ta.Target==='string' || typeof ta.Replacement==='string') {
+      contingut=replace(contingut,ta.Target,ta.Replacement,true);
     } else contingut=replace(contingut,ta.TargetContent,ta.ReplacementContent,ta.AllowMultiple===true);
   }
   return {dialecte,fitxer:rel,contingut};

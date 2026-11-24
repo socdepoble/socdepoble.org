@@ -81,8 +81,10 @@ const REBUIG_NORMES = 'Supabase 403: {"code":"42501","message":"SDP-MOD-428: cal
 /* Els textos anglesos que diuen els consumidors (els mateixos que les proves del mòdul pur). */
 const EN_NORMES = 'To post, you need to accept the community guidelines.';
 const EN_XARXA = 'Could not publish to the Wall.';
-const EN_LOCAL = 'Note saved on this device. Connect a backend to publish to the Wall.';
-const EN_LOCAL_CONNEXIO = 'Connection saved on this device. Connect a backend to share it to the Wall.';
+/* F4F (Assaig a la Plaça, canvi 1) · Sense «Connect a backend»: en el mode de proves no s'envia a ningú ni es
+   publica. La nota no nomena el Mur (també ix al Mercat) ni cap desat (la línia d'estat diu on es queda). */
+const EN_LOCAL = 'In test mode, the note is not sent to anyone or published.';
+const EN_LOCAL_CONNEXIO = 'In test mode, the connection is not sent to anyone or shared to the Wall.';
 const EN_PUBLICADA = 'Removing a note from the Wall has no data contract with the server yet: you can update it, but not make it private again.';
 /* D1 Opció A (261112) · Darrere de publicar o compartir, qui ho pot llegir; amb MUR_PUBLIC_FILTRAT, la versió pública. */
 const EN_DARRERE = MUR_PUBLIC_FILTRAT

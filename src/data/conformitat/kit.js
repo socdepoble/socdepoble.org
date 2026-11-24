@@ -224,6 +224,21 @@ const casosCompte = (metode, comprova, escriu = false) => [
     arguments: ctx => argumentsCompte(metode, ctx), comprova: senseSessio })
 ];
 
+const RECURSOS_COPIA_C6 = ['perfil','notes','noteFolders','organitzacions','patrimoni'];
+function fallesCopiaC6(v,ctx) {
+  if(!esObjecte(v)||v.format!=='socdepoble.backup.v2'||v.titularId!==ctx.ownerUserId||!esTextNoBuit(v.tenantId)||!esTextNoBuit(v.generatAl)||!Number.isFinite(Date.parse(v.generatAl))||!esObjecte(v.dades))return ['snapshot de negoci v2 o actor incorrecte'];
+  if(Object.keys(v.dades).sort().join(',')!==[...RECURSOS_COPIA_C6].sort().join(',')||!esObjecte(v.dades.perfil))return ['recursos de negoci incomplets'];
+  return RECURSOS_COPIA_C6.filter(k=>k!=='perfil').flatMap(k=>exigixLlistaAmbId(v.dades[k],k));
+}
+function fallesCandidatC6(v,ctx) {
+  if(!esObjecte(v)||!esObjecte(v.adaptador)||!esObjecte(v.restauracio))return ['falta candidat de negoci inactiu'];
+  const {adaptador:a,restauracio:r}=v;
+  if(a.perfilCopia!=='negoci-local'||r.durabilitat!=='memoria'||r.destinacio!=='copia-local-inactiva'||r.actiuModificat!==false||!esObjecte(r.creats))return ['candidat no restringit o activació inesperada'];
+  if(['llegixCopiaCompte','restauraCopiaCompte','loadNotes','getProfile','listMyOrganizations','llistaRevisionsPatrimoni','destroy'].some(k=>typeof a[k]!=='function'))return ['falta API de negoci restaurat'];
+  if(['loadFils','enviaMissatge','logout','adoptaSessioExterna','demanaBaixa','publishNote','exportaLesMeuesDades'].some(k=>k in a))return ['el candidat exposa una API exclosa'];
+  return RECURSOS_COPIA_C6.flatMap(k=>r.creats[k]===(k==='perfil'?1:ctx.copiaCompte.dades[k].length)?[]:['recompte restaurat incorrecte: '+k]);
+}
+
 function casosFedi17() {
   return [
     cas({ metode: 'appendChatMessages', escriu: true, requerix: ['filEscrivible'],
@@ -377,6 +392,10 @@ function casosFedi17() {
       ...['seguiments', 'bloquejos'].flatMap(k => v[k] === undefined || Array.isArray(v[k]) ? [] : [`l’exportació porta ${k} malformat`]),
       ...(Array.isArray(v.consentiments) && ['accepta', 'revoca'].every(accio => v.consentiments.some(a => a.tipus === 'analitica' && a.accio === accio)) ? [] : ['l’exportació ha perdut l’historial del consentiment'])
     ]),
+    cas({metode:'llegixCopiaCompte',capacitat:'copiaCompte',requerix:['compteOperatiu'],
+      titol:'C6: snapshot v2 conserva els cinc recursos i l’actor de la passada',arguments:ctx=>[ctx.config],comprova:fallesCopiaC6,desa:(v,ctx)=>{ctx.copiaCompte=v;}}),
+    cas({metode:'restauraCopiaCompte',capacitat:'restauracioCompte',escriu:true,requerix:['compteOperatiu','copiaCompte'],
+      titol:'C6: restauració preparada torna candidat de negoci inactiu i restringit',arguments:ctx=>[ctx.copiaCompte,ctx.config],comprova:fallesCandidatC6,desa:(v,ctx)=>{ctx.candidatNegoci=v.adaptador;}}),
     /* La baixa tanca la sessió: cap cas següent necessita sessió ni escriu. */
     ...casosCompte('demanaBaixa', fallesBaixa(true), true),
     cas({ metode: 'logout', escriu: true, titol: 'logout: eixida de pestanya explícita, resol void i el corredor comprova sessió buida',
@@ -1370,6 +1389,7 @@ export const CASOS = Object.freeze([
   cas({ metode: 'alternaDestacat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaDestacat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
   cas({ metode: 'alternaFixat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaFixat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
   cas({ metode: 'eliminaPerAMi', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: eliminaPerAMi rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  cas({ metode: 'eliminaPerATothom', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'C10: eliminaPerATothom rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
 
   /* R32.19 · Formes pures del proveïdor, substituïbles darrere del port.
      Arestes de tipus neutrals: no fixen els camins de cap proveïdor. */

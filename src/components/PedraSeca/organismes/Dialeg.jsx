@@ -110,7 +110,8 @@ function ContingutDialeg({
   useInsertionEffect(() => {
     // El destí del portal ja existix. Els refs del diàleg nou encara no:
     // capturar ací precedix autoFocus dels fills en la fase de layout.
-    if (local && obert) retorn.current = arrelModal.getRootNode().activeElement;
+    if (!obert) return;
+    retorn.current = local ? arrelModal.getRootNode().activeElement : document.activeElement;
   }, [obert, local, arrelModal]);
 
   /* P0-24 (G2120-07, marató 261101_2143) · L'Arrere d'Android tanca el diàleg
@@ -135,14 +136,14 @@ function ContingutDialeg({
 
   useEffect(() => {
     const d = ref.current;
-    if (!d || local) return;
+    if (!d || local || !obert) return undefined;
     // El primer commit local encara servix de sonda; el layout effect del
     // pare el trasllada al portal abans de pintar. Mai obrir-lo com a modal
     // de document durant este pas ni després d'una desconnexió de l'host.
-    if (d.getRootNode().host?.localName === 'soc-de-poble') return;
-    if (obert && !d.open) {
-      const arrel = d.getRootNode();
-      retorn.current = arrel.activeElement || document.activeElement;
+    if (d.getRootNode().host?.localName === 'soc-de-poble') return undefined;
+    if (!d.open) {
+      const previ = d.getRootNode().activeElement;
+      if (previ && !d.contains(previ)) retorn.current = previ;
       if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
       /* Fase D (261020, revisió) · L'autoFocus de React corre en el commit,
          amb el <dialog> encara tancat (display:none), i no fa res; React no
@@ -153,10 +154,28 @@ function ContingutDialeg({
       alObrirRef.current?.();
       /* T2 · Obert, ja es pot mesurar (en el commit encara era tancat). */
       avaluaBarraRef.current();
-    } else if (!obert && d.open) {
-      if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
-      retorn.current?.focus?.();
     }
+    return () => {
+      const desti = retorn.current;
+      retorn.current = null;
+      /* v1.2.24 · costura R32.75 · Si en tancar el focus ja és en un lloc de la
+         pàgina, fora del diàleg, no se li pren: l'hi ha dut algú altre (contingut
+         nou del mateix commit amb autoFocus, o el focus() que OperacionsArxiuLocal,
+         AccionsCarpetaLocal i LaboratoriWebpLocal fan en onTanca). Eixe focus()
+         només arriba si el diàleg no és modal (sense showModal(), com en jsdom, o
+         tancat pel navegador després de dos Escape): amb showModal() obert, la
+         resta de la pàgina és inert, no l'accepta i el disparador capturat en obrir
+         continua manant. Dins del diàleg, perdut (body) o dins d'un altre <dialog>
+         (un d'encadenat que s'obri i el prendrà d'ací), torna al disparador, com
+         fins ara. Es mira abans de tancar: close() el pot moure. */
+      const actiu = desti?.isConnected ? desti.getRootNode().activeElement : null;
+      const posatPelConsumidor = Boolean(actiu) && actiu !== d.ownerDocument.body
+        && !d.contains(actiu) && !actiu.closest('dialog');
+      if (d.open) {
+        if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
+      }
+      if (!posatPelConsumidor && desti?.isConnected && !desti.closest('[inert],[hidden]')) desti.focus();
+    };
   }, [obert, local]);
 
   useEffect(() => {
@@ -181,7 +200,7 @@ function ContingutDialeg({
        s'avisa el pare: si no, obert=true mentiria i el disparador ja no el
        podria reobrir. El tancament propi (obert=false) no avisa ningú. */
     const onClose = () => {
-      if (obertRef.current && !d.open) {
+      if (d.isConnected && obertRef.current && !d.open) {
         if (local) tancaRef.current?.('boto');
         else tancaRef.current?.('esc', { forcat: true });
       }
@@ -221,7 +240,13 @@ function ContingutDialeg({
         <header className="sdp-dialeg__cap">
           <h2 id={`${id}-titol`} className="sdp-dialeg__titol">{titol}</h2>
           {ambTanca ? (
-            <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label={tradueix(t, TANCA_DIALEG)}>
+            <button
+              type="button"
+              className="sdp-dialeg__tanca"
+              onClick={() => onTanca?.('boto')}
+              aria-label={tradueix(t, TANCA_DIALEG)}
+              title={tradueix(t, TANCA_DIALEG)}
+            >
               <X size={22} aria-hidden="true" focusable="false" />
             </button>
           ) : null}

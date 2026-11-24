@@ -11,6 +11,7 @@ import { autorDeCita, textDeCita } from '../conversa.js';
 export default function BarraResposta({ missatge, onCancela, t }) {
   if (!missatge) return null;
   const autor = autorDeCita(missatge, t);
+  const etiquetaCancela = t('section.xat.resposta.cancela', 'Cancel·la la resposta');
   return (
     <div
       className="sdp-xat-resposta"
@@ -25,7 +26,8 @@ export default function BarraResposta({ missatge, onCancela, t }) {
         type="button"
         className="sdp-xat-icona"
         onClick={onCancela}
-        aria-label={t('section.xat.resposta.cancela', 'Cancel·la la resposta')}
+        aria-label={etiquetaCancela}
+        title={etiquetaCancela}
       >
         <X size={20} aria-hidden="true" focusable="false" />
       </button>

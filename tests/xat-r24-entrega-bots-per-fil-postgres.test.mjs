@@ -13,6 +13,8 @@
    PostgreSQL 18.6 local i descartable; cap servei remot. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
 import { startLocalPostgres } from './fixtures/postgres-local.mjs';
 
@@ -33,7 +35,7 @@ async function actor(db, who, sql, params = []) {
 }
 
 test('R24 · llista = bombolla (D-1) en tots els estats i bots resolts una vegada per fil', { timeout: 300000 }, async t => {
-  const cluster = await startLocalPostgres(), db = cluster.db;
+  const cluster = await startLocalPostgres({ dataRoot: join(tmpdir(), 'sdp-r24-native') }), db = cluster.db;
   try {
     const plan = creaPlaMigracions();
     await db.query(plan.bootstrap);
@@ -55,11 +57,24 @@ test('R24 · llista = bombolla (D-1) en tots els estats i bots resolts una vegad
     /* E ha eixit; F l'ha deixat de veure; BOT2 és un principal sense lligam en GRUP2. */
     await db.query("update public.xat_participants set eixit_al=now() where fil_id=$1 and usuari_id=$2", [GRUP, E]);
     await db.query('update public.xat_participants set visible_fins_seq=12 where fil_id=$1 and usuari_id=$2', [GRUP, F]);
-    await db.query("insert into public.xat_fils(id,tenant_id,tipus,creat_per,ultim_seq) values($1,$2,'directe',$3,40)", [DIR, TOWN, D]);
-    await db.query('insert into public.xat_participants(fil_id,usuari_id) values($1,$2),($1,$3)', [DIR, D, G]);
-    await db.query("insert into public.xat_fils(id,tenant_id,tipus,creat_per,org_id,interlocutor_id,ultim_seq) values($1,$2,'directe',$3,$4,$3,40)", [ENT, TOWN, D, ORG]);
-    await db.query('insert into public.xat_participants(fil_id,usuari_id) values($1,$2)', [ENT, D]);
-    await db.query("insert into public.xat_participants(fil_id,usuari_id,com_org_id,rol) values($1,$2,$4,'admin'),($1,$3,$4,'admin')", [ENT, A, C, ORG]);
+    // IDEA-339 comprova els directes al COMMIT: la fixture també ha de crear
+    // el fil i els participants atòmicament, com fa la RPC canònica.
+    await db.query('begin');
+    await db.query("insert into public.xat_fils(id,tenant_id,tipus,creat_per) values($1,$2,'directe',$3)", [id(999), TOWN, D]);
+    await assert.rejects(db.query('commit'), e => e.code === '23514' && /SDP-XAT-051/.test(e.message));
+    await db.query('rollback');
+    assert.equal((await db.query('select count(*)::int n from public.xat_fils where id=$1', [id(999)])).rows[0].n, 0);
+    await db.query('begin');
+    try {
+      await db.query("insert into public.xat_fils(id,tenant_id,tipus,creat_per,ultim_seq) values($1,$2,'directe',$3,40)", [DIR, TOWN, D]);
+      await db.query('insert into public.xat_participants(fil_id,usuari_id) values($1,$2),($1,$3)', [DIR, D, G]);
+      await db.query("insert into public.xat_fils(id,tenant_id,tipus,creat_per,org_id,interlocutor_id,ultim_seq) values($1,$2,'directe',$3,$4,$3,40)", [ENT, TOWN, D, ORG]);
+      await db.query('insert into public.xat_participants(fil_id,usuari_id) values($1,$2)', [ENT, D]);
+      await db.query("insert into public.xat_participants(fil_id,usuari_id,com_org_id,rol) values($1,$2,$4,'admin'),($1,$3,$4,'admin')", [ENT, A, C, ORG]);
+      await db.query('commit');
+    } catch (e) { await db.query('rollback'); throw e; }
+    assert.deepEqual((await db.query('select fil_id,count(*)::int n from public.xat_participants where fil_id=any($1) group by fil_id order by fil_id', [[DIR, ENT]])).rows,
+      [{ fil_id: DIR, n: 2 }, { fil_id: ENT, n: 3 }]);
     const PROPI = (await actor(db, G, 'select public.crea_fil_directe($1,$2,null) as id', [TOWN, G])).rows[0].id;
     await db.query('update public.xat_fils set ultim_seq=40 where id=$1', [PROPI]);
 

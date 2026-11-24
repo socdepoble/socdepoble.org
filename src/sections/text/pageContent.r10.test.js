@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { localitzaPagina } from './pageContent.r10.js';
+import { obtePaginaVersionsCompleta } from './pageContent.versionsHistoric.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { CAPACITATS, CONTRACTE_BACKEND } from '../../data/contracte.js';
 import { CASOS } from '../../data/conformitat/kit.js';
@@ -24,7 +25,9 @@ describe('AH-22 · rural content and dated production balance in five languages'
  });
  test.each(languages)('%s distinguishes production, sealed kits and open custody', language => {
   for (const key of ['fedivers','fediversity','node-zero','versions']) {
-   const page=localitzaPagina(PAGE_COPY[key], language), body=doc(page.html);
+   const page = key === 'versions'
+    ? obtePaginaVersionsCompleta(PAGE_COPY[key], language)
+    : localitzaPagina(PAGE_COPY[key], language), body=doc(page.html);
    for (const fact of ['PostgreSQL 17.11','40','32',String(key==='versions'?46:Object.keys(CAPACITATS).length),String(key==='versions'?138:CONTRACTE_BACKEND.length),String(key==='versions'?190:CASOS.length),'R5','R6','R8','R9','R-5','3-2-1','Supabase','Nix','SKOS']) expect(body.body.textContent).toContain(fact);
    expect(body.querySelector('a[href="https://socdepoble.cat/api/v1/node0/status"]')).not.toBeNull();
    expect(body.querySelector('a[href="https://mastodont.cat/@depoble"]')).not.toBeNull();
@@ -79,9 +82,10 @@ describe('AH-22 · rural content and dated production balance in five languages'
   expect(localitzaPagina(custom,'es')).toBe(custom);
   expect(localitzaPagina(PAGE_COPY.habitatge,'fr')).toBe(PAGE_COPY.habitatge);
  });
- test('historical changelog stays intact and tagged with its original language', () => {
-  expect(PAGE_COPY.versions.html).toContain('3 de novembre de 2026 · v1.1.0');
-  expect(doc(localitzaPagina(PAGE_COPY.versions,'es').html).querySelector('div[lang="ca"]')).not.toBeNull();
+ test('historical changelog stays intact in lazy historic module and tagged with its original language', () => {
+  expect(PAGE_COPY.versions.html).not.toContain('3 de novembre de 2026 · v1.1.0');
+  expect(obtePaginaVersionsCompleta(PAGE_COPY.versions, 'ca').html).toContain('3 de novembre de 2026 · v1.1.0');
+  expect(doc(obtePaginaVersionsCompleta(PAGE_COPY.versions, 'es').html).querySelector('div[lang="ca"]')).not.toBeNull();
  });
  test('P0-38 / IDEA-157 · Regla del Cosí Guillermo: /anima, /projecte, /disseny i /anatomia-rural usen l’imaginari i conceptes «de poble» en les 5 llengües', () => {
   expect(PAGE_COPY.projecte.html).not.toContain('La IAIA usa les imatges del poble per a explicar la tecnologia.');

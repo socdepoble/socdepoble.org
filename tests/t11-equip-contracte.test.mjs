@@ -101,7 +101,7 @@ test('el lector web real mostra tots els perfils en vertical sense taules ni tra
   const html=parseMarkdown(parseDocument(read(EQUIP)).body,{entradilla:false});
   assert.equal(html.includes('![['),false);
   assert.equal(html.includes('<table'),false);
-  for(const m of members(source()))assert.ok(html.includes(`<h4 class="h3">${m.nom} (<code>${m.id}</code>)</h4>`)&&html.includes(m.rol)&&html.includes(`href="${m.url}"`),m.id);
+  for(const m of members(source()))assert.ok(html.includes(`<h4>${m.nom} (<code>${m.id}</code>)</h4>`)&&html.includes(m.rol)&&html.includes(`href="${m.url}"`),m.id);
 });
 test('lectura, resolució i comprovació deixen intactes les fonts i la memòria narrativa',()=>{
   const files=[EQUIP,'_wiki_de_poble/01_ser/agents_equip_ia.md','AGENTS.md','.agents/cervell.json','.agents/consell.json','.agents/PROFILE.md','.agents/ESTAT.md','.agents/skills/core-consell-i-colmena/SKILL.md'];

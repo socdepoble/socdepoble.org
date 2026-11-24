@@ -9,6 +9,7 @@
    prerender. */
 import { CAP_SOCIAL_BASE, primeraImatgeSocial } from './imatgeSocial.js';
 import { nomDeLaGent } from '../sections/pobles/nomsDelPoble.js';
+import { cercadorEndavant, llevaEtiquetes } from './contentHelpers.js';
 
 export const LIMIT_TITOL = 160;
 export const LIMIT_DESCRIPCIO = 300;
@@ -27,6 +28,55 @@ const senseEmfasi = (text) => text.replace(/[*_~]+/g, (tirada, posicio, tot) => 
   LLETRA_A_LA_FI.test(tot.slice(Math.max(0, posicio - 2), posicio))
     && LLETRA_A_L_INICI.test(tot.slice(posicio + tirada.length, posicio + tirada.length + 2)) ? tirada : ''));
 
+/* Mateixa forma que /<script\b[^>]*>[\s\S]*?<\/script>/gi, amb cerques
+   que només avancen. Sense tancament, les obertures següents tampoc casen. */
+function senseScripts(text) {
+  const inici = /<script\b/gi, cap = cercadorEndavant(text, '>'), fi = cercadorEndavant(text, /<\/script>/gi);
+  let net = '', fet = 0, match;
+  while ((match = inici.exec(text))) {
+    const tancaCap = cap(inici.lastIndex);
+    if (tancaCap === -1) break;
+    const tanca = fi(tancaCap + 1);
+    if (tanca === -1) break;
+    net += text.slice(fet, match.index) + ' ';
+    fet = tanca + 9;
+    inici.lastIndex = fet;
+  }
+  return net + text.slice(fet);
+}
+
+/* Tres passades com abans: [[nom|àlies]], [[nom]], !?[text](url).
+   Cada delimitador trobat es reutilitza fins que queda darrere del cursor. */
+function senseEnllacos(text, mode) {
+  const wiki = mode !== 0, obertura = wiki ? '[[' : '[';
+  const tanca = cercadorEndavant(text, ']'), segon = cercadorEndavant(text, mode === 2 ? '|' : ')');
+  let net = '', fet = 0, inici = text.indexOf(obertura);
+  while (inici !== -1) {
+    let etiqueta = inici + obertura.length;
+    const claudator = tanca(etiqueta);
+    if (claudator === -1) break;
+    let fi = -1;
+    if (wiki && claudator > etiqueta && text[claudator + 1] === ']') {
+      if (mode === 1) fi = claudator + 2;
+      else {
+        const separador = segon(etiqueta);
+        if (separador > etiqueta && separador < claudator - 1) { etiqueta = separador + 1; fi = claudator + 2; }
+      }
+    } else if (!wiki && text[claudator + 1] === '(') {
+      const parentesi = segon(claudator + 2);
+      if (parentesi === -1) break;
+      fi = parentesi + 1;
+    }
+    if (fi !== -1) {
+      const des = !wiki && text[inici - 1] === '!' && inici > fet ? inici - 1 : inici;
+      net += text.slice(fet, des) + text.slice(etiqueta, claudator);
+      fet = fi;
+    }
+    inici = text.indexOf(obertura, fi === -1 ? inici + 1 : fet);
+  }
+  return net + text.slice(fet);
+}
+
 /* El text pla d'una metadada: sense etiquetes HTML (ni scripts), sense la
    sintaxi d'enllaç, de codi ni d'èmfasi del Markdown, amb les entitats bàsiques
    descodificades, sense caràcters de control (\p{Cc}) i amb un sol espai. Es retalla
@@ -35,9 +85,7 @@ const senseEmfasi = (text) => text.replace(/[*_~]+/g, (tirada, posicio, tot) => 
    doc_to_app), i per això tornar-lo a passar no el canvia. */
 export function textPla(valor, limit = LIMIT_DESCRIPCIO) {
   if (typeof valor !== 'string') return '';
-  const text = senseEmfasi(valor.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<[^>]*>/g, ' ').replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
-    .replace(/\[\[([^\]]+)\]\]/g, '$1').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+  const text = senseEmfasi(senseEnllacos(senseEnllacos(senseEnllacos(llevaEtiquetes(senseScripts(valor)), 2), 1), 0)
     .replace(/`/g, '')).replace(/&(?:amp|lt|gt|quot|apos|#39);/g, (entitat) => ENTITATS[entitat])
     .replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim();
   let retallat = '';

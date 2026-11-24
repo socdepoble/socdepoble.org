@@ -87,8 +87,15 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * /mur/la-veu-de-soc-de-poble») · «La Veu de Sóc de Poble» entra davant del Pou de Neu.
  * Onada R25 (14-11-2026 17:35; ordre del Mestre, «El Farcellet Digital de Sóc de Poble») ·
  * «El Farcellet Digital de Sóc de Poble» entra la primera, la publicació més nova. Amb ella en són catorze.
+ * v1.2.24 (24-11-2026; ordre del Mestre) · Reconeixements entra la primera: «Reconeixements i fonts
+ * d'inspiració» (PAGE_COPY.reconeixements, IDEA-340, kit R32.61 de Gemini) és la Notícia #1 del Mur, davant
+ * del Farcellet. En remot mana la seua data de publicació (24-11-2026, 00:00 hora local). Amb ella en són quinze.
+ * Onada R32.86 (24-11-2026 16:45; IDEA-348, «Cada cosa al seu lloc») · entra la segona de la llavor, darrere de
+ * Reconeixements; en remot mana la seua data real (24-11-2026 16:45). Amb ella en són setze.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['pages', 'reconeixements'],
+  ['pages', 'cada-cosa-al-seu-lloc'],
   ['feedPosts', 'copies-de-seguretat-soc-de-poble'],
   ['feedPosts', 'la-veu-de-soc-de-poble'],
   ['feedPosts', 'noves-tecnologies-aplicades-a-la-cultura-rural'],

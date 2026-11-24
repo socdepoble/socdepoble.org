@@ -54,13 +54,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 64 capacitats atòmiques opcionals (`CAPACITATS`)
+## 66 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**152 mètodes addicionals** i **184 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**155 mètodes addicionals** i **187 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 64 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 66 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -68,22 +68,24 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `transportOAuth` | `bescanviaCodiOAuth` |
 | `ackCrdtRural` | `confirmaCapturaCrdtRural` |
 | `denunciesDiligents` | `registraDenunciaDiligent`, `revisaDenunciaDiligent`, `llistaDenunciesDiligents` |
+| `revocacioPublicacions` | `revocaPublicacioMur`, `drenaRevocacionsMur`, `encuaRevocacioNotaMur` |
+| `copublicacio` | `lligPublicadorsRegistrats`, `traspassaPublicacio`, `reverteixTraspasPublicacio` |
 | `projeccionsCataleg` | `loadProjeccionsCataleg` |
 | `administracioSessions` | `adminResumSessionsDispositius`, `adminLlistaSessionsDispositius` |
 | `curadoriaCultural` | `estatCuradoriaCultural`, `llistaAportacionsCulturals`, `enviaAportacioCultural`, `revisaAportacioCultural` |
 | `iaia` | `consultaIAIA` |
 | `xatRitme` | `loadRitmeXat`, `actualitzaPresenciaXat` |
-| `xatAccionsMissatge` | `carregaAccionsMissatges`, `alternaReaccio`, `alternaDestacat`, `alternaFixat`, `eliminaPerAMi` |
+| `xatAccionsMissatge` | `carregaAccionsMissatges`, `alternaReaccio`, `alternaDestacat`, `alternaFixat`, `eliminaPerAMi`, `eliminaPerATothom` |
 | `carpetesNotes` | `creaCarpetaNotes` |
 | `edicioEditorial` | `adminActualitzaPublicacioEditorial` |
 | `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |
 | `edicioPublicacionsPropies` | `desaPublicacioPropia` |
 | `revisionsPagines` | `llistaRevisionsPagina`, `desaRevisioPagina`, `restauraRevisioPagina` |
 | `revisionsPatrimoni` | `llistaRevisionsPatrimoni`, `desaRevisioPatrimoni`, `esborraRevisioPatrimoni` |
-| `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
-| `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |
 | `sessioExterna` | `adoptaSessioExterna` |
 | `paginacioNotes` | `loadNotesPage` |
+| `copiaCompte` | `llegixCopiaCompte` |
+| `restauracioCompte` | `restauraCopiaCompte` |
 | `paginacioSeccions` | `loadSeccioPage` |
 | `admin` | `adminListUsers`, `adminListOrganizations` |
 | `administracioUsuaris` | `adminLlistaUsuarisRegistrats`, `adminAssignaMembreOrganitzacio`, `adminConnectaUsuari` |
@@ -119,15 +121,15 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `moderacioLssi` | `registraDenunciaPublica`, `adminSafataDenuncies`, `adminRevisaDenuncia` |
 | `normesConvivencia` | `estatNormes`, `acceptaNormes` |
 | `seguiments` | `segueix`, `deixaDeSeguir`, `estatSeguiment`, `elsMeusSeguiments`, `quiEmSegueix` |
-| `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |
 | `titularPublic` | `loadTitularPublic` |
 | `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |
 | `dadesObertes` | `llegixDadesObertes` |
 | `restauracioDadesObertes` | `restauraDadesObertes` |
 | `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |
 | `silenciXat` | `silenciaFil` |
-| `copublicacio` | `lligPublicadorsRegistrats`, `traspassaPublicacio`, `reverteixTraspasPublicacio` |
-| `revocacioPublicacions` | `revocaPublicacioMur`, `drenaRevocacionsMur`, `encuaRevocacioNotaMur` |
+| `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |
+| `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
+| `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |
 
 ## Validació i conformitat
 
@@ -149,7 +151,7 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
-### Recompte local vigent (R32.44 · 2026-11-22) i verificació per correu (R6)
+### Recompte local vigent (R32.64 · 2026-11-24) i verificació per correu (R6)
 
 R32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia pública i revisió humana, amb tres casos de rebuig previ; el grup no està disponible a l’adaptador local.
 
@@ -157,11 +159,13 @@ R32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccio
 
 R32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.
 
-El recompte actual és de **247 casos sobre 184 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **250 casos sobre 187 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **48 dels 64 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 47 casos** d’estos grups per **capacitat absent**.
+L’adaptador local oferix **50 dels 66 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 184 operacions en un servidor remot continua pendent.
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 187 operacions en un servidor remot continua pendent.
+
+R32.56 (C6) afig `copiaCompte` i `restauracioCompte`: **còpia del subconjunt de negoci implementat** —perfil, notes, carpetes, organitzacions i patrimoni— i restauració en **candidat inactiu en RAM**, restringit i lligat a l’actor. **No és una restauració completa ni durable del compte** ni una capacitat de restauració remota. R32.64 (C10) afig el sisé mètode d’`xatAccionsMissatge`, `eliminaPerATothom`, i un cas comú de rebuig. La RPC preparada **elimina sense caducitat**, requerix **autoritat del servidor i rebut confirmat**; esta operació no confirma localment davant absència SQL o denegació. Les proves locals **no acrediten desplegament remot**.
 
 ### Consens del joc «D'on parles?» (R24)
 
@@ -255,7 +259,7 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **48 dels 64 grups declarats**; `CAPACITATS_NO_DECLARADES`
+L'adaptador local oferix **50 dels 66 grups declarats**; `CAPACITATS_NO_DECLARADES`
 conté `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política

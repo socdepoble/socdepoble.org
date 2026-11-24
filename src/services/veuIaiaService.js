@@ -84,7 +84,7 @@ const IDIOMES = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
    etiqueta ja normalitzada (minúscules, guionet). L'última és la llengua per
    a l'enunciat quan no hi ha cap veu que coincidisca. */
 const PRIORITAT_VEUS = Object.freeze({
-  ca: Object.freeze({ etiquetes: ['ca-es-valencia', 'ca-es', 'ca*'], perDefecte: 'ca-ES' }),
+  ca: Object.freeze({ etiquetes: ['ca-es-valencia', 'ca-es', 'ca*'], perDefecte: 'ca-ES-valencia' }),
   es: Object.freeze({ etiquetes: ['es-es', 'es*'], perDefecte: 'es-ES' }),
   eu: Object.freeze({ etiquetes: ['eu-es', 'eu*'], perDefecte: 'eu-ES' }),
   gl: Object.freeze({ etiquetes: ['gl-es', 'gl*'], perDefecte: 'gl-ES' }),
@@ -94,6 +94,7 @@ const PRIORITAT_VEUS = Object.freeze({
 /* Quan la persona ha triat explícitament una veu catalana oriental o balear i
    cau al navegador, prioritzem ca-ES estàndard abans de ca-ES-valencia. */
 const VEUS_ORIENTALS = new Set(['elia_central', 'olga_balear']);
+const RE_IDENTITAT_VALENCIANA = /valenci[aà]|\bpau\b/i;
 
 /* ------------------------------------------------------------------ */
 /* Normalització per a la veu                                           */
@@ -307,17 +308,27 @@ const etiquetaNormal = (lang) => String(lang || '').toLowerCase().replace(/_/g, 
 export function triaVeu(veus, idioma = 'ca', veuId = null) {
   const llengua = llenguaTriada(idioma);
   const prioritat = PRIORITAT_VEUS[llengua];
-  const etiquetes = llengua === 'ca' && veuId && VEUS_ORIENTALS.has(veuId)
+  const esOriental = llengua === 'ca' && Boolean(veuId && VEUS_ORIENTALS.has(veuId));
+  const etiquetes = esOriental
     ? ['ca-es', 'ca-es-valencia', 'ca*']
     : prioritat.etiquetes;
   const llista = Array.isArray(veus) ? veus : [];
   for (const etiqueta of etiquetes) {
     const prefix = etiqueta.endsWith('*') ? etiqueta.slice(0, -1) : null;
-    const trobada = llista.find((veu) => {
+    const candidates = llista.filter((veu) => {
       const lang = etiquetaNormal(veu?.lang);
       return prefix ? (lang === prefix || lang.startsWith(`${prefix}-`)) : lang === etiqueta;
     });
-    if (trobada) return trobada;
+    if (candidates.length > 0) {
+      /* IDEA-337 · En fallback offline per a valencià, si el navegador etiqueta totes les veus
+         com a ca-ES (ex. macOS/iOS on Pau comparteix ca-ES amb Jordi/Montse), prioritzem la veu
+         amb nom o URI valencià abans d'una veu oriental genèrica. */
+      if (llengua === 'ca' && !esOriental && etiqueta !== 'ca-es-valencia') {
+        const valencianaPerNom = candidates.find((veu) => RE_IDENTITAT_VALENCIANA.test(`${veu?.name || ''} ${veu?.voiceURI || ''}`));
+        if (valencianaPerNom) return valencianaPerNom;
+      }
+      return candidates[0];
+    }
   }
   return null;
 }
@@ -414,7 +425,10 @@ function creaCuaNavegador(idioma, signal, veuId, enFallada) {
       if (!treball) return;
       const primer = treball.proxim === 0;
       const enunciat = new window.SpeechSynthesisUtterance(treball.blocs[treball.proxim++]);
-      enunciat.lang = veu?.lang || PRIORITAT_VEUS[llenguaTriada(idioma)].perDefecte;
+      const perDefecte = llenguaTriada(idioma) === 'ca' && veuId && VEUS_ORIENTALS.has(veuId)
+        ? 'ca-ES'
+        : PRIORITAT_VEUS[llenguaTriada(idioma)].perDefecte;
+      enunciat.lang = veu?.lang || perDefecte;
       if (veu) enunciat.voice = veu;
       enCua.add(enunciat);
       enunciat.onstart = () => { if (!tancada && !signal.aborted && primer) treball.onInici?.(); };

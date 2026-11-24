@@ -1,0 +1,23 @@
+{
+  "session": "08099a27-1f99-4a04-a981-6304f2d9177f",
+  "operationId": "frontissa-aprova",
+  "planHash": "f8d08e3e8b13c23674a3eb20401d163690ba37cf3e21de8a351f9c96a22943a5",
+  "beforeSeal": "07ccd25cef9e51c01789d3d53529f80c12397e568f282dea42aa88f996dc95a2",
+  "kind": "frontissa-agent",
+  "action": "aprova",
+  "key": "anima",
+  "actor": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+  "reason": "v1.2.24 build 29: empremta de «anima» revisada al candidat 2edd686c (R32.75/R32.79/R32.85b/R32.86 i bump), aprovada per delegació explícita del Mestre",
+  "acceptaRetall": false,
+  "id": "1711fbcf-49b0-44ea-9d78-682bc46d9f50",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "6551f7e025bcb1514f196b7f6d79a39960527748d0a713092fbbbe551d6bbd73",
+      "after": "000ae7781a976f9c799b3a1171947be462a7667f54af54ea1fe9c0db3b68e419"
+    }
+  ],
+  "claim": "08099a27-1f99-4a04-a981-6304f2d9177f:governance-write",
+  "afterSeal": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
+  "state": "accepted"
+}

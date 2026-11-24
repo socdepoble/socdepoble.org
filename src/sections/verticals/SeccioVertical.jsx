@@ -20,6 +20,9 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssLlistesEscalables from '../../css/diferit-llistes-escalables.css?inline';
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { useSEO } from '../../hooks/useSEO';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -38,6 +41,10 @@ export const AMBITS_VERTICALS = Object.freeze(['mapa', 'vehicle', 'animalets', '
 
 /** On porta «+ Publicar»: l'editor del Bloc amb l'àmbit fixat. */
 export const rutaDePublicar = (ambit) => `/notes?ambit=${ambit}`;
+
+const adoptaEstilsLlistesEscalables = (node) => {
+  if (node) adoptaFullDiferit(node, 'llistes-escalables', cssLlistesEscalables);
+};
 
 /* Els textos de cada vertical, en parells [clau, reserva]: la reserva és el
    valor de ca.js, caràcter a caràcter (SeccioVertical.test.jsx ho compara
@@ -239,7 +246,12 @@ export default function SeccioVertical({ ambit }) {
           ? <EstatErrorDades titol={tr(textos.error)} error={error} onReintenta={refresh} />
           : null}
         {status === 'ready' && !items.length && !cercantPrimeraFitxa && !errorDeMes ? <p role="status">{tr(textos.buit)}</p> : null}
-        <div className="sdp-card-grid">
+        <div
+          ref={adoptaEstilsLlistesEscalables}
+          className="sdp-card-grid sdp-graella-escalable"
+          data-graella-teclat=""
+          onKeyDown={gestionaTeclaGraella}
+        >
           {items.map((item) => <TargetaDelMur key={`${item.type}-${item.id}`} item={item} />)}
         </div>
         {errorDeMes

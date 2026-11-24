@@ -15,11 +15,11 @@ import {
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('gauntlet-71-rutes-cdp: cobrix exactament les 71 rutes canòniques de Consola Zero més /page/guia i les 6 micro-apps', () => {
+test('gauntlet-71-rutes-cdp: cobrix exactament les 73 rutes canòniques de Consola Zero (R32.86 hi afig /cada-cosa-al-seu-lloc i /joc-taxonomia) més /page/guia i les 6 micro-apps', () => {
   const rutesJson = JSON.parse(fs.readFileSync(path.join(ARREL, 'tooling/gates/consola-zero.rutes.json'), 'utf8'));
   const { canoniques, totes } = llistaRutesCompleta(rutesJson);
-  assert.equal(canoniques.length, 71);
-  assert.equal(totes.length, 78);
+  assert.equal(canoniques.length, 73);
+  assert.equal(totes.length, 80);
   for (const extra of EXTRA_ROUTES) {
     assert.ok(totes.includes(extra), `Falta la ruta extra ${extra}`);
   }

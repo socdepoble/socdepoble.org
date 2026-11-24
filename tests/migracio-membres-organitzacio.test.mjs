@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { MISSATGES_MEMBRES_ORGANITZACIO as missatgesPublics } from '../src/data/contracte.js';
 import { MISSATGES_MEMBRES_ORGANITZACIO as missatgesFulla } from '../src/data/contracteOrganitzacions.js';
 
@@ -22,6 +23,7 @@ const MEMBRES_CONCURRENTS = '2610281730_membres_concurrents_i_correu_public.sql'
    pany sdp-orgowner: abans de llegir autoritat. Les branques d'organitzacions no canvien. */
 const COMMUTACIO = '2610311500_commutacio_grup_empresa_i_transferencia_propietat.sql';
 const CONNEXIONS_PUBLIQUES = '2611032100_connexions_publiques_i_membres.sql';
+const INDEXOS_FK = '20261123180000_r3252_indexs_suport_fk_verificats.sql';
 const MIGRACIONS = path.join(ARREL, 'supabase/migrations');
 const SQL = fs.readFileSync(path.join(MIGRACIONS, NOM), 'utf8');
 const CLIENT = fs.readFileSync(path.join(ARREL, 'src/data/supabase/organizations.js'), 'utf8');
@@ -46,6 +48,15 @@ function funcions(sql) {
   return eixida;
 }
 const FUNCIONS = funcions(CODI);
+function validaIndexosSenseHerencia(sql) {
+  // The two member-table mentions are FK catalogue rows, never new authority.
+  // Pin the complete pending migration so dynamic SQL cannot evade this audit.
+  assert.equal(createHash('sha256').update(sql).digest('hex'), 'fb6e55c005c149d753f1fc10bc2f2de33387425f543c97476ab0b615e43a0410');
+  const codi=senseComentaris(sql);
+  assert.equal(funcions(codi).length,0,'no redefinix funcions de permisos');
+  assert.equal((codi.match(/organization_member_organizations/gi)||[]).length,4,'dos noms de taula i els dos noms FK');
+  assert.doesNotMatch(codi,/\b(?:grant|revoke)\b/i,'no canvia cap ACL');
+}
 const funcio = (nom) => FUNCIONS.find((f) => f.esquema === 'public' && f.nom === nom);
 const LLISTA = funcio('membres_organitzacio');
 const DESA = funcio('desa_membre_organitzacio');
@@ -190,10 +201,20 @@ test('cap permís s’hereta: escriptures originals i només dues lectures noves
       assert.match(publicCos, /private\.connexions_vincle\(c\.tipus,c\.id,'entitat',v\)/);
       assert.match(publicCos, /private\.connexions_vincle\('entitat',v,c\.tipus,c\.id\)/);
       assert.match(publicCos, /not private\.connexions_bloqueig\(c\.tipus,c\.id,'entitat',v\)/);
+    } else if (fitxer === INDEXOS_FK) {
+      validaIndexosSenseHerencia(fs.readFileSync(path.join(MIGRACIONS,fitxer),'utf8'));
     } else {
       assert.doesNotMatch(codi, /organization_member_organizations/i, fitxer);
     }
   }
+});
+
+test('la revisió d’índexs de membres no admet nous grants ni cossos de permisos',()=>{
+  const sql=fs.readFileSync(path.join(MIGRACIONS,INDEXOS_FK),'utf8');
+  validaIndexosSenseHerencia(sql);
+  for(const hostile of [sql+'\ngrant insert on public.organization_member_organizations to authenticated;',
+    sql+"\ncreate function private.can_manage_organization(uuid) returns boolean language sql as $$select true$$;"])
+    assert.throws(()=>validaIndexosSenseHerencia(hostile));
 });
 
 /* ── Les RPC ── */

@@ -341,13 +341,14 @@ describe('respostes', () => {
     expect(document.activeElement).toBe(camp());
   });
 
-  test('no es respon a pendents, fallits ni esborrats', () => {
+  test('no es respon a pendents ni fallits, i els esborrats no deixen bombolla solta però conserven la cita', () => {
     pinta({
       messages: [
         m('1', 1, 'other'),
         { ...m('2', null, 'me'), estatEnviament: 'pendent' },
         { ...m('3', null, 'me'), estatEnviament: 'error' },
-        m('4', 4, 'other', { esborrat: true })
+        m('4', 4, 'other', { text: 'Secret vell', esborrat: true }),
+        m('5', 5, 'me', { text: 'Resposta viva', respostaA: '4' })
       ]
     });
     const noms = (id) => {
@@ -361,7 +362,10 @@ describe('respostes', () => {
        o seleccionar); cap opció que el servidor encara no té on aplicar. */
     expect(noms('2')).toEqual(['Copia el text', 'Elimina', 'Selecciona missatges']);
     expect(noms('3')).toEqual(['Copia el text', 'Elimina', 'Selecciona missatges']);
-    expect(within(item('4')).queryByRole('button', { name: 'Opcions del missatge' })).toBeNull();
+    /* IDEA-342 · Cap bombolla fantasma solta per a m('4'), però la cita dins de m('5') informa sense revelar el text original. */
+    expect(item('4')).toBeNull();
+    expect(within(item('5')).getByText("S'ha esborrat este missatge")).toBeTruthy();
+    expect(item('5').textContent).not.toContain('Secret vell');
   });
 
   /* R32.7 · Sense permís d'escriure, cap opció que escriga al fil (ni

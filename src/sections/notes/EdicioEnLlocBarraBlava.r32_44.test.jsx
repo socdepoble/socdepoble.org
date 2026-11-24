@@ -16,7 +16,7 @@
  *      desplegables amb 1 clic, i retorn automàtic a `retorn` en publicar/actualitzar.
  */
 import React, { useContext } from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { BarraBlava } from '../../components/universal/barres/BarraBlava.jsx';
 
@@ -179,6 +179,7 @@ import { UniversalWorkspace } from '../../components/universal/workspace/Univers
 import { PublicacioEditable } from './PublicacioEditable.jsx';
 import { ValorDeNotes } from './NotesContext.jsx';
 import { _reiniciaRevisionsEditorialsPerAProves } from '../../data/revisionsEditorials.js';
+import { installaIdbMemoriaTest } from './__fixtures__/idbMemoriaTest.js';
 
 globalThis.ResizeObserver ??= class ResizeObserver {
   observe() {}
@@ -187,7 +188,10 @@ globalThis.ResizeObserver ??= class ResizeObserver {
 };
 
 describe('R32.44 · Lot 03 · Botó Editar a BarraBlava, canvi d’identitat i 2 columnes plegades (IDEA-324b)', () => {
+  let restauraIdb = null;
+
   beforeEach(() => {
+    restauraIdb = installaIdbMemoriaTest();
     _reiniciaRevisionsEditorialsPerAProves();
     estatProva.currentUser = null;
     estatProva.esSuperadmin = false;
@@ -206,6 +210,8 @@ describe('R32.44 · Lot 03 · Botó Editar a BarraBlava, canvi d’identitat i 2
   afterEach(() => {
     cleanup();
     _reiniciaRevisionsEditorialsPerAProves();
+    restauraIdb?.();
+    restauraIdb = null;
   });
 
   test('BarraBlava: Llei del Píxel quan editarVisible=false i botó Editar a la dreta quan editarVisible=true', () => {
@@ -409,7 +415,9 @@ describe('R32.44 · Lot 03 · Botó Editar a BarraBlava, canvi d’identitat i 2
       fireEvent.click(botoActualitza);
     });
 
-    expect(estatProva.navigate).toHaveBeenCalledWith('/page/descarregues');
+    await waitFor(() => {
+      expect(estatProva.navigate).toHaveBeenCalledWith('/page/descarregues');
+    });
     if (prevClientWidth) Object.defineProperty(HTMLElement.prototype, 'clientWidth', prevClientWidth);
     else delete HTMLElement.prototype.clientWidth;
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: originalWidth });

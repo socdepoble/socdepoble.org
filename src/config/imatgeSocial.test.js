@@ -54,6 +54,7 @@ import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
 
 const ARREL = process.cwd();
 const FONT = path.join(ARREL, 'src/config/imatgeSocial.js');
+const FONT_BASE = path.join(ARREL, 'src/config/imatgeSocialBase.js');
 const SUPABASE = 'https://abcdefghijklmnop.supabase.co';
 const PUBLIC_DE_MITJANS = `${SUPABASE}/storage/v1/object/public/mitjans/`;
 
@@ -142,12 +143,21 @@ describe('una lògica pura amb protocol pel port, per a Vite i Node', () => {
       || node.type === 'MetaProperty' || node.type === 'ExportAllDeclaration'
       || (node.type === 'ExportNamedDeclaration' && node.source)
       || (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require'));
-    expect(importacions.map((node) => [node.type, node.source?.value])).toEqual([['ImportDeclaration', '../data/backendProtocolPublic.js']]);
-    expect(importacions[0].specifiers.map(node => node.imported.name).sort()).toEqual(['esReferenciaMitjaPrivada', 'prefixMitjansPublics']);
+    expect(importacions.map((node) => [node.type, node.source?.value])).toEqual([
+      ['ImportDeclaration', './imatgeSocialBase.js'], ['ImportDeclaration', '../data/backendProtocolPublic.js']
+    ]);
+    expect(importacions[0].specifiers.map(node => node.imported.name).sort()).toEqual(['ATRIBUT_SSR', 'CAP_SOCIAL_BASE', 'HERO_PER_DEFECTE', 'MARQUES', 'MARQUES_SVG_ANTIGUES', 'ORIGEN_SOCIAL_PER_DEFECTE']);
+    expect(importacions[1].specifiers.map(node => node.imported.name).sort()).toEqual(['esReferenciaMitjaPrivada', 'prefixMitjansPublics']);
+    const base = parse(readFileSync(FONT_BASE, 'utf8'), { ecmaVersion: 'latest', sourceType: 'module' });
+    expect([...nodes(base)].filter(node => node.type === 'ImportDeclaration' || node.type === 'ImportExpression'
+      || node.type === 'MetaProperty' || node.type === 'ExportAllDeclaration'
+      || (node.type === 'ExportNamedDeclaration' && node.source)
+      || (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require'))).toEqual([]);
   });
 
   test('cap global de navegador ni de node: només URL', () => {
-    const arbre = parse(readFileSync(FONT, 'utf8'), { ecmaVersion: 'latest', sourceType: 'module' });
+    const arbres = [FONT, FONT_BASE].map(file => parse(readFileSync(file, 'utf8'), { ecmaVersion: 'latest', sourceType: 'module' }));
+    const arbre = { type: 'Program', body: arbres.flatMap(ast => ast.body) };
     const propietats = new Set();
     for (const node of nodes(arbre)) {
       if (node.type === 'MemberExpression' && !node.computed) propietats.add(node.property);

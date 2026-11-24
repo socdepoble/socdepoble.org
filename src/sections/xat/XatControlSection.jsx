@@ -222,6 +222,7 @@ function CapcaleraOpcio({ titol, onTorna, alDetall, t }) {
     alDetall.current = false;
     if (focusPerdut(fletxaRef.current)) fletxaRef.current?.focus({ preventScroll: true });
   }, [panellObert, alDetall]);
+  const etiquetaTorna = t('section.xat.control.torna', 'Torna a les opcions');
   return (
     <header className="sdp-xat-capcalera sdp-xat-capcalera--opcio">
       <button
@@ -229,7 +230,8 @@ function CapcaleraOpcio({ titol, onTorna, alDetall, t }) {
         type="button"
         className="sdp-xat-icona"
         onClick={onTorna}
-        aria-label={t('section.xat.control.torna', 'Torna a les opcions')}
+        aria-label={etiquetaTorna}
+        title={etiquetaTorna}
       >
         <ArrowLeft size={24} aria-hidden="true" focusable="false" />
       </button>

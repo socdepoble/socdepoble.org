@@ -49,6 +49,12 @@ import { IDS_PLUGINS, PLUGINS, etiquetesAmbEstat, rutaDelPlugin } from '../plugi
 import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET as ETIQUETES_SNIPPET } from './destiSnippet.js';
 import { DATA_NODRIR_IAIA, ETIQUETES_NODRIR_IAIA, PAGINA_NODRIR_IAIA, TEXTOS_IAIA_SABUDA } from '../text/pageContent.nodrirIaia.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL } from './destinsControl.js';
+import {
+  RUTA_PERFIL_JAVI_FALLBACK,
+  RUTA_XAT_JAVI_LLAVOR,
+  TEXTOS_PEU_CONTROL,
+  resolDestiXatJavi,
+} from './textosPeuControl.js';
 import * as destinsControl from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
 import fontControl from './ControlSection.jsx?raw';
@@ -196,7 +202,9 @@ test('D3 · la taula de rutes d’App té les rutes que el Panell necessita i no
 test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la taula d’App', () => {
   const clicables = () => [
     ...document.querySelectorAll('button.sp-card-link-overlay, a.sp-card-porta, a.sp-card-author-link, button.btn-date-time'),
-    screen.getByRole('button', { name: /Missatges per a dubtes/ })
+    screen.getByTestId('control-peu-escriure-socdepoble'),
+    screen.getByTestId('control-peu-escriure-javi'),
+    screen.getByTestId('control-peu-perfil-compte'),
   ];
   pinta();
   const total = clicables().length;
@@ -308,25 +316,64 @@ test('D3 · P7-B · la Gestoria obri la seua pàgina (/plugin/gestoria), mai /ge
   expect(ubicacio()).toBe('/plugin/gestoria');
 });
 
-test('D3 · «Missatges per a dubtes» obri el Xat (/xat), no un fil inexistent', () => {
+test('IDEA-341 · el peu de «Filet pur i dur» substituïx els 5 botonots i GinySalutDispositiuJarvis, oferint elecció directa entre Sóc de Poble i Javi Llinares al Xat', async () => {
   pinta();
-  fireEvent.click(screen.getByRole('button', { name: /Missatges per a dubtes/ }));
-  expect(ubicacio()).toBe('/xat');
+  expect(screen.queryByTestId('giny-salut-dispositiu-jarvis')).toBeNull();
+  expect(document.querySelector('.sdp-control-actions')).toBeNull();
+  for (const antic of ['Mode rural', 'Restaurar dades obertes del municipi', 'Missatges per a dubtes', 'Compte i contrasenya', 'Eixir de poble']) {
+    expect(screen.queryByRole('button', { name: new RegExp(antic) }), antic).toBeNull();
+  }
+
+  const peu = screen.getByTestId('control-peu-filet-pur');
+  expect(within(peu).getByRole('heading', { level: 3, name: TEXTOS_PEU_CONTROL.ca.titol })).toBeTruthy();
+
+  fireEvent.click(within(peu).getByRole('button', { name: TEXTOS_PEU_CONTROL.ca.socDePobleNom }));
+  expect(ubicacio()).toBe('/xat?amb=socdepoble');
+
+  cleanup();
+  pinta();
+  fireEvent.click(screen.getByRole('button', { name: TEXTOS_PEU_CONTROL.ca.javiNom }));
+  expect(ubicacio()).toBe(RUTA_XAT_JAVI_LLAVOR);
+
+  /* Resolució remota del directe amb Javi Llinares i fallback segur si el port no respon */
+  await expect(resolDestiXatJavi({
+    externalConfig: { dataMode: 'remote', backendUrl: 'https://poble.example', tenantId: '00000000-0000-4000-8000-000000000000' },
+    port: {
+      teCapacitat: (c) => c === 'directori',
+      loadPerfilPublic: vi.fn().mockResolvedValue({ tipus: 'persona', id: 'c7cc745b-2c54-4739-b9c1-add751aac3c4' }),
+    },
+  })).resolves.toBe('/xat?amb=c7cc745b-2c54-4739-b9c1-add751aac3c4');
+
+  await expect(resolDestiXatJavi({
+    externalConfig: { dataMode: 'remote', backendUrl: 'https://poble.example', tenantId: '00000000-0000-4000-8000-000000000000' },
+    port: {
+      teCapacitat: () => true,
+      loadPerfilPublic: vi.fn().mockRejectedValue(new Error('xarxa caiguda')),
+    },
+  })).resolves.toBe(RUTA_PERFIL_JAVI_FALLBACK);
 });
 
-/* P0-63 / IDEA-194 (ordre del Mestre, 261108) · La verificadora buscava ací
-   on posar-se la contrasenya per a entrar a l'App mòbil: «Compte i
-   contrasenya» porta d'un toc a «El compte» del Perfil (RUTA_COMPTE), també a
-   /utilitats. Sense sessió, la barrera del Perfil fa la resta (App, RequireAuth). */
-test.each(['/control', '/utilitats'])('P0-63 · %s: «Compte i contrasenya» porta a «El compte» del Perfil', (ruta) => {
+test.each(['ca', 'es', 'en', 'eu', 'gl'])('IDEA-341 · el peu de «Filet pur i dur» pinta títol, subtítol i les 3 files en %s sense argot ni mots vetats', (idioma) => {
+  estat.idioma = idioma;
+  estat.traductor = createTranslator(idioma);
+  pinta();
+  const tx = TEXTOS_PEU_CONTROL[idioma];
+  const peu = screen.getByTestId('control-peu-filet-pur');
+  expect(within(peu).getByRole('heading', { level: 3, name: tx.titol })).toBeTruthy();
+  expect(within(peu).getByText(tx.subtitol)).toBeTruthy();
+  expect(within(peu).getByRole('button', { name: tx.socDePobleNom })).toBeTruthy();
+  expect(within(peu).getByRole('button', { name: tx.javiNom })).toBeTruthy();
+  expect(within(peu).getByRole('link', { name: tx.perfilNom }).getAttribute('href')).toBe('/el-meu-perfil?vista=compte');
+  expect(peu.textContent).not.toMatch(/sobir[aà]|La Masia|servidor del poble/i);
+});
+
+test.each(['/control', '/utilitats'])('P0-63 · IDEA-341 · %s: la fila «El meu perfil, contrasenya i dades a l’aparell» porta a «El compte» del Perfil', (ruta) => {
   pinta(ruta);
-  const boto = screen.getByRole('button', { name: /Compte i contrasenya/ });
-  expect(boto.closest('.sdp-control-actions')).toBeTruthy();
-  /* La clau, amb l'API de Boto (`icona`), i cap atribut que no siga de l'HTML. */
-  expect(boto.querySelector('svg')).toBeTruthy();
-  expect(boto.className).toBe('sdp-boto sdp-boto--secundari sdp-btn-ample');
-  expect(boto.hasAttribute('icon') || boto.hasAttribute('variant')).toBe(false);
-  fireEvent.click(boto);
+  const enllac = screen.getByRole('link', { name: TEXTOS_PEU_CONTROL.ca.perfilNom });
+  expect(enllac.closest('.sdp-control-peu__marc')).toBeTruthy();
+  expect(enllac.querySelector('svg')).toBeTruthy();
+  expect(enllac.getAttribute('href')).toBe('/el-meu-perfil?vista=compte');
+  fireEvent.click(enllac);
   expect(ubicacio()).toBe('/el-meu-perfil?vista=compte');
 });
 
@@ -668,7 +715,7 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
   pinta();
   /* Dalt, el Mapa continua a la seua posició i el Panell, sencer. */
   expect(targetesDeDalt()[3].querySelector('.sp-card-title').textContent).toBe('Publicar al Mapa');
-  expect(screen.getByRole('button', { name: /Missatges per a dubtes/ })).toBeTruthy();
+  expect(screen.getByTestId('control-peu-filet-pur')).toBeTruthy();
 });
 
 /* R16b (tercera ronda) · Els testimonis del Panell són dos h2 que el Panell de R16b pinta sempre

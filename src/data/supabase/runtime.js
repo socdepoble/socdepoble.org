@@ -17,7 +17,11 @@ export class ErrorSupabase extends Error {
 }
 
 let refresca = async () => false;
-export const configuraRefrescSessio = (callback) => { refresca = callback; };
+let refrescEnCurs = () => null;
+export const configuraRefrescSessio = (callback, enCurs = () => null) => {
+  refresca = callback;
+  refrescEnCurs = enCurs;
+};
 
 export function generateUUID() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -85,10 +89,10 @@ const jaCaducat = (jwt) => {
 /* Una renovació que torna false o llança no ha fet cap token: l'època + 1 serà d'una altra entrada. */
 const acabatDeRenovar = () => ultimaRenovacio !== null && !ultimaRenovacio.fallida
   && versioSessio === ultimaRenovacio.epoca + 1 && Date.now() - ultimaRenovacio.hora <= MARGE_RENOVACIO_MS;
-const renovaDesDe = (config, epoca) => {
+const renovaDesDe = (config, epoca, pendent = null) => {
   const renovacio = { epoca, hora: Date.now(), fallida: false };
   ultimaRenovacio = renovacio;
-  return Promise.resolve(refresca(config)).then((ok) => { if (!ok) renovacio.fallida = true; return ok; },
+  return Promise.resolve(pendent ?? refresca(config)).then((ok) => { if (!ok) renovacio.fallida = true; return ok; },
     (error) => { renovacio.fallida = true; throw error; });
 };
 const recordaSiNaixACaducar = (config) => {
@@ -107,6 +111,32 @@ const jwtACaducar = (config) => {
   jwtNascutACaducar = jwt;
   return false;
 };
+
+/* The SDK requests a token before its one transport attempt. Reuse the custom
+   refresh and clock-skew policy; never replay an SDK mutation after a failure. */
+export async function tokenPerClient(config = {}) {
+  const comprova = capturaSessio();
+  if (!jwtPerBackend(config)) return null;
+  const pendent = refrescEnCurs?.(config);
+  if (pendent || jwtACaducar(config)) {
+    const epoch = versioSessio, actor = actorDesat();
+    let renovada;
+    try { renovada = await renovaDesDe(config, epoch, pendent); }
+    catch (error) { comprova(); throw error; }
+    comprova();
+    if (!renovada) {
+      const actual = jwtPerBackend(config), exp = actual ? caducitatJwt(actual) : 0;
+      if (!actual || (exp !== null && exp <= Date.now())) throw sessioCaducada();
+    } else {
+      if (versioSessio !== epoch + 1 || actorDesat() !== actor) throw sessioCanviada();
+      recordaSiNaixACaducar(config);
+    }
+  }
+  comprova();
+  const jwt = jwtPerBackend(config);
+  if (!jwt) throw sessioCaducada();
+  return jwt;
+}
 
 /* v1.2.17 · Gauntlet R1 (S-02) · Una Authorization de qui crida (compte.js, la revocació d'Apple)
    guanya a la del JWT viu: la petició no el fa servir i no hi ha res a renovar abans. */
@@ -152,12 +182,20 @@ export async function request(path, config = {}, options = {}) {
   const controller = new AbortController();
   let timedOut = false;
   let timeoutId;
-  const avorta = () => controller.abort();
+  let escoltant = false;
+  const deslliga = () => {
+    if (!escoltant) return;
+    escoltant = false;
+    try { signal.removeEventListener('abort', avorta); } catch { /* senyal alié */ }
+  };
+  const avorta = () => { clearTimeout(timeoutId); deslliga(); controller.abort(); };
   const comprova = () => {
     if (controller.signal.aborted) throw controller.signal.reason ?? new DOMException('Operació cancel·lada.', 'AbortError');
     comprovaSessio?.();
   };
-  signal?.addEventListener('abort', avorta);
+  try {
+    if (signal) { escoltant = true; signal.addEventListener('abort', avorta); }
+  } catch (error) { deslliga(); throw error; }
   try {
     if (signal?.aborted) {
       const err = new Error('Abortat abans de començar');
@@ -184,7 +222,7 @@ export async function request(path, config = {}, options = {}) {
     }
     /* v1.2.17 · Gauntlet R1 (L2-02) · El temporitzador s'arma després de la renovació preventiva
        (fins a 12 s pròpies a auth.js): timeoutMs és per al fetch, com en el reintent post-401. */
-    const arma = (ms) => { timeoutId = setTimeout(() => { timedOut = true; controller.abort(); }, ms); };
+    const arma = (ms) => { timeoutId = setTimeout(() => { timedOut = true; deslliga(); controller.abort(); }, ms); };
     /* v1.2.19 · Gauntlet R1 (L1-02) · El termini, per a reprendre el temps que li quede al fetch després
        d'una renovació post-401 sense reintent.
        v1.2.19 · Gauntlet R2 (L1R2-01) · Amb un rellotge monotònic: si l'hora del sistema salta durant el
@@ -282,7 +320,7 @@ export async function request(path, config = {}, options = {}) {
     throw err;
   } finally {
     clearTimeout(timeoutId);
-    signal?.removeEventListener('abort', avorta);
+    deslliga();
   }
 }
 

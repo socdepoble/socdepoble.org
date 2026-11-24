@@ -132,6 +132,14 @@
   }
 
   :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(
+    .sdp-arbre a,
+    .sdp-molla__enllac,
+    .sdp-pestanyes__pestanya
+  ) {
+    min-height: 3rem;
+  }
+
+  :is(:root[data-sdp-senior="true"], :host([data-sdp-senior="true"]), .sdp-root[data-sdp-senior="true"]) :is(
     article.content-wrapper,
     .content-wrapper,
     .sdp-prose

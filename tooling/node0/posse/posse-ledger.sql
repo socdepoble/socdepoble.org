@@ -55,6 +55,8 @@ DO $guard$ BEGIN
 -- v1.2.23 · R2F-01, R2D-03 i R2D-04 (Gauntlet R2) · 20261122230000 torna a esmenar-se en el lloc (cap base no l'havia
 -- aplicada) i 20261122160000 canvia de bytes per R2D-02 (Gauntlet R2): el 129 es recalcula (04b61ce7) i el 131 també
 -- (c279b24d); el 7e3d0a4b i el 3a3fb97f d'abans deixen de valer.
+-- v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · conserva el 135 i afig el complet exacte 136 amb 20261124174000,
+-- NO aplicada. Cap altre intermedi.
 -- POSSE_MIGRATION_PINS_BEGIN
 (76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
 (77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
@@ -76,7 +78,9 @@ DO $guard$ BEGIN
 (125,'f09f94686782ea28b4ae500ce21567994670f53d1b91782246a0b4d841e56dc7'),
 (126,'595c69b52d28713884c9af3d802dc1f1a3a47853e2d8eb180e65f53b51be3e51'),
 (129,'04b61ce71c4579476fa4f550c0d38b788f159fc05ae01eeae96c60cc312e246a'),
-(131,'c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe')
+(131,'c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe'),
+(135,'39e372b6115858251c34e1093012b9281a9c0be2e5dc41184d878ef0aad9d14b'),
+(136,'28ebf52fee2073de63f15cb203a68deb6b0f0b87e59db34f3dca09f99475d2c3')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

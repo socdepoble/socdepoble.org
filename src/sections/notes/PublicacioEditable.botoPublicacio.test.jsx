@@ -39,13 +39,18 @@ vi.mock('../../hooks/useSuperadminEstable.js', () => ({ useSuperadminEstable: ()
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ agents: [], towns: [], pages: [] }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: { id: 'U' }, estat: 'dins' }), ESTAT: { DINS: 'dins' } }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ status: 'ready', feedPosts: [], events: [], marketItems: [] }) }));
-vi.mock('../../data/backendPort.js', () => ({ uploadToStorage: vi.fn(), teCapacitat: () => true }));
+vi.mock('../../data/backendPort.js', () => ({
+  uploadToStorage: vi.fn(),
+  getBackendImplementation: () => null,
+  teCapacitat: (cap) => cap !== 'revisionsPagines' && cap !== 'edicioPublicacionsPropies'
+}));
 
 import { NotesContext } from './objectesDeContext.js';
 import { PublicacioEditable } from './PublicacioEditable.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { _reiniciaRevisionsEditorialsPerAProves, revisioEditorial } from '../../data/revisionsEditorials.js';
+import { installaIdbMemoriaTest } from './__fixtures__/idbMemoriaTest.js';
 
 const UUID_FILA = '3f2a1b4c-5d6e-4f70-8a9b-0c1d2e3f4a5b';
 const FILA_MUR = {
@@ -55,7 +60,9 @@ const FILA_MUR = {
 const MANIFEST = { id: 'manifest-de-poble', title: 'Manifest de Poble', entradilla: 'Les associacions…', content: '<p>Un document obert.</p>' };
 
 let base;
+let restauraIdb = null;
 beforeEach(() => {
+  restauraIdb = installaIdbMemoriaTest();
   _reiniciaRevisionsEditorialsPerAProves();
   mocks.barra = null;
   mocks.adapter = null;
@@ -71,6 +78,8 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   _reiniciaRevisionsEditorialsPerAProves();
+  restauraIdb?.();
+  restauraIdb = null;
 });
 
 const obri = (element, seccio = 'mur') => render(

@@ -367,7 +367,8 @@ test('(7) la capacitat compta la segona lectura de cada projecció vigent: amb u
   // Només els lots grossos tenen ACK: la nota viva i la seua projecció queden fora de la compactació.
   const acks = ackTots(lotsGrossos, T0), ara = () => T0 + NOVANTA + 1;
   root.injectaFallada('removeEntry', { vegades: 1 });
-  const tallada = await sync(root, r0.crdt, { acks, ara });
+  // Esta prova força el tall de removeEntry; el pressupost real té una prova pròpia.
+  const tallada = await sync(root, r0.crdt, { acks, ara, cronometre: SENSE_PRESSA });
   assert.equal(tallada.compactacio.error, 'NoModificationAllowedError');
   assert.ok(tallada.compactacio.instantania);
   const llegida = await sync(root, r0.crdt);

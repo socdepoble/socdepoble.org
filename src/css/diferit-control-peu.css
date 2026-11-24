@@ -1,0 +1,114 @@
+/* ==========================================================================
+   PEDRA SECA · PEU DE «FILET PUR I DUR» DEL PANELL DE CONTROL (/control)
+   (FULL DIFERIT · R32.63 · IDEA-341 · 0 B a l'arrencada estàtica)
+   Substituïx els 5 botonots antics per un marc net de 1px amb files tàctils
+   (>= 48px) separades exclusivament per filet horitzontal pur.
+   ========================================================================== */
+@layer components {
+  .sdp-control-peu {
+    display: grid;
+    gap: var(--sdp-space-4);
+    min-inline-size: 0;
+    margin-block: var(--sdp-space-12) var(--sdp-space-6);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font);
+  }
+
+  .sdp-control-peu__marc {
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background-color: var(--sdp-fons-targeta);
+    overflow: clip;
+    min-inline-size: 0;
+  }
+
+  .sdp-control-peu__llista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-control-peu__item {
+    margin: 0;
+    padding: 0;
+  }
+
+  .sdp-control-peu__item + .sdp-control-peu__item {
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-control-peu__fila {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-4) var(--sdp-space-5);
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--sdp-t);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-control-peu__fila:hover {
+      background-color: var(--sdp-fons-subtil);
+    }
+  }
+
+  .sdp-control-peu__fila:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
+  .sdp-control-peu__cos {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  .sdp-control-peu__icona {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-block-start: var(--sdp-space-1);
+    color: var(--sdp-accio);
+  }
+
+  .sdp-control-peu__textos {
+    display: grid;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+  }
+
+  .sdp-control-peu__nom {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: var(--sdp-pes-negreta);
+    line-height: var(--sdp-leading-titol);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-control-peu__detall {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-control-peu__fletxa {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    color: var(--sdp-text-suau);
+  }
+}

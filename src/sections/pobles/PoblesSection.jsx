@@ -1,5 +1,11 @@
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssLlistesEscalables from '../../css/diferit-llistes-escalables.css?inline';
 import React from 'react';
+
+const adoptaEstilsLlistesEscalables = (node) => {
+  if (node) adoptaFullDiferit(node, 'llistes-escalables', cssLlistesEscalables);
+};
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -89,7 +95,12 @@ export default function PoblesSection() {
       {status === 'loading' ? <Carregant etiqueta={t('section.pobles.loading', 'Carregant pobles...')} /> : null}
       {status === 'error' ? <EstatErrorDades titol={t('section.pobles.error', 'Error carregant els pobles.')} error={error} onReintenta={refresh} /> : null}
       {status === 'ready' && poblesFiltrats.length === 0 ? <p role="status">{t('section.pobles.noResults', 'Cap poble trobat.')}</p> : null}
-      <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
+      <div
+        ref={adoptaEstilsLlistesEscalables}
+        className="sdp-card-grid sdp-graella-escalable"
+        data-graella-teclat=""
+        onKeyDown={gestionaTeclaGraella}
+      >
         {status === 'ready' && poblesFiltrats.map((town) => {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
              l'emporta, com sempre. */

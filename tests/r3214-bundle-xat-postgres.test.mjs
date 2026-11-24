@@ -9,6 +9,7 @@ import {createHash} from 'node:crypto';
 import {creaPlaMigracions} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {startLocalPostgres} from './fixtures/postgres-local.mjs';
 import {sources,generate} from '../tooling/migrations/genera-super-bundle-r32_14.mjs';
+import {projecta132PerFixture} from './fixtures/r3278-cataleg-parcial.mjs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const id=n=>`32140000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const TOWN=id(1),A=id(2),B=id(3),OUT=id(4),FIL=id(5);
@@ -44,7 +45,13 @@ const inbox=(db,who)=>actor(db,who,'select * from public.xat_fils_meus($1)',[TOW
 const hide=(db,who,n)=>actor(db,who,'select public.xat_elimina_per_a_mi($1,$2)',[FIL,id(n)]);
 async function bootstrap(db,exec,partial){
  const plan=creaPlaMigracions();await exec(plan.bootstrap);
- for(const m of plan.migrations.filter(m=>!pending.has(m.file))){try{await exec(m.sql);}catch(e){await exec('rollback');throw Error(m.file+': '+e.message,{cause:e});}}
+ for(const m of plan.migrations.filter(m=>!pending.has(m.file))){try{
+  // This historical fixture deliberately omits the bundle's two tables.
+  // Present tables retain every strict FK/body/CAS/index guard of the pinned 132.
+  const sql=m.file==='20261123180000_r3252_indexs_suport_fk_verificats.sql'
+   ? (await projecta132PerFixture(db,{absentRelations:['public.xat_missatges_fixats','public.xat_reaccions']})).sql : m.sql;
+  await exec(sql);
+ }catch(e){await exec('rollback');throw Error(m.file+': '+e.message,{cause:e});}}
  if(partial){
   for(const ddl of Object.values(JSON.parse(read('tests/fixtures/r32-fossils.json'))))await exec(ddl);
   await exec(read('supabase/migrations/20261116170000_r32_fossils_search_path.sql'));

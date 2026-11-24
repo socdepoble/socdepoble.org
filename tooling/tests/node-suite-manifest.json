@@ -10,6 +10,9 @@
   "requiredPrimary": [
     "tests/admin-invitacions-r20b.test.mjs",
     "tests/administracio-multipoble-postgres.test.mjs",
+    "tests/alergens-bar-nevera.r3251.test.mjs",
+    "tests/alergens-mercat-botiga.r3252.test.mjs",
+    "tests/alergens-unanimitat.test.mjs",
     "tests/antigravity-hook.test.mjs",
     "tests/apps-del-paquet.test.mjs",
     "tests/backend_consolidacio.test.mjs",
@@ -48,6 +51,7 @@
     "tests/fediversity-nixos-module.test.mjs",
     "tests/fonts-vigilancia.test.mjs",
     "tests/fortificacio.test.mjs",
+    "tests/frontissa-dual-cas.test.mjs",
     "tests/git-hooks.test.mjs",
     "tests/governanca-260930-segell.test.mjs",
     "tests/higiene-estructural.test.mjs",
@@ -148,6 +152,10 @@
     "tests/porta-reflex.test.mjs",
     "tests/portabilitat-fediversity.test.mjs",
     "tests/public_exports.test.mjs",
+    "tests/r3252-radiografia-pglite.test.mjs",
+    "tests/r3252-radiografia-snapshot.test.mjs",
+    "tests/r3254-migracio132-postgres.test.mjs",
+    "tests/r3254-migracio132.test.mjs",
     "tests/render-pdf.test.mjs",
     "tests/restauracio-independent-r20b.test.mjs",
     "tests/revisions-patrimoni-viu.test.mjs",
@@ -173,11 +181,13 @@
     "tests/t11-retrieval-provenance.test.mjs",
     "tests/tractor-rls-r2-ddl.test.mjs",
     "tests/uuid-editorial-authorship-boundary-r19.test.mjs",
+    "tests/verifica-alergens-unanimitat.test.mjs",
     "tests/verificador-scc.test.mjs",
     "tests/vite-empremta-dev.test.mjs",
     "tests/wiki-backlinks-readonly.test.mjs",
     "tooling/gates/guarda-nocturna.test.mjs",
     "tooling/gates/teclat-superficies.test.mjs",
+    "tooling/gates/tractor-zero-dependencia-ia.test.mjs",
     "tooling/instalador/inventari-estatic.test.mjs",
     "tooling/media/sentinella-video-aplec2023.test.mjs",
     "tooling/seo/genera-llms.test.mjs",
@@ -308,7 +318,13 @@
     "tests/r3246-identitat-privacitat-pglite.test.mjs",
     "tests/r3246-storage-quotes-orfes-pglite.test.mjs",
     "tests/r3246-contractes-taules-pglite.test.mjs",
-    "tooling/gates/sentinella-edicions-humanes.test.mjs"
+    "tooling/gates/sentinella-edicions-humanes.test.mjs",
+    "tests/migracio-v1224-integritat-xat-perfils.test.mjs",
+    "tests/enllacos-externs-pestanya-nova.test.mjs",
+    "tests/tractor-promesa-sintaxi.test.mjs",
+    "tests/tractor-rls-search-path-local.test.mjs",
+    "tests/verificadors-externs-cadena.test.mjs",
+    "tests/mutacio-durable-historic.test.mjs"
   ],
   "files": [
     {
@@ -341,6 +357,21 @@
       "suite": "primary",
       "kind": "postgres",
       "reason": "R21.5: purga del catàleg antic, hidratació canònica i preservació de persones i entitats reals sobre PostgreSQL real."
+    },
+    {
+      "path": "tests/alergens-bar-nevera.r3251.test.mjs",
+      "suite": "primary",
+      "reason": "R32.51 IDEA-336: declaracions del Bar i Nevera i projecció pura amb opcionals/alternatives, desconeixement honest i preservació del recomanador."
+    },
+    {
+      "path": "tests/alergens-mercat-botiga.r3252.test.mjs",
+      "suite": "primary",
+      "reason": "Corpus 6: catàleg comercial intacte, projecció desconeguda i absència d’acreditació per payload."
+    },
+    {
+      "path": "tests/alergens-unanimitat.test.mjs",
+      "suite": "primary",
+      "reason": "R32.51 IDEA-336: contracte pur de JSONL i projecció14, identitat/vots de huit escoles, sis corpus, pending i protecció d’aptitud sense acreditació de consum."
     },
     {
       "path": "tests/anticipacio-261003.test.mjs",
@@ -705,6 +736,11 @@
       "path": "tests/frontissa-contingut.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/frontissa-dual-cas.test.mjs",
+      "suite": "primary",
+      "reason": "R32.49 IDEA-334/335: Frontissa humana en TTY sense IA i via agent amb claim, CAS durable compartit, retalls motivats i fallades d’auditoria/concurrència en fixtures aïllades."
     },
     {
       "path": "tests/frontissa-gate.test.mjs",
@@ -1714,6 +1750,26 @@
       "reason": "R32.13: PF03 i LSSI en PostgreSQL 18.6 natiu amb dues sessions READ COMMITTED i PGlite; dependències locals obligatòries, cap salt silenciós ni SQL remot."
     },
     {
+      "path": "tests/r3252-radiografia-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "Cadena SQL PGlite completa, ràdars originals, índexs FK verificats i migració idempotent post-131."
+    },
+    {
+      "path": "tests/r3252-radiografia-snapshot.test.mjs",
+      "suite": "primary",
+      "reason": "Comparador estructural offline: esquema estricte, diff exacte, privacitat i diagnòstics tancats."
+    },
+    {
+      "path": "tests/r3254-migracio132-postgres.test.mjs",
+      "suite": "primary",
+      "reason": "Concurrència nativa per socket Unix: NOWAIT, rollback, admissió i cost real de SHARE; necessita PostgreSQL/SysV local."
+    },
+    {
+      "path": "tests/r3254-migracio132.test.mjs",
+      "suite": "primary",
+      "reason": "Font 132 immutable i generació determinista de guardes de panys i pressupostos."
+    },
+    {
       "path": "tests/r327-xat-accions-pglite.test.mjs",
       "suite": "primary",
       "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
@@ -2019,6 +2075,11 @@
       "reason": "R19: boundary regression for UUID editorial review; owner RLS and entity signature CHECK remain intact, with explicit PostgreSQL WASM fixture."
     },
     {
+      "path": "tests/verifica-alergens-unanimitat.test.mjs",
+      "suite": "primary",
+      "reason": "R32.51 IDEA-334/336: CLI offline de lectura explícita, codis ordinaris/estrictes i calibradors de fitxers malformats o absents, sense xarxa ni IA."
+    },
+    {
       "path": "tests/verificador-scc.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
@@ -2172,6 +2233,11 @@
       "path": "tooling/gates/tractor-sentinella-blindatge.test.mjs",
       "suite": "primary",
       "reason": "R32.7: regressió executable SQL/ACL o sentinella HTTP/TLS amb fixtures locals, sense sondeig de producció."
+    },
+    {
+      "path": "tooling/gates/tractor-zero-dependencia-ia.test.mjs",
+      "suite": "primary",
+      "reason": "R32.49 IDEA-334: contracte AST i scripts crítics, calibradors negatius de dependència IA i fluxos humans amb inferència rebutjada o pendent; desplegaments només simulats, sense xarxa real ni credencials."
     },
     {
       "path": "tooling/instalador/inicia-node-germa.test.mjs",
@@ -2671,6 +2737,136 @@
       "path": "tooling/gates/sentinella-edicions-humanes.test.mjs",
       "suite": "primary",
       "reason": "v1.2.23 · Gemini R32.44 (IDEA-324a): sentinella Humà → IAIA que compara edicions humanes amb PAGE_COPY; fixtures portables."
+    },
+    {
+      "path": "tests/migracio-v1224-integritat-xat-perfils.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.24 · IDEA-339: catàleg complet PGlite de 20261124030000 (comptes sense perfil, directes sense participants, disparadors diferits SDP-XAT-051 i publicació de Realtime buida)."
+    },
+    {
+      "path": "tests/enllacos-externs-pestanya-nova.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.24 · R32.75 (IDEA-343): sanitizeHtml i parseMarkdown obrin tot enllaç extern en pestanya nova amb rel noopener noreferrer i lleven target=_blank als interns, relatius i mailto:/tel:; escàner AST de tots els <a> JSX de src/ amb jsdom i @babel/parser, sense xarxa ni estat de sessió."
+    },
+    {
+      "path": "tests/r3278-cataleg-parcial-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: catàleg parcial de fixtures amb omissions explícites, controls FK/índex/productor/CAS i 132 completa immutable."
+    },
+    {
+      "path": "tests/botigues.asc.produccio.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78 IDEA-346: contracte REST App Store públic amb servidor sintètic, confirmació i secrets protegits."
+    },
+    {
+      "path": "tests/botigues.asc.integracio.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78 IDEA-346: integració dels scripts de publicació i ARD amb estat real simulat d’App Store."
+    },
+    {
+      "path": "tests/alergens-actualitzacio-parcial-pura.r3258.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/alergens-actualitzacio-parcial.r3258.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/centims-invariants.r3262.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/dependency-graph.r3258.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/imatge-social-leaf.r3270.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/r3264-xat-elimina-per-a-tothom-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/r3272-cataleg-complementari-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/r3272-higiene-sql-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/r3272-sql-pendent-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/revisions-editorials-capacitat.r3270.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/revisions-editorials-journal.r3260.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/sha256-leaf.r3270.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/tractor-maquetacio-canonica.r3270.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/wiki-manifest-selectiu.r3274.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tooling/gates/tractor-tdz.test.mjs",
+      "suite": "primary",
+      "reason": "R32.78: classifica explícitament la regressió portable acumulada de R32.74; el duplicat de la sentinella tapava esta absència. Cap prova ni assertion retirada."
+    },
+    {
+      "path": "tests/tractor-promesa-sintaxi.test.mjs",
+      "suite": "primary",
+      "reason": "R32.88: precisió sintàctica amb calibradors negatius obligatoris, sense relaxar controls."
+    },
+    {
+      "path": "tests/tractor-rls-search-path-local.test.mjs",
+      "suite": "primary",
+      "reason": "R32.88: precisió sintàctica amb calibradors negatius obligatoris, sense relaxar controls."
+    },
+    {
+      "path": "tests/verificadors-externs-cadena.test.mjs",
+      "suite": "primary",
+      "reason": "R32.88: abast explícit dels verificadors externs i refús determinista d’entrades invàlides."
+    },
+    {
+      "path": "tests/r3287-hook-dialecte-2x.test.mjs",
+      "suite": "primary",
+      "reason": "R32.87 (Gemini Neon, LOT-1): dialecte 2.x d'Antigravity als cinc guardians de governança."
+    },
+    {
+      "path": "tests/r3287-blindatges-p0-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "R32.87 · migració 136: els tres blindatges P0 de Gemini Neon (ex-admin revocat, prova LSSI i resol_reclamacio) en PGlite real."
+    },
+    {
+      "path": "tests/mutacio-durable-historic.test.mjs",
+      "suite": "primary",
+      "reason": "R32.90: evidència terminal històrica estricta, journal i negatives de mutació durable."
     }
   ]
 }

@@ -389,6 +389,7 @@ function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, chrom
       badge={pagina.calendarBadge ?? null}
       objecteXat={senseXat ? null : objecteXat}
       actesCalendari={mur?.events ?? []}
+      amagaTitol
     />
   ) : null;
 

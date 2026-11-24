@@ -31,7 +31,13 @@
  * A7 (Xcode pot crear perfils al compte de l'equip: -allowProvisioningUpdates). Només
  * --confirma=VERSIO+BUILD puja, i només eixe build: el «sí» del Mestre en eixe moment, per a eixa
  * pujada (RUNBOOK §4, S4). La clau .p8 es passa per RUTA (-authenticationKeyPath a xcodebuild,
- * --p8-file-path a altool); el seu contingut no es llig mai.
+ * --p8-file-path a altool); la pujada no en llig el contingut.
+ *
+ * R32.78 · --prepara-revisio / --envia-revisio reutilitzen el rebut postpujada i
+ * exigixen la confirmació de producció del mateix SHA; no compilen ni tornen a
+ * pujar l'IPA. El client REST llig aleshores la clau privada fora del repositori,
+ * firma ES256 en memòria i només mostra estats/recomptes. --notes-fitxer admet
+ * JSON/TXT acotat; mai un PEM. AFTER_APPROVAL publica després de l'aprovació.
  *
  * Les opcions d'xcodebuild i d'altool: el script les busca a l'ajuda de cada eina abans de fer res
  * i, si en falta alguna, para (eixida 6). Llavors es consulta la documentació oficial i s'esmena el
@@ -48,15 +54,74 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
   BUILD, CANALS, EIXIDA, REBUTS, SEGELL, VERSIO, analitzaArguments, analitzaConfirmacio, apsDeCodesign, apuntaPujada, avisDelRegistre, canalAdmes, usDelCanal,
-  confirmacioEsperada, equipDeCodesign, executa, exportOptionsPlist, guardaDelRegistre, llegixAjuda, mostraOrdre, opcionsQueFalten, plega,
+  carregaEntorn, confirmacioEsperada, equipDeCodesign, esDins, executa, exportOptionsPlist, guardaDelRegistre, llegixAjuda, llegixRegistre, mostraOrdre, opcionsQueFalten, plega,
   problemaDelPaquet, rutaDe, sha256DeFitxer
 } from './entorn.mjs';
 import { arrelComprovada, preflight, projecteIos } from './preflight.mjs';
 
 import { problemaDeVersioClient } from './versio-client.mjs';
+import { clientAsc, ErrorAsc, preparaProduccio } from './app-store-connect.mjs';
 
-const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, canal: true, push: false, ajuda: false });
-const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>]';
+const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, canal: true, push: false, ajuda: false,
+  'espera-valid': false, 'notes-fitxer': true, 'prepara-revisio': false, 'envia-revisio': false });
+const US = 'Ús: --versio X.Y.Z --build N [--canal intern|produccio] [--push] [--compila] [--confirma=X.Y.Z+N | --confirma=produccio:X.Y.Z+N@<sha12>] [--prepara-revisio | --envia-revisio] [--espera-valid] [--notes-fitxer notes.json|notes.txt]';
+
+/** Notes locals acotades. Cap error no cita contingut, ruta ni dades de contacte. */
+export function notesDeFitxer(cami) {
+  let fd;
+  try {
+    const extensio = path.extname(cami).toLowerCase();
+    if (!['.json', '.txt'].includes(extensio)) throw new Error();
+    fd = fs.openSync(cami, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    const st = fs.fstatSync(fd);
+    if (!st.isFile() || st.size > 128 * 1024) throw new Error();
+    const bytes = Buffer.alloc(128 * 1024 + 1);
+    const n = fs.readSync(fd, bytes, 0, bytes.length, 0);
+    if (n > 128 * 1024) throw new Error();
+    const text = bytes.subarray(0, n).toString('utf8').trim();
+    if (!text || text.includes('PRIVATE KEY-----')) throw new Error();
+    if (extensio !== '.json') return text;
+    const dades = JSON.parse(text);
+    if (!dades || Array.isArray(dades) || typeof dades !== 'object') throw new Error();
+    return dades;
+  } catch { throw new Error('No es poden llegir les notes: cal text o JSON de localitzacions, regular i acotat.'); }
+  finally { if (fd !== undefined) fs.closeSync(fd); }
+}
+
+/** La revisió reutilitza el rebut local postpujada; mai gasta una altra pujada ni fabrica un SHA. */
+export function referenciaPujadaIos({ arrel, valors, versio, build }) {
+  let fd;
+  try {
+    const carpeta = rutaDe(arrel, valors, 'SDP_BUILDS_DIR');
+    const real = fs.realpathSync(carpeta);
+    if (!fs.statSync(real).isDirectory() || esDins(arrel, carpeta) || esDins(arrel, real)) throw new Error();
+    const registre = llegixRegistre(carpeta);
+    if (registre.errors.length) throw new Error();
+    fd = fs.openSync(path.join(carpeta, 'pujades.jsonl'), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    const st = fs.fstatSync(fd);
+    if (!st.isFile() || st.size > 1024 * 1024) throw new Error();
+    const bytes = Buffer.alloc(1024 * 1024 + 1);
+    const n = fs.readSync(fd, bytes, 0, bytes.length, 0);
+    if (n > 1024 * 1024) throw new Error();
+    const files = bytes.subarray(0, n).toString('utf8').split('\n').filter((s) => s.trim()).map((s) => JSON.parse(s));
+    const trobades = files.filter((e) => e.plataforma === 'ios' && String(e.versio) === versio && String(e.build) === build);
+    if (!trobades.length || trobades.some((e) => !/^[a-f0-9]{64}$/.test(e.sha256 ?? '')) || new Set(trobades.map((e) => e.sha256)).size !== 1) throw new Error();
+    return trobades[0].sha256;
+  } catch { throw new Error('Falta un rebut de pujada iOS íntegre amb versió, build i SHA-256 inequívocs; no es prepara cap revisió.'); }
+  finally { if (fd !== undefined) fs.closeSync(fd); }
+}
+
+export async function preparaRevisioIos({ arrel, valors, versio, build, confirma, notes, esperaValid = false, enviaRevisio = false, asc = {} }) {
+  const sha256 = referenciaPujadaIos({ arrel, valors, versio, build });
+  if (confirma !== confirmacioEsperada(versio, build, { canal: CANALS.PRODUCCIO, sha256 })) {
+    throw new ErrorAsc('confirma');
+  }
+  const client = asc.client ?? clientAsc({ ...asc, valors, arrel });
+  const apps = await client.request('GET', `/v1/apps?filter[bundleId]=${encodeURIComponent(valors.SDP_APP_ID ?? '')}`);
+  const exactes = apps.data?.filter((a) => a.attributes?.bundleId === valors.SDP_APP_ID);
+  if (exactes?.length !== 1) throw new Error('ASC no identifica una sola aplicació amb el paquet configurat.');
+  return preparaProduccio({ client, appId: exactes[0].id, versio, build, sha256, confirma, notes, esperaValid, enviaRevisio });
+}
 
 /* B9 · Després d'una pujada a producció, el que fa el Mestre a App Store Connect (P9 i S6), sense
    cap grup de proves: Apple processa la build i l'App Review és l'únic camí a la botiga. */
@@ -209,7 +274,7 @@ export function rebut({ segell, versio, build, ipa, sha256 = null, pujat, canal 
     '  qui ha dit «sí»: (ho escriu qui executa)', ''].join('\n');
 }
 
-export async function main(argv) {
+export async function main(argv, { env = process.env, asc = {} } = {}) {
   const { opcions, errors } = analitzaArguments(argv, ADMESOS);
   if (opcions.ajuda) {
     process.stdout.write(`node scripts/botigues/puja-ios.mjs ${US.slice(4)}\n`);
@@ -234,6 +299,29 @@ export async function main(argv) {
       : (String(opcions.confirma).startsWith('produccio:') ? ' (este és un «sí» de producció: va amb --canal produccio)' : '');
     return plega(EIXIDA.CONFIRMACIO, `--confirma ha de ser exactament ${confirmacioEsperada(versio, build, { canal })}: un «sí» val per a una sola pujada${pista}`);
   }
+  const revisio = opcions['prepara-revisio'] || opcions['envia-revisio'];
+  const opcionsRevisio = revisio || opcions['espera-valid'] || opcions['notes-fitxer'] !== undefined;
+  if (opcionsRevisio && (!revisio || !produccio || opcions.compila)) {
+    return plega(EIXIDA.US, 'La revisió exigeix --canal produccio i --prepara-revisio o --envia-revisio, sense --compila.');
+  }
+  if (revisio) {
+    if (!confirmacio) return plega(EIXIDA.CONFIRMACIO, 'La revisió exigeix --confirma=produccio:VERSIO+BUILD@<sha12> del rebut de pujada.');
+    const arrel = arrelComprovada();
+    if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l’arrel del repositori on viu este script');
+    const entorn = carregaEntorn({ arrel, env });
+    if (entorn.codi !== EIXIDA.BE) return plega(entorn.codi, 'El fitxer d’entorn no deixa preparar la revisió.', entorn.problemes);
+    try {
+      const notes = opcions['notes-fitxer'] === undefined ? undefined : notesDeFitxer(opcions['notes-fitxer']);
+      const estat = await preparaRevisioIos({ arrel, valors: entorn.valors, versio, build, confirma: opcions.confirma,
+        notes, esperaValid: Boolean(opcions['espera-valid']), enviaRevisio: Boolean(opcions['envia-revisio']), asc });
+      process.stdout.write(`${JSON.stringify(estat)}\n`);
+      return EIXIDA.BE;
+    } catch (error) {
+      // Només es publiquen diagnòstics de confiança del client; cap excepció de fitxer o transport.
+      return plega(error instanceof ErrorAsc && error.tipus === 'confirma' ? EIXIDA.CONFIRMACIO : EIXIDA.EXTERNA,
+        error instanceof ErrorAsc ? error.message : 'La preparació ASC no s’ha completat. Comprova el rebut, les notes, el build VALID, captures iPhone/iPad i els permisos/contractes a App Store Connect; ard.json no canvia.');
+    }
+  }
   // P0-23 · El build porta la versió del client que l'app dirà al node (versio-client.mjs).
   const deLaVersio = problemaDeVersioClient(build);
   if (deLaVersio) return plega(EIXIDA.ARBRE, deLaVersio);
@@ -241,7 +329,7 @@ export async function main(argv) {
   const arrel = arrelComprovada();
   if (!arrel) return plega(EIXIDA.EINA, 'git no reconeix l\'arrel del repositori on viu este script');
 
-  const pre = preflight({ arrel, plataformes: ['ios'], canal, push: Boolean(opcions.push) });
+  const pre = preflight({ arrel, plataformes: ['ios'], canal, push: Boolean(opcions.push), env });
   process.stdout.write(`${pre.linies.join('\n')}\n`);
   if (pre.codi !== EIXIDA.BE) return plega(pre.codi, 'Preflight amb problemes: no es fa res.');
   /* ARB-B9-02 · Tancat per defecte: sense l'estat dels avisos push no se sap quin aps-environment

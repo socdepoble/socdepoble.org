@@ -44,6 +44,7 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { localitzaPagina } from './pageContent.r10.js';
+import { obtePaginaVersionsCompleta } from './pageContent.versionsHistoric.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import { pluginPerId } from '../plugins/registrePlugins.js';
@@ -199,7 +200,7 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
       const body = doc(PAGE_COPY[clau].html).body;
       expect(seccio(body, BALANC.ca[1]).map((n) => n.textContent).join(' ')).not.toContain('segellats en còpia aïllada');
     }
-    const versions = doc(PAGE_COPY.versions.html).body;
+    const versions = doc(obtePaginaVersionsCompleta(PAGE_COPY.versions, 'ca').html).body;
     // R21, R20 i R19 s'afigen davant de les sis entrades històriques: cap s'esborra ni es reescriu.
     // R21 (COMMIT 5) · La fita R21 C5 s'afig davant de la R21.
     // Onada R23 · La crònica de l'Onada R23 obri /versions, davant de la fita R21 C5.
@@ -228,7 +229,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.21 · I la crònica de l'Onada R32.41 obri /versions, davant de la R32.34.
     // Onada v1.2.22 · I la crònica de les Onades R32.42 i R32.43 obri /versions, davant de la R32.41.
     // v1.2.23 · C (ordre del Mestre 261123) · I la crònica de la v1.2.23 obri /versions, davant de les R32.42 i R32.43.
-    expect([...versions.querySelectorAll('h3')].slice(0, 35).map((h3) => h3.textContent)).toEqual([
+    // v1.2.24 · R32.85 · I la crònica de la v1.2.24 obri /versions, davant de la v1.2.23.
+    expect([...versions.querySelectorAll('h3')].slice(0, 36).map((h3) => h3.textContent)).toEqual([
+      '24 de novembre de 2026 · Reconeixements en cinc llengües, «Elimina per a tothom» al Xat i compartir que sempre respon',
       '23 de novembre de 2026 · El lloc de les fotos a la vista, «Editar» des de la pàgina i la versió al menú',
       '22 de novembre de 2026, nit · Onades R32.42 i R32.43 · Un Xat obert a tots els pobles, un logotip que es veu i un sol Mode Bancal',
       '22 de novembre de 2026, vesprada · Onada R32.41 · Les pàgines de l’Atles a tota l’amplada, un accés al Xat que cap en pantalles estretes i el mateix preu al Mur i al Mercat',
@@ -627,14 +630,16 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     // La xifra coincidix, però el conjunt d'avui no és el del 14-11: el que acredita el
     // text és el tall reconstruït traient les portes posteriors a eixa data. Una porta
     // nova trenca esta prova i obliga a renovar xifra i data en les cinc llengües.
+    const cens = seleccionaPassos({ cens: true });
+    const declarades = passos.filter((pas) => !pas.prova);
+    const teSenseIa = declarades.some((pas) => pas.script === 'porta:sense-ia');
     const POSTERIORS_AL_TALL_14_11 = [
       'porta:coherencia-editorial', // Gemini R31, 16-11-2026
       'porta:conformitat-federacio', 'porta:economia-arrencada', 'porta:imatges-enquadrament', // Codex R32.11, 18-11-2026
       'porta:egress', // Codex R32.13, 19-11-2026: preflight de Hosting, posterior al rebut històric
-      'porta:duplicats' // v1.2.23 · L4-09 (ordre del Mestre 261123): duplicats de public/assets enfilats a la cadena
+      'porta:duplicats', // v1.2.23 · L4-09 (ordre del Mestre 261123): duplicats de public/assets enfilats a la cadena
+      ...(teSenseIa ? ['porta:sense-ia'] : []) // v1.2.24 · Codex R32.74: tractor zero dependència IA posterior al tall 14-11
     ];
-    const cens = seleccionaPassos({ cens: true });
-    const declarades = passos.filter((pas) => !pas.prova);
     const ambMutacions = seleccionaPassos({ cens: true, ambMutacions: true });
     const proves = passos.filter((pas) => pas.prova);
     const tractorR329 = 'tooling/gates/tractor-consola-neta.mjs';
@@ -651,9 +656,9 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     expect(declarades.length - tall14_11.length).toBe(POSTERIORS_AL_TALL_14_11.length + SENSE_SCRIPT_POSTERIORS.length);
     expect(tall14_11).toHaveLength(60);
     expect(tall14_11).toContainEqual(expect.objectContaining({ nom: 'Porta Build', potMutar: true }));
-    expect(cens).toHaveLength(67);
-    expect(declarades).toHaveLength(68);
-    expect(ambMutacions).toHaveLength(68);
+    expect(cens).toHaveLength(67 + (teSenseIa ? 1 : 0));
+    expect(declarades).toHaveLength(68 + (teSenseIa ? 1 : 0));
+    expect(ambMutacions).toHaveLength(68 + (teSenseIa ? 1 : 0));
     expect(ambMutacions).toEqual(declarades);
     expect(declarades.filter((pas) => !cens.includes(pas))).toEqual([
       expect.objectContaining({ nom: 'Porta Build', potMutar: true }),
@@ -672,8 +677,10 @@ describe('Gauntlet R9 · G1-03, G1-04 i G1-05 · la secció d’IA i el Node 0 d
     // són text que anomena Ollama, no codi que s'hi connecte (com a la prova de dalt).
     // Atles 2D (261122) · La còpia de les dades d'estudi de /disseny?categoria=atles-2d (atles2dDades.js, només un
     // objecte de dades) diu qui va fer la ronda R01 de l'Assaig a la Plaça: «8 escoles d'Ollama» del Node 0. És un fet citat.
+    // R32.61 · reconeixementsCredits5L.js cita institucionalment el motor local d'Ollama com a atribució humana/lliure, mai codi de connexió.
     const textosEditorials = new Set(['sections/text/pageContent.r10.js', 'sections/mur/articles/laVeuDeSocDePobleContent.js',
-      'sections/text/pageContent.sistemaNervios.js', 'data/wikiManifest.js', 'sections/disseny/cataleg/dades/atles2dDades.js']);
+      'sections/text/pageContent.sistemaNervios.js', 'data/wikiManifest.js', 'sections/disseny/cataleg/dades/atles2dDades.js',
+      'sections/text/reconeixementsCredits5L.js']);
     const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
       .map((f) => String(f).split(path.sep).join('/'))
       .filter((f) => /\.(?:js|jsx|mjs)$/.test(f) && !f.includes('.test.') && !textosEditorials.has(f));

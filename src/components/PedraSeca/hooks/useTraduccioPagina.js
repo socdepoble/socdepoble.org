@@ -20,6 +20,8 @@ import {
   subscriuVeuPreferida,
 } from '../../../services/veusTerritorials.js';
 import { tradueix, useTraductorOpcional } from './useTraductorOpcional.js';
+import { esModeHumaPur } from '../../../sections/realitat/nivellIaia.js';
+import useNivellIaia from '../../../sections/realitat/useNivellIaia.js';
 
 export const AVIS_SENSE_TRADUCTOR = 'La traducció automàtica no està disponible en este servidor.';
 export const AVIS_ERROR_TRADUCCIO = 'No s’ha pogut traduir la pàgina. Torna-ho a provar més tard.';
@@ -115,7 +117,8 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
   const viaLliure = !servidor.disponible && viaLliureDisponible();
   const traductorDisponible = servidor.disponible || viaLliure;
   const esPrivada = Boolean(cosRef?.current && arrelTraduccioPrivada(cosRef.current));
-  const teVeu = sintesiVeuDisponibleLleugera({ privat: esPrivada });
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
+  const teVeu = !modeHumaPur && sintesiVeuDisponibleLleugera({ privat: esPrivada });
   const disponible = traductorDisponible || teVeu;
 
   const { showToast } = useToast();
@@ -167,6 +170,17 @@ export function useTraduccioPagina({ titol = null, cosRef = null } = {}) {
       }
     };
   }, [clauVeu]);
+
+  useEffect(() => {
+    if (!modeHumaPur) return;
+    const vida = vidaRef.current;
+    if (vida.escoltant) {
+      vida.escoltant = false;
+      vida.lectura = null;
+      vida.serveiVeu?.atura?.();
+      setParlantPagina(false);
+    }
+  }, [modeHumaPur]);
 
   const vigent = estat.clau === clauPagina ? estat : ORIGINAL;
   const llenguaInterficie = typeof ui?.llenguaDelText === 'string' && ui.llenguaDelText ? ui.llenguaDelText : null;

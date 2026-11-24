@@ -53,12 +53,12 @@ export async function desaPublicacioPropia(input, config = {}) {
     check();
     /* v1.2.23 · L4-02 (Gauntlet R1) · El transport (runtime.js) desa el SQLSTATE de PostgreSQL a `sqlstate`; `postgrestCode`
        només porta els PGRST###. El missatge SDP-BETA-* de la 130 és la segona prova del mateix rebuig. */
-    const sql = cause?.sqlstate, text = typeof cause?.message === 'string' ? cause.message : '';
-    const code = sql === '40001' || text.includes('SDP-BETA-003') ? 'conflicte-versio'
+    const sql = cause?.sqlstate ?? cause?.postgrestCode, text = typeof cause?.message === 'string' ? cause.message : '';
+    const code = cause?.status === 409 || sql === '40001' || text.includes('SDP-BETA-003') ? 'conflicte-versio'
       : cause?.status === 404 && cause?.postgrestCode === 'PGRST202' ? 'esquema-absent'
         : sql === '42501' || text.includes('SDP-BETA-002') ? 'sense-permis'
           : sql === '54000' || text.includes('SDP-BETA-429') ? 'quota-assolida' : null;
-    if (code) throw Object.assign(new Error('No s’ha confirmat la publicació. Conserva l’esborrany i l’operació.'), { codi: code, code, cause });
+    if (code) throw Object.assign(new Error('No s’ha confirmat la publicació. Conserva l’esborrany i l’operació.'), { codi: code, code, status: code === 'conflicte-versio' ? 409 : cause?.status, cause });
     throw cause;
   }
   check();

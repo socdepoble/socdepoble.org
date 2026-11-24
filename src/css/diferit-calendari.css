@@ -279,6 +279,14 @@
   .sdp-calendari-fonts-panell__estat--error,
   .sdp-calendari-fonts-panell__avis--error { color: var(--sdp-error-text); }
 
+  /* v1.2.24 · F5A · La barra d'accions del compte (Connecta, Cancel·la, Desconnecta): una classe del carril
+     (tests/lint_calendari_fonts) amb el modificador compartit sdp-fila--centrada (G10 R32.67/R32.85b), que la centra. */
+  .sdp-calendari-fonts-panell__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
   .sdp-calendari-agricola__resum-viu {
     display: flex;
     flex-wrap: wrap;

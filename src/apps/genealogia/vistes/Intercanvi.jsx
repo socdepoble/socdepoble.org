@@ -59,6 +59,8 @@ export function Exporta() {
   const [previsualitzat, setPreparat] = useState(null);
   const preparat = previsualitzat?.origen === g.complet ? previsualitzat : null;
   const [missatge, setMissatge] = useState(null);
+  const [descarregant, setDescarregant] = useState(false);
+  const descarregantRef = useRef(false);
   if (!g.carregat) return null;
   const canviaFormat = (nou) => { setFormat(nou); setPreparat(null); setMissatge(null); };
   const canviaVius = (nou) => { setConsentiment(nou ? g.complet : null); setPreparat(null); setMissatge(null); };
@@ -82,15 +84,23 @@ export function Exporta() {
     }
   };
   const descarrega = async () => {
-    if (!descarregaText(preparat.text, preparat.nom, preparat.tipus)) {
-      setMissatge({ to: 'avis', text: tx('exporta.noDescarrega') });
-      return;
-    }
-    setMissatge({ to: 'exit', text: tx('exporta.descarregat') });
+    if (descarregantRef.current) return;
+    descarregantRef.current = true;
+    setDescarregant(true);
     try {
-      await g.marcaCopia();
-    } catch {
-      /* La còpia ja és a les mans de la persona: no saber-ne la data no és cap error seu. */
+      if (!descarregaText(preparat.text, preparat.nom, preparat.tipus)) {
+        setMissatge({ to: 'avis', text: tx('exporta.noDescarrega') });
+        return;
+      }
+      setMissatge({ to: 'exit', text: tx('exporta.descarregat') });
+      try {
+        await g.marcaCopia();
+      } catch {
+        /* La còpia ja és a les mans de la persona: no saber-ne la data no és cap error seu. */
+      }
+    } finally {
+      descarregantRef.current = false;
+      setDescarregant(false);
     }
   };
 
@@ -115,7 +125,7 @@ export function Exporta() {
             <Camp etiqueta={tx('exporta.revisa')}>
               <AreaText files={14} readOnly value={preparat.text} />
             </Camp>
-            <Accions><Boto varietat="primari" icona={Download} onClick={descarrega}>{tx('exporta.descarrega')}</Boto></Accions>
+            <Accions><Boto varietat="primari" icona={Download} carregant={descarregant} disabled={descarregant} onClick={descarrega}>{tx('exporta.descarrega')}</Boto></Accions>
             <BotoCopia text={preparat.text} />
           </>
         ) : null}
@@ -244,8 +254,20 @@ export function AvisGenealogia() {
   const idioma = useIdioma();
   const navega = useNavegaGenealogia();
   const [error, setError] = useState(null);
+  const [acceptant, setAcceptant] = useState(false);
+  const acceptantRef = useRef(false);
   if (!g.carregat) return null;
-  const accepta = () => g.acceptaAvis().then(() => navega(['entrevista'], { replace: true }), (e) => setError(textError(e, idioma)));
+  const accepta = () => {
+    if (acceptantRef.current) return;
+    acceptantRef.current = true;
+    setAcceptant(true);
+    g.acceptaAvis()
+      .then(() => navega(['entrevista'], { replace: true }), (e) => setError(textError(e, idioma)))
+      .finally(() => {
+        acceptantRef.current = false;
+        setAcceptant(false);
+      });
+  };
   return (
     <MarcGenealogia titol={tx('avis.titol')}>
       <Pila gap={6}>
@@ -257,7 +279,7 @@ export function AvisGenealogia() {
         ))}
         {error ? <Alerta to="error">{error}</Alerta> : null}
         {g.avisAcceptat ? <p>{tx('avis.acceptat')}</p> : (
-          <Accions><Boto varietat="primari" mida="gran" disabled={g.nomesLectura} onClick={accepta}>{tx('boto.entesos')}</Boto></Accions>
+          <Accions><Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || g.nomesLectura} onClick={accepta}>{tx('boto.entesos')}</Boto></Accions>
         )}
       </Pila>
     </MarcGenealogia>

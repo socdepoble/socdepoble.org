@@ -8,10 +8,10 @@
       "data": "2026-11-07"
     },
     "anima": {
-      "sha256": "a23e602152e3a846ab012dd579dfd43965c0c30a8347b647c8e1e2e776d61122",
-      "html": 13266,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "7dc11cf633690aaa70387bb8a4131128a783c3b6f8fd3975aaa6bbe71edb1191",
+      "html": 14926,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "arbres-monumentals": {
       "sha256": "de3ed82953ef4fb08c0defc35118a23f702ee172789166725628b435fc86c914",
@@ -24,6 +24,12 @@
       "html": 840,
       "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.22), per ordre del Mestre Javi (prompt 261122_1835; 22-11-2026): subtítol, lead i cos del Banc de llavors en cinc llengües amb la quarta font del lot 02 de Codex R32.42 (3 varietats d'olivera de l'estudi de la Generalitat Valenciana), i el cos matisat pel Gauntlet R2 (M4-01 i revisió): de l'estudi d'oliveres no se'n transcriu res (les fitxes porten el nom de la varietat, l'espècie i la pàgina del PDF) i «Alfafarenca» és la sinonímia local d'«Alfafara». Pendent de lectura humana (Gauntlet R2, M3-04), 2026-11-22.",
       "data": "2026-11-22"
+    },
+    "cada-cosa-al-seu-lloc": {
+      "sha256": "276d450b589def760e92227123f565c79a83f80a33399895b6c008bd9cfec98e",
+      "html": 1002,
+      "aprovat_per": "Mestre Javi (261124 18:00 vinyeta Nano Ibáñez/Berlanga R32.86)",
+      "data": "2026-11-24"
     },
     "cervell": {
       "sha256": "ab8623d080dd0661bfd48b2bea64ef3cdaf52cb645aeac6c1952654897036a93",
@@ -44,10 +50,10 @@
       "data": "2026-11-19"
     },
     "descarregues": {
-      "sha256": "c2a97b1f978a637cca5eaa82c4294307e0895241b87b60037a88ca7ac5a31769",
+      "sha256": "d5215f8c57678045ec23ff7fae1b5e10f3b06d3f5d74e6b90d4fea2549d820c8",
       "html": 10055,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.16), per l'ordre del Mestre Javi del 21-11-2026 01:32 (ZERO APK fora de botiga, prompt 261121_0216): Descàrregues i la Guia de canals ja no ofereixen cap APK directe, en 5 llengües; revisada per dues rondes de Gauntlet; pendent de lectura humana",
-      "data": "2026-11-21"
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "dispositius": {
       "sha256": "411a021fc0ae529c4f7683642fda52fc8d10e9cfef29f1e64bffdfff6f8e937f",
@@ -68,16 +74,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "7a3693f86cc60383a2c054377a3a4ff1245032a7eb15fe751c064dd541fc09d0",
-      "html": 21957,
-      "aprovat_per": "Codex GPT-6, encàrrec directe del Mestre R32.44 C1 (prompt/pla 261122_2227): cens mecànic de 2 capacitats i 4 mètodes nous, casos i absències locals contrastats; pendent de lectura humana",
-      "data": "2026-11-22"
+      "sha256": "e40d4788b44a3d7a75c68496c038ec6133e831ac55276ca515d42bc74c3f6440",
+      "html": 21960,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "fediversity": {
-      "sha256": "378d8fc0d17d263e04e7782cc1c35b9ee7af45244300bbf945da3707090d4ad3",
-      "html": 67048,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
-      "data": "2026-11-23"
+      "sha256": "d1f2a5d5d9419ff56f852d8c24f5563119429611eea78821e67ea42568f6e601",
+      "html": 67044,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -104,10 +110,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "aacb9f91ce0c1892da84a44c43b09f132f7ba1ef911c9ae9fb8a9a795ec719fe",
-      "html": 30210,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
-      "data": "2026-11-23"
+      "sha256": "24091eda2e02166af8bd40365ff4ca8e2b0baa0a9ed61eb44e7dd5e4c9a49a13",
+      "html": 31800,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
@@ -116,10 +122,10 @@
       "data": "2026-11-14"
     },
     "projecte": {
-      "sha256": "018d39c4e10f09b3ae3a42b49165a9de1a56ffa1c308d9b9a8c9ef0f62ecab57",
-      "html": 12761,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
-      "data": "2026-11-19"
+      "sha256": "cf65c368093fd6ae9873ce12f7cc816a7872b8c947bc5b9b4c086ff9fccd2339",
+      "html": 12710,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "publicar_mapa": {
       "sha256": "e36f3439422a65b5d5ada30b468de1718e978383e5c4158fb1666b46b59c9f1c",
@@ -132,6 +138,12 @@
       "html": 2066,
       "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
       "data": "2026-11-12"
+    },
+    "reconeixements": {
+      "sha256": "3281549ad7f68ea3effad653c79f33d0ec42e62bc7ec662c247355a4fe64680b",
+      "html": 1663,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "roadmap": {
       "sha256": "51309768529004965cf344af2f879949434b1929f78855a141f66ca057d404d0",
@@ -152,10 +164,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "43ed7eadb88cc554c2576e9c029a57e828b08942e42102c9f56fb8af0225ac5f",
-      "html": 186438,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439; delegació autònoma de MarIA): paràgraf del servidor de la crònica FITA_V1223 posat al dia després del T2 (127 a 131 aplicades la nit del 23 al 24-11-2026 amb les sondes en verd); pendent de lectura humana",
-      "data": "2026-11-23"
+      "sha256": "4299cee222222f6000fab88562a0dd7bb51568b63c89002cbfc4ee677efb4377",
+      "html": 27172,
+      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+      "data": "2026-11-24"
     },
     "wikidepoble": {
       "sha256": "c7892d0e58181409d5fa8338d5c9cf22c96467346ea77e52c54971558f08ab33",

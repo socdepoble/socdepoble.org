@@ -15,7 +15,7 @@
  */
 import { SELECTOR_EXCLOS_VEU } from './deteccioLecturaVeu.js';
 
-const SELECTOR_BLOC = 'h1, h2, h3, h4, h5, h6, p, blockquote, li, dt, dd, figcaption';
+const SELECTOR_BLOC = 'h1, h2, h3, h4, h5, h6, p, blockquote, li, dt, dd, figcaption, tbody > tr, .sdp-alerta__text';
 const ETIQUETES_TITOL = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 
 function estilVisible(element, arrel) {
@@ -100,11 +100,25 @@ function resumDeText(text, max = 76) {
 
 function teFillDeBlocPropi(element) {
   const tag = element.tagName?.toLowerCase();
-  if (tag === 'blockquote' || tag === 'li' || tag === 'dd') {
-    const fills = element.querySelectorAll?.('p, h2, h3, h4, h5, h6');
+  if (tag === 'blockquote' || tag === 'li' || tag === 'dd' || element.classList?.contains('sdp-alerta__text')) {
+    const fills = element.querySelectorAll?.('p, h2, h3, h4, h5, h6, ul, ol');
+    return Boolean(fills && fills.length > 0);
+  }
+  if (tag === 'tr') {
+    const fills = element.querySelectorAll?.('p, h2, h3, h4, h5, h6, ul, ol, table');
     return Boolean(fills && fills.length > 0);
   }
   return false;
+}
+
+function textDeFilaTaula(fila) {
+  const celles = [...(fila.children || [])].filter((c) => {
+    const tag = c.tagName?.toLowerCase();
+    return (tag === 'th' || tag === 'td') && !dinsDExclos(c, fila);
+  });
+  const parts = celles.map((c) => textNetDeBloc(c)).filter(Boolean);
+  if (!parts.length) return '';
+  return parts.join(parts.length === 2 ? ': ' : ' · ');
 }
 
 /**
@@ -115,9 +129,10 @@ export function extreuBlocsLecturaVeu({ capcalera = null, cos = null } = {}) {
   let seccioActual = '';
 
   const afigBloc = (element, etiquetaForcada = null) => {
-    const text = textNetDeBloc(element);
+    const tagInicial = etiquetaForcada || element.tagName.toLowerCase();
+    const text = tagInicial === 'tr' ? textDeFilaTaula(element) : textNetDeBloc(element);
     if (!text) return;
-    const tag = etiquetaForcada || element.tagName.toLowerCase();
+    const tag = element.classList?.contains('sdp-alerta__text') ? 'p' : tagInicial;
     const esLead = tag === 'p' && element.classList?.contains('lead');
     const etiqueta = esLead ? 'lead' : tag;
     const esTitol = ETIQUETES_TITOL.has(etiqueta);

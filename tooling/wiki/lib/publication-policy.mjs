@@ -7,6 +7,7 @@ import { CAMINS } from '../../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { llevaEtiquetes } from '../../../src/config/contentHelpers.js';
 
 // La reserva no és una data acreditada de creació: és un valor estable per a
 // distribucions sense historial. Mai usem mtime ni l'hora de compilació.
@@ -213,5 +214,5 @@ export function pobleAllowsIndex(route, attributes = {}) {
   const [section, detail] = tramsDeRuta(route);
   if (!['pobles', 'poblacio'].includes(section) || !detail) return true;
   return attributes?.contingut_local_verificat === true
-    && typeof attributes.content === 'string' && Boolean(attributes.content.replace(/<[^>]*>/g, '').trim());
+    && typeof attributes.content === 'string' && Boolean(llevaEtiquetes(attributes.content).trim());
 }

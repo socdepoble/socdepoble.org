@@ -89,6 +89,8 @@ import { rutaDelXatDeJavi, rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefect
 import { ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte } from '../../data/xatsPerDefecte.js';
 import { useXat } from '../xat/XatContext';
 import SelectorRealitat from '../realitat/SelectorRealitat.jsx';
+import { esModeHumaPur } from '../realitat/nivellIaia.js';
+import useNivellIaia from '../realitat/useNivellIaia.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 /* T6b (IDEA-14; decisió del Mestre, 261024) · «Veïnat connectat amb tu» (abans «Gent que et seguix»; P1-11, G1945-04), a la fitxa pròpia d'una persona. */
 import { GentQueEtSegueix } from './Seguidors.jsx';
@@ -102,6 +104,12 @@ import {
   etiquetaTipusPerfilPublic
 } from './textosPerfilPublic.js';
 import { textosDenunciaContingut } from '../../components/universal/i18nDenunciaContingut.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssFitxaDetall from '../../css/diferit-fitxa-detall.css?inline';
+
+const adoptaEstilsFitxaDetall = (node) => {
+  if (node) adoptaFullDiferit(node, 'fitxa-detall', cssFitxaDetall);
+};
 
 /* Onada R17 (AH-R17-10) · El dossier històric, estatutari i el model d'acta
    d'El Rentonar, en un tros diferit: les seues dades (data/patrimoni/actaRentonar.js)
@@ -566,6 +574,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
      com a la càrrega de la ruta, i no de useXat(), que fora del proveïdor diu
      'remote' també en llavor. */
   const { senseSessio } = useXat();
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
   /* Gauntlet 261025_0545 (CUR-01) · «Veïnat connectat amb tu» és la llista
      de qui té la sessió (quiEmSegueix sense entitat): només a la fitxa de la
      persona que mira ara, comprovat en este pintat i no només amb el
@@ -753,7 +762,7 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
     ? esComptePersonaPilot(sessio?.currentUser)
     : (perfil.propietari === true || administra));
   const rutaDelXat = (!ambXat || directeAmbUnMateix) ? null : esIAIA(perfil.id)
-    ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
+    ? (modeHumaPur ? null : rutaDelXatDeLaIAIA(modeDades, senseSessio))
     : esLaPilotDelPaquet
       ? (senseSessio ? `/xat/${ID_FIL_DE_MOSTRA_DE_JAVI}` : rutaDelXatDeJavi(modeDades))
       : `/xat?amb=${encodeURIComponent(perfil.id)}`;
@@ -910,32 +919,36 @@ export function FitxaPublica({ perfil, ambEdita = true, ambXat = true, chrome = 
         </Alerta>
       ) : null}
       {actuaComEsta ? <p role="status" className="sdp-perfil-public__meta">{omple(t('section.perfil.public.actuaComEsta', 'Ara actues com a {nom}.'), { nom: perfil.nom })}</p> : null}
-      {mailto ? (
-        <p className="sdp-perfil-public__meta">
-          {t('section.perfil.public.correuEtiqueta', 'Correu: ')}
-          <a href={mailto}>{correuPublic}</a>
-        </p>
-      ) : null}
-      {enllacosRelMe.length > 0 ? (
-        <p
-          className="sdp-perfil-public__meta"
-          data-compte-institucional={esElProjecte ? COMPTE_INSTITUCIONAL_CANONIC : undefined}
-        >
-          {t('section.perfil.public.fediversEtiqueta', 'Fedivers: ')}
-          {enllacosRelMe.map((item, idx) => (
-            <span key={item.profileUrl}>
-              {idx > 0 ? ', ' : null}
-              <a rel="me noopener noreferrer" href={item.profileUrl} target="_blank">{item.handle}</a>
-            </span>
-          ))}
-        </p>
-      ) : null}
-      {/* P1-59 (b) i IDEA-25 · La targeta de contacte (.vcf), al costat del correu públic d'una organització (el d'una persona no ix mai). */}
-      {vcard ? (
-        <div className="sdp-alerta__accions sdp-perfil-public__accions">
-          <Boto varietat="secundari" icona={Contact} onClick={() => desaVcard(vcard, nomFitxerVcard(perfil.nom))}>
-            {t('section.perfil.public.vcard', 'Descarrega el contacte (vCard)')}
-          </Boto>
+      {mailto || enllacosRelMe.length > 0 || vcard ? (
+        <div ref={adoptaEstilsFitxaDetall} className="sdp-perfil-public__contacte">
+          {mailto ? (
+            <p className="sdp-perfil-public__meta">
+              {t('section.perfil.public.correuEtiqueta', 'Correu: ')}
+              <a href={mailto}>{correuPublic}</a>
+            </p>
+          ) : null}
+          {enllacosRelMe.length > 0 ? (
+            <p
+              className="sdp-perfil-public__meta"
+              data-compte-institucional={esElProjecte ? COMPTE_INSTITUCIONAL_CANONIC : undefined}
+            >
+              {t('section.perfil.public.fediversEtiqueta', 'Fedivers: ')}
+              {enllacosRelMe.map((item, idx) => (
+                <span key={item.profileUrl}>
+                  {idx > 0 ? ', ' : null}
+                  <a rel="me noopener noreferrer" href={item.profileUrl} target="_blank">{item.handle}</a>
+                </span>
+              ))}
+            </p>
+          ) : null}
+          {/* P1-59 (b) i IDEA-25 · La targeta de contacte (.vcf), al costat del correu públic d'una organització (el d'una persona no ix mai). */}
+          {vcard ? (
+            <div className="sdp-alerta__accions sdp-perfil-public__accions">
+              <Boto varietat="secundari" icona={Contact} onClick={() => desaVcard(vcard, nomFitxerVcard(perfil.nom))}>
+                {t('section.perfil.public.vcard', 'Descarrega el contacte (vCard)')}
+              </Boto>
+            </div>
+          ) : null}
         </div>
       ) : null}
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes

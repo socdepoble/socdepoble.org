@@ -48,7 +48,10 @@ export const PAGE_ROUTE_MAP = {
   /* Onada R23 · Àlies directe cap a l'article multimèdia i interactiu «La Veu de Sóc de Poble». */
   'la-veu-de-soc-de-poble': '/mur/la-veu-de-soc-de-poble',
   /* Onada R25 · Àlies directe cap a la guia didàctica «El Farcellet Digital de Sóc de Poble». */
-  'copies-de-seguretat-soc-de-poble': '/mur/copies-de-seguretat-soc-de-poble'
+  'copies-de-seguretat-soc-de-poble': '/mur/copies-de-seguretat-soc-de-poble',
+  /* R32.86 · IDEA-348 · Joc públic al Píxel 0 «Cada cosa al seu lloc» i àlies curt. */
+  'cada-cosa-al-seu-lloc': '/cada-cosa-al-seu-lloc',
+  'joc-taxonomia': '/cada-cosa-al-seu-lloc'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

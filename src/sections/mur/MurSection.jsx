@@ -1,4 +1,6 @@
 import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssLlistesEscalables from '../../css/diferit-llistes-escalables.css?inline';
 import { adoptaEstilsTaulellFeed } from '../../components/universal/estilsTaulellFeed.js';
 import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { Component, Suspense, useEffect, useMemo, useState } from 'react';
@@ -123,6 +125,9 @@ const PARAMS_DEL_CALENDARI = Object.freeze(['vista', 'setmana', 'mes', 'any']);
    capçalera no salta en arribar les dades. Es desfà llevant-la. */
 const CLASSE_PAGINA_MUR = 'sdp-pagina-mur';
 const RUTA_PUBLICAR_MUR = '/notes?ambit=mur';
+const adoptaEstilsLlistesEscalables = (node) => {
+  if (node) adoptaFullDiferit(node, 'llistes-escalables', cssLlistesEscalables);
+};
 
 /* El filtre ?category= (les etiquetes de cada element), el mateix per a la
    graella i per al calendari de la pestanya. */
@@ -429,7 +434,7 @@ export default function MurSection() {
                   ))}
                 </div>
               </header>
-              <div className="sdp-mur-revisio-panel__llista">
+              <div ref={adoptaEstilsLlistesEscalables} className="sdp-mur-revisio-panel__llista sdp-graella-escalable">
                 {dadesRevisioWp.articles.map((art) => (
                   <article key={art.wp_id} className="sdp-mur-revisio-card" data-wp-id={art.wp_id}>
                     <div className="sdp-mur-revisio-card__top">
@@ -511,7 +516,12 @@ export default function MurSection() {
               «Mostrar també al Mur» apagat no hi és, però sí a /calendari. */}
           {filterType === 'all' && !dateFilter && !categoryFilter ? <ProjeccionsEnSuperficie desti="mur" /> : null}
           {filterType === 'events' ? <CalendariDelMur actes={actesDelCalendari} /> : (
-            <div className="sdp-card-grid" onKeyDown={gestionaTeclaGraella}>
+            <div
+              ref={adoptaEstilsLlistesEscalables}
+              className="sdp-card-grid sdp-graella-escalable"
+              data-graella-teclat=""
+              onKeyDown={gestionaTeclaGraella}
+            >
               {/* Ordre del Mestre, 261001 · la targeta de cada element és
                   TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
                   porta el seu model (el mateix del Calendari i del filtre ?date=).

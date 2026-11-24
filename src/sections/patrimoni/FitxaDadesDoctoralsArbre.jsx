@@ -1,11 +1,42 @@
 import { useMemo, useState } from 'react';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { AreaText, Boto, Camp, CampText } from '../../components/PedraSeca/index.js';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssArbresMonumentals from '../../css/diferit-arbres-monumentals.css?inline';
 import { creaFitxaDoctoralArbre, calculaDeltaBiometricArbre, slugRevisionsDoctoralsArbre,
   LIMITS_MESURES_DOCTORALS, esMesuraDendrometricaValida } from '../../data/patrimoni/esquemaDoctoralArbres.js';
 import EinesDadesArbres from './EinesDadesArbres.jsx';
 import { textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import { useRevisionsArbre } from './useRevisionsArbre.js';
+
+export const adoptaEstilsArbresMonumentals = (node) => {
+  if (node) adoptaFullDiferit(node, 'arbres-monumentals', cssArbresMonumentals);
+};
+
+export function TaulaArbrePedraSeca({ titol, files, capCamp = 'Camp documental', capValor = 'Valor acreditat', llenguaValors = undefined }) {
+  if (!Array.isArray(files) || files.length === 0) return null;
+  return (
+    <div className="sdp-taula-prosa">
+      <table>
+        {titol ? <caption className="sdp-sr-only">{titol}</caption> : null}
+        <thead>
+          <tr>
+            <th scope="col">{capCamp}</th>
+            <th scope="col">{capValor}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.map((fila) => (
+            <tr key={fila.clau}>
+              <th scope="row">{fila.etiqueta}</th>
+              <td lang={fila.llengua ?? llenguaValors}>{fila.valor}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 const COTES = Object.freeze([
   { clau: 'alcadaM', etiqueta: 'Alçària total (m)' },
@@ -72,9 +103,9 @@ function FormulariCampanya({ servei }) {
   return (
     <>
       {servei.files.length > 0 && (
-        <ul>{servei.files.map(fila => (
-          <li key={fila.id}>
-            <strong>{fila.campanyaAny}</strong> · {fila.estatConservacio}
+        <ul className="sdp-arbre-campanyes">{servei.files.map(fila => (
+          <li key={fila.id} className="sdp-arbre-campanyes__item">
+            <span><strong>{fila.campanyaAny}</strong> · {fila.estatConservacio}</span>
             {servei.autoritzat && <Boto disabled={ocupat} onClick={() => edita(fila)}>Editar campanya {fila.campanyaAny}</Boto>}
           </li>
         ))}</ul>
@@ -101,14 +132,18 @@ function FormulariCampanya({ servei }) {
               <AreaText maxLength={4000} value={entrada.observacions}
                 onChange={event => canvia('observacions', event.target.value)} />
             </Camp>
-            <Boto tipus="submit" varietat="primari">Desa campanya</Boto>
-            {original && <Boto onClick={reinicia}>Nova campanya</Boto>}
-            {original && <Boto varietat="perill" onClick={() => setConfirmaBaixa(true)}>Esborra campanya</Boto>}
+            <div className="sdp-arbre-accions">
+              <Boto tipus="submit" varietat="primari">Desa campanya</Boto>
+              {original && <Boto onClick={reinicia}>Nova campanya</Boto>}
+              {original && <Boto varietat="perill" onClick={() => setConfirmaBaixa(true)}>Esborra campanya</Boto>}
+            </div>
             {confirmaBaixa && (
               <div role="group" aria-label={txPat.confirmacioBaixaCampanyaAria}>
                 <p>Esborrar la campanya {original.campanyaAny}?</p>
-                <Boto varietat="perill" onClick={esborra}>Confirma l’esborrat</Boto>
-                <Boto onClick={() => setConfirmaBaixa(false)}>Conserva la campanya</Boto>
+                <div className="sdp-arbre-accions">
+                  <Boto varietat="perill" onClick={esborra}>Confirma l’esborrat</Boto>
+                  <Boto onClick={() => setConfirmaBaixa(false)}>Conserva la campanya</Boto>
+                </div>
               </div>
             )}
           </fieldset>
@@ -124,34 +159,58 @@ export default function FitxaDadesDoctoralsArbre({ arbre, font }) {
   const servei = useRevisionsArbre(slugRevisionsDoctoralsArbre(arbre.id, font?.id));
   const fitxa = useMemo(() => creaFitxaDoctoralArbre(arbre, { revisions: servei.files, font }), [arbre, font, servei.files]);
   const deltes = useMemo(() => calculaDeltaBiometricArbre(fitxa), [fitxa]);
-  return (
-    <div>
-      <h4>Dades científiques i procedència</h4>
-      <p>{fitxa.font.titol} · {fitxa.font.municipi}</p>
-      <dl>
-        <dt>Taxonomia APG IV, POWO i Flora Iberica</dt>
-        <dd><em lang="la">{fitxa.taxonomia.nomCientific}</em>. Contrast amb les autoritats taxonòmiques pendent.</dd>
-        <dt>Georeferenciació ETRS89 i bioclimatologia</dt>
-        <dd>
+  const filesDoctorals = [
+    {
+      clau: 'taxonomia',
+      etiqueta: 'Taxonomia APG IV, POWO i Flora Iberica',
+      valor: <><em lang="la">{fitxa.taxonomia.nomCientific}</em>. Contrast amb les autoritats taxonòmiques pendent.</>
+    },
+    {
+      clau: 'georeferenciacio',
+      etiqueta: 'Georeferenciació ETRS89 i bioclimatologia',
+      valor: (
+        <>
           {fitxa.georeferenciacio.paratge}
           {fitxa.georeferenciacio.utmEtrs89
             ? ` · UTM ETRS89 fus ${fitxa.georeferenciacio.utmEtrs89.fus} · ${fitxa.georeferenciacio.utmEtrs89.x} / ${fitxa.georeferenciacio.utmEtrs89.y}`
             : ' · Coordenades pendents de campanya.'}
           {' Classificació bioclimàtica Rivas-Martínez pendent de campanya.'}
-        </dd>
-        <dt>Biometria CIEF i valoració Norma Granada</dt>
-        <dd>Data de presa de dades · {fitxa.biometria.base.data || 'Pendent de campanya'}. La valoració econòmica Norma Granada està pendent d’avaluació.</dd>
-        {COTES.map(({ clau, etiqueta }) => (
-          <div key={clau}><dt>{etiqueta}</dt><dd>{fitxa.biometria.base.dimensions[clau] ?? 'Pendent de campanya'}</dd></div>
-        ))}
-        <dt>Avaluació visual VTA i sanitat vegetal</dt>
-        <dd>{fitxa.avaluacio.descripcio} {fitxa.avaluacio.estatSalut} La diagnosi actual requerix una campanya documentada.</dd>
-        <dt>Protecció jurídica</dt>
-        <dd>Categoria declarada en el catàleg. Identificador registral i vigència de les mesures pendents de contrast amb l’administració competent.</dd>
-        <dt>Etnobotànica i memòria oral</dt>
-        <dd>{fitxa.memoria.valorCulturalHistoric || 'Pendent de documentació.'}</dd>
-      </dl>
-      <details>
+        </>
+      )
+    },
+    {
+      clau: 'biometria',
+      etiqueta: 'Biometria CIEF i valoració Norma Granada',
+      valor: `Data de presa de dades · ${fitxa.biometria.base.data || 'Pendent de campanya'}. La valoració econòmica Norma Granada està pendent d’avaluació.`
+    },
+    ...COTES.map(({ clau, etiqueta }) => ({
+      clau,
+      etiqueta,
+      valor: fitxa.biometria.base.dimensions[clau] ?? 'Pendent de campanya'
+    })),
+    {
+      clau: 'vta',
+      etiqueta: 'Avaluació visual VTA i sanitat vegetal',
+      valor: `${fitxa.avaluacio.descripcio} ${fitxa.avaluacio.estatSalut} La diagnosi actual requerix una campanya documentada.`
+    },
+    {
+      clau: 'proteccio',
+      etiqueta: 'Protecció jurídica',
+      valor: 'Categoria declarada en el catàleg. Identificador registral i vigència de les mesures pendents de contrast amb l’administració competent.'
+    },
+    {
+      clau: 'etnobotanica',
+      etiqueta: 'Etnobotànica i memòria oral',
+      valor: fitxa.memoria.valorCulturalHistoric || 'Pendent de documentació.'
+    }
+  ];
+
+  return (
+    <div className="sdp-arbre-doctoral" ref={adoptaEstilsArbresMonumentals}>
+      <h4>Dades científiques i procedència</h4>
+      <p>{fitxa.font.titol} · {fitxa.font.municipi}</p>
+      <TaulaArbrePedraSeca titol="Dades científiques i procedència" files={filesDoctorals} />
+      <details className="sdp-arbre-referencies">
         <summary>Referències del paquet de dades</summary>
         <p>{fitxa.avaluacio.observacions}</p>
         <ul>{fitxa.proteccio.marcNormatiu.map((norma, index) => <li key={index}>{norma}</li>)}</ul>

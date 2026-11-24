@@ -225,14 +225,19 @@ function VinclesPersona({ persona }) {
   const [altra, setAltra] = useState('');
   const [evidencia, setEvidencia] = useState({ fontEscrita: false, memoriaOral: true, vincleExplicit: true });
   const [missatge, setMissatge] = useState(null);
+  const [ocupat, setOcupat] = useState(false);
+  const ocupatRef = useRef(false);
   const vincles = (g.complet?.relacions || []).filter((relacio) => relacio.de === persona.id || relacio.a === persona.id);
   const candidates = persones.filter((altraPersona) => altraPersona.id !== persona.id);
   const afig = async (event) => {
     event.preventDefault();
+    if (ocupatRef.current) return;
     if (!altra) {
       setMissatge({ to: 'error', text: tx('editor.triaPersona') });
       return;
     }
+    ocupatRef.current = true;
+    setOcupat(true);
     try {
       const resultat = await g.desaRelacio({ ...OPCIONS_VINCLE[opcio](persona.id, altra), evidencia, fontIds: [] });
       if (resultat?.ok) {
@@ -241,9 +246,25 @@ function VinclesPersona({ persona }) {
       } else setMissatge({ to: 'error', text: tx('error.invalid') });
     } catch (error) {
       setMissatge({ to: 'error', text: textError(error, idioma) });
+    } finally {
+      ocupatRef.current = false;
+      setOcupat(false);
     }
   };
-  const lleva = (id) => g.esborraRelacio(id).catch((error) => setMissatge({ to: 'error', text: textError(error, idioma) }));
+  const lleva = async (id) => {
+    if (ocupatRef.current) return;
+    ocupatRef.current = true;
+    setOcupat(true);
+    try {
+      await g.esborraRelacio(id);
+      setMissatge(null);
+    } catch (error) {
+      setMissatge({ to: 'error', text: textError(error, idioma) });
+    } finally {
+      ocupatRef.current = false;
+      setOcupat(false);
+    }
+  };
   return (
     <GrupCamps llegenda={tx('editor.vincles')}>
       {vincles.length ? vincles.map((relacio) => {
@@ -254,29 +275,29 @@ function VinclesPersona({ persona }) {
               {`${tx(paperDeLAltra(relacio, persona.id))}: ${altraPersona ? nomVisible(altraPersona, idioma) : '—'} `}
               <EtiquetaEstat estat={relacio.estat} />
             </p>
-            <Accions><Boto varietat="fantasma" disabled={g.nomesLectura} onClick={() => lleva(relacio.id)}>{tx('editor.llevaVincle')}</Boto></Accions>
+            <Accions><Boto varietat="fantasma" disabled={g.nomesLectura || ocupat} onClick={() => lleva(relacio.id)}>{tx('editor.llevaVincle')}</Boto></Accions>
           </Pila>
         );
       }) : <p>{tx('fitxa.senseVincles')}</p>}
       <form onSubmit={afig} noValidate aria-label={tx('editor.nouVincle')}>
         <Pila gap={2}>
           <Camp etiqueta={tx('editor.tipusVincle')}>
-            <Selector value={opcio} disabled={g.nomesLectura} onChange={(event) => setOpcio(event.target.value)}
+            <Selector value={opcio} disabled={g.nomesLectura || ocupat} onChange={(event) => { setOpcio(event.target.value); setMissatge(null); }}
               opcions={Object.keys(OPCIONS_VINCLE).map((clau) => ({ valor: clau, etiqueta: tx(`opcio.${clau}`) }))} />
           </Camp>
           <Camp etiqueta={tx('editor.ambQui')}>
-            <Selector value={altra} disabled={g.nomesLectura} onChange={(event) => setAltra(event.target.value)}
+            <Selector value={altra} disabled={g.nomesLectura || ocupat} onChange={(event) => { setAltra(event.target.value); setMissatge(null); }}
               opcions={[{ valor: '', etiqueta: tx('editor.triaPersona') }, ...candidates.map((c) => ({ valor: c.id, etiqueta: nomVisible(c, idioma) }))]} />
           </Camp>
           <GrupCamps llegenda={tx('evidencia')}>
             {['fontEscrita', 'memoriaOral', 'vincleExplicit'].map((clau) => (
-              <Casella key={clau} etiqueta={tx(`evidencia.${clau}`)} checked={evidencia[clau]} disabled={g.nomesLectura}
+              <Casella key={clau} etiqueta={tx(`evidencia.${clau}`)} checked={evidencia[clau]} disabled={g.nomesLectura || ocupat}
                 onChange={(event) => setEvidencia({ ...evidencia, [clau]: event.target.checked })} />
             ))}
             <p>{`${tx('evidencia.resultat')} `}<EtiquetaEstat estat={estatDeVincle(evidencia)} /></p>
           </GrupCamps>
           {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-          <Accions><Boto varietat="secundari" tipus="submit" disabled={g.nomesLectura}>{tx('editor.afigVincle')}</Boto></Accions>
+          <Accions><Boto varietat="secundari" tipus="submit" carregant={ocupat} disabled={g.nomesLectura || ocupat}>{tx('editor.afigVincle')}</Boto></Accions>
         </Pila>
       </form>
     </GrupCamps>
@@ -293,11 +314,23 @@ function FormulariPersona({ persona }) {
   const [errors, setErrors] = useState({});
   const [missatge, setMissatge] = useState(null);
   const [esborrant, setEsborrant] = useState(null);
-  const posa = (camp, valor) => setValors((abans) => ({ ...abans, [camp]: valor }));
+  const [desant, setDesant] = useState(false);
+  const desantRef = useRef(false);
+  const posa = (camp, valor) => {
+    setValors((abans) => ({ ...abans, [camp]: valor }));
+    setMissatge(null);
+    setErrors((prev) => {
+      if (!prev[camp]) return prev;
+      const net = { ...prev };
+      delete net[camp];
+      return net;
+    });
+  };
   const opcionsAmb = (llista, prefix) => llista.map((valor) => ({ valor, etiqueta: tx(`${prefix}.${valor}`) }));
 
   const desa = async (event) => {
     event.preventDefault();
+    if (desantRef.current) return;
     const naixement = llegeixData(valors.naixement, { anyActual: g.anyActual });
     const defuncio = valors.defuncio.trim() === '' ? null : llegeixData(valors.defuncio, { anyActual: g.anyActual });
     const nous = {};
@@ -314,6 +347,8 @@ function FormulariPersona({ persona }) {
       fonts: valors.fonts.map((font) => ({ ...font, consultada: font.consultada.trim() || null })),
       origen: persona?.origen || 'ma'
     };
+    desantRef.current = true;
+    setDesant(true);
     try {
       const resultat = await g.desaPersona(cru, { esperat: esperat.current });
       if (!resultat?.ok) {
@@ -325,20 +360,29 @@ function FormulariPersona({ persona }) {
       if (!persona && resultat.persona?.id) navega(['persones', resultat.persona.id], { replace: true });
     } catch (error) {
       setMissatge({ to: 'error', text: textError(error, idioma) });
+    } finally {
+      desantRef.current = false;
+      setDesant(false);
     }
   };
   const esborra = async () => {
+    if (desantRef.current) return;
     const arbreEsperat = esborrant;
     setEsborrant(null);
     if (!arbreEsperat) return;
+    desantRef.current = true;
+    setDesant(true);
     try {
       await g.esborraPersona(persona.id, { esperat: arbreEsperat });
       navega(['persones'], { replace: true });
     } catch (error) {
       setMissatge({ to: 'error', text: textError(error, idioma) });
+    } finally {
+      desantRef.current = false;
+      setDesant(false);
     }
   };
-  const des = g.nomesLectura;
+  const des = g.nomesLectura || desant;
   const text = (camp, max) => (
     <Camp etiqueta={tx(`camp.${camp}`)} error={errors[camp]}>
       <CampText maxLength={max} autoComplete="off" value={valors[camp]} disabled={des} onChange={(event) => posa(camp, event.target.value)} />
@@ -385,14 +429,14 @@ function FormulariPersona({ persona }) {
             </Accions>
           </GrupCamps>
           {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-          <Accions><Boto varietat="primari" tipus="submit" disabled={des}>{tx('boto.desa')}</Boto></Accions>
+          <Accions><Boto varietat="primari" tipus="submit" carregant={desant} disabled={des}>{tx('boto.desa')}</Boto></Accions>
         </Pila>
       </form>
       {persona ? <VinclesPersona persona={persona} /> : <p>{tx('editor.primerDesa')}</p>}
       {persona ? (
         <Accions><Boto varietat="perill" disabled={des} onClick={() => setEsborrant(g.complet)}>{tx('editor.esborra')}</Boto></Accions>
       ) : null}
-      <DialegConfirmacio obert={Boolean(esborrant)} destructiu titol={tx('editor.esborra.titol')} etiquetaConfirma={tx('editor.esborra')}
+      <DialegConfirmacio obert={Boolean(esborrant)} destructiu carregant={desant} titol={tx('editor.esborra.titol')} etiquetaConfirma={tx('editor.esborra')}
         etiquetaCancela={tx('boto.cancela')} descripcio={tx('editor.esborra.text')} onTanca={() => setEsborrant(null)} onConfirma={esborra} />
     </Pila>
   );

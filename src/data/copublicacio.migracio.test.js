@@ -16,7 +16,9 @@ const SQL = ['2611111735_copublicacio_registrada.sql', '20261117150000_r324_copu
    tests/r32-posse-cataleg.test.mjs). Les dues coses són de l'integrador i del Mestre, que l'aplica. Mentrestant la clau
    queda declarada ací com a pendent: fora del registre, private.copub_recurs no la reconeix com a peça del paquet, i la
    prova falla el dia que la migració arribe sense que algú lleve la clau d'esta llista. */
-const PAGINES_PENDENTS_DE_REGISTRE = ['tot-el-que-pots-fer'];
+/* v1.2.24 · costura R32.75 · /page/reconeixements (IDEA-340, R32.61 dins de R32.75), la Notícia #1 del Mur, es troba
+   en el mateix cas: R32.75 no porta cap migració de registre ni cap pin POSSE. Queda pendent, com tot-el-que-pots-fer. */
+const PAGINES_PENDENTS_DE_REGISTRE = ['tot-el-que-pots-fer', 'reconeixements', 'cada-cosa-al-seu-lloc'];
 /* v1.2.22 · Codex R32.42 (lot 02) afig al Banc de llavors la font oficial d'oliveres GVA/IVIA i les seues tres varietats,
    però el kit no porta cap migració que les afija al registre de 2611111735. Com tot-el-que-pots-fer: queden declarades
    pendents (la migració i el seu pin POSSE són de l'integrador i del Mestre). La migració de registre que arribe s'ha

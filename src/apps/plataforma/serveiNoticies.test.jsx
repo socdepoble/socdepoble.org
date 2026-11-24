@@ -57,8 +57,9 @@ describe('useServeiNoticies (l’API pública)', () => {
 
   /* R32.11 (v1.2.9) · Actualitzada a posta: el nucli és l'1.7.0 (Accions, lots 05 i 06 de Gemini). */
   /* v1.2.17 · Ara l'1.8.0 (les declaracions d'espai del Rebost). */
-  test('el nucli 1.8 conserva la porta de notícies publicada en 1.3', () => {
-    expect(VERSIO_NUCLI).toBe('1.8.0');
+  /* v1.2.24 · costura R32.75 · Ara l'1.9.0 (IconesAlergens, les Receptes de la Nevera). */
+  test('el nucli 1.9 conserva la porta de notícies publicada en 1.3', () => {
+    expect(VERSIO_NUCLI).toBe('1.9.0');
     expect(PORTES_DEL_NUCLI.find((porta) => porta.clau === 'plataforma').noms).toContain('useServeiNoticies');
   });
 });

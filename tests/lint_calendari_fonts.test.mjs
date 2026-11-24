@@ -44,6 +44,11 @@ const PROVES = [
 const PUBLIC = ['public/auth/calendari-google.js'];
 const CARRIL = [...CODI, ...PROVES, ...PUBLIC, 'tests/lint_calendari_fonts.test.mjs'];
 const CSS_CANONIC = fs.readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => `src/css/${f}`);
+// Utilitats semàntiques canòniques usades pel panell reconciliat R32.85b.
+// Han de tindre regla CSS real; cap utilitat nova ni classe desconeguda s'admet.
+const UTILITATS_CANONIQUES = new Set(['sdp-fila', 'sdp-wrap', 'sdp-align-center', 'sdp-fila--centrada', 'sdp-centre']);
+const classesForaDelContracte = (tokens, declarades) => tokens.filter(c =>
+  !declarades.has(c) || !c.startsWith('sdp-calendari-fonts-') && !UTILITATS_CANONIQUES.has(c));
 
 test('tots els fitxers del carril existixen', () => {
   assert.deepEqual(CARRIL.filter((f) => !fs.existsSync(path.join(ARREL, f))), []);
@@ -99,7 +104,8 @@ test('tota classe del JSX del carril té regla als fulls canònics, i al full di
   const delCarril = [...new Set(usades)].filter((c) => c.startsWith('sdp-calendari-fonts-'));
   assert.ok(delCarril.length >= 10, `només ${delCarril.length} classes del carril: la cerca no les troba`);
   assert.deepEqual(delCarril.filter((c) => !declarades.has(c)), []);
-  assert.deepEqual(llig(`${FONTS}/PanellFontsCalendari.jsx`).match(/className="(?!sdp-calendari-fonts-)[^"]*"/g), null);
+  const explicites = [...llig(`${FONTS}/PanellFontsCalendari.jsx`).matchAll(/className="([^"]*)"/g)].flatMap(m => m[1].split(/\s+/));
+  assert.deepEqual(classesForaDelContracte(explicites, declarades), []);
   /* R32.11 (Gemini, dieta CSS del connector WordPress, D06) · El bloc «CALENDARI · FONTS» ja no és a modules.css:
      viu al full diferit src/css/diferit-calendari.css, dins de @layer components. Les seues regles continuen
      sense ombres, sense valors de recurs a var() i sense les altures fixes de 56/58px. */
@@ -109,6 +115,13 @@ test('tota classe del JSX del carril té regla als fulls canònics, i al full di
   const regles = [...full.matchAll(/\.sdp-calendari-fonts-[^{]*\{[^}]*\}/g)].map((m) => m[0]);
   assert.ok(regles.length >= 5, `només ${regles.length} regles del carril al full diferit`);
   assert.deepEqual(regles.filter((r) => /box-shadow|var\([^)]*,|56px|58px/.test(r)), []);
+});
+
+test('contracte de classes: una regla absent, una utilitat vetada i un nom alié continuen bloquejats', () => {
+  const declarades = new Set(['sdp-fila', 'sdp-calendari-fonts-boto', 'sdp-justify-center', 'classe-aliena']);
+  assert.deepEqual(classesForaDelContracte(['sdp-fila', 'sdp-calendari-fonts-boto'], declarades), []);
+  assert.deepEqual(classesForaDelContracte(['sdp-centre', 'sdp-calendari-fonts-absent', 'sdp-justify-center', 'classe-aliena'], declarades),
+    ['sdp-centre', 'sdp-calendari-fonts-absent', 'sdp-justify-center', 'classe-aliena']);
 });
 
 test('la pàgina de tornada: cap script en línia, CSP estricta, el mateix canal i el mateix missatge que l’adaptador', () => {

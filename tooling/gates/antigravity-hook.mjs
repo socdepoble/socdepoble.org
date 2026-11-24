@@ -114,6 +114,7 @@ import { pathToFileURL } from 'node:url';
 import { knownPureRead, SECURITY_PATHS, mutationPath } from './mutation-policy.mjs';
 import { documentArgv } from '../documental/command-policy.mjs';
 import { CAMINS } from '../lib/arrel.mjs';
+import { camiDeArgs, CLAUS_CONTINGUT_ESCRIPTURA, EINES_ESCRIPTURA_ANTIGRAVITY } from '../lib/tool-dialect.mjs';
 
 export const DESK = CAMINS.escriptori;
 export const INTERRUPTOR = '.agents/runtime/antigravity-hook.off';
@@ -139,8 +140,8 @@ const NOM_PER_NOM = /^\d{6}_\d{4}_[a-z0-9]+(?:_[a-z0-9]+)*(?:\.[A-Za-z0-9]+)+$/;
    TargetFile, CodeContent i ReplacementChunks, són els del dialecte que ja parla
    porta-reflex.mjs. Per això també compta com a escriptura qualsevol eina que
    porte un argument de contingut, es diga com es diga: un nom nou no escapa. */
-const ESCRIPTURA = new Set(['write_to_file', 'replace_file_content', 'multi_replace_file_content']);
-const ARGS_CONTINGUT = Object.freeze(['CodeContent', 'ReplacementChunks', 'ReplacementContent', 'TargetContent']);
+const ESCRIPTURA = new Set(EINES_ESCRIPTURA_ANTIGRAVITY);
+const ARGS_CONTINGUT = CLAUS_CONTINGUT_ESCRIPTURA;
 
 /* Peces que governen este mateix hook. Tocar-les és decisió del Mestre.
    Ordre del Mestre (261007): també les de l'alarma de fatiga (hook «sdp-fatiga»),
@@ -489,8 +490,8 @@ function motiuDeny(fitxer, errors) {
 }
 
 function preEscriptura(args, { root, portes }) {
-  const cami = typeof args.TargetFile === 'string' && args.TargetFile ? args.TargetFile : null;
-  if (!cami) return ask("Hook Olivera: eina d'escriptura sense TargetFile; cap comprovació feta.");
+  const cami = camiDeArgs(args);
+  if (!cami) return ask("Hook Olivera: eina d'escriptura sense TargetFile ni Path; cap comprovació feta.");
   const rel = relatiu(root, cami);
   if (rel === null) return ALLOW; // fora del repositori: artefactes propis de l'IDE (~/.gemini/…)
   if (zonaHumana(rel)) return forceAsk(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
@@ -659,7 +660,7 @@ export function calenPortes(mode, payload, root) {
   const nom = crida?.name;
   const args = argsDe(crida);
   if (typeof nom !== 'string' || nom === 'run_command' || !esEscriptura(nom, args)) return null;
-  const rel = relatiu(root, args.TargetFile);
+  const rel = relatiu(root, camiDeArgs(args));
   return rel && alPrimerNivell(rel) && esMd(rel) ? 'escriptura' : null;
 }
 
@@ -801,10 +802,11 @@ async function main(argv) {
   const args = argsDe(payload?.toolCall);
   const missatge = eixida.injectSteps?.[0]?.ephemeralMessage;
   const ordre = ordreDe(args);
+  const camiTraca = camiDeArgs(args);
   traca(root, {
     mode: mode ?? null,
     eina: payload?.toolCall?.name ?? null,
-    fitxer: relatiu(root, args.TargetFile) ?? (args.TargetFile ? 'fora del repositori' : null),
+    fitxer: relatiu(root, camiTraca) ?? (camiTraca ? 'fora del repositori' : null),
     // Ordre del Mestre (261007): l'ordre retallada, perquè la traça puga contrastar
     // una acta sense llegir la transcripció privada de l'IDE.
     ...(ordre !== null ? { ordre: retalla(ordre, 160) } : {}),

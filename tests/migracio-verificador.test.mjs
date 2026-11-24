@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import * as V from '../scripts/supabase/verifica-migracions.mjs';
 
@@ -51,7 +52,7 @@ function ambCopiaReal(mutacions, fn) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-migr-real-'));
   try {
     fs.cpSync(path.join(REPO, 'supabase/migrations'), path.join(dir, 'supabase/migrations'), { recursive: true });
-    for (const rel of ['supabase/README.md', 'supabase/ordre_desplegament.json', 'src/data/contracte.js']) {
+    for (const rel of ['supabase/README.md', 'supabase/ordre_desplegament.json', 'supabase/exempcions_historiques.json', 'src/data/contracte.js']) {
       let text = fs.readFileSync(path.join(REPO, rel), 'utf8');
       if (mutacions[rel]) text = mutacions[rel](text);
       fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
@@ -67,6 +68,19 @@ let real = null;
 const informeReal = () => (real ??= V.verifica({ arrel: REPO, ara: ARA }));
 const catalegDe = (informe) => new Map(Object.entries(informe.catalegFuncions));
 const blocsSql = (md) => [...md.matchAll(/```sql\n([\s\S]*?)```/g)].map((m) => m[1]);
+const EXEMPCIONS = 'supabase/exempcions_historiques.json';
+
+function declaraExempcionsDeProva(dir) {
+  const r = V.verifica({ arrel: dir, ara: ARA });
+  const exempcions = r.migracions.flatMap((m) => {
+    const diagnostics = r.avisos.filter((a) => a.versio === m.versio && a.pendent).map(({ codi, linia, missatge }) => ({ codi, linia, missatge, motiu: 'Fet històric revisat en esta fixture.', mesura: 'Revisar la preimatge abans d’aplicar.' }));
+    return diagnostics.length ? [{ fitxer: m.fitxer, sha256: m.sha256, diagnostics }] : [];
+  });
+  return { esquema: V.ESQUEMA_EXEMPCIONS, auditoria: 'C3-VAL01 · fixture', exempcions };
+}
+
+const escriuExempcions = (dir, manifest) => fs.writeFileSync(path.join(dir, EXEMPCIONS), JSON.stringify(manifest));
+const FIXTURE_EXEMPCIO = { migracions: { '2611010000_a.sql': 'create table public.u (id int);\n' }, readme: { estats: { 2611010000: NO_APLICADA } } };
 
 test('lèxic: ; dins de literals, E-strings, identificadors, cossos i comentaris imbricats', () => {
   const sql = [
@@ -493,6 +507,13 @@ test('arbre real: sense errors, pendents de HEAD estrictes, cadenes del README i
   for (const c of readme.cadenes) assert.ok(ordre.indexOf(c.abans) < ordre.indexOf(c.despres), `${c.abans} abans de ${c.despres}`);
   assert.ok(ordre.indexOf('2610312000') === ordre.indexOf('2610311800') + 1, '2610312000 just després de 2610311800');
   const estricte = V.verifica({ arrel: REPO, ara: ARA, estricte: true });
+  assert.deepEqual(estricte.errors, [], 'C3-VAL01: tot el catàleg passa en mode estricte');
+  assert.equal(estricte.exempcionsHistoriques.declarades, 7);
+  assert.equal(estricte.exempcionsHistoriques.aplicades.length, 7);
+  assert.equal(estricte.avisos.filter((a) => a.exempcioHistorica).length, 7, 'cap diagnòstic heretat desapareix');
+  assert.deepEqual(estricte.avisos, r.avisos, 'els dos modes conserven els mateixos avisos auditats');
+  assert.ok(r.avisos.some((a) => a.codi === 'A-ORDRE-MIXT'));
+  assert.equal(r.avisos.filter((a) => a.codi === 'A-INVERSIO-ALFABETICA').length, 1);
   for (const v of PENDENTS_HEAD) assert.ok(!estricte.errors.some((e) => e.versio === v || (e.fitxer ?? '').includes(`/${v}_`)), `${v} passa --estricte`);
   const m = (v) => r.migracions.find((x) => x.versio === v);
   assert.ok(m('2609080000').idempotencia.troballes.some((t) => t.regla === 'POLITICA_SENSE_DROP_PREVI' && t.linia === 813));
@@ -540,6 +561,137 @@ test('pendents: --estricte promou els avisos i les receptes de dues sessions mai
     const estricte = V.verifica({ arrel: dir, ara: ARA, estricte: true });
     for (const c of ['A-SENSE-TRANSACCIO', 'A-IDEMPOTENCIA']) assert.ok(estricte.errors.some((e) => e.codi === c && e.promogut), c);
     assert.ok(!estricte.errors.some((e) => (e.fitxer ?? '').endsWith('2611010000_a.sql')), 'les desconegudes no es promouen');
+  });
+});
+
+test('C3-VAL01: declaració estricta sense comodins, duplicats ni codis no exemptables', () => {
+  amb(FIXTURE_EXEMPCIO, (dir) => {
+    const base = declaraExempcionsDeProva(dir);
+    assert.equal(V.llegixExempcions(JSON.stringify(base)).exempcions[0].diagnostics.length, 2);
+    const mutants = [
+      (m) => { m.esquema = 'desconegut'; },
+      (m) => { m.extra = true; },
+      (m) => { m.auditoria = ''; },
+      (m) => { m.exempcions[0].fitxer = '../fora.sql'; },
+      (m) => { m.exempcions[0].sha256 = '*'; },
+      (m) => { m.exempcions.push(structuredClone(m.exempcions[0])); },
+      (m) => { m.exempcions[0].diagnostics.push(structuredClone(m.exempcions[0].diagnostics[0])); },
+      (m) => { m.exempcions[0].diagnostics[0].codi = 'E-TRANSACCIO'; },
+      (m) => { m.exempcions[0].diagnostics[0].codi = '*'; },
+      (m) => { m.exempcions[0].diagnostics[0].linia = 0; },
+      (m) => { m.exempcions[0].diagnostics[0].missatge = ''; },
+      (m) => { delete m.exempcions[0].diagnostics[0].mesura; },
+      (m) => { m.exempcions[0].diagnostics[0].motiu = ' '; },
+      (m) => { m.exempcions[0].diagnostics[0].extra = true; }
+    ];
+    for (const muta of mutants) {
+      const m = structuredClone(base); muta(m);
+      assert.throws(() => V.llegixExempcions(JSON.stringify(m)), undefined, String(muta));
+      escriuExempcions(dir, m);
+      for (const estricte of [false, true]) assert.ok(codis(V.verifica({ arrel: dir, ara: ARA, estricte })).includes('E-EXEMPCIONS-JSON'));
+    }
+  });
+});
+
+test('C3-VAL01: excepció exacta conserva diagnòstics i mesures en text, JSON i pla sense escriure SQL', () => {
+  amb(FIXTURE_EXEMPCIO, (dir) => {
+    const manifest = declaraExempcionsDeProva(dir);
+    escriuExempcions(dir, manifest);
+    const digest = () => createHash('sha256').update(fs.readFileSync(path.join(dir, 'supabase/migrations/2611010000_a.sql'))).digest('hex');
+    const abans = digest();
+    const normal = V.verifica({ arrel: dir, ara: ARA });
+    const r = V.verifica({ arrel: dir, ara: ARA, estricte: true });
+    assert.deepEqual(r.errors, []);
+    assert.deepEqual(r.avisos, normal.avisos);
+    assert.equal(r.exempcionsHistoriques.aplicades.length, 2);
+    assert.ok(r.avisos.every((a) => a.exempcioHistorica?.sha256 === abans));
+    assert.match(V.formataText(r), /exempció auditada C3-VAL01/);
+    assert.match(V.formataPla(r), /Mesura abans d'aplicar: Revisar la preimatge/);
+    assert.equal(JSON.parse(JSON.stringify(r)).exempcionsHistoriques.aplicades[0].motiu, 'Fet històric revisat en esta fixture.');
+    assert.deepEqual(V.verifica({ arrel: dir, ara: ARA, estricte: true }), r, 'informe complet determinista amb el mateix rellotge');
+    assert.equal(digest(), abans);
+    const run = spawnSync(process.execPath, [SCRIPT, '--arrel', dir, '--estricte', '--format', 'json'], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(JSON.parse(run.stdout).exempcionsHistoriques.aplicades.length, 2);
+    assert.equal(digest(), abans, 'el CLI també conserva els bytes');
+  });
+});
+
+test('C3-VAL01: un diagnòstic nou o no declarat continua fent fallar --estricte', () => {
+  amb(FIXTURE_EXEMPCIO, (dir) => {
+    const manifest = declaraExempcionsDeProva(dir);
+    manifest.exempcions[0].diagnostics = manifest.exempcions[0].diagnostics.filter((d) => d.codi === 'A-SENSE-TRANSACCIO');
+    escriuExempcions(dir, manifest);
+    const r = V.verifica({ arrel: dir, ara: ARA, estricte: true });
+    assert.ok(r.errors.some((e) => e.codi === 'A-IDEMPOTENCIA' && e.promogut));
+    assert.ok(!r.errors.some((e) => e.codi === 'A-SENSE-TRANSACCIO'));
+    const nova = { ...FIXTURE_EXEMPCIO.migracions, '2611010100_nova.sql': 'create table public.nova (id int);\n' };
+    fs.writeFileSync(path.join(dir, 'supabase/migrations/2611010100_nova.sql'), nova['2611010100_nova.sql']);
+    fs.writeFileSync(path.join(dir, 'supabase/README.md'), readmeDe(nova, { estats: { 2611010000: NO_APLICADA, 2611010100: NO_APLICADA } }));
+    const nou = V.verifica({ arrel: dir, ara: ARA, estricte: true });
+    assert.ok(nou.errors.some((e) => e.versio === '2611010100' && e.codi === 'A-SENSE-TRANSACCIO' && e.promogut));
+    const run = spawnSync(process.execPath, [SCRIPT, '--arrel', dir, '--estricte'], { encoding: 'utf8' });
+    assert.equal(run.status, 1);
+  });
+});
+
+test('C3-VAL01: deriva de bytes, migració absent o diagnòstic divergent fallen en els dos modes', () => {
+  for (const mutant of ['bytes', 'absent', 'codi', 'linia', 'missatge']) amb(FIXTURE_EXEMPCIO, (dir) => {
+    const manifest = declaraExempcionsDeProva(dir);
+    if (mutant === 'bytes') fs.appendFileSync(path.join(dir, 'supabase/migrations/2611010000_a.sql'), '-- deriva\n');
+    else if (mutant === 'absent') manifest.exempcions[0].fitxer = '2611010100_absent.sql';
+    else if (mutant === 'codi') manifest.exempcions[0].diagnostics[0].codi = 'A-DECLARA-IDEMPOTENT';
+    else if (mutant === 'linia') manifest.exempcions[0].diagnostics[0].linia = 999;
+    else manifest.exempcions[0].diagnostics[0].missatge += ' divergent';
+    escriuExempcions(dir, manifest);
+    const esperat = mutant === 'bytes' ? 'E-EXEMPCIO-DERIVA' : mutant === 'absent' ? 'E-EXEMPCIO-ABSENT' : 'E-EXEMPCIO-DIAGNOSTIC';
+    for (const estricte of [false, true]) assert.ok(codis(V.verifica({ arrel: dir, ara: ARA, estricte })).includes(esperat), `${mutant}:${estricte}`);
+  });
+});
+
+test('C3-VAL01: falta o JSON malformat no dispensen avisos; un enllaç simbòlic no és una declaració', () => {
+  amb(FIXTURE_EXEMPCIO, (dir) => {
+    const baseline = V.verifica({ arrel: dir, ara: ARA, estricte: true });
+    assert.ok(baseline.errors.length > 0);
+    fs.writeFileSync(path.join(dir, EXEMPCIONS), '{');
+    assert.ok(codis(V.verifica({ arrel: dir, ara: ARA, estricte: true })).includes('E-EXEMPCIONS-JSON'));
+    fs.unlinkSync(path.join(dir, EXEMPCIONS));
+    fs.writeFileSync(path.join(dir, 'supabase/manifest.json'), JSON.stringify(declaraExempcionsDeProva(dir)));
+    fs.symlinkSync('manifest.json', path.join(dir, EXEMPCIONS));
+    assert.ok(codis(V.verifica({ arrel: dir, ara: ARA, estricte: true })).includes('E-EXEMPCIONS-JSON'));
+  });
+});
+
+test('C3-VAL01: evidència d’aplicació desactiva excepcions i no s’inventa una aplicació remota', () => {
+  amb(FIXTURE_EXEMPCIO, (dir) => {
+    escriuExempcions(dir, declaraExempcionsDeProva(dir));
+    const pendent = V.verifica({ arrel: dir, ara: ARA, estricte: true });
+    assert.equal(pendent.migracions[0].estat, 'declarada_no_aplicada');
+    const aplicada = V.verifica({ arrel: dir, ara: ARA, estricte: true, aplicades: 'version\n2611010000\n' });
+    assert.deepEqual(aplicada.errors, []);
+    assert.equal(aplicada.migracions[0].estat, 'aplicada_registre');
+    assert.equal(aplicada.exempcionsHistoriques.aplicades.length, 0);
+  });
+});
+
+test('C3-VAL01: ordre mixt conserva totes les parelles lèxiques i les inversions cronològiques', () => {
+  const migracions = {
+    '2611010000_a.sql': sqlBase('select 1;'),
+    '2611010100_b.sql': sqlBase('select 1;'),
+    '20261102000000_c.sql': sqlBase('select 1;')
+  };
+  amb({ migracions, ordre: { ...ORDRE_BUIT, restriccions: [{ abans: '2611010100', despres: '2611010000', motiu: 'Precedència de prova.' }] } }, (dir) => {
+    const r = V.verifica({ arrel: dir, ara: ARA });
+    assert.deepEqual(r.errors, []);
+    assert.deepEqual(r.inversions, [
+      { abans: '2611010100', despres: '2611010000' },
+      { abans: '2611010100', despres: '20261102000000' },
+      { abans: '2611010000', despres: '20261102000000' }
+    ]);
+    assert.equal(r.avisos.filter((a) => a.codi === 'A-ORDRE-MIXT').length, 1);
+    assert.match(r.avisos.find((a) => a.codi === 'A-ORDRE-MIXT').missatge, /^2 parelles/);
+    assert.equal(r.avisos.filter((a) => a.codi === 'A-INVERSIO-ALFABETICA').length, 1);
+    assert.match(V.formataText(r), /inversions cronològiques: 2611010100→2611010000 · parelles lèxiques: 3/);
   });
 });
 

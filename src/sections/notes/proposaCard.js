@@ -46,6 +46,7 @@
  * torna els mateixos { motiu, camps, mogudes, cos } que abans.
  */
 import { esLlavorDeNota } from './llavorNota.js';
+import { llevaEtiquetes } from '../../config/contentHelpers.js';
 
 export {
   ACTOR_ESTRUCTURADOR, MOTIUS_MEMORIA, NIVELLS_CONFIANCA, OKF_VERSIO, TIPUS_OKF, VOCABULARI_RURAL,
@@ -96,7 +97,7 @@ const perComparar = (text) => senseFinal(net(text)).toLocaleLowerCase('ca');
 
 /** Cert si un camp (HTML) no porta cap text: '', null, «<br>» o només espais. */
 export function campBuit(html) {
-  return !net(String(html ?? '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' '));
+  return !net(llevaEtiquetes(html).replace(/&nbsp;/gi, ' '));
 }
 
 /* Sense punt final: un sol punt, mai uns punts suspensius. */

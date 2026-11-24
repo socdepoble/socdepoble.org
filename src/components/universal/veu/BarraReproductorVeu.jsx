@@ -840,6 +840,7 @@ export function BarraReproductorVeu({
             /* Onada R28 · veu-editorial-10 · Només apunta al panell quan és al DOM (es munta en obrir-lo). */
             aria-controls={panellSaltObert ? idPanellSalt : undefined}
             aria-label={tradueix(t, textos.apartats)}
+            title={tradueix(t, textos.apartats)}
             onClick={() => setPanellSaltObert((v) => !v)}
           >
             <ListOrdered size={20} aria-hidden="true" focusable="false" />
@@ -852,6 +853,7 @@ export function BarraReproductorVeu({
           type="button"
           className="sdp-barra-veu__control"
           aria-label={tradueix(t, textos.anterior)}
+          title={tradueix(t, textos.anterior)}
           disabled={total === 0 || indexActual <= 0}
           onClick={() => saltaABloc(indexActual - 1)}
         >
@@ -862,6 +864,7 @@ export function BarraReproductorVeu({
           type="button"
           className="sdp-barra-veu__control sdp-barra-veu__control--principal"
           aria-label={etiquetaPlay}
+          title={etiquetaPlay}
           disabled={total === 0}
           onClick={alternaPausaContinua}
         >
@@ -876,6 +879,7 @@ export function BarraReproductorVeu({
           type="button"
           className="sdp-barra-veu__control"
           aria-label={tradueix(t, textos.seguent)}
+          title={tradueix(t, textos.seguent)}
           disabled={total === 0 || indexActual >= total - 1}
           onClick={() => saltaABloc(indexActual + 1)}
         >
@@ -886,6 +890,7 @@ export function BarraReproductorVeu({
           type="button"
           className={copiatRecent ? 'sdp-barra-veu__control sdp-barra-veu__control--actiu' : 'sdp-barra-veu__control'}
           aria-label={tradueix(t, textos.copia)}
+          title={tradueix(t, textos.copia)}
           disabled={!blocActiu}
           onClick={copiaFragmentActual}
         >
@@ -900,6 +905,7 @@ export function BarraReproductorVeu({
           type="button"
           className="sdp-barra-veu__control"
           aria-label={tradueix(t, textos.tanca)}
+          title={tradueix(t, textos.tanca)}
           onClick={tancaReproductor}
         >
           <X size={20} aria-hidden="true" focusable="false" />

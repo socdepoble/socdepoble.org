@@ -106,7 +106,7 @@ export default function BarraActualitzacioRecomanada({
     >
       <div className="sdp-barra-actualitzacio__missatge">
         <span className="sdp-barra-actualitzacio__icona" aria-hidden="true">
-          <RefreshCw size={18} focusable="false" />
+          <RefreshCw size={18} aria-hidden="true" focusable="false" />
         </span>
         <p className="sdp-barra-actualitzacio__text">
           <strong className="sdp-barra-actualitzacio__titol">{titol}</strong>
@@ -119,6 +119,7 @@ export default function BarraActualitzacioRecomanada({
           type="button"
           className="sdp-boto sdp-boto--primari sdp-barra-actualitzacio__cta"
           onClick={clicaActualitza}
+          title={etiquetaBoto}
         >
           <span>{etiquetaBoto}</span>
           <ArrowUpRight size={16} aria-hidden="true" focusable="false" />
@@ -128,6 +129,7 @@ export default function BarraActualitzacioRecomanada({
           className="sdp-boto sdp-boto--secundari sdp-barra-actualitzacio__tanca"
           onClick={clicaDescarta}
           aria-label={`${etiquetaMesTard} · ${etiquetaTanca}`}
+          title={`${etiquetaMesTard} · ${etiquetaTanca}`}
         >
           <X size={16} aria-hidden="true" focusable="false" />
           <span>{etiquetaMesTard}</span>

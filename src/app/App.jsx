@@ -38,7 +38,8 @@ import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
 import { BarreraDelTrosAccessori, lazyRoute } from '../apps/plataforma/lazyRoute.js';
 import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
-import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
+import { esIaiaActiva, esModeHumaPur } from '../sections/realitat/nivellIaia.js';
+import useNivellIaia from '../sections/realitat/useNivellIaia.js';
 import { destiDeMultimedia } from '../sections/multimedia/rutesMultimedia.js';
 import { idDeDocumentWiki, RUTA_WIKI } from '../config/rutaSocial.js';
 import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
@@ -83,6 +84,7 @@ const PageDetailSection = lazyRoute(() => import('../sections/detail/PageDetailS
 const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
 const PluginPage = lazyRoute(() => import('../sections/plugins/PluginPage.jsx'));
+const JocCadaCosaAlSeuLlocPage = lazyRoute(() => import('../sections/taxonomia/JocCadaCosaAlSeuLlocPage.jsx'));
 const NotFoundPage = lazyRoute(() => import('../pages/NotFoundPage'));
 const EstilsModeSeniorActiu = lazyRoute(() => import('../components/universal/EstilsModeSeniorActiu.jsx'));
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
@@ -883,15 +885,10 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
 
-  /* T30.2 · la IAIA respira quan la IA està activa (nivell del Selector de
-     Realitat); el nivell arriba per esdeveniment perquè esta barra no es
-     torna a muntar en navegar. */
-  const [nivellIaia, setNivellIaia] = useState(nivellIaiaDesat);
-  useEffect(() => {
-    const escolta = (e) => setNivellIaia(Number(e.detail));
-    window.addEventListener(EVENT_NIVELL_IAIA, escolta);
-    return () => window.removeEventListener(EVENT_NIVELL_IAIA, escolta);
-  }, []);
+  /* T30.2 + IDEA-334 · la IAIA respira quan la IA està activa i s'oculta en
+     Experiència 100 % humana (nivell 0). */
+  const nivellIaia = useNivellIaia();
+  const modeHumaPur = esModeHumaPur(nivellIaia);
   /* Encàrrec 261018_1220 (Tasca 1) · `options` (l'estat de l'historial que
      porta la barra en anar a un workspace d'identitat) passa tal qual.
      PS-01 (B7) · La fosa la fa el router (RouterContext, transicioDeVista.js),
@@ -936,19 +933,21 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
             Realitat al peu; abans anava a la pantalla solta /realitat. El nom
             és el de la IAIA: «L'ànima de la iaia» (nav.ia) és l'article de
             /anima. */}
-        <button
-          type="button"
-          className={['sdp-top-bar-btn', 'sdp-top-bar-btn--iaia', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
-          data-iaia-activa={esIaiaActiva(nivellIaia) ? 'true' : 'false'}
-          onClick={() => navigateWithTransition(RUTA_FITXA_IAIA)}
-          aria-label={t('nav.iaiaFitxa', 'IAIA MarIA')}
-          title={t('nav.iaiaFitxaTitol', 'IAIA MarIA · Assistent digital de Sóc de Poble')}
-        >
-          {/* v1.2.22 · IDEA-326 (ajust en calent del Mestre, 22-11-2026 20:51) · Fora el rètol «IAIA»: no competix amb la
-              marca Sóc de Poble. El botó és un cercle blau amb la icona gran (utilities.css); el nom accessible
-              (aria-label «IAIA MarIA») i el title traduït en cinc llengües es queden. */}
-          <IaiaIcon aria-hidden="true" focusable="false" />
-        </button>
+        {!modeHumaPur ? (
+          <button
+            type="button"
+            className={['sdp-top-bar-btn', 'sdp-top-bar-btn--iaia', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
+            data-iaia-activa={esIaiaActiva(nivellIaia) ? 'true' : 'false'}
+            onClick={() => navigateWithTransition(RUTA_FITXA_IAIA)}
+            aria-label={t('nav.iaiaFitxa', 'IAIA MarIA')}
+            title={t('nav.iaiaFitxaTitol', 'IAIA MarIA · Assistent digital de Sóc de Poble')}
+          >
+            {/* v1.2.22 · IDEA-326 (ajust en calent del Mestre, 22-11-2026 20:51) · Fora el rètol «IAIA»: no competix amb la
+                marca Sóc de Poble. El botó és un cercle blau amb la icona gran (utilities.css); el nom accessible
+                (aria-label «IAIA MarIA») i el title traduït en cinc llengües es queden. */}
+            <IaiaIcon aria-hidden="true" focusable="false" />
+          </button>
+        ) : null}
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />
         </button>
@@ -1306,6 +1305,8 @@ function AppRoutes() {
         {import.meta.env.VITE_SDP_APP_AVISADOR !== '0' ? <Route path="/app/avisador" element={<RedireccioCanonica to="/page/avisador" />} /> : null}
         <Route path="/page/:slug/:itemSlug" element={<PageDetailSection />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
+        <Route path="/cada-cosa-al-seu-lloc" element={<JocCadaCosaAlSeuLlocPage />} />
+        <Route path="/joc-taxonomia" element={<RedireccioCanonica to="/cada-cosa-al-seu-lloc" />} />
         <Route path="/plugin/:id" element={<PluginPage />} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />

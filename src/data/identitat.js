@@ -614,23 +614,34 @@ export function adoptaSessioExterna(sessio, opcionsJS = {}) {
   }
 
   // Permetem a l'usuari extern proveir dades addicionals, però validant l'identificador
-  // Sanegem les dades per evitar injeccions a user_metadata
+  // Sanegem les dades per evitar injeccions a user_metadata i propietats top-level alienes (R32.87)
   const allowedMetadata = ['avatar_url', 'full_name', 'name', 'email'];
   const cleanMetadata = {};
   /* Només del blob del mateix `sub`: el nom i l'avatar d'una altra persona no
      es pengen a este token. */
-  if (user?.user_metadata && user.id === carrega.sub) {
+  if (user?.user_metadata && typeof user.user_metadata === 'object' && !Array.isArray(user.user_metadata) && user.id === carrega.sub) {
     allowedMetadata.forEach(k => {
-      if (user.user_metadata[k] !== undefined) cleanMetadata[k] = user.user_metadata[k];
+      const valor = user.user_metadata[k];
+      if (typeof valor !== 'string') return;
+      if (k === 'avatar_url' && (!valor.trim() || !esFontImatgeSegura(valor))) return;
+      cleanMetadata[k] = valor;
     });
   }
 
-  const usuariFinal = (user && user.id === carrega.sub)
-    ? { ...user, user_metadata: cleanMetadata }
-    : { id: carrega.sub, email: carrega.email ?? null, user_metadata: cleanMetadata };
+  const emailExtern = (user && user.id === carrega.sub && typeof user.email === 'string')
+    ? user.email
+    : (typeof carrega.email === 'string' ? carrega.email : null);
+  const usuariFinal = { id: carrega.sub, email: emailExtern, user_metadata: cleanMetadata };
 
-  /* D1: la sessió de l'amfitrió és de pestanya; mai baixa al registre persistent. */
-  const desada = desaSessio({ access_token: jwt, refresh_token: refresc ?? null, user: usuariFinal }, { origen: 'amfitrio' });
+  /* D1: la sessió de l'amfitrió és de pestanya; mai baixa al registre persistent.
+     R32.87: una reinjecció de JWT fresc del mateix `sub` pel mateix amfitrió és una
+     renovació (conserva generacioEntrada perquè TipTap no remunte ni el Xat avorte). */
+  const mateixAmfitrioSub = getEfimer(CLAU_ORIGEN, null) === 'amfitrio'
+    && getEfimer(CLAU_USUARI, null)?.id === carrega.sub;
+  const desada = desaSessio(
+    { access_token: jwt, refresh_token: refresc ?? null, user: usuariFinal },
+    { origen: 'amfitrio', renovacio: mateixAmfitrioSub }
+  );
   if (!desada) return false;
 
   oblidaConvidat();   // ja no és convidat: el protocol d'Apoptosi tanca ací

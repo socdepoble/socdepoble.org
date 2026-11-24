@@ -1799,3 +1799,26 @@ describe('DOL-32 · reserva de lectura pública en tallar la xarxa real del work
   });
 
 });
+
+describe('C7 · la presència de la dependència no acredita que siga JavaScript vàlid per MIME',()=>{
+  function poisoned({confirmed=true,repair=false}={}){
+    const {caches,memories}=memoriesFalses();let online=repair;
+    const worker=carregaWorker({caches,fetch:vi.fn(async()=>{if(!online)throw new TypeError('Synthetic offline');return jsDeLaXarxa();})});
+    preparaClosca(worker,memories,{pagina:confirmed?[]:null,desats:[JS]});
+    memories.get(worker.api.MEMORIA_RECURSOS).get(`${ORIGEN}${JS}`).resposta=resposta({headers:{'content-type':'text/html'},cos:'<!doctype html><p>Fallback antic</p>'});
+    return {worker,memories,offline:()=>{online=false;}};
+  }
+  test('una closca confirmada amb HTML davall del hash JS no es presenta com arrancable offline',async()=>{
+    const {worker}=poisoned();const result=await demana(worker,peticio('/app/bar/',{mode:'navigate'}));expect(result.resposta.status).toBe(503);
+  });
+  test('escalfament sense xarxa no confirma una closca amb la dependència corrupta',async()=>{
+    const {worker,memories}=poisoned({confirmed:false});await missatge(worker,{tipus:'sdp-escalfa',recursos:[JS],closca:'/app/bar/'});
+    expect(closcaDe(worker,memories,'/app/bar/').clau.headers.has('x-sdp-recursos-pagina')).toBe(false);
+    expect((await demana(worker,peticio('/app/bar/',{mode:'navigate'}))).resposta.status).toBe(503);
+  });
+  test('la xarxa repara el hit invàlid abans de confirmar i la closca torna a arrancar offline',async()=>{
+    const {worker,memories,offline}=poisoned({confirmed:false,repair:true});await missatge(worker,{tipus:'sdp-escalfa',recursos:[JS],closca:'/app/bar/'});
+    expect(worker.fetch).toHaveBeenCalledTimes(1);expect(memories.get(worker.api.MEMORIA_RECURSOS).get(`${ORIGEN}${JS}`).resposta.headers.get('content-type')).toBe('text/javascript');
+    offline();expect((await demana(worker,peticio('/app/bar/',{mode:'navigate'}))).resposta.status).toBe(200);
+  });
+});

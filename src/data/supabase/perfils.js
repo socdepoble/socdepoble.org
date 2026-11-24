@@ -137,7 +137,7 @@ export function perfilDePersona(fila, usuari) {
    en una línia lenta. Sense, els 3 s. */
 export const TERMINI_DE_LA_FITXA_MS = 3000;
 
-function ambTermini(senyalExtern, ms, feina) {
+async function ambTermini(senyalExtern, ms, feina) {
   const controlador = new AbortController();
   let talla;
   const tallada = new Promise((_resolve, reject) => { talla = reject; });
@@ -149,12 +149,14 @@ function ambTermini(senyalExtern, ms, feina) {
     talla(new DOMException('Operació cancel·lada.', 'AbortError'));
     controlador.abort();
   };
-  if (senyalExtern?.aborted) perFora();
-  else senyalExtern?.addEventListener('abort', perFora, { once: true });
-  return Promise.race([feina(controlador.signal), tallada]).finally(() => {
+  try {
+    if (senyalExtern?.aborted) perFora();
+    else senyalExtern?.addEventListener('abort', perFora, { once: true });
+    return await Promise.race([feina(controlador.signal), tallada]);
+  } finally {
     clearTimeout(perTermini);
-    senyalExtern?.removeEventListener('abort', perFora);
-  });
+    try { senyalExtern?.removeEventListener('abort', perFora); } catch { /* millor esforç amb un senyal alié */ }
+  }
 }
 
 export async function loadPerfilPublic(idOSlug, config = {}) {

@@ -71,17 +71,19 @@ function CompteDeFonts({ compte, onCommuta, onConnecta, onCancella, onDesconnect
       <p role="status" className={ambError ? 'sdp-calendari-fonts-panell__estat sdp-calendari-fonts-panell__estat--error' : 'sdp-calendari-fonts-panell__estat'}>
         {ambError ? compte.error.missatge : tx.fases[compte.fase]}
       </p>
-      {compte.fase === 'connectat' ? (
-        <Boto varietat="fantasma" aria-describedby={idNom} onClick={() => onDesconnecta(compte.clau)}>{tx.desconnecta}</Boto>
-      ) : null}
-      {compte.fase === 'connectant' ? (
-        <Boto varietat="fantasma" aria-describedby={idNom} onClick={() => onCancella(compte.clau)}>{tx.cancella}</Boto>
-      ) : null}
-      {compte.fase === 'desconnectat' ? (
-        <Boto varietat="secundari" aria-describedby={idNom} onClick={() => onConnecta(compte.clau)}>
-          {tx.connectaAmb(compte.proveidor)}
-        </Boto>
-      ) : null}
+      <div className="sdp-calendari-fonts-panell__accions sdp-fila--centrada">
+        {compte.fase === 'connectat' ? (
+          <Boto varietat="fantasma" aria-describedby={idNom} onClick={() => onDesconnecta(compte.clau)}>{tx.desconnecta}</Boto>
+        ) : null}
+        {compte.fase === 'connectant' ? (
+          <Boto varietat="fantasma" aria-describedby={idNom} onClick={() => onCancella(compte.clau)}>{tx.cancella}</Boto>
+        ) : null}
+        {compte.fase === 'desconnectat' ? (
+          <Boto varietat="secundari" aria-describedby={idNom} onClick={() => onConnecta(compte.clau)}>
+            {tx.connectaAmb(compte.proveidor)}
+          </Boto>
+        ) : null}
+      </div>
     </section>
   );
 }

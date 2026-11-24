@@ -1,0 +1,112 @@
+/* ==========================================================================
+   PEDRA SECA · FITXES DE DETALL VERTICALS, EMPRESA I POBLE
+   (FULL DIFERIT · R32.55 U-DIS-01, 0 B a l'arrencada estàtica)
+   S'adopta a demanda des de detailSectionMeta.jsx, PerfilPublicSection.jsx
+   i DetallPoble.jsx.
+   ========================================================================== */
+@layer components {
+  .sdp-fitxa-vertical {
+    display: grid;
+    grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+    margin-block: 0 var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-inline-size: 0;
+  }
+
+  .sdp-fitxa-vertical > dt,
+  .sdp-fitxa-vertical > dd {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-fitxa-vertical > dt {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    font-size: var(--sdp-text-small);
+    border-inline-end: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-fitxa-vertical > dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-cos);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-fitxa-vertical > dt:last-of-type,
+  .sdp-fitxa-vertical > dd:last-of-type {
+    border-block-end: 0;
+  }
+
+  @media (max-width: 520px) {
+    .sdp-fitxa-vertical {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sdp-fitxa-vertical > dt {
+      border-inline-end: 0;
+      border-block-end: 0;
+      padding-block-end: var(--sdp-space-1);
+    }
+
+    .sdp-fitxa-vertical > dd {
+      padding-block-start: var(--sdp-space-1);
+    }
+
+    .sdp-fitxa-vertical > dt:last-of-type {
+      border-block-end: 0;
+    }
+  }
+
+  .sdp-perfil-public__contacte {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-inline-size: 0;
+  }
+
+  .sdp-poble-opendata {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin-block-start: var(--sdp-space-5);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-inline-size: 0;
+  }
+
+  .sdp-poble-opendata__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+
+  .sdp-poble-opendata__id {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    overflow-wrap: anywhere;
+  }
+}

@@ -532,6 +532,19 @@ export function creaCuaSincronitzacioRural({
   const particions = Object.create(null);
   const empremtesPerAmbit = Object.create(null);
   const drenatgesEnVol = Object.create(null);
+  /* Un adaptador async pot acabar snapshots fora d'ordre. Les escriptures i
+     l'oblit d'un àmbit van en fila fins i tot si la partició es recrea.
+     Coordina esta instància; un adaptador compartit entre pestanyes ha de
+     proporcionar la seua pròpia transacció/CAS. */
+  const escripturesEnVol = new Map();
+  function enFilaDisc(ambit, operacio) {
+    const anterior = escripturesEnVol.get(ambit) || Promise.resolve();
+    const torn = anterior.catch(() => {}).then(operacio);
+    escripturesEnVol.set(ambit, torn);
+    const neteja = () => { if (escripturesEnVol.get(ambit) === torn) escripturesEnVol.delete(ambit); };
+    torn.then(neteja, neteja);
+    return torn;
+  }
 
   function obteMapaAmbit(ambit) {
     if (!ambit || typeof ambit !== 'string' || ambit.split('::').length < 4) {
@@ -549,16 +562,19 @@ export function creaCuaSincronitzacioRural({
       return { persistit: false, avis: 'SENSE_ADAPTADOR_PERSISTENT' };
     }
     const mapa = obteMapaAmbit(ambit);
-    const pendents = [...mapa.values()].filter(
-      (r) => r.estat === ESTATS_MISSATGE_RURAL.CUA_LOCAL || r.estat === ESTATS_MISSATGE_RURAL.ERROR_REINTENTABLE,
-    );
-    try {
-      await adaptadorPersistencia.desa(ambit, pendents);
-      return { persistit: true, avis: null };
-    } catch (err) {
-      const nomError = err?.name || err?.codi || 'ERROR_PERSISTENCIA_LOCAL';
-      return { persistit: false, avis: String(nomError) };
-    }
+    return enFilaDisc(ambit, async () => {
+      if (particions[ambit] !== mapa) return { persistit: false, avis: 'AMBIT_PURGAT' };
+      const pendents = [...mapa.values()].filter(
+        (r) => r.estat === ESTATS_MISSATGE_RURAL.CUA_LOCAL || r.estat === ESTATS_MISSATGE_RURAL.ERROR_REINTENTABLE,
+      );
+      try {
+        await adaptadorPersistencia.desa(ambit, pendents);
+        return particions[ambit] === mapa ? { persistit: true, avis: null } : { persistit: false, avis: 'AMBIT_PURGAT' };
+      } catch (err) {
+        const nomError = err?.name || err?.codi || 'ERROR_PERSISTENCIA_LOCAL';
+        return { persistit: false, avis: String(nomError) };
+      }
+    });
   }
 
   async function encua(entrada, { ambit = ambitActiu } = {}) {
@@ -595,11 +611,13 @@ export function creaCuaSincronitzacioRural({
           'COLISIO_PAYLOAD_IDEMPOTENT',
         );
       }
-      return existentPerUuid || registreInicial;
+      if (existentPerUuid?.persistitLocal) return existentPerUuid;
+      /* Un UUID acceptat en memòria després de quota encara no està desat:
+         el reintent torna a provar el disc, amb el mateix payload immutable. */
+    } else {
+      diccionariEmpremtes[clauEmpremta] = empremtaNova;
+      mapa.set(registreInicial.client_msg_id, registreInicial);
     }
-
-    diccionariEmpremtes[clauEmpremta] = empremtaNova;
-    mapa.set(registreInicial.client_msg_id, registreInicial);
 
     const estatDisc = await persisteixParticio(ambit);
     const vigent = mapa.get(registreInicial.client_msg_id) || registreInicial;
@@ -608,7 +626,7 @@ export function creaCuaSincronitzacioRural({
       persistitLocal: estatDisc.persistit,
       avisPersistencia: estatDisc.avis,
     });
-    mapa.set(registreActualitzat.client_msg_id, registreActualitzat);
+    if (particions[ambit] === mapa) mapa.set(registreActualitzat.client_msg_id, registreActualitzat);
     return registreActualitzat;
   }
 
@@ -871,7 +889,7 @@ export function creaCuaSincronitzacioRural({
       delete empremtesPerAmbit[ambit];
     }
     if (adaptadorPersistencia && typeof adaptadorPersistencia.esborra === 'function') {
-      await adaptadorPersistencia.esborra(ambit);
+      await enFilaDisc(ambit, () => adaptadorPersistencia.esborra(ambit));
     }
   }
 

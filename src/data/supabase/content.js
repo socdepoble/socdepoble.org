@@ -42,10 +42,9 @@ const MODES_LOCALS = new Set(['seed', 'local']);
    · Cursor de conjunt de claus (created_at, id), el mateix ordre de la
      primera pàgina (order=created_at.desc,id.desc): estable amb empats, sense
      salts per offset quan arriben publicacions noves.
-   · El final: amb les RPC de R21, una pàgina amb menys files de les demanades
-     (el servidor en garantix com a mínim 50); amb la lectura d'abans, com
-     loadNotesPage, només un rang amb total o una pàgina buida (esCompletaRpc
-     i esCompletaPerRang, baix).
+   · El final: l'envelope JSON de membres conserva el límit SQL; les files
+     públiques poden quedar retallades per max-rows de PostgREST. Una pàgina
+     pública curta necessita rang confirmat o una lectura buida posterior.
    · El cursor és opac per a la interfície i porta el poble i la secció: no
      val per a un altre àmbit. ── */
 const LIMIT_SECCIO = 50;
@@ -75,16 +74,14 @@ const elementDeFila = (row, sectionId) => elementDeFilaPublicada({ id: row.id, p
   createdAt: row.created_at, updatedAt: row.updated_at, ownerUserId: row.owner_user_id, authorOrgId: row.author_org_id,
   ...(typeof sectionId === 'string' ? { sectionId } : {}) });
 
-/* Les RPC de R21 limiten amb least(p_limit, 51) (membres) i least(p_limit, 200)
-   (públic), i el client no en demana mai més de 50 (LIMIT_SECCIO): tots els
-   filtres són al WHERE, abans del LIMIT. Una pàgina amb menys files de les
-   demanades és, per tant, la darrera (Gauntlet R22, dades-07). */
+/* Només l'envelope escalar de membres evita el tall exterior de PostgREST. */
 const esCompletaRpc = (rows, limit) => rows.length < limit;
 /* La lectura d'abans (COMMIT 4): només un rang amb total o una pàgina buida
    confirmen el final, perquè max-rows podria tallar abans. */
 function esCompletaPerRang(rows, contentRange) {
   const rang = RANG.exec(contentRange || '');
-  return rows.length === 0 || (rang !== null && Number(rang[2]) === rows.length);
+  const valid = rang !== null && (rows.length === 0 ? rang[1] === undefined : Number(rang[1]) + 1 === rows.length);
+  return rows.length === 0 || (valid && Number(rang[2]) === rows.length);
 }
 
 async function lligPublicacionsAnteriors(tenant, section, limit, config, { before, signal }) {
@@ -118,8 +115,11 @@ async function lligPublicacions(tenant, section, limit, config, { before = null,
   const senyal = signal || config.signal;
   const params = new URLSearchParams({ p_tenant_id: tenant, p_section_id: section, p_limit: String(limit) });
   if (before) { params.set('p_before_created_at', before.createdAt); params.set('p_before_id', before.id); }
+  let contentRange = null;
   const llig = async (membres, ambSessio = false) => {
-    const opts = { signal: senyal, ...(membres || ambSessio ? {} : { anonim: true }) };
+    contentRange = null;
+    const opts = { signal: senyal, ...(membres || ambSessio ? {} : { anonim: true }),
+      ...(!membres ? { headers: { Prefer: 'count=exact' }, onResponseMetadata: metadata => { contentRange = metadata.contentRange; } } : {}) };
     if (membres) return request(`/rest/v1/rpc/llig_mur_membres?${params}`, config, opts);
     if (!negociaVisibilitatMur()) return request(`/rest/v1/rpc/llig_mur_public?${params}`, config, opts);
     // v1.2.23 · L4-10 (ordre del Mestre 261123) · La RPC7 té nom propi, llig_mur_public_v7: cap sobrecàrrega de la RPC6.
@@ -159,7 +159,10 @@ async function lligPublicacions(tenant, section, limit, config, { before = null,
   if (!Array.isArray(rows) || rows.length > limit || (ambSobre && !['membre', 'public'].includes(data?.lectura))) {
     throw new Error('Resposta de la secció amb un format inesperat.');
   }
-  return { rows, complet: esCompletaRpc(rows, limit),
+  // Un total igual al límit SQL només compta la finestra limitada, mai tota la
+  // secció. Una pàgina pública plena sempre necessita avançar amb el cursor.
+  return { rows, complet: ambSobre ? esCompletaRpc(rows, limit)
+    : rows.length < limit && esCompletaPerRang(rows, contentRange),
     elements: rows.map(row => membre ? elementDeMurMembre(row, section) : elementDeMurPublic(row, section)) };
 }
 
@@ -172,7 +175,9 @@ function clauDeFila(createdAt, id) {
   if (!instant || !UUID.test(String(id ?? ''))) return null;
   const milisegons = Date.parse(createdAt.replace(/\.\d+/, ''));
   if (Number.isNaN(milisegons)) return null;
-  return { createdAt, id: String(id).toLowerCase(), ordre: milisegons * 1000 + Number((instant[1] || '').padEnd(6, '0')) };
+  // Date és exacte en mil·lisegons, però multiplicar un any llunyà per 1000
+  // excedix l'enter segur de Number i fusiona microsegons diferents.
+  return { createdAt, id: String(id).toLowerCase(), ordre: BigInt(milisegons) * 1000n + BigInt((instant[1] || '').padEnd(6, '0')) };
 }
 /* Estrictament més vella que `anterior` en l'ordre created_at.desc,id.desc. */
 const esMesVella = (clau, anterior) => clau.ordre < anterior.ordre || (clau.ordre === anterior.ordre && clau.id < anterior.id);
@@ -288,6 +293,8 @@ async function publicaCasGeneral(input, config) {
     payload, createdAt: ack.created_at, updatedAt: ack.updated_at, operationId: sub.operationId, replay: ack.replay };
 }
 export async function appendSectionSubmissionNetworkOnly(submission, config = {}) {
+  config = { ...config };
+  if (submission?.noteId !== undefined) submission = capturaJsonCas(submission);
   // Entrada explícita per al contracte R32.44; el caller conserva token i operationId.
   if (submission?.casBeta === true) {
     /* v1.2.23 · L4-05 i L6-06 (Gauntlet R1) · La mateixa bandera que la capacitat edicioPublicacionsPropies (index.js):
@@ -353,6 +360,18 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
     if (!receipt || receipt.publicacio?.id !== id || !Number.isSafeInteger(receipt.nota_revision)
         || receipt.nota_revision < 1 || !Number.isSafeInteger(receipt.publicada_revision)
         || receipt.publicada_revision < 1 || receipt.publicada_revision > receipt.nota_revision || typeof receipt.replay !== 'boolean') throw new TypeError('Rebut atòmic de publicació invàlid.');
+    if (import.meta.env.VITE_SDP_REVISIONS_PAGINES === '1') {
+      let historial;
+      try {
+        const { registraHistorialPublicacioNota } = await import('../costuraEdicions.js');
+        sessionGuard();
+        historial = await registraHistorialPublicacioNota(submission, receipt, config);
+      } catch (error) {
+        sessionGuard();
+        historial = { desada: false, desti: 'navegador', pendent: true, motiu: error?.code || 'historial-pendent' };
+      }
+      sessionGuard(); return { ...receipt, historial };
+    }
     return receipt;
   }
   const desades = await request('/rest/v1/section_submissions?on_conflict=id', config, { method: 'POST',
@@ -371,6 +390,8 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
 /* Onada 11 (261010) · Les claus d'app_content que demana loadCoreContent. */
 const CLAUS_CORE = ['towns', 'agents', ...CLAUS_PERSONALITZACIO].join(',');
 export async function loadCoreContent(ownerUserId = getDefaultUserId(), config = {}) {
+  config = { ...config };
+  const sessionGuard = capturaSessio();
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
   if (runtimeDataMode === 'seed') return { towns: normalitzaFilesEditorials(seed.towns), pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: hidrataCatalegAgents(seed.agents), ownerUserId, personalitzacio: personalitzacioLocal() };
   if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: hidrataCatalegAgents([]), ownerUserId, personalitzacio: personalitzacioLocal() };
@@ -378,7 +399,13 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(${CLAUS_CORE})&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
   const base = mapContentRowsToData(rows || []);
-  return { towns: normalitzaFilesEditorials(base.towns), pages: seed.pages, pageCopy: {}, agents: hidrataCatalegAgents(base.agents), ownerUserId, personalitzacio: personalitzacioDeFiles(rows || []) };
+  let pages = seed.pages;
+  if (import.meta.env.VITE_SDP_REVISIONS_PAGINES === '1' && getCurrentUser()) {
+    const { hidrataPaginesSistema } = await import('../costuraEdicions.js'); sessionGuard();
+    pages = await hidrataPaginesSistema(pages, config);
+  }
+  sessionGuard();
+  return { towns: normalitzaFilesEditorials(base.towns), pages, pageCopy: {}, agents: hidrataCatalegAgents(base.agents), ownerUserId, personalitzacio: personalitzacioDeFiles(rows || []) };
 }
 /** Carrega exclusivament les fonts d’una secció; Notes té el seu port propi.
  * Decisió 4 del Mestre (261007) · Amb `ambPaginacio` (només loadMur), demana

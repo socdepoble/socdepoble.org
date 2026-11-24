@@ -131,7 +131,7 @@ export function HistorialRevisionsBar({
               <p className="sdp-retorn-identitat__text">
                 {omplePlantillaEdicio(tx.detallRetorn, { actual: retornIdentitat.actualNom })}
               </p>
-              <div className="sdp-retorn-identitat__accions">
+              <div className="sdp-retorn-identitat__accions sdp-fila--centrada">
                 <Boto
                   varietat="primari"
                   className="sdp-historial-revisions__boto"

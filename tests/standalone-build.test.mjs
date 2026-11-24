@@ -1443,7 +1443,12 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
   for (const rel of ['src/data/revisionsEditorials.js', 'src/data/seedRevisions.js']) {
     assert.ok(!modulsDArrencada.has(rel), `${rel}: no viatja a l'arrencada estàtica (R30)`);
   }
-  assert.ok(modulsDArrencada.has('src/data/revisionsEditorialsDelNavegador.js'), 'la fulla del navegador viatja a l\'arrencada (R30)');
+  /* R74 · La façana estable només reexporta: Rollup pot ometre-la sense cap codi propi.
+     El Mur continua consumint el lector síncron; la fulla d'escriptura ha de quedar diferida. */
+  assert.ok(modulsDArrencada.has('src/data/lectorRevisionsEditorials.js'), 'el lector del navegador viatja a l\'arrencada (R30/R74)');
+  assert.ok(!modulsDArrencada.has('src/data/escriptorRevisionsEditorials.js'), 'l\'escriptor del navegador queda fora de l\'arrencada estàtica (R74)');
+  const facadeRevisions = fs.readFileSync(path.join(ARREL, 'src/data/revisionsEditorialsDelNavegador.js'), 'utf8');
+  assert.match(facadeRevisions, /export\s*\{[^}]*\brevisaLlista\b[^}]*\}\s*from\s*['"]\.\/lectorRevisionsEditorials\.js['"]/, 'la façana històrica conserva el lector del Mur (R30/R74)');
   /* R32.25 · El port manté el mateix contracte públic. Les formes que només
      consumixen les pantalles i els adaptadors diferits viuen en fulles:
      canviar el nom d'un tros no reduïx esta clausura estàtica completa. */

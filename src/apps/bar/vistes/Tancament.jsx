@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import {
-  Alerta, BarraResum, Boto, Camp, CampText, Dialeg, Fila, LiniesColleccio, TeclatNumeric
+  Accions, Alerta, BarraResum, Boto, Camp, CampText, Dialeg, Fila, LiniesColleccio, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { esDescartable, totals } from '../nucli/comanda.js';
@@ -15,7 +15,7 @@ import { incidenciesAutomatiques } from '../nucli/traspas.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { textosUiBar } from '../i18nBar.js';
 import { AvisDeLaColumna, AvisOperacio, Columna, Preparat } from './comu.jsx';
-import { passosTancament, useIdiomaBar, useVes } from './punt.js';
+import { passosTancament, useIdiomaBar, useUnaVegada, useVes } from './punt.js';
 import { TaulaResum } from './Torn.jsx';
 import { euros, nomOrigen } from './vestits.js';
 
@@ -176,9 +176,13 @@ function Traspas({ idioma = 'ca' }) {
       <Camp etiqueta={tx.unAvisCurt} ajuda={tx.ajudaAvisCurt}>
         <CampText value={avis} maxLength={80} onChange={(event) => setAvis(event.target.value)} />
       </Camp>
-      <Boto onClick={afigAvis} disabled={!escriu || !avis.trim() || esborrany.avisos.length >= 10}>{tx.afigAvis}</Boto>
+      <Accions>
+        <Boto onClick={afigAvis} disabled={!escriu || !avis.trim() || esborrany.avisos.length >= 10}>{tx.afigAvis}</Boto>
+      </Accions>
       <TeclatNumeric mode="import" etiqueta={tx.fonsDeixaCalaix} valor={fons} onCanvi={canviaFons} desactivat={!escriu} />
-      <Boto varietat="primari" ple onClick={() => ves('tancament', 'confirmar')}>{tx.continua}</Boto>
+      <Accions>
+        <Boto varietat="primari" ple onClick={() => ves('tancament', 'confirmar')}>{tx.continua}</Boto>
+      </Accions>
     </Columna>
   );
 }
@@ -187,24 +191,27 @@ function Confirmar({ idioma = 'ca' }) {
   const tx = textosUiBar(idioma);
   const { bar, obertes, comptat, diferencia, resum } = useTancament();
   const { ves } = useVes();
+  const [ocupat, unaVegada] = useUnaVegada();
   const bloquejat = obertes.some((c) => c.pagaments.length > 0) || !bar.permis.potEscriure;
-  const tanca = async () => {
+  const tanca = () => unaVegada(async () => {
     const r = await bar.accions.tancaTorn();
     if (r.ok) ves('torns', r.valor.id);
-  };
+  });
   return (
     <Columna titol={tx.confirmaTancament}>
       <AvisOperacio />
       <Alerta to="info" viva={false} titol={tx.despresNoDesfer}>
         {tx.tornEsCongelaText}
       </Alerta>
-      <Fila gap={2}>
+      <Fila gap={2} justify="center">
         <p>{tx.esperatValor(euros(resum.efectiuEsperatCents))}</p>
         <p>{tx.comptatValor(euros(comptat))}</p>
         <p>{tx.diferenciaValor(euros(diferencia))}</p>
         <p>{tx.comandesPassenN(obertes.length)}</p>
       </Fila>
-      <Boto varietat="primari" icona={Lock} ple mida="gran" disabled={bloquejat} onClick={tanca}>{tx.tancaElTorn}</Boto>
+      <Accions>
+        <Boto varietat="primari" icona={Lock} ple mida="gran" carregant={ocupat} disabled={ocupat || bloquejat} onClick={tanca}>{tx.tancaElTorn}</Boto>
+      </Accions>
     </Columna>
   );
 }

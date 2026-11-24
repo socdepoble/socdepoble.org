@@ -1,3 +1,4 @@
+import {jsonFixture,projectaPublicaParroquiaSintetica,receiptFixture} from '../../../tests/fixtures/fontsSintetiquesC6.mjs';
 // @vitest-environment node
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -107,8 +108,14 @@ describe('La Parròquia · public snapshot without purchase costs (Sanejament R1
     expect(versionat.stdout.toString().trim()).toBe('');
   });
 
-  test('if the complete snapshot is on disk: the public one is exactly it minus the purchase fields, and DEV loads it', async (context) => {
-    if (!existsSync(PRIVADA)) { context.skip(); return; }
+  test('if the complete snapshot is on disk: the public one is exactly it minus the purchase fields, and DEV loads it', async () => {
+    if (!existsSync(PRIVADA)) {
+      const publica=projectaPublicaParroquiaSintetica();
+      expect(publica).toEqual(jsonFixture('parroquia-publica.expected.json'));
+      expect(JSON.stringify(publica)).not.toContain('PRIVATE-CANARY-SYNTHETIC');
+      expect(jsonFixture('parroquia-completa.synthetic.json').tarifes[0].preuPackCents).toBe(100);
+      receiptFixture('public-snapshot-redaction');return;
+    }
     const bytes = readFileSync(PRIVADA);
     const completa = JSON.parse(bytes.toString('utf8'));
     const { privadesa, ...publica } = JSON.parse(readFileSync(PUBLICA, 'utf8'));

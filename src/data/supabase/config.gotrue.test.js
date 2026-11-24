@@ -5,8 +5,10 @@ import { createClient } from '@supabase/supabase-js';
    i per tant auth-js no pot avisar «Multiple GoTrueClient instances detected»
    encara que el JWT canvie i es creen clients nous. */
 const state = vi.hoisted(() => ({ token: null }));
-vi.mock('../identitat.js', () => ({ jwtPerBackend: config => config.tenantId === 'A' ? state.token : null }));
-vi.mock('./runtime.js', () => ({ getResolvedConfig: config => ({ ...config, hasSupabaseConfig: Boolean(config.supabaseUrl && config.supabaseAnonKey) }) }));
+vi.mock('../identitat.js', () => ({ jwtPerBackend: config => config.tenantId === 'A' ? state.token : null,
+  caducitatJwt: () => null, capturaSessio: () => () => {} }));
+vi.mock('./runtime.js', () => ({ getResolvedConfig: config => ({ ...config, hasSupabaseConfig: Boolean(config.supabaseUrl && config.supabaseAnonKey) }),
+  tokenPerClient: async config => config.tenantId === 'A' ? state.token : null }));
 
 const b64u = (valor) => btoa(JSON.stringify(valor)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 /* Ben format i amb `exp` futur: el temps real el llig com un token de veres. */

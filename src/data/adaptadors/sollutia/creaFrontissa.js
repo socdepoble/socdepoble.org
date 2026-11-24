@@ -46,11 +46,17 @@ function rutaValida(path) {
   try { return path.split('/').every(part => { const s = decodeURIComponent(part); return !['.', '..'].includes(s) && !['/', '\\', '?', '#', '%'].some(c => s.includes(c)) && !control.test(s); }); }
   catch { return false; }
 }
-function espera(promesa, signal) {
+function cancelaCos(lector) {
+  try { Promise.resolve(lector?.cancel()).catch(() => {}); } catch { /* Ja avortat. */ }
+}
+function espera(promesa, signal, descarta) {
   return new Promise((resolve, reject) => {
     const cancel = () => { signal.removeEventListener('abort', cancel); reject(signal.reason); };
     signal.addEventListener('abort', cancel, { once: true });
-    Promise.resolve(promesa).then(resolve, reject).finally(() => signal.removeEventListener('abort', cancel));
+    Promise.resolve(promesa).then(value => {
+      if (signal.aborted) { try { descarta?.(value); } catch { /* Descarta sense alterar el refús original. */ } }
+      else resolve(value);
+    }, reject).finally(() => signal.removeEventListener('abort', cancel));
     if (signal.aborted) cancel();
   });
 }
@@ -136,7 +142,7 @@ export function creaFrontissa(config) {
     const timer = setTimeout(() => { expired = true; controller.abort(new ErrorDades('TIMEOUT')); }, resource.timeoutMs);
     try {
       if (controller.signal.aborted) throw controller.signal.reason;
-      const response = await espera(fetchImpl(url.href, { method: 'GET', credentials: 'omit', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal }), controller.signal);
+      const response = await espera(fetchImpl(url.href, { method: 'GET', credentials: 'omit', redirect: 'error', headers: { Accept: 'application/json' }, signal: controller.signal }), controller.signal, response => cancelaCos(response?.body));
       body = response.body;
       comprovaContext();
       if (!response.ok) throw new ErrorDades(response.status === 401 ? 'UNAUTHENTICATED' : response.status === 403 ? 'FORBIDDEN' : 'UNAVAILABLE', response.status);
@@ -179,7 +185,7 @@ export function creaFrontissa(config) {
     } finally {
       if (!completed) {
         controller.abort();
-        try { Promise.resolve(reader ? reader.cancel() : body?.cancel()).catch(() => {}); } catch { /* Ja avortat. */ }
+        cancelaCos(reader ?? body);
       }
       try { reader?.releaseLock(); } catch { /* Una lectura avortada encara pot estar pendent. */ }
       clearTimeout(timer); signal?.removeEventListener('abort', cancel);

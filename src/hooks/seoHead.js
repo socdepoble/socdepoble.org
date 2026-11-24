@@ -1,4 +1,4 @@
-import { ATRIBUT_SSR, CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocial.js';
+import { ATRIBUT_SSR, CAP_SOCIAL_BASE, ORIGEN_SOCIAL_PER_DEFECTE } from '../config/imatgeSocialBase.js';
 import { clauSocialDeRuta } from '../config/rutaSocial.js';
 
 // Un sol propietari per document. La ruta té un fallback i les vistes poden

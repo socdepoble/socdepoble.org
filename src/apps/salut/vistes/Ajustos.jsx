@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
 import { useLocation } from '../../../app/contexts/RouterContext';
 import {
-  Alerta, Boto, Camp, CampText, DialegConfirmacio, GrupCamps, GrupOpcions, Interruptor, LlistaArticles, Pila
+  Accions, Alerta, Boto, Camp, CampText, DialegConfirmacio, GrupCamps, GrupOpcions, Interruptor, LlistaArticles, Pila
 } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import { avisSalutTraduit, textErrorSalut, tradueixErrorsPersonaSalut } from '../i18nSalut.js';
@@ -57,20 +57,28 @@ export function AjustosPersona() {
   const [errors, setErrors] = useState({});
   const [missatge, setMissatge] = useState(null);
   const [errorInterruptor, setErrorInterruptor] = useState(null);
+  const [desant, setDesant] = useState(false);
+  const desantRef = useRef(false);
   if (!salut.carregat) return null;
   const commuta = (id, encés) => apaga(id, !encés).then(() => setErrorInterruptor(null), (error) => setErrorInterruptor(textErrorSalut(error, idioma)));
   const actuals = valors || salut.persona;
   const desa = async (event) => {
     event.preventDefault();
+    if (desantRef.current) return;
     const { ok, errors: nous, persona } = validaPersona(aPersona(actuals));
     setErrors(tradueixErrorsPersonaSalut(nous, CAMPS_PERSONA, idioma));
     if (!ok) return;
+    desantRef.current = true;
+    setDesant(true);
     try {
       await salut.desaPersona(persona);
       setValors(null);
       setMissatge({ to: 'exit', text: tx.desat });
     } catch (error) {
       setMissatge({ to: 'error', text: textErrorSalut(error, idioma) });
+    } finally {
+      desantRef.current = false;
+      setDesant(false);
     }
   };
   return (
@@ -81,10 +89,16 @@ export function AjustosPersona() {
             <p>{tx.aliesProuText}</p>
             {CAMPS_PERSONA.map((c) => (
               <ControlCamp key={c.clau} definicio={c} valor={actuals[c.clau]} error={errors[c.clau]}
-                onCanvi={(valor) => setValors({ ...actuals, [c.clau]: valor })} />
+                onCanvi={(valor) => {
+                  setValors({ ...actuals, [c.clau]: valor });
+                  if (errors[c.clau]) setErrors((prev) => ({ ...prev, [c.clau]: undefined }));
+                  if (missatge) setMissatge(null);
+                }} />
             ))}
             {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
-            <Boto varietat="primari" tipus="submit" disabled={salut.nomesLectura}>{tx.desa}</Boto>
+            <Accions>
+              <Boto varietat="primari" tipus="submit" carregant={desant} disabled={desant || salut.nomesLectura}>{tx.desa}</Boto>
+            </Accions>
           </Pila>
         </form>
         <GrupCamps llegenda={tx.queVoleuApuntar}>
@@ -111,6 +125,10 @@ export function CopiaIEsborrat() {
   const [mode, setMode] = useState('afegir');
   const [confirmaImportacio, setConfirmaImportacio] = useState(false);
   const [important, setImportant] = useState(false);
+  const [demanant, setDemanant] = useState(false);
+  const [copiant, setCopiant] = useState(false);
+  const [esborrantEnVol, setEsborrantEnVol] = useState(false);
+  const operacioRef = useRef(false);
   const rondaCopia = useRef(0);
   const [esborrant, setEsborrant] = useState(false);
   const [confirmacio, setConfirmacio] = useState('');
@@ -124,19 +142,35 @@ export function CopiaIEsborrat() {
 
   const informa = (to, text) => setMissatge({ to, text });
   const demana = async () => {
-    const resultat = await salut.demanaPersistencia();
-    if (resultat === true) informa('exit', tx.navegadorPromes);
-    else if (resultat === false) informa('avis', tx.navegadorNoPromes);
-    else informa('info', tx.navegadorNoPermetDemanar);
-    setEstat(await salut.estatPersistencia());
+    if (operacioRef.current) return;
+    operacioRef.current = true;
+    setDemanant(true);
+    try {
+      const resultat = await salut.demanaPersistencia();
+      if (resultat === true) informa('exit', tx.navegadorPromes);
+      else if (resultat === false) informa('avis', tx.navegadorNoPromes);
+      else informa('info', tx.navegadorNoPermetDemanar);
+      setEstat(await salut.estatPersistencia());
+    } catch (error) {
+      informa('error', textErrorSalut(error, idioma));
+    } finally {
+      operacioRef.current = false;
+      setDemanant(false);
+    }
   };
   const copia = async () => {
+    if (operacioRef.current) return;
+    operacioRef.current = true;
+    setCopiant(true);
     try {
       const text = await salut.copia();
       if (descarregaFitxer({ nom: nomCopia(salut.avui), tipus: 'application/json', dades: text })) informa('exit', tx.copiaDescarregada);
       else informa('avis', tx.navegadorNoDescarrega);
     } catch (error) {
       informa('error', textErrorSalut(error, idioma));
+    } finally {
+      operacioRef.current = false;
+      setCopiant(false);
     }
   };
   const tria = async (event) => {
@@ -176,19 +210,25 @@ export function CopiaIEsborrat() {
   };
   const alias = salut.persona.alias || 'el pare';
   const esborra = async () => {
+    if (operacioRef.current) return;
     if (confirmacio.trim() !== alias) {
       informa('error', tx.escriuAliasExacte(alias));
       setEsborrant(false);
       return;
     }
+    operacioRef.current = true;
+    setEsborrantEnVol(true);
     try {
       await salut.esborraTot();
       informa('exit', tx.totEsborrat);
     } catch (error) {
       informa('error', textErrorSalut(error, idioma));
+    } finally {
+      operacioRef.current = false;
+      setEsborrantEnVol(false);
+      setConfirmacio('');
+      setEsborrant(false);
     }
-    setConfirmacio('');
-    setEsborrant(false);
   };
 
   return (
@@ -199,11 +239,15 @@ export function CopiaIEsborrat() {
           {estat?.duradora === true ? <p>{tx.navegadorPromes}</p> : null}
           {estat?.duradora === false ? <p>{tx.safari7Dies}</p> : null}
           {Number.isFinite(estat?.usat) ? <p>{tx.ocupenMegues(megues(estat.usat))}</p> : null}
-          <Boto varietat="secundari" onClick={demana}>{tx.demanaNoEsborre}</Boto>
+          <Accions>
+            <Boto varietat="secundari" carregant={demanant} disabled={demanant} onClick={demana}>{tx.demanaNoEsborre}</Boto>
+          </Accions>
         </Pila>
         <Pila gap={2}>
           <p>{salut.ultimaCopia ? tx.ultimaCopiaDel(dataCurta(dataLocalDe(salut.ultimaCopia))) : tx.encaraCapCopia}</p>
-          <Boto varietat="primari" icona={Download} onClick={copia}>{tx.descarregaUnaCopia}</Boto>
+          <Accions>
+            <Boto varietat="primari" icona={Download} carregant={copiant} disabled={copiant} onClick={copia}>{tx.descarregaUnaCopia}</Boto>
+          </Accions>
         </Pila>
         <GrupCamps llegenda={tx.importarUnaCopia}>
           <Camp etiqueta={tx.fitxerDeCopiaJson}>
@@ -215,25 +259,32 @@ export function CopiaIEsborrat() {
                 { valor: MODES_IMPORTACIO[0], etiqueta: tx.afegirElQueNoHiHa, ajuda: tx.ajudaAfegirCopia },
                 { valor: MODES_IMPORTACIO[1], etiqueta: tx.substituirHoTot, ajuda: tx.ajudaSubstituirCopia }
               ]} />
-              <Boto varietat="primari" icona={Upload} carregant={important} disabled={salut.nomesLectura || (mode === 'substituir' && llegida.descartats > 0)}
-                onClick={() => mode === 'substituir' ? setConfirmaImportacio(true) : importa()}>{tx.importa}</Boto>
+              <Accions>
+                <Boto varietat="primari" icona={Upload} carregant={important}
+                  disabled={important || salut.nomesLectura || (mode === 'substituir' && llegida.descartats > 0)}
+                  onClick={() => mode === 'substituir' ? setConfirmaImportacio(true) : importa()}>{tx.importa}</Boto>
+              </Accions>
               {mode === 'substituir' && llegida.descartats > 0
                 ? <p>{tx.registresValidsPerSubstituir}</p> : null}
             </>
           ) : null}
         </GrupCamps>
-        <EnllacBoto a={ruta('copia', 'full')}>{tx.importarFullCalcul}</EnllacBoto>
+        <Accions>
+          <EnllacBoto a={ruta('copia', 'full')}>{tx.importarFullCalcul}</EnllacBoto>
+        </Accions>
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
         <Pila gap={2}>
           <p>{tx.esborrarNoEsPotDesfer}</p>
-          <Boto varietat="perill" disabled={salut.nomesLectura} onClick={() => setEsborrant(true)}>{tx.esborraHoTot}</Boto>
+          <Accions>
+            <Boto varietat="perill" disabled={salut.nomesLectura || esborrantEnVol} onClick={() => setEsborrant(true)}>{tx.esborraHoTot}</Boto>
+          </Accions>
         </Pila>
       </Pila>
       <DialegConfirmacio obert={confirmaImportacio} destructiu carregant={important} titol={tx.substituirDiariTitol}
         descripcio={tx.substituirDiariDesc}
         etiquetaConfirma={tx.substituixElDiari} etiquetaCancela={tx.cancella}
         onTanca={() => setConfirmaImportacio(false)} onConfirma={importa} />
-      <DialegConfirmacio obert={esborrant} destructiu titol={tx.esborrarTotTitol} etiquetaConfirma={tx.esborraHoTot} etiquetaCancela={tx.noEsborresRes}
+      <DialegConfirmacio obert={esborrant} destructiu carregant={esborrantEnVol} titol={tx.esborrarTotTitol} etiquetaConfirma={tx.esborraHoTot} etiquetaCancela={tx.noEsborresRes}
         descripcio={tx.esborrarTotDesc}
         onTanca={() => { setConfirmacio(''); setEsborrant(false); }} onConfirma={esborra}>
         <Camp etiqueta={tx.perAConfirmarEscriu(alias)}>
@@ -250,9 +301,21 @@ export function AvisSalut() {
   const tx = useTextosSalut();
   const navega = useNavegaSalut();
   const [error, setError] = useState(null);
+  const [acceptant, setAcceptant] = useState(false);
+  const acceptantRef = useRef(false);
   if (!salut.carregat) return null;
   const apartats = avisSalutTraduit(idioma);
-  const accepta = () => salut.acceptaAvis().then(() => navega(['diari'], { replace: true }), (e) => setError(textErrorSalut(e, idioma)));
+  const accepta = () => {
+    if (acceptantRef.current) return;
+    acceptantRef.current = true;
+    setAcceptant(true);
+    salut.acceptaAvis()
+      .then(() => navega(['diari'], { replace: true }), (e) => setError(textErrorSalut(e, idioma)))
+      .finally(() => {
+        acceptantRef.current = false;
+        setAcceptant(false);
+      });
+  };
   return (
     <MarcSalut titol={tx.avisIPrivacitat}>
       <Pila gap={6}>
@@ -267,7 +330,9 @@ export function AvisSalut() {
         {salut.avisAcceptat ? (
           <p>{tx.avisAcceptatEl(dataCurta(dataLocalDe(salut.avis.acceptatA)))}</p>
         ) : (
-          <Boto varietat="primari" mida="gran" disabled={salut.nomesLectura} onClick={accepta}>{tx.hoHeEntes}</Boto>
+          <Accions>
+            <Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || salut.nomesLectura} onClick={accepta}>{tx.hoHeEntes}</Boto>
+          </Accions>
         )}
       </Pila>
     </MarcSalut>

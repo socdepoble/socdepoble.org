@@ -1,0 +1,23 @@
+{
+  "session": "22326f2e-f843-4862-acce-cd38e304f115",
+  "operationId": "frontissa-aprova",
+  "planHash": "fc6709e15a5d463be699a9b04f1e8164f0760eb887bb04660dde426ab4d29a03",
+  "beforeSeal": "db3b4e65a34954c3678eef78aab8c16f537be926f88a0cd6969ee70eb991e08c",
+  "kind": "frontissa-agent",
+  "action": "aprova",
+  "key": "reconeixements",
+  "actor": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+  "reason": "v1.2.24 build 29: empremta de «reconeixements» revisada al candidat 2edd686c (R32.75/R32.79/R32.85b/R32.86 i bump), aprovada per delegació explícita del Mestre",
+  "acceptaRetall": false,
+  "id": "ef2134d3-f262-47f7-9096-fc9807b90c11",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "3a0cb64f3fe3bd1b6df3f20a7f935e65c5c617e41e808c656063601663424b63",
+      "after": "680f85af37649a8b7fbbb65c529b0e939f171c5cdfb97ab8e4ea7418ff895494"
+    }
+  ],
+  "claim": "22326f2e-f843-4862-acce-cd38e304f115:governance-write",
+  "afterSeal": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
+  "state": "accepted"
+}

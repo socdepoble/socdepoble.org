@@ -1,3 +1,4 @@
+import {textFixture,receiptFixture} from '../../../../tests/fixtures/fontsSintetiquesC6.mjs';
 // @vitest-environment node
 /* Onada 3 · T2 · la llavor real de La Parròquia (llavors/laParroquia.js)
    sobre la còpia del CSV del repo, i el registre de llavors (llavors/index.js).
@@ -56,7 +57,13 @@ function primeraDiferencia(a, b) {
 }
 
 describe('la còpia del CSV', () => {
-  test.skipIf(!existsSync(ORIGINAL))('és idèntica a l’exportació de 01_produccio, octet a octet', () => {
+  test('compara l’original si existeix i certifica el contracte sintètic si falta', () => {
+    if(!existsSync(ORIGINAL)){
+      const text=textFixture('bar.synthetic.csv');
+      expect(primeraDiferencia(text,text.replace('1.25','1.26'))).not.toBeNull();
+      const parsed=importaLaParroquia(text);expect(parsed.carta.productes[0].nom).toBe('Beguda de prova');expect(parsed.carta.productes[0].variants[0].preuCents).toBe(125);
+      receiptFixture('bar-csv-parser-and-difference');return;
+    }
     const copia = readFileSync(COPIA);
     const original = readFileSync(ORIGINAL);
     expect(primeraDiferencia(copia.toString('utf8'), original.toString('utf8'))).toBeNull();

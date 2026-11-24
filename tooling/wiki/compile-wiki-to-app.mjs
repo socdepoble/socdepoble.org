@@ -17,7 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { escriuGenerat } from '../scripts/canonada.mjs';
-import { PUBLIC_WIKI_DIRS, publicWikiFiles, readPublicWikiFile, publicMetadata, resolveWikiEditorial, confinedFile } from './lib/publication-policy.mjs';
+import { PUBLIC_WIKI_DIRS, publicWikiFiles, publicWikiFile, readPublicWikiFile, publicMetadata, resolveWikiEditorial, confinedFile } from './lib/publication-policy.mjs';
 export { PUBLIC_WIKI_DIRS };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -113,6 +113,27 @@ function ensureCategory(categoriesMap, relativeDirectory) {
 
 /** Recorre la Wiki i torna `{ categories, items, omesos }`. Cap escriptura. */
 export function construeixManifest(root = ROOT_PER_DEFECTE) {
+  return construeixManifestDelsFitxers(root, publicWikiFiles(root));
+}
+
+/** Selecció explícita dins de la mateixa frontera pública; cap escriptura. */
+export function construeixManifestSelectiu(root, files) {
+  if (!Array.isArray(files) || files.length === 0 || new Set(files).size !== files.length) {
+    throw new TypeError('Selecció pública de Wiki invàlida.');
+  }
+  const seleccionats = files.map(rel => {
+    if (typeof rel !== 'string' || path.isAbsolute(rel) || /[\\\x00-\x1f\x7f]/.test(rel)
+      || rel.split('/').some(part => !part || part === '.' || part === '..')) {
+      throw new TypeError('Selecció pública de Wiki invàlida.');
+    }
+    const file = path.resolve(root, rel);
+    if (!publicWikiFile(root, file)) throw new TypeError('Selecció fora de la Wiki pública.');
+    return file;
+  });
+  return construeixManifestDelsFitxers(root, seleccionats);
+}
+
+function construeixManifestDelsFitxers(root, files) {
   const wikiRoot = path.join(root, WIKI_DIR);
   const categoriesMap = new Map();
   const items = [];
@@ -120,7 +141,7 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
   // quarantena). El lector no els ha de vore; el validador d'enllaços sí.
   const omesos = new Set();
 
-  for (const file of publicWikiFiles(root)) {
+  for (const file of files) {
     const ext = path.extname(file).toLowerCase();
     const content = readPublicWikiFile(root, file);
     if (content === null) continue;

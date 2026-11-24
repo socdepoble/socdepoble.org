@@ -1,3 +1,4 @@
+import { rebutEliminacioMissatge } from './rebutEliminacioMissatge.js';
 import { MAXIM_ADJUNT_XAT } from '../xatMultimedia.js';
 /* v1.2.8 · La projecció pura viu en un mòdul sense dependències: XatContext la necessita a l'arrencada
    i el motor (amb xatMultimedia.js) es carrega en diferit. */
@@ -10,7 +11,7 @@ const buida = (m) => ({ missatgeId: m.id, filId: m.threadId ?? m.filId, reaccion
 const camps = { alternaReaccio: 'reaccions', alternaDestacat: 'destacat', alternaFixat: 'fixat', eliminaPerAMi: 'amagat' };
 
 export function creaAccionsMissatge({ port, obteContext, obteMissatge, onCanvi = () => {},
-  creaPrivat, obreFil = () => {}, enviaText, enviaAdjunt, lligBlob, generaId = () => crypto.randomUUID(), maximBlobsBytes = 20_000_000 }) {
+  creaPrivat, obreFil = () => {}, onEliminaConfirmada = () => {}, enviaText, enviaAdjunt, lligBlob, generaId = () => crypto.randomUUID(), maximBlobsBytes = 20_000_000 }) {
   let clau = null, perMissatge = {}, destacats = [], esborranyPrivat = null, tancat = false;
   let bytesBlobs = 0, generacioBlobs = 0;
   const pressupostBlobs = Math.min(20_000_000, Number.isSafeInteger(maximBlobsBytes) && maximBlobsBytes > 0 ? maximBlobsBytes : 20_000_000);
@@ -56,12 +57,12 @@ export function creaAccionsMissatge({ port, obteContext, obteMissatge, onCanvi =
   });
   const font = (referencia) => {
     const m = obteMissatge(referencia);
-    if (!m?.id || !(m.threadId ?? m.filId) || m.bloquejat || m.esborrat || m.estatEnviament === 'pendent' || m.estatEnviament === 'error') {
+    if (!m?.id || perMissatge[m.id]?.esborrat === true || !(m.threadId ?? m.filId) || m.bloquejat || m.esborrat || m.estatEnviament === 'pendent' || m.estatEnviament === 'error') {
       throw error('Este missatge ja no està disponible.');
     }
     return m;
   };
-  const desa = (id, parcial) => { perMissatge = { ...perMissatge, [id]: { ...perMissatge[id], ...parcial } }; publica(); };
+  const desa = (id, parcial) => { if (perMissatge[id]?.esborrat === true) return; perMissatge = { ...perMissatge, [id]: { ...perMissatge[id], ...parcial } }; publica(); };
 
   async function muta(nom, referencia, valor, extra = {}) {
     const op = captura(extra.signal);
@@ -116,6 +117,20 @@ export function creaAccionsMissatge({ port, obteContext, obteMissatge, onCanvi =
     cues.set(clauRevisio, feina); return feina;
   }
 
+  async function eliminaPerATothom(referencia, { signal } = {}) {
+    const op = captura(signal);
+    try {
+      const m = font(referencia), dades = { filId: m.threadId ?? m.filId, missatgeId: m.id };
+      if (op.ctx.modeDades !== 'remote' || typeof port.eliminaPerATothom !== 'function') throw error('Este servidor encara no permet eliminar per a tothom.', 'XAT_ACCIONS_SQL_ABSENT');
+      const raw = await espera(port.eliminaPerATothom(dades, { ...obteContext().config, signal: op.control.signal }), op);
+      op.comprova();
+      const rebut = rebutEliminacioMissatge(raw, dades);
+      desa(m.id, { ...rebut, estat: 'confirmat' });
+      destacats = destacats.filter(x => x.missatgeId !== m.id);
+      onEliminaConfirmada(rebut); return rebut;
+    } finally { op.acaba(); }
+  }
+
   async function carrega(dades, { signal } = {}) {
     const op = captura(signal);
     const inici = new Map(revisions);
@@ -126,7 +141,7 @@ export function creaAccionsMissatge({ port, obteContext, obteMissatge, onCanvi =
       const nou = { ...perMissatge };
       for (const fila of resultat.missatges) {
         const previa = nou[fila.missatgeId];
-        if (previa?.estat === 'local') continue;
+        if (previa?.estat === 'local' || previa?.esborrat === true) continue;
         const combinada = { ...fila, estat: 'confirmat' };
         for (const camp of Object.values(camps)) {
           const k = `${fila.missatgeId}:${camp}`;
@@ -233,7 +248,7 @@ export function creaAccionsMissatge({ port, obteContext, obteMissatge, onCanvi =
     alternaReaccio: (m, emoji, activa) => muta('alternaReaccio', m, emoji, { activa }),
     alternaDestacat: (m, actiu) => muta('alternaDestacat', m, actiu),
     alternaFixat: (m, actiu) => muta('alternaFixat', m, actiu),
-    eliminaPerAMi: m => muta('eliminaPerAMi', m, true), responEnPrivat, reenviaAConverses,
+    eliminaPerAMi: m => muta('eliminaPerAMi', m, true), eliminaPerATothom, responEnPrivat, reenviaAConverses,
     tanca: () => { tancat = true; globalThis.window?.removeEventListener('sdp:auth-change', revalida); for (const c of controls) c.abort(abortat()); controls.clear(); manifests.clear(); bytesBlobs = 0; generacioBlobs += 1; }
   });
 }

@@ -1,0 +1,176 @@
+/* Onada v1.2.23 (R32.50) · IDEA-338 · Fitxa noble Pedra Seca per a l'Herbari de La Torre.
+   Full diferit adoptat per FitxaHerbari.jsx (0 B al tros d'arrencada del connector de WordPress). */
+@layer components {
+  .sdp-herbari-fitxa {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-5);
+    min-inline-size: 0;
+  }
+
+  /* Llei 261103 / 261114 · Barres de píndoles d'usos i paratge sempre centrades */
+  .sdp-herbari-fitxa__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sdp-herbari-fitxa__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.3;
+    max-inline-size: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .sdp-herbari-fitxa__pindola--paratge {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-weight: 600;
+  }
+
+  /* v1.2.24 · costura R32.75 · L3-01: el senyal pelat és per a la vora; la lletra pinta el seu token -text. */
+  .sdp-herbari-fitxa__pindola--toxica {
+    border-color: var(--sdp-error);
+    color: var(--sdp-error-text);
+  }
+
+  .sdp-herbari-fitxa__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+  }
+
+  .sdp-herbari-fitxa__seccio {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-herbari-fitxa__seccio > h3 {
+    margin: 0;
+  }
+
+  .sdp-herbari-fitxa .sdp-taula-prosa {
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-herbari-fitxa .sdp-taula-prosa table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    margin: 0;
+  }
+
+  /* v1.2.24 · costura R32.75 · Frontera de P1-16 i PS-03: les cel·les es lliguen a la fitxa i no a la taula de
+     prosa, i el fons de la capçalera el pinta la regla d'elements de sdp.css. El subtil que hi havia era el mateix
+     de la fila parell: la capçalera no es distingia de les files. */
+  .sdp-herbari-fitxa :where(th, td) {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    text-align: start;
+    vertical-align: top;
+    border-block-end: 1px solid var(--sdp-vora);
+    overflow-wrap: break-word;
+  }
+
+  .sdp-herbari-fitxa tbody tr:last-child :where(th, td) {
+    border-block-end: 0;
+  }
+
+  .sdp-herbari-fitxa thead th {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  .sdp-herbari-fitxa tbody th {
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+    inline-size: 40%;
+  }
+
+  .sdp-herbari-fitxa__seguretat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-herbari-fitxa__aptitud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-herbari-fitxa__alergens {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-2);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-herbari-fitxa__alergens-nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: 1.5;
+  }
+
+  .sdp-herbari-fitxa__font {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-herbari-fitxa__font > p {
+    margin: 0;
+  }
+
+  .sdp-herbari-fitxa__empremta {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-herbari-fitxa__empremta summary {
+    cursor: pointer;
+    font-weight: 600;
+    min-block-size: var(--sdp-touch);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .sdp-herbari-fitxa__empremta > p {
+    margin: var(--sdp-space-2) 0 0;
+  }
+
+  .sdp-herbari-fitxa__empremta code {
+    overflow-wrap: anywhere;
+  }
+}

@@ -41,7 +41,11 @@ test('R32.44 · edició pròpia i historial append-only amb el catàleg real', a
   const save = (section, item, expected, op, { actor = A, org = null, payload = { title: 'Revisió', content: '<p>Cos</p>' }, slug = null } = {}) =>
     as(actor, SAVE, [TENANT, section, slug, item, payload, org, expected, uid(op)]).then(rows => rows[0].ack);
   try {
+    // v1.2.24 · R32.87 · Fins a 135: la 136 reescriu publica_section_submission_beta_cas i revoca_publicacio_mur, i la
+    // reaplicació de la 130 (més avall) refusaria eixe cos nou com a deriva, com ha de fer.
     const plan = creaPlaMigracions();
+    plan.migrations = plan.migrations.slice(0, plan.migrations.findIndex((m) => m.version === '20261124033000') + 1);
+    assert.equal(plan.migrations.length, 135);
     await pg.exec(generaSql(plan, await preparaHidratacio(), { advisoryLock: false }));
     for (const actor of [A, B, C, D, E, F, G]) {
       await pg.query('INSERT INTO auth.users(id,email,email_confirmed_at,raw_user_meta_data) VALUES($1,$2,now(),$3)', [actor, `${actor}@example.invalid`, { full_name: 'Prova', tenant_id: TENANT, accepta_rgpd: true }]);
@@ -147,6 +151,8 @@ test('R32.44 · edició pròpia i historial append-only amb el catàleg real', a
       // v1.2.23 · L4-03 i L6-01 (Gauntlet R1) · Com admin_revisa_denuncia_lssi(…,'retirada',…): la fila es queda (R32.5, «sense esborrar contingut»).
       await pg.query("UPDATE public.section_submissions SET moderation_state='retirada_cautelar' WHERE id=$1", [uid(150)]);
       assert.equal(await revisionsDe(uid(150)), 2);
+      // v1.2.24 · R32.87 · Amb la migració 136 l'autor ja no pot revocar una fila retirada (prova LSSI): ho prova
+      // tests/r3287-blindatges-p0-pglite.test.mjs. Esta prova queda fixada al catàleg 135, el de la R32.44.
       assert.equal((await as(A, 'SELECT public.revoca_publicacio_mur($1,$2) AS ok', [uid(150), TENANT]))[0].ok, true);
       assert.equal((await pg.query('SELECT count(*)::int n FROM public.section_submissions WHERE id=$1', [uid(150)])).rows[0].n, 0);
       assert.equal(await revisionsDe(uid(150)), 0);

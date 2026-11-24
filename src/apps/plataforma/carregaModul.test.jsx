@@ -148,7 +148,9 @@ describe('carregaCos · el camí bo', () => {
     /* Actualitzat a posta (261016): el nucli real és l'1.2.0, que afig la porta 'workspace'.
        Actualitzada a posta (261024 T5): ara l'1.3.0, que afig useServeiNoticies a la plataforma. */
     /* v1.2.17 · l'1.8.0 afig a la porta 'workspace' les dues declaracions d'espai del Rebost (IDEA-303). */
-    expect(carregador.nucli()).toMatchObject({ versio: '1.8.0' });
+    /* v1.2.24 · costura R32.75 · l'1.9.0 afig IconesAlergens a la Pedra Seca (les Receptes de la Nevera). */
+    expect(carregador.nucli()).toMatchObject({ versio: '1.9.0' });
+    expect(carregador.nucli().pedraSeca.IconesAlergens).toBeTypeOf('function');
     /* R21.6 · l'1.6.0 afig la capçalera de lectura de la targeta a la Pedra Seca.
        R32.11 (v1.2.9) · l'1.7.0 hi afig Accions, el bloc d'accions (lots 05 i 06 de Gemini). */
     expect(carregador.nucli().pedraSeca.Accions).toBeTruthy();
@@ -216,19 +218,21 @@ describe('carregaCos · el que no passa (LazyRouteError, mai una recàrrega)', (
   });
 
   /* Actualitzat a posta (261016): el missatge nomena la versió del contracte, ara l'1.2.0.
-     Actualitzada a posta (261024 T5): ara l'1.3.0. R32.11 (v1.2.9): ara l'1.7.0. v1.2.17: ara l'1.8.0. */
-  test('un nucli que no és el 1.8.0 congelat', async () => {
+     Actualitzada a posta (261024 T5): ara l'1.3.0. R32.11 (v1.2.9): ara l'1.7.0. v1.2.17: ara l'1.8.0.
+     v1.2.24 · costura R32.75 · ara l'1.9.0 (IconesAlergens). */
+  test('un nucli que no és el 1.9.0 congelat', async () => {
     const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: { versio: VERSIO_NUCLI } }) });
-    expect(error.cause.message).toContain('no és el 1.8.0 congelat');
+    expect(error.cause.message).toContain('no és el 1.9.0 congelat');
   });
 
   /* Onada 7 (261009) · un nucli congelat d'una altra versió (l'1.0.0 d'abans) tampoc no passa.
      261016 · tampoc l'1.1.0, el d'abans de la porta 'workspace'. 261024 (T5) · tampoc l'1.2.0.
      R21.6 · tampoc l'1.5.0, el d'abans de la capçalera de lectura de la targeta.
-     R32.11 (v1.2.9) · tampoc l'1.6.0, el d'abans d'Accions. v1.2.17 · tampoc l'1.7.0, el d'abans de les declaracions. */
-  test.each(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.5.0', '1.6.0', '1.7.0'])('un nucli congelat d’una altra versió (%s)', async (versio) => {
+     R32.11 (v1.2.9) · tampoc l'1.6.0, el d'abans d'Accions. v1.2.17 · tampoc l'1.7.0, el d'abans de les declaracions.
+     v1.2.24 · costura R32.75 · tampoc l'1.8.0, el d'abans d'IconesAlergens. */
+  test.each(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.5.0', '1.6.0', '1.7.0', '1.8.0'])('un nucli congelat d’una altra versió (%s)', async (versio) => {
     const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: Object.freeze({ versio }) }) });
-    expect(error.cause.message).toContain('no és el 1.8.0 congelat');
+    expect(error.cause.message).toContain('no és el 1.9.0 congelat');
   });
 
   test('una app que no és un mòdul', async () => {

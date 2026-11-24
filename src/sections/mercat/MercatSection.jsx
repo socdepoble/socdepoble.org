@@ -1,5 +1,8 @@
 import ProjeccionsEnSuperficie from '../../components/universal/workspace/ProjeccionsEnSuperficie.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssLlistesEscalables from '../../css/diferit-llistes-escalables.css?inline';
 import { adoptaEstilsTaulellFeed } from '../../components/universal/estilsTaulellFeed.js';
+import { gestionaTeclaGraella } from '../../components/universal/workspace/navegacioTeclat.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 
@@ -25,6 +28,9 @@ import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTarge
 import { esFitxaDAmbit, esVisibleALaLlista } from '../../utils/publicacioUniversal.js';
 
 const RUTA_PUBLICAR_PRODUCTE = '/notes?ambit=mercat';
+const adoptaEstilsLlistesEscalables = (node) => {
+  if (node) adoptaFullDiferit(node, 'llistes-escalables', cssLlistesEscalables);
+};
 
 /* Decisió 4 del Mestre (261007) · «Carregar-ne més». Un useMur sense
    paginació (un doble d'abans de la Decisió 4) no en porta: cap botó. */
@@ -86,7 +92,12 @@ export default function MercatSection() {
           {t('section.mercat.buit', 'Encara no hi ha productes publicats en este poble.')}
         </p> : null}
         <ProjeccionsEnSuperficie desti="mercat" />
-        <div className="sdp-card-grid">
+        <div
+          ref={adoptaEstilsLlistesEscalables}
+          className="sdp-card-grid sdp-graella-escalable"
+          data-graella-teclat=""
+          onKeyDown={gestionaTeclaGraella}
+        >
           {/* Esmena 2 (261007_1645) · el descriptor, Connectar i el peu, a
               TargetaDelMercat: el JSX de sempre, píxel a píxel. */}
           {productes.map((item) => <TargetaDelMercat key={item.id} item={item} />)}

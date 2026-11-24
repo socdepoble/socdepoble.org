@@ -22,6 +22,7 @@ export const CLASSIFICACIO_PAGINES_PUBLIQUES=Object.freeze({
  cervell:['tecnologia-lliure','Node 0','Documentació'],
  xat:['comunitat-rural','Associacionisme'],
  'drets-autor':['patrimoni-cultura','Documentació'],
+ reconeixements:['tecnologia-lliure','Projecte Sóc de Poble','Documentació'],
  descarregues:['tecnologia-lliure','Documentació'],
  fediversity:['tecnologia-lliure','NGI Fediversity','Documentació'],
  'node-zero':['tecnologia-lliure','Node 0'],
@@ -35,7 +36,9 @@ export const CLASSIFICACIO_PAGINES_PUBLIQUES=Object.freeze({
  receptes:['patrimoni-cultura','Patrimoni'],
  dispositius:['tecnologia-lliure','Documentació'],
  // IDEA-287 · La guia pas a pas de totes les eines (pageContent.potsFer.js).
- 'tot-el-que-pots-fer':['comunitat-rural','Documentació']
+ 'tot-el-que-pots-fer':['comunitat-rural','Documentació'],
+ // IDEA-348 · Joc públic viu «Cada cosa al seu lloc» amb les 600 publicacions d'El Rentonar i Sóc de Poble.
+ 'cada-cosa-al-seu-lloc':['tecnologia-lliure','Patrimoni','Documentació']
 });
 
 const clausDePaginesPubliques=new WeakMap();

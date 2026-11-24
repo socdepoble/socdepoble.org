@@ -6,6 +6,7 @@ import { bootstrap, actor, id } from './fixtures/r32_25-push.mjs';
 import { creaPlaMigracions, generaSql } from '../tooling/node0/hidrata-postgres-node0.mjs';
 import { startLocalPostgres } from './fixtures/r3242-ajuntament-postgres-local.mjs';
 import { llegixReadme } from '../scripts/supabase/verifica-migracions.mjs';
+import { projecta132PerFixture } from './fixtures/r3278-cataleg-parcial.mjs';
 const engine=process.env.SDP_R3242_SQL_ENGINE||'pglite';
 const MIG='20261122160000_r3242_ajuntament_acreditacio_institucional.sql';
 const migration=readFileSync(new URL(`../supabase/migrations/${MIG}`,import.meta.url),'utf8');
@@ -160,7 +161,19 @@ test(`R32.42 ajuntament · ${engine} · reclamació genèrica anterior a la migr
  const db=await database();
  try{
   const plan=creaPlaMigracions();plan.migrations=plan.migrations.filter(m=>m.file!==MIG);
-  await db.exec(generaSql(plan,null,{advisoryLock:false}));
+  // The test removes the city-hall migration to exercise its genuine preimage.
+  // Project only its declared absent tables; do not relax the deployment SQL.
+  const pending132=plan.migrations.find(m=>m.file==='20261123180000_r3252_indexs_suport_fk_verificats.sql');
+  const index132=plan.migrations.indexOf(pending132);
+  assert.ok(index132>=0,'la fixture necessita la 132 canònica');
+  const before132={...plan,migrations:plan.migrations.slice(0,index132)};
+  await db.exec(generaSql(before132,null,{advisoryLock:false}));
+  const partial132=await projecta132PerFixture(db,{absentRelations:['private.ajuntament_auditoria','private.ajuntament_dominis_oficials']});
+  // Fixture-only SQL has no canonical migration ledger entry.
+  await db.exec(partial132.sql);
+  const after132={...plan,migrations:plan.migrations.slice(index132+1)};
+  // Direct source execution avoids claiming a full ledger for this partial fixture.
+  for(const m of after132.migrations)await db.exec(m.sql);
   await db.exec(JWT);
   await db.query("insert into public.towns(id,slug,name) values($1,'r3242-reclamacions-antigues','Poble sintètic de reclamacions antigues')",[T4]);
   for(const [u,email]of[[A,'secretaria@ajuntament.example'],[B,'revisora@example.invalid'],[X,'antiga@example.invalid']]) await db.query("insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data)values($1,$2,now(),$3)",[u,email,{full_name:'Persona sintètica',tenant_id:T4,accepta_rgpd:true}]);

@@ -16,7 +16,7 @@
  *      i ocultació / rebuig estricte sobre peces d'altres veïns.
  */
 import React, { useContext } from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const estat = vi.hoisted(() => ({
@@ -133,6 +133,7 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import { _reiniciaRevisionsEditorialsPerAProves } from '../../data/revisionsEditorials.js';
 import { _reiniciaRetornIdentitatPerAProves, llegixCanviIdentitatEdicio } from '../../data/retornIdentitatEdicio.js';
 import { TEXTOS_EDICIO_SISTEMA } from './i18nEdicioSistema.js';
+import { installaIdbMemoriaTest } from './__fixtures__/idbMemoriaTest.js';
 
 const UUID_MERCAT = '4a1b2c3d-5e6f-4a70-8b9c-0d1e2f3a4b5c';
 const UUID_CALENDARI = '7b2c3d4e-6f70-4b81-9c0d-1e2f3a4b5c6d';
@@ -163,7 +164,10 @@ const creaContextNotes = (overrides = {}) => ({
 });
 
 describe('R32.45 · Lot 01 · Retorn d’identitat «Vols tornar a ser Javi?» (IDEA-324 v3) en 5 llengües', () => {
+  let restauraIdb = null;
+
   beforeEach(() => {
+    restauraIdb = installaIdbMemoriaTest();
     _reiniciaRevisionsEditorialsPerAProves();
     _reiniciaRetornIdentitatPerAProves();
     estat.currentUser = { id: '0001', full_name: 'Javi Llinares' };
@@ -185,6 +189,8 @@ describe('R32.45 · Lot 01 · Retorn d’identitat «Vols tornar a ser Javi?» (
     cleanup();
     _reiniciaRevisionsEditorialsPerAProves();
     _reiniciaRetornIdentitatPerAProves();
+    restauraIdb?.();
+    restauraIdb = null;
   });
 
   test('paritat estructural en les 5 llengües a i18nEdicioSistema', () => {
@@ -253,7 +259,9 @@ describe('R32.45 · Lot 01 · Retorn d’identitat «Vols tornar a ser Javi?» (
       fireEvent.click(screen.getByRole('button', { name: 'Actualitzar al Mur' }));
     });
     expect(estat.navigate).not.toHaveBeenCalled();
-    expect(screen.getByText('Vols tornar a ser Javi Llinares?')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('Vols tornar a ser Javi Llinares?')).toBeTruthy();
+    });
 
     // Tria «Sí, torna a Javi Llinares» -> restaura persona i navega a /page/descarregues
     fireEvent.click(screen.getByRole('button', { name: 'Sí, torna a Javi Llinares' }));
@@ -389,7 +397,10 @@ describe('R32.45 · Lot 01 · Retorn d’identitat «Vols tornar a ser Javi?» (
 });
 
 describe('R32.45 · Lot 02 · Edició d’anada i tornada per a Beta Tester (Mur, Mercat i Esdeveniments/Calendari)', () => {
+  let restauraIdbLot2 = null;
+
   beforeEach(() => {
+    restauraIdbLot2 = installaIdbMemoriaTest();
     _reiniciaRevisionsEditorialsPerAProves();
     _reiniciaRetornIdentitatPerAProves();
     // Beta Tester normal: NO superadmin, NO membre de Sóc de Poble
@@ -407,7 +418,11 @@ describe('R32.45 · Lot 02 · Edició d’anada i tornada per a Beta Tester (Mur
     estat.idioma = 'ca';
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    restauraIdbLot2?.();
+    restauraIdbLot2 = null;
+  });
 
   test('Beta Tester edita el seu producte del Mercat (preu, unitat, categoria i foto) i es bloqueja sobre el d’un altre veí', async () => {
     const productePropi = {

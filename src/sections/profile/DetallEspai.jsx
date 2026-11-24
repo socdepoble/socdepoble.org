@@ -19,7 +19,9 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 import { pobleDeFitxa } from './fitxaDePerfil.js';
 import ControlModeSenior from '../../components/universal/ControlModeSenior.jsx';
+import ControlModeHumaPur from '../../components/universal/ControlModeHumaPur.jsx';
 import { textosModeSenior } from '../../config/textosModeSenior.js';
+import { textosModeHumaPur } from '../../config/textosModeHumaPur.js';
 import { textosPerfilA11y } from './i18nPerfilA11y.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -416,6 +418,9 @@ export function DetallIdioma({ persona }) {
         </Bloc>
         <Bloc titol={textosModeSenior(codiActiu, t).seccioPerfil}>
           <ControlModeSenior llengua={codiActiu} ambDescripcio testId="control-mode-senior-idioma" />
+        </Bloc>
+        <Bloc titol={textosModeHumaPur(codiActiu, t).seccioPerfil}>
+          <ControlModeHumaPur llengua={codiActiu} ambDescripcio testId="control-mode-huma-pur-idioma" />
         </Bloc>
       </div>
     </UniversalPage>

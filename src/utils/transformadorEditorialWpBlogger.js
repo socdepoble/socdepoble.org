@@ -39,6 +39,7 @@ import {
 } from '../data/importacio/catalegArbresRentonarWp.js';
 import { carregaPaginesTrilogiaIMoliWp, esPaginaTrilogiaIMoliWp, trobaPaginaTrilogiaIMoliWp } from '../data/importacio/paginesTrilogiaIMoliWp.js';
 import { transformaPaginaTrilogiaIMoliWp } from '../data/importacio/paginesTrilogiaIMoliEditorial.js';
+import { llevaEtiquetes } from '../config/contentHelpers.js';
 
 export {
   CASOS_US_EDITORIALS,
@@ -101,7 +102,7 @@ function desescapaXmlEditorial(text) { return desescapaEntitatsEditorials(text, 
 function titolEditorial(text) {
   // Vocabulari editorial explícit i numèriques, sense DOM ni descodificació
   // recursiva. Les entitats fora del vocabulari es conserven íntegres.
-  return desescapaEntitatsEditorials(text.replace(/<[^>]*>/g, ''), ENTITATS_HTML_EDITORIALS).trim();
+  return desescapaEntitatsEditorials(llevaEtiquetes(text, ''), ENTITATS_HTML_EDITORIALS).trim();
 }
 
 function textImportable(valor) {

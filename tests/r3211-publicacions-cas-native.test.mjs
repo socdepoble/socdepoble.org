@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import test from 'node:test';
 import { creaPlaMigracions, generaSql, preparaHidratacio } from '../tooling/node0/hidrata-postgres-node0.mjs';
@@ -14,6 +16,18 @@ const OTHER = '22222222-2222-4222-8222-222222222222';
 const id = n => `33333333-3333-4333-8333-${String(n).padStart(12, '0')}`;
 const operation = n => `44444444-4444-4444-8444-${String(n).padStart(12, '0')}`;
 const RPC = 'SELECT public.publica_section_submission_cas($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) AS ack';
+const PENDENTS_132_136 = [
+  ['20261123180000', '20261123180000_r3252_indexs_suport_fk_verificats.sql', 'fb6e55c005c149d753f1fc10bc2f2de33387425f543c97476ab0b615e43a0410'],
+  ['20261123233000', '20261123233000_r3264_xat_elimina_per_a_tothom_sense_caducitat.sql', '1bc848b4f67891d2a9430296ae8ef76ca2feaa5c4d0ad8c268135ca1349ea251'],
+  ['20261124030000', '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql', '9479af8c495c9968a3b35ff4bd5628adc92f4f35fb8e62a2f8bcb2357608c50b'],
+  ['20261124033000', '20261124033000_r3272_profiles_sense_enumeracio_i_execute_minim.sql', '2578292da6597dd294765515e60018131ceabd37cd24691344bae17c62907f8c'],
+  // v1.2.24 · R32.87 · Blindatges P0 de Gemini Neon, fila 136, NO aplicada.
+  ['20261124174000', '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql', '7c787d9509b6bd32da61b52f6f73d5d793314fe18006525a503e95a8ccfa2029']
+];
+function exigeixCataleg136(rows) {
+  assert.equal(rows.length, 136, 'cataleg136_incomplet');
+  assert.deepEqual(rows.slice(-5).map(({ version, file, sha256: hash }) => [version, file, hash]), PENDENTS_132_136, 'cataleg136_fonts_drift');
+}
 const SIGNATURE = 'public.publica_section_submission_cas(pg_catalog.uuid,pg_catalog.uuid,pg_catalog.text,pg_catalog.jsonb,pg_catalog.text,pg_catalog.text,pg_catalog.uuid,pg_catalog.bool,pg_catalog.timestamptz,pg_catalog.uuid)';
 
 async function beginActor(client, actor = OWNER, role = 'authenticated') {
@@ -62,7 +76,7 @@ async function advisoryBarrier(observer, holder, waiter, key) {
 }
 
 test('R32.11 CAS general · native PostgreSQL independent sessions and transaction outcomes', { timeout: 180000 }, async t => {
-  const cluster = await startLocalPostgres({ dataRoot: '/tmp/sdp_r32_14_pg' });
+  const cluster = await startLocalPostgres({ dataRoot: join(tmpdir(), 'sdp-cas-native') });
   const db = cluster.db;
   const manualSHA = sha256(manual);
   try {
@@ -74,8 +88,16 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     // v1.2.22 · R32.42 afig tres fonts NO aplicades (20261122160000, 20261122160200 i 20261122160300): 129 en total.
     // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · R32.44 (20261122230000) i R32.46 (20261123010000), també NO
     // aplicades, porten el catàleg a 131; es compten amb les tres R32.42 i les 126 d'abans no canvien.
-    const R32_42 = ['20261122160000', '20261122160200', '20261122160300', '20261122230000', '20261123010000'];
-    assert.equal(plan.migrations.length, 131);
+    // R78: els cinc afegits històrics i les quatre pendents exactes queden fora dels recomptes 126/125/124.
+    const R32_42 = ['20261122160000', '20261122160200', '20261122160300', '20261122230000', '20261123010000', ...PENDENTS_132_136.map(([version]) => version)];
+    exigeixCataleg136(plan.migrations);
+    for (const [version] of PENDENTS_132_136) {
+      assert.throws(() => exigeixCataleg136(plan.migrations.filter(row => row.version !== version)), /cataleg136_incomplet/);
+    }
+    const historical131 = plan.migrations.filter(row => !PENDENTS_132_136.some(([version]) => row.version === version));
+    assert.equal(historical131.length, 131);
+    assert.equal(sha256([...historical131].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version))).map(({ version, file, sha256: hash }) => `${version}\t${file}\t${hash}`).join('\n')), 'c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe');
+    assert.equal(plan.migrations.length, 136);
     assert.equal(plan.migrations.filter(row => !R32_42.includes(row.version)).length, 126);
     assert.equal(plan.migrations.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
     assert.deepEqual(plan.migrations.filter(row => row.version === '20261121090000').map(({file,sha256})=>[file,sha256]),[['20261121090000_r32_25_push_directes_i_bandols.sql','2122eceeef44039f60c9cf6931043a5d7dcc1bfd4c1ae834d651743119315b36']]);
@@ -226,7 +248,7 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
       await db.query(manual);
       assert.deepEqual((await db.query('SELECT * FROM private.publicacions_cas_rebuts ORDER BY operation_id')).rows, receipts);
       const installed = (await db.query('SELECT version,file,sha256 FROM node0.schema_migrations ORDER BY version COLLATE "C"')).rows;
-      assert.equal(installed.length, 131);
+      assert.equal(installed.length, 136);
       assert.equal(installed.filter(row => !R32_42.includes(row.version)).length, 126);
       assert.equal(installed.filter(row => row.version !== '20261121090000' && !R32_42.includes(row.version)).length, 125);
       assert.deepEqual(installed, [...plan.migrations].sort((a, b) => Buffer.compare(Buffer.from(a.version), Buffer.from(b.version)))

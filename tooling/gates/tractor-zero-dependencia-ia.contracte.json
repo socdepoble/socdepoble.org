@@ -1,0 +1,26 @@
+{
+  "schema": "sdp.zero-dependencia-ia.v1",
+  "surfaces": ["src", "tooling/gates", "scripts/botigues"],
+  "entries": ["src/main.jsx", "src/embed.jsx", "src/natiu/entrada.jsx", "src/host.js", "src/data/backendPort.js", "src/data/supabase/index.js", "src/data/node0/arrencadaNodeZero.js", "vite.config.js", "vite.standalone.config.js", "vite.natiu.config.js"],
+  "criticalFunctions": [
+    {"file":"src/host.js","exports":["arrenca","configura"]},
+    {"file":"src/data/supabase/runtime.js","exports":["request"]},
+    {"file":"src/data/supabase/auth.js","exports":["loginWithPassword","registerWithPassword","updateProfile","logout"]},
+    {"file":"src/data/supabase/xat.js","exports":["enviaMissatge","loadMissatges","loadFils"]},
+    {"file":"src/data/revisionsEditorials.js","exports":["desaRevisioEditorialAmbServidor"]}
+  ],
+  "optionalAi": [
+    {"file":"src/data/supabase/iaia.js","reason":"RPC functions.invoke('iaia') explícit, posterior a l'enviament humà al provider del xat."},
+    {"file":"src/services/veuNode0.js","reason":"Locució explícita, transport limitat i fallback del consumidor veuIaiaService."},
+    {"file":"src/services/veuIaiaService.js","reason":"Assistent de veu sol·licitat expressament; no és precondició del port humà."},
+    {"file":"tooling/vite/traductor-iaia.mjs","reason":"Connector de traducció apply:serve, fora dels hooks de build."}
+  ],
+  "scripts": ["build", "build:natiu", "build:wp:directori", "test:precommit", "porta", "botigues:preflight", "botigues:ios", "botigues:android", "botigues:publica-tot"],
+  "bounds": {"files":5000,"bytesPerFile":5000000,"totalBytes":60000000,"astNodes":4000000},
+  "limits": [
+    "Importacions locals estàtiques, reexports, require literals i import() literals; callbacks, dispatch d'objectes, SDKs externs i imports calculats no són un graf de crides complet. Ordres node literals es recorren; subprocessos configurables es declaren dinàmics.",
+    "Els transports configurables es declaren dinàmics; els fixtures d'avaria proven els destins i fluxos enumerats, no tots els possibles valors d'entorn.",
+    "El selector reconeix proveïdors públics coneguts, les rutes d'inferència del projecte i el port 11434. Un domini privat nou o un protocol opac requereix revisar el contracte; non-ai significa que no casa amb estes signatures, no acredita el servei remot.",
+    "No s'executen xarxes, compiladors natius, credencials, desplegaments ni proves d'interfície en esta porta de lectura. La suite complementària usa transports i eines fingits."
+  ]
+}

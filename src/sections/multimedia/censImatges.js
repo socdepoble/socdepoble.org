@@ -177,6 +177,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/img/que-es-socdepoble-4.jpg', 'Què és Sóc de Poble? (4)', 'contingut', 'foto'),
 
   e('/assets/nano_cards/animalets_nano_card.jpg', 'Animalets', 'contingut', 'ia'),
+  e('/assets/nano_cards/cada_cosa_al_seu_lloc_nano_card.jpg', 'Cada cosa al seu lloc', 'contingut', 'ia'),
   e('/assets/nano_cards/calendari_nano_card.jpg', 'Calendari', 'contingut', 'ia'),
   e('/assets/nano_cards/cervell_nano_card.jpg', 'Cervell', 'contingut', 'ia'),
   e('/assets/nano_cards/drets_autor_comic.jpg', 'Drets d’autor', 'contingut', 'ia'),
@@ -190,6 +191,7 @@ export const CENS_IMATGES = Object.freeze([
   e('/assets/nano_cards/mercat_nano_card.webp', 'Mercat', 'contingut', 'ia'),
   e('/assets/nano_cards/metriques_nano_card.jpg', 'Mètriques', 'contingut', 'ia'),
   e('/assets/nano_cards/mur_nano_card.jpg', 'Mur', 'contingut', 'ia'),
+  e('/assets/nano_cards/reconeixements_nano_card.jpg', 'Reconeixements i fonts d’inspiració', 'contingut', 'ia'),
   e('/assets/nano_cards/snippet_nano_card.jpg', 'Snippet', 'contingut', 'ia'),
   e('/assets/nano_cards/vehicle_nano_card.jpg', 'Vehicle', 'contingut', 'ia'),
 

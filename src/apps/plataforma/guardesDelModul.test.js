@@ -34,7 +34,7 @@ import {
 } from './guardesDelModul.js';
 import {
   NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
-  NOMS_DEL_NUCLI_1_7
+  NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_9
 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
@@ -595,4 +595,29 @@ test('R32.11: cada nom de l’1.7 el fan servir la Gestoria i la Nevera, per la 
     expect(deFora, carril).toEqual([]);
     expect([...usats].sort(), carril).toEqual(esperats);
   }
+});
+
+/* v1.2.24 · costura R32.75 · El nom que l'1.9.0 afig a la porta 'pedraSeca' (IconesAlergens, les icones
+   dels al·lèrgens) té ús en codi de veres que es compila com a mòdul: el diàleg de Receptes de la Nevera
+   (R32.53 de Gemini). El pren per la façana de Pedra Seca, que el nucli exposa. La prova demana una font
+   de la porta 'pedraSeca' (la façana o, des de l'1.9.0, també el fitxer de la molècula), no la façana
+   sola: amb l'1.8.0, el fitxer de la molècula no era de cap porta i hauria posat dins del cos una segona
+   còpia de la molècula i del registre dels al·lèrgens. */
+test('v1.2.24: cada nom de l’1.9 el fa servir la Nevera, per la porta del nucli', () => {
+  const noms19 = Object.values(NOMS_DEL_NUCLI_1_9).flat();
+  const esperats = Object.entries(NOMS_DEL_NUCLI_1_9).flatMap(([porta, noms]) => noms.map((nom) => `${porta}.${nom}`)).sort();
+  const usats = new Set();
+  const deFora = [];
+  for (const ruta of fitxersDe('src/apps/nevera')) {
+    for (const { especificador, noms } of importacions(llig(ruta))) {
+      const desti = resol(ruta, especificador) || '';
+      const porta = portaDeLaFont(desti);
+      for (const nom of noms.filter((candidat) => noms19.includes(candidat))) {
+        if (!porta || !exposaElNom(porta, nom)) deFora.push(`${ruta}: ${nom} de ${desti}`);
+        else usats.add(`${porta.clau}.${nom}`);
+      }
+    }
+  }
+  expect(deFora).toEqual([]);
+  expect([...usats].sort()).toEqual(esperats);
 });

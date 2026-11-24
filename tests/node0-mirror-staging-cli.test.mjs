@@ -21,8 +21,11 @@ test('canonical source manifest pins all current files and contains no hidden LA
   // opcionals (edicioPublicacionsPropies i revisionsPagines) i ja re-fixa tooling/node0/manifest-mirall-staging.json;
   // es revisa el canvi (només declaracions, cap camí ni secret nou) i el pin d'esta prova passa de 536cc6… a 1a8893….
   // v1.2.23 · pujada de versió (ordre del Mestre 261123) · VERSIO_CLIENT_NATIU 27 → 28 i el seu comentari: el pin passa a ee3bcf….
+  // R78: reviewed C6/C10 optional backup/delete declarations; all38 actual source-byte checks stay strict.
+  // v1.2.24 · pujada de versió (Pla 261124_1323, F5A) · VERSIO_CLIENT_NATIU 28 → 29 i el seu comentari, sense cap camí ni secret nou: el pin passa a a91a52….
+  // v1.2.24 · R32.86 (IDEA-348) · systemPages.js afig la pàgina del joc «Cada cosa al seu lloc» (cap camí ni secret nou): el seu pin del manifest passa d'ad32c6… a 008711….
   for(const [source,pin] of Object.entries({
-    'src/data/contracte.js':'ee3bcf282b8cf5cd985b538f85e329ed50861338389a80162ae0d42bb3023220',
+    'src/data/contracte.js':'a91a5286f58650e1dee8fea25687f825858995f32c80beef3822cfbe400f4567',
     'src/data/contracteAvisos.js':'9d8ee9cc8af5f3cb811ecfa345828ee165375972f3a70f83a8617371301cf5b2',
     'src/data/contracteConnexions.js':'547b1f339dbedc867ba1d0989f3d0b6407b7bd1901d72d017c0c06a5eb82cc17',
     'src/data/contracteOrganitzacions.js':'c6ac84378a30ab0bb9a8771839f2fb5c305764e6e9bd743835653524000b8c3e',

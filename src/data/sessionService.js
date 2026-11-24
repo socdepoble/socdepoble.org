@@ -222,8 +222,8 @@ function gestionaTemporitzador() {
 }
 
 S.sincronitzaActual = sincronitza;
-S.alDespertarActual = () => {
-  if (document.visibilityState !== 'visible') return;
+S.alDespertarActual = (represaNativa = false) => {
+  if (!represaNativa && document.visibilityState !== 'visible') return;
   /* R22 (sospita de xat-fluxos i nucli) · Una renovació que ha fallat sense cap
      transició fora de línia (temps, 5xx, xarxa feble amb navigator.onLine cert)
      deixava la pestanya «fora» fins a recarregar: només 'online' o una altra
@@ -252,6 +252,8 @@ if (typeof window !== 'undefined' && !S.oientsFinestraArmats) {
   window.addEventListener('sdp:auth-change', () => S.sincronitzaActual?.());
   window.addEventListener('storage', (event) => S.enStorageActual?.(event));
   document.addEventListener('visibilitychange', () => S.alDespertarActual?.());
+  // Capacitor Android/iOS also resumes without changing document visibility.
+  document.addEventListener('resume', () => S.alDespertarActual?.(true));
   window.addEventListener('online', () => {
     if (!S.tornaAProvarActual?.()) S.alDespertarActual?.();
   });

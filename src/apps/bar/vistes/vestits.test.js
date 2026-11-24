@@ -41,6 +41,8 @@ describe('articlesDelTpv: els al·lèrgens de cada producte', () => {
   test('les anotacions antigues sense font són desconegudes; no es pinten ingredients ni traces com a declarats', () => {
     const carta = llavorOriginal();
     const flam = carta.productes.find((p) => p.id === 'flam');
+    // La llavor actual té font: esta fixture representa expressament una dada antiga.
+    delete flam.fontAlergens;
     flam.tracesAlergens = ['gluten'];
     const article = perId(articlesDelTpv(carta)).get('flam');
     expect(article).not.toHaveProperty('alergens');

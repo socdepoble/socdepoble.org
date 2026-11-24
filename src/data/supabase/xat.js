@@ -640,7 +640,7 @@ export const loadMissatges = async (filId, config = {}) => {
         p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_despres_de_seq: opcions.despresDeSeq, p_limit: opcions.limit
       })
       : opcions.despresDeSeq !== null
-        ? supabase.rpc('xat_nous', { p_fil_id: filId, p_despres_de_seq: opcions.despresDeSeq })
+        ? supabase.rpc('xat_nous', { p_fil_id: filId, p_despres_de_seq: opcions.despresDeSeq, p_limit: opcions.limit })
         : supabase.rpc('xat_historial', { p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_limit: opcions.limit });
     const { data, error, status } = await ambSenyal(crida, config);
     if (error) throw ambEstat(error, status);

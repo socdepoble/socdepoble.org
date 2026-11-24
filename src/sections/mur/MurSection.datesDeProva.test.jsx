@@ -120,8 +120,10 @@ test.each([
   expect(titols()).toEqual([...dalt, ...maquinaria, ...tecniques, ...avall]);
   // El pou té una sola targeta: l'article (i /page/anatomia-rural hi porta per l'àlies).
   /* Onada R23 · tretze: «La Veu de Sóc de Poble». Onada R25 (IDEA-267) · catorze: «El Farcellet Digital
-     de Sóc de Poble» n'és ara la primera (datesDeProvaMur.js, datesDeProvaMur.test.js). */
-  expect(IMPORTANTS_DEL_MUR).toHaveLength(14);
+     de Sóc de Poble» n'és ara la primera (datesDeProvaMur.js, datesDeProvaMur.test.js).
+     v1.2.24 (24-11-2026; ordre del Mestre) · quinze: «Reconeixements i fonts d'inspiració» n'és ara la primera,
+     la Notícia #1 del Mur. Onada R32.86 (IDEA-348) · setze: «Cada cosa al seu lloc» entra la segona. */
+  expect(IMPORTANTS_DEL_MUR).toHaveLength(16);
   expect(titols()[0]).toBe(importants[0]);
   expect(titols().filter((titol) => titol === importants[0])).toHaveLength(1);
   expect(titols()).not.toContain('Anatomia rural');

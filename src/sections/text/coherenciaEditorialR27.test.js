@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { localitzaPagina } from './pageContent.r10.js';
+import { obtePaginaVersionsCompleta } from './pageContent.versionsHistoric.js';
 import { APARADOR_R20_TEXTS, htmlAparadorR20 } from './pageContent.fediversityR20.js';
 import { LA_VEU_DE_SOC_DE_POBLE_COPY } from '../mur/articles/laVeuDeSocDePobleContent.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -152,14 +153,18 @@ const textDeLaPagina = (pagina) => [pagina.title, pagina.subtitle, pagina.lead, 
 describe('Onada R29 · Calcs del basc a totes les pàgines de PAGE_COPY', () => {
   test('eu · cap pàgina diu «erreproduzitzaile» ni «lokailu»', () => {
     const calcs = Object.entries(PAGE_COPY)
-      .filter(([, pagina]) => /erreproduzitzaile|lokailu/i.test(textDeLaPagina(localitzaPagina(pagina, 'eu'))))
+      .filter(([clau, pagina]) => {
+        const loc = clau === 'versions' ? obtePaginaVersionsCompleta(pagina, 'eu') : localitzaPagina(pagina, 'eu');
+        return /erreproduzitzaile|lokailu/i.test(textDeLaPagina(loc));
+      })
       .map(([clau]) => clau);
     expect(calcs).toEqual([]);
   });
 
   test('eu · el reproductor de /versions, /page/node-zero i /disseny és «erreproduzigailu», i el connector de /page/descarregues, «konektore»', () => {
     for (const clau of ['versions', 'node-zero', 'disseny']) {
-      expect([clau, /erreproduzigailu/.test(textDeLaPagina(localitzaPagina(PAGE_COPY[clau], 'eu')))]).toEqual([clau, true]);
+      const loc = clau === 'versions' ? obtePaginaVersionsCompleta(PAGE_COPY[clau], 'eu') : localitzaPagina(PAGE_COPY[clau], 'eu');
+      expect([clau, /erreproduzigailu/.test(textDeLaPagina(loc))]).toEqual([clau, true]);
     }
     const descarregues = textDeLaPagina(localitzaPagina(PAGE_COPY.descarregues, 'eu'));
     expect(descarregues).toContain('<strong>konektoreak</strong>');

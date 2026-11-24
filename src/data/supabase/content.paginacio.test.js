@@ -52,7 +52,7 @@ describe('Decisió 4 · loadMur porta el cursor de les seccions que tenen més',
     // El total es demana a les tres seccions; app_content no en necessita.
     for (const seccio of ['mur', 'events', 'mercat']) {
       expect(cridesA(`p_section_id=${seccio}`)[0].opcions).toMatchObject({ anonim: true });
-      expect(cridesA(`p_section_id=${seccio}`)[0].opcions).not.toHaveProperty('onResponseMetadata');
+      expect(cridesA(`p_section_id=${seccio}`)[0].opcions.onResponseMetadata).toEqual(expect.any(Function));
     }
     expect(cridesA('app_content')[0].opcions).not.toHaveProperty('headers');
   });
@@ -65,12 +65,10 @@ describe('Decisió 4 · loadMur porta el cursor de les seccions que tenen més',
     expect(Object.keys(valor).sort()).toEqual(['events', 'feedPosts', 'marketItems']);
   });
 
-  /* Gauntlet R22 (dades-07) · Les RPC de R21 limiten amb least(p_limit, 51) o least(p_limit, 200) i tots els
-     filtres són abans del LIMIT: una pàgina de menys de les 50 demanades és la darrera. Una de 50 justes, no. */
-  test('una pàgina de menys de 50 és la darrera (el límit del servidor és ≥ 50); una de 50, no', async () => {
+  test('R32.54 · una pàgina pública curta sense rang no acredita el final; una plena tampoc', async () => {
     const files = cinquanta().slice(0, 20);
     respon('p_section_id=mur', files, null);
-    expect(await loadMur('U', {})).not.toHaveProperty('paginacio');
+    expect((await loadMur('U', {})).paginacio).toEqual({ mur: cursor('mur', files.at(-1).created_at, 80) });
     const plena = cinquanta();
     respon('p_section_id=mur', plena, null);
     expect((await loadMur('U', {})).paginacio).toEqual({ mur: cursor('mur', plena.at(-1).created_at, 50) });
@@ -130,7 +128,7 @@ describe('Decisió 4 · loadSeccioPage', () => {
     expect(params.get('p_before_id')).toBe(id(42));
     expect(params.has('or')).toBe(false);
     expect(opcions).toMatchObject({ signal: senyal, anonim: true });
-    expect(opcions).not.toHaveProperty('headers');
+    expect(opcions.headers).toEqual({ Prefer: 'count=exact' });
   });
 
   test('codificació: el «+» del fus, els «:», les cometes i les comes viatgen codificats', async () => {
@@ -191,13 +189,13 @@ describe('Decisió 4 · loadSeccioPage', () => {
     await expect(loadSeccioPage({ seccio: 'mur', cursor: cursor('mur', CREAT, 42) }, {})).rejects.toThrow('no avança');
   });
 
-  test('Content-Range de la RPC limitada no acredita el final: s’ignora encara que diga total 1', async () => {
+  test('R32.54 · el rang acredita el final només dins d’una finestra SQL curta', async () => {
     // Una pàgina plena (limit 1) continua oberta encara que el rang diga «total 1»: mana el compte de files.
     respon('/rpc/llig_mur_public', [fila(41, CREAT)], '0-0/1');
     expect(await loadSeccioPage({ seccio: 'mur', limit: 1 }, {})).toMatchObject({ complete: false, nextCursor: cursor('mur',CREAT,41) });
-    // Una pàgina curta és la darrera encara que el rang diga un total més gran.
+    // max-rows pot retallar la resposta: un total més gran deixa el cursor viu.
     respon('/rpc/llig_mur_public', [fila(41, CREAT)], '0-0/9');
-    expect(await loadSeccioPage({ seccio: 'mur' }, {})).toMatchObject({ complete: true, nextCursor: null });
+    expect(await loadSeccioPage({ seccio: 'mur' }, {})).toMatchObject({ complete: false, nextCursor: cursor('mur',CREAT,41) });
     respon('/rpc/llig_mur_public', [], '*/0');
     expect(await loadSeccioPage({ seccio: 'mur', cursor: cursor('mur',CREAT,41) }, {})).toEqual({ elements: [],complete: true,nextCursor: null });
   });

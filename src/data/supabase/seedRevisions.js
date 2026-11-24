@@ -30,25 +30,34 @@ function failure(cause) {
 export async function loadSeedRevisions(input, config = {}) {
   const query = capturaConsultaRevisionsSeed(input), { resolved, comprova } = capturaContext(config);
   if (!query.ids.length) return [];
-  let rows;
-  try {
-    rows = await request(`/rest/v1/seed_revisions?select=section,seed_id,payload,version,source_version&tenant_id=eq.${encodeURIComponent(resolved.tenantId)}&section=eq.${query.seccio}&seed_id=in.(${query.ids.join(',')})`, config, { signal: config.signal, anonim: true });
-  } catch (cause) { failure(cause); }
-  comprova();
-  if (!Array.isArray(rows) || rows.length > query.ids.length) throw errorRevisioSeed('resposta-invalida');
-  const seen = new Set(), result = [];
-  for (const row of rows) {
-    if (row?.section !== query.seccio || !query.ids.includes(row?.seed_id) || seen.has(row.seed_id)) throw errorRevisioSeed('resposta-invalida');
-    seen.add(row.seed_id);
-    /* Àrbitre R11 (R33-L2-03) · Una fila que el lector no pot acceptar es descarta
-       sola: la peça es mostra canònica i la resta de revisions continua. */
+  const pending = new Set(query.ids), result = [];
+  // El cursor és el conjunt finit d'IDs encara no rebuts (màxim200), sense
+  // offset ni dependència de la col·lació text del servidor. Cada resposta
+  // no buida n'ha de consumir almenys un; el pressupost és N+1 peticions.
+  for (let page = 0; page <= query.ids.length; page++) {
+    comprova();
+    let rows, contentRange = null;
     try {
-      result.push(capturaRespostaRevisioSeed({ seccio: row.section, id: row.seed_id, camps: row.payload, versio: row.version, fontVersio: row.source_version }));
-    } catch (error) {
-      if (error?.code !== 'seed-invalid') throw error;
+      rows = await request(`/rest/v1/seed_revisions?select=section,seed_id,payload,version,source_version&tenant_id=eq.${encodeURIComponent(resolved.tenantId)}&section=eq.${query.seccio}&seed_id=in.(${[...pending].join(',')})&order=seed_id.asc&limit=${pending.size}`, config,
+        { signal: config.signal, anonim: true, headers: { Prefer: 'count=exact' }, onResponseMetadata: metadata => { contentRange = metadata.contentRange; } });
+    } catch (cause) { failure(cause); }
+    comprova();
+    if (!Array.isArray(rows) || rows.length > pending.size) throw errorRevisioSeed('resposta-invalida');
+    for (const row of rows) {
+      if (row?.section !== query.seccio || !pending.delete(row?.seed_id)) throw errorRevisioSeed('resposta-invalida');
+      /* Àrbitre R11 (R33-L2-03) · Una fila il·legible cau sola i no es torna
+         a demanar; la font canònica continua disponible per a eixa peça. */
+      try {
+        result.push(capturaRespostaRevisioSeed({ seccio: row.section, id: row.seed_id, camps: row.payload, versio: row.version, fontVersio: row.source_version }));
+      } catch (error) {
+        if (error?.code !== 'seed-invalid') throw error;
+      }
     }
+    const range = /^0-(\d+)\/(\d+)$/.exec(contentRange || '');
+    const complete = range !== null && Number(range[1]) + 1 === rows.length && Number(range[2]) === rows.length;
+    if (rows.length === 0 || pending.size === 0 || complete) return result;
   }
-  return result;
+  throw errorRevisioSeed('resposta-invalida');
 }
 export async function desaRevisioSeed(input, config = {}) {
   const revision = capturaRevisioSeed(input), { resolved, comprova } = capturaContext(config);

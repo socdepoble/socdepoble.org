@@ -233,8 +233,13 @@
     padding: var(--sdp-space-5);
     max-inline-size: min(90vw, 40rem);
   }
+  :where(dialog:modal) {
+    overscroll-behavior: contain;
+  }
   :where(dialog)::backdrop {
     background: var(--sdp-fons-vel);
+    overflow: hidden;
+    overscroll-behavior: contain;
   }
   /* Entrada del diàleg (pla 261004_0050, Fase C): la durada base i la corba
      d'eixida del sistema. El desplaçament el posen els fotogrames clau

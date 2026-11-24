@@ -325,7 +325,7 @@ test('portes 261026: porta-documents i run-portes --diagnostic mesuren conformit
   // denominador del diagnòstic l'ha de comptar sense convertir-lo en N/A.
   // v1.2.23 · L4-09 (ordre del Mestre 261123) · la Porta Duplicats Públics entra a la cadena com a pas de només lectura.
   // v1.2.23 · L4-01 i L8-07 (Gauntlet R1) · la Porta Maquetació Canònica (IDEA-319) entra a la cadena com a pas de només lectura.
-  assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
+  assert.deepEqual(PASSOS_DIAGNOSTIC.map((pas) => pas.nom), ['Contracte sense dependència IA', 'Contracte de plantilles', 'Autoritat i arrencada', 'Segell de skills',
     'Consola neta (motor; imatges com a dependència explícita)',
     'Integritat del LEDGER', 'Contracte documental', 'Protecció anti-factura egress', 'Higiene de paquets', 'Tractor Vigilant', 'Lògica universal', 'Porta Cobertura Social', 'Coherència editorial viva',
     'Conformitat federació pública', 'Economia documental d’arrencada', 'Integritat d’imatges i enquadrament', 'Porta Duplicats Públics', 'Porta Maquetació Canònica (IDEA-319)'],

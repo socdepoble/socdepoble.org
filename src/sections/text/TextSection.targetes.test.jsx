@@ -29,6 +29,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 }));
 import TextSection from './TextSection.jsx';
 import { PAGE_COPY } from './pageContent.js';
+import { projeccioLecturaLegal } from './projeccioLecturaLegal.js';
 import { MARCA_GRUP } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
@@ -44,10 +45,16 @@ const cosDe = (container) => container.querySelector('[data-pagina] > article');
 describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a l’apartat 4', () => {
   const pinta = () => cosDe(render(<TextSection page={PAGE_COPY.legal} pageKey="legal" />).container);
 
-  test('l’article de lectura amb targetes conserva «cms-preview» i porta el cos amb targetes', () => {
+  test('l’article de lectura amb targetes conserva «cms-preview» i porta els dos grups de targetes (Drets d’autor i Reconeixements)', () => {
     const article = pinta();
     expect(article.className).toBe('cms-preview sdp-amb-targetes');
-    expect([...article.children].map((fill) => fill.className)).toEqual(['sdp-cos-tros', 'sdp-targetes', 'sdp-cos-tros']);
+    expect([...article.children].map((fill) => fill.className)).toEqual([
+      'sdp-cos-tros',
+      'sdp-targetes',
+      'sdp-cos-tros',
+      'sdp-targetes',
+      'sdp-cos-tros'
+    ]);
   });
 
   test('una targeta sola, a la dreta: la regla de la flotant la fa flotar i el cos la conté', () => {
@@ -97,13 +104,31 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
     expect(article.querySelector('a[href^="https://creativecommons.org"]')).toBeNull();
   });
 
-  test('cap text del document es perd: els trossos són l’HTML sanejat sense el grup', () => {
+  test('cap text del document projectat es perd: els trossos són l’HTML projectat sanejat sense els grups', () => {
     const article = pinta();
     const trossos = [...article.querySelectorAll(':scope > .sdp-cos-tros')].map((tros) => tros.innerHTML).join('');
     const senseGrup = document.createElement('div');
-    senseGrup.innerHTML = sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.legal.html), { enllacosEditorials: true });
-    senseGrup.querySelector(`[${MARCA_GRUP}]`).remove();
+    senseGrup.innerHTML = sanitizeHtml(resolRecursosDeHtml(projeccioLecturaLegal(PAGE_COPY.legal.html)), { enllacosEditorials: true });
+    for (const grup of senseGrup.querySelectorAll(`[${MARCA_GRUP}]`)) grup.remove();
     expect(trossos.replace(/\s+/g, ' ').trim()).toBe(senseGrup.innerHTML.replace(/\s+/g, ' ').trim());
+  });
+
+  test('IDEA-340 · /legal substituïx en lectura el llistat d’agraïments i l’H3 en majúscules per la UniversalCard de /page/reconeixements', () => {
+    const article = pinta();
+    expect(article.textContent).not.toContain("RECONEIXEMENTS I FONTS D'INSPIRACIÓ");
+    expect(article.textContent).not.toContain('23. Agraïments a la comunitat divulgadora');
+    const h3s = [...article.querySelectorAll('h3')].map((el) => el.textContent);
+    expect(h3s).toContain("Reconeixements i fonts d'inspiració");
+    expect(h3s).not.toContain("RECONEIXEMENTS I FONTS D'INSPIRACIÓ");
+
+    const grups = [...article.querySelectorAll('.sdp-targetes')];
+    expect(grups).toHaveLength(2);
+    const cartaReconeixements = grups[1].querySelector('.sdp-targeta > article.sp-card');
+    expect(cartaReconeixements.querySelector('.sp-card-title').textContent).toBe(PAGE_COPY.reconeixements.title);
+    expect(cartaReconeixements.querySelector('.sp-card-subtitle').textContent).toBe(PAGE_COPY.reconeixements.subtitle);
+    expect(cartaReconeixements.querySelector('.sp-card-text').textContent).toBe(PAGE_COPY.reconeixements.lead);
+    expect(cartaReconeixements.querySelector('a.sp-card-link-overlay').getAttribute('to')).toBe('/page/reconeixements');
+    expect(article.querySelector('.sdp-cos-tros a[href="/page/reconeixements"]')).not.toBeNull();
   });
 });
 
@@ -121,9 +146,25 @@ describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de s
       'consola',
       'cervell',
       'drets-autor',
+      'reconeixements',
       'fediversity',
       'node-zero',
     ]);
+  });
+
+  test('IDEA-340 · parella creuada reconeixements <-> legal: targetes vives flotants a la dreta i enllaços contextuals bidireccionals', () => {
+    expect(PAGE_COPY.reconeixements.html).toContain('data-sdp-targeta="pagina:legal"');
+    expect(projeccioLecturaLegal(PAGE_COPY.legal.html)).toContain('data-sdp-targeta="pagina:reconeixements"');
+
+    const cosRec = cosDe(render(<TextSection page={PAGE_COPY.reconeixements} pageKey="reconeixements" />).container);
+    const grupRec = cosRec.querySelector('.sdp-targetes');
+    expect([grupRec?.getAttribute('data-forma'), grupRec?.getAttribute('data-alineacio')]).toEqual(['sola', 'dreta']);
+    const cartaLegal = grupRec?.querySelector('.sdp-targeta > article.sp-card');
+    expect(cartaLegal?.querySelector('.sp-card-title')?.textContent).toBe(PAGE_COPY.legal.title);
+    expect(cartaLegal?.querySelector('.sp-card-subtitle')?.textContent).toBe(PAGE_COPY.legal.subtitle);
+    expect(cartaLegal?.querySelector('.sp-card-text')?.textContent).toBe(PAGE_COPY.legal.lead);
+    expect(cartaLegal?.querySelector('a.sp-card-link-overlay')?.getAttribute('to')).toBe('/legal');
+    expect(cosRec.querySelector('.sdp-cos-tros a[href="/legal"]')).not.toBeNull();
   });
 
   /* Gauntlet O7-9, ronda 2 (PC-01) · /disseny (DesignSection) i /wikidepoble (WikiDePobleSection) pinten

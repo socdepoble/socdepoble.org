@@ -20,12 +20,12 @@ function failure(cause) {
   if (cause?.name === 'AbortError') throw cause;
   /* v1.2.23 · R2D-06 (Gauntlet R2) · Com L4-02 a publicacionsPropies.js: el transport (runtime.js) desa el SQLSTATE de
      PostgreSQL a `sqlstate`; `postgrestCode` només porta els PGRST###. El missatge SDP-PAGE-* de la 130 és la segona prova. */
-  const sql = cause?.sqlstate, text = typeof cause?.message === 'string' ? cause.message : '';
-  const code = sql === '40001' || text.includes('SDP-PAGE-003') ? 'conflicte-versio'
+  const sql = cause?.sqlstate ?? cause?.postgrestCode, text = typeof cause?.message === 'string' ? cause.message : '';
+  const code = cause?.status === 409 || sql === '40001' || text.includes('SDP-PAGE-003') ? 'conflicte-versio'
     : cause?.status === 404 && cause?.postgrestCode === 'PGRST202' ? 'no-disponible'
       : sql === '42501' || text.includes('SDP-PAGE-002') ? 'sense-permis'
         : sql === '54000' || text.includes('SDP-PAGE-429') ? 'quota-assolida' : 'revisio-error';
-  throw Object.assign(new Error('No s’ha confirmat la revisió al servidor. Conserva l’esborrany.'), { code, codi: code, cause });
+  throw Object.assign(new Error('No s’ha confirmat la revisió al servidor. Conserva l’esborrany.'), { code, codi: code, status: code === 'conflicte-versio' ? 409 : cause?.status, cause });
 }
 const params = (q, tenant) => ({ p_tenant_id: tenant, p_section_id: q.seccio, p_slug: q.slug, p_item_id: q.itemId });
 const sameResource = (row, q, tenant) => row.tenantId === tenant && row.seccio === q.seccio && row.id === q.id;

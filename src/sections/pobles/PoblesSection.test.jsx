@@ -487,10 +487,13 @@ test('P0-39 / IDEA-166 · un poble sense data a la fitxa mostra la seua última 
    Expectativa actualitzada a propòsit: Onada R25 (ordre del Mestre, «El Farcellet Digital de Sóc de Poble»;
    sectionContent.js i datesDeProvaMur.js) · «El Farcellet Digital de Sóc de Poble», de la gent de la Torre, és la
    publicació més nova: a la llavor crua porta el 14-11-2026 a les 17:35, i en mode seed les importants són catorze, i el
-   primer moment, el de les 20:00. */
+   primer moment, el de les 20:00.
+   v1.2.24 (24-11-2026; ordre del Mestre) · «Reconeixements i fonts d'inspiració», una pàgina del sistema sense poble, és
+   ara la primera de les quinze importants: el Farcellet passa al segon moment, el de les 16:24 del mateix dijous
+   (3.360 minuts de jornada × 13,5 / 15). */
 test.each([
   ['dates crues de la llavor (supabase/seed.sql)', () => APP_SEED, ['17:35', '14/11/26']],
-  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0)), ['20:00', '08/10/26']]
+  ['dates del mode seed (llavorAmbDatesDeProva)', () => llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 9, 4, 0)), ['13:15', '08/10/26']] // R32.86 · setze importants: el pas de les dates de prova canvia
 ])('P0-39 / IDEA-166 · La Torre de les Maçanes és #1 amb el rellotge de l’última publicació (%s)', (_, llavorDelMur, rellotgeTorre) => {
   const { feedPosts, marketItems, events } = llavorDelMur();
   expect(marketItems.some((item) => item.population === 'La Torre de les Maçanes')).toBe(true);

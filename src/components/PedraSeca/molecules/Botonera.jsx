@@ -1,4 +1,5 @@
 import { Link } from '../../../app/contexts/RouterContext';
+import { gestionaTeclaPindoles } from './PillToggle.jsx';
 
 /**
  * Botonera.jsx — Menú de navegació semàntic de Pedra Seca.
@@ -18,6 +19,7 @@ export function Botonera({
     <nav
       aria-label={etiqueta}
       className={['sdp-pindola', vertical ? 'sdp-pindola--vertical' : '', className].filter(Boolean).join(' ')}
+      onKeyDown={(e) => gestionaTeclaPindoles(e, vertical)}
     >
       {opcions.map((opcio) => {
         return (

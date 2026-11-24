@@ -1,16 +1,20 @@
 // DESTÍ: tests/frontissa-contingut.test.mjs
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {verificaSegell} from '../tooling/gates/segella.mjs';
 import { comprova, empremta, retall, executa, carregaContingut, REGISTRE } from '../tooling/gates/frontissa-contingut.mjs';
 
+const roots = [];
+after(() => { for (const root of roots) fs.rmSync(root, {recursive: true, force: true}); });
+const run = (args, root) => executa(args.length ? [...args, '--motiu', 'Revisió de fixture'] : args, root, {session: 'fixture', authorize: async () => ({claim: 'fixture', complete: async () => {}})});
 const pagina = (html) => ({ title: 'T', html });
 
 /** Un Mas mínim en un directori temporal, amb el contingut i els consumidors. */
 function mas(pagines, registre = null) {
-  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'frontissa-'));
+  const arrel = fs.mkdtempSync(path.join(os.tmpdir(), 'frontissa-')); roots.push(arrel);
   const escriu = (rel, text) => {
     fs.mkdirSync(path.dirname(path.join(arrel, rel)), { recursive: true });
     fs.writeFileSync(path.join(arrel, rel), text);
@@ -20,6 +24,8 @@ function mas(pagines, registre = null) {
   escriu('src/config/systemPages.js', "export const SYSTEM_PAGES = [{ key: 'projecte' }, { key: 'wikidepoble' }];\nexport const COVER_PAGE_KEYS = { wiki: 'wikidepoble' };\n");
   escriu('src/config/sections.js', "export const SECTIONS = [\n  { id: 'legal', pageKey: 'legal' }\n];\n");
   if (registre) escriu(REGISTRE, JSON.stringify(registre));
+  escriu('.agents/skills/fixture/SKILL.md', 'Fixture');
+  verificaSegell(arrel, {update: true});
   return arrel;
 }
 
@@ -46,8 +52,8 @@ test('un comentari que nomene la clau no la fa existir: es mira l’objecte', as
 
 test('--inicia registra l’estat actual i després la porta passa', async () => {
   const arrel = mas(complet());
-  await executa(['--inicia', '--per', 'Mestre'], arrel);
-  const r = await executa([], arrel);
+  await run(['--inicia', '--per', 'Mestre'], arrel);
+  const r = await run([], arrel);
   assert.equal(r.valid, true);
   assert.equal(r.correctes, 3);
   assert.equal(r.requerides, 3);
@@ -55,7 +61,7 @@ test('--inicia registra l’estat actual i després la porta passa', async () =>
 
 test('--inicia no accepta un registre amb claus absents', async () => {
   const arrel = mas({ projecte: pagina('x') });
-  await assert.rejects(() => executa(['--inicia', '--per', 'Mestre'], arrel), /claus absents/);
+  await assert.rejects(() => run(['--inicia', '--per', 'Mestre'], arrel), /claus absents/);
 });
 
 test('un canvi d’empremta falla fins que s’aprova, i l’aprovació és d’eixa empremta', () => {
@@ -82,13 +88,13 @@ test('--aprova refusa un retall gran sense --accepta-retall', async () => {
   const gran = { ...complet(), projecte: pagina('x'.repeat(100)) };
   const registre = { schema: 'sdp.contingut.v1', claus: Object.fromEntries(Object.entries(gran).map(([k, v]) => [k, { ...empremta(v), aprovat_per: 'Mestre', data: '2026-09-24' }])) };
   const arrel = mas({ ...gran, projecte: pagina('x'.repeat(10)) }, registre);
-  await assert.rejects(() => executa(['--aprova', 'projecte', '--per', 'Mestre'], arrel), /--accepta-retall/);
-  await executa(['--aprova', 'projecte', '--per', 'Mestre', '--accepta-retall'], arrel);
-  assert.equal((await executa([], arrel)).valid, true);
+  await assert.rejects(() => run(['--aprova', 'projecte', '--per', 'Mestre'], arrel), /--accepta-retall/);
+  await run(['--aprova', 'projecte', '--per', 'Mestre', '--accepta-retall'], arrel);
+  assert.equal((await run([], arrel)).valid, true);
 });
 
 test('--retira no deixa llevar una clau que un consumidor encara demana', async () => {
   const arrel = mas(complet());
-  await executa(['--inicia', '--per', 'Mestre'], arrel);
-  await assert.rejects(() => executa(['--retira', 'wikidepoble', '--per', 'Mestre'], arrel), /encara la demana/);
+  await run(['--inicia', '--per', 'Mestre'], arrel);
+  await assert.rejects(() => run(['--retira', 'wikidepoble', '--per', 'Mestre'], arrel), /encara la demana/);
 });

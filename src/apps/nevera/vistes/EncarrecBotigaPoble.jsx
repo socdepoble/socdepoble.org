@@ -12,7 +12,7 @@
  *     o copia i obri `/xat` per enganxar-lo al comerç veí.
  *   · 5 llengües del sistema (`ca`, `es`, `en`, `eu`, `gl`) via `useClosaAplicacio().idioma`.
  */
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { ClipboardCopy, Download, MessageSquare, Share2, Store } from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Alerta, AreaText, Boto, Botonera, Camp, CampText, GrupCamps } from '../../../components/PedraSeca/index.js';
@@ -167,6 +167,8 @@ export function EncarrecBotigaPoble({ llista }) {
   const [signatura, setSignatura] = useState('');
   const [avis, setAvis] = useState(null);
   const [errorAvis, setErrorAvis] = useState(null);
+  const [compartint, setCompartint] = useState(false);
+  const accioEnVolRef = useRef(false);
 
   const nomVisible = netejaNomLlistaEncarrec(llista.nom, llengua);
   const encarrec = useMemo(
@@ -200,7 +202,9 @@ export function EncarrecBotigaPoble({ llista }) {
   };
 
   const compartixAlDispositiu = async () => {
-    if (buida || !compartibleNatiu) return;
+    if (buida || !compartibleNatiu || accioEnVolRef.current) return;
+    accioEnVolRef.current = true;
+    setCompartint(true);
     setErrorAvis(null);
     try {
       await globalThis.navigator.share({
@@ -212,6 +216,9 @@ export function EncarrecBotigaPoble({ llista }) {
       if (err?.name === 'AbortError') return;
       setAvis(null);
       setErrorAvis(textos.errorCompartir);
+    } finally {
+      accioEnVolRef.current = false;
+      setCompartint(false);
     }
   };
 
@@ -219,9 +226,14 @@ export function EncarrecBotigaPoble({ llista }) {
      és al porta-retalls: si la còpia falla, la persona continua ací amb
      l'encàrrec al quadre i l'avís de còpia manual, i no el perd en el Xat. */
   const copiaIObriXat = async () => {
-    if (buida) return;
-    const copiat = await copiaAlPortaRetalls();
-    if (copiat === true) navigate('/xat');
+    if (buida || accioEnVolRef.current) return;
+    accioEnVolRef.current = true;
+    try {
+      const copiat = await copiaAlPortaRetalls();
+      if (copiat === true) navigate('/xat');
+    } finally {
+      accioEnVolRef.current = false;
+    }
   };
 
   const descarregaTxt = () => {
@@ -265,6 +277,7 @@ export function EncarrecBotigaPoble({ llista }) {
                   onChange={(event) => {
                     setComerc(event.target.value);
                     setAvis(null);
+                    setErrorAvis(null);
                   }}
                 />
               </Camp>
@@ -275,6 +288,7 @@ export function EncarrecBotigaPoble({ llista }) {
                   onChange={(event) => {
                     setRecollida(event.target.value);
                     setAvis(null);
+                    setErrorAvis(null);
                   }}
                 />
               </Camp>
@@ -285,6 +299,7 @@ export function EncarrecBotigaPoble({ llista }) {
                   onChange={(event) => {
                     setSignatura(event.target.value);
                     setAvis(null);
+                    setErrorAvis(null);
                   }}
                 />
               </Camp>
@@ -301,11 +316,11 @@ export function EncarrecBotigaPoble({ llista }) {
                   {textos.copia}
                 </Boto>
                 {compartibleNatiu ? (
-                  <Boto icona={Share2} onClick={compartixAlDispositiu}>
+                  <Boto icona={Share2} carregant={compartint} disabled={compartint} onClick={compartixAlDispositiu}>
                     {textos.compartix}
                   </Boto>
                 ) : null}
-                <Boto icona={MessageSquare} onClick={copiaIObriXat}>
+                <Boto icona={MessageSquare} disabled={compartint} onClick={copiaIObriXat}>
                   {textos.obriXat}
                 </Boto>
                 <Boto icona={Download} onClick={descarregaTxt}>

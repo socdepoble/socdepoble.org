@@ -258,7 +258,11 @@ export async function compartix(titol, url, showToast) {
     await navigator.clipboard.writeText(url);
     showToast('Enllaç copiat al porta-retalls.');
   } catch {
-    showToast(`No s'ha pogut copiar. Enllaç: ${url}`, 6000);
+    /* Plaça, canvi 6 (261124) · Sense porta-retalls, o si el refusa, l'avís
+       porta l'enllaç sencer i diu com copiar-lo a mà: el text de l'avís es pot
+       seleccionar. Dura 15 s (abans 6): llegir-lo, mantindre el dit damunt i
+       triar «Copia» no hi cabia (revisió adversarial, 261124). */
+    showToast(`No s'ha pogut copiar l'enllaç. Mantín-lo premut per a copiar-lo: ${url}`, 15000);
   }
 }
 

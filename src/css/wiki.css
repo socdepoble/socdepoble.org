@@ -1,33 +1,28 @@
-/* La Wiki desplaça la semàntica dels headings, però conserva el ritme visual
-   de base.css amb les classes canòniques h1…h6. Només corregix les propietats
-   que el tag nou aportaria per cascada o pels selectors adjacents. */
+/* IDEA-344 · La Wiki emet etiquetes semàntiques pures (<h3>..<h6>) alineades
+   a l'inici i delega en base.css tota l'escala tipogràfica i els marges d'ítems. */
 @layer legacy {
-  .sdp-wiki-workspace .sdp-prose h3.h2 {
-    border-bottom: 0;
-    padding-bottom: 0;
+  .sdp-wiki-workspace .sdp-prose :is(h3, h4, h5, h6) + :is(ul, ol) {
+    margin-top: 0;
   }
-  .sdp-wiki-workspace .sdp-prose h6.h5 { letter-spacing: normal; }
 
-  .sdp-wiki-workspace .sdp-prose .h1 + p,
-  .sdp-wiki-workspace .sdp-prose .h2 + p { margin-top: 12px; }
-  .sdp-wiki-workspace .sdp-prose .h1 + .lead,
-  .sdp-wiki-workspace .sdp-prose .h2 + .lead { margin-top: 0; }
-  .sdp-wiki-workspace .sdp-prose .h2 + ul,
-  .sdp-wiki-workspace .sdp-prose .h2 + ol { margin-top: 0; }
-  .sdp-wiki-workspace .sdp-prose .h5 + ul,
-  .sdp-wiki-workspace .sdp-prose .h5 + ol { margin-top: -4px; }
-  .sdp-wiki-workspace .sdp-prose .h2 + .h3 { margin-top: 24px; }
-  .sdp-wiki-workspace .sdp-prose .h3 + .h4 { margin-top: 16px; }
+  .sdp-wiki-workspace .sdp-prose :is(ul, ol) {
+    margin-top: 8px;
+    padding-left: 24px;
+  }
 
-  /* ── TARGETA DE DIAGRAMA / MERMAID (Pedra Seca & Apple HIG) ── */
-  .sdp-wiki-workspace .sdp-diagrama-card {
+  .sdp-wiki-workspace .sdp-prose li {
+    line-height: 1.55;
+  }
+
+  /* ── TARGETA DE DIAGRAMA / MERMAID (Pedra Seca, compartida per Wiki i BIOS) ── */
+  .sdp-diagrama-card {
     margin: 20px 0;
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
     overflow: hidden;
   }
-  .sdp-wiki-workspace .sdp-diagrama-capcalera {
+  .sdp-diagrama-capcalera {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -40,7 +35,7 @@
     border-bottom: 1px solid var(--sdp-vora);
     text-transform: uppercase;
   }
-  .sdp-wiki-workspace .sdp-diagrama-cos {
+  .sdp-diagrama-cos {
     margin: 0;
     padding: 16px;
     background: transparent;
@@ -50,29 +45,11 @@
     line-height: 1.5;
     overflow-x: auto;
   }
-  .sdp-wiki-workspace .sdp-diagrama-cos code {
+  .sdp-diagrama-cos code {
     background: transparent;
     padding: 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--sdp-font-mono);
     color: var(--sdp-accio-text);
     white-space: pre;
   }
-
-  /* ── RITME DE LLISTES (Compacte entre ítems, espaiat respecte a paràgrafs) ──
-     PS-05 (B7b, 261102) · Els tokens de prosa: 20px darrere de la llista
-     (--sdp-mb-ul) i 4px entre ítems (--sdp-li-gap, Llei de llistes del 261031). */
-  .sdp-wiki-workspace .sdp-prose ul,
-  .sdp-wiki-workspace .sdp-prose ol {
-    margin-top: 8px;
-    margin-bottom: var(--sdp-mb-ul);
-    padding-left: 24px;
-  }
-  .sdp-wiki-workspace .sdp-prose li {
-    margin-bottom: var(--sdp-li-gap);
-    line-height: 1.55;
-  }
-  .sdp-wiki-workspace .sdp-prose li:last-child {
-    margin-bottom: 0;
-  }
 }
-

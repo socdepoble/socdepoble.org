@@ -13,6 +13,12 @@
     font-family: var(--sdp-font);
   }
 
+  .sdp-salut-dispositiu[data-integrat="perfil"] {
+    margin-block-start: 0;
+    padding-block-end: var(--sdp-space-6);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+
   .sdp-salut-dispositiu__graella {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -23,14 +29,13 @@
   @container (min-width: 46rem) {
     .sdp-salut-dispositiu__graella {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: stretch;
+      align-items: start;
     }
   }
 
   .sdp-salut-dispositiu__targeta {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     gap: var(--sdp-space-4);
     min-inline-size: 0;
     padding: var(--sdp-space-5);
@@ -175,8 +180,11 @@
     background-color: var(--sdp-error);
   }
 
+  /* IDEA-341 · Sobreescriu :where(dl) { grid-template-columns: max-content 1fr } de sdp.css
+     perquè cap caixa es talle per la dreta ni es cree cap columna fantasma. */
   .sdp-salut-dispositiu__compartiments {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-3);
     margin: 0;
     min-inline-size: 0;
@@ -213,13 +221,19 @@
     overflow-wrap: anywhere;
   }
 
+  /* Llei 9 · Text d'historial alineat a l'inici i botó «Revisar» sempre centrat al mig */
   .sdp-salut-dispositiu__fila-revisio {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
     gap: var(--sdp-space-3);
     min-inline-size: 0;
+  }
+
+  .sdp-salut-dispositiu__accions-revisio {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    padding-inline: var(--sdp-space-4);
   }
 
   .sdp-salut-dispositiu__boto-revisar {
@@ -229,7 +243,7 @@
     gap: var(--sdp-space-2);
     min-inline-size: var(--sdp-touch);
     min-block-size: var(--sdp-touch);
-    padding: var(--sdp-space-2) var(--sdp-space-5);
+    padding: var(--sdp-space-2) var(--sdp-space-6);
     border: 1px solid var(--sdp-vora-control);
     border-radius: var(--sdp-radi-boto);
     background-color: var(--sdp-fons-elevat);
@@ -237,6 +251,7 @@
     font: inherit;
     font-size: var(--sdp-text-small);
     font-weight: var(--sdp-pes-negreta);
+    text-align: center;
     cursor: pointer;
   }
 

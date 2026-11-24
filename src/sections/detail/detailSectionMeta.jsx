@@ -1,5 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssFitxaDetall from '../../css/diferit-fitxa-detall.css?inline';
 import DetallPoble from '../pobles/DetallPoble.jsx';
+
+const adoptaEstilsFitxaDetall = (node) => {
+  if (node) adoptaFullDiferit(node, 'fitxa-detall', cssFitxaDetall);
+};
 import { UserRound } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage, semblaHtml } from './detailHelpers.jsx';
@@ -838,30 +844,55 @@ function VistaCompletaArticleImportatWp({ item, t }) {
           Aquesta és la fitxa completa de previsualització Pedra Seca per a la publicació importada des de{' '}
           <code>socdepoble.net</code>. Pots verificar la classificació biblioteconòmica i territorial, consultar l’original o aprovar-la directament des d’ací.
         </p>
-        <dl>
-          <dt>Autoria i custòdia documental</dt>
-          <dd>
-            <strong>{item.author || 'Sóc de Poble'}</strong>
-            {item.estudi_tecnic ? ` · Estudi tècnic: ${item.estudi_tecnic}` : ''}
-          </dd>
-          <dt>Ruta canònica en Sóc de Poble</dt>
-          <dd><code>{item.ruta_canonica}</code></dd>
-          <dt>Data de publicació original</dt>
-          <dd>{String(item.created_at || '').slice(0, 10)}</dd>
-          <dt>Faceta Temàtica (PMEST)</dt>
-          <dd>{item.categoria_tematica || 'Comunitat i Territori'}</dd>
-          <dt>Faceta Geogràfica (Pobles etiquetats)</dt>
-          <dd>{Array.isArray(item.pobles_etiquetats) && item.pobles_etiquetats.length > 0 ? item.pobles_etiquetats.join(' · ') : item.town_name}</dd>
-          <dt>Etiquetes del Tesaurus SKOS</dt>
-          <dd>{Array.isArray(item.tags) && item.tags.length > 0 ? item.tags.join(' · ') : 'Sense etiquetes addicionals'}</dd>
-          <dt>Casos d’ús i estructura multimèdia</dt>
-          <dd>
-            {Array.isArray(item.casos_us_meta) && item.casos_us_meta.length > 0
-              ? item.casos_us_meta.map((c) => `${c.icona} ${c.titol}`).join(' · ')
-              : 'Text editorial estàndard'}{' '}
-            ({item.num_imatges || 0} imatges · {item.num_videos || 0} vídeos · {item.num_pdfs || 0} documents PDF)
-          </dd>
-        </dl>
+        <div className="sdp-taula-prosa">
+          <table>
+            <caption className="sdp-sr-only">Metadades documentals i territorials de la publicació importada</caption>
+            <thead>
+              <tr>
+                <th scope="col">Faceta documental</th>
+                <th scope="col">Dada verificada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Autoria i custòdia documental</th>
+                <td>
+                  <strong>{item.author || 'Sóc de Poble'}</strong>
+                  {item.estudi_tecnic ? ` · Estudi tècnic: ${item.estudi_tecnic}` : ''}
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Ruta canònica en Sóc de Poble</th>
+                <td><code>{item.ruta_canonica}</code></td>
+              </tr>
+              <tr>
+                <th scope="row">Data de publicació original</th>
+                <td>{String(item.created_at || '').slice(0, 10)}</td>
+              </tr>
+              <tr>
+                <th scope="row">Faceta Temàtica (PMEST)</th>
+                <td>{item.categoria_tematica || 'Comunitat i Territori'}</td>
+              </tr>
+              <tr>
+                <th scope="row">Faceta Geogràfica (Pobles etiquetats)</th>
+                <td>{Array.isArray(item.pobles_etiquetats) && item.pobles_etiquetats.length > 0 ? item.pobles_etiquetats.join(' · ') : item.town_name}</td>
+              </tr>
+              <tr>
+                <th scope="row">Etiquetes del Tesaurus SKOS</th>
+                <td>{Array.isArray(item.tags) && item.tags.length > 0 ? item.tags.join(' · ') : 'Sense etiquetes addicionals'}</td>
+              </tr>
+              <tr>
+                <th scope="row">Casos d’ús i estructura multimèdia</th>
+                <td>
+                  {Array.isArray(item.casos_us_meta) && item.casos_us_meta.length > 0
+                    ? item.casos_us_meta.map((c) => `${c.icona} ${c.titol}`).join(' · ')
+                    : 'Text editorial estàndard'}{' '}
+                  ({item.num_imatges || 0} imatges · {item.num_videos || 0} vídeos · {item.num_pdfs || 0} documents PDF)
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div className="sdp-admin-importacio__accions">
           <Boto varietat="primari" onClick={() => canviaEstat('aprovat')}>
             ✅ Aprovar aquesta pàgina
@@ -960,7 +991,7 @@ function FitxaDeLectura({ ambit, item, t }) {
   const estat = normalitzaEstat(item?.estat);
   const files = CAMPS[ambit].filter((campDef) => dades[campDef.id] !== undefined);
   return (
-    <dl>
+    <dl ref={adoptaEstilsFitxaDetall} className="sdp-fitxa-vertical">
       <dt>{t('ambit.camp.estat', 'Estat')}</dt>
       <dd><Insignia to={TO_PER_ESTAT[estat]}>{etiquetaDEstat(estat, t)}</Insignia></dd>
       {files.map((campDef) => (

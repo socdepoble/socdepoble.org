@@ -181,7 +181,7 @@ export function ConnexioDetall({ nota }) {
   }) : true);
 
   const tira = (
-    <div className="sdp-connexio-lector__tira" role="group" aria-label={t("section.notes.connexio.recopilacio", "Recopilació de la connexió")}>
+    <div className="sdp-connexio-lector__tira sdp-align-center sdp-fila--centrada" role="group" aria-label={t("section.notes.connexio.recopilacio", "Recopilació de la connexió")}>
       {ruta ? (
         <Boto varietat="secundari" icona={ExternalLink} onClick={() => navigate(ruta)}>{t("section.notes.connexio.obriOriginal", "Obri l’original")}</Boto>
       ) : null}

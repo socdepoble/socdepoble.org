@@ -573,6 +573,7 @@ header.page-title h1, header.page-title .h1 {
   letter-spacing: 0.02em;
   max-width: none;
   overflow-wrap: break-word;
+  text-wrap: balance;
 }
 header.page-title .lead {
   margin-bottom: 0;
@@ -858,6 +859,19 @@ nav.mobile-nav { display: none; }
 
 }
 
+/* R32.67 · Mòbil i columna <= 520px (32.5rem): reduïm el coixí horitzontal de
+   header.page-title de 32px a 16px (--sdp-space-4), igual que al detall del
+   Workspace, perquè títols de 14+ lletres («Reconeixements», «Esdeveniments»)
+   càpien sencers a 375px sense trencar l'última lletra en línia òrfena. */
+@container sdp-arrel (max-width: 32.5rem) {
+  header.page-title { padding-inline: var(--sdp-space-4); }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 32.5rem) {
+    header.page-title { padding-inline: var(--sdp-space-4); }
+  }
+}
+
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
 /* Cinc accions (sis fins al 261006, amb Telefonades): quatre objectius de
    48px i el control de 60px necessiten 252px abans dels coixins (amb sis,
@@ -913,11 +927,8 @@ nav.mobile-nav { display: none; }
     max-width: 100%;
     object-fit: contain;
   }
-  header.bar-black .right-icons { flex: none; }
-  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. Sense ell, la
-     cel·la del logotip (flex: 1 1 auto) s'emportava tot l'espai lliure i, a 320 i 360 px, el tocava (0 px); margin-left:
-     auto no hi feia res. A 320 px el logotip baixa a uns 112 × 29 px (sonda CDP r2b), l'amplària que queda. */
-  header.bar-black .right-icons { gap: 0; margin-inline-start: var(--sdp-space-2); }
+  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. */
+  header.bar-black .right-icons { flex: none; gap: 0; margin-inline-start: var(--sdp-space-2); }
   /* Q2 (pla 261004_0050) · la cel·la tàctil és el token, no un 44 a mà. */
   header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
@@ -973,11 +984,8 @@ nav.mobile-nav { display: none; }
     max-width: 100%;
     object-fit: contain;
   }
-  header.bar-black .right-icons { flex: none; }
-  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. Sense ell, la
-     cel·la del logotip (flex: 1 1 auto) s'emportava tot l'espai lliure i, a 320 i 360 px, el tocava (0 px); margin-left:
-     auto no hi feia res. A 320 px el logotip baixa a uns 112 × 29 px (sonda CDP r2b), l'amplària que queda. */
-  header.bar-black .right-icons { gap: 0; margin-inline-start: var(--sdp-space-2); }
+  /* v1.2.22 · IDEA-323.2 (Gauntlet R1, L3-02) · El respir de l'encàrrec entre el logotip i la IAIA: 8 px. */
+  header.bar-black .right-icons { flex: none; gap: 0; margin-inline-start: var(--sdp-space-2); }
   header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 var(--sdp-touch); width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); padding: var(--sdp-space-2); }
   header.bar-black .right-icons img.icon { width: var(--sdp-touch); height: var(--sdp-touch); min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
   /* v1.2.22 · IDEA-326 (ajust en calent del Mestre) · Les quatre icones, més grans en mòbil: 26 px (abans 22) i traç de

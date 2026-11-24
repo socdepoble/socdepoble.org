@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, HardDrive } from 'lucide-react';
 import {
-  Alerta, BarraResum, Boto, Camp, CampText, DialegConfirmacio, Interruptor, LiniesColleccio
+  Accions, Alerta, BarraResum, Boto, Camp, CampText, DialegConfirmacio, Interruptor, LiniesColleccio
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { esSlug, titolDe, useApp, useInterruptorsApp, useParametresConsulta } from '../../plataforma/index.js';
@@ -52,6 +52,8 @@ function Dispositiu({ idioma = 'ca' }) {
   const [errorPersistencia, setErrorPersistencia] = useState(false);
   const [demanant, setDemanant] = useState(false);
   const peticioPersistencia = useRef(false);
+  const [copiant, setCopiant] = useState(false);
+  const copiantRef = useRef(false);
   const [fitxerCopia, setFitxerCopia] = useState(null);
   const [ocupat, executa] = useUnaVegada();
   useEffect(() => {
@@ -80,6 +82,9 @@ function Dispositiu({ idioma = 'ca' }) {
     }
   };
   const copia = async () => {
+    if (copiantRef.current) return;
+    copiantRef.current = true;
+    setCopiant(true);
     try {
       const text = await accions.exportaCopia();
       const ara = new Date().toISOString();
@@ -87,6 +92,9 @@ function Dispositiu({ idioma = 'ca' }) {
       setAvis(ofert ? tx.copiaPreparada : tx.navegadorNoDeixaDesar);
     } catch {
       setAvis(tx.errorLlegirCopia);
+    } finally {
+      copiantRef.current = false;
+      setCopiant(false);
     }
   };
   const triaCopia = (event) => {
@@ -122,8 +130,10 @@ function Dispositiu({ idioma = 'ca' }) {
         total={persistent ? tx.enEsteNavegador : tx.nomesEnMemoria} textTotal={tx.llocEtiqueta} />
       <p>{tx.privacitatDispositiuText}</p>
       {estat ? <p>{estat.duradora ? tx.promesNoEsborrar : tx.encaraNoPromes}</p> : null}
-      <Boto icona={HardDrive} onClick={demana} carregant={demanant} disabled={demanant}>{tx.demanaNoEsborren}</Boto>
-      <Boto icona={Download} onClick={copia}>{tx.desaCopiaJson}</Boto>
+      <Accions>
+        <Boto icona={HardDrive} onClick={demana} carregant={demanant} disabled={demanant}>{tx.demanaNoEsborren}</Boto>
+        <Boto icona={Download} onClick={copia} carregant={copiant} disabled={copiant}>{tx.desaCopiaJson}</Boto>
+      </Accions>
       <Camp etiqueta={tx.restauraCopiaCamp} ajuda={tx.ajudaRestauraCopia}>
         <CampText tipus="file" accept=".json,application/json" onChange={triaCopia}
           disabled={!permis.potEscriure || mode === 'lectora' || ocupat} />
@@ -145,11 +155,12 @@ function Caixa({ idioma = 'ca' }) {
   const [nom, setNom] = useState(establiment.nom);
   const [iva, setIva] = useState(String(establiment.ivaPerDefecte));
   const [desat, setDesat] = useState(false);
+  const [ocupat, unaVegada] = useUnaVegada();
   const ivaNet = /^\d{1,3}$/.test(iva) && Number(iva) <= 100 ? Number(iva) : null;
-  const desa = async () => {
+  const desa = () => unaVegada(async () => {
     const r = await accions.desaEstabliment({ ...establiment, nom: nom.trim() || establiment.nom, ivaPerDefecte: ivaNet });
     setDesat(r.ok);
-  };
+  });
   return (
     <Columna titol={tx.caixaTitol}>
       <AvisOperacio />
@@ -161,7 +172,9 @@ function Caixa({ idioma = 'ca' }) {
         error={ivaNet === null ? tx.errorIvaRang : undefined}>
         <CampText inputMode="numeric" value={iva} maxLength={3} onChange={(event) => { setIva(event.target.value); setDesat(false); }} />
       </Camp>
-      <Boto varietat="primari" disabled={!permis.potEscriure || ivaNet === null} onClick={desa}>{tx.desa}</Boto>
+      <Accions>
+        <Boto varietat="primari" carregant={ocupat} disabled={ocupat || !permis.potEscriure || ivaNet === null} onClick={desa}>{tx.desa}</Boto>
+      </Accions>
     </Columna>
   );
 }
@@ -246,7 +259,9 @@ function CartaLlavor({ idioma = 'ca' }) {
       <BarraResum etiqueta={tx.cartaTitol} comptador={carta.productes.length} textComptador={(n) => textProductesBar(n, idioma)}
         total={nomDeLlavor(establiment.llavor, idioma)} textTotal={tx.llavorEtiqueta} />
       <p>{tx.cartaLlavorExplicacio}</p>
-      {llistaLlavors.map((l) => <Boto key={l.id} disabled={!permis.potEscriure} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
+      <Accions>
+        {llistaLlavors.map((l) => <Boto key={l.id} disabled={ocupat || !permis.potEscriure} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
+      </Accions>
       {resultat ? <ResumLlavor resultat={resultat} idioma={idioma} /> : null}
       <DialegConfirmacio obert={Boolean(triada)} destructiu carregant={ocupat}
         titol={triada ? tx.substituixCartaPer(triada.nom) : tx.substituixCarta}

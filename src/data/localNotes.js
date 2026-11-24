@@ -19,11 +19,14 @@ function openDB() {
   return new Promise((resolve, reject) => {
     if (!globalThis.indexedDB) { reject(new Error('El navegador no permet desar notes locals.')); return; }
     const request = indexedDB.open('SdpLocalNotes', 1);
+    let acabada = false;
     request.onupgradeneeded = () => request.result.createObjectStore(STORE);
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Tanca les altres pestanyes per actualitzar el bloc local.'));
+    request.onerror = () => { acabada = true; reject(request.error); };
+    request.onblocked = () => { acabada = true; reject(new Error('Tanca les altres pestanyes per actualitzar el bloc local.')); };
     request.onsuccess = () => {
       const db = request.result;
+      if (acabada) { db.close(); return; }
+      acabada = true;
       db.onversionchange = () => db.close();
       resolve(db);
     };
@@ -46,6 +49,17 @@ const persistence = {
         };
         tx.oncomplete = () => resolve(value);
         tx.onabort = tx.onerror = () => reject(failure || tx.error || new Error('Nota local no desada.'));
+      });
+    } finally { db.close(); }
+  },
+  async readMany(keys) {
+    const db = await openDB();
+    try {
+      return await new Promise((resolve,reject) => {
+        const tx = db.transaction(STORE,'readonly');
+        const requests = keys.map(key=>tx.objectStore(STORE).get(key));
+        tx.oncomplete = () => resolve(requests.map(request=>request.result === undefined ? {} : request.result));
+        tx.onabort = tx.onerror = () => reject(tx.error || new Error('Snapshot de notes no llegit.'));
       });
     } finally { db.close(); }
   },
@@ -97,9 +111,15 @@ const viva = (notes, id) => (Object.hasOwn(notes, id) && !notes[id]?._esborrada 
    el filtre de load(): un null rebutjava tota càrrega de les notes
    (loadNotesPage llig note.estat) i un primitiu eixia com una nota sense id.
    Només es deixa de llistar: l'entrada es queda al magatzem, intacta. */
-const esNota = (note) => note !== null && typeof note === 'object' && !note._esborrada;
+const esNota = (note) => note !== null && typeof note === 'object' && !Array.isArray(note)
+  && typeof note.id === 'string' && note.id.trim() !== '' && !note._esborrada;
 const noTrobada = () => Object.assign(new Error('Nota local no trobada.'), { status: 404 });
 const conflicte = () => Object.assign(new Error('Conflicte de concurrència de revisió.'), { status: 409 });
+/* Una carpeta malmesa no pot impedir llegir ni desar totes les notes.
+   Només s'aparta de la projecció: la fila original queda intacta al disc. */
+const carpetesLlegibles = (files) => Object.values(files || {}).flatMap(fila => {
+  try { return [carpetaDeFila(fila)]; } catch { return []; }
+});
 
 /** Storage is injectable for another offline host; the DTO matches the backend port.
  * El rellotge també: la purga de la paperera es prova sense esperar 30 dies. */
@@ -135,6 +155,15 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
     finally { lecturesEnVol.delete(clau); carreguesEnVol.delete(clau); }
   };
   return {
+    async llegixSnapshot(owner = getDefaultUserId(),config = {}) {
+      if (typeof storage.readMany !== 'function') throw Object.assign(new Error('El magatzem no oferix snapshot complet.'),{code:'copia-no-disponible'});
+      const key = scope(owner,config), [stored,folders] = await storage.readMany([key,key+':carpetes']);
+      const validMap = value => value && typeof value==='object' && !Array.isArray(value) && [Object.prototype,null].includes(Object.getPrototypeOf(value));
+      if (!validMap(stored) || !validMap(folders)) throw Object.assign(new TypeError('Magatzem no exportable sense pèrdua.'),{code:'copia-dades-malmeses'});
+      const merged = {...initial(config),...stored};
+      for (const [id,note] of Object.entries(merged)) if (!note || typeof note!=='object' || Array.isArray(note) || note.id!==id) throw Object.assign(new TypeError('Nota malmesa no exportable.'),{code:'copia-dades-malmeses'});
+      return structuredClone({notes:Object.values(merged),noteFolders:[...NOTE_FOLDERS_SEED,...Object.values(folders)]});
+    },
     async load(owner = getDefaultUserId(), config = {}) {
       const clau = scope(owner, config);
       return comparteix(carreguesEnVol, clau, async () => {
@@ -145,8 +174,8 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
         if (malmeses && registraIncident('dades', 'notes-locals', 'entrada-apartada') === 1) {
           console.warn(`[localNotes] ${malmeses} entrada/es del magatzem local no són notes: es deixen de banda, sense tocar-les.`);
         }
-        const extra = Object.values((await llig(`${clau}:carpetes`)) || {});
-        return { notes: bones, noteFolders: [...NOTE_FOLDERS_SEED, ...extra.map(carpetaDeFila)] };
+        const extra = carpetesLlegibles(await llig(`${clau}:carpetes`));
+        return { notes: bones, noteFolders: [...NOTE_FOLDERS_SEED, ...extra] };
       });
     },
     async createFolder(input, config = {}) {
@@ -155,7 +184,7 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
       let carpeta;
       await escriu(clau, stored => {
         const actual = stored || {};
-        carpeta = Object.values(actual).find(row => typeof row.nom === 'string' && row.nom.toLowerCase() === nom.toLowerCase());
+        carpeta = carpetesLlegibles(actual).find(row => row.nom.toLowerCase() === nom.toLowerCase());
         if (carpeta) return actual;
         carpeta = { id: `f-${crypto.randomUUID()}`, nom, parentId: null };
         return { ...actual, [carpeta.id]: carpeta };

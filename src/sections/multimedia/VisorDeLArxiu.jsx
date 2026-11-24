@@ -153,7 +153,7 @@ function EnllacCopiable({ url, textos }) {
   return (
     <Pila gap={2}>
       <span ref={refUrl} translate="no">{url}</span>
-      <Fila gap={2}>
+      <Fila gap={2} justify="center">
         <Boto varietat="secundari" icona={Copy} onClick={copia}>{textos.copia}</Boto>
         <span role="status">{avis.url === url ? avis.text : ''}</span>
       </Fila>

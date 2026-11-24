@@ -1,0 +1,23 @@
+{
+  "session": "821677a8-3e9d-405f-925b-08849c2bae16",
+  "operationId": "frontissa-aprova",
+  "planHash": "0828f365f26ad5a5da792a734c13a96d74ea93728802a804bc7dcaafdbf7fb8b",
+  "beforeSeal": "55ab959d8928048c9fe34d8a02caf27f301dcd9da722483126dd11f5b9d19a23",
+  "kind": "frontissa-agent",
+  "action": "aprova",
+  "key": "versions",
+  "actor": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
+  "reason": "v1.2.24 build 29: empremta de «versions» revisada al candidat 2edd686c (R32.75/R32.79/R32.85b/R32.86 i bump), aprovada per delegació explícita del Mestre",
+  "acceptaRetall": false,
+  "id": "53eab774-a775-487e-8ee9-0476f26284c5",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "680f85af37649a8b7fbbb65c529b0e939f171c5cdfb97ab8e4ea7418ff895494",
+      "after": "602036e15758cd3cfab33c954abe2e17e5775b6b53245999a4064ef7650463b8"
+    }
+  ],
+  "claim": "821677a8-3e9d-405f-925b-08849c2bae16:governance-write",
+  "afterSeal": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
+  "state": "accepted"
+}

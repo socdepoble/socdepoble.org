@@ -550,7 +550,7 @@ export function creaAvisosPushNatius({ nucli = nucliPerDefecte(), desa = null, t
           // És només un senyal: verificar el token vigent dins de la cua SDK.
           testimoni = await testimoniDeTask(cicle, topallMs);
         }
-        if (!viu || gen !== generacioLocal || (android && (baixaPont || !registrat)) || typeof testimoni !== 'string' || !testimoni) return;
+        if (!viu || gen !== generacioLocal || baixaPont || !registrat || typeof testimoni !== 'string' || !testimoni) return;
         deuBaixa();
         try { Promise.resolve(fn({ testimoni, plataforma: plataformaDe(nucli) })).catch(() => {}); } catch { /* el consumidor no tomba el pont */ }
       }));

@@ -244,8 +244,10 @@ describe('el detall mentre la carpeta d’entrada espera la seua font', () => {
     munta('/notes?carpeta=f-mur');
     const deSempre = screen.getByRole('alert');
     expect(deSempre.textContent).toBe('No s’han pogut carregar les dades. Reintentar');
-    /* El node de text de l'espai, entre el missatge i el botó. */
-    expect([...deSempre.childNodes].map((n) => n.nodeName)).toEqual(['#text', '#text', 'BUTTON']);
+    /* El node de text de l'espai, entre el missatge i el botó.
+       v1.2.24 · costura R32.75 · Llei 9 (R32.67): el missatge va en un <p> i el
+       botó dins de .sdp-accions, com a NotesDetail; l'espai continua entre tots dos. */
+    expect([...deSempre.childNodes].map((n) => n.nodeName)).toEqual(['P', '#text', 'DIV']);
     expect(within(deSempre).getByRole('button').textContent).toBe('Reintentar');
   });
 });

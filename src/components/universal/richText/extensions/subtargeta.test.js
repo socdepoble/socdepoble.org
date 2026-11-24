@@ -14,7 +14,7 @@ import { executa, llegeixEstat } from '../tiptapToolbarAdapter.js';
 import { NIVELL_TITOL_SUBTARGETA, NOM_SUBTARGETA, ORDRE_SUBTARGETA, TEXTOS_SUBTARGETA, nivellDeContext, textosDeLOrdre, textosDeMostra } from './subtargeta.js';
 import CA from '../../../../config/idiomes/ca.js';
 
-const PRIMITIVA = '<div class="sdp-subtargeta" data-sdp-subtargeta=""><h4>1 · Arquitectura</h4><p>160 h · 8.000 €</p><h5>Fet hui</h5><ul><li><p>Un port neutral.</p></li></ul><p>Un <a target="_blank" rel="noopener noreferrer nofollow" href="/pobles">enllaç</a>.</p></div>';
+const PRIMITIVA = '<div class="sdp-subtargeta" data-sdp-subtargeta=""><h4>1 · Arquitectura</h4><p>160 h · 8.000 €</p><h5>Fet hui</h5><ul><li><p>Un port neutral.</p></li></ul><p>Un <a rel="noopener noreferrer nofollow" href="/pobles">enllaç</a>.</p></div>';
 
 let editor = null;
 function creaEditor(content, opcions = {}) {

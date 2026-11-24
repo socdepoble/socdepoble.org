@@ -118,10 +118,25 @@ describe('triaVeu', () => {
     { lang: 'en-US', name: 'd' },
     { lang: 'ca-AD', name: 'e' },
   ];
-  test('prefereix ca-ES-valencia, després ca-ES, després ca*', () => {
+  test('prefereix ca-ES-valencia, després veus ca-ES amb identitat valenciana (Pau/Valencià), després ca-ES i ca*', () => {
     expect(triaVeu(veus, 'ca').name).toBe('c');
     expect(triaVeu(veus.filter((v) => v.name !== 'c'), 'ca').name).toBe('b');
     expect(triaVeu(veus.filter((v) => v.name === 'e'), 'ca').name).toBe('e');
+    const macVoices = [
+      { lang: 'ca-ES', name: 'Jordi' },
+      { lang: 'ca-ES', name: 'Pau (Valencià)' },
+    ];
+    expect(triaVeu(macVoices, 'ca').name).toBe('Pau (Valencià)');
+    expect(triaVeu(macVoices, 'ca', 'elia_central').name).toBe('Jordi');
+  });
+  test('sense veu coincident en ca usa per defecte ca-ES-valencia (i ca-ES només per a veus orientals)', async () => {
+    const { parlat } = instalaSintesi([{ lang: 'en-US', name: 'Samantha' }]);
+    await parla('Bon dia a tot el poble.', { idioma: 'ca' });
+    expect(parlat[0].lang).toBe('ca-ES-valencia');
+
+    desaVeuPreferida('elia_central');
+    await parla('Bon dia.', { idioma: 'ca' });
+    expect(parlat[1].lang).toBe('ca-ES');
   });
   test('accepta el guionet baix i les altres llengües', () => {
     expect(triaVeu(veus, 'es').name).toBe('a');

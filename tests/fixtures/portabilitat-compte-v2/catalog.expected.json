@@ -1,0 +1,5 @@
+{
+  "source":"independent synthetic authored values; not a reconstructed human CSV",
+  "publicats":[["mer-infusio-de-prova","Infusió de prova","begudes","Marca de prova","Got",250,"ml",125],["mer-arros-de-prova","Arròs de prova","cereals-pasta","Marca de prova","Paquet",1,"kg",250]],
+  "complets":[{"id":"mer-infusio-de-prova","preuCentims":125,"preuUnitariCentims":500,"quantitat":0.25,"unitat":"l"},{"id":"mer-arros-de-prova","preuCentims":250,"preuUnitariCentims":250,"quantitat":1000,"unitat":"g"}]
+}

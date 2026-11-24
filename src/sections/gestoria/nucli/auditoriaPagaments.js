@@ -35,7 +35,7 @@
 import { textDelsConceptes } from './c43.js';
 import { citaNumero, concilia } from './concilia.js';
 import { comparaDates, diesEntre, dinsDeRang, esDataValida, formatData, rangTrimestre, trimestreDe } from './dates.js';
-import { formatImport } from './diners.js';
+import { formatImport, proporcioCentims, sumaCentims } from './diners.js';
 import { TIPUS_IRPF_HABITUALS, clauDuplicat, normalitzaNom, totals } from './model.js';
 
 /* Punts de marge entre la diferència d'una factura i un tipus habitual de retenció (el mateix que l'IVA de model.js). */
@@ -56,7 +56,15 @@ const MONEDA = 'EUR';
 /* La moneda d'una factura sense camp `moneda` és l'euro (model.js). */
 const enEuros = (f) => f.moneda == null || f.moneda === MONEDA;
 const importEsperat = (f) => (Number.isSafeInteger(f.total) ? (f.tipus === 'ingres' ? f.total : -f.total) : null);
-const suma = (llista) => llista.reduce((total, x) => total + x, 0);
+// Una cancel·lació intermèdia pot excedir Number encara que el total final hi càpia.
+const suma = (llista) => {
+  if (!llista.every(Number.isSafeInteger)) return null;
+  try { return sumaCentims(llista); }
+  catch (error) { if (error.codi === 'IMPORT_FORA_DE_RANG') return null; throw error; }
+};
+const resta = (a, b) => a === null || b === null ? null : suma([a, -b]);
+const negatiu = valor => valor === null ? null : -valor || 0;
+const importText = valor => valor === null ? 'import desconegut' : formatImport(valor);
 const plural = (n, una, moltes) => (n === 1 ? una : `${n} ${moltes}`);
 const nomFactura = (f) => (f.num ? `«${f.num}»` : 'sense número');
 const quin = (m) => `del ${formatData(m.dataOperacio)} (${formatImport(m.centims)})`;
@@ -134,7 +142,12 @@ function pagamentsDuplicats(moviments, parelles, deMoviment) {
    l'import llegit no se sumen, i ho diu `incomplet`. */
 function totalsDe(factures) {
   const sumables = factures.filter(enEuros);
-  const t = totals(sumables);
+  let t;
+  try { t = totals(sumables); }
+  catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    return { factures: factures.length, base: null, iva: null, total: null, incomplet: true, foraDeRang: true };
+  }
   return {
     factures: factures.length,
     base: t.subtotal,
@@ -152,7 +165,8 @@ function totalsDe(factures) {
 function retencioDe(f) {
   if (Number.isSafeInteger(f.retencio)) return { centims: (f.subtotal < 0 ? -1 : 1) * Math.abs(f.retencio), deduida: false };
   if (!['subtotal', 'iva', 'total'].every((camp) => Number.isSafeInteger(f[camp]))) return null;
-  const diferencia = f.subtotal + f.iva - f.total;
+  const diferencia = suma([f.subtotal, f.iva, -f.total]);
+  if (diferencia === null) return null;
   if (Math.abs(diferencia) <= 1) return { centims: 0, deduida: false };
   if (f.subtotal === 0) return null;
   const percentatge = (diferencia / f.subtotal) * 100;
@@ -163,8 +177,10 @@ function retencioDe(f) {
 function retencionsDe(emeses) {
   const lectures = emeses.filter(enEuros).map(retencioDe);
   const desconegudes = lectures.filter((r) => r === null).length;
+  const total = desconegudes > 0 ? null : suma(lectures.map((r) => r.centims));
   return {
-    total: desconegudes > 0 ? null : suma(lectures.map((r) => r.centims)),
+    total,
+    ...(total === null && !desconegudes ? { foraDeRang: true } : {}),
     deduides: lectures.filter((r) => r?.deduida).length,
     desconegudes
   };
@@ -197,8 +213,11 @@ function partDelMoviment(parella, f) {
   if (parella.factures.length === 1) return m.centims;
   const esperats = parella.factures.map((x) => (enEuros(x) ? importEsperat(x) : null));
   const total = esperats.includes(null) ? 0 : suma(esperats);
+  if (total === null) return null;
   if (total === 0) return 0;
-  return Math.round((m.centims * esperats[parella.factures.indexOf(f)]) / total);
+  try {
+    return proporcioCentims(total < 0 ? -m.centims : m.centims, esperats[parella.factures.indexOf(f)], Math.abs(total));
+  } catch (error) { if (error.codi === 'IMPORT_FORA_DE_RANG') return null; throw error; }
 }
 
 /**
@@ -300,18 +319,23 @@ export function auditaPagaments({ fulls = [], moviments = [] } = {}) {
       despeses: totalsRebudes,
       ivaRepercutit: totalsEmeses.iva,
       ivaSuportat: totalsRebudes.iva,
-      diferenciaIva: totalsEmeses.iva - totalsRebudes.iva,
+      diferenciaIva: resta(totalsEmeses.iva, totalsRebudes.iva),
       retencions: retencions.total,
       retencionsDeduides: retencions.deduides,
       retencionsDesconegudes: retencions.desconegudes,
-      resultat: totalsEmeses.base - totalsRebudes.base,
+      resultat: resta(totalsEmeses.base, totalsRebudes.base),
       incomplet: totalsEmeses.incomplet || totalsRebudes.incomplet,
       cobrat: moguts(emeses),
       pendentDeCobrar: pendent(emesesSenseCobrament),
-      pagat: -moguts(rebudes) || 0,
+      pagat: negatiu(moguts(rebudes)),
       pendentDePagar: pendent(rebudesSensePagament),
       movimentsDelBanc: delTrimestre.length
     };
+    const foraDeRang = ['diferenciaIva', 'resultat', 'cobrat', 'pendentDeCobrar', 'pagat', 'pendentDePagar'].filter(camp => resum[camp] === null);
+    if (retencions.foraDeRang) foraDeRang.push('retencions');
+    if (totalsEmeses.foraDeRang || totalsRebudes.foraDeRang || foraDeRang.length) {
+      resum.incomplet = true; resum.importsForaDeRang = foraDeRang;
+    }
 
     const on = { any: full.any, t: full.t };
     for (const d of duplicatsDelTrimestre) {
@@ -338,11 +362,11 @@ export function auditaPagaments({ fulls = [], moviments = [] } = {}) {
     }
     if (despesesSenseFactura.length) {
       incidencia('DESPESA_SENSE_FACTURA', 'mitjana',
-        `${plural(despesesSenseFactura.length, 'Una eixida del banc no té', 'eixides del banc no tenen')} factura al full del ${etiqueta} (${formatImport(-suma(despesesSenseFactura.map((m) => m.centims)))}): impostos, quotes i comissions no en porten; la resta, cal buscar-la.`, on);
+        `${plural(despesesSenseFactura.length, 'Una eixida del banc no té', 'eixides del banc no tenen')} factura al full del ${etiqueta} (${importText(negatiu(suma(despesesSenseFactura.map((m) => m.centims))))}): impostos, quotes i comissions no en porten; la resta, cal buscar-la.`, on);
     }
     if (ingressosSenseFactura.length) {
       incidencia('INGRES_SENSE_FACTURA', 'mitjana',
-        `${plural(ingressosSenseFactura.length, 'Una entrada del banc no té', 'entrades del banc no tenen')} factura emesa al full del ${etiqueta} (${formatImport(suma(ingressosSenseFactura.map((m) => m.centims)))}).`, on);
+        `${plural(ingressosSenseFactura.length, 'Una entrada del banc no té', 'entrades del banc no tenen')} factura emesa al full del ${etiqueta} (${importText(suma(ingressosSenseFactura.map((m) => m.centims)))}).`, on);
     }
     if (rebudesSensePagament.length) {
       incidencia('REBUDA_SENSE_PAGAMENT', 'baixa',
@@ -396,25 +420,28 @@ export function informePagaments(auditoria, { ambBanc = true } = {}) {
     linies.push(
       '',
       `── ${q.t}T de ${q.any} (${formatData(q.rang.inici)} - ${formatData(q.rang.fi)})${q.deduit ? ' · trimestre deduït de les dates de les factures' : ''} ──`,
-      `Ingressos: ${formatImport(r.ingressos.base)} de base, ${formatImport(r.ivaRepercutit)} d’IVA repercutit i ${formatImport(r.ingressos.total)} de total (${plural(r.ingressos.factures, 'una factura', 'factures')}).`,
-      `Despeses: ${formatImport(r.despeses.base)} de base, ${formatImport(r.ivaSuportat)} d’IVA suportat i ${formatImport(r.despeses.total)} de total (${plural(r.despeses.factures, 'una factura', 'factures')}).`,
-      `IVA repercutit menys suportat: ${formatImport(r.diferenciaIva)} (quin IVA és deduïble ho diu la gestoria).`,
+      `Ingressos: ${importText(r.ingressos.base)} de base, ${importText(r.ivaRepercutit)} d’IVA repercutit i ${importText(r.ingressos.total)} de total (${plural(r.ingressos.factures, 'una factura', 'factures')}).`,
+      `Despeses: ${importText(r.despeses.base)} de base, ${importText(r.ivaSuportat)} d’IVA suportat i ${importText(r.despeses.total)} de total (${plural(r.despeses.factures, 'una factura', 'factures')}).`,
+      `IVA repercutit menys suportat: ${importText(r.diferenciaIva)} (quin IVA és deduïble ho diu la gestoria).`,
       /* Mai un «0,00 €» que no és cert: si alguna factura no quadra i no se sap per què, es diu que no se sap. */
-      r.retencions === null
+      r.importsForaDeRang?.includes('retencions')
+        ? 'Retencions d’IRPF: import desconegut perquè el total queda fora del rang de cèntims segurs.'
+        : r.retencions === null
         ? `Retencions d’IRPF: no es poden saber (${plural(r.retencionsDesconegudes, 'una factura emesa no quadra', 'factures emeses no quadren')} i la diferència no és cap retenció habitual, o li falta algun import). Mira-les al full.`
-        : `Retencions d’IRPF a les factures emeses: ${formatImport(r.retencions)}${r.retencionsDeduides > 0
+        : `Retencions d’IRPF a les factures emeses: ${importText(r.retencions)}${r.retencionsDeduides > 0
           ? ` (deduïdes de base + IVA − total en ${plural(r.retencionsDeduides, 'una factura', 'factures')}: el full no té columna de retenció)` : ''}.`,
-      `Resultat (base dels ingressos menys base de les despeses): ${formatImport(r.resultat)}.`
+      `Resultat (base dels ingressos menys base de les despeses): ${importText(r.resultat)}.`
     );
-    if (r.incomplet) linies.push('Atenció: alguna factura no és en euros o no té l’import llegit, i no s’ha sumat.');
+    if (r.importsForaDeRang) linies.push('Atenció: algun total queda fora del rang de cèntims segurs i es mostra com a import desconegut; revisa els imports.');
+    if (r.incomplet && !r.importsForaDeRang) linies.push('Atenció: alguna factura no és en euros o no té l’import llegit, i no s’ha sumat.');
     if (!ambBanc) continue;
     linies.push(
-      `Banc: ${plural(r.movimentsDelBanc, 'un moviment', 'moviments')} al trimestre. Cobrat ${formatImport(r.cobrat)} i pendent de cobrar ${formatImport(r.pendentDeCobrar)}; pagat ${formatImport(r.pagat)} i sense pagament al banc ${formatImport(r.pendentDePagar)}.`,
+      `Banc: ${plural(r.movimentsDelBanc, 'un moviment', 'moviments')} al trimestre. Cobrat ${importText(r.cobrat)} i pendent de cobrar ${importText(r.pendentDeCobrar)}; pagat ${importText(r.pagat)} i sense pagament al banc ${importText(r.pendentDePagar)}.`,
       ...bloc('Factures emeses sense cobrament', q.emesesSenseCobrament.map(liniaFactura)),
       ...bloc('Eixides del banc sense factura', q.despesesSenseFactura.map(liniaMoviment)),
       ...bloc('Entrades del banc sense factura', q.ingressosSenseFactura.map(liniaMoviment)),
       ...bloc('Possibles pagaments duplicats', q.duplicats.map((d) => `${d.moviments.map(liniaMoviment).join('  ↔  ')}${d.factures.length ? ` · factura ${nomFactura(d.factures[0])}` : ''}`)),
-      ...bloc('Imports que no quadren', q.importsQueNoQuadren.map((p) => `${liniaMoviment(p.moviments[0])} contra ${p.factures.map(nomFactura).join(', ')}: ${formatImport(p.diferencia)} de diferència`)),
+      ...bloc('Imports que no quadren', q.importsQueNoQuadren.map((p) => `${liniaMoviment(p.moviments[0])} contra ${p.factures.map(nomFactura).join(', ')}: ${importText(p.diferencia)} de diferència`)),
       ...bloc('Factures amb la data fora del trimestre', q.foraDeTrimestre.map(liniaFactura)),
       ...bloc('Factures rebudes sense pagament al banc', q.rebudesSensePagament.map(liniaFactura)),
       ...bloc('Factures del full cobrades o pagades en un altre trimestre', q.pagamentsEnAltreTrimestre.map((p) => `${p.factures.map(nomFactura).join(', ')} · moviment ${quin(p.moviments[0])}`))

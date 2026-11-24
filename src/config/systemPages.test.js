@@ -253,6 +253,43 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     ]);
   });
 
+  describe('IDEA-340 · Reconeixements i fonts d’inspiració', () => {
+    test('viu a /page/reconeixements, sense acció gran i visible tant a la web com a l’app nativa', () => {
+      expect(SYSTEM_PAGES.find((pagina) => pagina.key === 'reconeixements')).toEqual({
+        key: 'reconeixements',
+        isAvis: false,
+        href: '/page/reconeixements'
+      });
+      expect(accioDeLaPagina('reconeixements')).toBeNull();
+      expect(accioDeLaTargeta('reconeixements')).toBeNull();
+      expect(accioAlFinal('reconeixements')).toBe(false);
+      expect(esPaginaVisible('reconeixements')).toBe(true);
+      expect(esPaginaVisible('reconeixements', { nativa: true })).toBe(true);
+      expect(resolvePageSlugPath('reconeixements')).toBeNull();
+    });
+
+    test('el copy porta el títol canònic, la vinyeta Bruguera 1600x1600 i les etiquetes canòniques', () => {
+      const copy = PAGE_COPY.reconeixements;
+      expect(copy).toMatchObject({
+        date: '2026-11-24T00:00:00+01:00',
+        title: "Reconeixements i fonts d'inspiració",
+        subtitle: "Divulgadors, laboratoris d'investigació, codi obert i mestres del camí",
+        image: '/assets/nano_cards/reconeixements_nano_card.webp',
+        imageWidth: 1600,
+        imageHeight: 1600,
+        imageFetchPriority: 'high'
+      });
+      expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
+      expect(copy.imageAlt).toContain('GRÀCIES MESTRES');
+      expect(copy.labels).toEqual([
+        { text: 'Sistema', className: 'sdp-badge-system' },
+        { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
+        { text: 'Projecte Sóc de Poble', className: 'sdp-badge-tag' },
+        { text: 'Documentació', className: 'sdp-badge-tag' }
+      ]);
+    });
+  });
+
   /* Cap botiga mòbil ni cap APK no és oberta a tothom (actes 261024_0345 i
      261026_1630): la pàgina no hi porta cap enllaç, ni el de proves internes
      de Google Play. 01-11-2026 (ordre del Mestre 261101_0311, T1) · L'única

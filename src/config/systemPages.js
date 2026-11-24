@@ -119,8 +119,10 @@ export const SYSTEM_PAGES = Object.freeze([
   { key: 'legal', isAvis: false, href: '/legal' },
   { key: 'xat', isAvis: false, href: '/page/xat', accio: ANAR_AL_XAT },
   { key: 'drets-autor', isAvis: false, href: '/page/drets-autor' },
+  { key: 'reconeixements', isAvis: false, href: '/page/reconeixements' },
   { key: 'descarregues', isAvis: false, href: '/page/descarregues', nomesWeb: true },
   { key: 'la-iaia-sabuda', isAvis: false, href: '/page/la-iaia-sabuda' },
+  { key: 'cada-cosa-al-seu-lloc', isAvis: false, href: '/cada-cosa-al-seu-lloc' },
   { key: 'fediversity', isAvis: false, href: '/page/fediversity' }
 ].map((page) => Object.freeze(page)));
 

@@ -192,10 +192,12 @@ function AvisDeLAgenda({ agenda, idioma = 'ca' }) {
   if (agenda.fase !== 'error') return null;
   const tx = textosCalendariExtra(idioma);
   return (
-    <p ref={adoptaEstilsDiferits} role="status">
-      {tx.avisAgenda}{' '}
-      <Boto varietat="fantasma" onClick={agenda.reintenta}>{tx.tornaAProvar}</Boto>
-    </p>
+    <div ref={adoptaEstilsDiferits} role="status" className="sdp-paragraf-centrat">
+      {tx.avisAgenda}
+      <span className="sdp-accions">
+        <Boto varietat="secundari" onClick={agenda.reintenta}>{tx.tornaAProvar}</Boto>
+      </span>
+    </div>
   );
 }
 

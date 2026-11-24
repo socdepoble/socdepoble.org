@@ -463,6 +463,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     joNom = null,
     joAvatar = null,
     joEsJavi = false,
+    orgIdsPermeses = CAP,
     /* R21 (carril f2) · Si el backend obri el xat propi «<Nom> (Tu)»
        ('disponible' | 'per-confirmar' | 'no' | null). Un context d'abans no el
        porta: 'no', l'avís honest d'abans de R21.4 i cap promesa. */
@@ -494,6 +495,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     alternaDestacat = null,
     alternaFixat = null,
     eliminaPerAMi = null,
+    eliminaPerATothom = null,
     responEnPrivat = null,
     reenviaAConverses = null
   } = useXat();
@@ -1227,6 +1229,37 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     if (opcions?.abast !== 'mi' || typeof eliminaPerAMi !== 'function' || !filActiuId) return;
     Promise.resolve(eliminaPerAMi(ambFilDelMissatge(msg, filActiuId))).catch(notificaErrorAccio);
   }, [eliminaPerAMi, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  const handleEliminaPerATothom = useCallback(async (missatgesLot) => {
+    if (typeof eliminaPerATothom !== 'function' || !filActiuId) return;
+    const filOrigenId = String(filActiuId);
+    const llista = (Array.isArray(missatgesLot) ? missatgesLot : [missatgesLot])
+      .filter(Boolean)
+      .map((m) => ambFilDelMissatge(m, filOrigenId));
+    if (!llista.length) return;
+    const ambitClic = ambitEstable;
+    const vigent = () => mounted.current && ambitActualRef.current === ambitClic;
+    const errors = [];
+    for (const m of llista) {
+      try {
+        await eliminaPerATothom(m);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length > 0) {
+      const primer = errors[0];
+      if (vigent()) {
+        if (primer?.name !== 'AbortError') {
+          showToast(
+            textDErrorDelXat(primer, t, primer?.message || textAccioMissatgeXat(locale, 'eliminaPerATothomError')),
+            'error'
+          );
+        }
+      }
+      throw primer;
+    }
+  }, [eliminaPerATothom, filActiuId, ambFilDelMissatge, ambitEstable, showToast, t, locale]);
 
   const handleObriDirecteAmb = useCallback(async (msg, opcions = {}) => {
     if (!msg || !filActiuId) return;
@@ -1966,12 +1999,13 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
       />
     );
   } else if (comunitatId) {
+    const etiquetaTornaConverses = t('section.xat.tornaConverses', 'Torna a les converses');
     capcalera = (
       <AppGridColumn
         esDark={true}
         esquerra={(
           <>
-            <button ref={tornaFitxaRef} type="button" className="sdp-xat-icona" onClick={tornaDeLaComunitat} aria-label={t('section.xat.tornaConverses', 'Torna a les converses')}>
+            <button ref={tornaFitxaRef} type="button" className="sdp-xat-icona" onClick={tornaDeLaComunitat} aria-label={etiquetaTornaConverses} title={etiquetaTornaConverses}>
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
             </button>
             <BotoTitolSeccioXat titol={t('section.xat.comunitats.titol', 'Comunitats')} icona={Users} />
@@ -1980,6 +2014,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
       />
     );
   } else if (safataArxivatsOberta) {
+    const etiquetaTornaConverses = t('section.xat.tornaConverses', 'Torna a les converses');
     capcalera = (
       <AppGridColumn
         esDark={true}
@@ -1990,7 +2025,8 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
               type="button"
               className="sdp-xat-icona"
               onClick={() => setSafataArxivatsOberta(false)}
-              aria-label={t('section.xat.tornaConverses', 'Torna a les converses')}
+              aria-label={etiquetaTornaConverses}
+              title={etiquetaTornaConverses}
             >
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
             </button>
@@ -2096,6 +2132,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
                 type="button"
                 className="sdp-xat-fitxa"
                 aria-label={t('section.xat.cerca.lleva', 'Lleva el filtre {nom}').replace('{nom}', nomFiltre)}
+                title={t('section.xat.cerca.lleva', 'Lleva el filtre {nom}').replace('{nom}', nomFiltre)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => { setFiltreCerca(null); cercaRef.current?.focus(); }}
               >
@@ -2125,6 +2162,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
               type="button"
               className="sdp-xat-icona"
               aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
+              title={t('section.xat.tancaCerca', 'Tanca la cerca')}
               onMouseDown={(e) => e.preventDefault()}
               onClick={buidaCerca}
             >
@@ -2197,6 +2235,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
           onSendMedia={modeDades === 'remote' && !senseSessio && !esXatDeLaIAIA(activeThread) ? sendChatMedia : null}
           configAdjunts={externalConfig}
           usuariAdjunts={joId}
+          orgIdsPermeses={orgIdsPermeses}
           onBack={handleBackToList}
           onOblidaSessioIAIA={(activeThread.sessioLocalIAIA || activeThread.id === ID_FIL_LOCAL_IAIA) && oblidaSessioIAIA ? async (id) => {
             if (await oblidaSessioIAIA(id) && activeThread.sessioLocalIAIA) navigate(`/xat${consulta()}`, { replace: true });
@@ -2215,6 +2254,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
           onAlternaDestacat={potAccionsMissatge && typeof alternaDestacat === 'function' ? handleAlternaDestacat : null}
           onAlternaFixat={potAccionsMissatge && typeof alternaFixat === 'function' ? handleAlternaFixat : null}
           onEliminaMissatge={potAccionsMissatge && typeof eliminaPerAMi === 'function' ? handleEliminaMissatge : null}
+          onEliminaPerATothom={potAccionsMissatge && typeof eliminaPerATothom === 'function' ? handleEliminaPerATothom : null}
           onObriDirecteAmb={potAccionsMissatge && typeof responEnPrivat === 'function' ? handleObriDirecteAmb : null}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}

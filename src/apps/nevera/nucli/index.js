@@ -3,6 +3,8 @@
  * La vista, el magatzem i l'importador només importen d'ací.
  */
 export { ARTICLES_BASE, ARTICLES_PRODUCTES, CATEGORIES, FONT, ID_PROPIS } from './cataleg.js';
+/* Corpus 6 · Projecció comercial separada: cap columna nova al catàleg publicat. */
+export { PRODUCTES_AMB_ALERGENS, producteBotigaPerId, matriuBotigaPerId } from './alergensProductes.js';
 export {
   ESQUEMA_ESTAT, ESTATS_CASA, IDS_RESERVATS, LIMITS, LLISTA_INICIAL,
   afig, afigPerNom, afigPropostes, amagaSeccio, articlePerId, articlePerNom, articlesDe, categoriesDeLlista, clauDeNom,

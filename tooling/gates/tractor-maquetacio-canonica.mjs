@@ -5,13 +5,14 @@
  * també la prova DOM del carril de vistes. No es pretén executar React ací.
  */
 import fs from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-let parseFragment, parse, postcss, javascriptParser;
+let parseFragment, parse, postcss, javascriptParser, jsxParser;
 function htmlFragment(text) {
   parseFragment ||= require('parse5').parseFragment;
   return parseFragment(text);
@@ -24,6 +25,15 @@ function parseProgram(text, file) {
       javascriptParser ||= require('acorn').Parser;
       return javascriptParser.parse(text, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
     } catch { /* Errors, JSX en JS o Acorn absent conserven el parser canònic. */ }
+  }
+  // Acorn JSX conserva ESTree i evita construir metadades de Babel quan no
+  // calen. Les entitats JSX (incloses astrals), TS i extensions van al parser
+  // canònic; dependències opcionals absents també mantenen la mateixa reserva.
+  if (!/\.tsx?$/.test(file) && !/&(?:#(?:x[\da-f]+|\d+)|[a-z][\da-z]+);/i.test(text)) {
+    try {
+      jsxParser ||= require('acorn').Parser.extend(require('acorn-jsx')());
+      return jsxParser.parse(text, { ecmaVersion: 'latest', sourceType: 'module', allowHashBang: true });
+    } catch { /* Babel manté la cobertura de sintaxi i paquets opcionals. */ }
   }
   parse ||= require('@babel/parser').parse;
   return parse(text, { sourceType: 'unambiguous', attachComment: false, plugins: ['jsx', 'estree', ...(/\.tsx?$/.test(file) ? ['typescript'] : [])] }).program;
@@ -185,7 +195,7 @@ function demandFrontier(lexical) {
 }
 
 /** API pura sobre una instantània { 'src/...jsx': text }; útil també en CI. */
-export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, lexicalFiles = null, roots = null, mode = 'all', reuse = null, knownWrappers = null, documentFiles = null } = {}) {
+export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, lexicalFiles = null, roots = null, mode = 'all', reuse = null, knownWrappers = null, documentFiles = null, fullAst = false } = {}) {
   const started = performance.now();
   const issues = [], exemptions = [], modules = reuse ? (reuse.modules ||= new Map()) : new Map(), emitted = new Set();
   const literalMemo = reuse ? (reuse.literalMemo ||= new WeakMap()) : new WeakMap();
@@ -296,8 +306,8 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
     const key = `${file}:${source}`;
     if (importCache.has(key)) return importCache.get(key);
     if (!source?.startsWith('.')) return null;
-    const base = path.posix.normalize(path.posix.join(path.posix.dirname(file), source.split('?')[0]));
-    const result = [base, `${base}.jsx`, `${base}.js`, `${base}.tsx`, `${base}.ts`, `${base}/index.js`, `${base}/index.jsx`].find(name => Object.hasOwn(fonts, name));
+    const base = path.posix.join(path.posix.dirname(file), source.split('?')[0]);
+    const result = Object.hasOwn(fonts, base) ? base : [`${base}.jsx`, `${base}.js`, `${base}.tsx`, `${base}.ts`, `${base}/index.js`, `${base}/index.jsx`].find(name => Object.hasOwn(fonts, name));
     importCache.set(key, result);
     return result;
   }
@@ -341,7 +351,7 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
       }
       if (source[i] !== '"' && source[i] !== "'") return { target: null, end: i, spec: null };
       const quotedEnd = quoted(i, source[i]);
-      const spec = source.slice(i + 1, quotedEnd - 1).replace(/\\x([\da-f]{2})|\\u([\da-f]{4})/gi, (_, x, u) => String.fromCharCode(parseInt(x || u, 16)));
+      const spec = source.slice(i + 1, quotedEnd - 1).replace(/\\(?:u\{([\da-f]+)\}|u([\da-f]{4})|x([\da-f]{2})|(\r\n|[\r\n\u2028\u2029])|([\s\S]))/gi, (_, point, unicode, hex, newline, other) => point || unicode || hex ? String.fromCodePoint(parseInt(point || unicode || hex, 16)) : newline ? '' : ({ n: '\n', r: '\r', t: '\t', b: '\b', f: '\f', v: '\v', 0: '\0' }[other] ?? other));
       const target = importFile(file, spec);
       if (target) {
         if (!parents.has(target)) parents.set(target, new Set()); parents.get(target).add(file);
@@ -544,9 +554,10 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
     return found;
   }
   const cachedGraph = prepared && reuse?.graph;
-  const canHaveH2 = cachedGraph?.all || closure(), canHaveTags = cachedGraph?.tags || closure('tag'), tagBodies = new Set();
+  const allSourceFiles = Object.keys(fonts).filter(file => FONT.test(file) && !PROVA.test(file));
+  const canHaveH2 = fullAst ? new Set(allSourceFiles) : cachedGraph?.all || closure(), canHaveTags = fullAst ? new Set(allSourceFiles) : cachedGraph?.tags || closure('tag'), tagBodies = new Set();
   for (const file of canHaveTags) for (const parent of parents.get(file) || []) if (lexical.get(parent)?.jsx) tagBodies.add(parent);
-  const canRenderContent = cachedGraph?.body || closure('body', tagBodies);
+  const canRenderContent = fullAst ? new Set(allSourceFiles) : cachedGraph?.body || closure('body', tagBodies);
   if (prepared && reuse && !reuse.graph) reuse.graph = { all: canHaveH2, tags: canHaveTags, body: canRenderContent };
     let checkpoint = phase('indexMs', started);
   if (mode === 'prepare') return { prepared: { lexical: [...lexical], parents: [...parents].map(([file, entries]) => [file, [...entries]]) }, stats: { files: Object.keys(fonts).length, ...phases, durationMs: performance.now() - started } };
@@ -664,11 +675,48 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
     }
     return null;
   }
+  function htmlAttr(el, name) {
+    return el?.attrs?.find(a => a.name === name)?.value ?? '';
+  }
+  function htmlHasClass(el, token) {
+    return htmlAttr(el, 'class').trim().split(/\s+/).includes(token);
+  }
+  function htmlHasText(el) {
+    if (!el) return false;
+    if (el.nodeName === '#text') return el.value.trim() !== '';
+    for (const child of el.childNodes || []) if (htmlHasText(child)) return true;
+    return Boolean(el.content && htmlHasText(el.content));
+  }
+  function htmlMeaningfulChildren(parent) {
+    const seq = [];
+    for (const child of parent?.childNodes || []) {
+      if (child.nodeName === '#comment') continue;
+      if (child.nodeName === '#text') {
+        if (child.value.trim() !== '') seq.push({ kind: 'text', node: child });
+        continue;
+      }
+      if (child.tagName) seq.push({ kind: 'element', node: child });
+    }
+    return seq;
+  }
+  function isValidHtmlH2Triad(seq, index) {
+    const current = seq[index], lead = seq[index + 1], section = seq[index + 2];
+    if (current?.kind !== 'element' || current.node.tagName !== 'h2' || !htmlHasText(current.node)) return false;
+    if (lead?.kind !== 'element' || /^h[1-6]$/.test(lead.node.tagName) || controlTags.has(lead.node.tagName) || !htmlHasClass(lead.node, 'lead') || !htmlHasText(lead.node)) return false;
+    if (section?.kind !== 'element' || section.node.tagName !== 'h3' || !htmlHasText(section.node)) return false;
+    return true;
+  }
   function html(text, file, node, code, ancestors = []) {
     if (!text || !/<\s*h2\b/i.test(text) || code === 'MC2' && !contextRenders(ancestors)) return;
     const fragment = htmlFragment(text);
     const walk = value => {
-      if (value.tagName === 'h2') add(code, file, node, 'H2 dins del cos editorial HTML; usa H3/H4.');
+      const seq = htmlMeaningfulChildren(value);
+      for (let i = 0; i < seq.length; i++) {
+        const item = seq[i];
+        if (item.kind === 'element' && item.node.tagName === 'h2' && !isValidHtmlH2Triad(seq, i)) {
+          add(code, file, node, 'H2 dins del cos editorial HTML sense entradilla (.lead) + H3; usa H3/H4 o completa H2 -> .lead -> H3.');
+        }
+      }
       for (const child of value.childNodes || []) walk(child);
       if (value.content) walk(value.content);
     };
@@ -691,9 +739,9 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
   checkpoint = phase('pageCopyMs', checkpoint);
 
   const frontier = prepared?.frontier || demandFrontier(lexical);
-  const rootFiles = roots || frontier.roots;
+  const rootFiles = roots || (fullAst ? allSourceFiles : frontier.roots);
   const canonicalAuditFiles = new Set(knownWrappers?.auditedRoots || rootFiles);
-  const pageReferences = new Map(frontier.references.map(([file, names]) => [file, new Set(names)]));
+  const pageReferences = new Map((fullAst ? allSourceFiles.map(file => [file, ['*']]) : frontier.references).map(([file, names]) => [file, new Set(names)]));
   function isPage(file, name, node = null) {
     if (!isComponentName(name)) return false;
     if (isCanonicalPage(file, name)) return true;
@@ -1125,6 +1173,92 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
       renderedProp(value, entry.file, entry.path[0], ancestors, consumer);
     }
   }
+  function jsxNodeHasContent(node, file, seen = new Set()) {
+    node = unwrap(node);
+    if (!node) return false;
+    if (node.type === 'JSXText') return node.value.trim() !== '';
+    if (node.type === 'Literal') return typeof node.value === 'boolean' ? false : String(node.value ?? '').trim() !== '';
+    if (node.type === 'JSXFragment') return node.children.some(c => jsxNodeHasContent(c, file, seen));
+    if (node.type === 'JSXElement') {
+      if (jsxHasChildren(node)) return node.children.some(c => jsxNodeHasContent(c, file, seen));
+      const explicitChildren = attr(node, 'children');
+      if (explicitChildren) return jsxNodeHasContent(explicitChildren, file, seen);
+      const dangerous = unwrap(attr(node, 'dangerouslySetInnerHTML'));
+      if (dangerous) {
+        const htmlEntry = objectEntries(dangerous, file).find(e => e.key === '__html');
+        const htmlText = htmlEntry ? literal(htmlEntry.value, htmlEntry.file) : null;
+        return htmlText !== null ? htmlHasText(htmlFragment(htmlText)) : true;
+      }
+      return false;
+    }
+    if (node.type === 'Identifier') {
+      if (undefinedValue(node, file)) return false;
+      const key = `${file}:${node.name}:${node.start}`;
+      if (seen.has(key)) return false;
+      const target = resolve(file, node.name, undefined, node);
+      if (!target) return true;
+      return target.node === null ? true : jsxNodeHasContent(target.node, target.file, new Set([...seen, key]));
+    }
+    const lit = literal(node, file);
+    if (lit !== null) return lit.trim() !== '';
+    return !undefinedValue(node, file);
+  }
+  function jsxElementDescriptor(rawChild, file, seen = new Set()) {
+    const child = unwrap(rawChild);
+    if (!child || child.type === 'JSXEmptyExpression') return null;
+    if (child.type === 'JSXText') return child.value.trim() === '' ? null : { kind: 'other' };
+    if (child.type === 'Identifier') {
+      const key = `${file}:${child.name}:${child.start}`;
+      if (seen.has(key)) return { kind: 'other' };
+      const imp = mod(file).imports.get(child.name);
+      const target = !imp || canRenderContent.has(importFile(file, imp.from)) ? resolveRendered(file, child.name, child, new Set(), 'body') : null;
+      if (target?.node) return jsxElementDescriptor(target.node, target.file, new Set([...seen, key]));
+      return { kind: 'other' };
+    }
+    if (child.type !== 'JSXElement') return { kind: 'other' };
+    const originalName = jsxName(child.openingElement.name);
+    const importedTag = mod(file).imports.get(originalName.split('.')[0]);
+    const tagValue = isComponentName(originalName) && (!importedTag || canHaveTags.has(importFile(file, importedTag.from)))
+      ? resolveRendered(file, originalName, child, new Set(), 'tag')
+      : null;
+    const resolvedLiteral = tagValue ? literal(tagValue.node, tagValue.file) : null;
+    const tag = resolvedLiteral || originalName;
+    const className = literal(attr(child, 'className'), file) || '';
+    return {
+      kind: 'jsx',
+      tag,
+      custom: !resolvedLiteral && isComponentName(originalName),
+      hasLeadClass: className.trim().split(/\s+/).includes('lead'),
+      hasContent: jsxNodeHasContent(child, file),
+      elementNode: child,
+      elementFile: file
+    };
+  }
+  function validJsxH2TriadHeads(children, file) {
+    const seq = [];
+    for (const raw of children || []) {
+      if (raw.type === 'JSXText' && raw.value.trim() === '') continue;
+      if (raw.type === 'JSXExpressionContainer' && raw.expression?.type === 'JSXEmptyExpression') continue;
+      const desc = jsxElementDescriptor(raw, file);
+      if (desc) seq.push({ raw, desc });
+    }
+    const heads = new Map();
+    for (let i = 0; i < seq.length; i++) {
+      const first = seq[i]?.desc, second = seq[i + 1]?.desc, third = seq[i + 2]?.desc;
+      if (first?.kind !== 'jsx' || first.tag !== 'h2' || !first.hasContent) continue;
+      if (second?.kind !== 'jsx' || second.custom || /^h[1-6]$/.test(second.tag) || controlTags.has(second.tag) || !second.hasLeadClass || !second.hasContent) continue;
+      if (third?.kind !== 'jsx' || third.tag !== 'h3' || !third.hasContent) continue;
+      heads.set(seq[i].raw, { file: first.elementFile, start: first.elementNode.start });
+    }
+    return heads;
+  }
+  function withTriadContext(baseAncestors, file, ownerNode, triadTarget) {
+    if (!triadTarget) return baseAncestors;
+    const last = baseAncestors.at(-1);
+    const token = `,triad:${triadTarget.file}:${triadTarget.start}`;
+    const baseContext = last?.context || '';
+    return [...baseAncestors, { ...(last || { file, node: ownerNode }), triadH2: triadTarget, context: baseContext.includes(token) ? baseContext : baseContext + token }];
+  }
   const pageExceptionClasses = new Set(exceptions.map(entry => entry.className).filter(Boolean));
   function contextualPageClass(node, file) {
     const value = literal(attr(node, 'className'), file);
@@ -1190,23 +1324,31 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
       if (name === 'h2') {
         if (!contextRenders(ancestors)) return;
         const id = literal(attr(node, 'id'), file), text = node.children.filter(n => n.type === 'JSXText').map(n => n.value).join('').trim();
-        const dialog = ancestors.findLast(a => jsxName(a.node.openingElement.name) === 'dialog');
+        const dialog = ancestors.findLast(a => a.node?.type === 'JSXElement' && jsxName(a.node.openingElement.name) === 'dialog');
         const label = dialog && literal(attr(dialog.node, 'aria-labelledby'), dialog.file);
         const titleOfDialog = id && label?.split(/\s+/).includes(id);
-        const sample = exceptions.find(e => e.file === file && e.text === text && ancestors.some(a => literal(attr(a.node, 'className'), a.file)?.split(/\s+/).includes(e.className)));
+        const sample = exceptions.find(e => e.file === file && e.text === text && ancestors.some(a => a.node?.type === 'JSXElement' && literal(attr(a.node, 'className'), a.file)?.split(/\s+/).includes(e.className)));
+        const activeTriad = ancestors.at(-1)?.triadH2;
+        const validTriadHead = Boolean(activeTriad && activeTriad.file === file && activeTriad.start === node.start);
         if (titleOfDialog && exceptions.some(e => e.id === 'dialog-independent')) exemptions.push({ id: 'dialog-independent', file, line: location(file, node).line, reason: EXCEPCIONS[1].reason });
         else if (sample) exemptions.push({ id: sample.id, file, line: location(file, node).line, reason: sample.reason });
-        else add('MC2', file, node, 'H2 renderitzat com a children de UniversalPage; usa H3/H4.');
+        else if (!validTriadHead) add('MC2', file, node, 'H2 renderitzat com a children de UniversalPage sense entradilla (.lead) + H3; usa H3/H4 o completa H2 -> .lead -> H3.');
       }
       const changesContext = name === 'dialog' || contextualPageClass(node, file);
-      const nextAncestors = [...ancestors, { file, node, context: context + (changesContext ? `,${file}:${node.start}` : '') }];
+      const nextAncestors = [...ancestors, { file, node, triadH2: null, context: context + (changesContext ? `,${file}:${node.start}` : '') }];
       const consumer = custom ? { file, name, node } : null;
-      for (const child of node.children) renderedProp(child, file, 'children', nextAncestors, consumer, isControl);
+      const triadHeads = validJsxH2TriadHeads(node.children, file);
+      for (const child of node.children) renderedProp(child, file, 'children', withTriadContext(nextAncestors, file, node, triadHeads.get(child)), consumer, isControl);
       for (const property of node.openingElement.attributes) {
         if (property.type === 'JSXSpreadAttribute') renderedProps(property.argument, file, nextAncestors, new Set(), custom ? null : new Set(['children', 'dangerouslySetInnerHTML', 'style']), isControl, consumer, ignored);
         else if (!ignored.has(property.name.name) && (custom || property.name.name === 'children' || property.name.name === 'dangerouslySetInnerHTML')) renderedProp(property.value, file, property.name.name, nextAncestors, consumer, isControl);
       }
       if (custom && !isCanonicalPage(file, name) && target) { renderedDefaults(node, file, target, nextAncestors, consumer); rendered(target.node, target.file, nextAncestors); }
+      return;
+    }
+    if (node.type === 'JSXFragment') {
+      const triadHeads = validJsxH2TriadHeads(node.children, file);
+      for (const child of node.children) rendered(child, file, withTriadContext(ancestors, file, node, triadHeads.get(child)));
       return;
     }
     if (node.type === 'CallExpression') {
@@ -1239,7 +1381,8 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
     if (!canonical && !isPage(file, name, node)) return;
     const ancestors = canonical ? [] : [{ file, node, context: '' }];
     const consumer = canonical ? null : { file, name, node, pageOnly: true };
-    for (const child of node.children) renderedProp(child, file, 'children', ancestors, consumer);
+    const triadHeads = validJsxH2TriadHeads(node.children, file);
+    for (const child of node.children) renderedProp(child, file, 'children', withTriadContext(ancestors, file, node, triadHeads.get(child)), consumer);
     const ignored = jsxHasChildren(node) ? new Set(['children']) : new Set();
     for (const property of node.openingElement.attributes) {
       if (property.type === 'JSXSpreadAttribute') renderedProps(property.argument, file, ancestors, new Set(), canonical ? new Set(['children']) : null, false, consumer, ignored);
@@ -1298,18 +1441,126 @@ export function auditaFonts(fonts, { exceptions = EXCEPCIONS, prepared = null, l
     inventory: exceptions, stats: { files: Object.keys(fonts).length, parsedModules: modules.size, relevantClosure: canHaveH2.size, bodyClosure: canRenderContent.size, pageRoots: rootFiles.length, ...phases, durationMs: Math.round((performance.now() - started) * 100) / 100 } };
 }
 
-export function auditaMaquetacio(arrel = process.cwd()) {
-  const started = performance.now(), fonts = {};
+const CACHE_FORMAT = 1;
+const digest = value => createHash('sha256').update(value).digest('hex');
+function hashPart(hash, value) {
+  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value);
+  hash.update(`${bytes.length}:`).update(bytes);
+}
+
+// Fingerprint the actual installed implementation, not only lockfile versions.
+// Optional parsers being installed/removed also change the engine identity.
+function engineIdentity(options) {
+  const hash = createHash('sha256'), seen = new Set(), packages = new Set();
+  let files = 0, bytes = 0;
+  function read(file) {
+    const buffer = fs.readFileSync(file);
+    hashPart(hash, file); hashPart(hash, buffer); files++; bytes += buffer.length;
+    return buffer;
+  }
+  hashPart(hash, JSON.stringify({ format: CACHE_FORMAT, node: process.versions, platform: process.platform,
+    arch: process.arch, flags: process.execArgv, nodeOptions: process.env.NODE_OPTIONS || '', ...options }));
+  read(fileURLToPath(import.meta.url));
+  function dependency(name, resolver) {
+    let entry;
+    try { entry = resolver.resolve(name); }
+    catch (error) { hashPart(hash, `${name}:unavailable:${error.code}`); return; }
+    entry = fs.realpathSync(entry);
+    hashPart(hash, `${name}:${entry}`);
+    let root = path.dirname(entry), manifest;
+    while (true) {
+      const candidate = path.join(root, 'package.json');
+      if (fs.existsSync(candidate)) {
+        const parsed = JSON.parse(fs.readFileSync(candidate, 'utf8'));
+        if (parsed.name === name) { manifest = parsed; break; }
+      }
+      const parent = path.dirname(root);
+      if (parent === root) throw new Error(`No package manifest for ${name}`);
+      root = parent;
+    }
+    if (packages.has(root)) return;
+    packages.add(root);
+    function walk(directory) {
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        const file = path.join(directory, entry.name);
+        if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('.')) walk(file);
+        else if (entry.isFile() && /\.(?:[cm]?js|json|node|wasm)$/.test(entry.name) && !seen.has(file)) { seen.add(file); read(file); }
+      }
+    }
+    walk(root);
+    const localRequire = createRequire(path.join(root, 'package.json'));
+    for (const next of Object.keys({ ...manifest.dependencies, ...manifest.optionalDependencies, ...manifest.peerDependencies }).sort()) dependency(next, localRequire);
+  }
+  for (const name of ['acorn', 'acorn-jsx', '@babel/parser', 'parse5', 'postcss']) dependency(name, require);
+  return { hash: hash.digest('hex'), files, bytes };
+}
+
+function validCachedReport(report, inventory, sourceFiles) {
+  if (!report || typeof report !== 'object' || typeof report.ok !== 'boolean' || !Array.isArray(report.issues) || !Array.isArray(report.exemptions) || !report.stats || typeof report.stats !== 'object') return false;
+  if (report.ok !== (report.issues.length === 0) || JSON.stringify(report.inventory) !== JSON.stringify(inventory)) return false;
+  const position = value => Number.isInteger(value) && value > 0;
+  if (!report.issues.every(issue => issue && ['MC0', 'MC1', 'MC2', 'MC3'].includes(issue.code) && sourceFiles.has(issue.file) && position(issue.line) && position(issue.column) && typeof issue.message === 'string' && (!Object.hasOwn(issue, 'selector') || issue.selector === null || typeof issue.selector === 'string'))) return false;
+  if (!report.exemptions.every(item => item && inventory.some(entry => entry.id === item.id) && sourceFiles.has(item.file) && position(item.line) && typeof item.reason === 'string')) return false;
+  return report.stats.files === sourceFiles.size && Number.isInteger(report.stats.parsedModules) && report.stats.parsedModules >= 0;
+}
+function readResultCache(file, identity, inventory, sourceFiles) {
+  try {
+    const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (record.format !== CACHE_FORMAT || record.identity !== identity || record.reportHash !== digest(JSON.stringify(record.report)) || !validCachedReport(record.report, inventory, sourceFiles)) return null;
+    return record.report;
+  } catch { return null; }
+}
+function writeResultCache(file, identity, report) {
+  let temporary;
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    temporary = `${file}.${process.pid}.${randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, JSON.stringify({ format: CACHE_FORMAT, identity, reportHash: digest(JSON.stringify(report)), report }), { flag: 'wx', mode: 0o600 });
+    fs.renameSync(temporary, file);
+    return true;
+  } catch { return false; }
+  finally { if (temporary) { try { fs.unlinkSync(temporary); } catch { /* Already renamed, or cache unavailable. */ } } }
+}
+
+/** Fresh reads of every production byte precede every content-cache lookup.
+ * Cache contents are local derived data, under the same trust as the checkout.
+ * Corrupt/missing/unwritable caches fall back to the complete canonical audit.
+ */
+export function auditaMaquetacio(arrel = process.cwd(), { cache = true, cacheDir = path.join(arrel, 'node_modules/.cache/sdp-maquetacio'), fullAst = false, exceptions = EXCEPCIONS } = {}) {
+  const started = performance.now(), buffers = new Map(), content = createHash('sha256');
   let bytes = 0;
   for (const file of filesAt(arrel, 'src')) if ((FONT.test(file) && !PROVA.test(file)) || file.endsWith('.css')) {
     const buffer = fs.readFileSync(path.join(arrel, file));
     bytes += buffer.length;
-    fonts[file] = buffer.toString('utf8');
+    buffers.set(file, buffer); hashPart(content, file); hashPart(content, buffer);
   }
-  const readMs = performance.now() - started, result = auditaFonts(fonts);
-  Object.assign(result.stats, { workers: 0, terminatedWorkers: 0, discovery: 'demand', inventoryReadFiles: Object.keys(fonts).length,
-    inventoryReadBytes: bytes, actualReads: Object.keys(fonts).length, actualReadBytes: bytes,
-    readMs: Math.round(readMs * 100) / 100, durationMs: Math.round((performance.now() - started) * 100) / 100 });
+  const sourceHash = content.digest('hex'), readMs = performance.now() - started, sourceFiles = new Set(buffers.keys());
+  let engine = null, identity = null, cached = null;
+  const cacheFile = path.join(cacheDir, 'report.json');
+  if (cache && !fullAst) {
+    try {
+      engine = engineIdentity({ fullAst, exceptions });
+      identity = digest(`${sourceHash}:${engine.hash}`);
+      cached = readResultCache(cacheFile, identity, exceptions, sourceFiles);
+    } catch { /* A fingerprint failure cannot authorize a cached result. */ }
+  }
+  const verificationMs = performance.now() - started - readMs;
+  const fonts = {};
+  // Les claus continuen validant l'inventari; els bytes ja verificats deixen
+  // d'estar retinguts quan el text passa al mateix analitzador canònic.
+  if (!cached) for (const [file, buffer] of buffers) { fonts[file] = buffer.toString('utf8'); buffers.delete(file); }
+  buffers.clear();
+  const result = cached || auditaFonts(fonts, { fullAst, exceptions });
+  const previousParsed = result.stats.parsedModules;
+  let cacheWritten = false;
+  if (!cached && identity && validCachedReport(result, exceptions, sourceFiles)) cacheWritten = writeResultCache(cacheFile, identity, result);
+  Object.assign(result.stats, { ...(cached ? { cachedParsedModules: previousParsed, cachedAnalysisMs: result.stats.durationMs, parsedModules: 0, lexicalMs: 0, indexMs: 0, pageCopyMs: 0, wrappersMs: 0, childrenMs: 0, cssMs: 0 } : {}),
+    workers: 0, terminatedWorkers: 0, discovery: 'demand', inventoryReadFiles: sourceFiles.size,
+    inventoryReadBytes: bytes, actualReads: sourceFiles.size, actualReadBytes: bytes,
+    cache: cached ? 'verified-content-hit' : cacheWritten ? 'verified-content-created' : fullAst ? 'bypassed-full-ast' : cache ? 'miss-unavailable' : 'disabled',
+    sourceHash, engineHash: engine?.hash || null, engineReadFiles: engine?.files || 0, engineReadBytes: engine?.bytes || 0,
+    readMs: Math.round(readMs * 100) / 100, verificationMs: Math.round(verificationMs * 100) / 100,
+    durationMs: Math.round((performance.now() - started) * 100) / 100 });
   return result;
 }
 
@@ -1455,14 +1706,14 @@ if (!isMainThread && workerData?.canonicalGate) {
       parentPort.postMessage({ id: packet.id, result });
     } catch (error) { parentPort.postMessage({ id: packet.id, error: error.stack || String(error) }); }
   });
-} else if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href) {
+} else if (process.argv[1] && fs.existsSync(path.resolve(process.argv[1])) && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href) {
   /* v1.2.23 · costura Porta Arrel A4 (ordre del Mestre 261123) · mateixa guarda d'entrada directa (camí real de argv[1]
    * contra import.meta.url), escrita en la forma que la Porta Arrel reconeix; abans comparava amb fileURLToPath. */
   const args = process.argv.slice(2), rootArg = args.find(a => a.startsWith('--arrel='));
   const root = rootArg?.slice(8) || (args.includes('--arrel') ? args[args.indexOf('--arrel') + 1] : process.cwd());
   const started = performance.now();
   let result;
-  try { result = auditaMaquetacio(path.resolve(root)); }
+  try { result = auditaMaquetacio(path.resolve(root), { cache: !args.includes('--no-cache'), fullAst: args.includes('--full-ast'), ...(args.find(arg => arg.startsWith('--cache-dir=')) ? { cacheDir: path.resolve(args.find(arg => arg.startsWith('--cache-dir=')).slice(12)) } : {}) }); }
   catch (error) { result = { ok: false, issues: [{ code: 'MC0', file: 'tooling/gates/tractor-maquetacio-canonica.mjs', line: 1, column: 1, message: `Anàlisi interrompuda: ${error.message}` }], exemptions: [], inventory: EXCEPCIONS, stats: { terminatedWorkers: error.terminatedWorkers || 0 } }; }
   result.stats.totalMs = Math.round((performance.now() - started) * 100) / 100;
   if (args.includes('--json')) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

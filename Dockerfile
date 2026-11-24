@@ -22,6 +22,10 @@ RUN npm install --omit=dev --no-audit --no-fund
 COPY tooling/lib/ /app/tooling/lib/
 COPY tooling/wiki/core/ /app/tooling/wiki/core/
 COPY tooling/wiki/lib/ /app/tooling/wiki/lib/
+# publication-policy importa el netejador compartit, que usa la fulla Unicode.
+# Només esta clausura JS pura: cap interfície ni la resta de src/.
+COPY src/config/contentHelpers.js /app/src/config/contentHelpers.js
+COPY src/utils/normalitzaUnicodeSegura.js /app/src/utils/normalitzaUnicodeSegura.js
 
 # L'índex públic que escriu el productor (npm run rag:build): RUTES.indexRag.
 COPY public/rag-index.json /app/public/rag-index.json

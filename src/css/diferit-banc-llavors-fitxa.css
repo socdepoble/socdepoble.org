@@ -1,0 +1,125 @@
+/* Onada v1.2.23+ (R32.53) · IDEA-336 + IDEA-338 · Fitxes nobles Pedra Seca per al Banc de Llavors.
+   Full diferit adoptat per BancLlavorsSection.jsx (0 B al tros d'arrencada del connector de WordPress). */
+@layer components {
+  .sdp-llavors-font {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-llavors-font > p {
+    margin: 0;
+  }
+
+  .sdp-fitxa-didactica :where(h4) {
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* Llei 261103 / 261114 · Píndoles centrades de catàleg, origen i espècie */
+  .sdp-llavors-fitxa__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-llavors-fitxa__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.3;
+    max-inline-size: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .sdp-llavors-fitxa__pindola--origen {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-weight: 600;
+  }
+
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) .sdp-taula-prosa {
+    overflow: auto;
+    max-inline-size: 100%;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) .sdp-taula-prosa table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    margin: 0;
+  }
+
+  /* v1.2.24 · costura R32.75 · Frontera de P1-16 i PS-03: les cel·les es lliguen a la fitxa i no a la taula de
+     prosa, i el fons de la capçalera el pinta la regla d'elements de sdp.css. El subtil que hi havia era el mateix
+     de la fila parell: la capçalera no es distingia de les files. */
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) :where(th, td) {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    text-align: start;
+    vertical-align: top;
+    border-block-end: 1px solid var(--sdp-vora);
+    overflow-wrap: break-word;
+  }
+
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) tbody tr:last-child :where(th, td) {
+    border-block-end: 0;
+  }
+
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) thead th {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  :where(.sdp-fitxa-didactica, .sdp-llavors-font) tbody th {
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+    inline-size: 38%;
+  }
+
+  .sdp-llavors-fitxa__seguretat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-llavors-fitxa__aptitud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-llavors-fitxa__alergens {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding-block-start: var(--sdp-space-2);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+
+  .sdp-llavors-fitxa__alergens-nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: 1.5;
+  }
+}

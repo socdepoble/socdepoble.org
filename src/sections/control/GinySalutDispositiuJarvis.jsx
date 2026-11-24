@@ -1,6 +1,6 @@
 import { HardDrive, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { useUIActions } from '../../app/contexts/UIContext';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import fullSalutDispositiu from '../../css/diferit-salut-dispositiu.css?inline';
 import {
@@ -74,9 +74,22 @@ function etiquetaEstatCategoria(categoria, tx, idioma) {
   return tx.etiquetaConservat;
 }
 
-export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei = null, topallMs = TOPALL_DIAGNOSTIC_MS }) {
-  const accionsUi = useUIActions?.() || {};
-  const idiomaActiu = idiomaProp || accionsUi.language || 'ca';
+function useLlenguaUiOpcional() {
+  try {
+    return useUIActionsOpcional()?.language ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export default function GinySalutDispositiuJarvis({
+  idioma: idiomaProp,
+  servei = null,
+  topallMs = TOPALL_DIAGNOSTIC_MS,
+  integratPerfil = false,
+}) {
+  const llenguaUi = useLlenguaUiOpcional();
+  const idiomaActiu = idiomaProp || llenguaUi || 'ca';
   const tx = useMemo(() => resolTextosSalutDispositiu(idiomaActiu), [idiomaActiu]);
 
   const arrelRef = useRef(null);
@@ -301,6 +314,7 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
       aria-labelledby={idSeccio}
       data-testid="giny-salut-dispositiu-jarvis"
       data-estat-ui={estatUi}
+      data-integrat={integratPerfil ? 'perfil' : undefined}
     >
       <h3 id={idSeccio}>{tx.titolSeccio}</h3>
       <p className="lead">{tx.entradetaSeccio}</p>
@@ -312,7 +326,8 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
       <div
         className={estatUi === 'error' ? 'sdp-salut-dispositiu__avis' : 'sdp-salut-dispositiu__anunci'}
         data-to={estatUi === 'error' ? 'error' : undefined}
-        role="alert"
+        role={estatUi === 'error' ? 'alert' : undefined}
+        aria-live="assertive"
         aria-atomic="true"
       >
         {estatUi === 'error' ? tx.estatError : ''}
@@ -406,15 +421,17 @@ export default function GinySalutDispositiuJarvis({ idioma: idiomaProp, servei =
                     : tx.historialCap}
                 </p>
               )}
-              <button
-                type="button"
-                className="sdp-salut-dispositiu__boto-revisar"
-                aria-expanded={revisioOberta ? 'true' : 'false'}
-                aria-controls={idRevisio}
-                onClick={() => setRevisioOberta((oberta) => !oberta)}
-              >
-                {revisioOberta ? tx.botoTancarRevisio : tx.botoRevisar}
-              </button>
+              <div className="sdp-salut-dispositiu__accions-revisio">
+                <button
+                  type="button"
+                  className="sdp-salut-dispositiu__boto-revisar"
+                  aria-expanded={revisioOberta ? 'true' : 'false'}
+                  aria-controls={idRevisio}
+                  onClick={() => setRevisioOberta((oberta) => !oberta)}
+                >
+                  {revisioOberta ? tx.botoTancarRevisio : tx.botoRevisar}
+                </button>
+              </div>
             </div>
 
             <ul id={idRevisio} className="sdp-salut-dispositiu__detall" hidden={!revisioOberta}>

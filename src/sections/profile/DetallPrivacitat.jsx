@@ -29,7 +29,10 @@ import { omple } from '../../config/moderacio.js';
 import { avaluaRetencioPublicacio } from '../../utils/politicaRetencioIFiltresUsuari.js';
 /* T7 · IDEA-48 (pla 261101_1246) · «Persones de confiança», darrere de la bandera E2EE: apagada, Rollup plega la constant i el bloc no entra al paquet. */
 import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
+import { codiLlenguaPerfil } from './i18nPerfilA11y.js';
 const BlocPersonesConfianca = E2EE_ACTIU_PER_DEFECTE ? lazyRoute(() => import('./BlocPersonesConfianca.jsx')) : null;
+const GinySalutDispositiuJarvis = lazyRoute(() => import('../control/GinySalutDispositiuJarvis.jsx'));
+const BlocModeRuralPerfil = lazyRoute(() => import('./BlocModeRuralPerfil.jsx'));
 const PortabilitatFederada = lazyRoute(() => import('./PortabilitatFederada.jsx'));
 /* FEDI-07 · Mostra efímera només en desenvolupament: la condició ha de
    envoltar també l'import perquè el motor no entre al graf de producció. */
@@ -738,6 +741,8 @@ export function DetallPrivacitat({
      xat, darrere del consentiment. Sense la moderació, el DOM de sempre. */
   const moderacio = useModeracio();
   const t = useTraductorOpcional();
+  const llenguaUi = useUIStateOpcional()?.language ?? null;
+  const idiomaVista = codiLlenguaPerfil({ language: llenguaUi, t });
 
   /* Els drets són de la persona: una organització no en té cap pàgina. */
   if (identitat?.mena !== 'persona') return null;
@@ -781,6 +786,14 @@ export function DetallPrivacitat({
         {BlocPersonesConfianca ? (
           <BarreraDelTrosAccessori>
             <Suspense fallback={null}><BlocPersonesConfianca /></Suspense>
+          </BarreraDelTrosAccessori>
+        ) : null}
+        {ambCompte || ambConsentiment ? (
+          <BarreraDelTrosAccessori>
+            <Suspense fallback={null}>
+              <GinySalutDispositiuJarvis idioma={idiomaVista} integratPerfil={true} />
+              <BlocModeRuralPerfil idioma={idiomaVista} />
+            </Suspense>
           </BarreraDelTrosAccessori>
         ) : null}
         <BarreraDelTrosAccessori>

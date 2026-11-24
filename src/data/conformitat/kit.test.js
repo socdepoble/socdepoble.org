@@ -801,7 +801,9 @@ describe('IDEA-24 · els casos de la transferència de la propietat', () => {
 /* FEDI-17 · Cada cas additiu s'executa de veritat. Els mutants han de caure
    pel domini o DTO; no basta haver afegit el nom al cens. */
 describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
-  const nous = CASOS.slice(99, 172);
+  // Historic FEDI-17 cohort stays intact; the two additive C6 cases have
+  // their own semantic refutations below and execute in the same real runner.
+  const nous = CASOS.filter(c => !c.titol.startsWith('C6:')).slice(99, 172);
   const context = () => Object.assign(contextDeConformitat({
     config: Object.freeze({ dataMode: 'remote', tenantId: 'tenant-de-prova' }), escriptures: true,
     escenaris: { compteOperatiu: true, compteModeProva: true, compteSenseSessio: true, publicacioOperativa: true,
@@ -849,10 +851,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
   }
 
   /* R32.5 · moderacioLssi hi afig una capacitat i tres mètodes opcionals. */
-  test('cens exacte del contracte, 32 obligatòries i 152 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 155 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(64);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(152);
+    expect(Object.keys(CAPACITATS)).toHaveLength(66);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(155);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -931,7 +933,7 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
 
 
 test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis aliens', async () => {
-  const nous = CASOS.slice(172,178);
+  const nous = CASOS.filter(c=>c.capacitat==='connexionsPubliques');
   expect(nous).toHaveLength(6);
   expect(nous.map(c => c.metode)).toEqual(CAPACITATS.connexionsPubliques);
   for (const c of nous) {
@@ -945,7 +947,7 @@ test('FEDI23 · sis casos nous rebutgen resolucions, errors sense codi i codis a
 });
 
 test('R6 · els quatre serveis opcionals de correu preserven els178 casos i refuten errors o èxits aliens', async () => {
-  const nous=CASOS.slice(178,182);
+  const nous=CASOS.filter(c=>['verificacioCorreu','recuperacioCorreu'].includes(c.capacitat));
   expect(nous).toHaveLength(4);
   expect(nous.map(c=>c.metode)).toEqual([...CAPACITATS.verificacioCorreu,...CAPACITATS.recuperacioCorreu]);
   for(const c of nous){
@@ -1081,4 +1083,44 @@ describe('R32.13 · ACK remot i denúncia diligent amb entrades malformades', ()
     expect(CASOS.filter(c => c.titol.startsWith('R32.13:')).map(c => c.metode)).toEqual(methods);
     expect(metodesSenseCas()).toEqual([]);
   });
+});
+
+describe('C6 · els dos casos comuns de negoci tenen refutacions semàntiques pròpies',()=>{
+  const cases=CASOS.filter(c=>c.titol.startsWith('C6:'));
+  const context=()=>Object.assign(contextDeConformitat({escriptures:true,escenaris:{compteOperatiu:true}}),{ownerUserId:'persona'});
+  const snapshot=()=>({format:'socdepoble.backup.v2',titularId:'persona',tenantId:'tenant',generatAl:'2026-11-23T12:00:00Z',dades:{perfil:{bio:'Prova'},notes:[{id:'n'}],noteFolders:[{id:'f'}],organitzacions:[],patrimoni:[]}});
+  function candidate(){return {adaptador:{perfilCopia:'negoci-local',...Object.fromEntries(['llegixCopiaCompte','restauraCopiaCompte','loadNotes','getProfile','listMyOrganizations','llistaRevisionsPatrimoni','destroy'].map(k=>[k,()=>{}]))},restauracio:{durabilitat:'memoria',destinacio:'copia-local-inactiva',actiuModificat:false,creats:{perfil:1,notes:1,noteFolders:1,organitzacions:0,patrimoni:0}}};}
+  test('cens complet, sense opt-in no s’invoca i restauració exigeix escriptures',async()=>{
+    expect(cases.map(c=>c.metode)).toEqual(['llegixCopiaCompte','restauraCopiaCompte']);
+    expect(metodesSenseCas()).toEqual([]);
+    for(const c of cases){let calls=0;const a={[c.metode]:()=>{calls++;}};
+      expect(await executaCas(c,a,contextDeConformitat())).toMatchObject({estat:'omés'});expect(calls).toBe(0);
+    }
+    const ctx=context();ctx.copiaCompte=snapshot();ctx.escriptures=false;
+    expect(await executaCas(cases[1],{},ctx)).toMatchObject({estat:'omés',motiu:'escriptura no demanada'});
+  });
+  test('snapshot incomplet o actor alié falla; només forma bona prepara l’entrada restaurable',async()=>{
+    const c=cases[0],ctx=context();
+    for(const value of [null,{},[],{...snapshot(),titularId:'altra'}, {...snapshot(),dades:{perfil:{},notes:[]}}, {...snapshot(),dades:{...snapshot().dades,patrimoni:[{}]}}])
+      expect(await executaCas(c,{llegixCopiaCompte:async()=>value},context())).toMatchObject({estat:'falla'});
+    expect(await executaCas(c,{llegixCopiaCompte:async()=>snapshot()},ctx)).toMatchObject({estat:'ok'});expect(ctx.copiaCompte).toEqual(snapshot());
+  });
+  test('no passa un backend complet, un recompte truncat ni un destí actiu/durable simulat',async()=>{
+    const c=cases[1],ctx=context();ctx.copiaCompte=snapshot();
+    const complete=candidate();complete.adaptador.loadFils=()=>[];
+    const truncated=candidate();truncated.restauracio.creats.notes=0;
+    const active=candidate();active.restauracio.actiuModificat=true;
+    const durable=candidate();durable.restauracio.durabilitat='remota';
+    for(const value of [null,{},complete,truncated,active,durable])expect(await executaCas(c,{restauraCopiaCompte:async()=>value},ctx)).toMatchObject({estat:'falla'});
+    const good=candidate();expect(await executaCas(c,{restauraCopiaCompte:async()=>good},ctx)).toMatchObject({estat:'ok'});expect(ctx.candidatNegoci).toBe(good.adaptador);
+  });
+});
+
+test('C10 · eliminaPerATothom té cas neutral real i no accepta ACK amb input invàlid', async () => {
+ const c=CASOS.find(x=>x.metode==='eliminaPerATothom');
+ expect(c).toMatchObject({capacitat:'xatAccionsMissatge',espera:'rebutja',escriu:false});
+ const ctx=contextDeConformitat();
+ expect(await executaCas(c,{eliminaPerATothom:async()=>{throw Object.assign(new Error('invalid'),{code:'XAT_ACCIO_INVALIDA'});}},ctx)).toMatchObject({estat:'ok'});
+ for(const api of [async()=>({esborrat:true}),async()=>{throw new Error('sense codi');},async()=>{throw Object.assign(new Error('denied'),{status:403});}])expect(await executaCas(c,{eliminaPerATothom:api},ctx)).toMatchObject({estat:'falla'});
+ expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés'});
 });

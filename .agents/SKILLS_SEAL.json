@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-11-23T23:05:50.960Z",
-  "hash": "f2da025851c6c428d7dd1f1a008fa11271011ee4b7cad76c9ac0086007f71351",
+  "timestamp": "2026-11-24T20:21:06.449Z",
+  "hash": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
   "filesCount": 45,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "a7a458a04613e2d5096b432b0381ec984276fde2ee05a97e9baabe320dcfdc0a",
@@ -18,8 +18,8 @@
     ".agents/skills/core-identitat-visual/SKILL.md": "fa261ec5619439629aabf7fed299d53541ff440f83d2620a8a83ba57467de4e3",
     ".agents/skills/core-identitat/SKILL.md": "ebbf84b4fb8780035cd4ceacebcf5f87acaadc5bb727dd9295211390cbbcd965",
     ".agents/skills/core-informes-pdf/SKILL.md": "4a7efdfd01194bede623da4b74f95256802344a0a678d4cf42da3219e1f47c54",
-    ".agents/skills/core-llegibilitat-text/SKILL.md": "40a591ac8386a28f29161fd0834d1799d738b104cdbd7ffaf03f0ab72bc9377a",
-    ".agents/skills/core-maquetacio-markdown/SKILL.md": "282f3f6f83c7abc607bb7b1514e72be77970b6d5ecdd0e90854a3e764c18b16b",
+    ".agents/skills/core-llegibilitat-text/SKILL.md": "a3d67a048aee130754c8ef950ec7523cd441fec9ef1a282cd90894f903b27b5a",
+    ".agents/skills/core-maquetacio-markdown/SKILL.md": "52e92a0d5a792970bfc92aed513d90511ecd46f0694d87ab067e2b0dc951750a",
     ".agents/skills/core-memoria-historica/SKILL.md": "227ae95cc465b4a527ec35cd92393580146324a751524b66a4143c9a531acf8f",
     ".agents/skills/core-neteja-brossa/SKILL.md": "171f40c018b59d38ac6948e2ff87ec759f6873a54ec561aa998714bbf2a1ffa2",
     ".agents/skills/core-portaveu-institucional/SKILL.md": "0077dddb0fef29de28595a0796bbe1b0041abeb896fbf16efccb7e75ad66f7b9",
@@ -49,5 +49,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d394e96ea749330bc5472e5a84e3420c1986f5894752807e68c60d84d8eff42e",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "983c3e56a5e450934b4f804385f25a2ef28431fe39a726257d890fb38a943ca3"
   },
-  "transaction": "58507405-4caf-403f-97d6-cbee117fccea"
+  "transaction": "53eab774-a775-487e-8ee9-0476f26284c5"
 }

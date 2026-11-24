@@ -3,8 +3,12 @@ import { capturaBaixaRevisioPatrimoni, capturaConsultaRevisionsPatrimoni, captur
 
 const clauPeca = ({ entitatTipus, entitatSlug }) => `${entitatTipus}:${entitatSlug}`;
 
-export function creaRevisionsPatrimoniLocal(usuari, nouId = () => globalThis.crypto.randomUUID()) {
+export function creaRevisionsPatrimoniLocal(usuari, nouId = () => globalThis.crypto.randomUUID(), inicial = null) {
   const peces = new Map();
+  if (inicial) for (const value of inicial.revisions) {
+    const revisio=capturaEdicioRevisioPatrimoni(value,1),key=clauPeca(revisio),campaigns=peces.get(key)??new Map();
+    campaigns.set(revisio.campanyaAny,{autor:inicial.actorId,revisio});peces.set(key,campaigns);
+  }
   function exigeixAutor(previ) {
     const actor = usuari()?.id;
     if (!actor) throw errorRevisioPatrimoni('sense-sessio');
@@ -21,6 +25,9 @@ export function creaRevisionsPatrimoniLocal(usuari, nouId = () => globalThis.cry
     }
   }
   return {
+    llegixPatrimoniPortable(actorId) {
+      return structuredClone([...peces.values()].flatMap(campaigns=>[...campaigns.values()].filter(row=>row.autor===actorId).map(row=>row.revisio)));
+    },
     llistaRevisionsPatrimoni(input, config = {}) {
       const consulta = capturaConsultaRevisionsPatrimoni(input);
       comprovaSenyal(config);

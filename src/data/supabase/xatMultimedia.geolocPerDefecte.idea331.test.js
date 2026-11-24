@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { amagaUbicacioAdjunt, preparaAdjunt } from '../../sections/xat/adjuntLocal.js';
 import { publicaAdjuntXat } from './xatMultimedia.js';
 import { creaOpcionsMotorAccions } from '../xat/creaOpcionsMotorAccions.js';
-import { extreuTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { extreuTiff, imatgeSenseUbicacio } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { imatgeAmbUbicacio, tiffDeCoordenades } from '../../components/universal/enquadrament/exifAmbUbicacio.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { inspeccionaUbicacioMitja, senseUbicacioVideo } from '../../utils/ubicacioMitjans.js';
@@ -21,7 +21,8 @@ import { caixesPrimerNivell, mp4Fragmentat, offsetsTfra } from '../../../tests/h
 import { JPEG_NET, WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
 import { APP0_JFIF, SOI, TIPUS, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, tiff } from '../../../tests/helpers/jpegProva.js';
 
-const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), urlAdjuntXat: vi.fn(), user: { id: '00000000-0000-4000-8000-000000000001' } }));
+const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), urlAdjuntXat: vi.fn(), comprimeix: vi.fn(), user: { id: '00000000-0000-4000-8000-000000000001' } }));
+vi.mock('../../utils/imageUtils.js', () => ({ compressImage: (...args) => m.comprimeix(...args) }));
 vi.mock('./runtime.js', () => ({ rpc: m.rpc, request: m.request, getResolvedConfig: () => ({ runtimeDataMode: 'remote', supabaseUrl: 'https://node.test', supabaseAnonKey: 'publica' }) }));
 vi.mock('../identitat.js', () => ({ usuariDeSessio: () => m.user, jwtPerBackend: () => 'sessio-test', entradaSessio: () => 1, capturaSessio: () => () => {} }));
 vi.mock('../backendPort.js', () => ({ urlAdjuntXat: m.urlAdjuntXat }));
@@ -65,6 +66,7 @@ const text = async (blob) => new TextDecoder('latin1').decode(await bytes(blob))
 const tipusDe = new Map();
 beforeEach(() => {
   vi.clearAllMocks(); tipusDe.clear();
+  m.comprimeix.mockImplementation(canvas('image/jpeg'));
   m.rpc.mockImplementation(async (nom, p) => {
     if (nom === 'xat_reserva_adjunt') { tipusDe.set(p.p_id, /^video\//.test(p.p_mime) ? 'video' : 'imatge'); return { ruta: p.p_id, pujat: false }; }
     return { id: p.p_id, fil_id: FIL, seq: 1, tipus: tipusDe.get(p.p_id), metadades: p.p_ubicacio ? { ubicacio: p.p_ubicacio } : {} };
@@ -205,9 +207,10 @@ describe('IDEA-331 · reenviar: qui reenvia no és l’autor', () => {
     const motor = creaOpcionsMotorAccions({ entornAccions: { current: { config: {}, sendChatMedia } } });
     const copia = await motor.lligBlob({ tipus: 'imatge', metadades: { adjunt: { id: 'antiga', mime: 'image/jpeg' } } }, {});
     expect((await exifDe(copia))?.gps ?? null).toBeNull();
-    /* v1.2.23 · L1-01 (Gauntlet R1) · Sense GPS, però no sense EXIF: la data i la càmera de l'autor hi continuen
-       (TRIA_SENSE_UBICACIO, com abans de la IDEA-331), com diu creaOpcionsMotorAccions.js. */
-    expect(await exifDe(copia, { ambCamera: true })).toMatchObject({ dataCaptura: '2017-05-14T10:22:33+02:00', camera: { marca: 'CAMERA-SINTETICA' } });
+    // El helper legacy continua conservant data/càmera; la còpia FINAL opt-out ja no en porta cap.
+    const legacy = new Blob([imatgeSenseUbicacio(await bytes(desada)).bytes], { type: 'image/jpeg' });
+    expect(await exifDe(legacy, { ambCamera: true })).toMatchObject({ dataCaptura: '2017-05-14T10:22:33+02:00', camera: { marca: 'CAMERA-SINTETICA' } });
+    expect(extreuTiff(await bytes(copia))).toBeNull();
     expect((await bytes(desada)).length).toBeGreaterThan(0);
     await motor.enviaAdjunt({ id: FIL }, { id: 'nou', tipus: 'imatge', fitxer: copia }, { signal: undefined });
     expect(sendChatMedia).toHaveBeenCalledWith({ id: FIL }, { id: 'nou', tipus: 'imatge', fitxer: copia, conservaUbicacio: false }, { signal: undefined });

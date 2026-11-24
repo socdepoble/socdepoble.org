@@ -3,7 +3,7 @@ import { CONTRACTE_NUCLI } from '../contracte.js';
 import { CASOS, contextDeConformitat, executaCas, metodesSenseCas } from '../conformitat/kit.js';
 const io = vi.hoisted(() => ({ invoke: vi.fn(), rpc: vi.fn(), actor: '10000000-0000-4000-8000-000000000001' }));
 vi.mock('./config.js', () => ({ getClient: async () => ({ functions: { invoke: io.invoke } }) }));
-vi.mock('./runtime.js', () => ({ getCurrentUser: () => ({ id: io.actor }), getResolvedConfig: () => ({ runtimeDataMode: 'remote', hasSupabaseConfig: true }), rpc: (...args) => io.rpc(...args) }));
+vi.mock('./runtime.js', () => ({ configuraRefrescSessio: () => {}, getCurrentUser: () => ({ id: io.actor }), getResolvedConfig: () => ({ runtimeDataMode: 'remote', hasSupabaseConfig: true }), rpc: (...args) => io.rpc(...args) }));
 vi.mock('../identitat.js', async original => ({ ...(await original()), usuariDeSessio: () => ({ id: io.actor }), versioSessio: 1 }));
 import { consultaIAIA } from './iaia.js';
 import { loadRitmeXat, actualitzaPresenciaXat } from './xatRitme.js';
@@ -127,4 +127,23 @@ test('R32.13 · quatre operacions reals rebutgen abans de RPC, inferència o esc
   expect(io.rpc).not.toHaveBeenCalled();
   expect(io.invoke).not.toHaveBeenCalled();
   expect(metodesSenseCas()).toEqual([]);
+});
+
+
+// C6: the actual remote adapter declares neither optional business-copy API.
+// Public portability entrypoints must refuse it before any network/SQL call.
+test('C6 · Supabase remot real no inventa exportació/restauració completa',async()=>{
+  const remote=await import('./index.js');
+  const {readFileSync}=await import('node:fs');
+  const {creaPaquetCompte,exportaComptePortable,importaComptePortable}=await import('../portabilitatCompte.js');
+  const context=contextDeConformitat({config:{dataMode:'remote'},escriptures:true,escenaris:{compteOperatiu:true}});
+  context.copiaCompte=JSON.parse(readFileSync('tests/fixtures/portabilitat-compte-v2/compte.synthetic.json','utf8'));
+  const packet=creaPaquetCompte(context.copiaCompte);
+  for(const c of CASOS.filter(c=>c.titol.startsWith('C6:'))){
+    expect(remote[c.metode]).toBeUndefined();
+    expect(await executaCas(c,remote,context)).toMatchObject({estat:'omés',motiu:`capacitat ${c.capacitat} absent`});
+  }
+  await expect(exportaComptePortable(remote,context.config)).rejects.toMatchObject({code:'copia-no-disponible'});
+  await expect(importaComptePortable(packet.zip,remote,{sha256Esperat:packet.sha256,config:context.config})).rejects.toMatchObject({code:'copia-no-disponible'});
+  expect(io.rpc).not.toHaveBeenCalled();expect(io.invoke).not.toHaveBeenCalled();
 });

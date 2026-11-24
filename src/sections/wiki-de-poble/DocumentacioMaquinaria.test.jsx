@@ -108,8 +108,7 @@ describe('DocumentacioMaquinaria', () => {
      de ser idèntica. Quan el panell es corregisca, unEsglaoAmunt sobrarà i la
      prova fallarà: llavors es compara tal qual. */
   const unEsglaoAmunt = (html) => html
-    .replace(/<h([3-6]) class="h([2-6])">/g, (_m, s, v) => `<h${s - 1} class="h${v - 1}">`)
-    .replace(/<\/h([3-6])>/g, (_m, s) => `</h${s - 1}>`);
+    .replace(/<(\/?)h([3-6])>/g, (_m, tanca, s) => `<${tanca}h${Number(s) - 1}>`);
 
   test('agents_panell: el BIOS, el mateix text que el panell dels Agents (amb els títols un esglaó amunt), sense avís ni cap control', () => {
     const produccio = render(<DocumentacioMaquinaria id={ID_BIOS} />).container;
@@ -121,8 +120,8 @@ describe('DocumentacioMaquinaria', () => {
     expect(html).not.toBe(desenvolupament);
     expect(html).toBe(unEsglaoAmunt(desenvolupament));
     expect(html).toContain('UN SOL CERVELL');
-    // Un «## » d'AGENTS.md, un h3 (classe visual h2), com a la resta de la Wiki.
-    expect(html).toMatch(/<h3 class="h2">0\. REGLA 0/);
+    // IDEA-344 · Un «## » d'AGENTS.md és un <h3> semàntic i tipogràfic pur.
+    expect(html).toMatch(/<h3>0\. REGLA 0/);
   });
 
   test('markdownDelBios: el frontmatter en cita, els enllaços d’Obsidian com a ítems, sense l’H1 i amb els títols tal qual', () => {

@@ -11,7 +11,7 @@ function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-seo-wiki-r329-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const write = (rel, text) => { const f = path.join(root, rel);fs.mkdirSync(path.dirname(f), { recursive: true });fs.writeFileSync(f, text);return f; };
-  for (const rel of ['tooling/gates/build-seo-manifest.mjs','tooling/lib/arrel.mjs','tooling/wiki/lib/publication-policy.mjs','src/config/rutaSocial.js']) write(rel, fs.readFileSync(path.join(REPO, rel), 'utf8'));
+  for (const rel of ['tooling/gates/build-seo-manifest.mjs','tooling/lib/arrel.mjs','tooling/wiki/lib/publication-policy.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js','src/config/rutaSocial.js']) write(rel, fs.readFileSync(path.join(REPO, rel), 'utf8'));
   fs.symlinkSync(path.join(REPO, 'node_modules'),path.join(root,'node_modules'));
   write('package.json','{"type":"module"}');write('.agents/AGENTS.md','# Fixture');
   write('src/config/sections.js',`export const SECTIONS=[${Array.from({length:16},(_,i)=>`{id:'public${i}',path:'/public${i}'}`).join(',')}];`);

@@ -126,7 +126,7 @@ export default function RevisorEditorialNode0Panel({
 
       <p>{textos.subtitle}</p>
 
-      <div className="sdp-admin-actions-inline">
+      <div className="sdp-admin-actions-inline sdp-fila sdp-wrap sdp-align-center sdp-fila--centrada sdp-fila--espai-2">
         <Boto varietat="primari" onClick={executaRevisio} disabled={disabled}>
           {textos.btnReview}
         </Boto>

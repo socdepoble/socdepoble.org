@@ -86,10 +86,10 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
      tretze.
      9c1e6e333 · Les catorze de SYSTEM_PAGES i, darrere, les cinc de
      patrimoni: dènou targetes. */
-  test('les catorze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
+  test('les quinze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
     expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length - 1 + PATRIMONI_AL_MUR.length);
-    expect(SYSTEM_PAGES).toHaveLength(15);
-    expect(AL_MUR).toHaveLength(19);
+    expect(SYSTEM_PAGES).toHaveLength(17); // R32.86 · + «Cada cosa al seu lloc»
+    expect(AL_MUR).toHaveLength(21);
     expect(AL_MUR.map(item => item.key)).not.toContain('la-iaia-sabuda');
     expect(AL_MUR.map(item => item.key)).not.toContain('anatomia-rural');
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {

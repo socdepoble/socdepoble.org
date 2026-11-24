@@ -34,7 +34,7 @@ export const byId = (items) => {
    des de `des`, per a preguntes amb un `des` que mai no recula: mentre la
    resposta d'abans encara cau endavant, val, i cada caràcter del text es mira
    un nombre fitat de vegades. */
-function cercadorEndavant(text, buscat) {
+export function cercadorEndavant(text, buscat) {
   let trobat = -2;
   return (des) => {
     if (trobat === -2 || (trobat !== -1 && trobat < des)) {
@@ -106,7 +106,7 @@ export function llevaScriptsIEstils(valor) {
 /* Abans: /<[^>]*>/g → ' '. Una etiqueta va d'un '<' al primer '>' (un altre
    '<' de dins no la tanca) i es fa un espai. Un '<' sense cap '>' més avant
    no n'obri cap, ni tampoc els que el seguixen. */
-export function llevaEtiquetes(valor) {
+export function llevaEtiquetes(valor, separador = ' ') {
   const text = String(valor ?? '');
   let net = '';
   let fet = 0;
@@ -114,7 +114,7 @@ export function llevaEtiquetes(valor) {
   while (inici !== -1) {
     const fi = text.indexOf('>', inici + 1);
     if (fi === -1) break;
-    net += `${text.slice(fet, inici)} `;
+    net += text.slice(fet, inici) + separador;
     fet = fi + 1;
     inici = text.indexOf('<', fet);
   }

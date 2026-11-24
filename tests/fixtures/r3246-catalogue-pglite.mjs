@@ -10,7 +10,7 @@ const root=fileURLToPath(new URL('../../',import.meta.url));
 const roles=new Set(['anon','authenticated','service_role','node0_runtime']);
 
 /** Motor local obligatori; una absència no es transforma en un test ignorat. */
-export async function creaBaseR3246(){
+export async function creaBaseR3246({throughVersion=null}={}){
  const modulePath=process.env.SDP_PGLITE_MODULE;
  if(!modulePath||!path.isAbsolute(modulePath))throw Error('SDP_PGLITE_MODULE absolut obligatori.');
  const url=pathToFileURL(modulePath),{PGlite}=await import(url.href);
@@ -20,10 +20,15 @@ export async function creaBaseR3246(){
  const pg=new PGlite({database:'socdepoble_node0',loadDataDir:image,extensions:{pgcrypto}});
  try{
   const plan=creaPlaMigracions();
+  if(throughVersion!==null){
+   const end=plan.migrations.findIndex(m=>m.version===throughVersion);
+   if(end<0)throw Error('Versió final de fixture absent.');
+   plan.migrations=plan.migrations.slice(0,end+1);
+  }
   await pg.exec(generaSql(plan,await preparaHidratacio(),{advisoryLock:false}));
   const packagePath=path.resolve(path.dirname(modulePath),'../package.json');
   const engine=JSON.parse(fs.readFileSync(packagePath,'utf8')).version;
-  Object.defineProperty(pg,'r3246',{value:{engine,postgres:(await pg.query('select version() as version')).rows[0].version,migrations:plan.migrations.map(source=>Object.fromEntries(Object.entries(source).filter(([clau])=>clau!=='sql'))),orderSha256:plan.orderSha256,bootstrapSha256:sha(fs.readFileSync(path.join(root,'tooling/node0/bootstrap-node0.sql')))}});
+  Object.defineProperty(pg,'r3246',{value:{engine,postgres:(await pg.query('select version() as version')).rows[0].version,migrations:plan.migrations.map(migration=>{const source={...migration};delete source.sql;delete source.body;return source;}),orderSha256:plan.orderSha256,bootstrapSha256:sha(fs.readFileSync(path.join(root,'tooling/node0/bootstrap-node0.sql')))}});
   return pg;
  }catch(error){await pg.close();throw error;}
 }

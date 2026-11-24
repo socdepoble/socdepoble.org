@@ -89,7 +89,7 @@ export default function EmojisXL() {
       fes={['Usa emoticones per orientar i acompanya-les d’un nom llegible.', 'Assignar de veres només el que el navegador pot desar (l’emoticona d’una nota) i dir-ho clar de les pàgines del codi.']}
       noFacis={['Dependre només del color o de la forma del glif per comunicar un estat.', 'Un menú flotant per a triar el destí: hi hauria massa pàgines.']}>
     <div className="sdp-emojis-xl" role="region" aria-label="Directori d’emoticones">
-      <p>{TOTAL_EMOJIS} entrades del catàleg <a href={FONT_UNICODE_EMOJIS}>Unicode {VERSIO_UNICODE_EMOJIS}</a>, inclosos els components de color de pell i cabell.</p>
+      <p>{TOTAL_EMOJIS} entrades del catàleg <a href={FONT_UNICODE_EMOJIS} target="_blank" rel="noopener noreferrer">Unicode {VERSIO_UNICODE_EMOJIS}</a>, inclosos els components de color de pell i cabell.</p>
       <p className="sdp-emojis-xl__estat" role="status" aria-live="polite" aria-atomic="true">
         {estat.text}{estat.nom ? <span lang="en">{estat.nom}</span> : null}{estat.final}
       </p>

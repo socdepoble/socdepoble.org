@@ -197,6 +197,39 @@ describe('la factura', () => {
     }
   });
 
+  /* v1.2.24 · P06-09: el preu d'una línia. La coma és la dels cèntims, amb una o dues xifres (com diu l'ajuda
+     del camp, «12,50»); el punt, de milers davant de la coma o en grups, i de calculadora amb una o dues xifres
+     darrere. El que pot voler dir dues coses no s'endevina: es pregunta. Abans, «12,500» eren 12.500,00 € i
+     «1,459» (el litre de gasoil), 1.459,00 €, en silenci; i «0,125», 0,13 €, arredonit. */
+  test('el preu: la coma és la dels cèntims, i el que pot ser de milers o de cèntims es pregunta (P06-09)', () => {
+    const preu = (text) => dadesDeFactura(facturaBona({ linies: [{ concepte: 'Gasoil', quantitat: '1', preu: text, tipusIva: '21' }] }));
+    const coma = (n) => `Línia ${n}: darrere de la coma van els cèntims, amb dues xifres, i este preu en porta més. Si són cèntims, escriu-lo com 12,50; si són milers, com 12.500,00.`;
+    const punt = (n) => `Línia ${n}: no se sap si el punt d’este preu és de milers o de cèntims. Escriu-lo amb la coma dels cèntims: com 12.500,00 si són milers, o com 12,50 si són cèntims.`;
+    // Es llig sense dubte.
+    for (const [text, centims] of [
+      ['12,5', 1250], ['12,50', 1250], ['1234,56', 123456], ['1.234,56', 123456], ['1234.56', 123456], ['2.5', 250],
+      ['12.500,00', 1250000], ['12500', 1250000], ['12 500', 1250000], ['1.234.567', 123456700], ['-12,50', -1250], ['12,50 €', 1250]
+    ]) {
+      const { dades, errors } = preu(text);
+      expect([text, errors, dades?.linies[0].preuUnitari]).toEqual([text, [], centims]);
+    }
+    // Més de dues xifres darrere de la coma: ni 12,50 € ni 12.500,00 € endevinats, ni cap arredoniment.
+    for (const text of ['12,500', '1,459', '-1,459', '0,125', '12,5555', '12,500 €', '1.234,567', '1,234.56', '1,234,567']) {
+      expect([text, preu(text)]).toEqual([text, { dades: null, errors: [coma(1)] }]);
+    }
+    // Un sol punt, sense coma, amb tres xifres o més darrere: milers o cèntims?
+    for (const text of ['12.500', '1.459', '-12.500', '0.125', '12.5555', '12.500 €', '1 234.567']) {
+      expect([text, preu(text)]).toEqual([text, { dades: null, errors: [punt(1)] }]);
+    }
+    // Cada línia diu el seu número, i la bona no fa soroll.
+    const dues = dadesDeFactura(facturaBona({ linies: [
+      { concepte: 'Pa', quantitat: '1', preu: '2,50', tipusIva: '4' }, { concepte: 'Gasoil', quantitat: '40', preu: '1,459', tipusIva: '21' }
+    ] }));
+    expect(dues).toEqual({ dades: null, errors: [coma(2)] });
+    // El que no és cap import continua amb el missatge de sempre.
+    expect(preu('12,,5').errors).toEqual(['Línia 1: el preu no s’entén; escriu-lo amb coma per als cèntims, com 12,50.']);
+  });
+
   test('els totals i els errors són els del nucli, amb l’emissor de la configuració', () => {
     const config = llegixConfigEmpresa(configDeFormulari(formulariBo()));
     const { dades } = dadesDeFactura(facturaBona());

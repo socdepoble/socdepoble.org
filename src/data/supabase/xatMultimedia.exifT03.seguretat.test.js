@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { amagaUbicacioAdjunt, preparaAdjunt } from '../../sections/xat/adjuntLocal.js';
 import { publicaAdjuntXat } from './xatMultimedia.js';
-import { ambExifDeLoriginal, extreuTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { ambExifDeLoriginal, extreuTiff, imatgeSenseUbicacio, incrustaEnWebp } from '../../components/universal/enquadrament/exifIncrustat.js';
 import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { mp4 } from '../../../tests/helpers/contenidorsMedia.js';
 import { JPEG_NET, PNG_NET, WEBP_NET } from '../../../tests/helpers/mitjansPublicsNets.js';
@@ -38,6 +38,34 @@ beforeEach(() => {
 });
 
 afterEach(() => vi.unstubAllGlobals());
+
+test.each(['image/jpeg', 'image/webp'])('R32.56: opt-out explícit del transport %s no admet data/càmera encara que no hi haja GPS', async mime => {
+  const metadata = tiff({ ifd0: [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'CAMERA-PRIVADA-SINTETICA' }], exif: dataOriginal('2017:05:14 10:22:33', '+02:00') });
+  const raw = mime === 'image/jpeg' ? concatena(SOI, app1Exif(metadata), JPEG_NET.subarray(2)) : incrustaEnWebp(WEBP_NET, metadata);
+  const canonical = imatgeSenseUbicacio(raw).bytes;
+  const fitxer = new Blob([canonical], { type: mime }), original = await sha(fitxer);
+  expect(extreuTiff(canonical)).not.toBeNull(); expect(await gps(fitxer)).toBeNull();
+  await expect(publicaAdjuntXat(FIL, { id: ID, fitxer, tipus: 'imatge', conservaUbicacio: false }))
+    .rejects.toMatchObject({ code: 'foto-codificacio' });
+  expect(m.rpc).not.toHaveBeenCalled(); expect(fetch).not.toHaveBeenCalled(); expect(await sha(fitxer)).toBe(original);
+});
+
+test.each([undefined, true])('R32.56: la retenció aprovada (%s) conserva la data/càmera del transport sense GPS', async conservaUbicacio => {
+  const raw = concatena(SOI, app1Exif(tiff({ ifd0: [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'CAMERA-SINTETICA' }], exif: dataOriginal('2017:05:14 10:22:33', '+02:00') })), JPEG_NET.subarray(2));
+  const fitxer = new Blob([imatgeSenseUbicacio(raw).bytes], { type: 'image/jpeg' });
+  await expect(publicaAdjuntXat(FIL, { id: ID, fitxer, tipus: 'imatge', conservaUbicacio })).resolves.toMatchObject({ seq: 1 });
+  expect(llegixExif(concatena(SOI, app1Exif(extreuTiff(await bytes(fetch.mock.calls[0][1].body)))), { ambCamera: true }).camera.marca).toBe('CAMERA-SINTETICA');
+});
+
+test('R32.56: canviar el DTO durant la validació no revoca un opt-out ja capturat', async () => {
+  const raw = concatena(SOI, app1Exif(tiff({ exif: dataOriginal('2017:05:14 10:22:33', '+02:00') })), JPEG_NET.subarray(2));
+  const fitxer = new Blob([imatgeSenseUbicacio(raw).bytes], { type: 'image/jpeg' });
+  const entrada = { id: ID, fitxer, tipus: 'imatge', conservaUbicacio: false };
+  const read = fitxer.arrayBuffer.bind(fitxer);
+  fitxer.arrayBuffer = async () => { entrada.conservaUbicacio = true; return read(); };
+  await expect(publicaAdjuntXat(FIL, entrada)).rejects.toMatchObject({ code: 'foto-codificacio' });
+  expect(m.rpc).not.toHaveBeenCalled(); expect(fetch).not.toHaveBeenCalled();
+});
 
 /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el fitxer conserva el GPS de l'original (el Mestre ho
    mana, amb l'avís abans de publicar); el DTO del mapa continua arrodonit a 2 decimals (DOL-55). */

@@ -37,6 +37,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { CAMINS } from '../lib/arrel.mjs';
+import { importacionsExecutables } from '../lib/promesa-js.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -79,6 +80,17 @@ const IMPORTA = /\bimport\s*\(\s*['"`]([^'"`]+)['"`]/g;
 for (const f of FONTS) {
   const text = fs.readFileSync(path.join(ARREL, f), 'utf8');
   const linies = text.split('\n');
+  const esJS = /\.(?:mjs|cjs|js)$/.test(f);
+  if (esJS) {
+    const executable = importacionsExecutables(text, { root: ARREL, file: f });
+    for (const error of executable.errors) afig('P1', f, error.line, error.detail);
+    for (const { spec, base, line, inline } of executable.imports) {
+      const resolved = path.resolve(base, spec);
+      if (![resolved, `${resolved}.mjs`, `${resolved}.js`, path.join(resolved, 'index.mjs')].some(c => fs.existsSync(c))) {
+        afig('P1', f, line, `import() dinàmic${inline ? ' en Node --eval' : ''} de «${spec}», que no resol`);
+      }
+    }
+  }
 
   linies.forEach((ln, i) => {
     const n = i + 1;
@@ -94,7 +106,7 @@ for (const f of FONTS) {
         }
       }
     }
-    if (!esComentari) {
+    if (!esComentari && !esJS) {
       for (const m of codi.matchAll(IMPORTA)) {
         const spec = m[1];
         if (!spec.startsWith('.')) continue;

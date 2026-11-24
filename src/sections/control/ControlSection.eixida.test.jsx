@@ -1,38 +1,27 @@
-/* Ordre del Mestre 260930 (P2) · «Eixir del poble» del Panell de Control
-   tenia el mateix defecte que «Tanca la sessió» dels Ajustos del Xat: en
-   acabar l'eixida feia window.location.reload(), i a WordPress això
-   recarrega la pàgina sencera de l'amfitrió. Ara porta a /registre i prou:
-   la sessió tancada ja buida els proveïdors de la persona (generació).
-
-   L'eixida segura se substituïx per a quedar-se el `despres` que el Panell
-   li passa, i es crida com ho faria useEixidaSegura després del logout.
-   jsdom no deixa substituir location.reload: una recàrrega hi emet un
-   `jsdomError` «Not implemented: navigation…» per la consola virtual de la
-   finestra, i eixe avís és el que es vigila. */
-import { act, cleanup, render, screen } from '@testing-library/react';
+/* Ordre del Mestre 260930 (P2) + Reforma IDEA-341 (R32.63) · Al Panell de
+   Control (/control) es retira l'antic botó públic «Eixir de poble» (l'eixida
+   viu dins d'«El meu perfil › Eixir de poble» i d'«Ajustos del Xat») i la
+   fila de filet pur «El meu perfil, contrasenya i dades a l'aparell» navega
+   pel router intern a RUTA_COMPTE (/el-meu-perfil?vista=compte) sense fer cap
+   window.location.reload() sobre la pàgina amfitriona de WordPress. */
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
+import { TEXTOS_PEU_CONTROL } from './textosPeuControl.js';
 
-const estat = vi.hoisted(() => ({ despres: null }));
 vi.mock('../../app/contexts/UIContext', () => ({
-  useUIActions: () => ({ t: (_, reserva) => reserva, resolveAsset: (valor) => valor }),
-  useUIState: () => ({ externalConfig: {} })
-}));
-vi.mock('../../components/universal/EixidaSegura.jsx', () => ({
-  useEixidaSegura: ({ despres } = {}) => {
-    estat.despres = despres;
-    return { demana: vi.fn(), ocupat: false, avis: null, error: null };
-  }
+  useUIActions: () => ({ t: (_, reserva) => reserva, resolveAsset: (valor) => valor, language: 'ca' }),
+  useUIState: () => ({ externalConfig: { dataMode: 'seed' }, language: 'ca' }),
 }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ children }) => <section>{children}</section>
+  UniversalPage: ({ children }) => <section>{children}</section>,
 }));
 
 import ControlSection from './ControlSection.jsx';
 
 function Ubicacio() {
-  const { pathname } = useLocation();
-  return <output data-testid="ubicacio">{pathname}</output>;
+  const { pathname, search } = useLocation();
+  return <output data-testid="ubicacio">{`${pathname}${search ? `?${search}` : ''}`}</output>;
 }
 
 let navegacions = [];
@@ -41,7 +30,6 @@ const escoltaJsdom = (error) => {
 };
 
 beforeEach(() => {
-  estat.despres = null;
   navegacions = [];
   window._virtualConsole?.on('jsdomError', escoltaJsdom);
 });
@@ -50,16 +38,17 @@ afterEach(() => {
   window._virtualConsole?.off('jsdomError', escoltaJsdom);
 });
 
-test('Ordre del Mestre · en acabar «Eixir del poble», porta a /registre sense recarregar la pàgina', () => {
+test('IDEA-341 · el Panell retira el botó públic «Eixir de poble» i les 3 files de Filet Pur naveguen pel router intern sense recarregar l’amfitrió', () => {
   expect(typeof window._virtualConsole?.on).toBe('function');
   render(
     <MemoryRouter rutaInicial="/control">
       <ControlSection />
       <Ubicacio />
-    </MemoryRouter>
+    </MemoryRouter>,
   );
-  expect(typeof estat.despres).toBe('function');
-  act(() => { estat.despres(); });
-  expect(screen.getByTestId('ubicacio').textContent).toBe('/registre');
+
+  expect(screen.queryByRole('button', { name: /Eixir de poble/ })).toBeNull();
+  fireEvent.click(screen.getByRole('link', { name: TEXTOS_PEU_CONTROL.ca.perfilNom }));
+  expect(screen.getByTestId('ubicacio').textContent).toBe('/el-meu-perfil?vista=compte');
   expect(navegacions).toEqual([]);
 });

@@ -172,7 +172,7 @@ test('[CONTROL D6] l’informe i la simulació resolen l’arrel de l’eina enc
   const arrel = mas(t, ['# Índex', '', `- [[${sense(x)}]]`, '']);
   posa(arrel, x);
   // B1 261101: --arxiva --sec carrega el pla d'enllaços (import dinàmic) i el seu graf.
-  for (const file of ['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', 'tooling/lib/markdown-prose.mjs','tooling/lib/document-section-scanner.mjs','tooling/lib/document-link-scanners.mjs', '.agents/AGENTS.md',
+  for (const file of ['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', 'tooling/lib/tool-dialect.mjs', 'tooling/lib/markdown-prose.mjs','tooling/lib/document-section-scanner.mjs','tooling/lib/document-link-scanners.mjs', '.agents/AGENTS.md',
     'tooling/documental/arxiu-enllacos.mjs', 'tooling/documental/turns.mjs', 'tooling/documental/core.mjs', 'tooling/lib/document-links.mjs', 'tooling/gates/verificador-scc.mjs', 'tooling/wiki/lib/frontmatter.mjs']) {
     fs.mkdirSync(path.dirname(path.join(arrel, file)), { recursive: true });
     fs.copyFileSync(path.join(REPO, file), path.join(arrel, file));

@@ -1,11 +1,113 @@
 /** Textos del visor lazy: les denominacions botàniques es conserven de la font. */
-const claus=['titol','cerca','us','tots','aliment','aromatica','medicinal','ornamental','artesanal','toxic','fitxes','buit','mes','font','pagina','castella','angles','valencia','cientific','zona','usos','toxicitatDesconeguda','toxicitatAdvertida','documental','empremta','veu','atura','veuAbsent','veuError'];
-const textos={
- ca:['Consulta les 117 fitxes','Cerca pel nom o pel paratge','Ús transcrit','Tots','Aliment','Aromàtica','Medicinal','Ornamental','Artesanal','Tòxic','fitxes','No hi ha fitxes amb estos filtres.','Mostra més fitxes','Font documental','Pàgina','Nom en castellà','Nom en anglès','Nom en valencià','Nom científic transcrit','Paratge','Usos transcrits','La font no avalua la toxicitat. Això no acredita innocuïtat: no mengeu cap planta sense consell expert.','La font advertix toxicitat. No en mengeu cap part ni la deixeu a l’abast de xiquets o animals.','Transcripció documental; taxonomia pendent de revisió. Els usos tradicionals no són recomanacions de consum.','Empremta de la font','Escolta amb la veu local del dispositiu','Atura la lectura','No hi ha cap veu local disponible. No s’envia text a cap servei.','No s’ha pogut completar la lectura local.'],
- es:['Consulta las 117 fichas','Busca por nombre o paraje','Uso transcrito','Todos','Alimento','Aromática','Medicinal','Ornamental','Artesanal','Tóxico','fichas','No hay fichas con estos filtros.','Muestra más fichas','Fuente documental','Página','Nombre en castellano','Nombre en inglés','Nombre en valenciano','Nombre científico transcrito','Paraje','Usos transcritos','La fuente no evalúa la toxicidad. Esto no acredita inocuidad: no comáis ninguna planta sin consejo experto.','La fuente advierte toxicidad. No comáis ninguna parte ni la dejéis al alcance de niños o animales.','Transcripción documental; taxonomía pendiente de revisión. Los usos tradicionales no son recomendaciones de consumo.','Huella de la fuente','Escucha con la voz local del dispositivo','Detén la lectura','No hay ninguna voz local disponible. No se envía texto a ningún servicio.','No se ha podido completar la lectura local.'],
- en:['Browse the 117 records','Search by name or place','Transcribed use','All','Food','Aromatic','Medicinal','Ornamental','Craft','Toxic','records','No records match these filters.','Show more records','Documentary source','Page','Spanish name','English name','Valencian name','Transcribed scientific name','Place','Transcribed uses','The source does not assess toxicity. This does not establish safety: do not eat any plant without expert advice.','The source warns of toxicity. Do not eat any part and keep it away from children and animals.','Documentary transcription; taxonomy awaits review. Traditional uses are not recommendations for consumption.','Source fingerprint','Listen with the device’s local voice','Stop reading','No local voice is available. No text is sent to a service.','Local reading could not be completed.'],
- eu:['Kontsultatu 117 fitxak','Bilatu izenaren edo tokiaren arabera','Transkribatutako erabilera','Guztiak','Elikagaia','Aromatikoa','Sendabelarra','Apaingarria','Artisautza','Toxikoa','fitxa','Ez dago iragazki horiekin bat datorren fitxarik.','Erakutsi fitxa gehiago','Dokumentu iturria','Orrialdea','Gaztelaniazko izena','Ingelesezko izena','Valentzierazko izena','Transkribatutako izen zientifikoa','Tokia','Transkribatutako erabilerak','Iturriak ez du toxikotasuna ebaluatzen. Horrek ez du segurtasuna egiaztatzen: ez jan landarerik aditu baten aholkurik gabe.','Iturriak toxikotasunaz ohartarazten du. Ez jan inolako zatirik eta ez utzi haurren edo animalien eskura.','Dokumentu transkripzioa; taxonomia berrikusteke dago. Erabilera tradizionalak ez dira kontsumorako gomendioak.','Iturriaren hatz marka','Entzun gailuaren tokiko ahotsarekin','Gelditu irakurketa','Ez dago tokiko ahots erabilgarririk. Ez da testurik bidaltzen zerbitzu batera.','Ezin izan da tokiko irakurketa osatu.'],
- gl:['Consulta as 117 fichas','Busca polo nome ou pola paraxe','Uso transcrito','Todos','Alimento','Aromática','Medicinal','Ornamental','Artesanal','Tóxico','fichas','Non hai fichas con estes filtros.','Mostra máis fichas','Fonte documental','Páxina','Nome en castelán','Nome en inglés','Nome en valenciano','Nome científico transcrito','Paraxe','Usos transcritos','A fonte non avalía a toxicidade. Isto non acredita inocuidade: non comas ningunha planta sen consello experto.','A fonte advirte toxicidade. Non comas ningunha parte nin a deixes ao alcance de nenos ou animais.','Transcrición documental; taxonomía pendente de revisión. Os usos tradicionais non son recomendacións de consumo.','Pegada da fonte','Escoita coa voz local do dispositivo','Detén a lectura','Non hai ningunha voz local dispoñible. Non se envía texto a ningún servizo.','Non se puido completar a lectura local.']
+const claus = [
+  'titol', 'cerca', 'us', 'tots', 'aliment', 'aromatica', 'medicinal', 'ornamental', 'artesanal', 'toxic',
+  'fitxes', 'buit', 'mes', 'font', 'pagina', 'castella', 'angles', 'valencia', 'cientific', 'zona', 'usos',
+  'toxicitatDesconeguda', 'toxicitatAdvertida', 'documental', 'empremta',
+  'sinonimia', 'llenguaCol', 'denominacioCol', 'seguretatTitol',
+  'aptitudToxica', 'aptitudNoComestible', 'aptitudAlimentDocumental', 'aptitudAromaticaDocumental', 'aptitudNoAvaluada',
+  'alergensEtiqueta', 'tracesEtiqueta', 'alergensPendent', 'alergensCapDeclarat',
+];
+
+const textos = {
+  ca: [
+    'Consulta les 117 fitxes', 'Cerca pel nom o pel paratge', 'Ús transcrit', 'Tots',
+    'Aliment', 'Aromàtica', 'Medicinal', 'Ornamental', 'Artesanal', 'Tòxic',
+    'fitxes', 'No hi ha fitxes amb estos filtres.', 'Mostra més fitxes', 'Font documental', 'Pàgina',
+    'Nom en castellà', 'Nom en anglès', 'Nom en valencià', 'Nom científic transcrit', 'Paratge', 'Usos transcrits',
+    'La font no avalua la toxicitat. Això no acredita innocuïtat: no mengeu cap planta sense consell expert.',
+    'La font advertix toxicitat. No en mengeu cap part ni la deixeu a l’abast de xiquets o animals.',
+    'Transcripció documental; taxonomia pendent de revisió. Els usos tradicionals no són recomanacions de consum.',
+    'Empremta de la font',
+    'Sinonímia i denominacions', 'Llengua', 'Denominació', 'Aptitud alimentària, toxicitat i al·lèrgens',
+    'Planta tòxica · No apta per al consum', 'Planta no comestible',
+    'Ús alimentari tradicional transcrit (pendent de validació experta)',
+    'Ús aromàtic o d’infusió tradicional transcrit (pendent de validació experta)',
+    'Aptitud alimentària no acreditada per la font',
+    'Al·lèrgens', 'Possibles traces',
+    'Al·lèrgens UE 1169/2011: estat desconegut fins a verificació documental.',
+    'Al·lèrgens UE 1169/2011: cap dels 14 al·lèrgens obligatoris declarat en estat natural.',
+  ],
+  es: [
+    'Consulta las 117 fichas', 'Busca por nombre o paraje', 'Uso transcrito', 'Todos',
+    'Alimento', 'Aromática', 'Medicinal', 'Ornamental', 'Artesanal', 'Tóxico',
+    'fichas', 'No hay fichas con estos filtros.', 'Muestra más fichas', 'Fuente documental', 'Página',
+    'Nombre en castellano', 'Nombre en inglés', 'Nombre en valenciano', 'Nombre científico transcrito', 'Paraje', 'Usos transcritos',
+    'La fuente no evalúa la toxicidad. Esto no acredita inocuidad: no comáis ninguna planta sin consejo experto.',
+    'La fuente advierte toxicidad. No comáis ninguna parte ni la dejéis al alcance de niños o animales.',
+    'Transcripción documental; taxonomía pendiente de revisión. Los usos tradicionales no son recomendaciones de consumo.',
+    'Huella de la fuente',
+    'Sinonimia y denominaciones', 'Lengua', 'Denominación', 'Aptitud alimentaria, toxicidad y alérgenos',
+    'Planta tóxica · No apta para el consumo', 'Planta no comestible',
+    'Uso alimentario tradicional transcrito (pendiente de validación experta)',
+    'Uso aromático o de infusión tradicional transcrito (pendiente de validación experta)',
+    'Aptitud alimentaria no acreditada por la fuente',
+    'Alérgenos', 'Posibles trazas',
+    'Alérgenos UE 1169/2011: estado desconocido hasta verificación documental.',
+    'Alérgenos UE 1169/2011: ninguno de los 14 alérgenos obligatorios declarado en estado natural.',
+  ],
+  en: [
+    'Browse the 117 records', 'Search by name or place', 'Transcribed use', 'All',
+    'Food', 'Aromatic', 'Medicinal', 'Ornamental', 'Craft', 'Toxic',
+    'records', 'No records match these filters.', 'Show more records', 'Documentary source', 'Page',
+    'Spanish name', 'English name', 'Valencian name', 'Transcribed scientific name', 'Place', 'Transcribed uses',
+    'The source does not assess toxicity. This does not establish safety: do not eat any plant without expert advice.',
+    'The source warns of toxicity. Do not eat any part and keep it away from children and animals.',
+    'Documentary transcription; taxonomy awaits review. Traditional uses are not recommendations for consumption.',
+    'Source fingerprint',
+    'Synonymy and names', 'Language', 'Name', 'Edibility, toxicity and allergens',
+    'Toxic plant · Unfit for consumption', 'Inedible plant',
+    'Transcribed traditional food use (pending expert validation)',
+    'Transcribed traditional aromatic or infusion use (pending expert validation)',
+    'Edibility not established by the source',
+    'Allergens', 'Possible traces',
+    'EU 1169/2011 allergens: unknown status pending documentary verification.',
+    'EU 1169/2011 allergens: none of the 14 mandatory allergens declared in natural state.',
+  ],
+  eu: [
+    'Kontsultatu 117 fitxak', 'Bilatu izenaren edo tokiaren arabera', 'Transkribatutako erabilera', 'Guztiak',
+    'Elikagaia', 'Aromatikoa', 'Sendabelarra', 'Apaingarria', 'Artisautza', 'Toxikoa',
+    'fitxa', 'Ez dago iragazki horiekin bat datorren fitxarik.', 'Erakutsi fitxa gehiago', 'Dokumentu iturria', 'Orrialdea',
+    'Gaztelaniazko izena', 'Ingelesezko izena', 'Valentzierazko izena', 'Transkribatutako izen zientifikoa', 'Tokia', 'Transkribatutako erabilerak',
+    'Iturriak ez du toxikotasuna ebaluatzen. Horrek ez du segurtasuna egiaztatzen: ez jan landarerik aditu baten aholkurik gabe.',
+    'Iturriak toxikotasunaz ohartarazten du. Ez jan inolako zatirik eta ez utzi haurren edo animalien eskura.',
+    'Dokumentu transkripzioa; taxonomia berrikusteke dago. Erabilera tradizionalak ez dira kontsumorako gomendioak.',
+    'Iturriaren hatz marka',
+    'Sinonimia eta izendapenak', 'Hizkuntza', 'Izendapena', 'Elikadura-egokitasuna, toxikotasuna eta alergenoak',
+    'Landare toxikoa · Kontsumorako ez-egokia', 'Landare ez-jangarria',
+    'Transkribatutako elikadura-erabilera tradizionala (adituen balidazioaren zain)',
+    'Transkribatutako erabilera aromatiko tradizionala (adituen balidazioaren zain)',
+    'Iturriak ez du elikadura-egokitasuna egiaztatzen',
+    'Alergenoak', 'Aztarna posibleak',
+    'EB 1169/2011 alergenoak: egoera ezezaguna dokumentu-egiaztapena egin arte.',
+    'EB 1169/2011 alergenoak: ez da 14 alergeno nahitaezkoetatik bat ere adierazi egoera naturalean.',
+  ],
+  gl: [
+    'Consulta as 117 fichas', 'Busca polo nome ou pola paraxe', 'Uso transcrito', 'Todos',
+    'Alimento', 'Aromática', 'Medicinal', 'Ornamental', 'Artesanal', 'Tóxico',
+    'fichas', 'Non hai fichas con estes filtros.', 'Mostra máis fichas', 'Fonte documental', 'Páxina',
+    'Nome en castelán', 'Nome en inglés', 'Nome en valenciano', 'Nome científico transcrito', 'Paraxe', 'Usos transcritos',
+    'A fonte non avalía a toxicidade. Isto non acredita inocuidade: non comas ningunha planta sen consello experto.',
+    'A fonte advirte toxicidade. Non comas ningunha parte nin a deixes ao alcance de nenos ou animais.',
+    'Transcrición documental; taxonomía pendente de revisión. Os usos tradicionais non son recomendacións de consumo.',
+    'Pegada da fonte',
+    'Sinonimia e denominacións', 'Lingua', 'Denominación', 'Aptitude alimentaria, toxicidade e alérxenos',
+    'Planta tóxica · Non apta para o consumo', 'Planta non comestible',
+    'Uso alimentario tradicional transcrito (pendente de validación experta)',
+    'Uso aromático ou de infusión tradicional transcrito (pendente de validación experta)',
+    'Aptitude alimentaria non acreditada pola fonte',
+    'Alérxenos', 'Posibles trazas',
+    'Alérxenos UE 1169/2011: estado descoñecido ata verificación documental.',
+    'Alérxenos UE 1169/2011: ningún dos 14 alérxenos obrigatorios declarado en estado natural.',
+  ],
 };
-export const TEXTOS_HERBARI=Object.freeze(Object.fromEntries(Object.entries(textos).map(([lang,vals])=>[lang,Object.freeze(Object.fromEntries(claus.map((key,i)=>[key,vals[i]])))])));
-export const textosHerbari=lang=>TEXTOS_HERBARI[lang]??TEXTOS_HERBARI.ca;
+
+export const TEXTOS_HERBARI = Object.freeze(
+  Object.fromEntries(
+    Object.entries(textos).map(([lang, vals]) => [
+      lang,
+      Object.freeze(Object.fromEntries(claus.map((key, i) => [key, vals[i]]))),
+    ])
+  )
+);
+
+export const textosHerbari = (lang) => TEXTOS_HERBARI[lang] ?? TEXTOS_HERBARI.ca;

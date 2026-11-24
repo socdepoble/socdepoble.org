@@ -25,13 +25,15 @@ export default function BarraSeleccio({
   t,
   refEixir = null
 }) {
+  const etiquetaEixir = t('section.xat.seleccio.eixirXats', 'Eixir de la selecció de xats');
   const eixir = (
     <button
       ref={refEixir}
       type="button"
       className="sdp-xat-icona"
       onClick={onEixir}
-      aria-label={t('section.xat.seleccio.eixirXats', 'Eixir de la selecció de xats')}
+      aria-label={etiquetaEixir}
+      title={etiquetaEixir}
     >
       <X size={24} aria-hidden="true" focusable="false" />
     </button>

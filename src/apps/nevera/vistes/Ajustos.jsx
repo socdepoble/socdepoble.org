@@ -13,7 +13,7 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, Database, Download, RotateCcw, Trash2 } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { useNavigate } from '../../../app/contexts/RouterContext';
-import { Boto, Camp, CampText, GrupCamps, MarcColumna, OrdenaCategories } from '../../../components/PedraSeca/index.js';
+import { Accions, Boto, Camp, CampText, GrupCamps, MarcColumna, OrdenaCategories } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { textosVistaNevera } from '../i18nNevera.js';
 import { nomLlistaVisible } from '../mercadona.js';
@@ -44,9 +44,14 @@ function FormulariNom({ llista, onCanvia, tx }) {
   return (
     <form onSubmit={envia} noValidate>
       <Camp etiqueta={tx.nomDeLaLlista} error={error}>
-        <CampText value={nom} maxLength={LIMITS.nom} autoComplete="off" onChange={(event) => setNom(event.target.value)} />
+        <CampText value={nom} maxLength={LIMITS.nom} autoComplete="off" onChange={(event) => {
+          setNom(event.target.value);
+          if (error) setError(null);
+        }} />
       </Camp>
-      <Boto tipus="submit" varietat="primari" disabled={nom.trim() === llista.nom}>{tx.canviaElNom}</Boto>
+      <Accions>
+        <Boto tipus="submit" varietat="primari" disabled={nom.trim() === llista.nom}>{tx.canviaElNom}</Boto>
+      </Accions>
     </form>
   );
 }
@@ -76,16 +81,20 @@ export function ColumnaAjustosLlista({ params }) {
           onMou={(id, direccio) => accions.mouSeccio(llista.id, id, direccio)}
           onVisibilitat={(id, visible) => accions.amagaSeccio(llista.id, id, !visible)}
         />
-        <Boto icona={RotateCcw} onClick={() => accions.restableixSeccions(llista.id)}>{tx.tornaOrdreSempre}</Boto>
+        <Accions>
+          <Boto icona={RotateCcw} onClick={() => accions.restableixSeccions(llista.id)}>{tx.tornaOrdreSempre}</Boto>
+        </Accions>
       </GrupCamps>
       <GrupCamps llegenda={tx.esborrar}>
         {unica ? <p>{tx.unicaLlistaAvis}</p> : null}
-        <Boto varietat="perill" icona={Trash2} disabled={unica} onClick={() => demanaConfirmacio({
-          titol: tx.volsEsborrarLlista(nomLlista),
-          descripcio: tx.esborrarLlistaDesc,
-          etiquetaConfirma: tx.esborraLaLlista,
-          accio: () => accions.esborraLlista(llista.id)
-        })}>{tx.esborraEstaLlista}</Boto>
+        <Accions>
+          <Boto varietat="perill" icona={Trash2} disabled={unica} onClick={() => demanaConfirmacio({
+            titol: tx.volsEsborrarLlista(nomLlista),
+            descripcio: tx.esborrarLlistaDesc,
+            etiquetaConfirma: tx.esborraLaLlista,
+            accio: () => accions.esborraLlista(llista.id)
+          })}>{tx.esborraEstaLlista}</Boto>
+        </Accions>
       </GrupCamps>
     </MarcColumna>
   );
@@ -112,6 +121,7 @@ export function ColumnaDades({ params }) {
   });
 
   const exporta = async () => {
+    setErrorCopia(null);
     const nom = `nevera-de-casa-${avui()}.json`;
     const creada = new Date().toISOString();
     try {
@@ -159,18 +169,22 @@ export function ColumnaDades({ params }) {
     <MarcColumna capcalera={<AppGridColumn titol={tx.dadesICopia} startActions={startActions} />} etiqueta={tx.dadesICopia}>
       <AvisNevera sempre />
       <GrupCamps llegenda={tx.copiaSeguretat}>
-        <Boto icona={Download} onClick={exporta}>{tx.descarregaUnaCopia}</Boto>
+        <Accions>
+          <Boto icona={Download} onClick={exporta}>{tx.descarregaUnaCopia}</Boto>
+        </Accions>
         <Camp etiqueta={tx.recuperaUnaCopia} ajuda={tx.ajudaRecuperaCopia} error={errorCopia}>
           <CampText tipus="file" accept=".json,application/json" onChange={recupera} />
         </Camp>
       </GrupCamps>
       <GrupCamps llegenda={tx.comencarDeNou}>
-        <Boto varietat="perill" icona={Trash2} onClick={() => demanaConfirmacio({
-          titol: tx.volsEsborrarTot,
-          descripcio: tx.esborrarTotDesc,
-          etiquetaConfirma: tx.esborraHoTot,
-          accio: () => accions.esborraTot()
-        })}>{tx.esborraHoTot}</Boto>
+        <Accions>
+          <Boto varietat="perill" icona={Trash2} onClick={() => demanaConfirmacio({
+            titol: tx.volsEsborrarTot,
+            descripcio: tx.esborrarTotDesc,
+            etiquetaConfirma: tx.esborraHoTot,
+            accio: () => accions.esborraTot()
+          })}>{tx.esborraHoTot}</Boto>
+        </Accions>
       </GrupCamps>
     </MarcColumna>
   );

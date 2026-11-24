@@ -349,7 +349,7 @@ test('compartir sense porta-retalls avisa amb l\'enllaç en lloc de petar', asyn
     pinta({ title: 'X', hasFooter: true });
     await act(async () => { troba('[aria-label="Compartir X"]').click(); });
     expect(mocks.toast).toHaveBeenCalledWith(
-      expect.stringContaining("No s'ha pogut copiar"), 6000
+      expect.stringContaining("No s'ha pogut copiar"), 15000
     );
   } finally {
     if (shareOriginal) Object.defineProperty(navigator, 'share', shareOriginal);

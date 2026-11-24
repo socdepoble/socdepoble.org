@@ -12,11 +12,12 @@
  *     la versió. A la web, només la versió (la web no té build). Dins de l'App, el de socdepoble.org (la CSP de la closca ho permet:
  *     tests/agentic-browsing-ard-llms.test.mjs); a la web, el del mateix origen, només a socdepoble.org
  *     i al seu mirall socdepoble.cat. Fora (el connector de WordPress, desenvolupament), cap consulta
- *     (cap 404 a la consola de l'amfitrió) i la línia diu només la instal·lada.
+ *     (cap 404 a la consola de l'amfitrió) i la línia diu només la instal·lada (SENSE_CONSULTA_MANIFEST,
+ *     sense mostrar l'alarma «Última publicada: no s'ha pogut comprovar»; IDEA-332).
  *   · Cinc llengües, en una taula d'este tros (no als diccionaris: el valencià va a l'arrencada del
  *     connector); la llengua la passa qui la pinta (`llengua`, la de useUIActions). No és contingut de
  *     PAGE_COPY: la Frontissa de /versions no canvia.
- * Mai llança: sense manifest, «no s'ha pogut comprovar».
+ * Mai llança: quan consulta el manifest i falla, «no s'ha pogut comprovar»; quan no s'ha de consultar, només la instal·lada.
  */
 import { useEffect, useState } from 'react';
 import { Alerta } from '../PedraSeca/molecules/Alerta.jsx';
@@ -29,6 +30,8 @@ import { VERSIO_CLIENT_NATIU } from '../../data/contracte.js';
 export const CAMI_MANIFEST_PUBLIC = '/.well-known/ard.json';
 /** Els orígens web que servixen el manifest (Firebase i el mirall del Node 0). */
 export const ORIGENS_AMB_MANIFEST = Object.freeze([ORIGEN_PUBLIC_PER_DEFECTE, 'https://socdepoble.cat']);
+/** Estat quan l'origen no servix manifest públic (localhost, connector de WordPress): cap consulta i cap falsa alarma. */
+export const SENSE_CONSULTA_MANIFEST = 'sense-consulta';
 
 export const TEXTOS_LINIA_VERSIO = Object.freeze({
   ca: Object.freeze({
@@ -100,12 +103,13 @@ export function publicadaDelManifest(manifest, { plataforma, versio = VERSIO_SIS
   return endarrerit ? { versio: canals.versio } : { versio: canals.versio, build: maxim };
 }
 
-/** El text de la línia. `publicada`: null (s'està comprovant), false (sense dades), { versio } o { versio, build }. Pur. */
+/** El text de la línia. `publicada`: 'sense-consulta' (només instal·lada), null (s'està comprovant), false (sense dades), { versio } o { versio, build }. Pur. */
 export function textLiniaVersio({ llengua, plataforma, versio = VERSIO_SISTEMA, build = VERSIO_CLIENT_NATIU, publicada }) {
   const codi = String(llengua || 'ca').toLowerCase().split('-')[0];
   const textos = Object.hasOwn(TEXTOS_LINIA_VERSIO, codi) ? TEXTOS_LINIA_VERSIO[codi] : TEXTOS_LINIA_VERSIO.ca;
   const nativa = plataforma === 'android' || plataforma === 'ios';
   const installada = nativa ? omple(textos.installada, { versio, build }) : omple(textos.installadaWeb, { versio });
+  if (publicada === SENSE_CONSULTA_MANIFEST) return installada;
   let darrera = textos.comprovant;
   if (publicada === false) darrera = textos.senseDades;
   else if (publicada) darrera = omple(Number.isSafeInteger(publicada.build) ? textos.publicada : textos.publicadaSenseBuild, publicada);
@@ -126,9 +130,9 @@ export default function LiniaVersioInstallada({
   llengua = 'ca'
 }) {
   const url = urlManifestPublic({ plataforma, origen });
-  const [publicada, setPublicada] = useState(() => (url ? null : false));
+  const [publicada, setPublicada] = useState(() => (url ? null : SENSE_CONSULTA_MANIFEST));
   useEffect(() => {
-    if (!url) { setPublicada(false); return undefined; }
+    if (!url) { setPublicada(SENSE_CONSULTA_MANIFEST); return undefined; }
     let viu = true;
     setPublicada(null);
     consultaJsonPublic({ fetchImpl, url }).then((manifest) => {

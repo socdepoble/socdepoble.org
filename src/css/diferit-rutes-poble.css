@@ -1,0 +1,100 @@
+/* ==========================================================================
+   PEDRA SECA · ITINERARIS I RUTES DE POBLE (FULL DIFERIT · R32.55 U-DIS-01)
+   S'adopta a demanda des de RutesDePobleSection.jsx (0 B al paquet d'arrencada).
+   ========================================================================== */
+@layer components {
+  .sdp-rutes-poble {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-5);
+    min-inline-size: 0;
+  }
+
+  .sdp-rutes-poble__fonts,
+  .sdp-rutes-poble__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+
+  .sdp-rutes-poble__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-tight);
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-rutes-poble__sep {
+    display: none;
+  }
+
+  .sdp-rutes-poble__vigencia {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-avis);
+    border-inline-start-width: 4px;
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+  }
+
+  .sdp-rutes-poble__ruta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-inline-size: 0;
+  }
+
+  .sdp-rutes-poble__ruta-titol {
+    margin: 0;
+    text-align: center;
+    color: var(--sdp-text-titol);
+  }
+
+  .sdp-rutes-poble__lema {
+    margin: 0;
+    text-align: center;
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-rutes-poble__parades,
+  .sdp-rutes-poble__recursos {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-rutes-poble__parada,
+  .sdp-rutes-poble__recurs {
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: 3px solid var(--sdp-accio);
+    background: var(--sdp-fons-app);
+    line-height: var(--sdp-leading-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-rutes-poble__programa {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    min-inline-size: 0;
+  }
+}

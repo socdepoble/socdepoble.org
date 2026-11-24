@@ -42,7 +42,8 @@ export default function CitaResposta({ citat = null, onVes = null, interactiva =
       ) : null}
     </>
   );
-  if (!interactiva || typeof onVes !== 'function') return <div className={classe}>{cos}</div>;
+  const esborrat = Boolean(citat.esborrat) || Boolean(citat.esborratAl);
+  if (!interactiva || esborrat || typeof onVes !== 'function') return <div className={classe}>{cos}</div>;
   return (
     <button type="button" className={classe} onClick={() => onVes(citat.id)}>
       <span className="sdp-nomes-lector">{`${t('section.xat.resposta.citat', 'Missatge citat')}:`}</span>

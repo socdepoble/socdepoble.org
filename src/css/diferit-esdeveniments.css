@@ -42,11 +42,26 @@
     overflow-wrap: anywhere;
   }
 
+  .sdp-quadre-esdeveniment__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
   .sdp-quadre-esdeveniment__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
     margin: 0;
-    font-size: var(--sdp-fluid-cos);
-    line-height: var(--sdp-leading-cos);
-    color: var(--sdp-text-cos);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-tight);
+    color: var(--sdp-text-titol);
+    max-inline-size: 100%;
     overflow-wrap: anywhere;
   }
 

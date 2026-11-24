@@ -5,7 +5,7 @@ const dobles = vi.hoisted(() => ({ compressImage: vi.fn() }));
 vi.mock('./imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 
 import {
-  AVISOS_DE_LA_FOTO, ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF,
+  AVISOS_DE_LA_FOTO, ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA, ERROR_FOTO_ILLEGIBLE, ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF,
   ERROR_PRESSUPOST_EXIF_CAMERA, MAX_CODIFICACIONS, MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP, PRESSUPOST_PUJADA,
   QUALITATS_DE_LA_CERCA, QUALITAT_MAXIMA, QUALITAT_MINIMA, MAX_COSTAT_WEBP, QUALITAT_WEBP,
   bytesDeDataUrl, esAvisDeLaFoto, fitxerDeDataUrl, fotoDinsDelPressupost, garantixWebp, tipusReal,
@@ -27,13 +27,13 @@ const WEBP = Uint8Array.from('RIFF\u0000\u0000\u0000\u0000WEBPVP8 ', (c) => c.ch
 const JPEG = concatena(SOI, APP0_JFIF, IMATGE);
 const dataUrl = (tipus, bytes) => `data:${tipus};base64,${btoa(String.fromCharCode(...bytes))}`;
 
-/* Un fetch que torna els bytes de veres del data URL, amb el tipus de la seua capçalera. */
-function fetchDeVeres() {
-  vi.stubGlobal('fetch', vi.fn(async (url) => {
-    const coma = url.indexOf(',');
-    const tipus = /^data:([^;,]*)/.exec(url)?.[1] || '';
-    const bytes = Uint8Array.from(atob(url.slice(coma + 1)), (c) => c.charCodeAt(0));
-    return { blob: async () => new Blob([bytes], { type: tipus }) };
+/* P08-04 · La CSP estricta d'un amfitrió (WordPress) sense `data:` a
+   connect-src: qualsevol fetch peta, com al navegador. Abans un fetch simulat
+   tornava els bytes del data URL; ara el fitxer es fa sense xarxa, i esta
+   guarda ho fixa a totes les proves que en fan un. */
+function senseFetch() {
+  vi.stubGlobal('fetch', vi.fn(() => {
+    throw new TypeError('Refused to connect: Content Security Policy (connect-src)');
   }));
 }
 const bytesDe = (blob) => new Promise((resol, rebutja) => {
@@ -122,7 +122,7 @@ const foto = () => new File(['x'], 'foto.jpg', { type: 'image/jpeg' });
 
 describe('fotoDinsDelPressupost · la mida fixa, la qualitat més alta que hi cap i menys de 80.000 bytes', () => {
   test('el sostre, si hi cap: un sol intent, el de sempre (0,8)', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(79000)));
     const { fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
     expect(crides()).toEqual([[1200, 'image/webp', 0.8]]);
@@ -130,7 +130,7 @@ describe('fotoDinsDelPressupost · la mida fixa, la qualitat més alta que hi ca
   });
 
   test('si no, la qualitat MÉS ALTA que hi cap, a la MATEIXA mida, i el File del tipus real: el millor intent, sense tornar a codificar', async () => {
-    fetchDeVeres();
+    senseFetch();
     // 115.200 B a qualitat 1: hi cap per davall de 0,694; la més alta de la reixa és 0,68 (78.336 B).
     dobles.compressImage.mockImplementation(codificador(lineal(115200)));
     const { dataUrl, fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
@@ -140,7 +140,7 @@ describe('fotoDinsDelPressupost · la mida fixa, la qualitat més alta que hi ca
   });
 
   test('estricte: 80.000 bytes exactes no hi caben; 79.999 sí', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador((q) => (q === QUALITAT_MAXIMA ? 80000 : 79999)));
     const { fitxer } = await fotoDinsDelPressupost(foto(), { mida: 400, nom: 'avatar' });
     expect(crides()).toEqual([0.8, 0.4, 0.6, 0.68, 0.72, 0.76].map((q) => [400, 'image/webp', q]));
@@ -148,7 +148,7 @@ describe('fotoDinsDelPressupost · la mida fixa, la qualitat més alta que hi ca
   });
 
   test('si ni la qualitat mínima hi cap: ERROR_PRESSUPOST, després de la cerca a la mateixa mida, que acaba a QUALITAT_MINIMA', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(90000)));
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' })).rejects.toThrow(ERROR_PRESSUPOST);
     expect(crides()).toEqual([0.8, 0.4, 0.2, 0.08, 0.04].map((q) => [1200, 'image/webp', q]));
@@ -157,7 +157,7 @@ describe('fotoDinsDelPressupost · la mida fixa, la qualitat més alta que hi ca
   });
 
   test('Safari 16 (sense WebP en canvas): es torna a demanar JPEG, i des d’eixe intent ja no es demana WebP', async () => {
-    fetchDeVeres();
+    senseFetch();
     // 100.000 B a qualitat 1: el JPEG de 0,8 en fa 80.000 (no hi cap) i el de 0,76, 76.000. És el pitjor cas: set codificacions.
     dobles.compressImage.mockImplementation(codificador(lineal(100000), { sapWebp: false }));
     const { fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
@@ -237,7 +237,7 @@ describe('fotoDinsDelPressupost · la qualitat MÉS ALTA que hi cap, amb les cor
     [nomFoto, 'JPEG (WebKit: iPhone i Safari)', false],
   ]);
   test.each(casos)('%s en %s: hi cap, a 1.200 × 1.200, amb la qualitat més alta de la reixa', async (nomFoto, _motor, sapWebp) => {
-    fetchDeVeres();
+    senseFetch();
     const corbes = CORBES_MESURADES[nomFoto];
     dobles.compressImage.mockImplementation(codificadorMesurat(corbes, { sapWebp }));
     const { dataUrl, fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
@@ -252,7 +252,7 @@ describe('fotoDinsDelPressupost · la qualitat MÉS ALTA que hi cap, amb les cor
   });
 
   test('DSC00410 en JPEG (un iPhone): abans, ERROR_PRESSUPOST a 0,4; ara puja a 0,24 (72.803 B), en sis codificacions', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificadorMesurat(CORBES_MESURADES['DSC00410.JPG'], { sapWebp: false }));
     const { fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
     expect(crides()).toEqual([
@@ -302,7 +302,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   const opcions = () => dobles.compressImage.mock.calls.map(([, o]) => o);
 
   test('conservaExif i l’original passen a cada intent (també a la reserva JPEG); sense `original`, el mateix fitxer', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador((q) => (q === QUALITAT_MAXIMA ? 90000 : 70000), { sapWebp: false }));
     const triada = original();
     const retall = foto();
@@ -317,7 +317,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   });
 
   test('sense la tria, o desmarcada: cap clau nova a compressImage (com abans)', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(1000)));
     await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage' });
     await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: false, original: original() });
@@ -325,7 +325,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   });
 
   test('si amb l’EXIF no hi cap però sense sí que hi cabria: ERROR_PRESSUPOST_EXIF, que diu com eixir-ne, i res no puja', async () => {
-    fetchDeVeres();
+    senseFetch();
     const { tiff } = await exifPublicable(original());
     expect(tiff.length).toBeGreaterThan(50);
     const triada = original();
@@ -337,7 +337,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   });
 
   test('si tampoc no hi cabria sense l’EXIF, o la casella era desmarcada: ERROR_PRESSUPOST, el de sempre', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(90000)));
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true, original: original() })).rejects.toThrow(ERROR_PRESSUPOST);
     dobles.compressImage.mockImplementation(codificador(sempre(PRESSUPOST_PUJADA + 10)));
@@ -349,7 +349,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   /* P1-64 (pla 261028_1526 §3.1.1) · La precisió de les píndoles va amb la
      tria a cada intent; sense, cap clau nova. */
   test('P1-64 · `precisio` passa a cada intent amb conservaExif; sense, cap clau nova', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(1000)));
     const triada = original();
     await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: true, original: triada, precisio: 'poble' });
@@ -364,7 +364,7 @@ describe('fotoDinsDelPressupost · la tria de l’EXIF compta dins del pressupos
   });
 
   test('P1-64 · una ubicació que no es pot arrodonir a la precisió triada: ERROR_EXIF_NO_CONSERVABLE abans de comprimir, mai el punt exacte', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificador(sempre(1000)));
     const rara = new File([jpegAmbExif({ gps: gpsTorre({ lat: [[38, 1], [35, 1], [30, 1], [1, 1]] }) })], 'rara.jpg', { type: 'image/jpeg' });
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true, original: rara, precisio: 'poble' })).rejects.toThrow(ERROR_EXIF_NO_CONSERVABLE);
@@ -423,7 +423,7 @@ describe('fotoDinsDelPressupost · el sostre per format i l’avís honest', () 
 
   test('un TIFF de 70.462 B en eixida WebP: es conserva sencer, perquè hi cap en el pressupost', async () => {
     expect(TIFF_GRAN.length).toBe(70462);
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificadorAmbExif());
     const triada = webpAmb(TIFF_GRAN);
     const { fitxer } = await fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: true, original: triada });
@@ -436,7 +436,7 @@ describe('fotoDinsDelPressupost · el sostre per format i l’avís honest', () 
   });
 
   test('el mateix en eixida JPEG (Safari 16): no hi cap en un APP1, i es diu (ERROR_EXIF_NO_CONSERVABLE), no una foto neta', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificadorAmbExif({ sapWebp: false }));
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, nom: 'heroImage', conservaExif: true, original: webpAmb(TIFF_GRAN) }))
       .rejects.toThrow(ERROR_EXIF_NO_CONSERVABLE);
@@ -450,7 +450,7 @@ describe('fotoDinsDelPressupost · el sostre per format i l’avís honest', () 
   });
 
   test('un EXIF que no es pot conservar (un punter fora del bloc): l’avís abans de comprimir res', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockImplementation(codificadorAmbExif());
     const original = trencat({ exif: dataOriginal('2017:05:14 10:22:33'), gps: gpsTorre() });
     await expect(fotoDinsDelPressupost(foto(), { mida: 1200, conservaExif: true, original })).rejects.toThrow(ERROR_EXIF_NO_CONSERVABLE);
@@ -459,7 +459,7 @@ describe('fotoDinsDelPressupost · el sostre per format i l’avís honest', () 
   });
 
   test('una càmera sense GPS ni data: els avisos parlen de la càmera, amb l’etiqueta que es veu', async () => {
-    fetchDeVeres();
+    senseFetch();
     const camera = jpegDe({ ifd0: MARCA_MODEL });
     expect(await exifPublicable(camera)).toMatchObject({ gps: null, dataCaptura: null, tiff: expect.any(Uint8Array) });
     dobles.compressImage.mockImplementation(codificadorAmbExif({ pes: PRESSUPOST_PUJADA + 10 }));
@@ -470,9 +470,13 @@ describe('fotoDinsDelPressupost · el sostre per format i l’avís honest', () 
     expect(ERROR_EXIF_NO_CONSERVABLE_CAMERA).toContain(`«${ETIQUETA_CONSERVA_CAMERA}»`);
   });
 
-  test('esAvisDeLaFoto: els cinc avisos de la foto (els que qui puja ha de mostrar tal qual), i res més', () => {
+  /* P08-04 (revisió adversarial) · La foto que no es pot llegir també és un
+     avís de la foto: no s'ha tocat la xarxa, i l'avatar no l'ha de dir com un
+     error de connexió. */
+  test('esAvisDeLaFoto: els sis avisos de la foto (els que qui puja ha de mostrar tal qual), i res més', () => {
     expect(AVISOS_DE_LA_FOTO).toEqual([
       ERROR_PRESSUPOST, ERROR_PRESSUPOST_EXIF, ERROR_PRESSUPOST_EXIF_CAMERA, ERROR_EXIF_NO_CONSERVABLE, ERROR_EXIF_NO_CONSERVABLE_CAMERA,
+      ERROR_FOTO_ILLEGIBLE,
     ]);
     expect(Object.isFrozen(AVISOS_DE_LA_FOTO)).toBe(true);
     AVISOS_DE_LA_FOTO.forEach((avis) => expect(esAvisDeLaFoto(avis)).toBe(true));
@@ -505,11 +509,69 @@ describe('fitxerDeDataUrl · el nom porta l’extensió del tipus real i els byt
     ['JPEG', 'image/jpeg', JPEG, 'heroImage', 'heroImage.jpg', 'image/jpeg'],
     ['WebP', 'image/webp', WEBP, 'logoImage', 'logoImage.webp', 'image/webp'],
   ])('%s', async (_cas, capcalera, bytes, nomBase, nom, tipus) => {
-    fetchDeVeres();
+    senseFetch();
     const fitxer = await fitxerDeDataUrl(dataUrl(capcalera, bytes), nomBase);
     expect(fitxer).toBeInstanceOf(File);
     expect([fitxer.name, fitxer.type]).toEqual([nom, tipus]);
     expect([...await bytesDe(fitxer)]).toEqual([...bytes]);
+  });
+});
+
+/* P08-04 (peix 8, la CSP de WordPress) · Abans fitxerDeDataUrl feia
+   fetch(dataUrl), i un fetch a una URL data: el governa connect-src: amb la
+   CSP d'un amfitrió que no hi porta `data:`, el navegador el bloquejava i cap
+   foto es pujava (ni l'avatar, ni el logotip, ni la capçalera, ni la d'una
+   nota o del text). Ara el base64 es descodifica ací mateix (atob), com
+   fotoNetaDIdentitat.js, sense xarxa. */
+describe('fitxerDeDataUrl · P08-04 · sense fetch(data:): els bytes i el tipus exactes, o un error clar', () => {
+  /* Tots els valors d'un byte, de 0 a 255, darrere de la firma: cap no es perd ni canvia. */
+  const TOTS_ELS_BYTES = Uint8Array.from({ length: 256 }, (_, i) => i);
+
+  test.each([
+    ['PNG', 'image/png', concatena(PNG, TOTS_ELS_BYTES), 'avatar', 'avatar.png'],
+    ['JPEG', 'image/jpeg', concatena(JPEG, TOTS_ELS_BYTES), 'heroImage', 'heroImage.jpg'],
+    ['WebP', 'image/webp', concatena(WEBP, TOTS_ELS_BYTES), 'logoImage', 'logoImage.webp'],
+  ])('un data URL %s amb una CSP estricta: el File porta els bytes i el tipus exactes, i no es crida cap fetch', async (_cas, tipus, bytes, nomBase, nom) => {
+    senseFetch();
+    const fitxer = await fitxerDeDataUrl(dataUrl(tipus, bytes), nomBase);
+    expect(fitxer).toBeInstanceOf(File);
+    expect([fitxer.name, fitxer.type, fitxer.size]).toEqual([nom, tipus, bytes.length]);
+    expect([...await bytesDe(fitxer)]).toEqual([...bytes]);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  /* Revisió adversarial · Uns bytes que no diuen cap format (tres zeros): el
+     tipus del File l'ha de donar el Blob, que porta el de la capçalera del
+     data URL en minúscules i sense els paràmetres (`;name=…`), com feia el
+     fetch. Un tipus que no és d'imatge queda en WebP, el de sempre. */
+  test.each([
+    ['data:image/png;base64,AAAA', 'x.png', 'image/png'],
+    ['data:IMAGE/JPEG;name=a;base64,AAAA', 'x.jpg', 'image/jpeg'],
+    ['data:text/plain;base64,AAAA', 'x.webp', 'image/webp'],
+  ])('%s: sense firma als bytes, mana el tipus de la capçalera, i no es crida cap fetch', async (url, nom, tipus) => {
+    senseFetch();
+    const fitxer = await fitxerDeDataUrl(url, 'x');
+    expect([fitxer.name, fitxer.type, fitxer.size]).toEqual([nom, tipus, 3]);
+    expect([...await bytesDe(fitxer)]).toEqual([0, 0, 0]);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('l’error, amb paraules de casa: què ha passat i com eixir-ne', () => {
+    expect(ERROR_FOTO_ILLEGIBLE).toBe('No s’ha pogut llegir la foto per a pujar-la; prova amb una altra foto.');
+  });
+
+  test.each([
+    ['un base64 trencat', 'data:image/png;base64,@@@@'],
+    ['un base64 d’una longitud impossible', `data:image/png;base64,${'A'.repeat(5)}`],
+    ['sense base64 (el canvas no en fa mai)', 'data:image/png,xyz'],
+    ['sense «data:» davant', 'image/png;base64,AAAA'],
+    ['sense la coma', 'data:image/png;base64'],
+    ['una cadena buida', ''],
+    ['res', null],
+  ])('%s: ERROR_FOTO_ILLEGIBLE (no un «Failed to fetch»), i no es crida cap fetch', async (_cas, url) => {
+    senseFetch();
+    await expect(fitxerDeDataUrl(url, 'x')).rejects.toThrow(new Error(ERROR_FOTO_ILLEGIBLE));
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
 
@@ -528,7 +590,7 @@ describe('garantixWebp · cap JPEG ni PNG nou a Storage', () => {
     ['un nom sense extensió', 'image/jpeg', JPEG, 'captura', 'captura.webp'],
     ['un nom amb punts', 'image/png', PNG, 'festa.2026.png', 'festa.2026.webp'],
   ])('%s ix en WebP, amb el nom en .webp i els bytes del codificador', async (_cas, tipus, bytes, nom, nomNou) => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockResolvedValue(dataUrl('image/webp', WEBP));
     const original = new File([bytes], nom, { type: tipus });
     const fitxer = await garantixWebp(original);
@@ -540,7 +602,7 @@ describe('garantixWebp · cap JPEG ni PNG nou a Storage', () => {
   });
 
   test('sense cap opció d’EXIF: la recodificació no porta ni la ubicació ni la data', async () => {
-    fetchDeVeres();
+    senseFetch();
     dobles.compressImage.mockResolvedValue(dataUrl('image/webp', WEBP));
     await garantixWebp(new File([JPEG], 'a.jpg', { type: 'image/jpeg' }));
     const [, opcions] = dobles.compressImage.mock.calls[0];
@@ -573,7 +635,7 @@ describe('garantixWebp · cap JPEG ni PNG nou a Storage', () => {
   });
 
   test('el codificador injectable (comprimeix) mana sobre el de sempre', async () => {
-    fetchDeVeres();
+    senseFetch();
     const comprimeix = vi.fn(async () => dataUrl('image/webp', WEBP));
     const fitxer = await garantixWebp(new File([PNG], 'x.png', { type: 'image/png' }), { comprimeix });
     expect(comprimeix).toHaveBeenCalledTimes(1);

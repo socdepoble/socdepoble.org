@@ -13,7 +13,7 @@ import { FORMAT_LOT } from '../dadesObertesLot.js';
 import { entradaOpenDataDelPoble } from '../entradaOpenDataDelPoble.js';
 import { exportaMunicipiOpenData } from '../exportaMunicipiOpenData.js';
 import { importaMunicipiOpenData } from '../importaMunicipiOpenData.js';
-import { metodesSenseCas } from '../conformitat/kit.js';
+import { CASOS, contextDeConformitat, executaCas, metodesSenseCas } from '../conformitat/kit.js';
 import { validaBackendImplementation } from '../backendPort.js';
 import { adoptaSessioExterna, configuraBackendSessio, desaSessio, esborraSessio, usuariDeSessio } from '../identitat.js';
 import { esperaLaIAIA, reiniciaLocalXat } from '../localXat.js';
@@ -82,7 +82,7 @@ describe('opcions de la factoria', () => {
     /* v1.2.23 · costura R32.44 · El contracte passa de 62 a 64 capacitats: edicioPublicacionsPropies
        (desaPublicacioPropia) i revisionsPagines (historial privat de pàgines) només tenen camí de servidor,
        i el node local les deixa a posta entre les absències, a continuació de xatAccionsMissatge. */
-    expect(Object.keys(CAPACITATS)).toHaveLength(64);
+    expect(Object.keys(CAPACITATS)).toHaveLength(66);
     expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));
@@ -940,4 +940,18 @@ test('R32.13 · cap estat local anuncia ACK durable ni moderació remota diligen
       }
     } finally { await a.destroy(); }
   }
+});
+
+
+test('C6 · els dos casos comuns recorren snapshot i candidat locals reals sense publicar', async()=>{
+  const a=creaAdaptadorLocal({mode:'local',ara});entra(a);
+  await a.createNote({id:'nota-kit-c6',title:'Prova comuna',content:'<p>Cos conservat</p>'});
+  const ctx=Object.assign(contextDeConformitat({escriptures:true,escenaris:{compteOperatiu:true}}),{ownerUserId:PERSONA});
+  try {
+    const casos=CASOS.filter(c=>c.titol.startsWith('C6:'));expect(casos).toHaveLength(2);
+    for(const c of casos)expect(await executaCas(c,a,ctx),c.titol).toEqual({estat:'ok',falles:[],motiu:null});
+    expect((await ctx.candidatNegoci.llegixCopiaCompte()).dades).toEqual(ctx.copiaCompte.dades);
+    expect((await a.llegixCopiaCompte()).dades).toEqual(ctx.copiaCompte.dades);
+    expect(ctx.candidatNegoci).not.toBe(a);expect(ctx.candidatNegoci.loadFils).toBeUndefined();
+  } finally {await ctx.candidatNegoci?.destroy();await a.destroy();}
 });

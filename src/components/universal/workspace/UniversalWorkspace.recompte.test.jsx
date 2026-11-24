@@ -51,12 +51,15 @@ const net = (html) => html.replace(/<svg\b[^>]*\bclass="([^"]*)"[^>]*>[\s\S]*?<\
 const FOLDER = '<svg class="lucide lucide-folder"/>';
 const fila = (atributs, nom) => `<button type="button"${atributs} class="sdp-workspace-nav-item"><span class="sdp-workspace-nav-item__icon" aria-hidden="true">${FOLDER}</span><span class="sdp-workspace-nav-item__label">${nom}</span></button>`;
 const BUIT = '<div class="sdp-workspace-folder-toggle-spacer" aria-hidden="true"></div>';
-/* La captura del component sense recompte (16-10-2026, abans del camp). */
+/* La captura del component sense recompte (16-10-2026, abans del camp).
+   v1.2.24 · costura R32.75 · R32.48 (Llei de la Icona Viva, IDEA-330) dona al
+   botó de plegar un title igual que el seu aria-label, com ja el porta el rail;
+   no és del recompte: la resta és la captura de sempre. */
 const ARBRE_DABANS = [
   '<nav class="sdp-workspace-column__body" aria-label="CATEGORIES"><div class="sdp-workspace-groups">',
   '<div class="sdp-workspace-group" data-group="fonts" data-obert="true"><ul class="sdp-workspace-categories" aria-label="CATEGORIES">',
   `<li><div class="sdp-workspace-folder-row">${fila(' aria-expanded="true"', 'Tecnologia')}`,
-  '<button type="button" class="sdp-workspace-nav-item sdp-workspace-folder-toggle" aria-label="Plegar Tecnologia" aria-expanded="true"><svg class="lucide lucide-chevron-down"/></button></div>',
+  '<button type="button" class="sdp-workspace-nav-item sdp-workspace-folder-toggle" aria-label="Plegar Tecnologia" title="Plegar Tecnologia" aria-expanded="true"><svg class="lucide lucide-chevron-down"/></button></div>',
   `<ul class="sdp-workspace-categories" aria-label="Tecnologia"><li><div class="sdp-workspace-folder-row">${fila(' aria-current="page"', 'IA')}${BUIT}</div></li></ul></li>`,
   `<li><div class="sdp-workspace-folder-row">${fila('', 'Poble')}${BUIT}</div></li>`,
   '</ul></div></div></nav>'

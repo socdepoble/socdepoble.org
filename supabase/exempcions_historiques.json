@@ -1,0 +1,85 @@
+{
+  "esquema": "sdp.exempcions-historiques-migracions.v1",
+  "auditoria": "C3-VAL01 · R32.47 · 2026-11-23",
+  "exempcions": [
+    {
+      "fitxer": "2610061448_superadmin_aal2.sql",
+      "sha256": "1b529ab27781ec75503a72bcb1b13190f545f63d59aec1c15f7df0255ee79817",
+      "diagnostics": [
+        {
+          "codi": "A-SENSE-CONSULTES",
+          "linia": null,
+          "missatge": "pendent sense cap consulta de lectura, columna de sonda ni empremta per a confirmar-ne l'estat",
+          "motiu": "La funció ja existia abans i la presència no acredita el canvi AAL2; no hi ha empremta exclusiva ni consulta de lectura a la capçalera original.",
+          "mesura": "Llegir pg_get_functiondef i les ACL de private.es_superadmin(), comparar el cos amb esta versió i verificar AAL2 en una base local abans de proposar aplicació."
+        },
+        {
+          "codi": "A-SENSE-TRANSACCIO",
+          "linia": null,
+          "missatge": "sense begin … commit: pot quedar a mitges",
+          "motiu": "El fitxer històric conté una sola sentència CREATE OR REPLACE FUNCTION: PostgreSQL aplica cada sentència atòmicament, encara que no hi haja BEGIN explícit.",
+          "mesura": "Preservar els bytes. Comparar la definició i les ACL de private.es_superadmin() abans i després; una aplicació pendent exigix la decisió AAL2 del Mestre i evidència real."
+        }
+      ]
+    },
+    {
+      "fitxer": "2610061450_capcalera_client_ip.sql",
+      "sha256": "3ca8a254a83c9af07293c4ddfa614a5cd171f9baf747686601b8e78c5b253197",
+      "diagnostics": [
+        {
+          "codi": "A-SENSE-CONSULTES",
+          "linia": null,
+          "missatge": "pendent sense cap consulta de lectura, columna de sonda ni empremta per a confirmar-ne l'estat",
+          "motiu": "Redefinix una funció existent i no deixa cap objecte exclusiu; la presència no distingix la prioritat de capçaleres ni el costat dret de x-forwarded-for.",
+          "mesura": "Llegir pg_get_functiondef de private.capcalera_client(text), comparar el cos i provar les capçaleres en una base local abans de proposar aplicació."
+        },
+        {
+          "codi": "A-SENSE-TRANSACCIO",
+          "linia": null,
+          "missatge": "sense begin … commit: pot quedar a mitges",
+          "motiu": "El fitxer històric és una sola sentència CREATE OR REPLACE FUNCTION, atòmica per sentència, sense BEGIN explícit.",
+          "mesura": "Preservar els bytes i comparar la definició i les ACL de private.capcalera_client(text) abans i després en la sessió del Mestre."
+        }
+      ]
+    },
+    {
+      "fitxer": "2610081400_grups_sense_mare.sql",
+      "sha256": "313e9959f51c48c5345205bc3620c78fe3ecc0a7422133a1d46b18f6d923ad27",
+      "diagnostics": [
+        {
+          "codi": "A-SENSE-CONSULTES",
+          "linia": null,
+          "missatge": "pendent sense cap consulta de lectura, columna de sonda ni empremta per a confirmar-ne l'estat",
+          "motiu": "La funció i la política ja existien, per tant el detector de presència no pot acreditar el canvi funcional i la capçalera històrica no inclou sonda.",
+          "mesura": "Comparar pg_get_functiondef de private.can_create_group(uuid,uuid) i pg_policies per a members create organizations; provar permisos amb i sense mare en una base local."
+        }
+      ]
+    },
+    {
+      "fitxer": "2611080430_iaia_xat.sql",
+      "sha256": "903832377ba5d60bc43f3ca4c16d7330b6697f3959c791e1b402a3dc90475154",
+      "diagnostics": [
+        {
+          "codi": "A-IDEMPOTENCIA",
+          "linia": 8,
+          "missatge": "no repetible (no_repetible_falla_neta): TAULA_SENSE_IF_NOT_EXISTS, FUNCIO_SENSE_OR_REPLACE",
+          "motiu": "Conserva CREATE TABLE sense IF NOT EXISTS i CREATE FUNCTION sense OR REPLACE. El fitxer té BEGIN/COMMIT i una repetició falla netament; no es declara repetible ni es relaxa la regla.",
+          "mesura": "No reaplicar sobre objectes presents. Conciliar la contradicció documental del bolcat de 2026-11-13 amb el Pas 0 i validar instal·lació només sobre la preimatge local absent abans de qualsevol decisió remota."
+        }
+      ]
+    },
+    {
+      "fitxer": "2611110010_autoria_256_caracters.sql",
+      "sha256": "3171d203785c981120e06bfe6dd15a694bd0e22a4dbd6ad7727cf03054f10e18",
+      "diagnostics": [
+        {
+          "codi": "A-SENSE-CONSULTES",
+          "linia": null,
+          "missatge": "pendent sense cap consulta de lectura, columna de sonda ni empremta per a confirmar-ne l'estat",
+          "motiu": "Els tres CHECK es redefinixen dins d’un DO dinàmic; el verificador no els tracta com a empremta exclusiva i la capçalera original no inclou sonda.",
+          "mesura": "Llegir pg_get_constraintdef dels CHECK notes_copyright_longitud, profiles_copyright_longitud i organizations_copyright_longitud; comparar els tres cossos i provar les fronteres de 256/274 caràcters localment."
+        }
+      ]
+    }
+  ]
+}

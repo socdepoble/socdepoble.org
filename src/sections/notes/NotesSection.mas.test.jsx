@@ -176,12 +176,15 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    Mur (l'article complet del Pou de Neu és l'única targeta del pou).
    R16b · Dènou: «Què dinem?» (/page/receptes, la pàgina de l'Onada R14)
    entra com a cinquena pàgina de patrimoni (PAGINES_PATRIMONI_MUR). Abans,
-   díhuit. */
+   díhuit.
+   v1.2.24 · costura R32.75 · IDEA-340 (ordre del Mestre) · Vint: «Reconeixements
+   i fonts d'inspiració» (/page/reconeixements, R32.61 dins de R32.75), la
+   Notícia #1 del Mur, hi entra com a pàgina del sistema. Abans, dènou. */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
 const PATRIMONI_AL_MUR = ['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes'];
 /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta del Mur: dènou. */
 const SISTEMA = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), ...PATRIMONI_AL_MUR].map((clau) => `publicacio:mur:${clau}`);
-const PAGINES_DEL_SISTEMA = 19;
+const PAGINES_DEL_SISTEMA = 21; // R32.86 · + «Cada cosa al seu lloc»
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
 test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les catorze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {

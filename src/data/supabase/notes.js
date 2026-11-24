@@ -17,7 +17,7 @@ async function carpetesPrivades(config, ownerUserId) {
   try {
     const folders = [];
     let after = '';
-    // 32 × 500: límit de treball per càrrega, sense pintar un catàleg parcial
+    // 32 respostes de fins a 500: límit de treball per càrrega, sense pintar un catàleg parcial
     // com si fóra complet quan un servidor envia pàgines indefinidament.
     for (let pagina = 0; pagina < 32; pagina += 1) {
       if (config.signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
@@ -30,7 +30,9 @@ async function carpetesPrivades(config, ownerUserId) {
         after = folder.id;
         folders.push(folder);
       }
-      if (rows.length < 500) return [...NOTE_FOLDERS_SEED, ...folders];
+      // max-rows de PostgREST pot ser inferior a 500: una pàgina curta no
+      // acredita que el catàleg s'ha acabat. L'ID immutable continua avançant.
+      if (rows.length === 0) return [...NOTE_FOLDERS_SEED, ...folders];
     }
     throw new Error('S’ha arribat al límit de pàgines de carpetes; cal acotar la consulta.');
   } catch (error) {

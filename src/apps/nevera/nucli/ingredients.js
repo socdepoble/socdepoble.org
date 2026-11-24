@@ -34,10 +34,11 @@
  * que el calendari de temporada, src/utils/temporada).
  * «Mongeta» a soles és el fesol (la seca); la tendra és la bajoca.
  *
- * Sense al·lèrgens: la Nevera no en porta cap taxonomia i ací no se n'inventa
- * cap. Pur: cap React, cap rellotge, cap disc.
+ * Al·lèrgens: composició amb la taxonomia comuna dels 14 grups; cap promesa
+ * sobre el proveïdor o la preparació. Pur: cap React, cap rellotge, cap disc.
  */
 import { clauDeNom } from './nevera.js';
+import { declaracioIngredient, matriuDeIngredient } from './alergens.js';
 
 /* El nombre del NOM de l'ingredient («Tomaques» és plural; «Arròs» i «Carabassó», singular):
    el diu la taula, no la «s» final (correcció del refutador, 261011, R2). */
@@ -86,6 +87,7 @@ export const INGREDIENTS = Object.freeze(TAULA.map(([id, nom, fresc, plural, for
   nom,
   fresc,
   plural,
+  ...declaracioIngredient(id, nom),
   /* El nom de la llista (el plural del catàleg) també és una forma. */
   formes: Object.freeze([...new Set([nom, ...formes].map(clauDeNom))])
 })));
@@ -184,4 +186,9 @@ export function ingredientDArticle(article) {
 /** El nom d'un ingredient dins d'una frase: «tomaques», «oli d’oliva». */
 export function nomEnFrase(ingredient) {
   return typeof ingredient?.nom === 'string' ? ingredient.nom.toLocaleLowerCase('ca') : '';
+}
+
+/** La matriu canònica de composició d’un id del rebost, o desconeguda. */
+export function matriuIngredient(id) {
+  return matriuDeIngredient(ingredientPerId(id));
 }

@@ -13,15 +13,12 @@
  * fa servir algú (auth.js, en eixir).
  */
 
-import { clientActual } from './config.js';
+import { clientActual, tancaClientRealtime } from './config.js';
 
 /** Tanca tots els canals del client viu. Sense client viu no en crea cap. */
 export const tancaRealtime = async () => {
   try {
-    const supabase = clientActual();
-    if (supabase && supabase.removeAllChannels) {
-      supabase.removeAllChannels();
-    }
+    await tancaClientRealtime(clientActual());
   } catch (e) {
     console.warn("Error tancant realtime", e);
   }

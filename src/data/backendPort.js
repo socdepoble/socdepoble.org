@@ -31,8 +31,11 @@ function lligAmbGuardes(nom, args, backend) {
   const config = args[1] && typeof args[1] === 'object' ? args[1] : {};
   const avorta = () => control.abort();
   const senyals = [...new Set([config.signal, ...(nom === 'loadNotesPage' ? [args[0]?.signal] : [])].filter(Boolean))];
+  if (senyals.some(s => typeof s.addEventListener !== 'function' || typeof s.removeEventListener !== 'function')) return Promise.reject(new TypeError('AbortSignal invàlid.'));
   if (senyals.some(s => s.aborted)) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
-  for (const signal of senyals) signal.addEventListener('abort', avorta, { once: true });
+  const deslliga = () => { for (const signal of senyals) { try { signal.removeEventListener('abort', avorta); } catch { /* Continuar la neteja. */ } } };
+  try { for (const signal of senyals) signal.addEventListener('abort', avorta, { once: true }); }
+  catch (error) { deslliga(); return Promise.reject(error); }
   estatPort.lecturesEnVol.add(control);
   let rebutja;
   const interrompuda = new Promise((_resol, reject) => { rebutja = reject; });
@@ -53,7 +56,7 @@ function lligAmbGuardes(nom, args, backend) {
     return mur;
   });
   return Promise.race([feina, interrompuda]).finally(() => {
-    clearTimeout(rellotge); for (const signal of senyals) signal.removeEventListener('abort', avorta); control.signal.removeEventListener('abort', talla); estatPort.lecturesEnVol.delete(control);
+    clearTimeout(rellotge); deslliga(); control.signal.removeEventListener('abort', talla); estatPort.lecturesEnVol.delete(control);
   });
 }
 const EMPTY = Object.freeze(Object.create(null));
@@ -170,46 +173,56 @@ const mutacioDeNota = (nom, retira) => (...args) => {
   });
 };
 
-export const adoptaSessioExterna = asseguraMetode('adoptaSessioExterna');
-export const getDefaultUserId = asseguraMetode('getDefaultUserId');
-export const refrescaSessio = asseguraMetode('refrescaSessio');
-export const confirmaCorreu = asseguraMetode('confirmaCorreu');
-export const reenviaVerificacioCorreu = asseguraMetode('reenviaVerificacioCorreu');
-export const demanaRestablimentCorreu = asseguraMetode('demanaRestablimentCorreu');
-export const restablixContrasenyaAmbCorreu = asseguraMetode('restablixContrasenyaAmbCorreu');
-export const elMeuRol = asseguraMetode('elMeuRol');
+/* C8 · ABI: els noms ja viuen a CONTRACTE_BACKEND. Esta taula evita repetir
+   174 literals en l'arrencada i conserva els exports Identifier de les portes.
+   Els índexs són l'ordre canònic del contracte: backendPort.contracte.r3260.test.js
+   acredita cada nom/target i refusa canvis d'ordre amb un mutant real.
+   Les 13 excepcions conserven el codi propi: updateNote, recullTornadaOAuth,
+   els sis mètodes de protocol/OAuth, uploadToStorage, mouNota i esborraNota,
+   més els dos delegats PURE llegixCopiaCompte/restauraCopiaCompte, que continuen
+   permetent eliminar les capacitats opcionals de portabilitat no consumides. */
+const metodesDelContracte = CONTRACTE_BACKEND.map(asseguraMetode);
 
-export const loadCoreContent = asseguraMetode('loadCoreContent');
-export const loadMur = asseguraMetode('loadMur');
-export const loadMultimedia = asseguraMetode('loadMultimedia');
-export const loadNotesPage = asseguraMetode('loadNotesPage');
+export const adoptaSessioExterna = metodesDelContracte[75];
+export const getDefaultUserId = metodesDelContracte[22];
+export const refrescaSessio = metodesDelContracte[90];
+export const confirmaCorreu = metodesDelContracte[86];
+export const reenviaVerificacioCorreu = metodesDelContracte[87];
+export const demanaRestablimentCorreu = metodesDelContracte[88];
+export const restablixContrasenyaAmbCorreu = metodesDelContracte[89];
+export const elMeuRol = metodesDelContracte[91];
+
+export const loadCoreContent = metodesDelContracte[0];
+export const loadMur = metodesDelContracte[1];
+export const loadMultimedia = metodesDelContracte[2];
+export const loadNotesPage = metodesDelContracte[76];
 /* Decisió 4 del Mestre (261007) · «Carregar-ne més» (capacitat
    'paginacioSeccions'). No és nucli: MurContext pregunta abans amb
    teCapacitat i, sense ella, no ofereix el botó. */
-export const loadSeccioPage = asseguraMetode('loadSeccioPage');
-export const loadProjeccionsCataleg = asseguraMetode('loadProjeccionsCataleg');
-export const loadNotes = asseguraMetode('loadNotes');
-export const appendChatMessages = asseguraMetode('appendChatMessages');
+export const loadSeccioPage = metodesDelContracte[79];
+export const loadProjeccionsCataleg = metodesDelContracte[48];
+export const loadNotes = metodesDelContracte[3];
+export const appendChatMessages = metodesDelContracte[4];
 
-export const appendSectionSubmissionNetworkOnly = asseguraMetode('appendSectionSubmissionNetworkOnly');
-export const desaPublicacioPropia = asseguraMetode('desaPublicacioPropia');
-export const llistaRevisionsPagina = asseguraMetode('llistaRevisionsPagina');
-export const desaRevisioPagina = asseguraMetode('desaRevisioPagina');
-export const restauraRevisioPagina = asseguraMetode('restauraRevisioPagina');
+export const appendSectionSubmissionNetworkOnly = metodesDelContracte[5];
+export const desaPublicacioPropia = metodesDelContracte[68];
+export const llistaRevisionsPagina = metodesDelContracte[69];
+export const desaRevisioPagina = metodesDelContracte[70];
+export const restauraRevisioPagina = metodesDelContracte[71];
 export const updateNote = mutacioDeNota('updateNote', args => args[1]?.isPublished === false);
-export const revocaPublicacioMur = asseguraMetode('revocaPublicacioMur');
-export const drenaRevocacionsMur = asseguraMetode('drenaRevocacionsMur');
-export const encuaRevocacioNotaMur = asseguraMetode('encuaRevocacioNotaMur');
-export const loginWithMagicLink = asseguraMetode('loginWithMagicLink');
-export const registerWithPassword = asseguraMetode('registerWithPassword');
-export const loginWithPassword = asseguraMetode('loginWithPassword');
-export const loginWithGoogle = asseguraMetode('loginWithGoogle');
-export const listMyOrganizations = asseguraMetode('listMyOrganizations');
-export const createOrganization = asseguraMetode('createOrganization');
-export const updateOrganization = asseguraMetode('updateOrganization');
-export const updateProfile = asseguraMetode('updateProfile');
-export const updateUserPassword = asseguraMetode('updateUserPassword');
-export const getProfile = asseguraMetode('getProfile');
+export const revocaPublicacioMur = metodesDelContracte[42];
+export const drenaRevocacionsMur = metodesDelContracte[43];
+export const encuaRevocacioNotaMur = metodesDelContracte[44];
+export const loginWithMagicLink = metodesDelContracte[7];
+export const registerWithPassword = metodesDelContracte[8];
+export const loginWithPassword = metodesDelContracte[9];
+export const loginWithGoogle = metodesDelContracte[10];
+export const listMyOrganizations = metodesDelContracte[11];
+export const createOrganization = metodesDelContracte[12];
+export const updateOrganization = metodesDelContracte[13];
+export const updateProfile = metodesDelContracte[14];
+export const updateUserPassword = metodesDelContracte[15];
+export const getProfile = metodesDelContracte[16];
 export const recullTornadaOAuth = async (...args) => {
   await import('../host.js').then(m => m.quanLlest());
   const backend = estatPort.currentImpl;
@@ -218,38 +231,39 @@ export const recullTornadaOAuth = async (...args) => {
   }
   return backend['recullTornadaOAuth'](...args);
 };
-export const logout = asseguraMetode('logout');
-export const getCurrentUser = asseguraMetode('getCurrentUser');
-export const getBackendConfigurat = asseguraMetode('getBackendConfigurat');
-export const getRuntimeDataMode = asseguraMetode('getRuntimeDataMode');
+export const logout = metodesDelContracte[18];
+export const getCurrentUser = metodesDelContracte[19];
+export const getBackendConfigurat = metodesDelContracte[20];
+export const getRuntimeDataMode = metodesDelContracte[21];
 
 
 // Nous mètodes per al Xat v2 i el pont amb Notes
-export const createNote = asseguraMetode('createNote');
-export const creaCarpetaNotes = asseguraMetode('creaCarpetaNotes');
-export const loadFils = asseguraMetode('loadFils');
-export const loadMissatges = asseguraMetode('loadMissatges');
-export const enviaMissatge = asseguraMetode('enviaMissatge');
-export const marcaLlegit = asseguraMetode('marcaLlegit');
-export const loadRitmeXat = asseguraMetode('loadRitmeXat');
-export const actualitzaPresenciaXat = asseguraMetode('actualitzaPresenciaXat');
+export const createNote = metodesDelContracte[23];
+export const creaCarpetaNotes = metodesDelContracte[64];
+export const loadFils = metodesDelContracte[24];
+export const loadMissatges = metodesDelContracte[25];
+export const enviaMissatge = metodesDelContracte[26];
+export const marcaLlegit = metodesDelContracte[27];
+export const loadRitmeXat = metodesDelContracte[56];
+export const actualitzaPresenciaXat = metodesDelContracte[57];
 /* P0-122 · Grup opcional complet; estat local i optimisme són del servei. */
-export const carregaAccionsMissatges = asseguraMetode('carregaAccionsMissatges');
-export const alternaReaccio = asseguraMetode('alternaReaccio');
-export const alternaDestacat = asseguraMetode('alternaDestacat');
-export const alternaFixat = asseguraMetode('alternaFixat');
-export const eliminaPerAMi = asseguraMetode('eliminaPerAMi');
-export const creaFilDirecte = asseguraMetode('creaFilDirecte');
-export const carregaMembres = asseguraMetode('carregaMembres');
-export const subscribeToXat = asseguraMetode('subscribeToXat');
-export const unsubscribeFromXat = asseguraMetode('unsubscribeFromXat');
+export const carregaAccionsMissatges = metodesDelContracte[58];
+export const alternaReaccio = metodesDelContracte[59];
+export const alternaDestacat = metodesDelContracte[60];
+export const alternaFixat = metodesDelContracte[61];
+export const eliminaPerAMi = metodesDelContracte[62];
+export const eliminaPerATothom = metodesDelContracte[63];
+export const creaFilDirecte = metodesDelContracte[28];
+export const carregaMembres = metodesDelContracte[29];
+export const subscribeToXat = metodesDelContracte[30];
+export const unsubscribeFromXat = metodesDelContracte[31];
 
 // Mode Administrador
-export const adminListUsers = asseguraMetode('adminListUsers');
-export const adminLlistaUsuarisRegistrats = asseguraMetode('adminLlistaUsuarisRegistrats');
-export const adminAssignaMembreOrganitzacio = asseguraMetode('adminAssignaMembreOrganitzacio');
-export const adminConnectaUsuari = asseguraMetode('adminConnectaUsuari');
-export const adminListOrganizations = asseguraMetode('adminListOrganizations');
+export const adminListUsers = metodesDelContracte[80];
+export const adminLlistaUsuarisRegistrats = metodesDelContracte[82];
+export const adminAssignaMembreOrganitzacio = metodesDelContracte[83];
+export const adminConnectaUsuari = metodesDelContracte[84];
+export const adminListOrganizations = metodesDelContracte[81];
 
 
 /* Fase 4 · Mitjans (capacitat 'mitjans').
@@ -263,53 +277,55 @@ export const uploadToStorage = async (...args) => {
   }
   return backend['uploadToStorage'](...args);
 };
-export const getPublicUrl = asseguraMetode('getPublicUrl');
-export const resolveAsset = asseguraMetode('resolveAsset');
-export const promoteToPublic = asseguraMetode('promoteToPublic');
+export const getPublicUrl = metodesDelContracte[93];
+export const resolveAsset = metodesDelContracte[94];
+export const promoteToPublic = metodesDelContracte[95];
 
 /* Pla 261018_1605 (Tasca 4, D8; ordre del Mestre, 18-10-2026) · La biblioteca
    de fotos pròpies (capacitat 'mitjansPropis'). No és nucli ni part de
    'mitjans': «Multimèdia» pregunta abans amb teCapacitat i, sense ella, només
    pinta les fotos actives de la fitxa. */
-export const llistaElsMeusMitjans = asseguraMetode('llistaElsMeusMitjans');
-export const esborraElMeuMitja = asseguraMetode('esborraElMeuMitja');
-export const quotaXat = asseguraMetode('quotaXat');
-export const publicaAdjuntXat = asseguraMetode('publicaAdjuntXat');
-export const urlAdjuntXat = asseguraMetode('urlAdjuntXat');
-export const descartaAdjuntXat = asseguraMetode('descartaAdjuntXat');
+export const llistaElsMeusMitjans = metodesDelContracte[96];
+export const esborraElMeuMitja = metodesDelContracte[97];
+export const quotaXat = metodesDelContracte[98];
+export const publicaAdjuntXat = metodesDelContracte[99];
+export const urlAdjuntXat = metodesDelContracte[100];
+export const descartaAdjuntXat = metodesDelContracte[101];
 
 /* P1-12 · Capacitats E2EE opcionals de §8.3. Delegació exacta: no crea claus,
    no activa xifratge ni fabrica un transport absent. Pregunta teCapacitat
    abans d'usar el grup; un mètode absent conserva el rebuig del port. */
-export const publicaIdentitatXat = asseguraMetode('publicaIdentitatXat');
-export const laMevaIdentitatXat = asseguraMetode('laMevaIdentitatXat');
-export const desaFraseXat = asseguraMetode('desaFraseXat');
-export const clausDeXat = asseguraMetode('clausDeXat');
-export const desaLlibretaXat = asseguraMetode('desaLlibretaXat');
-export const laMevaLlibretaXat = asseguraMetode('laMevaLlibretaXat');
-export const estatXifratXat = asseguraMetode('estatXifratXat');
-export const epoquesDelFilXat = asseguraMetode('epoquesDelFilXat');
-export const sobresMeusXat = asseguraMetode('sobresMeusXat');
-export const obriEpocaXat = asseguraMetode('obriEpocaXat');
-export const enviaXifratXat = asseguraMetode('enviaXifratXat');
-export const reembolcallaXat = asseguraMetode('reembolcallaXat');
-export const demanaXifratXat = asseguraMetode('demanaXifratXat');
-export const publicaAdjuntXifratXat = asseguraMetode('publicaAdjuntXifratXat');
-export const bytesAdjuntXat = asseguraMetode('bytesAdjuntXat');
+export const publicaIdentitatXat = metodesDelContracte[102];
+export const laMevaIdentitatXat = metodesDelContracte[103];
+export const desaFraseXat = metodesDelContracte[104];
+export const clausDeXat = metodesDelContracte[105];
+export const desaLlibretaXat = metodesDelContracte[106];
+export const laMevaLlibretaXat = metodesDelContracte[107];
+export const estatXifratXat = metodesDelContracte[108];
+export const epoquesDelFilXat = metodesDelContracte[109];
+export const sobresMeusXat = metodesDelContracte[110];
+export const obriEpocaXat = metodesDelContracte[111];
+export const enviaXifratXat = metodesDelContracte[112];
+export const reembolcallaXat = metodesDelContracte[113];
+export const demanaXifratXat = metodesDelContracte[114];
+export const publicaAdjuntXifratXat = metodesDelContracte[115];
+export const bytesAdjuntXat = metodesDelContracte[116];
 
 /* Fase 5 · Agenda */
-export const loadActesAgenda = asseguraMetode('loadActesAgenda');
+export const loadActesAgenda = metodesDelContracte[117];
 
 /* Fase 1 · Compte i consentiment (capacitats 'compte' i 'consentiment').
    Cap és nucli: la interfície pregunta abans amb teCapacitat, perquè
    asseguraMetode llança de manera síncrona si el backend no les té. */
-export const exportaLesMeuesDades = asseguraMetode('exportaLesMeuesDades');
-export const estatBaixa = asseguraMetode('estatBaixa');
-export const demanaBaixa = asseguraMetode('demanaBaixa');
-export const cancelaBaixa = asseguraMetode('cancelaBaixa');
-export const estatConsentiment = asseguraMetode('estatConsentiment');
-export const registraConsentiment = asseguraMetode('registraConsentiment');
-export const revocaConsentiment = asseguraMetode('revocaConsentiment');
+export const exportaLesMeuesDades = metodesDelContracte[118];
+export const llegixCopiaCompte = /* @__PURE__ */ asseguraMetode('llegixCopiaCompte');
+export const restauraCopiaCompte = /* @__PURE__ */ asseguraMetode('restauraCopiaCompte');
+export const estatBaixa = metodesDelContracte[119];
+export const demanaBaixa = metodesDelContracte[120];
+export const cancelaBaixa = metodesDelContracte[121];
+export const estatConsentiment = metodesDelContracte[122];
+export const registraConsentiment = metodesDelContracte[123];
+export const revocaConsentiment = metodesDelContracte[124];
 
 /* Cicle de vida de les notes (capacitat 'cicleNotes'). Tampoc és nucli:
    l'editor només pinta «Borrar» si teCapacitat('cicleNotes'). */
@@ -319,151 +335,151 @@ export const esborraNota = mutacioDeNota('esborraNota', () => true);
 /* Lògica d'Usuari · perfil públic (capacitat 'directori') i agents IA
    administrats (capacitat 'agents'). Cap és nucli: la interfície pregunta
    abans amb teCapacitat. */
-export const loadPerfilPublic = asseguraMetode('loadPerfilPublic');
+export const loadPerfilPublic = metodesDelContracte[127];
 /* Pla 261022_1955 (T1) · El directori públic de les organitzacions (capacitat
    'directoriEntitats'). No és nucli: /cerca pregunta abans amb teCapacitat i,
    sense ella, no el demana. */
-export const listPublicOrganizations = asseguraMetode('listPublicOrganizations');
+export const listPublicOrganizations = metodesDelContracte[128];
 /* T2 · D04/D10 (assalt 261101) · Les dades obertes del poble (capacitat
    'dadesObertes') i la seua restauració ('restauracioDadesObertes'). No són
    nucli ni van a FORMES_LECTURA: null hi és una resposta vàlida (com
    listPublicOrganizations, la forma la valida qui crida). */
-export const llegixDadesObertes = asseguraMetode('llegixDadesObertes');
-export const restauraDadesObertes = asseguraMetode('restauraDadesObertes');
-export const importaMunicipiOpenData = asseguraMetode('importaMunicipiOpenData');
-export const listMyAgents = asseguraMetode('listMyAgents');
-export const updateAgent = asseguraMetode('updateAgent');
+export const llegixDadesObertes = metodesDelContracte[171];
+export const restauraDadesObertes = metodesDelContracte[172];
+export const importaMunicipiOpenData = metodesDelContracte[85];
+export const listMyAgents = metodesDelContracte[129];
+export const updateAgent = metodesDelContracte[130];
 
 /* T43 (ordre del Mestre, 260928) · Administrar organitzacions (capacitat
    'reclamacions') i el seu correu opcional ('contacteOrganitzacio'). Cap és
    nucli: la interfície pregunta abans amb teCapacitat. */
-export const reclamaOrganitzacio = asseguraMetode('reclamaOrganitzacio');
-export const lesMevesReclamacions = asseguraMetode('lesMevesReclamacions');
-export const llegeixContacteOrganitzacio = asseguraMetode('llegeixContacteOrganitzacio');
-export const desaContacteOrganitzacio = asseguraMetode('desaContacteOrganitzacio');
+export const reclamaOrganitzacio = metodesDelContracte[131];
+export const lesMevesReclamacions = metodesDelContracte[132];
+export const llegeixContacteOrganitzacio = metodesDelContracte[133];
+export const desaContacteOrganitzacio = metodesDelContracte[134];
 
 /* T63.2 i T67 · El xat comú d'una Pàgina Universal (capacitat 'xatDePagina').
    No és nucli: XatContext pregunta abans amb teCapacitat i, sense ella,
    rebutja amb un error de codi 'sense-capacitat'. */
-export const obriFilDePagina = asseguraMetode('obriFilDePagina');
+export const obriFilDePagina = metodesDelContracte[135];
 
 /* T2 i T4 · Salut del node (capacitat 'salut'). No és nucli: /registre
    pregunta abans amb teCapacitat i, sense ella, canvia de mode com abans. */
-export const comprovaServidor = asseguraMetode('comprovaServidor');
+export const comprovaServidor = metodesDelContracte[136];
 
 /* T8b · P0-23 (BOT-A2; assalt 261101) · La versió mínima de l'app nativa
    (capacitat 'versioClient'). No és nucli: l'entrada nativa pregunta abans
    amb teCapacitat i, sense ella, l'app entra com sempre. */
-export const versioMinimaClient = asseguraMetode('versioMinimaClient');
+export const versioMinimaClient = metodesDelContracte[137];
 
 /* R (Onada 3, 261003) · Recuperar la contrasenya (capacitat
    'recuperacioContrasenya'). No és nucli: /registre pregunta abans amb
    teCapacitat i, sense ella, no pinta l'enllaç. R2 · definixContrasenyaNova
    verifica l'enllaç pendent i definix en una sola crida (contracte.js). */
-export const demanaRecuperacioContrasenya = asseguraMetode('demanaRecuperacioContrasenya');
-export const definixContrasenyaNova = asseguraMetode('definixContrasenyaNova');
+export const demanaRecuperacioContrasenya = metodesDelContracte[138];
+export const definixContrasenyaNova = metodesDelContracte[139];
 
 /* Fase D (261020, tasca 1) · Entrar amb el testimoni d'un proveïdor (capacitat
    'entradaAmbToken'): el full natiu d'Apple o de Google. No és nucli: /registre
    pregunta abans amb teCapacitat i, sense ella, no pinta els botons natius. */
-export const entraAmbTokenDeProveidor = asseguraMetode('entraAmbTokenDeProveidor');
+export const entraAmbTokenDeProveidor = metodesDelContracte[140];
 
 /* Ordre del Mestre (261008, grup C) · Els membres d'una organització
    (capacitat 'membresOrganitzacio'). No és nucli: el Perfil pregunta abans
    amb teCapacitat i, sense ella, no pinta la gestió de membres ni «Eixir». */
-export const llistaMembresOrganitzacio = asseguraMetode('llistaMembresOrganitzacio');
-export const desaMembreOrganitzacio = asseguraMetode('desaMembreOrganitzacio');
-export const llevaMembreOrganitzacio = asseguraMetode('llevaMembreOrganitzacio');
+export const llistaMembresOrganitzacio = metodesDelContracte[141];
+export const desaMembreOrganitzacio = metodesDelContracte[142];
+export const llevaMembreOrganitzacio = metodesDelContracte[143];
 /* IDEA-24 (marató 261101_2143, B4) · La transferència atòmica de la
    propietat (capacitat 'transferenciaPropietat'). No és nucli: qui l'oferisca
    ha de preguntar abans amb teCapacitat i, sense ella, no oferir-la. */
-export const transfereixPropietatOrganitzacio = asseguraMetode('transfereixPropietatOrganitzacio');
+export const transfereixPropietatOrganitzacio = metodesDelContracte[144];
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
    superadmin (capacitat 'segonFactor'). No és nucli: «El compte» pregunta
    abans amb teCapacitat i, sense ella, no pinta la inscripció. */
-export const llistaFactors = asseguraMetode('llistaFactors');
-export const inscriuFactor = asseguraMetode('inscriuFactor');
-export const reptaFactor = asseguraMetode('reptaFactor');
-export const verificaFactor = asseguraMetode('verificaFactor');
-export const retiraFactor = asseguraMetode('retiraFactor');
+export const llistaFactors = metodesDelContracte[145];
+export const inscriuFactor = metodesDelContracte[146];
+export const reptaFactor = metodesDelContracte[147];
+export const verificaFactor = metodesDelContracte[148];
+export const retiraFactor = metodesDelContracte[149];
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
    poble (capacitat 'personalitzacio'). No és nucli: el Tauler pregunta abans
    amb teCapacitat i, sense ella, no pinta «Desa». La lectura va dins de
    loadCoreContent (camp additiu `personalitzacio`). */
-export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
-export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');
-export const adminActualitzaPublicacioEditorial = asseguraMetode('adminActualitzaPublicacioEditorial');
-export const lligPublicadorsRegistrats = asseguraMetode('lligPublicadorsRegistrats');
-export const traspassaPublicacio = asseguraMetode('traspassaPublicacio');
-export const reverteixTraspasPublicacio = asseguraMetode('reverteixTraspasPublicacio');
-export const loadSeedRevisions = asseguraMetode('loadSeedRevisions');
-export const desaRevisioSeed = asseguraMetode('desaRevisioSeed');
-export const llistaRevisionsPatrimoni = asseguraMetode('llistaRevisionsPatrimoni');
-export const desaRevisioPatrimoni = asseguraMetode('desaRevisioPatrimoni');
-export const esborraRevisioPatrimoni = asseguraMetode('esborraRevisioPatrimoni');
-export const adminLlistaPobles = asseguraMetode('adminLlistaPobles');
-export const adminLligPersonalitzacio = asseguraMetode('adminLligPersonalitzacio');
+export const adminDesaPersonalitzacio = metodesDelContracte[150];
+export const adminHistorialPersonalitzacio = metodesDelContracte[151];
+export const adminActualitzaPublicacioEditorial = metodesDelContracte[65];
+export const lligPublicadorsRegistrats = metodesDelContracte[45];
+export const traspassaPublicacio = metodesDelContracte[46];
+export const reverteixTraspasPublicacio = metodesDelContracte[47];
+export const loadSeedRevisions = metodesDelContracte[66];
+export const desaRevisioSeed = metodesDelContracte[67];
+export const llistaRevisionsPatrimoni = metodesDelContracte[72];
+export const desaRevisioPatrimoni = metodesDelContracte[73];
+export const esborraRevisioPatrimoni = metodesDelContracte[74];
+export const adminLlistaPobles = metodesDelContracte[152];
+export const adminLligPersonalitzacio = metodesDelContracte[153];
 
 /* Fase D (261020, tasca 2; pla 261020_1300) · La moderació (capacitat
    'moderacio') i les normes de convivència ('normesConvivencia'). Cap és
    nucli: ModeracioContext pregunta abans amb teCapacitat i, sense elles,
    cap targeta ni bombolla no pinta «Més opcions» ni cap porta de normes. */
-export const denunciaContingut = asseguraMetode('denunciaContingut');
-export const registraDenunciaPublica = asseguraMetode('registraDenunciaPublica');
-export const adminSafataDenuncies = asseguraMetode('adminSafataDenuncies');
-export const adminRevisaDenuncia = asseguraMetode('adminRevisaDenuncia');
-export const llistaBloquejos = asseguraMetode('llistaBloquejos');
-export const bloquejaAutor = asseguraMetode('bloquejaAutor');
-export const desbloquejaAutor = asseguraMetode('desbloquejaAutor');
-export const estatNormes = asseguraMetode('estatNormes');
-export const acceptaNormes = asseguraMetode('acceptaNormes');
+export const denunciaContingut = metodesDelContracte[154];
+export const registraDenunciaPublica = metodesDelContracte[158];
+export const adminSafataDenuncies = metodesDelContracte[159];
+export const adminRevisaDenuncia = metodesDelContracte[160];
+export const llistaBloquejos = metodesDelContracte[155];
+export const bloquejaAutor = metodesDelContracte[156];
+export const desbloquejaAutor = metodesDelContracte[157];
+export const estatNormes = metodesDelContracte[161];
+export const acceptaNormes = metodesDelContracte[162];
 
 /* T6b (IDEA-14; decisió del Mestre, 261024) · «Connectar / Seguir», el
    seguiment d'un sol sentit d'una persona o d'una entitat (capacitat
    'seguiments'). No és nucli: /connectar i el Perfil pregunten abans amb
    teCapacitat i, sense ella, no pinten «Connectar amb {nom}» ni el veïnat connectat. */
-export const segueix = asseguraMetode('segueix');
-export const deixaDeSeguir = asseguraMetode('deixaDeSeguir');
-export const estatSeguiment = asseguraMetode('estatSeguiment');
-export const elsMeusSeguiments = asseguraMetode('elsMeusSeguiments');
-export const quiEmSegueix = asseguraMetode('quiEmSegueix');
+export const segueix = metodesDelContracte[163];
+export const deixaDeSeguir = metodesDelContracte[164];
+export const estatSeguiment = metodesDelContracte[165];
+export const elsMeusSeguiments = metodesDelContracte[166];
+export const quiEmSegueix = metodesDelContracte[167];
 
 /* IDEA-22, punt 2 (Directiva del Mestre; pla 261025_0200) · La persona
    titular d'una entitat, només si ella ho ha triat (capacitat
    'titularPublic'), i la seua tria (capacitat 'consentimentTitular'). Cap és
    nucli: /connectar i la gestió dels membres pregunten abans amb teCapacitat. */
-export const loadTitularPublic = asseguraMetode('loadTitularPublic');
-export const estatTitularPublic = asseguraMetode('estatTitularPublic');
-export const marcaTitularPublic = asseguraMetode('marcaTitularPublic');
+export const loadTitularPublic = metodesDelContracte[168];
+export const estatTitularPublic = metodesDelContracte[169];
+export const marcaTitularPublic = metodesDelContracte[170];
 
 /* B8C-2 (marató 261101_2143; Bloc B8) · Els aparells dels avisos push del
    Xat (capacitat 'avisosPush') i el silenci d'una conversa ('silenciXat').
    Cap és nucli: la interfície pregunta abans amb teCapacitat i, sense elles,
    no oferix l'interruptor dels avisos i el silenci es queda en la memòria
    de la pàgina. */
-export const desaDispositiuAvisos = asseguraMetode('desaDispositiuAvisos');
-export const retiraDispositiuAvisos = asseguraMetode('retiraDispositiuAvisos');
-export const silenciaFil = asseguraMetode('silenciaFil');
+export const desaDispositiuAvisos = metodesDelContracte[173];
+export const retiraDispositiuAvisos = metodesDelContracte[174];
+export const silenciaFil = metodesDelContracte[175];
 
 /* FEDI23 · capacitat opcional completa, sense fallback que publique privats. */
-export const preferenciesConnexions = asseguraMetode('preferenciesConnexions');
-export const desaVisibilitatConnexions = asseguraMetode('desaVisibilitatConnexions');
-export const connexionsPubliquesDe = asseguraMetode('connexionsPubliquesDe');
-export const membresIEntitatsConnectadesDe = asseguraMetode('membresIEntitatsConnectadesDe');
-export const inclouPersonaEnEntitat = asseguraMetode('inclouPersonaEnEntitat');
-export const solicitaUnirSeAEntitat = asseguraMetode('solicitaUnirSeAEntitat');
+export const preferenciesConnexions = metodesDelContracte[176];
+export const desaVisibilitatConnexions = metodesDelContracte[177];
+export const connexionsPubliquesDe = metodesDelContracte[178];
+export const membresIEntitatsConnectadesDe = metodesDelContracte[179];
+export const inclouPersonaEnEntitat = metodesDelContracte[180];
+export const solicitaUnirSeAEntitat = metodesDelContracte[181];
 
-export const consultaIAIA = asseguraMetode('consultaIAIA');
+export const consultaIAIA = metodesDelContracte[55];
 
 /* R15 · Autoritat de sessions i curadoria resolta exclusivament pel servidor. */
-export const adminResumSessionsDispositius = asseguraMetode('adminResumSessionsDispositius');
-export const adminLlistaSessionsDispositius = asseguraMetode('adminLlistaSessionsDispositius');
-export const estatCuradoriaCultural = asseguraMetode('estatCuradoriaCultural');
-export const llistaAportacionsCulturals = asseguraMetode('llistaAportacionsCulturals');
-export const enviaAportacioCultural = asseguraMetode('enviaAportacioCultural');
-export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural');
+export const adminResumSessionsDispositius = metodesDelContracte[49];
+export const adminLlistaSessionsDispositius = metodesDelContracte[50];
+export const estatCuradoriaCultural = metodesDelContracte[51];
+export const llistaAportacionsCulturals = metodesDelContracte[52];
+export const enviaAportacioCultural = metodesDelContracte[53];
+export const revisaAportacioCultural = metodesDelContracte[54];
 
 /* P0-111 / R30 P1-79 · Revisions WP: desa({wpId,estat,nota,autoria,desti,
    actualitzatEsperat}) és CAS. null/absent només crea; una fila existent
@@ -471,21 +487,21 @@ export const revisaAportacioCultural = asseguraMetode('revisaAportacioCultural')
    l’esborrany local i requerix revisió explícita abans del reintent. Un
    servidor sense RPC CAS rebutja amb no-disponible: l’esborrany queda al
    navegador i mai no es prova una signatura antiga sense guarda. */
-export const llistaRevisionsEditorialsWp = asseguraMetode('llistaRevisionsEditorialsWp');
-export const desaRevisioEditorialWp = asseguraMetode('desaRevisioEditorialWp');
+export const llistaRevisionsEditorialsWp = metodesDelContracte[182];
+export const desaRevisioEditorialWp = metodesDelContracte[183];
 
 /* R24 · CODEX-R24-03 · El consens del joc «D'on parles?» (capacitat 'consensIsoglosses'). No és
    nucli: la targeta pregunta abans si el backend segellat té el mètode i, sense ell, es queda
    amb la llavor i el dispositiu. */
-export const lligConsensIsoglossesPoble = asseguraMetode('lligConsensIsoglossesPoble');
-export const votaVariantIsoglossaPoble = asseguraMetode('votaVariantIsoglossaPoble');
-export const desaAportacioVeuPoble = asseguraMetode('desaAportacioVeuPoble');
+export const lligConsensIsoglossesPoble = metodesDelContracte[184];
+export const votaVariantIsoglossaPoble = metodesDelContracte[185];
+export const desaAportacioVeuPoble = metodesDelContracte[186];
 
 /* R32.13 optional capabilities; absence is explicit, never a synthetic ACK. */
-export const confirmaCapturaCrdtRural = asseguraMetode('confirmaCapturaCrdtRural');
-export const registraDenunciaDiligent = asseguraMetode('registraDenunciaDiligent');
-export const revisaDenunciaDiligent = asseguraMetode('revisaDenunciaDiligent');
-export const llistaDenunciesDiligents = asseguraMetode('llistaDenunciesDiligents');
+export const confirmaCapturaCrdtRural = metodesDelContracte[38];
+export const registraDenunciaDiligent = metodesDelContracte[39];
+export const revisaDenunciaDiligent = metodesDelContracte[40];
+export const llistaDenunciesDiligents = metodesDelContracte[41];
 
 /* R32.19 · API pública completa del port. Les consultes pures també es
    poden importar de la seua fulla neutral, sense carregar la resta del port. */

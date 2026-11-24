@@ -31,6 +31,8 @@ import { Accions, Fila, Pila } from '../../components/PedraSeca/composicio/index
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { Botonera } from '../../components/PedraSeca/molecules/Botonera.jsx';
 import { CandidatsAlergens } from '../../components/PedraSeca/molecules/CandidatsAlergens.jsx';
+/* Nucli 1.9.0 (v1.2.24, costura R32.75): les icones dels al·lèrgens de les Receptes de la Nevera. */
+import { IconesAlergens } from '../../components/PedraSeca/molecules/IconesAlergens.jsx';
 import { PillToggle } from '../../components/PedraSeca/molecules/PillToggle.jsx';
 import { Accordion, AccordionItem } from '../../components/PedraSeca/organismes/Accordion.jsx';
 import { AfegitRapid } from '../../components/PedraSeca/organismes/AfegitRapid.jsx';
@@ -82,7 +84,7 @@ export const NUCLI = Object.freeze({
   pedraSeca: Object.freeze({
     Accions, Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Botonera, Camp, CampFitxer, CampText, Carregant,
     CandidatsAlergens, Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
-    Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
+    Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, IconesAlergens, Insignia, Interruptor, LiniaDelTemps,
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,
     Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
     UniversalTPV, encapcalamentDeTargeta, estatLinia, mouCategoria, nivellHistograma

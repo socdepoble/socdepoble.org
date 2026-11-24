@@ -1,0 +1,12 @@
+{
+  "schema": "sdp.r3274.wp619-original.v1",
+  "source": "/Users/javillinares/Documents/Antigravity/Som de Poble/_cultura_de_poble/patrimoni_i_llengua/trilogia_mediterrania_i_moli_la_torre/corpus_text/00_10_pagines_completes.json",
+  "legacySource": "_cultura_de_poble/trilogia_mediterrania_i_moli_la_torre/wp_socdepoble_net/00_10_pagines_completes.json",
+  "fixture": "tests/fixtures/patrimoni/wp619-pages.original.json",
+  "sha256": "0e9b0e946186fa82caa6f9931fa54a083100b8a2d16a728a28d68a3f5c1983d6",
+  "bytes": 322744,
+  "completeSource": true,
+  "sourceReadOnly": true,
+  "contentRegenerated": false,
+  "scope": "Exact existing full 10-page JSON; WP619 assertions retain their original independent expected SHA/text/anchors."
+}

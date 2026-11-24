@@ -1,3 +1,5 @@
+import { backendScope } from '../../config/backendConfig.js';
+import { NOTE_FOLDERS_SEED } from '../carpetesSeed.js';
 /**
  * adaptadorLocal.js — El segon adaptador complet del port (T1 · D01; assalt
  * 261101, pla aprovat pel Mestre el 2026-11-01).
@@ -58,6 +60,7 @@ import { capturaAdminUsuaris } from '../adminUsuaris.js';
 import { capturaConsultaRevisionsSeed, capturaRevisioSeed } from '../seedRevisions.js';
 import { capturaBaixaRevisioPatrimoni, capturaConsultaRevisionsPatrimoni, capturaEdicioRevisioPatrimoni } from '../revisionsPatrimoni.js';
 import { creaRevisionsPatrimoniLocal } from '../revisionsPatrimoniMemoria.js';
+import { creaPortabilitatLocal, capturaInicialPortable } from './portabilitatLocal.js';
 import { creaRevisionsEditorialsWpLocal } from '../revisionsEditorialsWpMemoria.js';
 import { creaConsensIsoglossesMemoria } from '../consensIsoglosses.js';
 import { creaMitjansLocal } from './mitjansLocal.js';
@@ -90,6 +93,13 @@ const CLAUS_DADES = Object.freeze(['towns', 'pages', 'agents', 'feedPosts', 'eve
 /* La interfície els crida de manera síncrona (NotesDataContext, identitat):
    no passen per la guarda asíncrona. */
 const SINCRONS = new Set(['getRuntimeDataMode', 'getBackendConfigurat', 'getDefaultUserId', 'getCurrentUser', 'adoptaSessioExterna']);
+/* A restored business candidate is deliberately not a complete backend.
+   In particular it cannot reach the module-global Xat or change the live
+   identity. Absent methods also keep optional capability inference honest. */
+const METODES_CANDIDAT_NEGOCI = new Set(['getRuntimeDataMode','getBackendConfigurat','getDefaultUserId','getCurrentUser',
+  'getProfile','updateProfile','loadPerfilPublic','listMyOrganizations','listPublicOrganizations','updateOrganization',
+  'llegeixContacteOrganitzacio','desaContacteOrganitzacio','loadNotes','loadNotesPage','createNote','updateNote','creaCarpetaNotes','mouNota','esborraNota',
+  'llistaRevisionsPatrimoni','desaRevisioPatrimoni','esborraRevisioPatrimoni','llegixCopiaCompte','restauraCopiaCompte']);
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const copia = (valor) => (valor === undefined ? undefined : structuredClone(valor));
@@ -194,10 +204,11 @@ function capturaArgumentsConnexions(nom, args) {
 
 /* Un magatzem de notes en memòria amb el contracte {read, mutate} de
    localNotes.js: una lectura i una escriptura no compartixen mai referències. */
-function creaMagatzemMemoria() {
-  const files = new Map();
+function creaMagatzemMemoria(inicial = []) {
+  const files = new Map(inicial);
   return {
     async read(clau) { return structuredClone(files.get(clau) || {}); },
+    async readMany(claus) { return structuredClone(claus.map(clau=>files.get(clau)===undefined?{}:files.get(clau))); },
     async mutate(clau, transforma) {
       const valor = transforma(structuredClone(files.get(clau)));
       files.set(clau, structuredClone(valor));
@@ -252,9 +263,10 @@ function llavorDelMode(mode) {
  */
 export function creaAdaptadorLocal({
   mode = 'seed', tenantId = globalThis.crypto.randomUUID(), ara = () => new Date(), nouId = () => globalThis.crypto.randomUUID(),
-  dades = {}, persistenciaNotes = 'memoria', magatzemNotes = null, personalitzacioOberta = false, restauracioOberta = false, politica = null, administracioLocal = null
+  dades = {}, persistenciaNotes = 'memoria', magatzemNotes = null, personalitzacioOberta = false, restauracioOberta = false, politica = null, administracioLocal = null, negociRestaurat = null
 } = {}) {
   validaOpcions({ mode, tenantId, ara, nouId, dades, persistenciaNotes, magatzemNotes, politica });
+  const portable = capturaInicialPortable(negociRestaurat,{mode,persistenciaNotes,magatzemNotes,actor:usuariDeSessio()?.id});
   const autoritatLocal = administracioLocalValidada(administracioLocal);
   const configuracio = Object.freeze({ backendId: BACKEND_ID_LOCAL, tenantId: tenantId.toLowerCase(), dataMode: mode });
   /* backendUrl buit a posta: normalizeBackendConfig no hi barreja l'URL del
@@ -270,12 +282,17 @@ export function creaAdaptadorLocal({
   /* Una col·lecció: la de `dades` si la porta; si no, la de la llavor. */
   const coleccio = (clau) => (Object.hasOwn(inicials, clau) ? inicials[clau] : llavor[clau] ?? []);
 
-  const memoriaNotes = persistenciaNotes === 'memoria' && magatzemNotes === null ? creaMagatzemMemoria() : null;
+  const initialPortable = portable ? (()=>{
+    const key=JSON.stringify([backendScope(configuracio),portable.titularId]);
+    return [[key,Object.fromEntries(portable.dades.notes.map(row=>[row.id,row]))],[key+':carpetes',Object.fromEntries(portable.dades.noteFolders.filter(row=>!NOTE_FOLDERS_SEED.some(seed=>seed.id===row.id)).map(row=>[row.id,row]))]];
+  })() : [];
+  const memoriaNotes = persistenciaNotes === 'memoria' && magatzemNotes === null ? creaMagatzemMemoria(initialPortable) : null;
   const notes = persistenciaNotes === 'indexeddb'
     ? createLocalNotesAdapter(undefined, { rellotge: ara })
     : createLocalNotesAdapter(magatzemNotes ?? memoriaNotes, { rellotge: ara });
   const perfils = createLocalPerfilsAdapter({
-    entitats: inicials.entitats ?? ENTITATS_SEED, persones: inicials.persones ?? PERSONES_SEED, ara
+    entitats: portable ? [] : inicials.entitats ?? ENTITATS_SEED, persones: inicials.persones ?? PERSONES_SEED, ara,
+    negociInicial: portable ? {actorId:portable.titularId,...portable.dades} : null
   });
   const seguiments = createLocalSeguimentsAdapter({ perfils, persones: inicials.persones ?? PERSONES_SEED, ara });
 
@@ -291,6 +308,12 @@ export function creaAdaptadorLocal({
      public read DTOs never contain this ownership metadata. */
   const revisionsLlavor = { actuals: new Map(), autoria: new Map() };
   const usuari = () => usuariDeSessio();
+  const entradaPortable = portable ? capturaSessio() : null;
+  const comprovaPortable = () => {
+    if (!portable) return;
+    entradaPortable();
+    if (usuari()?.id !== portable.titularId) throw cancelacio();
+  };
   /* R24 · CODEX-R24-03 · El consens del joc «D'on parles?» ('consensIsoglosses'): vots i
      aportacions d'esta instància, amb l'autoria de la sessió (sense sessió, cap escriptura). */
   const consensIsoglosses = creaConsensIsoglossesMemoria({ usuari, ara, nouId });
@@ -312,9 +335,11 @@ export function creaAdaptadorLocal({
      mateix AbortError de capturaSessio) o si la persona viva ja no és la
      capturada (també una sessió caducada). Una renovació no el mou. */
   const abast = () => {
+    comprovaPortable();
     const persona = usuari()?.id ?? null;
     const entrada = capturaSessio();
     return () => {
+      comprovaPortable();
       if (tancat) throw errorTancat();
       entrada();
       if ((usuari()?.id ?? null) !== persona) throw new DOMException('La sessió ha canviat.', 'AbortError');
@@ -337,9 +362,11 @@ export function creaAdaptadorLocal({
     alTancar: (fn) => { netejes.push(fn); }
   });
 
+  const patrimoni = creaRevisionsPatrimoniLocal(usuari,nouId,portable ? {actorId:portable.titularId,revisions:portable.dades.patrimoni} : null);
+  const {llegixPatrimoniPortable: snapshotPatrimoni,...metodesPatrimoni}=patrimoni;
   const metodes = {};
   for (const part of [creaCompteLocal(e), creaAdminUsuarisLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
-    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, creaRevisionsPatrimoniLocal(usuari, nouId), creaRevisionsEditorialsWpLocal(usuari, ara),
+    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, metodesPatrimoni, creaPortabilitatLocal(e,snapshotPatrimoni,snapshot=>creaAdaptadorLocal({mode:'local',tenantId:snapshot.tenantId,ara,dades:{entitats:[],persones:[]},negociRestaurat:snapshot})), creaRevisionsEditorialsWpLocal(usuari, ara),
     consensIsoglosses.metodes]) {
     for (const [nom, fn] of Object.entries(part)) {
       if (Object.hasOwn(metodes, nom)) throw new Error(`[adaptadorLocal] ${nom} ve de dos mòduls.`);
@@ -408,7 +435,11 @@ export function creaAdaptadorLocal({
     });
   };
   const publics = {};
-  for (const [nom, fn] of Object.entries(metodes)) publics[nom] = SINCRONS.has(nom) ? fn : guardat(nom, fn);
+  for (const [nom, fn] of Object.entries(metodes)) {
+    if (!portable || METODES_CANDIDAT_NEGOCI.has(nom)) publics[nom] = SINCRONS.has(nom)
+      ? portable ? (...args)=>{if(tancat)throw errorTancat();comprovaPortable();return fn(...args);} : fn
+      : guardat(nom, fn);
+  }
 
   /** Tanca l'adaptador: cap crida asíncrona més ni cap resultat de les que
       eren en vol, cap canal obert d'esta instància i els magatzems propis
@@ -431,7 +462,7 @@ export function creaAdaptadorLocal({
        adaptadors (el Supabase en seed); els canals d'esta instància ja són tancats. */
   }
 
-  return Object.freeze({ ...publics, destroy, configuracio });
+  return Object.freeze({ ...publics, destroy, configuracio, ...(portable ? {perfilCopia:'negoci-local'} : {}) });
 }
 
 export default creaAdaptadorLocal;

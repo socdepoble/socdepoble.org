@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
+import { cosMigracio, creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { projecta132PerFixture } from './fixtures/r3278-cataleg-parcial.mjs';
 import { startLocalPostgres } from './fixtures/postgres-local.mjs';
 
 const MIG = '20261117140000_r32_5_lssi_revisio_cautelar.sql';
@@ -11,13 +14,21 @@ const sql = readFileSync(new URL('../supabase/migrations/' + MIG, import.meta.ur
 const error = code => e => e.code === code;
 
 test('R32.5 LSSI · PostgreSQL real, catàleg complet, RLS, quota i retirada cautelar', { timeout: 180000 }, async t => {
-  const cluster = await startLocalPostgres(), db = cluster.db;
+  const cluster = await startLocalPostgres({ dataRoot: join(tmpdir(), 'sdp-lssi-native') }), db = cluster.db;
   t.after(() => cluster.close());
   const plan = creaPlaMigracions();
   await db.query(plan.bootstrap);
   for (const m of plan.migrations) {
     if (m.file === MIG) continue;
-    try { await db.query('begin'); await db.query(m.body); await db.query('commit'); }
+    let body = m.body;
+    if (m.file === '20261123180000_r3252_indexs_suport_fk_verificats.sql') {
+      const partial = await projecta132PerFixture(db, { absentRelations: ['private.lssi_revisions'] });
+      assert.deepEqual(partial.report.omittedRelations, ['private.lssi_revisions']);
+      assert.equal(partial.report.deploymentOrLedger, false);
+      t.diagnostic(JSON.stringify(partial.report));
+      body = cosMigracio(partial.sql);
+    }
+    try { await db.query('begin'); await db.query(body); await db.query('commit'); }
     catch (e) { throw new Error(`${m.file}: ${e.message}`, { cause: e }); }
   }
   assert.equal((await db.query("select to_regprocedure('public.admin_safata_denuncies_lssi(text,integer)') f")).rows[0].f, null);

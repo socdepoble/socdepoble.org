@@ -109,10 +109,15 @@ describe('la llavor del Mur amb les dates de prova', () => {
        P0-51 / IDEA-182 (261108) · Es retira Anatomia rural del Mur i
        tornem al sostre de dotze, sense canviar la seua pàgina directa.
        Onada R23 (261113) · «La Veu de Sóc de Poble» hi entra davant del Pou de Neu.
-       Onada R25 (261114) · «El Farcellet Digital de Sóc de Poble» hi entra la primera: amb ella en són catorze. */
-    expect(N).toBeLessThanOrEqual(14);
-    expect(IMPORTANTS_DEL_MUR).toHaveLength(14);
-    expect(IMPORTANTS_DEL_MUR.slice(0, 4).map(clau)).toEqual([
+       Onada R25 (261114) · «El Farcellet Digital de Sóc de Poble» hi entra la primera: amb ella en són catorze.
+       v1.2.24 (24-11-2026; ordre del Mestre) · «Reconeixements i fonts d'inspiració» hi entra la primera, la
+       Notícia #1 del Mur, davant del Farcellet: amb ella en són quinze.
+       Onada R32.86 (261124; IDEA-348) · «Cada cosa al seu lloc» hi entra la segona: amb ella en són setze. */
+    expect(N).toBeLessThanOrEqual(16);
+    expect(IMPORTANTS_DEL_MUR).toHaveLength(16);
+    expect(IMPORTANTS_DEL_MUR.slice(0, 6).map(clau)).toEqual([
+      'pages:reconeixements',
+      'pages:cada-cosa-al-seu-lloc',
       'feedPosts:copies-de-seguretat-soc-de-poble',
       'feedPosts:la-veu-de-soc-de-poble',
       'feedPosts:noves-tecnologies-aplicades-a-la-cultura-rural',
@@ -191,9 +196,14 @@ describe('la llavor del Mur amb les dates de prova', () => {
     expect(TECNIQUES_DEL_MUR.map(clau)).toEqual(['pages:versions']);
     const remot = targetesDeSistema(PAGE_COPY, { nativa: false });
     expect(remot.map(({ id }) => id)).not.toContain('la-iaia-sabuda');
-    // La més nova del sistema en remot ja no és cap pàgina del 9-11 que no recull res.
-    const mesNova = [...remot].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
-    expect(Date.parse(mesNova.created_at)).toBeLessThan(Date.parse(PAGE_COPY['la-iaia-sabuda'].date));
+    /* La més nova del sistema en remot ja no és cap pàgina del 9-11 que no recull res.
+       v1.2.24 (24-11-2026; ordre del Mestre) · «Reconeixements i fonts d'inspiració» porta la seua data de
+       publicació (24-11-2026): la Notícia #1 del Mur. Onada R32.86 · en remot mana la data real, i «Cada cosa al
+       seu lloc» (24-11-2026 16:45) n'és més nova. Totes les altres continuen sent anteriors al 9-11. */
+    const perData = [...remot].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+    expect(perData.slice(0, 2).map(({ id }) => id)).toEqual(['cada-cosa-al-seu-lloc', 'reconeixements']);
+    expect(perData[1].created_at).toBe(PAGE_COPY.reconeixements.date);
+    expect(Date.parse(perData[2].created_at)).toBeLessThan(Date.parse(PAGE_COPY['la-iaia-sabuda'].date));
     const demo = llavorAmbDatesDeProva(APP_SEED, new Date(2026, 10, 9, 14, 0));
     const pageCopyDemo = Object.fromEntries(demo.pages.map((pagina) => [pagina.id, pagina]));
     expect(targetesDeSistema(pageCopyDemo, { nativa: false }).map(({ id }) => id)).not.toContain('la-iaia-sabuda');

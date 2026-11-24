@@ -30,6 +30,7 @@
  * es desa es torna a llegir igual.
  */
 import { Extension, Mark, Node } from '@tiptap/core';
+import { destinacioSeguraDEnllac } from '../../../../utils/enllacosExterns.js';
 
 export const CLASSES_DE_CONTENIDOR = Object.freeze([
   'aplec-2023__galeria',
@@ -150,7 +151,51 @@ export const NomesPerALectors = Mark.create({
   },
 });
 
+/* IDEA-343 · Paritat d'enllaços entre TipTap (StarterKit · Link) i sanitizeHtml:
+   de sèrie, @tiptap/extension-link posa target="_blank" fins i tot als enllaços
+   interns (/pobles), fet que expulsava de la SPA i trencava la igualtat
+   sanitizeHtml(editor.getHTML()) === editor.getHTML() (salt de cursor al desar).
+   Ací s'anul·la el target per defecte d'HTMLAttributes en la instància de Link
+   de l'editor i es delega target a destinacioSeguraDEnllac (sempre '_blank' en
+   externs; sense target en interns, fragments i mailto:/tel:). */
+export const DestinacioDEnllac = Extension.create({
+  name: 'sdpDestinacioDEnllac',
+  addGlobalAttributes() {
+    const link = this.extensions?.find((extensio) => extensio.name === 'link');
+    if (link && !link.config.__sdpDestinacioAplicada) {
+      const opcionsPropies = link.config.addOptions;
+      const atributsPropis = link.config.addAttributes;
+      link.config = {
+        ...link.config,
+        __sdpDestinacioAplicada: true,
+        addOptions() {
+          const opcions = opcionsPropies ? opcionsPropies.call(this) : (this.parent?.() ?? {});
+          return {
+            ...opcions,
+            HTMLAttributes: { ...opcions.HTMLAttributes, target: null },
+          };
+        },
+        addAttributes() {
+          const base = atributsPropis ? atributsPropis.call(this) : (this.parent?.() ?? {});
+          return {
+            ...base,
+            target: {
+              default: null,
+              parseHTML: (element) => destinacioSeguraDEnllac(element.getAttribute('href'), element.getAttribute('target')),
+              renderHTML: (atributs) => {
+                const target = destinacioSeguraDEnllac(atributs.href, atributs.target);
+                return target ? { target } : {};
+              },
+            },
+          };
+        },
+      };
+    }
+    return [];
+  },
+});
+
 /** Les peces, en l'ordre en què l'editor les ha de llegir. */
 export const extensionsDeMaquetacio = () => [
-  AccionsDeMaquetacio, ContenidorDeMaquetacio, ClasseDeParagraf, ClassesTipografiques, NomesPerALectors,
+  AccionsDeMaquetacio, ContenidorDeMaquetacio, ClasseDeParagraf, ClassesTipografiques, NomesPerALectors, DestinacioDEnllac,
 ];

@@ -19,7 +19,10 @@ test('variants destructives protegides force_ask; el classificador no executa ca
  }
  assert.equal(call(root,{CommandLine:'rm a.md',Cwd:path.join(root,DESK)}).decision,'force_ask');
  assert.equal(call(root,{CommandLine:'rg -n "rm a.md" .',Cwd:path.join(root,DESK)}).decision,'allow');
- assert.equal(call(root,{CommandLine:'rm -rf .',Cwd:'/tmp'}).decision,'allow','neteja temporal fora del repo no és governança');
+ // El directori extern ha de ser germà de la fixture: /tmp pot ser-ne
+ // l'ancestre quan TMPDIR és curt per als sockets de PostgreSQL.
+ assert.equal(call(root,{CommandLine:'rm -rf .',Cwd:path.join(path.dirname(root),'fora-del-repositori')}).decision,'allow','neteja temporal fora del repo no és governança');
+ assert.equal(call(root,{CommandLine:'rm -rf .',Cwd:path.dirname(root)}).decision,'force_ask','un ancestre de la fixture continua protegit');
  assert.equal(get(root,file),'Document intacte\n');
 });
 test('lectures pures i via documental preaprovada continuen allow amb text rm i rutes governades',t=>{

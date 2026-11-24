@@ -59,8 +59,9 @@ const NOMES_ASCII = /^[\u0000-~]*$/;
    R15: l'1.5.0 afig el Workspace de catàleg, el detall i la revisió assistida.
    R21.6: l'1.6.0 afig la capçalera de lectura de la targeta (encapcalamentDeTargeta).
    R32.11 (v1.2.9): l'1.7.0 afig Accions, el bloc d'accions de la Gestoria i del Rebost (lots 05 i 06 de Gemini).
-   v1.2.17: l'1.8.0 afig les dues declaracions d'espai del Rebost a la porta 'workspace' (Gemini R32.26, IDEA-303). */
-const RANG = '^1.8';
+   v1.2.17: l'1.8.0 afig les dues declaracions d'espai del Rebost a la porta 'workspace' (Gemini R32.26, IDEA-303).
+   v1.2.24 · costura R32.75 · l'1.9.0 afig IconesAlergens a la Pedra Seca (les Receptes de la Nevera, R32.53). */
+const RANG = '^1.9';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -81,13 +82,15 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(VERSIO_NUCLI).toBe('1.8.0');
+    /* v1.2.24 · costura R32.75 · l'1.9.0 (IconesAlergens): la versió i el rang ^1.9. */
+    expect(VERSIO_NUCLI).toBe('1.9.0');
     expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
     expect(rangDelNucli('1.5.2')).toBe('^1.5');
     expect(rangDelNucli('1.6.2')).toBe('^1.6');
     expect(rangDelNucli('1.7.2')).toBe('^1.7');
     expect(rangDelNucli('1.8.2')).toBe('^1.8');
+    expect(rangDelNucli('1.9.2')).toBe('^1.9');
   });
 
   test('un id que no és d’una app no compila', () => {
@@ -429,7 +432,8 @@ const APPS_DE_LA_FASE_1 = Object.freeze({
   nevera: Object.freeze({
     base: 'sdp-nevera',
     nous: {
-      router: ['useRouter'], pedraSeca: ['Accions', 'MarcColumna', 'NavegacioPeriode', 'OrdenaCategories', 'encapcalamentDeTargeta'],
+      /* v1.2.24 · costura R32.75 · Nucli 1.9.0: IconesAlergens, les icones del diàleg de Receptes (R32.53). */
+      router: ['useRouter'], pedraSeca: ['Accions', 'IconesAlergens', 'MarcColumna', 'NavegacioPeriode', 'OrdenaCategories', 'encapcalamentDeTargeta'],
       /* v1.2.17 · Nucli 1.8.0: les dues declaracions d'espai del Rebost (IDEA-303). */
       workspace: ['CatalegWorkspace', 'DetallCataleg', 'declaraNivellInicialEspai', 'declaraVistaPerDefecteEspai'], plataforma: []
     },
@@ -507,8 +511,9 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))(`Onada 7 · %s compilat com a mòd
 
   /* Actualitzada a posta (261024 T5): també el nom de l'1.3.0 (useServeiNoticies, el Lector).
      R21.6: i el de l'1.6.0 (encapcalamentDeTargeta, el Bar i la Nevera per l'esquelet comú).
-     R32.11 (v1.2.9): i el de l'1.7.0 (Accions, el Rebost de la Nevera, lot 06 de Gemini). */
-  test('la porta mira de veres: el cos importa noms que les versions 1.1 a 1.8 afigen al nucli, i el nucli els exposa', () => {
+     R32.11 (v1.2.9): i el de l'1.7.0 (Accions, el Rebost de la Nevera, lot 06 de Gemini).
+     v1.2.24 · costura R32.75 · i el de l'1.9.0 (IconesAlergens, les Receptes de la Nevera). */
+  test('la porta mira de veres: el cos importa noms que les versions 1.1 a 1.9 afigen al nucli, i el nucli els exposa', () => {
     for (const [font, noms] of [
       ['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca],
       ['src/components/universal/workspace/index.js', nous.workspace], ['src/apps/plataforma/index.js', nous.plataforma]

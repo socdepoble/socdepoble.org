@@ -146,7 +146,7 @@ function GaleriaWeb({ espai, categoria, membres }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const obri = (item) => navega(categoria, String(item.id));
   let graella;
-  if (membres.length === 0) graella = <p ref={adoptaEstilsDiferits}>{tr(E.senseImatges)}</p>;
+  if (membres.length === 0) graella = <p ref={adoptaEstilsDiferits} role="status" className="sdp-paragraf-centrat">{tr(E.senseImatges)}</p>;
   else if (vistaWeb === 'taula') graella = <TaulaCataleg t={t} membres={membres} onObri={obri} />;
   else if (categoria === GALERIA_CRONOLOGIA) {
     graella = (

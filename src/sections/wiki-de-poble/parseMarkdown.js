@@ -34,6 +34,7 @@
  */
 
 import { iniciDelContingut } from '../../utils/iniciEditorial.js';
+import { llevaEtiquetes } from '../../config/contentHelpers.js';
 import { llevaPuntFinal } from '../../components/universal/editorial.js';
 import { marcaDeTaula } from '../../utils/sanitize.js';
 
@@ -388,13 +389,13 @@ export function parseMarkdown(md, { entradilla = true, etiquetaTaula = null, niv
   // 1c · Entradilla (7). Sobre el Markdown, amb el codi ja apartat.
   if (entradilla) html = marcaEntradilla(html);
 
-  // UniversalPage té l'h1 de pàgina. El nivell visual conserva la classe
-  // tipogràfica canònica; el nivell semàntic comença un esglaó més avall.
-  // Les línies buides al voltant en fan un bloc propi (6).
+  // IDEA-344 · UniversalPage ja pinta H1 + H2 centrat + Entradilla (.lead).
+  // Al cos del Markdown, cada nivell puja a l'etiqueta semàntica pura sense
+  // disfressar els ## com a .h2 centrats: ## -> <h3>, ### -> <h4>, #### -> <h5>,
+  // ##### / ###### -> <h6> (i un # romanent -> <h2>). Bloc propi (6).
   html = html.replace(/^(#{1,6}) (.*$)/gim, (_match, hashes, text) => {
-    const visual = hashes.length;
-    const semantic = Math.min(visual + 1, 6);
-    return `\n\n<h${semantic} class="h${visual}">${netejaTitol(text)}</h${semantic}>\n\n`;
+    const semantic = Math.min(hashes.length + 1, 6);
+    return `\n\n<h${semantic}>${netejaTitol(text)}</h${semantic}>\n\n`;
   });
 
   // Horizontal Rule
@@ -475,11 +476,18 @@ export function parseMarkdownEnLinia(md) {
 
 /* Títol del Markdown com a text pla: l'H1 de la pàgina és text de React, i
    un «**» o un «[x](y)» s'hi veurien tal qual. */
+function senseMarquesFinals(md) {
+  let fi = md.length;
+  while (fi && (md[fi - 1] === ' ' || md[fi - 1] === '\t')) fi--;
+  const tanca = fi;
+  while (fi && md[fi - 1] === '#') fi--;
+  if (fi === tanca || !fi || (md[fi - 1] !== ' ' && md[fi - 1] !== '\t')) return md;
+  while (fi && (md[fi - 1] === ' ' || md[fi - 1] === '\t')) fi--;
+  return md.slice(0, fi);
+}
 function textPla(md) {
   // Onada R29 · SEG-R29-03: els enllaços i les imatges, en temps lineal (substituixEnllacos).
-  const senseEnllacos = substituixEnllacos(md
-    .replace(/[ \t]+#+[ \t]*$/, '')
-    .replace(/<[^>]*>/g, '')
+  const senseEnllacos = substituixEnllacos(llevaEtiquetes(senseMarquesFinals(md), '')
     .replace(/`([^`\n]+)`/g, '$1'), (text) => text, { buits: true, imatge: true });
   return llevaPuntFinal(senseEnllacos
     .replace(/(\*\*|__)(\S(?:[^\n]*?\S)?)\1/g, '$2')

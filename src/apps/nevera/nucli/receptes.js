@@ -1,3 +1,6 @@
+import { agregaAlergensRecepta } from './alergens.js';
+import { ingredientPerId } from './ingredients.js';
+
 /**
  * La Nevera de Casa · el RECEPTARI de llavor (dada pura).
  *
@@ -18,8 +21,8 @@
  *       o          ingredients que el poden substituir («penques o bledes»)
  *
  * ORIENTATIU i pendent de la revisió del Mestre: cada casa fa l'olla a la seua
- * manera. Sense passos de preparació, sense cap afirmació de salut i sense
- * al·lèrgens (la Nevera no en porta cap taxonomia: no se n'inventa cap).
+ * manera. Sense passos de preparació ni afirmacions de salut. La matriu dels
+ * 14 grups es consulta amb matriuDeRecepta; no certifica la preparació real.
  */
 
 export const RACIONS_PER_DEFECTE = 4;
@@ -99,4 +102,9 @@ const PER_ID = new Map(RECEPTES.map((r) => [r.id, r]));
 /** La recepta amb este id, o null. */
 export function receptaPerId(id) {
   return PER_ID.get(id) || null;
+}
+
+/** Matriu dels 14 grups per id o recepta; opcionals i alternatives són potencials. */
+export function matriuDeRecepta(recepta) {
+  return agregaAlergensRecepta(typeof recepta === 'string' ? receptaPerId(recepta) : recepta, ingredientPerId);
 }

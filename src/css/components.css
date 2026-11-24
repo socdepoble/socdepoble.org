@@ -96,7 +96,7 @@
   .sdp-align-start { align-items: flex-start; }
   .sdp-align-end { align-items: flex-end; }
   .sdp-align-stretch { align-items: stretch; }
-  .sdp-justify-center { justify-content: center; }
+  .sdp-justify-center, .sdp-fila--centrada { justify-content: center; }
   .sdp-justify-flex-start { justify-content: flex-start; }
   .sdp-justify-flex-end { justify-content: flex-end; }
   .sdp-justify-space-between { justify-content: space-between; }
@@ -601,7 +601,7 @@
     margin-bottom: var(--sdp-space-6); padding: var(--sdp-space-1) var(--sdp-space-4);
     border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m); background: var(--sdp-fons-targeta);
   }
-  .sdp-molla__enllac { display: inline-flex; align-items: center; min-height: var(--sdp-touch-min); color: var(--sdp-accio-text); font-weight: 700; }
+  .sdp-molla__enllac, .sdp-arbre a { display: inline-flex; align-items: center; min-height: var(--sdp-touch-min); color: var(--sdp-accio-text); font-weight: 700; }
   .sdp-molla__pas [aria-current="page"] { color: var(--sdp-text-titol); font-weight: 700; }
 
   .sdp-paginacio { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sdp-space-2); }
@@ -704,7 +704,7 @@
   .sdp-arbre, .sdp-arbre ul { margin: 0; list-style: none; }
   .sdp-arbre { padding: 0; }
   .sdp-arbre ul { padding-inline-start: var(--sdp-space-6); border-inline-start: 2px solid var(--sdp-vora); }
-  .sdp-arbre li { margin-block: var(--sdp-space-3); }
+  .sdp-arbre li { margin-block: var(--sdp-space-2); }
   .sdp-arbre__rol { display: block; color: var(--sdp-text-suau); }
   .sdp-arbre__relacio { color: var(--sdp-text-titol); }
   .sdp-arbre code { overflow-wrap: anywhere; }
@@ -2273,6 +2273,15 @@ header.bar-blue { container-type: inline-size; }
 @container (max-width: 335.98px) {
   .bar-blue .bar-blue-left__endavant { display: none; }
 }
+/* R32.87 · Peix 4 (Gemini Neon) · El pas 2: per davall de 288px de barra (sis
+   cel·les de 48) encara sobreïx. Com la barra taronja a 280px, les accions de
+   la targeta baixen a una segona fila, a la dreta. La barra la respon el pare
+   (T20, del mateix ample) i els descendents, la barra. */
+@container (max-width: 287.98px) {
+  header.bar-blue { height: auto; min-height: var(--sdp-alt-accio); grid-template-columns: minmax(max-content, 1fr) max-content; }
+  .bar-blue .btn-connectar.sp-card-connect, .bar-blue-right { grid-column: 2; grid-row: 1; }
+  .bar-blue .sp-card-actions { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+}
 @supports not (container-type: inline-size) {
   @media (max-width: 391.98px) {
     .app-grid-shell[data-llista="rail"] .bar-blue .bar-blue-left__endavant { display: none; }
@@ -2316,6 +2325,9 @@ section.bar-orange[data-centre="buit"] > .sp-card-author { justify-self: start; 
   }
   section.bar-orange[data-centre="buit"] {
     grid-template-columns: minmax(var(--sdp-touch), 1fr) max-content;
+  }
+  section.bar-orange[data-centre="buit"] > .sdp-emoticona-barra {
+    display: none;
   }
   section.bar-orange[data-centre="buit"] > .bar-actions {
     grid-column: 2;

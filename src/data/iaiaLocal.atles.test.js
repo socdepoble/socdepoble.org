@@ -11,10 +11,11 @@ import { pobleDelForaster } from '../sections/xat/pobleAmfitrio.js';
 import {
   ATLES_OPERATIU, DF_MAXIM_DEL_COS, ENCAPCALAMENT_DE_LA_WIKI, ENCAPCALAMENT_DE_SOC_DE_POBLE, EQUIVALENCIES, MAXIM_FRAGMENT_DE_L_ATLES,
   PAGINES_PER_A_LA_IAIA, RUTA_INTERNA, RUTES_DE_PAGINA, SUGGERIMENTS_RAPIDS_IAIA, componResposta, construeixIndex, cercaRellevant, documentDelPoble,
-  documentsDePageCopy, esborranyDeRespostaIAIA, extreuAccionsDeRespostaIAIA, indexDeLaCapaLocal, oblidaIndexDeLaWiki, respostaDeLaIAIA, rutaDePagina, termesDeLaPregunta, textDeHtml, tokenitza
+  carregaPaquetDeLaIAIA, documentsDePageCopy, esborranyDeRespostaIAIA, extreuAccionsDeRespostaIAIA, indexDeLaCapaLocal, oblidaIndexDeLaWiki, respostaDeLaIAIA, rutaDePagina, termesDeLaPregunta, textDeHtml, tokenitza
 } from './iaiaLocal.js';
 import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { obtePaginaVersionsCompleta } from '../sections/text/pageContent.versionsHistoric.js';
 import { legalContent } from '../sections/text/legalContent.js';
 import { SECTIONS } from '../config/sections.js';
 import { RUTES_CANONIQUES } from '../config/navigation.js';
@@ -144,10 +145,15 @@ describe('privacitat', () => {
     expect(documentsDePageCopy({ legal: legalContent })).toEqual([]);
   });
 
-  test('el dossier continua indexat sense copiar correus ni identificadors federats públics', () => {
-    const documents = documentsDePageCopy(PAGE_COPY);
+  /* v1.2.24 · costura R32.75 · /versions en dos nivells (R32.48): PAGE_COPY.versions.html només porta el Nivell 1, i el
+     dossier (PostgreSQL, @depoble@mastodont.cat) és a l'arxiu històric. La font de /versions és la pàgina sencera
+     (obtePaginaVersionsCompleta), i els documents, els del paquet de la segona capa (carregaPaquetDeLaIAIA), que la
+     indexa sencera. Les expectatives de cada pàgina no canvien. */
+  test('el dossier continua indexat sense copiar correus ni identificadors federats públics', async () => {
+    const fonts = { fedivers: PAGE_COPY.fedivers.html, versions: obtePaginaVersionsCompleta(PAGE_COPY.versions, 'ca').html };
+    const documents = (await carregaPaquetDeLaIAIA()).items;
     for (const clau of ['fedivers', 'versions']) {
-      expect(PAGE_COPY[clau].html).toContain('@depoble@mastodont.cat');
+      expect(fonts[clau]).toContain('@depoble@mastodont.cat');
       const document = documents.find((entrada) => entrada.id === `pagina:${clau}`);
       expect(document).toBeDefined();
       expect(ambDadesPersonals(`${document.title} ${document.subtitle} ${document.content}`)).toBe(false);

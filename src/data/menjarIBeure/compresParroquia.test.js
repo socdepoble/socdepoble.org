@@ -1,3 +1,4 @@
+import {jsonFixture,receiptFixture} from '../../../tests/fixtures/fontsSintetiquesC6.mjs';
 // @vitest-environment node
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
@@ -38,8 +39,13 @@ describe('Actual source purchase rows and explicit formats', () => {
     expect(compra.font).toContain('preu revisat: Factura de prova F-2, 2026-11-09');
   });
 
-  test('local complete snapshot (if on disk): the historical pack price prepares the purchase as before', async (context) => {
-    if (!existsSync(PRIVADA)) { context.skip(); return; }
+  test('local complete snapshot (if on disk): the historical pack price prepares the purchase as before', async () => {
+    if (!existsSync(PRIVADA)) {
+      const dades=jsonFixture('parroquia-completa.synthetic.json');
+      const compra=ingredientDeTarifaParroquia({dades,tarifaId:'parroquia-preus-1-7',quantitatPerUnitat:0.25,unitat:'l',ivaPercent:10,ivaDeductible:true,recarrecEquivalencia:false});
+      expect(compra).toMatchObject({estat:'preparat',preuCents:100,quantitatCompra:0.5,costUnitatCents:50});
+      receiptFixture('purchase-private-snapshot');return;
+    }
     const dades = await carregaCatalegParroquia();
     const bombo = tarifesCompraParroquia(dades).find((t) => t.nom === 'Bombó');
     expect(bombo).toMatchObject({ id: 'parroquia-preus-1-7', preuPackCents: 40, unitatsPack: 1 });

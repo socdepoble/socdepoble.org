@@ -64,7 +64,7 @@ function frontissaFixture(f) {
     put(root, '.agents/contingut_estructural.json', JSON.stringify({ schema: 'sdp.contingut.v1', claus: {
       poble: { sha256: digest(JSON.stringify(page)), html: page.html.length, aprovat_per: 'fixture', data: '2026-11-02' }
     } }));
-    for (const name of ['tooling/gates/frontissa-contingut.mjs', 'tooling/lib/arrel.mjs']) put(root, name, fs.readFileSync(path.join(ROOT, name)));
+    for (const name of ['tooling/gates/frontissa-contingut.mjs', 'tooling/lib/arrel.mjs', 'tooling/lib/mutacio-durable.mjs']) put(root, name, fs.readFileSync(path.join(ROOT, name)));
   }
 }
 

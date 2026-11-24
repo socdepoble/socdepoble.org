@@ -35,6 +35,7 @@ function esperaXarxa(signal) {
     const acaba = (valor) => {
       window.removeEventListener('online', alTornar);
       document.removeEventListener('visibilitychange', alVeure);
+      document.removeEventListener('resume', alTornar);
       signal?.removeEventListener('abort', alAbortar);
       resolve(valor);
     };
@@ -43,6 +44,7 @@ function esperaXarxa(signal) {
     const alAbortar = () => acaba(false);
     window.addEventListener('online', alTornar);
     document.addEventListener('visibilitychange', alVeure);
+    document.addEventListener('resume', alTornar);
     signal?.addEventListener('abort', alAbortar, { once: true });
   });
 }

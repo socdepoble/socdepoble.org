@@ -14,7 +14,7 @@ function controls(dialeg) {
       if (estil.display === 'none' || estil.visibility === 'hidden' || estil.visibility === 'collapse') return false;
     }
     return true;
-  }).sort((a, b) => (a.tabIndex || Infinity) - (b.tabIndex || Infinity));
+  }).sort((a, b) => (a.tabIndex > 0 ? a.tabIndex : Number.MAX_SAFE_INTEGER) - (b.tabIndex > 0 ? b.tabIndex : Number.MAX_SAFE_INTEGER));
 }
 
 /* Revisió del Gauntlet 261017 (M1, A11Y-1) · Un element enfocat de dins que

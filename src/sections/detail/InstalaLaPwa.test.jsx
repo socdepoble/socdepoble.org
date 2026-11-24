@@ -168,10 +168,12 @@ describe('les ranures de botiga', () => {
 
   /* B9 (marató 261101_2143) · L'App Store oberta: el mateix botó normal, amb
      «Disponible a l'App Store». El nom accessible és el text visible (cap
-     aria-label, WCAG 2.5.3) i l'enllaç s'obri en la mateixa pestanya.
+     aria-label, WCAG 2.5.3).
      P0-62 bis (08-11-2026; ordre del Mestre al xat de Claude) · El botó de
-     marca d'Apple (classeDeBotiga), no el secundari; la resta, igual. */
-  test('l’App Store oberta pinta «Disponible a l’App Store», sense aria-label ni pestanya nova', () => {
+     marca d'Apple (classeDeBotiga), no el secundari; la resta, igual.
+     IDEA-343 (24-11-2026) · Tot enllaç extern a les botigues oficials obri
+     sempre en pestanya nova (target="_blank" i rel="noopener noreferrer"). */
+  test('l’App Store oberta pinta «Disponible a l’App Store», sense aria-label i en pestanya nova (IDEA-343)', () => {
     render(<Ranures canals={[
       { id: 'google-play', nom: 'Google Play', url: null },
       { id: 'app-store', nom: 'App Store', url: APP_STORE },
@@ -182,7 +184,9 @@ describe('les ranures de botiga', () => {
       [APP_STORE, CLASSE_APP_STORE, "Disponible a l'App Store"],
       [WORDPRESS, CLASSE_BOTIGA, 'WordPress.org']
     ]);
-    for (const a of enllacos) expect([a.hasAttribute('aria-label'), a.hasAttribute('target')]).toEqual([false, false]);
+    for (const a of enllacos) {
+      expect([a.hasAttribute('aria-label'), a.getAttribute('target'), a.getAttribute('rel')]).toEqual([false, '_blank', 'noopener noreferrer']);
+    }
     expect(ranura().textContent).not.toMatch(/beta|TestFlight|prompte|aviat|pròximament/i);
   });
 

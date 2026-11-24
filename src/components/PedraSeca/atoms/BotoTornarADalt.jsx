@@ -13,7 +13,7 @@ import { ArrowUp } from 'lucide-react';
 
 export function BotoTornarADalt({ onPuja, etiqueta = 'Tornar a dalt' }) {
   return (
-    <button type="button" className="sdp-tornar-dalt" aria-label={etiqueta} onClick={onPuja}>
+    <button type="button" className="sdp-tornar-dalt" aria-label={etiqueta} title={etiqueta} onClick={onPuja}>
       <ArrowUp aria-hidden="true" focusable="false" />
     </button>
   );

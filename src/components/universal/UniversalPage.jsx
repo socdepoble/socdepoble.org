@@ -6,7 +6,7 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
 import { ImatgeDePortada, PageFrame } from './PageFrame';
 import { isSafeUrl } from './UniversalUtils';
-import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
+import { compartix, rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
 import { usePastillaCalendari } from './barres/pastillaCalendari.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 import { origenDeLaPagina } from '../../config/origenPublic.js';
@@ -199,17 +199,13 @@ export function UniversalPage(props) {
        la barra d'adreces, byte a byte. */
     const hrefDePagina = urlPerCompartir(undefined, router);
     const safeHref = isSafeUrl(hrefDePagina) ? hrefDePagina : origenDeLaPagina();
-    if (navigator.share) {
-      /* Gauntlet 261017 (Bloc 0.1) · Tancar el menú de compartir (AbortError)
-         no és cap error, com en compartix (PedraSeca/hooks/useAccions.js). */
-      navigator.share({ title: title || document.title, url: safeHref }).catch((error) => {
-        if (error?.name !== 'AbortError') console.error(error);
-      });
-    } else {
-      navigator.clipboard.writeText(safeHref).then(() => {
-        showToast('Enllaç copiat al porta-retalls');
-      }).catch(console.error);
-    }
+    /* Plaça, canvi 6 (261124) · Compartir sempre respon, pel camí de les
+       targetes (compartix · PedraSeca/hooks/useAccions.js): si el menú del
+       telèfon falla, copia l'enllaç i ho diu; si tampoc es pot copiar, l'avís
+       porta l'enllaç. Tancar el menú (AbortError) continua sense ser cap
+       error (Gauntlet 261017, Bloc 0.1). Abans, un rebuig només anava a la
+       consola, i sense porta-retalls el toc petava en silenci. */
+    return compartix(title, safeHref, showToast);
   });
 
   const barDateTime = props.topBarData?.dateTime ?? props.dateTime ?? config.dateTime;

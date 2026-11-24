@@ -1,7 +1,7 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
-import { MARQUES, MARQUES_SVG_ANTIGUES } from '../../config/imatgeSocial.js';
+import { MARQUES, MARQUES_SVG_ANTIGUES } from '../../config/imatgeSocialBase.js';
 
 /* Fase C (Capacitor 8; ordre del Mestre, 261019) · L'esquema de l'app nativa
    d'iOS (iosScheme de capacitor.config.json). Android servix l'app des de
@@ -75,7 +75,7 @@ export function rutaDAutorSegura(href) {
 
 /* Onada 8 (261009) · Els logotips de Sóc de Poble (MARQUES: els PNG de 256 px
    d'alt) i els d'abans en SVG (MARQUES_SVG_ANTIGUES), amb la mateixa clau.
-   Pla 261027_1154 (P1-61) · Viuen a config/imatgeSocial.js, la fulla sense
+   Pla 261027_1154 (P1-61) · Viuen a config/imatgeSocialBase.js, la fulla sense
    imports del selector de la imatge social, que també els ha de reconéixer
    com a reserves. Mateixos valors i mateixos objectes congelats: este mòdul
    els llig d'allí i continua exportant MARQUES_SVG_ANTIGUES amb el mateix

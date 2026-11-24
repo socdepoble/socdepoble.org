@@ -63,7 +63,8 @@ export function TargetaDelMercat({ item }) {
      Traduir a la targeta ni cap text cap al Traduir de la pàgina (translate="no"
      a l'article). La revisada i l'avís de la targeta del Mur encara no es
      pinten ací. Sense mode, el DOM de sempre (Llei del Píxel). */
-  const traduible = esProducteTraduibleMercat(item, interficie?.language || 'ca');
+  const idioma = interficie?.language || 'ca';
+  const traduible = esProducteTraduibleMercat(item, idioma);
   const navigate = useNavigate();
   /* T63.2 · el descriptor del producte: Connectar se l'emporta i
      Comentar obri el seu xat comú. Lògica d'Usuari (T4, T5):
@@ -72,7 +73,7 @@ export function TargetaDelMercat({ item }) {
   /* R22 · Les fitxes de /pobles, per a la pastilla del poble (la darrera).
      Fora del proveïdor, cap fitxa: cap pastilla de poble. */
   const { towns } = useCoreContent();
-  const props = propsDeTargetaDeProducte(item, t, { towns });
+  const props = propsDeTargetaDeProducte(item, t, { towns, idioma });
 
   return (
     <UniversalCard

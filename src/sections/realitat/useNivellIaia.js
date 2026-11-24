@@ -12,11 +12,19 @@
  * afig. Un valor fora de 0-3 cau a Passiva (1), com nivellIaiaDesat.
  */
 import { useEffect, useState } from 'react';
-import { STORAGE_PREFIX } from '../../config/storage.js';
+import * as storageModul from '../../config/storage.js';
 import { CLAU_NIVELL_IAIA, EVENT_NIVELL_IAIA, nivellIaiaDesat } from './nivellIaia.js';
 
-/* La clau de localStorage que escriu setVal (config/storage.js porta el prefix). */
-const CLAU_EMMAGATZEMADA = `${STORAGE_PREFIX}${CLAU_NIVELL_IAIA}`;
+/* La clau de localStorage que escriu setVal (config/storage.js porta el prefix;
+   protegit amb try/catch per tolerar mocks parcials de getVal/setVal en Vitest 4). */
+function prefixEmmagatzematge() {
+  try {
+    return typeof storageModul.STORAGE_PREFIX === 'string' ? storageModul.STORAGE_PREFIX : 'sdp_embed_';
+  } catch {
+    return 'sdp_embed_';
+  }
+}
+const CLAU_EMMAGATZEMADA = `${prefixEmmagatzematge()}${CLAU_NIVELL_IAIA}`;
 
 /* El nivell d'un esdeveniment, o null si no és un dels quatre. */
 function nivellValid(valor) {

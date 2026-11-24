@@ -11,7 +11,7 @@ import { describe, expect, test, vi } from 'vitest';
 import CA from '../../config/idiomes/ca.js';
 import { CODI_ESQUEMA_ABSENT } from '../errorsBackend.js';
 import { PAGE_COPY } from '../../sections/text/pageContent.js';
-import { localitzaPagina } from '../../sections/text/pageContent.r10.js';
+import { obtePaginaVersionsCompleta } from '../../sections/text/pageContent.versionsHistoric.js';
 
 const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
 /* El text que es llig: un bloc (h3, h4, p…) és un espai; una etiqueta de línia (strong, code, a), res. */
@@ -63,9 +63,12 @@ describe('R21 C5 · /versions diu el que fan content.js i storage.js, en les cin
   const NETES_DE_TOT_LLEVAT = /netes de tota metadada, llevat|limpias de todo metadato, salvo|clean of all metadata, except|metadatu guztiak kenduta|limpas de todo metadato, agás/i;
   /* Expectativa actualitzada a propòsit: Onada R23 · la crònica de l'Onada R23 obri /versions, davant de la fita
      R21 C5 (pageContent.versions.test.js). El bloc C5 ja no és el primer: es busca pel seu títol, que hi ha de ser
-     una sola volta i darrere de la crònica R23. */
+     una sola volta i darrere de la crònica R23.
+     v1.2.24 · costura R32.75 · /versions en dos nivells (R32.48): el bloc C5 és a l'arxiu històric
+     (pageContent.versionsHistoric.js), byte a byte. Es busca a la pàgina sencera, obtePaginaVersionsCompleta, com
+     localitzaVersions de pageContent.versions.test.js; la comprovació (una sola volta, darrere d'una altra) no canvia. */
   const blocEn = (llengua) => {
-    const cos = localitzaPagina(PAGE_COPY.versions, llengua).html.trimStart();
+    const cos = obtePaginaVersionsCompleta(PAGE_COPY.versions, llengua).html.trimStart();
     const inici = cos.indexOf(`<h3>${INICIS_R21_C5[llengua]}`);
     expect([llengua, inici > 0, cos.indexOf(`<h3>${INICIS_R21_C5[llengua]}`, inici + 1)]).toEqual([llengua, true, -1]);
     const fi = cos.indexOf('<h3>', inici + 1);

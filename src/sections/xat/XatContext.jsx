@@ -183,7 +183,7 @@ import { creaEmissorRebutsEntrega } from '../../data/rebutsEntregaXat.js';
  *     reinjecció a identitat.js; després n'hi ha prou que `renovacio` exigisca
  *     també la mateixa entrada. Fora de l'abast d'este fitxer: pendent.
  */
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 /* P1-71 (Gauntlet 261029) · L'objecte de context viu a objectesDeContext.js,
    que no importa res del projecte; ací es reexporta amb el mateix nom. */
 import { XatContext } from './objectesDeContext.js';
@@ -191,7 +191,6 @@ import {
   loadFils,
   loadMissatges,
   enviaMissatge,
-  publicaAdjuntXat,
   marcaLlegit,
   creaFilDirecte,
   loadPerfilPublic,
@@ -223,15 +222,22 @@ import { esIdentitatDeLectura } from '../../app/contexts/identitatDeReserva.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
+import { E2EE_ACTIU_PER_DEFECTE } from '../../config/xifratXat.js';
 import useXifratXat, { useOblitXat } from './useXifratXat.js';
-import AvisOblitXat from './components/AvisOblitXat.jsx';
+const AvisOblitXat = E2EE_ACTIU_PER_DEFECTE ? lazy(() => import('./components/AvisOblitXat.jsx')) : null;
 /* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
    reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
    inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
 import { capturaSessio, getDefaultUserId, sessioRecuperable } from '../../data/identitat.js';
 /* v1.2.8 · Només la projecció pura és estàtica; el motor d'accions i serveiXat.js es carreguen en diferit
    (pes de l'arrencada estàtica del connector de WordPress). */
-import { projectaAccionsMissatges, previesSenseAmagats } from '../../data/xat/projeccioAccionsMissatges.js';
+import { projectaAccionsMissatges } from '../../data/xat/projeccioAccionsMissatges.js';
+import {
+  aplicaEsborratsLocals,
+  llegixEsborratsSessioLocal,
+  netejaEsborratsSessioLocalExcepte,
+  previesSenseEsborratsNiAmagats
+} from './eliminaPerATothomPrevia.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -392,6 +398,19 @@ export function esperaDeLaLlista(fallades, reintentable) {
   return ESPERES_LLISTA[Math.max(0, fallades - 1)] ?? MS_LLISTA_SOSTRE;
 }
 
+/* v1.2.24 (IDEA-339, radiografia de Producció) · Amb la llista visible i
+   quieta, el sondeig s'espaia: 25 s les tres primeres voltes iguals, 40 s fins
+   a la sisena i 60 s (MS_LLISTA_SOSTRE) després. Qualsevol canvi de la llista,
+   la tornada de la pestanya o de la xarxa i obrir una conversa el tornen als
+   25 s. L'avís del canal del fil obert i els avisos natius no depenen d'esta
+   espera. Pura. */
+export function esperaDeLaLlistaQuieta(quietes) {
+  const n = Number.isSafeInteger(quietes) && quietes > 0 ? quietes : 0;
+  if (n < 3) return MS_LLISTA;
+  if (n < 6) return 40000;
+  return MS_LLISTA_SOSTRE;
+}
+
 /* B09 · L'espera de l'historial cap arrere després de la fallada número
    `fallades` d'un fil: { fallades, manual, fins }. `manual` vol dir que
    l'observador ja no torna a provar sol; `fins`, l'instant (ms) abans del
@@ -479,6 +498,7 @@ const BUIT = {
      proveïdor, cap (null, i «Nova conversa» no el pinta). */
   xatPropi: null,
   entitatActiva: null,
+  orgIdsPermeses: CAP,
   senseSessio: false,
   chatThreads: [],
   chatMessages: [],
@@ -501,7 +521,7 @@ const BUIT = {
   avisLlista: null,
   sendChatMessage: async () => [],
   sendChatMedia: null,
-  alternaReaccio: null, alternaDestacat: null, alternaFixat: null, eliminaPerAMi: null,
+  alternaReaccio: null, alternaDestacat: null, alternaFixat: null, eliminaPerAMi: null, eliminaPerATothom: null,
   responEnPrivat: null, reenviaAConverses: null, carregaAccionsMissatges: null, carregaDestacats: null,
   missatgesDestacats: CAP, esborranyPrivat: null, errorAccions: null,
   reintenta: async () => [],
@@ -625,6 +645,13 @@ export function XatProvider({ children, config }) {
     () => (actuaComEntitat ? { id: entitatId, nom: entitatNom, avatar: entitatAvatar } : null),
     [actuaComEntitat, entitatId, entitatNom, entitatAvatar]
   );
+  const orgIdsPermeses = useMemo(() => {
+    const ids = Array.isArray(identitats)
+      ? identitats.filter((i) => i?.tipus === 'entitat' && i.id != null).map((i) => String(i.id))
+      : [];
+    if (entitatId != null && !ids.includes(String(entitatId))) ids.push(String(entitatId));
+    return ids.length ? Object.freeze(ids) : CAP;
+  }, [identitats, entitatId]);
   /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 (Apagada) la IAIA no apareix
      al xat: ni a la llista (i, per tant, a les cerques i a les comunitats),
      ni als no llegits, ni als contactes freqüents, ni als avisos. Les dades
@@ -789,6 +816,14 @@ export function XatProvider({ children, config }) {
   const [fils, setFils] = useState([]);
   const [estatAccions, setEstatAccions] = useState({ perMissatge: {}, destacats: [], esborranyPrivat: null });
   const [errorAccions, setErrorAccions] = useState(null);
+  const [esborratsPerATothom, setEsborratsPerATothom] = useState(() => (modeDades !== 'remote' ? llegixEsborratsSessioLocal(clauPersona) : {}));
+  const esborratsPerATothomRef = useRef(esborratsPerATothom);
+  const mutaEsborratsPerATothom = useCallback((fn) => {
+    const nou = fn(esborratsPerATothomRef.current);
+    if (nou === esborratsPerATothomRef.current) return;
+    esborratsPerATothomRef.current = nou;
+    setEsborratsPerATothom(nou);
+  }, []);
   const filsRef = useRef([]);
   /* ── R21 (carril f2) · El xat propi «<Nom> (Tu)» ──
      Gauntlet R21 (regressio_ui_xat-02/-05, honestedat_textos-04) · La fila
@@ -888,6 +923,8 @@ export function XatProvider({ children, config }) {
   const llistaCarregadaRef = useRef(false);
   const falladesLlistaRef = useRef(0);
   const reintentableLlistaRef = useRef(true);
+  /* v1.2.24 · Càrregues bones seguides amb la llista igual (esperaDeLaLlistaQuieta). */
+  const quietesLlistaRef = useRef(0);
   /* Revisió 261008 (B04) · El sondeig viu hi deixa com tornar a armar el
      seu tic: una fallada que no ve del tic (la càrrega inicial,
      «Connectar», la cerca global) també passa a l'espera curta. */
@@ -1215,6 +1252,9 @@ export function XatProvider({ children, config }) {
       /* B8C-5 · Els silencis en memòria eren de l'àmbit d'abans (la persona, l'actor o el backend). */
       mutaSilencisLocals((mapa) => (mapa.size ? new Map() : mapa));
       mutaArxivatsLocals((mapa) => (mapa.size ? new Map() : mapa));
+      const esborratsInicials = modeDades !== 'remote' && joId ? llegixEsborratsSessioLocal(clauPersona) : {};
+      esborratsPerATothomRef.current = esborratsInicials;
+      setEsborratsPerATothom(esborratsInicials);
       setEstat(joId ? 'loading' : 'ready');
     }
     setTokenEstat(token);
@@ -1222,7 +1262,7 @@ export function XatProvider({ children, config }) {
        l'operació nova si és el mateix àmbit; si no, rep null. */
     previa?.passa(renovacio ? op : null);
     return () => { op.controller.abort(); };
-  }, [token, joId, mutaPendents, mutaSilencisLocals, mutaArxivatsLocals]);
+  }, [token, joId, modeDades, clauPersona, mutaPendents, mutaSilencisLocals, mutaArxivatsLocals]);
 
   /* ── Llista de fils ──
      Torna true si s'ha aplicat, false si ha fallat (o l'àmbit ja no és el
@@ -1319,6 +1359,9 @@ export function XatProvider({ children, config }) {
       if (dia !== diaFilsRef.current || !filsEquivalents(filsRef.current, nous)) {
         diaFilsRef.current = dia;
         mutaFils(() => nous);
+        quietesLlistaRef.current = 0;
+      } else {
+        quietesLlistaRef.current += 1;
       }
       /* Un visitant que ja torna a la llista ja hi participa. */
       const ids = new Set(nous.map((f) => f.id));
@@ -1705,7 +1748,9 @@ export function XatProvider({ children, config }) {
        ha fallat. Amb la pestanya amagada no es demana res: 25 s. */
     const esperaSeguent = () => (falladesLlistaRef.current > 0
       ? esperaDeLaLlista(falladesLlistaRef.current, reintentableLlistaRef.current)
-      : MS_LLISTA);
+      : esperaDeLaLlistaQuieta(quietesLlistaRef.current));
+    /* Obrir una conversa (este efecte torna a córrer) és activitat: 25 s. */
+    quietesLlistaRef.current = 0;
     let tic = null;
     const arma = (ms) => {
       if (temporitzador) clearTimeout(temporitzador);
@@ -1743,6 +1788,7 @@ export function XatProvider({ children, config }) {
 
     const desperta = () => {
       if (!viu || !vigent(op)) return;
+      quietesLlistaRef.current = 0;
       if (temporitzador) clearTimeout(temporitzador);
       tic();
       if (filActiu) {
@@ -2025,111 +2071,13 @@ export function XatProvider({ children, config }) {
   }, [sendChatMessage]);
 
   /* L'adjunt conserva la previsualització local fins a la confirmació.
-     No entra a la cua de text ni desa Blobs/URL temporals a l'emmagatzematge local.
-     XAT-03 · `onProgres` (opcional) passa tal qual al port: el progrés de la pujada. */
-  const sendChatMedia = useCallback(async (fil, adjunt, { signal, onProgres } = {}) => {
+     El cos pesant viu en diferit a eliminaPerATothomModel.js per no inflar l'arrencada estàtica. */
+  const ctxDiferitRef = useRef(null);
+  const sendChatMedia = useCallback(async (fil, adjunt, opcions = {}) => {
     const op = captura();
-    // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
-    const { errorAdjuntXat, normalitzaUbicacioXat } = await import('../../data/xatMultimedia.js');
-    const ubicacioEsperada = normalitzaUbicacioXat(adjunt?.ubicacio);
-    if (adjunt?.conservaUbicacio === false && ubicacioEsperada) throw errorAdjuntXat('ubicacio-invalida');
-    // La frontera neutral també quantitza els adjunts represos o legacy.
-    const adjuntPreparat = ubicacioEsperada ? { ...adjunt, ubicacio: ubicacioEsperada } : adjunt;
-    if (!joId || !vigent(op) || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
-    const complet = filsRef.current.find((f) => f.id === fil?.id) || visitantsRef.current[fil?.id] || fil;
-    if (!complet?.id || complet.potEscriure === false || (complet.tipus === 'canal' && complet.potEscriure !== true)) {
-      throw new Error('No pots enviar fitxers en esta conversa.');
-    }
-    if (!teCapacitat('xatMultimedia')) throw new Error('Este node encara no permet enviar adjunts.');
-    const sessioVigent = capturaSessio();
-    const moderacio = moderacioRef.current;
-    if (typeof moderacio?.asseguraNormes === 'function' && !(await moderacio.asseguraNormes())) {
-      throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
-    }
-    sessioVigent();
-    const actual = operacio.current;
-    if (!vigent(actual) || actual.llinatge !== op.llinatge || signal?.aborted) throw new DOMException('La sessió ha canviat.', 'AbortError');
-    const controller = new AbortController();
-    let vigilada = actual;
-    let acabada = false;
-    const avorta = () => controller.abort(new DOMException('La sessió ha canviat o l’enviament s’ha cancel·lat.', 'AbortError'));
-    const asseguraVigent = () => {
-      sessioVigent();
-      const actual = operacio.current;
-      if (controller.signal.aborted || !vigent(actual) || actual.llinatge !== op.llinatge) {
-        throw controller.signal.reason ?? new DOMException('La sessió ha canviat.', 'AbortError');
-      }
-    };
-    /* El transport té un senyal estable. Una renovació només canvia qui rep
-       l'ACK; mai no torna a publicar un adjunt amb resultat encara incert. */
-    const segueixRelleu = () => {
-      const anterior = vigilada;
-      anterior.controller.signal.removeEventListener('abort', segueixRelleu);
-      relleuViu(anterior).then((nova) => {
-        if (acabada) return;
-        sessioVigent();
-        if (!vigent(nova) || nova.llinatge !== op.llinatge) { avorta(); return; }
-        vigilada = nova;
-        nova.controller.signal.addEventListener('abort', segueixRelleu, { once: true });
-        if (nova.controller.signal.aborted) segueixRelleu();
-      }).catch(avorta);
-    };
-    const revalidaSessio = () => { try { asseguraVigent(); } catch { avorta(); } };
-    signal?.addEventListener('abort', avorta, { once: true });
-    vigilada.controller.signal.addEventListener('abort', segueixRelleu, { once: true });
-    globalThis.window?.addEventListener('sdp:auth-change', revalidaSessio);
-    let desat;
-    /* Integració 261024 (Codex C-02) · Un rebuig per les normes (SDP-MOD-428,
-       a la causa de l'error de l'adjunt) torna a obrir la porta UNA vegada; si
-       les accepta, es publica de nou amb el mateix id (la reserva ja pujada no
-       es torna a pujar); si les declina, l'AbortError de sempre. */
-    const publica = () => {
-      asseguraVigent();
-      const enVol = publicaAdjuntXat(complet.id, adjuntPreparat, { ...config, signal: controller.signal, onProgres });
-      // També liquida la UI si un port ignora l'abort; el resultat tardà es consumix.
-      return new Promise((resol, rebutja) => {
-        const cancel = () => rebutja(controller.signal.reason);
-        if (controller.signal.aborted) cancel();
-        else controller.signal.addEventListener('abort', cancel, { once: true });
-        Promise.resolve(enVol).then(
-          (valor) => { controller.signal.removeEventListener('abort', cancel); resol(valor); },
-          (error) => { controller.signal.removeEventListener('abort', cancel); rebutja(error); },
-        );
-      });
-    };
-    try {
-      try { desat = await publica(); }
-      catch (error) {
-        if (!esRebuigDeNormes(error) || typeof moderacio?.asseguraNormes !== 'function') throw error;
-        const acceptades = await moderacio.asseguraNormes({ rebutjades: true });
-        asseguraVigent();
-        if (acceptades !== true) throw new DOMException('Cal acceptar les normes de convivència.', 'AbortError');
-        desat = await publica();
-      }
-    }
-    finally {
-      acabada = true;
-      signal?.removeEventListener('abort', avorta);
-      vigilada.controller.signal.removeEventListener('abort', segueixRelleu);
-      globalThis.window?.removeEventListener('sdp:auth-change', revalidaSessio);
-    }
-    asseguraVigent();
-    const seq = typeof desat?.seq === 'number' ? desat.seq : typeof desat?.seq === 'string' && /^[1-9]\d*$/.test(desat.seq) ? Number(desat.seq) : NaN;
-    if (!desat || desat.encuat === true || desat.id !== adjunt?.id || desat.filId !== complet.id
-      || !Number.isSafeInteger(seq) || seq <= 0 || desat.tipus !== adjunt.tipus) {
-      // Import dinàmic: xatMultimedia.js es queda fora de l'arrencada estàtica del connector.
-      throw (await import('../../data/xatMultimedia.js')).errorAdjuntXat('sense-confirmacio');
-    }
-    const ubicacioConfirmada = normalitzaUbicacioXat(desat.metadades?.ubicacio);
-    // v1.2.8 · Un servidor sense 20261117193000 publica sense la ubicació (ubicacioNoAdmesa, xatMultimedia.js).
-    if ((ubicacioConfirmada && (desat.metadades.ubicacio.lat !== ubicacioConfirmada.lat || desat.metadades.ubicacio.lng !== ubicacioConfirmada.lng))
-      || (ubicacioEsperada && desat.ubicacioNoAdmesa !== true && (!ubicacioConfirmada || ubicacioConfirmada.lat !== ubicacioEsperada.lat || ubicacioConfirmada.lng !== ubicacioEsperada.lng))
-      || ((!ubicacioEsperada || desat.ubicacioNoAdmesa === true || adjunt.conservaUbicacio === false) && ubicacioConfirmada)) throw errorAdjuntXat('sense-confirmacio');
-    const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
-    mutaMissatges((previs) => ({ ...previs, [complet.id]: fusionaPerSeq(previs[complet.id] || [], [definitiu]) }));
-    mutaFils((previs) => previs.map((f) => f.id === complet.id ? actualitzaFilAmbMissatge(f, definitiu) : f));
-    return [desat.ubicacioNoAdmesa === true ? { ...definitiu, ubicacioNoAdmesa: true } : definitiu];
-  }, [joId, captura, vigent, config, mutaMissatges, mutaFils]);
+    const { executaSendChatMediaEnContext } = await import('./eliminaPerATothomModel.js');
+    return executaSendChatMediaEnContext(ctxDiferitRef.current, op, fil, adjunt, opcions);
+  }, [captura]);
 
   /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
   const reintenta = useCallback(async (missatgeId) => {
@@ -2488,7 +2436,10 @@ export function XatProvider({ children, config }) {
       const rebutAltres = fil?.esPropi ? 0 : (fil?.rebutPelsAltresFinsSeq ?? 0);
       /* R24 · xat_entrega (P2-9) · Si el servidor no informa de l'entrega, la marca ho diu. */
       const rebutsConeguts = !fil || fil.esPropi || fil.rebutsConeguts !== false;
-      const combinats = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts);
+      const combinats = aplicaEsborratsLocals(
+        combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], llegitAltres, rebutAltres, rebutsConeguts),
+        esborratsPerATothom
+      );
       anotatsPerFil[id] = anotaMissatgesBloquejats(
         cablejatRural.current?.projecta(combinats, fil) ?? combinats,
         esPersonaBloquejada
@@ -2498,14 +2449,12 @@ export function XatProvider({ children, config }) {
     return { missatgesDerivats: resultat, missatgesAnotats: anotatsPerFil };
     /* R32 (xat_tros_paralel) · versioRural: el cablejat de la ref ha arribat. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural, estatAccions.perMissatge]);
+  }, [missatgesPerFil, pendentsPerFil, filsVisibles, esPersonaBloquejada, versioRural, estatAccions.perMissatge, esborratsPerATothom]);
 
-  /* D-v128-2-PREVIA · Les vistes prèvies de chatThreads (la llista, «Reenvia a…», la cerca del Xat, /cerca)
-     i de comunitats (FitxaComunitat, VistaComunitats) no ensenyen un missatge carregat i amagat amb
-     «Elimina per a mi»: l'últim que encara veus, o la vista prèvia buida. La MATEIXA llista si no n'hi ha
-     cap d'amagat. Va abans dels bloquejos: l'autor corregit també hi compta. */
+  /* D-v128-2-PREVIA + IDEA-342 · Les vistes prèvies de chatThreads i comunitats no ensenyen cap missatge
+     amagat («Elimina per a mi») ni esborrat («Elimina per a tothom»): mostren l'últim viu anterior o buit. */
   const filsAmbPrevia = useMemo(
-    () => previesSenseAmagats(filsVisibles, missatgesAnotats, estatAccions.perMissatge, joId),
+    () => previesSenseEsborratsNiAmagats(filsVisibles, missatgesAnotats, estatAccions.perMissatge, joId),
     [filsVisibles, missatgesAnotats, estatAccions.perMissatge, joId]
   );
   /* Fase D (261020, tasca 2) · La llista que es VEU, amb la vista prèvia
@@ -2563,6 +2512,7 @@ export function XatProvider({ children, config }) {
     personaPrevia.current = clauPersona;
     entradesFetes.current = new Set();
     buidaEsborranys();
+    netejaEsborratsSessioLocalExcepte(clauPersona);
     /* Pla 261022_1425 · Les emoticones recents tampoc passen d'una persona a l'altra. */
     buidaRecents();
     /* Gauntlet 261026_1615 (Codex C1615-01, Gemini G1615-00) · El que s'havia
@@ -2783,6 +2733,37 @@ export function XatProvider({ children, config }) {
   }, [visible, filActiu, idsAccions, accionsMissatge]);
   const carregaDestacats = useCallback(opcions => accionsMissatge.carregaAccionsMissatges({ ...opcions, nomesDestacats: true }), [accionsMissatge]);
 
+  const [remotsElimina, setRemotsElimina] = useState(false);
+  useEffect(() => {
+    if (modeDades !== 'remote' || !visible || (!teCapacitat('xatAccionsMissatge') && !teCapacitat('xatEliminaPerATothom'))) {
+      setRemotsElimina(false);
+      return undefined;
+    }
+    let actiu = true;
+    motorAccions.carrega().then((motor) => {
+      if (actiu) setRemotsElimina(typeof motor?.eliminaPerATothom === 'function');
+    }).catch(() => { if (actiu) setRemotsElimina(false); });
+    return () => { actiu = false; };
+  }, [modeDades, visible, scopeKey, motorAccions]);
+
+  const potEliminaPerATothom = visible && (
+    modeDades !== 'remote' || remotsElimina || teCapacitat('xatEliminaPerATothom') === true
+  );
+
+  ctxDiferitRef.current = {
+    joId, modeDades, clauPersona, vigent, desmuntat, entornAccions, pendentsRef, missatgesRef, filActiuRef,
+    esborratsPerATothomRef, filsRef, visitantsRef, moderacioRef, operacio, config, motorAccions,
+    mutaPendents, mutaMissatges, mutaFils, mutaEsborratsPerATothom, setErrorAccions, relleuViu
+  };
+
+  const executaEliminaPerATothomCtx = useCallback(async (referencia, opcions = {}) => {
+    setErrorAccions(null);
+    const ambit = entornAccions.current.ambit;
+    const valida = capturaSessio();
+    const { correEliminaPerATothomEnContext } = await import('./eliminaPerATothomModel.js');
+    return correEliminaPerATothomEnContext(ctxDiferitRef.current, ambit, valida, referencia, opcions);
+  }, []);
+
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
@@ -2809,6 +2790,7 @@ export function XatProvider({ children, config }) {
     /* Pla 261014_1450 (front C) · L'entitat de la barra negra, només per a
        pintar-la (rail i compositor); null si actua com a persona. */
     entitatActiva: visible ? entitatActiva : null,
+    orgIdsPermeses: visible ? orgIdsPermeses : CAP,
     /* Remot sense sessió, ja comprovat (mai mentre la sessió es comprova):
        ?sobre= porta a /registre en lloc de fer com si. */
     senseSessio: !joId && estatSessio !== 'comprovant',
@@ -2835,6 +2817,7 @@ export function XatProvider({ children, config }) {
     sendChatMessage: enviaAmbNormes,
     sendChatMedia,
     ...accionsMissatge,
+    eliminaPerATothom: potEliminaPerATothom ? executaEliminaPerATothomCtx : null,
     carregaDestacats,
     missatgesDestacats: visible ? estatAccions.destacats : CAP,
     esborranyPrivat: visible ? estatAccions.esborranyPrivat : null,
@@ -2870,9 +2853,9 @@ export function XatProvider({ children, config }) {
     /* R22 · T1 · Si el fil es pot arxivar i el canvi d'arxiu. */
     potArxivarFil,
     arxivaFil
-  }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
+  }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, orgIdsPermeses, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
-    enviaAmbNormes, sendChatMedia, accionsMissatge, carregaDestacats, estatAccions, errorAccions, reintenta, descartaFallit, marcaVist,
+    enviaAmbNormes, sendChatMedia, accionsMissatge, potEliminaPerATothom, executaEliminaPerATothomCtx, carregaDestacats, estatAccions, errorAccions, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil, potArxivarFil, arxivaFil]);
 
@@ -2880,7 +2863,11 @@ export function XatProvider({ children, config }) {
     <XatContext.Provider value={value}>
       <AvisadorXat registra={registraAvisador} ambSessio={Boolean(joId)} />
       {children}
-      <AvisOblitXat oblit={oblitXat} reintenta={reintentaOblitXat} ambSessio={Boolean(joId)} />
+      {E2EE_ACTIU_PER_DEFECTE && AvisOblitXat ? (
+        <Suspense fallback={null}>
+          <AvisOblitXat oblit={oblitXat} reintenta={reintentaOblitXat} ambSessio={Boolean(joId)} />
+        </Suspense>
+      ) : null}
     </XatContext.Provider>
   );
 }

@@ -97,7 +97,7 @@ export function FranjaAmfitrio({ nomPoble, text, estat, ruta = RUTA_FEDIVERS, et
         <ChevronRight aria-hidden="true" focusable="false" size={18} />
       </NavLink>
       {onTanca ? (
-        <button type="button" className="sdp-amfitrio-franja__tanca" aria-label={etiquetaTanca} onClick={onTanca}>
+        <button type="button" className="sdp-amfitrio-franja__tanca" aria-label={etiquetaTanca} title={etiquetaTanca} onClick={onTanca}>
           <X aria-hidden="true" focusable="false" size={20} />
         </button>
       ) : null}

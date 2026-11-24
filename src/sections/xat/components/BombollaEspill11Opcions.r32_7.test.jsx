@@ -314,7 +314,7 @@ describe('R32.7 · Espill d’avatars 44×44 px, botons visibles, reaccions i me
     act(() => { fireEvent.click(botoNouGrup); });
     expect(onNouGrupReenvia).toHaveBeenCalledTimes(1);
 
-    /* Elimina sobre un missatge propi mostra tant «Elimina per a mi» com «Elimina per a tothom» */
+    /* IDEA-342 · Elimina per a tothom fa desaparéixer la bombolla del tot sense deixar brossa ni làpida solta */
     const itemMeu = document.querySelector('[data-missatge="m-meu"]');
     const botoMenuMeu = within(itemMeu).getByRole('button', { name: 'Opcions del missatge' });
     act(() => { fireEvent.click(botoMenuMeu); });
@@ -323,7 +323,8 @@ describe('R32.7 · Espill d’avatars 44×44 px, botons visibles, reaccions i me
     expect(within(dialegElimina).getByRole('button', { name: 'Elimina per a mi' })).toBeTruthy();
     const botoTothom = within(dialegElimina).getByRole('button', { name: 'Elimina per a tothom' });
     act(() => { fireEvent.click(botoTothom); });
-    expect(itemMeu.textContent).toContain("S'ha esborrat este missatge");
+    expect(document.querySelector('[data-missatge="m-meu"]')).toBeNull();
+    expect(document.body.textContent).not.toContain("S'ha esborrat este missatge");
     expect(onEliminaPerATothom).toHaveBeenCalledTimes(1);
 
     /* v1.2.8 · Sense motor de servidor, el diàleg no oferix «Elimina per a tothom» (Llei 0). */

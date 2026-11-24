@@ -92,6 +92,7 @@
  */
 import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
 import { markdownProse } from '../lib/markdown-prose.mjs';
+import { camiDeArgs, contingutCompletDeArgs } from '../lib/tool-dialect.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import tty from 'node:tty';
@@ -914,11 +915,9 @@ function rutaIContingut(payload) {
   const ti = payload.tool_input;
   const ta = payload.toolArgs;
   const dialecte = ti ? 'claude' : 'antigravity';
-  const fitxer = ti?.file_path || ti?.notebook_path || ta?.TargetFile
+  const fitxer = camiDeArgs(ti) || camiDeArgs(ta)
     || destiDeShell(ti?.command || ta?.Command || ta?.CommandLine) || null;
-  const contingut = typeof ti?.content === 'string' ? ti.content
-    : typeof ta?.CodeContent === 'string' ? ta.CodeContent
-      : null;
+  const contingut = contingutCompletDeArgs(ti) ?? contingutCompletDeArgs(ta) ?? null;
   return { dialecte, fitxer, contingut };
 }
 

@@ -39,7 +39,7 @@ Per mantindre una **transparència verificable**, classifiquem **tota la maquin�
 
 ### 3.1 Maquinària 100 % pròpia de Sóc de Poble
 
-El repositori manté **44 skills actives** dins de `.agents/skills/` (`21` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `23` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.
+El repositori manté **44 skills actives** dins de `.agents/skills/` (`22` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.
 
 #### Identitat, Consell i govern humà
 Fixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la revisió humana. Agrupen `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.
@@ -55,7 +55,7 @@ Mantenen l'**Escriptori ordenat**, retiren **fitxers temporals** i exigixen **no
 
 #### Qualitat editorial, seguretat i auditoria
 Regulen la **jerarquia de títols**, la **lectura escanejable**, la **seguretat de base de dades** i les rondes d'**auditoria creuada** per a tots els agents constructors i revisors. Són `core-llegibilitat-text`, `core-maquetacio-markdown`, `core-informes-pdf`, `core-seguretat-audit`, `core-sentinella-blindatge`, `core-tecniques-investigacio` i `core-gauntlet-loop`.
-- **Incorporació real:** **100 % propi** · Actiu amb `tractor-frontmatter.mjs`, `tractor-registre.mjs` i `cataleg_skills.mjs` (core-maquetacio-markdown), `certifica-enllacos.mjs` (core-tecniques-investigacio) i `tractor-sentinella-blindatge.mjs` (core-sentinella-blindatge); la resta, procedimentals.
+- **Incorporació real:** **100 % propi** · Actiu amb `tractor-maquetacio-canonica.mjs` (core-llegibilitat-text i core-maquetacio-markdown), `tractor-frontmatter.mjs`, `tractor-registre.mjs` i `cataleg_skills.mjs` (core-maquetacio-markdown), `certifica-enllacos.mjs` (core-tecniques-investigacio) i `tractor-sentinella-blindatge.mjs` (core-sentinella-blindatge); la resta, procedimentals.
 
 #### Imatge i connectors d'allotjament
 Cuiden l'**estil d'il·lustració pròxima** de còmic i empaqueten el **connector de WordPress** dins del **límit estricte de pes** per a MarIA, Gemini i l'administració del sistema. Comprenen `core-identitat-visual`, `core-calibratge-visual-nano`, `core-empaquetat-wp` i `sdp-vigilant-tellado`.

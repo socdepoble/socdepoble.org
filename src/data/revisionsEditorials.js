@@ -32,14 +32,14 @@
 import { backendScope } from '../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from './identitat.js';
 import { capturaRevisioSeed } from './seedRevisions.js';
-import { _buidaHistorialRevisionsPerAProves, registraEntradaHistorial } from './historialRevisionsEditorials.js';
+import { _buidaHistorialRevisionsPerAProves, historialRevisionsEditorials, registraEntradaHistorial } from './historialRevisionsEditorials.js';
 /* Onada R30 · A4 · La meitat del navegador (el registre, els oients i el solapament) viu a
    revisionsEditorialsDelNavegador.js, una fulla que l'arrencada del paquet importa sense
    arrossegar l'escriptura al servidor ni seedRevisions.js. Ací se'n reexporta cada nom públic, amb
    el mateix nom, i se n'usen els interns: el codi de baix és el de sempre. */
 import {
-  CAMPS_DE_LA_REVISIO, _buidaRevisionsDelNavegadorPerAProves, campsValids, carregaMapa, desaRevisioEditorial, igual, normalitzaClau,
-  notifica, oblidaRevisioEditorial, persisteixMapa, revisaElement, revisaLlista, revisioEditorial,
+  CAMPS_DE_LA_REVISIO, _buidaRevisionsDelNavegadorPerAProves, ambPanyMapaRevisions, campsValids, carregaMapa, desaRevisioEditorial, igual, marcaConfirmacioRevisio, normalitzaClau,
+  notifica, oblidaRevisioEditorial, persisteixMapa, revisaElement, revisaLlista, revisioEditorial, revisioPersistida,
   subscriuRevisionsEditorials, versioRevisionsEditorials, versioValida
 } from './revisionsEditorialsDelNavegador.js';
 
@@ -104,7 +104,18 @@ function motiuSenseServidor({ seccio, element, config, esSuperadmin, teCapacitat
  * @param {{ esSuperadmin?: boolean, config?: object|null, signal?: AbortSignal, autorNom?: string|null }} [opcions]
  * @returns {Promise<{ desada: boolean, desti: 'servidor'|'navegador'|null, motiu: string|null, versio?: number }>}
  */
-export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { esSuperadmin = false, config = null, signal = null, autorNom = null } = {}) {
+export async function desaRevisioEditorialAmbServidor(seccio, element, camps, opcions = {}) {
+  let entradaLocal = null;
+  const resultat = await desaAmbServidor(seccio, element, camps, opcions, entrada => { entradaLocal = entrada; });
+  /* `true` en desaRevisioEditorial significa camps acceptats en memòria.
+     La UI asíncrona només rep «desada» si el disc o el servidor ho confirma. */
+  if (resultat.desada && resultat.desti === 'navegador' && !revisioPersistida(entradaLocal)) {
+    return { ...resultat, desada: false, motiu: 'sense-persistencia' };
+  }
+  return resultat;
+}
+
+async function desaAmbServidor(seccio, element, camps, { esSuperadmin = false, config = null, signal = null, autorNom = null }, capturaLocal) {
   // Captura abans d'importar el port o d'esperar la cua: qui crida pot
   // reutilitzar i mutar l'objecte de configuració mentrestant.
   config = config && { ...config };
@@ -121,17 +132,43 @@ export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { 
     if (signal?.aborted) throw new DOMException('Operació cancel·lada.', 'AbortError');
   };
   const id = element && typeof element === 'object' ? element.id : null;
-  const clauPrevia = normalitzaClau(seccio, id);
-  const campsAnteriors = clauPrevia ? carregaMapa().get(clauPrevia)?.camps ?? null : null;
-  if (!desaRevisioEditorial(seccio, id, camps)) return { desada: false, desti: null, motiu: 'invalida' };
   const clau = normalitzaClau(seccio, id);
-  const entradaLocal = carregaMapa().get(clau);
-  if (registraEntradaHistorial(clau, campsAnteriors, entradaLocal?.camps ?? null, autorNom)) notifica();
+  let entradaLocal;
+  const acceptada = await ambPanyMapaRevisions(() => {
+    const previa = clau ? carregaMapa(true).get(clau) : null;
+    const historialAnterior = historialRevisionsEditorials(seccio, id).at(-1);
+    const campsAnteriors = previa && !(seccio === 'sistema' && previa.servidor && element._paginaVersio >= previa.servidor.versio)
+      ? previa.camps : historialAnterior?.campsNous ?? null;
+    if (!desaRevisioEditorial(seccio, id, camps)) return false;
+    entradaLocal = carregaMapa().get(clau);
+    capturaLocal(entradaLocal);
+    if (registraEntradaHistorial(clau, campsAnteriors, entradaLocal?.camps ?? null, autorNom, historialAnterior?.versio || 0)) notifica();
+    return true;
+  });
+  if (!acceptada) return { desada: false, desti: null, motiu: 'invalida' };
   const scope = `${entrada}:${config ? backendScope(config) : 'navegador'}:${clau}:editorial`;
   const enviada = Object.freeze({ ...(campsPerScope.get(scope) || {}), ...campsNets });
   campsPerScope.set(scope, enviada);
   const port = await import('./backendPort.js');
   try { comprovaSessio(); } catch { return { desada: true, desti: 'navegador', motiu: 'avortada' }; }
+  /* R32.47 · La pàgina Sistema i el contracte de revisions R32.44 passen
+     pel diari CAS; cap revisió v1 sense autoria es publica en bloc. */
+  if (seccio === 'sistema' || port.teCapacitat('revisionsPagines')) {
+    const { desaRevisioPaginaAmbFallback } = await import('./costuraEdicions.js');
+    try { comprovaSessio(); } catch { return { desada: true, desti: 'navegador', motiu: 'avortada' }; }
+    try {
+      const resultat = await desaRevisioPaginaAmbFallback(seccio, element, campsNets, config || { dataMode: 'local' }, { continuaEditor: true });
+      if (seccio === 'sistema' && resultat.desti === 'servidor') await ambPanyMapaRevisions(() => {
+        const mapa = carregaMapa(true);
+        if (mapa.get(clau) !== entradaLocal) return;
+        mapa.set(clau, marcaConfirmacioRevisio(entradaLocal, { versio: resultat.versio }, campsNets));
+        persisteixMapa(mapa); notifica();
+      });
+      return resultat;
+    } catch (error) {
+      return { desada: true, desti: 'navegador', motiu: error?.code || 'revisio-error', ...(error?.status === 409 ? { status: 409 } : {}) };
+    }
+  }
   /* Àrbitre R11 (R33-L2-01) · El lector marca TOTA peça d'app_content amb la versió
      de la fila (_seedFontVersio), també la que ja porta _editorialVersio: la
      propietària no superadmin hi entra per la revisió de llavor; el superadmin
@@ -178,17 +215,18 @@ export async function desaRevisioEditorialAmbServidor(seccio, element, camps, { 
     campsConfirmatsPerScope.set(scope, Object.freeze(confirmats));
     if (Object.keys(pendents).length) campsPerScope.set(scope, Object.freeze(pendents));
     else campsPerScope.delete(scope);
-    const mapa = carregaMapa();
-    const actual = mapa.get(clau);
     /* Àrbitre B4-S1 · Només si l'entrada és encara la que s'ha enviat: una desada
        posterior (en cua o d'una altra pestanya) no es pot marcar amb esta versió,
        o el lector l'amagaria encara que el servidor la rebutge després. */
-    if (actual === entradaLocal && completa
-      && Object.entries(actual.camps).every(([camp, valor]) => Object.hasOwn(confirmats, camp) && igual(confirmats[camp], valor))) {
-      mapa.set(clau, Object.freeze({ ...actual, servidor: Object.freeze({ versio: resultat.versio }) }));
-      persisteixMapa(mapa);
-      notifica();
-    }
+    await ambPanyMapaRevisions(() => {
+      const mapa = carregaMapa(true), actual = mapa.get(clau);
+      if (actual === entradaLocal && completa
+        && Object.entries(actual.camps).every(([camp, valor]) => Object.hasOwn(confirmats, camp) && igual(confirmats[camp], valor))) {
+        mapa.set(clau, marcaConfirmacioRevisio(actual, { versio: resultat.versio }, actual.camps));
+        persisteixMapa(mapa);
+        notifica();
+      }
+    });
     return completa ? { desada: true, desti: 'servidor', motiu: null, versio: resultat.versio }
       : { desada: true, desti: 'navegador', motiu: 'camps-nomes-navegador', versio: resultat.versio,
         campsNoDesats: Object.keys(enviada || {}).filter(camp => !Object.hasOwn(CAMP_DEL_SERVIDOR, camp) || enviada[camp] === null) };
@@ -216,11 +254,13 @@ async function enviaRevisioSeed(input, port, config, signal, comprovaSessio, ent
       comprovaSessio();
       if (!versioValida(resultat?.versio) || resultat.versio !== versio + 1) return { desada: true, desti: 'navegador', motiu: 'resposta-invalida' };
       versionsConfirmades.set(scope, resultat.versio);
-      const mapa = carregaMapa(), actual = mapa.get(clau);
-      if (actual && actual === localCapturada && Object.entries(actual.camps).every(([key, value]) => igual(resultat.camps?.[key], value))) {
-        mapa.set(clau, Object.freeze({ ...actual, servidor: Object.freeze({ tipus: 'seed', versio: resultat.versio, fontVersio: capturada.fontVersio }) }));
-        persisteixMapa(mapa); notifica();
-      }
+      await ambPanyMapaRevisions(() => {
+        const mapa = carregaMapa(true), actual = mapa.get(clau);
+        if (actual && actual === localCapturada && Object.entries(actual.camps).every(([key, value]) => igual(resultat.camps?.[key], value))) {
+          mapa.set(clau, marcaConfirmacioRevisio(actual, { tipus: 'seed', versio: resultat.versio, fontVersio: capturada.fontVersio }, resultat.camps));
+          persisteixMapa(mapa); notifica();
+        }
+      });
       return { desada: true, desti: 'servidor', motiu: null, versio: resultat.versio };
     } catch (error) {
       const motiu = error?.name === 'AbortError' ? 'avortada' : error?.code === 'conflicte-versio' ? 'conflicte-versio'
@@ -271,6 +311,7 @@ export function rebutjadaPelServidor(resultat) {
 
 /** L'avís que diu on ha quedat la revisió: al servidor, o només al navegador (perquè el servidor no l'ha acceptada o perquè no hi ha servidor). */
 export function avisDeLaRevisioEditorial(resultat, t = null) {
+  if (resultat?.motiu === 'sense-persistencia') return 'No s’ha pogut desar esta edició al dispositiu ni confirmar-la al servidor. Conserva o exporta el text abans de tancar.';
   const [clau, reserva] = resultat?.desti === 'servidor'
     ? ['section.notes.publicacio.revisioDesadaServidor', 'Revisió desada al servidor: el Mur i la pàgina ja la mostren a tothom.']
     : rebutjadaPelServidor(resultat)

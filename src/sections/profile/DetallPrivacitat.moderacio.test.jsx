@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 /* Fase D (261020, tasca 2; pla 261020_1300; crítica 261020, 18) · «Privacitat
    i dades» del perfil porta també les persones i entitats bloquejades, amb
    «Desbloqueja» (LlistaBloquejos, la mateixa del Control del xat), darrere
@@ -32,6 +32,16 @@ const moderacio = (mes = {}) => ({
 });
 const pagina = () => <DetallPrivacitat identitat={jo} config={config} onPerfilCanviat={vi.fn()} onSessioTancada={vi.fn()} />;
 
+beforeAll(async () => {
+  await Promise.all([
+    import('../control/GinySalutDispositiuJarvis.jsx'),
+    import('../../data/salutEmmagatzematgeDispositiu.js'),
+    import('./BlocModeRuralPerfil.jsx'),
+    import('./PortabilitatFederada.jsx'),
+    import('./ProvaXifratXat.jsx'),
+  ]);
+});
+
 beforeEach(() => {
   m.caps = new Set(['compte', 'consentiment']);
   m.estatBaixa.mockReset().mockResolvedValue({ demanada: false, demanadaAl: null, purgaPrevistaAl: null });
@@ -43,30 +53,54 @@ const titols = () => screen.getAllByRole('heading', { level: 3 }).map((h) => h.t
 /* L'HTML sense els ids de useId, que canvien d'un muntatge a l'altre. */
 const dom = (container) => container.firstChild.outerHTML.replace(/:r[0-9a-z]+:/g, ':id:');
 
+async function esperaVistaEstable() {
+  if (m.caps.has('compte')) {
+    await screen.findByRole('button', { name: 'Donar-me de baixa' });
+  }
+  if (m.caps.has('consentiment')) {
+    await screen.findByText(/Política de privacitat vigent/);
+  }
+  if (m.caps.has('compte') || m.caps.has('consentiment')) {
+    await screen.findByTestId('perfil-mode-rural-explica');
+    await waitFor(() => {
+      expect(screen.queryByText('Mirant l’espai usat en este aparell…')).toBeNull();
+    });
+  }
+  await screen.findByRole('heading', { level: 3, name: 'Portabilitat federada' });
+  if (import.meta.env.DEV) {
+    await screen.findByRole('heading', { level: 3, name: 'Prova local de xifratge' });
+  }
+}
+
 test('amb la moderació, el bloc dels bloquejos va darrere del consentiment i davant de la baixa', async () => {
   const valor = moderacio();
   render(<ModeracioContext.Provider value={valor}>{pagina()}</ModeracioContext.Provider>);
-  await waitFor(() => expect(m.estatBaixa).toHaveBeenCalled());
-  expect(titols()).toEqual(['Les meues dades', 'Consentiment', 'Persones i entitats bloquejades', 'Donar-se de baixa']);
-  /* El títol és el del bloc: la llista no en posa cap altre. */
-  expect(screen.queryByRole('heading', { level: 4 })).toBeNull();
+  await esperaVistaEstable();
+  expect(titols().slice(0, 4)).toEqual(['Les meues dades', 'Consentiment', 'Persones i entitats bloquejades', 'Donar-se de baixa']);
+  /* El bloc de bloquejos no posa cap subtítol h4 propi (només GinySalutDispositiuJarvis porta les 2 targetes Bento). */
+  const seccioBloquejos = screen.getByRole('heading', { level: 3, name: 'Persones i entitats bloquejades' }).closest('section');
+  expect(seccioBloquejos.querySelector('h4')).toBeNull();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desbloqueja Pepa' })); });
   expect(valor.desbloqueja).toHaveBeenCalledWith({ tipus: 'persona', id: 'pepa', nom: 'Pepa' });
 });
 
 test('sense proveïdor o sense la capacitat, el DOM de sempre', async () => {
   const sense = render(pagina());
-  await waitFor(() => expect(m.estatBaixa).toHaveBeenCalled());
+  await esperaVistaEstable();
   const base = dom(sense.container);
   cleanup();
   const ambNull = render(<ModeracioContext.Provider value={moderacio({ disponible: false })}>{pagina()}</ModeracioContext.Provider>);
-  await waitFor(() => expect(m.estatBaixa).toHaveBeenCalledTimes(2));
+  await esperaVistaEstable();
   expect(dom(ambNull.container)).toBe(base);
 });
 
-test('un node sense compte ni consentiment però amb la moderació no diu que no oferix res', () => {
+test('un node sense compte ni consentiment però amb la moderació no diu que no oferix res', async () => {
   m.caps = new Set();
   render(<ModeracioContext.Provider value={moderacio()}>{pagina()}</ModeracioContext.Provider>);
-  expect(titols()).toEqual(['Persones i entitats bloquejades']);
+  await esperaVistaEstable();
+  expect(titols()[0]).toBe('Persones i entitats bloquejades');
+  expect(titols()).not.toContain('Les meues dades');
+  expect(titols()).not.toContain('Consentiment');
+  expect(titols()).not.toContain('Donar-se de baixa');
   expect(screen.queryByText('Este node encara no oferix cap d’estes opcions.')).toBeNull();
 });

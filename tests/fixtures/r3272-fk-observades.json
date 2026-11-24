@@ -1,0 +1,753 @@
+{
+  "schema": "sdp.r3272.observed-fk-projection.v1",
+  "sourceSha256": "282b793277f69a222be81fcfc4a4b9cd8bbcc2170cbeda0c06cf4eb15ffcfcff",
+  "scope": "82 raw FK alerts only; no production index catalogue, full DDL or referential action is inferred.",
+  "foreignKeys": [
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "admin_accions",
+      "schema_name": "private",
+      "constraint_name": "admin_accions_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "creada_per"
+      ],
+      "table_name": "admin_invitacions",
+      "schema_name": "private",
+      "constraint_name": "admin_invitacions_creada_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "admin_invitacions",
+      "schema_name": "private",
+      "constraint_name": "admin_invitacions_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "tenant_id",
+        "organitzacio"
+      ],
+      "table_name": "admin_invitacions",
+      "schema_name": "private",
+      "constraint_name": "admin_invitacions_tenant_id_organitzacio_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "actor_id"
+      ],
+      "table_name": "ajuntament_auditoria",
+      "schema_name": "private",
+      "constraint_name": "ajuntament_auditoria_actor_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "claim_id"
+      ],
+      "table_name": "ajuntament_auditoria",
+      "schema_name": "private",
+      "constraint_name": "ajuntament_auditoria_claim_id_fkey",
+      "referenced_table": "organization_claims"
+    },
+    {
+      "fk_columns": [
+        "organization_id"
+      ],
+      "table_name": "ajuntament_auditoria",
+      "schema_name": "private",
+      "constraint_name": "ajuntament_auditoria_organization_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "verificat_per"
+      ],
+      "table_name": "ajuntament_dominis_oficials",
+      "schema_name": "private",
+      "constraint_name": "ajuntament_dominis_oficials_verificat_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "source_id",
+        "external_product_id"
+      ],
+      "table_name": "aparadors_sync_events",
+      "schema_name": "private",
+      "constraint_name": "aparadors_sync_events_source_id_external_product_id_fkey",
+      "referenced_table": "private.aparadors_sync_products"
+    },
+    {
+      "fk_columns": [
+        "source_id"
+      ],
+      "table_name": "aparadors_sync_events",
+      "schema_name": "private",
+      "constraint_name": "aparadors_sync_events_source_id_fkey",
+      "referenced_table": "private.aparadors_sync_sources"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "aparadors_sync_sources",
+      "schema_name": "private",
+      "constraint_name": "aparadors_sync_sources_owner_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "entitat"
+      ],
+      "table_name": "connexions_preferencies",
+      "schema_name": "private",
+      "constraint_name": "connexions_preferencies_entitat_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "persona"
+      ],
+      "table_name": "connexions_preferencies",
+      "schema_name": "private",
+      "constraint_name": "connexions_preferencies_persona_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "poble"
+      ],
+      "table_name": "connexions_preferencies",
+      "schema_name": "private",
+      "constraint_name": "connexions_preferencies_poble_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "persona"
+      ],
+      "table_name": "connexions_sollicituds",
+      "schema_name": "private",
+      "constraint_name": "connexions_sollicituds_persona_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "entitat"
+      ],
+      "table_name": "connexions_vincles",
+      "schema_name": "private",
+      "constraint_name": "connexions_vincles_entitat_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "persona"
+      ],
+      "table_name": "connexions_vincles",
+      "schema_name": "private",
+      "constraint_name": "connexions_vincles_persona_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "poble"
+      ],
+      "table_name": "connexions_vincles",
+      "schema_name": "private",
+      "constraint_name": "connexions_vincles_poble_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "revisor"
+      ],
+      "table_name": "lssi_revisions",
+      "schema_name": "private",
+      "constraint_name": "lssi_revisions_revisor_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "municipi_opendata_documents",
+      "schema_name": "private",
+      "constraint_name": "municipi_opendata_documents_tenant_id_fkey",
+      "referenced_table": "private.municipi_opendata"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "mur_actes_notes",
+      "schema_name": "private",
+      "constraint_name": "mur_actes_notes_owner_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "bloquejat_entitat"
+      ],
+      "table_name": "mur_bloquejos_opacs",
+      "schema_name": "private",
+      "constraint_name": "mur_bloquejos_opacs_bloquejat_entitat_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "bloquejat_persona"
+      ],
+      "table_name": "mur_bloquejos_opacs",
+      "schema_name": "private",
+      "constraint_name": "mur_bloquejos_opacs_bloquejat_persona_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "note_id"
+      ],
+      "table_name": "mur_operacions_notes",
+      "schema_name": "private",
+      "constraint_name": "mur_operacions_notes_note_id_fkey",
+      "referenced_table": "notes"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "mur_operacions_notes",
+      "schema_name": "private",
+      "constraint_name": "mur_operacions_notes_owner_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "mur_publicacions_revocades",
+      "schema_name": "private",
+      "constraint_name": "mur_revocades_owner_fk",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "mur_revocacions_notes",
+      "schema_name": "private",
+      "constraint_name": "mur_notes_owner_fk",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "qui"
+      ],
+      "table_name": "publicacio_traspassos",
+      "schema_name": "private",
+      "constraint_name": "publicacio_traspassos_qui_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "submission_id"
+      ],
+      "table_name": "publicacions_beta_cas_rebuts",
+      "schema_name": "private",
+      "constraint_name": "publicacions_beta_cas_rebuts_submission_id_fkey",
+      "referenced_table": "section_submissions"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "publicacions_beta_cas_rebuts",
+      "schema_name": "private",
+      "constraint_name": "publicacions_beta_cas_rebuts_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "publicacions_cas_rebuts",
+      "schema_name": "private",
+      "constraint_name": "publicacions_cas_rebuts_owner_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "submission_id"
+      ],
+      "table_name": "publicacions_cas_rebuts",
+      "schema_name": "private",
+      "constraint_name": "publicacions_cas_rebuts_submission_id_fkey",
+      "referenced_table": "section_submissions"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "publicacions_cas_rebuts",
+      "schema_name": "private",
+      "constraint_name": "publicacions_cas_rebuts_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "owner_id"
+      ],
+      "table_name": "r3213_crdt_captures",
+      "schema_name": "private",
+      "constraint_name": "r3213_crdt_captures_owner_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "owner_id"
+      ],
+      "table_name": "r3213_crdt_dots",
+      "schema_name": "private",
+      "constraint_name": "r3213_crdt_dots_owner_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "actor_id"
+      ],
+      "table_name": "r3213_lssi_audit",
+      "schema_name": "private",
+      "constraint_name": "r3213_lssi_audit_actor_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "denuncia_id"
+      ],
+      "table_name": "r3213_lssi_audit",
+      "schema_name": "private",
+      "constraint_name": "r3213_lssi_audit_denuncia_id_fkey",
+      "referenced_table": "denuncies"
+    },
+    {
+      "fk_columns": [
+        "actor_id"
+      ],
+      "table_name": "r3213_lssi_rebuts",
+      "schema_name": "private",
+      "constraint_name": "r3213_lssi_rebuts_actor_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "bot_id"
+      ],
+      "table_name": "xat_iaia_binding",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_binding_bot_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "fil_id"
+      ],
+      "table_name": "xat_iaia_binding",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_binding_fil_id_fkey",
+      "referenced_table": "xat_fils"
+    },
+    {
+      "fk_columns": [
+        "updated_by"
+      ],
+      "table_name": "xat_iaia_binding",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_binding_updated_by_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "bot_id"
+      ],
+      "table_name": "xat_iaia_jobs",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_jobs_bot_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "fil_id"
+      ],
+      "table_name": "xat_iaia_jobs",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_jobs_fil_id_fkey",
+      "referenced_table": "xat_fils"
+    },
+    {
+      "fk_columns": [
+        "requester_id"
+      ],
+      "table_name": "xat_iaia_jobs",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_jobs_requester_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "source_id"
+      ],
+      "table_name": "xat_iaia_jobs",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_jobs_source_id_fkey",
+      "referenced_table": "xat_missatges"
+    },
+    {
+      "fk_columns": [
+        "registered_by"
+      ],
+      "table_name": "xat_iaia_principals",
+      "schema_name": "private",
+      "constraint_name": "xat_iaia_principals_registered_by_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "usuari_id"
+      ],
+      "table_name": "xat_presencia",
+      "schema_name": "private",
+      "constraint_name": "xat_presencia_usuari_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "branca_id"
+      ],
+      "table_name": "aportacions_culturals",
+      "schema_name": "public",
+      "constraint_name": "aportacions_culturals_branca_id_fkey",
+      "referenced_table": "branques_saber"
+    },
+    {
+      "fk_columns": [
+        "revisor_id"
+      ],
+      "table_name": "aportacions_culturals",
+      "schema_name": "public",
+      "constraint_name": "aportacions_culturals_revisor_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "bloquejat_entitat"
+      ],
+      "table_name": "bloquejos",
+      "schema_name": "public",
+      "constraint_name": "bloquejos_bloquejat_entitat_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "bloquejat_persona"
+      ],
+      "table_name": "bloquejos",
+      "schema_name": "public",
+      "constraint_name": "bloquejos_bloquejat_persona_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "versio_politica"
+      ],
+      "table_name": "consentiments",
+      "schema_name": "public",
+      "constraint_name": "consentiments_versio_politica_fkey",
+      "referenced_table": "politiques_privacitat"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "denuncies",
+      "schema_name": "public",
+      "constraint_name": "denuncies_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "branca_id"
+      ],
+      "table_name": "inventari_brain_node0",
+      "schema_name": "public",
+      "constraint_name": "inventari_brain_node0_branca_id_fkey",
+      "referenced_table": "branques_saber"
+    },
+    {
+      "fk_columns": [
+        "owner_user_id"
+      ],
+      "table_name": "note_folders",
+      "schema_name": "public",
+      "constraint_name": "note_folders_owner_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "published_submission_id"
+      ],
+      "table_name": "notes",
+      "schema_name": "public",
+      "constraint_name": "notes_published_submission_id_fkey",
+      "referenced_table": "section_submissions"
+    },
+    {
+      "fk_columns": [
+        "resolta_per"
+      ],
+      "table_name": "organization_claims",
+      "schema_name": "public",
+      "constraint_name": "organization_claims_resolta_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "tenant_id",
+        "organization_id"
+      ],
+      "table_name": "organization_claims",
+      "schema_name": "public",
+      "constraint_name": "organization_claims_tenant_id_organization_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "user_id"
+      ],
+      "table_name": "organization_claims",
+      "schema_name": "public",
+      "constraint_name": "organization_claims_user_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "created_by"
+      ],
+      "table_name": "organization_member_organizations",
+      "schema_name": "public",
+      "constraint_name": "organization_member_organizations_created_by_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "tenant_id",
+        "organization_id"
+      ],
+      "table_name": "organization_member_organizations",
+      "schema_name": "public",
+      "constraint_name": "organization_member_organizations_organitzacio_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "tenant_id",
+        "organization_id"
+      ],
+      "table_name": "organization_memberships",
+      "schema_name": "public",
+      "constraint_name": "organization_memberships_tenant_id_organization_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "tenant_id",
+        "parent_organization_id"
+      ],
+      "table_name": "organizations",
+      "schema_name": "public",
+      "constraint_name": "organizations_tenant_id_parent_organization_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "actor_entity_id"
+      ],
+      "table_name": "page_revisions",
+      "schema_name": "public",
+      "constraint_name": "page_revisions_actor_entity_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "author_id"
+      ],
+      "table_name": "seed_revisions",
+      "schema_name": "public",
+      "constraint_name": "seed_revisions_author_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "tenant_id"
+      ],
+      "table_name": "seguiments",
+      "schema_name": "public",
+      "constraint_name": "seguiments_tenant_id_fkey",
+      "referenced_table": "towns"
+    },
+    {
+      "fk_columns": [
+        "granted_by"
+      ],
+      "table_name": "user_platform_roles",
+      "schema_name": "public",
+      "constraint_name": "user_platform_roles_granted_by_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "amic_id"
+      ],
+      "table_name": "xat_alliberaments_recuperacio",
+      "schema_name": "public",
+      "constraint_name": "xat_alliberaments_recuperacio_amic_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "peticio_id",
+        "amic_id",
+        "intent"
+      ],
+      "table_name": "xat_alliberaments_recuperacio",
+      "schema_name": "public",
+      "constraint_name": "xat_alliberaments_recuperacio_peticio_id_amic_id_intent_fkey",
+      "referenced_table": "xat_verificacions_recuperacio"
+    },
+    {
+      "fk_columns": [
+        "amic_id"
+      ],
+      "table_name": "xat_avals_recuperacio",
+      "schema_name": "public",
+      "constraint_name": "xat_avals_recuperacio_amic_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "creat_per"
+      ],
+      "table_name": "xat_fils",
+      "schema_name": "public",
+      "constraint_name": "xat_fils_creat_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "interlocutor_id"
+      ],
+      "table_name": "xat_fils",
+      "schema_name": "public",
+      "constraint_name": "xat_fils_interlocutor_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "org_id"
+      ],
+      "table_name": "xat_fils",
+      "schema_name": "public",
+      "constraint_name": "xat_fils_org_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "propi_usuari_id"
+      ],
+      "table_name": "xat_fils",
+      "schema_name": "public",
+      "constraint_name": "xat_fils_propi_usuari_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "cadena_arrel"
+      ],
+      "table_name": "xat_missatges",
+      "schema_name": "public",
+      "constraint_name": "xat_missatges_cadena_arrel_fkey",
+      "referenced_table": "xat_missatges"
+    },
+    {
+      "fk_columns": [
+        "com_org_id"
+      ],
+      "table_name": "xat_missatges",
+      "schema_name": "public",
+      "constraint_name": "xat_missatges_com_org_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "esborrat_per"
+      ],
+      "table_name": "xat_missatges",
+      "schema_name": "public",
+      "constraint_name": "xat_missatges_esborrat_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "resposta_a"
+      ],
+      "table_name": "xat_missatges",
+      "schema_name": "public",
+      "constraint_name": "xat_missatges_resposta_a_fkey",
+      "referenced_table": "xat_missatges"
+    },
+    {
+      "fk_columns": [
+        "fixat_per"
+      ],
+      "table_name": "xat_missatges_fixats",
+      "schema_name": "public",
+      "constraint_name": "xat_missatges_fixats_fixat_per_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "com_org_id"
+      ],
+      "table_name": "xat_participants",
+      "schema_name": "public",
+      "constraint_name": "xat_participants_com_org_id_fkey",
+      "referenced_table": "organizations"
+    },
+    {
+      "fk_columns": [
+        "usuari_id"
+      ],
+      "table_name": "xat_reaccions",
+      "schema_name": "public",
+      "constraint_name": "xat_reaccions_usuari_id_fkey",
+      "referenced_table": "auth.users"
+    },
+    {
+      "fk_columns": [
+        "amic_id"
+      ],
+      "table_name": "xat_verificacions_recuperacio",
+      "schema_name": "public",
+      "constraint_name": "xat_verificacions_recuperacio_amic_id_fkey",
+      "referenced_table": "auth.users"
+    }
+  ]
+}

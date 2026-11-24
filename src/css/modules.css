@@ -2308,12 +2308,22 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .toc-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--sdp-touch);
+  min-block-size: var(--sdp-touch);
   background: none;
   border: none;
   color: var(--sdp-text-suau);
   cursor: pointer;
   padding: var(--sdp-space-2);
-  border-radius: var(--sdp-radi-s);
+  border-radius: var(--sdp-radi-boto);
+}
+
+.toc-close-btn:focus-visible {
+  outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+  outline-offset: var(--sdp-focus-separacio);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -11712,38 +11722,6 @@ details[open] summary.accordion-header svg:last-child {
      anywhere). La @container que partia el <code> i les capçaleres d'esta taula ja no tenia res a
      casar i s'ha llevat. */
 
-  .sdp-admin-status-ok {
-    margin: 0;
-    padding: var(--sdp-space-3) var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-s);
-    background: var(--sdp-fons-subtil);
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-small);
-    font-weight: 600;
-  }
-
-  .sdp-admin-kpi {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    padding: var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-superficie);
-  }
-
-  .sdp-admin-kpi strong {
-    font-size: var(--sdp-text-h3);
-    color: var(--sdp-text-titol);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .sdp-admin-kpi span {
-    font-size: var(--sdp-text-meta);
-    color: var(--sdp-text-suau);
-  }
-
   /* IDEA-125 · La graella del Banc d'Importació és una llista (<ul>) de UniversalCard: sense pics
      ni sagnat de llista. */
   .sdp-admin-importacio__llista {
@@ -11980,44 +11958,8 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
   }
 
-  /* Onada R9 · C3 (IDEA-120; G8-12 i G8-15) · L'assistent de botigues de l'Administració, fora del
-     bloc de la Gestoria: el detall del canal i el QR de la guia. El paper i la tinta del QR no
-     canvien amb el tema (--sdp-sobre-roca i --sdp-fons-roca): contrast fix per a qualsevol lector.
-     Les llistes de passos no porten gap ni flex (llei de les llistes). */
-  .sdp-admin-botiga-detall {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-    gap: var(--sdp-space-4);
-    align-items: start;
-    margin-block: var(--sdp-space-3);
-    padding: var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-superficie);
-  }
-
-  /* P0-74 · Amb la columna de la pàgina estreta (47rem ≈ 42rem de panell), una sola columna: el QR
-     damunt de la fitxa i els avisos push damunt de la conformitat, en lloc de dues de 16rem. */
-  @container (max-width: 47rem) {
-    .sdp-admin-botiga-detall {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  .sdp-admin-botiga-detall__qr {
-    display: grid;
-    justify-items: center;
-    gap: var(--sdp-space-2);
-  }
-
-  /* P0-74 · La columna de la fitxa no creix amb el contingut (una ruta llarga en un paràgraf). */
-  .sdp-admin-botiga-detall__info {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sdp-space-2);
-    overflow-wrap: break-word;
-  }
-
+  /* Onada R9 · C3 (IDEA-120; G8-12 i G8-15) · QR compartit amb ProtocolEmergenciesOfflineCard;
+     el detall de botigues viu a diferit-admin-taxonomia.css. */
   .sdp-admin-qr__svg {
     width: 9rem;
     height: 9rem;
@@ -12025,18 +11967,6 @@ details[open] summary.accordion-header svg:last-child {
 
   .sdp-admin-qr__paper { fill: var(--sdp-sobre-roca); }
   .sdp-admin-qr__tinta { fill: var(--sdp-fons-roca); }
-
-  .sdp-admin-botiga-detall__url {
-    font-size: var(--sdp-text-small);
-    overflow-wrap: anywhere;
-    text-align: center;
-  }
-
-  .sdp-admin-botiga-detall__passos {
-    margin: 0;
-    padding-inline-start: var(--sdp-space-4);
-    font-size: var(--sdp-text-small);
-  }
 
   .sdp-input,
   .sdp-select {
@@ -12231,30 +12161,6 @@ details[open] summary.accordion-header svg:last-child {
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--sdp-space-2);
-  }
-
-  .sdp-fitxa-didactica__nutricio-dl {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-    gap: var(--sdp-space-3);
-    margin: 0;
-  }
-
-  .sdp-fitxa-didactica__nutricio-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    min-width: 0;
-  }
-
-  .sdp-fitxa-didactica__nutricio-item dt {
-    font-weight: 700;
-    color: var(--sdp-text-titol);
-  }
-
-  .sdp-fitxa-didactica__nutricio-item dd {
-    margin: 0;
-    color: var(--sdp-text-cos);
   }
 
   .sdp-fitxa-didactica__font-nutricio {
@@ -12670,18 +12576,6 @@ details[open] summary.accordion-header svg:last-child {
    `utilities` no toca estes propietats d'estos elements.
    ═══════════════════════════════════════════════════════════════════ */
 @layer components {
-  .sdp-admin-sessions {
-    min-width: 0;
-    max-width: 100%;
-  }
-  .sdp-admin-sessions table {
-    table-layout: fixed;
-  }
-  .sdp-admin-sessions th,
-  .sdp-admin-sessions td {
-    overflow-wrap: anywhere;
-  }
-
   /* ═══ Onada R16.12 (R16-X1) + R21.5 · Subnavegació Pobles ↔ Gent i Entitats ↔ Demografia ═══ */
   .sdp-subnav-pobles-gent-contenidor {
     display: flex;
@@ -12807,20 +12701,7 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-cos);
   }
 
-  /* R16-AA6..AA8 · Capçalera de la fitxa de l'Herbari (botó de tornar) i Configuració de l'espai de treball en columna de detall */
-  .sdp-herbari-fitxa__capcalera {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sdp-space-3);
-    margin-block-end: var(--sdp-space-3);
-  }
-
-  .sdp-herbari-fitxa__tornar {
-    flex-shrink: 0;
-  }
-
+  /* R16-AA6..AA8 · Configuració de l'espai de treball en columna de detall */
   .sdp-workspace-settings-inline {
     display: flex;
     flex-direction: column;
@@ -12961,17 +12842,7 @@ details[open] summary.accordion-header svg:last-child {
     width: 100%;
   }
 
-  /* ── P0-86 · Fitxa Viva i Longitudinal CIEF v232 dels 19 Arbres Singulars ── */
-  .sdp-arbre-fitxa {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-5);
-    min-width: 0;
-  }
-
-  .sdp-arbre-fitxa__accions,
-  .sdp-arbre-fitxa__pestanyes,
-  .sdp-arbre-revisions__intervals,
+  /* ── P0-86 · .sdp-arbre-* mogut a diferit-arbres-monumentals.css (R32.48) ── */
   .sdp-calendari-agricola__filtres,
   .sdp-calendari-agricola__mesos,
   .sdp-rentonar-doc__pestanyes {
@@ -12982,72 +12853,6 @@ details[open] summary.accordion-header svg:last-child {
     gap: var(--sdp-space-2);
   }
 
-  .sdp-arbre-cotes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-    gap: var(--sdp-space-3);
-    min-width: 0;
-  }
-
-  .sdp-arbre-cota {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    padding: var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora);
-    border-radius: 0;
-    background: var(--sdp-fons-app);
-    min-width: 0;
-  }
-
-  .sdp-arbre-cota__etiqueta {
-    font-size: var(--sdp-text-meta);
-    color: var(--sdp-text-suau);
-  }
-
-  .sdp-arbre-cota__valor {
-    font-size: var(--sdp-text-h5);
-    font-weight: 800;
-    line-height: 1.2;
-    color: var(--sdp-text-titol);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .sdp-arbre-comparador {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-    gap: var(--sdp-space-4);
-    min-width: 0;
-  }
-
-  .sdp-arbre-comparador__marc {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-2);
-    margin: 0;
-    padding: var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora);
-    border-radius: 0;
-    background: var(--sdp-fons-targeta);
-    min-width: 0;
-  }
-
-  .sdp-arbre-comparador__imatge {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    background: var(--sdp-fons-subtil);
-  }
-
-  .sdp-arbre-comparador__peu {
-    font-size: var(--sdp-text-meta);
-    color: var(--sdp-text-suau);
-  }
-
-  .sdp-arbre-revisions,
-  .sdp-arbre-cief,
-  .sdp-arbre-ordenanca,
   .sdp-rentonar-doc,
   .sdp-calendari-agricola {
     display: flex;
@@ -13082,23 +12887,6 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-rentonar-doc__fitxa > dd + dt {
       margin-block-start: var(--sdp-space-2);
     }
-  }
-
-  .sdp-arbre-delta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-    gap: var(--sdp-space-3);
-    min-width: 0;
-  }
-
-  .sdp-arbre-delta__item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sdp-space-1);
-    padding: var(--sdp-space-3);
-    border-inline-start: 3px solid var(--sdp-accio);
-    background: var(--sdp-fons-app);
-    min-width: 0;
   }
 
   /* WCAG 1.4.11 · En contrast forçat el fons i les ombres desapareixen: la

@@ -24,9 +24,13 @@ import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 /* Onada R29 · R29-RUT-01 i R29-RUT-04 · Dos accessoris de la pàgina: amb lazyRoute i, en pintar-los,
    dins de BarreraDelTrosAccessori. Si el tros no arriba, el text de la pàgina es queda sense ells. */
+/* IDEA-340 (R32.61) · El tros CreditsComunitatS23 de /legal passa a /page/reconeixements amb CreditsReconeixementsComplet. */
 const AparadorFediversity = lazyRoute(() => import('./AparadorFediversity.jsx'));
 const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx').then((m) => ({ default: m.ConsolaIncrustada })));
-const CreditsComunitatS23 = lazyRoute(() => import('./CreditsComunitatS23.jsx'));
+const CreditsReconeixementsComplet = lazyRoute(() => import('./CreditsReconeixementsComplet.jsx'));
+const QuadreEstatCanalsVersions = lazyRoute(() => import('./QuadreEstatCanalsVersions.jsx'));
+const ArxiuHistoricVersions = lazyRoute(() => import('./ArxiuHistoricVersions.jsx'));
+import { projeccioLecturaLegal } from './projeccioLecturaLegal.js';
 import { useSEO } from '../../hooks/useSEO';
 import { useEdicioEnLloc } from '../../hooks/useEdicioEnLloc.js';
 import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js';
@@ -75,7 +79,8 @@ import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstall
    una altra llengua). Sense, cap atribut. */
 export function CosDeLaPagina({ html }) {
   const lang = useLlenguaDelContingut();
-  const cos = esAppNativa() ? htmlPerAppNativa(html) : html;
+  const projectat = projeccioLecturaLegal(html);
+  const cos = esAppNativa() ? htmlPerAppNativa(projectat) : projectat;
   if (String(cos || '').includes(MARCA_GRUP)) {
     const segments = segmentsAmbTargetes(sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos)), { enllacosEditorials: true }));
     if (segments.some((segment) => segment.tipus === 'targetes')) {
@@ -225,9 +230,22 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {plaR51?.tipus === 'error' ? (
         <Alerta to="avis">{t('section.text.traduccioR51Error', 'Esta pàgina no té la traducció ben configurada: es mostra en la llengua original, sense traducció automàtica.')}</Alerta>
       ) : null}
-      {pageKey === 'versions' ? <LiniaVersioInstallada llengua={language} /> : null}
+      {pageKey === 'versions' ? (
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={<LiniaVersioInstallada llengua={language} />}>
+            <QuadreEstatCanalsVersions llengua={language} etiquetes={page.labels} />
+          </Suspense>
+        </BarreraDelTrosAccessori>
+      ) : null}
       {!amagaCos && <CosDeLaPagina html={page.html} />}
-      {pageKey==='legal'&&<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsComunitatS23 language={language}/></Suspense></BarreraDelTrosAccessori>}
+      {pageKey === 'versions' && !amagaCos ? (
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <ArxiuHistoricVersions llengua={language} renderCos={(htmlHistoric) => <CosDeLaPagina html={htmlHistoric} />} />
+          </Suspense>
+        </BarreraDelTrosAccessori>
+      ) : null}
+      {pageKey==='reconeixements'&&!amagaCos&&<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsReconeixementsComplet language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}
       {children}

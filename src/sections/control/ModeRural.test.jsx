@@ -374,3 +374,20 @@ test('R29 · PF-03 · la quota de la carpeta CRDT té missatge propi i allibera 
   expect(alerta.textContent).not.toBe(TEXTOS_MODE_RURAL.crdtQuota[1]);
   expect(screen.getByRole('button', { name: 'Sincronitzar una carpeta' }).disabled).toBe(false);
 });
+
+test('IDEA-341 · Llei 9: tots els botons d’acció de ModeRural viuen dins de contenidors centrats .sdp-accions', async () => {
+  render(<ModeRural fabrica={fabrica} onBack={() => {}} />);
+  const botoActivar = screen.getByRole('button', { name: 'Activar en este dispositiu' });
+  expect(botoActivar.closest('.sdp-accions')).toBeTruthy();
+  await activa();
+  for (const nomBoto of [
+    'Consolidar el diari local',
+    'Tancar el mode rural',
+    'Desar la nota al dispositiu',
+    'Preparar còpia de les notes',
+    'Preparar paquet d’emergència signat',
+    'Esborrar les dades d’este espai rural',
+  ]) {
+    expect(screen.getByRole('button', { name: nomBoto }).closest('.sdp-accions'), nomBoto).toBeTruthy();
+  }
+});

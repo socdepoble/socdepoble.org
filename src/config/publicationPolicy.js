@@ -6,6 +6,8 @@
  * de fortificacio/documental i el manifest social no depenguen de src/.
  * publicationPolicy.test.js en fixa la paritat: un canvi d'un costat sense
  * l'altre la fa fallar. */
+import { llevaEtiquetes } from './contentHelpers.js';
+
 const ESTATS_PUBLICATS = new Set(['published', 'publicat', 'publicada']);
 
 export function publicMetadata(attributes = {}) {
@@ -39,5 +41,5 @@ export function pobleAllowsIndex(route, attributes = {}) {
   const [section, detail] = tramsDeRuta(route);
   if (!['pobles', 'poblacio'].includes(section) || !detail) return true;
   return attributes?.contingut_local_verificat === true
-    && typeof attributes.content === 'string' && Boolean(attributes.content.replace(/<[^>]*>/g, '').trim());
+    && typeof attributes.content === 'string' && Boolean(llevaEtiquetes(attributes.content).trim());
 }

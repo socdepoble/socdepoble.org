@@ -73,6 +73,8 @@ import { TEXTOS_CONSTRUCCIO, textosDeVista } from './vistaEnConstruccioModel.js'
 import PaginaNotificacions from './PaginaNotificacions.jsx';
 import { useControlAvisosPush } from '../useAvisosPushXat.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
+import ControlModeHumaPur from '../../../components/universal/ControlModeHumaPur.jsx';
+import { textosModeHumaPur } from '../../../config/textosModeHumaPur.js';
 
 /* Onada R28 · El punter principal és un dit (la mateixa consulta que les barres amb scroll). */
 function esDispositiuTactil() {
@@ -459,6 +461,12 @@ export function CosAjustos({
             <GrupAjustos key={grup.id} grup={grup} t={t} triada={triada(grup)} valorDe={valorDe} nota={notaDe(grup)} onPrem={prem} />
           );
         })}
+        {pagina.id === 'aparenca' ? (
+          <div className="sdp-xat-ajustos__grup">
+            <h3 className="sdp-xat-ajustos__seccio">{textosModeHumaPur(llengua, t).seccioPerfil}</h3>
+            <ControlModeHumaPur llengua={llengua} ambDescripcio testId="control-mode-huma-pur-xat" />
+          </div>
+        ) : null}
       </>
     );
   }

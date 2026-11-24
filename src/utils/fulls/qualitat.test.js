@@ -11,6 +11,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
+import { elementsXml, senseComentarisXml } from './xmlParts.js';
 
 const ARREL = process.cwd();
 const FULLS = 'src/utils/fulls';
@@ -37,7 +38,8 @@ describe('el cens', () => {
     expect(DE_FULLS).toContain(`${FULLS}/index.js`);
     expect(DE_FULLS).toContain(`${FULLS}/qualitat.test.js`);
     expect(readdirSync(path.join(ARREL, FULLS, '__fixtures__'))).toEqual(['zipAmbDeflate.js']);
-    expect(PRODUCCIO).toHaveLength(9);
+    expect(PRODUCCIO).toHaveLength(10);
+    expect(DE_FULLS).toContain(`${FULLS}/xmlParts.js`);
   });
 });
 
@@ -143,5 +145,24 @@ describe('higiene', () => {
     ];
     const trobats = PRODUCCIO.flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
+  });
+});
+
+
+describe('el desè mòdul: fragments OOXML per posicions',()=>{
+  test('CDATA, comentaris i > entre cometes no inventen etiquetes; conserva ordre i cos',()=>{
+    const xml='<x:sst><!-- <si>fantasma</si> --><x:si nom="a>b"><t><![CDATA[<si>literal</si>]]></t></x:si><si/></x:sst>';
+    const rows=[...elementsXml(xml,'si')];expect(rows).toHaveLength(2);
+    expect(rows[0].atributs).toBe(' nom="a>b"');expect(rows[0].cos).toBe('<t><![CDATA[<si>literal</si>]]></t>');expect(rows[1].cos).toBeUndefined();
+    expect(senseComentarisXml(xml)).not.toContain('fantasma');
+    expect(senseComentarisXml('<t><![CDATA[<!-- literal -->]]></t>')).toContain('<!-- literal -->');
+  });
+  test.each(['<si>','<si','<si nom="obert>','<!--','<![CDATA[','<?xml','<!DOCTYPE x>'])('rebutja delimitador incomplet o declaració: %s',xml=>{
+    expect(()=>[...elementsXml(xml,'si')]).toThrow(TypeError);
+  });
+  test('els inicis de fila no consumixen les cel·les i cada element progressa',()=>{
+    const rows=[...elementsXml('<row r="1"><c><v>1</v></c><c/></row><row r="2"/>',['row','c'],{oberts:['row']})];
+    expect(rows.map(r=>r.nom)).toEqual(['row','c','c','row']);expect(rows[1].cos).toBe('<v>1</v>');
+    expect(rows.every((r,i)=>i===0||r.inici>rows[i-1].inici)).toBe(true);
   });
 });

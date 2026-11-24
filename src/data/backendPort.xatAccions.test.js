@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 let port;
 let contracte;
-const metodes = ['carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi'];
+const metodes = ['carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi', 'eliminaPerATothom'];
 beforeEach(async () => {
   vi.resetModules();
   port = await import('./backendPort.js');

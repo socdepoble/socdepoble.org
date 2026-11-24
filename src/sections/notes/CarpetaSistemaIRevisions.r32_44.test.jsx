@@ -73,8 +73,12 @@ import {
   _reiniciaRevisionsEditorialsPerAProves,
   revisioEditorial
 } from '../../data/revisionsEditorials.js';
+import { installaIdbMemoriaTest } from './__fixtures__/idbMemoriaTest.js';
+
+let restauraIdb = null;
 
 beforeEach(() => {
+  restauraIdb = installaIdbMemoriaTest();
   _reiniciaRevisionsEditorialsPerAProves();
   mocks.navigate.mockReset();
   mocks.toast.mockReset();
@@ -86,6 +90,8 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   _reiniciaRevisionsEditorialsPerAProves();
+  restauraIdb?.();
+  restauraIdb = null;
 });
 
 const baseContext = () => ({
@@ -119,8 +125,8 @@ describe('IDEA-324a · Carpeta Sistema, edició de pàgines de PAGE_COPY i histo
       expect(esPublicacioEditable(item)).toBe(true);
       expect(esRevisioEditorial(item)).toBe(true);
     }
-    // El Mur públic conserva intactes les 19 targetes canòniques (cap pàgina nova al Mur).
-    expect(targetesDeSistema(PAGE_COPY, { nativa: false })).toHaveLength(19);
+    // El Mur públic conserva les 20 targetes canòniques (19 + /page/reconeixements afegida en R32.61).
+    expect(targetesDeSistema(PAGE_COPY, { nativa: false })).toHaveLength(21);
   });
 
   test('editar una pàgina de Sistema a PublicacioEditable actualitza en viu TextSection, preserva widgets i permet Desfer amb 1 clic', async () => {

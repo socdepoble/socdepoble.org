@@ -27,6 +27,8 @@ import { tradueix, useTraductorOpcional } from '../PedraSeca/hooks/useTraductorO
 import { omple } from '../../config/moderacio.js';
 import { VeuLecturaPaginaContext } from './veu/VeuLecturaPaginaContext.js';
 import { teProsaDeLectura } from './veu/deteccioLecturaVeu.js';
+import { esModeHumaPur } from '../../sections/realitat/nivellIaia.js';
+import useNivellIaia from '../../sections/realitat/useNivellIaia.js';
 
 import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 
@@ -451,8 +453,14 @@ export function TableOfContentsDrawer({
       >
         <div className="toc-header">
           <h2 id="toc-title">{tradueix(t, TEXTOS_INDEX.titol)}</h2>
-          <button type="button" className="toc-close-btn" onClick={onClose} aria-label={tradueix(t, TEXTOS_INDEX.tanca)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            type="button"
+            className="toc-close-btn"
+            onClick={onClose}
+            aria-label={tradueix(t, TEXTOS_INDEX.tanca)}
+            title={tradueix(t, TEXTOS_INDEX.tanca)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -751,9 +759,11 @@ export function PageFrame({
   const capcaleraRef = useRef(null);
   const botoVeuLecturaRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
   /* v1.2.17 · Gauntlet R1 (L3-01) · El mode de taulell (chrome 'feed') conserva el botó d'escoltar la pàgina: IDEA-305
-     només hi lleva el tercer logotip i l'entradeta, i retirar la veu dels taulells és una decisió del Mestre. */
-  const enEdicioVeu = Boolean(onCanviaCopyright) || Boolean(accionsInoperatives) || chrome === 'none' || veuLectura === false;
+     només hi lleva el tercer logotip i l'entradeta, i retirar la veu dels taulells és una decisió del Mestre.
+     v1.2.23 · IDEA-334 · En Experiència 100 % humana (nivell d'IA 0) s'oculta el botó «Escolta la IAIA» i es tanca el reproductor. */
+  const enEdicioVeu = Boolean(onCanviaCopyright) || Boolean(accionsInoperatives) || chrome === 'none' || veuLectura === false || modeHumaPur;
   const [teLecturaVeu, setTeLecturaVeu] = useState(false);
   const [reproductorVeuObert, setReproductorVeuObert] = useState(false);
   const [estatVeu, setEstatVeu] = useState({ oberta: false, parlant: false });

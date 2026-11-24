@@ -100,17 +100,19 @@ test('la renovació pròpia del JWT (renovacio: true) no mou l’entrada ni avor
   expect(result.current.workspaceKey).toBe(clau);
 });
 
-test('PENDENT · la reinjecció de l’amfitrió del mateix `sub` compta com a entrada nova: remunta el Bloc i avorta el desat', async () => {
+/* R32.87 (Gemini Neon, LOT-2) · adoptaSessioExterna passa renovacio: true quan l'amfitrió torna a injectar el
+   mateix `sub`: el que abans era PENDENT ara és el comportament vigent. */
+test('R32.87 · la reinjecció de l’amfitrió del mateix `sub` ja no compta com a entrada nova: ni remunta el Bloc ni avorta el desat', async () => {
   const { result, rerender, desat, acaba } = await blocAmbDesatEnCurs();
   const clau = result.current.workspaceKey;
   const entrada = entradaSessio();
-  const avortat = expect(desat).rejects.toMatchObject({ name: 'AbortError' });
   // L'amfitrió torna a injectar la sessió del MATEIX compte abans de `exp`.
   expect(adoptaSessioExterna({ access_token: token(A, 7200), user: { id: A } })).toBe(true);
   mocks.generacio++;
   rerender();
-  expect(entradaSessio()).not.toBe(entrada);
-  // El PATCH ha arribat al servidor, però el Bloc el dona per avortat.
-  await act(async () => { acaba({ id: 'nota', title: 'A', revision: 2 }); await avortat; });
-  expect(result.current.workspaceKey).not.toBe(clau);
+  expect(entradaSessio()).toBe(entrada);
+  let desada;
+  await act(async () => { acaba({ id: 'nota', title: 'A', revision: 2 }); desada = await desat; });
+  expect(desada).toEqual({ id: 'nota', title: 'A', revision: 2 });
+  expect(result.current.workspaceKey).toBe(clau);
 });

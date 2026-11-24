@@ -23,8 +23,8 @@ export default function LaminesBotaniquesNode0({ lamina, nom, binomi, titolEleme
                 {variant.etiqueta}
                 <br />
                 {variant.tipusImatge === 'recreacio-auditada' && 'Recreació botànica · '}
-                <a href={variant.urlOrigen}>{variant.titolImatge}</a> · {variant.autor} ·{' '}
-                <a href={variant.llicenciaUrl}>{variant.llicencia}</a>
+                <a href={variant.urlOrigen} target="_blank" rel="noopener noreferrer">{variant.titolImatge}</a> · {variant.autor} ·{' '}
+                <a href={variant.llicenciaUrl} target="_blank" rel="noopener noreferrer">{variant.llicencia}</a>
               </figcaption>
             </figure>
           ))}

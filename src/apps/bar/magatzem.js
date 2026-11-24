@@ -39,6 +39,18 @@ export { CLAUS_META };
 
 const ID_CARTA = 'carta';
 const ID_SALA = 'sala';
+const dadesMalmeses = () => errorBar('DADES_MALMESES', 'Les dades locals del Bar estan malmeses. Conserva una còpia abans de continuar.');
+/* Llegir conserva les formes històriques, inclosos torns incomplets i
+   historials malmesos. Només es valida el snapshot d'una operació activa;
+   una desada explícita completa amb rev correcta pot reparar el registre. */
+function comprovaComandaCompleta(fila) {
+  const esRegistre = valor => valor && typeof valor === 'object' && !Array.isArray(valor);
+  if (!esRegistre(fila) || typeof fila.id !== 'string' || !fila.id
+    || !Number.isSafeInteger(fila.rev) || fila.rev < 0
+    || !Array.isArray(fila.linies) || fila.linies.some(linia => !esRegistre(linia))
+    || !Array.isArray(fila.pagaments) || fila.pagaments.some(pagament => !esRegistre(pagament))
+    || !Array.isArray(fila.historial)) throw dadesMalmeses();
+}
 
 function cartaNeta(registre) {
   const carta = {
@@ -117,6 +129,8 @@ export function creaMagatzemBar(opcions = {}) {
     if (registre?.valor !== id) throw conflicteTorn();
   };
   const comprovaComandes = (actuals, previstes) => {
+    actuals.forEach(comprovaComandaCompleta);
+    previstes.forEach(comprovaComandaCompleta);
     const perId = new Map(previstes.map((registre) => [registre.id, registre.rev]));
     if (actuals.length !== perId.size || actuals.some((registre) => perId.get(registre.id) !== registre.rev)) throw conflicteTorn();
   };
@@ -125,6 +139,7 @@ export function creaMagatzemBar(opcions = {}) {
   const clauTancament = ['meta', 'tancament'];
 
   const desaOberta = async (comanda, { ambTorn = false } = {}) => {
+    comprovaComandaCompleta(comanda);
     const claus = [['comandes', comanda.id], ['tiquets', comanda.id]];
     if (ambTorn) claus.push(clauActual);
     const [desada] = await base.actualitzaRegistres(claus, ([actual, tiquet, torn]) => {
@@ -141,6 +156,7 @@ export function creaMagatzemBar(opcions = {}) {
 
   /** Tanca amb un tiquet immutable i retira la comanda en la mateixa transacció. */
   async function tancaComanda(tiquet, { ambTorn = false } = {}) {
+    comprovaComandaCompleta(tiquet);
     const venda = tiquet.tipus === 'venda';
     const referencies = [
       ['tiquets', tiquet.id], ['tiquets', tiquet.tornId, 'tornId']
@@ -154,6 +170,7 @@ export function creaMagatzemBar(opcions = {}) {
       const canvis = Array(referencies.length);
       canvis[0] = tiquet;
       if (venda) {
+        if (altres.at(-1) !== undefined) comprovaComandaCompleta(altres.at(-1));
         comprovaRev(altres.at(-1), tiquet);
         canvis[canvis.length - 1] = null;
       }
@@ -227,12 +244,16 @@ export function creaMagatzemBar(opcions = {}) {
 
     /** Mou o dividix línies i aplica els dos canvis junts si continuen vigents. */
     async traspassaComandes(origen, desti) {
+      comprovaComandaCompleta(origen);
+      comprovaComandaCompleta(desti);
       const [, destiDesat, origenDesat] = await base.actualitzaRegistres([
         clauActual, ['comandes', desti.id], ['comandes', origen.id],
         ['tiquets', desti.id], ['tiquets', origen.id]
       ], ([vigent, alDesti, aLOrigen, tiquetDesti, tiquetOrigen]) => {
         comprovaTorn(vigent, origen.tornId);
         if (origen.tornId !== desti.tornId || tiquetDesti || tiquetOrigen || !aLOrigen) throw conflicteTorn();
+        comprovaComandaCompleta(aLOrigen);
+        if (alDesti !== undefined) comprovaComandaCompleta(alDesti);
         comprovaRev(aLOrigen, origen);
         comprovaRev(alDesti, desti);
         const origenNou = esDescartable(origen) ? null : { ...origen, rev: origen.rev + 1 };
@@ -243,9 +264,11 @@ export function creaMagatzemBar(opcions = {}) {
 
     /** Descarta una comanda buida i comprova que la versió del disc és la prevista. */
     async descartaComanda(comanda) {
+      comprovaComandaCompleta(comanda);
       if (!esDescartable(comanda)) throw errorBar('NO_DESCARTABLE', 'Només es descarta una comanda buida.');
       await base.actualitzaRegistres([['comandes', comanda.id]], ([actual]) => {
         if (!actual) return [undefined];
+        comprovaComandaCompleta(actual);
         /* També la crida «Mou» després de desar el destí; l'origen al disc
            pot tindre línies, però ha de ser de la mateixa revisió. */
         comprovaRev(actual, comanda);
@@ -257,7 +280,7 @@ export function creaMagatzemBar(opcions = {}) {
 
     /** Una devolució és un tiquet nou: també s'escriu una sola vegada. */
     async desaDevolucio(tiquet, opcions) {
-      if (tiquet.tipus !== 'devolucio') throw errorBar('TIPUS', 'Només devolucions.');
+      if (tiquet?.tipus !== 'devolucio') throw errorBar('TIPUS', 'Només devolucions.');
       return tancaComanda(tiquet, opcions);
     },
 

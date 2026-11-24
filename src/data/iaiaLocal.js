@@ -1185,9 +1185,18 @@ export function documentsDePageCopy(pageCopy) {
    triades, totes dues a demanda (import() sense espai: XatSection.pes.test.js
    no el compta com a estàtic). La Wiki es baixa ací; PAGE_COPY ja és en
    memòria des de l'arrencada (l'adaptador la porta per la llavor), i el seu
-   import() no afig cap byte ni cap viatge. */
-const carregaPaquetDeLaIAIA = () => Promise.all([import('./wikiManifest.js'), import('../sections/text/pageContent.js')])
-  .then(([wiki, pagines]) => ({ items: [...(Array.isArray(wiki.wikiManifest?.items) ? wiki.wikiManifest.items : []), ...documentsDePageCopy(pagines.PAGE_COPY)] }));
+   import() no afig cap byte ni cap viatge.
+   v1.2.24 · costura R32.75 · /versions en dos nivells (R32.48, IDEA-332): PAGE_COPY.versions només porta el
+   Nivell 1, les cròniques recents. L'arxiu històric (el dossier del 5-11, amb PostgreSQL i el compte del pont, i
+   totes les cròniques d'abans) viu a pageContent.versionsHistoric.js, darrere d'import(). La IAIA el baixa ací,
+   amb la Wiki (mai en arrencar ni al tros de /xat), i indexa /versions sencera, la mateixa pàgina que abans de la
+   partició (obtePaginaVersionsCompleta, en valencià). Sense això, la segona capa perdia tot l'arxiu de /versions.
+   S'exporta perquè iaiaLocal.atles.test.js llija el paquet de veritat. */
+const ambVersionsSenceres = (pageCopy, obtePaginaVersionsCompleta) => (pageCopy?.versions && typeof pageCopy.versions === 'object'
+  ? { ...pageCopy, versions: obtePaginaVersionsCompleta(pageCopy.versions, 'ca') } : pageCopy);
+export const carregaPaquetDeLaIAIA = () => Promise.all([import('./wikiManifest.js'), import('../sections/text/pageContent.js'), import('../sections/text/pageContent.versionsHistoric.js')])
+  .then(([wiki, pagines, historic]) => ({ items: [...(Array.isArray(wiki.wikiManifest?.items) ? wiki.wikiManifest.items : []),
+    ...documentsDePageCopy(ambVersionsSenceres(pagines.PAGE_COPY, historic.obtePaginaVersionsCompleta))] }));
 
 /* L'índex del paquet es construïx una sola vegada per pestanya. Si la
    càrrega falla, es descarta i la pregunta següent ho torna a provar. Un

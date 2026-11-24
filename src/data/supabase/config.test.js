@@ -4,16 +4,20 @@ vi.mock('@supabase/supabase-js', () => ({ createClient: (url, key, options) => {
   const client = { removeAllChannels: vi.fn(), realtime: { setAuth: vi.fn((...args) => state.setAuth?.(...args)) } };
   state.calls.push({ url, key, options }); state.clients.push(client); return client;
 } }));
-vi.mock('../identitat.js', () => ({ jwtPerBackend: config => config.tenantId === 'A' ? state.token : null }));
-vi.mock('./runtime.js', () => ({ getResolvedConfig: config => ({ ...config, supabaseUrl: config.backend_url || config.supabaseUrl, hasSupabaseConfig: true }) }));
+vi.mock('../identitat.js', () => ({ jwtPerBackend: config => config.tenantId === 'A' ? state.token : null,
+  caducitatJwt: () => null, capturaSessio: () => () => {} }));
+vi.mock('./runtime.js', () => ({ getResolvedConfig: config => ({ ...config, supabaseUrl: config.backend_url || config.supabaseUrl, hasSupabaseConfig: true }),
+  tokenPerClient: async config => config.tenantId === 'A' ? state.token : null }));
 afterEach(() => { vi.resetModules(); state.calls.length = 0; state.clients.length = 0; state.token = 'jwt-A'; state.setAuth = null; });
 const TENANT_A = { backend_url: 'https://sollutia.example.test', supabaseAnonKey: 'anon', tenantId: 'A' };
 test('SDK keeps explicit partial tenant and does not reuse the previous tenant JWT', async () => {
   const { getClient } = await import('./config.js');
   const first = await getClient({ backend_url: 'https://sollutia.example.test', supabaseAnonKey: 'anon', tenantId: 'A' });
-  expect(state.calls[0].options.global.headers.Authorization).toBe('Bearer jwt-A');
+  expect(await state.calls[0].options.accessToken()).toBe('jwt-A');
+  expect(state.calls[0].options.global?.headers?.Authorization).toBeUndefined();
   expect(await getClient({ tenantId: 'B' })).not.toBe(first);
-  expect(state.calls[1].options.global.headers.Authorization).toBe('Bearer anon');
+  expect(await state.calls[1].options.accessToken()).toBeNull();
+  expect(state.calls[1].options.global?.headers?.Authorization).toBeUndefined();
   expect(state.calls[1].url).toBe('https://sollutia.example.test');
 });
 

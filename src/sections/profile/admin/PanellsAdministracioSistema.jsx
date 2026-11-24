@@ -9,7 +9,7 @@ import { Link } from '../../../app/contexts/RouterContext.jsx';
 /* v1.2.19 · fusió · R32.30b (lot 03) porta els aria-label i placeholder d'este panell al diccionari diferit
    del Perfil (5 llengües, el valencià byte a byte); el ref adoptaEstilsAdminTaxonomia de la v1.2.18 es queda a
    cada etiqueta .sdp-admin-taxonomia__*: les dues coses viuen en la mateixa etiqueta. */
-import { textosPerfilA11y } from '../i18nPerfilA11y.js';
+import { textosPerfilA11y, codiLlenguaPerfil } from '../i18nPerfilA11y.js';
 import { adminDesaPersonalitzacio, teCapacitat } from '../../../data/backendPort.js';
 import { MISSATGE_PERSONALITZACIO } from '../../../data/errorsBackend.js';
 import { ambCrom } from '../../../config/estil.js';
@@ -26,6 +26,60 @@ import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 const adoptaEstilsAdminTaxonomia = (node) => { if (node) adoptaFullDiferit(node, 'admin-taxonomia', cssAdminTaxonomia); };
 
 const BotiguesSistema = lazy(() => import('../../botigues/BotiguesSistema.jsx'));
+
+export const RUTA_FITXA_OPENDATA_ADMIN = '/control?fitxa=opendata';
+
+export const TEXTOS_OPENDATA_ADMIN = Object.freeze({
+  ca: Object.freeze({
+    titol: 'Restaurar dades obertes del municipi',
+    explica: 'Eina d’administració del sistema (superadmin + aal2) i preparada per als futurs gestors acreditats d’Ajuntament: comprova l’empremta SHA-256 d’un paquet municipal (.zip) i en restaura les col·leccions obertes amb màxima seguretat.',
+    boto: 'Obrir restaurador de dades obertes',
+  }),
+  es: Object.freeze({
+    titol: 'Restaurar datos abiertos del municipio',
+    explica: 'Herramienta de administración del sistema (superadmin + aal2) y preparada para futuros gestores acreditados de Ayuntamiento: comprueba la huella SHA-256 de un paquete municipal (.zip) y restaura sus colecciones abiertas con máxima seguridad.',
+    boto: 'Abrir restaurador de datos abiertos',
+  }),
+  en: Object.freeze({
+    titol: 'Restore municipal open data',
+    explica: 'System administration tool (superadmin + aal2), ready for future accredited Town Hall managers: verifies the SHA-256 digest of a municipal archive (.zip) and safely restores its open-data collections.',
+    boto: 'Open open-data restore tool',
+  }),
+  eu: Object.freeze({
+    titol: 'Udalerriko datu irekiak leheneratu',
+    explica: 'Sistemaren administrazioko tresna (superadmin + aal2), Udaleko etorkizuneko kudeatzaile egiaztatuentzat prestatua: udal-pakete baten (.zip) SHA-256 hatz-marka egiaztatu eta bilduma irekiak segurtasunez leheneratzen ditu.',
+    boto: 'Ireki datu irekien leheneratzailea',
+  }),
+  gl: Object.freeze({
+    titol: 'Restaurar datos abertos do municipio',
+    explica: 'Ferramenta de administración do sistema (superadmin + aal2) e preparada para futuros xestores acreditados do Concello: comproba a pegada SHA-256 dun paquete municipal (.zip) e restaura as súas coleccións abertas con máxima seguridade.',
+    boto: 'Abrir restaurador de datos abertos',
+  }),
+});
+
+export function BlocRestauracioOpenDataAdmin({ idioma = null }) {
+  const idTitol = useId();
+  const languageUi = useUIStateOpcional()?.language ?? null;
+  const codi = codiLlenguaPerfil({ language: idioma || languageUi });
+  const tx = TEXTOS_OPENDATA_ADMIN[codi] || TEXTOS_OPENDATA_ADMIN.ca;
+
+  return (
+    <section
+      ref={adoptaEstilsAdminTaxonomia}
+      className="sdp-admin-taxonomia__panel"
+      aria-labelledby={idTitol}
+      data-testid="admin-restaurar-opendata"
+    >
+      <h3 id={idTitol}>{tx.titol}</h3>
+      <p className="sdp-muted">{tx.explica}</p>
+      <div className="sdp-admin-actions-inline">
+        <Link className="sdp-boto sdp-boto--primari" to={RUTA_FITXA_OPENDATA_ADMIN}>
+          {tx.boto}
+        </Link>
+      </div>
+    </section>
+  );
+}
 
 export function PanellBotiguesVerificadors() {
   return <Suspense fallback={<Carregant etiqueta="Carregant botigues i verificadors…" />}><BotiguesSistema /></Suspense>;
@@ -497,6 +551,8 @@ export function PanellNodesFediversResiliencia() {
           </Link>
         </div>
       </section>
+
+      <BlocRestauracioOpenDataAdmin />
     </article>
   );
 }

@@ -20,7 +20,7 @@ import {
 import { NUCLI } from './nucliModuls.js';
 import {
   NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
-  NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8
+  NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8, NOMS_DEL_NUCLI_1_9
 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
@@ -110,6 +110,18 @@ describe('l’objecte SocDePoble.nucli', () => {
     expect(element.props.className).toContain('sdp-accions');
   });
 
+  /* v1.2.24 · costura R32.75 · El nom de l'1.9.0 són les icones dels al·lèrgens (R32.53 de Gemini, les
+     Receptes de la Nevera): el mateix component de la façana de Pedra Seca, pel seu fitxer. */
+  test('v1.2.24: el nucli 1.9 dona IconesAlergens, el mateix component de la façana de Pedra Seca', () => {
+    for (const [porta, noms] of Object.entries(NOMS_DEL_NUCLI_1_9)) {
+      for (const nom of noms) {
+        expect(typeof NUCLI[porta][nom], `${porta}.${nom}`).toBe('function');
+        expect(NUCLI[porta][nom], `${porta}.${nom}`).toBe(PedraSeca[nom]);
+      }
+    }
+    expect(NOMS_PER_FITXER_DE_PEDRA_SECA['src/components/PedraSeca/molecules/IconesAlergens.jsx']).toEqual(['IconesAlergens']);
+  });
+
   test('cap porta dona el backend, la sessió ni la identitat', () => {
     const vetats = /backend|supabase|session|identitat|adoptaSessio|getCurrentUser|teCapacitat/i;
     for (const { clau } of PORTES_DEL_NUCLI) {
@@ -182,6 +194,10 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.6', '1.7.0', true],
     ['^1.7', '1.7.0', true],
     ['^1.8', '1.7.0', false],
+    /* v1.2.24 · costura R32.75 · l'1.9.0 (IconesAlergens): un mòdul de '^1.8' hi entra; un de '^1.9', no en l'1.8.0. */
+    ['^1.8', '1.9.0', true],
+    ['^1.9', '1.8.0', false],
+    ['^1.9', '1.9.0', true],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -204,9 +220,11 @@ describe('el contracte (contracteNucli.js)', () => {
      Actualitzada a posta (R32.11, v1.2.9): l'1.7 afig Accions (lots 05 i 06 de Gemini); el primer rang
      futur rebutjat és ara '^1.8'.
      Actualitzada a posta (v1.2.17): l'1.8 afig les dues declaracions d'espai del Rebost (IDEA-303); el primer rang
-     futur rebutjat és ara '^1.9'. */
-  test('el rang 1.8 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
-    expect(VERSIO_NUCLI).toBe('1.8.0');
+     futur rebutjat és ara '^1.9'.
+     v1.2.24 · costura R32.75 · l'1.9 afig IconesAlergens (les Receptes de la Nevera, R32.53); el primer rang
+     futur rebutjat és ara '^1.10'. */
+  test('el rang 1.9 conserva els mòduls anteriors i rebutja el primer rang futur', () => {
+    expect(VERSIO_NUCLI).toBe('1.9.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
     expect(nucliSatisfa('^1.2')).toBe(true);
@@ -216,7 +234,8 @@ describe('el contracte (contracteNucli.js)', () => {
     expect(nucliSatisfa('^1.6')).toBe(true);
     expect(nucliSatisfa('^1.7')).toBe(true);
     expect(nucliSatisfa('^1.8')).toBe(true);
-    expect(nucliSatisfa('^1.9')).toBe(false);
+    expect(nucliSatisfa('^1.9')).toBe(true);
+    expect(nucliSatisfa('^1.10')).toBe(false);
   });
 
   /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
@@ -232,8 +251,9 @@ describe('el contracte (contracteNucli.js)', () => {
      R15: NOMS_DEL_NUCLI_1_5 fixa els catàlegs i la revisió assistida pendent.
      R21.6: NOMS_DEL_NUCLI_1_6 fixa la capçalera de lectura de la targeta.
      R32.11 (v1.2.9): NOMS_DEL_NUCLI_1_7 fixa el bloc d'accions (Accions).
-     v1.2.17: NOMS_DEL_NUCLI_1_8 fixa les dues declaracions d'espai del Rebost. */
-  test('el nucli 1.8 conserva tots els noms publicats i només afig els declarats per versió', () => {
+     v1.2.17: NOMS_DEL_NUCLI_1_8 fixa les dues declaracions d'espai del Rebost.
+     v1.2.24 · costura R32.75 · NOMS_DEL_NUCLI_1_9 fixa les icones dels al·lèrgens (IconesAlergens). */
+  test('el nucli 1.9 conserva tots els noms publicats i només afig els declarats per versió', () => {
     for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
       expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
     }
@@ -254,7 +274,7 @@ describe('el contracte (contracteNucli.js)', () => {
     }
     expect(afegits).toEqual(fusiona(
       NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2, NOMS_DEL_NUCLI_1_3, NOMS_DEL_NUCLI_1_4, NOMS_DEL_NUCLI_1_5, NOMS_DEL_NUCLI_1_6,
-      NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8
+      NOMS_DEL_NUCLI_1_7, NOMS_DEL_NUCLI_1_8, NOMS_DEL_NUCLI_1_9
     ));
   });
 });

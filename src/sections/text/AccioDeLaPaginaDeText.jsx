@@ -28,12 +28,16 @@
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { esModeHumaPur } from '../realitat/nivellIaia.js';
+import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useXat } from '../xat/XatContext';
 import { accioDeLaPaginaDeText } from './accionsDeText.js';
 
 export function AccioDeLaPaginaDeText({ pageKey, lloc = 'dalt' }) {
   const { t } = useUIActions();
-  const { modeDades, senseSessio } = useXat();
+  const { modeDades, senseSessio, iaiaApagada } = useXat();
+  const modeHumaPur = esModeHumaPur(useNivellIaia());
+  if (pageKey === 'anima' && (iaiaApagada || modeHumaPur)) return null;
   const porta = accioDeLaPaginaDeText(pageKey, t, modeDades, senseSessio);
   if (!porta) return null;
   if (lloc !== 'baix') return <PortaDePagina porta={porta} />;

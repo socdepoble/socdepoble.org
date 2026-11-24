@@ -15,7 +15,13 @@ vi.mock('../../../app/contexts/RouterContext.jsx', () => ({
 
 import { LaboratoriTaxonomiaDoctoral } from './LaboratoriTaxonomiaDoctoral.jsx';
 import { BancImportacioEditorial } from './BancImportacioEditorial.jsx';
-import { PanellNodesFediversResiliencia, PanellEmpaquetatsDesplegament } from './PanellsAdministracioSistema.jsx';
+import {
+  BlocRestauracioOpenDataAdmin,
+  PanellNodesFediversResiliencia,
+  PanellEmpaquetatsDesplegament,
+  RUTA_FITXA_OPENDATA_ADMIN,
+  TEXTOS_OPENDATA_ADMIN,
+} from './PanellsAdministracioSistema.jsx';
 import {
   RESUM_AUDITORIA_BIBLIOTECONOMIA,
   FACETA_1_CATEGORIES_GEOGRAFIQUES,
@@ -186,5 +192,16 @@ describe('BLOC 2 · AH-29 (IDEA-89) · Administració del sistema, Eliminació d
     expect(screen.getByRole('article', { name: /Empaquetats i Desplegament/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 2, name: /Empaquetats i Desplegament/i })).toBeNull();
     expect(screen.getByText(/Connector WordPress/i)).toBeTruthy();
+  });
+
+  test.each(['ca', 'es', 'en', 'eu', 'gl'])('9. IDEA-341 · Administració del sistema exposa l’accés centrat a «Restaurar dades obertes del municipi» en %s', (codi) => {
+    render(<BlocRestauracioOpenDataAdmin idioma={codi} />);
+    const tx = TEXTOS_OPENDATA_ADMIN[codi];
+    const panell = screen.getByTestId('admin-restaurar-opendata');
+    expect(screen.getByRole('heading', { level: 3, name: tx.titol })).toBeTruthy();
+    expect(panell.textContent).toContain('superadmin + aal2');
+    const enllac = screen.getByRole('link', { name: tx.boto });
+    expect(enllac.getAttribute('href')).toBe(RUTA_FITXA_OPENDATA_ADMIN);
+    expect(enllac.closest('.sdp-admin-actions-inline')).toBeTruthy();
   });
 });

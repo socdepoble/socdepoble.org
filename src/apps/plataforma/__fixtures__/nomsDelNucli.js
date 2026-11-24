@@ -95,3 +95,10 @@ export const NOMS_DEL_NUCLI_1_7 = congela({
 export const NOMS_DEL_NUCLI_1_8 = congela({
   workspace: ['declaraNivellInicialEspai', 'declaraVistaPerDefecteEspai']
 });
+
+/* v1.2.24 · costura R32.75 · El que l'1.9.0 afig a l'1.8.0: un nom a la porta 'pedraSeca', les icones
+   dels al·lèrgens que el diàleg de Receptes de la Nevera pinta al costat del text (R32.53 de Gemini).
+   guardesDelModul.test.js comprova que la Nevera les pren per la porta 'pedraSeca' que el nucli exposa. */
+export const NOMS_DEL_NUCLI_1_9 = congela({
+  pedraSeca: ['IconesAlergens']
+});

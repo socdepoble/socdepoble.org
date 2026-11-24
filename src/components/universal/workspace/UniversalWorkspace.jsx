@@ -1635,6 +1635,7 @@ function CategoryBranch({
                   type="button"
                   className="sdp-workspace-nav-item sdp-workspace-folder-toggle"
                   aria-label={omple(String((expanded ? textPlega : textDesplega) ?? ''), { nom: category.label })}
+                  title={omple(String((expanded ? textPlega : textDesplega) ?? ''), { nom: category.label })}
                   aria-expanded={expanded}
                   onClick={() => toggleFolder(key)}
                 >

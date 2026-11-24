@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.31
+Stable tag: 1.1.32
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.32 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.24 de Sóc de Poble, la que explica la seua pàgina «Versions»: la pàgina de Reconeixements, on el Mas agraïx en cinc llengües a qui l'inspira, encapçala el Mur, i al Xat «Elimina per a tothom» esborra els teus missatges sense límit d'hora.
+* **Mòbil i tauleta:** la benvinguda ja no parla de proves, el botó «Compartir» sempre respon (copia l'adreça o te la mostra), els enllaços de fora s'obrin en una pestanya nova, les imatges dels enllaços compartits pesen molt menys i les pàgines del projecte es lligen amb paraules planes.
+
 = 1.1.31 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.23 de Sóc de Poble, la que explica la seua pàgina «Versions»: les fotos i els vídeos que es publiquen conserven el lloc on es van fer, si el fitxer el porta dins, amb un avís i un toc a «Amaga el lloc» per a llevar-lo, el que és teu s'edita amb «Editar» des de la mateixa pàgina, el menú del Xat és més senzill i el menú de l'esquerra diu la versió que tens.
 * **Veu i preus:** si el telèfon talla una gravació de veu, o la gravació falla, la veu que ja s'havia recollit es queda per a escoltar-la abans de decidir si s'envia, i la cerca dona el preu d'un producte igual que el Mercat.
@@ -282,6 +286,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.32 =
+Visor al dia amb la versió 1.2.24 de Sóc de Poble: la pàgina de Reconeixements, «Elimina per a tothom» sense límit d'hora al Xat, compartir que sempre respon i una benvinguda sense rètol de proves.
 
 = 1.1.31 =
 Visor al dia amb la versió 1.2.23 de Sóc de Poble: fotos i vídeos amb el lloc que porten dins i «Amaga el lloc» per a llevar-lo, «Editar» des de la pàgina, un menú del Xat més senzill i la versió al menú.

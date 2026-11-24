@@ -292,9 +292,10 @@ export default function CapcaleraConversa({
       : quants === 1
         ? t('section.xat.seleccio.triat', '1 triat')
         : t('section.xat.seleccio.triats', '{n} triats').replace('{n}', String(quants));
+    const etiquetaEixir = t('section.xat.seleccio.eixir', 'Eixir de la selecció');
     return (
       <header key="seleccio" className="sdp-xat-capcalera sdp-xat-capcalera--seleccio">
-        <button ref={creuRef} type="button" className="sdp-xat-icona" onClick={onEixir} aria-label={t('section.xat.seleccio.eixir', 'Eixir de la selecció')}>
+        <button ref={creuRef} type="button" className="sdp-xat-icona" onClick={onEixir} aria-label={etiquetaEixir} title={etiquetaEixir}>
           <X size={24} aria-hidden="true" focusable="false" />
         </button>
         <strong className="sdp-sr-only" {...propsDeTitol(nivellTitol)}>{nom}</strong>
@@ -405,12 +406,15 @@ export default function CapcaleraConversa({
   }
 
   /* §8.5 · Amb origen, la fletxa és a totes les amplàries i hi torna. */
+  const etiquetaTornaOrigen = t('section.xat.conversa.tornaOrigen', 'Torna a la pàgina anterior');
+  const etiquetaTornaLlista = t('section.xat.conversa.torna', 'Torna a la llista');
+  const etiquetaOpcions = t('section.xat.conversa.opcions', 'Opcions de la conversa');
   const fletxa = typeof onTornaAOrigen === 'function' ? (
-    <button type="button" className="sdp-xat-icona" onClick={onTornaAOrigen} aria-label={t('section.xat.conversa.tornaOrigen', 'Torna a la pàgina anterior')}>
+    <button type="button" className="sdp-xat-icona" onClick={onTornaAOrigen} aria-label={etiquetaTornaOrigen} title={etiquetaTornaOrigen}>
       <ArrowLeft size={24} aria-hidden="true" focusable="false" />
     </button>
   ) : (
-    <button type="button" className="sdp-xat-icona d-mobile-only" onClick={onTorna} aria-label={t('section.xat.conversa.torna', 'Torna a la llista')}>
+    <button type="button" className="sdp-xat-icona d-mobile-only" onClick={onTorna} aria-label={etiquetaTornaLlista} title={etiquetaTornaLlista}>
       <ArrowLeft size={24} aria-hidden="true" focusable="false" />
     </button>
   );
@@ -430,7 +434,8 @@ export default function CapcaleraConversa({
           ref={botoRef}
           type="button"
           className="sdp-xat-icona"
-          aria-label={t('section.xat.conversa.opcions', 'Opcions de la conversa')}
+          aria-label={etiquetaOpcions}
+          title={etiquetaOpcions}
           aria-haspopup="menu"
           aria-expanded={menuObert}
           onClick={() => setMenuObert((obert) => !obert)}

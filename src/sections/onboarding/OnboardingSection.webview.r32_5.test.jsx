@@ -81,8 +81,11 @@ const UA_TIKTOK_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) Ap
 const UA_LINE_ANDROID = 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 Line/14.7.1';
 const UA_SAFARI_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 const UA_CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36';
+/* P01-03 (v1.2.24) · L'enllaç del poble rebut per WhatsApp a Android (el mateix agent que navegadorIncrustat.r32_13). */
+const UA_WHATSAPP_WEBVIEW = 'Mozilla/5.0 (Linux; Android 14; SM-A546B Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.6778.135 Mobile Safari/537.36 WhatsApp/2.24.25.78';
 
 const uaOriginal = navigator.userAgent;
+const rutaOriginal = `${window.location.pathname}${window.location.search}${window.location.hash}`;
 
 function fixaUserAgent(ua) {
   Object.defineProperty(window.navigator, 'userAgent', {
@@ -106,6 +109,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   fixaUserAgent(uaOriginal);
+  window.history.replaceState(null, '', rutaOriginal);
 });
 
 describe('P0-113 · detectaWebViewInApp (detector pur + blindatge Capacitor)', () => {
@@ -182,7 +186,10 @@ describe('P0-113 · OnboardingSection Escut Empàtic OAuth en 5 llengües', () =
     expect(screen.getByRole('button', { name: tx.botoCopiaUrl })).toBeTruthy();
   });
 
-  test('1 toc en el botó de la contrasenya oblidada (R325-01) obri RecuperacioStep i en «Entra o crea un compte amb el correu» obri mode login', async () => {
+  /* P01-03 (v1.2.24, F4-B) · «Entra o crea un compte amb el correu» ja no força
+     «Entrar»: qui arriba per «Registrar-se» (sense ?mode, o ?mode=crear) torna a
+     «Crea el teu compte». */
+  test('1 toc en el botó de la contrasenya oblidada (R325-01) obri RecuperacioStep i en «Entra o crea un compte amb el correu» torna a Crear compte (P01-03)', async () => {
     fixaUserAgent(UA_FACEBOOK_ANDROID);
     render(<OnboardingSection />);
     await buida();
@@ -195,7 +202,8 @@ describe('P0-113 · OnboardingSection Escut Empàtic OAuth en 5 llengües', () =
     expect(document.getElementById('rec-email')).not.toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu }));
-    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolCrear'] })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeNull();
     expect(document.getElementById('reg-email')).not.toBeNull();
   });
 
@@ -231,6 +239,102 @@ describe('P0-113 · OnboardingSection Escut Empàtic OAuth en 5 llengües', () =
     for (const dic of Object.values(DICCIONARIS)) {
       expect(Object.keys(dic).filter((clau) => clau.startsWith('section.login.webview.'))).toEqual([]);
     }
+  });
+
+  /* P01-03 (v1.2.24, F4-B) · Dins del navegador de WhatsApp, Instagram o Facebook, la persona
+     nova veu primer el camí del correu (entrar o crear), i la recuperació, de segona. */
+  test.each([
+    ['whatsapp', UA_WHATSAPP_WEBVIEW],
+    ['facebook', UA_FACEBOOK_ANDROID]
+  ])('%s: el primer botó de l’escut és «Entra o crea un compte amb el correu», el primari; la recuperació va de segona (P01-03)', async (app, ua) => {
+    fixaUserAgent(ua);
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(document.querySelector(`[data-escut-webview="${app}"]`)).not.toBeNull();
+    const botons = [...document.querySelectorAll('.onboarding-entrada-nativa button')];
+    expect(botons.map((b) => b.textContent)).toEqual([
+      TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu,
+      TEXTOS_ESCUT_WEBVIEW.ca.botoEnllacMagic,
+      TEXTOS_ESCUT_WEBVIEW.ca.botoCopiaUrl
+    ]);
+    expect(botons[0].classList.contains('sdp-boto--primari')).toBe(true);
+    expect(botons[1].classList.contains('sdp-boto--secundari')).toBe(true);
+    expect(botons[2].classList.contains('sdp-boto--fantasma')).toBe(true);
+    expect(document.querySelectorAll('.onboarding-entrada-nativa .sdp-boto--primari')).toHaveLength(1);
+  });
+
+  test('sense la capacitat de recuperar, el correu continua sent l’únic botó primari i no hi ha recuperació (P01-03)', async () => {
+    fixaUserAgent(UA_WHATSAPP_WEBVIEW);
+    m.teCapacitat = () => false;
+    render(<OnboardingSection />);
+    await buida();
+
+    const botons = [...document.querySelectorAll('.onboarding-entrada-nativa button')];
+    expect(botons.map((b) => b.textContent)).toEqual([
+      TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu,
+      TEXTOS_ESCUT_WEBVIEW.ca.botoCopiaUrl
+    ]);
+    expect(botons[0].classList.contains('sdp-boto--primari')).toBe(true);
+  });
+
+  test('?mode=crear: «Entra o crea un compte amb el correu» deixa «Crea el teu compte»; ?mode=entrar es continua respectant (P01-03)', async () => {
+    fixaUserAgent(UA_WHATSAPP_WEBVIEW);
+    window.history.replaceState(null, '', '/registre?mode=crear');
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolCrear'] })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu }));
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolCrear'] })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeNull();
+    cleanup();
+
+    window.history.replaceState(null, '', '/registre?mode=entrar');
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ESCUT_WEBVIEW.ca.botoEnllacMagic }));
+    expect(screen.getByRole('heading', { name: CA['section.login.recuperacio.titol'] })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu }));
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeTruthy();
+  });
+
+  /* P01-03 (v1.2.24, F4-B, revisió adversarial) · Amb ?mode=recuperar (P0-63 /
+     IDEA-194) el formulari ja ix en «Recupera la contrasenya»: el botó del correu
+     no es pot quedar mort, ha de portar a «Entra al teu compte», amb el correu. */
+  test('?mode=recuperar: «Entra o crea un compte amb el correu» porta a «Entra al teu compte» (P01-03)', async () => {
+    fixaUserAgent(UA_WHATSAPP_WEBVIEW);
+    window.history.replaceState(null, '', '/registre?mode=recuperar');
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(screen.getByRole('heading', { name: CA['section.login.recuperacio.titol'] })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: TEXTOS_ESCUT_WEBVIEW.ca.botoCorreu }));
+    expect(screen.queryByRole('heading', { name: CA['section.login.recuperacio.titol'] })).toBeNull();
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolEntrar'] })).toBeTruthy();
+    expect(document.getElementById('reg-email')).not.toBeNull();
+  });
+
+  /* P01-03 (v1.2.24, F4-B) · Dins de l'escut no hi ha cap botó de Google: la nota
+     «…amb el botó de Google de dalt» no s'hi pinta. Fora de l'escut, sí. */
+  test('en la vista Crear, dins de l’escut no hi ha la nota del «botó de Google de dalt»; en Safari, sí (P01-03)', async () => {
+    fixaUserAgent(UA_WHATSAPP_WEBVIEW);
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolCrear'] })).toBeTruthy();
+    expect(document.querySelector('.onboarding-card__nota-google')).toBeNull();
+    expect(document.body.textContent).not.toContain(CA['section.login.registre.notaGoogleCrear']);
+    cleanup();
+
+    fixaUserAgent(UA_SAFARI_IOS);
+    render(<OnboardingSection />);
+    await buida();
+
+    expect(screen.getByRole('heading', { name: CA['section.login.registre.titolCrear'] })).toBeTruthy();
+    expect(document.querySelector('.onboarding-card__nota-google')?.textContent).toBe(CA['section.login.registre.notaGoogleCrear']);
   });
 
   test('en Safari estàndard mostra el botó normal d’Entrar amb Google sense escut WebView', async () => {

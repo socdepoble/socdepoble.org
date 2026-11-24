@@ -909,7 +909,8 @@
   --sdp-accent-titol:          var(--sdp-primary-400);    /*  8,97:1 targeta ·  7,44:1 subtil · 9,70:1 app */
   /* v1.2.22 · IDEA-328 · Les píndoles i l'avatar to-6 porten el text d'accent sobre este fons: amb el primary-900 del fosc
      el taronja viu hi quedava a 5,43:1. Un tint taronja fosc (18 % del taronja de marca sobre negre, #2e1500) el porta a
-     7,93:1, i el text blanc a 17,16:1. */
+     7,93:1, i el text blanc a 17,16:1. R32.87: valor de reserva Baseline 2022 (#2e1500) per a WebViews < Chrome 111. */
+  --sdp-accent-subtil:         #2e1500;
   --sdp-accent-subtil:         color-mix(in srgb, var(--sdp-primary-500) 18%, var(--sdp-negre-pur));
   --sdp-accent-text-hover:     var(--sdp-blanc-pur);      /* 19,42:1 · el hover augmenta el contrast */
   --sdp-accent-control:        var(--sdp-primary-900);    /* 11,74:1 amb --sdp-sobre-color blanc */

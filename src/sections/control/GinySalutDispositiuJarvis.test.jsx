@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { creaServeiSalutEmmagatzematgeDispositiu } from '../../data/salutEmmagatzematgeDispositiu.js';
@@ -91,6 +93,7 @@ describe('IDEA-278 · textosSalutDispositiuJarvis (5 llengües i Llei 0)', () =>
         expect(typeof valor, `${idioma}.${clau}`).toBe('string');
         expect(valor.trim().length, `${idioma}.${clau}`).toBeGreaterThan(0);
         expect(valor, `${idioma}.${clau}`).not.toMatch(/sobir[aà]|soberan/i);
+        expect(valor, `${idioma}.${clau}`).not.toMatch(/La Masia|servidor del poble|servidor del pueblo/i);
         expect(valor, `${idioma}.${clau}`).not.toMatch(/dies estalviats|días ahorrados|days saved/i);
       }
     }
@@ -134,6 +137,7 @@ describe('IDEA-278 · GinySalutDispositiuJarvis (6 estats UI ECC, revelació in-
     expect(screen.getByText(tx.compartimentSagratTitol)).toBeTruthy();
 
     const botoRevisar = screen.getByRole('button', { name: tx.botoRevisar });
+    expect(botoRevisar.closest('.sdp-salut-dispositiu__accions-revisio')).toBeTruthy();
     expect(botoRevisar.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(botoRevisar);
     expect(screen.getByRole('button', { name: tx.botoTancarRevisio }).getAttribute('aria-expanded')).toBe('true');
@@ -142,6 +146,29 @@ describe('IDEA-278 · GinySalutDispositiuJarvis (6 estats UI ECC, revelació in-
     const botoPrincipal = screen.getByRole('button', { name: tx.botoAlliberar });
     expect(botoPrincipal.closest('.sdp-salut-dispositiu__accio-principal')).toBeTruthy();
     expect(botoPrincipal.disabled).toBe(false);
+  });
+
+  test('IDEA-341 · el full diferit blinda <dl> amb grid-template-columns: minmax(0, 1fr), align-items: start sense space-between i centra tots els botons (Llei 9)', () => {
+    const css = fs.readFileSync(path.resolve(process.cwd(), 'src/css/diferit-salut-dispositiu.css'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const blocDl = css.match(/\.sdp-salut-dispositiu__compartiments\s*\{([^}]*)\}/)?.[1] || '';
+    expect(blocDl).toContain('grid-template-columns: minmax(0, 1fr);');
+
+    const blocGraella = css.match(/@container\s*\(min-width:\s*46rem\)\s*\{\s*\.sdp-salut-dispositiu__graella\s*\{([^}]*)\}/)?.[1] || '';
+    expect(blocGraella).toContain('align-items: start;');
+    expect(blocGraella).not.toContain('stretch');
+
+    const blocTargeta = css.match(/\.sdp-salut-dispositiu__targeta\s*\{([^}]*)\}/)?.[1] || '';
+    expect(blocTargeta).not.toContain('space-between');
+
+    const blocRevisio = css.match(/\.sdp-salut-dispositiu__accions-revisio\s*\{([^}]*)\}/)?.[1] || '';
+    expect(blocRevisio).toContain('justify-content: center;');
+
+    const blocPrincipal = css.match(/\.sdp-salut-dispositiu__accio-principal\s*\{([^}]*)\}/)?.[1] || '';
+    expect(blocPrincipal).toContain('justify-content: center;');
+
+    render(<GinySalutDispositiuJarvis idioma="ca" servei={serveiMock()} integratPerfil={true} />);
+    expect(screen.getByTestId('giny-salut-dispositiu-jarvis').getAttribute('data-integrat')).toBe('perfil');
   });
 
   test('estat loading -> success: executa purga segura i mostra els bytes eliminats sense tocar dades sagrades', async () => {

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alerta, Boto, Camp, CampText, Selector } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, Camp, CampText, IconesAlergens, Insignia, Selector } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useFullDiferit } from '../../config/fullDiferit.js';
+import cssBancLlavorsFitxa from '../../css/diferit-banc-llavors-fitxa.css?inline';
+import cssLlistesEscalables from '../../css/diferit-llistes-escalables.css?inline';
 import { FONTS_BANC_LLAVORS, entradesDelCataleg, filtraEntrades } from '../../data/patrimoni/bancLlavors.js';
 import LaminesBotaniquesNode0 from './LaminesBotaniquesNode0.jsx';
 import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
@@ -9,47 +12,173 @@ import { FASES_CALENDARI, ambComa, barra12MesosDe, fasesAmbMesos, nutricioDe } f
 import { traductorPatrimoni } from './textosPatrimoni.js';
 import { textosBibliotecaAgricola } from './i18nBibliotecaAgricola.js';
 
-/* IDEA-112 (Onada R9, carril C5) · /page/banc-de-llavors: la consulta dels tres catàlegs, davall del text breu de
-   PAGE_COPY (PageDetailSection la carrega en un chunk lazy). Només llig dades literals: cap formulari, cap
-   persistència, cap custodi ni cap lot (G9-05). Els noms i les dades es mantenen en la llengua de cada font
-   (valenciana, mallorquina o catalana): no es traduïxen. Les pàgines són les del PDF de cada catàleg.
-   P0-59 / IDEA-190 (Onada R13) · La fitxa ja no és cap finestra emergent: es desplega a la pàgina, damunt de
-   la llista, amb el focus al seu títol (i, en tancar-la, torna al botó de la llista). Porta la barra dels 12
-   mesos quan la varietat té calendari, les varietats germanes del Catàleg valencià i, si l'espècie en té, els
-   valors de referència d'un registre de l'USDA FoodData Central (fitxaDidactica.js), que no són de la font i
-   ho diu. Sense calendari (AVL, Atles) no hi ha barra; sense perfil, no hi ha bloc de nutrició. */
+/* IDEA-112 (Onada R9, carril C5) · /page/banc-de-llavors: la consulta dels catàlegs publicats i l'estudi d'oliveres,
+   davall del text breu de PAGE_COPY (PageDetailSection la carrega en un chunk lazy). Només llig dades literals: cap
+   formulari, cap persistència, cap custodi ni cap lot (G9-05). Els noms i les dades es mantenen en la llengua de cada
+   font: no es traduïxen. Les pàgines són les del PDF de cada catàleg.
+   R32.53 (IDEA-336 + IDEA-338) · Fitxes desplegables amb noblesa Pedra Seca (.sdp-taula-prosa amb <th scope>, lang,
+   píndoles centrades i bloc desacoplat d'aptitud i 14 al·lèrgens UE 1169/2011 amb estat preventiu 'desconegut'). */
 const MIDA = 24;
 
 /* v1.2.22 · Gauntlet R2 (M5-06) · La llengua del títol de la font: 'ca' si la font no en diu cap. L'estudi d'oliveres
    (llenguaTitol: 'es') té el títol en castellà, i l'autoria i la nota de la font continuen en català. */
 const llenguaDelTitol = (font) => (typeof font?.llenguaTitol === 'string' && font.llenguaTitol ? font.llenguaTitol : 'ca');
 
+/**
+ * Resol de manera pura i sense inventar certificacions el bloc d'aptitud i els
+ * 14 al·lèrgens UE 1169/2011 d'una entrada del Banc de Llavors quan arriba el
+ * consens 8/8 d'IDEA-336 (`registreAlergens` o `consensAlergens`).
+ * Invariant innegociable: una varietat tòxica o no comestible mai s'acredita
+ * com a apta per al consum ni exposa al·lèrgens d'aliment.
+ */
+export function resolSeguretatIAlergensLlavor(entrada, registreAlergens, txBib) {
+  const dada = entrada?.dada || {};
+  const reg = registreAlergens || entrada?.consensAlergens || dada?.consensAlergens || null;
+  const aptitud = reg?.aptitud || entrada?.aptitud || dada?.aptitud || null;
+  const esToxica = entrada?.esToxica === true || dada?.esToxica === true || aptitud === 'toxica';
+  const esNoComestible = !esToxica && aptitud === 'no_comestible';
+
+  if (esToxica) {
+    return {
+      esToxica: true,
+      esNoComestible: false,
+      insigniaTo: 'error',
+      insigniaText: txBib.aptitudToxica,
+      alergens: [],
+      traces: [],
+      estatAlergens: 'ocult',
+    };
+  }
+  if (esNoComestible) {
+    return {
+      esToxica: false,
+      esNoComestible: true,
+      insigniaTo: 'neutre',
+      insigniaText: txBib.aptitudNoComestible,
+      alergens: [],
+      traces: [],
+      estatAlergens: 'ocult',
+    };
+  }
+
+  const normalitzaIdAlergen = (id) => String(id || '').trim().toLowerCase().replace(/_/g, '-');
+  const matriu = reg?.matriuFinal || reg?.matriuAlergens || entrada?.matriuFinal || entrada?.matriuAlergens || null;
+  let alergens = Array.isArray(reg?.alergens)
+    ? reg.alergens.map(normalitzaIdAlergen)
+    : Array.isArray(entrada?.alergens)
+      ? entrada.alergens.map(normalitzaIdAlergen)
+      : [];
+  let traces = Array.isArray(reg?.tracesAlergens)
+    ? reg.tracesAlergens.map(normalitzaIdAlergen)
+    : Array.isArray(entrada?.tracesAlergens)
+      ? entrada.tracesAlergens.map(normalitzaIdAlergen)
+      : [];
+
+  if (matriu && typeof matriu === 'object') {
+    const desDeMatriu = [];
+    const tracesMatriu = [];
+    for (const [clau, valor] of Object.entries(matriu)) {
+      const idCanonic = normalitzaIdAlergen(clau);
+      const estat = typeof valor === 'object' && valor !== null ? valor.estat : valor;
+      if (estat === 'conte' || estat === 'ingredient') desDeMatriu.push(idCanonic);
+      else if (estat === 'traca') tracesMatriu.push(idCanonic);
+    }
+    if (!alergens.length) alergens = desDeMatriu;
+    if (!traces.length) traces = tracesMatriu;
+  }
+
+  const valorsMatriu = matriu && typeof matriu === 'object'
+    ? Object.values(matriu).map((v) => (typeof v === 'object' && v !== null ? v.estat : v))
+    : [];
+  const teConsensComplet = valorsMatriu.length > 0 && valorsMatriu.every(
+    (v) => v === 'conte' || v === 'ingredient' || v === 'traca' || v === 'absent'
+  );
+
+  let insigniaTo = 'avis';
+  let insigniaText = txBib.aptitudCultiuDocumental;
+  if (aptitud === 'aromatica_infusio') {
+    insigniaTo = 'info';
+    insigniaText = txBib.aptitudAromatica;
+  } else if (aptitud === 'aliment' && (alergens.length > 0 || traces.length > 0 || teConsensComplet)) {
+    insigniaTo = 'exit';
+    insigniaText = txBib.aptitudAlimentRevisat;
+  }
+
+  if (alergens.length > 0 || traces.length > 0) {
+    return { esToxica: false, esNoComestible: false, insigniaTo, insigniaText, alergens, traces, estatAlergens: 'declarat' };
+  }
+  if (teConsensComplet) {
+    return { esToxica: false, esNoComestible: false, insigniaTo, insigniaText, alergens: [], traces: [], estatAlergens: 'absent_verificat' };
+  }
+  return { esToxica: false, esNoComestible: false, insigniaTo, insigniaText, alergens: [], traces: [], estatAlergens: 'desconegut' };
+}
+
+function TaulaDadesPedraSeca({ caption, txBib, ariaLabel = null, children }) {
+  return (
+    <div
+      className="sdp-taula-prosa"
+      tabIndex={0}
+      {...(ariaLabel ? { role: 'region', 'aria-label': ariaLabel } : {})}
+    >
+      <table>
+        <caption className="sdp-sr-only">{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{txBib.campCol}</th>
+            <th scope="col">{txBib.valorCol}</th>
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
 /* v1.2.22 · Gauntlet R2 (M4-01) · Amb `webEsRegistreDocument`, l'adreça és el registre del document (RedIVIA), no la
    web d'una entitat: el rètol ve del mòdul de textos del Banc, en la llengua que rep `llengua`. */
 export function FitxaDeLaFont({ font, tr, llengua = 'ca' }) {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'banc-llavors-fitxa', cssBancLlavorsFitxa);
+  const txBib = textosBibliotecaAgricola(llengua);
   const etiquetaWeb = font.webEsRegistreDocument === true
-    ? textosBibliotecaAgricola(llengua).registreDocument
+    ? txBib.registreDocument
     : tr('patrimoni.llavors.web', 'Web de l’entitat');
   return (
-    <>
-    <p lang="ca">{font.nota}</p>
-    {font.discrepancies.length > 0 && (
-      <Alerta to="avis" viva={false} titol={tr('patrimoni.font.discrepancia', 'Discrepància')}>
-        <span lang="ca">{font.discrepancies.join(' ')}</span>
-      </Alerta>
-    )}
-    <dl>
-      <dt>{tr('patrimoni.font.titol', 'La font')}</dt><dd lang={llenguaDelTitol(font)}>{font.titol}</dd>
-      <dt>{tr('patrimoni.llavors.autoria', 'Procedència')}</dt><dd lang="ca">{font.autoria}</dd>
-      <dt>{tr('patrimoni.llavors.ambit', 'Àmbit')}</dt><dd lang="ca">{font.ambit}</dd>
-      {font.web && (
-        <>
-          <dt>{etiquetaWeb}</dt>
-          <dd><a href={font.web} target="_blank" rel="noopener noreferrer">{font.web.replace(/^https:\/\//, '')}</a> {tr('patrimoni.font.finestraNova', '(s’obri en una finestra nova)')}</dd>
-        </>
+    <div ref={arrelRef} className="sdp-llavors-font">
+      <p lang="ca">{font.nota}</p>
+      {font.discrepancies.length > 0 && (
+        <Alerta to="avis" viva={false} titol={tr('patrimoni.font.discrepancia', 'Discrepància')}>
+          <span lang="ca">{font.discrepancies.join(' ')}</span>
+        </Alerta>
       )}
-    </dl>
-    </>
+      <TaulaDadesPedraSeca
+        caption={`${tr('patrimoni.font.titol', 'La font')} · ${font.autoria}`}
+        txBib={txBib}
+        ariaLabel={`${tr('patrimoni.font.titol', 'La font')} · ${font.autoria}`}
+      >
+        <tr>
+          <th scope="row">{tr('patrimoni.font.titol', 'La font')}</th>
+          <td lang={llenguaDelTitol(font)}>{font.titol}</td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.autoria', 'Procedència')}</th>
+          <td lang="ca">{font.autoria}</td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.ambit', 'Àmbit')}</th>
+          <td lang="ca">{font.ambit}</td>
+        </tr>
+        {font.web ? (
+          <tr>
+            <th scope="row">{etiquetaWeb}</th>
+            <td>
+              <a href={font.web} target="_blank" rel="noopener noreferrer">{font.web.replace(/^https:\/\//, '')}</a>{' '}
+              {tr('patrimoni.font.finestraNova', '(s’obri en una finestra nova)')}
+            </td>
+          </tr>
+        ) : null}
+      </TaulaDadesPedraSeca>
+    </div>
   );
 }
 
@@ -102,27 +231,27 @@ function Barra12Mesos({ calendari, tr }) {
 }
 
 /* P0-59 · Valors de referència de l'aliment (no de la font), només si l'espècie en té (fitxaDidactica.js). */
-function BlocNutricio({ item, tr }) {
+export function BlocNutricio({ item, tr, txBib }) {
   const nutricio = nutricioDe(item);
   if (!nutricio) return null;
   const titol = tr('patrimoni.llavors.nutricio', 'Valors nutricionals de referència (per 100 g)');
   return (
     <section className="sdp-fitxa-didactica__bloc" aria-label={titol}>
       <h4>{titol}</h4>
-      <dl className="sdp-fitxa-didactica__nutricio-dl">
-        <div className="sdp-fitxa-didactica__nutricio-item">
-          <dt>{tr('patrimoni.llavors.energia', 'Energia')}</dt>
-          <dd>{`${nutricio.kcal100g} kcal / 100 g`}</dd>
-        </div>
-        <div className="sdp-fitxa-didactica__nutricio-item">
-          <dt>{tr('patrimoni.llavors.fibraAigua', 'Fibra i aigua')}</dt>
-          <dd>{`${ambComa(nutricio.fibraG)} g de fibra · ${ambComa(nutricio.aiguaG)} g d’aigua`}</dd>
-        </div>
-        <div className="sdp-fitxa-didactica__nutricio-item">
-          <dt>{tr('patrimoni.llavors.vitamines', 'Vitamines i minerals')}</dt>
-          <dd lang="ca">{nutricio.vitaminesMinerals}</dd>
-        </div>
-      </dl>
+      <TaulaDadesPedraSeca caption={titol} txBib={txBib}>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.energia', 'Energia')}</th>
+          <td>{`${nutricio.kcal100g} kcal / 100 g`}</td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.fibraAigua', 'Fibra i aigua')}</th>
+          <td>{`${ambComa(nutricio.fibraG)} g de fibra · ${ambComa(nutricio.aiguaG)} g d’aigua`}</td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.vitamines', 'Vitamines i minerals')}</th>
+          <td lang="ca">{nutricio.vitaminesMinerals}</td>
+        </tr>
+      </TaulaDadesPedraSeca>
       <p className="sdp-fitxa-didactica__font-nutricio">
         {tr('patrimoni.llavors.nutricioFont', 'Valors de referència per 100 g: «{aliment}», USDA FoodData Central SR Legacy, FDC {fdc}; no són de la font del catàleg.', { aliment: nutricio.aliment, fdc: nutricio.fdc })}
       </p>
@@ -130,7 +259,7 @@ function BlocNutricio({ item, tr }) {
   );
 }
 
-function DetallValencia({ v, germanes = [], onTriaGermana, tr }) {
+export function DetallValencia({ v, germanes = [], onTriaGermana, tr, txBib }) {
   return (
     <>
       {germanes.length > 1 && (
@@ -142,13 +271,26 @@ function DetallValencia({ v, germanes = [], onTriaGermana, tr }) {
           ))}
         </div>
       )}
-      <dl>
-        <dt>{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</dt><dd><i>{v.nomCientific}</i></dd>
-        {v.familia && <><dt>{tr('patrimoni.llavors.familia', 'Família')}</dt><dd lang="ca">{v.familia}</dd></>}
-        {v.nomIndex && <><dt>{tr('patrimoni.llavors.nomIndex', 'A l’índex del catàleg es diu')}</dt><dd lang="ca">{v.nomIndex.text}</dd></>}
-      </dl>
+      <TaulaDadesPedraSeca caption={`${v.nom} · ${v.nomCientific}`} txBib={txBib}>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</th>
+          <td lang="la"><i>{v.nomCientific}</i></td>
+        </tr>
+        {v.familia ? (
+          <tr>
+            <th scope="row">{tr('patrimoni.llavors.familia', 'Família')}</th>
+            <td lang="ca">{v.familia}</td>
+          </tr>
+        ) : null}
+        {v.nomIndex ? (
+          <tr>
+            <th scope="row">{tr('patrimoni.llavors.nomIndex', 'A l’índex del catàleg es diu')}</th>
+            <td lang="ca">{v.nomIndex.text}</td>
+          </tr>
+        ) : null}
+      </TaulaDadesPedraSeca>
       <Barra12Mesos calendari={v.calendari} tr={tr} />
-      <BlocNutricio item={v} tr={tr} />
+      <BlocNutricio item={v} tr={tr} txBib={txBib} />
       <h4>{tr('patrimoni.llavors.tecnica', 'Informació tècnica')}</h4>
       <ul lang="ca">
         {v.camps.map((camp) => <li key={camp.linies[0]}>{camp.clau ? `${camp.clau}: ${camp.valor}` : camp.valor}</li>)}
@@ -158,18 +300,27 @@ function DetallValencia({ v, germanes = [], onTriaGermana, tr }) {
   );
 }
 
-function DetallAvl({ v, tr }) {
+export function DetallMallorca({ v, tr, txBib }) {
   const temporada = v.temporada === 'hivern'
     ? tr('patrimoni.llavors.temporada.hivern', 'Varietats d’hivern')
     : tr('patrimoni.llavors.temporada.estiu', 'Varietats d’estiu');
   return (
     <>
-      <dl>
-        <dt>{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</dt><dd><i>{v.nomCientific}</i></dd>
-        <dt>{tr('patrimoni.llavors.origen', 'Origen')}</dt><dd lang="ca">{v.origen}</dd>
-        <dt>{tr('patrimoni.llavors.temporada', 'Temporada')}</dt><dd>{temporada}</dd>
-      </dl>
-      <BlocNutricio item={v} tr={tr} />
+      <TaulaDadesPedraSeca caption={`${v.nom} · ${v.nomCientific}`} txBib={txBib}>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</th>
+          <td lang="la"><i>{v.nomCientific}</i></td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.origen', 'Origen')}</th>
+          <td lang="ca">{v.origen}</td>
+        </tr>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.temporada', 'Temporada')}</th>
+          <td>{temporada}</td>
+        </tr>
+      </TaulaDadesPedraSeca>
+      <BlocNutricio item={v} tr={tr} txBib={txBib} />
     </>
   );
 }
@@ -177,7 +328,7 @@ function DetallAvl({ v, tr }) {
 /* R9V-C5-04 · Algunes línies del text extret de l'Atles ajunten dues varietats que el PDF presenta per separat
    (`particions` de les dades, contrastades amb les pàgines del PDF). Es mostren separades i amb l'avís: la dada
    literal no canvia. */
-function DetallAtles({ e, tr }) {
+export function DetallCatalunya({ e, tr, txBib }) {
   const particions = e.particions ?? [];
   const partida = new Map(particions.map((p) => [p.trossos.join(' '), p.trossos]));
   const grups = [
@@ -187,10 +338,13 @@ function DetallAtles({ e, tr }) {
   ].filter(([, , linies]) => linies.length > 0);
   return (
     <>
-      <dl>
-        <dt>{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</dt><dd><i>{e.nomCientific}</i></dd>
-      </dl>
-      <BlocNutricio item={e} tr={tr} />
+      <TaulaDadesPedraSeca caption={`${e.especie || e.nomCientific} · ${e.nomCientific}`} txBib={txBib}>
+        <tr>
+          <th scope="row">{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</th>
+          <td lang="la"><i>{e.nomCientific}</i></td>
+        </tr>
+      </TaulaDadesPedraSeca>
+      <BlocNutricio item={e} tr={tr} txBib={txBib} />
       {grups.map(([clau, titol, linies]) => (
         <section key={clau} aria-label={titol}>
           <h4>{titol}</h4>
@@ -204,8 +358,44 @@ function DetallAtles({ e, tr }) {
   );
 }
 
-export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFocus = true, llengua = 'ca' }) {
+export function DetallOlivera({ o, tr, txBib }) {
+  return (
+    <TaulaDadesPedraSeca caption={`${o.nom} · ${o.nomCientific}`} txBib={txBib}>
+      <tr>
+        <th scope="row">{tr('patrimoni.llavors.nomCientific', 'Nom científic')}</th>
+        <td lang="la"><i>{o.nomCientific}</i></td>
+      </tr>
+      {Array.isArray(o.llista) && o.llista.length > 0 ? (
+        <tr>
+          <th scope="row">{txBib.denominacioEstudi}</th>
+          <td lang="ca">{o.llista.join(', ')}</td>
+        </tr>
+      ) : null}
+      {Array.isArray(o.sinonimies) && o.sinonimies.length > 0 ? (
+        <tr>
+          <th scope="row">{txBib.sinonimiaLocal}</th>
+          <td lang="ca">{o.sinonimies.join(', ')}</td>
+        </tr>
+      ) : null}
+    </TaulaDadesPedraSeca>
+  );
+}
+
+export function Fitxa({
+  entrada,
+  totes,
+  onTriaEntrada,
+  font,
+  onTanca,
+  tr,
+  autoFocus = true,
+  llengua = 'ca',
+  registreAlergens = null,
+}) {
   const { dada } = entrada;
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'banc-llavors-fitxa', cssBancLlavorsFitxa);
+  const txBib = textosBibliotecaAgricola(llengua);
   const cataleg = useLaminesBotaniquesNode0();
   const lamina = cataleg?.obteLaminaBotanicaNode0(entrada.id);
   const titol = useRef(null);
@@ -215,16 +405,72 @@ export function Fitxa({ entrada, totes, onTriaEntrada, font, onTanca, tr, autoFo
     () => (font.id === 'cataleg-valencia' ? totes.filter((x) => x.nomCientific === entrada.nomCientific) : []),
     [font.id, totes, entrada.nomCientific]
   );
+  const seguretat = resolSeguretatIAlergensLlavor(entrada, registreAlergens, txBib);
+  const origenOCataleg = dada?.origen || dada?.familia || null;
+
   return (
-    <section className="sdp-fitxa-didactica" aria-label={entrada.nom}>
+    <section ref={arrelRef} className="sdp-fitxa-didactica" aria-label={entrada.nom}>
       <header className="sdp-fitxa-didactica__cap">
         <h4 ref={titol} tabIndex={-1} className="sdp-fitxa-didactica__titol">{entrada.nom}</h4>
         <Boto varietat="secundari" mida="p" onClick={onTanca}>{tr('common.tanca', 'Tancar')}</Boto>
       </header>
-      {font.id === 'cataleg-valencia' && <DetallValencia v={dada} germanes={germanes} onTriaGermana={onTriaEntrada} tr={tr} />}
-      {font.id === 'avl-mallorca' && <DetallAvl v={dada} tr={tr} />}
-      {font.id === 'atles-catalunya' && <DetallAtles e={dada} tr={tr} />}
+
+      <div className="sdp-llavors-fitxa__pindoles">
+        <span className="sdp-llavors-fitxa__pindola">
+          <span aria-hidden="true">🌱</span>
+          <span lang="ca">{font.ambit}</span>
+        </span>
+        <span className="sdp-llavors-fitxa__pindola sdp-llavors-fitxa__pindola--origen">
+          <span aria-hidden="true">🔬</span>
+          <i lang="la">{entrada.nomCientific}</i>
+        </span>
+        {origenOCataleg ? (
+          <span className="sdp-llavors-fitxa__pindola sdp-llavors-fitxa__pindola--origen">
+            <span aria-hidden="true">📍</span>
+            <span lang="ca">{origenOCataleg}</span>
+          </span>
+        ) : null}
+      </div>
+
+      {font.id === 'cataleg-valencia' && <DetallValencia v={dada} germanes={germanes} onTriaGermana={onTriaEntrada} tr={tr} txBib={txBib} />}
+      {font.id === 'avl-mallorca' && <DetallMallorca v={dada} tr={tr} txBib={txBib} />}
+      {font.id === 'atles-catalunya' && <DetallCatalunya e={dada} tr={tr} txBib={txBib} />}
+      {font.id === 'oliveres-gva-ivia' && <DetallOlivera o={dada} tr={tr} txBib={txBib} />}
+
       <LaminesBotaniquesNode0 lamina={lamina} nom={entrada.nom} binomi={lamina?.binomiNet} titolElement="h4" />
+
+      <section className="sdp-fitxa-didactica__bloc" aria-label={txBib.seguretatTitol}>
+        <h4>{txBib.seguretatTitol}</h4>
+        <div className="sdp-llavors-fitxa__seguretat">
+          <div className="sdp-llavors-fitxa__aptitud">
+            <Insignia to={seguretat.insigniaTo}>{seguretat.insigniaText}</Insignia>
+          </div>
+          <Alerta to={seguretat.esToxica || seguretat.esNoComestible ? 'avis' : 'info'} viva={false}>
+            <p>{seguretat.esToxica || seguretat.esNoComestible ? txBib.avisToxicaLlavors : txBib.avisPreventiuLlavors}</p>
+          </Alerta>
+          {seguretat.estatAlergens === 'declarat' ? (
+            <div className="sdp-llavors-fitxa__alergens">
+              {seguretat.alergens.length > 0 ? (
+                <IconesAlergens alergens={seguretat.alergens} mida="mitjana" etiqueta={txBib.alergensEtiqueta} />
+              ) : null}
+              {seguretat.traces.length > 0 ? (
+                <IconesAlergens alergens={seguretat.traces} mida="xicoteta" etiqueta={txBib.tracesEtiqueta} />
+              ) : null}
+            </div>
+          ) : null}
+          {seguretat.estatAlergens === 'absent_verificat' ? (
+            <div className="sdp-llavors-fitxa__alergens">
+              <p className="sdp-llavors-fitxa__alergens-nota">{txBib.alergensCapDeclarat}</p>
+            </div>
+          ) : null}
+          {seguretat.estatAlergens === 'desconegut' ? (
+            <div className="sdp-llavors-fitxa__alergens">
+              <p className="sdp-llavors-fitxa__alergens-nota">{txBib.alergensPendent}</p>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
       {/* v1.2.22 · Gauntlet R1 (L4-11) · Les oliveres (Codex R32.42 lot 02) només porten el nom i la pàgina del document:
           no se'n transcriu res, i la fitxa no ho pot dir. */}
       {font.id !== 'oliveres-gva-ivia' ? (
@@ -247,6 +493,7 @@ export default function BancLlavorsSection() {
   const [seleccio, setSeleccio] = useState(null);
   const [tornada, setTornada] = useState(null);
   const llista = useRef(null);
+  useFullDiferit(llista, 'llistes-escalables', cssLlistesEscalables);
   const font = FONTS_BANC_LLAVORS.find((f) => f.id === idFont) ?? FONTS_BANC_LLAVORS[0];
   const totes = useMemo(() => entradesDelCataleg(font.id), [font.id]);
   const entrades = useMemo(() => filtraEntrades(totes, cerca), [totes, cerca]);
@@ -280,7 +527,7 @@ export default function BancLlavorsSection() {
         <Fitxa key={seleccio.id} entrada={seleccio} totes={totes} onTriaEntrada={setSeleccio} font={font} onTanca={tanca} tr={tr} llengua={language} />
       )}
       {entrades.length ? (
-        <ol lang="ca" ref={llista}>
+        <ol lang="ca" ref={llista} className="sdp-llista-escalable">
           {entrades.slice(0, limit).map((entrada) => (
             <li key={entrada.id}>
               <Boto varietat="fantasma" data-entrada={entrada.id} onClick={() => setSeleccio(entrada)}>{entrada.nom} · <i>{entrada.nomCientific}</i></Boto>

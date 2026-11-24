@@ -49,9 +49,13 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   // R32.14 (19-11-2026); la resta de rebuts històrics es queden com eren, i l'empremta es torna a fixar.
   // v1.2.22 · R32.42 (lots 02 i 03) afig 20261122160000, 20261122160200 i 20261122160300 (files 127 a 129),
   // NO aplicades a Producció en esta versió: les 124 files històriques i la seua empremta no canvien.
-  // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · R32.44 i R32.46 afigen 20261122230000 i 20261123010000
-  // (files 130 i 131), NO aplicades a Producció: les 124 files històriques i la seua empremta continuen igual.
-  assert.equal(taula.length, 131);
+  // Preserva els rebuts de producció del HEAD; contrasta totes les files amb els SQL reals.
+  const fitxers = fs.readdirSync(path.join(REPO, 'supabase/migrations'), { withFileTypes: true }).filter((e) => e.isFile() && e.name.endsWith('.sql')).map((e) => e.name).sort();
+  assert.equal(taula.length, fitxers.length, 'una fila per fitxer SQL real');
+  assert.equal(new Set(taula.map((f) => f.versio)).size, taula.length, 'cap versió duplicada');
+  assert.deepEqual(taula.map((f) => f.fitxer).sort(), fitxers, 'cap migració absent ni fila fantasma, encara que el recompte coincidisca');
+  // v1.2.24 · IDEA-339 (Claude 01c) afig 20261124030000: per ordre de versió és la fila 134, entre la 133 (R32.64)
+  // i la 135 (C12/R32.72); NO aplicada, i les 124 files històriques no canvien.
   const R3242 = [
     [127, '20261122160000', '20261122160000_r3242_ajuntament_acreditacio_institucional.sql'],
     [128, '20261122160200', '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql'],
@@ -59,23 +63,49 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
     [130, '20261122230000', '20261122230000_r3244_edicio_propia_i_page_revisions.sql'],
     [131, '20261123010000', '20261123010000_r3246_quota_owner_id.sql']
   ];
-  const historic = taula.filter(f => !['20261119143000', '20261121090000', ...R3242.map(([, versio]) => versio)].includes(f.versio));
+  const KITS_RECONCILIATS = [
+    [130, '20261122230000', '20261122230000_r3244_edicio_propia_i_page_revisions.sql'],
+    [131, '20261123010000', '20261123010000_r3246_quota_owner_id.sql']
+  ];
+  // C1..C12 afigen només estes tres propostes pendents: no entren al rebut històric.
+  const PENDENTS_C1_C12 = [
+    [132, '20261123180000', '20261123180000_r3252_indexs_suport_fk_verificats.sql'],
+    [133, '20261123233000', '20261123233000_r3264_xat_elimina_per_a_tothom_sense_caducitat.sql'],
+    [135, '20261124033000', '20261124033000_r3272_profiles_sense_enumeracio_i_execute_minim.sql']
+  ];
+  // v1.2.24 · IDEA-339 (Claude 01c) · Va per versió entre la 133 i la de C12: fila 134, NO aplicada i fora del rebut històric.
+  const PENDENT_V1224 = [134, '20261124030000', '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql'];
+  // v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · fila 136, NO aplicada i fora del rebut històric.
+  const PENDENT_R3287 = [136, '20261124174000', '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql'];
+  const historic = taula.filter(f => !['20261119143000', '20261121090000', PENDENT_V1224[1], PENDENT_R3287[1], ...R3242.map(([, versio]) => versio), ...KITS_RECONCILIATS.map(([, versio]) => versio), ...PENDENTS_C1_C12.map(([, versio]) => versio)].includes(f.versio));
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
     'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
   assert.equal(fila('20261119143000').ordre, 125);
   assert.equal(fila('20261119143000').fitxer, '20261119143000_r32_14_xat_fils_previa_sense_amagats.sql');
   assert.equal(declarat.get('20261119143000'), 'declarada_aplicada');
+  assert.equal(fila('20261124030000').ordre, 134);
+  assert.equal(fila('20261124030000').fitxer, '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql');
+  assert.equal(declarat.get('20261124030000'), 'declarada_no_aplicada');
+  assert.match(fila('20261124030000').estat, /NO aplicada/);
   assert.equal(fila('20261121090000').ordre, 126);
   assert.equal(fila('20261121090000').fitxer, '20261121090000_r32_25_push_directes_i_bandols.sql');
   assert.equal(declarat.get('20261121090000'), 'declarada_no_aplicada');
   assert.match(fila('20261121090000').estat, /NO aplicada/);
-  for (const [ordre, versio, fitxer] of R3242) {
+  for (const [ordre, versio, fitxer] of [...R3242, ...KITS_RECONCILIATS]) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
     // v1.2.23 · T2 · Aplicades a producció la nit del 23 al 24-11-2026 per l'integrador, amb el rebut de les sondes.
     assert.equal(declarat.get(versio), 'declarada_aplicada', versio);
     assert.match(fila(versio).estat, /^Aplicada a producció la nit del 23 al 24-11-2026 .*12d34bc46.*REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES\.json/, versio);
+  }
+  assert.deepEqual(taula.filter(f => f.ordre >= 132).map(({ ordre, versio, fitxer }) => [ordre, versio, fitxer]),
+    [...PENDENTS_C1_C12.slice(0, 2), PENDENT_V1224, PENDENTS_C1_C12[2], PENDENT_R3287], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
+  for (const [ordre, versio, fitxer] of [...PENDENTS_C1_C12, PENDENT_R3287]) {
+    assert.equal(fila(versio).ordre, ordre, versio);
+    assert.equal(fila(versio).fitxer, fitxer, versio);
+    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
+    assert.match(fila(versio).estat, /^NO aplicada a Producció;/, versio);
   }
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);

@@ -102,9 +102,20 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
           </div>
 
           {totalActes === 0 ? (
-            <p className="sdp-cal-desplegable__detall" role="status">
-              {tr('section.calendari.desplegable.buit', tx.desplegableBuit)}
-            </p>
+            <div className="sdp-paragraf-centrat">
+              <p className="sdp-cal-desplegable__detall" role="status">
+                {tr('section.calendari.desplegable.buit', tx.desplegableBuit)}
+              </p>
+              <div className="sdp-cal-desplegable__accions">
+                <button
+                  type="button"
+                  className="sdp-boto sdp-boto--secundari"
+                  onClick={() => onCanviMode('all')}
+                >
+                  {tr('section.calendari.desplegable.veureTot', tx.desplegableVeureTot)}
+                </button>
+              </div>
+            </div>
           ) : (
             <ul id={idLlista} className="sdp-cal-desplegable__llista" hidden={!desplegat}>
               {desplegat ? entradesEsdeveniments.map((entrada) => {

@@ -1,0 +1,59 @@
+/* ==========================================================================
+   PEDRA SECA · AUTO-RECUPERACIÓ DE RUTA I DESPLEGAMENT (5 LLENGÜES)
+   (FULL DIFERIT · R32.55 R-RES-02, 0 B a l'arrencada estàtica)
+   S'adopta a demanda des d'i18nRecuperacioRuta.jsx quan una ruta cau.
+   ========================================================================== */
+@layer components {
+  .sdp-route-error:has(.sdp-route-error__deploy) {
+    max-inline-size: 42rem;
+    margin-inline: auto;
+    margin-block: var(--sdp-space-6);
+    padding: var(--sdp-space-6);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+
+  .sdp-route-error__deploy {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-3);
+    min-inline-size: 0;
+  }
+
+  .sdp-route-error__insignia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-forta);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  .sdp-route-error__explicacio {
+    margin: 0;
+    max-inline-size: 56ch;
+    color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-route-error__context {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+}

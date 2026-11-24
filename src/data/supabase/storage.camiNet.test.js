@@ -62,6 +62,13 @@ const CAMINS_QUE_MOUEN = [
 ];
 
 describe('resolveAsset · cap camí que moga la URL arriba a Storage', () => {
+  test.each(['\u0085', '\u009f', '\u200b', '\u202e', '\u2066', '\ufeff', '\u2028', '\u2029'])('R32.56: control Unicode %j no arriba a signar ni promoure', async control => {
+    for (const ref of [`sdp-media://mitjans_privats/u/a${control}b.webp`, `sdp-media://mitjans${control}_privats/u/a.webp`]) {
+      expect(await resolveAsset(ref, {})).toBe(ref);
+      expect(await promoteToPublic(ref, {})).toBe(ref);
+    }
+    expect(peticions).toEqual([]);
+  });
   test('[DEFECTE d’abans] el client de veres, amb un camí de punts, fa el POST fora de /object/sign/', async () => {
     await m.client.storage.from('mitjans_privats').createSignedUrl(`${POBLE}/../../../../../../rest/v1/rpc/qualsevol`, 3600);
     expect(peticions).toHaveLength(1);
@@ -137,5 +144,20 @@ describe('el marc de la capçalera (#sdp-crop=) viatja amb la referència', () =
     expect(await resolveAsset(bruta, {})).toBe(bruta);
     expect(await promoteToPublic(bruta, {})).toBe(bruta);
     expect(peticions).toEqual([]);
+  });
+});
+
+/* R32.87 · Peix 1 (Gemini Neon) · llista blanca de cubells: abans, qualsevol sdp-media://<cubell>/… sortia com a
+   URL pública d'eixe cubell. */
+describe('resolveAsset · només els cubells mitjans i mitjans_privats', () => {
+  test('un cubell fora de la llista es torna opac i no construïx cap URL', async () => {
+    for (const ref of [`sdp-media://avatars/${RUTA}`, `sdp-media://xat_adjunts/${RUTA}`, `sdp-media://Mitjans/${RUTA}`, `sdp-media://mitjans\u0085/${RUTA}`]) {
+      expect(await resolveAsset(ref, {})).toBe(ref);
+    }
+    expect(peticions).toEqual([]);
+  });
+
+  test('control · el cubell públic continua resolent-se', async () => {
+    expect(await resolveAsset(`sdp-media://mitjans/${RUTA}`, {})).toBe(`${ORIGEN}/storage/v1/object/public/mitjans/${RUTA}`);
   });
 });

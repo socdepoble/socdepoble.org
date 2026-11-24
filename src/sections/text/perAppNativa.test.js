@@ -271,8 +271,12 @@ describe('el contingut real de PAGE_COPY', () => {
   /* O6-CLAUDE-1 (ordre del Mestre, Onada 6, 261103) · L'entrada v1.1.0 de /versions conta la
      revisió de Google Play i l'APK en un apartat propi. Dins de l'app nativa, la xarxa en lleva
      exactament eixe h4 i eixe paràgraf, i el que diu de l'App Store i de l'iPhone es queda. */
-  test('la xarxa, sobre Versions: només se’n va l’apartat de Google Play i l’APK', () => {
-    const { html, retirats } = adaptaHtml(PAGE_COPY.versions.html);
+  test('la xarxa, sobre Versions: el nivell 1 és net i a l’arxiu històric només se’n va l’apartat de Google Play i l’APK', async () => {
+    const nivell1 = adaptaHtml(PAGE_COPY.versions.html);
+    expect(nivell1.retirats).toEqual([]);
+    expect(nivell1.html).not.toMatch(PROHIBIDES);
+    const { obtePaginaVersionsCompleta } = await import('./pageContent.versionsHistoric.js');
+    const { html, retirats } = adaptaHtml(obtePaginaVersionsCompleta(PAGE_COPY.versions, 'ca').html);
     /* El text retirat és el de llevaEtiquetes (cada etiqueta, un espai), i al títol l'adaptació
        declarada ja s'ha emportat «per a Android» abans que la xarxa en lleve la resta. */
     expect(retirats).toEqual([
@@ -290,6 +294,27 @@ describe('el contingut real de PAGE_COPY', () => {
     expect(html).not.toMatch(PROHIBIDES);
     expect(retirats.length).toBeGreaterThan(0);
     expect(html).toContain('<h3>iPhone i iPad</h3>');
+  });
+
+  test('IDEA-340 · /page/reconeixements (obertura i catàleg 5L) i la projecció de /legal no nomenen cap plataforma ni botiga mòbil aliena', async () => {
+    const { CREDITS_RECONEIXEMENTS_5_LLENGUES } = await import('./reconeixementsCredits5L.js');
+    const { BLOC_TARGETA_RECONEIXEMENTS_LEGAL } = await import('./projeccioLecturaLegal.js');
+
+    expect(paginaPerAppNativa(PAGE_COPY.reconeixements, { nativa: true })).toBe(PAGE_COPY.reconeixements);
+    expect(adaptaHtml(BLOC_TARGETA_RECONEIXEMENTS_LEGAL).retirats).toEqual([]);
+    expect(nomenaPlataformaAliena(lectures(BLOC_TARGETA_RECONEIXEMENTS_LEGAL))).toBe(false);
+
+    for (const lang of ['ca', 'es', 'en', 'eu', 'gl']) {
+      const tr = PAGE_COPY.reconeixements.translations[lang];
+      expect(nomenaPlataformaAliena(`${tr.title} | ${tr.subtitle} | ${tr.lead} | ${tr.imageAlt}`), `meta:${lang}`).toBe(false);
+      expect(adaptaHtml(tr.html).retirats, `obertura:${lang}`).toEqual([]);
+      expect(nomenaPlataformaAliena(lectures(tr.html)), `obertura lectures:${lang}`).toBe(false);
+
+      const cat = CREDITS_RECONEIXEMENTS_5_LLENGUES[lang];
+      expect(adaptaHtml(cat).retirats, `cataleg:${lang}`).toEqual([]);
+      expect(nomenaPlataformaAliena(lectures(cat)), `cataleg lectures:${lang}`).toBe(false);
+      expect(lectures(cat), `cataleg prohibides:${lang}`).not.toMatch(PROHIBIDES);
+    }
   });
 });
 

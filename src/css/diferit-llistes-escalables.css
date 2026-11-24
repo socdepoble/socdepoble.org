@@ -1,0 +1,41 @@
+/* ==========================================================================
+   PEDRA SECA · CONTENCIÓ DE RENDERITZAT EN LLISTES GRANS (R32.57 · E-ESC-02)
+   S'adopta a demanda als taulells i catàlegs llargs (0 B a l'arrencada estàtica).
+   Guia modern-web-guidance `defer-rendering-heavy-content`:
+   · Els primers elements visibles sobre el plec (:nth-child(-n + 8) en graella de
+     targetes i :nth-child(-n + 12) en llistes compactes) no porten content-visibility
+     per no retardar l'LCP ni el primer pintat.
+   · Sota el plec s'aplica content-visibility: auto amb contain-intrinsic-size: auto
+     per evitar salts d'scroll (CLS = 0) i recordar l'alçada real un colp pintat.
+   · En rebre el focus (:focus-within) o en imprimir (@media print) es desactiva la
+     contenció perquè cap control enfocat ni cap pàgina impresa quede oculta.
+   ========================================================================== */
+@layer components {
+  .sdp-graella-escalable > :nth-child(n + 9) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
+  }
+
+  .sdp-graella-escalable > :nth-child(n + 9):focus-within {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+
+  .sdp-llista-escalable > :nth-child(n + 13) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 52px;
+  }
+
+  .sdp-llista-escalable > :nth-child(n + 13):focus-within {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+
+  @media print {
+    .sdp-graella-escalable > :nth-child(n + 9),
+    .sdp-llista-escalable > :nth-child(n + 13) {
+      content-visibility: visible;
+      contain-intrinsic-size: none;
+    }
+  }
+}

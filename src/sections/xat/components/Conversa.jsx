@@ -81,6 +81,7 @@ import { useArxivaDelFil } from '../useArxivaDelFil.js';
 import DialegSilenci from './DialegSilenci.jsx';
 import PanellAdjuntsConversa from './PanellAdjuntsConversa.jsx';
 import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
+import { potEliminarMissatgePerATothom } from '../eliminaPerATothomModel.js';
 
 /* P1-12 pas 17 (pla 261101_1246, T7 · S5) · L'estat del xifratge d'esta conversa i el
    diàleg del número de seguretat, darrere de la bandera compilada. Apagada, Rollup
@@ -341,9 +342,9 @@ export default function Conversa({
   filsPerReenviar = null, onReenviaMissatge = null, onNouGrupReenvia = null,
   onAlternaReaccio = null, onAlternaDestacat = null, onAlternaFixat = null,
   onEliminaMissatge = null, onObriDirecteAmb = null,
-  /* v1.2.8 · «Elimina per a tothom» només apareix amb un motor que ho faça al servidor; sense, seria
-     un esborrat només de la pantalla pròpia presentat com si fóra per a tothom (Llei 0). */
+  /* v1.2.8 + IDEA-342 · «Elimina per a tothom» sense caducitat i amb autoria multi-barret. */
   onEliminaPerATothom = null,
+  orgIdsPermeses = null,
   referenciaPagina = null
 }) {
   const navigate = useNavigate();
@@ -353,7 +354,7 @@ export default function Conversa({
   const estables = useMemo(() => estabilitza(missatgesRebuts, establesRef.current), [missatgesRebuts]);
   useLayoutEffect(() => { establesRef.current = estables; }, [estables]);
   const [amagatsLocals, setAmagatsLocals] = useState(() => new Set());
-  const [lapidesLocals, setLapidesLocals] = useState(() => new Map());
+  const [eliminatsLocals, setEliminatsLocals] = useState(() => new Set());
   const [reaccionsLocals, setReaccionsLocals] = useState(() => new Map());
   const [destacatsLocals, setDestacatsLocals] = useState(() => new Map());
   const [fixatIdLocal, setFixatIdLocal] = useState(undefined);
@@ -361,12 +362,20 @@ export default function Conversa({
   const [lotReenvia, setLotReenvia] = useState(null);
   const obridorEliminaRef = useRef(null);
   const obridorReenviaRef = useRef(null);
-  const messages = useMemo(
-    () => (amagatsLocals.size === 0
-      ? estables.llista
-      : estables.llista.filter((m) => m?.id == null || !amagatsLocals.has(String(m.id)))),
-    [estables.llista, amagatsLocals]
+  const esMissatgeEsborrat = useCallback(
+    (m) => Boolean(m?.esborrat) || m?.esborratAl != null || (m?.id != null && eliminatsLocals.has(String(m.id))),
+    [eliminatsLocals]
   );
+  const messages = useMemo(() => {
+    const teOcults = amagatsLocals.size > 0
+      || eliminatsLocals.size > 0
+      || estables.llista.some((m) => Boolean(m?.esborrat) || m?.esborratAl != null);
+    if (!teOcults) return estables.llista;
+    return estables.llista.filter((m) => {
+      if (esMissatgeEsborrat(m)) return false;
+      return m?.id == null || !amagatsLocals.has(String(m.id));
+    });
+  }, [estables.llista, amagatsLocals, eliminatsLocals, esMissatgeEsborrat]);
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triats, setTriats] = useState(() => new Set());
@@ -726,7 +735,7 @@ export default function Conversa({
        només es buida si hi havia res triat. */
     setTriats((previs) => (previs.size ? new Set() : previs));
     setAmagatsLocals((previs) => (previs.size ? new Set() : previs));
-    setLapidesLocals((previs) => (previs.size ? new Map() : previs));
+    setEliminatsLocals((previs) => (previs.size ? new Set() : previs));
     setReaccionsLocals((previs) => (previs.size ? new Map() : previs));
     setDestacatsLocals((previs) => (previs.size ? new Map() : previs));
     setFixatIdLocal((previ) => (previ !== undefined ? undefined : previ));
@@ -1175,12 +1184,28 @@ export default function Conversa({
     [carregantFil, filesDelFil, cortesiaIAIA, respostesLocals]
   );
 
-  /* Els missatges per id, per a trobar el que cita cada resposta. */
+  /* Els missatges per id, per a trobar el que cita cada resposta.
+     IDEA-342 · Conserva els esborrats com a làpida sense text ni metadades
+     perquè CitaResposta mostre «S'ha esborrat este missatge» si algú hi havia
+     respost amb respostaA, mentre la bombolla solta desapareix de `messages`. */
   const perId = useMemo(() => {
     const mapa = new Map();
-    for (const m of messages) if (m?.id != null) mapa.set(String(m.id), m);
+    for (const m of estables.llista) {
+      if (m?.id == null) continue;
+      const clau = String(m.id);
+      if (amagatsLocals.has(clau)) continue;
+      if (esMissatgeEsborrat(m)) {
+        mapa.set(clau, m.esborrat === true && m.text === '' ? m : { ...m, text: '', metadades: {}, esborrat: true });
+      } else {
+        mapa.set(clau, m);
+      }
+    }
     return mapa;
-  }, [messages]);
+  }, [estables.llista, amagatsLocals, esMissatgeEsborrat]);
+
+  useEffect(() => {
+    if (resposta && esMissatgeEsborrat(resposta)) setResposta(null);
+  }, [resposta, esMissatgeEsborrat]);
 
   /* Gauntlet 261022_0225 (crítica Claude, F4) · Bombolla és memo i la llista
      es memoritza: una tecla al compositor ja no torna a fer cap bombolla, i un
@@ -1298,10 +1323,14 @@ export default function Conversa({
   const missatgeFixat = useMemo(() => {
     if (fixatIdLocal === false) return null;
     if (typeof fixatIdLocal === 'string' && fixatIdLocal) {
-      return perId.get(fixatIdLocal) ?? null;
+      const candidat = perId.get(fixatIdLocal) ?? null;
+      return candidat && !candidat.esborrat && !candidat.esborratAl ? candidat : null;
     }
     const idDelFil = fil?.missatgeFixatId ?? fil?.fixatId ?? null;
-    if (idDelFil != null && perId.has(String(idDelFil))) return perId.get(String(idDelFil));
+    if (idDelFil != null && perId.has(String(idDelFil))) {
+      const candidat = perId.get(String(idDelFil));
+      return candidat && !candidat.esborrat && !candidat.esborratAl ? candidat : null;
+    }
     return messages.find((m) => m && !m.esborrat && !m.bloquejat && (m.fixat || m.metadades?.fixat)) ?? null;
   }, [fixatIdLocal, perId, fil, messages]);
 
@@ -1392,7 +1421,7 @@ export default function Conversa({
       }
       const msgOriginal = fila.msg;
       const clauId = msgOriginal?.id != null ? String(msgOriginal.id) : null;
-      const msg = clauId && lapidesLocals.has(clauId) ? lapidesLocals.get(clauId) : msgOriginal;
+      const msg = msgOriginal;
       const objectiu = moderacio && !msg.bloquejat ? moderacio.objectiuDeMissatge?.(msg, fil) ?? null : null;
       const accions = objectiu ? accionsDe(msgOriginal) : null;
       const esRespostaIAIA = (cortesiaIAIA || consultaIAIA) && Boolean(msg?.is_ai || msg?.esIA || msg?.usuariId === IAIA_ID);
@@ -1465,7 +1494,7 @@ export default function Conversa({
   }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
     responEnPrivat, alternaReaccio, alternaDestacat, alternaFixat, obriReenvia, enviaPrivat, demanaElimina, seleccionaDesDeMissatge,
-    lapidesLocals, reaccionsLocals, destacatsLocals, missatgeFixat, caraPropia, nomPropi, rutaPropia,
+    reaccionsLocals, destacatsLocals, missatgeFixat, caraPropia, nomPropi, rutaPropia,
     ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
     obriImatgeGaleria, cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio, caresFil
   ]);
@@ -1962,30 +1991,47 @@ export default function Conversa({
       {peu}
       {dialegElimina ? (() => {
         const llistaElimina = dialegElimina.missatges;
-        const esAdminGrup = fil?.rol === 'admin' || fil?.rol === 'propietari';
-        const potPerATothom = typeof onEliminaPerATothom === 'function' && llistaElimina.length > 0 && llistaElimina.every((m) => m?.sender === 'me' || esAdminGrup);
+        const joIdEfectiu = usuariAdjunts ?? actorLlista?.id ?? null;
+        const potPerATothom = typeof onEliminaPerATothom === 'function'
+          && llistaElimina.length > 0
+          && llistaElimina.every((m) => potEliminarMissatgePerATothom(m, { joId: joIdEfectiu, orgIdsPermeses, fil }));
         const tancaElimina = () => {
           setDialegElimina(null);
           obridorEliminaRef.current?.focus?.({ preventScroll: true });
         };
         const executaElimina = (abast) => {
+          const idsElimina = llistaElimina.filter((m) => m?.id != null).map((m) => String(m.id));
+          if (resposta?.id != null && idsElimina.includes(String(resposta.id))) {
+            setResposta(null);
+          }
           if (abast === 'mi') {
             setAmagatsLocals((previs) => {
               const nous = new Set(previs);
-              for (const m of llistaElimina) if (m?.id != null) nous.add(String(m.id));
+              for (const id of idsElimina) nous.add(id);
               return nous;
             });
           } else {
-            setLapidesLocals((previs) => {
-              const nous = new Map(previs);
-              for (const m of llistaElimina) {
-                if (m?.id != null) nous.set(String(m.id), { ...m, esborrat: true });
-              }
+            setEliminatsLocals((previs) => {
+              const nous = new Set(previs);
+              for (const id of idsElimina) nous.add(id);
               return nous;
             });
           }
           for (const m of llistaElimina) onEliminaMissatge?.(m, { abast });
-          if (abast === 'tothom') onEliminaPerATothom?.(llistaElimina);
+          if (abast === 'tothom') {
+            const promesa = onEliminaPerATothom?.(llistaElimina);
+            if (promesa && typeof promesa.catch === 'function') {
+              promesa.catch(() => {
+                if (!muntadaRef.current) return;
+                setEliminatsLocals((previs) => {
+                  if (!previs.size) return previs;
+                  const nous = new Set(previs);
+                  for (const id of idsElimina) nous.delete(id);
+                  return nous;
+                });
+              });
+            }
+          }
           setDialegElimina(null);
           if (modeSeleccio) surtDeSeleccio();
           else obridorEliminaRef.current?.focus?.({ preventScroll: true });

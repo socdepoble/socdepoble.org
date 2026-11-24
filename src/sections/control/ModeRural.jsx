@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
-import { Alerta, Boto, Camp, CampText, AreaText, CampFitxer, DialegConfirmacio } from '../../components/PedraSeca/index.js';
+import { Accions, Alerta, Boto, Camp, CampText, AreaText, CampFitxer, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { useUIState } from '../../app/contexts/UIContext.jsx';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext.jsx';
@@ -180,17 +180,23 @@ function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica
         <p>{tr('punt3')}</p>
       </div>
       {!potEntrar ? <p>{tr('entra')}</p> : !estat ? <>
-        <Boto carregant={ocupat} onClick={() => void executa(() => activa())}>{tr('activa')}</Boto>
-        <Boto disabled={ocupat || !opfsDisponible} onClick={() => void executa(() => activa('opfs'))}>{tr('activaOpfs')}</Boto>
+        <Accions>
+          <Boto carregant={ocupat} onClick={() => void executa(() => activa())}>{tr('activa')}</Boto>
+          <Boto disabled={ocupat || !opfsDisponible} onClick={() => void executa(() => activa('opfs'))}>{tr('activaOpfs')}</Boto>
+        </Accions>
         <p>{tr('ajudaOpfs')}</p>{!opfsDisponible ? <p>{tr('opfsNoDisponible')}</p> : null}
       </> : <>
         <p>{tr('local')}</p>
-        {estat.crdt && estat.motor === 'opfs' ? <><p>{tr('crdtActiu')}</p><Boto disabled={ocupat} onClick={() => void executa(actualitza)}>{tr('refresca')}</Boto>{estat.dependenciesPendents ? <Alerta>{tr('dependenciesPendents')}</Alerta> : null}</> : null}
+        {estat.crdt && estat.motor === 'opfs' ? <><p>{tr('crdtActiu')}</p><Accions><Boto disabled={ocupat} onClick={() => void executa(actualitza)}>{tr('refresca')}</Boto></Accions>{estat.dependenciesPendents ? <Alerta>{tr('dependenciesPendents')}</Alerta> : null}</> : null}
         <p>{tr('limitCua')}: {Math.ceil(estat.bytesCua / 1024)} / {Math.ceil(estat.limitBytesCua / 1024)} KiB</p>
-        <Boto disabled={ocupat || !estat.pendents} onClick={() => void executa(async () => { const nou = await motor.current.consolidaDiari(); vigent(); if (viu.current) setEstat(nou); })}>{tr('consolida')}</Boto>
+        <Accions>
+          <Boto disabled={ocupat || !estat.pendents} onClick={() => void executa(async () => { const nou = await motor.current.consolidaDiari(); vigent(); if (viu.current) setEstat(nou); })}>{tr('consolida')}</Boto>
+        </Accions>
         <p>{tr('ajudaConsolida')}</p>
         <p role="status">{tr('cua')}: {estat.pendents}. {estat.cadenaValida ? tr('cadena') : ''}</p>
-        <Boto disabled={ocupat} onClick={() => { motor.current.close(); motor.current = null; netejaVista(); }}>{tr('desactiva')}</Boto>
+        <Accions>
+          <Boto disabled={ocupat} onClick={() => { motor.current.close(); motor.current = null; netejaVista(); }}>{tr('desactiva')}</Boto>
+        </Accions>
         <section aria-label={tr('nota')}>
           <h3>{tr('nota')}</h3>
           {edicio ? <p>{tr('ajudaEdicio')}</p> : null}
@@ -201,37 +207,47 @@ function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica
           }); }}>
             <Camp etiqueta={tr('titolNota')} obligatori><CampText autoFocus={Boolean(edicio)} value={title} maxLength={200} onChange={e => setTitle(e.target.value)} disabled={ocupat} /></Camp>
             <Camp etiqueta={tr('cosNota')} obligatori={!edicio}><AreaText value={content} maxLength={edicio ? 100000 : 20000} onChange={e => setContent(e.target.value)} disabled={ocupat} /></Camp>
-            <Boto tipus="submit" disabled={ocupat || !title.trim() || (!edicio && !content.trim())}>{tr(edicio ? 'desaCanvis' : 'desa')}</Boto>
-            {edicio ? <Boto disabled={ocupat} onClick={() => { setEdicio(null); setTitle(''); setContent(''); }}>{tr('cancelaEdicio')}</Boto> : null}
+            <Accions>
+              <Boto tipus="submit" disabled={ocupat || !title.trim() || (!edicio && !content.trim())}>{tr(edicio ? 'desaCanvis' : 'desa')}</Boto>
+              {edicio ? <Boto disabled={ocupat} onClick={() => { setEdicio(null); setTitle(''); setContent(''); }}>{tr('cancelaEdicio')}</Boto> : null}
+            </Accions>
           </form>
           {edicio && Object.keys(edicio.nota.variants ?? {}).length ? <section aria-label={tr('variantsTitol')}><h4>{tr('variantsTitol')}</h4>
             {Object.entries(edicio.nota.variants).map(([camp, valors]) => <section key={camp}><h5>{tr(campsVariants[camp])}</h5>
               <ul>{valors.map((valor, i) => <li key={i}><p>{textVariant(valor)}</p>
-                <Boto disabled={ocupat} aria-label={`${tr('triaVariant')}: ${tr(campsVariants[camp])} · ${textVariant(valor)}`} onClick={() => triaVariant(camp, valor)}>{tr('triaVariant')}</Boto></li>)}</ul>
+                <Accions><Boto disabled={ocupat} aria-label={`${tr('triaVariant')}: ${tr(campsVariants[camp])} · ${textVariant(valor)}`} onClick={() => triaVariant(camp, valor)}>{tr('triaVariant')}</Boto></Accions></li>)}</ul>
               {edicio.resol.includes(camp) ? <p>{tr('variantTriada')}</p> : null}
             </section>)}
           </section> : null}
         </section>
         <section aria-label={tr('carpeta')}><h3>{tr('carpeta')}</h3>{estat.crdt ? <p>{tr('carpetaCrdtAjuda')}</p> : null}
-          <Boto disabled={ocupat} onClick={() => void executa(async () => prepara(estat.crdt ? 'notes-rurals-crdt.json' : 'notes-rurals.json', await motor.current.exportaVault()))}>{tr('exportaVault')}</Boto>
+          <Accions>
+            <Boto disabled={ocupat} onClick={() => void executa(async () => prepara(estat.crdt ? 'notes-rurals-crdt.json' : 'notes-rurals.json', await motor.current.exportaVault()))}>{tr('exportaVault')}</Boto>
+          </Accions>
           <Camp etiqueta={tr('importaVault')}><CampFitxer accept=".json,application/json" disabled={ocupat} onChange={e => importa(e, 'vault')} /></Camp>
-          {typeof globalThis.showDirectoryPicker === 'function' ? <Boto disabled={ocupat} onClick={() => void executa(async () => { const handle = await globalThis.showDirectoryPicker({ mode: 'readwrite' }); vigent(); if (!viu.current) return; const resultat = await motor.current.sincronitzaCarpeta(handle); vigent(); if (!viu.current) return; setAvis(resultat.sincronitzacio?.incorporacionsSenseBase ? tr('carpetaSenseBase') : ''); await actualitza(); })}>{tr('sincronitza')}</Boto> : null}
+          {typeof globalThis.showDirectoryPicker === 'function' ? <Accions><Boto disabled={ocupat} onClick={() => void executa(async () => { const handle = await globalThis.showDirectoryPicker({ mode: 'readwrite' }); vigent(); if (!viu.current) return; const resultat = await motor.current.sincronitzaCarpeta(handle); vigent(); if (!viu.current) return; setAvis(resultat.sincronitzacio?.incorporacionsSenseBase ? tr('carpetaSenseBase') : ''); await actualitza(); })}>{tr('sincronitza')}</Boto></Accions> : null}
         </section>
         <section aria-label={tr('pont')}><h3>{tr('pont')}</h3><p>{tr('origenDispositiu')}</p>
-          <Boto disabled={ocupat} onClick={() => void executa(async () => { const { delta, publicKeyJwk } = await motor.current.exportaDelta(); prepara('emergencia.sdp-dtn-delta.json', delta); if (viu.current) setClauPublica(JSON.stringify(publicKeyJwk, null, 2)); })}>{tr('exportaDelta')}</Boto>
+          <Accions>
+            <Boto disabled={ocupat} onClick={() => void executa(async () => { const { delta, publicKeyJwk } = await motor.current.exportaDelta(); prepara('emergencia.sdp-dtn-delta.json', delta); if (viu.current) setClauPublica(JSON.stringify(publicKeyJwk, null, 2)); })}>{tr('exportaDelta')}</Boto>
+          </Accions>
           <Camp etiqueta={tr('publica')} ajuda={tr('ajudaClau')}><AreaText value={clauPublica} onChange={e => setClauPublica(e.target.value)} maxLength={4096} disabled={ocupat} /></Camp>
           <Camp etiqueta={tr('importaDelta')}><CampFitxer accept=".json,application/json" disabled={ocupat || !clauPublica.trim()} onChange={e => importa(e, 'delta')} /></Camp>
         </section>
         <section aria-label={tr('rebudes')}><h3>{tr('rebudes')}</h3>
           <ul>{estat.notes.map(n => <li key={n.id}><strong>{n.title}</strong><p>{n.content}</p>
             {estat.crdt ? <>{Object.keys(n.variants ?? {}).length ? <p>{tr('variantsAvis')}</p> : null}
-              <Boto disabled={ocupat || Boolean(edicio)} aria-label={`${tr('edita')}: ${n.title}`} onClick={() => void executa(() => obriEdicio(n))}>{tr('edita')}</Boto>
-              <Boto disabled={ocupat || Boolean(edicio)} aria-label={`${tr('eliminaNota')}: ${n.title}`} onClick={() => void executa(async () => { const draft = await motor.current.preparaEdicio(n.id); vigent(); if (viu.current) setNotaPerEsborrar(draft); })}>{tr('eliminaNota')}</Boto>
+              <Accions>
+                <Boto disabled={ocupat || Boolean(edicio)} aria-label={`${tr('edita')}: ${n.title}`} onClick={() => void executa(() => obriEdicio(n))}>{tr('edita')}</Boto>
+                <Boto disabled={ocupat || Boolean(edicio)} aria-label={`${tr('eliminaNota')}: ${n.title}`} onClick={() => void executa(async () => { const draft = await motor.current.preparaEdicio(n.id); vigent(); if (viu.current) setNotaPerEsborrar(draft); })}>{tr('eliminaNota')}</Boto>
+              </Accions>
             </> : null}
           </li>)}{estat.bans.filter(n => !estat.notes.some(nota => nota.id === n.id)).map(n => <li key={n.id}><strong>{n.payload.title}</strong><p>{n.payload.content}</p></li>)}</ul>
         </section>
         <section aria-label={tr('retencioTitol')}><h3>{tr('retencioTitol')}</h3><p>{tr('retencioText')}</p>
-          <Boto disabled={ocupat} onClick={() => setConfirmaEsborrat(true)}>{tr('esborra')}</Boto>
+          <Accions>
+            <Boto disabled={ocupat} onClick={() => setConfirmaEsborrat(true)}>{tr('esborra')}</Boto>
+          </Accions>
         </section>
       </>}
       {/* control-04 (revisió del Panell, 261104) · Amb un diàleg obert, el
@@ -259,7 +275,7 @@ function ModeRuralDins({ abast, municipi, nomVisible, potEntrar, onBack, fabrica
       </DialegConfirmacio>
       {avis ? <Alerta>{avis}</Alerta> : null}
       {error && !(errorDelDialeg && (confirmaEsborrat || notaPerEsborrar)) ? <Alerta to="error">{error}</Alerta> : null}
-      {preparat ? <section aria-label={tr('preparat')}><h3>{tr('preparat')}: {preparat.nom}</h3><Camp etiqueta={tr('contingut')}><AreaText value={preparat.text} readOnly /></Camp><Boto onClick={descarrega}>{tr('descarrega')}</Boto></section> : null}
+      {preparat ? <section aria-label={tr('preparat')}><h3>{tr('preparat')}: {preparat.nom}</h3><Camp etiqueta={tr('contingut')}><AreaText value={preparat.text} readOnly /></Camp><Accions><Boto onClick={descarrega}>{tr('descarrega')}</Boto></Accions></section> : null}
     </div>
   </UniversalPage>;
 }

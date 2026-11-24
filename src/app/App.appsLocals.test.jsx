@@ -525,7 +525,9 @@ test('sense sessió, /control continua sense guarda: es pinta el Panell, com aba
   await munta('/control', async () => {
     const maquinaria = await screen.findByRole('heading', { level: 3, name: 'Maquinària i Sistema' }, { timeout: 8000 });
     expect(maquinaria.closest('section')?.classList.contains('sdp-control-maquinaria')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Eixir de poble' })).toBeTruthy();
+    expect(screen.getByTestId('control-peu-filet-pur')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Escriure a Sóc de Poble' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Escriure a Javi Llinares' })).toBeTruthy();
     const barra = screen.getByRole('navigation', { name: 'Navegació principal' });
     expect(within(barra).getByRole('button', { name: 'Panell de control' }).getAttribute('aria-current')).toBe('page');
     expect(window.location.pathname).toBe('/control');

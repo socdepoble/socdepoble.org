@@ -26,6 +26,7 @@ import { Fragment } from 'react';
 import { Alerta } from '../../PedraSeca/molecules/Alerta.jsx';
 import { Boto } from '../../PedraSeca/atoms/Boto.jsx';
 import { llenguaDeTraduccio } from '../../../data/traductor.js';
+import { esEnllacExtern } from '../../../utils/enllacosExterns.js';
 import { hrefSegur, relOriginalSegur } from './blocsTraduibles.js';
 import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 
@@ -89,8 +90,9 @@ function pintaEnllac(href, novaFinestra, fills, clau, rel) {
   // Segona porta: només un href segur (blocsTraduibles ja l'ha triat de l'original).
   const segur = hrefSegur(href);
   if (!segur) return <Fragment key={clau}>{fills}</Fragment>;
+  const obriEnPestanyaNova = esEnllacExtern(segur) || Boolean(novaFinestra);
   return (
-    <a key={clau} href={segur} {...(novaFinestra ? { target: '_blank' } : {})} rel={relOriginalSegur(rel) || REL_ENLLAC}>{fills}</a>
+    <a key={clau} href={segur} {...(obriEnPestanyaNova ? { target: '_blank' } : {})} rel={relOriginalSegur(rel) || REL_ENLLAC}>{fills}</a>
   );
 }
 

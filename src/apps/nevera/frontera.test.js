@@ -36,6 +36,12 @@ const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(
    El lector de CSV comú (sense xarxa ni disc) és només per a l'importador de
    productes de botiga, que viu fora del nucli: ho vigila una prova de baix. */
 const LECTOR_CSV = 'src/utils/fulls/csv.js';
+const ALERGENS_COMUNS = 'src/utils/alergens.js';
+const ADAPTADOR_ALERGENS = `${APP}/nucli/alergens.js`;
+const ALERGENS_COMERCIALS = 'src/utils/alergensComercials.js';
+const ADAPTADOR_COMERCIAL = `${APP}/nucli/alergensProductes.js`;
+const esPontAlergens = (fitxer, desti) => fitxer === ADAPTADOR_ALERGENS && desti === ALERGENS_COMUNS
+  || fitxer === ADAPTADOR_COMERCIAL && desti === ALERGENS_COMERCIALS;
 const PERMESOS_DE_FORA = new Set([
   'src/apps/plataforma/index.js',
   'src/apps/comu/esquelet/index.js',
@@ -62,7 +68,7 @@ describe('el que pot importar', () => {
     /* R16-F (261110) · La compartició de la llista de la compra. */
     /* IDEA-258b (Onada R24) · Precomanda per a la botiga local / de poble. */
     expect(NUCLI).toEqual([
-      `${APP}/nucli/cataleg.js`, `${APP}/nucli/comparticio.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/encarrec.js`,
+      ADAPTADOR_ALERGENS, ADAPTADOR_COMERCIAL, `${APP}/nucli/cataleg.js`, `${APP}/nucli/comparticio.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/encarrec.js`,
       `${APP}/nucli/index.js`, `${APP}/nucli/ingredients.js`, `${APP}/nucli/nevera.js`, `${APP}/nucli/productes.js`,
       `${APP}/nucli/receptes.js`, `${APP}/nucli/recomanador.js`
     ]);
@@ -74,7 +80,10 @@ describe('el que pot importar', () => {
   });
 
   test('el catàleg ampliat entra pel nucli i cap vista importa dades o el generat', () => {
-    expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => resol(f, e).startsWith('src/data/')))).toEqual([]);
+    const importsDeDades = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => resol(f, e).startsWith('src/data/')).map((e) => [f, resol(f, e)]));
+    expect(importsDeDades).toEqual([]);
+    const importsDeDomini = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => [ALERGENS_COMUNS, ALERGENS_COMERCIALS].includes(resol(f, e))).map((e) => [f, resol(f, e)]));
+    expect(importsDeDomini).toEqual([[ADAPTADOR_ALERGENS, ALERGENS_COMUNS], [ADAPTADOR_COMERCIAL, ALERGENS_COMERCIALS]]);
     expect(especificadors(llig(`${APP}/vistes/Mercadona.jsx`))).toContain('../../plataforma/index.js');
     expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => e.includes('mercadona.generated')))).toEqual([]);
   });
@@ -86,7 +95,7 @@ describe('el que pot importar', () => {
 
   test('només paquets permesos, fitxers propis o les portes públiques de la plataforma, l’esquelet, Pedra Seca i el magatzem', () => {
     const fora = PRODUCCIO.flatMap((fitxer) => especificadors(llig(fitxer)).map((e) => [fitxer, e, resol(fitxer, e)])
-      .filter(([, , desti]) => !PAQUETS.has(desti) && !desti.startsWith(`${APP}/`) && !PERMESOS_DE_FORA.has(desti))
+      .filter(([, , desti]) => !PAQUETS.has(desti) && !desti.startsWith(`${APP}/`) && !PERMESOS_DE_FORA.has(desti) && !esPontAlergens(fitxer, desti))
       .map(([fitxer, e]) => `${fitxer}: ${e}`));
     expect(fora).toEqual([]);
   });
@@ -130,9 +139,12 @@ describe('cap xarxa', () => {
 const IMPURS = /\b(?:React|use[A-Z]\w*|window|document|navigator|globalThis|Date|setTimeout|setInterval|queueMicrotask)\b|Math\.random|crypto\./;
 
 describe('el nucli és pur', () => {
-  test('només s’importa a ell mateix', () => {
+  test('només s’importa a ell mateix o la taxonomia pura pel seu adaptador', () => {
     for (const fitxer of NUCLI) {
-      for (const e of especificadors(llig(fitxer))) expect(e, `${fitxer}: ${e}`).toMatch(/^\.\/[a-z]+\.js$/);
+      for (const e of especificadors(llig(fitxer))) {
+        if (esPontAlergens(fitxer, resol(fitxer, e)) || fitxer === `${APP}/nucli/index.js` && resol(fitxer, e) === ADAPTADOR_COMERCIAL) continue;
+        expect(e, `${fitxer}: ${e}`).toMatch(/^\.\/[a-z]+\.js$/);
+      }
     }
   });
 

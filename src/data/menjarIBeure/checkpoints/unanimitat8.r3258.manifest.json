@@ -1,0 +1,113 @@
+{
+  "format": "socdepoble.alergens.parcial.v1",
+  "estat": "parcial",
+  "abast": "sis_corpus_esquema_c3",
+  "coberturaGlobal": "parcial",
+  "certificacioExperta": false,
+  "acreditatPerAlConsum": false,
+  "corpus": {
+    "quedinem": {
+      "cataleg": 149,
+      "llegits": 10,
+      "consolidats": 4,
+      "pendents": 6,
+      "senseResultat": 139,
+      "desconeguts": 145
+    },
+    "bar": {
+      "cataleg": 31,
+      "llegits": 0,
+      "consolidats": 0,
+      "pendents": 0,
+      "senseResultat": 31,
+      "desconeguts": 31
+    },
+    "nevera-ing": {
+      "cataleg": 30,
+      "llegits": 0,
+      "consolidats": 0,
+      "pendents": 0,
+      "senseResultat": 30,
+      "desconeguts": 30
+    },
+    "nevera-rec": {
+      "cataleg": 14,
+      "llegits": 0,
+      "consolidats": 0,
+      "pendents": 0,
+      "senseResultat": 14,
+      "desconeguts": 14
+    },
+    "llavors": {
+      "cataleg": 128,
+      "llegits": 0,
+      "consolidats": 0,
+      "pendents": 0,
+      "senseResultat": 128,
+      "desconeguts": 128
+    },
+    "herbari": {
+      "cataleg": 117,
+      "llegits": 0,
+      "consolidats": 0,
+      "pendents": 0,
+      "senseResultat": 117,
+      "desconeguts": 117
+    }
+  },
+  "consolidats": [
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:aigua-sal"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:dacsa-fregida"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:espigues-torrades"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:olives-blanquetes"
+    }
+  ],
+  "pendents": [
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:allioli"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:amanida-de-tomaca-all-i-tonyina"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:caragols-amb-tomaca"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:conserva-de-tomaca"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:olives-mancanelles-en-sosa"
+    },
+    {
+      "corpus": "quedinem",
+      "uid": "quedinem:pa-rustic"
+    }
+  ],
+  "avisos": [
+    "Consens estructural de dades de 8 models; no és una certificació clínica ni de seguretat alimentària. Verifiqueu ingredients, etiquetatge, preparació i consell expert. L’absència dels 14 al·lèrgens no acredita comestibilitat.",
+    "Només es projecten els registres consolidats del checkpoint validat. La resta conserva els 14 al·lèrgens desconeguts. No substituïx les matrius editorials existents.",
+    "Els sis corpus són els de l’esquema C3 del checkpoint. Mercat/Botiga C4 queda fora d’este esquema i no rep cobertura per inferència."
+  ],
+  "font": {
+    "bytes": 68102,
+    "sha256": "a54a8b849c2d2c445bf59dbb0b76b6eaf1bebc9542b00dd0717374e67ede16ef"
+  },
+  "catalegSha256": "9337fa309f85faffd5d0486decb2004bb7f2408a90b7f767b663341400de0333",
+  "jsonlSha256": "d7e040437aa4d2aff17de0d4f8237815dbb6236615baec6c90112e53bd8fe14c"
+}

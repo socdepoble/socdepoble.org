@@ -103,7 +103,7 @@ describe('v1.2.22 · /page/banc-de-llavors, les quatre fonts', () => {
       expect(empremta.container.textContent, codi).toContain(`${tx.registreDocument}: ${OLIVERES.document}`);
       expect(empremta.container.textContent, codi).toContain(OLIVERES.sha256.slice(0, 8));
       const fitxaFont = render(createElement(FitxaDeLaFont, { font: OLIVERES, tr, llengua: codi }));
-      const termes = [...fitxaFont.container.querySelectorAll('dt')].map((dt) => dt.textContent);
+      const termes = [...fitxaFont.container.querySelectorAll('tbody th[scope="row"]')].map((th) => th.textContent);
       expect(termes, codi).toContain(tx.registreDocument);
       expect(termes, codi).not.toContain('Web de l’entitat');
       cleanup();
@@ -113,7 +113,7 @@ describe('v1.2.22 · /page/banc-de-llavors, les quatre fonts', () => {
     expect(valencia.container.querySelector('summary').textContent).toBe('Empremta SHA-256 de la font');
     expect(valencia.container.textContent).toContain(`Document: ${font('cataleg-valencia').document}`);
     const avl = render(createElement(FitxaDeLaFont, { font: font('avl-mallorca'), tr, llengua: 'es' }));
-    expect([...avl.container.querySelectorAll('dt')].map((dt) => dt.textContent)).toContain('Web de l’entitat');
+    expect([...avl.container.querySelectorAll('tbody th[scope="row"]')].map((th) => th.textContent)).toContain('Web de l’entitat');
   });
 
   test('M5-02 · el rètol de la pestanya del Banc és el total calculat de les dades, en les cinc llengües', () => {
@@ -135,9 +135,9 @@ describe('v1.2.22 · /page/banc-de-llavors, les quatre fonts', () => {
     expect(OLIVERES.llenguaTitol).toBe('es');
     expect(FONTS_BANC_LLAVORS.filter((f) => f.llenguaTitol !== undefined).map((f) => f.id)).toEqual(['oliveres-gva-ivia']);
     const fitxaFont = render(createElement(FitxaDeLaFont, { font: OLIVERES, tr }));
-    const titol = [...fitxaFont.container.querySelectorAll('dd')].find((dd) => dd.textContent === OLIVERES.titol);
+    const titol = [...fitxaFont.container.querySelectorAll('tbody td')].find((td) => td.textContent === OLIVERES.titol);
     expect(titol?.getAttribute('lang')).toBe('es');
-    const autoria = [...fitxaFont.container.querySelectorAll('dd')].find((dd) => dd.textContent === OLIVERES.autoria);
+    const autoria = [...fitxaFont.container.querySelectorAll('tbody td')].find((td) => td.textContent === OLIVERES.autoria);
     expect(autoria?.getAttribute('lang')).toBe('ca');
     cleanup();
     const alfafarenca = entradesDelCataleg(OLIVERES.id).find((e) => e.id === 'olivera-alfafarenca');
@@ -152,7 +152,7 @@ describe('v1.2.22 · /page/banc-de-llavors, les quatre fonts', () => {
     cleanup();
     // Les altres fonts tenen el títol en català i el conserven amb lang="ca".
     const valencia = render(createElement(FitxaDeLaFont, { font: font('cataleg-valencia'), tr }));
-    const titolCa = [...valencia.container.querySelectorAll('dd')].find((dd) => dd.textContent === font('cataleg-valencia').titol);
+    const titolCa = [...valencia.container.querySelectorAll('tbody td')].find((td) => td.textContent === font('cataleg-valencia').titol);
     expect(titolCa?.getAttribute('lang')).toBe('ca');
   });
 });

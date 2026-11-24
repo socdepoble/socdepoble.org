@@ -1,3 +1,4 @@
+import { rebutEliminacioMissatge, uuidMissatgeValid } from '../xat/rebutEliminacioMissatge.js';
 /** R32.7 · Port d'interaccions. Cap fallback ací; absència SQL estructurada. */
 import { rpc } from './runtime.js';
 import { capturaSessio, jwtPerBackend, usuariDeSessio } from '../identitat.js';
@@ -59,7 +60,9 @@ function estat(v) {
 async function crida(nom, params, config) {
   const comprova = guarda(config); comprova();
   try {
-    const v = primera(await rpc(nom, params, config, { signal: config.signal }));
+    const raw = await rpc(nom, params, config, { signal: config.signal });
+    if (nom === 'xat_elimina_per_a_tothom' && Array.isArray(raw) && raw.length !== 1) throw invalid();
+    const v = primera(raw);
     comprova(); return v;
   } catch (error) {
     comprova();
@@ -85,8 +88,9 @@ export async function carregaAccionsMissatges({ filId = null, missatgeIds = [], 
   return { missatges, teMes: v.teMes, seguentId: v.teMes ? v.seguentId : null };
 }
 async function muta(nom, dades, extra, config) {
-  if (!UUID.test(dades?.filId) || !UUID.test(dades?.missatgeId)) throw invalid();
-  const v = estat(await crida(nom, { p_fil_id: dades.filId, p_missatge_id: dades.missatgeId, ...extra }, config));
+  if (!uuidMissatgeValid(dades?.filId) || !uuidMissatgeValid(dades?.missatgeId)) throw invalid();
+  const raw = await crida(nom, { p_fil_id: dades.filId, p_missatge_id: dades.missatgeId, ...extra }, config);
+  const v = nom === 'xat_elimina_per_a_tothom' ? rebutEliminacioMissatge(raw, dades) : estat(raw);
   if (v.filId !== dades.filId || v.missatgeId !== dades.missatgeId) throw invalid();
   return v;
 }
@@ -103,3 +107,5 @@ export function alternaFixat(dades, config = {}) {
   return muta('xat_alterna_fixat', dades, { p_actiu: dades.actiu }, config);
 }
 export const eliminaPerAMi = (dades, config = {}) => muta('xat_elimina_per_a_mi', dades, {}, config);
+
+export const eliminaPerATothom = (dades, config = {}) => muta('xat_elimina_per_a_tothom', dades, {}, config);

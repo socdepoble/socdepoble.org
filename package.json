@@ -1,6 +1,6 @@
 {
   "name": "socdepoble-react",
-  "version": "1.2.23",
+  "version": "1.2.24",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "sideEffects": [
@@ -11,6 +11,8 @@
   "scripts": {
     "despertar": "node tooling/brain/despertar.mjs",
     "porta:psicopatia": "node tooling/gates/tractor-psicopatia.mjs",
+    "porta:sense-ia": "node tooling/gates/tractor-zero-dependencia-ia.mjs",
+    "porta:alergens-unanimitat": "node tooling/gates/verifica-alergens-unanimitat.mjs",
     "test:porta:psicopatia": "node --test tooling/gates/tractor-psicopatia.test.mjs",
     "porta:arrel": "node tooling/gates/tractor-arrel.mjs",
     "porta:importacions": "node tooling/gates/tractor-importacions.mjs",
@@ -142,7 +144,9 @@
     "porta:egress": "node tooling/gates/tractor-anti-factura-egress.mjs",
     "seo:compila-mapa-301": "node tooling/seo/mapa-redireccions-301.mjs",
     "dades:calcula": "node tooling/domain/calcula-dades.mjs",
-    "importacio:editorial": "node tooling/importacio/importa-editorial.mjs"
+    "importacio:editorial": "node tooling/importacio/importa-editorial.mjs",
+    "porta:radiografia-supabase-viu": "node tooling/gates/verifica-radiografia-supabase-viu.mjs",
+    "migracions:prepara132": "node tooling/gates/prepara-migracio132-r3254.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

@@ -51,6 +51,9 @@ const POST_R32_25=CATALEG.filter(m=>comparaVersions(m.version,'20261121090000')>
 // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · el 129 de R32.42 (fins a 20261122160300, amb els bytes de la
 // v1.2.23) es conserva com a perfil; R32.44 (20261122230000) i R32.46 (20261123010000), NO aplicades, en queden fora.
 const POST_R32_42=CATALEG.filter(m=>comparaVersions(m.version,'20261122160300')>0).map(m=>m.version);
+// R78/F4I: el 131 conserva els seus bytes exactes; només el catàleg complet 135 té pin nou.
+// Els estadis pendents 132–134 no són perfils autoritzats.
+const POST_R32_46=CATALEG.filter(m=>comparaVersions(m.version,'20261123010000')>0).map(m=>m.version);
 const POST_A03=CATALEG.filter(m=>comparaVersions(m.version,'20261118230000')>0).map(m=>m.version);
 const POST_R32_8=CATALEG.filter(m=>comparaVersions(m.version,'20261117193000')>0).map(m=>m.version);
 const POST_R32_4=['20261117140000',...CATALEG.filter(m=>comparaVersions(m.version,'20261117150000')>0).map(m=>m.version)];
@@ -88,7 +91,11 @@ const PERFILS=[
  // visibilitat pública del Mur (20261122160000, 20261122160200 i 20261122160300, NO aplicades).
  {migracions:129,exclou:POST_R32_42,fonts:[]},
  // v1.2.23 · complet131 amb l'edició pròpia i page_revisions (R32.44) i la quota per owner_id (R32.46), NO aplicades.
- {migracions:131,exclou:[],fonts:[]},
+ {migracions:131,exclou:POST_R32_46,fonts:[]},
+ // R78/F4I: 132–135 íntegres, sense substituir cap hash històric ni admetre intermedis.
+ {migracions:135,exclou:['20261124174000'],fonts:[]},
+ // v1.2.24 · R32.87 · complet136 amb els blindatges P0 de Gemini Neon (20261124174000, NO aplicada).
+ {migracions:136,exclou:[],fonts:[]},
 ];
 const catalogues=PERFILS.map(({exclou,fonts})=>aplicaFontsHistoriques(CATALEG.filter(m=>!exclou.includes(m.version)),fonts));
 const PINS=[...sqlPosse.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)[1].matchAll(/\((\d+),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>`${count}:${hash}`);
@@ -110,7 +117,9 @@ test('POSSE accepts exact source ledgers derived from the complete migration cat
  // Cada pin del SQL el prova exactament un perfil reproduït, i cap perfil queda sense pin.
  // v1.2.22 · 19: s'afig el 129 complet de R32.42 i el 126 de la v1.2.17 queda com a perfil històric.
  // v1.2.23 · 20: el 129 es recalcula i es conserva com a perfil; s'afig el complet 131 de R32.44 i R32.46.
- assert.equal(PINS.length,20);
+ // R78/F4I · 21: el 131 queda històric i s'afig únicament el complet 135.
+ // v1.2.24 · R32.87 · 22: el 135 queda històric i s'afig el complet 136.
+ assert.equal(PINS.length,22);
  assert.deepEqual(catalogues.map(rows=>`${rows.length}:${ledgerHash(rows)}`).sort(),[...PINS].sort());
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
@@ -119,6 +128,12 @@ test('R23 counts without exact source identity proof never establish readiness',
  const unknown=structuredClone(catalogues[1]);unknown[0].file='unknown.sql';
  const unknownVersion=structuredClone(catalogues[0]);unknownVersion[0].version='9999999999';
  for(const state of[{...base,migrationLedgerSha256:undefined},{...base,migrationLedgerSha256:'0'.repeat(64)},ready(wrong),ready(unknown),ready(unknownVersion),{...base,migrations:75},{...base,migrations:77},{...base,migrations:78},{...base,migrations:79},{...base,migrations:80},{...base,migrations:81},{...ready(catalogues[3]),migrationLedgerSha256:ledgerHash(catalogues[2])}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>state}}),/posse_schema_drift/);
+ for(const count of [132,133,134]){
+  const intermediate=CATALEG.slice(0,count);
+  assert.equal(intermediate.length,count,'el control negatiu usa un prefix real complet');
+  assert.equal(PINS.includes(`${count}:${ledgerHash(intermediate)}`),false,'cap estadi intermedi és un pin POSSE');
+  await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>ready(intermediate)}}),/posse_schema_drift/);
+ }
  for(const change of[{ownerStable:false},{tablesPrivate:false},{sourceInstalled:false},{remoteInstalled:false},{functionHashes:{}}])await assert.rejects(verificaEsquemaPosseNodeZero({db:{query:async()=>({...base,...change})}}),/posse_schema_drift/);
  // Amb els bytes actuals de 2611080440 (A2, 776f77186) les composicions R54-85 i R15-86 no són
  // cap registre fixat; i els pins obsolets 111 (ea68491ba, sense 20261115030000), 112 (R28, sense
@@ -153,10 +168,11 @@ test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumpt
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
-test('POSSE PostgreSQL installs all twenty exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+test('POSSE PostgreSQL installs all twenty-two exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
  // v1.2.22 · 19: el 126 de la v1.2.17 passa a històric i s'afig el complet 129 de R32.42.
  // v1.2.23 · 20: el 129 passa a perfil fix i s'afig el complet 131.
- assert.equal(PERFILS.length,20,'vint perfils fixats: 76..81, els dos 85, 86, el 114 d’R30, el 116 d’R31, el 119 d’R32.2, el 120 d’R32.4, el 121 de la v1.2.7, el 123 de la v1.2.8, el 124 d’A-03, el 125, el 126 i el 129 i el complet actual 131');
+ // R78/F4I · 21: es conserva el 131 i s'afig el complet actual 135.
+ assert.equal(PERFILS.length,22,'vint-i-dos perfils fixats: 76..81, els dos 85, 86, el 114 d’R30, el 116 d’R31, el 119 d’R32.2, el 120 d’R32.4, el 121 de la v1.2.7, el 123 de la v1.2.8, el 124 d’A-03, el 125, el 126, el 129, el 131, el 135 i el complet actual 136');
  for(const [index,{exclou,fonts}] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou,fonts});
   try{
@@ -169,7 +185,7 @@ test('POSSE PostgreSQL installs all twenty exact pinned profiles and rejects inc
      JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace WHERE p.prosecdef AND n.nspname IN ('public','private')
      AND NOT coalesce(p.proconfig @> ARRAY['search_path=""']::text[],false)
      AND NOT coalesce(p.proconfig @> ARRAY['search_path=']::text[],false)`)).rows;
-    assert.deepEqual(pending,[],'cap definer públic/privat pendent després de les 131 fonts');
+    assert.deepEqual(pending,[],'cap definer públic/privat pendent després de les 135 fonts');
     const e2ee=(await f.pg.query('SELECT public.xat_verifica_prerequisits_e2ee() AS contracte')).rows[0].contracte;
     assert.equal(e2ee.preparat_sql,true);assert.deepEqual(e2ee.faltants,[]);
     const push=(await f.pg.query("SELECT pg_get_constraintdef(oid) AS definicio FROM pg_constraint WHERE conname='xat_dispositius_push_sessio_fk'")).rows;
@@ -197,6 +213,17 @@ test('POSSE PostgreSQL installs all twenty exact pinned profiles and rejects inc
    await f.pg.query("UPDATE node0.schema_migrations SET version=$1 WHERE version='9999999999'",[row.version]);
    await f.pg.query("INSERT INTO node0.schema_migrations(version,file,sha256) VALUES('9999999999','unknown.sql',repeat('0',64))");await rejectBoth();
    await f.pg.query("DELETE FROM node0.schema_migrations WHERE version='9999999999'");
+   if(saved.length===135){
+    // El motor SQL i l'instal·lador també rebutgen cada prefix intermedi, no sols el lector JS.
+    for(const count of [132,133,134]){
+     const removed=saved.slice(count);
+     for(const row of removed)await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[row.version]);
+     assert.equal(await scalar('SELECT count(*)::int FROM node0.schema_migrations'),count);
+     await rejectBoth();
+     for(const row of removed)await f.pg.query('INSERT INTO node0.schema_migrations(version,file,sha256) VALUES($1,$2,$3)',[row.version,row.file,row.sha256]);
+     assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);
+    }
+   }
    if(saved.length===79){
     const seal=saved.find(r=>r.version==='2611061520');await f.pg.query('DELETE FROM node0.schema_migrations WHERE version=$1',[seal.version]);
     assert.equal(await scalar("SELECT node0_posse.readiness()->>'migrationLedgerSha256'"),ledgerHash(catalogues[2]));assert.equal(await verificaEsquemaPosseNodeZero({db:f.db}),true);

@@ -1,3 +1,4 @@
+import {textFixture,jsonFixture,receiptFixture} from '../../../../tests/fixtures/fontsSintetiquesC6.mjs';
 // @vitest-environment node
 /* La Nevera de Casa · els productes de botiga (nucli/productes.js): la forma
    de les dades, la privacitat del fitxer, els ids publicats i la deriva
@@ -119,7 +120,13 @@ describe('els ids publicats', () => {
 });
 
 describe('la deriva respecte del full', () => {
-  test.skipIf(!HI_HA_FULL)('l’importador aplicat al full sobre el tall publicat dona EXACTAMENT PRODUCTES, i només avisa de la nota', () => {
+  test('l’importador conserva el tall de la font disponible; original absent queda declarat', () => {
+    if(!HI_HA_FULL){
+      const expected=jsonFixture('catalog.expected.json');
+      const {productes,avisos}=importaProductes(textFixture('catalog.synthetic.csv'),{publicats:expected.publicats,delimitador:','});
+      expect(productes).toEqual(expected.publicats);expect(avisos).toEqual([]);
+      receiptFixture('nevera-csv-import');return;
+    }
     const { productes, avisos } = importaProductes(readFileSync(RUTA_FULL), { publicats: PRODUCTES, delimitador: ',' });
     expect(avisos).toHaveLength(1);
     expect(avisos[0]).toMatch(/és una nota, no un producte/);

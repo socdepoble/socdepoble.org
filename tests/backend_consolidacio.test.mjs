@@ -13,7 +13,7 @@ import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, CODI_SEGON_FACTOR, esBackendIna
 import { tempsLimitPujada } from '../src/data/xatMultimedia.js';
 import { controlStorageDe, informaReconciliacioStorage } from '../src/data/supabase/controlStorage.js';
 import { PNG_NET } from './helpers/mitjansPublicsNets.js';
-import { capturaSessio } from '../src/data/identitat.js';
+import { caducitatJwt, capturaSessio } from '../src/data/identitat.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -200,6 +200,8 @@ test('singleton: config fixada, clau diferent rebutjada i token renovat', async 
     createClient: () => { creates++; return { removeAllChannels: async () => { removed++; }, realtime: {setAuth: async () => {}} }; },
     getResolvedConfig: c => ({...c, hasSupabaseConfig: !!(c.supabaseUrl && c.supabaseAnonKey)}),
     jwtPerBackend: () => jwt,
+    // isolated() lleva els imports: conserva les guardes reals i el token sintètic de la fixture.
+    capturaSessio, caducitatJwt, tokenPerClient: async () => jwt,
   });
   const first = await client.getClient(config); assert.equal(await client.getClient(), first);
   await assert.rejects(client.getClient({...config,supabaseAnonKey:'sb_publishable_other'}));

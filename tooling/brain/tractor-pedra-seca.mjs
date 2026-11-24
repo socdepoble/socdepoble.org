@@ -470,6 +470,14 @@ const EXCEPCIONS_ORFE = {
   'src/data/calendari/disponibilitatSenseSolapament.js': 'motor pur de disponibilitat sense solapaments (IDEA-284, Codex R32.13): sense pantalla; el prova disponibilitatSenseSolapament.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
   'src/data/inventari/reposicioAntiDobleComanda.js': 'motor pur de reposició sense doble comanda (IDEA-284, Codex R32.13): sense pantalla, la reserva atòmica és del backend; el prova reposicioAntiDobleComanda.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
   'src/data/crdtRuralRemot.js': 'pont del transport CRDT remot per a creaSessioRural (PF-03, Codex R32.13): ACK opcional sense consumidor de producció fins que el SQL R32.13 es faça servir; el prova crdtRuralRemot.r3213.test.js · integrat a la v1.2.11, revisió del Mestre pendent',
+  /* Decisió del Mestre (24-11-2026, xat del commit v1.2.24) · Sis mòduls dels kits dels carrils sense consumidor
+     de producció: entren com a biblioteques o façanes amb prova, a l'espera que se n'enllace o se'n retire l'ús. */
+  'src/data/gestioDiariEditorial.js': 'manteniment diferit i extracció paginada del diari editorial (R32.70, Codex): API sense pantalla; la prova tests/revisions-editorials-capacitat.r3270.test.mjs per la fixture · integrat a la v1.2.24, revisió del Mestre pendent',
+  'src/data/local/portabilitatLocal.js': 'portabilitat del segon adaptador local (R32.56/R32.74, Codex): només la importa adaptadorLocal.js, que és excepció a posta; la prova portabilitatLocal.r3256.test.js · integrat a la v1.2.24, revisió del Mestre pendent',
+  'src/data/portabilitatCompte.js': 'paquet de compte portable (R32.56/R32.74, Codex): el carrega portabilitatLocal.js; la proven portabilitatCompte.r3256.test.js i conformitat.r54.test.js · integrat a la v1.2.24, revisió del Mestre pendent',
+  'src/data/menjarIBeure/alergensMercatBotiga.js': 'façana pública dels al·lèrgens comercials (R32.78, Codex): la lògica viu a src/utils/alergensComercials.js; la paritat la fixa alergensCompartits.r3278.test.js · integrat a la v1.2.24, revisió del Mestre pendent (consumidor o retirada)',
+  'src/sections/mercat/alergensMercat.js': 'façana del Mercat sobre alergensMercatBotiga.js (R32.52/R32.74, Codex): sense consumidor de producció; la proven alergensCompartits.r3278.test.js i tests/alergens-mercat-botiga.r3252.test.mjs · integrat a la v1.2.24, revisió del Mestre pendent',
+  'src/sections/text/CreditsComunitatS23.jsx': 'tros dels crèdits S23 de /legal, despenjat per IDEA-340 (R32.61) en passar a /page/reconeixements: encara el munta la canari CanarisSanejamentTelladoFitxa14.r32_48.test.jsx · v1.2.24, revisió del Mestre pendent (retirar-lo amb la canari)',
 };
 /* Decisió del Mestre (30-10-2026) · Una fixture (dins de __fixtures__/) que una
    prova importa és part de la prova, amb el criteri de la línia de les proves.

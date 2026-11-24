@@ -748,7 +748,7 @@ describe('els canals de la fitxa del producte (Carta.jsx)', () => {
     await screen.findByText('Desat. Les comandes ja fetes no canvien.');
     const producte = (await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava');
     expect(producte.tracesAlergens).toEqual(['gluten']);
-    expect(producte.alergens).toEqual(['llet']);
+    expect(producte.alergens).toEqual(['sulfits', 'llet']);
     expect(producte.alergensAbsents).toEqual(['ous']);
     expect(producte.alergensEstat).toBe('revisio_manual');
     expect(producte.fontAlergens).toBe('Fitxa tècnica de prova, lot A, revisió 2026-11-08');
@@ -771,7 +771,7 @@ describe('els canals de la fitxa del producte (Carta.jsx)', () => {
     expect(screen.queryByText(/^Font vigent:/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
     await screen.findByText(/Indica una font actual per a la declaració/);
-    expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').tracesAlergens).toBeUndefined();
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes.find((p) => p.id === 'cava').tracesAlergens).toEqual([]);
     fireEvent.change(screen.getByRole('textbox', { name: 'Font de la declaració d’al·lèrgens' }), { target: { value: 'Fitxa tècnica de prova, lot B, revisió 2026-11-08' } });
     fireEvent.click(screen.getByRole('button', { name: 'Desa el producte' }));
     await screen.findByText('Desat. Les comandes ja fetes no canvien.');

@@ -67,7 +67,11 @@ describe('la primera publicació del Mur', () => {
     expect(FEED_POSTS[2].searchText).toContain('pou de neu del rentonar');
     expect(FEED_POSTS.slice(3)).toEqual(PUBLICACIONS_DE_MOCK_FEED);
     expect(MOCK_FEED.some((item) => item.id === POST.id)).toBe(false);
-    expect(IMPORTANTS_DEL_MUR.slice(0, 3)).toEqual([
+    /* v1.2.24 (24-11-2026; ordre del Mestre) · Davant de totes, la Notícia #1: «Reconeixements i fonts d'inspiració». */
+    expect(IMPORTANTS_DEL_MUR[0]).toEqual(['pages', 'reconeixements']);
+    // R32.86 (IDEA-348) · darrere, «Cada cosa al seu lloc».
+    expect(IMPORTANTS_DEL_MUR[1]).toEqual(['pages', 'cada-cosa-al-seu-lloc']);
+    expect(IMPORTANTS_DEL_MUR.slice(2, 5)).toEqual([
       ['feedPosts', 'copies-de-seguretat-soc-de-poble'],
       ['feedPosts', 'la-veu-de-soc-de-poble'],
       ['feedPosts', POST.id],
@@ -124,15 +128,17 @@ describe('la primera publicació del Mur', () => {
         moment: momentDeLaTargeta(item, esActeDelCalendari(item) ? acteAEsdeveniment(item) : null)
       })).sort(perMomentDescendent);
       const nostra = ordenades.find(({ item }) => item.id === POST.id).moment;
+      /* v1.2.24 (24-11-2026; ordre del Mestre) · Davant de les tres de la gent de la Torre va la Notícia #1,
+         «Reconeixements i fonts d'inspiració» (pages:reconeixements, una targeta del sistema). */
+      // R32.86 (IDEA-348) · i, darrere d'ella, «Cada cosa al seu lloc».
+      const DAVANT = ['reconeixements', 'cada-cosa-al-seu-lloc', 'copies-de-seguretat-soc-de-poble', 'la-veu-de-soc-de-poble'];
       const altres = ordenades
-        .filter(({ item }) => item.id !== POST.id && item.id !== 'la-veu-de-soc-de-poble' && item.id !== 'copies-de-seguretat-soc-de-poble')
+        .filter(({ item }) => item.id !== POST.id && !DAVANT.includes(item.id))
         .map(({ moment }) => moment)
         .filter(Number.isFinite);
       expect(altres.length).toBeGreaterThan(5);
       expect(altres.every((moment) => moment < nostra)).toBe(true);
-      expect(ordenades[0].item.id).toBe('copies-de-seguretat-soc-de-poble');
-      expect(ordenades[1].item.id).toBe('la-veu-de-soc-de-poble');
-      expect(ordenades[2].item.id).toBe(POST.id);
+      expect(ordenades.slice(0, 5).map(({ item }) => item.id)).toEqual([...DAVANT, POST.id]);
       expect(nostra).toBeLessThan(ara.getTime());
     }
   });

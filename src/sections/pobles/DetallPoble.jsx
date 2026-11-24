@@ -8,12 +8,22 @@
  * llegir l'outbox de socdepoble.org; es diu on es pot descarregar. */
 import { useEffect, useRef, useState } from 'react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssFitxaDetall from '../../css/diferit-fitxa-detall.css?inline';
 import { esPobleFederat, esSlugFederat, urlsDeMunicipi } from '../../data/activitypub.js';
 import { ORIGEN_PUBLIC_PER_DEFECTE, esAppNativa } from '../../config/origenPublic.js';
 import { ConnexionsPubliques, VisibilitatConnexions } from '../profile/ConnexionsPubliques.jsx';
 import { useConfigDeLApp } from './useEntitatsDelPoble.js';
 import { omple } from '../../config/moderacio.js';
 import { descarregaPaquet, resumDelPaquet, senseTraductorDetallPoble } from './detallPobleModel.js';
+
+/* v1.2.24 · costura R32.75 · Puresa HMR (R32.20/R32.24): l'adoptador del full diferit és local, com a
+   PerfilPublicSection.jsx i detailSectionMeta.jsx; un .jsx només exporta components. No ix a un .js
+   propi perquè la porta de vocabulari (css-diferit-04) vol la crida, amb la clau literal i el ?inline,
+   dins del fitxer que pinta les classes sdp-poble-opendata*. */
+const adoptaEstilsFitxaDetall = (node) => {
+  if (node) adoptaFullDiferit(node, 'fitxa-detall', cssFitxaDetall);
+};
 
 /* T2 · D04/D10 (assalt 261101) · El generador (ZIP, SHA-256, iCalendar i la
    memòria oral) es carrega en diferit, en clicar «Descarregar»: no pesa a la
@@ -63,16 +73,20 @@ export default function DetallPoble({ poble, t = senseTraductorDetallPoble, expo
   return (
     <>
     {connexions}
-    <section aria-label={federat ? t('section.detail.pobles.opendata.regio.federat', 'Dades obertes i identitat federada') : t('section.detail.pobles.opendata.regio', 'Dades obertes d’este poble')}>
+    <section
+      ref={adoptaEstilsFitxaDetall}
+      className="sdp-poble-opendata"
+      aria-label={federat ? t('section.detail.pobles.opendata.regio.federat', 'Dades obertes i identitat federada') : t('section.detail.pobles.opendata.regio', 'Dades obertes d’este poble')}
+    >
       {natiu
         ? <p>{t('section.detail.pobles.opendata.natiu', 'Dins de l’app el paquet no es pot desar a les descàrregues: descarrega’l des de socdepoble.org.')}</p>
-        : <p><Boto onClick={descarregar} disabled={ocupat} carregant={ocupat}>{federat
+        : <p className="sdp-poble-opendata__accions"><Boto onClick={descarregar} disabled={ocupat} carregant={ocupat}>{federat
           ? t('section.detail.pobles.opendata.descarregaFederat', 'Descarregar paquet Open Data d’este poble (JSON / ActivityStreams 2.0 + JSON-LD)')
           : t('section.detail.pobles.opendata.descarrega', 'Descarregar paquet Open Data d’este poble (JSON / JSON-LD)')}</Boto></p>}
       {federat ? (
         <>
-          <p>{t('section.detail.pobles.opendata.identificador', 'Identificador federat:')} <code>{identificador}</code></p>
-          <p><Boto onClick={copiar}>{t('section.detail.pobles.opendata.copia', 'Copiar identificador federat')}</Boto>{' '}<a href={urls.actor}>Actor</a>{' · '}<a href={urls.outbox}>Outbox</a></p>
+          <p className="sdp-poble-opendata__id">{t('section.detail.pobles.opendata.identificador', 'Identificador federat:')} <code>{identificador}</code></p>
+          <p className="sdp-poble-opendata__accions"><Boto onClick={copiar}>{t('section.detail.pobles.opendata.copia', 'Copiar identificador federat')}</Boto>{' '}<a href={urls.actor}>Actor</a>{' · '}<a href={urls.outbox}>Outbox</a></p>
           <p>{t('section.detail.pobles.opendata.fase1', 'Consulta pública en fase 1. Seguir i respondre des del Fedivers encara està pendent.')}</p>
         </>
       ) : null}

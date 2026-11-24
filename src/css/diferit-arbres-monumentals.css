@@ -1,0 +1,190 @@
+/* ==========================================================================
+   PEDRA SECA · FITXA VIVA I LONGITUDINAL CIEF v232 DELS ARBRES SINGULARS
+   (FULL DIFERIT · R32.48 + R32.55 U-DIS-01, sostre d'arrencada <= 1.588.500 B)
+   Les regles .sdp-arbre-* viuen a FitxaArbreMonumental.jsx i FitxaDadesDoctoralsArbre.jsx,
+   que es carreguen a demanda i adopten este full abans del primer pintat.
+   ========================================================================== */
+@layer components {
+  .sdp-arbre-fitxa,
+  .sdp-arbre-doctoral {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-5);
+    min-width: 0;
+  }
+
+  .sdp-arbre-fitxa__capcalera {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-arbre-fitxa__pindoles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+
+  .sdp-arbre-fitxa__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-tight);
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .sdp-arbre-fitxa__sep {
+    display: none;
+  }
+
+  .sdp-arbre-fitxa__autoria {
+    margin: 0;
+    text-align: center;
+    font-size: var(--sdp-text-small);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arbre-fitxa__accions,
+  .sdp-arbre-fitxa__pestanyes,
+  .sdp-arbre-revisions__intervals,
+  .sdp-arbre-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+
+  .sdp-arbre-cotes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-arbre-cota {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-arbre-cota__etiqueta {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arbre-cota__valor {
+    font-size: var(--sdp-text-h5);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--sdp-text-titol);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sdp-arbre-comparador {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+
+  .sdp-arbre-comparador__marc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-arbre-comparador__imatge {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--sdp-fons-subtil);
+  }
+
+  .sdp-arbre-comparador__peu {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+
+  .sdp-arbre-revisions,
+  .sdp-arbre-cief,
+  .sdp-arbre-ordenanca {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: 0;
+    background: var(--sdp-fons-targeta);
+    min-width: 0;
+  }
+
+  .sdp-arbre-delta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--sdp-space-3);
+    min-width: 0;
+  }
+
+  .sdp-arbre-delta__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3);
+    border-inline-start: 3px solid var(--sdp-accio);
+    background: var(--sdp-fons-app);
+    min-width: 0;
+  }
+
+  .sdp-arbre-referencies {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+    min-width: 0;
+  }
+
+  .sdp-arbre-campanyes {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sdp-arbre-campanyes__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-app);
+  }
+}

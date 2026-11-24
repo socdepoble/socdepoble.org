@@ -14,10 +14,10 @@ import { totals } from '../nucli/comanda.js';
 import { potTancar } from '../nucli/cobrament.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { textProductesBar, textosUiBar } from '../i18nBar.js';
-import { nomAlergen } from '../i18nMercaderies.js';
 import { EditorLinia } from './EditorLinia.jsx';
 import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { ambTornada, esTornaTpv, useFixaComanda, useIdiomaBar, usePunt, useVes } from './punt.js';
+import { textAlergensDetall } from './textAlergensDetall.js';
 import {
   articlesDeCarta, categoriesVestides, horaCurta, liniesVestides, llegixOpcio, necessitaTria, nomOrigen,
   opcionsDetall, preuObertDeConsulta, resumDeComanda, textLiniesPerIdioma, textosLiniesBar, tiquetsOberts, triaLaVariant
@@ -118,10 +118,8 @@ function CatalegDelPunt({ params, idioma = 'ca' }) {
             }
             afig(producte, { varianteId, modificadors: resolModificadors(producte, carta.grups, opcions), quantitat: quantitat || 1, nota });
           },
-          contingutDe: (article) => {
-            const alergens = perId.get(article.id)?.alergens || [];
-            return <p>{alergens.length ? tx.alergensManteBar(alergens.map((a) => nomAlergen(a, idioma)).join(', ')) : tx.senseAlergensManteBar}</p>;
-          }
+          /* P07-01 · La fitxa diu el mateix que la rajola del TPV: font, traces i «sense revisar». */
+          contingutDe: (article) => <p>{textAlergensDetall(perId.get(article.id), tx, idioma)}</p>
         }}
         resum={resumDeComanda(punt.comanda, idioma)}
         avis={<AvisDeLaColumna />}

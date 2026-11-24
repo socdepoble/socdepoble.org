@@ -28,6 +28,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { estatDelPush, targetSdkAndroid, TARGET_SDK_PLAY_MINIM } from './preflight.mjs';
+import { carregaEntorn, EIXIDA, plega } from './entorn.mjs';
+import { clientAsc, consultaAppStore } from './app-store-connect.mjs';
 
 const lligDe = (arrel, ...trossos) => { try { return fs.readFileSync(path.join(arrel, ...trossos), 'utf8'); } catch { return null; } };
 const existix = (arrel, ...trossos) => fs.existsSync(path.join(arrel, ...trossos));
@@ -196,7 +198,25 @@ export function liniesDeLEstat(e) {
 const principal = (() => {
   try { return process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href; } catch { return false; }
 })();
-if (principal) {
-  const arrel = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-  process.stdout.write(`${liniesDeLEstat(estatDeLesBotigues(arrel)).join('\n')}\n`);
+
+/** La consulta remota és explícita; el mode històric continua sent només de disc. */
+export async function mainEstat(argv = [], { arrel = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'), env = process.env, asc = {} } = {}) {
+  if (!argv.length) {
+    process.stdout.write(`${liniesDeLEstat(estatDeLesBotigues(arrel, { env })).join('\n')}\n`);
+    return EIXIDA.BE;
+  }
+  if (argv.length !== 1 || argv[0] !== '--asc') return plega(EIXIDA.US, 'Ús: estat.mjs [--asc] (sense bandera: fora de línia).');
+  const entorn = carregaEntorn({ arrel, env });
+  if (entorn.codi !== EIXIDA.BE) return plega(entorn.codi, 'No es pot llegir la configuració de botigues.', entorn.problemes);
+  try {
+    const client = asc.client ?? clientAsc({ ...asc, valors: entorn.valors, arrel });
+    const paquet = String(entorn.valors.SDP_APP_ID ?? '').trim();
+    const apps = await client.request('GET', `/v1/apps?filter[bundleId]=${encodeURIComponent(paquet)}`);
+    const exactes = apps.data?.filter((a) => a.attributes?.bundleId === paquet);
+    if (exactes?.length !== 1) throw new Error();
+    const estat = await consultaAppStore({ client, appId: exactes[0].id });
+    process.stdout.write(`${JSON.stringify(estat)}\n`);
+    return EIXIDA.BE;
+  } catch { return plega(EIXIDA.EXTERNA, 'No s’ha pogut consultar App Store Connect; no es mostra cap dada de contacte ni de credencials.'); }
 }
+if (principal) mainEstat(process.argv.slice(2)).then((codi) => { process.exitCode = codi; });

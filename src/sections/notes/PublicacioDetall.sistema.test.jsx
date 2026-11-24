@@ -188,20 +188,25 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      amb eixa portada. Ara en són quinze de text, i díhuit en total.
      R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) hi entra
      com a cinquena pàgina de patrimoni, de text: ara en són setze de text, i
-     dènou en total. */
-  const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
+     dènou en total.
+     v1.2.24 · costura R32.75 · IDEA-340 (ordre del Mestre) · «Reconeixements i
+     fonts d'inspiració» (/page/reconeixements, R32.61 dins de R32.75), la
+     Notícia #1 del Mur, hi entra com a pàgina de text: ara en són dèsset de
+     text, i vint en total. */
+  const SENSE_COS = ['disseny', 'notes', 'wikidepoble', 'cada-cosa-al-seu-lloc']; // R32.86 · el joc és una ruta d'aplicació, com Disseny
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
     /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), La IAIA Sabuda no és cap targeta:
-       dènou. Amb la bandera, hi torna (vint) i es llig com les altres. */
-    expect(SISTEMA).toHaveLength(19);
+       dènou. Amb la bandera, hi torna (vint) i es llig com les altres.
+       v1.2.24 · costura R32.75 · Amb Reconeixements, vint sense la bandera i vint-i-una amb ella. */
+    expect(SISTEMA).toHaveLength(21);
     expect(SISTEMA.map(item => item.id)).not.toContain('la-iaia-sabuda');
     vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
     let ambCuradoria;
     try { ambCuradoria = targetesDeSistema(PAGE_COPY); } finally { vi.unstubAllEnvs(); }
-    expect(ambCuradoria).toHaveLength(20);
+    expect(ambCuradoria).toHaveLength(22);
     expect(ambCuradoria.map(item => item.id)).toContain('la-iaia-sabuda');
     expect(ambCuradoria.filter(item => item.id !== 'la-iaia-sabuda')).toEqual(SISTEMA);
-    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(20);
+    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(22);
     expect(ambCuradoria.map(item => item.id)).not.toContain('anatomia-rural');
     for (const targeta of ambCuradoria) {
       const { container, unmount } = render(<PublicacioDetall item={publicacioComANota(targeta, 'mur')} />);

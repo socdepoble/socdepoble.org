@@ -15,7 +15,7 @@
  * (lazyRoute) i només quan la persona obri la pestanya: la pàgina del poble
  * no fa cap petició de més si no la mira.
  */
-import { useUIActions } from '../../app/contexts/UIContext';
+import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalCard } from '../../components/PedraSeca';
 import { encapcalamentDeTargeta } from '../../components/universal/editorial.js';
@@ -99,12 +99,25 @@ function TargetaDeLEntitat({ fila, textos, t, navigate }) {
   );
 }
 
+function useIdiomaEntitats() {
+  try {
+    const estat = useUIState();
+    return estat?.language || estat?.externalConfig?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 function EntitatsDelPobleAmbDades({ poble, textos, t }) {
   const navigate = useNavigate();
   const { estat, entitats, error, refresh } = useEntitatsDelPoble(poble);
-  if (estat === 'sense-poble' || (estat === 'ready' && !entitats.length)) return <p role="status">{textos.buit}</p>;
+  if (estat === 'sense-poble' || (estat === 'ready' && !entitats.length)) {
+    return <p role="status" className="sdp-paragraf-centrat">{textos.buit}</p>;
+  }
   /* C11-01 · Un servidor que no sap el poble de les organitzacions: el mateix avís que sense directori, sense «Torna-ho a provar» fals. */
-  if (estat === 'no-disponible' || (estat === 'error' && error?.code === 'NO-DISPONIBLE')) return <p role="status">{textos.noDisponible}</p>;
+  if (estat === 'no-disponible' || (estat === 'error' && error?.code === 'NO-DISPONIBLE')) {
+    return <p role="status" className="sdp-paragraf-centrat">{textos.noDisponible}</p>;
+  }
   if (estat === 'error') return <EstatErrorDades titol={textos.error} error={error} onReintenta={refresh} />;
   if (estat !== 'ready') return <Carregant etiqueta={textos.carregant} />;
   return (
@@ -117,7 +130,8 @@ function EntitatsDelPobleAmbDades({ poble, textos, t }) {
 /** Les organitzacions públiques de `poble` (una fitxa de /pobles), dins de la barrera de les targetes. */
 export function EntitatsDelPoble({ poble }) {
   const t = useTraductor();
-  const textos = textosDeLesEntitats(t);
+  const idioma = useIdiomaEntitats();
+  const textos = textosDeLesEntitats(t, idioma);
   return (
     <SlotErrorBoundary
       resetKey={String(poble?.id ?? '')}

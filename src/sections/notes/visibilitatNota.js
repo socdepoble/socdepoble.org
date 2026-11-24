@@ -26,8 +26,14 @@ export const PARELL_MOTIU_NORMES = Object.freeze(['section.moderacio.normes.calA
 
 export const TEXTOS_VISIBILITAT_NOTA = Object.freeze({
   motiuForaster: parellVisibilitat('motiu.foraster', 'Connecta amb el teu compte per a publicar la nota al Mur.'),
-  motiuLocal: parellVisibilitat('motiu.local', 'Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.'),
-  motiuLocalConnexio: parellVisibilitat('motiu.localConnexio', 'Connexió desada en este dispositiu. Connecta un backend per a compartir-la al Mur.'),
+  /* F4F (v1.2.24, Assaig a la Plaça · canvi 1) · En el mode de proves (seed o local) no s'envia res al servidor
+     ni es publica al Mur: el motiu ho diu. Abans demanava «Connecta un backend», que la persona no pot fer.
+     El de la nota no nomena el Mur: bloqueigDeNota no sap la secció, i al Mercat el botó diu «Publicar al
+     Mercat». Cap dels dos diu «desada»: en una publicació oberta en memòria (desatEnMemoria) no es desa res,
+     i on es queda ho diu la línia d'estat (honestedatDesat.js). Una connexió sempre es compartix al Mur.
+     El valencià del diccionari és el mateix (Llei del Píxel): la costura de src/config/idiomes va amb este canvi. */
+  motiuLocal: parellVisibilitat('motiu.local', 'En el mode de proves, la nota no s’envia a ningú ni es publica.'),
+  motiuLocalConnexio: parellVisibilitat('motiu.localConnexio', 'En el mode de proves, la connexió no s’envia a ningú ni es compartix al Mur.'),
   motiuPublicada: parellVisibilitat('motiu.publicada', 'Retirar una nota del Mur encara no té contracte de dades amb el servidor: la pots actualitzar, però no tornar a fer privada.'),
   /* F03-UI · Amb la capacitat de retirar, però en una vista que no la porta
      (el lector ConnexioDetall): on es fa, no «encara no». */
@@ -203,7 +209,7 @@ const MOTIUS_PREPARADA = Object.freeze({
   pendent: T.motiuPreparadaFallida
 });
 
-/** T47 · El motiu de no publicar en mode seed/local (sense Mur): nota o connexió. */
+/** T47 · El motiu de no publicar en mode seed/local (no es publica res): nota o connexió. */
 export function motiuModeLocal({ connexio = false, t = null } = {}) {
   return text(t, connexio ? T.motiuLocalConnexio : T.motiuLocal);
 }

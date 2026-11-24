@@ -140,8 +140,10 @@ const sentencies = sql => segmentsSql(sql);
  * RETURN i BEGIN ATOMIC, en canvi, comencen el cos SQL sense literal i
  * queden fora del subconjunt admés (error conservador si són definer).
  * Només s'acredita una assignació explícita i única de search_path buit.
- * Identitats desconegudes, tipus no resolts i search_path de sessió (SET,
- * set_config o dins d'un DO) tanquen amb error, com també el DDL de rutina
+ * Identitats desconegudes, tipus no resolts i search_path de sessió arbitrari
+ * (SET, set_config o dins d'un DO) tanquen amb error. R32.88 admet només el
+ * SET LOCAL catalogic explícit delimitat més avall, sense inferir identitats
+ * sense esquema ni usar-lo com a ruta de capçalera d'una definer. El DDL de rutina
  * en un fitxer amb ROLLBACK i el SQL dinàmic amb DEFINER: no és un parser
  * complet de PostgreSQL ni executa SQL dinàmic, només falla tancat davant seu.
  * Un nom de rutina SENSE esquema no és una identitat acreditable (la ruta de
@@ -740,7 +742,102 @@ function motiusCosDoR6(cos) {
   return motius;
 }
 
-function estatFuncionsR6(statement, file, estat, posicio) {
+/* R32.88 · Un SET LOCAL de catàleg no és un SET de capçalera de rutina.
+ * Acceptem només tokens d'esquemes exactes, pg_catalog primer i pg_temp últim
+ * si es declara. Un literal 'pg_catalog,public' és UN esquema amb coma per a
+ * PostgreSQL, no dos: mai el partim ni descodifiquem. Amb pg_temp omés, PG el
+ * cerca implícitament davant per a relacions i tipus; per això eixa forma
+ * només és admissible en fitxers SENSE DDL de rutina de nivell superior.
+ * No afirma seguretat general de les consultes, dels esquemes ni de SQL
+ * dinàmic: només evita atribuir un canvi d'identitat de rutina inexistent.
+ * Tampoc admetem operacions de relació sense esquema en el codi que R1
+ * interpreta: R2 suposa public per a eixos noms, però un pg_temp implícit
+ * (o pg_catalog explícit davant de public) podria designar una altra taula.
+ * La forma amb pg_temp últim conserva totes les comprovacions d'identitat,
+ * capçalera buida i DDL dinàmic de R6. */
+function rutaLocalCatalogicaR6(tokens, { transaccio = false, ddlRutina = 0, relacionsImplicites = false } = {}) {
+  if (!transaccio || relacionsImplicites || !paraula(tokens[0], 'set') || !paraula(tokens[1], 'local')
+    || !identificador(tokens[2]) || tokens[2].value.toLowerCase() !== 'search_path'
+    || !(tokens[3]?.kind === 'symbol' && tokens[3].value === '=' || paraula(tokens[3], 'to'))) return false;
+  const esquemes = [];
+  for (let i = 4; i < tokens.length; i++) {
+    const token = tokens[i];
+    if ((i - 4) % 2 === 0) {
+      if (!identificador(token)) return false;
+      esquemes.push(token.value);
+    } else if (token.kind !== 'symbol' || token.value !== ',') return false;
+  }
+  if (tokens.length % 2 === 0) return false; // coma final o llista buida
+  const esRuta = ruta => esquemes.length === ruta.length && esquemes.every((nom, i) => nom === ruta[i]);
+  if (esRuta(['pg_catalog', 'public'])) return ddlRutina === 0;
+  return esRuta(['pg_catalog', 'public', 'pg_temp']) || esRuta(['pg_catalog', 'pg_temp']);
+}
+
+function iniciaTransaccioR6(tokens) {
+  if (!tokens.every(token => token.kind === 'word' && token.depth === 0)) return false;
+  const forma = tokens.map(token => token.value).join(' ');
+  return ['begin', 'begin work', 'begin transaction', 'begin read only', 'begin read write',
+    'start transaction', 'start transaction read only', 'start transaction read write'].includes(forma);
+}
+
+/* El mateix codi executable que R1 (literals fora, cossos SQL/PLpgSQL dins),
+ * llegit per tokens. Sense aquesta condició, ENABLE t o DROP t podrien
+ * rebaixar l'estat de public.t encara que PostgreSQL actuara sobre una ombra.
+ * Les llistes DROP també es recorren; cap nom quoted es partix pels seus
+ * punts, comes o paraules clau. No inferim cap identitat a partir de la ruta. */
+function relacionsImplicitesR6(codi) {
+  const { tokens } = tokensDeFuncio(codi);
+  const qualificada = i => identificador(tokens[i]) && tokens[i + 1]?.kind === 'symbol'
+    && tokens[i + 1].value === '.' && identificador(tokens[i + 2]);
+  for (let i = 0; i < tokens.length; i++) {
+    let j = i + 1, llista = false, relacio = false;
+    if (paraula(tokens[i], 'create')) {
+      if (paraula(tokens[j], 'or') && paraula(tokens[j + 1], 'replace')) j += 2;
+      if (['temp', 'temporary', 'unlogged', 'recursive', 'constraint'].some(v => paraula(tokens[j], v))) j++;
+      if (paraula(tokens[j], 'table') || paraula(tokens[j], 'view')) {
+        j++; relacio = true;
+        if (paraula(tokens[j], 'if') && paraula(tokens[j + 1], 'not') && paraula(tokens[j + 2], 'exists')) j += 3;
+      } else if (paraula(tokens[j], 'policy') || paraula(tokens[j], 'trigger')) {
+        const profunditat = tokens[j].depth;
+        while (++j < tokens.length && !(tokens[j].depth === profunditat && paraula(tokens[j], 'on'))) { /* destí */ }
+        if (j === tokens.length) return true; // cap ON demostrable: no acreditem esta ruta
+        i = j; // el tram cercat no es torna a recórrer (també davant SQL incomplet)
+        j++; relacio = true;
+      }
+    } else if (paraula(tokens[i], 'alter') || paraula(tokens[i], 'drop')) {
+      if (paraula(tokens[j], 'table') || paraula(tokens[j], 'view')) {
+        llista = paraula(tokens[i], 'drop'); j++; relacio = true;
+        if (paraula(tokens[j], 'if') && paraula(tokens[j + 1], 'exists')) j += 2;
+        if (paraula(tokens[j], 'only')) j++;
+      }
+    } else if (paraula(tokens[i], 'insert') && paraula(tokens[j], 'into')) {
+      j++; relacio = true;
+      if (paraula(tokens[j], 'only')) j++;
+    } else if (paraula(tokens[i], 'grant') || paraula(tokens[i], 'revoke')) {
+      const profunditat = tokens[i].depth;
+      while (j < tokens.length && !(tokens[j].depth === profunditat
+        && ['on', 'to', 'from'].some(v => paraula(tokens[j], v)))) j++;
+      i = j; // GRANT de rol sense ON no torna a escanejar la cua
+      if (!paraula(tokens[j], 'on')) continue;
+      j++;
+      if (paraula(tokens[j], 'table')) j++;
+      else if (['function', 'procedure', 'routine', 'schema', 'database', 'sequence', 'type', 'domain',
+        'language', 'tablespace', 'large', 'parameter', 'foreign', 'all'].some(v => paraula(tokens[j], v))) continue;
+      relacio = true; llista = true;
+    }
+    if (!relacio) continue;
+    if (!qualificada(j)) return true;
+    // Una relació qualificada ocupa exactament tres tokens; el nom de taula
+    // quoted pot contindre una coma, però això continua sent un sol token.
+    while (llista && tokens[j + 3]?.kind === 'symbol' && tokens[j + 3].value === ',') {
+      j += 4;
+      if (!qualificada(j)) return true;
+    }
+  }
+  return false;
+}
+
+function estatFuncionsR6(statement, file, estat, posicio, contextLocal) {
   // La resolució amb un search_path de sessió arbitrari queda fora del
   // subconjunt: podria canviar tant l'esquema implícit com un tipus shadowed.
   const { tokens: tots } = tokensDeFuncio(statement);
@@ -748,7 +845,8 @@ function estatFuncionsR6(statement, file, estat, posicio) {
   const sessionOption = paraula(session[1], 'local') || paraula(session[1], 'session') ? 2 : 1;
   if ((paraula(session[0], 'set') || paraula(session[0], 'reset'))
     && (identificador(session[sessionOption]) && ['search_path', 'schema', 'all'].includes(session[sessionOption].value.toLowerCase())
-      || paraula(session[sessionOption], 'u') && session[sessionOption + 1]?.value === '&')) {
+      || paraula(session[sessionOption], 'u') && session[sessionOption + 1]?.value === '&')
+    && !rutaLocalCatalogicaR6(session, contextLocal)) {
     falla('R6', file, 'search_path de sessió no suportat per a resoldre identitats; cal SQL qualificat i verificació PostgreSQL.');
   }
   // R32 · P2 (b): select [pg_catalog.]set_config('search_path', …) és el mateix SET.
@@ -1505,10 +1603,20 @@ for (const file of files) {
 
   fontsProvaR6.set(file, content);
   // R6: només opcions reals de CREATE FUNCTION, sense text de cos o arguments.
-  statements.forEach((statement, posicio) => estatFuncionsR6(statement, file, estatDefiner, posicio));
+  // El context LOCAL es delimita dins de cada fitxer: no es propaga una
+  // transacció suposada d'una migració anterior ni un BEGIN escrit en literal.
+  const ddlRutina = statements.filter(statement => RE_DDL_RUTINA.test(statement)).length;
+  const relacionsImplicites = relacionsImplicitesR6(executableR1);
+  let transaccio = false;
+  statements.forEach((statement, posicio) => {
+    const { tokens } = tokensDeFuncio(statement);
+    if (iniciaTransaccioR6(tokens)) transaccio = true;
+    else if (['commit', 'end', 'rollback', 'abort'].some(verb => paraula(tokens[0], verb))
+      || paraula(tokens[0], 'prepare') && paraula(tokens[1], 'transaction')) transaccio = false;
+    estatFuncionsR6(statement, file, estatDefiner, posicio, { transaccio, ddlRutina, relacionsImplicites });
+  });
   // R32 · P2 (a): el model aplica cada DDL de rutina, però PostgreSQL en desfà
   // la part que queda dins d'un ROLLBACK [TO SAVEPOINT]. No s'acredita estat.
-  const ddlRutina = statements.filter(statement => RE_DDL_RUTINA.test(statement)).length;
   if (ddlRutina && statements.some(statement => RE_DESFA.test(statement))) {
     falla('R6', file, `ROLLBACK, ROLLBACK TO o ABORT de nivell superior al mateix fitxer que ${ddlRutina} DDL de rutina (CREATE/ALTER/DROP FUNCTION|PROCEDURE|ROUTINE): no s'acredita quina part aplica PostgreSQL; separa la reversió o verifica-ho amb PGlite.`);
   }

@@ -155,3 +155,24 @@ test('ARB-G-04 · sense inclouRelatius, la barra invertida talla la URL (diferè
   assert.deepEqual(extreuUrlsDeText(String.raw`"<a href=\"https://wordpress.org/plugins/socdepoble/\">"`), ['https://wordpress.org/plugins/socdepoble/']);
   assert.deepEqual(extreuUrlsDeText(String.raw`vegeu https://socdepoble.org/a\b`), ['https://socdepoble.org/a']);
 });
+
+test('R32.81 · certifica recursos OpenData emesos pel build (.zip), rutes explícites /page/avisador d’App i detalls /events/:id i /receptes/:slug', async () => {
+  const informe = await certificaEnllacos({
+    arrel: ARREL,
+    urls: [
+      'https://socdepoble.org/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip',
+      'https://socdepoble.org/opendata/dades-obertes-la-torre-de-les-macanes-20261103.zip.sha256',
+      'https://socdepoble.org/page/avisador',
+      'https://socdepoble.org/events/aplec-2023',
+      'https://socdepoble.org/receptes/olleta-de-music'
+    ],
+    remot: false
+  });
+  assert.equal(informe.ok, true, JSON.stringify(informe.falles));
+  assert.equal(informe.resultats[0].arbre.tipus, 'opendata');
+  assert.equal(informe.resultats[2].arbre.tipus, 'spa-ruta');
+  assert.equal(informe.resultats[3].arbre.tipus, 'spa-dinamica');
+  assert.equal(informe.resultats[3].arbre.pendentDades, true);
+  assert.equal(informe.resultats[4].arbre.tipus, 'spa-dinamica');
+  assert.equal(informe.resultats[4].arbre.pendentDades, true);
+});

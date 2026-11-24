@@ -20,7 +20,8 @@ const FESTES = { id: 'f-0f0e0d0c-0b0a-4908-8706-050403020100', nom: 'Festes' };
 const respostes = (folders) => async (ruta) => {
   if (String(ruta).startsWith('/rest/v1/note_folders')) {
     if (folders instanceof Error) throw folders;
-    return folders;
+    const after = new URL(ruta, 'http://local').searchParams.get('id');
+    return folders.filter(folder => after === null || folder.id > after.slice(3));
   }
   return [{ id: '00000000-0000-4000-8000-000000000001', revision: 1 }];
 };
@@ -79,10 +80,10 @@ test('R31 · un servidor que sempre avança té pressupost finit i mai retorna u
 test('R31 · una lectura legítima de més de 500 carpetes conserva totes les files', async () => {
   let pagines = 0;
   mocks.request.mockImplementation(async ruta => String(ruta).startsWith('/rest/v1/note_folders')
-    ? paginaCarpetes(pagines++, pagines === 1 ? 500 : 2) : []);
+    ? pagines < 2 ? paginaCarpetes(pagines++, pagines === 1 ? 500 : 2) : (pagines++, []) : []);
   const { noteFolders } = await loadNotes(mocks.user.id, config);
   expect(noteFolders).toHaveLength(NOTE_FOLDERS_SEED.length + 502);
-  expect(pagines).toBe(2);
+  expect(pagines).toBe(3);
 });
 
 test('R31 · cancel·lació en rebre una pàgina de carpetes no deixa començar-ne una altra', async () => {

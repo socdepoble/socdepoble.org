@@ -13,65 +13,66 @@ triggers_on:
   - copy
 contracte.llig:
   - .agents/skills/sdp-pedra-seca/SKILL.md
+  - .agents/skills/sdp-universal-page/SKILL.md
   - _wiki_de_poble/00_index.md
 contracte.escriu:
   - _wiki_de_poble/00_index.md
+motors:
+  - tooling/gates/tractor-maquetacio-canonica.mjs
 ---
-# Tractor de Llegibilitat i Flux de Text (Pedra Seca)
+# Tractor de llegibilitat i flux de text (Pedra Seca)
 
-Aquest tractor governa la llegibilitat de components, HTML i pàgines pintades. El fitxer Markdown font correspon a [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]] i l'encaminament documental a [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]].
+Aquest tractor governa la llegibilitat de components, HTML i pàgines pintades a l'aplicació. El fitxer Markdown font seguix [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]], l'anatomia de pàgina seguix [[sdp-universal-page/SKILL|sdp-universal-page]] i l'encaminament documental seguix [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]].
 
-## 1. Flux Lliure del Text (Zero "Capar")
-No es pot limitar artificialment l'amplada del text (evitar contenidors que tallen el text a poc més de mitja pàgina). El text ha de **fluir de forma natural ocupant l'espai disponible**, adaptant-se fins al final, respectant únicament els marges generals del sistema de Pedra Seca. Zero caixes estretes innecessàries.
+## 1. Flux lliure del text i redacció humana
 
-## 2. La Xarxa Didàctica a Tots els Nivells
-La característica fundacional de Sóc de Poble és que ha de ser **DIDÀCTICA a tots els nivells**: per al veí jove, per a la gent gran, per a l'enginyer i per a la IA.
-- Si un document és inaccessible, cridaner o difícil d'escanejar, ha fracassat com a eina rural.
-- **La Regla Didàctica d'Or:** *«Un paràgraf més mai està de més quan és didàctic.»* Si calen dos o tres paràgrafs per fer-ho entendre clarament a la gent del poble, s'escriuen amb naturalitat.
+No es pot limitar artificialment l'amplada del text amb contenidors que tallen la lectura a mitja pantalla (`--sdp-measure` prohibit en prosa per `tractor-maquetacio-canonica.mjs`). El text ha de **fluir de forma natural ocupant tot l'espai disponible**, respectant només els marges del contenidor de Pedra Seca.
 
-## 3. Jerarquia Editorial Canònica (H1 → H2 → Entradeta → H3 → Paràgraf)
-El contingut editorial de pàgines i publicacions seguix este patró. Un control, una etiqueta, un diàleg curt o un estat buit reutilitzen el seu component; no cal inventar un H1/H2/entradeta en cada peça. Les plantilles documentals i el Markdown tenen el seu contracte específic:
-- **H1:** Títol principal noble, **sense majúscules cridaneres**. Les majúscules només es reserven per a sigles i acrònims estrictes.
-- **H2:** Títol de secció o de bloc funcional. **MAI un paràgraf dens ni un totxo de cinc línies**. L'H2 es queda exclusivament amb la primera frase contundent i breu.
-- **Entradeta (Lead explicativa):** Text destacat just davall de l'H2 que sintetitza el propòsit essencial del bloc i absorbeix la càrrega contextual densa. Mai s'encasta un H3 directament davall d'un H2 sense entradeta.
-- **H3 / H4:** reserva els encapçalaments per a seccions que tenen contingut propi i han d'entrar a la Taula de Continguts. Els passos seqüencials continuen sent una llista numerada accessible; no els convertisques en encapçalaments només perquè porten un número.
-- **Paràgraf normal:** Explicació didàctica desenvolupada.
+La prosa pública i de la Wiki es redacta sempre per a **persones humanes amb to càlid, amable i didàctic**, mai amb estil sec, telegràfic o esquemàtic de màquina. Val sempre la **Regla Didàctica d'Or**: *«Un paràgraf més mai està de més quan és didàctic.»*
 
-## 4. Escanejabilitat Visual a Salts de Vista (6 a 8 Paraules en Negreta per Paràgraf)
-Sóc de Poble està pensat per a lectors que busquen anar al gra mitjançant **lectura a salts de vista (en diagonal)**.
-- Dins de cada paràgraf de 4 o 5 línies, és **obligatori marcar entre 6 i 8 paraules clau en negreta** (o una petita frase sintètica en negreta).
-- **La norma d'or ergonòmica:** Si el lector només llig les paraules en negreta, saltant d'un paràgraf al següent, ha de poder entendre el missatge complet de tota la pàgina d'un colp d'ull, sense necessitat de consumir la morralla conjuntiva.
+## 2. Regla d'or editorial (H1 → H2 centrat → Entradilla → H3..H6)
 
-## 5. Deure d'Avís i Auto-Correcció
-Si detectes text poc llegible, títols cridaners en majúscules o llistes llargues que haurien de ser H3, cita la superfície i el defecte. Corregix-lo quan entre en l'encàrrec autoritzat; fora d'abast, registra'l. Els canvis visuals respecten el pla aprovat i la Llei del Píxel de [[sdp-workflow/SKILL|sdp-workflow]].
+Tota `UniversalPage` i publicació de Sóc de Poble respecta aquesta escala tipogràfica i semàntica completa d'`H1` a `H6` (`IDEA-319` i `IDEA-344`):
 
-## 6. Algoritme Lèxic i Conceptual «De Poble vs. Del Poble» i «Utilitza vs. Usa» (`P0-38 / IDEA-157 · Regla del Cosí Guillermo`)
-Abans d'escriure o revisar qualsevol entradeta, subtítol o paràgraf editorial, aplica aquest filtre algorítmic de tres passos:
-1. **Substitució de `usa / usen` per `utilitza / utilitzen` (o `fa servir`):** En valencià viu de les nostres comarques no diem *«La IAIA usa...»*; diem **«La IAIA utilitza...»**.
-2. **Llei Global de Comunicació `de poble` vs. `del poble` (Test «De quin poble?» a TOT el Sistema):**
-   - **Pregunta de control:** *Si un lector llig «...del poble» i pregunta «de quin poble?», hi ha un municipi concret com a resposta?*
-   - **`de poble` (sense article determinat — regla general a tot el sistema):** És el nostre concepte comunicatiu, cultural i d'identitat de marca: **`Sóc de Poble`** (mai *Sóc del Poble*), **`Wiki de Poble`**, **`Gestoria de Poble`**, **`Manifest de Poble`**, **`Rutes de Poble`**, **`Còmic de Poble`**, **`Mur de Poble`**, **`Mercat de Poble`**, **`Gent de Poble`**, **`l'imaginari de poble`**, **`experiències de poble`**, **`paraules de poble`**, **`eines de poble`**, **`llenguatge visual de poble`**, **`veu de poble`**, **`obres de poble`**, **`memòria de poble`**, **`vida de poble`**. Substitueix sistemàticament les repeticions de *«del poble»* (com les 4–5 repeticions dins de `/anima`, `/projecte`, `/disseny`, `/anatomia-rural` i diccionaris) per **`de poble`** (`de pueblo` en castellà).
-   - **`del poble` (`de + el poble`, amb article determinat — excepció estricta):** Només és vàlid quan en el mateix context s'està parlant d'un municipi físic concret i identificable (ex.: La Torre de les Maçanes, l'ajuntament local, el poble actiu al filtre) on la pregunta *«de quin poble?»* té resposta específica.
-3. **Precisió entre `imaginari` i `imatges`:** Quan parlem de metàfores culturals, il·lustracions arquetípiques (Bruguera/Ibáñez) o comparacions rurals (bancal, séquia, pedra seca), no digues mai *«les imatges del poble»* (que és fals perquè ni són fotos d'un poble real ni es limiten a imatges); escriu sempre **«l'imaginari de poble»** (*«La IAIA utilitza l'imaginari de poble per a explicar la tecnologia»*).
+- **Capçalera de pàgina (`H1` → `H2` centrat → `.lead`):** `PageFrame` pinta un únic **`H1`** dins del bloc blanc superior, seguit sobre el fons de lectura per l'**`H2` centrat** (subtítol breu en taronja) i l'**Entradilla (`.lead`)** centrada que resumeix tot el propòsit de la pàgina.
+- **Cos ordinari (`H3` a `H6` alineats a l'inici):** Dins del cos del document, **totes les seccions principals comencen en `H3`** alineat a l'inici amb filet inferior (inclòs el `Quadre de Comandament ISO` i cada `##` del cos Markdown). Els subapartats i fitxes empren **`H4`**, **`H5`** i **`H6`** sense saltar cap nivell ni disfressar un `H3` amb `class="h2"`.
+- **Excepcionalitat estricta de l'`H2` dins del cos (`H2` → `.lead` → `H3`):** Només es pot posar un **`H2` centrat dins del cos** quan cal obrir un gran bloc temàtic excepcional, i **sempre ha d'anar seguit obligatòriament de la seua pròpia entradilla (`.lead`) i tot seguit d'un `H3`**. Un `H2` centrat nu sense `.lead` i `H3` és una infracció bloquejada per `tractor-maquetacio-canonica.mjs` (`MC1` en `PAGE_COPY` i `MC2` en JSX/HTML).
+- **Llistes numerades vs. encapçalaments:** Reserva `H3–H6` per a seccions amb contingut propi que entren a l'Índex de la Barra Blava. Els passos seqüencials van en llista numerada `<ol>`, sense convertir-los en títols només pel número.
 
-## 7. Mesa de Revisió Editorial de les 4 IAIAs del Node 0 (`IDEA-164` · Doble Funció: Porta Interna de Publicació + Assistent Editorial per a Cada Usuari)
-Les **4 IAIAs del Node 0 (`Mac mini M4`)** estan formades en l'ofici de **Revisor Editorial i Corrector d'Estil d'una Editorial** (cultura general extensa, correcció ortotipogràfica i gramatical, riquesa lèxica, coherència narrativa, detecció de duplicitats/redundàncies i proposta de redacció millorada):
-1. **Repartiment de Rols Editorials 4×4 al Node 0 (revisor local de `/notes`: `src/sections/notes/revisorEditorialNode0.js`):**
-   - **`iaia-maria:latest` (Directora d'Estil, Trellat i Llei «DE POBLE»):** Vetla pel to humà i didàctic, la claredat per a la gent gran i el compliment estricte de `de poble` vs `del poble` i `utilitza` vs `usa`.
-   - **`qwen3:8b` (Correctora Ortotipogràfica, Gramatical i Lèxica):** Detecta faltes d'ortografia, sintaxi, puntuació, barbarismes i cacofonies, i redacta sempre una **proposta de redacció millorada** que polix el text sense perdre la veu de l'autor.
-   - **`qwen2.5-coder:14b` (Revisora Estructural, Maquetació Pedra Seca i Caçadora de Duplicitats):** Detecta elements o visors duplicats (com dos pous de neu o paràgrafs repetits), incoherències de xifres/cotes respecte a les fonts primàries, jerarquia `H1→H2→Entradeta→H3` i les 6–8 negretes per paràgraf.
-   - **`nemotron-mini:latest` (Advocada del Lector i Veredicte Editorial):** Avalua la simplicitat i comprensió immediata per a un lector nou i emet el dictamen (`APROVAT`, `AMB PROPOSTA DE MILLORA`, `BLOQUEJAT PER DUPLICITAT O INCOHERÈNCIA`).
-2. **Obligació en cada Publicació del Sistema:** Sempre que la IAIA MarIA o qualsevol agent vaja a publicar o modificar un article, pàgina o crònica, les 4 IAIAs del Node 0 han de revisar el text i lliurar la seua avaluació i proposta de redacció millorada abans de publicar.
-3. **Funcionalitat per a Cada Usuari (`IDEA-164` a l'Editor Universal):** Aquesta mateixa capacitat de Revisora Editorial s'ofereix a cada veí i usuari dins de l'Editor Universal (`UniversalEditorShell.jsx` / `NotesEditor.jsx` / `Mur` / `Mercat`) per ajudar-lo a millorar la seua comunicació amb propostes de redacció, correcció amable i avís de duplicitats.
+## 3. Escanejabilitat visual a salts de vista (6 a 8 negretes per paràgraf)
 
-## 8. Llei del Quadre Blanc Editorial (`H3 / H4 + <p>`) vs. Fals Tauler d'Avió en Columnes (`<dl>`) (`261110`)
-- Quan mostrem informació en quadres informatius blancs (`.sdp-admin-taxonomia__panel`, `.sdp-card`), el marc blanc té tot el sentit perquè millora la lectura sobre el fons.
-- Però **dins del quadre blanc**, no s'ha d'abandonar mai l'`<h3>` / `<h4>` i el `<p>` editorial per fingir una "consola d'avió" en dues columnes (`<dl>` amb el punt `1`, `2`, `3` a l'esquerra i l'explicació escanyada a la dreta).
-- **Regla operativa:** Tota explicació de més d'una línia dins d'un quadre blanc va maquetada amb encapçalaments semàntics (`h3`, `h4`, `h5`) i paràgrafs (`p`) o llistes (`ul`, `ol`) d'amplària completa (`.sdp-admin-editorial-stack` / `.sdp-admin-editorial-bloc`), de manera que l'Índex de Continguts (TOC) ho indexe sola i siga 100% exportable com a HTML editorial net.
+Sóc de Poble està pensat perquè qualsevol veí puga comprendre un text tant en lectura calmada com en **lectura diagonal a salts de vista**.
 
-## Què acompanya cada comprovació
+- En cada paràgraf de prosa desenvolupada (4 o 5 línies), és **obligatori marcar entre 6 i 8 paraules o sintagmes breus en negreta** (`<strong>` / `**...**`).
+- **Norma d'or ergonòmica:** Si la persona lectora llig únicament els sintagmes en negreta saltant d'un paràgraf al següent, ha d'entendre el **missatge complet i fidel de tota la pàgina** d'un sol colp d'ull.
 
-`design_guard.mjs`, els components compartits i les seues suites comproven estructura i regressions concretes; no certifiquen llegibilitat didàctica o escaneig humà. La jerarquia del DOM, el focus i el text visible es contrasten amb la prova de la superfície; la lectura i el retall real necessiten inspecció visual. Declara estos resultats separadament.
+## 4. Algoritme lèxic «de poble vs. del poble» i «utilitza vs. usa»
+
+Abans d'escriure o revisar qualsevol entradeta, subtítol o paràgraf editorial, aplica aquest filtre de tres passos (`IDEA-157` · Regla del Cosí Guillermo):
+
+1. **Substitució d'`usa / usen` per `utilitza / utilitzen` (o `fa servir`):** En valencià viu de les nostres comarques escrivim sempre **«La IAIA utilitza...»**, mai *«La IAIA usa...»*.
+2. **Distinció `de poble` vs. `del poble` (test «De quin poble?»):** **`de poble`** (sense article) és el concepte d'identitat i cultura a tot el sistema (`Sóc de Poble`, `Wiki de Poble`, `eines de poble`, `veu de poble`, `vida de poble`). **`del poble`** només és vàlid quan el context assenyala un municipi físic concret (ex. La Torre de les Maçanes) que respon *«de quin poble?»*.
+3. **Precisió entre `imaginari` i `imatges`:** Quan parlem de metàfores rurals o il·lustracions arquetípiques (Bruguera/Ibáñez), escrivim sempre **«l'imaginari de poble»**, mai *«les imatges del poble»*.
+
+## 5. Mesa editorial i safata de propostes del Node 0
+
+Les **4 IAIAs del Node 0 (`Mac mini M4`)** actuen com a **Mesa de Revisió Editorial** (`IDEA-164` i `IDEA-344`):
+
+1. **Rols 4×4 (`revisorEditorialNode0.js`):** `iaia-maria:latest` vetla pel to humà, el Trellat i la llei `de poble`; `qwen3:8b` polix ortotipografia i sintaxi; `qwen2.5-coder:14b` verifica jerarquia `H1→H2→.lead→H3..H6`, duplicitats i les **6–8 negretes**; `nemotron-mini:latest` emet el dictamen de claredat lectora.
+2. **Safata per lots (`261124_propostes_editorials_node0`):** El generador del Node 0 detecta pàgines amb baixa densitat de negreta (`< 5` per paràgraf) o prosa telegràfica i diposita les **propostes humanitzades amb diff** en safata externa perquè la IAIA MarIA valide que conserven el **100 % dels fets tècnics i enllaços** abans d'integrar-les en lots CAS.
+
+## 6. Quadre blanc editorial vs. fals tauler en columnes
+
+Dins de quadres informatius blancs (`.sdp-admin-taxonomia__panel`, `.sdp-card`), tota explicació de més d'una línia es maqueta amb **encapçalaments semàntics (`h3`, `h4`, `h5`) i paràgrafs `<p>` o llistes `<ul>`/`<ol>` d'amplària completa**, mai fingint una consola en dues columnes `<dl>` que escanye la lectura a la dreta.
+
+## 7. Deure d'avís i abast de les portes
+
+Si detectes text telegràfic, títols en majúscules cridaneres, absència de negretes o un `H2` sense entradilla, cita la superfície i corregix-lo dins de l'encàrrec autoritzat; fora d'abast, registra'l.
+
+`tractor-maquetacio-canonica.mjs`, `design_guard.mjs` i les suites Vitest comproven l'estructura del DOM, l'amplada lliure i la regla `H2 → .lead → H3`, però no substitueixen la revisió humana de calidesa didàctica i lectura en pantalla real.
 
 ## Vincles
+
 - [[00_INDEX_SKILLS]]
+- [[core-maquetacio-markdown/SKILL]]
+- [[sdp-universal-page/SKILL]]

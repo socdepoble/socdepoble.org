@@ -27,7 +27,7 @@ const senseTraduccio = (_clau, reserva) => reserva;
    de /pobles (useCoreContent): la pastilla del poble, la de més a la dreta,
    només ix quan el poble de la publicació casa amb una fitxa. Sense fitxes
    (l'espècimen del catàleg, fora de l'App), les etiquetes de sempre. */
-export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns } = {}) {
+export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns, idioma = 'ca' } = {}) {
   /* Ordre del Mestre, 261001 · La boina del producte, amb el format i el
      lector únics (editorial.js · dataDElement), els mateixos que la seua
      targeta al Mur (TargetaDelMur.jsx): «dd/mm/aa» i «hh:mm», i el dateTime
@@ -85,8 +85,8 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns } = {
       : null),
     labels: [
       { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
-      item.category_slug ? { text: formataEtiquetaHumana(item.category_slug), className: 'sdp-badge-category' } : null,
-      item.tag ? { text: formataEtiquetaHumana(item.tag), className: 'sdp-badge-tag' } : null,
+      item.category_slug ? { text: formataEtiquetaHumana(item.category_slug, idioma), className: 'sdp-badge-category' } : null,
+      item.tag ? { text: formataEtiquetaHumana(item.tag, idioma), className: 'sdp-badge-tag' } : null,
       /* R22 · Ordre canònic [Mercat] → [categoria curta] → [subfamília humana] → [poble]:
          el recompte de variants no s'interposa; va just davant del poble. */
       item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,

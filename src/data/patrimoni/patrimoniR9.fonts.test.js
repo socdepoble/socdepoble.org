@@ -75,8 +75,10 @@ describe('els extractes són literals de la font sencera (quan és al disc)', ()
       for (const [n, text] of ex.linies) expect(redacta(linies[n - 1]), `${nom}:${n}`).toBe(text);
     });
   }
-  const bytesWp = fontSencera(EX_WP.font);
-  it.skipIf(!bytesWp)('WP 619: SHA-256, camp text i àncores de les 19 fitxes', () => {
+  // La font completa reubicada s'ha copiat byteexacta, no reconstruïda de l'extracte.
+  // Si la ruta externa antiga existix, continua sent la font que es contrasta.
+  const bytesWp = fontSencera(EX_WP.font) || readFileSync(path.join(FIX, 'wp619-pages.original.json'));
+  it('WP 619: SHA-256, camp text i àncores de les 19 fitxes', () => {
     expect(createHash('sha256').update(bytesWp).digest('hex')).toBe(EX_WP.sha256);
     const wp = JSON.parse(bytesWp.toString('utf8'))[FONT_ARBRES_MONUMENTALS.camp];
     expect([wp.id, wp.link, wp.date, wp.title]).toEqual([EX_WP.id, EX_WP.link, EX_WP.date, EX_WP.title]);

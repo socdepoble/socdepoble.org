@@ -32,6 +32,8 @@ vi.mock('../../data/backendPort.js', () => ({
   estatConsentiment: m.estatConsentiment, registraConsentiment: m.registra, revocaConsentiment: m.revoca,
 }));
 import { DetallPrivacitat, TEXTOS_PRIVACITAT, nomFitxerExportacio, dataLlegible, pagina } from './DetallPrivacitat.jsx';
+import { RUTA_FITXA_MODE_RURAL, TEXTOS_MODE_RURAL_PERFIL } from './BlocModeRuralPerfil.jsx';
+import { TEXTOS_SALUT_DISPOSITIU } from '../control/textosSalutDispositiuJarvis.js';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
 import { LANGUAGE_STORAGE_KEY } from '../../config/i18n.js';
 import { delVal } from '../../config/storage.js';
@@ -397,7 +399,15 @@ describe('TE-01 · en castellà', () => {
     pintaEnCastella();
     expect(screen.getByRole('heading', { level: 1, name: 'Privacidad y datos' })).toBeTruthy();
     expect(screen.queryByRole('heading', { level: 1, name: 'Privacitat i dades' })).toBeNull();
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Mis datos', 'Consentimiento', 'Darse de baja', 'Portabilidad federada', 'Prueba local de cifrado']);
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Mis datos',
+      'Consentimiento',
+      'Darse de baja',
+      'Salud del dispositivo y espacio local',
+      'Modo rural (guardado local sin cobertura)',
+      'Portabilidad federada',
+      'Prueba local de cifrado',
+    ]);
     await screen.findByRole('button', { name: 'Cancelar la baja' });
     const data = dataLlegible(pendent.purgaPrevistaAl, 'es-ES');
     expect(data).not.toBe(dataLlegible(pendent.purgaPrevistaAl));
@@ -485,4 +495,39 @@ test('Ronda 31 · R21-ARCH-02: DetallPrivacitat mostra i verifica la regla d’O
   expect(notaOblit).toBeTruthy();
   expect(notaOblit.textContent).toContain('Oblit Saludable Rural');
   expect(notaOblit.textContent).toContain('Sóc de Poble, El Rentonar i la Coordinadora');
+});
+
+describe('IDEA-341 · Reubicació de Salut de l’aparell i Mode rural dins d’«El meu perfil › Privacitat i dades»', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: false, media: query, onchange: null, addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn(),
+    })));
+    delVal(LANGUAGE_STORAGE_KEY);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delVal(LANGUAGE_STORAGE_KEY);
+  });
+
+  test.each(['ca', 'es', 'en', 'eu', 'gl'])('en %s, munta GinySalutDispositiuJarvis (data-integrat="perfil") i el bloc explicat de Mode rural amb enllaç centrat a /control?fitxa=mode-rural', async (codi) => {
+    m.caps = new Set(['compte', 'consentiment']);
+    render(
+      <UIProvider externalConfig={{ language: codi }}>
+        <DetallPrivacitat identitat={jo} config={config} />
+      </UIProvider>,
+    );
+
+    const giny = await screen.findByTestId('giny-salut-dispositiu-jarvis');
+    expect(giny.getAttribute('data-integrat')).toBe('perfil');
+    expect(within(giny).getByRole('heading', { level: 3, name: TEXTOS_SALUT_DISPOSITIU[codi].titolSeccio })).toBeTruthy();
+
+    const txRural = TEXTOS_MODE_RURAL_PERFIL[codi];
+    expect(await screen.findByRole('heading', { level: 3, name: txRural.titol })).toBeTruthy();
+    expect(screen.getByTestId('perfil-mode-rural-explica').textContent).toBe(txRural.explica);
+
+    const enllacRural = screen.getByRole('link', { name: txRural.boto });
+    expect(enllacRural.getAttribute('href')).toBe(RUTA_FITXA_MODE_RURAL);
+    expect(enllacRural.closest('.perfil-compte__accions')).toBeTruthy();
+  });
 });

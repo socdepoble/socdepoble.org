@@ -8,7 +8,6 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import TextSection from '../text/TextSection';
 import FitxaHerbari from './FitxaHerbari.jsx';
 import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
-import { creaLocutorHerbariLocal } from './locutorHerbariLocal.js';
 import { textosHerbari } from './textosHerbari.js';
 import { modelHerbariWorkspace } from './modelHerbariWorkspace.js';
 
@@ -40,46 +39,59 @@ function PaginaFitxaHerbari({ item, textos, onClose, children }) {
 }
 
 export default function HerbariWorkspaceSection({
-  locutor: injectat = null,
   page = null,
   accioPrincipal = null,
   children = null,
   itemSlug = null,
   sincronitzaRuta = false
 }) {
-  const { language = 'ca' } = useUIActions(), textos = textosHerbari(language);
+  const { language = 'ca' } = useUIActions();
+  const textos = textosHerbari(language);
   const cataleg = useLaminesBotaniquesNode0();
   const model = useMemo(() => modelHerbariWorkspace(textos, cataleg?.obteLaminaBotanicaNode0), [textos, cataleg]);
-  const locutor = useMemo(() => injectat ?? creaLocutorHerbariLocal(), [injectat]);
-  const fitxa = (item, onClose) => item ? <section className="sdp-cataleg-workspace__fitxa" aria-label={item.title}>
-    <div className="sdp-herbari-fitxa__capcalera">
-      <h3 lang="ca">{item.title}</h3>
-      {typeof onClose === 'function' ? (
-        <button type="button" className="sdp-boto sdp-boto--secundari sdp-herbari-fitxa__tornar" onClick={onClose}>
-          {`← ${textos.titol}`}
-        </button>
-      ) : null}
-    </div>
-    <FitxaHerbari key={item.id} especie={item.dades} textos={textos} locutor={locutor} />
-  </section> : <p>{textos.documental}</p>;
-  return <CatalegWorkspace font="herbari" destiPublicacio="herbari" model={model} id="herbari-p069" ruta="/page/herbari"
-    itemSlug={itemSlug} sincronitzaRuta={sincronitzaRuta}
-    labels={{ categories: textos.us, items: textos.titol, all: textos.tots, search: textos.cerca, empty: textos.buit, noResults: textos.buit }}
-    renderDetail={({ item, onClose }) => {
-      if (!page) return fitxa(item, onClose);
-      if (item) {
+
+  const fitxa = (item) => (item ? (
+    <section className="sdp-cataleg-workspace__fitxa" aria-label={item.title}>
+      <FitxaHerbari key={item.id} especie={item.dades} textos={textos} />
+    </section>
+  ) : (
+    <p>{textos.documental}</p>
+  ));
+
+  return (
+    <CatalegWorkspace
+      font="herbari"
+      destiPublicacio="herbari"
+      model={model}
+      id="herbari-p069"
+      ruta="/page/herbari"
+      itemSlug={itemSlug}
+      sincronitzaRuta={sincronitzaRuta}
+      labels={{
+        categories: textos.us,
+        items: textos.titol,
+        all: textos.tots,
+        search: textos.cerca,
+        empty: textos.buit,
+        noResults: textos.buit
+      }}
+      renderDetail={({ item, onClose }) => {
+        if (item) {
+          return (
+            <PaginaFitxaHerbari key={item.id} item={item} textos={textos} onClose={onClose}>
+              {fitxa(item)}
+              {children}
+            </PaginaFitxaHerbari>
+          );
+        }
+        if (!page) return fitxa(null);
         return (
-          <PaginaFitxaHerbari key={item.id} item={item} textos={textos} onClose={onClose}>
-            {fitxa(item, onClose)}
+          <TextSection page={page} pageKey="herbari" accioPrincipal={accioPrincipal}>
+            {fitxa(null)}
             {children}
-          </PaginaFitxaHerbari>
+          </TextSection>
         );
-      }
-      return (
-        <TextSection page={page} pageKey="herbari" accioPrincipal={accioPrincipal}>
-          {fitxa(null, onClose)}
-          {children}
-        </TextSection>
-      );
-    }} />;
+      }}
+    />
+  );
 }

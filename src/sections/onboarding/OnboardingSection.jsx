@@ -387,10 +387,17 @@ export default function OnboardingSection() {
     oblidaEnllac();
     setTimeout(() => { document.getElementById('rec-email')?.focus(); }, 0);
   };
+  /* P01-03 (v1.2.24, F4-B) · El botó del correu de l'escut no força cap mode:
+     qui ha arribat per «Registrar-se» es queda en «Crea el teu compte», i un
+     ?mode=entrar es continua respectant. Només tanca la recuperació i porta el
+     focus al correu. */
   const obriCorreuDesDeWebview = () => {
     setErrorEntrada(null);
     setObreRecuperacio(false);
-    setModeForcat('entrar');
+    /* Revisió adversarial (P01-03) · Amb ?mode=recuperar (P0-63 / IDEA-194) el
+       mode de la consulta ja és la recuperació: sense forçar-ne un altre, el
+       botó es quedaria mort. Qui ve a recuperar ja té compte: «Entrar». */
+    if (modeInicial === 'recuperar') setModeForcat('entrar');
     setTimeout(() => { document.getElementById('reg-email')?.focus(); }, 0);
   };
   const copiaAdrecaWebview = async () => {
@@ -668,10 +675,10 @@ export default function OnboardingSection() {
   const [abansAdreca, despresAdreca] = tr('section.login.google.adreca', 'Si no s’obri, copia l’adreça: {adreca}').split('{adreca}');
   /* Fase D (261020, tasca 1; decisió D2) · A l'app nativa, la benvinguda va
      davall del formulari: els botons d'Apple i Google, a la vista sense desplaçar. */
-  const [abansSegur, despresSegur] = tr('section.login.benvinguda.text', "L'accés és {segur} i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!").split('{segur}');
+  const [abansSegur, despresSegur] = tr('section.login.benvinguda.text', "L'accés és {segur} i les teues dades estan protegides pel Reglament europeu de protecció de dades (RGPD). T'agrairem que ens avises si trobes cap detall a millorar, especialment al mòbil o a la tauleta. Et mantindrem al dia de les novetats!").split('{segur}');
   const benvinguda = (
     <div className="onboarding-benvinguda">
-      <h3>{tr('section.login.benvinguda.beta', 'Benvinguda a la Beta de Sóc de Poble')}</h3>
+      <h3>{tr('section.login.benvinguda.beta', 'Benvinguda a Sóc de Poble')}</h3>
       <p className="onboarding-card__intro onboarding-card__intro--espaiada">
         {leadBenvinguda}
       </p>
@@ -809,10 +816,21 @@ export default function OnboardingSection() {
                         <p>{escutWebview.instruccions}</p>
                       </div>
                     </Alerta>
+                    {/* P01-03 (v1.2.24, F4-B) · La persona nova, de primeres: el
+                        correu (entrar o crear) és el primari; la recuperació de la
+                        contrasenya, de segona i només si el port en té. */}
                     <div className="onboarding-entrada-nativa">
+                      <Boto
+                        varietat="primari"
+                        ple
+                        disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
+                        onClick={obriCorreuDesDeWebview}
+                      >
+                        {txWebview.botoCorreu}
+                      </Boto>
                       {potRecuperar ? (
                         <Boto
-                          varietat="primari"
+                          varietat="secundari"
                           ple
                           disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
                           onClick={obriEnllacMagicDesDeWebview}
@@ -820,14 +838,6 @@ export default function OnboardingSection() {
                           {txWebview.botoEnllacMagic}
                         </Boto>
                       ) : null}
-                      <Boto
-                        varietat={potRecuperar ? 'secundari' : 'primari'}
-                        ple
-                        disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
-                        onClick={obriCorreuDesDeWebview}
-                      >
-                        {txWebview.botoCorreu}
-                      </Boto>
                       {adrecaWebview ? (
                         <Boto varietat="fantasma" ple onClick={copiaAdrecaWebview}>
                           {txWebview.botoCopiaUrl}
@@ -917,7 +927,9 @@ export default function OnboardingSection() {
             onTornar={() => setConfirmationEmail('')}
             onRecupera={potRecuperar ? demanaRecuperacio : null}
             introEntrada={introEntradaNativa}
-            teAccesGoogle={!esNatiu || proveidorsNatius.includes('google')}
+            /* P01-03 (v1.2.24, F4-B) · Dins de l'escut no hi ha cap botó de Google:
+               cap nota no hi ha d'enviar la persona «al botó de Google de dalt». */
+            teAccesGoogle={!webviewSocial.esWebViewSocial && (!esNatiu || proveidorsNatius.includes('google'))}
             t={tr}
           />
         ) : null}

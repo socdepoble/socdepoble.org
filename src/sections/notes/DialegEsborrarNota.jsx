@@ -12,23 +12,14 @@
  * res amb la nota, i mentre treballa (ocupat) tampoc tanquen. Al segon pas el
  * focus va a «Enrere» (Llei de la Por Orgànica, Dialeg.jsx): un Intro distret
  * no esborra res.
- *
- * La vista per a recuperar notes de la paperera i de l'arxiu encara no
- * existix: els textos no prometen cap botó de recuperar.
- *
- * F03-UI (Onada R21) · `retiraDelMur`: el port té la capacitat
- * 'revocacioPublicacions' i la nota és publicada. Aleshores és cert (trigger
- * mur_retira_des_de_nota de 2611121430) que la paperera i l'esborrat la
- * retiren del Mur en la mateixa transacció, i que l'arxiu no; el diàleg ho
- * diu. `seccio` ('mur' o 'mercat') diu d'on. Sense, el text de sempre. Els
- * textos nous van en les cinc llengües (useTraductorOpcional); la resta del
- * diàleg continua en valencià, com abans.
  */
 import { useState } from 'react';
 import { Dialeg, Boto } from '../../components/PedraSeca';
+import { useUIStateOpcional } from '../../app/contexts/UIContext';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { TITOL_NOTA_PREPARADA } from './notaPreparada.js';
+import { textosDialegEsborrarNota } from './i18nNotesDetail.js';
 
 export const TEXTOS_ESBORRAR_PUBLICADA = Object.freeze({
   publicada: Object.freeze(['section.notes.esborrar.publicada', 'Esta nota està publicada: arxivar-la, guardar-la a la paperera o borrar-la definitivament també la retira del Mur públic per a tothom. Recuperar la nota no recupera la publicació: si la tornes a publicar, tindrà un enllaç nou.']),
@@ -38,8 +29,17 @@ export const TEXTOS_ESBORRAR_PUBLICADA = Object.freeze({
 });
 const E = TEXTOS_ESBORRAR_PUBLICADA;
 
+function useIdiomaDialeg() {
+  try {
+    return useUIStateOpcional()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = false, retiraDelMur = false, seccio = 'mur' }) {
   const t = useTraductorOpcional();
+  const tx = textosDialegEsborrarNota(useIdiomaDialeg());
   const mercat = seccio === 'mercat';
   const retira = Boolean(retiraDelMur && nota?.isPublished);
   const [segonPas, setSegonPas] = useState(false);
@@ -52,6 +52,7 @@ export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = fals
   const titol = extractPlainText(nota?.title || '', Infinity).trim() || TITOL_NOTA_PREPARADA;
 
   const tria = (opcio) => {
+    if (ocupat) return;
     setTriada(opcio);
     onTria?.(opcio);
   };
@@ -63,40 +64,40 @@ export function DialegEsborrarNota({ obert, nota, onTanca, onTria, ocupat = fals
   if (segonPas) {
     return (
       <Dialeg obert={obert} onTanca={tanca} mida="s" tancaEnVel={false}
-        titol={`Borrar per sempre «${titol}»?`}
-        descripcio="S’esborra ara i no es podrà recuperar: no passa per la paperera."
+        titol={tx.titolPas2(titol)}
+        descripcio={tx.descripcioPas2}
         accions={(
           /* Les claus fan que els botons del segon pas es munten de nou: sense
              elles React reutilitza el primer botó del pas anterior, autoFocus
              no es torna a aplicar i el focus cau al body. */
           <>
-            <Boto key="enrere" varietat="secundari" onClick={() => { setSegonPas(false); setTornat(true); }} disabled={ocupat} autoFocus>Enrere</Boto>
-            <Boto key="per-sempre" varietat="perill" onClick={() => tria('definitiu')} carregant={ocupat}>Borrar per sempre</Boto>
+            <Boto key="enrere" varietat="secundari" onClick={() => { setSegonPas(false); setTornat(true); }} disabled={ocupat} autoFocus>{tx.enrere}</Boto>
+            <Boto key="per-sempre" varietat="perill" onClick={() => tria('definitiu')} disabled={ocupat} carregant={ocupat}>{tx.perSempre}</Boto>
           </>
         )}>
         {retira
           ? <p>{tradueix(t, mercat ? E.definitiuMercat : E.definitiu)}</p>
-          : (nota?.isPublished ? <p>La publicació al Mur es queda on és.</p> : null)}
+          : (nota?.isPublished ? <p>{tx.murQueda}</p> : null)}
       </Dialeg>
     );
   }
 
   return (
     <Dialeg obert={obert} onTanca={tanca} mida="s" tancaEnVel={false}
-      titol={`Què vols fer amb «${titol}»?`}
-      descripcio="Només «Borrar definitivament» no té volta arrere."
+      titol={tx.titolPas1(titol)}
+      descripcio={tx.descripcioPas1}
       accions={(
         <>
           <Boto key="paperera" varietat="secundari" onClick={() => tria('paperera')}
-            disabled={ocupat} carregant={ocupat && triada === 'paperera'}>Guardar durant 30 dies</Boto>
+            disabled={ocupat} carregant={ocupat && triada === 'paperera'}>{tx.paperera}</Boto>
           <Boto key="arxiu" varietat="secundari" onClick={() => tria('arxivada')}
-            disabled={ocupat} carregant={ocupat && triada === 'arxivada'}>Arxivar</Boto>
-          <Boto key="definitiu" varietat="perill" onClick={() => setSegonPas(true)} disabled={ocupat} autoFocus={tornat}>Borrar definitivament</Boto>
+            disabled={ocupat} carregant={ocupat && triada === 'arxivada'}>{tx.arxivar}</Boto>
+          <Boto key="definitiu" varietat="perill" onClick={() => setSegonPas(true)} disabled={ocupat} autoFocus={tornat}>{tx.definitiu}</Boto>
         </>
       )}>
-      <p><strong>Guardar durant 30 dies.</strong> Ix del bloc i es guarda a la paperera 30 dies; després s’esborra per sempre.</p>
-      <p><strong>Arxivar.</strong> Ix del bloc i es guarda a l’arxiu, sense data de caducitat.</p>
-      <p><strong>Borrar definitivament.</strong> S’esborra ara i no es podrà recuperar.</p>
+      <p><strong>{`${tx.paperera}.`}</strong> {tx.explicaPaperera}</p>
+      <p><strong>{`${tx.arxivar}.`}</strong> {tx.explicaArxiu}</p>
+      <p><strong>{`${tx.definitiu}.`}</strong> {tx.explicaDefinitiu}</p>
       {retira ? <p>{tradueix(t, mercat ? E.publicadaMercat : E.publicada)}</p> : null}
     </Dialeg>
   );

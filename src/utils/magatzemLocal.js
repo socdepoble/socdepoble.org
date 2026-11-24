@@ -638,9 +638,9 @@ export function creaMagatzemIdb({
      * (navigator.storage.persist). true concedit · false denegat · null sense API.
      */
     async demanaPersistencia() {
-      const storage = navegador?.storage;
-      if (typeof storage?.persist !== 'function') return null;
       try {
+        const storage = navegador?.storage;
+        if (typeof storage?.persist !== 'function') return null;
         return Boolean(await storage.persist());
       } catch {
         return false;
@@ -655,7 +655,8 @@ export function creaMagatzemIdb({
      *   mode        'lliure' | 'escriptora' | 'lectora'
      */
     async estatPersistencia() {
-      const storage = navegador?.storage;
+      let storage;
+      try { storage = navegador?.storage; } catch { /* StorageManager bloquejat per política del navegador. */ }
       let duradora = null;
       let usat = null;
       let quota = null;

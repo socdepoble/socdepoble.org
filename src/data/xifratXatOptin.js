@@ -16,20 +16,26 @@ export function creaMagatzemOptinXat({idb=globalThis.indexedDB,navegador=globalT
   const vigent=exigix=>{if(tancat)throw falla('opt-in-tancat');exigix?.();if(!base.persistent)throw falla('opt-in-no-persistent');};
   return Object.freeze({
     async llegix(ci,fil,{kid,exigix}={}) {
-      const id=idDe(ci,fil);await prepara();vigent(exigix);
-      const r=await base.obte('fils',id);vigent(exigix);
-      const valid=r&&r.id===id&&r.ci===ci&&r.fil===fil&&typeof kid==='string'&&kid&&r.kid===kid&&Number.isSafeInteger(r.revisio)&&r.revisio>0&&Number.isSafeInteger(r.creatMs)&&r.creatMs<=ara()&&Number.isSafeInteger(r.caducaMs)&&r.caducaMs>ara()&&r.caducaMs>r.creatMs&&r.caducaMs-r.creatMs<=VIDA_OPTIN_XAT_MS&&r.revocatMs===null;
-      return Object.freeze({actiu:Boolean(valid),revisio:r?.revisio??0});
+      try {
+        const id=idDe(ci,fil);await prepara();vigent(exigix);
+        const r=await base.obte('fils',id);vigent(exigix);
+        const valid=r&&r.id===id&&r.ci===ci&&r.fil===fil&&typeof kid==='string'&&kid&&r.kid===kid&&Number.isSafeInteger(r.revisio)&&r.revisio>0&&Number.isSafeInteger(r.creatMs)&&r.creatMs<=ara()&&Number.isSafeInteger(r.caducaMs)&&r.caducaMs>ara()&&r.caducaMs>r.creatMs&&r.caducaMs-r.creatMs<=VIDA_OPTIN_XAT_MS&&r.revocatMs===null;
+        return Object.freeze({actiu:Boolean(valid),revisio:r?.revisio??0});
+      } finally { if(tancat)base.tanca(); }
     },
     async activa(ci,fil,kid,{caducaMs=ara()+VIDA_OPTIN_XAT_MS,exigix}={}) {
-      const id=idDe(ci,fil),creatMs=ara();
-      if(typeof kid!=='string'||!kid||!Number.isSafeInteger(caducaMs)||caducaMs<=creatMs||caducaMs-creatMs>VIDA_OPTIN_XAT_MS)throw falla('opt-in-caducitat-invalida');
-      await prepara();vigent(exigix);
-      await base.actualitza('fils',id,r=>{vigent(exigix);return{id,ci,fil,kid,creatMs,caducaMs,revocatMs:null,revisio:(r?.revisio??0)+1};});vigent(exigix);
+      try {
+        const id=idDe(ci,fil),creatMs=ara();
+        if(typeof kid!=='string'||!kid||!Number.isSafeInteger(caducaMs)||caducaMs<=creatMs||caducaMs-creatMs>VIDA_OPTIN_XAT_MS)throw falla('opt-in-caducitat-invalida');
+        await prepara();vigent(exigix);
+        await base.actualitza('fils',id,r=>{vigent(exigix);return{id,ci,fil,kid,creatMs,caducaMs,revocatMs:null,revisio:(r?.revisio??0)+1};});vigent(exigix);
+      } finally { if(tancat)base.tanca(); }
     },
     async revoca(ci,fil,{exigix}={}) {
-      const id=idDe(ci,fil);await prepara();vigent(exigix);
-      await base.actualitza('fils',id,r=>{vigent(exigix);return{id,ci,fil,kid:r?.kid??'',creatMs:r?.creatMs??ara(),caducaMs:r?.caducaMs??ara(),revocatMs:ara(),revisio:(r?.revisio??0)+1};});vigent(exigix);
+      try {
+        const id=idDe(ci,fil);await prepara();vigent(exigix);
+        await base.actualitza('fils',id,r=>{vigent(exigix);return{id,ci,fil,kid:r?.kid??'',creatMs:r?.creatMs??ara(),caducaMs:r?.caducaMs??ara(),revocatMs:ara(),revisio:(r?.revisio??0)+1};});vigent(exigix);
+      } finally { if(tancat)base.tanca(); }
     },
     tanca(){tancat=true;base.tanca();}
   });

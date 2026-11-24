@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
 import {
-  Alerta, BarraResum, Boto, Camp, CampText, LiniesColleccio, PillToggle, Pila, Taula, TeclatNumeric
+  Accions, Alerta, BarraResum, Boto, Camp, CampText, LiniesColleccio, PillToggle, Pila, Taula, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccio } from '../../comu/esquelet/index.js';
 import { esDescartable } from '../nucli/comanda.js';
@@ -88,6 +88,7 @@ function LecturaTraspas({ nota, idioma = 'ca' }) {
   const tx = textosUiBar(idioma);
   const { accions, permis } = useBar();
   const [per, setPer] = useState('');
+  const [ocupat, unaVegada] = useUnaVegada();
   return (
     <Columna titol={tx.notaDeTraspas}>
       <AvisOperacio />
@@ -96,7 +97,10 @@ function LecturaTraspas({ nota, idioma = 'ca' }) {
       <Camp etiqueta={tx.quiLaLlig} ajuda={tx.ajudaQuiLaLlig}>
         <CampText value={per} maxLength={24} onChange={(event) => setPer(event.target.value)} />
       </Camp>
-      <Boto varietat="primari" ple disabled={!permis.potEscriure} onClick={() => accions.llegeixTraspas({ per })}>{tx.lheLlegida}</Boto>
+      <Accions>
+        <Boto varietat="primari" ple carregant={ocupat} disabled={ocupat || !permis.potEscriure}
+          onClick={() => unaVegada(() => accions.llegeixTraspas({ per }))}>{tx.lheLlegida}</Boto>
+      </Accions>
     </Columna>
   );
 }
@@ -106,6 +110,7 @@ function ObriTorn({ traspas, idioma = 'ca' }) {
   const { accions, permis } = useBar();
   const [per, setPer] = useState(traspas?.llegidaPer || '');
   const [fons, setFons] = useState(traspas ? traspas.fonsDeixatCents : 0);
+  const [ocupat, unaVegada] = useUnaVegada();
   return (
     <Columna titol={tx.obriTorn}>
       <AvisBase />
@@ -113,9 +118,12 @@ function ObriTorn({ traspas, idioma = 'ca' }) {
       <Camp etiqueta={tx.quiObriTorn} ajuda={tx.ajudaQuiObriTorn}>
         <CampText value={per} maxLength={24} onChange={(event) => setPer(event.target.value)} />
       </Camp>
-      <TeclatNumeric mode="import" etiqueta={tx.fonsInicialCaixa} valor={fons} onCanvi={setFons} />
+      <TeclatNumeric mode="import" etiqueta={tx.fonsInicialCaixa} valor={fons} onCanvi={setFons} desactivat={ocupat || !permis.potEscriure} />
       {traspas ? <p>{tx.tornAnteriorDeixar(euros(traspas.fonsDeixatCents))}</p> : null}
-      <Boto varietat="primari" ple mida="gran" disabled={!permis.potEscriure} onClick={() => accions.obriTorn({ per, fonsInicialCents: fons })}>{tx.obriTorn}</Boto>
+      <Accions>
+        <Boto varietat="primari" ple mida="gran" carregant={ocupat} disabled={ocupat || !permis.potEscriure}
+          onClick={() => unaVegada(() => accions.obriTorn({ per, fonsInicialCents: fons }))}>{tx.obriTorn}</Boto>
+      </Accions>
     </Columna>
   );
 }
@@ -167,7 +175,7 @@ function Moviments({ idioma = 'ca' }) {
   const [tipus, setTipus] = useState('entrada');
   const [importCents, setImport] = useState(0);
   const [motiu, setMotiu] = useState('');
-  const [, unaVegada] = useUnaVegada();
+  const [ocupat, unaVegada] = useUnaVegada();
   const afig = () => unaVegada(async () => {
     const r = await accions.moviment({ tipus, importCents, motiu });
     if (r.ok) {
@@ -180,11 +188,14 @@ function Moviments({ idioma = 'ca' }) {
       <AvisOperacio />
       <PillToggle etiqueta={tx.tipusMoviment} valor={tipus} onCanvi={setTipus}
         opcions={[{ valor: 'entrada', text: tx.entrada }, { valor: 'eixida', text: tx.eixida }]} />
-      <TeclatNumeric mode="import" etiqueta={tx.importEtiqueta} valor={importCents} onCanvi={setImport} />
+      <TeclatNumeric mode="import" etiqueta={tx.importEtiqueta} valor={importCents} onCanvi={setImport} desactivat={ocupat || !permis.potEscriure} />
       <Camp etiqueta={tx.motiuEtiqueta} obligatori>
         <CampText value={motiu} maxLength={80} onChange={(event) => setMotiu(event.target.value)} />
       </Camp>
-      <Boto varietat="primari" icona={ClipboardList} disabled={!permis.potEscriure || importCents < 1 || !motiu.trim()} onClick={afig}>{tx.afigMoviment}</Boto>
+      <Accions>
+        <Boto varietat="primari" icona={ClipboardList} carregant={ocupat}
+          disabled={ocupat || !permis.potEscriure || importCents < 1 || !motiu.trim()} onClick={afig}>{tx.afigMoviment}</Boto>
+      </Accions>
     </Pila>
   );
   return (

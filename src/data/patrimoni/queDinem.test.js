@@ -18,6 +18,7 @@ const ARREL_CULTURA = process.env.SDP_CULTURA_DE_POBLE || path.resolve(process.c
 const LAMINES_FONT = path.join(ARREL_CULTURA, 'menjar_i_beure_de_poble', 'imatges_llibre_que_dinem_webp');
 const SHA_PDF = '399d2f54abdba0fb4c75f0e4d1b60744f2b19ed0bdf781ae186e5758bc86fddd';
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const ORIGINALS = JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtures/patrimoni/que-dinem-originals.sha256.json'), 'utf8'));
 
 /* Els 47 identificadors que el PDF imprimix i que l'oEmbed de YouTube va respondre (200) com a vídeos del canal
    «Sangonereta Gastronomia» (triatge R14, 08-11-2026). */
@@ -194,10 +195,28 @@ describe('Què dinem? · làmines, PDF i vídeos', () => {
     expect(disc).toEqual(usades);
   });
 
-  it.skipIf(!existsSync(LAMINES_FONT))('quan la font és al disc, cada làmina és byte a byte la del llibre', () => {
+  it('cada làmina coincidix amb les 149 empremtes regenerades dels originals, no de public', () => {
+    expect(ORIGINALS.schema).toBe('sdp.r3274.que-dinem-original-hashes.v1');
+    expect(ORIGINALS.derivedFromPublicAssets).toBe(false);
+    expect(ORIGINALS.count).toBe(149);
+    expect(ORIGINALS.files).toHaveLength(149);
+    expect(sha256(JSON.stringify(ORIGINALS.files))).toBe('37f518bbd187f710c1c773b5bb81ecc29e44e62eb1971b6c1a51142799f26a84');
+    const originals = new Map(ORIGINALS.files.map(file => [file.name, file]));
+    expect(originals.size).toBe(149);
+    const usades = RECEPTES_QUE_DINEM.filter(r => r.lamina).map(r => path.basename(r.lamina));
+    expect(usades).toHaveLength(148);
+    // p163 és la cloenda del llibre, ja exclosa del corpus/public pel contracte antic.
+    expect([...originals.keys()].filter(nom => !usades.includes(nom))).toEqual(['p163.webp']);
+    expect(usades.every(nom => originals.has(nom))).toBe(true);
     for (const r of RECEPTES_QUE_DINEM.filter((x) => x.lamina)) {
       const nom = path.basename(r.lamina);
-      expect(sha256(readFileSync(path.join(DIR_LAMINES, nom))), nom).toBe(sha256(readFileSync(path.join(LAMINES_FONT, nom))));
+      const bytes = readFileSync(path.join(DIR_LAMINES, nom));
+      expect(bytes.length, nom).toBe(originals.get(nom).bytes);
+      expect(sha256(bytes), nom).toBe(originals.get(nom).sha256);
+      if (existsSync(LAMINES_FONT)) {
+        // L'asserció original també s'executa quan les fonts físiques són disponibles.
+        expect(sha256(readFileSync(path.join(DIR_LAMINES, nom))), nom).toBe(sha256(readFileSync(path.join(LAMINES_FONT, nom))));
+      }
     }
   });
 

@@ -1,10 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, statSync, utimesSync, symlinkSync, copyFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { auditaFonts, auditaMaquetacioConcurrent, EXCEPCIONS } from '../tooling/gates/tractor-maquetacio-canonica.mjs';
+import { auditaFonts as auditCandidate, auditaMaquetacio, auditaMaquetacioConcurrent, EXCEPCIONS } from '../tooling/gates/tractor-maquetacio-canonica.mjs';
+
+const canonicalReport = ({ ok, issues, exemptions, inventory }) => ({ ok, issues, exemptions, inventory });
+function auditaFonts(fonts, options = {}) {
+  const candidate = auditCandidate(fonts, options);
+  if (!options.prepared && !options.mode && !options.roots) {
+    const reference = auditCandidate(fonts, { ...options, fullAst: true });
+    assert.deepEqual(canonicalReport(candidate), canonicalReport(reference), 'candidate frontier must match the complete AST oracle');
+  }
+  return candidate;
+}
 
 const page = body => `import { UniversalPage } from '../components/UniversalPage.jsx'; export function Vista(){return <UniversalPage>${body}</UniversalPage>}`;
 const audit = (source, more = {}) => auditaFonts({ 'src/sections/Vista.jsx': source, ...more });
@@ -581,4 +593,195 @@ for(const[id,newline]of[['CR','\r'],['LS','\u2028'],['PS','\u2029']])test(`edge 
   'src/Shell.jsx':'export const Shell=({children})=><UniversalPage>{children}</UniversalPage>;'
  });
  assert.deepEqual(report.issues.map(issue=>issue.code),['MC2']);
+});
+
+
+// R32.47: every existing fixture above also compares against fullAst. These
+// cases exercise the result cache independently of the candidate frontier.
+const cacheFixture = run => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'sdp-maquetacio-cache-'));
+  const cacheDir = path.join(root, 'derived-cache');
+  const file = path.join(root, 'src/App.jsx');
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, page('<h3>Safe</h3>'));
+  try { return run({ root, cacheDir, file, audit: options => auditaMaquetacio(root, { cacheDir, ...options }) }); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+};
+
+test('content cache rereads every byte, preserves reports, and full AST bypasses it', () => cacheFixture(({ audit }) => {
+  const first = audit(), second = audit(), complete = audit({ fullAst: true });
+  assert.equal(first.stats.cache, 'verified-content-created');
+  assert.equal(second.stats.cache, 'verified-content-hit');
+  assert.equal(complete.stats.cache, 'bypassed-full-ast');
+  assert.equal(second.stats.actualReads, 1);
+  assert.equal(second.stats.actualReadBytes, first.stats.actualReadBytes);
+  assert.equal(second.stats.parsedModules, 0);
+  assert.ok(second.stats.engineReadFiles > 0);
+  assert.ok(second.stats.engineReadBytes > 0);
+  assert.deepEqual(canonicalReport(second), canonicalReport(complete));
+}));
+
+test('content cache invalidates same-size edits even when mtime is restored', () => cacheFixture(({ audit, file }) => {
+  const initial = audit(), metadata = statSync(file);
+  writeFileSync(file, page('<h2>Safe</h2>'));
+  utimesSync(file, metadata.atime, metadata.mtime);
+  const changed = audit();
+  assert.equal(changed.stats.actualReadBytes, initial.stats.actualReadBytes);
+  assert.equal(changed.stats.cache, 'verified-content-created');
+  assert.notEqual(changed.stats.sourceHash, initial.stats.sourceHash);
+  assert.deepEqual(codes(changed), ['MC2']);
+  assert.deepEqual(canonicalReport(changed), canonicalReport(audit({ cache: false, fullAst: true })));
+}));
+
+test('content cache invalidates additions and removals from production inventory', () => cacheFixture(({ audit, root }) => {
+  const initial = audit(), added = path.join(root, 'src/Extra.jsx');
+  writeFileSync(added, page('<h2>Added</h2>'));
+  const expanded = audit();
+  assert.equal(expanded.stats.actualReads, 2);
+  assert.equal(expanded.stats.cache, 'verified-content-created');
+  assert.deepEqual(codes(expanded), ['MC2']);
+  rmSync(added);
+  const restored = audit();
+  assert.equal(restored.stats.actualReads, 1);
+  assert.equal(restored.stats.sourceHash, initial.stats.sourceHash);
+  assert.equal(restored.stats.cache, 'verified-content-created');
+  assert.equal(restored.ok, true);
+}));
+
+for (const [name, corrupt] of [
+  ['truncated JSON', () => '{"format":'],
+  ['malformed envelope', record => JSON.stringify({ ...record, format: '1' })],
+  ['payload checksum mismatch', record => JSON.stringify({ ...record, reportHash: '0'.repeat(64) })],
+  ['schema-invalid payload with matching checksum', record => {
+    record.report.ok = 'true';
+    record.reportHash = createHash('sha256').update(JSON.stringify(record.report)).digest('hex');
+    return JSON.stringify(record);
+  }],
+]) test(`content cache recomputes after ${name}`, () => cacheFixture(({ audit, cacheDir }) => {
+  const first = audit(), cacheFile = path.join(cacheDir, 'report.json');
+  writeFileSync(cacheFile, corrupt(JSON.parse(readFileSync(cacheFile, 'utf8'))));
+  const actual = audit();
+  assert.equal(actual.stats.cache, 'verified-content-created');
+  assert.deepEqual(canonicalReport(actual), canonicalReport(first));
+}));
+
+test('content cache binds configured exemptions', () => cacheFixture(({ audit, file }) => {
+  writeFileSync(file, page('<div className="sample"><h2>Example</h2></div>'));
+  const exceptions = [{ id: 'configured', file: 'src/App.jsx', text: 'Example', className: 'sample', reason: 'Exact configured sample' }];
+  const excluded = audit({ exceptions });
+  assert.equal(excluded.ok, true);
+  assert.equal(audit({ exceptions }).stats.cache, 'verified-content-hit');
+  const changed = audit({ exceptions: [{ ...exceptions[0], text: 'Another example' }] });
+  assert.notEqual(changed.stats.engineHash, excluded.stats.engineHash);
+  assert.equal(changed.stats.cache, 'verified-content-created');
+  assert.deepEqual(codes(changed), ['MC2']);
+  assert.deepEqual(canonicalReport(changed), canonicalReport(audit({ exceptions: [{ ...exceptions[0], text: 'Another example' }], fullAst: true })));
+}));
+
+test('content cache binds Node engine flags across independent CLI processes', () => cacheFixture(({ root, cacheDir }) => {
+  const gate = path.resolve('tooling/gates/tractor-maquetacio-canonica.mjs');
+  const run = flags => {
+    const processResult = spawnSync(process.execPath, [...flags, gate, '--arrel', root, `--cache-dir=${cacheDir}`, '--json'], { encoding: 'utf8' });
+    assert.equal(processResult.status, 0, processResult.stderr);
+    return JSON.parse(processResult.stdout);
+  };
+  const first = run([]), changed = run(['--stack-trace-limit=30']);
+  assert.notEqual(first.stats.engineHash, changed.stats.engineHash);
+  assert.equal(changed.stats.cache, 'verified-content-created');
+  assert.equal(run(['--stack-trace-limit=30']).stats.cache, 'verified-content-hit');
+}));
+
+test('content cache binds installed dependency bytes and safely falls back from optional parsers', () => cacheFixture(({ root, cacheDir }) => {
+  const require = createRequire(import.meta.url), modules = path.join(root, 'node_modules');
+  mkdirSync(path.join(modules, '@babel'), { recursive: true });
+  for (const name of ['acorn-jsx', '@babel/parser', 'parse5', 'postcss']) {
+    let directory = path.dirname(require.resolve(name));
+    while (true) {
+      try { if (JSON.parse(readFileSync(path.join(directory, 'package.json'), 'utf8')).name === name) break; } catch { /* Package entry may be nested. */ }
+      const parent = path.dirname(directory);
+      assert.notEqual(parent, directory, name);
+      directory = parent;
+    }
+    symlinkSync(directory, path.join(modules, name), 'dir');
+  }
+  const acorn = path.join(modules, 'acorn');
+  mkdirSync(acorn);
+  writeFileSync(path.join(acorn, 'package.json'), JSON.stringify({ name: 'acorn', version: '0.0.0-fixture', main: 'index.js' }));
+  const implementation = path.join(acorn, 'index.js');
+  writeFileSync(implementation, 'exports.Parser={parse(){throw Error("optional parser unavailable")}};');
+  const copiedGate = path.join(root, 'tractor.mjs');
+  copyFileSync(path.resolve('tooling/gates/tractor-maquetacio-canonica.mjs'), copiedGate);
+  const run = () => {
+    const processResult = spawnSync(process.execPath, [copiedGate, '--arrel', root, `--cache-dir=${cacheDir}`, '--json'], { encoding: 'utf8' });
+    assert.equal(processResult.status, 0, processResult.stderr);
+    return JSON.parse(processResult.stdout);
+  };
+  const initial = run();
+  assert.equal(run().stats.cache, 'verified-content-hit');
+  writeFileSync(implementation, readFileSync(implementation, 'utf8') + '\n// changed implementation bytes');
+  const changed = run();
+  assert.equal(changed.stats.cache, 'verified-content-created');
+  assert.notEqual(changed.stats.engineHash, initial.stats.engineHash);
+  assert.deepEqual(canonicalReport(changed), canonicalReport(initial));
+}));
+
+for (const [name, specifier] of [
+  ['unicode codepoint', './\\u{53}hell.jsx'],
+  ['unicode fixed', './\\u0053hell.jsx'],
+  ['hexadecimal', './\\x53hell.jsx'],
+  ['line continuation', './S\\\nhell.jsx'],
+]) test(`candidate parity decodes import ${name}`, () => {
+  const fonts = {
+    'src/App.jsx': `import {Shell} from '${specifier}';export const App=()=> <Shell><h2>Body</h2></Shell>`,
+    'src/Shell.jsx': 'export const Shell=({children})=><UniversalPage>{children}</UniversalPage>',
+  };
+  assert.deepEqual(codes(auditaFonts(fonts)), ['MC2']);
+});
+
+
+test('content cache opt-out leaves the checkout read-only', () => cacheFixture(({ audit, cacheDir }) => {
+  const report = audit({ cache: false });
+  assert.equal(report.stats.cache, 'disabled');
+  assert.equal(existsSync(cacheDir), false);
+  assert.equal(report.ok, true);
+}));
+
+test('unavailable cache storage recomputes without suppressing a finding', () => cacheFixture(({ audit, cacheDir, file }) => {
+  writeFileSync(cacheDir, 'not a directory');
+  writeFileSync(file, page('<h2>Must remain visible</h2>'));
+  const report = audit();
+  assert.equal(report.stats.cache, 'miss-unavailable');
+  assert.deepEqual(codes(report), ['MC2']);
+}));
+// IDEA-344 (R32.68): Regla d'excepcionalitat H2 -> .lead -> H3 dins del cos editorial.
+test('IDEA-344 · JSX: H2 seguit de .lead i H3 d’obertura és vàlid al cos de UniversalPage', () => {
+  assert.equal(audit(page('<h2>Gran bloc temàtic</h2><p className="lead">Entradilla pròpia del bloc.</p><h3>Primera secció</h3><p>Cos.</p>')).ok, true);
+  assert.equal(audit(page('<section><h2>Bloc</h2>{/* comentari */}<p className="lead extra">Entradilla</p><h3>Secció</h3></section>')).ok, true);
+  assert.equal(audit(page('<><h2>Bloc en fragment</h2><p className="lead">Entradilla</p><h3>Secció</h3></>')).ok, true);
+});
+test('IDEA-344 · JSX: H2 sense .lead, amb .lead buida o sense H3 posterior falla amb MC2', () => {
+  assert.deepEqual(codes(audit(page('<h2>Bloc sense lead</h2><h3>Secció directa</h3>'))), ['MC2']);
+  assert.deepEqual(codes(audit(page('<h2>Bloc amb p normal</h2><p>No és lead</p><h3>Secció</h3>'))), ['MC2']);
+  assert.deepEqual(codes(audit(page('<h2>Bloc sense H3</h2><p className="lead">Entradilla sola</p><p>Cos</p>'))), ['MC2']);
+  assert.deepEqual(codes(audit(page('<h2>Bloc</h2><p className="lead">   </p><h3>Secció</h3>'))), ['MC2']);
+  assert.deepEqual(codes(audit(page('<h2>   </h2><p className="lead">Entradilla</p><h3>Secció</h3>'))), ['MC2']);
+});
+test('IDEA-344 · JSX: reutilitzar un mateix identificador H2 en tríada vàlida i en solitari falla en solitari', () => {
+  const src = `const titol = <h2>Bloc compartit</h2>; ${page('<section>{titol}<p className="lead">Entradilla</p><h3>Secció</h3></section><section>{titol}<p>Solitari</p></section>')}`;
+  assert.deepEqual(codes(audit(src)), ['MC2']);
+});
+test('IDEA-344 · HTML (PAGE_COPY i dangerouslySetInnerHTML): H2 -> .lead -> H3 és vàlid; qualsevol variant incompleta falla', () => {
+  assert.equal(auditaFonts({
+    'src/sections/text/pageContent.js': 'export const PAGE_COPY={p:{html:"<h2>Gran bloc</h2><!-- nota --><p class=\'lead\'>Entradilla del bloc.</p><h3>Primera secció</h3><p>Cos.</p>"}};'
+  }).ok, true);
+  assert.equal(audit(`const html='<h2>Gran bloc</h2><p class="lead">Entradilla.</p><h3>Primera secció</h3>';${page('<div dangerouslySetInnerHTML={{__html:html}}/>')}`).ok, true);
+  assert.deepEqual(codes(auditaFonts({
+    'src/sections/text/pageContent.js': 'export const PAGE_COPY={p:{html:"<h2>Gran bloc</h2><h3>Sense entradilla</h3>"}};'
+  })), ['MC1']);
+  assert.deepEqual(codes(auditaFonts({
+    'src/sections/text/pageContent.js': 'export const PAGE_COPY={p:{html:"<h2>Gran bloc</h2><p class=\'lead\'>Entradilla sense H3</p><p>Cos</p>"}};'
+  })), ['MC1']);
+  assert.deepEqual(codes(auditaFonts({
+    'src/sections/text/pageContent.js': 'export const PAGE_COPY={p:{html:"<h2>Gran bloc</h2>Text solt<p class=\'lead\'>Entradilla</p><h3>Secció</h3>"}};'
+  })), ['MC1']);
 });

@@ -348,7 +348,17 @@ test('T41 · bloquejos honestos: Foraster, mode local i nota ja publicada', () =
   mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'local' };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter.visibilitat.bloqueig.opcio).toBe('publica');
-  expect(mocks.adapter.visibilitat.bloqueig.motiu).toMatch(/Connecta un backend/);
+  /* F4F (Assaig a la Plaça, canvi 1) · Diu que en el mode de proves no s'envia ni es publica, mai «Connecta un backend». */
+  expect(mocks.adapter.visibilitat.bloqueig.motiu).toBe(MOTIU_LOCAL);
+  expect(mocks.adapter.visibilitat.bloqueig.motiu).toMatch(/^En el mode de proves, la nota no s’envia a ningú ni es publica\.$/);
+  expect(mocks.adapter.visibilitat.bloqueig.motiu).not.toMatch(/backend/i);
+  cleanup();
+  /* F4F · Revisió adversarial · Carme a /mercat en el mode de proves: el botó apagat diu «Publicar al Mercat»
+     i el motiu de davall, al mateix panell, no parla del Mur. */
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: [], tags: [], fitxa: { ambit: 'mercat', estat: 'disponible', dades: {} } }} />);
+  expect(mocks.adapter.visibilitat.textosEnLinia.publica.accio).toBe('Publicar al Mercat');
+  expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL });
+  expect(mocks.adapter.visibilitat.bloqueig.motiu).not.toMatch(/\bMur\b/);
   cleanup();
   // Una nota publicada no es pot retirar del Mur: privada bloquejada, amb el motiu.
   mocks.config = { tenantId: mocks.TENANT_A };

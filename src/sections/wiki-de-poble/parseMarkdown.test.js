@@ -273,14 +273,15 @@ describe('parseMarkdown · títols sense punt final (260925)', () => {
 
   it('un paràgraf enganxat davall d’un títol ja no queda fora de cap <p>', () => {
     const arrel = pinta('## Secció\nText enganxat.');
-    expect(arrel.querySelector('h3.h2').textContent).toBe('Secció');
+    expect(arrel.querySelector('h3').textContent).toBe('Secció');
+    expect(arrel.querySelector('h3').hasAttribute('class')).toBe(false);
     expect(textos(arrel.querySelectorAll(':scope > p'))).toEqual(['Text enganxat.']);
   });
 
   it('un comentari HTML entre el títol i la llista no deixa cap <p> buit', () => {
     const arrel = pinta('### Part tècnica\n<!-- Què hem tocat? -->\n- **Estat:** net');
     expect(arrel.querySelector('p')).toBeNull();
-    expect(arrel.querySelector('h4.h3 + ul > li > strong').textContent).toBe('Estat:');
+    expect(arrel.querySelector('h4 + ul > li > strong').textContent).toBe('Estat:');
   });
 
   it('un comentari sol no es pinta com a paràgraf, i davant de text el text continua dins d’un <p>', () => {

@@ -806,3 +806,57 @@ test('els drets del catàleg receptes conserven l’atribució exacta al bloc de
     unmount();
   }
 });
+
+describe('IDEA-340 (R32.61) · /page/reconeixements és «Reconeixements i fonts d’inspiració» amb targetes creuades 1:1 amb /legal', () => {
+  test('es resol per /page/reconeixements, porta la vinyeta Bruguera 1600x1600 i complix la llei T8 en les 5 llengües', async () => {
+    const { CREDITS_RECONEIXEMENTS_5_LLENGUES } = await import('./reconeixementsCredits5L.js');
+    const { BLOC_TARGETA_RECONEIXEMENTS_LEGAL, projeccioLecturaLegal } = await import('./projeccioLecturaLegal.js');
+
+    expect(pageKeyDeRuta('/page/reconeixements')).toBe('reconeixements');
+    expect(paginaDeRuta('/page/reconeixements?x=1#y')).toEqual({
+      pageKey: 'reconeixements',
+      page: PAGE_COPY.reconeixements
+    });
+
+    const pagina = PAGE_COPY.reconeixements;
+    expect(propsDePaginaDeText(pagina, 'reconeixements')).toMatchObject({
+      title: "Reconeixements i fonts d'inspiració",
+      subtitle: "Divulgadors, laboratoris d'investigació, codi obert i mestres del camí",
+      lead: pagina.lead,
+      heroImage: '/assets/nano_cards/reconeixements_nano_card.webp',
+      heroWidth: 1600,
+      heroHeight: 1600,
+      heroFetchPriority: 'high',
+      copyright: COPYRIGHT_SDP
+    });
+    expect(midesWebp(pagina.image)).toEqual([1600, 1600]);
+
+    // T8 en l'obertura, les 5 traduccions, el catàleg 5L i el tros nou projectat a /legal
+    expect(infraccionsT8(pagina.html)).toEqual([]);
+    expect(infraccionsT8(BLOC_TARGETA_RECONEIXEMENTS_LEGAL.replace(/^<hr \/>\s*/, ''))).toEqual([]);
+    expect(projeccioLecturaLegal(PAGE_COPY.legal.html)).toContain("<h3>Reconeixements i fonts d'inspiració</h3>");
+    for (const lang of ['ca', 'es', 'en', 'eu', 'gl']) {
+      expect(infraccionsT8(pagina.translations[lang].html), `T8 obertura ${lang}`).toEqual([]);
+      expect(infraccionsT8(CREDITS_RECONEIXEMENTS_5_LLENGUES[lang]), `T8 catàleg ${lang}`).toEqual([]);
+    }
+
+    // Sincronització 1:1 P0-33 en tots dos sentits
+    const atributDe = (bloc, nom) => bloc.match(new RegExp(`${nom}="([^"]*)"`))?.[1]?.replaceAll('&#39;', "'");
+    const targetaRec = BLOC_TARGETA_RECONEIXEMENTS_LEGAL.match(/<div data-sdp-targeta="pagina:reconeixements"[^>]*>/)?.[0] ?? '';
+    expect([
+      atributDe(targetaRec, 'data-ruta'),
+      atributDe(targetaRec, 'data-titol'),
+      atributDe(targetaRec, 'data-subtitol'),
+      atributDe(targetaRec, 'data-entradilla'),
+      atributDe(targetaRec, 'data-imatge')
+    ]).toEqual(['/page/reconeixements', pagina.title, pagina.subtitle, pagina.lead, pagina.image]);
+
+    const targetaLegal = pagina.html.match(/<div data-sdp-targeta="pagina:legal"[^>]*>/)?.[0] ?? '';
+    expect([
+      atributDe(targetaLegal, 'data-ruta'),
+      atributDe(targetaLegal, 'data-titol'),
+      atributDe(targetaLegal, 'data-subtitol'),
+      atributDe(targetaLegal, 'data-entradilla')
+    ]).toEqual(['/legal', PAGE_COPY.legal.title, PAGE_COPY.legal.subtitle, PAGE_COPY.legal.lead]);
+  });
+});

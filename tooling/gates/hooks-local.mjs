@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { camiDeArgs, EINES_ESCRIPTURA_TOTES } from '../lib/tool-dialect.mjs';
 import { ROOT } from '../documental/cli.mjs';
 import { protectedPath, relativePath, humanZone } from '../documental/core.mjs';
 import { checkPayload as reflex, normalitza } from './porta-reflex.mjs';
@@ -87,8 +88,8 @@ export function checkLocal(payload, root = ROOT) {
     if (documentary?.kind === 'read') return {code: 0, errors: [], authority: documentary};
     if (fs.existsSync(path.join(root,'.agents/runtime/mutation.pending.json'))) throw new Error('Operació incompleta: noves mutacions bloquejades fins a reconciliació');
     if (documentary) return {code: 0, errors: [], authority: documentary};
-    if (!['apply_patch', 'Write', 'Edit', 'NotebookEdit', 'write_to_file', 'replace_file_content', 'multi_replace_file_content'].includes(name)) throw new Error('Eina opaca o shell no confinada: usa lectura explícita o executor-mutacio.mjs amb lease; cap escriptura autoritzada');
-    if (name !== 'apply_patch') mutationPath(root, payload.tool_input?.file_path || payload.tool_input?.notebook_path || payload.toolArgs?.TargetFile, cwd);
+    if (!EINES_ESCRIPTURA_TOTES.includes(name)) throw new Error('Eina opaca o shell no confinada: usa lectura explícita o executor-mutacio.mjs amb lease; cap escriptura autoritzada');
+    if (name !== 'apply_patch') mutationPath(root, camiDeArgs(payload.tool_input) || camiDeArgs(payload.toolArgs), cwd);
     const ops = name === 'apply_patch' ? patchOperations(payload.tool_input?.command, cwd, root)
       : [payload];
     const errors = [];

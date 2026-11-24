@@ -24,7 +24,7 @@
  *        siga i obliga a llevar el deute pagat; que la línia base no cresca
  *        ho mira tests/tractor-enxufe.test.mjs contra HEAD
  *
- * Zero dependències. Anàlisi estàtica: no cal navegador ni node_modules.
+ * Parser JavaScript ja declarat al projecte; cap dependència nova ni navegador.
  * Només llig: cap mode d'esta porta escriu al disc (mutation-policy.mjs la
  * té per lectura pura).
  *
@@ -34,6 +34,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parse } from '@babel/parser';
 import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
 const JSON_OUT = process.argv.includes('--json');
@@ -60,7 +62,7 @@ function fonts() {
       if (EXCLOSOS.has(e.name)) continue;
       const c = path.join(d, e.name);
       if (e.isDirectory()) camina(c);
-      else if (/\.(js|jsx|mjs)$/.test(e.name)) eixida.push(c);
+      else if (/\.(?:js|jsx|mjs|cjs|ts|tsx)$/.test(e.name)) eixida.push(c);
     }
   }(R(CAMINS.src)));
   return eixida;
@@ -201,13 +203,122 @@ if (!embedText) {
   }
 }
 
+/* v1.2.24 · F5A + R32.88 · Una sola definició de «prova» per a E4 i E5. El nom __fixtures__ no hi entra:
+   el doble IDB de R32.85b (idbMemoriaTest.js) només s'excusa d'E4 si el graf d'imports l'acredita
+   (dobleIdbNomesDeProva, R32.88), no per la carpeta. */
+const esProva = (r) => /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(r);
+
 /* ═══════════════════════ E4 · Una sola superfície global ═══════════════════════ */
 
 const PERMESOS_GLOBAL = /__SDP_(?:REACT_MOUNTED|GLOBAL_ERRORS_BOUND|OUTBOX_QUARANTINED)__/;
 
+/* R32.88 · El doble IDB de G85b és un mòdul inert, amb consumidors de prova.
+ * El nom __fixtures__ no atorga permís: una importació productiva, un glob
+ * que el puga executar, un efecte de mòdul o l'absència de consumidor el tornen
+ * a E4. La comprovació és sintàctica i no executa cap font. */
+function dobleIdbNomesDeProva() {
+  const fixture = 'src/sections/notes/__fixtures__/idbMemoriaTest.js';
+  if (!fs.existsSync(R(fixture))) return false;
+  let component = '';
+  for (const part of fixture.split('/')) {
+    component = component ? `${component}/${part}` : part;
+    if (fs.lstatSync(R(component)).isSymbolicLink()) {
+      anota('E4', fixture, 'suport de proves amb enllaç simbòlic', 'cal una font regular i local verificable');
+      return false;
+    }
+  }
+  if (!fs.lstatSync(R(fixture)).isFile() || fs.statSync(R(fixture)).nlink !== 1) {
+    anota('E4', fixture, 'suport de proves no regular o amb hardlink', 'cal una font regular i local verificable');
+    return false;
+  }
+  const ast = (text, file) => parse(text, { sourceType: 'unambiguous', plugins: ['jsx', ...(/\.tsx?$/.test(file) ? ['typescript'] : [])], createImportExpressions: true, attachComment: false }).program;
+  const walk = (node, fn) => {
+    if (!node?.type) return;
+    fn(node);
+    for (const [key, value] of Object.entries(node)) {
+      if (['loc', 'extra', 'comments'].includes(key)) continue;
+      if (Array.isArray(value)) value.forEach(child => walk(child, fn));
+      else if (value?.type) walk(value, fn);
+    }
+  };
+  const esTest = name => /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(name);
+  function literal(node) {
+    if (node?.type === 'StringLiteral') return node.value;
+    if (node?.type === 'TemplateLiteral' && !node.expressions.length) return node.quasis[0].value.cooked;
+    if (node?.type === 'BinaryExpression' && node.operator === '+') {
+      const left = literal(node.left), right = literal(node.right);
+      return left !== null && right !== null ? left + right : null;
+    }
+    return null;
+  }
+  const resolveImport = (from, original) => {
+    let spec;
+    if (original.startsWith('file:')) {
+      try { const url = new URL(original); url.search = ''; url.hash = ''; return path.relative(arrelSegura(), fileURLToPath(url)).split(path.sep).join('/'); } catch { return null; }
+    }
+    try { spec = decodeURIComponent(original.split(/[?#]/, 1)[0]); } catch { return null; }
+    return spec.startsWith('@/') ? `src/${spec.slice(2)}` : spec.startsWith('/src/') ? spec.slice(1)
+      : path.isAbsolute(spec) ? path.relative(arrelSegura(), spec).split(path.sep).join('/')
+      : spec.startsWith('.') ? path.posix.normalize(path.posix.join(path.posix.dirname(from), spec)) : null;
+  };
+  const canonical = name => {
+    if (!name) return null;
+    for (const candidate of [name, ...['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '/index.js'].map(ext => name + ext)]) {
+      try { const stat = fs.statSync(R(candidate)); if (stat.isFile()) return `${stat.dev}:${stat.ino}`; } catch { /* el candidat següent */ }
+    }
+    return null;
+  };
+  const fixtureId = canonical(fixture);
+  const graph = new Map(), tests = new Set();
+  let consumers = 0, opaqueGlob = false;
+  try {
+    const module = ast(llegeix(R(fixture)) ?? '', fixture);
+    if (!module.body.length || !module.body.every(statement => statement.type === 'FunctionDeclaration'
+      || statement.type === 'ExportNamedDeclaration' && statement.declaration?.type === 'FunctionDeclaration')) return false;
+    const sources = fonts().map(abs => ({ abs, from: rel(abs).replace(/\\/g, '/') }));
+    for (const { abs, from } of sources) {
+      const fromId = canonical(from);
+      if (fromId === fixtureId) continue;
+      const edges = new Set(); graph.set(fromId, edges);
+      if (esTest(from)) tests.add(fromId);
+      walk(ast(llegeix(abs) ?? '', from), node => {
+        const spec = node.type === 'ImportDeclaration' || node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration' || node.type === 'ImportExpression'
+          ? literal(node.source) : node.type === 'CallExpression' && node.callee.name === 'require' ? literal(node.arguments[0]) : null;
+        if (spec) {
+          const target = canonical(resolveImport(from, spec));
+          if (target) edges.add(target);
+          if (target === fixtureId && esTest(from)) consumers++;
+        }
+        const method = node.callee?.computed ? literal(node.callee.property) : node.callee?.property?.name;
+        if (node.type === 'CallExpression' && node.callee.type === 'MemberExpression'
+          && ['glob', 'globEager'].includes(method) && node.callee.object.type === 'MetaProperty') {
+          const patterns = node.arguments[0]?.type === 'ArrayExpression' ? node.arguments[0].elements.map(literal) : [literal(node.arguments[0])];
+          for (const pattern of patterns) {
+            if (pattern === null) { if (!esTest(from)) opaqueGlob = true; continue; }
+            if (pattern.startsWith('!')) continue;
+            const prefix = pattern.split(/[*?{[]/, 1)[0];
+            const target = resolveImport(from, prefix);
+            for (const entry of sources) if (target && entry.from.startsWith(target)) edges.add(canonical(entry.from));
+          }
+        }
+      });
+    }
+  } catch { return false; }
+  const reachesFixture = (start, seen = new Set()) => {
+    if (start === fixtureId) return true;
+    if (seen.has(start)) return false;
+    seen.add(start);
+    return [...(graph.get(start) ?? [])].some(target => reachesFixture(target, seen));
+  };
+  // Un fitxer anomenat .test importat des de producte també és producte.
+  return consumers > 0 && !opaqueGlob && ![...graph.keys()].some(from => !tests.has(from) && reachesFixture(from));
+}
+const dobleIdbAcreditat = dobleIdbNomesDeProva();
+
 for (const abs of fonts()) {
   const r = rel(abs);
-  if (r === HOST || /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(r)) continue;
+  if (r === HOST || esProva(r)) continue;
+  if (dobleIdbAcreditat && r === 'src/sections/notes/__fixtures__/idbMemoriaTest.js') continue;
   const text = senseComentaris(llegeix(abs) ?? '');
   for (const m of text.matchAll(/\b(?:window|globalThis)(?:\.([A-Za-z_$][\w$]*)|\[['"`]([A-Za-z_$][\w$]*)['"`]\])\s*=(?!=)/g)) {
     const prop = m[1] || m[2];
@@ -256,7 +367,6 @@ const SENYALS_PROTOCOL = Object.freeze([
 ]);
 const NOMS_DE_SENYAL = new Set(SENYALS_PROTOCOL.map(([nom]) => nom));
 const GENERATS_E5 = new Set(['src/data/wikiManifest.js']);
-const esProva = (r) => /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(r);
 
 /** La línia base d'E5: { camí → senyals declarats }. Sense fitxer, buida (una
  *  arrel de proves, o un arbre que ja l'ha pagada sencera); malformada, una

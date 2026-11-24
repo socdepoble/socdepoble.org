@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {spawnSync} from 'node:child_process';
+import {empremta, REGISTRE} from '../tooling/gates/frontissa-contingut.mjs';
 import {sha} from '../tooling/documental/core.mjs';
 import {verificaSegell} from '../tooling/gates/segella.mjs';
 import {snapshotPreparedFiles} from '../tooling/gates/git-staged.mjs';
@@ -17,7 +18,7 @@ function setup(t) {
  }
  fs.symlinkSync(path.join(REPO,'node_modules'),path.join(root,'node_modules'),'dir');
  fs.writeFileSync(path.join(root,'package.json'),'{"type":"module"}');
- fs.writeFileSync(path.join(root,'.gitignore'),'.sdp-reflex/\nnode_modules\n.husky/_/\n');
+ fs.writeFileSync(path.join(root,'.gitignore'),'.sdp-reflex/\nnode_modules\n.husky/_/\n.agents/runtime/*.lock\n');
  fs.writeFileSync(path.join(root,'probe.txt'),'original');
  /* La frontissa és el primer pas del pre-commit i llig el contingut i els seus consumidors.
     Un Mas sintètic mínim (com a frontissa-contingut.test.mjs), no el src/ real: la prova
@@ -31,8 +32,8 @@ function setup(t) {
  for(const k of Object.keys(env)) if(k.startsWith('GIT_')&&!['GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM'].includes(k)) delete env[k];
  const run=(cmd,args)=>spawnSync(cmd,args,{cwd:root,env,encoding:'utf8',maxBuffer:8*1024*1024});
  const good=(cmd,args)=>{const r=run(cmd,args);assert.equal(r.status,0,r.stderr+r.stdout);return r.stdout;};
- // Sense registre d'empremtes la frontissa falla tancada (registre-absent): s'inicia i entra al commit.
- good(process.execPath,['tooling/gates/frontissa-contingut.mjs','--inicia','--per','Fixture']);
+ // Seed only this synthetic fixture. Human/agent CLI authorization is tested in frontissa-dual-cas.
+ fs.writeFileSync(path.join(root,REGISTRE),JSON.stringify({schema:'sdp.contingut.v1',claus:{projecte:{...empremta({title:'P',html:'<p>p</p>'}),aprovat_per:'Fixture',data:'2026-11-23'}}}));
  good('git',['init','--quiet']);
  // The hook fixture owns no background maintenance. Auto-packing can outlive
  // commit and race its teardown (ENOTEMPTY in .git/objects/info or pack).
@@ -239,4 +240,19 @@ test('abort d’un claim reclamat amb escriptura feta deixa signat que els scope
  const stored=JSON.parse(fs.readFileSync(receipt,'utf8'));
  assert.equal(stored.status,'aborted');assert.equal(stored.claims['governance-write'].status,'aborted');
  assert.equal(stored.abortScopesChanged,true);assert.notEqual(stored.abortScopeDigest,stored.scopeSnapshotAtSeal.digest);
+});
+test('Frontissa CLI agent previsualitza el pla i completa un claim Reflex real', t => {
+ const f=setup(t), scope=REGISTRE;
+ fs.writeFileSync(path.join(f.root,'src/sections/text/pageContent.js'),"export const PAGE_COPY={projecte:{title:'P',html:'<p>poble revisat explícitament</p>'}};\n");
+ // Keep bootstrap skill sealing independent of the content registry.
+ fs.mkdirSync(path.join(f.root,'.agents/skills/fixture'),{recursive:true});
+ fs.writeFileSync(path.join(f.root,'.agents/skills/fixture/SKILL.md'),'Fixture');verificaSegell(f.root,{update:true});
+ const command=['tooling/gates/frontissa-contingut.mjs','--aprova','projecte','--per','Fixture','--motiu','Revisió agent amb claim real'];
+ let session, bound;
+ const receipt=lease(f,{operation:'governance-write',scope,makePlan:id=>{session=id;bound=JSON.parse(f.good(process.execPath,[...command,'--session',id,'--pla'])).plan;return bound;}});
+ const result=f.good(process.execPath,[...command,'--session',session,'--rebut',receipt]);assert.match(result,/✅ \[Frontissa\] aprova/);
+ const audit=fs.readdirSync(path.join(f.root,'.agents/seal-transactions')).map(name=>JSON.parse(fs.readFileSync(path.join(f.root,'.agents/seal-transactions',name)))).find(r=>r.kind==='frontissa-agent');
+ assert.equal(audit.planHash,sha(JSON.stringify(bound)));assert.equal(audit.claim,`${session}:governance-write`);assert.equal(verificaSegell(f.root).ok,true);
+ assert.equal(JSON.parse(fs.readFileSync(receipt)).claims['governance-write'].status,'completed');
+ assert.notEqual(f.run(process.execPath,[...command,'--session',session,'--rebut',receipt]).status,0);
 });

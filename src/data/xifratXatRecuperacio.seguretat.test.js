@@ -15,9 +15,11 @@
        (generaParellaDh), el SAS amb compromís de §4 i la reconstrucció
        autenticada de §5.6.6, amb els camins negatius i el seu codi exacte.
    Els vectors viuen a xifratXatRecuperacio.vectors.json, copiats literalment de
-   les esmenes; els que les esmenes deixen pendents (§9.4) s'ometen amb el motiu.
+   les esmenes. L'oracle tècnic independent s'executa amb font fixada; l'estat
+   protocol·lari heretat de §9.4 continua separat i pendent de ratificació.
    Dades sintètiques; les claus són de prova. */
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { beforeAll, describe, expect, test } from 'vitest';
 import * as R from './xifratXatRecuperacio.js';
 import * as F from './xifratXatFormats.js';
@@ -25,6 +27,7 @@ import {
   ajunta, exportaPublica, generaParellaDh, generaParellaSignatura, hkdfExpand, hkdfExtract, signa
 } from './xifratXatCripto.js';
 import VECTORS from './xifratXatRecuperacio.vectors.json';
+import {split as privySplit, combine as privyCombine, resetRandom} from '../../tests/fixtures/shamir-independent/reference.mjs';
 
 const cripto = globalThis.crypto;
 const A = '0a0a0a0a-0000-4000-8000-00000000000a';
@@ -974,10 +977,52 @@ describe('l’alliberament d’anada i tornada amb claus noves, i la reconstrucc
   });
 });
 
-describe('vectors pendents (esmenes §9.4)', () => {
-  test.skip('Shamir en els dos sentits contra una implementació independent fixada per versió i commit (pendent: cal baixar l’eina amb el permís del Mestre; vectors_shamir_independents_v1.json no existix)', () => {});
+describe('oracle tècnic independent i estat protocol·lari separat (§9.4)', () => {
+  test('font i executable Privy 0.0.4 fixats; no és un oracle reescrit amb el mòdul provat', () => {
+    const pins = {
+      'index.ts.txt': 'f5096daf3155502c27d0b7a703fa61e0bf26fda348f2a2f216872bf49498e050',
+      'reference.mjs': '518fb8756a8a2d4ee072a08eba834394822fc221925f30f319d39cb0e68cd8fa',
+      'vectors.json': '25fcd61329abaef445f37234c6b469ce71857204ebb710a7716382602eb52885',
+      'LICENSE': 'c8e3e7049fce8e181ae7c80fb735652a916c99614dfb022cf0d516341559086a'
+    };
+    for (const [name, expected] of Object.entries(pins)) {
+      expect(createHash('sha256').update(readFileSync(new URL('../../tests/fixtures/shamir-independent/' + name, import.meta.url))).digest('hex'), name).toBe(expected);
+    }
+    const provenance = JSON.parse(readFileSync(new URL('../../tests/fixtures/shamir-independent/provenance.json', import.meta.url), 'utf8'));
+    expect(provenance.version).toBe('0.0.4');
+    expect(provenance.commit).toBe('73bbf04da63532a57a29353715183c6051d23c2c');
+    expect(VECTORS.shamir_independents.estat).toBe('pendent');
+  });
 
-  test('el JSON els marca pendents amb el motiu i el procediment de §9.4', () => {
+  test('Shamir executat en ambdós sentits amb Privy independent; canvi de disposició X||Y ↔ Y||X exclusiu de QA', async () => {
+    const toSdp = share => Uint8Array.from([share[32], ...share.subarray(0, 32)]);
+    const toPrivy = share => Uint8Array.from([...share.subarray(1), share[0]]);
+    let fromPrivy = 0, fromSdp = 0;
+    for (const seed of [0, 1, 255]) {
+      const secret = Uint8Array.from({length: 32}, (_, i) => seed === 0 ? 0 : seed === 255 ? 255 : i);
+      for (const n of [3, 4, 5, 8, 40, 255]) {
+        resetRandom(seed + n);
+        const theirs = await privySplit(secret, n, 3);
+        const ours = R.reparteixRk(cripto, secret, n);
+        const combinations = n <= 8 ? ternes(n) : [[0, 1, 2], [0, Math.floor(n / 2), n - 1], [n - 3, n - 2, n - 1]];
+        expect(new Set(theirs.map(s => s[32])).size).toBe(n);
+        for (const indexes of combinations) {
+          expect(aHex(R.recomponRk(indexes.map(i => toSdp(theirs[i]))))).toBe(aHex(secret));
+          expect(aHex(await privyCombine(indexes.map(i => toPrivy(ours[i]))))).toBe(aHex(secret));
+          fromPrivy++; fromSdp++;
+        }
+        // Shamir cru no autentica: una terna corrompuda pot donar un secret altre.
+        const corrupted = ours.slice(0, 3).map(toPrivy);
+        corrupted[0][0] ^= 0x80;
+        expect(aHex(await privyCombine(corrupted))).not.toBe(aHex(secret));
+        await expect(privyCombine([toPrivy(ours[0]), toPrivy(ours[0]), toPrivy(ours[2])])).rejects.toThrow(/duplicate/);
+      }
+    }
+    expect(fromPrivy).toBe(231);
+    expect(fromSdp).toBe(231);
+  });
+
+  test('el JSON protocol·lari heretat conserva estat/motiu/procediment pendents; l’oracle tècnic no el ratifica', () => {
     expect(VECTORS.shamir_independents.estat).toBe('pendent');
     expect(VECTORS.shamir_independents.motiu).toMatch(/permís del Mestre/);
     expect(VECTORS.shamir_independents.procediment).toHaveLength(4);

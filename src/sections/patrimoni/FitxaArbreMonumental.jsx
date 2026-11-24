@@ -5,7 +5,9 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIStateOpcional } from '../../app/contexts/UIContext.jsx';
 import { useNotes } from '../notes/NotesContext';
 import { paramsDeLaNota } from '../notes/modeDesa.js';
-import FitxaDadesDoctoralsArbre from './FitxaDadesDoctoralsArbre.jsx';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import cssArbresMonumentals from '../../css/diferit-arbres-monumentals.css?inline';
+import FitxaDadesDoctoralsArbre, { TaulaArbrePedraSeca } from './FitxaDadesDoctoralsArbre.jsx';
 import { formataAltArbreA11y, textosPatrimoniA11y } from './i18nPatrimoniA11y.js';
 import {
   AUTORIA_RENTONAR,
@@ -26,6 +28,10 @@ import {
   projectaFitxaCiefV232,
   revisionsDeLArbre
 } from '../../data/patrimoni/revisionsArbresCief.js';
+
+const adoptaEstilsArbresMonumentals = (node) => {
+  if (node) adoptaFullDiferit(node, 'arbres-monumentals', cssArbresMonumentals);
+};
 
 const PESTANYES_FITXA = Object.freeze([
   { id: 'viva', emoji: '📸', etiqueta: 'Fitxa viva i comparador 2007 ↔ 2020' },
@@ -57,9 +63,13 @@ export default function FitxaArbreMonumental(props) {
   const idFont = props.fontDoctoral?.id;
   if (idFont && idFont !== 'la-torre-de-les-macanes-2007-2020') {
     return (
-      <div className="sdp-arbre-fitxa">
+      <div className="sdp-arbre-fitxa" ref={adoptaEstilsArbresMonumentals}>
         {!props.amagaTitol && <h3>{`#${props.arbre.ordre} · ${props.arbre.nom}`}</h3>}
-        {props.onTanca && <Boto onClick={props.onTanca}>{props.etiquetaTornada || '← Tancar fitxa'}</Boto>}
+        {props.onTanca && (
+          <div className="sdp-arbre-fitxa__accions">
+            <Boto onClick={props.onTanca}>{props.etiquetaTornada || '← Tancar fitxa'}</Boto>
+          </div>
+        )}
         <FitxaDadesDoctoralsArbre arbre={props.arbre} font={props.fontDoctoral} />
       </div>
     );
@@ -156,22 +166,60 @@ function FitxaArbreArxiuLaTorre({
   const teAlertaXylella = arbre.id === 'arbre-02-alborc-del-xipreret';
   const coordsWgs84 = obteCoordenadesArbreSingular(arbre);
 
+  const filesDescripcioViva = [
+    { clau: 'descripcio', etiqueta: 'Descripció de l’exemplar / conjunt', valor: arbre.descripcio },
+    ...(dims.notaDendrometrica
+      ? [{ clau: 'precisio', etiqueta: 'Precisió dendromètrica', valor: dims.notaDendrometrica }]
+      : []),
+    { clau: 'cultural', etiqueta: 'Valor cultural, històric i paisatgístic', valor: arbre.valorCulturalHistoric },
+    {
+      clau: 'acces',
+      etiqueta: 'Accés i titularitat',
+      valor: `${arbre.acces} (${arbre.titularitatCief} · Accés lliure: ${arbre.accesLliure ? 'Sí' : 'No'}).`
+    },
+    {
+      clau: 'ecologia',
+      etiqueta: 'Ecologia, sòl i pendent',
+      valor: `Orientació: ${arbre.orientacio} · Pendent: ${arbre.pendent} · Sòl: ${arbre.sol ?? 'Pendent de campanya'} · Comunitat vegetal: ${arbre.comunitatVegetal ?? 'Pendent de campanya'}`
+    },
+    { clau: 'observacions', etiqueta: 'Observacions del catàleg', valor: arbre.observacions }
+  ];
+
+  const filesCief = campsCief.map((camp) => ({
+    clau: String(camp.numero),
+    etiqueta: camp.titol,
+    valor: camp.valor
+  }));
+
+  const filesOrdenanca = ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.capitols.map((capitol) => ({
+    clau: String(capitol.id),
+    etiqueta: capitol.titol,
+    valor: capitol.resum
+  }));
+
   return (
-    <div className="sdp-arbre-fitxa">
-      <div className="sdp-herbari-fitxa__capcalera">
-        <div>
-          {!amagaTitol && <h3 lang="ca">{`#${arbre.ordre} · ${arbre.nom}`}</h3>}
-          <p>
+    <div className="sdp-arbre-fitxa" ref={adoptaEstilsArbresMonumentals}>
+      <div className="sdp-arbre-fitxa__capcalera">
+        {!amagaTitol && <h3 lang="ca">{`#${arbre.ordre} · ${arbre.nom}`}</h3>}
+        <p className="sdp-arbre-fitxa__pindoles">
+          <span className="sdp-arbre-fitxa__pindola">
             <em lang="la">{arbre.especieCientifica}</em>
-            {` (${arbre.nomComu}) · Categoria: `}
+            {` (${arbre.nomComu})`}
+          </span>
+          <span className="sdp-arbre-fitxa__sep" aria-hidden="true">{' · '}</span>
+          <span className="sdp-arbre-fitxa__pindola">
+            {'Categoria: '}
             <strong>{arbre.categoria}</strong>
-            {arbre.monumental ? ' · Protecció genèrica Llei 4/2006 (Art. 4)' : ' · Protecció municipal (Ple 07/09/2007)'}
-          </p>
-          <p className="sdp-muted">
-            Autoria i custòdia: <strong>{AUTORIA_RENTONAR}</strong> · Estudi tècnic i catalogació base:{' '}
-            <strong>{AUTOR_ESTUDI_ARBRES}</strong>
-          </p>
-        </div>
+          </span>
+          <span className="sdp-arbre-fitxa__sep" aria-hidden="true">{' · '}</span>
+          <span className="sdp-arbre-fitxa__pindola">
+            {arbre.monumental ? 'Protecció genèrica Llei 4/2006 (Art. 4)' : 'Protecció municipal (Ple 07/09/2007)'}
+          </span>
+        </p>
+        <p className="sdp-arbre-fitxa__autoria">
+          Autoria i custòdia: <strong>{AUTORIA_RENTONAR}</strong> · Estudi tècnic i catalogació base:{' '}
+          <strong>{AUTOR_ESTUDI_ARBRES}</strong>
+        </p>
         <div className="sdp-arbre-fitxa__accions">
           {coordsWgs84 ? (
             <SquareBadge
@@ -349,24 +397,11 @@ function FitxaArbreArxiuLaTorre({
           </div>
 
           <h4>Descripció morfològica, ecologia i patrimoni cultural</h4>
-          <dl>
-            <dt>Descripció de l’exemplar / conjunt</dt>
-            <dd>{arbre.descripcio}</dd>
-            {dims.notaDendrometrica ? (
-              <>
-                <dt>Precisió dendromètrica</dt>
-                <dd>{dims.notaDendrometrica}</dd>
-              </>
-            ) : null}
-            <dt>Valor cultural, històric i paisatgístic</dt>
-            <dd>{arbre.valorCulturalHistoric}</dd>
-            <dt>Accés i titularitat</dt>
-            <dd>{`${arbre.acces} (${arbre.titularitatCief} · Accés lliure: ${arbre.accesLliure ? 'Sí' : 'No'}).`}</dd>
-            <dt>Ecologia, sòl i pendent</dt>
-            <dd>{`Orientació: ${arbre.orientacio} · Pendent: ${arbre.pendent} · Sòl: ${arbre.sol ?? 'Pendent de campanya'} · Comunitat vegetal: ${arbre.comunitatVegetal ?? 'Pendent de campanya'}`}</dd>
-            <dt>Observacions del catàleg</dt>
-            <dd>{arbre.observacions}</dd>
-          </dl>
+          <TaulaArbrePedraSeca
+            titol="Descripció morfològica, ecologia i patrimoni cultural"
+            files={filesDescripcioViva}
+            llenguaValors="ca"
+          />
         </section>
       ) : null}
 
@@ -460,14 +495,11 @@ function FitxaArbreArxiuLaTorre({
               ))}
             </div>
           ) : null}
-          <dl>
-            {campsCief.map((camp) => (
-              <div key={camp.numero}>
-                <dt><strong>{camp.titol}</strong></dt>
-                <dd>{camp.valor}</dd>
-              </div>
-            ))}
-          </dl>
+          <TaulaArbrePedraSeca
+            titol="Fitxa Oficial CIEF v232 (24 camps)"
+            files={filesCief}
+            llenguaValors="ca"
+          />
         </section>
       ) : null}
 
@@ -492,15 +524,12 @@ function FitxaArbreArxiuLaTorre({
             {ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.acordPlenariInclusio.votacio.toLowerCase()}).
           </p>
           <p>{ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.acordPlenariInclusio.resumAcord}</p>
-          {ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.capitols.length ? (
-            <dl>
-              {ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.capitols.map((capitol) => (
-                <div key={capitol.id}>
-                  <dt><strong>{capitol.titol}</strong></dt>
-                  <dd>{capitol.resum}</dd>
-                </div>
-              ))}
-            </dl>
+          {filesOrdenanca.length ? (
+            <TaulaArbrePedraSeca
+              titol={ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.titol}
+              files={filesOrdenanca}
+              llenguaValors="ca"
+            />
           ) : (
             <p className="sdp-muted">{`${ORDENANCA_MUNICIPAL_ARBRES_LA_TORRE.notaFont}.`}</p>
           )}

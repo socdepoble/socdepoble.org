@@ -19,18 +19,21 @@ export class LazyRouteError extends Error {
 export const ESPERA_TRANSICIO_DEPLOY_MS = 5000;
 
 let transicioDeDocumentFins = 0;
+let transicioDeDocumentDesDe = 0;
 
 export function marcaTransicioDeDocument(ara = Date.now(), duradaMs = ESPERA_TRANSICIO_DEPLOY_MS) {
   if (!Number.isFinite(ara) || !Number.isFinite(duradaMs) || duradaMs <= 0) return;
-  transicioDeDocumentFins = Math.max(transicioDeDocumentFins, ara + duradaMs);
+  transicioDeDocumentFins = ara < transicioDeDocumentDesDe ? ara + duradaMs : Math.max(transicioDeDocumentFins, ara + duradaMs);
+  transicioDeDocumentDesDe = ara;
 }
 
 export function enTransicioDeDocument(ara = Date.now()) {
-  return Number.isFinite(ara) && transicioDeDocumentFins > ara;
+  return Number.isFinite(ara) && ara >= transicioDeDocumentDesDe && transicioDeDocumentFins > ara;
 }
 
 export function _reiniciaTransicioDeDocument() {
   transicioDeDocumentFins = 0;
+  transicioDeDocumentDesDe = 0;
 }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {

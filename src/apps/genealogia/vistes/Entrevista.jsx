@@ -124,11 +124,27 @@ function FormulariPas({ pas, estat, enfoca = false }) {
   const [valor, setValor] = useState(() => valorInicial(pas, estat.respostes));
   const [errors, setErrors] = useState({});
   const [errorGeneral, setErrorGeneral] = useState(null);
+  const [ocupat, setOcupat] = useState(false);
+  const ocupatRef = useRef(false);
   const titol = useRef(null);
   const pregunta = enLlengua(pas.pregunta, idioma);
   const ajuda = enLlengua(pas.ajuda, idioma);
   const exemple = enLlengua(pas.exemple, idioma);
-  const posa = (camp, nou) => setValor((abans) => ({ ...abans, [camp]: nou }));
+  const posa = (camp, nou) => {
+    setValor((abans) => ({ ...abans, [camp]: nou }));
+    setErrorGeneral(null);
+    setErrors((prev) => {
+      if (!prev[camp]) return prev;
+      const net = { ...prev };
+      delete net[camp];
+      return net;
+    });
+  };
+  const posaValorSimple = (nou) => {
+    setValor(nou);
+    setErrorGeneral(null);
+    setErrors({});
+  };
   const afegides = Array.isArray(estat.respostes?.[pas.id]) ? estat.respostes[pas.id] : [];
 
   /* Una pregunta nova substituïx el formulari i el botó que tenia el focus
@@ -151,7 +167,9 @@ function FormulariPas({ pas, estat, enfoca = false }) {
 
   const envia = async (event) => {
     event.preventDefault();
-    if (besaviSenseIaios) return;
+    if (besaviSenseIaios || ocupatRef.current) return;
+    ocupatRef.current = true;
+    setOcupat(true);
     try {
       const resultat = await g.respon(pas.tipus === 'persona' ? respostaPersona(valor, pas) : valor);
       if (resultat?.ok) return;
@@ -166,9 +184,25 @@ function FormulariPas({ pas, estat, enfoca = false }) {
       setErrorGeneral(generals.length || !Object.keys(perCamp).length ? (generals[0] || tx('error.invalid')) : null);
     } catch (error) {
       setErrorGeneral(textError(error, idioma));
+    } finally {
+      ocupatRef.current = false;
+      setOcupat(false);
     }
   };
-  const fa = (accio) => accio().catch((error) => setErrorGeneral(textError(error, idioma)));
+  const fa = async (accio) => {
+    if (ocupatRef.current) return;
+    ocupatRef.current = true;
+    setOcupat(true);
+    try {
+      await accio();
+    } catch (error) {
+      setErrorGeneral(textError(error, idioma));
+    } finally {
+      ocupatRef.current = false;
+      setOcupat(false);
+    }
+  };
+  const desactivat = g.nomesLectura || ocupat;
 
   return (
     <form onSubmit={envia} noValidate aria-label={pregunta}>
@@ -182,18 +216,18 @@ function FormulariPas({ pas, estat, enfoca = false }) {
             {afegides.map((resposta, i) => (
               <Fila key={`${i}-${nomDeResposta(resposta)}`} gap={2}>
                 <span>{[nomDeResposta(resposta), resposta?.naixement].filter(Boolean).join(' · ')}</span>
-                <Boto varietat="fantasma" disabled={g.nomesLectura} onClick={() => fa(() => g.treuResposta(pas.id, i))}>{tx('entrevista.lleva')}</Boto>
+                <Boto varietat="fantasma" disabled={desactivat} onClick={() => fa(() => g.treuResposta(pas.id, i))}>{tx('entrevista.lleva')}</Boto>
               </Fila>
             ))}
           </GrupCamps>
         ) : null}
         {pas.tipus === 'text' ? (
           <Camp etiqueta={tx('entrevista.resposta')} error={errors.valor}>
-            <CampText maxLength={120} autoComplete="off" value={valor} disabled={g.nomesLectura} onChange={(event) => setValor(event.target.value)} />
+            <CampText maxLength={120} autoComplete="off" value={valor} disabled={desactivat} onChange={(event) => posaValorSimple(event.target.value)} />
           </Camp>
         ) : null}
         {pas.tipus === 'opcio' ? (
-          <GrupOpcions llegenda={tx('entrevista.font')} valor={valor} onCanvi={setValor} error={errors.valor} disabled={g.nomesLectura}
+          <GrupOpcions llegenda={tx('entrevista.font')} valor={valor} onCanvi={posaValorSimple} error={errors.valor} disabled={desactivat}
             opcions={OPCIONS_FONT.map((opcio) => ({ valor: opcio, etiqueta: tx(`entrevista.font.${opcio}`) }))} />
         ) : null}
         {besaviSenseIaios ? <Alerta to="info" viva={false}>{tx('entrevista.besavi.senseIaios')}</Alerta> : null}
@@ -201,29 +235,29 @@ function FormulariPas({ pas, estat, enfoca = false }) {
           <>
             <Alerta to="info" viva={false}>{tx('entrevista.cognom')}</Alerta>
             <Camp etiqueta={tx('camp.nom')} error={errors.nom}>
-              <CampText maxLength={80} autoComplete="off" value={valor.nom} disabled={g.nomesLectura} onChange={(event) => posa('nom', event.target.value)} />
+              <CampText maxLength={80} autoComplete="off" value={valor.nom} disabled={desactivat} onChange={(event) => posa('nom', event.target.value)} />
             </Camp>
             <Camp etiqueta={tx('camp.cognom1')} error={errors.cognom1}>
-              <CampText maxLength={80} autoComplete="off" value={valor.cognom1} disabled={g.nomesLectura} onChange={(event) => posa('cognom1', event.target.value)} />
+              <CampText maxLength={80} autoComplete="off" value={valor.cognom1} disabled={desactivat} onChange={(event) => posa('cognom1', event.target.value)} />
             </Camp>
             <Camp etiqueta={tx('camp.cognom2')} error={errors.cognom2}>
-              <CampText maxLength={80} autoComplete="off" value={valor.cognom2} disabled={g.nomesLectura} onChange={(event) => posa('cognom2', event.target.value)} />
+              <CampText maxLength={80} autoComplete="off" value={valor.cognom2} disabled={desactivat} onChange={(event) => posa('cognom2', event.target.value)} />
             </Camp>
-            <CampData etiqueta={tx('camp.naixement')} valor={valor.naixement} error={errors.naixement} desactivat={g.nomesLectura}
+            <CampData etiqueta={tx('camp.naixement')} valor={valor.naixement} error={errors.naixement} desactivat={desactivat}
               onCanvi={(nou) => posa('naixement', nou)} />
             <Camp etiqueta={tx('camp.lloc')} error={errors.lloc}>
-              <CampText maxLength={120} autoComplete="off" value={valor.lloc} disabled={g.nomesLectura} onChange={(event) => posa('lloc', event.target.value)} />
+              <CampText maxLength={120} autoComplete="off" value={valor.lloc} disabled={desactivat} onChange={(event) => posa('lloc', event.target.value)} />
             </Camp>
             <Camp etiqueta={tx('camp.ofici')} error={errors.ofici}>
-              <CampText maxLength={80} autoComplete="off" value={valor.ofici} disabled={g.nomesLectura} onChange={(event) => posa('ofici', event.target.value)} />
+              <CampText maxLength={80} autoComplete="off" value={valor.ofici} disabled={desactivat} onChange={(event) => posa('ofici', event.target.value)} />
             </Camp>
             {/* Tres respostes, no una casella: «viu» protegix la persona encara que
                 va nàixer fa 100 anys o més; «no ho sé» seguix la regla dels 100 anys. */}
             <GrupOpcions llegenda={tx('camp.viva')} valor={valor.viva} onCanvi={(nou) => posa('viva', nou)} error={errors.viva}
-              disabled={g.nomesLectura} opcions={VIVA.map((opcio) => ({ valor: opcio, etiqueta: tx(`viva.${opcio}`) }))} />
+              disabled={desactivat} opcions={VIVA.map((opcio) => ({ valor: opcio, etiqueta: tx(`viva.${opcio}`) }))} />
             {pas.id === 'g1-besavi' && opcionsFillDe.length ? (
               <Camp etiqueta={tx('entrevista.fillDe')} error={errors.fillDe}>
-                <Selector value={valor.fillDe || ''} disabled={g.nomesLectura} onChange={(event) => posa('fillDe', event.target.value)}
+                <Selector value={valor.fillDe || ''} disabled={desactivat} onChange={(event) => posa('fillDe', event.target.value)}
                   opcions={[{ valor: '', etiqueta: '—' }, ...opcionsFillDe]} />
               </Camp>
             ) : null}
@@ -232,16 +266,16 @@ function FormulariPas({ pas, estat, enfoca = false }) {
         {errorGeneral ? <Alerta to="error">{errorGeneral}</Alerta> : null}
         {/* Un pas repetible (germans, besavis) afig una persona i s'hi queda; «Següent» passa al pas de després. */}
         <Accions>
-          {estat.pas > 0 ? <Boto varietat="secundari" disabled={g.nomesLectura} onClick={() => fa(g.enrere)}>{tx('boto.anterior')}</Boto> : null}
+          {estat.pas > 0 ? <Boto varietat="secundari" disabled={desactivat} onClick={() => fa(g.enrere)}>{tx('boto.anterior')}</Boto> : null}
           {pas.repetible ? (
             <>
-              {besaviSenseIaios ? null : <Boto varietat="secundari" tipus="submit" disabled={g.nomesLectura}>{tx('entrevista.afig')}</Boto>}
-              <Boto varietat="primari" disabled={g.nomesLectura} onClick={() => fa(g.salta)}>{tx('boto.seguent')}</Boto>
+              {besaviSenseIaios ? null : <Boto varietat="secundari" tipus="submit" carregant={ocupat} disabled={desactivat}>{tx('entrevista.afig')}</Boto>}
+              <Boto varietat="primari" disabled={desactivat} onClick={() => fa(g.salta)}>{tx('boto.seguent')}</Boto>
             </>
           ) : (
             <>
-              {pas.opcional ? <Boto varietat="fantasma" disabled={g.nomesLectura} onClick={() => fa(g.salta)}>{tx('boto.salta')}</Boto> : null}
-              <Boto varietat="primari" tipus="submit" disabled={g.nomesLectura}>{tx('boto.seguent')}</Boto>
+              {pas.opcional ? <Boto varietat="fantasma" disabled={desactivat} onClick={() => fa(g.salta)}>{tx('boto.salta')}</Boto> : null}
+              <Boto varietat="primari" tipus="submit" carregant={ocupat} disabled={desactivat}>{tx('boto.seguent')}</Boto>
             </>
           )}
         </Accions>

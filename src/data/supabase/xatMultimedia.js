@@ -64,10 +64,11 @@ const primera = (valor) => Array.isArray(valor) ? valor[0] : valor;
    v1.2.23 · IDEA-331 (ordre del Mestre 261123) · Per defecte el contingut conserva el lloc: els bytes han de ser el
    punt fix d'imatgeAmbUbicacio (l'EXIF blanc amb el GPS, cap altra metadada). Amb «Amaga el lloc»
    (conservaUbicacio: false) o una entrada que declara senseUbicacio, el d'imatgeSenseUbicacio, com sempre. */
-async function comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio = false } = {}) {
+async function comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio = false, conservaUbicacio } = {}) {
   const canonic = ambUbicacio
     ? (await import('../../components/universal/enquadrament/exifAmbUbicacio.js')).imatgeAmbUbicacio
     : (await import('../../components/universal/enquadrament/exifIncrustat.js')).imatgeSenseUbicacio;
+  const extreuTiff = conservaUbicacio === false ? (await import('../../components/universal/enquadrament/exifIncrustat.js')).extreuTiff : null;
   comprova();
   let buffer;
   try {
@@ -89,6 +90,9 @@ async function comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio = 
   }
   comprova();
   const bytes = new Uint8Array(buffer);
+  // Opt-out explícit: ni data/càmera sense GPS. No es canvien ID ni bytes
+  // d'una reserva immutable; el caller ha de preparar un adjunt net nou.
+  if (conservaUbicacio === false && extreuTiff(bytes) !== null) throw errorAdjuntXat('foto-codificacio');
   const net = canonic(bytes);
   if (!net || net.format !== fitxer.type) throw errorAdjuntXat('foto-codificacio');
   /* v1.2.20 · Gauntlet R1 (L1-01) · Uns bytes que no són el punt fix del
@@ -99,7 +103,7 @@ async function comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio = 
 }
 /* v1.2.23 · IDEA-331 · Gauntlet R1 del carril A (P1) · Els dos punts fixos, amb nom: sense GPS (opt-out, entrada sense
    lloc o sense el DTO que l'avís ensenya) i amb el GPS que la persona ha vist. */
-const comprovaImatgeSenseUbicacio = (fitxer, comprova, signal) => comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio: false });
+const comprovaImatgeSenseUbicacio = (fitxer, comprova, signal, conservaUbicacio) => comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio: false, conservaUbicacio });
 const comprovaImatgeAmbUbicacio = (fitxer, comprova, signal) => comprovaImatgeCanonica(fitxer, comprova, signal, { ambUbicacio: true });
 
 /* El fallback antic no pot dir «sense la ubicació» d'un vídeo que només
@@ -272,13 +276,20 @@ async function puja(ruta, fitxer, usuari, config, onProgres, comprova = () => vi
   }
 }
 
+// JSON bigint may arrive as canonical decimal text; other primitives are not bytes.
+function bytesQuota(valor) {
+  const n = typeof valor === 'number' ? valor
+    : typeof valor === 'string' && valor.length <= 16 && /^(?:0|[1-9]\d*)$/.test(valor) ? Number(valor) : null;
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
 export async function quotaXat(config = {}) {
   const { comprova } = capturaOperacio(config);
   const quota = primera(await crida('xat_quota', {}, config));
   comprova();
-  if (!Number.isSafeInteger(Number(quota?.usats)) || Number(quota?.usats) < 0 || ![20_000_000, QUOTA_XAT_BYTES].includes(Number(quota?.limit))) throw noDisponible();
-  const pendents = Array.isArray(quota.pendents) ? quota.pendents.filter((a) => UUID.test(a?.id) && Number.isSafeInteger(a.bytes) && a.bytes > 0) : [];
-  return { usats: Number(quota.usats), limit: Number(quota.limit), pendents };
+  const usats = bytesQuota(quota?.usats), limit = bytesQuota(quota?.limit);
+  if (usats === null || ![20_000_000, QUOTA_XAT_BYTES].includes(limit)) throw noDisponible();
+  const pendents = Array.isArray(quota.pendents) ? quota.pendents.filter((a) => typeof a?.id === 'string' && UUID.test(a.id) && Number.isSafeInteger(a.bytes) && a.bytes > 0) : [];
+  return { usats, limit, pendents };
 }
 
 export async function descartaAdjuntXat(id, config = {}) {
@@ -301,7 +312,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   const { usuari, comprova } = capturaOperacio(config);
   if (!UUID.test(filId) || !UUID.test(entrada?.id)) throw errorAdjuntXat('format');
   validaAdjuntXat(entrada);
-  const { id, fitxer, tipus, duradaMs, respostaA = null } = entrada;
+  const { id, fitxer, tipus, duradaMs, respostaA = null, conservaUbicacio } = entrada;
   const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
   {
@@ -316,10 +327,10 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   /* v1.2.23 · IDEA-331 (ordre del Mestre 261123) · El fitxer conserva el lloc per defecte; el DTO arrodonit
      (R32.42) continua sent el que pinta el mapa. Només l'opt-out (o una entrada que declara senseUbicacio, com els
      reenviaments) ha d'acreditar uns bytes sense GPS abans de reservar. */
-  const senseLloc = entrada.conservaUbicacio === false || entrada.senseUbicacio === true;
+  const senseLloc = conservaUbicacio === false || entrada.senseUbicacio === true;
   /* Gauntlet R1 del carril A (P1) · Una foto que conserva el lloc porta també el DTO que la persona ha vist a l'avís.
      Sense DTO no hi ha avís: els bytes han de ser el punt fix sense GPS (cap lloc en silenci). */
-  if (tipus === 'imatge' && (senseLloc || !ubicacio)) await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal);
+  if (tipus === 'imatge' && (senseLloc || !ubicacio)) await comprovaImatgeSenseUbicacio(fitxer, comprova, config.signal, conservaUbicacio);
   else if (tipus === 'imatge') await comprovaImatgeAmbUbicacio(fitxer, comprova, config.signal);
   if (senseLloc && tipus === 'video' && /^video\/(mp4|quicktime)$/.test(fitxer.type)) await comprovaVideoSenseUbicacio(fitxer, comprova, config.signal);
   const reserva = primera(await crida('xat_reserva_adjunt', {
@@ -375,7 +386,7 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   // només el lloc aproximat: comprovem també els decimals de l'ACK cru.
   if ((llocConfirmat && (m.metadades.ubicacio.lat !== llocConfirmat.lat || m.metadades.ubicacio.lng !== llocConfirmat.lng))
     || (ubicacio && !ubicacioNoAdmesa && (!llocConfirmat || llocConfirmat.lat !== ubicacio.lat || llocConfirmat.lng !== ubicacio.lng))
-    || ((!ubicacio || ubicacioNoAdmesa || entrada.conservaUbicacio === false) && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
+    || ((!ubicacio || ubicacioNoAdmesa || conservaUbicacio === false) && llocConfirmat)) throw errorAdjuntXat('sense-confirmacio');
   return { id: m.id, filId, seq, usuariId: m.usuari_id, autorNom: m.autor_nom,
     text: m.cos, tipus: m.tipus, respostaA: m.resposta_a, metadades: m.metadades,
     comOrgId: m.com_org_id, creatAl: m.creat_al, esIA: false, ...(ubicacioNoAdmesa ? { ubicacioNoAdmesa: true } : {}) };

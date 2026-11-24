@@ -178,7 +178,6 @@ const enEuros = (f) => f.moneda == null || f.moneda === 'EUR';
 const importEsperat = (f) => (Number.isSafeInteger(f.total) ? (f.tipus === 'ingres' ? f.total : -f.total) : null);
 const signeEsperat = (f) => (f.tipus === 'ingres' ? 1 : -1) * (Number.isSafeInteger(f.total) && f.total < 0 ? -1 : 1);
 const signeCompatible = (m, f) => m.centims !== 0 && Math.sign(m.centims) === signeEsperat(f);
-const suma = (llista) => llista.reduce((s, x) => s + x, 0);
 const mateixDia = (x, y) => esDataValida(x) && esDataValida(y) && comparaDates(x, y) === 0;
 const diesDe = (m, f) => diesEntre(f.data, m.dataOperacio);
 const arrodonix = (x) => Math.round(x * 1e6) / 1e6;
@@ -192,7 +191,9 @@ function dinsFinestra(m, f, { abans, despres }) {
 function diferenciaDe(moviments, factures) {
   const esperats = factures.map((f) => (enEuros(f) ? importEsperat(f) : null));
   if (esperats.includes(null)) return null;
-  return suma(moviments.map((m) => m.centims)) - suma(esperats);
+  const diferencia = moviments.reduce((sum, m) => sum + BigInt(m.centims), 0n)
+    - esperats.reduce((sum, value) => sum + BigInt(value), 0n);
+  return diferencia <= BigInt(Number.MAX_SAFE_INTEGER) && diferencia >= BigInt(Number.MIN_SAFE_INTEGER) ? Number(diferencia) : null;
 }
 
 /* GES-A6: una factura en una altra moneda només quadra si el 24 del moviment porta el seu import exacte. */
@@ -368,7 +369,7 @@ export function concilia({ moviments = [], factures = [], rebuts = [], rang = nu
     /* GES-A6: sense un import que es puga comparar no hi ha «diferència 0», i també es diu. */
     if (parella.diferencia === null) {
       incidencia('IMPORT_DESCONEGUT', 'mitjana',
-        `El moviment ${quin(m)} cita ${quines}, però l’import no es pot comparar (una altra moneda o sense total): revisa-ho a mà.`, refMoviment(m));
+        `El moviment ${quin(m)} cita ${quines}, però l’import no es pot comparar (una altra moneda, sense total o fora del rang segur): revisa-ho a mà.`, refMoviment(m));
       return;
     }
     incidencia('IMPORT_DIFERENT', 'mitjana',

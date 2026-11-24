@@ -101,7 +101,7 @@ test('SEO no indexa seccions privades ni detalls marcats privats o arxivats', ()
 test('CLI SEO exclou seeds privats i verifica la política encara que el recompte no canvie', (t) => {
   const { root, write } = fixture(t);
   const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  for (const rel of ['tooling/gates/build-seo-manifest.mjs', 'tooling/lib/arrel.mjs', 'tooling/wiki/lib/publication-policy.mjs']) {
+  for (const rel of ['tooling/gates/build-seo-manifest.mjs', 'tooling/lib/arrel.mjs', 'tooling/wiki/lib/publication-policy.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js']) {
     write(rel, fs.readFileSync(path.join(repo, rel), 'utf8'));
   }
   fs.symlinkSync(path.join(repo, 'node_modules'), path.join(root, 'node_modules'));
@@ -234,7 +234,7 @@ test('manifest, RAG i slugs: cap camí d’usuari, ni a les etiquetes ni als JSO
 test('CLI --check --strict accepta privat existent i rebutja desaparegut sense escriure outputs', (t) => {
   const { root, write } = fixture(t);
   const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/lib/markdown-prose.mjs', 'tooling/wiki/lib/publication-policy.mjs',
+  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/lib/markdown-prose.mjs', 'tooling/wiki/lib/publication-policy.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js',
     'tooling/wiki/lib/frontmatter.mjs', 'tooling/lib/arrel.mjs', 'tooling/scripts/canonada.mjs']) {
     write(rel, fs.readFileSync(path.join(repo, rel), 'utf8'));
   }

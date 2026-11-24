@@ -10,7 +10,13 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { VERSIO_SISTEMA } from '../../config/versio.js';
 import { VERSIO_CLIENT_NATIU } from '../../data/contracte.js';
-import LiniaVersioInstallada, { TEXTOS_LINIA_VERSIO, publicadaDelManifest, textLiniaVersio, urlManifestPublic } from './LiniaVersioInstallada.jsx';
+import LiniaVersioInstallada, {
+  SENSE_CONSULTA_MANIFEST,
+  TEXTOS_LINIA_VERSIO,
+  publicadaDelManifest,
+  textLiniaVersio,
+  urlManifestPublic
+} from './LiniaVersioInstallada.jsx';
 
 const SHA = 'a'.repeat(64);
 const resposta = (cos, { ok = true } = {}) => ({ ok, status: ok ? 200 : 503, text: async () => (typeof cos === 'string' ? cos : JSON.stringify(cos)) });
@@ -38,6 +44,8 @@ describe('les peces pures', () => {
       .toBe('Instal·lada al dispositiu: 1.2.6 (web) · Última publicada: 1.2.7 (build 12)');
     expect(textLiniaVersio({ llengua: 'ca', plataforma: 'android', versio: '1.2.6', build: 11, publicada: null })).toMatch(/· Última publicada: s’està comprovant…$/);
     expect(textLiniaVersio({ llengua: 'ca', plataforma: 'android', versio: '1.2.6', build: 11, publicada: false })).toMatch(/· Última publicada: no s’ha pogut comprovar$/);
+    expect(textLiniaVersio({ llengua: 'ca', plataforma: 'web', versio: '1.2.6', publicada: SENSE_CONSULTA_MANIFEST }))
+      .toBe('Instal·lada al dispositiu: 1.2.6 (web)');
     expect(Object.keys(TEXTOS_LINIA_VERSIO)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
     const claus = Object.keys(TEXTOS_LINIA_VERSIO.ca);
     for (const [llengua, textos] of Object.entries(TEXTOS_LINIA_VERSIO)) {
@@ -126,12 +134,16 @@ describe('el component', () => {
       .toBe(`Instal·lada al dispositiu: ${VERSIO_SISTEMA} (build ${VERSIO_CLIENT_NATIU}) · Última publicada: 1.2.7 (build ${VERSIO_CLIENT_NATIU})`));
   });
 
-  test('al connector (un altre origen) cap consulta; i sense xarxa o amb un manifest dolent, «no s\'ha pogut comprovar»', async () => {
+  test('IDEA-332 · al connector i a localhost cap consulta ni falsa alarma («només la instal·lada»); sense xarxa o amb un manifest dolent quan sí es consulta, «no s\'ha pogut comprovar»', async () => {
     const fetchImpl = vi.fn(async () => resposta(ambProves));
-    render(<LiniaVersioInstallada plataforma="web" origen="https://un-poble.example" fetchImpl={fetchImpl} />);
-    expect(screen.getByTestId('linia-versio-installada').textContent).toMatch(/no s’ha pogut comprovar$/);
+    for (const origen of ['https://un-poble.example', 'http://localhost:3340']) {
+      render(<LiniaVersioInstallada plataforma="web" origen={origen} fetchImpl={fetchImpl} />);
+      expect(screen.getByTestId('linia-versio-installada').textContent, origen)
+        .toBe(`Instal·lada al dispositiu: ${VERSIO_SISTEMA} (web)`);
+      expect(screen.getByTestId('linia-versio-installada').textContent, origen).not.toMatch(/no s’ha pogut comprovar/);
+      cleanup();
+    }
     expect(fetchImpl).not.toHaveBeenCalled();
-    cleanup();
     for (const dolent of [
       async () => { throw new TypeError('Failed to fetch'); },
       async () => resposta('x', { ok: false }),
@@ -159,7 +171,8 @@ describe('les pàgines', () => {
   const arrel = path.resolve(import.meta.dirname, '..', '..', '..');
   test('/versions (TextSection) i /control (ControlSection) la pinten amb la llengua de la interfície; PAGE_COPY no la porta', async () => {
     const text = readFileSync(path.join(arrel, 'src', 'sections', 'text', 'TextSection.jsx'), 'utf8');
-    expect(text).toContain("{pageKey === 'versions' ? <LiniaVersioInstallada llengua={language} /> : null}");
+    expect(text).toContain('<Suspense fallback={<LiniaVersioInstallada llengua={language} />}>');
+    expect(text).toContain('<QuadreEstatCanalsVersions llengua={language} etiquetes={page.labels} />');
     const control = readFileSync(path.join(arrel, 'src', 'sections', 'control', 'ControlSection.jsx'), 'utf8');
     expect(control).toContain('<LiniaVersioInstallada llengua={idioma} />');
     const { PAGE_COPY } = await import('../../sections/text/pageContent.js');

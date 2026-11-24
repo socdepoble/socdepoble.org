@@ -180,10 +180,21 @@ const errorAmbCodi = (missatge, code) => Object.assign(new Error(missatge), { co
  * `persones` (opcional, grup C): el padró local de persones del poble que es
  * poden fer membres d'una organització. Per defecte, PERSONES_SEED.
  */
-export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones = PERSONES_SEED, ara = () => new Date() } = {}) {
+export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones = PERSONES_SEED, ara = () => new Date(), negociInicial = null } = {}) {
   /* T51 · El rellotge del servidor local (injectable a les proves). */
   const moment = () => ara().toISOString();
   let estat = creaMagatzem(entitats, moment());
+  if (negociInicial) {
+    const {actorId,perfil,organitzacions} = negociInicial;
+    estat.perfils.set(actorId,{id:actorId,...structuredClone(perfil)});
+    for (const row of organitzacions) {
+      const {contacte,...org}=structuredClone(row);
+      estat.organitzacions.set(org.id,org);
+      // Authority is derived for this new local copy, never read from a backup role.
+      estat.connexions.set(org.id,new Map([[actorId,{rol:'owner',desDe:estat.naixement}]]));
+      if (contacte) estat.contactes.set(org.id,contacte);
+    }
+  }
 
   const perfilDe = (usuari) => {
     if (!usuari?.id) return null;
@@ -440,6 +451,12 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
   };
 
   return {
+    llegixNegociPortable(usuari) {
+      if (!usuari?.id) throw new Error('Cal iniciar sessió.');
+      const perfil = copiaCamps(perfilDe(usuari),[...CAMPS_PERFIL,'created_at','updated_at']);
+      const organitzacions = orgsOnMana(usuari).map(org=>({ ...copiaCamps(org,['id',...CAMPS_ORG,'created_at','updated_at']),contacte:{...contacteDe(org.id)} }));
+      return structuredClone({perfil,organitzacions});
+    },
     identitatConnexions: identitatConn,
     fitxaConnexioPublica: dtoPublic,
     connexioEsPublica(dades, vincle = null, context = {}) {
