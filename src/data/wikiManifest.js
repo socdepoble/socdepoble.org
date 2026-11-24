@@ -762,8 +762,8 @@ export const wikiManifest = {
         "tractors"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-19T22:27:05+01:00",
-      "revisions": 9,
+      "updated": "2026-11-24T21:58:30+01:00",
+      "revisions": 10,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -780,8 +780,8 @@ export const wikiManifest = {
           "tractors"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-19T22:27:05+01:00",
-        "revisions": 9,
+        "updated": "2026-11-24T21:58:30+01:00",
+        "revisions": 10,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -1249,8 +1249,8 @@ export const wikiManifest = {
       "categoryId": "folder:02_saber/architecture",
       "tags": [],
       "date": "2026-11-01T00:52:20+01:00",
-      "updated": "2026-11-23T23:43:09+01:00",
-      "revisions": 21,
+      "updated": "2026-11-24T21:58:30+01:00",
+      "revisions": 22,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -1262,8 +1262,8 @@ export const wikiManifest = {
         "status": "esborrany",
         "description": "Inventari verificable del port i requisits d'allotjament Model B",
         "date": "2026-11-01T00:52:20+01:00",
-        "updated": "2026-11-23T23:43:09+01:00",
-        "revisions": 21,
+        "updated": "2026-11-24T21:58:30+01:00",
+        "revisions": 22,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -2629,7 +2629,7 @@ export const wikiManifest = {
       "date": "2026-11-17T00:14:00+01:00",
       "updated": "2026-11-21T03:48:00+01:00",
       "version": "1.2.1",
-      "revisions": 4,
+      "revisions": 5,
       "mur": false,
       "origenEditorial": {
         "date": "frontmatter",
@@ -2651,7 +2651,7 @@ export const wikiManifest = {
           "skills",
           "tractors"
         ],
-        "revisions": 4,
+        "revisions": 5,
         "origenEditorial": {
           "date": "frontmatter",
           "updated": "frontmatter",
