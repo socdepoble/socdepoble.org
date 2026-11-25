@@ -303,6 +303,8 @@ const MISSATGES_ENTRADA = Object.freeze({
      Només en valencià, com la resta d'esta taula (decisió D4 del Mestre). */
   [CODI_ENTRADA.TOKEN_REBUTJAT]: 'El servidor de Sóc de Poble no ha acceptat la identificació del teu compte. Torna-ho a provar o entra amb el correu.',
   [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor de Sóc de Poble. Entra amb el correu.',
+  /* ENT-01 (v1.2.25) · La vista no la pinta (esSilenciDEntrada): és la reserva perquè cap codi no caiga al text cru. */
+  [CODI_ENTRADA.CANCELADA_PROVEIDOR]: 'Has cancel·lat l’entrada amb Google.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 
@@ -338,6 +340,47 @@ export function missatgeDEntrada(error) {
   if (code) return MISSATGES_ENTRADA[code];
   const text = typeof error === 'string' ? error : error?.message;
   return typeof text === 'string' && text.trim() ? text : MISSATGES_ENTRADA[CODI_ENTRADA.DESCONEGUT];
+}
+
+/**
+ * ENT-01 (v1.2.25) · Cert si l'error d'entrada no s'ha de pintar: la persona
+ * mateixa ha dit «No» a la pantalla del proveïdor (CANCELADA_PROVEIDOR).
+ */
+export function esSilenciDEntrada(error) {
+  return error?.code === CODI_ENTRADA.CANCELADA_PROVEIDOR;
+}
+
+/* ENT-01 i ENT-08 (v1.2.25) · Els codis de l'entrada amb Google
+   (data/oauthRelay.js) i la seua clau a i18nOnboardingExtra.js, en 5 llengües. */
+const CLAUS_ERROR_GOOGLE = Object.freeze({
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'googleServidorInabastable',
+  [CODI_ENTRADA.MASSA_INTENTS]: 'googleMassaIntents',
+  [CODI_ENTRADA.DESCONEGUT]: 'googleDesconegut'
+});
+
+/* Un error del motor (TypeError, SyntaxError, una DOMException que no és la
+   cancel·lació…): el seu text és del navegador, no una frase pròpia d'un
+   adaptador, que sempre és un Error. Un context sense crypto.subtle (http)
+   en dona un abans d'obrir res. */
+function esErrorDelMotor(error) {
+  const nom = error?.name;
+  return typeof nom === 'string' && nom !== 'Error' && nom !== 'AbortError';
+}
+
+/**
+ * ENT-01 i ENT-08 (v1.2.25) · La frase d'un error de l'entrada amb Google en
+ * la llengua de la interfície: pel codi (codiDEntrada), el text de `textos`
+ * (textosOnboardingExtra de la llengua). Un error del motor sense codi val
+ * com a DESCONEGUT. Sense frase per al codi, la de la taula en valencià; sense
+ * codi, el text propi de l'adaptador (missatgeDEntrada). Mai el text del
+ * proveïdor ni el del navegador.
+ */
+export function missatgeDEntradaAmbGoogle(error, textos) {
+  const codi = codiDEntrada(error) ?? (esErrorDelMotor(error) ? CODI_ENTRADA.DESCONEGUT : null);
+  const clau = CLAUS_ERROR_GOOGLE[codi];
+  const frase = clau ? textos?.[clau] : null;
+  if (typeof frase === 'string' && frase.trim()) return frase;
+  return codi ? MISSATGES_ENTRADA[codi] : missatgeDEntrada(error);
 }
 
 /* Correcció de la revisió T1–T4 (260930) · Marca d'un sol ús de la capa

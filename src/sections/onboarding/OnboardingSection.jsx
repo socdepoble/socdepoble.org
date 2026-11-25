@@ -4,7 +4,9 @@ import { useNavigate, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Accions, Alerta, Boto, Divisor } from '../../components/PedraSeca/index.js';
-import { MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada, toDeLErrorDEntrada } from './onboardingModel.js';
+import {
+  MARCA_ENTRADA_PILOT, MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, esSilenciDEntrada, missatgeDEntrada, missatgeDEntradaAmbGoogle, toDeLErrorDEntrada
+} from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
@@ -17,7 +19,7 @@ import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
 import { cancelAuthAttempts } from '../../data/authAttempt.js';
-import { CODI_ENTRADA_EN_MARC, googleEnMarcAlie, urlPerAObrirFora } from '../../data/oauthRelay.js';
+import { CODI_ENTRADA_EN_MARC, descomptaIntentDeGoogle, googleEnMarcAlie, urlPerAObrirFora } from '../../data/oauthRelay.js';
 import { PERSONA_PILOT } from '../../data/identitatsSeed.js';
 import { entradaPilotDisponible } from '../../data/sessioPilot.js';
 import { createTranslator } from '../../config/i18n.js';
@@ -520,6 +522,10 @@ export default function OnboardingSection() {
     }
   };
 
+  /* El botó de Google i la marca que hi torna el focus quan l'espera acaba
+     sense res a dir (vegeu cancelaGoogle, més avall). */
+  const botoGoogle = useRef(null);
+  const focusAGoogle = useRef(false);
   const googleLogin = async () => {
     const op = obriIntent('google');
     setGoogleError('');
@@ -529,8 +535,12 @@ export default function OnboardingSection() {
       showToast(tr('section.login.benvinguda.deNou', 'Benvingut de nou al Mas!'), 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (loginError) {
+      /* ENT-01 i ENT-08 (v1.2.25) · Un «No» a Google no és cap error (silenci,
+         i el focus torna al botó de Google com amb «Cancel·la l’entrada»); la
+         resta, pel codi i en la llengua de la interfície, mai el text cru. */
       if (op.viu() && loginError?.code === CODI_ENTRADA_EN_MARC) setEnMarcAlie(true);
-      else if (op.viu()) setGoogleError(missatgeDEntrada(loginError));
+      else if (op.viu() && esSilenciDEntrada(loginError)) focusAGoogle.current = true;
+      else if (op.viu()) setGoogleError(missatgeDEntradaAmbGoogle(loginError, txExtra));
     } finally {
       op.tanca();
     }
@@ -542,10 +552,10 @@ export default function OnboardingSection() {
      l'intent (fora el verificador i els escoltadors; un codi que arribe després
      no entra) i allibera l'espera, també amb un port que no l'avortara. En
      prémer-lo, «Cancel·la l’entrada» desapareix i el focus torna a Google. */
-  const botoGoogle = useRef(null);
-  const focusAGoogle = useRef(false);
   const cancelaGoogle = () => {
     cancelAuthAttempts();
+    /* ENT-08 (v1.2.25) · Una entrada cancel·lada per la persona no compta per al fre. */
+    descomptaIntentDeGoogle();
     intent.current += 1;
     focusAGoogle.current = true;
     setBusyStep(null);

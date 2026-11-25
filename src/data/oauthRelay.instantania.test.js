@@ -19,9 +19,12 @@ import { webcrypto } from 'node:crypto';
 import { getEfimer, setEfimer, delEfimer } from '../config/storage.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { cancelAuthAttempts } from './authAttempt.js';
+import { CODI_ENTRADA } from './errorsBackend.js';
 import { _intern, entraAmbGoogle, gestionaTornada } from './oauthRelay.js';
 
 const ORIGEN = 'https://host.example';
+/* ENT-01 (v1.2.25) · La persona cancel·la a Google: un codi, mai el text del proveïdor. */
+const CANCELADA = Object.freeze({ code: CODI_ENTRADA.CANCELADA_PROVEIDOR, message: expect.not.stringContaining('access_denied') });
 /* La reproducció de Codex, literal. */
 const CUPO = '/wordpress/?page_id=12&code=HOST-COUPON&state=HOST-STATE&filter=all';
 const ESTAT_AMFITRIO = Object.freeze({ amfitrio: 'wordpress', pas: 3, llista: [1, 'dos', null, true], niu: { a: { b: 0.5 } } });
@@ -159,7 +162,7 @@ test('W4-02 · el proveïdor torna un error (la persona cancel·la a Google): la
   const { id, tornada } = await anada(CUPO, ESTAT_AMFITRIO);
   const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
   tornaDeGoTrue(tornada, { error: 'access_denied', error_code: 'access_denied', error_description: 'Denegat' });
-  await expect(gestionaTornada({}, config)).rejects.toThrow('access_denied');
+  await expect(gestionaTornada({}, config)).rejects.toMatchObject(CANCELADA);
   expect(fetch).not.toHaveBeenCalled();
   expect(ara()).toBe(ORIGEN + CUPO);
   expect(window.history.state).toEqual(ESTAT_AMFITRIO);
@@ -369,7 +372,7 @@ const FINALS_DEL_SEGON = Object.freeze({
   },
   'amb l’error del proveïdor': {
     resultat: { error: 'access_denied', error_code: 'access_denied', error_description: 'Denegat' },
-    tornada: (promesa) => expect(promesa).rejects.toThrow('access_denied'),
+    tornada: (promesa) => expect(promesa).rejects.toMatchObject(CANCELADA),
     codis: [],
     usuari: undefined
   }

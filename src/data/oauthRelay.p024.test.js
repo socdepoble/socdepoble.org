@@ -16,6 +16,7 @@ import { backendScope } from '../config/backendConfig.js';
 import { getEfimer, getVal, setEfimer, setVal } from '../config/storage.js';
 import { CENS_IMATGES } from '../sections/multimedia/censImatges.js';
 import { beginAuthAttempt, cancelAuthAttempts } from './authAttempt.js';
+import { CODI_ENTRADA } from './errorsBackend.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import {
   _intern,
@@ -30,6 +31,12 @@ const configProva = () => ({
   hasSupabaseConfig: true,
   supabaseUrl: 'https://backend.socdepoble.test',
   supabaseAnonKey: 'anon-key-publica',
+});
+
+/* ENT-01 (v1.2.25) · Cancel·lar a Google rebutja amb un codi que la vista calla, mai amb el text del proveïdor. */
+const CANCELADA_SENSE_TEXT_CRU = Object.freeze({
+  code: CODI_ENTRADA.CANCELADA_PROVEIDOR,
+  message: expect.not.stringContaining('access_denied'),
 });
 
 const obriPopupFals = () => {
@@ -94,7 +101,7 @@ describe('P0-24 (D06/D10): Invariants de revisió d’App Store i Google Play a 
     const popup = obriPopupFals();
 
     const promesa = entraAmbGoogle({}, configProva);
-    const resultat = expect(promesa).rejects.toThrow('access_denied');
+    const resultat = expect(promesa).rejects.toMatchObject(CANCELADA_SENSE_TEXT_CRU);
 
     await vi.waitFor(() => expect(popup.location.href).toContain('/auth/v1/authorize'));
     const intent = extreuIntentDePopup(popup);
@@ -135,7 +142,7 @@ describe('P0-24 (D06/D10): Invariants de revisió d’App Store i Google Play a 
       t: Date.now(),
     });
 
-    await expect(gestionaTornada({}, configProva)).rejects.toThrow('access_denied');
+    await expect(gestionaTornada({}, configProva)).rejects.toMatchObject(CANCELADA_SENSE_TEXT_CRU);
     expect(window.location.search).toBe('?page_id=42');
     expect(window.location.hash).toBe('#cataleg');
     expect(window.history.state).toEqual({ pestanya: 'mercat' });

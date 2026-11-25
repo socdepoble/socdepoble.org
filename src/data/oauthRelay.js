@@ -204,6 +204,7 @@ import { getVal, setVal, delVal, getEfimer, setEfimer, delEfimer, STORAGE_PREFIX
 import { beginAuthAttempt } from './authAttempt.js';
 import { backendScope } from '../config/backendConfig.js';
 import { desaSessio } from './identitat.js';
+import { CODI_ENTRADA, ambCodi, esBackendInabastable } from './errorsBackend.js';
 
 /* ───────────────────────── Configuració ───────────────────────── */
 
@@ -222,6 +223,8 @@ const clauTraspas = (intent) => PREFIX_TRASPAS + intent;
 const CAMI = Object.freeze({ EMERGENT: 'emergent', REDIRECCIO: 'redireccio' });
 const TIPUS_MISSATGE = 'sdp:oauth';
 const TEMPS_MAXIM_MS = 180000;
+/* Capa efímera · El comptador del fre de les entrades seguides: { count, time }. */
+const CLAU_CB = 'sdp:oauth:cb';
 /* Un traspàs més vell que açò no s'accepta: no és la tornada d'ara. */
 const VIGENCIA_TRASPAS_MS = 120000;
 
@@ -695,6 +698,59 @@ export function urlPerAObrirFora(pagina = globalThis.window?.location) {
   try { return urlDeTornada(pagina); } catch { return null; }
 }
 
+/* ─────────────────── Errors sense text cru (ENT-01, ENT-08) ─────────────────── */
+
+/* ENT-01 i ENT-08 (v1.2.25; auditoria 261125_0347) · Cap error d'esta entrada
+   no porta cap a la vista el text del proveïdor (access_denied, el JSON de
+   GoTrue) ni el del navegador (Load failed, «signal is aborted without
+   reason»): porta un `code` de CODI_ENTRADA i una frase pròpia en valencià, i
+   el cru viatja a `cause`. La vista tria pel codi la frase en la llengua de la
+   interfície (sections/onboarding/i18nOnboardingExtra.js). */
+const ERROR_CANCELACIO = 'access_denied';
+const MISSATGE_CANCELADA = 'Has cancel·lat l’entrada amb Google.';
+const MISSATGE_PROVEIDOR_FALLIT = 'No s’ha pogut completar l’entrada amb Google. Torna-ho a provar o entra amb el correu.';
+const MISSATGE_INABASTABLE = 'El servidor de Sóc de Poble no respon ara mateix. Torna-ho a provar d’ací a una estona.';
+const MISSATGE_MASSA_INTENTS = 'Has provat d’entrar amb Google moltes vegades seguides. Espera un minut i torna-ho a provar.';
+
+/* L'error que torna el proveïdor. La persona ha dit «No» si GoTrue diu
+   access_denied sense cap error_code (o amb el mateix access_denied):
+   signup_disabled, user_banned o provider_email_needs_verification també
+   arriben com a access_denied, i no són cap cancel·lació seua. `codiError`
+   null és un error_code absent; '' és un error_code present i buit, el d'un
+   rebuig del servidor sense codi (redirectErrors de GoTrue el deixa així a la
+   consulta), i tampoc no és cap cancel·lació. */
+function errorDelProveidor(error, codiError) {
+  const cause = { error, error_code: codiError ?? null };
+  const cancelada = error === ERROR_CANCELACIO && (codiError == null || codiError === ERROR_CANCELACIO);
+  return cancelada
+    ? ambCodi(new Error(MISSATGE_CANCELADA, { cause }), CODI_ENTRADA.CANCELADA_PROVEIDOR)
+    : ambCodi(new Error(MISSATGE_PROVEIDOR_FALLIT, { cause }), CODI_ENTRADA.DESCONEGUT);
+}
+
+const errorInabastable = (cause) => ambCodi(new Error(MISSATGE_INABASTABLE, cause ? { cause } : undefined), CODI_ENTRADA.SERVIDOR_INABASTABLE);
+
+/* Una resposta d'error del bescanvi: l'estat, mai el cos, dins del text; el
+   cos, a `cause`. Un 5xx és el servidor que no respon. */
+function errorDeResposta(status, cos) {
+  const code = Number.isInteger(status) && status >= 500 ? CODI_ENTRADA.SERVIDOR_INABASTABLE : CODI_ENTRADA.DESCONEGUT;
+  return Object.assign(ambCodi(new Error(`No s'ha pogut completar l'entrada (${status}).`, { cause: { status, cos } }), code), { status });
+}
+
+/* Un rebuig del bescanvi: el topall (també si el transport hi posa el seu
+   AbortError) i la xarxa caiguda són SERVIDOR_INABASTABLE, amb el cru a
+   `cause`. Una cancel·lació continua sent el seu AbortError: la vista la calla.
+   Qualsevol altre error sense codi de text (un 200 amb un cos que no és JSON,
+   que fa llançar resposta.json(); una sessió buida o que no es pot desar) és
+   DESCONEGUT, amb el cru a `cause`. */
+function errorDelBescanvi(error, signal, esgotat) {
+  if (signal.aborted && signal.reason === esgotat) return esgotat;
+  if (typeof error?.code !== 'string' && esBackendInabastable(error)) return errorInabastable(error);
+  if (error?.name !== 'AbortError' && typeof error?.code !== 'string') {
+    return ambCodi(new Error(MISSATGE_PROVEIDOR_FALLIT, { cause: error }), CODI_ENTRADA.DESCONEGUT);
+  }
+  return error;
+}
+
 /* ───────────────────────── Bescanvi ───────────────────────── */
 
 async function bescanvia(codi, verificador, config, attempt) {
@@ -702,14 +758,16 @@ async function bescanvia(codi, verificador, config, attempt) {
     throw new Error('El backend de l’entrada ha canviat. Torna a entrar.');
   }
   attempt.assertCurrent();
-  const timeout = setTimeout(() => attempt.controller.abort(), 12000);
+  /* ENT-01 · El topall avorta amb un motiu propi: sense, el navegador rebutja amb «signal is aborted without reason». */
+  const esgotat = errorInabastable();
+  const timeout = setTimeout(() => attempt.controller.abort(esgotat), 12000);
   try {
   const resposta = await bescanviaCodiOAuth(codi, verificador, config, attempt.signal);
 
   attempt.assertCurrent();
   if (!resposta.ok) {
     const cos = await resposta.text().catch(() => '');
-    throw new Error(`No s'ha pogut completar l'entrada (${resposta.status}). ${cos}`);
+    throw errorDeResposta(resposta.status, cos);
   }
 
   const sessio = await resposta.json();
@@ -726,6 +784,8 @@ async function bescanvia(codi, verificador, config, attempt) {
   netejaIntent(verificador);
   window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: sessio.user } }));
   return sessio;
+  } catch (error) {
+    throw errorDelBescanvi(error, attempt.signal, esgotat);
   } finally { clearTimeout(timeout); }
 }
 
@@ -768,6 +828,19 @@ function surtPerRedireccio(intent, url, instantania) {
 }
 
 /**
+ * ENT-08 (v1.2.25) · «Cancel·la l'entrada» de /registre: una entrada que la
+ * persona mateixa cancel·la no compta per al fre de les entrades seguides
+ * (CLAU_CB). Només la cancel·lació explícita, que és un gest de la persona: un
+ * «No» a Google sí que compta, perquè un bucle de redireccions també en pot
+ * tornar. Mai per davall de zero; un comptador absent o malmés, res.
+ */
+export function descomptaIntentDeGoogle() {
+  const intents = getEfimer(CLAU_CB, null);
+  if (!intents || typeof intents !== 'object' || !(Number(intents.count) > 0)) return;
+  setEfimer(CLAU_CB, { ...intents, count: Number(intents.count) - 1 });
+}
+
+/**
  * Obri l'entrada amb Google. Resol amb la sessió; rebutja amb un error
  * llegible. La pàgina amfitriona no navega si l'emergent s'obri. B: en un
  * marc d'un altre origen rebutja amb CODI_ENTRADA_EN_MARC abans de res.
@@ -792,18 +865,18 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
   const instantania = capturaInstantania() ?? heretaInstantania();
 
   // Circuit Breaker per evitar bucles de redirecció cap a l'autenticació
-  const clauCb = 'sdp:oauth:cb';
-  const intentsCb = getEfimer(clauCb, { count: 0, time: Date.now() });
+  const intentsCb = getEfimer(CLAU_CB, { count: 0, time: Date.now() });
   if (Date.now() - intentsCb.time > 60000) {
     intentsCb.count = 1;
     intentsCb.time = Date.now();
   } else {
     intentsCb.count += 1;
   }
-  setEfimer(clauCb, intentsCb);
+  setEfimer(CLAU_CB, intentsCb);
 
   if (intentsCb.count > 4) {
-    throw new Error('Massa intents d\'inici de sessió seguits. Circuit Breaker activat. Espera un minut.');
+    /* ENT-08 (v1.2.25) · Un codi i una frase per a la persona, mai l'argot del fre. */
+    throw ambCodi(new Error(MISSATGE_MASSA_INTENTS), CODI_ENTRADA.MASSA_INTENTS);
   }
 
   // Obertura síncrona per evitar bloqueig a Safari (Safari matarà el popup si ve després d'un await)
@@ -930,7 +1003,9 @@ function esperaCodi(emergent, origenTornada, intent, attempt, tancaPopup) {
     // El resultat d'este intent, vinga pel camí que vinga. Un altre id s'ignora.
     function rep(d) {
       if (!esCarregaDe(d, intent)) return;
-      if (typeof d.error === 'string' && d.error) return acaba(rebutja, new Error(d.error));
+      if (typeof d.error === 'string' && d.error) {
+        return acaba(rebutja, errorDelProveidor(d.error, typeof d.error_code === 'string' ? d.error_code : null));
+      }
       if (typeof d.code === 'string' && d.code) acaba(resol, d.code);
     }
 
@@ -1038,11 +1113,16 @@ function tornadaDeGoogle(intent, consulta, config, resolConfig) {
   const codi = consulta.get('code');
   const error = consulta.get('error') || consulta.get('error_description')
     || fragment.get('error') || fragment.get('error_description');
+  /* ENT-01 · L'error_code de GoTrue distingix el «No» de la persona d'un rebuig
+     del servidor (errorDelProveidor): el primer amb valor; si només n'hi ha de
+     buits, ''; si no n'hi ha cap, null. */
+  const codiError = consulta.get('error_code') || fragment.get('error_code')
+    || (consulta.has('error_code') || fragment.has('error_code') ? '' : null);
   if (!codi && !error) {
     netejaRetorn();
     return null;
   }
-  const resultat = error ? { error } : { code: codi };
+  const resultat = error ? { error, ...(codiError !== null ? { error_code: codiError } : null) } : { code: codi };
 
   /* (a) L'emergent. No bescanviem ací: el verificador viu a la mare. Encara
      que un navegador haguera copiat el verificador a l'emergent, el registre
@@ -1072,7 +1152,7 @@ function tornadaDeGoogle(intent, consulta, config, resolConfig) {
     tancaTornada(instantania);
     netejaIntent(verificador);
     oblidaIntent(intent);
-    throw new Error(error);
+    throw errorDelProveidor(error, codiError);
   }
   const { supabaseUrl, supabaseAnonKey } = resolConfig(config);
   const attempt = beginAuthAttempt();

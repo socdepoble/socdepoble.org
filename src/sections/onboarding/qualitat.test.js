@@ -53,7 +53,9 @@ const CENS = Object.freeze([
   'src/sections/onboarding/detectaWebViewInApp.js',
   'src/sections/onboarding/textosEscutWebview.js',
   'src/sections/onboarding/OnboardingSection.webview.r32_5.test.jsx',
-  'src/sections/onboarding/textosEscutWebview.r32_7.test.js'
+  'src/sections/onboarding/textosEscutWebview.r32_7.test.js',
+  /* ENT-01 i ENT-08 (v1.2.25) · Els errors de l'entrada amb Google en 5 llengües. */
+  'src/sections/onboarding/i18nOnboardingExtra.js'
 ]);
 
 describe('el cens', () => {

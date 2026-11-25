@@ -1,6 +1,8 @@
 /**
  * Onboarding extra (accés pilot DEV + ProvaCorreuAmbContrasenya) · 5 llengües (ca, es, en, eu, gl).
  * Conserva el valencià byte-per-byte idèntic i complix la Llei 32.
+ * ENT-01 i ENT-08 (v1.2.25) · google*: la frase de cada codi d'error de l'entrada amb Google
+ * (onboardingModel.js, missatgeDEntradaAmbGoogle). CANCELADA_PROVEIDOR no en té: és silenci.
  */
 const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
   ca: Object.freeze({
@@ -24,6 +26,9 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaRecarrega: 'Cal recarregar per comprovar el resultat.',
     provaNoConfirmada: 'No s’ha confirmat la prova del correu. No s’ha tornat a enviar.',
     guiaPasAPasBoto: 'Guia pas a pas',
+    googleServidorInabastable: 'El servidor de Sóc de Poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
+    googleMassaIntents: 'Has provat d’entrar amb Google moltes vegades seguides. Espera un minut i torna-ho a provar.',
+    googleDesconegut: 'No s’ha pogut completar l’entrada amb Google. Torna-ho a provar o entra amb el correu.',
   }),
   es: Object.freeze({
     pilotDevTitol: 'Acceso piloto de desarrollo · solo en este ordenador',
@@ -46,6 +51,9 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaRecarrega: 'Es necesario recargar para comprobar el resultado.',
     provaNoConfirmada: 'No se ha confirmado la prueba del correo. No se ha vuelto a enviar.',
     guiaPasAPasBoto: 'Guía paso a paso',
+    googleServidorInabastable: 'El servidor de Sóc de Poble no responde ahora mismo. Vuelve a intentarlo dentro de un rato.',
+    googleMassaIntents: 'Has intentado entrar con Google muchas veces seguidas. Espera un minuto y vuelve a intentarlo.',
+    googleDesconegut: 'No se ha podido completar el acceso con Google. Vuelve a intentarlo o entra con tu correo.',
   }),
   en: Object.freeze({
     pilotDevTitol: 'Development pilot access · this computer only',
@@ -68,6 +76,9 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaRecarrega: 'Reload the page to verify the result.',
     provaNoConfirmada: 'Email proof was not confirmed. Nothing was resent.',
     guiaPasAPasBoto: 'Step-by-step guide',
+    googleServidorInabastable: 'The Sóc de Poble server is not responding right now. Please try again in a little while.',
+    googleMassaIntents: 'You have tried to sign in with Google many times in a row. Wait a minute and try again.',
+    googleDesconegut: 'Signing in with Google could not be completed. Try again or sign in with your email.',
   }),
   eu: Object.freeze({
     pilotDevTitol: 'Garapeneko sarbide pilotua · ordenagailu honetan soilik',
@@ -90,6 +101,9 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaRecarrega: 'Birkargatu emaitza egiaztatzeko.',
     provaNoConfirmada: 'Postaren froga ez da baieztatu. Ez da berriro bidali.',
     guiaPasAPasBoto: 'Urratsez urratseko gida',
+    googleServidorInabastable: 'Sóc de Pobleren zerbitzariak ez du erantzuten oraintxe. Saiatu berriro geroxeago.',
+    googleMassaIntents: 'Google bidez sartzen saiatu zara askotan jarraian. Itxaron minutu bat eta saiatu berriro.',
+    googleDesconegut: 'Ezin izan da Google bidezko sarrera osatu. Saiatu berriro edo sartu posta elektronikoarekin.',
   }),
   gl: Object.freeze({
     pilotDevTitol: 'Acceso piloto de desenvolvemento · só neste ordenador',
@@ -112,6 +126,9 @@ const TEXTOS_ONBOARDING_EXTRA = Object.freeze({
     provaRecarrega: 'Cómpre recargar para comprobar o resultado.',
     provaNoConfirmada: 'Non se confirmou a proba do correo. Non se volveu enviar.',
     guiaPasAPasBoto: 'Guía paso a paso',
+    googleServidorInabastable: 'O servidor de Sóc de Poble non responde agora mesmo. Téntao de novo dentro dun anaco.',
+    googleMassaIntents: 'Intentaches entrar con Google moitas veces seguidas. Agarda un minuto e téntao de novo.',
+    googleDesconegut: 'Non se puido completar a entrada con Google. Téntao de novo ou entra co correo.',
   }),
 });
 

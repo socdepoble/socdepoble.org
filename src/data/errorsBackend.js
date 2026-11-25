@@ -13,7 +13,10 @@
  * Fase D (261020, tasca 1) · Entrada amb el testimoni d'un proveïdor (capacitat
  * 'entradaAmbToken'): TOKEN_REBUTJAT, el servidor no accepta el testimoni (mal
  * format, nonce o audiència que no casen); PROVEIDOR_INACTIU, el servidor no té
- * activat eixe proveïdor. Cap dels dos és culpa de la persona. */
+ * activat eixe proveïdor. Cap dels dos és culpa de la persona.
+ * ENT-01 (v1.2.25) · CANCELADA_PROVEIDOR: la persona mateixa ha dit «No» a la
+ * pantalla del proveïdor (access_denied sense cap error_code més concret de
+ * GoTrue). No és cap error: la vista no en pinta res. */
 export const CODI_ENTRADA = Object.freeze({
   CREDENCIALS: 'credencials',
   CORREU_PENDENT: 'correu-pendent',
@@ -26,6 +29,7 @@ export const CODI_ENTRADA = Object.freeze({
   MATEIXA_CONTRASENYA: 'mateixa-contrasenya',
   TOKEN_REBUTJAT: 'token-rebutjat',
   PROVEIDOR_INACTIU: 'proveidor-inactiu',
+  CANCELADA_PROVEIDOR: 'cancelada-proveidor',
   DESCONEGUT: 'desconegut'
 });
 

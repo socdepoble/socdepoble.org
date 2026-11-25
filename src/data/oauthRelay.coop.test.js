@@ -19,6 +19,7 @@ import { getEfimer, setEfimer, getVal, setVal, STORAGE_PREFIX } from '../config/
 import { backendScope } from '../config/backendConfig.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { cancelAuthAttempts } from './authAttempt.js';
+import { CODI_ENTRADA } from './errorsBackend.js';
 import { _intern, entraAmbGoogle, gestionaTornada } from './oauthRelay.js';
 
 const config =() => ({ hasSupabaseConfig: true, supabaseUrl: 'https://backend.example.test', supabaseAnonKey: 'public' });
@@ -132,7 +133,10 @@ test('F1 · closed === true pel camí 1: el missatge de l’emergent amb el seu 
 test('F1 · closed === true i un error del seu id per storage: rebutja amb l’error, sense bescanvi, i neteja', async () => {
   const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
   const { work, id } = await obriEntrada();
-  const result = expect(work).rejects.toThrow('Denegat');
+  // ENT-01 (v1.2.25) · Un error del proveïdor que no és cap «No» de la persona: DESCONEGUT, i el cru a cause.
+  const result = expect(work).rejects.toMatchObject({
+    code: CODI_ENTRADA.DESCONEGUT, message: expect.not.stringContaining('Denegat'), cause: { error: 'Denegat', error_code: null }
+  });
   await vi.advanceTimersByTimeAsync(3 * TIC_MS);
   window.dispatchEvent(traspas(UN_ALTRE, { error: 'HOST-CHECKOUT-FAILED' }));   // la clau d'un altre id: ignorada
   window.dispatchEvent(traspas(UN_ALTRE, { error: 'HOST-CHECKOUT-FAILED' }, _intern.clauTraspas(id)));   // la seua clau, un altre id

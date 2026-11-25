@@ -21,7 +21,11 @@ const CENS = Object.freeze([
   /* Quarta passada (261003) · W4-02, la instantània de la pàgina; B, l'entrada en un marc d'un altre origen. */
   'src/data/oauthRelay.instantania.test.js',
   'src/data/oauthRelay.marc.test.js',
-  'src/sections/onboarding/OnboardingSection.marc.test.jsx'
+  'src/sections/onboarding/OnboardingSection.marc.test.jsx',
+  /* ENT-01 i ENT-08 (v1.2.25) · L'entrada amb Google sense text cru. */
+  'src/data/oauthRelay.ent01.test.js',
+  'src/data/oauthRelay.p024.test.js',
+  'src/sections/onboarding/OnboardingSection.entradaGoogle.test.jsx'
 ]);
 
 describe('el cens', () => {

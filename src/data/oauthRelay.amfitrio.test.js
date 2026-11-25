@@ -14,6 +14,7 @@ import { setEfimer, getEfimer, setVal, getVal, STORAGE_PREFIX } from '../config/
 import { backendScope } from '../config/backendConfig.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { cancelAuthAttempts } from './authAttempt.js';
+import { CODI_ENTRADA } from './errorsBackend.js';
 import { _intern, entraAmbGoogle, gestionaTornada, urlDeTornada, urlDeTornadaOAuth, urlDeTornadaAlta, esTornadaValida } from './oauthRelay.js';
 
 const ORIGEN = 'https://gentdelatorre.net';
@@ -172,7 +173,10 @@ test('un #sdp_code del relé retirat, sense marca, no es bescanvia ni es toca', 
 test('una tornada d’error de GoTrue es neteja sencera, error_code i marca inclosos', async () => {
   pestanyaDelCami3();
   vesA(`/alguna/pagina?x=1&error=access_denied&error_code=bad_oauth_state&error_description=Denegat&sdp_oauth_attempt=${ID}#error=access_denied&error_code=bad_oauth_state`);
-  await expect(gestionaTornada({}, config)).rejects.toThrow('access_denied');
+  // ENT-01 (v1.2.25) · bad_oauth_state no és cap «No» de la persona: DESCONEGUT, mai el text de GoTrue.
+  await expect(gestionaTornada({}, config)).rejects.toMatchObject({
+    code: CODI_ENTRADA.DESCONEGUT, message: expect.not.stringContaining('access_denied'), cause: { error: 'access_denied', error_code: 'bad_oauth_state' }
+  });
   expect(window.location.href).toBe(PAGINA);
   // L'intent ha acabat: el verificador del seu id ja no serveix.
   expect(getEfimer('sdp:oauth:verificador', null)).toBeNull();
