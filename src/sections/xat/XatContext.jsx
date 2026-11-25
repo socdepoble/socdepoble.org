@@ -269,6 +269,7 @@ import {
   trobaPendent
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
+import { marcaEstatPendent, netejaEstatPendent } from '../../pwa/estatsPendents.js';
 import { canviaSessioCompartit, reiniciaDestiCompartit } from '../../config/compartirNatiu.js';
 import { buidaRecents } from './recentsEmoticones.js';
 import { recordaRutaForaDelXat } from './rutaForaDelXat.js';
@@ -284,7 +285,7 @@ const pushNatiuPortaElsAvisos = () => {
 };
 import { useModeracio } from '../../components/PedraSeca/hooks/moderacioDePoble.js';
 import { anotaFilsBloquejats, anotaMissatgesBloquejats, senseDirectesBloquejats } from '../../config/moderacio.js';
-import { CODI_NORMES_SERVIDOR, esRebuigDeNormes } from '../../data/errorsBackend.js';
+import { CODI_NORMES_SERVIDOR, esBackendInabastable, esRebuigDeNormes } from '../../data/errorsBackend.js';
 import { TEXTOS_MODERACIO } from '../../components/PedraSeca/organismes/textosModeracio.js';
 import { tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 
@@ -304,6 +305,20 @@ function hostReady(signal) {
 /* R32 (xat_tros_paralel) · Una lectura bona espera el tros rural com a molt
    este sostre: un tros lent o penjat no la deixa sense pintar. */
 const SOSTRE_TROS_RURAL_MS = 400;
+
+/* Onada v1.2.25 (XAT-B02) · La clau del xat al registre de l'estat pendent
+   (src/pwa/estatsPendents.js): l'identificador del proveïdor, mai el text.
+   Gauntlet v1.2.25 (VS-F2, VS-F3) · Dues claus més del mateix proveïdor:
+   les eliminacions per a tothom que encara s'han de fer (eliminació tardana)
+   i les bombolles en repòs d'una sessió perduda sense eixir (R22). */
+const CLAU_PENDENT_ENVIAMENTS = 'xat.enviaments';
+const CLAU_PENDENT_ELIMINACIONS = 'xat.eliminacions';
+const CLAU_PENDENT_REPOS = 'xat.enviaments.repos';
+/* Gauntlet v1.2.25 (VS-F1) · L'eliminació tardana que falla per xarxa, per
+   temps o perquè la sessió ha canviat es torna a provar (amb xarxa, després
+   d'esta espera, que es doblega; sense, quan torna), fins a este sostre. */
+const MAX_INTENTS_ELIMINACIO_TARDANA = 3;
+const ESPERA_ELIMINACIO_TARDANA_MS = 5000;
 
 /* R24 · Gauntlet (G-client-1) · Retard del segon pla per a un fil que falla. */
 const ESPERA_ENTREGA_BASE_MS = 30000;
@@ -522,6 +537,7 @@ const BUIT = {
   sendChatMessage: async () => [],
   sendChatMedia: null,
   alternaReaccio: null, alternaDestacat: null, alternaFixat: null, eliminaPerAMi: null, eliminaPerATothom: null,
+  cancelaEnviament: () => null, eliminacionsDesfetes: CAP,
   responEnPrivat: null, reenviaAConverses: null, carregaAccionsMissatges: null, carregaDestacats: null,
   missatgesDestacats: CAP, esborranyPrivat: null, errorAccions: null,
   reintenta: async () => [],
@@ -686,10 +702,16 @@ export function XatProvider({ children, config }) {
      historial, ni marques, ni cap directe nou. En remot sense sessió no hi ha
      joId i el xat de mostra en té cura. */
   const convidat = !usuari?.id && Boolean(joId);
-  const { t } = useUIActions();
+  const { t, language } = useUIActions();
   /* Integració 261024 · El text d'una bombolla rebutjada per les normes, sense refer l'enviament. */
   const traductorRef = useRef(t);
   useLayoutEffect(() => { traductorRef.current = t; }, [t]);
+  /* Gauntlet v1.2.25 (VS-F1) · L'avís d'una eliminació tardana que no s'ha
+     pogut fer: el toast de l'App i la llengua de la interfície (el text, de
+     i18nAccionsMissatgeXat.js, en les 5 llengües). */
+  const { showToast } = useToast();
+  const avisRef = useRef({ showToast, language });
+  useLayoutEffect(() => { avisRef.current = { showToast, language }; }, [showToast, language]);
   const avisDeLaMostra = t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!");
   const [araDeLaMostra] = useState(() => new Date().toISOString());
   const filDeMostra = useMemo(() => (convidat ? filDeMostraDeJavi({ avis: avisDeLaMostra }) : null), [convidat, avisDeLaMostra]);
@@ -963,12 +985,43 @@ export function XatProvider({ children, config }) {
   /* Bombolles pròpies encara sense seq: pendents i fallides. */
   const [pendentsPerFil, setPendentsPerFil] = useState({});
   const pendentsRef = useRef({});
+  /* Onada v1.2.25 (XAT-B01) · Els ids de les bombolles pròpies que la persona
+     ha cancel·lat abans de l'ACK (cancelaPendent): executaEnviament els
+     consulta abans de rural.envia i després de cada espera, i ja no les
+     envia. Només en memòria i de l'àmbit.
+     Gauntlet v1.2.25 (T3, VS-F2) · `intentatsRef`: els ids d'un enviament
+     viu que ja ha cridat rural.envia (en vol, o esperant després d'una
+     fallada sense resposta): el servidor potser ja el té.
+     `eliminacionsTardanesRef`: els cancel·lats que potser ja són al servidor,
+     id → { filId, intents, enCurs, rellotge, sonda, sondejant }. Des que es
+     cancel·len ja no es pinten amb el text (esborratsPerATothom) i s'eliminen
+     per a tothom quan el magatzem els té; si el transport acaba sense ACK,
+     una lectura del fil (sondejaEliminacio) diu si el servidor el té. Cada
+     canvi del Map passa per tocaTardanes (versioTardanes): l'efecte de
+     l'eliminació i la marca 'xat.eliminacions' en pengen. */
+  const cancellatsRef = useRef(new Set());
+  const intentatsRef = useRef(new Set());
+  const eliminacionsTardanesRef = useRef(new Map());
+  const [versioTardanes, setVersioTardanes] = useState(0);
+  const tocaTardanes = useCallback(() => setVersioTardanes((versio) => versio + 1), []);
+  /* Gauntlet v1.2.25 (VS-F1) · Els ids d'eliminacions tardanes que han
+     fallat del tot (el missatge torna amb el text): la costura amb Conversa,
+     que els ha de traure dels seus eliminatsLocals. */
+  const [eliminacionsDesfetes, setEliminacionsDesfetes] = useState(CAP);
   /* R22 (A-xat-fluxos-r1-2) · Les bombolles pròpies sense confirmar d'un àmbit
      que la sessió ha perdut SENSE eixir (la renovació ha fallat i la pestanya
      s'ha buidat, però el registre la pot tornar): { ambit, persona, pendents }.
      Només en memòria. Tornen, en error i amb el mateix id, quan torna el MATEIX
-     àmbit (backend, persona i actor); una altra persona les descarta. */
+     àmbit (backend, persona i actor); una altra persona les descarta.
+     Gauntlet v1.2.25 (VS-F3) · Només s'escriu amb posaEnRepos: mentre en
+     guarda cap, una recàrrega les perdria i el registre de l'estat pendent
+     ho sap ('xat.enviaments.repos'). */
   const bombollesEnReposRef = useRef(null);
+  const posaEnRepos = useCallback((repos) => {
+    bombollesEnReposRef.current = repos;
+    if (repos) marcaEstatPendent(CLAU_PENDENT_REPOS);
+    else netejaEstatPendent(CLAU_PENDENT_REPOS);
+  }, []);
   /* T63.2 · Fils de pàgina que llegixes sense ser-ne participant (remot), per id. */
   const [visitants, setVisitants] = useState({});
   const visitantsRef = useRef({});
@@ -1040,6 +1093,36 @@ export function XatProvider({ children, config }) {
     const nou = fn(pendentsRef.current);
     pendentsRef.current = nou;
     setPendentsPerFil(nou);
+  }, []);
+  /* Onada v1.2.25 (XAT-B02) · Les bombolles pròpies sense ACK (pendents i
+     fallides) només viuen en memòria: una recàrrega les perd. Mentre n'hi ha
+     cap, el registre de l'estat pendent ho sap i la recuperació de
+     desplegament no recarrega sola (com els esborranys, esborranys.js). Sense
+     cap (confirmades, descartades o eliminades), en desmuntar i en canviar de
+     persona (l'àmbit nou buida pendentsPerFil), la marca se'n va. Desar la
+     cua al dispositiu és decisió del Mestre. */
+  useEffect(() => {
+    if (!Object.values(pendentsPerFil).some((llista) => llista?.length)) return undefined;
+    marcaEstatPendent(CLAU_PENDENT_ENVIAMENTS);
+    return () => netejaEstatPendent(CLAU_PENDENT_ENVIAMENTS);
+  }, [pendentsPerFil]);
+  /* Gauntlet v1.2.25 (VS-F2) · Una bombolla cancel·lada que potser ja és al
+     servidor ja no és pendent, però la seua eliminació per a tothom només viu
+     en memòria: una recàrrega la perdria i el missatge es quedaria amb el
+     text per a tothom. Mentre n'hi ha cap d'armada, també es marca. */
+  useEffect(() => {
+    if (!eliminacionsTardanesRef.current.size) return undefined;
+    marcaEstatPendent(CLAU_PENDENT_ELIMINACIONS);
+    return () => netejaEstatPendent(CLAU_PENDENT_ELIMINACIONS);
+  }, [versioTardanes]);
+  /* En desmuntar, ni les bombolles en repòs (VS-F3) ni els rellotges de les
+     eliminacions tardanes (VS-F1) no es queden. */
+  useEffect(() => {
+    const tardanes = eliminacionsTardanesRef.current;
+    return () => {
+      netejaEstatPendent(CLAU_PENDENT_REPOS);
+      for (const entrada of tardanes.values()) clearTimeout(entrada.rellotge);
+    };
   }, []);
   const mutaVisitants = useCallback((fn) => {
     const nou = fn(visitantsRef.current);
@@ -1205,13 +1288,13 @@ export function XatProvider({ children, config }) {
          Eixir de veres (el registre s'esborra) o una altra persona les obliden. */
       const propies = previa?.token.jo && !token.jo ? interromEnviaments(pendentsRef.current) : null;
       if (propies && Object.keys(propies).length && sessioRecuperable()) {
-        bombollesEnReposRef.current = { ambit: previa.token.ambit, persona: previa.token.persona, pendents: propies };
+        posaEnRepos({ ambit: previa.token.ambit, persona: previa.token.persona, pendents: propies });
       } else if (token.jo && bombollesEnReposRef.current?.persona !== token.persona) {
-        bombollesEnReposRef.current = null;
+        posaEnRepos(null);
       }
       const recuperades = token.jo && bombollesEnReposRef.current?.ambit === token.ambit
         ? bombollesEnReposRef.current.pendents : null;
-      if (recuperades) bombollesEnReposRef.current = null;
+      if (recuperades) posaEnRepos(null);
       setFils([]);
       filsRef.current = [];
       diaFilsRef.current = null;
@@ -1221,6 +1304,14 @@ export function XatProvider({ children, config }) {
       baseContiguaRef.current = {};
       setPendentsPerFil(recuperades || {});
       pendentsRef.current = recuperades || {};
+      /* Onada v1.2.25 (XAT-B01) · Ni les cancel·lacions ni les eliminacions tardanes passen a l'àmbit nou. */
+      cancellatsRef.current.clear();
+      if (eliminacionsTardanesRef.current.size) {
+        for (const entrada of eliminacionsTardanesRef.current.values()) clearTimeout(entrada.rellotge);
+        eliminacionsTardanesRef.current.clear();
+        tocaTardanes();
+      }
+      setEliminacionsDesfetes(CAP);
       setVisitants({});
       visitantsRef.current = {};
       setPaginacio({});
@@ -1262,7 +1353,7 @@ export function XatProvider({ children, config }) {
        l'operació nova si és el mateix àmbit; si no, rep null. */
     previa?.passa(renovacio ? op : null);
     return () => { op.controller.abort(); };
-  }, [token, joId, modeDades, clauPersona, mutaPendents, mutaSilencisLocals, mutaArxivatsLocals]);
+  }, [token, joId, modeDades, clauPersona, mutaPendents, mutaSilencisLocals, mutaArxivatsLocals, posaEnRepos, tocaTardanes]);
 
   /* ── Llista de fils ──
      Torna true si s'ha aplicat, false si ha fallat (o l'àmbit ja no és el
@@ -1822,12 +1913,83 @@ export function XatProvider({ children, config }) {
     };
   }, [joId, filActiu, carregaFils, carregaMissatges, tokenEstat, token, config, captura, vigent]);
 
+  /* Onada v1.2.25 (XAT-B01) · Un missatge cancel·lat que potser ja és al
+     servidor: des d'ara no es pinta amb el text (esborratsPerATothom) i,
+     quan el magatzem el té (l'ACK tardà o la lectura que el porta), l'efecte
+     de l'eliminació tardana l'elimina per a tothom. */
+  const armaEliminacioTardana = useCallback((filId, id) => {
+    if (!eliminacionsTardanesRef.current.has(id)) {
+      eliminacionsTardanesRef.current.set(id, { filId, intents: 0, enCurs: false, rellotge: null, sonda: false, sondejant: false });
+      tocaTardanes();
+    }
+    mutaEsborratsPerATothom((previs) => (Object.hasOwn(previs, id) ? previs : { ...previs, [id]: new Date().toISOString() }));
+  }, [mutaEsborratsPerATothom, tocaTardanes]);
+  /* L'eliminació tardana d'`id` ja no s'ha de fer (feta, o el servidor no el
+     té) o no s'ha pogut fer (`desmarca`: el text torna a la vista). */
+  const tancaEliminacioTardana = useCallback((id, entrada, desmarca) => {
+    if (eliminacionsTardanesRef.current.get(id) !== entrada) return false;
+    eliminacionsTardanesRef.current.delete(id);
+    tocaTardanes();
+    if (desmarca) {
+      mutaEsborratsPerATothom((previs) => {
+        if (!Object.hasOwn(previs, id)) return previs;
+        const nous = { ...previs };
+        delete nous[id];
+        return nous;
+      });
+    }
+    return true;
+  }, [mutaEsborratsPerATothom, tocaTardanes]);
+  /* Gauntlet v1.2.25 (VS-F2) · El transport ha acabat sense ACK: una lectura
+     del fil (la mateixa de sempre, carregaMissatges) diu si el servidor el té.
+     Si el porta, l'efecte l'elimina; si torna bé sense ell, el servidor no
+     l'ha desat i no hi ha res a eliminar (ni marca que vete les recàrregues).
+     Si la lectura falla, es torna a provar amb la xarxa o la lectura següent. */
+  const sondejaEliminacio = useCallback((id) => {
+    const entrada = eliminacionsTardanesRef.current.get(id);
+    if (!entrada || entrada.sondejant) return;
+    entrada.sondejant = true;
+    entrada.sonda = false;
+    Promise.resolve(carregaMissatgesRef.current?.(entrada.filId)).then((ok) => {
+      entrada.sondejant = false;
+      if (eliminacionsTardanesRef.current.get(id) !== entrada) return;
+      if (ok !== true) { entrada.sonda = true; return; }
+      if (entrada.enCurs || (missatgesRef.current[entrada.filId] || []).some((m) => String(m.id) === id)) return;
+      tancaEliminacioTardana(id, entrada, true);
+    });
+  }, [tancaEliminacioTardana]);
+  /* Onada v1.2.25 (XAT-B01) · Gauntlet v1.2.25 (T2, VS-F4) · Cancel·la una
+     bombolla pròpia encara sense ACK (pendent o en error): ja no s'envia
+     (cancellatsRef) i es retira de la vista. Si el seu enviament ja ha cridat
+     rural.envia, potser ja és al servidor: l'eliminació tardana s'arma ara
+     mateix (sense text si una lectura el porta abans de l'ACK). La fan servir
+     «Elimina per a tothom» (eliminaPerATothomModel.js), «Elimina per a mi»
+     (accionsMissatge) i el context (cancelaEnviament), que no depén de la
+     capacitat d'eliminar per a tothom. Null si no és cap bombolla pendent. */
+  const cancelaPendent = useCallback((referencia) => {
+    const id = typeof referencia === 'string' ? referencia : referencia?.id ?? referencia?.missatgeId;
+    if (id == null || desmuntat.current) return null;
+    const missatgeId = String(id);
+    const trobat = trobaPendent(pendentsRef.current, missatgeId);
+    if (!trobat) return null;
+    cancellatsRef.current.add(missatgeId);
+    if (intentatsRef.current.has(missatgeId)) armaEliminacioTardana(trobat.filId, missatgeId);
+    mutaPendents((previs) => retiraPendent(previs, missatgeId));
+    return { estat: 'local', filId: trobat.filId, missatgeId };
+  }, [mutaPendents, armaEliminacioTardana]);
+
   /* ── Enviament amb reintents: sempre el mateix id (XAT-A25) ──
      Gauntlet 261025_0545 (D2) · `esperaLaXarxa` fals (Connectar): sense
      xarxa, els reintents de sempre en lloc de l'espera de XC-03. */
-  const executaEnviament = useCallback(async (filId, id, cos, respostaA = null, esperaLaXarxa = true) => {
+  const executaEnviamentCos = useCallback(async (filId, id, cos, respostaA = null, esperaLaXarxa = true) => {
     let op = captura();
     if (!vigent(op)) return [];
+    /* Onada v1.2.25 (XAT-B01) · Cert, i la cancel·lació es consumix, si la
+       persona l'ha eliminat abans de l'ACK. Cada comprovació certa torna.
+       Gauntlet v1.2.25 (VS-F2) · `intentat`: este enviament ja ha cridat
+       rural.envia (intentatsRef, fins que acaba: vegeu executaEnviament). */
+    const cancellat = () => cancellatsRef.current.delete(id);
+    let intentat = false;
     /* Una resposta porta l'id del missatge citat; el port ja l'accepta
        (enviaMissatge(filId, { id, text, respostaA })). Sense resposta, el cos
        és el de sempre. */
@@ -1846,14 +2008,30 @@ export function XatProvider({ children, config }) {
         const opcions = { ...config, signal: op.controller.signal };
         if (visitant) opcions.visitant = true;
         rural = await carregaRural();
+        /* XAT-B01 · Just abans de rural.envia, que ve després de cada espera
+           (la cua del fil, el tros rural, la xarxa, el reintent i les normes:
+           totes tornen ací amb `continue`). */
+        if (cancellat()) {
+          /* Gauntlet v1.2.25 (VS-F2) · Cancel·lada mentre esperava després
+             d'un intent sense resposta: l'eliminació tardana ja és armada
+             (cancelaPendent) i la lectura del fil diu si el servidor el té. */
+          if (intentat && vigent(op)) sondejaEliminacio(id);
+          return [];
+        }
         if (!vigent(op)) return [];
+        intentat = true;
+        intentatsRef.current.add(id);
         const resultat = await rural.envia(op, filId, entrada, opcions);
         op = resultat.op;
         const desat = resultat.desat;
         if (!vigent(op)) return [];
         /* R32 · F7 · El motor E2EE l'ha desat a la safata del dispositiu (claus
            bloquejades): no hi ha seq ni ✓, i tampoc cap error. La bombolla es
-           queda 'pendent' (cua_local) i no es reintenta: la safata és del motor. */
+           queda 'pendent' (cua_local) i no es reintenta: la safata és del motor.
+           Gauntlet v1.2.25 (T4, VS-F5) · Costura pendent amb el carril de l'E2EE
+           (E2EE_ACTIU_PER_DEFECTE és apagada i zona intacta): una cancel·lació
+           no arriba a la safata del motor. Abans d'encendre-la, el motor ha de
+           poder retirar-ne un id i este camí ha de consultar `cancellat()`. */
         if (resultat.encuat) return [];
         if (visitant) {
           mutaVisitants((previs) => (previs[filId] ? { ...previs, [filId]: { ...previs[filId], participant: true } } : previs));
@@ -1861,6 +2039,15 @@ export function XatProvider({ children, config }) {
         }
         const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
         mutaPendents((previs) => retiraPendent(previs, id));
+        /* Onada v1.2.25 (XAT-B01) · L'ACK ha arribat després que la persona
+           l'eliminara: ja és al servidor. L'eliminació tardana ja és armada
+           (cancelaPendent): entra al magatzem (el motor d'accions l'hi busca)
+           ja sense text, i s'elimina per a tothom (si una lectura ja l'hi ha
+           portat i eliminat, l'efecte no el torna a eliminar). */
+        if (cancellat()) {
+          mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], [definitiu]) }));
+          return [];
+        }
         /* Auditoria 261007 (B) · Es pinta al magatzem, però el cursor de
            servidor (cursorRef) no es toca: el missatge d'un altre amb un seq
            anterior encara ha d'arribar per la lectura incremental. */
@@ -1874,6 +2061,14 @@ export function XatProvider({ children, config }) {
         const actual = operacio.current;
         if (actual?.llinatge === op.llinatge && actual.token === tokenActual.current) op = actual;
         if (!vigent(op)) return [];
+        /* Onada v1.2.25 (XAT-B01) · Eliminat amb el transport en vol i sense
+           ACK: cap reintent. El servidor potser l'ha desat igualment: la
+           lectura del fil (sondejaEliminacio) el porta i s'elimina per a tothom
+           sense pintar-lo, o diu que no hi és. */
+        if (cancellat()) {
+          sondejaEliminacio(id);
+          return [];
+        }
         /* Gauntlet 261025_0545 (XC-03) · Sense xarxa (el navegador ho diu),
            una fallada de xarxa no gasta cap reintent: abans, els tres
            s'esgotaven en uns 10 s i la bombolla quedava en error, i res no la
@@ -1938,7 +2133,17 @@ export function XatProvider({ children, config }) {
         return [];
       }
     }
-  }, [joId, config, captura, vigent, mutaFils, mutaMissatges, mutaPendents, mutaVisitants, carregaFils, carregaRural]);
+  }, [joId, config, captura, vigent, mutaFils, mutaMissatges, mutaPendents, mutaVisitants, carregaFils, carregaRural, sondejaEliminacio]);
+  /* Gauntlet v1.2.25 (T3, VS-F2) · intentatsRef només guarda els enviaments
+     vius: quan l'enviament acaba (enviat, en error, encuat, cancel·lat o
+     tallat), l'id se'n va. */
+  const executaEnviament = useCallback(async (filId, id, ...resta) => {
+    try {
+      return await executaEnviamentCos(filId, id, ...resta);
+    } finally {
+      intentatsRef.current.delete(id);
+    }
+  }, [executaEnviamentCos]);
 
   /* Gauntlet 261025_0545 (MISSED P2, ordre d'enviament) · Els enviaments d'un
      mateix fil, en l'ordre en què s'escriuen: cada un espera que l'anterior
@@ -2033,6 +2238,9 @@ export function XatProvider({ children, config }) {
       error: null
     };
     mutaPendents((previs) => afigPendent(previs, filId, pendent));
+    /* Onada v1.2.25 (XAT-B01) · Un enviament nou amb un id ja cancel·lat (el
+       reintent d'un reenviament) és una intenció nova. */
+    cancellatsRef.current.delete(id);
     const tasca = () => executaEnviament(filId, id, cos, respostaA, esperaLaXarxa);
     if (esperaLaXarxa) return encuaEnviament(filId, tasca);
     /* Gauntlet 261025_0545 (D2) · El fil espera la xarxa per una bombolla
@@ -2711,6 +2919,14 @@ export function XatProvider({ children, config }) {
     'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi', 'responEnPrivat', 'reenviaAConverses', 'carregaAccionsMissatges'
   ].map(nom => [nom, (...args) => {
     setErrorAccions(null);
+    /* Gauntlet v1.2.25 (T2) · «Elimina per a mi» sobre una bombolla pròpia
+       encara sense ACK la cancel·la com «Elimina per a tothom» (si l'ACK
+       arriba tard, s'elimina per a tothom): el motor no la troba (no té seq) i,
+       abans, la persona rebia un error i el missatge s'enviava igualment. */
+    if (nom === 'eliminaPerAMi') {
+      const cancellada = cancelaPendent(args[0]);
+      if (cancellada) return Promise.resolve(cancellada);
+    }
     const ambit = entornAccions.current.ambit;
     const valida = capturaSessio();
     return motorAccions.carrega().then(motor => {
@@ -2721,7 +2937,7 @@ export function XatProvider({ children, config }) {
       if (!desmuntat.current && entornAccions.current.ambit === ambit && error?.name !== 'AbortError') setErrorAccions(error);
       throw error;
     });
-  }])), [motorAccions]);
+  }])), [motorAccions, cancelaPendent]);
   const idsAccions = (filActiu ? missatgesPerFil[filActiu] || [] : []).map(m => m.id).sort().join(',');
   useEffect(() => {
     if (!visible || !filActiu || !idsAccions || !teCapacitat('xatAccionsMissatge')) return undefined;
@@ -2751,9 +2967,9 @@ export function XatProvider({ children, config }) {
   );
 
   ctxDiferitRef.current = {
-    joId, modeDades, clauPersona, vigent, desmuntat, entornAccions, pendentsRef, missatgesRef, filActiuRef,
+    joId, modeDades, clauPersona, vigent, desmuntat, entornAccions, cancelaPendent, missatgesRef, filActiuRef,
     esborratsPerATothomRef, filsRef, visitantsRef, moderacioRef, operacio, config, motorAccions,
-    mutaPendents, mutaMissatges, mutaFils, mutaEsborratsPerATothom, setErrorAccions, relleuViu
+    mutaMissatges, mutaFils, mutaEsborratsPerATothom, setErrorAccions, relleuViu
   };
 
   const executaEliminaPerATothomCtx = useCallback(async (referencia, opcions = {}) => {
@@ -2763,6 +2979,72 @@ export function XatProvider({ children, config }) {
     const { correEliminaPerATothomEnContext } = await import('./eliminaPerATothomModel.js');
     return correEliminaPerATothomEnContext(ctxDiferitRef.current, ambit, valida, referencia, opcions);
   }, []);
+
+  /* Gauntlet v1.2.25 (VS-F1) · Una eliminació tardana que ha fallat. Per
+     xarxa, per temps, per un servidor caigut o perquè la sessió ha canviat
+     (AbortError en el mateix àmbit: un àmbit nou ja ha buidat el Map), es
+     torna a provar: amb xarxa, després d'una espera que es doblega; sense,
+     quan torna (o amb la lectura següent que canvie el magatzem). Si la
+     fallada és definitiva, o s'arriba al sostre, el missatge torna a la vista
+     amb el text, la persona ho sap (toast en la seua llengua, mai el text de
+     l'error: per a XARXA seria «Failed to fetch») i Conversa ho pot saber
+     (eliminacionsDesfetes). Abans, el silenci: el text es quedava al servidor
+     per a tothom i ningú no ho tornava a provar. */
+  const fallaEliminacioTardana = useCallback((id, entrada, error) => {
+    entrada.enCurs = false;
+    if (desmuntat.current || eliminacionsTardanesRef.current.get(id) !== entrada) return;
+    entrada.intents += 1;
+    const reintentable = error?.name === 'AbortError' || error?.name === 'TimeoutError' || error?.retriable === true
+      || esBackendInabastable(error) || Number(error?.status) >= 500;
+    if (reintentable && entrada.intents < MAX_INTENTS_ELIMINACIO_TARDANA) {
+      if (globalThis.navigator?.onLine !== false) {
+        entrada.rellotge = setTimeout(() => { entrada.rellotge = null; tocaTardanes(); },
+          ESPERA_ELIMINACIO_TARDANA_MS * 2 ** (entrada.intents - 1));
+      }
+      return;
+    }
+    tancaEliminacioTardana(id, entrada, true);
+    setEliminacionsDesfetes((previs) => (previs.includes(id) ? previs : Object.freeze([...previs, id])));
+    import('./i18nAccionsMissatgeXat.js')
+      .then(({ textAccioMissatgeXat }) => textAccioMissatgeXat(avisRef.current.language, 'eliminaPerATothomError'),
+        () => traductorRef.current('section.xat.accioError', "No s'ha pogut completar l'acció."))
+      .then((text) => { if (!desmuntat.current) avisRef.current.showToast(text, 'error'); });
+  }, [tancaEliminacioTardana, tocaTardanes]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const alTornarXarxa = () => { if (eliminacionsTardanesRef.current.size) tocaTardanes(); };
+    window.addEventListener('online', alTornarXarxa);
+    return () => window.removeEventListener('online', alTornarXarxa);
+  }, [tocaTardanes]);
+
+  /* Onada v1.2.25 (XAT-B01) · L'eliminació tardana (armaEliminacioTardana):
+     després del render que posa el missatge cancel·lat al magatzem, perquè
+     el motor d'accions el busca a l'entorn d'este render.
+     Gauntlet v1.2.25 (T1) · Torna a mirar amb cada canvi del magatzem I del
+     Map (versioTardanes): una lectura que l'ha portat abans que el transport
+     fallara ja no el deixa sense eliminar en un fil quiet. Un missatge que el
+     magatzem ja té esborrat no es torna a eliminar; un que encara no hi és i
+     espera la lectura del fil (sonda), la torna a demanar; un que espera el
+     rellotge del reintent (VS-F1), l'espera. */
+  useEffect(() => {
+    for (const [id, entrada] of eliminacionsTardanesRef.current) {
+      if (entrada.enCurs || entrada.rellotge) continue;
+      const missatge = (missatgesPerFil[entrada.filId] || []).find((m) => String(m.id) === id);
+      if (!missatge) {
+        if (entrada.sonda) sondejaEliminacio(id);
+        continue;
+      }
+      if (missatge.esborrat || missatge.esborratAl != null) {
+        tancaEliminacioTardana(id, entrada, false);
+        continue;
+      }
+      entrada.enCurs = true;
+      executaEliminaPerATothomCtx({ id, missatgeId: id, filId: entrada.filId, threadId: entrada.filId }).then(() => {
+        entrada.enCurs = false;
+        tancaEliminacioTardana(id, entrada, false);
+      }, (error) => fallaEliminacioTardana(id, entrada, error));
+    }
+  }, [missatgesPerFil, versioTardanes, executaEliminaPerATothomCtx, sondejaEliminacio, tancaEliminacioTardana, fallaEliminacioTardana]);
 
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
@@ -2818,6 +3100,12 @@ export function XatProvider({ children, config }) {
     sendChatMedia,
     ...accionsMissatge,
     eliminaPerATothom: potEliminaPerATothom ? executaEliminaPerATothomCtx : null,
+    /* Gauntlet v1.2.25 (VS-F4) · Cancel·la una bombolla pròpia encara sense
+       ACK (cancelaPendent), també on el node no oferix «Elimina per a tothom»:
+       el «Cancel·la l'enviament» de Bombolla i Conversa (lot G1 de Gemini).
+       I els ids de les eliminacions tardanes que no s'han pogut fer (VS-F1). */
+    cancelaEnviament: cancelaPendent,
+    eliminacionsDesfetes: visible ? eliminacionsDesfetes : CAP,
     carregaDestacats,
     missatgesDestacats: visible ? estatAccions.destacats : CAP,
     esborranyPrivat: visible ? estatAccions.esborranyPrivat : null,
@@ -2855,7 +3143,7 @@ export function XatProvider({ children, config }) {
     arxivaFil
   }), [visible, joId, joNom, joAvatar, joEsJavi, xatPropi, entitatActiva, orgIdsPermeses, estatSessio, usuari?.id, actuaComEntitat, clauPersona, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsAmbBloquejos, filServeiTecnic, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, filCarregat, avisFil, recarregaFil, tipusAvisFil, llegintFil,
-    enviaAmbNormes, sendChatMedia, accionsMissatge, potEliminaPerATothom, executaEliminaPerATothomCtx, carregaDestacats, estatAccions, errorAccions, reintenta, descartaFallit, marcaVist,
+    enviaAmbNormes, sendChatMedia, accionsMissatge, potEliminaPerATothom, executaEliminaPerATothomCtx, cancelaPendent, eliminacionsDesfetes, carregaDestacats, estatAccions, errorAccions, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat, oblitXat, oblitXatFallit, reintentaOblitXat, potSilenciarFil, silenciaFil, potArxivarFil, arxivaFil]);
 

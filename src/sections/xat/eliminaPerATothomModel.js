@@ -10,9 +10,7 @@ import { esRebuigDeNormes } from '../../data/errorsBackend.js';
 import {
   actualitzaFilAmbMissatge,
   fusionaPerSeq,
-  mapejaMissatge,
-  retiraPendent,
-  trobaPendent
+  mapejaMissatge
 } from './missatges.js';
 import {
   desfaEsborratSessioLocal,
@@ -92,18 +90,20 @@ export async function executaEliminaPerATothom({
 
 export async function correEliminaPerATothomEnContext(ctx, ambit, valida, referencia, opcions = {}) {
   const {
-    joId, modeDades, clauPersona, desmuntat, entornAccions, pendentsRef, missatgesRef, filActiuRef,
-    esborratsPerATothomRef, motorAccions, mutaPendents, mutaMissatges,
+    joId, modeDades, clauPersona, desmuntat, entornAccions, cancelaPendent, missatgesRef, filActiuRef,
+    esborratsPerATothomRef, motorAccions, mutaMissatges,
     mutaEsborratsPerATothom, setErrorAccions
   } = ctx;
   const id = typeof referencia === 'string' ? referencia : referencia?.id ?? referencia?.missatgeId;
   const missatgeId = id != null ? String(id) : '';
   if (!missatgeId || !joId) return null;
-  const pendent = trobaPendent(pendentsRef.current, missatgeId);
-  if (pendent) {
-    mutaPendents((previs) => retiraPendent(previs, missatgeId));
-    return { estat: 'local', filId: pendent.filId, missatgeId };
-  }
+  /* Onada v1.2.25 (XAT-B01) · Una bombolla encara sense ACK no només es
+     retira de la vista: se cancel·la (cancelaPendent, XatContext.jsx). Abans,
+     l'enviament que esperava la xarxa l'enviava igualment a tothom; ara
+     executaEnviament la consulta i, si potser ja és al servidor, l'eliminació
+     tardana l'elimina per a tothom. */
+  const cancellada = cancelaPendent(missatgeId);
+  if (cancellada) return cancellada;
   let filId = typeof referencia === 'object' ? (referencia?.filId ?? referencia?.threadId ?? null) : null;
   if (!filId) {
     for (const [fId, llista] of Object.entries(missatgesRef.current)) {
