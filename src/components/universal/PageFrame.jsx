@@ -1121,14 +1121,15 @@ export function PageFrame({
        f) avatarAutor: una persona o la IA no porten logotip, porten el seu
           avatar redó (ordre del Mestre, 261004, prompt 261004_1108 T2);
        g) altrament, res: una font de fora no en porta.
-       v1.2.17 (R32.26 · IDEA-305) · Excepció: el mode de taulell (chrome 'feed') no en pinta cap, ni la boina
-       de Sóc de Poble, perquè les targetes es vegen abans (Mur, Mercat i Calendari).
+       v1.2.17 (R32.26 · IDEA-305) + v1.2.25 (IDEA-352, ordre del Mestre 261124) · En mode de taulell
+       (chrome 'feed'), showLogos={true} explícit pinta el logotip de Sóc de Poble igual que a Pobles
+       (Mur, Mercat i Calendari); sense showLogos={true}, es manté el taulell compacte sense 3r logotip.
      Derogat per l'ordre del Mestre, 261004: showLogos ja no decidix sol, i
      showLogos={false} no lleva el logotip a una pàgina que signa Sóc de
      Poble. El logotip, o l'avatar, compta per a fer aparéixer el bloc del
      títol. */
   const logoDeLaRanura = topBarData?.logoComponent || null;
-  const logoAutomatic = senseLogo === true || isFeedChrome ? null
+  const logoAutomatic = senseLogo === true || (isFeedChrome && showLogos !== true) ? null
     : (logoDescrit(logoEntitat) ?? (esRutaDelProjecte(barAuthorHref) || showLogos === true ? DEFAULT_AUTHOR.logo : null));
   const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor, tAvis);
   /* Correcció de la revisió (261008, CONTRACTE-1) · Una referència que no es

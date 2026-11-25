@@ -739,16 +739,25 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
     expect(text).not.toContain('the municipal Ordenança Municipal');
     expect(text).toContain('it cites the Ordenança Municipal de Protecció d’Arbres d’Interès Local');
   });
-  test('R89 · clear: both al segon encapçalament de les pàgines amb targetes flotants (fediversity i node-zero)', () => {
-    const css = llegix('src/css/modules.css');
-    expect(css).toContain('.sdp-amb-targetes .sdp-cos-tros > h2 ~ h2');
-    expect(css).toContain('.sdp-amb-targetes .sdp-cos-tros > h3 ~ h3');
-    expect(css).toContain('clear: both;');
-    // Cadena R11, Loop 3 (L2-01) · L'overflow dels encapçalaments només val quan hi ha columna al
-    // costat de la flotant (> 40rem). A 375px, amb la targeta a tota l'amplària, el h2 quedava amb
-    // 0px d'ample i el text retallat.
-    expect(css).toMatch(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/);
-    expect(css.replace(/@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;\s*\}\s*\}/, '')).not.toMatch(/\.sdp-amb-targetes h2,\s*\.sdp-amb-targetes h3 \{\s*overflow: hidden;/);
+  test('IDEA-353 · els títols (h2..h6) s’adapten al costat de les targetes i imatges flotants sense clear: both ni overflow: hidden', () => {
+    // Derogat el clear: both de R89 per ordre directa del Mestre (25-11-2026, IDEA-353):
+    // els títols mai salten per davall d'una imatge o targeta flotant deixant un buit vertical.
+    // Gauntlet 261125 (CSS-R3291-01, GL0-A11Y-03): el context de format de bloc del títol el dona
+    // display: flow-root, no overflow: hidden, que retallava l'anell de focus dels enllaços dels títols.
+    const css = llegix('src/css/modules.css').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(css).not.toMatch(/\.sdp-amb-targetes[^{}]*h[2-6]\s*~\s*h[2-6]/);
+    // L2-01 conservada: el context de format de bloc dels encapçalaments només val quan hi ha columna al
+    // costat de la flotant (> 40rem). A 375px, amb la targeta a tota l'amplària, el títol quedava amb 0px d'ample.
+    const blocAdaptatiu = /@media \(min-width: 40\.01rem\) \{\s*:where\(\.cms-preview, \.detail-content, \.sdp-prose, \.sdp-editor-full-canvas\) :where\(:is\(h2, h3, h4, h5, h6\):not\(\[hidden\], \.sdp-targeta \*, \.sp-card \*\)\) \{\s*display: flow-root;\s*overflow-wrap: break-word;\s*\}/;
+    expect(css).toMatch(blocAdaptatiu);
+    expect(css.replace(blocAdaptatiu, '')).not.toMatch(/display: flow-root/);
+    // Cap títol de prosa amb overflow: hidden. Només el títol h2/h3 de la UniversalCard incrustada conserva el
+    // de R11 (Llei del Píxel: la targeta, com abans), i també només per damunt de 40rem.
+    const blocTargeta = /@media \(min-width: 40\.01rem\) \{\s*\.sdp-amb-targetes :where\(\.sdp-targeta\) :is\(h2, h3\) \{\s*overflow: hidden;\s*\}\s*\}/;
+    expect(css).toMatch(blocTargeta);
+    const resta = css.replace(blocTargeta, '');
+    expect(resta).not.toMatch(/\.sdp-amb-targetes[^{}]*\bh[2-6]\b[^{}]*\{[^}]*overflow: hidden/);
+    expect(resta).not.toMatch(/:where\(\.cms-preview, \.detail-content, \.sdp-prose, \.sdp-editor-full-canvas\)[^{}]*\{[^}]*overflow: hidden/);
   });
 });
 

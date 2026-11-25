@@ -32,12 +32,14 @@ const NIVELLS = [
   ['H6', '--sdp-fluid-h6', '--sdp-pes-negreta (700)', 'var(--sdp-text-suau) (pedra)', 'Esquerra', 'Cap (majúscules)']
 ];
 
-/** [element, token del marge superior, valor, token del marge inferior, valor] */
+/** [element, token del marge superior, valor, token del marge inferior, valor]
+ *  IDEA-351 (ordre del Mestre 261124) · Gauntlet 261125 (CSS-R3291-04, GL0-PS-04): l'h3 passa a 32px
+ *  de dalt i l'h4 a 28px de dalt i 12px de baix, els valors de tokens.css. */
 export const RITME = [
   ['h1', '--sdp-mt-h1', '0', '--sdp-mb-h1', '16px'],
   ['h2', '--sdp-mt-h2', '48px', '--sdp-mb-h2', '12px'],
-  ['h3', '--sdp-mt-h3', '40px', '--sdp-mb-h3', '12px'],
-  ['h4', '--sdp-mt-h4', '32px', '--sdp-mb-h4', '16px'],
+  ['h3', '--sdp-mt-h3', '32px', '--sdp-mb-h3', '12px'],
+  ['h4', '--sdp-mt-h4', '28px', '--sdp-mb-h4', '12px'],
   ['h5', '--sdp-mt-h5', '24px', '--sdp-mb-h5', '8px'],
   ['h6', '--sdp-mt-h6', '20px', '--sdp-mb-h6', '8px'],
   ['p', null, '0', '--sdp-mb-p', '20px'],

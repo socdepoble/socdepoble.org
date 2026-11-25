@@ -69,7 +69,7 @@ export default function MercatSection() {
     subtitle: t('section.mercat.title', 'Productes i intercanvis'),
     lead: t('section.mercat.subtitle', 'Explora els productes i les ofertes disponibles.'),
     chrome: "feed",
-    showLogos: false,
+    showLogos: true,
     /* v1.2.17 · El full del mode de taulell viatja amb esta secció, no amb l'arrencada (estilsTaulellFeed.js). */
     adoptaEstilsChrome: adoptaEstilsTaulellFeed
   };

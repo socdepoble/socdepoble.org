@@ -152,6 +152,7 @@ p {
   color: var(--sdp-text-cos);
   margin-top: 0;
   margin-bottom: var(--sdp-mb-p);
+  text-wrap: pretty;
   /* U18 (pla 260924_0545): sense partició automàtica de paraules. En text
      alineat a l'esquerra o centrat, «mò-bil» és un defecte, no una millora. */
   hyphens: none;
@@ -245,15 +246,27 @@ p:last-child, .lead:last-child,
 ul:last-child, ol:last-child,
 blockquote:last-child { margin-bottom: 0; }
 
-/* ── RITME VERTICAL DINS DE CONTENIDORS NUS DE PROSA (FEDI-21, Mestre 261103) ──
-   Si l'HTML editorial agrupa blocs dins de <div> sense classe, :first-child i
-   :last-child no poden anul·lar la separació entre un paràgraf i el títol següent. */
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h2:first-child { margin-top: var(--sdp-mt-h2); }
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h3:first-child { margin-top: var(--sdp-mt-h3); }
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h4:first-child,
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote) + div:not([class]) > div:not([class]):first-child > h4:first-child { margin-top: var(--sdp-mt-h4); }
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h5:first-child { margin-top: var(--sdp-mt-h5); }
-:where(article.content-wrapper, .sdp-prose) :is(p, ul, ol, blockquote, div:not([class])) + div:not([class]) > h6:first-child { margin-top: var(--sdp-mt-h6); }
+/* ── RITME VERTICAL DINS DE CONTENIDORS NUS DE PROSA (FEDI-21 + IDEA-351) ──
+   Si l'HTML o JSX editorial agrupa seccions dins de <div> o <section> sense classe
+   en qualsevol contenidor de lectura (.cms-preview, article.content-wrapper,
+   .detail-content, .sdp-prose, .ProseMirror), :first-child i :last-child mai no
+   poden anul·lar a 0 px la respiració entre el paràgraf anterior i el títol següent. */
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote, section:not([class]), div:not([class])) + :is(section:not([class]), div:not([class])) > h2:first-child { margin-top: var(--sdp-mt-h2); }
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote, section:not([class]), div:not([class])) + :is(section:not([class]), div:not([class])) > h3:first-child { margin-top: var(--sdp-mt-h3); }
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote, section:not([class]), div:not([class])) + :is(section:not([class]), div:not([class])) > h4:first-child,
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote) + div:not([class]) > div:not([class]):first-child > h4:first-child { margin-top: var(--sdp-mt-h4); }
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote, section:not([class]), div:not([class])) + :is(section:not([class]), div:not([class])) > h5:first-child { margin-top: var(--sdp-mt-h5); }
+:where(article.content-wrapper, .cms-preview, .detail-content, .sdp-prose, .ProseMirror) :is(p, ul, ol, blockquote, section:not([class]), div:not([class])) + :is(section:not([class]), div:not([class])) > h6:first-child { margin-top: var(--sdp-mt-h6); }
+/* IDEA-351 + IDEA-353 · Gauntlet 261125 (CSS-R3291-02) · El mateix per als trossos de text
+   del cos amb targetes (.sdp-cos-tros, display: contents, modules.css T7). Dos trossos germans
+   només hi són quan qui pinta el cos afig una peça viva darrere del text (CosDeLaPagina amb
+   children: CreditsReconeixementsComplet, section.sdp-cos-tros, a /page/reconeixements): el
+   títol que obri el segon era :first-child i el paràgraf d'abans :last-child, a 0px. */
+.sdp-amb-targetes > .sdp-cos-tros + .sdp-cos-tros > h2:first-child { margin-top: var(--sdp-mt-h2); }
+.sdp-amb-targetes > .sdp-cos-tros + .sdp-cos-tros > h3:first-child { margin-top: var(--sdp-mt-h3); }
+.sdp-amb-targetes > .sdp-cos-tros + .sdp-cos-tros > h4:first-child { margin-top: var(--sdp-mt-h4); }
+.sdp-amb-targetes > .sdp-cos-tros + .sdp-cos-tros > h5:first-child { margin-top: var(--sdp-mt-h5); }
+.sdp-amb-targetes > .sdp-cos-tros + .sdp-cos-tros > h6:first-child { margin-top: var(--sdp-mt-h6); }
 
 
 /* ── LLEI DE VIDA · cap control per davall de --sdp-touch ── */

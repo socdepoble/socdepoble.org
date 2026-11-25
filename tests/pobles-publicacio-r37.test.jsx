@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { poblesAmbUltimaPublicacio } from '../src/sections/pobles/clauDelPoble.js';
@@ -123,12 +125,42 @@ test.each(Object.entries({ ca, es, en, eu, gl }))('R89-independent · %s despleg
   expect(summary.textContent).toBe(dict['section.pobles.xarxa']);
   expect(details.open).toBe(false); fireEvent.click(summary); expect(details.open).toBe(true);
 });
-const clearSelector = '.sdp-amb-targetes .sdp-cos-tros > h2 ~ h2, .sdp-amb-targetes .sdp-cos-tros > h3 ~ h3, .sdp-amb-targetes > h2 ~ h2, .sdp-amb-targetes > h3 ~ h3';
-test.each(['fediversity', 'node-zero'].flatMap(key => ['ca', 'es', 'en', 'eu', 'gl'].map(lang => [key, lang])))('R89-independent · %s/%s encapçalament R5–R10 real casa amb clear:both', (key, lang) => {
+/* IDEA-353 (ordre del Mestre, 25-11-2026) · Derogat el clear:both de R89 sobre h2 ~ h2 / h3 ~ h3: l'encapçalament
+   real «R5–R10» de /page/fediversity i /page/node-zero (el segon títol, el que R89 empenyia davall de la targeta)
+   flueix al costat de la targeta flotant. Gauntlet 261125 (CSS-R3291-08, R3291-PROVA-04) · La prova no compara
+   amb un selector escrit a mà: llig els fulls de src/css (sense comentaris) i casa les seues regles amb el DOM
+   real de les 10 combinacions. Cap regla amb clear li aplica (amb el CSS d'abans d'IDEA-353 sí: la de R89), i la
+   regla d'IDEA-353 que li dona el context de format de bloc (display: flow-root) sí. */
+const CSS_SENSE_COMENTARIS = readdirSync(path.join(process.cwd(), 'src/css'))
+  .filter((nom) => nom.endsWith('.css'))
+  .map((nom) => readFileSync(path.join(process.cwd(), 'src/css', nom), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
+/** Els selectors d'un prelud, partits per les comes de fora de parèntesis. */
+const selectorsDe = (prelud) => {
+  const eixida = [];
+  let nivell = 0;
+  let actual = '';
+  for (const c of prelud) {
+    if (c === '(') nivell += 1;
+    if (c === ')') nivell -= 1;
+    if (c === ',' && nivell === 0) { eixida.push(actual.trim()); actual = ''; } else actual += c;
+  }
+  if (actual.trim()) eixida.push(actual.trim());
+  return eixida;
+};
+/* Un selector amb pseudoelement (::after del clearfix) pinta una caixa generada, mai el títol. */
+const SELECTORS_AMB_CLEAR = CSS_SENSE_COMENTARIS
+  .flatMap((css) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\bclear\s*:/.test(m[2])))
+  .flatMap((m) => selectorsDe(m[1].trim()))
+  .filter((selector) => !selector.includes('::'));
+const MODULS = readFileSync(path.join(process.cwd(), 'src/css/modules.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+const SELECTOR_IDEA_353 = /@media \(min-width: 40\.01rem\) \{\s*([^{}]+?)\s*\{\s*display: flow-root;/.exec(MODULS)?.[1];
+test.each(['fediversity', 'node-zero'].flatMap(key => ['ca', 'es', 'en', 'eu', 'gl'].map(lang => [key, lang])))('IDEA-353 · %s/%s encapçalament R5–R10 real: cap regla amb clear el toca i la d’IDEA-353 l’adapta al costat de la flotant', (key, lang) => {
   const html = lang === 'ca' ? PAGE_COPY[key].html : PAGE_COPY[key].translations[lang].html;
   const { container } = render(<CosAmbTargetes segments={segmentsAmbTargetes(sanitizeHtml(html))} />);
   const prepared = [...container.querySelectorAll('h2,h3')].find(el => el.textContent.includes('R5–R10'));
   expect(prepared).toBeTruthy();
-  expect(prepared.matches(clearSelector)).toBe(true);
-  console.log(JSON.stringify({ key, lang, prepared: prepared.textContent, matchesClearBoth: prepared.matches(clearSelector), wrappers: container.querySelectorAll('.sdp-cos-tros').length }));
+  expect(SELECTORS_AMB_CLEAR.length).toBeGreaterThan(0);
+  expect(SELECTORS_AMB_CLEAR.filter((selector) => prepared.matches(selector))).toEqual([]);
+  expect(SELECTOR_IDEA_353).toBeTruthy();
+  expect(prepared.matches(SELECTOR_IDEA_353)).toBe(true);
 });

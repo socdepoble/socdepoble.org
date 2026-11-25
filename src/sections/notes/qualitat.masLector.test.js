@@ -101,7 +101,12 @@ describe('Pedra Seca', () => {
       expect(lector, peca).toContain(peca);
     }
     expect(lector).not.toMatch(/dangerouslySetInnerHTML/);
-    expect(llig('src/sections/text/TextSection.jsx')).toContain('export function CosDeLaPagina({ html })');
+    /* IDEA-353 (ordre del Mestre, 25-11-2026) · Gauntlet 261125 (R3291-PROVA-02): CosDeLaPagina accepta
+       children (la peça viva de darrere del text: els crèdits de /page/reconeixements, dins de l'article amb
+       targetes). Sense children, l'article de sempre, sol: el lector reutilitza la mateixa maquinària. */
+    const textSection = llig('src/sections/text/TextSection.jsx');
+    expect(textSection).toContain('export function CosDeLaPagina({ html, children = null })');
+    expect(textSection).toContain('return children ? <>{article}{children}</> : article;');
     // Arbitratge R46, Loop 3 · R41 hi passa la llengua de la interfície; la maquinària és la mateixa.
     expect(llig('src/sections/mur/usePublicacionsDeLActor.js')).toContain('targetesDeSistema(pageCopy, { language })');
     expect(llig('src/sections/notes/NotesSection.jsx')).toContain('usePaginesDelSistema()');

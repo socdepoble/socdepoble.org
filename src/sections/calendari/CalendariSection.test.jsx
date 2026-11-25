@@ -633,3 +633,10 @@ test('pantalla completa · eixir mentre el Mur carrega: quan arriba el calendari
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
 });
+
+test('IDEA-352 · la capçalera de taulell de /calendari porta el logotip oficial Sóc de Poble, com /mur, /mercat i /pobles', () => {
+  pinta();
+  /* Els dos <img> del logotip (clar i fosc) dins de header.page-title, igual que MurSection.pedra i MercatSection.data. */
+  expect(document.querySelectorAll('header.page-title img.page-title-logo').length).toBe(2);
+  expect(screen.getByRole('link', { name: 'Publicar un esdeveniment' })).toBeTruthy();
+});

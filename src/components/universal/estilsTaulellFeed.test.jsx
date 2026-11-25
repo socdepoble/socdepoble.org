@@ -30,6 +30,15 @@ describe('v1.2.17 · el full diferit del mode de taulell', () => {
     expect(llegix('src/css/modules.css')).not.toContain('--feed');
   });
 
+  test('IDEA-352 · la capçalera de taulell no porta coixí ni radi propis: hereta els de header.page-title (layout.css) i la regla mòbil R32.67', () => {
+    const diferit = llegix('src/css/diferit-taulell-feed.css').replace(/\/\*[\s\S]*?\*\//g, '');
+    const blocs = [...diferit.matchAll(/\.sdp-universal-page-container--feed > header\.page-title \{([^}]*)\}/g)].map((m) => m[1]);
+    expect(blocs).toHaveLength(1);
+    const propietats = blocs[0].split(';').map((d) => d.split(':')[0].trim()).filter(Boolean);
+    expect(propietats).toContain('display');
+    expect(propietats.filter((p) => /^(padding|border-radius|border-(start|end|top|bottom)-(start|end|left|right)-radius)/.test(p))).toEqual([]);
+  });
+
   test('el Mur, el Mercat i el Calendari passen l’adoptador amb la seua config; PageFrame no importa cap full', () => {
     for (const cami of ['src/sections/mur/MurSection.jsx', 'src/sections/mercat/MercatSection.jsx', 'src/sections/calendari/CalendariSection.jsx']) {
       const font = llegix(cami);

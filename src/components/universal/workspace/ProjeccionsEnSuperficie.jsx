@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { UniversalCard } from '../../PedraSeca/index.js';
+import { Alerta, UniversalCard } from '../../PedraSeca/index.js';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useProjeccionsCataleg } from '../../../hooks/useProjeccionsCataleg.js';
 import { useTextCanonicCataleg } from '../../../hooks/useTextCanonicCataleg.js';
@@ -34,9 +34,13 @@ export default function ProjeccionsEnSuperficie({ desti }) {
   const rows = useTextCanonicCataleg(files, ui?.language);
   const lecturaFallida = publicacio.error && publicacio.error.desatLocal !== true;
   if (!rows.length && !lecturaFallida) return null;
+  /* IDEA-352 (ordre del Mestre, 261124) · Si la lectura de referències falla i no
+     hi ha files, mai es pinta un <h3> + <p> cru que trenque la pàgina: es mostra
+     únicament el widget d'avís estandarditzat de Pedra Seca (<Alerta to="avis">). */
+  if (!rows.length) return <Alerta to="avis">{t[2]}</Alerta>;
   return <section aria-label={t[0]}><h3>{t[0]}</h3>
-    {lecturaFallida ? <p role="status">{t[2]}</p> : null}
-    {rows.length ? <div className="sdp-card-grid">{rows.map(item => {
+    {lecturaFallida ? <Alerta to="avis">{t[2]}</Alerta> : null}
+    <div className="sdp-card-grid">{rows.map(item => {
       const row = projeccioCatalegDe(item);
       /* PRODNM-02 · Sense l'app de la font en este build, la targeta no porta enlloc. */
       const ruta = rutaDeFitxaCataleg(row.font);
@@ -45,6 +49,6 @@ export default function ProjeccionsEnSuperficie({ desti }) {
         body={row.font.lead} headingLevel="h4" hasFooter={false} showShare={false}
         labels={row.pendent ? [t[1]] : []} {...(objecte ? { objecte, ambModeracio: true, className: 'sdp-referencia-cataleg' } : null)}
         onMainClick={ruta ? () => navega(ruta) : undefined} />;
-    })}</div> : null}
+    })}</div>
   </section>;
 }

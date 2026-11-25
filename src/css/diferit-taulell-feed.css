@@ -5,22 +5,30 @@
    abans del primer pintat (useFullDiferit), de manera que l'arrencada del connector no les paga.
    ========================================================================== */
 @layer components {
-  /* R32.26 (IDEA-305) · Mode opt-in chrome="feed" per a taulells (/mur, /mercat,
-     /calendari): capçalera compacta centrada que conserva BarraBlava, BarraTaronja,
-     H1 i accioPrincipal (+ Publicar), ometent el 3r logotip redundant i el .lead
-     de prosa perquè les targetes i píndoles es vegen en <3 s al primer plànol. */
+  /* R32.26 (IDEA-305) + IDEA-352 (ordre del Mestre, 261124) · Mode chrome="feed"
+     als taulells (/mur, /mercat, /calendari): manté la mateixa caixa blanca,
+     logotip Sóc de Poble (quan showLogos={true}) i escala d'H1 que /pobles,
+     amb el botó d'acció principal (+ Publicar) centrat just davall de l'H1 i
+     sense el .lead de prosa per apropar les píndoles i targetes.
+     Gauntlet 261125 (CSS-R3291-05, R3291-04, GL0-PS-05) · Ni padding ni
+     border-radius propis: la caixa és la de header.page-title (layout.css),
+     amb el seu coixí i el seu radi, i també la regla mòbil R32.67 (16px
+     laterals a <= 32.5rem dins de @container sdp-arrel), que esta capa
+     (components) anul·lava. Així el logotip mesura el mateix que a /pobles
+     també a 375px. */
   .sdp-universal-page-container--feed > header.page-title {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--sdp-space-3) var(--sdp-space-4);
-    padding: var(--sdp-space-3) var(--sdp-space-6);
-    margin-block-end: var(--sdp-space-3);
-    border-radius: 0 0 var(--sdp-radi-g) var(--sdp-radi-g);
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-4);
+  }
+  .sdp-universal-page-container--feed > header.page-title .page-title-logo {
+    margin-block: 0 var(--sdp-space-1);
   }
   .sdp-universal-page-container--feed > header.page-title h1 {
-    font-size: var(--sdp-text-h3);
+    font-size: var(--sdp-fluid-h1);
     margin-block: 0;
   }
   .sdp-universal-page-container--feed > header.page-title .page-title-labels,

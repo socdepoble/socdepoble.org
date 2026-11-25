@@ -71,11 +71,13 @@ beforeEach(() => {
   };
 });
 
-test('amb dades, la pàgina del Mur porta sdp-pagina-mur al contenidor, al costat de la columna «contained»', () => {
+test('amb dades, la pàgina del Mur porta sdp-pagina-mur al contenidor, el logotip oficial Sóc de Poble (IDEA-352) i el botó Publicar al Mur', () => {
   render(<MurSection />);
   expect(document.querySelectorAll('.sdp-universal-page-container').length).toBe(1);
   expect(contenidor().classList.contains('sdp-pagina-mur')).toBe(true);
   expect(contenidor().classList.contains('sdp-universal-page-container--contained')).toBe(true);
+  expect(document.querySelectorAll('header.page-title img.page-title-logo').length).toBe(2);
+  expect(screen.getByRole('link', { name: 'Publicar al Mur' })).toBeTruthy();
   /* v1.2.17 · Mode de taulell (chrome 'feed', R32.26 · IDEA-305): el Mur ja no pinta l'entradeta, ni en ample ni
      en estret, i el seu text tampoc no és al DOM. */
   expect(entradeta()).toBeUndefined();

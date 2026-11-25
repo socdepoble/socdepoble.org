@@ -51,8 +51,10 @@ beforeEach(() => {
   mocks.mur = { status: 'ready', sortedMarketItems: [MEL, OLI, SENSE_DATA] };
 });
 
-test('la boina pinta «hh:mm» i «dd/mm/aa» de dataDElement, mai el format de toLocaleDateString', () => {
+test('la boina pinta «hh:mm» i «dd/mm/aa» de dataDElement i la capçalera conserva el logotip Sóc de Poble (IDEA-352) + Publicar un producte', () => {
   const arrel = render(<MercatSection />).container;
+  expect(arrel.querySelectorAll('header.page-title img.page-title-logo').length).toBe(2);
+  expect(arrel.querySelector('header.page-title .page-title-accio a')?.getAttribute('href')).toBe('/notes?ambit=mercat');
   for (const item of [MEL, OLI]) {
     const data = dataDElement(item);
     const pastilla = textos(pastillaDe(targetaDe(arrel, item.title)));

@@ -136,12 +136,16 @@ describe('d) qui signa Sóc de Poble porta el seu logotip, també les pàgines d
     expect(container.querySelector('img.page-title-logo')).toBeNull();
   });
 
-  test('chrome="feed" (taulell compacte opt-in) omet el 3r logotip automàtic però conserva l’H1 i les barres', () => {
+  test('chrome="feed" (taulell compacte opt-in) omet el 3r logotip automàtic però conserva l’H1 i les barres; amb showLogos={true} (Mur, Mercat i Calendari, IDEA-352) pinta el de Sóc de Poble igual que a Pobles', () => {
     const { container } = render(<PageFrame chrome="feed" title="Mur" />);
     expect(fills(capcalera(container))).toEqual(['H1.']);
     expect(container.querySelector('img.page-title-logo')).toBeNull();
     expect(container.querySelector('header.bar-blue')).not.toBeNull();
     expect(container.querySelector('section.bar-orange')).not.toBeNull();
+    cleanup();
+    const ambLogo = render(<PageFrame chrome="feed" showLogos={true} title="Mur" accioPrincipal={<a href="/notes?ambit=mur">Publicar al Mur</a>} />).container;
+    expect(fills(capcalera(ambLogo))).toEqual([...DOS_LOGOS_SDP, 'H1.', 'DIV.page-title-accio']);
+    expect(logos(ambLogo).map((img) => img.outerHTML)).toEqual(marcatgeDAbans());
   });
 
   test('amb la base del paquet (WordPress, Sollutia), els src pengen d’ella', () => {

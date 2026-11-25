@@ -319,7 +319,7 @@ export default function MurSection() {
     subtitle: t('section.mur.title', 'Publicacions recents'),
     lead: t('section.mur.subtitle', 'Explora el mur públic a través de les diferents vistes: llista, calendari i mapa.'),
     chrome: "feed",
-    showLogos: false,
+    showLogos: true,
     /* v1.2.17 · El full del mode de taulell viatja amb esta secció, no amb l'arrencada (estilsTaulellFeed.js). */
     adoptaEstilsChrome: adoptaEstilsTaulellFeed
   };

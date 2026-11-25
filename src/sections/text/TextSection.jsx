@@ -77,7 +77,7 @@ import LiniaVersioInstallada from '../../components/universal/LiniaVersioInstall
    és text de la pàgina: porta el lang que li dona PageFrame
    (useLlenguaDelContingut; només amb llenguaDelContingut i la interfície en
    una altra llengua). Sense, cap atribut. */
-export function CosDeLaPagina({ html }) {
+export function CosDeLaPagina({ html, children = null }) {
   const lang = useLlenguaDelContingut();
   const projectat = projeccioLecturaLegal(html);
   const cos = esAppNativa() ? htmlPerAppNativa(projectat) : projectat;
@@ -86,12 +86,13 @@ export function CosDeLaPagina({ html }) {
     if (segments.some((segment) => segment.tipus === 'targetes')) {
       return (
         <ProveidorSincronitzacioTargetes>
-          <CosAmbTargetes segments={segments} className="cms-preview" lang={lang} enllacosEditorials />
+          <CosAmbTargetes segments={segments} className="cms-preview" lang={lang} enllacosEditorials>{children}</CosAmbTargetes>
         </ProveidorSincronitzacioTargetes>
       );
     }
   }
-  return <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos)), { enllacosEditorials: true }) }} />;
+  const article = <article className="cms-preview" lang={lang} dangerouslySetInnerHTML={{ __html: sanitizeHtml(etiquetaEnllacosDImatge(resolRecursosDeHtml(cos)), { enllacosEditorials: true }) }} />;
+  return children ? <>{article}{children}</> : article;
 }
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a
@@ -237,7 +238,11 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
           </Suspense>
         </BarreraDelTrosAccessori>
       ) : null}
-      {!amagaCos && <CosDeLaPagina html={page.html} />}
+      {!amagaCos && (
+        <CosDeLaPagina html={page.html}>
+          {pageKey==='reconeixements'?<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsReconeixementsComplet language={language}/></Suspense></BarreraDelTrosAccessori>:null}
+        </CosDeLaPagina>
+      )}
       {pageKey === 'versions' && !amagaCos ? (
         <BarreraDelTrosAccessori>
           <Suspense fallback={null}>
@@ -245,7 +250,6 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
           </Suspense>
         </BarreraDelTrosAccessori>
       ) : null}
-      {pageKey==='reconeixements'&&!amagaCos&&<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsReconeixementsComplet language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}
       {children}

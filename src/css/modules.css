@@ -10017,6 +10017,29 @@ details[open] summary.accordion-header svg:last-child {
   :where(.cms-preview, .content-wrapper) :where(a, code) {
     overflow-wrap: break-word;
   }
+  /* IDEA-353 (ordre del Mestre, 25-11-2026) · Qualsevol títol (h2..h6) dins de
+     la prosa s'adapta a la columna disponible al costat d'una imatge o insígnia
+     flotant sense xocar-hi amb el filet inferior ni deixar mitja línia buida.
+     Gauntlet 261125 (CSS-R3291-01, GL0-A11Y-03, CSS-R3291-06):
+       · display: flow-root, no overflow: hidden. Tots dos fan del títol un
+         context de format de bloc que s'aparta de la flotant, però overflow
+         retallava l'anell de focus (3px + 2px) dels enllaços dins del títol
+         (/page/roadmap, IndexConsola). :not([hidden]): l'atribut hidden
+         continua amagant el títol.
+       · Fora els títols de les UniversalCard (.sdp-targeta incrustada i
+         qualsevol .sp-card de dins de la prosa): la targeta no és prosa i es
+         queda com era (text-wrap: balance de base.css, subtítol sense retall).
+       · Dins de :where(), especificitat 0: qualsevol regla de classe que done
+         un altre display a un títol continua manant. */
+  @media (min-width: 40.01rem) {
+    :where(.cms-preview, .detail-content, .sdp-prose, .sdp-editor-full-canvas) :where(:is(h2, h3, h4, h5, h6):not([hidden], .sdp-targeta *, .sp-card *)) {
+      display: flow-root;
+      overflow-wrap: break-word;
+    }
+    :where(.cms-preview, .detail-content, .sdp-prose, .sdp-editor-full-canvas) :where(h3:not(.sdp-targeta *, .sp-card *)) {
+      text-wrap: pretty;
+    }
+  }
 }
 
 /* T7 · Ordre del Mestre, 261004 (prompt 261004_0515) · Front «editor».
@@ -10110,17 +10133,22 @@ details[open] summary.accordion-header svg:last-child {
      /page/fediversity). L'overflow només s'aplica quan hi ha columna de text
      al costat de la flotant; per davall, l'encapçalament torna a passar per
      davall de la targeta, com a HEAD. */
+  /* IDEA-353 (ordre del Mestre, 25-11-2026) · Derogat el clear: both sobre h2 ~ h2
+     i h3 ~ h3 de R89, que empenyia el segon títol per davall de la targeta flotant
+     i deixava un buit enorme quan la introducció era més curta que la targeta
+     (com a /page/reconeixements). Els títols de la prosa (h2..h6) els adapta
+     el bloc general d'IDEA-353 (:where(.cms-preview, .detail-content,
+     .sdp-prose, .sdp-editor-full-canvas), més amunt), que també cobrix tot
+     .sdp-amb-targetes: CosAmbTargetes sempre hi suma cms-preview o
+     detail-content, i l'editor sdp-prose (Gauntlet 261125, CSS-R3291-07).
+     Ací només queda el que R11 donava a la UniversalCard incrustada: el
+     títol h2/h3 de la targeta, amb el seu context de format de bloc al costat
+     de la insígnia flotant, com abans (Llei del Píxel, CSS-R3291-06), amb la
+     mateixa especificitat (0,1,1) i el mateix lloc de la regla de R11. */
   @media (min-width: 40.01rem) {
-    .sdp-amb-targetes h2,
-    .sdp-amb-targetes h3 {
+    .sdp-amb-targetes :where(.sdp-targeta) :is(h2, h3) {
       overflow: hidden;
     }
-  }
-  .sdp-amb-targetes .sdp-cos-tros > h2 ~ h2,
-  .sdp-amb-targetes .sdp-cos-tros > h3 ~ h3,
-  .sdp-amb-targetes > h2 ~ h2,
-  .sdp-amb-targetes > h3 ~ h3 {
-    clear: both;
   }
   .sdp-targeta.ProseMirror-selectednode {
     outline: var(--sdp-focus-gruix) solid var(--sdp-focus);

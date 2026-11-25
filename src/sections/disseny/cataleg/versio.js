@@ -15,7 +15,12 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js i detalls/EspecimenIdentitat.jsx, 2026-11-23T23:04:02+01:00, v1.2.23 · integració
+ * Darrera posada al dia: detalls/EspecimenTipografia.jsx, 2026-11-25T05:00:47+01:00, v1.2.25 · Lot 0 (IDEA-351, ordre del
+ * Mestre 261124; Gauntlet 261125, CSS-R3291-04 i GL0-PS-04): la taula RITME del contracte tipogràfic diu els marges que
+ * pinta tokens.css després del Ritme Vertical Universal, l'h3 amb 32px de dalt i l'h4 amb 28px de dalt i 12px de baix.
+ * Substituïx el «--sdp-mb-h4 16px» de la nota de la versió del 25-10-2026, que era el valor d'IDEA-26; el
+ * comentari d'IDEA-26 de tokens.css ja diu el recalibratge. El p i les llistes continuen amb 20px.
+ * Versió anterior: manifest.js i detalls/EspecimenIdentitat.jsx, 2026-11-23T23:04:02+01:00, v1.2.23 · integració
  * (necessitats de G6 i G7 del Gauntlet R2): la descripció de Composició ja no diu «amplada de lectura» sinó «contenidor a
  * tota l’amplada» (R2E-07), i el contracte de CalaixIdentitats diu que el Xat i la barra negra (useIdentitatDeLaBarra)
  * passen els textos fixos en la llengua de la interfície (R2E-04); només esta mostra pinta el valencià de sempre.
@@ -517,4 +522,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-11-23T23:04:02+01:00';
+export const VERSIO_CATALEG = '2026-11-25T05:00:47+01:00';
