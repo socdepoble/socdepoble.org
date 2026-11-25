@@ -17,6 +17,12 @@
  * ENT-01 (v1.2.25) · CANCELADA_PROVEIDOR: la persona mateixa ha dit «No» a la
  * pantalla del proveïdor (access_denied sense cap error_code més concret de
  * GoTrue). No és cap error: la vista no en pinta res. */
+/* K-CAB-ENT0108 (v1.2.25, claus de G9) · Tres rebuigs de GoTrue a l'entrada amb
+   un proveïdor que arriben com a access_denied amb un error_code propi i que ja
+   no són DESCONEGUT (data/oauthRelay.js · errorDelProveidor): ALTES_TANCADES
+   (signup_disabled, el poble no admet altes noves), COMPTE_SUSPES (user_banned)
+   i CORREU_GOOGLE_PENDENT (provider_email_needs_verification, el proveïdor no
+   acredita el correu). La vista els diu amb section.login.error.*. */
 export const CODI_ENTRADA = Object.freeze({
   CREDENCIALS: 'credencials',
   CORREU_PENDENT: 'correu-pendent',
@@ -30,6 +36,9 @@ export const CODI_ENTRADA = Object.freeze({
   TOKEN_REBUTJAT: 'token-rebutjat',
   PROVEIDOR_INACTIU: 'proveidor-inactiu',
   CANCELADA_PROVEIDOR: 'cancelada-proveidor',
+  ALTES_TANCADES: 'altes-tancades',
+  COMPTE_SUSPES: 'compte-suspes',
+  CORREU_GOOGLE_PENDENT: 'correu-google-pendent',
   DESCONEGUT: 'desconegut'
 });
 

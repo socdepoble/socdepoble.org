@@ -305,13 +305,21 @@ const MISSATGES_ENTRADA = Object.freeze({
   [CODI_ENTRADA.PROVEIDOR_INACTIU]: 'Esta manera d’entrar encara no està activada al servidor de Sóc de Poble. Entra amb el correu.',
   /* ENT-01 (v1.2.25) · La vista no la pinta (esSilenciDEntrada): és la reserva perquè cap codi no caiga al text cru. */
   [CODI_ENTRADA.CANCELADA_PROVEIDOR]: 'Has cancel·lat l’entrada amb Google.',
+  /* K-CAB-ENT0108 (v1.2.25) · Els tres rebuigs de GoTrue amb codi propi (data/oauthRelay.js). Cada text és byte a
+     byte el valor valencià de la seua clau section.login.error.* (CLAUS_ENTRADA_DICCIONARI, baix). */
+  [CODI_ENTRADA.ALTES_TANCADES]: 'Les altes noves estan tancades temporalment en este poble. Si ja tens compte, entra amb el teu correu.',
+  [CODI_ENTRADA.COMPTE_SUSPES]: 'Este compte està suspés temporalment. Contacta amb l’administració d’este poble si creus que és un error.',
+  [CODI_ENTRADA.CORREU_GOOGLE_PENDENT]: 'El teu compte de Google encara no té el correu confirmat. Confirma’l abans de tornar a entrar.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 
 /* Un error que no s'ha de llegir en veu alta com a urgència: la persona no ha fet res mal.
-   Fase D · Tampoc un testimoni rebutjat ni un proveïdor apagat al servidor. */
+   Fase D · Tampoc un testimoni rebutjat ni un proveïdor apagat al servidor.
+   K-CAB-ENT0108 (v1.2.25, decisió de l'integrador pendent de ratificar) · Les altes tancades (és el poble qui no
+   n'admet) i el correu de Google sense confirmar (un pas pendent, com CORREU_PENDENT) són avís; el compte suspés,
+   no: és un rebuig que la persona ha de conéixer com a error. */
 const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT, CODI_ENTRADA.ENLLAC_CADUCAT,
-  CODI_ENTRADA.TOKEN_REBUTJAT, CODI_ENTRADA.PROVEIDOR_INACTIU]);
+  CODI_ENTRADA.TOKEN_REBUTJAT, CODI_ENTRADA.PROVEIDOR_INACTIU, CODI_ENTRADA.ALTES_TANCADES, CODI_ENTRADA.CORREU_GOOGLE_PENDENT]);
 
 /**
  * El codi d'entrada d'un error, o null. Un error sense codi però que diu que
@@ -367,6 +375,14 @@ function esErrorDelMotor(error) {
   return typeof nom === 'string' && nom !== 'Error' && nom !== 'AbortError';
 }
 
+/* K-CAB-ENT0108 (v1.2.25, claus de G9) · Els tres codis de l'entrada amb Google que tenen la frase als cinc
+   diccionaris canònics, no a i18nOnboardingExtra.js. La reserva de cada parell és el valor valencià de ca.js. */
+const CLAUS_ENTRADA_DICCIONARI = Object.freeze({
+  [CODI_ENTRADA.ALTES_TANCADES]: Object.freeze(['section.login.error.altesTancades', MISSATGES_ENTRADA[CODI_ENTRADA.ALTES_TANCADES]]),
+  [CODI_ENTRADA.COMPTE_SUSPES]: Object.freeze(['section.login.error.compteSuspes', MISSATGES_ENTRADA[CODI_ENTRADA.COMPTE_SUSPES]]),
+  [CODI_ENTRADA.CORREU_GOOGLE_PENDENT]: Object.freeze(['section.login.error.confirmaCorreuGoogle', MISSATGES_ENTRADA[CODI_ENTRADA.CORREU_GOOGLE_PENDENT]])
+});
+
 /**
  * ENT-01 i ENT-08 (v1.2.25) · La frase d'un error de l'entrada amb Google en
  * la llengua de la interfície: pel codi (codiDEntrada), el text de `textos`
@@ -374,9 +390,16 @@ function esErrorDelMotor(error) {
  * com a DESCONEGUT. Sense frase per al codi, la de la taula en valencià; sense
  * codi, el text propi de l'adaptador (missatgeDEntrada). Mai el text del
  * proveïdor ni el del navegador.
+ * K-CAB-ENT0108 · Les altes tancades, el compte suspés i el correu de Google
+ * sense confirmar es diuen amb `t` (el traductor de la interfície) i la clau
+ * section.login.error.*; sense `t`, la reserva valenciana.
  */
-export function missatgeDEntradaAmbGoogle(error, textos) {
+export function missatgeDEntradaAmbGoogle(error, textos, t = null) {
   const codi = codiDEntrada(error) ?? (esErrorDelMotor(error) ? CODI_ENTRADA.DESCONEGUT : null);
+  if (codi && Object.hasOwn(CLAUS_ENTRADA_DICCIONARI, codi)) {
+    const [clau, reserva] = CLAUS_ENTRADA_DICCIONARI[codi];
+    return typeof t === 'function' ? t(clau, reserva) : reserva;
+  }
   const clau = CLAUS_ERROR_GOOGLE[codi];
   const frase = clau ? textos?.[clau] : null;
   if (typeof frase === 'string' && frase.trim()) return frase;

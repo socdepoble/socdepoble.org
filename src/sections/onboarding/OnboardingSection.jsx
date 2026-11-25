@@ -538,9 +538,11 @@ export default function OnboardingSection() {
       /* ENT-01 i ENT-08 (v1.2.25) · Un «No» a Google no és cap error (silenci,
          i el focus torna al botó de Google com amb «Cancel·la l’entrada»); la
          resta, pel codi i en la llengua de la interfície, mai el text cru. */
+      /* K-CAB-ENT0108 (v1.2.25) · Amb el traductor: les altes tancades, el compte
+         suspés i el correu de Google pendent viuen als cinc diccionaris. */
       if (op.viu() && loginError?.code === CODI_ENTRADA_EN_MARC) setEnMarcAlie(true);
       else if (op.viu() && esSilenciDEntrada(loginError)) focusAGoogle.current = true;
-      else if (op.viu()) setGoogleError(missatgeDEntradaAmbGoogle(loginError, txExtra));
+      else if (op.viu()) setGoogleError(missatgeDEntradaAmbGoogle(loginError, txExtra, tr));
     } finally {
       op.tanca();
     }

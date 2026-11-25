@@ -276,6 +276,159 @@ describe('PUB-D11-01 · una ref que la promoció torna privada no arriba mai al 
   });
 });
 
+/* v1.2.25 · K-CAB-PUBD11 (PUB-D11-01, opció (a); clau section.notes.visibilitat.errorPublicarDocument de G9) · Un
+   document privat del cos (PDF, TXT, CSV, ODT o DOCX, per la ruta real de la ref) no es pot fer públic mai
+   (promouSenseMarc només sanejarà JPEG, PNG i WebP: mitjansPublicsNets.js), i abans s'aturava amb el motiu de la
+   imatge, que no li escau. Ara té motiu propi, 'document'. La capçalera, els logotips i qualsevol imatge privada que
+   quede continuen sent 'imatge', que té prioritat. Igual que la imatge: no s'envia res, ni geo ni intent al diari. */
+describe('K-CAB-PUBD11 · un document privat del cos té motiu propi', () => {
+  const IMATGE = 'sdp-media://mitjans_privats/poble/u1/notes/foto.avif';
+  const doc = (nom) => `sdp-media://mitjans_privats/poble/u1/notes/${nom}`;
+  const rebut = async (sub) => (sub.consulta === true ? null
+    : { publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false });
+  const publicaAmbError = async (nota_) => {
+    mocks.notes = [nota_];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+    return { error, result };
+  };
+  const capNoEnvia = () => {
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'success')).toEqual([]);
+    expect(textosDelsToasts().filter((text) => /Reintenta-la|pendent de confirmar/i.test(text))).toEqual([]);
+    expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
+    expect(fotosGeoDelCos).not.toHaveBeenCalled();
+    expect(geoDelHero).not.toHaveBeenCalled();
+  };
+
+  test('el motiu del document és propi, distint del de la imatge, i la reserva és el valor valencià de ca.js', () => {
+    const motiu = motiuPublicacioNoFeta('document');
+    expect(motiu).toBe(TEXTOS_VISIBILITAT_NOTA.errorPublicarDocument[1]);
+    expect(TEXTOS_VISIBILITAT_NOTA.errorPublicarDocument[0]).toBe('section.notes.visibilitat.errorPublicarDocument');
+    expect(motiu).toBe(createTranslator('ca')('section.notes.visibilitat.errorPublicarDocument'));
+    expect(motiu).not.toBe(motiuPublicacioNoFeta('imatge'));
+  });
+
+  /* Llei 0 · Un document no es pot fer públic mai (promouSenseMarc només saneja JPEG, PNG i WebP:
+     src/data/mitjansPublicsNets.js), de manera que el motiu no pot prometre que reintentar-ho ho arreglarà. El text de
+     G9 deia «Torna-ho a provar més tard o lleva’l»: ara diu només el que funciona, llevar-lo. */
+  test('el motiu del document no promet cap reintent en cap llengua: només llevar-lo', () => {
+    const REINTENT = { ca: /Torna-ho a provar/, es: /Vuelve a intentarlo/, en: /Try again/i, eu: /Saiatu berriro/, gl: /Téntao de novo/ };
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      const text = createTranslator(code)(...TEXTOS_VISIBILITAT_NOTA.errorPublicarDocument);
+      expect([code, REINTENT[code].test(text)]).toEqual([code, false]);
+      /* Control: el de la imatge sí que el porta (una imatge es pot tornar a pujar). */
+      expect([code, REINTENT[code].test(createTranslator(code)(...TEXTOS_VISIBILITAT_NOTA.errorPublicarImatge))]).toEqual([code, true]);
+    }
+  });
+
+  test.each([
+    ['un PDF enllaçat', `<p>A</p><p><a href="${doc('informe.pdf')}">Informe</a></p>`, doc('informe.pdf')],
+    ['un TXT enllaçat', `<p><a href="${doc('acta.txt')}">Acta</a></p>`, doc('acta.txt')],
+    ['un CSV enllaçat', `<p><a href="${doc('comptes.csv')}">Comptes</a></p>`, doc('comptes.csv')],
+    ['un ODT enllaçat', `<p><a href="${doc('carta.odt')}">Carta</a></p>`, doc('carta.odt')],
+    ['un DOCX enllaçat', `<p><a href="${doc('bases.docx')}">Bases</a></p>`, doc('bases.docx')],
+    ['un PDF amb l’extensió en majúscules', `<p><a href="${doc('INFORME.PDF')}">Informe</a></p>`, doc('INFORME.PDF')],
+    ['un PDF amb consulta i fragment', `<p><a href="${doc('informe.pdf?v=2#p=3')}">Informe</a></p>`, doc('informe.pdf?v=2#p=3')],
+    ['la ref d’un PDF escrita com a text', `<p>Vegeu ${doc('informe.pdf')} al Bloc.</p>`, doc('informe.pdf')]
+  ])('%s al cos: motiu «document», no s’envia res', async (_cas, content, ref) => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (r) => r);
+    mocks.send.mockImplementation(rebut);
+    const { error } = await publicaAmbError(nota({ content }));
+    const motiu = motiuPublicacioNoFeta('document');
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.promou).toHaveBeenCalledWith(ref, expect.anything());
+    expect(mocks.toast).toHaveBeenCalledWith(motiu, 'error');
+    expect(mocks.toast).not.toHaveBeenCalledWith(motiuPublicacioNoFeta('imatge'), 'error');
+    capNoEnvia();
+  });
+
+  test.each([
+    ['una imatge privada del cos', { content: `<p>A</p><img src="${IMATGE}"><p><a href="${doc('informe.pdf')}">Informe</a></p>` }],
+    ['la capçalera', { coverImage: IMATGE, content: `<p><a href="${doc('informe.pdf')}">Informe</a></p>` }],
+    ['el logotip', { logoImage: IMATGE, content: `<p><a href="${doc('informe.pdf')}">Informe</a></p>` }],
+    ['el logotip de nit', { logoImageDark: IMATGE, content: `<p><a href="${doc('informe.pdf')}">Informe</a></p>` }],
+    ['una ref privada sense extensió de document', { content: `<p><a href="${doc('informe')}">Informe</a> i <a href="${doc('acta.txt')}">acta</a></p>` }],
+    ['una ref que només porta «pdf» abans de l’extensió real', { content: `<p><img src="${doc('informe.pdf.webp')}"><a href="${doc('acta.txt')}">acta</a></p>` }],
+    ['una ref amb «.pdf» a la carpeta', { content: `<p><img src="${doc('arxiu.pdf/foto.webp')}"><a href="${doc('acta.csv')}">acta</a></p>` }]
+  ])('amb %s privada i un document privat, el motiu continua sent «imatge» (té prioritat)', async (_cas, extra) => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (r) => r);
+    mocks.send.mockImplementation(rebut);
+    const { error } = await publicaAmbError(nota(extra));
+    const motiu = motiuPublicacioNoFeta('imatge');
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.toast).toHaveBeenCalledWith(motiu, 'error');
+    capNoEnvia();
+  });
+
+  test('el camí de veres: la foto del cos es fa pública i el PDF no (promouSenseMarc el torna tal qual): motiu «document»', async () => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (r) => (/\.pdf$/.test(r) ? r : r.replace('mitjans_privats/', 'mitjans/')));
+    mocks.send.mockImplementation(rebut);
+    const { error, result } = await publicaAmbError(nota({ coverImage: IMATGE,
+      content: `<p>A</p><img src="${IMATGE}"><p><a href="${doc('informe.pdf')}">Informe</a></p>` }));
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuPublicacioNoFeta('document') });
+    expect(mocks.promou).toHaveBeenCalledWith(doc('informe.pdf'), expect.anything());
+    capNoEnvia();
+    /* Cap intent obert al diari: sense el PDF, el pròxim intent s'envia directe, sense consulta, i sense cap ref privada. */
+    mocks.notes = [nota({ coverImage: IMATGE, content: `<p>A</p><img src="${IMATGE}">` })];
+    await act(async () => { expect(await result.current.publishNote(mocks.notes[0])).toBe(true); });
+    expect(mocks.send.mock.calls.map(([sub]) => sub.consulta === true)).toEqual([false]);
+    expect(JSON.stringify(mocks.send.mock.calls[0][0].payload)).not.toContain('mitjans_privats');
+  });
+
+  test('sense la capacitat mitjans (cap promoció), un PDF privat del cos també s’atura amb el motiu «document»', async () => {
+    mocks.capacitats = new Set();
+    mocks.promou.mockImplementation(async (r) => r);
+    mocks.send.mockImplementation(rebut);
+    const { error } = await publicaAmbError(nota({ content: `<p><a href="${doc('informe.pdf')}">Informe</a></p>` }));
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuPublicacioNoFeta('document') });
+    expect(mocks.promou).not.toHaveBeenCalled();
+    capNoEnvia();
+  });
+
+  test('control · un PDF que ja és públic (mitjans/) no para res: es publica', async () => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (r) => r);
+    mocks.send.mockImplementation(rebut);
+    mocks.notes = [nota({ content: '<p><a href="sdp-media://mitjans/poble/u1/notes/informe.pdf">Informe</a></p>' })];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    await act(async () => { expect(await result.current.publishNote(mocks.notes[0])).toBe(true); });
+    expect(mocks.promou).not.toHaveBeenCalled();
+    expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'error')).toEqual([]);
+  });
+
+  test('el veí ho llig en la seua llengua: el motiu del document ix del diccionari en les 5 llengües, i parla d’este poble', async () => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (r) => r);
+    mocks.send.mockImplementation(rebut);
+    /* Gauntlet R22, ronda 3 (visibilitatNota.test.js, la de la imatge) · El poble de qui llig és «este poble». */
+    const ESTE = { ca: 'la resta d’este poble', es: 'el resto de este pueblo', en: 'the rest of this village', eu: 'herri honetako gainerakoek', gl: 'o resto deste pobo' };
+    const DEL = /\bdel poble\b|\bdel pueblo\b|\bthe town\b|\bherriko gainerakoek\b|\bdo pobo\b/i;
+    const vistos = new Set();
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      cleanup();
+      mocks.toast.mockClear();
+      mocks.traductor = createTranslator(code);
+      const esperat = mocks.traductor(...TEXTOS_VISIBILITAT_NOTA.errorPublicarDocument);
+      expect([code, esperat.includes(ESTE[code]), DEL.test(esperat)]).toEqual([code, true, false]);
+      if (code !== 'ca') expect(esperat).not.toBe(TEXTOS_VISIBILITAT_NOTA.errorPublicarDocument[1]);
+      mocks.notes = [nota({ id: `${ID}-${code}`, content: `<p><a href="${doc('informe.pdf')}">Informe</a></p>` })];
+      const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+      let error;
+      await act(async () => { error = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+      expect([code, error?.message]).toEqual([code, esperat]);
+      expect(mocks.toast).toHaveBeenCalledWith(esperat, 'error');
+      vistos.add(esperat);
+    }
+    expect(vistos.size).toBe(5);
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+});
+
 /* Gauntlet R22 (ronda 3, sql-05) · El límit de mida nou del servidor (section_submissions_limita_mida, SDP-MUR-MIDA,
    22001): 1.000 caràcters de títol, 20.000 de resum (l'entradilla) i 100.000 de cos. El client el diu abans d'enviar
    i, si el servidor el rebutja igualment, el reconeix com a definitiu: l'intent es retira del diari i el motiu diu

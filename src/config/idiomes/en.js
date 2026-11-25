@@ -4298,7 +4298,7 @@ export default {
   'section.multimedia.local.ipadImporta': "Import photos or files (iPad / browser)",
   'section.multimedia.local.ipadImportaAria': "Import photos or files on this iPad or browser",
   'section.multimedia.local.ipadNotaCopiaPrivada': "Importing creates a private copy inside this browser and never modifies the original files on your device. It does not replace an external backup.",
-  'section.notes.visibilitat.errorPublicarDocument': "Nothing was published: a private document in the note could not be made public, so neighbours would not be able to open it. Try again later or remove it before publishing.",
+  'section.notes.visibilitat.errorPublicarDocument': "Nothing was published: a private document in the note cannot be made public, and the rest of this village would not be able to open it. Remove it before publishing.",
   'section.login.error.altesTancades': "New registrations are temporarily closed in this village. If you already have an account, sign in with your email.",
   'section.login.error.compteSuspes': "This account is temporarily suspended. Contact this village’s administration if you believe this is a mistake.",
   'section.login.error.confirmaCorreuGoogle': "Your Google account’s email address is not verified yet. Verify it before signing in again.",

@@ -60,6 +60,10 @@ export const TEXTOS_VISIBILITAT_NOTA = Object.freeze({
   /* Gauntlet R22 (sql-02) · La còpia pública d'una imatge de la nota no s'ha pogut pujar (CODI_PROMOCIO_PUBLICA,
      per exemple SDP-PURGA-004 després d'una retirada): no s'envia res, mai una imatge privada al Mur. */
   errorPublicarImatge: parellVisibilitat('errorPublicarImatge', 'No s’ha publicat res: una imatge de la nota no s’ha pogut fer pública, i la resta d’este poble l’hauria vista trencada. Torna-ho a provar més tard o canvia la imatge.'),
+  /* v1.2.25 · K-CAB-PUBD11 (PUB-D11-01, opció (a); clau de G9) · Un document privat del cos (PDF, TXT, CSV, ODT o
+     DOCX) no es pot fer públic mai (la promoció només saneja JPEG, PNG i WebP: mitjansPublicsNets.js): no s'envia
+     res i el motiu no promet cap reintent. La imatge (capçalera, logotips o cos) té prioritat. */
+  errorPublicarDocument: parellVisibilitat('errorPublicarDocument', 'No s’ha publicat res: un document privat de la nota no es pot fer públic i la resta d’este poble no el podria obrir. Lleva’l abans de publicar.'),
   /* Gauntlet R22 (notes-05) · Un rebuig definitiu de publica_nota_al_mur (SDP-MUR-OWNER, SDP-MUR-PUBLICACIO):
      l'intent es descarta i reintentar igual no ho canvia. Mai «es reutilitzarà la mateixa publicació». */
   errorPublicarRebutjada: parellVisibilitat('errorPublicarRebutjada', 'No s’ha publicat: el servidor no accepta esta publicació amb esta sessió o amb este contingut. Tornar-ho a provar igual no ho canviarà; revisa la nota i la identitat amb què publiques.'),
@@ -313,6 +317,7 @@ const MOTIUS_NO_FETA = Object.freeze({
   conflicte: T.errorPublicarConflicte,
   servidor: T.errorPublicarServidor,
   imatge: T.errorPublicarImatge,
+  document: T.errorPublicarDocument,
   rebutjada: T.errorPublicarRebutjada,
   midaTitol: T.errorPublicarMidaTitol,
   midaResum: T.errorPublicarMidaResum,
@@ -324,7 +329,7 @@ const MOTIUS_NO_FETA = Object.freeze({
  * 'conflicte' (SDP-MUR-REVISION), 'servidor' (sense la RPC atòmica), 'imatge' (la còpia pública d'una imatge
  * no s'ha pogut pujar) o 'rebutjada' (SDP-MUR-OWNER o SDP-MUR-PUBLICACIO). Ronda 3 (sql-05) · 'midaTitol',
  * 'midaResum', 'midaCos' o 'mida' (un camp passa de LIMITS_PUBLICACIO; vegeu motiuDeMida). Un altre tipus,
- * 'conflicte'. */
+ * 'conflicte'. K-CAB-PUBD11 (v1.2.25) · 'document': un document privat del cos no s'ha pogut fer públic. */
 export function motiuPublicacioNoFeta(tipus = 'conflicte', t = null) {
   return text(t, Object.hasOwn(MOTIUS_NO_FETA, tipus) ? MOTIUS_NO_FETA[tipus] : T.errorPublicarConflicte);
 }

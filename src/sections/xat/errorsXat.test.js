@@ -65,6 +65,29 @@ describe('textDErrorDelXat', () => {
     expect(traduccions.size).toBe(SUPPORTED_LANGUAGES.length);
   });
 
+  /* v1.2.25 · K-CAB-XATACCIO (cablatge de la clau de G9) · XAT_ACCIO_INVALIDA (l'acció sobre un missatge que el port
+     refusa: supabase/xatAccions.js, data/xat/accionsMissatge.js, data/xat/rebutEliminacioMissatge.js i el contracte
+     R32.7 de conformitat/kit.js) arribava a la persona amb el text valencià de l'adaptador en totes les llengües. Ara es
+     diu pel codi, en la llengua de la interfície, i mai amb el codi cru. */
+  it.each(SUPPORTED_LANGUAGES.map(({ code }) => code))('%s · XAT_ACCIO_INVALIDA es diu amb section.xat.error.accioInvalida, mai amb el text de l’adaptador', (llengua) => {
+    const t = createTranslator(llengua);
+    const esperat = t('section.xat.error.accioInvalida');
+    expect(esperat).not.toBe('section.xat.error.accioInvalida');
+    if (llengua !== 'ca') expect(esperat).not.toBe(ca('section.xat.error.accioInvalida'));
+    for (const message of ['El missatge o l’acció no són vàlids.', 'Este missatge ja no està disponible.', 'El servidor no ha confirmat l’eliminació del missatge.', '']) {
+      const text = textDErrorDelXat({ code: 'XAT_ACCIO_INVALIDA', message }, t, 'reserva');
+      expect([llengua, message, text]).toEqual([llengua, message, esperat]);
+      expect(text).not.toMatch(/XAT_ACCIO/);
+    }
+  });
+
+  it('XAT_ACCIO_INVALIDA sense traductor conserva el missatge de l’adaptador, i un codi semblant no s’hi confon', () => {
+    expect(textDErrorDelXat({ code: 'XAT_ACCIO_INVALIDA', message: 'Tria una emoticona vàlida.' }, null, 'reserva')).toBe('Tria una emoticona vàlida.');
+    expect(textDErrorDelXat({ code: 'XAT_ACCIONS_SQL_ABSENT', message: 'Este servidor encara no permet eliminar per a tothom.' }, ca, 'x'))
+      .toBe('Este servidor encara no permet eliminar per a tothom.');
+    expect(textDErrorDelXat({ code: 'xat_accio_invalida', message: 'm' }, ca, 'x')).toBe('m');
+  });
+
   it('textDeFalladaDirecte: el 429 també, i sense missatge el text genèric d’obrir', () => {
     const es = createTranslator('es');
     expect(textDeFalladaDirecte({ code: 'SDP-XAT-429', message: ca('section.xat.error.massaMissatges') }, es)).toBe(es('section.xat.error.massaMissatges'));

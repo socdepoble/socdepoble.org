@@ -4312,7 +4312,7 @@ export default {
   'section.multimedia.local.ipadImporta': "Importa fotos ou ficheiros (iPad / navegador)",
   'section.multimedia.local.ipadImportaAria': "Importa fotos ou ficheiros neste iPad ou navegador",
   'section.multimedia.local.ipadNotaCopiaPrivada': "Importar crea unha copia privada neste navegador e nunca modifica os orixinais do dispositivo. Non substitúe unha copia de seguridade externa.",
-  'section.notes.visibilitat.errorPublicarDocument': "Non se publicou nada: un documento privado da nota non se puido facer público e o resto desta vila non podería abrilo. Téntao de novo máis tarde ou quítao antes de publicar.",
+  'section.notes.visibilitat.errorPublicarDocument': "Non se publicou nada: un documento privado da nota non se pode facer público e o resto deste pobo non podería abrilo. Quítao antes de publicar.",
   'section.login.error.altesTancades': "As novas altas están pechadas temporalmente nesta vila. Se xa tes conta, entra co teu correo.",
   'section.login.error.compteSuspes': "Esta conta está suspendida temporalmente. Contacta coa administración desta vila se cres que é un erro.",
   'section.login.error.confirmaCorreuGoogle': "A túa conta de Google aínda non ten o correo confirmado. Confírmao antes de volver entrar.",

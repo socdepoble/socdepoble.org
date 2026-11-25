@@ -31,7 +31,14 @@ export const CLAUS_ERROR_SDP = Object.freeze({
  *  SDP-XAT-002, que en este cas contradiria la fila «Envia't missatges a tu
  *  mateix». */
 export const CODI_XAT_PROPI_NO = 'XAT_PROPI_NO_DISPONIBLE';
-const CLAUS_ERROR_INTERFICIE = Object.freeze({ [CODI_XAT_PROPI_NO]: 'section.xat.nou.personalNo' });
+/* v1.2.25 · K-CAB-XATACCIO (clau de G9) · XAT_ACCIO_INVALIDA, l'acció sobre un missatge que el port refusa
+   (supabase/xatAccions.js, data/xat/accionsMissatge.js, data/xat/rebutEliminacioMissatge.js; contracte R32.7 de
+   conformitat/kit.js). El text de l'adaptador és en valencià i no és cap reserva del diccionari: la interfície el
+   diu pel codi, en la llengua de qui llig. */
+const CLAUS_ERROR_INTERFICIE = Object.freeze({
+  [CODI_XAT_PROPI_NO]: 'section.xat.nou.personalNo',
+  XAT_ACCIO_INVALIDA: 'section.xat.error.accioInvalida'
+});
 
 /** El text per a la persona d'un error del xat ({ code, message }), o `perDefecte` si no en porta cap. */
 export function textDErrorDelXat(error, t, perDefecte = '') {

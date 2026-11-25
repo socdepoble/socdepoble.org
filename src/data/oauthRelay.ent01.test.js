@@ -12,6 +12,11 @@
  *   (un 200 que no és JSON, una sessió buida) és DESCONEGUT amb el cru a cause.
  *   ENT-08 · El fre de cinc entrades seguides rebutja amb MASSA_INTENTS i un
  *   text humà, i «Cancel·la l'entrada» (descomptaIntentDeGoogle) no compta.
+ *   K-CAB-ENT0108 (v1.2.25, claus de G9) · Tres d'eixos error_code ja no són
+ *   DESCONEGUT sinó un codi propi amb frase als cinc diccionaris:
+ *   signup_disabled → ALTES_TANCADES, user_banned → COMPTE_SUSPES i
+ *   provider_email_needs_verification → CORREU_GOOGLE_PENDENT. Qualsevol altre
+ *   continua sent DESCONEGUT.
  */
 import { webcrypto } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -19,6 +24,7 @@ import { backendScope } from '../config/backendConfig.js';
 import { getEfimer, getVal, setEfimer, setVal } from '../config/storage.js';
 import { cancelAuthAttempts } from './authAttempt.js';
 import { CODI_ENTRADA } from './errorsBackend.js';
+import ca from '../config/idiomes/ca.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { _intern, descomptaIntentDeGoogle, entraAmbGoogle, gestionaTornada } from './oauthRelay.js';
 
@@ -85,11 +91,61 @@ describe('ENT-01 · l’error del proveïdor', () => {
     expect(error.cause).toMatchObject({ error: 'access_denied' });
   });
 
-  it('camí 1: un access_denied amb un error_code de GoTrue (signup_disabled) no és cap cancel·lació: DESCONEGUT, amb el cru a cause', async () => {
+  /* v1.2.25 · K-CAB-ENT0108 · Abans esperava DESCONEGUT: signup_disabled ara té codi propi (ALTES_TANCADES). No és
+     cap afluixament: continua sense ser cap cancel·lació, sense text cru i amb el cru a cause; el codi és més
+     concret. DESCONEGUT el conserva un error_code que no tenim traduït (prova de baix). */
+  it('camí 1: un access_denied amb un error_code de GoTrue (signup_disabled) no és cap cancel·lació: ALTES_TANCADES, amb el cru a cause', async () => {
     const error = await errorPelCami1({ error: 'access_denied', error_code: 'signup_disabled' });
-    expect(error.code).toBe('desconegut');
+    expect(error.code).toBe('altes-tancades');
     expect(error.message).not.toMatch(CRU);
     expect(error.cause).toMatchObject({ error: 'access_denied', error_code: 'signup_disabled' });
+  });
+
+  /* v1.2.25 · K-CAB-ENT0108 · Els tres error_code de GoTrue que arriben com a access_denied i tenen una frase pròpia
+     als cinc diccionaris (section.login.error.*): el codi, mai CANCELADA_PROVEIDOR ni DESCONEGUT, i el cru a cause. */
+  const CODIS_PROPIS = [
+    ['signup_disabled', 'altes-tancades', 'ALTES_TANCADES', 'section.login.error.altesTancades'],
+    ['user_banned', 'compte-suspes', 'COMPTE_SUSPES', 'section.login.error.compteSuspes'],
+    ['provider_email_needs_verification', 'correu-google-pendent', 'CORREU_GOOGLE_PENDENT', 'section.login.error.confirmaCorreuGoogle']
+  ];
+  it.each(CODIS_PROPIS)('camí 1: error_code %s → %s (CODI_ENTRADA.%s), mai cancel·lació ni DESCONEGUT', async (codiGoTrue, code, nom, clau) => {
+    expect(CODI_ENTRADA[nom]).toBe(code);
+    const error = await errorPelCami1({ error: 'access_denied', error_code: codiGoTrue });
+    expect(error.code).toBe(code);
+    expect(error.code).not.toBe(CODI_ENTRADA.CANCELADA_PROVEIDOR);
+    expect(error.message).not.toMatch(CRU);
+    /* La frase pròpia de l'adaptador és la valenciana del diccionari, byte a byte (no la genèrica de Google). */
+    expect(error.message).toBe(ca[clau]);
+    expect(error.cause).toEqual({ error: 'access_denied', error_code: codiGoTrue });
+  });
+
+  it.each(CODIS_PROPIS)('camí 3: error_code %s a la consulta → %s, i també quan només el porta el fragment', async (codiGoTrue, code) => {
+    tornadaDelCami3(`error=access_denied&error_code=${codiGoTrue}&error_description=Text+cru+de+GoTrue`);
+    const perConsulta = await rebuig(gestionaTornada({}, config));
+    expect(perConsulta.code).toBe(code);
+    expect(perConsulta.message).not.toMatch(CRU);
+    expect(perConsulta.message).not.toMatch(/Text cru/);
+    expect(perConsulta.cause).toEqual({ error: 'access_denied', error_code: codiGoTrue });
+    tornadaDelCami3('', `error=access_denied&error_code=${codiGoTrue}&error_description=Text+cru+de+GoTrue`);
+    const perFragment = await rebuig(gestionaTornada({}, config));
+    expect(perFragment.code).toBe(code);
+    expect(perFragment.cause).toEqual({ error: 'access_denied', error_code: codiGoTrue });
+  });
+
+  it('un error_code de GoTrue que no tenim traduït continua sent DESCONEGUT (mai silenci, mai un codi propi), i un codi heretat de l’objecte no compta', async () => {
+    for (const codiGoTrue of ['unexpected_failure', 'toString', 'SIGNUP_DISABLED']) {
+      const error = await errorPelCami1({ error: 'access_denied', error_code: codiGoTrue });
+      expect([codiGoTrue, error.code]).toEqual([codiGoTrue, 'desconegut']);
+      expect(error.cause).toEqual({ error: 'access_denied', error_code: codiGoTrue });
+      cancelAuthAttempts();
+      window.sessionStorage.clear();
+    }
+  });
+
+  it('un error que no és access_denied amb error_code propi també té el codi propi (el codi el dona l’error_code)', async () => {
+    const error = await errorPelCami1({ error: 'server_error', error_code: 'user_banned' });
+    expect(error.code).toBe('compte-suspes');
+    expect(error.cause).toEqual({ error: 'server_error', error_code: 'user_banned' });
   });
 
   it('l’emergent passa a la mare també l’error_code de GoTrue', async () => {
@@ -115,18 +171,21 @@ describe('ENT-01 · l’error del proveïdor', () => {
     expect(getEfimer(_intern.CLAU_VERIFICADOR, null)).toBeNull();
   });
 
-  it('camí 3: un error de GoTrue amb error_code és DESCONEGUT, mai silenci, i sense el text de GoTrue', async () => {
+  /* v1.2.25 · K-CAB-ENT0108 · Les dues proves següents esperaven DESCONEGUT; signup_disabled i user_banned ara tenen
+     codi propi (ALTES_TANCADES i COMPTE_SUSPES). Continuen vigilant el mateix: mai silenci, cap text de GoTrue, el cru
+     a cause i l'error_code del fragment compta. */
+  it('camí 3: un error de GoTrue amb error_code és el seu codi (ALTES_TANCADES), mai silenci, i sense el text de GoTrue', async () => {
     tornadaDelCami3('error=access_denied&error_code=signup_disabled&error_description=Signups+not+allowed+for+this+instance');
     const error = await rebuig(gestionaTornada({}, config));
-    expect(error.code).toBe('desconegut');
+    expect(error.code).toBe('altes-tancades');
     expect(error.message).not.toMatch(CRU);
     expect(error.cause).toMatchObject({ error: 'access_denied', error_code: 'signup_disabled' });
   });
 
-  it('camí 3: l’error_code que només porta el fragment també compta: user_banned és DESCONEGUT, mai silenci', async () => {
+  it('camí 3: l’error_code que només porta el fragment també compta: user_banned és COMPTE_SUSPES, mai silenci', async () => {
     tornadaDelCami3('', 'error=access_denied&error_code=user_banned&error_description=User+is+banned');
     const error = await rebuig(gestionaTornada({}, config));
-    expect(error.code).toBe('desconegut');
+    expect(error.code).toBe('compte-suspes');
     expect(error.message).not.toMatch(CRU);
     expect(error.cause).toEqual({ error: 'access_denied', error_code: 'user_banned' });
   });

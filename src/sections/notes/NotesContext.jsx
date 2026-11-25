@@ -53,7 +53,15 @@ const esNotaPublicada = (note) => Boolean(note?.isPublished || note?.publishedSu
    el prefix nu escrit com a text no és cap imatge i no para la publicació. */
 const REFS_PRIVADES_DEL_COS = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
 const portaRefPrivada = (valor) => typeof valor === 'string' && valor.includes('sdp-media://mitjans_privats/');
-const cosPortaRefPrivada = (cos) => typeof cos === 'string' && cos.search(REFS_PRIVADES_DEL_COS) !== -1;
+/* v1.2.25 · K-CAB-PUBD11 (PUB-D11-01, opció (a)) · Un document privat del cos (PDF, TXT, CSV, ODT o DOCX) es
+   reconeix per la ruta real de la ref: l'extensió amb què acaba el camí, sense la consulta, el fragment ni la marca
+   que el tanca. L'editor del Bloc no té cap node de document propi: és la ref que la promoció troba al cos. Qualsevol
+   altra ref privada (sense extensió o amb una altra) compta com a imatge, que té prioritat. Compacte a posta: el
+   NotesProvider viatja a l'arrencada estàtica, que té el trinquet d'1.591.000 B (tests/standalone-build.test.mjs);
+   per això la guarda de PUB-D11-01 tria el motiu en el mateix throw i cosPortaRefPrivada ja no fa falta (el cos
+   porta una ref privada si REFS_PRIVADES_DEL_COS hi troba res). */
+const RE_DOCUMENT_PRIVAT = /\.(?:pdf|txt|csv|odt|docx)(?:[?#<]|$)/i;
+const esRefDeDocument = (ref) => RE_DOCUMENT_PRIVAT.test(ref);
 
 function retiraPublicacionsDeLaNota(note) {
   if (!note?.id) return;
@@ -707,8 +715,14 @@ export function NotesProvider({ children }) {
          'mitjans': sense ella no hi ha promoció, i una ref privada que hi arribe (dades d'un altre backend)
          tampoc no la veuria ningú més. El PDF privat dins del cos també s'hi atura, amb el motiu de la
          imatge, que no li escau: un motiu propi o llevar-lo del cos públic és una costura pendent. */
-      if ([finalHeroImage, finalLogo, finalLogoDark].some(portaRefPrivada) || cosPortaRefPrivada(finalContent)) {
-        throw Object.assign(new Error('No s’ha pogut fer pública una imatge de la publicació.'), { codi: CODI_PROMOCIO_PUBLICA });
+      /* K-CAB-PUBD11 (v1.2.25) · Costura feta, opció (a): si totes les refs privades que queden al cos són
+         documents (esRefDeDocument) i la capçalera i els logotips ja no en porten cap, el motiu és el propi,
+         'document'. Amb qualsevol imatge privada, 'imatge', que té prioritat. */
+      const imatgePrivada = [finalHeroImage, finalLogo, finalLogoDark].some(portaRefPrivada);
+      const refsPrivadesDelCos = finalContent.match(REFS_PRIVADES_DEL_COS);
+      if (imatgePrivada || refsPrivadesDelCos) {
+        throw Object.assign(new Error('No s’ha pogut fer pública una imatge de la publicació.'), { codi: CODI_PROMOCIO_PUBLICA,
+          motiu: imatgePrivada || !refsPrivadesDelCos.every(esRefDeDocument) ? undefined : 'document' });
       }
 
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028) · L'índex del Mapa
@@ -978,7 +992,9 @@ export function NotesProvider({ children }) {
        intent nou al diari (la promoció va abans), i no es toca. PUB-D11-01 · També
        la guarda de després de la promoció, si en queda cap de privada. */
     if (operationRef.current === operation && error?.codi === CODI_PROMOCIO_PUBLICA) {
-      const motiu = motiuPublicacioNoFeta('imatge', t);
+      /* K-CAB-PUBD11 (v1.2.25) · Només la guarda de just després de la promoció posa motiu, i només 'document'; la
+         resta (també el rebuig de promoteToPublic, que no en porta), 'imatge'. */
+      const motiu = motiuPublicacioNoFeta(error.motiu ?? 'imatge', t);
       showToast(motiu, 'error');
       throw new ErrorPublicacio(motiu);
     }

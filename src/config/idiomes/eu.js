@@ -4314,7 +4314,7 @@ export default {
   'section.multimedia.local.ipadImporta': "Inportatu argazkiak edo fitxategiak (iPad / nabigatzailea)",
   'section.multimedia.local.ipadImportaAria': "Inportatu argazkiak edo fitxategiak iPad edo nabigatzaile honetan",
   'section.multimedia.local.ipadNotaCopiaPrivada': "Inportatzeak kopia pribatu bat sortzen du nabigatzaile honetan eta ez ditu inoiz gailuko jatorrizkoak aldatzen. Ez du kanpoko segurtasun-kopia ordezkatzen.",
-  'section.notes.visibilitat.errorPublicarDocument': "Ez da ezer argitaratu: oharreko dokumentu pribatu bat ezin izan da publiko egin eta herriko gainerakoek ezin izango lukete ireki. Saiatu berriro geroago edo kendu argitaratu aurretik.",
+  'section.notes.visibilitat.errorPublicarDocument': "Ez da ezer argitaratu: oharreko dokumentu pribatu bat ezin da publiko egin eta herri honetako gainerakoek ezin izango lukete ireki. Kendu argitaratu aurretik.",
   'section.login.error.altesTancades': "Izen-emate berriak aldi baterako itxita daude herri honetan. Kontua baduzu jada, sartu zure posta elektronikoarekin.",
   'section.login.error.compteSuspes': "Kontu hau aldi baterako etenda dago. Jarri harremanetan herri honetako administrazioarekin akatsa dela uste baduzu.",
   'section.login.error.confirmaCorreuGoogle': "Zure Google kontuaren posta elektronikoa ez dago oraindik berretsita. Berretsi berriro sartu aurretik.",

@@ -712,6 +712,15 @@ const MISSATGE_PROVEIDOR_FALLIT = 'No s’ha pogut completar l’entrada amb Goo
 const MISSATGE_INABASTABLE = 'El servidor de Sóc de Poble no respon ara mateix. Torna-ho a provar d’ací a una estona.';
 const MISSATGE_MASSA_INTENTS = 'Has provat d’entrar amb Google moltes vegades seguides. Espera un minut i torna-ho a provar.';
 
+/* K-CAB-ENT0108 (v1.2.25, claus de G9) · Tres d'eixos error_code de GoTrue tenen codi propi (CODI_ENTRADA) i una
+   frase als cinc diccionaris (section.login.error.*); la frase valenciana d'ací és la de ca.js. Qualsevol altre
+   error_code, també un de buit, continua sent DESCONEGUT. El valor cru continua viatjant a `cause`. */
+const ERRORS_CODI_PROVEIDOR = Object.freeze({
+  signup_disabled: Object.freeze([CODI_ENTRADA.ALTES_TANCADES, 'Les altes noves estan tancades temporalment en este poble. Si ja tens compte, entra amb el teu correu.']),
+  user_banned: Object.freeze([CODI_ENTRADA.COMPTE_SUSPES, 'Este compte està suspés temporalment. Contacta amb l’administració d’este poble si creus que és un error.']),
+  provider_email_needs_verification: Object.freeze([CODI_ENTRADA.CORREU_GOOGLE_PENDENT, 'El teu compte de Google encara no té el correu confirmat. Confirma’l abans de tornar a entrar.'])
+});
+
 /* L'error que torna el proveïdor. La persona ha dit «No» si GoTrue diu
    access_denied sense cap error_code (o amb el mateix access_denied):
    signup_disabled, user_banned o provider_email_needs_verification també
@@ -722,6 +731,10 @@ const MISSATGE_MASSA_INTENTS = 'Has provat d’entrar amb Google moltes vegades 
 function errorDelProveidor(error, codiError) {
   const cause = { error, error_code: codiError ?? null };
   const cancelada = error === ERROR_CANCELACIO && (codiError == null || codiError === ERROR_CANCELACIO);
+  if (!cancelada && typeof codiError === 'string' && Object.hasOwn(ERRORS_CODI_PROVEIDOR, codiError)) {
+    const [codi, missatge] = ERRORS_CODI_PROVEIDOR[codiError];
+    return ambCodi(new Error(missatge, { cause }), codi);
+  }
   return cancelada
     ? ambCodi(new Error(MISSATGE_CANCELADA, { cause }), CODI_ENTRADA.CANCELADA_PROVEIDOR)
     : ambCodi(new Error(MISSATGE_PROVEIDOR_FALLIT, { cause }), CODI_ENTRADA.DESCONEGUT);

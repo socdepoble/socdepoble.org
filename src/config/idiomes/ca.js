@@ -4372,7 +4372,7 @@ export default {
   'section.multimedia.local.ipadImporta': "Importa fotos o fitxers (iPad / navegador)",
   'section.multimedia.local.ipadImportaAria': "Importa fotos o fitxers en este iPad o navegador",
   'section.multimedia.local.ipadNotaCopiaPrivada': "Importar crea una còpia privada en este navegador i no modifica mai els originals del dispositiu. No substituïx una còpia de seguretat externa.",
-  'section.notes.visibilitat.errorPublicarDocument': "No s’ha publicat res: un document privat de la nota no s’ha pogut fer públic, i la resta d’este poble no l’hauria pogut obrir. Torna-ho a provar més tard o lleva’l abans de publicar.",
+  'section.notes.visibilitat.errorPublicarDocument': "No s’ha publicat res: un document privat de la nota no es pot fer públic i la resta d’este poble no el podria obrir. Lleva’l abans de publicar.",
   'section.login.error.altesTancades': "Les altes noves estan tancades temporalment en este poble. Si ja tens compte, entra amb el teu correu.",
   'section.login.error.compteSuspes': "Este compte està suspés temporalment. Contacta amb l’administració d’este poble si creus que és un error.",
   'section.login.error.confirmaCorreuGoogle': "El teu compte de Google encara no té el correu confirmat. Confirma’l abans de tornar a entrar.",

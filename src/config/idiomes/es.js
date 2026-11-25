@@ -4297,7 +4297,7 @@ export default {
   'section.multimedia.local.ipadImporta': "Importa fotos o archivos (iPad / navegador)",
   'section.multimedia.local.ipadImportaAria': "Importa fotos o archivos en este iPad o navegador",
   'section.multimedia.local.ipadNotaCopiaPrivada': "Importar crea una copia privada en este navegador y nunca modifica los originales del dispositivo. No sustituye una copia de seguridad externa.",
-  'section.notes.visibilitat.errorPublicarDocument': "No se ha publicado nada: un documento privado de la nota no se ha podido hacer público y el resto de este pueblo no podría abrirlo. Vuelve a intentarlo más tarde o quítalo antes de publicar.",
+  'section.notes.visibilitat.errorPublicarDocument': "No se ha publicado nada: un documento privado de la nota no se puede hacer público y el resto de este pueblo no podría abrirlo. Quítalo antes de publicar.",
   'section.login.error.altesTancades': "Las nuevas altas están cerradas temporalmente en este pueblo. Si ya tienes cuenta, entra con tu correo.",
   'section.login.error.compteSuspes': "Esta cuenta está suspendida temporalmente. Contacta con la administración de este pueblo si crees que es un error.",
   'section.login.error.confirmaCorreuGoogle': "Tu cuenta de Google todavía no tiene el correo confirmado. Confírmalo antes de volver a entrar.",
