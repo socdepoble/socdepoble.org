@@ -64,7 +64,9 @@ test('dist, sense barra final i sense URL netes', () => {
   // (tractor-anti-factura-egress.mjs --require-build) bloqueja qualsevol altre ZIP.
   expect(hosting.ignore).toEqual(['**/.*', '!.well-known', '**/node_modules/**', '_headers', '_redirects', '**/*.apk', '**/*.apk.sha256',
     '**/*.aab', '**/*.ipa', '**/*.xcarchive', '**/*.xcarchive/**', 'descarregues/**/*.zip']);
-  expect(hosting.predeploy).toEqual(['node tooling/gates/tractor-anti-factura-egress.mjs --require-build']);
+  // PWA-03b (v1.2.25, Guàrdia #6 de MarIA) · Primer, la porta del build fresc: cap dist/ d'una altra versió no es desplega.
+  expect(hosting.predeploy).toEqual(['node tooling/gates/porta-build-fresc.mjs --build dist',
+    'node tooling/gates/tractor-anti-factura-egress.mjs --require-build']);
 });
 
 /* P1-23 (ordre del Mestre del 30-10-2026) · Les reescriptures de WebFinger van

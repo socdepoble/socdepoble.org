@@ -270,6 +270,7 @@
       }
     ],
     "predeploy": [
+      "node tooling/gates/porta-build-fresc.mjs --build dist",
       "node tooling/gates/tractor-anti-factura-egress.mjs --require-build"
     ]
   }

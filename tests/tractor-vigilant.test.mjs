@@ -629,3 +629,81 @@ test('PWA03VF-04 · la capçalera Version: es llig en temps lineal i dona el mat
  // Fora dels casos bons, com get_file_data de WordPress: la primera línia Version: mana, i una de buida no dona cap línia.
  assert.equal(linia(' * Version:\n * Version: 1.1.32'),null);assert.equal(linia(' * Version:    \n'),null);
 });
+
+// PWA-03b (Guàrdia #6 de MarIA, 11:00) · La predeploy de Firebase refusa un dist/ que no siga d'esta versió. Les proves
+// viuen ací perquè un .test.mjs nou demanaria una entrada a tooling/tests/node-suite-manifest.json, que és camí de kits.
+const CLI_BUILD_FRESC=path.join(REPO_L202,'tooling/gates/porta-build-fresc.mjs');
+test('PWA-03b · porta-build-fresc: només deixa desplegar un dist/ d’esta versió; ranci, trencat, sense manifest o sense arbre es refusa',async t=>{
+ const {avaluaBuildFresc,readOnly:nomesLectura}=await import('../tooling/gates/porta-build-fresc.mjs');
+ assert.equal(nomesLectura,true);
+ const casos=[
+  ['dist/ de la 1.2.24 (versio-viva)',w=>w('dist/versio-viva.json',viva('1.2.24')),true,'mesurat'],
+  ['dist/ de la 1.2.24-dev (release)',w=>{w('dist/sdp-release.json',release('1.2.24-dev'));w('dist/versio-viva.json',viva('1.2.24'));},true,'mesurat'],
+  ['dist/ de la 1.2.0',w=>w('dist/versio-viva.json',viva('1.2.0')),false,'ranci'],
+  ['dist/ amb release vella i viva nova',w=>{w('dist/sdp-release.json',release('1.2.0-dev'));w('dist/versio-viva.json',viva('1.2.24'));},false,'ranci'],
+  ['dist/ amb un manifest «{}»',w=>w('dist/versio-viva.json','{}'),false,'ranci'],
+  ['dist/ amb un manifest que no és JSON',w=>w('dist/versio-viva.json','{'),false,'trencat'],
+  ['dist/ amb sdp-release.json com a carpeta',w=>{w('dist/sdp-release.json/x','1');w('dist/versio-viva.json',viva('1.2.24'));},false,'trencat'],
+  ['dist/ sense cap manifest',w=>w('dist/index.html','<!doctype html>'),false,null],
+  ['un manifest niat no data el build',w=>w('dist/assets/versio-viva.json',viva('1.2.24')),false,null],
+  // Gauntlet T3 · Una release amb la versió de l'arbre no tapa una versio-viva.json vella, i dist/ sense ella no s'acredita.
+  ['una release de l’arbre no tapa una viva vella',w=>{w('dist/sdp-release.json',release('1.2.24'));w('dist/versio-viva.json',viva('1.2.0'));},false,'ranci'],
+  ['dist/ només amb release, sense versio-viva.json',w=>w('dist/sdp-release.json',release('1.2.24-dev')),false,'ranci'],
+  // PWA03B-BR-04 · El límit de lectura: un manifest de més de 8 MiB no és cap manifest.
+  ['un manifest de més de 8 MiB',w=>w('dist/versio-viva.json',viva('1.2.24')+' '.repeat(8*1024*1024)),false,'trencat'],
+ ];
+ for(const [nom,prepara,ok,estat] of casos) {
+  const {root,write}=fixture(t);arbreV1224(write);prepara(write);
+  const r=avaluaBuildFresc(root,'dist');assert.equal(r.ok,ok,nom);assert.equal(r.estat,estat,nom);
+  if(!ok) assert.ok(typeof r.motiu==='string'&&r.motiu.length>10,nom);
+ }
+ // L'arbre: sense package.json, il·legible o sense versió, no es desplega res.
+ for(const [nom,prepara] of [
+  ['sense package.json',(root,write)=>{write('dist/versio-viva.json',viva('1.2.24'));}],
+  ['package.json sense versió',(root,write)=>{write('package.json','{}');write('dist/versio-viva.json',viva('1.2.24'));}],
+  ['package.json com a carpeta',(root,write)=>{write('package.json/x','1');write('dist/versio-viva.json',viva('1.2.24'));}],
+ ]) {
+  const {root,write}=fixture(t);prepara(root,write);const r=avaluaBuildFresc(root,'dist');assert.equal(r.ok,false,nom);assert.equal(r.estat,null,nom);
+ }
+ // package.json que no és JSON: es diu així, no «sense versió». Amb BOM, com fa npm, es llig.
+ {const {root,write}=fixture(t);write('package.json','{version');write('dist/versio-viva.json',viva('1.2.24'));const r=avaluaBuildFresc(root,'dist');assert.equal(r.ok,false);assert.match(r.motiu,/no és JSON/);}
+ {const {root,write}=fixture(t);arbreV1224(write);write('package.json','\uFEFF'+JSON.stringify({version:'1.2.24'}));write('dist/versio-viva.json',viva('1.2.24'));assert.equal(avaluaBuildFresc(root,'dist').ok,true);}
+ // Gauntlet T4 · Un manifest que és un enllaç simbòlic a una versio-viva.json fresca d'un altre lloc no acredita res.
+ {const {root,write}=fixture(t);arbreV1224(write);write('fora/versio-viva.json',viva('1.2.24'));write('dist/index.html','x');
+  fs.symlinkSync(path.join(root,'fora/versio-viva.json'),path.join(root,'dist/versio-viva.json'));
+  const r=avaluaBuildFresc(root,'dist');assert.equal(r.ok,false);assert.equal(r.estat,'trencat');}
+ // Sense dist/ o amb una carpeta que no és de build (PWA03B-BR-03: public/ amb una versio-viva.json fresca tampoc).
+ {const {root,write}=fixture(t);arbreV1224(write);assert.equal(avaluaBuildFresc(root,'dist').ok,false);assert.equal(avaluaBuildFresc(root,'../fora').ok,false);
+  write('public/versio-viva.json',viva('1.2.24'));assert.equal(avaluaBuildFresc(root,'public').ok,false);}
+ // La línia del connector només data el build amb la versio-viva.json d'esta App (el mateix criteri que la Vigilant).
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/sdp-release.json',release('1.1.32'));write('dist/versio-viva.json',viva('1.2.24'));assert.equal(avaluaBuildFresc(root,'dist').ok,true);}
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/sdp-release.json',release('1.1.32'));write('dist/versio-viva.json',viva('1.2.0'));assert.equal(avaluaBuildFresc(root,'dist').ok,false);}
+});
+test('PWA-03b · porta-build-fresc per la CLI: 0 amb un dist/ fresc, 1 amb un de ranci i 2 amb una bandera desconeguda',t=>{
+ // Sense RESOURCE_DIR heretat: el posa Firebase només dins d'una predeploy.
+ const entorn=(extra={})=>{const e={...process.env,...extra};if(!('RESOURCE_DIR' in extra)) delete e.RESOURCE_DIR;return e;};
+ const corre=(root,args=[],extra={})=>spawnSync(process.execPath,[CLI_BUILD_FRESC,'--arrel',root,...args],{encoding:'utf8',env:entorn(extra)});
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/versio-viva.json',viva('1.2.24'));const r=corre(root);assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/Build fresc.*la versió, no el commit/);}
+ {const {root,write}=fixture(t);arbreV1224(write);RANCI_DIST(write);const r=corre(root,['--build','dist']);assert.equal(r.status,1);
+  assert.match(r.stderr,/No es desplega: dist\/ és de la 1\.2\.0 i l’arbre, de la 1\.2\.24/);assert.match(r.stderr,/ORDRE_WEB/);}
+ {const {root,write}=fixture(t);arbreV1224(write);const r=corre(root,['--res']);assert.equal(r.status,2);}
+ // PWA03B-BR-02 · La invocació real de la predeploy: sense --arrel, des de l'arrel del projecte (cwd de firebase-tools).
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/versio-viva.json',viva('1.2.24'));
+  const r=spawnSync(process.execPath,[CLI_BUILD_FRESC,'--build','dist'],{cwd:root,encoding:'utf8',env:entorn()});assert.equal(r.status,0,r.stderr);}
+ // Gauntlet T1 · Dins d'una predeploy, RESOURCE_DIR és la carpeta que Firebase pujarà: ha de ser dist/, també per un enllaç.
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/versio-viva.json',viva('1.2.24'));write('ranci/versio-viva.json',viva('1.2.0'));
+  const altra=corre(root,['--build','dist'],{RESOURCE_DIR:path.join(root,'ranci')});assert.equal(altra.status,1);assert.match(altra.stderr,/Firebase pujaria una carpeta que no és dist\//);
+  assert.equal(corre(root,['--build','dist'],{RESOURCE_DIR:path.join(root,'dist')}).status,0);
+  fs.symlinkSync(path.join(root,'dist'),path.join(root,'enllac-dist'));assert.equal(corre(root,['--build','dist'],{RESOURCE_DIR:path.join(root,'enllac-dist')}).status,0);
+  assert.equal(corre(root,['--build','dist'],{RESOURCE_DIR:path.join(root,'no-hi-es')}).status,1);}
+ // Gauntlet T7 · Una versió hostil no pinta seqüències de control ni salts de línia a la consola.
+ {const {root,write}=fixture(t);arbreV1224(write);write('dist/versio-viva.json',viva('1.2.0\n\u001b[32m✅ fals'+'x'.repeat(80)));
+  const r=corre(root);assert.equal(r.status,1);assert.doesNotMatch(r.stderr,/\u001b/);assert.equal(r.stderr.trim().split('\n').length,1);assert.match(r.stderr,/…/);}
+});
+test('PWA-03b · firebase.json executa la porta del build fresc a la predeploy, abans de l’egrés',()=>{
+ const firebase=JSON.parse(fs.readFileSync(path.join(REPO_L202,'firebase.json'),'utf8'));
+ assert.equal(firebase.hosting.public,'dist');
+ const pre=firebase.hosting.predeploy;assert.ok(Array.isArray(pre));
+ assert.equal(pre[0],'node tooling/gates/porta-build-fresc.mjs --build dist');
+ assert.ok(pre.includes('node tooling/gates/tractor-anti-factura-egress.mjs --require-build'));
+});
