@@ -3,22 +3,25 @@
      missatge) de publica_nota_al_mur v2 (2611122200): l'intent del diari es retira, el motiu ho diu i mai
      «Reintenta-la: es reutilitzarà la mateixa publicació»;
    · la còpia pública d'una imatge que no s'ha pogut pujar (promoteToPublic rebutja amb CODI_PROMOCIO_PUBLICA,
-     p. ex. SDP-PURGA-004 després d'una retirada): no s'envia res al Mur, mai la ref privada. */
+     p. ex. SDP-PURGA-004 després d'una retirada): no s'envia res al Mur, mai la ref privada;
+   · PUB-D11-01 (v1.2.25) · la promoció que torna la ref privada tal qual, sense llançar: tampoc no s'envia res. */
 import { beforeEach as abansDePublicar } from 'vitest';
 import { creaIdbFalsEstructurat } from '../../../tests/helpers/idbFalsEstructurat.js';
 abansDePublicar(() => { globalThis.indexedDB = creaIdbFalsEstructurat(); });
 import { renderHook, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import '../../../tests/helpers/diccionaris.js';
 const mocks = vi.hoisted(() => ({
-  update: vi.fn(), send: vi.fn(), toast: vi.fn(), promou: vi.fn(), notes: [], capacitats: new Set()
+  update: vi.fn(), send: vi.fn(), toast: vi.fn(), promou: vi.fn(), notes: [], capacitats: new Set(), traductor: null
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: 'tenant-user-r22-def', workspaceKey: 'session-r22-def', config: { tenantId: 'tenant' },
   status: 'ready', updateNote: mocks.update, confirmaPublicacioNota: vi.fn(async (_id, rebut) => rebut), mouNota: vi.fn(), esborraNota: vi.fn()
 }) }));
+/* PUB-D11-01 · Sense traductor, la reserva (el valencià de sempre); amb un, la llengua de qui publica. */
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
-  useUIActions: () => ({ normalizeSearchText: s => s, t: (_key, fallback) => fallback })
+  useUIActions: () => ({ normalizeSearchText: s => s, t: (key, fallback) => (mocks.traductor ? mocks.traductor(key, fallback) : fallback) })
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: [], marketItems: [] }) }));
@@ -35,9 +38,18 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
     const next = transform(records.get(key) || {}); records.set(key, next); return next;
   } }) };
 });
+/* PUB-D11-01 · La geo de les fotos, la de veres però espiada: la guarda va abans (ni el tros ni l'EXIF del hero
+   per a una publicació que no eixirà). */
+vi.mock('./geoDeLesFotos.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, fotosGeoDelCos: vi.fn(actual.fotosGeoDelCos), geoDelHero: vi.fn(actual.geoDelHero) };
+});
 import { NotesProvider, useNotes } from './NotesContext';
-import { motiuPublicacioNoFeta, esRebuigDefinitiuDePublicacio, esRebuigDeMida, campQuePassaDelLimit, motiuDeMida, LIMITS_PUBLICACIO } from './visibilitatNota.js';
+import { fotosGeoDelCos, geoDelHero } from './geoDeLesFotos.js';
+import { motiuPublicacioNoFeta, esRebuigDefinitiuDePublicacio, esRebuigDeMida, campQuePassaDelLimit, motiuDeMida, LIMITS_PUBLICACIO,
+  TEXTOS_VISIBILITAT_NOTA } from './visibilitatNota.js';
 import { CODI_MITJANS, CODI_PROMOCIO_PUBLICA } from '../../data/errorsBackend.js';
+import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 
 /* Els rebuigs tal com els construïx runtime.js (ErrorSupabase): el text «Supabase NNN: {json}», l'estat, el
    sqlstate i, només per a SDP-MUR-REVISION i SDP-MUR-OWNER, el `codi`. */
@@ -58,6 +70,8 @@ beforeEach(() => {
   mocks.notes = [nota()];
   mocks.toast.mockReset(); mocks.send.mockReset(); mocks.promou.mockReset();
   mocks.capacitats = new Set();
+  mocks.traductor = null;
+  vi.mocked(fotosGeoDelCos).mockClear(); vi.mocked(geoDelHero).mockClear();
   mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
 });
 afterEach(cleanup);
@@ -155,6 +169,110 @@ describe('sql-02 · la còpia pública d’una imatge no s’ha pogut pujar', ()
     const payload = JSON.stringify(mocks.send.mock.calls[0][0].payload);
     expect(payload).toContain('sdp-media://mitjans/poble/u1/notes/foto.webp');
     expect(payload).not.toContain('mitjans_privats');
+  });
+});
+
+/* PUB-D11-01 (v1.2.25, D09/D11) · promoteToPublic torna la ref privada tal qual, sense llançar, en sis camins
+   (storage.js · promouSenseMarc: camí no net, baixada fallida, un fitxer buit o de més de 5 MiB, un format no
+   sanejable com AVIF, i un duplicat no verificable o de bytes distints). Abans eixia al Mur amb la ref privada i
+   «Nota publicada correctament al mur!»: només l'autora veia la foto i la resta del poble, la targeta sense foto
+   per sempre. Ara la publicació s'atura pel mateix camí que sql-02 (CODI_PROMOCIO_PUBLICA, motiu 'imatge'), abans
+   de la geo i d'obrir cap intent al diari, i també sense la capacitat 'mitjans'. Al cos només compta el que la
+   promoció hi busca: el prefix nu escrit com a text es publica. El PDF privat dins del cos no es decidix ací
+   (vegeu NotesContext.jsx). */
+describe('PUB-D11-01 · una ref que la promoció torna privada no arriba mai al Mur', () => {
+  const PRIVADA = 'sdp-media://mitjans_privats/poble/u1/notes/foto.avif';
+  const rebut = async (sub) => (sub.consulta === true ? null
+    : { publicacio: { id: sub.id }, nota_revision: sub.expectedNoteRevision + 1, publicada_revision: sub.expectedNoteRevision + 1, replay: false });
+  const CASOS = [['la capçalera', { coverImage: PRIVADA }], ['una imatge del cos', { content: `<p>A</p><img src="${PRIVADA}">` }],
+    ['el logotip', { logoImage: PRIVADA }], ['el logotip de nit', { logoImageDark: PRIVADA }]];
+
+  test.each(CASOS)(
+    '%s: promou = async ref => ref; send no es crida i el motiu és el de la imatge', async (_cas, extra) => {
+      mocks.capacitats = new Set(['mitjans']);
+      mocks.promou.mockImplementation(async (ref) => ref);
+      mocks.send.mockImplementation(rebut);
+      mocks.notes = [nota(extra)];
+      const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+      const motiu = motiuPublicacioNoFeta('imatge');
+      let error;
+      await act(async () => { error = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+      expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+      expect(mocks.promou).toHaveBeenCalledWith(PRIVADA, expect.anything());
+      expect(mocks.send).not.toHaveBeenCalled();
+      expect(mocks.toast).toHaveBeenCalledWith(motiu, 'error');
+      expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'success')).toEqual([]);
+      expect(textosDelsToasts().filter((text) => /Reintenta-la|pendent de confirmar/i.test(text))).toEqual([]);
+      expect(mocks.update.mock.calls.filter(([, canvis]) => canvis?.isPublished)).toEqual([]);
+      /* La guarda va abans de la geo: ni el tros ni l'EXIF del hero (fins a uns 8 s) per a res. */
+      expect(fotosGeoDelCos).not.toHaveBeenCalled();
+      expect(geoDelHero).not.toHaveBeenCalled();
+      /* Cap intent obert al diari: amb la còpia pública feta, el pròxim intent s'envia directe, sense consulta,
+         i ja no porta cap ref privada. La geo hi passa una vegada (l'espia és viva). */
+      mocks.promou.mockImplementation(async (ref) => ref.replace('mitjans_privats/', 'mitjans/'));
+      await act(async () => { expect(await result.current.publishNote(mocks.notes[0])).toBe(true); });
+      expect(mocks.send.mock.calls.map(([sub]) => sub.consulta === true)).toEqual([false]);
+      expect(JSON.stringify(mocks.send.mock.calls[0][0].payload)).not.toContain('mitjans_privats');
+      expect(fotosGeoDelCos).toHaveBeenCalledTimes(1);
+    });
+
+  test.each(CASOS)('sense la capacitat mitjans (cap promoció), %s privada tampoc no ix al Mur', async (_cas, extra) => {
+    mocks.capacitats = new Set();
+    mocks.promou.mockImplementation(async (ref) => ref);
+    mocks.send.mockImplementation(rebut);
+    mocks.notes = [nota(extra)];
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    const motiu = motiuPublicacioNoFeta('imatge');
+    let error;
+    await act(async () => { error = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.promou).not.toHaveBeenCalled();
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith(motiu, 'error');
+    expect(fotosGeoDelCos).not.toHaveBeenCalled();
+    /* Reintentar no la cola: la mateixa nota, una altra vegada, s'atura igual (cap estat de l'intent d'abans). */
+    let altra;
+    await act(async () => { altra = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+    expect(altra).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  test.each([['seguit d’un espai', 'Les fotos privades viuen a sdp-media://mitjans_privats/ i no es veuen.'],
+    ['entre cometes', 'El prefix "sdp-media://mitjans_privats/" no és cap foto.']])(
+    'el prefix nu escrit com a text (%s) no és cap imatge: es publica i no es promou res', async (_cas, text) => {
+      mocks.capacitats = new Set(['mitjans']);
+      mocks.promou.mockImplementation(async (ref) => ref);
+      mocks.send.mockImplementation(rebut);
+      mocks.notes = [nota({ content: `<p>${text}</p>` })];
+      const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+      await act(async () => { expect(await result.current.publishNote(mocks.notes[0])).toBe(true); });
+      expect(mocks.promou).not.toHaveBeenCalled();
+      expect(mocks.send.mock.calls.map(([sub]) => sub.consulta === true)).toEqual([false]);
+      expect(mocks.send.mock.calls[0][0].payload.content).toContain(text);
+      expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'error')).toEqual([]);
+    });
+
+  test('el veí ho llig en la seua llengua: el motiu de la imatge ix del diccionari en les 5 llengües', async () => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.promou.mockImplementation(async (ref) => ref);
+    mocks.send.mockImplementation(rebut);
+    const vistos = new Set();
+    expect(SUPPORTED_LANGUAGES.map(({ code }) => code)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      cleanup();
+      mocks.toast.mockClear();
+      mocks.traductor = createTranslator(code);
+      const esperat = mocks.traductor(...TEXTOS_VISIBILITAT_NOTA.errorPublicarImatge);
+      mocks.notes = [nota({ id: `${ID}-${code}`, coverImage: PRIVADA })];
+      const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+      let error;
+      await act(async () => { error = await result.current.publishNote(mocks.notes[0]).catch((e) => e); });
+      expect([code, error?.message]).toEqual([code, esperat]);
+      expect(mocks.toast).toHaveBeenCalledWith(esperat, 'error');
+      vistos.add(esperat);
+    }
+    expect(vistos.size).toBe(5);
+    expect(mocks.send).not.toHaveBeenCalled();
   });
 });
 

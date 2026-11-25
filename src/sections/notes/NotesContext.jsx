@@ -47,6 +47,14 @@ const netejaCampDeNota = (camp, valor) => ['mostrarAlMur', 'ocultarDelMur'].incl
 /* F03-UI · Si la nota té (o ha tingut sense retirar) una publicació al Mur. */
 const esNotaPublicada = (note) => Boolean(note?.isPublished || note?.publishedSubmissionId);
 
+/* PUB-D11-01 (v1.2.25) · Les refs del bucket privat (només les llig qui les ha pujades). Una capçalera o un
+   logotip és una imatge sencera: en porta una si conté el prefix. Dins del cos només compta el que la
+   promoció hi busca per a fer-ho públic (el prefix i almenys un caràcter de camí, el mateix patró):
+   el prefix nu escrit com a text no és cap imatge i no para la publicació. */
+const REFS_PRIVADES_DEL_COS = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
+const portaRefPrivada = (valor) => typeof valor === 'string' && valor.includes('sdp-media://mitjans_privats/');
+const cosPortaRefPrivada = (cos) => typeof cos === 'string' && cos.search(REFS_PRIVADES_DEL_COS) !== -1;
+
 function retiraPublicacionsDeLaNota(note) {
   if (!note?.id) return;
   const ids = new Set([String(note.id)]);
@@ -675,7 +683,7 @@ export function NotesProvider({ children }) {
           finalLogoDark = (await promoteToPublic(finalLogoDark, config)) || finalLogoDark;
         }
 
-        const imgRegex = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
+        const imgRegex = REFS_PRIVADES_DEL_COS;
         const matches = finalContent.match(imgRegex);
         if (matches) {
           // Eliminem duplicats
@@ -689,6 +697,18 @@ export function NotesProvider({ children }) {
           }
 
         }
+      }
+      /* PUB-D11-01 (v1.2.25) · promoteToPublic torna la ref privada tal qual, sense llançar, en sis camins
+         (storage.js · promouSenseMarc: camí no net, baixada fallida, un fitxer buit o de més de 5 MiB, un
+         format no sanejable com AVIF, i un duplicat no verificable o de bytes distints). Si en queda cap a la
+         capçalera, al cos o als logotips, no es publica: la resta del poble veuria la targeta sense la imatge
+         per sempre i l'autora, «publicada correctament». Va pel catch de CODI_PROMOCIO_PUBLICA (motiu
+         'imatge', baix), abans de la geo i d'obrir cap intent al diari. Fora del bloc de la capacitat
+         'mitjans': sense ella no hi ha promoció, i una ref privada que hi arribe (dades d'un altre backend)
+         tampoc no la veuria ningú més. El PDF privat dins del cos també s'hi atura, amb el motiu de la
+         imatge, que no li escau: un motiu propi o llevar-lo del cos públic és una costura pendent. */
+      if ([finalHeroImage, finalLogo, finalLogoDark].some(portaRefPrivada) || cosPortaRefPrivada(finalContent)) {
+        throw Object.assign(new Error('No s’ha pogut fer pública una imatge de la publicació.'), { codi: CODI_PROMOCIO_PUBLICA });
       }
 
       /* P1-64 (pla 261028_1526 §3.1.1; Mestre 261028) · L'índex del Mapa
@@ -955,7 +975,8 @@ export function NotesProvider({ children }) {
     /* Gauntlet R22 (sql-02) · La còpia pública d'una imatge no s'ha pogut pujar
        (promoteToPublic rebutja amb CODI_PROMOCIO_PUBLICA, p. ex. SDP-PURGA-004):
        no s'ha enviat res i mai una ref privada al Mur. Encara no s'ha obert cap
-       intent nou al diari (la promoció va abans), i no es toca. */
+       intent nou al diari (la promoció va abans), i no es toca. PUB-D11-01 · També
+       la guarda de després de la promoció, si en queda cap de privada. */
     if (operationRef.current === operation && error?.codi === CODI_PROMOCIO_PUBLICA) {
       const motiu = motiuPublicacioNoFeta('imatge', t);
       showToast(motiu, 'error');
