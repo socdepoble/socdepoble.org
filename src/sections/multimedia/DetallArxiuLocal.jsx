@@ -49,7 +49,7 @@ import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
 
 /* El que cal per a pintar cada vista (sense el text editable, que el llig l'editor). */
-async function carregaVista(font, ruta, vista, blob, urls) {
+async function carregaVista(font, ruta, vista, blob, urls, volum = null) {
   if (vista === 'imatge' || vista === 'svg') {
     const info = await inspeccionaImatgeLocal(font, ruta);
     if (vista === 'svg') {
@@ -64,7 +64,9 @@ async function carregaVista(font, ruta, vista, blob, urls) {
     return esBytesPdf(cap) ? { src: urls.visor(blob) } : { src: null, noPdf: true };
   }
   if (vista === 'codi') {
-    const llegit = await llegixTextLocal(font, ruta);
+    const llegit = typeof volum?.llegixText === 'function'
+      ? await volum.llegixText(ruta)
+      : await llegixTextLocal(font, ruta);
     return { text: llegit.text };
   }
   return {};
@@ -125,6 +127,7 @@ function EstatWeb({ t, el, exactes }) {
 export function DetallArxiuLocal({
   t,
   font,
+  volum = null,
   el,
   potEscriure = false,
   carpetes = [],
@@ -172,7 +175,7 @@ export function DetallArxiuLocal({
         return;
       }
       try {
-        const carregat = await carregaVista(font, ruta, vista, blob, urls);
+        const carregat = await carregaVista(font, ruta, vista, blob, urls, volum);
         if (actiu) setDades({ estat: 'llest', ...carregat });
       } catch (error) {
         if (actiu) setDades({ estat: 'error', error, ambBytes: true });
@@ -182,7 +185,7 @@ export function DetallArxiuLocal({
       actiu = false;
       urls.tanca();
     };
-  }, [font, ruta, vista]);
+  }, [font, volum, ruta, vista]);
 
   /* «Descarregar» (Gauntlet 261029, cicle 1) · font.fitxer és una instantània
      del disc (mida i data): quan l'editor desa (o un altre programa canvia
@@ -236,6 +239,7 @@ export function DetallArxiuLocal({
       <EditorTextLocal
         t={t}
         font={font}
+        volum={volum}
         el={el}
         potEscriure={potEscriure}
         blocDeNotes={blocDeNotes}
@@ -251,7 +255,7 @@ export function DetallArxiuLocal({
     cos = <Alerta to="avis">{errorText(dades.error)}</Alerta>;
   } else if (vista === 'imatge' && EXTENSIONS_RASTER_CONVERTIBLE.has(el.ext)) {
     cos = (
-      <LaboratoriWebpLocal t={t} font={font} el={el} src={dades.src} potEscriure={potEscriure} onMides={setMides} onFet={onFet} />
+      <LaboratoriWebpLocal t={t} font={font} volum={volum} el={el} src={dades.src} potEscriure={potEscriure} onMides={setMides} onFet={onFet} />
     );
   } else if (vista === 'imatge') {
     cos = dades.src ? (

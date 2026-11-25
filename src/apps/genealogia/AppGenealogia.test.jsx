@@ -84,15 +84,14 @@ describe('la closca', () => {
     expect(carrega).not.toHaveBeenCalled();
   });
 
-  test('la porta de l’avís: fins que no s’accepta, només l’avís; «Entesos» porta a l’entrevista', async () => {
+  test('la porta de l’avís (v1.2.25): banda integrada d’1 clic sense expulsar de la vista; «Entesos» l’accepta', async () => {
     munta('/app/genealogia/arbre');
     const entesos = await screen.findByRole('button', { name: 'Entesos' });
-    expect(ubicacio()).toBe('/app/genealogia/avis');
-    expect(screen.getByText(/no cerca als arxius ni parla amb cap IA/)).toBeTruthy();
-    expect(screen.getByText(/es queden en este dispositiu/)).toBeTruthy();
+    expect(ubicacio()).toBe('/app/genealogia/arbre');
+    expect(screen.getByText(/no ixen del teu dispositiu/)).toBeTruthy();
     fireEvent.click(entesos);
-    await waitFor(() => expect(ubicacio()).toBe('/app/genealogia/entrevista'));
-    expect(await screen.findByRole('heading', { level: 3, name: /malnom de la vostra casa/ })).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Entesos' })).toBeNull());
+    expect(ubicacio()).toBe('/app/genealogia/arbre');
   });
 
   test('un paràmetre que no és un UUID ni un arxiu conegut no obri res', async () => {

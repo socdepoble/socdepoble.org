@@ -43,14 +43,19 @@ export const RUTES_AJUSTOS = Object.freeze({
   wiki: '/wikidepoble',
   legal: '/legal',
   versions: '/versions',
-  multimedia: '/xat?vista=multimedia'
+  multimedia: '/xat?vista=multimedia',
+  destacats: '/xat?vista=destacats'
 });
 
 /** La pàgina de dalt de la pila. */
 export const ARREL_AJUSTOS = 'arrel';
 
-/** Onada R28 (Lot C3) · Les pàgines especials de la còpia i l'acció que pinten. */
-export const ESPECIALS_COPIA = Object.freeze({ 'copia-desa': 'desa', 'copia-comprova': 'comprova' });
+/** Onada R28 (Lot C3) + v1.2.25 (Lot G1) · Les pàgines especials de la còpia i l'acció que pinten. */
+export const ESPECIALS_COPIA = Object.freeze({
+  'copia-desa': 'desa',
+  'copia-comprova': 'comprova',
+  'copia-restaura': 'restaura'
+});
 
 /* La llengua pròpia primer i la resta en l'ordre de la configuració, com a
    /traduccions (TranslationsSection). El nom de cada llengua es diu en la
@@ -104,7 +109,7 @@ export const PAGINES_AJUSTOS = Object.freeze({
     grups: Object.freeze([
       Object.freeze({ id: 'personal', files: Object.freeze([
         fila('preferits', 'pagina', 'section.xat.filtres.preferits', 'Preferits', { icona: 'Heart', pagina: 'preferits' }),
-        fila('destacats', 'pagina', 'section.xat.rail.destacats', 'Destacats', { icona: 'Star', pagina: 'destacats' })
+        fila('destacats', 'ruta', 'section.xat.rail.destacats', 'Destacats', { icona: 'Star', ruta: RUTES_AJUSTOS.destacats })
       ]) }),
       Object.freeze({ id: 'historial', files: Object.freeze([
         fila('historial', 'pagina', 'section.xat.ajustos.historial', 'Historial del xat', { icona: 'RefreshCw', pagina: 'historial' })
@@ -131,13 +136,6 @@ export const PAGINES_AJUSTOS = Object.freeze({
     id: 'preferits',
     titol: ['section.xat.filtres.preferits', 'Preferits'],
     especial: 'preferits'
-  }),
-
-  /* El MATEIX text que la vista Destacats del rail (textosDeVista). */
-  destacats: Object.freeze({
-    id: 'destacats',
-    titol: ['section.xat.rail.destacats', 'Destacats'],
-    construccio: Object.freeze({ vista: 'destacats' })
   }),
 
   /* Sense sincronització entre dispositius: el text de la referència no s'aplica. */
@@ -205,7 +203,8 @@ export const PAGINES_AJUSTOS = Object.freeze({
         nota: ['section.xat.copia.nota', 'Una còpia xifrada amb una contrasenya que tries tu, en un arxiu .sdpbackup: hi van les converses i els missatges que este dispositiu ha carregat, sense fotos, àudios ni vídeos. Restaurar-la dins de l’app encara no és possible.'],
         files: Object.freeze([
           fila('copia-desa', 'pagina', 'section.xat.copia.desa.titol', 'Desa una còpia xifrada', { pagina: 'copia-desa' }),
-          fila('copia-comprova', 'pagina', 'section.xat.copia.comprova.titol', 'Comprova una còpia', { pagina: 'copia-comprova' })
+          fila('copia-comprova', 'pagina', 'section.xat.copia.comprova.titol', 'Comprova una còpia', { pagina: 'copia-comprova' }),
+          fila('copia-restaura', 'pagina', null, 'Restaura una còpia', { pagina: 'copia-restaura', clauV1225: 'copia.restaura.fila', nomesAmbRestauracio: true })
         ])
       })
     ])
@@ -219,6 +218,12 @@ export const PAGINES_AJUSTOS = Object.freeze({
     id: 'copia-comprova',
     titol: ['section.xat.copia.comprova.titol', 'Comprova una còpia'],
     especial: 'copia-comprova'
+  }),
+  'copia-restaura': Object.freeze({
+    id: 'copia-restaura',
+    titol: [null, 'Restaura una còpia'],
+    clauV1225: 'copia.restaura.fila',
+    especial: 'copia-restaura'
   }),
 
   /* Una sola pàgina d'Aparença, dos portes (l'arrel i Xats): el tema, el
@@ -380,7 +385,7 @@ const textDeCercaDeSeccio = (grup, t) => [grup.capcalera, grup.paraules]
  * (l'Aparença de l'arrel i la de Xats) donen un sol resultat: el més curt.
  * `ambSessio` false lleva les files que només tenen sentit amb sessió.
  */
-export function cercaAjustos(terme, { t = senseTraduir, ambSessio = true, pagines = PAGINES_AJUSTOS } = {}) {
+export function cercaAjustos(terme, { t = senseTraduir, ambSessio = true, permetRestaurar = false, pagines = PAGINES_AJUSTOS } = {}) {
   const llistaFitxes = fitxesDeConsulta(terme);
   if (!llistaFitxes.length) return null;
   const camins = caminsAjustos(pagines);
@@ -399,6 +404,7 @@ export function cercaAjustos(terme, { t = senseTraduir, ambSessio = true, pagine
       }
       for (const filaAjust of grup.files) {
         if (filaAjust.nomesAmbSessio && !ambSessio) continue;
+        if (filaAjust.nomesAmbRestauracio && !permetRestaurar) continue;
         if (!casa(etiquetaDeFila(filaAjust, t))) continue;
         if (filaAjust.tipus === 'pagina') {
           if (destins.has(filaAjust.pagina)) continue;

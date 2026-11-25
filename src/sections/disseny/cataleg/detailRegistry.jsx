@@ -147,4 +147,13 @@ export const CATALOG_DETAIL_LOADERS = {
   'atles-2d/xarxes-mon': lazyRoute(() => import('./detalls/EspecimenAtles2dXarxesMon.jsx')),
   'atles-2d/mapa-entitats': lazyRoute(() => import('./detalls/EspecimenAtles2dMapaEntitats.jsx')),
   'atles-2d/motor-estudis': lazyRoute(() => import('./detalls/EspecimenAtles2dMotorEstudis.jsx')),
+  /* IDEA-354 (Onada v1.2.25 · Lot G3) · Registre de canvis atòmic en 3 columnes (+0 B a l'arrencada). */
+  'registre-de-canvis/conjunt': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisConjunt.jsx')),
+  'registre-de-canvis/v1-2-25': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1225.jsx')),
+  'registre-de-canvis/v1-2-24': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1224.jsx')),
+  'registre-de-canvis/v1-2-23': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1223.jsx')),
+  'registre-de-canvis/v1-2-22': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1222.jsx')),
+  'registre-de-canvis/v1-2-21': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1221.jsx')),
+  'registre-de-canvis/v1-2-20': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisV1220.jsx')),
+  'registre-de-canvis/historic': lazyRoute(() => import('./detalls/EspecimenRegistreCanvisHistoric.jsx')),
 };

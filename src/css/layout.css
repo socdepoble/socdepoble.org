@@ -1216,6 +1216,25 @@ nav.mobile-nav { display: none; }
   @media (hover: hover) and (pointer: fine) {
     nav.app-sidebar .nav-item--desplegable:hover { color: var(--sdp-crom-text); }
   }
+
+  /* IDEA-354 (Onada v1.2.25 · Lot G3 / G9a) · Número de versió clicable al peu discret de La Roca.
+     GEM-08 · La guarda del hover va ací, com la dels desplegables: darrere de la portada
+     buida, cap @media (barresScroll.capes.test.js). Cap regla de la capa d'ací fins a
+     on era abans toca .nav-item: la cascada no canvia. */
+  nav.app-sidebar .nav-item--versio-peu {
+    margin-top: auto;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-crom-text-secundari);
+    font-family: var(--sdp-font-mono);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    nav.app-sidebar .nav-item--versio-peu:hover {
+      color: var(--sdp-crom-text);
+    }
+  }
+  nav.app-sidebar .nav-item--versio-peu:focus-visible {
+    color: var(--sdp-crom-text);
+  }
 }
 
 .hero-image--buit { background: transparent; padding: var(--sdp-space-8) 0; }

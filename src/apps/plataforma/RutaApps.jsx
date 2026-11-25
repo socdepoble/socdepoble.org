@@ -25,6 +25,7 @@
 import { Suspense, useRef } from 'react';
 import { useFullDiferit } from '../../config/fullDiferit.js';
 import cssAppsPlataforma from '../../css/diferit-apps-plataforma.css?inline';
+import cssImpressioApps from '../../css/diferit-impressio-apps.css?inline';
 import ProveidorProjeccionsCataleg from '../../app/contexts/ProveidorProjeccionsCataleg.jsx';
 import { Navigate, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -80,6 +81,9 @@ function GuardaPermis({ permis, children }) {
 function ContenidorApp({ manifest, entrada }) {
   const contenidorAppsRef = useRef(null);
   useFullDiferit(contenidorAppsRef, 'apps-plataforma', cssAppsPlataforma);
+  /* CR-01 (Gauntlet de la integració v1.2.25) · El tiquet tèrmic d'El Bar i l'arbre A4 de Genealogia (G9): el seu full
+     ja no viatja a l'arrencada dins de diferit-apps-plataforma.css (BarraApp.jsx), i s'adopta ací, darrere d'eixe. */
+  useFullDiferit(contenidorAppsRef, 'impressio-apps', cssImpressioApps);
   const registre = useRegistre();
   const { search } = useLocation();
   /* Fase D (261020, tasca 4.1) · L1 · Els títols seguixen la llengua del text, no la demanada. */

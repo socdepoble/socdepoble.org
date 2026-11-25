@@ -2,6 +2,7 @@ import { compressImage } from '../../utils/imageUtils.js';
 import { ERRORS_ADJUNT_XAT, MAXIM_ADJUNT_XAT, MAXIM_BLOB_ADJUNT, MAX_VIDEO_ENTRADA_BYTES, MAX_VIDEO_MS, normalitzaUbicacioXat, errorAdjuntXat } from '../../data/xatMultimedia.js';
 import { inspeccionaUbicacioMitja, senseUbicacioVideo as netejaUbicacioVideo } from '../../utils/ubicacioMitjans.js';
 import { comprimeixVideoClient } from '../../utils/compressioVideoClient.js';
+import { textXatV1225 } from './i18nVistesXatV1225.js';
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-7) · Primer AAC en MP4: Safari,
    iOS, Chrome i Firefox el reproduïxen, i Chrome el grava des que ho admet
    (abans guanyava el WebM, sense durada ni cerca a Chromium). El WebM/Opus
@@ -60,10 +61,19 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
   obrir: 'section.xat.adjunts.error.obrir'
 });
 
-/** El text per a la persona d'una fallada dels adjunts, en la llengua de `t`. Sense codi conegut, el missatge o `perDefecte`. */
-export function textDErrorAdjunt(error, t, perDefecte = '') {
-  const code = String(error?.code ?? '');
+/* Onada v1.2.25 (Lot G6 · Costura C1+G1) · Codis d'error de documents en 5 llengües
+   sense alterar la paritat exacta de CLAUS_ERROR_ADJUNT amb ERRORS_ADJUNT_XAT. */
+const ERRORS_DOCUMENTS_V1225 = Object.freeze({
+  'document-format': 'documents.errorFormat',
+  'document-mida': 'documents.errorMida',
+  'document-contingut': 'documents.errorContingut',
+});
+
+/** El text per a la persona d'una fallada dels adjunts, en la llengua de `t` o `idioma`. Sense codi conegut, el missatge o `perDefecte`. */
+export function textDErrorAdjunt(error, t, perDefecte = '', idioma = 'ca') {
+  const code = String(error?.code ?? error?.codi ?? '');
   if (Object.hasOwn(CLAUS_ERROR_ADJUNT, code)) return t(CLAUS_ERROR_ADJUNT[code], ERRORS_ADJUNT_XAT[code]);
+  if (Object.hasOwn(ERRORS_DOCUMENTS_V1225, code)) return textXatV1225(idioma, ERRORS_DOCUMENTS_V1225[code]);
   return error?.message || perDefecte;
 }
 
@@ -178,8 +188,98 @@ export const esCapturaDePantalla = (fitxer) => fitxer?.type === 'image/png';
 const MIME_PER_EXTENSIO = Object.freeze({
   heic: 'image/heic', heif: 'image/heif', jpg: 'image/jpeg', jpeg: 'image/jpeg',
   png: 'image/png', webp: 'image/webp', avif: 'image/avif', gif: 'image/gif',
-  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm'
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
+  pdf: 'application/pdf',
+  csv: 'text/csv',
+  txt: 'text/plain',
+  odt: 'application/vnd.oasis.opendocument.text',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 });
+
+/* v1.2.25 · Lot G1/G9 · Suport d'adjunts documentals (PDF, CSV, ODT, DOCX, TXT, màx. 10 MB decimals · C1). */
+export const LIMIT_DOCUMENT_BYTES = 10_000_000;
+export const EXTENSIONS_DOCUMENT = Object.freeze(['pdf', 'csv', 'txt', 'odt', 'docx']);
+export const MIMES_DOCUMENT = Object.freeze({
+  pdf: 'application/pdf',
+  csv: 'text/csv',
+  txt: 'text/plain',
+  odt: 'application/vnd.oasis.opendocument.text',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+});
+const MIMES_DOCUMENT_VALIDS = new Set(Object.values(MIMES_DOCUMENT));
+
+function extensioDeNom(nom) {
+  return /\.([^.]+)$/.exec(String(nom || ''))?.[1]?.toLowerCase() || '';
+}
+
+function sanititzaNomDocument(nom, extensio) {
+  const base = String(nom || '')
+    .replace(/[/\\]+/g, ' ')
+    .replace(/[\u0000-\u001f\u007f]+/g, '')
+    .trim();
+  if (base) return base.slice(0, 140);
+  return extensio ? `document.${extensio}` : 'document';
+}
+
+export function esDocumentPermes(fitxer) {
+  if (!(fitxer instanceof Blob)) return false;
+  const ext = extensioDeNom(fitxer.name);
+  if (ext && !EXTENSIONS_DOCUMENT.includes(ext)) return false;
+  if (EXTENSIONS_DOCUMENT.includes(ext)) return true;
+  return MIMES_DOCUMENT_VALIDS.has(String(fitxer.type || '').toLowerCase());
+}
+
+async function comprovaSignaturaDocument(fitxer, ext) {
+  if (typeof fitxer.slice !== 'function') return true;
+  const cap = fitxer.slice(0, 8);
+  if (typeof cap.arrayBuffer !== 'function') return true;
+  const buf = new Uint8Array(await cap.arrayBuffer());
+  if (!buf.length) return false;
+  if (ext === 'pdf') {
+    return buf.length >= 5 && buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46 && buf[4] === 0x2d;
+  }
+  if (ext === 'odt' || ext === 'docx') {
+    return buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b && (buf[2] === 0x03 || buf[2] === 0x05 || buf[2] === 0x07);
+  }
+  // TXT / CSV: rebutja bytes nuls binaris al començament
+  return !buf.includes(0x00);
+}
+
+/** Valida i prepara un document local (PDF, CSV, ODT, DOCX o TXT, màx. 10 MB decimals). */
+export async function preparaDocument(fitxer, { signal } = {}) {
+  if (!(fitxer instanceof Blob) || !fitxer.size) throw errorAdjuntXat('buit');
+  if (signal?.aborted) throw abortat();
+  const extDirecta = extensioDeNom(fitxer.name);
+  if (extDirecta && !EXTENSIONS_DOCUMENT.includes(extDirecta)) {
+    throw Object.assign(errorAdjuntXat('format'), { code: 'document-format' });
+  }
+  const mimeNet = String(fitxer.type || '').toLowerCase();
+  const extPerMime = Object.entries(MIMES_DOCUMENT).find(([, m]) => m === mimeNet)?.[0] || '';
+  const ext = EXTENSIONS_DOCUMENT.includes(extDirecta) ? extDirecta : extPerMime;
+  if (!ext || !EXTENSIONS_DOCUMENT.includes(ext)) {
+    throw Object.assign(errorAdjuntXat('format'), { code: 'document-format' });
+  }
+  if (fitxer.size > LIMIT_DOCUMENT_BYTES) {
+    throw Object.assign(errorAdjuntXat('video-mida'), { code: 'document-mida' });
+  }
+  const valid = await comprovaSignaturaDocument(fitxer, ext);
+  if (signal?.aborted) throw abortat();
+  if (!valid) {
+    throw Object.assign(errorAdjuntXat('format'), { code: 'document-contingut' });
+  }
+  const mime = MIMES_DOCUMENT[ext];
+  const blobFinal = fitxer.type === mime ? fitxer : fitxer.slice(0, fitxer.size, mime);
+  return {
+    id: crypto.randomUUID(),
+    tipus: 'document',
+    fitxer: blobFinal,
+    nom: sanititzaNomDocument(fitxer.name, ext),
+    extensio: ext,
+    mime,
+    bytes: blobFinal.size,
+    duradaMs: null
+  };
+}
 function ambMimeLocal(fitxer) {
   const extensio = /\.([^.]+)$/.exec(fitxer.name || '')?.[1].toLowerCase();
   const inferit = Object.hasOwn(MIME_PER_EXTENSIO, extensio) ? MIME_PER_EXTENSIO[extensio] : '';
@@ -270,7 +370,7 @@ const imatgeRecodificada = async (fitxer, opcions) => (await imatgeAmbLloc(fitxe
  * el navegador no pot netejar ix tal com és, i la interfície ho diu abans de publicar. Només amb
  * conservaUbicacio: false es neteja, i si no es pot netejar no ix (l'avís de cada camí). */
 export async function preparaAdjunt(fitxer, {
-  signal, conservaUbicacio = true, onProgresCompressio,
+  signal, conservaUbicacio = true, onProgresCompressio, permetDocuments = false,
   comprimeix = compressImage, lligDurada = duradaLocal, netejaVideo = senseUbicacioVideo,
   inspecciona = inspeccionaUbicacioMitja, comprimeixVideo = comprimeixVideoClient,
 } = {}) {
@@ -279,7 +379,10 @@ export async function preparaAdjunt(fitxer, {
   fitxer = ambMimeLocal(fitxer);
   const imatge = /^image\/(jpeg|png|webp|avif|gif|heic|heif)$/.test(fitxer.type);
   const video = /^video\/(mp4|webm|quicktime)$/.test(fitxer.type);
-  if (!imatge && !video) throw errorAdjuntXat('format');
+  if (!imatge && !video) {
+    if (permetDocuments && esDocumentPermes(fitxer)) return preparaDocument(fitxer, { signal });
+    throw errorAdjuntXat('format');
+  }
   if (video && fitxer.size > MAX_VIDEO_ENTRADA_BYTES) throw errorAdjuntXat('video-mida-entrada');
   const inspeccio = await inspecciona(fitxer, { signal });
   if (signal?.aborted) throw abortat();

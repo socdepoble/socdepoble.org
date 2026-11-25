@@ -1,0 +1,115 @@
+/* ============================================================================
+   REGISTRE DE CANVIS ATÒMIC A /disseny (Onada v1.2.25 · Lot G3 · IDEA-354)
+   Full diferit (?inline), adoptat per RegistreCanvisDisseny.jsx (+0 B al nucli).
+   Inspirat en la captura de referència 261125_0219 (3 columnes + acordions
+   Millores/Correccions + Expandir/Plegar tot), 100 % tokens Pedra Seca 2.0.
+   ============================================================================ */
+@layer components {
+  .sdp-rc-contenidor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-5);
+  }
+
+  .sdp-rc-barra-accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-rc-versio-targeta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-rc-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+  }
+
+  .sdp-rc-versio-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-rc-resum {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: 1.6;
+  }
+
+  .sdp-rc-detalls {
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    overflow: hidden;
+  }
+
+  .sdp-rc-sumari {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .sdp-rc-sumari::-webkit-details-marker {
+    display: none;
+  }
+
+  .sdp-rc-sumari:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
+  .sdp-rc-sumari__indicador {
+    flex: none;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  .sdp-rc-llista {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-5) var(--sdp-space-4);
+    border-top: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .sdp-rc-llista__item {
+    color: var(--sdp-text-cos);
+    line-height: 1.55;
+  }
+
+  .sdp-rc-llista__item + .sdp-rc-llista__item {
+    margin-block-start: var(--sdp-space-2);
+  }
+
+  .sdp-rc-nav-versions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding-top: var(--sdp-space-3);
+    border-top: 1px solid var(--sdp-vora);
+  }
+}

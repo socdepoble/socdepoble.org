@@ -373,17 +373,19 @@ test('Compte amb sessió: el correu com a valor i «Tanca la sessió» en roig, 
   await waitFor(() => expect(within(full()).queryByText('Encara hi ha canvis sense desar')).toBeNull());
 });
 
-test('una pàgina sense dades diu «En construcció» i què hi haurà; Destacats, el mateix text que la vista del rail', () => {
+test('una pàgina sense dades diu «En construcció» amb EstatBuit i Alerta; Destacats porta a /xat?vista=destacats i tanca el full', () => {
   pinta();
   obriDesDelPeu();
   fireEvent.click(fila('Notificacions'));
   const seccio = within(full()).getByRole('region', { name: 'En construcció' });
+  expect(seccio.querySelector('.sdp-buit')).toBeTruthy();
+  expect(seccio.querySelector('.sdp-alerta')).toBeTruthy();
   expect(seccio.textContent).toContain('missatges nous');
   expect(seccio.textContent).toContain('Encara no està disponible');
   fireEvent.click(within(full()).getByRole('button', { name: 'Torna a Ajustos' }));
   fireEvent.click(fila('Destacats'));
-  expect(within(full()).getByRole('region', { name: 'En construcció' }).textContent)
-    .toContain("Ací hi haurà els missatges que marques amb l'estrela");
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=destacats');
+  expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
 });
 
 /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · «Multimèdia,

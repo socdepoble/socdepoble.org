@@ -20,6 +20,7 @@ const regles = (css) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
 const RESERVA = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px))';
 const RESERVA_FOCUS = 'calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4))';
 const ABAST = ':where(.sdp-root.is-compact) .sdp-workspace--universal';
+const ABAST_ANULLACIO_ML02 = ':where(.sdp-root.is-compact) .sdp-app-contenidor .sdp-workspace--universal';
 const SCROLLERS = ['.sdp-workspace-rail', '.sdp-workspace-column__body', '.sdp-workspace-detail'];
 /* Correcció dels verificadors (261004) · L'abast és l'estructura pròpia de
    la closca, amb combinadors de fill: un descendent qualsevol també
@@ -55,7 +56,15 @@ describe('la reserva de la barra mòbil als scrollers del Workspace', () => {
 
   test('cap regla més no usa l’abast del Workspace, i cap reserva als scrollers en queda fora', () => {
     const totes = regles(modules);
-    expect(totes.filter((r) => r.selectors.some((s) => s.includes('sdp-workspace--universal')))).toHaveLength(1);
+    /* ML-02 = RR-D12-02 (v1.2.25 · Lot G8 · GEM-28) · Exactament dues regles usen l'abast:
+       la reserva de sempre i la seua anul·lació dins de .sdp-app-contenidor (les micro-apps ja
+       la tenen a .app-main__content). La segona, amb els mateixos quatre scrollers, selector per
+       selector, i sense la reserva. Una tercera regla torna a fallar. */
+    const ambAbast = totes.filter((r) => r.selectors.some((s) => s.includes('sdp-workspace--universal')));
+    expect(ambAbast).toHaveLength(2);
+    expect(ambAbast[0].selectors).toEqual(SELECTORS);
+    expect(ambAbast[1].selectors).toEqual(SELECTORS.map((s) => s.replace(ABAST, ABAST_ANULLACIO_ML02)));
+    expect(ambAbast[1].cos).toBe('padding-bottom: 0; scroll-padding-bottom: var(--sdp-space-4);');
     /* Una reserva sobre els scrollers sense l'abast cauria també al Xat. */
     const senseAbast = totes.filter((r) => r.cos.includes('--sdp-alt-nav-mobil')
       && r.selectors.some((s) => SCROLLERS.some((sc) => s.endsWith(sc)) && !s.startsWith(ABAST)));

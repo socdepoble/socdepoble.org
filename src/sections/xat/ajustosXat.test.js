@@ -74,12 +74,15 @@ describe('l’arbre', () => {
        no hi és: derogat per l'ordre del Mestre del 261004 (prompt
        261004_0515), la seua fila porta a la vista operativa del rail. */
     const enConstruccio = Object.values(PAGINES_AJUSTOS).filter((p) => p.construccio).map((p) => p.id).sort();
-    expect(enConstruccio).toEqual(['dades', 'destacats', 'historial', 'notificacions', 'temporals']);
+    expect(enConstruccio).toEqual(['dades', 'historial', 'notificacions', 'temporals']);
     expect(paginaAjustos('multimedia')).toBeNull();
+    expect(paginaAjustos('destacats')).toBeNull();
     expect(filesDePagina(paginaAjustos('xats')).find((f) => f.id === 'xats-multimedia'))
       .toMatchObject({ tipus: 'ruta', ruta: '/xat?vista=multimedia', clau: 'section.xat.control.multimedia.titol' });
-    /* Destacats diu el mateix que la vista del rail (textosDeVista). */
-    expect(paginaAjustos('destacats').construccio).toEqual({ vista: 'destacats' });
+    /* v1.2.25 · Lot G1 · Destacats ja és operativa al rail (/xat?vista=destacats). */
+    expect(filesDePagina(paginaAjustos('arrel')).find((f) => f.id === 'destacats'))
+      .toMatchObject({ tipus: 'ruta', ruta: '/xat?vista=destacats', clau: 'section.xat.rail.destacats' });
+    expect(paginaAjustos('copia-restaura')).toMatchObject({ especial: 'copia-restaura' });
   });
 
   test('les opcions: el tema de theme.js, les cinc llengües (la pròpia primer) i els tres presets', () => {

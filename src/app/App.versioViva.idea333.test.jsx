@@ -28,7 +28,15 @@ vi.mock('../sections/notes/GlobalSaveManager.js', async (importOriginal) => ({
 
 const LLENGUES = SUPPORTED_LANGUAGES.map((llengua) => llengua.code);
 const VERSIONS = SECTIONS.find((seccio) => seccio.id === 'versions');
-const rotolEsperat = (llengua) => `${createTranslator(llengua)('nav.versions')} · v${VERSIO_DE_PROVA}`;
+const RUTA_REGISTRE = '/disseny?categoria=registre-de-canvis&item=registre-de-canvis-conjunt';
+const ETIQUETES_REGISTRE = Object.freeze({
+  ca: 'Registre de canvis',
+  es: 'Registro de cambios',
+  en: 'Changelog',
+  eu: 'Aldaketen erregistroa',
+  gl: 'Rexistro de cambios'
+});
+const rotolEsperat = (llengua) => `${ETIQUETES_REGISTRE[llengua]} · v${VERSIO_DE_PROVA}`;
 
 const consulta = (media) => ({
   matches: false, media, onchange: null,
@@ -98,8 +106,9 @@ async function munta(ruta, { width, language }) {
   await act(async () => { await carregaDiccionari(language); });
 }
 
-/* «Sistema» està plegat fora de les seues rutes (l'enllaç hi és, però dins d'un grup hidden): es busca per href. */
-const enllacDeVersions = (arrel) => arrel.querySelector('a.nav-item[href="/versions"]');
+/* IDEA-354 (Onada v1.2.25 · Lot G3) · «Versions» es retira del desplegable «Sistema» i el seu lloc
+   passa a ser el número de versió clicable al peu discret de la barra lateral, enllaçant al Registre de canvis de /disseny. */
+const enllacDeVersions = (arrel) => arrel.querySelector('[data-testid="barra-versio-peu"]');
 
 describe('IDEA-333 · el rètol (sections.js, rotolDeLaSeccio)', () => {
   test('només /versions porta versioViva, i la ruta continua sent /versions', () => {
@@ -126,17 +135,18 @@ describe('IDEA-333 · el rètol (sections.js, rotolDeLaSeccio)', () => {
   });
 });
 
-describe('IDEA-333 · la barra lateral en les 5 llengües', () => {
-  test.each(LLENGUES)('%s · pantalla gran (1280 px): el rètol i el nom porten la versió viva; plegada, també el title del rail', async (llengua) => {
+describe('IDEA-333 + IDEA-354 · la barra lateral en les 5 llengües', () => {
+  test.each(LLENGUES)('%s · pantalla gran (1280 px): el peu porta v{versio} i cap «Versions» dins Sistema; plegada, el title del rail', async (llengua) => {
     await munta('/mur', { width: 1280, language: llengua });
     const t = createTranslator(llengua);
     const barra = screen.getByRole('navigation', { name: t('nav.navegacioPrincipal') });
+    expect(barra.querySelector('#app-sidebar-sistema a.nav-item[href="/versions"]'), llengua).toBeNull();
     const enllac = enllacDeVersions(barra);
     expect(enllac, llengua).toBeTruthy();
-    expect(enllac.getAttribute('href')).toBe('/versions');
-    expect(enllac.querySelector('.nav-item__text').textContent).toBe(rotolEsperat(llengua));
+    expect(enllac.getAttribute('href')).toBe(RUTA_REGISTRE);
+    expect(enllac.querySelector('.nav-item__text').textContent).toBe(`v${VERSIO_DE_PROVA}`);
     expect(enllac.getAttribute('aria-label')).toBe(rotolEsperat(llengua));
-    // Oberta, el rètol ja es veu: cap title.
+    // Oberta, el número ja es veu: cap title.
     expect(enllac.hasAttribute('title')).toBe(false);
 
     fireEvent.click(within(barra).getByRole('button', { name: t('nav.plegaBarra') }));
@@ -153,23 +163,23 @@ describe('IDEA-333 · la barra lateral en les 5 llengües', () => {
     }
   }, 30000);
 
-  test.each(LLENGUES)('%s · compacte (360 px): el calaix porta el mateix rètol, sense title', async (llengua) => {
+  test.each(LLENGUES)('%s · compacte (360 px): el calaix porta el peu clicable amb v{versio}, sense title', async (llengua) => {
     await munta('/mur', { width: 360, language: llengua });
     const t = createTranslator(llengua);
     fireEvent.click(within(document.querySelector('header.bar-black')).getByRole('button', { name: t('nav.obrirMenu') }));
     const calaix = document.querySelector('dialog.sdp-dialeg-sidebar');
     await waitFor(() => expect(calaix.open).toBe(true));
     const enllac = enllacDeVersions(calaix);
-    expect(enllac.querySelector('.nav-item__text').textContent).toBe(rotolEsperat(llengua));
+    expect(enllac.querySelector('.nav-item__text').textContent).toBe(`v${VERSIO_DE_PROVA}`);
+    expect(enllac.getAttribute('aria-label')).toBe(rotolEsperat(llengua));
     expect(enllac.hasAttribute('title')).toBe(false);
   }, 30000);
 
-  test('la ruta no canvia: l’entrada porta a /versions i s’hi encén', async () => {
+  test('IDEA-354 · prémer el peu de versió porta a /disseny?categoria=registre-de-canvis', async () => {
     await munta('/mur', { width: 1280, language: 'ca' });
     const barra = screen.getByRole('navigation', { name: 'Navegació principal' });
     fireEvent.click(enllacDeVersions(barra));
-    await waitFor(() => expect(window.location.pathname).toBe('/versions'));
-    await waitFor(() => expect(enllacDeVersions(barra).getAttribute('aria-current')).toBe('page'));
-    expect(within(barra).getByRole('link', { name: `Versions · v${VERSIO_DE_PROVA}` })).toBe(enllacDeVersions(barra));
+    await waitFor(() => expect(window.location.pathname).toBe('/disseny'));
+    await waitFor(() => expect(window.location.search).toContain('categoria=registre-de-canvis'));
   }, 30000);
 });

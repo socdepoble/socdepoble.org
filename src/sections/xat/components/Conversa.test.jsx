@@ -368,6 +368,28 @@ describe('respostes', () => {
     expect(item('5').textContent).not.toContain('Secret vell');
   });
 
+  /* XAT-B01 (v1.2.25 · Lot G6, K-G6-PENDENT) · Amb onCancelaEnviament (XatSection hi passa
+     XatContext.cancelaEnviament), un pendent propi es cancel·la: «Cancel·la l’enviament» en lloc
+     d'«Elimina», i el clic va directe, sense el diàleg d'eliminar. Un fallit continua amb «Elimina».
+     Sense la prop, la prova d'ací dalt fixa el camí de sempre. */
+  test('amb onCancelaEnviament, el pendent es cancel·la sense el diàleg d’eliminar; el fallit, «Elimina»', () => {
+    const onCancelaEnviament = vi.fn(() => ({ estat: 'local', filId: FIL.id, missatgeId: '2' }));
+    const pendent = { ...m('2', null, 'me'), estatEnviament: 'pendent' };
+    pinta({ onCancelaEnviament, messages: [m('1', 1, 'other'), pendent, { ...m('3', null, 'me'), estatEnviament: 'error' }] });
+    const noms = (id) => {
+      const items = within(menuDe(id)).getAllByRole('menuitem').map((e) => e.textContent);
+      fireEvent.click(within(item(id)).getByRole('button', { name: 'Opcions del missatge' }));
+      return items;
+    };
+    expect(noms('2')).toEqual(['Copia el text', 'Cancel·la l’enviament', 'Selecciona missatges']);
+    expect(noms('3')).toEqual(['Copia el text', 'Elimina', 'Selecciona missatges']);
+    fireEvent.click(within(menuDe('2')).getByRole('menuitem', { name: 'Cancel·la l’enviament' }));
+    expect(onCancelaEnviament).toHaveBeenCalledTimes(1);
+    expect(onCancelaEnviament.mock.calls[0][0]).toMatchObject({ id: '2', estatEnviament: 'pendent' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
   /* R32.7 · Sense permís d'escriure, cap opció que escriga al fil (ni
      «Respon», ni «Respon en privat», ni «Reacciona», ni «Fixa»); les opcions
      personals (Destaca, Reenvia, Copia el text) i la gestió local, sí. En un

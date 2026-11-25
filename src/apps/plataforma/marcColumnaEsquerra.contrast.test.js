@@ -117,8 +117,10 @@ describe('R30 · CONTRAST-MARC-01 · text nu del cos de MarcColumna en la column
       for (const part of parts) expect(part.endsWith(':not(:is(.sdp-alerta, dialog) *)')).toBe(true);
     }
     expect(DEL_COS[0].selector).toContain(':is(p:not([class]), .sdp-camp__etiqueta)');
-    /* Gauntlet v1.2.15 · i la línia d'EstatBuit breu (p.sdp-buit), que al Bar quedava a 1,23:1. */
-    expect(DEL_COS[1].selector).toContain(':is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit)');
+    /* Gauntlet v1.2.15 · i la línia d'EstatBuit breu (p.sdp-buit), que al Bar quedava a 1,23:1.
+       Onada v1.2.25 (Lot G5 · RR-D12-01 · GEM-01) · i .sdp-camp__ajuda (l'avís de frase de pas a
+       Genealogia), que també quedava a 1,23:1. Ampliació exacta de la llista: un quint membre torna a fallar. */
+    expect(DEL_COS[1].selector).toContain(':is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit, .sdp-camp__ajuda)');
   });
 
   test('les regles arriben on es pinta MarcColumna: el marc adopta el full diferit a la seua arrel', () => {

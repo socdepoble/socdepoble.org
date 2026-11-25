@@ -15,12 +15,13 @@
  *     ix sense adjunts, com sempre.
  */
 import { useEffect, useId, useRef, useState } from 'react';
-import { Camera, ImagePlus, MapPin, Mic, RefreshCw, Send, Square, X } from 'lucide-react';
+import { Camera, FileText, ImagePlus, MapPin, Mic, RefreshCw, Send, Square, X } from 'lucide-react';
 import { descartaAdjuntXat, quotaXat, teCapacitat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 import { getRuntimePolicy } from '../../../config/runtimePolicy.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import { MAX_VEU_MS, amagaUbicacioAdjunt, gravaVeu, mimeDeGravacio, preparaAdjunt, textDErrorAdjunt } from '../adjuntLocal.js';
+import { normalitzaLlenguaXat, textXatV1225 } from '../i18nVistesXatV1225.js';
 import { PrevisualitzacioAdjunt, callaVeuActiva, tempsDeVeu, traductorAdjunt } from './AdjuntXat.jsx';
 import { ID_MENU_ADJUNTS, LIMIT_TEXT } from './Compositor.jsx';
 import useCompartitPendent from '../useCompartitPendent.js';
@@ -28,6 +29,7 @@ import { alliberaFitxerCompartit, prenFitxerCompartit, tornaFitxerCompartit } fr
 
 const PORT = { quotaXat, teCapacitat, descartaAdjuntXat };
 const ACCEPTA_GALERIA = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.avif,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov';
+const ACCEPTA_DOCUMENTS = '.pdf,.csv,.txt,.odt,.docx,application/pdf,text/csv,text/plain,application/vnd.oasis.opendocument.text,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 /* Gauntlet 261022_0225 (crítica Claude, MEDIA-10) · Sense la capacitat o sense
    la migració, el xat es veu com abans: cap panell ni cap alerta. */
 const SENSE_PANELL = new Set(['sense-capacitat', 'SDP-XAT-001']);
@@ -67,7 +69,7 @@ function veuRecuperada(error) {
   };
 }
 
-export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFitxerRef = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, children = null }) {
+export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFitxerRef = null, servei = PORT, externalConfig, usuariId, t: tProp, locale = 'ca-ES', actiu = true, permetDocuments = null, children = null }) {
   const t = traductorAdjunt(tProp);
   // La cau és de la persona EN ESTE backend i poble, no del seu UUID a soles.
   // No valida el port des del render: la quota continua passant pel servei.
@@ -106,6 +108,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const [deCompartir, setDeCompartir] = useState(false);
   const selector = useRef(null);
   const selectorCamera = useRef(null);
+  const selectorDocuments = useRef(null);
   const operacio = useRef(null);
   const revisioContext = useRef(0);
   const lecturaQuotaRef = useRef(0);
@@ -270,7 +273,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   /* Torna com ha acabat: 'preparada', 'fallida' (error a la vista), 'avortada'
      (la conversa s'ha tancat o s'ha cancel·lat) o 'ocupada' (no s'ha començat).
      El menú «Compartir» ho necessita per a saber si el fitxer torna al lot. */
-  const tria = async (fitxer, { ambPeu = false } = {}) => {
+  const tria = async (fitxer, { ambPeu = false, permetDocuments = false } = {}) => {
     if (!fitxer || pujadaRef.current || pujant || ocupat) return 'ocupada';
     operacio.current?.abort();
     const controller = new AbortController(); operacio.current = controller;
@@ -285,7 +288,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
     };
     let estat = 'avortada';
     try {
-      const adjunt = await preparaAdjunt(fitxer, { signal: controller.signal, onProgresCompressio });
+      const adjunt = await preparaAdjunt(fitxer, { signal: controller.signal, permetDocuments, onProgresCompressio });
       if (viu.current && operacio.current === controller && !controller.signal.aborted) { accepta(adjunt); estat = 'preparada'; }
     } catch (e) {
       if (viu.current && operacio.current === controller && !controller.signal.aborted) {
@@ -539,12 +542,20 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   /* P1-66 · La safata només ocupa lloc mentre hi ha alguna cosa a fer; buida,
      col·lapsa a 0 (modules.css) i no és cap grup. La regió viva dels passos i
      els selectors de fitxer hi són sempre. */
+  const potDocuments = typeof permetDocuments === 'boolean'
+    ? permetDocuments
+    : (servei === PORT && Boolean(servei.teCapacitat?.('xatDocuments')));
   const activa = Boolean(error || quota?.pendents?.length || preparat || ocupat || gravant || progres);
   const safata = (
     <div className={activa ? 'sdp-xat-adjunts sdp-xat-adjunts--activa' : 'sdp-xat-adjunts'} role={activa ? 'group' : undefined}
       aria-label={activa ? t('section.xat.adjunts.grup', 'Adjunts del xat') : undefined} ref={contenidor}>
       {error ? <div className="sdp-xat-adjunts__fila">
-        <p role="alert">{textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))}</p>
+        <p role="alert">{
+          error?.code === 'document-format' ? textXatV1225(normalitzaLlenguaXat(locale), 'documents.errorFormat')
+            : error?.code === 'document-mida' ? textXatV1225(normalitzaLlenguaXat(locale), 'documents.errorMida')
+              : error?.code === 'document-contingut' ? textXatV1225(normalitzaLlenguaXat(locale), 'documents.errorContingut')
+                : textDErrorAdjunt(error, t, t('section.xat.adjunts.error.envia', 'No hem pogut enviar el fitxer.'))
+        }</p>
         <button type="button" className="sdp-xat-icona" onClick={tancaAvis} aria-label={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')} title={t('section.xat.adjunts.tancaAvis', 'Tanca l’avís')}><X size={20} aria-hidden="true" focusable="false" /></button>
       </div> : null}
       {quota?.pendents?.length ? <div role="group" aria-label={t('section.xat.adjunts.pendents', 'Fitxers pendents d’enviar')}>
@@ -556,7 +567,18 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       {/* MEDIA-9 · Cancel·la també durant la pujada: amb el temps proporcional a la mida, s'ha de poder parar. */}
       {ocupat || preparat ? (
         <div className="sdp-xat-adjunts__fila">
-          {preparat && url ? <PrevisualitzacioAdjunt tipus={preparat.tipus} url={url} duradaMs={preparat.duradaMs} locale={locale} t={t} /> : null}
+          {preparat && url ? (
+            <PrevisualitzacioAdjunt
+              tipus={preparat.tipus}
+              url={url}
+              duradaMs={preparat.duradaMs}
+              nom={preparat.nom}
+              bytes={preparat.bytes ?? preparat.fitxer?.size}
+              extensio={preparat.extensio}
+              locale={locale}
+              t={t}
+            />
+          ) : null}
           {/* XAT-07 · role=timer no és una regió viva que parle: els avisos van a la de baix. */}
           {gravant ? <span className="sdp-xat-adjunts__rellotge" role="timer"><span className="sdp-nomes-lector">{t('section.xat.adjunts.tempsGravacio', 'Temps de gravació')} </span>{tempsDeVeu(segonsGravats * 1000)}</span> : null}
           <button type="button" className="sdp-xat-icona sdp-xat-adjunts__cancella" ref={botons.cancella} onClick={descarta}
@@ -621,6 +643,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
       ) : null}
       <p className={avisAturada && estat === avisAturada ? 'sdp-xat-adjunts__estat sdp-xat-adjunts__avis' : 'sdp-xat-adjunts__estat'} role="status">{estat}</p>
       <input className="sdp-nomes-lector" type="file" ref={selector} accept={ACCEPTA_GALERIA} tabIndex={-1} aria-label={t('section.xat.adjunts.selector', 'Tria una foto o un vídeo de fins a 60 segons')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer); }} />
+      {potDocuments ? <input className="sdp-nomes-lector" type="file" ref={selectorDocuments} accept={ACCEPTA_DOCUMENTS} tabIndex={-1} aria-label={textXatV1225(normalitzaLlenguaXat(locale), 'documents.triaInput')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer, { permetDocuments: true }); }} /> : null}
       {tactil ? <input className="sdp-nomes-lector" type="file" ref={selectorCamera} accept="image/*" capture="environment" tabIndex={-1} aria-label={t('section.xat.adjunts.selectorCamera', 'Fes una foto amb la càmera')} onChange={(e) => { const fitxer = e.target.files?.[0]; e.target.value = ''; tria(fitxer); }} /> : null}
     </div>
   );
@@ -641,6 +664,7 @@ export default function ControlsAdjunt({ fil, onEnvia, onTextOrfe = null, triaFi
   const reintentaQuota = { id: 'reintenta', etiqueta: t('section.xat.missatge.reintenta', 'Torna-ho a provar'), icona: RefreshCw, onTria: () => setIntentQuota((n) => n + 1) };
   const opcions = quota ? [
     { id: 'fotos', etiqueta: t('section.xat.adjunts.fotos', 'Fotos i vídeos'), icona: ImagePlus, onTria: () => selector.current?.click() },
+    ...(potDocuments ? [{ id: 'document', etiqueta: textXatV1225(normalitzaLlenguaXat(locale), 'documents.menuOpcio'), icona: FileText, onTria: () => selectorDocuments.current?.click() }] : []),
     ...(tactil ? [{ id: 'camera', etiqueta: t('section.xat.adjunts.camera', 'Càmera'), icona: Camera, onTria: () => selectorCamera.current?.click() }] : []),
     ...(errorQuota ? [reintentaQuota] : [])
   ] : [reintentaQuota];

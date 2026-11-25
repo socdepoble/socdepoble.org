@@ -925,14 +925,15 @@ describe('Especímens del Xat · onada 3B', () => {
     }
   });
 
-  it('XatRail: les tres vistes en construcció, amb els controls inerts que ho diuen', () => {
+  it('XatRail: Telefonades continua en construcció amb controls inerts; Multimèdia i Destacats són vives', () => {
     pinta(EspecimenXatRail);
-    expect(screen.getAllByRole('region', { name: 'En construcció' })).toHaveLength(3);
-    for (const nom of ['Telefonades', 'Contingut multimèdia', 'Destacats']) {
-      expect(screen.getByRole('complementary', { name: nom }).querySelectorAll('[aria-disabled="true"]').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('region', { name: 'En construcció' })).toHaveLength(1);
+    expect(screen.getByRole('complementary', { name: 'Telefonades' }).querySelectorAll('[aria-disabled="true"]').length).toBeGreaterThan(0);
+    for (const nom of ['Contingut multimèdia', 'Destacats']) {
+      expect(screen.getByRole('complementary', { name: nom }).querySelectorAll('[aria-disabled="true"]').length).toBe(0);
     }
-    fireEvent.click(within(screen.getByRole('complementary', { name: 'Destacats' })).getByRole('button', { name: 'Editar' }));
-    expect(screen.getByText('Destacats: en construcció.')).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('complementary', { name: 'Telefonades' })).getByRole('button', { name: /Nova telefonada/i }));
+    expect(screen.getByText('Telefonades: en construcció.')).toBeTruthy();
   });
 
   it('activaDeRuta: de la ruta del rail a l’entrada activa', () => {

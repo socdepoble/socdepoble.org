@@ -206,11 +206,15 @@ function FormulariPas({ pas, estat, enfoca = false }) {
 
   return (
     <form onSubmit={envia} noValidate aria-label={pregunta}>
-      <Pila gap={4}>
+      <Pila gap={3}>
         <h3 ref={titol} tabIndex={-1}>{pregunta}</h3>
-        {ajuda ? <p>{ajuda}</p> : null}
-        {/* L'exemple del nucli ja diu que és inventat. */}
-        {exemple ? <p>{exemple}</p> : null}
+        {ajuda || exemple ? (
+          <p className="sdp-camp__ajuda">
+            {ajuda}
+            {ajuda && exemple ? ' · ' : ''}
+            {exemple}
+          </p>
+        ) : null}
         {pas.repetible && afegides.length ? (
           <GrupCamps llegenda={tx('entrevista.afegides')}>
             {afegides.map((resposta, i) => (
@@ -323,11 +327,17 @@ export function PreguntaEntrevista() {
     );
   }
   const { fet, total } = progresEntrevista(estat);
+  /* ML-06 (v1.2.25) · Compactació vertical: progrés i regla en una sola línia
+     compacta perquè la pregunta i el camp de resposta entren al primer plec en
+     pantalla estreta (375×812 px). */
   return (
     <MarcGenealogia titol={tx('entrevista.titol')}>
-      <Pila gap={4}>
-        <p>{tx('entrevista.progres', { fet: Math.min(fet + 1, total), total })}</p>
-        <p>{tx('entrevista.regla')}</p>
+      <Pila gap={3}>
+        <p className="sdp-camp__ajuda">
+          <strong>{tx('entrevista.progres', { fet: Math.min(fet + 1, total), total })}</strong>
+          {' · '}
+          {tx('entrevista.regla')}
+        </p>
         {/* Una sola pregunta: la clau fa un formulari net a cada pas (i a cada repetició). */}
         <FormulariPas key={clau} pas={pas} estat={estat} enfoca={enfoca} />
       </Pila>

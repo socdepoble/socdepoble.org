@@ -11,11 +11,6 @@ export const VISTES_EN_CONSTRUCCIO = Object.freeze({
     descripcio: ['section.xat.vista.telefonades.text', 'Ací hi haurà les telefonades i les videotelefonades amb la gent de poble: les perdudes, les rebudes i les que fas tu.'],
     avis: Object.freeze(['nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.']),
   }),
-  destacats: Object.freeze({
-    accio: Object.freeze({ tipus: 'pindola', etiqueta: ['section.xat.vista.destacats.editar', 'Editar'] }),
-    cerca: ['section.xat.vista.cerca', 'Cerca'],
-    descripcio: ['section.xat.vista.destacats.text', "Ací hi haurà els missatges que marques amb l'estrela, de totes les converses, per a trobar-los de pressa."],
-  }),
 });
 
 export const TEXTOS_CONSTRUCCIO = Object.freeze({

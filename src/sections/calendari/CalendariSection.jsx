@@ -311,6 +311,7 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError, idioma = 'ca' }) 
               onCanviMode={setMode}
               entradesEsdeveniments={targetesActes}
               onSaltaAMes={saltaAMes}
+              ambError={Boolean(avisError)}
             />
           )}
           avisAgenda={<AvisDeLAgenda agenda={agenda} idioma={idioma} />}

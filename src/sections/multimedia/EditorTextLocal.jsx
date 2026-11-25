@@ -39,6 +39,7 @@ const normalitza = (text) => String(text ?? '').replace(/\r\n?/g, '\n');
 export function EditorTextLocal({
   t,
   font,
+  volum = null,
   el,
   potEscriure = false,
   blocDeNotes = null,
@@ -78,7 +79,10 @@ export function EditorTextLocal({
     setError(null);
     setAvis(null);
     setJsonInvalid(false);
-    llegixTextLocal(font, ruta).then(
+    const llig = typeof volum?.llegixText === 'function'
+      ? () => volum.llegixText(ruta)
+      : () => llegixTextLocal(font, ruta);
+    llig().then(
       (llegit) => {
         if (!actiu) return;
         const base = normalitza(llegit.text);
@@ -95,7 +99,7 @@ export function EditorTextLocal({
     return () => {
       actiu = false;
     };
-  }, [font, ruta, versio]);
+  }, [font, volum, ruta, versio]);
 
   const editable = estat === 'llest' && Boolean(lectura?.editable) && potEscriure;
   const pendents = estat === 'llest' && lectura !== null && valor !== lectura.base;
@@ -123,15 +127,18 @@ export function EditorTextLocal({
     setAvis(null);
     setDesant(true);
     try {
-      /* La primera espera del clic o de ⌘S: si no, el navegador no mostra la petició. */
-      const permis = await verificaPermisCarpetaLocal(font.handle, { mode: 'readwrite', demana: true });
-      if (permis !== 'granted') {
-        if (viu.current) {
-          setAvis({ to: 'avis', text: permis === 'prompt' ? tr(T['permis.gestCaducat']) : missatgeDErrorLocal(t, { codi: 'ESCRIPTURA_DENEGADA' }) });
+      /* Costura C6a: amb volum OPFS/IDB protegit per Web Locks (`volum.escriuText`),
+         `font.handle` és null i els permisos es comproven dins del pany del volum. */
+      if (typeof volum?.escriuText !== 'function') {
+        const permis = await verificaPermisCarpetaLocal(font.handle, { mode: 'readwrite', demana: true });
+        if (permis !== 'granted') {
+          if (viu.current) {
+            setAvis({ to: 'avis', text: permis === 'prompt' ? tr(T['permis.gestCaducat']) : missatgeDErrorLocal(t, { codi: 'ESCRIPTURA_DENEGADA' }) });
+          }
+          return;
         }
-        return;
       }
-      const desat = await escriuTextLocal(font, ruta, text, {
+      const opcionsEscriptura = {
         sobreescriu: true,
         ambBom: lectura.ambBom,
         salts: lectura.salts === 'crlf' ? 'crlf' : 'lf',
@@ -141,7 +148,10 @@ export function EditorTextLocal({
            conflicte. «Sobreescriure igualment» no en comprova cap. */
         modificatEsperat: forcaConflicte ? null : lectura.modificat,
         midaEsperada: forcaConflicte ? null : lectura.mida
-      });
+      };
+      const desat = typeof volum?.escriuText === 'function'
+        ? await volum.escriuText(ruta, text, opcionsEscriptura)
+        : await escriuTextLocal(font, ruta, text, opcionsEscriptura);
       if (!viu.current) return;
       setLectura((abans) => ({
         ...abans,
@@ -193,7 +203,9 @@ export function EditorTextLocal({
 
   const creaNou = async (nom) => {
     try {
-      const creat = await creaFitxerMarkdownLocal(font, { carpeta: el.carpeta, nom });
+      const creat = typeof volum?.creaFitxerMarkdown === 'function'
+        ? await volum.creaFitxerMarkdown({ carpeta: el.carpeta, nom })
+        : await creaFitxerMarkdownLocal(font, { carpeta: el.carpeta, nom });
       if (viu.current) setNouObert(false);
       onNouFitxer?.(creat.ruta);
       return null;

@@ -171,10 +171,9 @@ describe('Pedra Seca · apps.css', () => {
     for (const [, valor] of css.matchAll(/(\d*\.?\d+)px/g)) expect(valor, `${valor}px`).toBe('1');
   });
 
-  test('l’àrea única reserva, en compacte, l’alçada de la barra mòbil (la barra d’accions del TPV no queda tapada)', () => {
+  test('l’àrea única no duplica la reserva de la barra mòbil (ML-02: la reserva ja viu a .app-main__content)', () => {
     const reserva = regles.filter(({ selector }) => selector === ':where(.sdp-root.is-compact) .sdp-app-unica');
-    expect(reserva).toHaveLength(1);
-    expect(reserva[0].cos).toMatch(/padding-bottom:\s*calc\(var\(--sdp-alt-nav-mobil\) \+ env\(safe-area-inset-bottom, 0rem\)\)/);
+    expect(reserva).toHaveLength(0);
     const base = regles.find(({ selector }) => selector === '.sdp-app-unica');
     expect(base.cos).toMatch(/position:\s*absolute/);
     expect(base.cos).toMatch(/overflow:\s*hidden/);

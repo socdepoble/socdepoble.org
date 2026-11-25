@@ -171,6 +171,38 @@ export const destinacioEnllac = LLAVOR_ACTIVA
   ? destinacioDe(creaFontsPersonals({ obriMagatzem: () => creaMagatzemLector(), font: () => fontDeLaLlavor(ARA_DEL_NAVEGADOR) }))
   : null;
 
+/**
+ * v1.2.25 (Lot G2 · Costura amb Codex C2 `creaDestinacioServei`):
+ * Construeix una destinació del Snippet Curador sobre el servei neutral de la plataforma,
+ * sense dependre de `VITE_SDP_LECTOR_LLAVOR`. Si s'injecta `creaDestinacioServei` (Kit C2),
+ * hi delega directament; si no, aplica el mateix contracte estricte (`disponible && personals`,
+ * refusant amb `codi: 'personals-off'` sense escriure al magatzem).
+ */
+export function destinacioEnllacDelServei(servei, {
+  creaDestinacioServei = null,
+  obriMagatzem = () => creaMagatzemLector()
+} = {}) {
+  if (typeof creaDestinacioServei === 'function') {
+    return creaDestinacioServei({ servei, obriMagatzem });
+  }
+  if (!servei || typeof servei.estat !== 'function' || typeof servei.fonts !== 'function' || typeof servei.feed !== 'function' || typeof servei.feedPersonal !== 'function') {
+    return null;
+  }
+  const font = creaFontNoticies(creaAdaptadorRemot({ servei }));
+  const destinacio = destinacioDe(creaFontsPersonals({ obriMagatzem, font: () => font }));
+  return Object.freeze({
+    nomMaxim: destinacio.nomMaxim,
+    categories: () => destinacio.categories(),
+    async afig(entrada) {
+      const estat = await servei.estat();
+      if (estat?.disponible !== true || estat?.personals !== true) {
+        throw Object.assign(new Error('El servei encara no permet afegir fonts personals.'), { codi: 'personals-off' });
+      }
+      return destinacio.afig(entrada);
+    }
+  });
+}
+
 /* El camí canònic d'un enllaç de notícies que no ho és, o null (replace: l'historial no guanya
    cap pas):
      /noticies?article=x       → /noticies/hui?article=x

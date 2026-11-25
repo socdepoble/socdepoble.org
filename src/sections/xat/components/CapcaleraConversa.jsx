@@ -84,7 +84,7 @@
  * ho tria. Fora de la selecció de missatges. Sense, la capçalera de sempre.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeft, BellOff, Building2, MoreVertical, X } from 'lucide-react';
+import { ArrowLeft, BellOff, Building2, MoreVertical, Search, X } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { RUTA_PERFIL_PROPI, rutaDePerfil } from '../../../config/navigation.js';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
@@ -204,7 +204,8 @@ export default function CapcaleraConversa({
   onDenunciaPersona = null, onBloqueja = null, onDesbloqueja = null, nomContrapart = '',
   onTornaAOrigen = null, accioXifratge = null, accioSilenci = null, accioArxiva = null,
   accioContingutCompartit = null, accioOblit = null, escrivint = 0,
-  nivellTitol = 1, canals = null, onTriaCanal = null, contrapartReserva = null
+  nivellTitol = 1, canals = null, onTriaCanal = null, contrapartReserva = null,
+  onAlternaCerca = null, cercaOberta = false, idBarraCerca = null, refBotoCerca = null, etiquetaCercaConversa = ''
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
@@ -429,6 +430,20 @@ export default function CapcaleraConversa({
     <header key="conversa" className="sdp-xat-capcalera">
       {fletxa}
       {capIdentitat}
+      {typeof onAlternaCerca === 'function' ? (
+        <button
+          ref={refBotoCerca}
+          type="button"
+          className="sdp-xat-icona"
+          aria-label={etiquetaCercaConversa || t('section.xat.conversa.cerca', 'Cerca en esta conversa')}
+          title={etiquetaCercaConversa || t('section.xat.conversa.cerca', 'Cerca en esta conversa')}
+          aria-expanded={Boolean(cercaOberta)}
+          aria-controls={cercaOberta && idBarraCerca ? idBarraCerca : undefined}
+          onClick={onAlternaCerca}
+        >
+          <Search size={22} aria-hidden="true" focusable="false" />
+        </button>
+      ) : null}
       <div className="sdp-xat-capcalera__menu" ref={menuRef}>
         <button
           ref={botoRef}

@@ -118,14 +118,13 @@ describe('un recorregut sencer: entrevista → arbre → arxius → intercanvi',
   test('la persona fa l’entrevista, mira l’arbre Sosa, prepara consultes i exporta i reimporta el GEDCOM', async () => {
     const carrega = munta('/app/genealogia');
 
-    /* 1 · Producció: l'app s'obri, i la porta de l'avís mana abans que res. */
-    /* La primera càrrega diferida (lazy) pot tardar més d'un segon amb la suite en paral·lel. */
+    /* 1 · Producció (v1.2.25 · IDEA-348): l'app s'obri directe a /entrevista amb banda d'avís d'1 clic integrada. */
     const entesos = await screen.findByRole('button', { name: 'Entesos' }, { timeout: 10000 });
     expect(carrega).toHaveBeenCalledTimes(1);
-    expect(ubicacio()).toBe('/app/genealogia/avis');
+    expect(ubicacio()).toBe('/app/genealogia/entrevista');
     expect(within(navegacio()).getByRole('link', { name: 'Arbre i Sosa' }).getAttribute('href')).toBe('/app/genealogia/arbre');
     fireEvent.click(entesos);
-    await waitFor(() => expect(ubicacio()).toBe('/app/genealogia/entrevista'));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Entesos' })).toBeNull());
 
     /* 2 · L'entrevista: una sola pregunta per torn. */
     await esperaPregunta('casa');

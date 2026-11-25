@@ -49,11 +49,12 @@
  */
 import { Component, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDownUp, BellDot, Check, ChevronLeft, ChevronRight, CircleQuestionMark, CircleX, Heart, KeyRound,
+  ArrowDownUp, BellDot, Check, ChevronLeft, ChevronRight, CircleQuestionMark, CircleX, Construction, Heart, KeyRound,
   Lock, MessageCircle, Palette, RefreshCw, Search, Star, X
 } from 'lucide-react';
-import { Alerta, Boto, Dialeg } from '../../../components/PedraSeca/index.js';
+import { Alerta, Boto, Dialeg, EstatBuit } from '../../../components/PedraSeca/index.js';
 import { esErrorLazy, lazyRouteRenovable } from '../../../apps/plataforma/lazyRoute.js';
+import { textXatV1225 } from '../i18nVistesXatV1225.js';
 import CaraXat from './CaraXat.jsx';
 import { caraDeComunitat } from '../caraDeSocDePoble.js';
 import { AvatarResolt } from '../../../components/universal/identitat/AvatarResolt.jsx';
@@ -235,6 +236,7 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
           onObriConversa={obriConversa}
           onTanca={() => onTanca('boto')}
           PaginaCopia={PaginaCopiaSeguretatXat}
+          permetRestaurar={Boolean(sessio?.teCapacitat?.('xatRestauracioLocal'))}
         />
       ) : null}
     </Dialeg>
@@ -319,7 +321,7 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  */
 export function CosAjustos({
   t, campRef = null, focusAlCercador = true, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
-  ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, PaginaCopia = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
+  ambSessio = false, ambPrivacitat = null, avisos = null, FilaEixida = null, PaginaCopia = null, permetRestaurar = false, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
   onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
   const [pila, setPila] = useState(() => (Array.isArray(pilaInicial) && pilaInicial.length ? pilaInicial : ARREL));
@@ -334,7 +336,7 @@ export function CosAjustos({
   const pagina = paginaAjustos(actual.id) || paginaAjustos(ARREL_AJUSTOS);
   const aLArrel = pila.length === 1;
   const pare = aLArrel ? null : paginaAjustos(pila[pila.length - 2].id);
-  const titol = textDe(pagina.titol, t);
+  const titol = pagina.clauV1225 ? textXatV1225(llengua, pagina.clauV1225) : textDe(pagina.titol, t);
 
   /* Empènyer una pàgina porta el focus al ‹ de la nova; tornar, a la fila
      que l'havia obert (a l'arrel amb cerca, al resultat premut). */
@@ -412,7 +414,7 @@ export function CosAjustos({
 
   const etiquetaTanca = t('section.xat.ajustos.tanca', 'Tanca els ajustos');
   const etiquetaTorna = pare ? t('section.xat.ajustos.torna', 'Torna a {pagina}').replace('{pagina}', textDe(pare.titol, t)) : '';
-  const resultats = aLArrel ? cercaAjustos(terme, { t, ambSessio }) : null;
+  const resultats = aLArrel ? cercaAjustos(terme, { t, ambSessio, permetRestaurar }) : null;
 
   let cos;
   if (resultats) cos = <ResultatsAjustos resultats={resultats} terme={terme} t={t} onObri={obriResultat} />;
@@ -425,7 +427,7 @@ export function CosAjustos({
      catàleg, fora del xat) no hi ha cap còpia a fer, i ho diu. */
   else if (Object.hasOwn(ESPECIALS_COPIA, pagina.especial ?? '')) {
     cos = PaginaCopia ? (
-      <PaginaCopiaProtegida PaginaCopia={PaginaCopia} accio={ESPECIALS_COPIA[pagina.especial]} t={t} capRef={capRef} />
+      <PaginaCopiaProtegida PaginaCopia={PaginaCopia} accio={ESPECIALS_COPIA[pagina.especial]} t={t} llengua={llengua} capRef={capRef} />
     ) : <p className="sdp-xat-ajustos__nota">{t('section.xat.copia.senseCompte', 'Entra al xat amb el teu compte per a fer o comprovar una còpia.')}</p>;
   }
   else if (pagina.construccio) cos = <PaginaEnConstruccio construccio={pagina.construccio} t={t} />;
@@ -457,8 +459,11 @@ export function CosAjustos({
             );
           }
           if (grup.nomesAmbSessio) return null;
+          const filesVisibles = grup.files.filter((f) => !f.nomesAmbRestauracio || permetRestaurar);
+          if (!filesVisibles.length) return null;
+          const grupVisible = filesVisibles.length === grup.files.length ? grup : { ...grup, files: filesVisibles };
           return (
-            <GrupAjustos key={grup.id} grup={grup} t={t} triada={triada(grup)} valorDe={valorDe} nota={notaDe(grup)} onPrem={prem} />
+            <GrupAjustos key={grup.id} grup={grupVisible} t={t} llengua={llengua} triada={triada(grup)} valorDe={valorDe} nota={notaDe(grup)} onPrem={prem} />
           );
         })}
         {pagina.id === 'aparenca' ? (
@@ -564,7 +569,7 @@ function AvisCopiaNoCarregada({ t, onReintenta }) {
    barrera). La intenció es calcula ací, fora del Suspense (vegeu
    paginaDiferidaRenovable). En reintentar, el focus va al ‹ de la pàgina, com
    en entrar-hi: el botó de l'avís desapareix. */
-function PaginaCopiaProtegida({ PaginaCopia, accio, t, capRef }) {
+function PaginaCopiaProtegida({ PaginaCopia, accio, t, llengua, capRef }) {
   const entrada = useId();
   const [reintent, setReintent] = useState(0);
   const reintenta = () => {
@@ -574,7 +579,7 @@ function PaginaCopiaProtegida({ PaginaCopia, accio, t, capRef }) {
   return (
     <BarreraDeLaCopia key={reintent} fallback={<AvisCopiaNoCarregada t={t} onReintenta={reintenta} />}>
       <Suspense fallback={<p className="sdp-xat-ajustos__nota" role="status">{t('common.treballant', 'Treballant…')}</p>}>
-        <PaginaCopia accio={accio} t={t} intent={`${entrada}#${reintent}`} />
+        <PaginaCopia accio={accio} t={t} idioma={llengua} intent={`${entrada}#${reintent}`} />
       </Suspense>
     </BarreraDeLaCopia>
   );
@@ -583,7 +588,7 @@ function PaginaCopiaProtegida({ PaginaCopia, accio, t, capRef }) {
 /* Un grup: la capçalera de secció (fora de la targeta), les files en una
    targeta i la nota del peu (la calcula CosAjustos, notaDe). Una selecció
    única és un grup amb nom. */
-function GrupAjustos({ grup, t, triada, valorDe, nota = '', onPrem }) {
+function GrupAjustos({ grup, t, llengua = 'ca', triada, valorDe, nota = '', onPrem }) {
   const idCap = useId();
   return (
     <div className="sdp-xat-ajustos__grup" role={grup.capcalera ? 'group' : undefined} aria-labelledby={grup.capcalera ? idCap : undefined}>
@@ -591,7 +596,7 @@ function GrupAjustos({ grup, t, triada, valorDe, nota = '', onPrem }) {
       <ul className="sdp-xat-ajustos__targeta">
         {grup.files.map((fila) => (
           <li key={fila.id}>
-            <FilaAjust fila={fila} etiqueta={etiquetaDeFila(fila, t)} valor={valorDe(fila.valor)}
+            <FilaAjust fila={fila} etiqueta={fila.clauV1225 ? textXatV1225(llengua, fila.clauV1225) : etiquetaDeFila(fila, t)} valor={valorDe(fila.valor)}
               triada={fila.tipus === 'opcio' ? triada === fila.opcio : false} onPrem={() => onPrem(fila, grup)} />
           </li>
         ))}
@@ -644,10 +649,14 @@ function ResultatsAjustos({ resultats, terme, t, onObri }) {
     const net = terme.trim();
     return (
       <div className="sdp-xat-ajustos__buit" role="status">
-        <p className="sdp-xat-ajustos__buit-titol">{t('section.xat.ajustos.capResultat.titol', 'Cap resultat')}</p>
-        <p className="sdp-xat-ajustos__buit-text">
-          {t('section.xat.ajustos.capResultat.text', 'Cap ajust coincidix amb «{terme}».').replace('{terme}', () => net)}
-        </p>
+        <EstatBuit
+          icona={Search}
+          titol={<span className="sdp-xat-ajustos__buit-titol">{t('section.xat.ajustos.capResultat.titol', 'Cap resultat')}</span>}
+        >
+          <p className="sdp-xat-ajustos__buit-text">
+            {t('section.xat.ajustos.capResultat.text', 'Cap ajust coincidix amb «{terme}».').replace('{terme}', () => net)}
+          </p>
+        </EstatBuit>
       </div>
     );
   }
@@ -677,10 +686,14 @@ function PaginaPreferits({ preferits, t, onObri }) {
   if (!preferits.length) {
     return (
       <div className="sdp-xat-ajustos__buit" role="status">
-        <p className="sdp-xat-ajustos__buit-titol">{t('section.xat.ajustos.preferits.buit.titol', 'Cap preferit')}</p>
-        <p className="sdp-xat-ajustos__buit-text">
-          {t('section.xat.ajustos.preferits.buit.text', 'Quan tingues converses preferides, les trobaràs ací i al filtre «Preferits» de la llista de converses.')}
-        </p>
+        <EstatBuit
+          icona={Heart}
+          titol={<span className="sdp-xat-ajustos__buit-titol">{t('section.xat.ajustos.preferits.buit.titol', 'Cap preferit')}</span>}
+        >
+          <p className="sdp-xat-ajustos__buit-text">
+            {t('section.xat.ajustos.preferits.buit.text', 'Quan tingues converses preferides, les trobaràs ací i al filtre «Preferits» de la llista de converses.')}
+          </p>
+        </EstatBuit>
       </div>
     );
   }
@@ -708,9 +721,7 @@ function PaginaPreferits({ preferits, t, onObri }) {
   );
 }
 
-/* Una pàgina sense dades: el títol en negreta i les frases grises, centrats
-   (com «No hay reportes», captura 21.05.44). Destacats diu el MATEIX que la
-   seua vista del rail (textosDeVista); l'avís és el genèric del xat. */
+/* Una pàgina sense dades: EstatBuit + Alerta canònics de Pedra Seca 2.0 (v1.2.25 · FN0-005). */
 function PaginaEnConstruccio({ construccio, t }) {
   const idTitol = useId();
   const textos = construccio.vista ? textosDeVista(construccio.vista, t) : null;
@@ -718,9 +729,15 @@ function PaginaEnConstruccio({ construccio, t }) {
   const avis = (textos && textos.avis) || t(...TEXTOS_CONSTRUCCIO.avis);
   return (
     <section className="sdp-xat-ajustos__buit" aria-labelledby={idTitol}>
-      <h3 id={idTitol} className="sdp-xat-ajustos__buit-titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</h3>
-      {descripcio ? <p className="sdp-xat-ajustos__buit-text">{descripcio}</p> : null}
-      <p className="sdp-xat-ajustos__buit-text">{avis}</p>
+      <EstatBuit
+        icona={Construction}
+        titol={<span id={idTitol} role="heading" aria-level={3} className="sdp-xat-ajustos__buit-titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</span>}
+      >
+        {descripcio ? <p className="sdp-xat-ajustos__buit-text">{descripcio}</p> : null}
+        <Alerta to="info" viva={false} className="sdp-xat-ajustos__buit-text">
+          {avis}
+        </Alerta>
+      </EstatBuit>
     </section>
   );
 }

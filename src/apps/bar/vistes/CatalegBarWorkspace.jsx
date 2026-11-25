@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from '../../../app/contexts/RouterContext';
+import { Link, Navigate, useSearchParams } from '../../../app/contexts/RouterContext';
 import { Accions, Alerta, Boto, Camp, CandidatsAlergens, Fila, Selector } from '../../../components/PedraSeca/index.js';
 import { CatalegWorkspace, DetallCataleg } from '../../../components/universal/workspace/index.js';
 import { candidatsVariantParroquia, useApp } from '../../plataforma/index.js';
@@ -41,7 +41,7 @@ function DetallProducte({ item, ruta, historic, tx }) {
 }
 
 export function CatalegBarWorkspace() {
-  const { carta, establiment, carregat, errorCarrega } = useBar();
+  const { carta, establiment, carregat, errorCarrega, tornActual } = useBar();
   const { ruta, idioma = 'ca' } = useApp();
   const tx = textosUiBar(idioma);
   const [historica, setHistorica] = useState(null);
@@ -51,6 +51,7 @@ export function CatalegBarWorkspace() {
   const actual = font === 'historica' && historica ? historica : { carta, establiment };
   const [searchParams] = useSearchParams();
   const fitxaEnllacada = searchParams.get('fitxa');
+  const demanaCataleg = searchParams.get('veure') === 'cataleg' || Boolean(fitxaEnllacada);
   const peticio = useRef(null);
   const viu = useRef(true);
   useEffect(() => { viu.current = true; return () => { viu.current = false; peticio.current = null; }; }, []);
@@ -96,6 +97,12 @@ export function CatalegBarWorkspace() {
       <Link to={ruta('ajustos', 'carta')}>{tx.gestionaCarta}</Link>
     </Accions>
   );
+  /* IDEA-348 + DOL-51 (Onada v1.2.25 · Lot G2) · Amb torn obert, entrar a El Bar duu directe al TPV
+     per operar a l'acte sense pantalla intermèdia (llevat que es demane explícitament ?veure=cataleg o ?fitxa=). */
+  if (carregat && tornActual && !demanaCataleg) {
+    return <Navigate to={ruta('tpv')} replace />;
+  }
+
   return (
     <CatalegWorkspace font="bar" destiPublicacio="bar" id={ID_CATALEG_BAR} model={model} ruta={ruta('cataleg')} privateItems
       labels={{ categories: tx.catalegCategories, items: tx.catalegTitol, all: tx.catalegTota, search: tx.catalegCerca, empty: tx.catalegBuit, noResults: tx.catalegSenseCoincidencies }}

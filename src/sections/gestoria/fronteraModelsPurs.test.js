@@ -97,8 +97,12 @@ describe('els models purs', () => {
 });
 
 describe('encara no estan endollats', () => {
-  test('cap fitxer de src de fora dels tres carrils els importa', () => {
-    const importadors = fitxersDe('src').filter((ruta) => !dinsCarrils(ruta) && !esProva(ruta))
+  /* Onada v1.2.25 (Lot G2/G9): VistaBurocracia.jsx endolla els models purs de burocracia/ i titular.js
+     en càlcul 100 % local sense accés a disc ni modificació de tractors signats. */
+  const ENDOLLATS_AUTORITZATS = new Set([`${GESTORIA}/vistes/VistaBurocracia.jsx`]);
+
+  test('cap fitxer de src de fora dels tres carrils els importa (llevat dels endollats autoritzats)', () => {
+    const importadors = fitxersDe('src').filter((ruta) => !dinsCarrils(ruta) && !esProva(ruta) && !ENDOLLATS_AUTORITZATS.has(ruta))
       .flatMap((ruta) => especificadors(llig(ruta)).filter((e) => dinsCarrils(resol(ruta, e))).map((e) => `${ruta}: ${e}`));
     expect(importadors).toEqual([]);
   });

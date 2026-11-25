@@ -38,6 +38,7 @@ import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere
 import MarquesEstat from './MarquesEstat.jsx';
 import CitaResposta from './CitaResposta.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
+import { textXatV1225 } from '../i18nVistesXatV1225.js';
 import SelectorEmoticones from './SelectorEmoticones.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos, segmentaRutesDeLaWiki } from '../enllacos.js';
@@ -242,6 +243,7 @@ function Bombolla({
   reaccions = null, destacat = false, fixat = false,
   onResponEnPrivat = null, onReacciona = null, onDestaca = null, onFixa = null,
   onReenvia = null, onEnviaPrivat = null, onElimina = null, onSelecciona = null,
+  onCancelaEnviament = null,
   onCapaFlotantCanvia = null
 }) {
   const [menuObert, setMenuObert] = useState(false);
@@ -285,12 +287,18 @@ function Bombolla({
   const nomBloqueig = String(nomAutor || '').trim();
   const potBloquejar = typeof onBloqueja === 'function' && Boolean(nomBloqueig);
 
-  const potEliminar = typeof onElimina === 'function' && !esborrat && missatge.id != null;
+  /* XAT-B01 (v1.2.25 · Lot G6, K-G6-PENDENT) · Una bombolla pròpia pendent es cancel·la, no s'elimina: amb
+     onCancelaEnviament (XatContext.cancelaEnviament, via XatSection i Conversa), l'entrada diu «Cancel·la
+     l'enviament» i la crida directament, sense el diàleg d'eliminar. Sense ella, «Elimina» de sempre: el
+     rètol només promet el que fa el clic. */
+  const potCancelarEnviament = estat === 'pendent' && typeof onCancelaEnviament === 'function'
+    && !esborrat && missatge.id != null;
+  const potEliminar = !potCancelarEnviament && typeof onElimina === 'function' && !esborrat && missatge.id != null;
   const potSeleccionar = typeof onSelecciona === 'function' && !esborrat && missatge.id != null;
 
   const teBloc1 = potRespondre || potRespondreEnPrivat || potReaccionar || potDestacar || potFixar || potReenviar || potCopiar;
   const teBloc2 = potEnviarPrivat || potDenunciar || potBloquejar;
-  const teBloc3 = potEliminar || potSeleccionar;
+  const teBloc3 = potCancelarEnviament || potEliminar || potSeleccionar;
 
   const teMenu = missatge.tipus !== 'sistema' && !missatge.bloquejat && !triable && !esborrat && (teBloc1 || teBloc2 || teBloc3);
   const menuVisible = menuObert && teMenu;
@@ -616,7 +624,7 @@ function Bombolla({
               <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">{t(...textXifratTancat(missatge))}</p>
             ) : llistaComu ? (
               <TargetaLlistaComu llista={llistaComu} actor={actorLlista} interactiva={!triable} onMuta={onMutaLlista} />
-            ) : ['imatge', 'video', 'veu'].includes(missatge.tipus) && missatge.metadades?.adjunt?.id ? (
+            ) : ['imatge', 'video', 'veu', 'document'].includes(missatge.tipus) && missatge.metadades?.adjunt?.id ? (
               <>
                 <AdjuntXat
                   key={missatge.tipus === 'veu' && triable ? 'veu-quieta' : 'adjunt'}
@@ -822,6 +830,17 @@ function Bombolla({
 
                   {(teBloc1 || teBloc2) && teBloc3 ? <hr className="sdp-xat-menu__divisor" /> : null}
 
+                  {potCancelarEnviament ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="sdp-xat-menu__item sdp-xat-menu__item--perill"
+                      onClick={() => triaDelMenu(() => onCancelaEnviament(missatge))}
+                    >
+                      <Trash2 size={18} aria-hidden="true" focusable="false" />
+                      {textXatV1225(locale, 'missatge.cancellaEnviament')}
+                    </button>
+                  ) : null}
                   {potEliminar ? (
                     <button
                       type="button"

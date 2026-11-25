@@ -34,6 +34,7 @@ import { RetornTiquet, TiquetTriat, TiquetsTorn, TriaTiquet } from './vistes/Tiq
 import { MovimentsTorn, TornActual } from './vistes/Torn.jsx';
 import { DetallTorn, HistorialTorns, TriaTorn } from './vistes/Torns.jsx';
 import { TpvBar } from './vistes/Tpv.jsx';
+import { CuinaKdsRuta } from './vistes/CuinaKdsRuta.jsx';
 import { CatalegBarWorkspace } from './vistes/CatalegBarWorkspace.jsx';
 import { textosUiBar } from './i18nBar.js';
 
@@ -68,6 +69,8 @@ export const RUTES_BAR = Object.freeze([
   { path: 'tiquets', Mig: TiquetsTorn, Detall: TriaTiquet },
   { path: 'tiquets/:tiquet', params: { tiquet: esIdOpac }, Mig: TiquetsTorn, Detall: TiquetTriat, estret: 'detall' },
   { path: 'tiquets/:tiquet/retorn', params: { tiquet: esIdOpac }, Mig: TiquetsTorn, Detall: RetornTiquet, estret: 'detall' },
+  /* Cuina (KDS local en temps real · v1.2.25 Lot G2). */
+  { path: 'cuina', Unica: CuinaKdsRuta },
   /* El torn, el tancament i l'historial. */
   { path: 'torn', Mig: MovimentsTorn, Detall: TornActual, estret: 'detall' },
   { path: 'tancament', Mig: PassosTancament, Detall: PasTancament, estret: 'detall' },

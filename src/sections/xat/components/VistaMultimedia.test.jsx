@@ -86,17 +86,30 @@ const FILA_SEGMENTS_ABANS = [
   '</div>'
 ].join('');
 
-test('Llei del Píxel · la fila de títol i el control segmentat pinten el DOM literal de quan era en construcció', () => {
+/* G1 (v1.2.25, ho demana el paquet) · Les tres accions de la fila de títol ja són vives: sense sdp-xat-inert ni
+   aria-disabled, la lupa amb aria-expanded, i Ordena i Selecciona amb aria-pressed i el title del seu estat. La resta de
+   la capçalera (plec, icona, títol i el SVG de cada acció) és byte a byte la d'abans. CR-03 (Gauntlet de la integració
+   v1.2.25) · El kit havia canviat el DOM literal per un getByText del títol: la Llei del Píxel torna a fixar-lo sencer, i
+   cada diferència amb el d'abans queda escrita ací. */
+const CAPCALERA_V1225 = CAPCALERA_ABANS
+  .replaceAll(' sdp-xat-inert', '')
+  .replace('aria-label="Cerca" title="Cerca" aria-disabled="true"', 'aria-label="Cerca" title="Cerca" aria-expanded="false"')
+  .replace('aria-label="Ordena" title="Ordena" aria-disabled="true"', 'aria-label="Ordena" title="Ordena: més recents primer" aria-pressed="false"')
+  .replace('aria-label="Selecciona" title="Selecciona" aria-disabled="true"', 'aria-label="Selecciona" title="Selecciona elements" aria-pressed="false"');
+
+test('Llei del Píxel · la fila de títol i el control segmentat pinten el DOM net amb controls actius (v1.2.25)', () => {
+  expect(CAPCALERA_V1225).not.toContain('aria-disabled');
   const ara = pinta();
   const capcalera = ara.container.querySelector('.app-grid-col-header');
-  expect(capcalera.outerHTML).toBe(CAPCALERA_ABANS);
-  /* L'únic canvi del control segmentat: ja no és inert. */
+  expect(within(capcalera).getByText('Contingut multimèdia')).toBeTruthy();
+  expect(capcalera.outerHTML).toBe(CAPCALERA_V1225);
   expect(ara.container.querySelector('.sdp-xat-vista__fila').outerHTML).toBe(
     FILA_SEGMENTS_ABANS.replaceAll(' sdp-xat-inert', '').replaceAll(' aria-disabled="true"', '')
   );
-  /* Les tres icones de la fila de títol, en l'ordre de la captura. */
+  /* Les tres icones de la fila de títol, en l'ordre de la captura, totes actives (sense sdp-xat-inert). */
   expect([...capcalera.querySelectorAll('.app-grid-col-header__accions svg')].map((svg) => svg.getAttribute('class')))
     .toEqual(['lucide lucide-search', 'lucide lucide-list-filter', 'lucide lucide-list-checks']);
+  expect(capcalera.querySelectorAll('.sdp-xat-inert')).toHaveLength(0);
 });
 
 test('Llei del Píxel · la peça compartida pinta encara, inert, el DOM literal d’abans', () => {
@@ -111,9 +124,8 @@ test('Llei del Píxel · la peça compartida pinta encara, inert, el DOM literal
   expect(container.querySelector('.sdp-xat-vista__fila').outerHTML).toBe(FILA_SEGMENTS_ABANS);
 });
 
-test('el control segmentat canvia de pestanya amb aria-pressed, sense toast; la lupa, Ordena i Selecciona continuen inerts', () => {
-  const onEnConstruccio = vi.fn();
-  pinta({ onEnConstruccio });
+test('el control segmentat i els 3 controls (Cerca, Ordena, Selecciona) són operatius', () => {
+  pinta();
   expect(premuts()).toEqual([['Fitxers', 'true'], ['Enllaços', 'false'], ['Documents', 'false']]);
   for (const b of within(screen.getByRole('group', { name: 'Tipus de contingut' })).getAllByRole('button')) {
     expect(b.hasAttribute('aria-disabled')).toBe(false);
@@ -124,15 +136,17 @@ test('el control segmentat canvia de pestanya amb aria-pressed, sense toast; la 
   expect(screen.getByRole('region', { name: 'Enllaços' })).toBeTruthy();
   fireEvent.click(segment('Documents'));
   expect(premuts()).toEqual([['Fitxers', 'false'], ['Enllaços', 'false'], ['Documents', 'true']]);
-  expect(onEnConstruccio).not.toHaveBeenCalled();
 
   const icones = within(document.querySelector('.app-grid-col-header')).getAllByRole('button');
-  expect(icones.map((b) => [b.getAttribute('aria-label'), b.getAttribute('aria-disabled')]))
-    .toEqual([['Cerca', 'true'], ['Ordena', 'true'], ['Selecciona', 'true']]);
-  icones.forEach((b) => fireEvent.click(b));
-  expect(onEnConstruccio).toHaveBeenCalledTimes(3);
-  /* I cap cercador en píndola (captura 19.41.58). */
+  expect(icones.map((b) => [b.getAttribute('aria-label'), b.hasAttribute('aria-disabled')]))
+    .toEqual([['Cerca', false], ['Ordena', false], ['Selecciona', false]]);
   expect(screen.queryByRole('searchbox')).toBeNull();
+  fireEvent.click(icones[0]);
+  expect(screen.getByRole('searchbox', { name: 'Cerca' })).toBeTruthy();
+  fireEvent.click(icones[1]);
+  expect(icones[1].getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(icones[2]);
+  expect(icones[2].getAttribute('aria-pressed')).toBe('true');
 });
 
 test('Enllaços: per mes, el domini, l’enllaç segur i el botó germà que obri la conversa', () => {
@@ -217,26 +231,21 @@ test('un nom de grup amb «$&», «$$», «$`» o «$\'» arriba literal al nom 
   expect(boto.getAttribute('aria-label')).toBe(`Obri la conversa de ${nom} · Pepica ${hora}`);
 });
 
-/* xat-ux-a11y-06 (T7a, 261104) · Els adjunts F1 (fotos, vídeo i veu) ja
-   van: l'avís ja no diu que «només es pot enviar text». Diu el que és cert a
-   qualsevol node (si la conversa ho permet) i que els documents encara no. */
-const AVIS_ADJUNTS = 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.';
-
-test('Fitxers i Documents buits: l’avís dels adjunts és cert (F1 ja envia fotos, vídeo i veu); Enllaços buit, també', () => {
+/* v1.2.25 · Lot G1 · Fitxers, Documents i Enllaços usen EstatBuit + Alerta canònics de Pedra Seca 2.0,
+   i l'avís ja inclou fotos, vídeos, notes de veu i documents. */
+test('Fitxers, Documents i Enllaços buits: EstatBuit + Alerta canònics (sense construcció obsoleta)', () => {
   pinta({ missatgesPerFil: { 'f-festes': [{ id: 'x', seq: 1, text: 'Hola', creatAl: '2026-10-03T18:00:00Z' }] } });
-  let targeta = screen.getByRole('region', { name: 'En construcció' });
-  expect(targeta.textContent).toContain('les fotos i els vídeos');
-  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_ADJUNTS);
-  expect(targeta.textContent).not.toContain('només es pot enviar text');
-  expect(targeta.textContent).not.toContain('F1');
+  let regio = screen.getByRole('region', { name: 'Fitxers' });
+  expect(regio.querySelector('.sdp-buit')).toBeTruthy();
+  expect(regio.querySelector('.sdp-alerta').textContent).toContain('documents (PDF, CSV, ODT, DOCX, TXT)');
+  expect(regio.textContent).toContain('les fotos i els vídeos');
   fireEvent.click(segment('Documents'));
-  targeta = screen.getByRole('region', { name: 'En construcció' });
-  expect(targeta.textContent).toContain('els documents');
-  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_ADJUNTS);
-  expect(targeta.textContent).not.toContain('només es pot enviar text');
+  regio = screen.getByRole('region', { name: 'Documents' });
+  expect(regio.querySelector('.sdp-buit')).toBeTruthy();
+  expect(regio.querySelector('.sdp-alerta').textContent).toContain('documents (PDF, CSV, ODT, DOCX, TXT)');
+  expect(regio.textContent).toContain('els documents');
   fireEvent.click(segment('Enllaços'));
-  expect(screen.queryByRole('region', { name: 'En construcció' })).toBeNull();
-  expect(screen.getByRole('status').textContent).toBe("Encara no s'ha compartit cap enllaç en les converses obertes.");
+  expect(screen.getByRole('status').textContent).toContain("Encara no s'ha compartit cap enllaç en les converses obertes.");
 });
 
 test('l’avís local és a totes les pestanyes', () => {
@@ -248,7 +257,7 @@ test('l’avís local és a totes les pestanyes', () => {
   }
 });
 
-test('si arriben adjunts, una fila per element amb la icona del tipus, sense miniatura, que obri la conversa', () => {
+test('si arriben adjunts, una fila per element amb la icona del tipus (sense miniatura si no té adjunt.id), que obri la conversa', () => {
   const onObriFil = vi.fn();
   pinta({
     onObriFil,
@@ -262,8 +271,6 @@ test('si arriben adjunts, una fila per element amb la icona del tipus, sense min
   expect(fila.textContent).toContain('Vicent Ferris');
   expect(fila.textContent).toContain('Fotos · La plaça');
   expect(fila.querySelector('svg.lucide-camera')).toBeTruthy();
-  /* P1-36 (261026_2126) · Un adjunt és una fila senzilla, no una targeta de
-     conversa: els 72px i la icona de 48 amb el dibuix de 24 d'abans. */
   expect(fila.className).toBe('sdp-xat-fila sdp-xat-fila--senzilla');
   expect(fila.querySelector(':scope > .sdp-xat-avatar-icona > svg').getAttribute('width')).toBe('24');
   expect(fitxers.querySelector('img')).toBeNull();
@@ -278,5 +285,9 @@ test('tradueix amb la clau: el t de l’app rep les claus i18n', () => {
   render(<VistaMultimedia titol="Contingut multimèdia" fils={FILS} missatgesPerFil={MISSATGES} t={tr} />);
   expect(screen.getByRole('group', { name: '«section.xat.vista.multimedia.tipus»' })).toBeTruthy();
   expect(document.querySelector('.sdp-xat-resultats__avis').textContent).toBe('«section.xat.vista.multimedia.avisLocal»');
-  expect(screen.getByRole('region', { name: '«section.xat.construccio.titol»' }).textContent).toContain('«section.xat.vista.multimedia.avisAdjunts»');
+  expect(document.querySelector('.sdp-buit')).toBeTruthy();
+  /* CR-03 (Gauntlet de la integració v1.2.25) · L'avís dels adjunts torna a passar pel t de l'app amb la clau canònica
+     (els cinc diccionaris), com abans de G1; el kit el pintava amb el diccionari paral·lel i la prova se n'havia oblidat. */
+  expect(document.querySelector('.sdp-alerta').textContent).toBe('«section.xat.vista.multimedia.avisAdjunts»');
+  expect(tr).toHaveBeenCalledWith('section.xat.vista.multimedia.avisAdjunts', TEXTOS_MULTIMEDIA.avisAdjunts[1]);
 });

@@ -96,13 +96,9 @@
   background: var(--sdp-fons-app);
 }
 
-/* En compacte, la barra mòbil és fixa damunt de la caixa: l'àrea li reserva
-   l'alçada a baix (com les columnes d'AppGridShell, modules.css), perquè la
-   barra d'accions del TPV no quede tapada. El valor de recanvi de env() va
-   en rem: el full no admet px fora de les vores. */
-:where(.sdp-root.is-compact) .sdp-app-unica {
-  padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0rem));
-}
+/* ML-02 = RR-D12-02 (v1.2.25 · Lot G8) · La reserva de la barra inferior mòbil
+   ja l'aplica .app-main__content (layout.css) per damunt de .sdp-app-contenidor:
+   .sdp-app-unica no la duplica. */
 
 /* ── Portal /app (PortalApps.jsx) ──
    header.page-title (layout.css) s'apega a dalt com a la resta de pàgines:

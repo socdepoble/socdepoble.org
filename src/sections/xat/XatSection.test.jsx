@@ -2837,15 +2837,12 @@ test('3B · una conversa oberta des de la vista de comunitats la conserva i la f
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
 });
 
-/* D17 (ordre del Mestre, 260930): Telefonades porta el seu avís propi, al cos
-   i al toast dels controls inerts; Destacats, el genèric i el toast «En
-   construcció». Contingut multimèdia ja no és a esta llista: derogat per
-   l'ordre del Mestre del 261004 (prompt 261004_0515); és operativa i les
-   seues proves són les de «T5 · ?vista=multimedia» de baix. */
+/* D17 (ordre del Mestre, 260930) + v1.2.25 Lot G1: Telefonades conserva el seu
+   avís propi de projecte lliure CC; Destacats i Contingut multimèdia ja són
+   vistes operatives (sense «En construcció»). */
 const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
 test.each([
-  ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17],
-  ['destacats', 'Destacats', 'lucide-star', 'Encara no està disponible', 'En construcció']
+  ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17]
 ])('3B · ?vista=%s: fila de títol de la captura, controls inerts que avisen i la dreta buida', async (vista, titol, icona, avis, toast) => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista });
@@ -2884,7 +2881,7 @@ test('D17 · ?vista=telefonades: el «+», el cercador i la targeta diuen el tex
   expect(mocks.showToast).not.toHaveBeenCalledWith('En construcció', 'info');
 });
 
-test('3B · cada vista porta els controls de la seua captura', () => {
+test('3B · cada vista porta els controls operatius (v1.2.25)', async () => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista: 'telefonades' });
   const view = render(<XatSection />);
@@ -2895,8 +2892,6 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   mocks.params = new URLSearchParams({ vista: 'multimedia' });
   view.rerender(<XatSection />);
   const mm = screen.getByRole('complementary', { name: 'Contingut multimèdia' });
-  /* Captura 19.41.58: la cerca és una lupa a la fila de títol, amb ordenar i
-     seleccionar; cap cercador en píndola. */
   expect(within(mm).queryByRole('searchbox')).toBeNull();
   expect(within(mm.querySelector('.app-grid-col-header__accions')).getAllByRole('button').map((b) => b.getAttribute('aria-label')))
     .toEqual(['Cerca', 'Ordena', 'Selecciona']);
@@ -2904,8 +2899,6 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   const segments = within(mm).getByRole('group', { name: 'Tipus de contingut' });
   expect(within(segments).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]))
     .toEqual([['Fitxers', 'true'], ['Enllaços', 'false'], ['Documents', 'false']]);
-  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): els
-     segments ja no són inerts. Un clic canvia la pestanya, sense toast. */
   expect(within(segments).getAllByRole('button').some((b) => b.hasAttribute('aria-disabled'))).toBe(false);
   fireEvent.click(within(segments).getByRole('button', { name: 'Enllaços' }));
   expect(within(segments).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]))
@@ -2915,8 +2908,8 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   mocks.params = new URLSearchParams({ vista: 'destacats' });
   view.rerender(<XatSection />);
   const dest = screen.getByRole('complementary', { name: 'Destacats' });
-  expect(within(dest).getByRole('button', { name: 'Editar' }).classList.contains('sdp-xat-vista__pindola')).toBe(true);
-  expect(within(dest).getByRole('searchbox', { name: 'Cerca' }).getAttribute('aria-disabled')).toBe('true');
+  const cercaDest = await within(dest).findByRole('searchbox', { name: 'Cerca als missatges destacats' });
+  expect(cercaDest.hasAttribute('aria-disabled')).toBe(false);
 });
 
 /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia
@@ -2942,9 +2935,9 @@ test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conve
   expect(capcalera.querySelector('.app-grid-col-header__titol').textContent).toBe('Contingut multimèdia');
   expect(capcalera.querySelectorAll('.sdp-xat-titol-seccio svg.lucide-image')).toHaveLength(1);
   expect(capcalera.querySelector('.app-grid-col-header__accions svg.lucide-image')).toBeNull();
-  /* Fitxers, per defecte: l'avís cert dels adjunts F1 (xat-ux-a11y-06, 261104). */
-  expect(within(columna).getByRole('region', { name: 'En construcció' }).textContent)
-    .toContain('Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.');
+  /* Fitxers, per defecte: EstatBuit + Alerta canònics (v1.2.25). */
+  expect(within(columna).getByRole('region', { name: 'Fitxers' }).textContent)
+    .toContain('Pel xat ja es poden enviar fotos, vídeos, notes de veu i documents (PDF, CSV, ODT, DOCX, TXT), si la conversa ho permet.');
   expect(within(columna).getByText('Només es veu el contingut de les converses obertes en esta sessió.')).toBeTruthy();
 
   fireEvent.click(within(columna).getByRole('button', { name: 'Enllaços' }));
@@ -2963,9 +2956,10 @@ test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conve
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/a?vista=multimedia');
   expect(mocks.showToast).not.toHaveBeenCalled();
 
-  /* La lupa encara no fa res, i ho diu. */
+  /* v1.2.25 (Lot G1) · La lupa de VistaMultimedia ja és operativa i desplega el cercador. */
   fireEvent.click(within(columna.querySelector('.app-grid-col-header')).getByRole('button', { name: 'Cerca' }));
-  expect(mocks.showToast).toHaveBeenLastCalledWith('En construcció', 'info');
+  expect(within(columna).getByRole('searchbox')).toBeTruthy();
+  expect(mocks.showToast).not.toHaveBeenCalled();
   /* La dreta, el document per defecte; el rail marca la vista. */
   expect(await within(document.getElementById('app-grid-main')).findByTestId('document-per-defecte')).toBeTruthy();
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Contingut multimèdia' }).getAttribute('aria-current')).toBe('page');

@@ -17,16 +17,17 @@
  * al camí) i els ganxos de navegació de les vistes: així els fitxers .jsx
  * només exporten components.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { esIdOpac, useApp } from '../../plataforma/index.js';
 import { comandaObertaDe } from '../nucli/comanda.js';
+import { ContextBar } from '../estat/contextBar.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { codiIdiomaBar, textosUiBar } from '../i18nBar.js';
 
 /** Idioma actiu dins d'una vista del Bar, amb reserva segura 'ca' en proves aïllades. */
 export function useIdiomaBar() {
-  return codiIdiomaBar(useBar()?.idioma);
+  return codiIdiomaBar(useContext(ContextBar)?.idioma);
 }
 
 /** L'id d'una comanda: un id opac que comença per «c-» (nucli/ids.js). */

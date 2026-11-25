@@ -116,9 +116,10 @@
  * de la sessió, si n'hi ha; `hrefIdentitat` (opcional), la ruta de la vista
  * «Identitat i Finestreta»; `hrefFull` (opcional), la del Full trimestral.
  */
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
+import { Carregant } from '../../../components/PedraSeca/atoms/estats.jsx';
 import { DateTimeControl } from '../../../components/PedraSeca/atoms/controls.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Dialeg } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
@@ -142,6 +143,8 @@ import { useTauler } from './useTauler.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
+const VistaBurocraciaDiferida = lazy(() => import('../vistes/VistaBurocracia.jsx'));
+const VistaContactesDiferida = lazy(() => import('../contactes/VistaContactes.jsx'));
 
 /**
  * Les factures que podrien faltar al trimestre del Full (ordre del Mestre,
@@ -175,18 +178,8 @@ export const TITULAR_SENSE_CONFIGURAR = 'Titular sense configurar';
  */
 export const MODULS_GESTORIA = Object.freeze([
   { id: 'tauler', titol: 'Tauler Central', subtitol: 'Gestoria de Poble' },
-  {
-    id: 'facturacio', titol: 'Facturació', subtitol: 'Factures, rectificatives i pressupostos', enObres: true,
-    explica: 'L’emissió de factures sobre el llibre Veri*Factu encara no té pantalla: ara només n’hi ha el nucli. És el pas 2 del pla de la Gestoria.'
-  },
-  {
-    id: 'contactes', titol: 'Contactes', subtitol: 'Clients i proveïdors', enObres: true,
-    explica: 'La llibreta de clients i proveïdors encara no existix. Mentrestant, els proveïdors habituals els aprén el full trimestral.'
-  },
-  {
-    id: 'burocracia', titol: 'Burocràcia', subtitol: 'Models, cotitzacions i notificacions', enObres: true,
-    explica: 'El calendari d’obligacions i els avisos de terminis tenen el model pur, però encara no tenen pantalla. És el pas 4 del pla de la Gestoria.'
-  },
+  { id: 'contactes', titol: 'Contactes', subtitol: 'Clients i proveïdors' },
+  { id: 'burocracia', titol: 'Burocràcia', subtitol: 'Models, cotitzacions i notificacions' },
   { id: 'bancs', titol: 'Bancs i Tresoreria', subtitol: 'Estat de comptes reals i conciliació' },
   { id: 'impostos', titol: 'Impostos', subtitol: 'Estimacions del 303 i del 130' },
   { id: 'full', titol: 'Full trimestral', subtitol: 'El full de factures del trimestre per a la gestoria' },
@@ -558,6 +551,16 @@ export default function ShellGestoria({
     full: (
       <ContenidorGestoria magatzem={magatzem} subtle={subtle} tractors={tractors} entorn={entorn} rellotge={rellotge}
         inflate={inflate} avui={avui} descarrega={descarrega} onFactures={setFull} idioma={idioma} />
+    ),
+    contactes: (
+      <Suspense fallback={<Carregant etiqueta={tg(idioma, 'Contactes')} />}>
+        <VistaContactesDiferida full={full} descarrega={descarrega} idioma={idioma} />
+      </Suspense>
+    ),
+    burocracia: (
+      <Suspense fallback={<Carregant etiqueta={tg(idioma, 'Burocràcia')} />}>
+        <VistaBurocraciaDiferida avui={avui} descarrega={descarrega} idioma={idioma} />
+      </Suspense>
     ),
     escaner: (
       <PanellEscaner escaner={escaner} tauler={tauler} dades={dades} visible={visible} onObreTractors={obreTractors}

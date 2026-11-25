@@ -10,8 +10,9 @@
  * (1908, ~1908, 1908?) i una data desconeguda ho diu.
  */
 import { useMemo, useState } from 'react';
+import { Printer } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
-import { Accions, Alerta, Boto, EstatBuit, GrupCamps, Insignia, Pila, Taula } from '../../../components/PedraSeca/index.js';
+import { Accions, Alerta, Boto, EstatBuit, GrupCamps, Insignia, PillToggle, Pila, Taula } from '../../../components/PedraSeca/index.js';
 import { useApp } from '../../plataforma/index.js';
 import { avisosCognom, estatEfectiu, etiquetaData, urlSegura, useGenealogia } from '../nucli/index.js';
 import { nomVisible, textAlerta, textError } from '../i18nGenealogia.js';
@@ -35,14 +36,128 @@ export function useTextData() {
 
 const titolGeneracio = (generacio, tx) => (generacio >= 1 && generacio <= 4 ? tx(`arbre.generacio.${generacio}`) : tx('arbre.generacio.n', { n: generacio }));
 
+const TEXTOS_ARBRE_GRAFIC = Object.freeze({
+  ca: Object.freeze({
+    vista: 'Format de vista de l’arbre',
+    taula: 'Taula Sosa',
+    grafic: 'Arbre visual (4 generacions)',
+    imprimix: 'Imprimix arbre (A4 apaïsat)',
+    ariaSvg: 'Arbre genealògic gràfic de quatre generacions (numeració Sosa 1 a 15)',
+    sensePersona: 'Per completar'
+  }),
+  es: Object.freeze({
+    vista: 'Formato de vista del árbol',
+    taula: 'Tabla Sosa',
+    grafic: 'Árbol visual (4 generaciones)',
+    imprimix: 'Imprimir árbol (A4 apaisado)',
+    ariaSvg: 'Árbol genealógico gráfico de cuatro generaciones (numeración Sosa 1 a 15)',
+    sensePersona: 'Por completar'
+  }),
+  en: Object.freeze({
+    vista: 'Tree display format',
+    taula: 'Ahnentafel table',
+    grafic: 'Visual tree (4 generations)',
+    imprimix: 'Print tree (A4 landscape)',
+    ariaSvg: 'Four-generation family tree chart (Sosa numbering 1 to 15)',
+    sensePersona: 'To be completed'
+  }),
+  eu: Object.freeze({
+    vista: 'Zuhaitzaren ikuspegi-formatua',
+    taula: 'Sosa taula',
+    grafic: 'Zuhaitz bisuala (4 belaunaldi)',
+    imprimix: 'Inprimatu zuhaitza (A4 etzana)',
+    ariaSvg: 'Lau belaunaldiko zuhaitz genealogiko grafikoa (Sosa 1etik 15era)',
+    sensePersona: 'Osatzeko'
+  }),
+  gl: Object.freeze({
+    vista: 'Formato de vista da árbore',
+    taula: 'Táboa Sosa',
+    grafic: 'Árbore visual (4 xeracións)',
+    imprimix: 'Imprimir árbore (A4 apaisado)',
+    ariaSvg: 'Árbore xenealóxica gráfica de catro xeracións (numeración Sosa 1 a 15)',
+    sensePersona: 'Por completar'
+  })
+});
+
+function textosArbreGrafic(idioma = 'ca') {
+  const codi = String(idioma || 'ca').toLowerCase().slice(0, 2);
+  return Object.hasOwn(TEXTOS_ARBRE_GRAFIC, codi) ? TEXTOS_ARBRE_GRAFIC[codi] : TEXTOS_ARBRE_GRAFIC.ca;
+}
+
+/* Posicions netes (x, y) per a les 4 generacions Sosa 1..15 en llenç A4 apaïsat (960 × 560). */
+const POSICIONS_SOSA = Object.freeze({
+  1: { x: 20, y: 245 },
+  2: { x: 255, y: 115 },
+  3: { x: 255, y: 375 },
+  4: { x: 490, y: 50 },
+  5: { x: 490, y: 180 },
+  6: { x: 490, y: 310 },
+  7: { x: 490, y: 440 },
+  8: { x: 725, y: 15 },
+  9: { x: 725, y: 85 },
+  10: { x: 725, y: 150 },
+  11: { x: 725, y: 215 },
+  12: { x: 725, y: 280 },
+  13: { x: 725, y: 345 },
+  14: { x: 725, y: 410 },
+  15: { x: 725, y: 475 }
+});
+
+function ArbreGrafic4Gen({ files, perId, idioma, textData }) {
+  const tg = textosArbreGrafic(idioma);
+  const perSosa = new Map(files.filter((f) => f.sosa >= 1 && f.sosa <= 15).map((f) => [f.sosa, f]));
+  const ample = 210;
+  const alt = 56;
+  const arestes = [];
+  for (let sosa = 1; sosa <= 7; sosa += 1) {
+    const origen = POSICIONS_SOSA[sosa];
+    for (const fill of [sosa * 2, sosa * 2 + 1]) {
+      const desti = POSICIONS_SOSA[fill];
+      if (!desti) continue;
+      const x1 = origen.x + ample;
+      const y1 = origen.y + alt / 2;
+      const x2 = desti.x;
+      const y2 = desti.y + alt / 2;
+      const xm = (x1 + x2) / 2;
+      arestes.push(`M ${x1} ${y1} H ${xm} V ${y2} H ${x2}`);
+    }
+  }
+
+  return (
+    <Pila gap={2}>
+      <svg viewBox="0 0 960 550" role="img" aria-label={tg.ariaSvg} data-testid="arbre-grafic-4gen" data-sdp-arbre="llenc">
+        <g data-sdp-arbre="branques" fill="none" stroke="currentColor" strokeWidth="1.5">
+          {arestes.map((d, i) => <path key={i} d={d} />)}
+        </g>
+        {Object.entries(POSICIONS_SOSA).map(([sosaStr, pos]) => {
+          const sosa = Number(sosaStr);
+          const fila = perSosa.get(sosa);
+          const persona = fila?.personaId ? perId.get(fila.personaId) : null;
+          const nom = persona ? nomVisible(persona, idioma) : tg.sensePersona;
+          const dates = persona ? [textData(persona.naixement), textData(persona.defuncio)].filter(Boolean).join(' – ') : '';
+          return (
+            <g key={sosa} transform={`translate(${pos.x}, ${pos.y})`} data-sdp-arbre="node">
+              <rect width={ample} height={alt} rx="8" ry="8" data-sdp-arbre="caixa" />
+              <text x="10" y="21" data-sdp-arbre="nom">{`${sosa}. ${nom.slice(0, 24)}`}</text>
+              {dates ? <text x="10" y="42" data-sdp-arbre="meta">{dates.slice(0, 28)}</text> : null}
+            </g>
+          );
+        })}
+      </svg>
+    </Pila>
+  );
+}
+
 export function LlistaAhnentafel() {
   const g = useGenealogia();
   const tx = useT();
   const idioma = useIdioma();
+  const tg = textosArbreGrafic(idioma);
   const { ruta } = useApp();
   const estret = useEstret();
   const perId = usePersonesPerId();
   const textData = useTextData();
+  const [formatVista, setFormatVista] = useState('taula');
   if (!g.carregat) return null;
   if (!g.complet) {
     return (
@@ -72,7 +187,30 @@ export function LlistaAhnentafel() {
     <MarcGenealogia titol={tx('arbre.titol')} columna="mig" eines={eines}>
       <Pila gap={6}>
         <p>{tx('arbre.explica')}</p>
-        {generacions.map(({ generacio, files }) => (
+        <Accions>
+          <PillToggle
+            etiqueta={tg.vista}
+            valor={formatVista}
+            onCanvi={setFormatVista}
+            opcions={[
+              { valor: 'taula', text: tg.taula },
+              { valor: 'grafic', text: tg.grafic }
+            ]}
+          />
+          <Boto
+            varietat="secundari"
+            icona={Printer}
+            onClick={() => {
+              if (formatVista !== 'grafic') setFormatVista('grafic');
+              if (typeof window !== 'undefined' && typeof window.print === 'function') window.print();
+            }}
+          >
+            {tg.imprimix}
+          </Boto>
+        </Accions>
+        {formatVista === 'grafic' ? (
+          <ArbreGrafic4Gen files={g.sosa.files} perId={perId} idioma={idioma} textData={textData} />
+        ) : generacions.map(({ generacio, files }) => (
           <Taula key={generacio} titol={titolGeneracio(generacio, tx)} densa>
             <caption>{titolGeneracio(generacio, tx)}</caption>
             <thead>

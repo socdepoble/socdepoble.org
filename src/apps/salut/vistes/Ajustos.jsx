@@ -330,9 +330,12 @@ export function AvisSalut() {
         {salut.avisAcceptat ? (
           <p>{tx.avisAcceptatEl(dataCurta(dataLocalDe(salut.avis.acceptatA)))}</p>
         ) : (
-          <Accions>
-            <Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || salut.nomesLectura} onClick={accepta}>{tx.hoHeEntes}</Boto>
-          </Accions>
+          <>
+            {salut.nomesLectura ? <Alerta to="avis" titol={tx.nomesMirarTitol}>{tx.nomesMirarPanell}</Alerta> : null}
+            <Accions>
+              <Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || salut.nomesLectura} onClick={accepta}>{tx.hoHeEntes}</Boto>
+            </Accions>
+          </>
         )}
       </Pila>
     </MarcSalut>

@@ -63,7 +63,7 @@ async function codificaWebp(img, qualitat, maxCostat) {
    diferència de pes AMB SIGNE) viu a suportGestorLocal.js: este fitxer només
    exporta components (Fast Refresh, exportacionsComponents.test.js). */
 
-export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onMides, onFet }) {
+export function LaboratoriWebpLocal({ t, font, volum = null, el, src, potEscriure = false, onMides, onFet }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
   const locale = useLocaleOpcional();
   const id = useId();
@@ -158,7 +158,9 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
     setConfirmacio(null);
     setOcupat('desa');
     try {
-      const desat = await desaWebpALaCarpetaLocal(font, rutaWebp, resultat.bytes, { sobreescriu });
+      const desat = typeof volum?.desaWebp === 'function'
+        ? await volum.desaWebp(rutaWebp, resultat.bytes, { sobreescriu })
+        : await desaWebpALaCarpetaLocal(font, rutaWebp, resultat.bytes, { sobreescriu });
       onFet?.({
         missatge: { to: 'exit', parell: T['lab.desat'], valors: { ruta: desat.ruta, pes: formatKb(desat.mida, locale) } },
         seleccio: viu.current ? el.ruta : undefined,
@@ -168,7 +170,7 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
       if (error?.codi === 'FITXER_JA_EXISTEIX' && !sobreescriu) {
         if (viu.current) setConfirmacio({ tipus: 'webp', ruta: rutaWebp });
       } else {
-        onFet?.({ error });
+        onFet?.({ error, refresca: error?.codi === 'OPERACIO_PARCIAL_CONFIRMADA' });
       }
     } finally {
       if (viu.current) setOcupat(null);
@@ -180,7 +182,9 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
     setConfirmacio(null);
     setOcupat('mou');
     try {
-      const fet = await desaWebpIMouOriginalLocal(font, el.ruta, resultat.bytes, { sobreescriuWebp });
+      const fet = typeof volum?.desaWebpIMouOriginal === 'function'
+        ? await volum.desaWebpIMouOriginal(el.ruta, resultat.bytes, { sobreescriuWebp })
+        : await desaWebpIMouOriginalLocal(font, el.ruta, resultat.bytes, { sobreescriuWebp });
       onFet?.({
         missatge: { to: 'exit', parell: T['lab.desatIMogut'], valors: { webp: fet.webp.ruta, original: fet.original.ruta } },
         seleccio: viu.current ? fet.original.ruta : undefined,
@@ -190,7 +194,7 @@ export function LaboratoriWebpLocal({ t, font, el, src, potEscriure = false, onM
       if (error?.codi === 'FITXER_JA_EXISTEIX' && error?.detall?.quina === 'webp' && !sobreescriuWebp) {
         if (viu.current) setConfirmacio({ tipus: 'mou', ruta: error.detall.ruta || rutaWebp });
       } else {
-        onFet?.({ error, refresca: error?.codi === 'ORIGINAL_NO_MOGUT' });
+        onFet?.({ error, refresca: error?.codi === 'ORIGINAL_NO_MOGUT' || error?.codi === 'OPERACIO_PARCIAL_CONFIRMADA' });
       }
     } finally {
       if (viu.current) setOcupat(null);

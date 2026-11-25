@@ -1,0 +1,65 @@
+/* ============================================================================
+   IMPRESSIÓ DE LES APPS (Onada v1.2.25 · Lot G9 · esmena G2-08)
+   Tiquet tèrmic de 58 i 80 mm d'El Bar (NotaClient.jsx) i Arbre Genealògic A4
+   (Arbre.jsx). Full diferit (?inline): l'adopta ContenidorApp (RutaApps.jsx, tros
+   diferit de /app/*) amb useFullDiferit sobre el .sdp-app-contenidor que
+   conté el cos que nomenen els selectors, just darrere de
+   diferit-apps-plataforma.css, abans del primer pintat i dins de la mateixa
+   capa. Les apps no l'importen (Model B).
+   CR-01 (Gauntlet de la integració v1.2.25) · Les regles venen del final de
+   diferit-apps-plataforma.css, que BarraApp.jsx importa a l'arrencada del
+   paquet de WordPress: hi sumaven 1.477 B i passaven el sostre de
+   pesDelNucli.test.js amb credencials de llargària de producció. Els cossos són
+   els mateixos; l'àncora passa de .sdp-app-contenidor (modules.css, arrencada)
+   a .sdp-app-contenidor__cos, el cos de la mateixa caixa, que només declara
+   diferit-apps-plataforma.css: la porta de vocabulari (css-diferit-04) vol que
+   cada full diferit tinga alguna classe que només declaren fulls diferits.
+   Mateixa especificitat i el mateix element: tot el que pinta una app és dins
+   del cos. Cap altra regla toca estos atributs data-sdp-*.
+   ============================================================================ */
+@layer components {
+  .sdp-app-contenidor__cos [data-sdp-tiquet-termic] {
+    max-width: 100%;
+    margin-inline: auto;
+  }
+  .sdp-app-contenidor__cos [data-sdp-tiquet-termic="58mm"] { max-width: 24rem; }
+  .sdp-app-contenidor__cos [data-sdp-tiquet-termic="80mm"] { max-width: 32rem; }
+  .sdp-app-contenidor__cos [data-sdp-tiquet-controls] { display: flex; justify-content: center; }
+
+  .sdp-app-contenidor__cos [data-sdp-arbre="llenc"] {
+    display: block;
+    width: 100%;
+    min-width: 44rem;
+    height: auto;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    padding: var(--sdp-space-3);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-app-contenidor__cos [data-sdp-arbre="branques"] { color: var(--sdp-vora-forta); }
+  .sdp-app-contenidor__cos [data-sdp-arbre="node"] { color: var(--sdp-text-cos); }
+  .sdp-app-contenidor__cos [data-sdp-arbre="caixa"] {
+    fill: var(--sdp-fons-subtil);
+    stroke: var(--sdp-vora-control);
+    stroke-width: 1.5;
+  }
+  .sdp-app-contenidor__cos [data-sdp-arbre="nom"] {
+    fill: var(--sdp-text-titol);
+    font-family: var(--sdp-font);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+  }
+  .sdp-app-contenidor__cos [data-sdp-arbre="meta"] {
+    fill: var(--sdp-text-suau);
+    font-family: var(--sdp-font);
+    font-size: var(--sdp-text-meta);
+  }
+
+  @media print {
+    .sdp-app-contenidor__cos [data-sdp-tiquet-controls] { display: none; }
+    .sdp-app-contenidor__cos [data-sdp-tiquet-termic="58mm"] { width: 58mm; max-width: 58mm; font-family: var(--sdp-font-mono); }
+    .sdp-app-contenidor__cos [data-sdp-tiquet-termic="80mm"] { width: 80mm; max-width: 80mm; font-family: var(--sdp-font-mono); }
+    .sdp-app-contenidor__cos [data-sdp-arbre="llenc"] { border: 0; padding: 0; min-width: 0; width: 100%; page-break-inside: avoid; }
+  }
+}

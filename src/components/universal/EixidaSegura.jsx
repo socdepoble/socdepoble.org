@@ -15,6 +15,15 @@
 import { useCallback, useState } from 'react';
 import { Alerta, Boto } from '../PedraSeca/index.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext';
+
+function useIdiomaInterficieOpcional() {
+  try {
+    return useUIActionsOpcional()?.language ?? 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 /* Els camps de la fitxa (perfilCamps.js), com els diu la persona. */
 const NOMS_CAMPS = Object.freeze({
@@ -158,8 +167,11 @@ export function ErrorEixidaDelCalaix({ llengua }) {
  * Torna { demana, avis, error, ocupat }: `demana` és l'onClick del botó
  * d'eixir; `avis`, l'Alerta (o null) que el component pinta on vulga.
  */
-export function useEixidaSegura({ despres } = {}) {
+export function useEixidaSegura({ despres, llengua } = {}) {
   const { logout, preparaEixida } = useSession();
+  const idiomaContext = useIdiomaInterficieOpcional();
+  const idiomaEfectiu = codiConegut(llengua ?? idiomaContext);
+  const textos = textosAvisEixida(idiomaEfectiu);
   const [pendents, setPendents] = useState(null);
   const [ocupat, setOcupat] = useState(false);
   const [error, setError] = useState(null);
@@ -171,12 +183,12 @@ export function useEixidaSegura({ despres } = {}) {
       await logout();
     } catch {
       setOcupat(false);
-      setError(ERROR_EIXIDA);
+      setError(textos.error);
       return;
     }
     setPendents(null);
     despres?.();
-  }, [logout, despres]);
+  }, [logout, despres, textos.error]);
 
   const demana = useCallback(async () => {
     if (ocupat) return;
@@ -194,7 +206,6 @@ export function useEixidaSegura({ despres } = {}) {
     await eix();
   }, [ocupat, preparaEixida, eix]);
 
-  const textos = TEXTOS_AVIS_EIXIDA.ca;
   const avis = pendents ? (
     <Alerta
       to="avis"
@@ -207,7 +218,7 @@ export function useEixidaSegura({ despres } = {}) {
         </>
       )}
     >
-      <p>{textPendentsEixida(pendents)}</p>
+      <p>{textPendentsEixida(pendents, idiomaEfectiu)}</p>
     </Alerta>
   ) : null;
 

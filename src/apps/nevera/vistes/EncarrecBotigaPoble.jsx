@@ -230,7 +230,9 @@ export function EncarrecBotigaPoble({ llista }) {
     accioEnVolRef.current = true;
     try {
       const copiat = await copiaAlPortaRetalls();
-      if (copiat === true) navigate('/xat');
+      if (copiat === true) {
+        navigate('/xat');
+      }
     } finally {
       accioEnVolRef.current = false;
     }

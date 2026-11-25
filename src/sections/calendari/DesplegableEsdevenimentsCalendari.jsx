@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CalendarDays, Check, ChevronDown, ChevronUp, CircleHelp, Users, X } from 'lucide-react';
+import { AlertTriangle, CalendarDays, Check, ChevronDown, ChevronUp, CircleHelp, Sprout, Users, X } from 'lucide-react';
 import { Link } from '../../app/contexts/RouterContext';
 import { PillToggle } from '../../components/PedraSeca/index.js';
 import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext';
@@ -24,7 +24,15 @@ import {
   textNet,
 } from './desplegableEsdevenimentsCalendariModel.js';
 
-export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments, onSaltaAMes = null }) {
+const TEXTOS_ENLLAC_AGRICOLA = Object.freeze({
+  ca: 'Calendari Agrícola',
+  es: 'Calendario Agrícola',
+  en: 'Agricultural Calendar',
+  eu: 'Nekazaritza Egutegia',
+  gl: 'Calendario Agrícola'
+});
+
+export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments, onSaltaAMes = null, ambError = false }) {
   const arrelRef = useRef(null);
   useFullDiferit(arrelRef, 'esdeveniments', cssEsdeveniments);
 
@@ -71,6 +79,13 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
             { valor: 'all', text: tr('section.calendari.filtre.tot', tx.filtreTot) }
           ]}
         />
+        <Link
+          className="sdp-boto sdp-boto--secundari"
+          to="/page/banc-de-llavors?llibre=calendari"
+        >
+          <Sprout size={16} aria-hidden="true" focusable="false" />
+          <span>{TEXTOS_ENLLAC_AGRICOLA[String(language || 'ca').toLowerCase().slice(0, 2)] || TEXTOS_ENLLAC_AGRICOLA.ca}</span>
+        </Link>
       </div>
 
       {mode === 'events' ? (
@@ -102,20 +117,22 @@ export function SelectorModeCalendari({ mode, onCanviMode, entradesEsdeveniments
           </div>
 
           {totalActes === 0 ? (
-            <div className="sdp-paragraf-centrat">
-              <p className="sdp-cal-desplegable__detall" role="status">
-                {tr('section.calendari.desplegable.buit', tx.desplegableBuit)}
-              </p>
-              <div className="sdp-cal-desplegable__accions">
-                <button
-                  type="button"
-                  className="sdp-boto sdp-boto--secundari"
-                  onClick={() => onCanviMode('all')}
-                >
-                  {tr('section.calendari.desplegable.veureTot', tx.desplegableVeureTot)}
-                </button>
+            ambError ? null : (
+              <div className="sdp-paragraf-centrat">
+                <p className="sdp-cal-desplegable__detall" role="status">
+                  {tr('section.calendari.desplegable.buit', tx.desplegableBuit)}
+                </p>
+                <div className="sdp-cal-desplegable__accions">
+                  <button
+                    type="button"
+                    className="sdp-boto sdp-boto--secundari"
+                    onClick={() => onCanviMode('all')}
+                  >
+                    {tr('section.calendari.desplegable.veureTot', tx.desplegableVeureTot)}
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <ul id={idLlista} className="sdp-cal-desplegable__llista" hidden={!desplegat}>
               {desplegat ? entradesEsdeveniments.map((entrada) => {

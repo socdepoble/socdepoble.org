@@ -1,54 +1,38 @@
 /**
  * VistaMultimedia.jsx — la columna central de «Contingut multimèdia»
- * (/xat?vista=multimedia, captura 19.41.58), operativa per ordre del Mestre
- * del 261004 (prompt 261004_0515, T5). Fins ara era una de les vistes en
- * construcció (VistaEnConstruccio).
+ * (/xat?vista=multimedia), 100 % operativa (Onada v1.2.25 · Lot G1):
  *
- * De dalt a baix, amb el MATEIX DOM de fila de títol i de control segmentat
- * que tenia en construcció (FilaDeTitolVista i FilaSegments):
- *   · la fila de títol amb la lupa, Ordena i Selecciona. Continuen INERTS
- *     (aria-disabled i «En construcció» en prémer-los): el Mestre encara no
- *     n'ha decidit la lògica i no hi ha captura del que fan;
- *   · el subtítol i el control segmentat «Fitxers | Enllaços | Documents»,
- *     ara de veres: aria-pressed diu la pestanya triada;
- *   · el cos, amb el contingut de multimediaXat.js agrupat per mes:
- *       - Enllaços: per a cada URL, el domini, l'enllaç (EnllacSegur: pestanya
- *         nova, rel="noopener noreferrer" i l'avís de domini enganyós) i el
- *         botó que obri la conversa on es va compartir. Són dos controls
- *         GERMANS: un <a> no pot viure dins d'un <button>;
- *       - Fitxers i Documents: sense cap element, la targeta «En construcció»
- *         diu què hi haurà i què es pot enviar pel xat. T7a (261104,
- *         xat-ux-a11y-06) · Abans deia que F0 només enviava text
- *         (SDP-XAT-010), i F1 ja envia fotos, vídeo i missatges de veu: l'avís
- *         (avisAdjunts) ho diu, amb «si la conversa ho permet» (un node o una
- *         conversa sense la capacitat xatMultimedia no en mostra el +; este
- *         component no llig cap context), i que els documents encara no. Si
- *         n'arriben, una fila per element amb la icona del tipus i sense
- *         miniatura: encara no hi ha contracte d'URL;
- *   · sempre, l'avís local: només es veu el que s'ha carregat en esta sessió.
- * Cap previsualització d'enllaços: demanaria un servidor intermediari.
- *
- * Presentacional: no llig cap context de l'app, i per això es pot pintar al
- * catàleg de disseny. La pestanya triada és estat local.
+ *   · Fila de títol amb les 3 accions VIVES (zero inerts):
+ *       - Cerca: desplega el cercador per text, conversa, autor, domini o nom de document;
+ *       - Ordena: commuta entre més recents primer i més antics primer (aria-pressed);
+ *       - Selecciona: permet marcar elements (i copiar enllaços seleccionats en lot).
+ *   · Control segmentat «Fitxers | Enllaços | Documents» (aria-pressed).
+ *   · Miniatures segures per a imatges amb `adjunt.id` resoltes sota demanda via `urlAdjuntXat`
+ *     (MAI URLs externes crues de metadades — zero píxels espia).
+ *   · Estats buits i avisos amb `<EstatBuit>` i `<Alerta>` canònics de Pedra Seca 2.0.
  */
-import { useId, useMemo, useState } from 'react';
-import { Construction, ListChecks, ListFilter, Search } from 'lucide-react';
-import { FilaDeTitolVista, FilaSegments } from './VistaEnConstruccio.jsx';
-import { TEXTOS_CONSTRUCCIO } from './vistaEnConstruccioModel.js';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { CircleX, Copy, FileText, Image as ImageIcon, Link2, ListChecks, ListFilter, Search, X } from 'lucide-react';
+import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
+import { Alerta, Boto, EstatBuit } from '../../../components/PedraSeca/index.js';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
+import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
+import { plega } from '../../search/indexCerca.js';
+import cssV1225 from '../../../css/diferit-xat-v1225.css?inline';
+import { FilaSegments } from './VistaEnConstruccio.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
 import { AvatarFil } from './FilaConversa.jsx';
 import { IconaFiltre } from './FiltresCerca.jsx';
 import { FILTRES_CERCA_XAT } from '../cercaXat.js';
+import { normalitzaLlenguaXat, textXatV1225 } from '../i18nVistesXatV1225.js';
 import { PESTANYES_MULTIMEDIA, agrupaPerMes, contingutMultimedia } from '../multimediaXat.js';
 import { etiquetaLlista } from '../temps.js';
 
 const CAP = Object.freeze([]);
 const noop = () => {};
 
-/* Els textos de la vista, parells [clau i18n, text en valencià]. Els de la
-   fila de títol i del control segmentat són els que tenia en construcció,
-   amb les mateixes claus; les opcions van en l'ordre de PESTANYES_MULTIMEDIA.
-   `buit`: el que diu cada pestanya sense contingut. */
+/* Els textos de la vista, parells [clau i18n, text en valencià]. Es conserven
+   totes les claus registrades als diccionaris globals. */
 export const TEXTOS_MULTIMEDIA = Object.freeze({
   icones: Object.freeze([
     ['section.xat.vista.cerca', 'Cerca', Search],
@@ -69,12 +53,8 @@ export const TEXTOS_MULTIMEDIA = Object.freeze({
     enllacos: Object.freeze(['section.xat.vista.multimedia.enllacos.buit', "Encara no s'ha compartit cap enllaç en les converses obertes."]),
     documents: Object.freeze(['section.xat.vista.multimedia.documents.buit', "Ací hi haurà els documents que s'han compartit en les converses."])
   }),
-  /* T7a (261104, xat-ux-a11y-06) · `adjunts` ja no es pinta: era fals des de
-     F1. Es conserva el parell perquè la clau continua als cinc diccionaris i
-     src/config/i18n.claus.test.js en fixa la reserva; retirar-la és feina de
-     qui toca els diccionaris. La vista pinta `avisAdjunts`, clau nova. */
   adjunts: Object.freeze(['section.xat.vista.multimedia.adjunts', 'Els adjunts arriben amb la fase F1 del xat: ara només es pot enviar text.']),
-  avisAdjunts: Object.freeze(['section.xat.vista.multimedia.avisAdjunts', 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.']),
+  avisAdjunts: Object.freeze(['section.xat.vista.multimedia.avisAdjunts', 'Pel xat ja es poden enviar fotos, vídeos, notes de veu i documents (PDF, CSV, ODT, DOCX, TXT), si la conversa ho permet.']),
   avisLocal: Object.freeze(['section.xat.vista.multimedia.avisLocal', 'Només es veu el contingut de les converses obertes en esta sessió.']),
   obri: Object.freeze(['section.xat.vista.multimedia.obri', 'Obri la conversa de {nom}']),
   senseData: Object.freeze(['section.xat.vista.multimedia.senseData', 'Sense data'])
@@ -84,7 +64,6 @@ function nomDe(fil, t) {
   return fil?.name || fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
 }
 
-/* Qui l'ha compartit: «Tu» si és meu; si no, l'autor, quan se sap. */
 function autorDe(missatge, t) {
   if (missatge?.sender === 'me') return t('section.xat.fila.tu', 'Tu');
   return missatge?.author || '';
@@ -100,22 +79,65 @@ function GrupDeMes({ titol, children }) {
   );
 }
 
-/* Una URL: el domini, l'enllaç i, germà, el botó de la conversa.
-   Revisió 261004 (Relleus 4-12) · El nom accessible del botó conté, sencer i
-   en el mateix ordre, el que es veu (WCAG 2.5.3): el nom de la conversa, qui
-   l'ha compartit i l'hora, darrere del verb. Abans només deia el nom de la
-   conversa. El reemplaçament és una funció: amb una cadena, String.replace
-   interpretaria $&, $`, $' i $$ del nom, que el posa la gent. */
-function FilaEnllac({ item, onObriFil, locale, t }) {
+/* Miniatura segura: només per `adjunt.id` via port `urlAdjuntXat` (mai URLs externes). */
+function MiniaturaSegura({ adjuntId, configAdjunts, fallback }) {
+  const [urlResolta, setUrlResolta] = useState(null);
+  useEffect(() => {
+    if (!adjuntId || !teCapacitat('xatMultimedia')) return undefined;
+    const ctrl = new AbortController();
+    let allibera = null;
+    let muntat = true;
+    urlAdjuntXat(adjuntId, { ...configAdjunts, signal: ctrl.signal }, {
+      renova: false,
+      reten: (fn) => { if (typeof fn === 'function') allibera = fn; }
+    }).then((url) => {
+      if (!muntat || ctrl.signal.aborted) { allibera?.(); return; }
+      setUrlResolta(url || null);
+    }).catch(() => {});
+    return () => {
+      muntat = false;
+      ctrl.abort();
+      allibera?.();
+    };
+  }, [adjuntId, configAdjunts]);
+
+  if (urlResolta) {
+    return (
+      <img
+        src={urlResolta}
+        alt=""
+        className="sdp-xat-multimedia__miniatura"
+        width="48"
+        height="48"
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  return fallback;
+}
+
+function FilaEnllac({ item, onObriFil, locale, t, seleccio = null }) {
   const { fil, missatge, enllac } = item;
   const nom = nomDe(fil, t);
   const autor = autorDe(missatge, t);
   const hora = etiquetaLlista(missatge.creatAl, { locale, t });
   const vist = autor ? `${nom} · ${autor}` : nom;
   const etiqueta = t(...TEXTOS_MULTIMEDIA.obri).replace('{nom}', () => (hora ? `${vist} ${hora}` : vist));
+  const triat = Boolean(seleccio?.triats?.has(item.clau));
   return (
     <li className="sdp-xat-multimedia__item">
-      <span className="sdp-xat-multimedia__host">{enllac.host}</span>
+      <div className="sdp-xat-multimedia__seleccio-item">
+        {seleccio ? (
+          <input
+            type="checkbox"
+            checked={triat}
+            aria-label={enllac.href}
+            onChange={() => seleccio.onAlterna(item.clau)}
+          />
+        ) : null}
+        <span className="sdp-xat-multimedia__host">{enllac.host}</span>
+      </div>
       <div className="sdp-xat-multimedia__enllac">
         <EnllacSegur segment={enllac} t={t} />
       </div>
@@ -133,91 +155,308 @@ function FilaEnllac({ item, onObriFil, locale, t }) {
   );
 }
 
-/* Un fitxer o un document: una fila de xat, amb la icona del tipus en lloc
-   de la miniatura, que obri la conversa.
-   Ordre del Mestre (261026_2126; pla 261026_2130, P1-36) · Un adjunt no és
-   cap targeta de conversa: la fila senzilla (sdp-xat-fila--senzilla)
-   conserva els 72px i la icona de 48 amb el dibuix de 24 d'abans. */
-function FilaAdjunt({ item, onObriFil, locale, t }) {
+function FilaAdjunt({ item, onObriFil, locale, t, configAdjunts = null, seleccio = null }) {
   const { fil, missatge, tipus } = item;
   const filtre = FILTRES_CERCA_XAT.find((f) => f.id === tipus) || null;
   const nom = nomDe(fil, t);
   const etiqueta = filtre ? t(filtre.clauI18n, filtre.etiqueta) : '';
-  const text = typeof missatge.text === 'string' ? missatge.text.trim() : '';
+  const nomAdjunt = String(missatge.metadades?.adjunt?.nom || missatge.metadades?.adjunt?.name || '').trim();
+  const text = typeof missatge.text === 'string' && missatge.text.trim() ? missatge.text.trim() : nomAdjunt;
   const hora = etiquetaLlista(missatge.creatAl, { locale, t });
+  const adjuntId = missatge.tipus === 'imatge' && missatge.metadades?.adjunt?.id
+    ? String(missatge.metadades.adjunt.id)
+    : null;
+  const iconaFallback = (
+    <span className="sdp-xat-avatar-icona" aria-hidden="true">
+      <IconaFiltre nom={filtre?.icona} size={24} />
+    </span>
+  );
+  const triat = Boolean(seleccio?.triats?.has(item.clau));
+
   return (
     <li className="sdp-xat-multimedia__adjunt">
-      <button type="button" className="sdp-xat-fila sdp-xat-fila--senzilla" onClick={() => onObriFil(fil.id)}>
-        <span className="sdp-xat-avatar-icona" aria-hidden="true">
-          <IconaFiltre nom={filtre?.icona} size={24} />
-        </span>
-        <span className="sdp-xat-fila__cos">
-          <span className="sdp-xat-fila__cap">
-            <span className="sdp-xat-fila__nom">{nom}</span>
-            {hora ? <time className="sdp-xat-fila__hora" dateTime={missatge.creatAl}>{hora}</time> : null}
+      <div className="sdp-xat-multimedia__seleccio-item">
+        {seleccio ? (
+          <input
+            type="checkbox"
+            checked={triat}
+            aria-label={text ? `${nom}: ${text}` : `${nom}: ${etiqueta}`}
+            onChange={() => seleccio.onAlterna(item.clau)}
+          />
+        ) : null}
+        <button type="button" className="sdp-xat-fila sdp-xat-fila--senzilla" onClick={() => onObriFil(fil.id)}>
+          {adjuntId ? (
+            <MiniaturaSegura adjuntId={adjuntId} configAdjunts={configAdjunts} fallback={iconaFallback} />
+          ) : iconaFallback}
+          <span className="sdp-xat-fila__cos">
+            <span className="sdp-xat-fila__cap">
+              <span className="sdp-xat-fila__nom">{nom}</span>
+              {hora ? <time className="sdp-xat-fila__hora" dateTime={missatge.creatAl}>{hora}</time> : null}
+            </span>
+            <span className="sdp-xat-fila__peu">
+              <span className="sdp-xat-fila__previa">{text ? `${etiqueta} · ${text}` : etiqueta}</span>
+            </span>
           </span>
-          <span className="sdp-xat-fila__peu">
-            <span className="sdp-xat-fila__previa">{text ? `${etiqueta} · ${text}` : etiqueta}</span>
-          </span>
-        </span>
-      </button>
+        </button>
+      </div>
     </li>
   );
 }
 
 export default function VistaMultimedia({
   titol, icona = null, esquerra = null, fils = CAP, missatgesPerFil = null,
-  onObriFil = noop, onEnConstruccio = noop, locale = 'ca-ES', t
+  configAdjunts = null, onObriFil = noop, locale = 'ca-ES', idioma: idiomaProp = null, t
 }) {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'xat-v1225', cssV1225);
+
+  const idioma = normalitzaLlenguaXat(idiomaProp || locale);
   const [pestanya, setPestanya] = useState(PESTANYES_MULTIMEDIA[0]);
-  const idBuit = useId();
+  const [cercaOberta, setCercaOberta] = useState(false);
+  const [terme, setTerme] = useState('');
+  const [ordreAntic, setOrdreAntic] = useState(false);
+  const [modeSeleccio, setModeSeleccio] = useState(false);
+  const [triats, setTriats] = useState(() => new Set());
+  const [avisCopia, setAvisCopia] = useState('');
+  const cercaRef = useRef(null);
+  const lupaRef = useRef(null);
+  const idCerca = useId();
+
   const tr = (parell) => t(parell[0], parell[1]);
-  /* La lupa, Ordena i Selecciona: inerts però enfocables, com abans. */
-  const inert = { 'aria-disabled': 'true', onClick: onEnConstruccio };
-  const icones = TEXTOS_MULTIMEDIA.icones.map(([clau, text, Icona]) => ({ etiqueta: t(clau, text), Icona }));
   const segments = { etiqueta: tr(TEXTOS_MULTIMEDIA.segments.etiqueta), opcions: TEXTOS_MULTIMEDIA.segments.opcions.map(tr) };
   const triat = PESTANYES_MULTIMEDIA.indexOf(pestanya);
 
-  const grups = useMemo(
-    () => agrupaPerMes(contingutMultimedia({ fils, missatgesPerFil, pestanya }), { locale }),
-    [fils, missatgesPerFil, pestanya, locale]
+  useEffect(() => {
+    if (cercaOberta) cercaRef.current?.focus();
+  }, [cercaOberta]);
+
+  const itemsBase = useMemo(
+    () => contingutMultimedia({ fils, missatgesPerFil, pestanya }),
+    [fils, missatgesPerFil, pestanya]
   );
 
+  const termeNet = terme.trim();
+  const plegat = plega(termeNet);
+  const itemsFiltrats = useMemo(() => {
+    const filtrats = !plegat ? itemsBase : itemsBase.filter((item) => {
+      const text = [
+        item.fil?.name,
+        item.fil?.title,
+        item.missatge?.author,
+        item.missatge?.text,
+        item.missatge?.metadades?.adjunt?.nom,
+        item.enllac?.host,
+        item.enllac?.href
+      ].filter(Boolean).join(' ');
+      return plega(text).includes(plegat);
+    });
+    return ordreAntic ? [...filtrats].reverse() : filtrats;
+  }, [itemsBase, plegat, ordreAntic]);
+
+  const grups = useMemo(
+    () => agrupaPerMes(itemsFiltrats, { locale }),
+    [itemsFiltrats, locale]
+  );
+
+  const alternaSeleccioItem = (clau) => {
+    setTriats((previs) => {
+      const nous = new Set(previs);
+      if (nous.has(clau)) nous.delete(clau);
+      else nous.add(clau);
+      return nous;
+    });
+  };
+
+  const copiaEnllacosTriats = async () => {
+    const urls = itemsFiltrats
+      .filter((item) => triats.has(item.clau) && item.enllac?.href)
+      .map((item) => item.enllac.href);
+    if (!urls.length) return;
+    if (typeof navigator?.clipboard?.writeText !== 'function') {
+      setAvisCopia(textXatV1225(idioma, 'multimedia.errorCopia'));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(urls.join('\n'));
+      setAvisCopia(textXatV1225(idioma, 'multimedia.enllacosCopiats'));
+    } catch {
+      setAvisCopia(textXatV1225(idioma, 'multimedia.errorCopia'));
+    }
+  };
+
+  const etiquetaCerca = tr(TEXTOS_MULTIMEDIA.icones[0]);
+  const etiquetaOrdena = tr(TEXTOS_MULTIMEDIA.icones[1]);
+  const etiquetaSelecciona = tr(TEXTOS_MULTIMEDIA.icones[2]);
+  const titolOrdena = ordreAntic ? textXatV1225(idioma, 'multimedia.ordenaAntic') : textXatV1225(idioma, 'multimedia.ordenaRecent');
+
+  const seleccioObj = modeSeleccio ? { triats, onAlterna: alternaSeleccioItem } : null;
   let cos;
   if (grups.length) {
     const Fila = pestanya === 'enllacos' ? FilaEnllac : FilaAdjunt;
     cos = grups.map((grup) => (
       <GrupDeMes key={grup.clau || 'sense-data'} titol={grup.titol || tr(TEXTOS_MULTIMEDIA.senseData)}>
-        {grup.items.map((item) => <Fila key={item.clau} item={item} onObriFil={onObriFil} locale={locale} t={t} />)}
+        {grup.items.map((item) => (
+          <Fila
+            key={item.clau}
+            item={item}
+            onObriFil={onObriFil}
+            locale={locale}
+            t={t}
+            configAdjunts={configAdjunts}
+            seleccio={seleccioObj}
+          />
+        ))}
       </GrupDeMes>
     ));
-  } else if (pestanya === 'enllacos') {
-    cos = <p className="sdp-workspace-state" role="status">{tr(TEXTOS_MULTIMEDIA.buit.enllacos)}</p>;
-  } else {
-    /* Res compartit encara: què hi haurà i, cert des de F1 (xat-ux-a11y-06),
-       què es pot enviar pel xat. */
+  } else if (termeNet) {
     cos = (
-      <section className="sdp-xat-construccio" aria-labelledby={idBuit}>
-        <span className="sdp-xat-construccio__icona" aria-hidden="true">
-          <Construction size={32} aria-hidden="true" focusable="false" />
-        </span>
-        <h3 id={idBuit} className="sdp-xat-construccio__titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</h3>
-        <p className="sdp-xat-construccio__text">{tr(TEXTOS_MULTIMEDIA.buit[pestanya])}</p>
-        <p className="sdp-xat-construccio__avis">{tr(TEXTOS_MULTIMEDIA.avisAdjunts)}</p>
-      </section>
+      <div role="status">
+        <EstatBuit icona={Search} titol={textXatV1225(idioma, 'multimedia.buitCercaTitol')}>
+          <p>{textXatV1225(idioma, 'multimedia.buitCercaText', { terme: termeNet })}</p>
+        </EstatBuit>
+      </div>
+    );
+  } else if (pestanya === 'enllacos') {
+    cos = (
+      <div role="status">
+        <EstatBuit icona={Link2} titol={textXatV1225(idioma, 'multimedia.buitEnllacosTitol')}>
+          <p>{tr(TEXTOS_MULTIMEDIA.buit.enllacos)}</p>
+        </EstatBuit>
+      </div>
+    );
+  } else {
+    const IconaBuit = pestanya === 'documents' ? FileText : ImageIcon;
+    const titolBuit = pestanya === 'documents'
+      ? textXatV1225(idioma, 'multimedia.buitDocumentsTitol')
+      : textXatV1225(idioma, 'multimedia.buitFitxersTitol');
+    cos = (
+      <div className="sdp-xat-multimedia__alerta">
+        <EstatBuit icona={IconaBuit} titol={titolBuit}>
+          <p>{tr(TEXTOS_MULTIMEDIA.buit[pestanya])}</p>
+        </EstatBuit>
+        <Alerta to="info" viva={false}>
+          <p>{tr(TEXTOS_MULTIMEDIA.avisAdjunts)}</p>
+        </Alerta>
+      </div>
     );
   }
 
   return (
-    <>
-      <FilaDeTitolVista titol={titol} icona={icona} icones={icones} esquerra={esquerra} inert={inert} />
+    <div ref={arrelRef}>
+      <AppGridColumn esDark={true} titol={esquerra ? null : titol} icona={esquerra ? null : icona} esquerra={esquerra}>
+        <button
+          ref={lupaRef}
+          type="button"
+          className="sdp-xat-icona"
+          aria-label={etiquetaCerca}
+          title={etiquetaCerca}
+          aria-expanded={cercaOberta}
+          aria-controls={cercaOberta ? idCerca : undefined}
+          onClick={() => {
+            if (cercaOberta) { setCercaOberta(false); setTerme(''); }
+            else setCercaOberta(true);
+          }}
+        >
+          <Search size={24} aria-hidden="true" focusable="false" />
+        </button>
+        <button
+          type="button"
+          className="sdp-xat-icona"
+          aria-label={etiquetaOrdena}
+          title={titolOrdena}
+          aria-pressed={ordreAntic ? 'true' : 'false'}
+          onClick={() => setOrdreAntic((v) => !v)}
+        >
+          <ListFilter size={24} aria-hidden="true" focusable="false" />
+        </button>
+        <button
+          type="button"
+          className="sdp-xat-icona"
+          aria-label={etiquetaSelecciona}
+          title={modeSeleccio ? textXatV1225(idioma, 'multimedia.surtSeleccio') : textXatV1225(idioma, 'multimedia.selecciona')}
+          aria-pressed={modeSeleccio ? 'true' : 'false'}
+          onClick={() => {
+            setModeSeleccio((v) => {
+              if (v) { setTriats(new Set()); setAvisCopia(''); }
+              return !v;
+            });
+          }}
+        >
+          <ListChecks size={24} aria-hidden="true" focusable="false" />
+        </button>
+      </AppGridColumn>
 
       <FilaSegments
         subtitol={tr(TEXTOS_MULTIMEDIA.subtitol)}
         segments={segments}
         triat={triat}
-        onTria={(i) => setPestanya(PESTANYES_MULTIMEDIA[i])}
+        onTria={(i) => {
+          setPestanya(PESTANYES_MULTIMEDIA[i]);
+          setTriats(new Set());
+          setAvisCopia('');
+        }}
       />
+
+      {cercaOberta ? (
+        <div id={idCerca} className="sdp-xat-cerca">
+          <div className="sdp-xat-cerca__camp">
+            <label className="sdp-xat-cerca__etiqueta">
+              <span className="sdp-nomes-lector">{etiquetaCerca}</span>
+              <Search size={20} aria-hidden="true" focusable="false" />
+              <input
+                ref={cercaRef}
+                type="search"
+                autoComplete="off"
+                value={terme}
+                placeholder={textXatV1225(idioma, 'multimedia.cercaPlaceholder')}
+                onChange={(e) => setTerme(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (terme) setTerme('');
+                    else { setCercaOberta(false); lupaRef.current?.focus(); }
+                  }
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              className="sdp-xat-icona"
+              aria-label={textXatV1225(idioma, 'multimedia.cercaNeteja')}
+              title={textXatV1225(idioma, 'multimedia.cercaNeteja')}
+              onClick={() => {
+                if (terme) { setTerme(''); cercaRef.current?.focus(); }
+                else { setCercaOberta(false); lupaRef.current?.focus(); }
+              }}
+            >
+              <CircleX size={20} aria-hidden="true" focusable="false" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {modeSeleccio ? (
+        <div className="sdp-xat-multimedia__barra-seleccio" role="region" aria-label={etiquetaSelecciona}>
+          <span role="status">
+            {avisCopia || textXatV1225(idioma, 'multimedia.seleccionats', { n: triats.size })}
+          </span>
+          <div className="sdp-xat-cerca-conversa__accions">
+            {pestanya === 'enllacos' && triats.size > 0 ? (
+              <Boto varietat="secundari" icona={Copy} onClick={copiaEnllacosTriats}>
+                {textXatV1225(idioma, 'multimedia.copiaEnllacos')}
+              </Boto>
+            ) : null}
+            <button
+              type="button"
+              className="sdp-xat-icona"
+              aria-label={textXatV1225(idioma, 'multimedia.surtSeleccio')}
+              onClick={() => { setModeSeleccio(false); setTriats(new Set()); setAvisCopia(''); }}
+            >
+              <X size={20} aria-hidden="true" focusable="false" />
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="sdp-workspace-column__body">
         <div className="sdp-xat-multimedia" role="region" aria-label={segments.opcions[triat]}>
@@ -225,6 +464,6 @@ export default function VistaMultimedia({
           <p className="sdp-xat-resultats__avis">{tr(TEXTOS_MULTIMEDIA.avisLocal)}</p>
         </div>
       </div>
-    </>
+    </div>
   );
 }

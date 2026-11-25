@@ -245,7 +245,7 @@ export default {
   'editor.closca.mostrarAlMur.inactiu': "Solo en su libro o carpeta",
   'editor.closca.mostrarAlMur.ajudaActiu': "Visible en el escaparate del Muro y guardada dentro de su libro o carpeta.",
   'editor.closca.mostrarAlMur.ajudaInactiu': "Se mantiene guardada y accesible dentro de su libro o carpeta sin aparecer en el Muro.",
-  'editor.closca.imatge.ajuda': "Puedes subir cualquier tipo de imagen o archivo multimedia.",
+  'editor.closca.imatge.ajuda': "Elige una foto (JPG, PNG o WebP).",
   'editor.closca.imatge.pujant': "La imagen todavía se está guardando. Cuando acabe, podrás volver a cambiarla.",
   'editor.closca.imatge.errorDesar': "No se ha podido guardar la imagen.",
   'editor.closca.forma.capcalera': "Recomendado: la miniatura del listado y la tarjeta del Muro muestran la misma imagen entera. Si la nota ya está en el Muro, la tarjeta no cambia hasta que la vuelvas a publicar.",
@@ -513,6 +513,7 @@ export default {
   'nav.legalShort': 'Legal',
   'nav.connectar': 'Conectar',
   'nav.idioma': 'Idioma',
+  'nav.registreCanvis': 'Registro de cambios',
   'nav.perfil': 'Perfil',
   'nav.cerca': 'Buscar',
   'nav.acces': 'Acceso',
@@ -2382,7 +2383,9 @@ export default {
   'section.xat.vista.multimedia.adjunts': 'Los adjuntos llegan con la fase F1 del chat: ahora solo se puede enviar texto.',
   /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
      vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
-  'section.xat.vista.multimedia.avisAdjunts': 'Por el chat ya se pueden enviar fotos, vídeos y mensajes de voz, si la conversación lo permite. Los documentos, todavía no.',
+  /* CR-03 (v1.2.25) · Amb els documents de C1, el text de G1, que abans pintava el diccionari
+     paral·lel (multimedia.avisAdjuntsViu); la vista el torna a demanar al t de l'app. */
+  'section.xat.vista.multimedia.avisAdjunts': 'Por el chat ya se pueden enviar fotos, vídeos, notas de voz y documentos (PDF, CSV, ODT, DOCX, TXT), si la conversación lo permite.',
   'section.xat.vista.multimedia.avisLocal': 'Solo se ve el contenido de las conversaciones abiertas en esta sesión.',
   'section.xat.vista.multimedia.obri': 'Abrir la conversación de {nom}',
   'section.xat.vista.multimedia.senseData': 'Sin fecha',
@@ -4286,4 +4289,14 @@ export default {
   'section.notes.carpeta.sistema': "Sistema",
   'pagina.barra.editar': "Editar",
   'pagina.barra.editantCom': "Editando como {nom}",
+  // Oleada v1.2.25 · Lot G9 · Búsqueda en conversación, OPFS iPad, PUB-D11-01, ENT0108-VS-03 y XAT_ACCIO_INVALIDA
+  'section.xat.conversa.cerca': "Buscar en esta conversación",
+  'section.xat.error.accioInvalida': "Esta acción no es válida para este mensaje.",
+  'section.multimedia.local.ipadImporta': "Importa fotos o archivos (iPad / navegador)",
+  'section.multimedia.local.ipadImportaAria': "Importa fotos o archivos en este iPad o navegador",
+  'section.multimedia.local.ipadNotaCopiaPrivada': "Importar crea una copia privada en este navegador y nunca modifica los originales del dispositivo. No sustituye una copia de seguridad externa.",
+  'section.notes.visibilitat.errorPublicarDocument': "No se ha publicado nada: un documento privado de la nota no se ha podido hacer público y el resto de este pueblo no podría abrirlo. Vuelve a intentarlo más tarde o quítalo antes de publicar.",
+  'section.login.error.altesTancades': "Las nuevas altas están cerradas temporalmente en este pueblo. Si ya tienes cuenta, entra con tu correo.",
+  'section.login.error.compteSuspes': "Esta cuenta está suspendida temporalmente. Contacta con la administración de este pueblo si crees que es un error.",
+  'section.login.error.confirmaCorreuGoogle': "Tu cuenta de Google todavía no tiene el correo confirmado. Confírmalo antes de volver a entrar.",
 };

@@ -118,7 +118,7 @@ function categoriaConteElement(categoryId, item, categories, inclouDescendents) 
 }
 
 /** One catalogue shell; the domain retains its data, actions and inline page. */
-export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false, navegacioLlibres = null, inclouDescendents = false, afegirCataleg = false, itemSlug = null, sincronitzaRuta = false }) {
+export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false, navegacioLlibres = null, inclouDescendents = false, afegirCataleg = false, itemSlug = null, sincronitzaRuta = false, avisLlista = null }) {
   const ui = useUIActionsOpcional();
   const textos = textosCatalegWorkspace(ui?.language);
   /* USA-05 · La vista persistix per superfície (vistaCataleg.js). */
@@ -310,6 +310,7 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
     ]}
     peuNavegacio={(mostraPrincipal || mostraAdminImportacio) ? <PeuCataleg textos={textos} mostraPrincipal={mostraPrincipal}
       mostraAdminImportacio={mostraAdminImportacio} onHome={tornaAInici} navega={navega} /> : null}
+    avisLlista={avisLlista}
     renderItem={({ item, active, onSelect }) => {
       if (vista === 'canonica') return <DefaultItemCard item={{ ...item, image: item.imageUrl || item.image, icon: item.glyph || item.icon }}
         active={active} onSelect={onSelect} idElement={item.id} nomAccessible={item.title} imageAlt={item.imageAlt} />;

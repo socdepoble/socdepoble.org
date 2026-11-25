@@ -284,7 +284,8 @@ describe('els literals citats són els de l’app', () => {
     // Només a la pàgina pròpia, com Salut: les dades personals de salut obrin la guarda d'ama del document.
     expect(text).toContain('només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web');
     expect(manifest).toContain("dadesPersonals: 'salut',");
-    expect(font('src/apps/genealogia/AppGenealogia.jsx')).toContain("if (!genealogia.avisAcceptat && pathname !== ruta('avis')) return <Navigate to={ruta('avis')} replace />;");
+    expect(font('src/apps/genealogia/AppGenealogia.jsx')).toContain("if (!genealogia.avisAcceptat && pathname !== ruta('avis'))");
+    expect(font('src/apps/genealogia/AppGenealogia.jsx')).toContain("t(idioma, 'boto.entesos')");
     // Cap promesa del que l'app no fa: ni dictat de veu, ni impressió, ni futur.
     expect(text).not.toMatch(/veu alta|dictat|imprimir|serà |podràs|tindràs|en obres/i);
   });

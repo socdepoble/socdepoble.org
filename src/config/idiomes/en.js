@@ -245,7 +245,7 @@ export default {
   'editor.closca.mostrarAlMur.inactiu': "Only in its book or folder",
   'editor.closca.mostrarAlMur.ajudaActiu': "Visible in the Wall showcase and kept inside its book or folder.",
   'editor.closca.mostrarAlMur.ajudaInactiu': "Stays saved and accessible inside its book or folder without appearing on the Wall.",
-  'editor.closca.imatge.ajuda': "You can upload any type of image or media file.",
+  'editor.closca.imatge.ajuda': "Choose a photo (JPG, PNG or WebP).",
   'editor.closca.imatge.pujant': "The image is still being saved. When it finishes, you can change it again.",
   'editor.closca.imatge.errorDesar': "The image could not be saved.",
   'editor.closca.forma.capcalera': "Recommended: the list thumbnail and the Wall card show the same whole image. If the note is already on the Wall, the card does not change until you publish it again.",
@@ -513,6 +513,7 @@ export default {
   'nav.legalShort': 'Legal',
   'nav.connectar': 'Connect',
   'nav.idioma': 'Language',
+  'nav.registreCanvis': 'Changelog',
   'nav.perfil': 'Profile',
   'nav.cerca': 'Search',
   'nav.acces': 'Access',
@@ -2382,7 +2383,9 @@ export default {
   'section.xat.vista.multimedia.adjunts': 'Attachments arrive with phase F1 of the chat: for now only text can be sent.',
   /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
      vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
-  'section.xat.vista.multimedia.avisAdjunts': 'Photos, videos and voice messages can already be sent in the chat, if the conversation allows it. Documents, not yet.',
+  /* CR-03 (v1.2.25) · Amb els documents de C1, el text de G1, que abans pintava el diccionari
+     paral·lel (multimedia.avisAdjuntsViu); la vista el torna a demanar al t de l'app. */
+  'section.xat.vista.multimedia.avisAdjunts': 'Chat supports photos, videos, voice messages and documents (PDF, CSV, ODT, DOCX, TXT) when the conversation allows attachments.',
   'section.xat.vista.multimedia.avisLocal': 'Only content from the conversations opened in this session is shown.',
   'section.xat.vista.multimedia.obri': 'Open the conversation {nom}',
   'section.xat.vista.multimedia.senseData': 'No date',
@@ -4287,4 +4290,14 @@ export default {
   'section.notes.carpeta.sistema': "System",
   'pagina.barra.editar': "Edit",
   'pagina.barra.editantCom': "Editing as {nom}",
+  // Wave v1.2.25 · Lot G9 · In-conversation search, OPFS iPad, PUB-D11-01, ENT0108-VS-03 and XAT_ACCIO_INVALIDA
+  'section.xat.conversa.cerca': "Search in this conversation",
+  'section.xat.error.accioInvalida': "This action is not valid for this message.",
+  'section.multimedia.local.ipadImporta': "Import photos or files (iPad / browser)",
+  'section.multimedia.local.ipadImportaAria': "Import photos or files on this iPad or browser",
+  'section.multimedia.local.ipadNotaCopiaPrivada': "Importing creates a private copy inside this browser and never modifies the original files on your device. It does not replace an external backup.",
+  'section.notes.visibilitat.errorPublicarDocument': "Nothing was published: a private document in the note could not be made public, so neighbours would not be able to open it. Try again later or remove it before publishing.",
+  'section.login.error.altesTancades': "New registrations are temporarily closed in this village. If you already have an account, sign in with your email.",
+  'section.login.error.compteSuspes': "This account is temporarily suspended. Contact this village’s administration if you believe this is a mistake.",
+  'section.login.error.confirmaCorreuGoogle': "Your Google account’s email address is not verified yet. Verify it before signing in again.",
 };

@@ -245,7 +245,7 @@ export default {
   'editor.closca.mostrarAlMur.inactiu': "Només al seu llibre o carpeta",
   'editor.closca.mostrarAlMur.ajudaActiu': "Visible a l’aparador del Mur i guardada dins del seu llibre o carpeta.",
   'editor.closca.mostrarAlMur.ajudaInactiu': "Es manté guardada i accessible dins del seu llibre o carpeta sense aparéixer al Mur.",
-  'editor.closca.imatge.ajuda': "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.",
+  'editor.closca.imatge.ajuda': "Tria una foto (JPG, PNG o WebP).",
   'editor.closca.imatge.pujant': "Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.",
   'editor.closca.imatge.errorDesar': "No s'ha pogut desar la imatge.",
   'editor.closca.forma.capcalera': "Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.",
@@ -518,6 +518,7 @@ export default {
   'nav.legalShort': 'Legal',
   'nav.connectar': 'Connectar',
   'nav.idioma': 'Idioma',
+  'nav.registreCanvis': 'Registre de canvis',
   'nav.perfil': 'Perfil',
   'nav.cerca': 'Cerca',
   'nav.acces': 'Accés',
@@ -2444,7 +2445,9 @@ export default {
   'section.xat.vista.multimedia.adjunts': 'Els adjunts arriben amb la fase F1 del xat: ara només es pot enviar text.',
   /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
      vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
-  'section.xat.vista.multimedia.avisAdjunts': 'Pel xat ja es poden enviar fotos, vídeos i missatges de veu, si la conversa ho permet. Els documents, encara no.',
+  /* CR-03 (v1.2.25) · Amb els documents de C1, el text de G1, que abans pintava el diccionari
+     paral·lel (multimedia.avisAdjuntsViu); la vista el torna a demanar al t de l'app. */
+  'section.xat.vista.multimedia.avisAdjunts': 'Pel xat ja es poden enviar fotos, vídeos, notes de veu i documents (PDF, CSV, ODT, DOCX, TXT), si la conversa ho permet.',
   'section.xat.vista.multimedia.avisLocal': 'Només es veu el contingut de les converses obertes en esta sessió.',
   'section.xat.vista.multimedia.obri': 'Obri la conversa de {nom}',
   'section.xat.vista.multimedia.senseData': 'Sense data',
@@ -4361,4 +4364,14 @@ export default {
   'section.notes.carpeta.sistema': "Sistema",
   'pagina.barra.editar': "Editar",
   'pagina.barra.editantCom': "Editant com a {nom}",
+  // Onada v1.2.25 · Lot G9 · Cerca conversa, OPFS iPad, PUB-D11-01, ENT0108-VS-03 i XAT_ACCIO_INVALIDA
+  'section.xat.conversa.cerca': "Cerca en esta conversa",
+  'section.xat.error.accioInvalida': "Esta acció no és vàlida per a este missatge.",
+  'section.multimedia.local.ipadImporta': "Importa fotos o fitxers (iPad / navegador)",
+  'section.multimedia.local.ipadImportaAria': "Importa fotos o fitxers en este iPad o navegador",
+  'section.multimedia.local.ipadNotaCopiaPrivada': "Importar crea una còpia privada en este navegador i no modifica mai els originals del dispositiu. No substituïx una còpia de seguretat externa.",
+  'section.notes.visibilitat.errorPublicarDocument': "No s’ha publicat res: un document privat de la nota no s’ha pogut fer públic, i la resta d’este poble no l’hauria pogut obrir. Torna-ho a provar més tard o lleva’l abans de publicar.",
+  'section.login.error.altesTancades': "Les altes noves estan tancades temporalment en este poble. Si ja tens compte, entra amb el teu correu.",
+  'section.login.error.compteSuspes': "Este compte està suspés temporalment. Contacta amb l’administració d’este poble si creus que és un error.",
+  'section.login.error.confirmaCorreuGoogle': "El teu compte de Google encara no té el correu confirmat. Confirma’l abans de tornar a entrar.",
 };

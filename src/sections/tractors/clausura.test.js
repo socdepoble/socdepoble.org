@@ -47,7 +47,18 @@ const ENTRADES = Object.freeze([
 
 /* Del graf però fora de les fonts, a propòsit. */
 const LLISTA_BLANCA = Object.freeze({
-  [`${GESTORIA}/tractors.js`]: 'Són els manifests: calculaEmpremta en resumix els valors sencers (manifestNet) i el mòdul només els exporta congelats.'
+  [`${GESTORIA}/tractors.js`]: 'Són els manifests: calculaEmpremta en resumix els valors sencers (manifestNet) i el mòdul només els exporta congelats.',
+  /* Onada v1.2.25 (Lot G2/G9) · Vistes pures en càlcul local (Burocràcia i Contactes) sense lectura de disc ni modificació dels tractors signats. */
+  [`${GESTORIA}/vistes/VistaBurocracia.jsx`]: 'Vista pura de càlcul local d’obligacions i conservació (sense lectura de disc ni accés a tractors signats).',
+  [`${GESTORIA}/contactes/VistaContactes.jsx`]: 'Vista local de contactes del full trimestral ja en memòria (sense lectura de disc).',
+  [`${GESTORIA}/i18nGestoriaV1225.js`]: 'Diccionari estàtic en 5 llengües per a les vistes locals de Burocràcia i Contactes.',
+  [`${GESTORIA}/burocracia/nucli/avisos.js`]: 'Model pur de calendari d’avisos consumit per VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/burocracia/nucli/icsTerminis.js`]: 'Generador pur d’ICS privat consumit per VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/burocracia/nucli/obligacions.js`]: 'Model pur d’obligacions fiscals consumit per VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/burocracia/nucli/terminis.js`]: 'Model pur de terminis fiscals consumit per VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/documents/plaNeteja.js`]: 'Taula pura de terminis mínims de conservació consumida per VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/identitat/nucli/guardes.js`]: 'Guardes pures de tipus per als titulars locals de VistaBurocracia (zero lectura de disc).',
+  [`${GESTORIA}/identitat/nucli/titular.js`]: 'Constructor pur de titulars locals de VistaBurocracia (zero lectura de disc).'
 });
 
 /* La porta sencera i la UI que la fa servir: les dos aprovacions humanes

@@ -15,10 +15,12 @@
  * columna va fora del <nav> de l'arbre (UniversalWorkspace · peuNavegacio).
  */
 import { useId } from 'react';
-import { FolderOpen, FolderPlus, RefreshCw, Unplug, X } from 'lucide-react';
+import { FolderOpen, FolderPlus, RefreshCw, Unplug, Upload, X } from 'lucide-react';
 import { Alerta, Boto, Insignia } from '../../components/PedraSeca/index.js';
 import { nomVisibleLocal } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, tradueix } from './textosGestorLocal.js';
+import { textOpfsIpad } from './i18nOpfsIpad.js';
+import { useLocaleOpcional } from './useLocaleOpcional.js';
 import { adoptaFullDiferit } from '../../config/fullDiferit.js';
 import cssDiferitArxiu from '../../css/diferit-arxiu.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'arxiu', cssDiferitArxiu); };
@@ -34,6 +36,7 @@ export function BarraVolumsLocals({
   gestCaducat = false,
   contenidorRef = null,
   onVincula,
+  onImportaIpad = null,
   onTria,
   onReconnecta,
   onOblida,
@@ -42,6 +45,7 @@ export function BarraVolumsLocals({
   nivell = 3
 }) {
   const tr = (parell, valors) => tradueix(t, parell, valors);
+  const locale = useLocaleOpcional();
   const id = useId();
   const idTitol = `${id}-titol`;
   const actiu = volums.find((v) => v.id === volumActiu) || null;
@@ -74,6 +78,18 @@ export function BarraVolumsLocals({
         <Boto varietat="primari" icona={FolderPlus} aria-label={tr(T.vincula)} onClick={onVincula} disabled={ocupat} data-accio="vincula">
           {tr(T.vincula).split(' ')[0]}
         </Boto>
+        {typeof onImportaIpad === 'function' ? (
+          <Boto
+            varietat="secundari"
+            icona={Upload}
+            aria-label={tr(['section.multimedia.local.ipadImportaAria', textOpfsIpad(locale, 'aria')])}
+            onClick={onImportaIpad}
+            disabled={ocupat}
+            data-accio="importa-ipad"
+          >
+            {tr(['section.multimedia.local.ipadImporta', textOpfsIpad(locale, 'boto')])}
+          </Boto>
+        ) : null}
         {obert ? (
           <>
             <Boto icona={RefreshCw} onClick={onRelleig} disabled={ocupat}>{tr(T.relleig)}</Boto>
@@ -117,6 +133,11 @@ export function BarraVolumsLocals({
       ) : null}
 
       {!potTriar ? <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">{tr(T.senseSelector)}</p> : null}
+      {typeof onImportaIpad === 'function' ? (
+        <p ref={adoptaEstilsDiferits} className="sdp-arxiu-local__ajuda">
+          {tr(['section.multimedia.local.ipadNotaCopiaPrivada', textOpfsIpad(locale, 'avisCopiaPrivada')])}
+        </p>
+      ) : null}
       <p className="sdp-arxiu-local__ajuda">{tr(T.privadesa)}</p>
     </section>
   );

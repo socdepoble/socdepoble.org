@@ -62,7 +62,7 @@ test('T22 · sense sessió, la barra taronja diu «Foraster» i «Poble de la pe
 test('T35 · sense onHeroEdit, el botó de la capçalera diu «Editar capçalera» i l’ajuda de sempre', () => {
   const { getByRole, container } = closca({});
   expect(getByRole('button', { name: 'Editar capçalera' })).toBeTruthy();
-  expect(container.querySelector('.hero-image .sdp-camp__ajuda').textContent).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
+  expect(container.querySelector('.hero-image .sdp-camp__ajuda').textContent).toBe('Tria una foto (JPG, PNG o WebP).');
 });
 
 test('T35 · amb onHeroEdit, el botó porta l’etiqueta del pare i li passa «acaba», que torna a la imatge', () => {

@@ -34,8 +34,9 @@
  *
  * El rellotge i l'atzar s'injecten (proves); el magatzem també.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSessioApp } from '../../plataforma/index.js';
+import { ContextBar } from './contextBar.js';
 import { codiIdiomaBar } from '../i18nBar.js';
 import { creaMagatzemBar } from '../magatzem.js';
 import { errorBar } from '../nucli/comu.js';
@@ -54,8 +55,6 @@ import { llistaReposicio } from '../nucli/reposicio.js';
 import { obteLlavor } from '../llavors/index.js';
 import { detectaMigsMoviments } from '../nucli/migMoviment.js';
 import { textError } from './textos.js';
-
-const ContextBar = createContext(null);
 
 const araReal = () => new Date().toISOString();
 const AMB_TORN = Object.freeze({ ambTorn: true });
@@ -487,4 +486,9 @@ export function useBar() {
   const valor = useContext(ContextBar);
   if (!valor) throw new Error('useBar s’ha de cridar dins de ProveidorBar.');
   return valor;
+}
+
+/** Variant opcional per a vistes o proves aïllades fora de ProveidorBar. */
+export function useBarOpcional() {
+  return useContext(ContextBar);
 }

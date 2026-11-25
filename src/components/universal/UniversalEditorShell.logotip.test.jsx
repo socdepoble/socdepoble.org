@@ -35,8 +35,8 @@ test('ordre E · en repòs, la ranura del logotip pinta el DOM de sempre', () =>
   expect(fills).toEqual(['INPUT.sdp-nomes-lector', 'BUTTON.sdp-boto sdp-boto--secundari', 'P.sdp-camp__ajuda']);
   const boto = ranura(container).querySelector('button');
   expect(boto.hasAttribute('disabled')).toBe(false);
-  expect(ranura(container).querySelector('.sdp-camp__ajuda').textContent).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
-  expect(ranura(container).querySelector('input').getAttribute('accept')).toBe('image/*,video/*,audio/*,.pdf,.doc,.docx');
+  expect(ranura(container).querySelector('.sdp-camp__ajuda').textContent).toBe('Tria una foto (JPG, PNG o WebP).');
+  expect(ranura(container).querySelector('input').getAttribute('accept')).toBe('image/*');
 });
 
 test('ordre E · amb onLogoEdit, el botó porta l’etiqueta del pare i li passa «acaba», sense obrir cap selector', () => {

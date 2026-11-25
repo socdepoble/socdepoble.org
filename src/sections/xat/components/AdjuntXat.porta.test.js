@@ -59,14 +59,15 @@ describe('Pedra Seca i Shadow DOM', () => {
   /* R32.6 (P0-119) · D-R27-1 (opció b) · Les regles del reproductor de veu (.sdp-xat-veu*) són al full
      diferit src/css/diferit-xat-veu.css, que AdjuntXat.jsx adopta a l'arrel on es pinta (fullDiferit.js). */
   const diferitVeu = llig('src/css/diferit-xat-veu.css');
-  const canonics = [css, moduls, llig('src/css/components.css'), diferitVeu].join('\n');
+  const diferitV1225 = llig('src/css/diferit-xat-v1225.css');
+  const canonics = [css, moduls, llig('src/css/components.css'), diferitVeu, diferitV1225].join('\n');
   test('cada classe del JSX és declarada', () => {
     const classes = new Set(FONTS.flatMap((f) => [...llig(f).matchAll(/className="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/))).filter(Boolean));
     const orfes = [...classes].filter((c) => !new RegExp(`\\.${c.replace(/[-_]/g, '\\$&')}(?![\\w-])`).test(canonics));
     expect(orfes).toEqual([]);
   });
   test('cap color en brut ni estil en línia', () => {
-    for (const full of [css, diferitVeu]) expect(full.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
+    for (const full of [css, diferitVeu, diferitV1225]) expect(full.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
     for (const f of FONTS) expect(llig(f)).not.toMatch(/\sstyle=\{|import\s+[^;]*\.css['"]/);
   });
   test('el full viatja dins del CSS compartit que la SPA i l’encastat injecten', () => {

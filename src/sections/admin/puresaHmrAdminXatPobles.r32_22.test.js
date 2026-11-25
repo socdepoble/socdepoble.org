@@ -111,10 +111,11 @@ describe('Onada R32.22 · T2 · Puresa HMR dels 7 components .jsx i contracte pu
     actualitzaInsigniaApp(3, { setAppBadge });
     expect(setAppBadge).toHaveBeenCalledWith(3);
 
-    expect(Object.keys(VISTES_EN_CONSTRUCCIO)).toEqual(['telefonades', 'destacats']);
+    expect(Object.keys(VISTES_EN_CONSTRUCCIO)).toEqual(['telefonades']);
     expect(TEXTOS_CONSTRUCCIO.titol[1]).toBe('En construcció');
     expect(textosDeVista('inexistent', (_, r) => r)).toBeNull();
-    expect(textosDeVista('destacats', (_, r) => r)?.accio).toEqual({ tipus: 'pindola', etiqueta: 'Editar' });
+    expect(textosDeVista('destacats', (_, r) => r)).toBeNull();
+    expect(textosDeVista('telefonades', (_, r) => r)?.accio).toEqual({ tipus: 'nou', etiqueta: 'Nova telefonada' });
 
     expect(COLLECCIONS_RESUM).toEqual(['noticies', 'agenda', 'directori', 'memoria', 'memoriaOral']);
     expect(MAXIM_BYTES_OPENDATA).toBe(64 * 1024 * 1024);

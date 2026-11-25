@@ -307,21 +307,22 @@ export default function AppGestoria() {
       <PaginaApp title={tx.facturacioTitol} subtitle={tx.facturacioSubtitol} labels={etiquetesFacturacio}
         author={autor} rellotgeViu showComment={false} showShare={false} showConnect={false}>
         <Pila gap={4}>
-          <Alerta to="info" viva={false} titol={tx.abastFacturacioTitol}>
-            {tx.abastFacturacioText}
+          {/* v1.2.25 (FN0-003 · Lot G2) · Una sola banda compacta d'estat en lloc de dues <Alerta> apilades. */}
+          <Alerta
+            to={titular ? 'info' : 'avis'}
+            viva={false}
+            titol={tx.abastFacturacioTitol}
+            accions={!titular ? (
+              <Link className="sdp-boto sdp-boto--secundari" to={entradaAlCompte}>{tx.identificaTitularBoto}</Link>
+            ) : undefined}
+          >
+            <p>{tx.abastFacturacioText}</p>
+            <p>
+              <strong>{titular ? tx.titularVinculatTitol(titular.nom) : tx.senseSessioFacturacioTitol}</strong>
+              {' · '}
+              {titular ? tx.titularVinculatText : tx.senseSessioFacturacioText}
+            </p>
           </Alerta>
-          {titular ? (
-            <Alerta to="exit" viva={false} titol={tx.titularVinculatTitol(titular.nom)}>
-              {tx.titularVinculatText}
-            </Alerta>
-          ) : (
-            <Alerta to="avis" viva={false} titol={tx.senseSessioFacturacioTitol}>
-              <p>{tx.senseSessioFacturacioText}</p>
-              <Accions>
-                <Link className="sdp-boto sdp-boto--secundari" to={entradaAlCompte}>{tx.identificaTitularBoto}</Link>
-              </Accions>
-            </Alerta>
-          )}
           <LimitErrorPontGestoria clauRuta={pathname} tx={tx} rutaTauler={rutaTauler}>
             <Suspense fallback={<Carregant etiqueta={tx.carregantFacturacio} />}>
               <Facturacio idioma={idioma} />

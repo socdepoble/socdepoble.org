@@ -8,7 +8,7 @@ import { useScrollDeNavegacio } from '../hooks/useScrollDeNavegacio.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
 import { Globe, MoonStar, Search, Settings, Sun } from '../icons.jsx';
-import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
+import { ChevronDown, LayoutGrid, PanelLeftClose, Tag } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/IaiaIcon.jsx';
 import { tradueix, useTraductorOpcional } from '../components/PedraSeca/hooks/useTraductorOpcional.js';
 import BrandMark from '../components/BrandMark';
@@ -139,7 +139,11 @@ import { ProveidorModeImmersiu } from './contexts/ModeImmersiuContext.jsx';
 const SECCIONS_VISIBLES = ['xat', 'mur', 'mercat', 'pobles', 'notes'];
 const ALL_NAV_SECTIONS = SECTIONS.filter((section) => SECTION_ORDER.includes(section.id));
 const NAV_SECTIONS = ALL_NAV_SECTIONS.filter((section) => SECCIONS_VISIBLES.includes(section.id));
-const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter((section) => !SECCIONS_VISIBLES.includes(section.id));
+/* IDEA-354 (Onada v1.2.25 · Lot G3) · «Versions» es retira del desplegable «Sistema» i el seu lloc
+   passa a ser el número de versió clicable al peu discret de La Roca, enllaçat al Registre de canvis
+   en 3 columnes de /disseny (/versions continua com a ruta compatible). */
+const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter((section) => !SECCIONS_VISIBLES.includes(section.id) && section.id !== 'versions');
+const RUTA_REGISTRE_CANVIS_PEU = '/disseny?categoria=registre-de-canvis&item=registre-de-canvis-conjunt';
 /* Dins de «Sistema», un filet separa les eines dels textos del projecte. */
 const PRIMERA_DEL_PROJECTE = 'projecte';
 /* Com NavLink (matchPaths): la ruta, les subrutes i tot el que hi penja amb '/'. */
@@ -205,6 +209,9 @@ const NOMS_CLOSCA = Object.freeze({
   seccions: Object.freeze(['nav.seccions', 'Seccions']),
   sistema: Object.freeze(['nav.sistema', 'Sistema']),
   idioma: Object.freeze(['nav.idioma', 'Idioma']),
+  /* IDEA-354 (v1.2.25 · Lot G3) · El rètol del peu de versió. CR-03 (Gauntlet de la integració v1.2.25) · Abans era un
+     diccionari en línia (ETIQUETA_REGISTRE_CANVIS_PEU); ara passa pels cinc diccionaris, amb els mateixos textos. */
+  registreCanvis: Object.freeze(['nav.registreCanvis', 'Registre de canvis']),
   saltaContingut: Object.freeze(['nav.saltaContingut', 'Salta al contingut principal']),
   navegacioPrincipal: Object.freeze(['nav.navegacioPrincipal', 'Navegació principal']),
   obrirMenu: Object.freeze(['nav.obrirMenu', 'Obrir menú']),
@@ -341,6 +348,18 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
             >
               <Globe className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">{nom(NOMS_CLOSCA.idioma)}</span>
+            </NavLink>
+            <NavLink
+              to={RUTA_REGISTRE_CANVIS_PEU}
+              transicio
+              className="nav-item nav-item--versio-peu"
+              data-testid="barra-versio-peu"
+              aria-label={`${nom(NOMS_CLOSCA.registreCanvis)} · v${VERSIO_SISTEMA}`}
+              title={isDesktopSidebarClosed && !isCompact ? `${nom(NOMS_CLOSCA.registreCanvis)} · v${VERSIO_SISTEMA}` : undefined}
+              onClick={() => { if (isCompact) toggleSidebar(); }}
+            >
+              <Tag className="icona-linia" strokeWidth={2.1} size={20} aria-hidden="true" focusable="false" />
+              <span className="nav-item__text">{`v${VERSIO_SISTEMA}`}</span>
             </NavLink>
           </div>
         </div>

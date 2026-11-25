@@ -13,9 +13,9 @@
  *     les capes de l'amfitrió i de la persona);
  *   · el component és l'export per defecte d'AppBar.jsx;
  *   · les entrades són la barra lateral de l'app (disseny del Bar §A.8) i
- *     el primer tram de cada ruta interna (rutesBar.js). «TPV» (ordre del
- *     Mestre, 261006) és el TPV Universal, al costat de la Caixa, que no
- *     canvia i continua sent l'entrada per defecte.
+ *     el primer tram de cada ruta interna (rutesBar.js). `entradaPerDefecte`
+ *     és `'cataleg'` (i «TPV» / «Caixa» s'obrin en 1 clic des de la barra i
+ *     les accions ràpides, sense passos previs bloquejants — IDEA-348).
  * Les dades són locals per disseny (IndexedDB del dispositiu, sense
  * sincronitzar): cap capacitat del backend, cap dada personal.
  * permisos.escriure 'sessio': la plataforma el traduïx a un booleà
@@ -60,6 +60,7 @@ export default {
     { slug: 'taules', titol: { ca: 'Taules', es: 'Mesas', en: 'Tables', eu: 'Mahaiak', gl: 'Mesas' }, icona: 'LayoutGrid', grup: 'servei' },
     { slug: 'emportar', titol: { ca: 'Per emportar', es: 'Para llevar', en: 'Takeaway', eu: 'Eramateko', gl: 'Para levar' }, icona: 'Package', grup: 'servei' },
     { slug: 'tiquets', titol: { ca: 'Tiquets del torn', es: 'Tiques del turno', en: 'Shift receipts', eu: 'Txandako tiketak', gl: 'Tíckets da quenda' }, icona: 'FileText', grup: 'servei' },
+    { slug: 'cuina', titol: { ca: 'Cuina (KDS)', es: 'Cocina (KDS)', en: 'Kitchen (KDS)', eu: 'Sukaldea (KDS)', gl: 'Cociña (KDS)' }, icona: 'ClipboardList', grup: 'servei' },
     { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo', en: 'Catalogue', eu: 'Katalogoa', gl: 'Catálogo' }, icona: 'LayoutGrid', grup: 'carta' },
     { slug: 'productes', titol: { ca: 'Productes', es: 'Productos', en: 'Products', eu: 'Produktuak', gl: 'Produtos' }, icona: 'Coffee', grup: 'carta' },
     { slug: 'categories', titol: { ca: 'Categories', es: 'Categorías', en: 'Categories', eu: 'Kategoriak', gl: 'Categorías' }, icona: 'LayoutDashboard', grup: 'carta' },

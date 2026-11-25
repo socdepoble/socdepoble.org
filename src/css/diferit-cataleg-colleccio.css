@@ -67,9 +67,11 @@
     color: var(--sdp-crom-text);
   }
   /* Gauntlet v1.2.15 · p.sdp-buit és la línia d'EstatBuit breu («Sense torn actiu.» del Bar a la Caixa): hi
-     queia a 1,23:1, com el «Carregant…». Cap altre EstatBuit pinta un <p class="sdp-buit">. */
-  :root:not([data-theme="dark"]) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit):not(:is(.sdp-alerta, dialog) *),
-  :host(:not([data-theme="dark"])) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit):not(:is(.sdp-alerta, dialog) *) {
+     queia a 1,23:1, com el «Carregant…». Cap altre EstatBuit pinta un <p class="sdp-buit">.
+     Onada v1.2.25 (Lot G5 · RR-D12-01) · .sdp-camp__ajuda (ex. l'avís de frase de pas a Genealogia)
+     també queia a 1,23:1 damunt Grafit 700; amb --sdp-crom-text-secundari arriba a 7,81:1 AAA. */
+  :root:not([data-theme="dark"]) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit, .sdp-camp__ajuda):not(:is(.sdp-alerta, dialog) *),
+  :host(:not([data-theme="dark"])) .app-grid-column--left > .sdp-marc-columna > .sdp-marc-columna__cos :is(.sdp-camp-fitxer__estat, .sdp-carregant, p.sdp-buit, .sdp-camp__ajuda):not(:is(.sdp-alerta, dialog) *) {
     color: var(--sdp-crom-text-secundari);
   }
   .sdp-marc-columna__cap { position: relative; z-index: 1; flex: none; }

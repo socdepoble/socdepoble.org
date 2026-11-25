@@ -55,6 +55,7 @@ import {
 import { escoltaOblitCarpetesLocals } from './bibliotecaCarpetesLocals.js';
 import { canviaElDisc } from './suportGestorLocal.js';
 import { TEXTOS_LOCAL as T, traduccioDeReserva } from './textosGestorLocal.js';
+import { textOpfsIpad } from './i18nOpfsIpad.js';
 
 const OCUPATS = new Set(['comprovant', 'llegint']);
 
@@ -79,7 +80,9 @@ export function useGestorArxiusLocals({
   cens = null,
   mitjansWeb = [],
   t = traduccioDeReserva,
+  locale = 'ca',
   magatzemCarpetes = null,
+  creaVolumOpfs = null,
   entorn = globalThis,
   cripto = globalThis.crypto,
   seleccioRef,
@@ -121,6 +124,7 @@ export function useGestorArxiusLocals({
   const hashRef = useRef(null);
   const barraRef = useRef(null);
   const inputRef = useRef(null);
+  const inputFitxersRef = useRef(null);
   const retornDialeg = useRef(null);
   const canvisRef = useRef(false);
   const viuRef = useRef(true);
@@ -130,7 +134,23 @@ export function useGestorArxiusLocals({
   }, [onSeleccio]);
 
   const volums = useMemo(() => [...recordats, ...deSessio], [recordats, deSessio]);
-  const potEscriure = typeof font?.escriu === 'function';
+  /* Costura C6a (Codex): en façanes OPFS/IDB protegides per Web Locks, `font.potEscriure`
+     (booleà explícit) mana sobre la mera presència de `font.escriu`. */
+  const potEscriure = typeof font?.potEscriure === 'boolean' ? font.potEscriure : typeof font?.escriu === 'function';
+  const volumActiuObjRef = useRef(null);
+  const [volumActiuObj, setVolumActiuObj] = useState(null);
+
+  const oblidaFontSegura = useCallback((f, v = null) => {
+    if (typeof v?.oblida === 'function') {
+      v.oblida();
+      return;
+    }
+    if (typeof f?.oblida === 'function') {
+      f.oblida();
+      return;
+    }
+    if (f) oblidaFont(f);
+  }, []);
 
   /* La selecció de qui munta el gestor: undefined = sense canvi. */
   const avisaSeleccio = useCallback((canvi) => {
@@ -157,8 +177,10 @@ export function useGestorArxiusLocals({
     generacio.current += 1;
     hashRef.current?.abort();
     hashRef.current = null;
-    if (fontRef.current) oblidaFont(fontRef.current);
+    if (fontRef.current) oblidaFontSegura(fontRef.current, volumActiuObjRef.current);
     fontRef.current = null;
+    volumActiuObjRef.current = null;
+    setVolumActiuObj(null);
     setFont(null);
     setSal(null);
     setEntrades([]);
@@ -171,7 +193,8 @@ export function useGestorArxiusLocals({
        font oberta (una reconnexió), la URL es queda: en obrir-se, apunta a
        l'arxiu que demanava. */
     if (seleccio && teniaFont && seleccioRef?.current != null) avisaSeleccio({ carpeta: '', ruta: null, sal: null });
-  }, [avisaSeleccio, descartaCanvis, seleccioRef]);
+    /* GEM-48 · oblidaFontSegura és estable (useCallback sense dependències): no torna a crear buidaFont. */
+  }, [avisaSeleccio, descartaCanvis, oblidaFontSegura, seleccioRef]);
 
   /* QA-R2-03 · Amb `epoca` (la que ha capturat qui l'obri abans de la seua
      primera espera), una continuació d'una època vella (l'eixida, o una altra
@@ -185,9 +208,15 @@ export function useGestorArxiusLocals({
     setEstatVolum('llegint');
     setGestCaducat(false);
     setMissatge(null);
+    if (volum.volumC6a) {
+      volumActiuObjRef.current = volum.volumC6a;
+      setVolumActiuObj(volum.volumC6a);
+    }
     let nova;
     try {
-      nova = volum.fitxers ? fontDesDeFitxers(volum.fitxers, { nom: volum.nom }) : fontDesDeHandle(volum.handle);
+      if (volum.font) nova = volum.font;
+      else if (volum.fitxers) nova = fontDesDeFitxers(volum.fitxers, { nom: volum.nom });
+      else nova = fontDesDeHandle(volum.handle);
     } catch (error) {
       setEstatVolum('error');
       setMissatge({ to: 'error', error });
@@ -210,7 +239,7 @@ export function useGestorArxiusLocals({
       setCerca('');
       setPagina({ carpeta: '', n: 1 });
       setEstatVolum('obert');
-      if (!volum.efimer) Promise.resolve(bib.marcaAcces?.(volum.id)).catch(() => {});
+      if (!volum.efimer && !volum.privatDelNavegador) Promise.resolve(bib.marcaAcces?.(volum.id)).catch(() => {});
     } catch (error) {
       oblidaFont(nova);
       if (gen !== generacio.current) return;
@@ -268,10 +297,12 @@ export function useGestorArxiusLocals({
       viuRef.current = false;
       generacio.current += 1;
       hashRef.current?.abort();
-      if (fontRef.current) oblidaFont(fontRef.current);
+      if (fontRef.current) oblidaFontSegura(fontRef.current, volumActiuObjRef.current);
       fontRef.current = null;
+      volumActiuObjRef.current = null;
+      volumOpfsViuRef.current = false;
     };
-  }, []);
+  }, [oblidaFontSegura]);
 
   /* QA-A01b · Eixida de la sessió: el gestor no sobreviu a qui l'ha obert.
      `rellegeix`: la biblioteca del perfil es torna a llegir (una persona
@@ -281,6 +312,8 @@ export function useGestorArxiusLocals({
     epocaBib.current += 1;
     const epoca = epocaBib.current;
     const local = seleccioRef?.current != null;
+    volumOpfsViuRef.current = false;
+    volumOpfsRef.current = null;
     buidaFont({ seleccio: false });
     setPendent(null);
     setRecordats([]);
@@ -298,8 +331,15 @@ export function useGestorArxiusLocals({
       .then((llista) => {
         if (viuRef.current && epoca === epocaBib.current) setRecordats(Array.isArray(llista) ? llista : []);
       })
-      .catch(() => {});
-  }, [bib, buidaFont, avisaSeleccio, seleccioRef]);
+      .catch(() => {
+        /* ML-15 (v1.2.25 · Lot G6) · No deixar que les carpetes vinculades «desapareguen» en silenci. */
+        if (viuRef.current && epoca === epocaBib.current) {
+          setMissatge({ to: 'avis', textDirecte: textOpfsIpad(locale, 'errorLlistaCarpetes') });
+        }
+      });
+    /* GEM-48 · Amb `locale`, l'avís ix en la llengua d'ara. Si canvia, l'efecte de
+       l'usuari es repetix amb el mateix idUsuari i no invalida res. */
+  }, [bib, buidaFont, avisaSeleccio, seleccioRef, locale]);
 
   const sessio = useSessioOpcional();
   const idUsuari = typeof sessio?.currentUser?.id === 'string' || typeof sessio?.currentUser?.id === 'number'
@@ -504,6 +544,149 @@ export function useGestorArxiusLocals({
     obriVolum(volum);
   };
 
+  /* v1.2.25 (Lot G2 · FN0-007 · Costura amb Codex C2 `creaFontArxiusOpfs`):
+     Importació directa de fotos o fitxers en iPadOS / WebKit / navegadors sense showDirectoryPicker.
+     · Si s'injecta `creaVolumOpfs` (contracte de `fontArxiusOpfs.js`: retorna `{ font, tipus, privatDelNavegador, importaFitxers }`),
+       es passa `volum.font` (font real de `fontDesDeHandle`) al gestor i es gestiona `SENSE_ESPAI` + error parcial `detall={importats,fallit}`
+       refrescant la llista també en error.
+     · Si encara no s'ha injectat `creaVolumOpfs`, prova OPFS nadiu a `sdp-multimedia-v1` (el mateix directori que C2),
+       capturant `QuotaExceededError` com a `SENSE_ESPAI`, o degrada explícitament a sessió efímera informant-ho a la UI. */
+  const volumOpfsRef = useRef(null);
+  const volumOpfsViuRef = useRef(false);
+  const enImportarFitxersIpad = async (event) => {
+    const fitxers = Array.from(event.target?.files ?? []);
+    if (event.target) event.target.value = '';
+    if (fitxers.length === 0) return;
+    interaccio.current = true;
+    const epoca = epocaBib.current;
+
+    if (typeof creaVolumOpfs === 'function') {
+      let volumOpfs = volumOpfsViuRef.current ? volumOpfsRef.current : null;
+      try {
+        /* Costura C6a (Codex): font.handle és sempre null en la façana protegida per Web Locks;
+           no utilitzar mai `font.handle === null` com a senyal de volum caducat. */
+        if (!volumOpfs || !volumOpfs.font) {
+          volumOpfs = await creaVolumOpfs({ storage: entorn?.navigator?.storage, idb: entorn?.indexedDB });
+          if (!vigent(epoca)) return;
+          volumOpfsRef.current = volumOpfs;
+          volumOpfsViuRef.current = true;
+        }
+        const resultat = await volumOpfs.importaFitxers(fitxers);
+        if (!vigent(epoca)) return;
+        const volum = {
+          id: 'privat:opfs:navegador',
+          nom: textOpfsIpad(locale, 'volumNom'),
+          font: volumOpfs.font,
+          volumC6a: volumOpfs,
+          tipus: volumOpfs.tipus || resultat?.tipus || 'opfs',
+          privatDelNavegador: true,
+          efimer: false
+        };
+        setDeSessio((abans) => [...abans.filter((v) => v.id !== volum.id), volum]);
+        await obriVolum(volum, { epoca });
+        if (!vigent(epoca)) return;
+        setMissatge({
+          to: 'exit',
+          textDirecte: textOpfsIpad(locale, 'desatOpfs', {
+            n: resultat?.importats?.length ?? fitxers.length,
+            tipus: volum.tipus === 'indexeddb' ? 'IndexedDB' : 'OPFS'
+          })
+        });
+      } catch (err) {
+        if (!vigent(epoca)) return;
+        if (volumOpfs?.font) {
+          const volum = {
+            id: 'privat:opfs:navegador',
+            nom: textOpfsIpad(locale, 'volumNom'),
+            font: volumOpfs.font,
+            volumC6a: volumOpfs,
+            tipus: volumOpfs.tipus || 'opfs',
+            privatDelNavegador: true,
+            efimer: false
+          };
+          setDeSessio((abans) => [...abans.filter((v) => v.id !== volum.id), volum]);
+          await obriVolum(volum, { epoca });
+        }
+        if (!vigent(epoca)) return;
+        const esSenseEspai = err?.codi === 'SENSE_ESPAI' || err?.cause?.name === 'QuotaExceededError' || err?.name === 'QuotaExceededError';
+        const esParcialConfirmada = err?.codi === 'OPERACIO_PARCIAL_CONFIRMADA';
+        const detall = err?.detall;
+        if (esParcialConfirmada) {
+          const confirmades = Array.isArray(detall?.confirmades) ? detall.confirmades.join(', ') : String(detall?.confirmades || '');
+          setMissatge({
+            to: 'avis',
+            textDirecte: textOpfsIpad(locale, 'operacioParcialConfirmada', { confirmades: confirmades || '—' })
+          });
+        } else if (esSenseEspai) {
+          setMissatge({ to: 'error', textDirecte: textOpfsIpad(locale, 'senseEspai') });
+        } else if (detall && Array.isArray(detall.importats) && detall.fallit) {
+          setMissatge({
+            to: 'avis',
+            textDirecte: textOpfsIpad(locale, 'importacioParcial', {
+              importats: detall.importats.length,
+              fallit: detall.fallit
+            })
+          });
+        } else {
+          setMissatge({ to: 'error', textDirecte: textOpfsIpad(locale, 'errorImportacio') });
+        }
+      }
+      return;
+    }
+
+    let guardatOpfs = false;
+    let senseEspai = false;
+    try {
+      const storage = entorn?.navigator?.storage;
+      if (typeof storage?.getDirectory === 'function') {
+        const arrelOpfs = await storage.getDirectory();
+        const dir = await arrelOpfs.getDirectoryHandle('sdp-multimedia-v1', { create: true });
+        for (const fitxer of fitxers) {
+          const nomSegur = String(fitxer.name || 'arxiu').replace(/[/\\]/g, '_');
+          const fh = await dir.getFileHandle(nomSegur, { create: true });
+          if (typeof fh.createWritable === 'function') {
+            const w = await fh.createWritable();
+            await w.write(fitxer);
+            await w.close();
+          }
+        }
+        guardatOpfs = true;
+      }
+    } catch (err) {
+      guardatOpfs = false;
+      senseEspai = err?.name === 'QuotaExceededError' || err?.codi === 'SENSE_ESPAI';
+    }
+    if (!vigent(epoca)) return;
+    if (senseEspai) {
+      setMissatge({ to: 'error', textDirecte: textOpfsIpad(locale, 'senseEspai') });
+      return;
+    }
+    const nom = guardatOpfs
+      ? textOpfsIpad(locale, 'volumNom')
+      : (fitxers.length === 1 ? (fitxers[0]?.name || 'iPad') : `iPad (${fitxers.length})`);
+    const volum = {
+      id: `sessio:opfs:${salDeSessio(cripto)}`,
+      nom,
+      fitxers,
+      efimer: !guardatOpfs,
+      privatDelNavegador: guardatOpfs
+    };
+    setDeSessio((abans) => [...abans.filter((v) => !v.fitxers), volum]);
+    await obriVolum(volum, { epoca });
+    if (!vigent(epoca)) return;
+    setMissatge({
+      to: guardatOpfs ? 'exit' : 'info',
+      textDirecte: guardatOpfs
+        ? textOpfsIpad(locale, 'desatOpfs', { n: fitxers.length, tipus: 'OPFS' })
+        : textOpfsIpad(locale, 'desatSessio', { n: fitxers.length })
+    });
+  };
+
+  const importaFotosIpad = () => {
+    interaccio.current = true;
+    inputFitxersRef.current?.click();
+  };
+
   /* QA-A01b · Si un volum recordat encara és a la biblioteca. Es crida ABANS
      del permís i s'espera DESPRÉS: el permís continua sent la primera espera
      del clic. Els volums d'esta sessió no hi són mai: valen. */
@@ -630,10 +813,19 @@ export function useGestorArxiusLocals({
 
   /* El resultat d'una operació del detall o de les accions de carpeta. */
   const enFet = ({ missatge: nou = null, error = null, seleccio, carpeta, origen, refresca: cal = false } = {}) => {
-    if (error) setMissatge({ to: 'error', error });
-    else if (nou) setMissatge(nou);
+    const esParcial = error?.codi === 'OPERACIO_PARCIAL_CONFIRMADA';
+    if (esParcial) {
+      const confirmades = Array.isArray(error?.detall?.confirmades)
+        ? error.detall.confirmades.join(', ')
+        : String(error?.detall?.confirmades || '—');
+      setMissatge({ to: 'avis', textDirecte: textOpfsIpad(locale, 'operacioParcialConfirmada', { confirmades }) });
+    } else if (error) {
+      setMissatge({ to: 'error', error });
+    } else if (nou) {
+      setMissatge(nou);
+    }
     if (seleccio === null && encaraEs(origen)) descartaCanvis();
-    if (error && !cal && !canviaElDisc(error)) return;
+    if (error && !esParcial && !cal && !canviaElDisc(error)) return;
     refresca({ seleccio, carpeta, origen });
   };
 
@@ -691,6 +883,7 @@ export function useGestorArxiusLocals({
     ocupat,
     gestCaducat,
     onVincula: () => demanaCanvi(vincula),
+    onImportaIpad: () => demanaCanvi(importaFotosIpad),
     onTria: (volum) => demanaCanvi(() => tria(volum)),
     onReconnecta: reconnecta,
     onOblida: (volum) => demanaCanvi(() => oblida(volum)),
@@ -699,7 +892,7 @@ export function useGestorArxiusLocals({
   };
 
   return {
-    t, volums, volumActiu, nomVolum, estatVolum, gestCaducat, ocupat, potTriar, potEscriure, font, limitacions,
+    t, volums, volumActiu, volumActiuObj, nomVolum, estatVolum, gestCaducat, ocupat, potTriar, potEscriure, font, limitacions,
     bibliotecaLlesta, arrencadaLlesta,
     volumObert: estatVolum === 'obert' && Boolean(font),
     idVolum: volumActiu,
@@ -708,6 +901,6 @@ export function useGestorArxiusLocals({
     filtreEstat, setFiltreEstat, filtreTipus, setFiltreTipus, cerca, setCerca, vista, setVista, paginaDe, triaPagina,
     missatge, setMissatge, canvisPendents, rutaBruta, marcaCanvis, descartaCanvis, demanaCanvi, pendent,
     confirmaPendent, cancelaPendent,
-    versioDetall, enFet, enNouFitxer, enDesatText, refresca, propsBarra, barraRef, inputRef, enTriarFitxers, elementDe
+    versioDetall, enFet, enNouFitxer, enDesatText, refresca, propsBarra, barraRef, inputRef, inputFitxersRef, enTriarFitxers, enImportarFitxersIpad, elementDe
   };
 }

@@ -47,7 +47,7 @@ const AJUDA = 'PNG, JPEG o WebP, fins a 10 MB.';
 
 describe('sense les props noves, el DOM de sempre', () => {
   test('AJUDA_IMATGE_PER_DEFECTE és el text que la closca deia de sèrie', () => {
-    expect(AJUDA_IMATGE_PER_DEFECTE).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
+    expect(AJUDA_IMATGE_PER_DEFECTE).toBe('Tria una foto (JPG, PNG o WebP).');
     expect(AJUDA_IMATGE_PUJANT).toBe('Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.');
     const { container } = closca();
     expect(ranura(container).querySelector('.sdp-camp__ajuda').textContent).toBe(AJUDA_IMATGE_PER_DEFECTE);
@@ -87,7 +87,7 @@ describe('sense les props noves, el DOM de sempre', () => {
       expect(camp.children[0].getAttribute('aria-label')).toBe(camp.children[1].textContent.trim());
       expect(atributs(camp.children[1])).toEqual(['class', 'type']);
       expect(atributs(camp.children[2])).toEqual(['class']);
-      expect(camp.children[2].textContent).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
+      expect(camp.children[2].textContent).toBe('Tria una foto (JPG, PNG o WebP).');
     }
     expect(hero(sense.container).className).toBe('hero-image hero-image--buit');
     cleanup();

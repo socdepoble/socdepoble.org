@@ -16,7 +16,7 @@
  *     conversa (`onVesAlMissatge(id)`), tancant el panell.
  */
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { FileAudio, Image, Link2, ListTodo, MessageSquare, Video, X } from 'lucide-react';
+import { FileAudio, FileText, Image, Link2, ListTodo, MessageSquare, Video, X } from 'lucide-react';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { marcaTemps } from '../../search/indexCerca.js';
@@ -72,10 +72,12 @@ export function extrauContingutConversa(messages, t) {
         instant,
         seq
       });
-    } else if (tipus === 'veu' || tipus === 'llista_comu') {
+    } else if (tipus === 'veu' || tipus === 'llista_comu' || tipus === 'document') {
       const titolLlista = tipus === 'llista_comu'
         ? String(m.metadades?.llista?.titol || m.metadades?.titol || m.text || '').trim()
-        : '';
+        : tipus === 'document'
+          ? String(adjunt?.nom || adjunt?.name || m.text || '').trim()
+          : '';
       const duradaSegons = tipus === 'veu' && Number.isFinite(Number(adjunt?.durada_s))
         ? Math.max(1, Math.round(Number(adjunt.durada_s)))
         : null;
@@ -425,16 +427,19 @@ export default function PanellAdjuntsConversa({
               {contingut.altres.map((item) => {
                 const data = etiquetaLlista(item.creatAl, { locale, t });
                 const esVeu = item.tipus === 'veu';
+                const esDocument = item.tipus === 'document';
                 const titol = esVeu
                   ? (item.duradaSegons
                     ? `${t('section.xat.adjunts.veu', 'Missatge de veu')} (${item.duradaSegons} s)`
                     : t('section.xat.adjunts.veu', 'Missatge de veu'))
-                  : (item.titolLlista || t('section.xat.contingutCompartit.llistaComu', 'Llista compartida'));
+                  : esDocument
+                    ? (item.titolLlista || t('section.xat.vista.multimedia.documents', 'Documents'))
+                    : (item.titolLlista || t('section.xat.contingutCompartit.llistaComu', 'Llista compartida'));
                 return (
                   <li key={item.clau} className="sdp-xat-adjunts-panell__item">
                     <div className="sdp-xat-adjunts-panell__media-fila">
                       <span className="sdp-xat-adjunts-panell__icona-caixa" aria-hidden="true">
-                        {esVeu ? <FileAudio size={20} focusable="false" /> : <ListTodo size={20} focusable="false" />}
+                        {esVeu ? <FileAudio size={20} focusable="false" /> : esDocument ? <FileText size={20} focusable="false" /> : <ListTodo size={20} focusable="false" />}
                       </span>
                       <div className="sdp-xat-adjunts-panell__detall">
                         <strong className="sdp-xat-adjunts-panell__titol-item">{titol}</strong>

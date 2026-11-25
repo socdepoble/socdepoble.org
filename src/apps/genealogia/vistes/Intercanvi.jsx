@@ -279,7 +279,10 @@ export function AvisGenealogia() {
         ))}
         {error ? <Alerta to="error">{error}</Alerta> : null}
         {g.avisAcceptat ? <p>{tx('avis.acceptat')}</p> : (
-          <Accions><Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || g.nomesLectura} onClick={accepta}>{tx('boto.entesos')}</Boto></Accions>
+          <>
+            {g.nomesLectura ? <Alerta to="avis" titol={tx('panell.lectura.titol')}>{tx('panell.lectura.text')}</Alerta> : null}
+            <Accions><Boto varietat="primari" mida="gran" carregant={acceptant} disabled={acceptant || g.nomesLectura} onClick={accepta}>{tx('boto.entesos')}</Boto></Accions>
+          </>
         )}
       </Pila>
     </MarcGenealogia>

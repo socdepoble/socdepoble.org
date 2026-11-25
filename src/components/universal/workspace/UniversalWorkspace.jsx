@@ -671,6 +671,7 @@ export function UniversalWorkspace({
   accionsLlista = CAP,
   accionsSubcapcalera = CAP,
   peuNavegacio = null,
+  avisLlista = null,
   amagaRodaAjustos = false,
   ajustosEnDetall = false,
   titolTornadaAjustos = null
@@ -845,6 +846,7 @@ export function UniversalWorkspace({
         accionsLlista={accionsLlista}
         accionsSubcapcalera={accionsSubcapcalera}
         peuNavegacio={peuNavegacio}
+        avisLlista={avisLlista}
         etiquetaEspai={etiquetaEspai}
         amagaRodaAjustos={amagaRodaAjustos}
         ajustosEnDetall={ajustosEnDetall}
@@ -860,7 +862,7 @@ function WorkspaceFrame({
   labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className,
   /* etiquetaEspai: sense valor per defecte (B3 · P1-22). L'únic que la crida,
      UniversalWorkspace, sempre li passa la traduïda de TEXT_ESPAI_DE_TREBALL. */
-  accionsLlista, accionsSubcapcalera = CAP, etiquetaEspai, peuNavegacio = null, amagaRodaAjustos = false, ajustosEnDetall = false, titolTornadaAjustos = null
+  accionsLlista, accionsSubcapcalera = CAP, etiquetaEspai, peuNavegacio = null, avisLlista = null, amagaRodaAjustos = false, ajustosEnDetall = false, titolTornadaAjustos = null
 }) {
   const workspace = useWorkspace();
   const focusAfterLayout = useFocusAfterLayout();
@@ -1028,6 +1030,7 @@ function WorkspaceFrame({
             expandBtnRef={expandMiddleRef}
             accionsLlista={accionsLlista}
             accionsSubcapcalera={accionsSubcapcalera}
+            avisLlista={avisLlista}
             navegacioRef={navegacioRef}
             expandirNavegacioRef={expandLeftRef}
             onTriaExplicita={tancaAjustosPerTria}
@@ -1666,7 +1669,7 @@ function CategoryBranch({
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout,
-  accionsLlista = CAP, accionsSubcapcalera = CAP, navegacioRef = null, expandirNavegacioRef = null, onTriaExplicita = null
+  accionsLlista = CAP, accionsSubcapcalera = CAP, avisLlista = null, navegacioRef = null, expandirNavegacioRef = null, onTriaExplicita = null
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -2199,6 +2202,7 @@ function ItemListColumn({
 
       {/* Gauntlet R22 (ronda 4) · El modificador --llista dona el scroll suau només a la Columna 2 (modules.css). */}
       <div className="sdp-workspace-column__body sdp-workspace-column__body--llista">
+        {avisLlista}
         {status === 'loading' || (status === 'revalidating' && !filteredItems.length) ? (
           <p className="sdp-workspace-state" role="status" aria-live="polite">{labels.loading}</p>
         ) : status === 'error' ? (

@@ -13,8 +13,8 @@
  *     Cap selector de fitxers: CampFitxer escriu el seu estat només en valencià.
  * Els textos, en les cinc llengües de la interfície (useClosaAplicacio().idioma).
  */
-import { useId, useMemo, useState } from 'react';
-import { Download, Link2, Share2, Upload } from 'lucide-react';
+import { useId, useMemo, useRef, useState } from 'react';
+import { Download, FileUp, Link2, Share2, Upload } from 'lucide-react';
 import { useLocation, useNavigate, useRouter } from '../../../app/contexts/RouterContext';
 import { Alerta, Boto, Botonera, Camp, CampText, Casella, GrupCamps } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
@@ -249,10 +249,21 @@ function PrevisualitzacioRebuda({ paquet, nomLlista, textos, idioma = 'ca', potE
   );
 }
 
+const MAX_FITXER_JSON_BYTES = 256 * 1024;
+const TEXTOS_FITXER_JSON = Object.freeze({
+  ca: Object.freeze({ triaJson: 'Importa fitxer .json', ariaJson: 'Selecciona un fitxer .json de llista de la compra' }),
+  es: Object.freeze({ triaJson: 'Importa archivo .json', ariaJson: 'Selecciona un archivo .json de lista de la compra' }),
+  en: Object.freeze({ triaJson: 'Import .json file', ariaJson: 'Choose a .json shopping list file' }),
+  eu: Object.freeze({ triaJson: 'Inportatu .json fitxategia', ariaJson: 'Hautatu erosketa-zerrendako .json fitxategi bat' }),
+  gl: Object.freeze({ triaJson: 'Importa ficheiro .json', ariaJson: 'Escolle un ficheiro .json de lista da compra' })
+});
+
 export function ComparticioLlistaCompra({ llista }) {
   const { estat, accions, mode, llegit, ruta, descarrega } = useVistaNevera();
   const { idioma } = useClosaAplicacio();
   const textos = Object.hasOwn(TEXTOS, idioma) ? TEXTOS[idioma] : TEXTOS.ca;
+  const textosJson = Object.hasOwn(TEXTOS_FITXER_JSON, idioma) ? TEXTOS_FITXER_JSON[idioma] : TEXTOS_FITXER_JSON.ca;
+  const inputJsonRef = useRef(null);
   /* v1.2.19 · Gauntlet R1 (L3-02) · El nom de la llista, pintat en la llengua de la interfície (la de botiga es desa amb el nom canònic). */
   const nomLlista = nomLlistaVisible(llista.nom, idioma);
   const { pathname, search, hash } = useLocation();
@@ -288,6 +299,32 @@ export function ComparticioLlistaCompra({ llista }) {
     setAvis(null);
     setText('');
     setPegada((previa) => ({ clau: (previa?.clau ?? 0) + 1, paquet: resultat.paquet }));
+  };
+
+  const importaFitxerJson = async (event) => {
+    const [fitxer] = event.target?.files || [];
+    if (event.target) event.target.value = '';
+    if (!fitxer) return;
+    if (fitxer.size > MAX_FITXER_JSON_BYTES) {
+      setError({ on: 'text', codi: 'massa-gran' });
+      return;
+    }
+    try {
+      const contingut = typeof fitxer.text === 'function'
+        ? await fitxer.text()
+        : new TextDecoder().decode(await fitxer.arrayBuffer());
+      const resultat = importaLlistaCompra(contingut);
+      if (!resultat.ok) {
+        setError({ on: 'text', codi: resultat.codi });
+        return;
+      }
+      setError(null);
+      setAvis(null);
+      setText('');
+      setPegada((previa) => ({ clau: (previa?.clau ?? 0) + 1, paquet: resultat.paquet }));
+    } catch {
+      setError({ on: 'text', codi: 'format' });
+    }
   };
 
   const afig = (paquet) => {
@@ -382,7 +419,16 @@ export function ComparticioLlistaCompra({ llista }) {
             </Camp>
             <Botonera etiqueta={textos.rep}>
               <Boto icona={Upload} disabled={!text.trim()} onClick={revisaText}>{textos.revisa}</Boto>
+              <Boto icona={FileUp} onClick={() => inputJsonRef.current?.click()}>{textosJson.triaJson}</Boto>
             </Botonera>
+            <input
+              ref={inputJsonRef}
+              type="file"
+              accept=".json,application/json"
+              hidden
+              aria-label={textosJson.ariaJson}
+              onChange={importaFitxerJson}
+            />
           </GrupCamps>
         </div>
       ) : null}

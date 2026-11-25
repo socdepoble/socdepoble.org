@@ -695,12 +695,17 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-4));
 }
-/* Onada R20 (Bucle 2 · Auditoria Chromium CDP 280/375px) · Les columnes de les apps
-   obertes del Panell (.sdp-app-contenidor .app-grid-shell > ... > .sdp-marc-columna:
-   Salut amb «Truca al 112», Genealogia, Bar, Nevera, Lector) reserven l'alçada de la
-   barra de navegació inferior mòbil perquè ni el peu ni l'última línia queden tapats. */
-:where(.sdp-root.is-compact) .sdp-app-contenidor .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-marc-columna {
-  padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+/* ML-02 = RR-D12-02 (v1.2.25 · Lot G8) · Dins de .sdp-app-contenidor, la reserva
+   de la barra inferior mòbil ja viu a .app-main__content (layout.css). S'elimina
+   la segona reserva dels scrollers de les micro-apps (Bar, Nevera, Lector, Salut,
+   Genealogia) per recuperar 72 px reals a 375×812 px; /notes i la resta de seccions
+   fora de .sdp-app-contenidor conserven intacta la seua única reserva. */
+:where(.sdp-root.is-compact) .sdp-app-contenidor .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .app-grid-col-header--collapsed > .sdp-workspace-rail,
+:where(.sdp-root.is-compact) .sdp-app-contenidor .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-rail > .sdp-workspace-column > .app-grid-col-header--collapsed > .sdp-workspace-rail,
+:where(.sdp-root.is-compact) .sdp-app-contenidor .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .sdp-workspace-column__body,
+:where(.sdp-root.is-compact) .sdp-app-contenidor .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column--right > .sdp-workspace-detail {
+  padding-bottom: 0;
+  scroll-padding-bottom: var(--sdp-space-4);
 }
 /* Llei de la Roda Dentada (ordre del Mestre, 261007) · La configuració de
    l'espai de treball (WorkspaceSettingsDialog): «Amplada de les columnes» i

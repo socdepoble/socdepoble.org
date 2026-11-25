@@ -61,13 +61,13 @@ describe('les guardes', () => {
     expect(carrega).not.toHaveBeenCalled();
   });
 
-  test('la porta de l’avís: fins que no s’accepta, només l’avís; acceptar porta a Avui', async () => {
+  test('la porta de l’avís (v1.2.25): banda integrada d’1 clic sense bloquejar l’accés a Avui', async () => {
     munta('/app/salut/diari');
     expect(await screen.findByRole('button', { name: 'Ho he entés' })).toBeTruthy();
-    expect(ubicacio()).toBe('/app/salut/avis');
+    expect(ubicacio()).toBe('/app/salut/diari');
     expect(screen.getByText(/No és un producte sanitari/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Ho he entés' }));
-    await waitFor(() => expect(ubicacio()).toBe('/app/salut/diari'));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Ho he entés' })).toBeNull());
     expect((await carregaTot(magatzem)).avis).toEqual({ acceptatA: ARA.toISOString(), versio: 1 });
     expect(await screen.findByRole('button', { name: 'Ha orinat' })).toBeTruthy();
   });
@@ -537,7 +537,7 @@ describe('el full i les dades', () => {
     fireEvent.change(within(dialeg).getByRole('textbox', { name: /escriu «el pare»/ }), { target: { value: 'el pare' } });
     await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Esborra-ho tot' })); });
     await waitFor(async () => expect((await carregaTot(magatzem)).apunts).toEqual([]));
-    /* Sense l'avís acceptat, torna a la porta. */
-    await waitFor(() => expect(ubicacio()).toBe('/app/salut/avis'));
+    /* Sense l'avís acceptat, torna a mostrar la banda d'avís integrada d'1 clic (IDEA-348). */
+    expect(await screen.findByRole('button', { name: 'Ho he entés' })).toBeTruthy();
   });
 });

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Mic, Pause, Play } from 'lucide-react';
-import { teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
+import { Download, FileText, Mic, Pause, Play } from 'lucide-react';
+import { bytesAdjuntXat, teCapacitat, urlAdjuntXat } from '../../../data/backendPort.js';
 import { errorAdjuntXat } from '../../../data/xatMultimedia.js';
 import { E2EE_ACTIU_PER_DEFECTE } from '../../../config/xifratXat.js';
 import { textDErrorAdjunt } from '../adjuntLocal.js';
 /* R32.6 (P0-119) · D-R27-1 (opció b) · L'estil del reproductor de veu no viatja a l'arrencada: s'adopta en pintar-se. */
 import { useFullDiferit } from '../../../config/fullDiferit.js';
 import cssXatVeu from '../../../css/diferit-xat-veu.css?inline';
+import cssV1225 from '../../../css/diferit-xat-v1225.css?inline';
+import { normalitzaLlenguaXat, textXatV1225 } from '../i18nVistesXatV1225.js';
 
 /* QA-C01 (Gauntlet 261029_1858) · Retenció dels blob: desxifrats que es pinten
    o sonen. Amb el xat xifrat, el registre LRU (data/xatMultimediaXifrat.js) no
@@ -571,12 +573,142 @@ function VideoAdjunt({ obteUrl, t, interactiu }) {
   );
 }
 
+function formataMidaDocument(bytes, locale = 'ca-ES') {
+  const n = Number(bytes);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  if (n >= 1_000_000) {
+    return `${new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n / 1_000_000)} MB`;
+  }
+  return `${Math.max(1, Math.round(n / 1000))} kB`;
+}
+
+const EXTS_DOC_PER_MIME = Object.freeze([
+  ['pdf', 'pdf'],
+  ['csv', 'csv'],
+  ['opendocument', 'odt'],
+  ['wordprocessingml', 'docx'],
+  ['plain', 'txt']
+]);
+
+function extensioDocument(adjunt) {
+  if (typeof adjunt?.extensio === 'string' && adjunt.extensio) return adjunt.extensio.toUpperCase();
+  const nom = String(adjunt?.nom || adjunt?.name || '');
+  const ext = /\.([^.]+)$/.exec(nom)?.[1];
+  if (ext) return ext.toUpperCase();
+  const mime = String(adjunt?.mime || '').toLowerCase();
+  const trobada = EXTS_DOC_PER_MIME.find(([clau]) => mime.includes(clau))?.[1] || 'doc';
+  return trobada.toUpperCase();
+}
+
+function TargetaDocument({ adjunt, obteBytes, locale = 'ca-ES', t, interactiu = true }) {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'xat-v1225', cssV1225);
+  const idioma = normalitzaLlenguaXat(locale);
+  const [baixant, setBaixant] = useState(false);
+  const [error, setError] = useState(null);
+  const viu = useRef(true);
+  useEffect(() => () => { viu.current = false; }, []);
+
+  const nom = String(adjunt?.nom || adjunt?.name || '').trim() || textXatV1225(idioma, 'documents.senseNom');
+  const ext = extensioDocument(adjunt);
+  const mida = formataMidaDocument(adjunt?.bytes ?? adjunt?.size, locale);
+  const meta = [ext, mida].filter(Boolean).join(' · ');
+
+  const baixa = async () => {
+    if (baixant || !interactiu) return;
+    setBaixant(true);
+    setError(null);
+    let objecte = null;
+    try {
+      /* SV-02 (Gauntlet de la integració v1.2.25) · El servidor només comprova el MIME i la mida, i la validació de
+         l'enviament és del client de qui envia: qui rep demana els bytes pel transport del port (obteBytes,
+         bytesAdjuntXat, que ja és al catàleg Tellado), els torna a passar per validaBytesDocumentXat (C1) amb el MIME de
+         la fila i baixa exactament eixos bytes, com a Blob. Si no passen, no es baixa res i la targeta ho diu amb
+         documents.errorContingut. No és cap antivirus. */
+      const bytes = await obteBytes();
+      if (!viu.current) return;
+      const mime = String(adjunt?.mime || '');
+      const { validaBytesDocumentXat } = await import('../../../data/xat/documents.js');
+      try { validaBytesDocumentXat(bytes, mime); } catch (cause) {
+        throw Object.assign(new Error('document-contingut', { cause }), { code: 'document-contingut' });
+      }
+      objecte = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      const enllac = document.createElement('a');
+      enllac.href = objecte;
+      enllac.download = nom;
+      enllac.rel = 'noopener noreferrer';
+      enllac.click();
+      const baixat = objecte;
+      objecte = null;
+      // Safari necessita que la URL visca un moment després del clic (vcardOrganitzacio.js).
+      setTimeout(() => URL.revokeObjectURL(baixat), 1000);
+    } catch (e) {
+      if (objecte) URL.revokeObjectURL(objecte);
+      if (viu.current && e?.name !== 'AbortError') setError(e);
+    } finally {
+      if (viu.current) setBaixant(false);
+    }
+  };
+
+  return (
+    <article ref={arrelRef} className="sdp-xat-adjunt">
+      <span className="sdp-xat-document">
+        <span className="sdp-xat-document__icona" aria-hidden="true">
+          <FileText size={22} focusable="false" />
+        </span>
+        <span className="sdp-xat-document__dades">
+          <span className="sdp-xat-document__nom">{nom}</span>
+          <span className="sdp-xat-document__meta">{meta}</span>
+        </span>
+        {interactiu ? (
+          <button
+            type="button"
+            className="sdp-xat-document__accio"
+            onClick={baixa}
+            disabled={baixant}
+            aria-busy={baixant || undefined}
+            aria-label={`${textXatV1225(idioma, 'documents.baixa')}: ${nom}`}
+          >
+            <Download size={18} aria-hidden="true" focusable="false" />
+            <span>{baixant ? textXatV1225(idioma, 'documents.baixant') : textXatV1225(idioma, 'documents.baixa')}</span>
+          </button>
+        ) : null}
+      </span>
+      {error ? (
+        <p className="sdp-xat-adjunt__estat">
+          {textDErrorAdjunt(error, t, t('section.xat.adjunts.error.obrir', 'No hem pogut obrir el fitxer.'), idioma)}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+function PrevisualitzacioDocument({ nom, bytes, extensio, locale = 'ca-ES' }) {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'xat-v1225', cssV1225);
+  const idioma = normalitzaLlenguaXat(locale);
+  const nomVisible = String(nom || '').trim() || textXatV1225(idioma, 'documents.senseNom');
+  const meta = [extensio ? String(extensio).toUpperCase() : '', formataMidaDocument(bytes, locale)].filter(Boolean).join(' · ');
+  return (
+    <span ref={arrelRef} className="sdp-xat-document">
+      <span className="sdp-xat-document__icona" aria-hidden="true">
+        <FileText size={22} focusable="false" />
+      </span>
+      <span className="sdp-xat-document__dades">
+        <span className="sdp-xat-document__nom">{nomVisible}</span>
+        {meta ? <span className="sdp-xat-document__meta">{meta}</span> : null}
+      </span>
+    </span>
+  );
+}
+
 /** La previsualització local (URL blob:) abans d'enviar. */
-export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, locale, t: tProp }) {
+export function PrevisualitzacioAdjunt({ tipus, url, onError, duradaMs = null, nom = '', bytes = null, extensio = '', locale, t: tProp }) {
   const t = traductorAdjunt(tProp);
   const obteUrl = useMemo(() => () => Promise.resolve(url), [url]);
   if (tipus === 'imatge') return <img className="sdp-xat-adjunt__imatge" src={url} alt={t('section.xat.adjunts.foto', 'Foto adjunta')} onError={onError} />;
   if (tipus === 'video') return <video className="sdp-xat-adjunt__video" src={url} controls playsInline preload="metadata" onError={onError} aria-label={t('section.xat.adjunts.video', 'Vídeo adjunt')} />;
+  if (tipus === 'document') return <PrevisualitzacioDocument nom={nom} bytes={bytes} extensio={extensio} locale={locale} />;
   return <ReproductorVeu key={url} obteUrl={obteUrl} duradaMs={duradaMs} locale={locale} t={t} />;
 }
 
@@ -588,6 +720,10 @@ export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, loc
   const obteUrl = useCallback(({ signal, renova = false, reten = null } = {}) => (
     urlAdjuntXat(adjunt.id, { ...externalConfig, signal }, typeof reten === 'function' && ambRetencio() ? { renova, reten } : { renova })
   ), [adjunt.id, externalConfig]);
+  /* SV-02 · Els bytes del document per a validar-los en rebre'l. Sense el transport, cap baixada sense validar. */
+  const obteBytes = useCallback(() => (teCapacitat('xatMultimediaXifrat')
+    ? bytesAdjuntXat(adjunt.id, { ...externalConfig })
+    : Promise.reject(errorAdjuntXat('obrir'))), [adjunt.id, externalConfig]);
   if (!teCapacitat('xatMultimedia')) {
     return <div className="sdp-xat-adjunt"><p className="sdp-xat-adjunt__estat">{t('section.xat.adjunts.noCapacitat', 'Este node encara no pot obrir els adjunts del xat.')}</p></div>;
   }
@@ -595,5 +731,6 @@ export default function AdjuntXat({ adjunt, tipus, externalConfig, usuariId, loc
   const clau = String(usuariId ?? '');
   if (tipus === 'imatge') return <ImatgeAdjunta key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} onObriImatge={onObriImatge} />;
   if (tipus === 'video') return <VideoAdjunt key={clau} obteUrl={obteUrl} t={t} interactiu={interactiu} />;
+  if (tipus === 'document') return <TargetaDocument key={clau} adjunt={adjunt} obteBytes={obteBytes} locale={locale} t={t} interactiu={interactiu} />;
   return <div className="sdp-xat-adjunt"><ReproductorVeu key={clau} obteUrl={obteUrl} duradaMs={adjunt.duradaMs} memoria={`${clau}/${adjunt.id}`} locale={locale} t={t} interactiu={interactiu} /></div>;
 }

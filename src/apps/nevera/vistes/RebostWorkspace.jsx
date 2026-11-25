@@ -61,8 +61,10 @@ export function RebostWorkspace({ params = {} }) {
       </> : <><h3>{tx.catalegICarpetes}</h3><p>{tx.catalegICarpetesText}</p></>}
     </DetallCataleg>;
   };
-  /* v1.2.17 · Gauntlet R1 (L3-15) · El mateix id que declaren el nivell i la vista inicials. */
+  /* v1.2.17 · Gauntlet R1 (L3-15) · El mateix id que declaren el nivell i la vista inicials.
+     Onada v1.2.25 (Lot G5 · ML-07) · AvisNevera també damunt la graella/llista quan idb:null o lectura. */
   return <CatalegWorkspace font="nevera" destiPublicacio="rebost" id={ID_REBOST_WORKSPACE} model={model} ruta={ruta('rebost')} privateItems
+    avisLlista={<AvisNevera />}
     labels={{ categories: tx.categoriesDelRebost, items: tx.rebost, all: tx.totElCataleg, search: tx.buscaAlRebost, empty: txBuit.rebostEmpty, noResults: txBuit.rebostNoResults }}
     renderDetail={renderDetail} />;
 }

@@ -70,6 +70,7 @@ const TIPUS = Object.freeze([
 /* El text d'un missatge desat com a descripció (es tradueix en pintar-lo). */
 function textDelMissatge(t, missatge) {
   if (!missatge) return '';
+  if (typeof missatge.textDirecte === 'string' && missatge.textDirecte) return missatge.textDirecte;
   if (missatge.error) return missatgeDErrorLocal(t, missatge.error, missatge.valors);
   const text = tradueix(t, missatge.parell, missatge.valors);
   return missatge.motiu ? `${text} ${missatgeDeBibliotecaLocal(t, missatge.motiu)}` : text;
@@ -85,19 +86,30 @@ const clauDeMiniatures = (elements) => elements
   .map((el) => `${el.ruta}\u0000${el.mida}\u0000${el.modificat}`)
   .join('\u0001');
 
-/** L'<input webkitdirectory> de la reserva de només lectura: una sola instància. */
+/** L'<input webkitdirectory> de la reserva de només lectura + selector múltiple iPadOS/OPFS. */
 export function InputCarpetaLocal({ gestor }) {
   return (
-    <input
-      ref={gestor.inputRef}
-      type="file"
-      webkitdirectory=""
-      directory=""
-      multiple
-      hidden
-      onChange={gestor.enTriarFitxers}
-      data-testid="input-carpeta-multimedia-local"
-    />
+    <>
+      <input
+        ref={gestor.inputRef}
+        type="file"
+        webkitdirectory=""
+        directory=""
+        multiple
+        hidden
+        onChange={gestor.enTriarFitxers}
+        data-testid="input-carpeta-multimedia-local"
+      />
+      <input
+        ref={gestor.inputFitxersRef}
+        type="file"
+        accept="image/*,video/*,audio/*,.pdf,.txt,.md,.json,.csv"
+        multiple
+        hidden
+        onChange={gestor.enImportarFitxersIpad}
+        data-testid="input-fitxers-ipad-multimedia-local"
+      />
+    </>
   );
 }
 
@@ -389,6 +401,7 @@ export function PanellGestorLocal({
               key={`${elSeleccionat.ruta}\u0000${versioDetall}`}
               t={t}
               font={font}
+              volum={gestor.volumActiuObj}
               el={elSeleccionat}
               potEscriure={potEscriure}
               carpetes={carpetes}

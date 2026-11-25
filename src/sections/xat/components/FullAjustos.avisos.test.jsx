@@ -72,10 +72,14 @@ vi.mock('../../../data/backendPort.js', async (importOriginal) => ({
 
 Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 1280; } });
 
-/* El DOM de la pàgina «Notificacions» a HEAD 333af8c2c (abans de B8C-6). */
-const CONSTRUCCIO_DE_HUI = '<section class="sdp-xat-ajustos__buit" aria-labelledby="ID"><h3 id="ID" class="sdp-xat-ajustos__buit-titol">En construcció</h3>'
-  + '<p class="sdp-xat-ajustos__buit-text">Ací podràs triar com t’avisa el xat dels missatges nous, dels grups i de les reaccions.</p>'
-  + '<p class="sdp-xat-ajustos__buit-text">Encara no està disponible: es construirà en una fase següent del xat.</p></section>';
+/* v1.2.25 · FN0-005 · La pàgina «En construcció» usa EstatBuit + Alerta canònics de Pedra Seca 2.0. */
+function comprovaConstruccio(cos) {
+  const regio = within(cos).getByRole('region', { name: 'En construcció' });
+  expect(regio.querySelector('.sdp-buit')).toBeTruthy();
+  expect(regio.querySelector('.sdp-alerta')).toBeTruthy();
+  expect(regio.textContent).toContain('Ací podràs triar com t’avisa el xat dels missatges nous, dels grups i de les reaccions.');
+  expect(regio.textContent).toContain('Encara no està disponible: es construirà en una fase següent del xat.');
+}
 
 /* L'adaptador fals: el tipus i el motiu es lligen a cada publicació del registre. */
 const adaptador = {
@@ -130,7 +134,6 @@ function obriNotificacions() {
   fireEvent.click(within(full()).getByRole('button', { name: /^Notificacions/ }));
   return full().querySelector('.sdp-xat-ajustos__cos');
 }
-const normalitza = (html) => html.replace(/(id|aria-labelledby)="[^"]*"/g, '$1="ID"');
 
 /* Onada R9 (C3, G8-08 e) · La bandera de debò és encesa des del 261106. Este
    cas ja no és «la bandera apagada»: és l'estona (o la càrrega sense xarxa) en
@@ -138,11 +141,11 @@ const normalitza = (html) => html.replace(/(id|aria-labelledby)="[^"]*"/g, '$1="
    oferir i la pàgina ha de ser la de hui. La web sense clau VAPID (amb
    adaptador) és el cas «sense clau» de baix, que també ho prova. */
 describe('bandera encesa (la de debò), abans que arribe cap adaptador', () => {
-  test('cap adaptador registrat encara: la pàgina és idèntica a la de hui, sense interruptor', () => {
+  test('cap adaptador registrat encara: la pàgina mostra EstatBuit + Alerta en construcció, sense interruptor', () => {
     expect(AVISOS_PUSH_XAT_ACTIUS).toBe(true);
     expect(avisosPushDisponibles()).toBe(false);
     const cos = obriNotificacions();
-    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+    comprovaConstruccio(cos);
     expect(screen.queryByRole('switch')).toBeNull();
   });
 });
@@ -195,6 +198,6 @@ describe('amb un adaptador registrat', () => {
   ])('%s: la construcció de hui', (_nom, prepara) => {
     prepara();
     const cos = obriNotificacions();
-    expect(normalitza(cos.innerHTML)).toBe(CONSTRUCCIO_DE_HUI);
+    comprovaConstruccio(cos);
   });
 });

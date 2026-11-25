@@ -20,7 +20,7 @@ import { Lock } from 'lucide-react';
 import { Link, useNavigate } from '../../../app/contexts/RouterContext';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import {
-  Accions, Alerta, Boto, Camp, CampFitxer, CampText, Casella, DialegConfirmacio, EstatBuit, GrupCamps, GrupOpcions, Insignia, MarcColumna, Pila, Selector
+  Accions, Alerta, Boto, Camp, CampFitxer, CampText, Casella, DialegConfirmacio, EstatBuit, Fila, GrupCamps, GrupOpcions, Insignia, MarcColumna, Pila, Selector
 } from '../../../components/PedraSeca/index.js';
 import { useApp, useClosaAplicacio } from '../../plataforma/index.js';
 import { llegeixFitxerArbre, lligTextFitxerArbre } from '../gedcom/index.js';
@@ -261,10 +261,28 @@ export function ProteccioFrase() {
   );
 }
 
-/* El peu de les columnes en estret i en mitjana: el panell dels arbres hi queda amagat. */
+/* El peu de les columnes en estret i en mitjana: el panell dels arbres hi queda amagat.
+   Onada v1.2.25 (Lot G5 · ML-08) · En pantalla estreta/mitjana, dir sempre al peu
+   si la base només viu en memòria o si la pestanya és de només lectura. */
 function PeuGenealogia() {
+  const g = useGenealogia();
   const { obriPanell } = useClosaAplicacio();
   const tx = useT();
+  const avisPeu = !g.persistent
+    ? tx('panell.memoria.text')
+    : g.nomesLectura
+      ? tx('panell.lectura.text')
+      : null;
+  if (avisPeu) {
+    return (
+      <Fila gap={2}>
+        <span>{avisPeu}</span>
+        <Boto varietat="fantasma" data-obri-columna="esquerra" aria-controls="app-grid-sidebar" onClick={() => obriPanell('esquerra')}>
+          {tx('col.esquerra')}
+        </Boto>
+      </Fila>
+    );
+  }
   return (
     <Accions>
       <Boto varietat="fantasma" data-obri-columna="esquerra" aria-controls="app-grid-sidebar" onClick={() => obriPanell('esquerra')}>

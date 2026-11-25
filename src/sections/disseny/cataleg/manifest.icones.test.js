@@ -56,7 +56,8 @@ test('la taula no porta cap espècimen que no existisca, i les categories conser
   expect(sobrants).toEqual([]);
   expect(CATALOG_CATEGORIES.map((categoria) => [categoria.id, categoria.icon])).toEqual([
     ['fonaments', '🧱'], ['estructura', '📐'], ['formularis', '📝'], ['superposicions', '🗂️'],
-    ['retroalimentacio', '🔔'], ['navegacio', '🧭'], ['inventari', '📦'], ['emoticones', '🌻'], ['atles-2d', '🗺️']
+    ['retroalimentacio', '🔔'], ['navegacio', '🧭'], ['inventari', '📦'], ['emoticones', '🌻'], ['atles-2d', '🗺️'],
+    ['registre-de-canvis', '📋']
   ]);
 });
 

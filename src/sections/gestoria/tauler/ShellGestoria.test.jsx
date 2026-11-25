@@ -129,7 +129,7 @@ const serialitzat = (node) => new XMLSerializer().serializeToString(node);
 /* La persona tria un mòdul a la BarraApp global i l'amfitrió canvia la ruta: a la closca li arriba un altre modulActiu. */
 const ID_DEL_MODUL = Object.freeze({
   'Tauler d’Inici': 'tauler', Facturació: 'facturacio', Bancs: 'bancs', Impostos: 'impostos', 'Full trimestral': 'full',
-  'Escàner Local': 'escaner'
+  'Escàner Local': 'escaner', Contactes: 'contactes', Burocràcia: 'burocracia', Informes: 'informes'
 });
 const vesAlModul = (nom) => rutaDeLAmfitrio(ID_DEL_MODUL[nom]);
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): el rellotge viu, l'últim fill de les accions de la barra. */
@@ -185,16 +185,16 @@ describe('la navegació i els mòduls', () => {
         .toEqual(m.enObres ? ['GESTORIA', 'PANELL INTERN', 'En obres'] : ['GESTORIA', 'PANELL INTERN', 'En proves · Beta oberta']);
       expect(closca.querySelectorAll('.page-title-labels > li.sdp-insignia-beta-oberta'), m.id).toHaveLength(m.enObres ? 0 : 1);
     }
-    /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): l'Escàner Local ja existix i deixa d'estar en obres. */
-    expect(MODULS_GESTORIA.filter((m) => m.enObres).map((m) => m.id)).toEqual(['facturacio', 'contactes', 'burocracia', 'informes']);
+    /* v1.2.25 (Lot G2): Facturació entra pel pont d'AppGestoria; Contactes i Burocràcia ja són operatius; només Informes resta en obres. */
+    expect(MODULS_GESTORIA.filter((m) => m.enObres).map((m) => m.id)).toEqual(['informes']);
   });
 
   test('un mòdul en obres ho diu, amb el perquè, a la seua pàgina amb la barra taronja', async () => {
     const { closca } = munta();
-    vesAlModul('Facturació');
-    expect(h1(closca)).toBe('Facturació');
+    vesAlModul('Informes');
+    expect(h1(closca)).toBe('Informes');
     expect(screen.getByText('En obres', { selector: 'p' })).toBeTruthy();
-    expect(closca.querySelector('.sdp-buit__text').textContent).toMatch(/Veri\*Factu/);
+    expect(closca.querySelector('.sdp-buit__text').textContent).toMatch(/models presentats/);
     expect(boina(closca)).not.toBeNull();
     expect([...closca.querySelectorAll('.page-title-labels > li')].map((li) => li.textContent)).toEqual(['GESTORIA', 'PANELL INTERN', 'En obres']);
   });

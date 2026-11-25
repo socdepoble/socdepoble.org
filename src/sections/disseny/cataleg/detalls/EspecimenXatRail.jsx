@@ -42,6 +42,7 @@ import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import { ENTRADES_RAIL, RailXat, entradaDeVista } from '../../../xat/components/ClosCaXat.jsx';
 import VistaEnConstruccio from '../../../xat/components/VistaEnConstruccio.jsx';
 import { textosDeVista } from '../../../xat/components/vistaEnConstruccioModel.js';
+import VistaDestacats from '../../../xat/components/VistaDestacats.jsx';
 import VistaMultimedia from '../../../xat/components/VistaMultimedia.jsx';
 import { mostraDelXat } from './EspecimenXatLlista.jsx';
 
@@ -158,7 +159,10 @@ export default function EspecimenXatRail() {
             <aside className="sdp-workspace-column" aria-label={titol}>
               {id === 'multimedia' ? (
                 <VistaMultimedia titol={titol} icona={entrada.Icona} t={t} fils={fils} missatgesPerFil={MISSATGES_AMB_ENLLACOS}
-                  onObriFil={(filId) => setAvis(`Obriria la conversa ${filId} i conservaria la vista.`)} onEnConstruccio={enConstruccio} />
+                  onObriFil={(filId) => setAvis(`Obriria la conversa ${filId} i conservaria la vista.`)} />
+              ) : id === 'destacats' ? (
+                <VistaDestacats titol={titol} icona={entrada.Icona} t={t} fils={fils} missatgesPerFil={MISSATGES_AMB_ENLLACOS}
+                  onObriMissatge={(filId) => setAvis(`Obriria la conversa ${filId} pel missatge destacat.`)} />
               ) : (
                 <VistaEnConstruccio {...textosDeVista(id, t)} titol={titol} icona={entrada.Icona} t={t} onEnConstruccio={enConstruccio} />
               )}

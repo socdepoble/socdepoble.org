@@ -245,7 +245,7 @@ export default {
   'editor.closca.mostrarAlMur.inactiu': "Bere liburuan edo karpetan bakarrik",
   'editor.closca.mostrarAlMur.ajudaActiu': "Hormako erakusleihoan ikusgai eta bere liburuan edo karpetan gordeta.",
   'editor.closca.mostrarAlMur.ajudaInactiu': "Bere liburuan edo karpetan gordeta eta eskuragarri geratzen da, Horman agertu gabe.",
-  'editor.closca.imatge.ajuda': "Edozein motatako irudi edo multimedia-fitxategi igo dezakezu.",
+  'editor.closca.imatge.ajuda': "Aukeratu argazki bat (JPG, PNG edo WebP).",
   'editor.closca.imatge.pujant': "Irudia gordetzen ari da oraindik. Amaitzen denean, berriro aldatu ahal izango duzu.",
   'editor.closca.imatge.errorDesar': "Ezin izan da irudia gorde.",
   'editor.closca.forma.capcalera': "Gomendatua: zerrendako miniaturak eta Hormako txartelak irudi oso bera erakusten dute. Oharra Horman badago jada, txartela ez da aldatuko berriro argitaratu arte.",
@@ -522,6 +522,7 @@ export default {
   'nav.legalShort': 'Legea',
   'nav.connectar': 'Konektatu',
   'nav.idioma': 'Hizkuntza',
+  'nav.registreCanvis': 'Aldaketen erregistroa',
   'nav.perfil': 'Profila',
   'nav.cerca': 'Bilatu',
   'nav.acces': 'Sarbidea',
@@ -2397,7 +2398,9 @@ export default {
   'section.xat.vista.multimedia.adjunts': 'Eranskinak txataren F1 fasearekin iritsiko dira: oraingoz testua bakarrik bidal daiteke.',
   /* xat-ux-a11y-06 (261104) · Els adjunts F1 (fotos, vídeo i veu) ja funcionen: la
      vista pinta avisAdjunts en lloc d'adjunts (VistaMultimedia.jsx). */
-  'section.xat.vista.multimedia.avisAdjunts': 'Txatean argazkiak, bideoak eta ahots-mezuak bidal daitezke dagoeneko, elkarrizketak aukera ematen badu. Dokumentuak, oraindik ez.',
+  /* CR-03 (v1.2.25) · Amb els documents de C1, el text de G1, que abans pintava el diccionari
+     paral·lel (multimedia.avisAdjuntsViu); la vista el torna a demanar al t de l'app. */
+  'section.xat.vista.multimedia.avisAdjunts': 'Txatean argazkiak, bideoak, ahots-mezuak eta dokumentuak (PDF, CSV, ODT, DOCX, TXT) bidal daitezke, elkarrizketak onartzen badu.',
   'section.xat.vista.multimedia.avisLocal': 'Saio honetan irekitako elkarrizketetako edukia bakarrik ikusten da.',
   'section.xat.vista.multimedia.obri': 'Ireki {nom} elkarrizketa',
   'section.xat.vista.multimedia.senseData': 'Datarik gabe',
@@ -4303,4 +4306,14 @@ export default {
   'section.notes.carpeta.sistema': "Sistema",
   'pagina.barra.editar': "Editatu",
   'pagina.barra.editantCom': "{nom} gisa editatzen",
+  // v1.2.25 olatua · G9 lotea · Elkarrizketako bilaketa, OPFS iPad, PUB-D11-01, ENT0108-VS-03 eta XAT_ACCIO_INVALIDA
+  'section.xat.conversa.cerca': "Bilatu elkarrizketa honetan",
+  'section.xat.error.accioInvalida': "Ekintza hau ez da baliozkoa mezu honetarako.",
+  'section.multimedia.local.ipadImporta': "Inportatu argazkiak edo fitxategiak (iPad / nabigatzailea)",
+  'section.multimedia.local.ipadImportaAria': "Inportatu argazkiak edo fitxategiak iPad edo nabigatzaile honetan",
+  'section.multimedia.local.ipadNotaCopiaPrivada': "Inportatzeak kopia pribatu bat sortzen du nabigatzaile honetan eta ez ditu inoiz gailuko jatorrizkoak aldatzen. Ez du kanpoko segurtasun-kopia ordezkatzen.",
+  'section.notes.visibilitat.errorPublicarDocument': "Ez da ezer argitaratu: oharreko dokumentu pribatu bat ezin izan da publiko egin eta herriko gainerakoek ezin izango lukete ireki. Saiatu berriro geroago edo kendu argitaratu aurretik.",
+  'section.login.error.altesTancades': "Izen-emate berriak aldi baterako itxita daude herri honetan. Kontua baduzu jada, sartu zure posta elektronikoarekin.",
+  'section.login.error.compteSuspes': "Kontu hau aldi baterako etenda dago. Jarri harremanetan herri honetako administrazioarekin akatsa dela uste baduzu.",
+  'section.login.error.confirmaCorreuGoogle': "Zure Google kontuaren posta elektronikoa ez dago oraindik berretsita. Berretsi berriro sartu aurretik.",
 };

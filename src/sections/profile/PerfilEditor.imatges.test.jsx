@@ -136,7 +136,7 @@ const botonsImatge = () => screen.queryAllByRole('button').map((b) => b.textCont
    la línia .sdp-camp__ajuda del seu mateix camp, o null si no en té cap. */
 const ajudaDe = (boto) => boto.closest('.sdp-camp')?.querySelector('.sdp-camp__ajuda')?.textContent ?? null;
 /* El text que la ranura de la closca diu de sèrie (UniversalEditorShell). */
-const AJUDA_DE_LA_RANURA = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.";
+const AJUDA_DE_LA_RANURA = 'Tria una foto (JPG, PNG o WebP).';
 
 /* Ordre del Mestre (18-10-2026, relleu del Pla 2000, punt 2) · La finestra de
    l'avatar desa amb «Guardar enquadre»; la capçalera i el logotip, amb

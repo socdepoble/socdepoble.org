@@ -89,6 +89,8 @@ import { useCapaEnrere } from '../../components/PedraSeca/hooks/useCapaEnrere.js
 import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 /* Fase D (261020, L4) · El document destacat (TextSection i PAGE_COPY) arriba en diferit. */
 import { esErrorLazy, lazyRoute, lazyRouteRenovable } from '../../apps/plataforma/lazyRoute.js';
+/* v1.2.25 · Lot G1 · VistaDestacats arriba en diferit sense tocar lazyRouteRenovable (reservat a la fitxa viva). */
+const VistaDestacatsDiferida = lazyRoute(() => import('./components/VistaDestacats.jsx'));
 import { esperaDeLaLlista, useXat } from './XatContext';
 import { useRitmeXat } from './useRitmeXat.js';
 import { derivaEstat } from './missatges.js';
@@ -497,7 +499,12 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     eliminaPerAMi = null,
     eliminaPerATothom = null,
     responEnPrivat = null,
-    reenviaAConverses = null
+    reenviaAConverses = null,
+    missatgesDestacats = CAP,
+    carregaDestacats = null,
+    /* XAT-B01 (ee54c3a98) · Cancel·la una bombolla pròpia pendent: ja no s'envia. No depén de la capacitat
+       d'eliminar per a tothom. Un context d'abans no la porta: null, i la bombolla ofereix «Elimina». */
+    cancelaEnviament = null
   } = useXat();
   /* Fase D (261020, tasca 2; pla 261020_1300) · Denunciar i bloquejar des de
      la conversa: només amb la capacitat i una sessió (el xat de mostra, mai).
@@ -1224,6 +1231,13 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
     if (typeof alternaFixat !== 'function' || !filActiuId) return;
     Promise.resolve(alternaFixat(ambFilDelMissatge(msg, filActiuId), Boolean(actiu))).catch(notificaErrorAccio);
   }, [alternaFixat, filActiuId, ambFilDelMissatge, notificaErrorAccio]);
+
+  /* XAT-B01 (v1.2.25 · Lot G6, K-G6-PENDENT) · «Cancel·la l'enviament» d'una bombolla pròpia pendent va
+     directe al motor (XatContext.cancelaEnviament), sense el diàleg d'eliminar: la retira i ja no s'envia.
+     Si ja s'havia confirmat, torna null i no canvia res. */
+  const handleCancelaEnviament = useCallback((msg) => (
+    typeof cancelaEnviament === 'function' && msg ? cancelaEnviament(msg) : null
+  ), [cancelaEnviament]);
 
   const handleEliminaMissatge = useCallback((msg, opcions = {}) => {
     if (opcions?.abast !== 'mi' || typeof eliminaPerAMi !== 'function' || !filActiuId) return;
@@ -2075,12 +2089,6 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
       />
     );
   } else if (vistaActiva === 'multimedia') {
-    /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut
-       multimèdia ja és operativa: els enllaços dels missatges carregats en
-       esta sessió i, a Fitxers i Documents, l'estat buit honest fins als
-       adjunts de F1. Una conversa oberta des d'ella conserva la vista
-       (obriFilDeLaVista), i la fletxa hi torna (handleBackToList). La lupa,
-       Ordena i Selecciona continuen inertes: «En construcció». */
     vistaNode = (
       <MultimediaDeLaClosca
         titol={titolVista}
@@ -2088,9 +2096,28 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
         esquerra={<BotoTitolSeccioXat titol={titolVista} icona={entradaVista.Icona} />}
         fils={threads}
         missatgesPerFil={getThreadMessages}
+        configAdjunts={externalConfig}
         onObriFil={obriFilDeLaVista}
-        onEnConstruccio={() => showToast(t('section.xat.construccio.titol', 'En construcció'), 'info')}
         locale={locale}
+        idioma={llenguaDelText ?? language}
+        t={t}
+      />
+    );
+  } else if (vistaActiva === 'destacats') {
+    vistaNode = (
+      <DestacatsDeLaClosca
+        titol={titolVista}
+        icona={entradaVista.Icona}
+        esquerra={<BotoTitolSeccioXat titol={titolVista} icona={entradaVista.Icona} />}
+        fils={threads}
+        missatgesPerFil={getThreadMessages}
+        missatgesDestacats={missatgesDestacats}
+        onCarregaDestacats={carregaDestacats}
+        onObriMissatge={(filId, missatgeId) => navigate(`/xat/${enc(filId)}?vista=destacats&missatge=${enc(missatgeId)}`)}
+        onAlternaDestacat={!senseSessio && typeof alternaDestacat === 'function' ? (msg, actiu) => Promise.resolve(alternaDestacat(msg, Boolean(actiu))).catch(notificaErrorAccio) : null}
+        senseSessio={senseSessio}
+        locale={locale}
+        idioma={llenguaDelText ?? language}
         t={t}
       />
     );
@@ -2222,6 +2249,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
           clauEsborrany={ambitEstable && !activeThread.sessioLocalIAIA ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext || (esborranyInicialPagina?.filId === String(activeThread.id) ? esborranyInicialPagina.text : '')}
           referenciaPagina={referenciaPaginaActiva}
+          missatgeInicialId={params.get('missatge') || ''}
           peu={activeThread.filLocalIAIA ? <AvisPrivadesaIAIA t={t} /> : null}
           cortesiaIAIA={modeDades === 'remote' && !senseSessio && !iaiaApagada && !activeThread.filLocalIAIA && esXatDeLaIAIA(activeThread)}
           consultaIAIA={!iaiaApagada && (esXatDeLaIAIA(activeThread) || (senseSessio && activeThread.id === ID_FIL_DE_MOSTRA_DE_LA_IAIA))}
@@ -2255,6 +2283,7 @@ function XatWorkspace({ origen = null, referenciaEntrada = null }) {
           onAlternaFixat={potAccionsMissatge && typeof alternaFixat === 'function' ? handleAlternaFixat : null}
           onEliminaMissatge={potAccionsMissatge && typeof eliminaPerAMi === 'function' ? handleEliminaMissatge : null}
           onEliminaPerATothom={potAccionsMissatge && typeof eliminaPerATothom === 'function' ? handleEliminaPerATothom : null}
+          onCancelaEnviament={typeof cancelaEnviament === 'function' ? handleCancelaEnviament : null}
           onObriDirecteAmb={potAccionsMissatge && typeof responEnPrivat === 'function' ? handleObriDirecteAmb : null}
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}
@@ -2441,6 +2470,15 @@ function VistaDeLaClosca({ onObriFil, ...resta }) {
 function MultimediaDeLaClosca({ onObriFil, ...resta }) {
   const obri = useApartaEnEstret(onObriFil);
   return <VistaMultimedia {...resta} onObriFil={obri} />;
+}
+
+function DestacatsDeLaClosca({ onObriMissatge, ...resta }) {
+  const obri = useApartaEnEstret(onObriMissatge);
+  return (
+    <Suspense fallback={<p className="sdp-workspace-state" role="status">{resta.t('section.xat.carregant', 'Carregant…')}</p>}>
+      <VistaDestacatsDiferida {...resta} onObriMissatge={obri} />
+    </Suspense>
+  );
 }
 
 function FitxaDeLaClosca({ onObriFil, ...resta }) {

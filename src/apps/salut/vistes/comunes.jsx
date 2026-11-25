@@ -92,11 +92,19 @@ export function Enllac112() {
 }
 
 export function PeuSalut() {
+  const salut = useSalut();
   const { obriPanell } = useClosaAplicacio();
   const tx = useTextosSalut();
+  /* Onada v1.2.25 (Lot G5 · ML-01) · No prometre «només en este dispositiu»
+     quan IndexedDB no és persistent o la pestanya és de només lectura. */
+  const resumEstat = !salut.persistent
+    ? tx.nomesMemoriaText
+    : salut.nomesLectura
+      ? tx.nomesMirarPanell
+      : tx.dadesNomesDispositiuPeu;
   return (
     <Fila gap={2}>
-      <span>{tx.dadesNomesDispositiuPeu}</span>
+      <span>{resumEstat}</span>
       <Boto varietat="fantasma" data-obri-columna="esquerra" aria-controls="app-grid-sidebar" onClick={() => obriPanell('esquerra')}>
         {tx.estat}
       </Boto>

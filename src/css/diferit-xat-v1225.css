@@ -1,0 +1,257 @@
+/* diferit-xat-v1225.css — Full diferit de Pedra Seca 2.0 per a l'Onada v1.2.25 (Lot G1):
+   · VistaDestacats (missatges destacats)
+   · BarraCercaConversa (cerca intra-conversa ↑/↓)
+   · Targeta documental (.sdp-xat-document)
+   · Controls vius de VistaMultimedia (cerca, ordenació, selecció i miniatures)
+   · Confirmació de restauració .sdpbackup */
+@layer components {
+  /* ── VistaDestacats ── */
+  .sdp-xat-destacats {
+    display: grid;
+    gap: var(--sdp-space-3);
+    padding-bottom: var(--sdp-space-4);
+  }
+  .sdp-xat-destacats__llista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+  }
+  .sdp-xat-destacats__item {
+    display: flex;
+    align-items: stretch;
+    gap: var(--sdp-space-2);
+    border-bottom: 1px solid var(--sdp-vora);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+  }
+  .sdp-xat-destacats__obri {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    display: grid;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-destacats__obri:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-xat-destacats__obri:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-destacats__cap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-xat-destacats__conversa {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-destacats__data {
+    flex: none;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-destacats__text {
+    margin: 0;
+    color: var(--sdp-text-cos);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .sdp-xat-destacats__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-destacats__treu {
+    flex: none;
+    align-self: center;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-accio-text);
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-destacats__treu:hover { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-xat-destacats__treu:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-destacats__alerta { margin: var(--sdp-space-3); }
+
+  /* ── BarraCercaConversa ── */
+  .sdp-xat-cerca-conversa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-bottom: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-cerca-conversa__camp {
+    flex: 1 1 12rem;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding-inline: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-cerca-conversa__camp:focus-within {
+    outline: 2px solid var(--sdp-focus);
+    outline-offset: 1px;
+  }
+  .sdp-xat-cerca-conversa__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    min-height: var(--sdp-touch);
+  }
+  .sdp-xat-cerca-conversa__input:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-cerca-conversa__estat {
+    flex: none;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .sdp-xat-cerca-conversa__accions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    flex: none;
+  }
+
+  /* ── Targeta documental (AdjuntXat & PrevisualitzacioAdjunt) ── */
+  .sdp-xat-document {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    min-width: 0;
+  }
+  .sdp-xat-document__icona {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-document__dades {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-xat-document__nom {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-document__meta {
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-document__accio {
+    flex: none;
+    min-height: var(--sdp-touch);
+    min-width: var(--sdp-touch);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sdp-xat-document__accio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* ── VistaMultimedia viva (miniatures i selecció) ── */
+  .sdp-xat-multimedia__miniatura {
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    object-fit: cover;
+    border-radius: var(--sdp-radi-s);
+    flex: none;
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-multimedia__barra-seleccio {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-multimedia__seleccio-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-xat-multimedia__alerta { margin: var(--sdp-space-3) var(--sdp-space-4); }
+
+  /* ── Restauració .sdpbackup ── */
+  .sdp-xat-copia-restaura {
+    display: grid;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-xat-copia-restaura__accions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+
+  /* ── XAT-B04 · Controls inerts de VistaEnConstruccio (pantalla tàctil i Mode Sènior) ── */
+  .sdp-xat-inert[aria-disabled="true"] {
+    opacity: 0.55;
+  }
+  .sdp-xat-cerca__camp--inert {
+    opacity: 0.65;
+    min-block-size: var(--sdp-touch);
+  }
+  .sdp-xat-cerca__camp--inert input {
+    min-block-size: var(--sdp-touch);
+  }
+}

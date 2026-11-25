@@ -137,7 +137,7 @@ describe('Onada R32.14 · T2 (D03 · T3-UI-03) · Gestoria interna 100 % en les 
     ['gl', '/app/gestoria/full', 'Folla trimestral', '1. Aprobación dos tractores'],
     ['en', '/app/gestoria/escaner', 'Local Scanner', 'Tractor approval required'],
     ['eu', '/app/gestoria/escaner', 'Tokiko Eskanerra', 'Traktorea onartu behar da'],
-    ['gl', '/app/gestoria/contactes', 'Contactos', 'En obras']
+    ['gl', '/app/gestoria/informes', 'Informes', 'En obras']
   ])('munta mòduls de ShellGestoria (%s · %s) traduïts i sense fuites valencianes', async (lang, ruta, h1Esperat, textEsperat) => {
     const registre = creaRegistre({ internes: [manifestGestoria] });
     const { container } = muntaPlataforma(ruta, {

@@ -11,6 +11,7 @@ import { COPYRIGHT_SDP, dataHoraDeBarra, pindolesUniques } from '../../component
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { ETIQUETES_MARC_ESPECIMEN, localitzaItemCataleg, normalitzaLlenguaDisseny } from './cataleg/i18nControlsBarra.js';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
+import { TEXTOS_REGISTRE_CANVIS, localitzaItemRegistreCanvis, normalitzaLlenguaRc } from './registre-canvis/dadesRegistreCanvis.js';
 /* T51 · La data de la versió del catàleg viu al costat del manifest
    (cataleg/versio.js), on la veu qui edita el catàleg i l'ha de posar al dia. */
 import { VERSIO_CATALEG } from './cataleg/versio.js';
@@ -82,12 +83,16 @@ const copyDeLaPortada = (pageCopy, language = 'ca') => {
    (metadadesDePagina sobre el copy de la portada, la imatge pel selector social:
    la WebP va al <head> per la variant JPEG de 1200x630); el d'un espècimen, el
    seu títol i l'entradeta que pinta. La pàgina no canvia (Llei del Píxel). */
+function localitzaEspecimenDisseny(item, language) {
+  return localitzaItemRegistreCanvis(item, language) || localitzaItemCataleg(item, language);
+}
+
 function seoDelDetall(item, pageCopy, language = 'ca') {
   if (!item || item.id === '__intro') {
     const metadades = metadadesDePagina(copyDeLaPortada(pageCopy, language), opcionsDeLaImatgeSocial());
     return { title: metadades.title, description: metadades.description, image: metadades.image || resolveAsset(CAP_SOCIAL_BASE.image.url) };
   }
-  const itemLocalitzat = localitzaItemCataleg(item, language);
+  const itemLocalitzat = localitzaEspecimenDisseny(item, language);
   return {
     title: textPla(itemLocalitzat.title, LIMIT_TITOL),
     description: textPla(itemLocalitzat.lead || entradillaEnCurs(itemLocalitzat.categoriaLabel || etiquetaCategoria(itemLocalitzat)), LIMIT_DESCRIPCIO)
@@ -140,7 +145,7 @@ function CatalogDetail({ item }) {
   // Sense fitxa editorial (lead) l'espècimen es presenta «En curs». T51 · la
   // seua data és la de la versió del catàleg (VERSIO_CATALEG), o la pròpia
   // quan el manifest la porte.
-  const itemLocalitzat = localitzaItemCataleg(item, language);
+  const itemLocalitzat = localitzaEspecimenDisseny(item, language);
   const categoria = itemLocalitzat.categoriaLabel || etiquetaCategoria(itemLocalitzat);
   const enCurs = !itemLocalitzat.lead;
   const etiquetesMarc = ETIQUETES_MARC_ESPECIMEN[normalitzaLlenguaDisseny(language)];
@@ -203,8 +208,12 @@ export default function DesignSection() {
   const { pageCopy } = useCoreContent();
   const language = useLlenguaOpcional();
   const portada = copyDeLaPortada(pageCopy, language);
+  const categoriesLocalitzades = useMemo(() => {
+    const nomRc = TEXTOS_REGISTRE_CANVIS[normalitzaLlenguaRc(language)].categoriaNom;
+    return CATALOG_CATEGORIES.map((c) => (c.id === 'registre-de-canvis' ? { ...c, label: nomRc } : c));
+  }, [language]);
   const itemsLocalitzats = useMemo(
-    () => CATALOG_ITEMS.map((item) => localitzaItemCataleg(item, language)),
+    () => CATALOG_ITEMS.map((item) => localitzaEspecimenDisseny(item, language)),
     [language]
   );
   const model = useMemo(() => ({
@@ -212,7 +221,7 @@ export default function DesignSection() {
     /* Onada R29 · R29-02-1 · El catàleg és estàtic i complet (CATALOG_ITEMS i la portada): un ?item= que
        no hi és es reconcilia amb la fitxa de reserva de la categoria, no amb un error de càrrega. */
     itemsComplete: true,
-    categories: CATALOG_CATEGORIES,
+    categories: categoriesLocalitzades,
     items: [
       {
         id: '__intro',
@@ -224,7 +233,7 @@ export default function DesignSection() {
       },
       ...itemsLocalitzats
     ]
-  }), [portada, itemsLocalitzats]);
+  }), [portada, categoriesLocalitzades, itemsLocalitzats]);
 
   const handleSelectionChange = useCallback((selection, meta) => {
     const currentCategory = params.get('categoria');

@@ -58,7 +58,7 @@ export const TEXTOS_CLOSCA = Object.freeze({
   mostrarAlMurInactiu: parellCloscaEditor('mostrarAlMur.inactiu', 'Només al seu llibre o carpeta'),
   mostrarAlMurAjudaActiu: parellCloscaEditor('mostrarAlMur.ajudaActiu', 'Visible a l’aparador del Mur i guardada dins del seu llibre o carpeta.'),
   mostrarAlMurAjudaInactiu: parellCloscaEditor('mostrarAlMur.ajudaInactiu', 'Es manté guardada i accessible dins del seu llibre o carpeta sense aparéixer al Mur.'),
-  imatgeAjuda: parellCloscaEditor('imatge.ajuda', "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia."),
+  imatgeAjuda: parellCloscaEditor('imatge.ajuda', 'Tria una foto (JPG, PNG o WebP).'),
   imatgePujant: parellCloscaEditor('imatge.pujant', 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.'),
   imatgeErrorDesar: parellCloscaEditor('imatge.errorDesar', "No s'ha pogut desar la imatge."),
   formaCapcalera: parellCloscaEditor('forma.capcalera', 'Recomanat: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge sencera. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.'),
@@ -1220,7 +1220,7 @@ function ImageUploaderUI({
 
   return (
     <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-      <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={handler.fileInputRef} onChange={changeHandler} className="sdp-nomes-lector" tabIndex={-1} aria-label={editLabel} />
+      <input type="file" accept="image/*" ref={handler.fileInputRef} onChange={changeHandler} className="sdp-nomes-lector" tabIndex={-1} aria-label={editLabel} />
       <button ref={botoRef} type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} aria-describedby={idAjuda}
         onClick={() => (onEdit ? onEdit({ acaba: handler.cancelEdit }) : handler.fileInputRef.current?.click())}>
         <ImageIcon size={16} aria-hidden="true" /> {editLabel}

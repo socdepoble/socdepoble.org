@@ -20,8 +20,43 @@ import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 import { AVIS_GPS_ELIMINAT_PERFIL } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
 import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { useUIActionsOpcional } from '../../app/contexts/UIContext';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
 import { textosPerfilA11y } from './i18nPerfilA11y.js';
+
+/* Onada v1.2.25 (Lot G5 · ENT-03) · Textos locals en 5 llengües per a les
+   accions d'eixida i pendents del compte sense inflar el diccionari ca.js. */
+const TEXTOS_ACCIO_COMPTE = Object.freeze({
+  ca: Object.freeze({
+    accioPendent: 'Aquesta acció encara no està implementada en aquesta versió.',
+    confirmaEixida: 'Confirmar eixida',
+  }),
+  es: Object.freeze({
+    accioPendent: 'Esta acción todavía no está implementada en esta versión.',
+    confirmaEixida: 'Confirmar salida',
+  }),
+  en: Object.freeze({
+    accioPendent: 'This action is not implemented yet in this version.',
+    confirmaEixida: 'Confirm sign out',
+  }),
+  eu: Object.freeze({
+    accioPendent: 'Ekintza hau oraindik ez dago inplementatuta bertsio honetan.',
+    confirmaEixida: 'Berretsi irteera',
+  }),
+  gl: Object.freeze({
+    accioPendent: 'Esta acción aínda non está implementada nesta versión.',
+    confirmaEixida: 'Confirmar saída',
+  }),
+});
+
+function useIdiomaAjust() {
+  try {
+    const lang = useUIActionsOpcional()?.language;
+    return Object.hasOwn(TEXTOS_ACCIO_COMPTE, lang) ? lang : 'ca';
+  } catch {
+    return 'ca';
+  }
+}
 
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La ruta del Tauler de
    superadministració (App.jsx: /admin/*, darrere de RequireAuth). */
@@ -97,6 +132,8 @@ export default function DetallAjust({
 }) {
   const navigate = useNavigate();
   const t = useTraductorOpcional();
+  const idiomaAjust = useIdiomaAjust();
+  const txAccioCompte = TEXTOS_ACCIO_COMPTE[idiomaAjust];
   const txPerfil = textosPerfilA11y({ t });
   /* T47 (correcció de la revisió C01, 260928) · «Confirmar eixida» pregunta
      primer què no ha arribat al servidor i ho diu abans d'esborrar-ho.
@@ -105,7 +142,7 @@ export default function DetallAjust({
     navigate('/xat', { replace: true });
     pagina.recarrega();
   }, [navigate]);
-  const eixida = useEixidaSegura({ despres: despresDEixir });
+  const eixida = useEixidaSegura({ despres: despresDEixir, llengua: idiomaAjust });
 
   const [valorTemp, setValorTemp] = useState('');
   const [pobleExtra, setPobleExtra] = useState('');
@@ -450,7 +487,7 @@ export default function DetallAjust({
             {ajust.titol}
           </button>
           <p className="sdp-buit">
-            Aquesta acció encara no està implementada en aquesta versió.
+            {txAccioCompte.accioPendent}
           </p>
         </div>
       );
@@ -460,7 +497,7 @@ export default function DetallAjust({
         <div className="sdp-buit">
           <button type="button" className="sdp-boto sdp-boto--perill" onClick={eixida.demana}
             disabled={eixida.ocupat || Boolean(eixida.avis)}>
-            Confirmar eixida
+            {txAccioCompte.confirmaEixida}
           </button>
           {eixida.avis}
           {eixida.error ? <p className="sdp-camp__error" role="alert">{eixida.error}</p> : null}

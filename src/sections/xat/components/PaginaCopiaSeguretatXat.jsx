@@ -71,7 +71,10 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CircleAlert, FileUp } from 'lucide-react';
 import { Alerta, Boto, ControlContrasenya } from '../../../components/PedraSeca/index.js';
 import { useUIState } from '../../../app/contexts/UIContext';
+import { useFullDiferit } from '../../../config/fullDiferit.js';
 import { esAppNativa } from '../../../config/origenPublic.js';
+import cssV1225 from '../../../css/diferit-xat-v1225.css?inline';
+import { normalitzaLlenguaXat, textXatV1225 } from '../i18nVistesXatV1225.js';
 import {
   CODI_DEGRADACIO,
   CODI_IDENTITAT_DIVERGENT,
@@ -93,13 +96,212 @@ import {
 const CAP = Object.freeze([]);
 const RESERVA = (_clau, reserva) => reserva;
 
-/** El motor de veres; les proves en poden passar un altre. */
+function instantMsDe(registre) {
+  const candidat = registre?.esborratAl ?? registre?.editatAl ?? registre?.modificatAl ?? registre?.actualitzatAl ?? registre?.creatAl ?? null;
+  if (typeof candidat === 'number' && Number.isFinite(candidat)) return candidat;
+  if (typeof candidat === 'string' && candidat) {
+    const ms = Date.parse(candidat);
+    if (Number.isFinite(ms)) return ms;
+  }
+  return 0;
+}
+
+function esLapida(m) {
+  return Boolean(m?.esborrat === true || m?.esborratAl);
+}
+
+/**
+ * Normalitza qualsevol làpida (primera importació o fusió sobre un previ):
+ * retira cos (`text`/`content`) i totes les referències d'adjunts per a
+ * preservar privacitat sense resurrecció (C1+C6 ↔ G9 · Codex P1).
+ */
+function normalitzaLapidaRestauracio(base, entrant) {
+  const combinat = base ? { ...base, ...entrant } : { ...entrant };
+  delete combinat.adjunt;
+  delete combinat.adjunts;
+  delete combinat.attachment;
+  delete combinat.attachments;
+  delete combinat.media;
+  delete combinat.arxiu;
+  delete combinat.fitxer;
+  if (combinat.metadades && typeof combinat.metadades === 'object') {
+    const neta = { ...combinat.metadades };
+    delete neta.adjunt;
+    delete neta.adjunts;
+    combinat.metadades = neta;
+  }
+  return {
+    ...combinat,
+    text: '',
+    content: '',
+    esborrat: true,
+    esborratAl: entrant?.esborratAl || base?.esborratAl || new Date().toISOString()
+  };
+}
+
+/**
+ * Fusiona un registre nou sobre un previ preservant làpides (tombstones)
+ * i aplicant edicions més recents sense resurrecció (C1+C6 ↔ G9).
+ */
+function fusionaMissatgeRestauracio(previ, entrant) {
+  if (esLapida(entrant)) {
+    if (previ && esLapida(previ) && instantMsDe(previ) >= instantMsDe(entrant)) {
+      return { valor: normalitzaLapidaRestauracio(null, previ), canvi: false };
+    }
+    return {
+      valor: normalitzaLapidaRestauracio(previ, entrant),
+      canvi: true
+    };
+  }
+  if (!previ) return { valor: entrant, canvi: true };
+  if (esLapida(previ)) return { valor: normalitzaLapidaRestauracio(null, previ), canvi: false };
+  const msPrevi = instantMsDe(previ);
+  const msEntrant = instantMsDe(entrant);
+  const textCanviat = (entrant.text ?? entrant.content ?? '') !== (previ.text ?? previ.content ?? '');
+  if (msEntrant > msPrevi || (msEntrant === msPrevi && textCanviat && Boolean(entrant.editatAl || entrant.modificatAl))) {
+    return { valor: { ...previ, ...entrant }, canvi: true };
+  }
+  return { valor: previ, canvi: false };
+}
+
+function creaErrorRestauracio(codi, missatge, cause = null) {
+  const err = new Error(missatge);
+  err.codi = codi;
+  err.code = codi;
+  if (cause) err.cause = cause;
+  return err;
+}
+
+/**
+ * Persistència local transaccional en IndexedDB (v1.2.25 · Lot G6 · P1 tancat).
+ *  · MAI resol èxit en memòria si IndexedDB no existix, rebutja quota o falla la transacció.
+ *  · Aplica làpides (tombstones) i edicions sense resurrecció.
+ *  · Substituïble 1:1 per `creaMotorCopiaSeguretatXatV1225` (Codex C6).
+ */
+export async function restauraCopiaLocal(resultat, { abast, indexedDB = globalThis.indexedDB } = {}) {
+  if (typeof indexedDB?.open !== 'function') {
+    throw creaErrorRestauracio('RESTAURACIO_SENSE_IDB', 'IndexedDB no està disponible per a una restauració duradora.');
+  }
+  const clau = `${abast?.tenantId ?? 'local'}::${abast?.usuariId ?? 'anon'}`;
+
+  return new Promise((resol, rebutja) => {
+    let req;
+    try {
+      req = indexedDB.open('sdp-xat-copia-restaurada-v1', 1);
+    } catch (cause) {
+      const esQuota = cause?.name === 'QuotaExceededError';
+      rebutja(creaErrorRestauracio(esQuota ? 'RESTAURACIO_QUOTA' : 'RESTAURACIO_ERROR_IDB', 'No s’ha pogut obrir IndexedDB.', cause));
+      return;
+    }
+
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('lots')) db.createObjectStore('lots', { keyPath: 'clau' });
+    };
+
+    req.onerror = () => {
+      const cause = req.error || null;
+      const esQuota = cause?.name === 'QuotaExceededError';
+      rebutja(creaErrorRestauracio(esQuota ? 'RESTAURACIO_QUOTA' : 'RESTAURACIO_ERROR_IDB', 'Error en obrir IndexedDB.', cause));
+    };
+
+    req.onsuccess = () => {
+      const db = req.result;
+      let tx;
+      try {
+        tx = db.transaction('lots', 'readwrite');
+      } catch (cause) {
+        try { db.close(); } catch { /* ok */ }
+        const esQuota = cause?.name === 'QuotaExceededError';
+        rebutja(creaErrorRestauracio(esQuota ? 'RESTAURACIO_QUOTA' : 'RESTAURACIO_ERROR_IDB', 'Error en iniciar la transacció.', cause));
+        return;
+      }
+
+      const store = tx.objectStore('lots');
+      let resum = null;
+      const fallaTx = (cause) => {
+        try { db.close(); } catch { /* ok */ }
+        const esQuota = cause?.name === 'QuotaExceededError';
+        rebutja(creaErrorRestauracio(esQuota ? 'RESTAURACIO_QUOTA' : 'RESTAURACIO_ERROR_IDB', 'La transacció de restauració no s’ha confirmat.', cause));
+      };
+
+      tx.oncomplete = () => {
+        try { db.close(); } catch { /* ok */ }
+        resol(resum);
+      };
+      tx.onerror = () => fallaTx(tx.error || null);
+      tx.onabort = () => fallaTx(tx.error || null);
+
+      const getReq = store.get(clau);
+      getReq.onerror = () => fallaTx(getReq.error || null);
+      getReq.onsuccess = () => {
+        try {
+          const existent = getReq.result || {};
+          const filsMap = new Map((Array.isArray(existent.fils) ? existent.fils : CAP).filter((f) => f?.id != null).map((f) => [String(f.id), f]));
+          const missMap = new Map((Array.isArray(existent.missatges) ? existent.missatges : CAP).filter((m) => m?.id != null).map((m) => [String(m.id), m]));
+
+          let filsNous = 0;
+          let missatgesNous = 0;
+          let missatgesActualitzats = 0;
+          let duplicatsOmesos = 0;
+
+          for (const fil of Array.isArray(resultat?.fils) ? resultat.fils : CAP) {
+            if (!fil?.id) continue;
+            const id = String(fil.id);
+            if (!filsMap.has(id)) {
+              filsMap.set(id, fil);
+              filsNous += 1;
+            } else {
+              const previ = filsMap.get(id);
+              if (instantMsDe(fil) > instantMsDe(previ)) filsMap.set(id, { ...previ, ...fil });
+              duplicatsOmesos += 1;
+            }
+          }
+
+          for (const m of Array.isArray(resultat?.missatges) ? resultat.missatges : CAP) {
+            if (!m?.id) continue;
+            const id = String(m.id);
+            const tenia = missMap.has(id);
+            const { valor, canvi } = fusionaMissatgeRestauracio(missMap.get(id), m);
+            missMap.set(id, valor);
+            if (!tenia) missatgesNous += 1;
+            else if (canvi) missatgesActualitzats += 1;
+            else duplicatsOmesos += 1;
+          }
+
+          resum = {
+            filsNous,
+            missatgesNous,
+            missatgesActualitzats,
+            duplicatsOmesos,
+            totalFils: filsMap.size,
+            totalMissatges: missMap.size,
+            durable: true,
+          };
+
+          store.put({
+            clau,
+            desatAl: new Date().toISOString(),
+            fils: [...filsMap.values()],
+            missatges: [...missMap.values()]
+          });
+        } catch (cause) {
+          try { tx.abort(); } catch { /* ok */ }
+          fallaTx(cause);
+        }
+      };
+    };
+  });
+}
+
+/** El motor de veres; les proves (o el motor C1 de Codex) en poden passar un altre. */
 export const MOTOR_COPIA = Object.freeze({
   exporta: exportaCopiaSeguretatXatAmbRebut,
   desa: desaArxiuCopiaSeguretatXat,
   llegix: llegixArxiuCopiaSeguretatXat,
   descriu: descriuCopiaSeguretatXat,
   importa: importaCopiaSeguretatXat,
+  restaura: restauraCopiaLocal,
 });
 
 /* El focus s'ha perdut si és a <body>, enlloc o en un node que ja no hi és. */
@@ -608,17 +810,257 @@ function FormulariComprova({ t, abast, locale, motor }) {
   );
 }
 
+/* ─────────────────────────── Restaura (v1.2.25 · G1) ─────────────────────────── */
+
+function FormulariRestaura({ t, abast, locale, idioma, motor }) {
+  const arrelRef = useRef(null);
+  useFullDiferit(arrelRef, 'xat-v1225', cssV1225);
+
+  const [arxiu, setArxiu] = useState(null);
+  const [errorArxiu, setErrorArxiu] = useState(null);
+  const [contrasenya, setContrasenya] = useState('');
+  const [errorContrasenya, setErrorContrasenya] = useState(null);
+  const [estat, setEstat] = useState(null);
+  const [pendentConfirmacio, setPendentConfirmacio] = useState(null);
+  const idArxiu = useId();
+  const idEstat = `${idArxiu}-estat`;
+  const idError = `${idArxiu}-error`;
+  const input = useRef(null);
+  const campArxiu = useRef(null);
+  const campContrasenya = useRef(null);
+  const botoConfirmaRef = useRef(null);
+  const viu = useRef(true);
+  useEffect(() => () => { viu.current = false; }, []);
+
+  const ocupat = estat?.tipus === 'llegint' || estat?.tipus === 'ocupat' || estat?.tipus === 'restaurant';
+
+  const ambError = (error) => {
+    const { camp, text } = errorDeLaCopia(error, t, 'comprova');
+    if (camp === 'contrasenya') {
+      setErrorContrasenya(text);
+      setEstat(null);
+      enfocaControl(campContrasenya.current);
+    } else if (camp === 'arxiu') {
+      setErrorArxiu(text);
+      setEstat(null);
+      enfocaBoto(campArxiu.current, 'button');
+    } else {
+      setEstat({ tipus: 'error', text });
+    }
+  };
+
+  const tria = async (event) => {
+    const fitxer = event.target.files?.[0] ?? null;
+    event.target.value = '';
+    if (!fitxer || ocupat) return;
+    setArxiu(null);
+    setPendentConfirmacio(null);
+    setErrorArxiu(null);
+    setErrorContrasenya(null);
+    setEstat({ tipus: 'llegint' });
+    try {
+      const bytes = await motor.llegix(fitxer);
+      const capcalera = await motor.descriu(bytes);
+      if (!viu.current) return;
+      if (capcalera.xifrada !== true) throw Object.assign(new Error('Còpia sense xifrar.'), { codi: CODI_DEGRADACIO });
+      if (capcalera.usuariId !== abast.usuariId || capcalera.tenantId !== abast.tenantId) {
+        throw Object.assign(new Error('Còpia d’un altre àmbit.'), { codi: CODI_IDENTITAT_DIVERGENT });
+      }
+      setArxiu({ nom: typeof fitxer.name === 'string' ? fitxer.name : '', bytes });
+      setEstat(null);
+      enfocaControl(campContrasenya.current);
+    } catch (error) {
+      if (!viu.current) return;
+      ambError(error);
+    }
+  };
+
+  const revisa = async (event) => {
+    event.preventDefault();
+    if (ocupat) return;
+    if (!arxiu) {
+      setErrorArxiu(textAmb(TEXTOS_COPIA.errorSenseArxiu, t));
+      enfocaBoto(campArxiu.current, 'button');
+      return;
+    }
+    if (!contrasenya) {
+      setErrorContrasenya(textAmb(TEXTOS_COPIA.errorBuida, t));
+      enfocaControl(campContrasenya.current);
+      return;
+    }
+    const clauNfc = normalitzaNfcSeguraUi(contrasenya, { maxLongitud: 1024 });
+    if (clauNfc === null) {
+      setErrorContrasenya(textAmb(TEXTOS_COPIA.errorIncorrecta, t));
+      enfocaControl(campContrasenya.current);
+      return;
+    }
+    setErrorContrasenya(null);
+    setEstat({ tipus: 'ocupat' });
+    try {
+      const resultat = await motor.importa(arxiu.bytes, {
+        usuariIdEsperat: abast.usuariId,
+        tenantIdEsperat: abast.tenantId,
+        contrasenya,
+      });
+      if (!viu.current) return;
+      setContrasenya('');
+      setPendentConfirmacio({ resultat, resum: resumDeLaCopia(resultat) });
+      setEstat(null);
+      queueMicrotask(() => botoConfirmaRef.current?.closest('button')?.focus());
+    } catch (error) {
+      if (!viu.current) return;
+      ambError(error);
+    }
+  };
+
+  const confirmaRestauracio = async () => {
+    if (!pendentConfirmacio || ocupat) return;
+    setEstat({ tipus: 'restaurant' });
+    try {
+      const fnRestaura = typeof motor.restaura === 'function' ? motor.restaura : restauraCopiaLocal;
+      const fet = await fnRestaura(pendentConfirmacio.resultat, { abast });
+      if (!viu.current) return;
+      setPendentConfirmacio(null);
+      setEstat({
+        tipus: 'fet',
+        filsNous: fet?.filsNous ?? pendentConfirmacio.resum.fils,
+        missatgesNous: fet?.missatgesNous ?? pendentConfirmacio.resum.missatges,
+        duplicatsOmesos: fet?.duplicatsOmesos ?? 0
+      });
+    } catch (err) {
+      if (!viu.current) return;
+      if (err?.commitConfirmat === true) {
+        setPendentConfirmacio(null);
+        setEstat({
+          tipus: 'avis',
+          text: textXatV1225(idioma, 'copia.restaura.commitConfirmat'),
+          rebut: err?.rebut || null,
+        });
+        return;
+      }
+      const codi = err?.codi || err?.code || '';
+      const clauErr = codi === 'RESTAURACIO_SENSE_IDB'
+        ? 'copia.restaura.errorSenseIdb'
+        : codi === 'RESTAURACIO_QUOTA' || err?.name === 'QuotaExceededError'
+          ? 'copia.restaura.errorQuota'
+          : 'copia.restaura.errorGeneral';
+      setEstat({ tipus: 'error', text: textXatV1225(idioma, clauErr) });
+    }
+  };
+
+  let avis = null;
+  if (estat?.tipus === 'ocupat') avis = <p className="sdp-xat-ajustos__nota">{textAmb(TEXTOS_COPIA.comprovaComprovant, t)}</p>;
+  else if (estat?.tipus === 'restaurant') avis = <p className="sdp-xat-ajustos__nota">{textXatV1225(idioma, 'copia.restaura.restaurant')}</p>;
+  else if (estat?.tipus === 'fet') {
+    avis = (
+      <Alerta to="exit" viva={false} titol={textXatV1225(idioma, 'copia.restaura.exitTitol')}>
+        <p>
+          {textXatV1225(idioma, 'copia.restaura.exitText', {
+            fils: formataNombre(estat.filsNous, locale),
+            missatges: formataNombre(estat.missatgesNous, locale),
+            omesos: formataNombre(estat.duplicatsOmesos, locale)
+          })}
+        </p>
+      </Alerta>
+    );
+  } else if (estat?.tipus === 'avis') {
+    avis = <Alerta to="avis" viva={false}><p>{estat.text}</p></Alerta>;
+  } else if (estat?.tipus === 'error') {
+    avis = <Alerta to="error" viva={false}><p>{estat.text}</p></Alerta>;
+  }
+
+  const etiquetaArxiu = textAmb(TEXTOS_COPIA.comprovaArxiu, t);
+  const verb = textAmb(TEXTOS_COPIA.comprovaTria, t);
+  const estatArxiu = arxiu ? textAmb(TEXTOS_COPIA.comprovaArxiuTriat, t, { nom: arxiu.nom }) : textAmb(TEXTOS_COPIA.comprovaCapArxiu, t);
+  const descritArxiu = [idEstat, errorArxiu ? idError : null].filter(Boolean).join(' ');
+
+  return (
+    <div ref={arrelRef} className="sdp-xat-copia-restaura">
+      <div className="sdp-xat-ajustos__grup">
+        <p className="sdp-xat-ajustos__nota">{textXatV1225(idioma, 'copia.restaura.descripcio')}</p>
+      </div>
+      {!pendentConfirmacio ? (
+        <form className="sdp-xat-ajustos__grup" noValidate onSubmit={revisa}>
+          <div className="sdp-camp" ref={campArxiu}>
+            <label className="sdp-camp__etiqueta" htmlFor={idArxiu}>{etiquetaArxiu}</label>
+            <div className="sdp-camp-fitxer">
+              <input
+                ref={input}
+                id={idArxiu}
+                type="file"
+                className="sdp-nomes-lector"
+                tabIndex={-1}
+                aria-describedby={descritArxiu}
+                aria-invalid={errorArxiu ? 'true' : undefined}
+                disabled={ocupat}
+                onChange={tria}
+              />
+              <Boto
+                varietat="secundari"
+                icona={FileUp}
+                className="sdp-camp-fitxer__boto"
+                aria-label={`${etiquetaArxiu}: ${verb}`}
+                aria-describedby={descritArxiu}
+                disabled={ocupat}
+                onClick={() => input.current?.click()}
+              >
+                {verb}
+              </Boto>
+              <p id={idEstat} className="sdp-camp-fitxer__estat" aria-live="polite">{estatArxiu}</p>
+            </div>
+            <ErrorDeCamp id={idError} text={errorArxiu} />
+          </div>
+          <UsuariDeLaCopia t={t} />
+          <CampContrasenya
+            etiqueta={textAmb(TEXTOS_COPIA.contrasenya, t)}
+            error={errorContrasenya}
+            valor={contrasenya}
+            onCanvi={(valor) => { setContrasenya(valor); if (errorContrasenya) setErrorContrasenya(null); }}
+            contenidorRef={campContrasenya}
+            etiquetaUll={textAmb(TEXTOS_COPIA.ull, t)}
+            autoComplete="current-password"
+            desactivat={ocupat}
+          />
+          <Boto tipus="submit" varietat="primari" ple carregant={estat?.tipus === 'ocupat'} disabled={estat?.tipus === 'llegint'}>
+            {textXatV1225(idioma, 'copia.restaura.comprovaPrimer')}
+          </Boto>
+        </form>
+      ) : (
+        <div className="sdp-xat-ajustos__grup">
+          <Alerta to="avis" viva={false} titol={textXatV1225(idioma, 'copia.restaura.confirmacioTitol')}>
+            <p>
+              {textXatV1225(idioma, 'copia.restaura.confirmacioText', {
+                fils: formataNombre(pendentConfirmacio.resum.fils, locale),
+                missatges: formataNombre(pendentConfirmacio.resum.missatges, locale)
+              })}
+            </p>
+          </Alerta>
+          <div className="sdp-xat-copia-restaura__accions">
+            <Boto varietat="primari" carregant={estat?.tipus === 'restaurant'} onClick={confirmaRestauracio}>
+              <span ref={botoConfirmaRef}>{textXatV1225(idioma, 'copia.restaura.botoConfirma')}</span>
+            </Boto>
+            <Boto varietat="secundari" disabled={ocupat} onClick={() => setPendentConfirmacio(null)}>
+              {textXatV1225(idioma, 'copia.restaura.cancella')}
+            </Boto>
+          </div>
+        </div>
+      )}
+      <AvisDeLaPagina>{avis}</AvisDeLaPagina>
+    </div>
+  );
+}
+
 /* ───────────────────────────── El cos ───────────────────────────── */
 
 /**
- * `accio`: 'desa' o 'comprova'. `abast`: { usuariId, tenantId } o null (sense
+ * `accio`: 'desa', 'comprova' o 'restaura'. `abast`: { usuariId, tenantId } o null (sense
  * compte: només l'avís). `contingut`: { fils, missatges, filsAmbMissatges,
  * desDeSeqPerFil } de contingutDeLaCopia (només per a 'desa'). `natiu`: dins de l'app de
  * Capacitor. `cripto`: el WebCrypto del navegador (sense, només l'avís).
  * `motor`: el de veres per defecte.
  */
 export function CosCopiaSeguretatXat({
-  accio = 'desa', t = RESERVA, abast = null, contingut = null, locale = 'ca-ES', natiu = false,
+  accio = 'desa', t = RESERVA, abast = null, contingut = null, locale = 'ca-ES', idioma = null, natiu = false,
   navegador = globalThis.navigator, cripto = globalThis.crypto, motor = MOTOR_COPIA,
 }) {
   if (!abast) {
@@ -633,19 +1075,21 @@ export function CosCopiaSeguretatXat({
   if (!criptoDisponible(cripto)) {
     return <Alerta to="info" viva={false}><p>{textAmb(TEXTOS_COPIA.errorSenseCripto, t)}</p></Alerta>;
   }
+  const codiIdioma = normalitzaLlenguaXat(idioma || locale);
   if (accio === 'comprova') return <FormulariComprova t={t} abast={abast} locale={locale} motor={motor} />;
+  if (accio === 'restaura') return <FormulariRestaura t={t} abast={abast} locale={locale} idioma={codiIdioma} motor={motor} />;
   return <FormulariDesa t={t} abast={abast} contingut={contingut} locale={locale} natiu={natiu} navegador={navegador} motor={motor} />;
 }
 
 /** La pàgina amb les dades de l'app: el xat (useXat) i la llengua (useUIState). */
-export default function PaginaCopiaSeguretatXat({ accio = 'desa', t = RESERVA }) {
+export default function PaginaCopiaSeguretatXat({ accio = 'desa', idioma = null, t = RESERVA }) {
   const { joId = null, joNom = null, joAvatar = null, ambitEstable = '', chatThreads = CAP, getThreadMessages = null } = useXat();
-  const { locale = 'ca-ES' } = useUIState() || {};
+  const { locale = 'ca-ES', language = 'ca' } = useUIState() || {};
   const abast = useMemo(() => abastDeLaCopia({ joId, ambitEstable }), [joId, ambitEstable]);
   const contingut = useMemo(
     () => (accio === 'desa' ? contingutDeLaCopia({ chatThreads, getThreadMessages, joNom, joAvatar }) : null),
     [accio, chatThreads, getThreadMessages, joNom, joAvatar]
   );
   const natiu = useMemo(() => esAppNativa(), []);
-  return <CosCopiaSeguretatXat accio={accio} t={t} abast={abast} contingut={contingut} locale={locale} natiu={natiu} />;
+  return <CosCopiaSeguretatXat accio={accio} t={t} abast={abast} contingut={contingut} locale={locale} idioma={idioma || language} natiu={natiu} />;
 }

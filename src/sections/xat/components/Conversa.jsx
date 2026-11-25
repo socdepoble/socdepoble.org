@@ -48,14 +48,16 @@ import {
   extreuAccionsDeRespostaIAIA,
   respostaDeLaIAIA
 } from '../../../data/iaiaLocal.js';
-import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, forwardRef, lazy, useCallback, useContext, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Copy, CornerUpRight, FileText, ImagePlus, Pin, Star, Trash2, X } from 'lucide-react';
 import { Link, useNavigate } from '../../../app/contexts/RouterContext.jsx';
 import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { useCapaEnrere } from '../../../components/PedraSeca/hooks/useCapaEnrere.js';
 import { CONSULTA_TACTIL } from '../../../hooks/useBarresAmbScroll.js';
 import CapcaleraConversa from './CapcaleraConversa.jsx';
+import BarraCercaConversa from './BarraCercaConversa.jsx';
 import BanerReferenciaPagina from './BanerReferenciaPagina.jsx';
+import { normalitzaLlenguaXat, textXatV1225 } from '../i18nVistesXatV1225.js';
 import Bombolla, { normalitzaReaccions } from './Bombolla.jsx';
 import DialegCompartir from './DialegCompartir.jsx';
 import SeparadorDia from './SeparadorDia.jsx';
@@ -345,7 +347,17 @@ export default function Conversa({
   /* v1.2.8 + IDEA-342 · «Elimina per a tothom» sense caducitat i amb autoria multi-barret. */
   onEliminaPerATothom = null,
   orgIdsPermeses = null,
-  referenciaPagina = null
+  referenciaPagina = null,
+  missatgeInicialId = '',
+  cercadorConversa = null,
+  onCanviaConsultaCerca = null,
+  resultatsCercaExterns = null,
+  carregantCercaExterns = false,
+  errorCercaExterns = null,
+  onCarregaMissatgePerId = null,
+  /* XAT-B01 (v1.2.25 · Lot G6, K-G6-PENDENT) · Cancel·la una bombolla pròpia pendent sense el diàleg
+     d'eliminar (XatContext.cancelaEnviament, via XatSection). Sense ella, la bombolla ofereix «Elimina». */
+  onCancelaEnviament = null
 }) {
   const navigate = useNavigate();
   /* REV-ESTRES-2 · La llista amb els objectes d'abans (estabilitza); la ref
@@ -396,6 +408,15 @@ export default function Conversa({
   const arxiva = useArxivaDelFil(fil, t);
   const [contingutCompartitObert, setContingutCompartitObert] = useState(false);
   const obridorContingutRef = useRef(null);
+  const [cercaConversaOberta, setCercaConversaOberta] = useState(false);
+  const idBarraCerca = useId();
+  const refBotoCerca = useRef(null);
+  const idiomaConversa = normalitzaLlenguaXat(locale);
+  const tancaCercaConversa = useCallback(() => {
+    setCercaConversaOberta(false);
+    refBotoCerca.current?.focus();
+  }, []);
+  useCapaEnrere(cercaConversaOberta && !modeSeleccio, tancaCercaConversa);
   const [oblitObert, setOblitObert] = useState(null);
   /* La via que el diàleg confirma, fixada en obrir-lo: el títol i el text no
      canvien mentre es tanca, quan ja no queda res per oblidar. */
@@ -1103,18 +1124,77 @@ export default function Conversa({
     else ol.focus({ preventScroll: true });
   };
 
-  /* La cita porta a l'original: la llista el centra i el ressalta, i el
-     focus hi va (#12) perquè el lector el llegisca i el Tab continue des
-     d'allí. El salt ja el fa la llista: preventScroll. */
-  const vesAlMissatge = useCallback((id) => {
+  /* La cita o la cerca porta a l'original: la llista el centra i el ressalta, i el
+     focus hi va (#12). Costura C1+G1 (Codex C6b): si el missatge no és al DOM
+     (anterior als 50 carregats) i existeix `onCarregaMissatgePerId`, el demana
+     asíncronament amb generació de cancel·lació i completa el salt en rebre'l. */
+  const saltPendentIdRef = useRef(null);
+  const saltGenRef = useRef(0);
+  const [avisCercaSalt, setAvisCercaSalt] = useState(null);
+
+  const centraNodeMissatge = useCallback((id, { enfoca = true } = {}) => {
     const ol = llistaRef.current;
-    if (!ol || id == null) return;
+    if (!ol || id == null) return false;
     const node = [...ol.querySelectorAll('[data-missatge]')].find((el) => el.getAttribute('data-missatge') === String(id));
-    if (!node) return;
+    if (!node) return false;
     desplacaLlista(ol, scrollPerCentrar(ol.scrollTop, ol.getBoundingClientRect(), node.getBoundingClientRect()), comportamentDesplacament());
-    node.focus({ preventScroll: true });
+    if (enfoca) node.focus({ preventScroll: true });
     setRessalt({ id: String(id) });
+    return true;
   }, []);
+
+  const vesAlMissatge = useCallback((id, { enfoca = true } = {}) => {
+    if (id == null) return;
+    const gen = ++saltGenRef.current;
+    saltPendentIdRef.current = null;
+    setAvisCercaSalt(null);
+    if (centraNodeMissatge(id, { enfoca })) {
+      return;
+    }
+    if (typeof onCarregaMissatgePerId !== 'function' || !fil?.id) return;
+    const targetId = String(id);
+    saltPendentIdRef.current = targetId;
+    Promise.resolve()
+      .then(() => onCarregaMissatgePerId(fil.id, targetId))
+      .then((trobat) => {
+        if (saltGenRef.current !== gen) return;
+        if (!trobat) {
+          saltPendentIdRef.current = null;
+          setAvisCercaSalt(textXatV1225(idiomaConversa, 'cercaConversa.missatgeNoDisponible'));
+        }
+      })
+      .catch(() => {
+        if (saltGenRef.current !== gen) return;
+        saltPendentIdRef.current = null;
+        setAvisCercaSalt(textXatV1225(idiomaConversa, 'cercaConversa.missatgeNoDisponible'));
+      });
+  }, [centraNodeMissatge, onCarregaMissatgePerId, fil?.id, idiomaConversa]);
+
+  useEffect(() => {
+    return () => {
+      saltGenRef.current += 1;
+      saltPendentIdRef.current = null;
+    };
+  }, [fil?.id]);
+
+  useEffect(() => {
+    const pendent = saltPendentIdRef.current;
+    if (!pendent) return;
+    if (centraNodeMissatge(pendent)) {
+      saltPendentIdRef.current = null;
+    }
+  }, [messages, centraNodeMissatge]);
+
+  const saltInicialFetRef = useRef('');
+  useEffect(() => {
+    const objectiu = String(missatgeInicialId || '').trim();
+    if (!objectiu || !fil?.id) return;
+    const clau = `${fil.id}::${objectiu}`;
+    if (saltInicialFetRef.current === clau) return;
+    if (!messages.some((m) => m?.id != null && String(m.id) === objectiu)) return;
+    saltInicialFetRef.current = clau;
+    vesAlMissatge(objectiu);
+  }, [fil?.id, missatgeInicialId, messages, vesAlMissatge]);
 
   const alterna = useCallback((clau) => {
     setTriats((previs) => {
@@ -1462,6 +1542,7 @@ export default function Conversa({
           onReenvia={obriReenvia}
           onEnviaPrivat={esGrup ? enviaPrivat : null}
           onElimina={demanaElimina}
+          onCancelaEnviament={onCancelaEnviament}
           onSelecciona={seleccionaDesDeMissatge}
           reaccions={reaccionsMsg}
           destacat={destacatMsg}
@@ -1493,7 +1574,7 @@ export default function Conversa({
     });
   }, [
     files, moderacio, fil, accionsDe, configAdjunts, usuariAdjunts, esGrup, perId, vesAlMissatge, potRespondre, respon,
-    responEnPrivat, alternaReaccio, alternaDestacat, alternaFixat, obriReenvia, enviaPrivat, demanaElimina, seleccionaDesDeMissatge,
+    responEnPrivat, alternaReaccio, alternaDestacat, alternaFixat, obriReenvia, enviaPrivat, demanaElimina, onCancelaEnviament, seleccionaDesDeMissatge,
     reaccionsLocals, destacatsLocals, missatgeFixat, caraPropia, nomPropi, rutaPropia,
     ressalt, locale, t, modeSeleccio, seleccioDe, triats, onReintenta, onDescarta, onCopia, actorLlista, onMutaLlista,
     obriImatgeGaleria, cortesiaIAIA, consultaIAIA, onEnviaAlBloc, enviaEsborranyIAIA, creantNota, senseSessio, caresFil
@@ -1555,6 +1636,7 @@ export default function Conversa({
     reiniciaArrossegament();
     setVisorGaleria(null);
     setContingutCompartitObert(false);
+    setCercaConversaOberta(false);
   }, [fil?.id, reiniciaArrossegament]);
 
   useEffect(() => {
@@ -1630,8 +1712,13 @@ export default function Conversa({
         canals={canals}
         onTriaCanal={onTriaCanal}
         contrapartReserva={contrapartReservaCapcalera}
-        onSeleccionar={() => setModeSeleccio(true)}
+        onSeleccionar={() => { setCercaConversaOberta(false); setModeSeleccio(true); }}
         seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
+        onAlternaCerca={!modeSeleccio ? () => setCercaConversaOberta((v) => !v) : null}
+        cercaOberta={cercaConversaOberta}
+        idBarraCerca={idBarraCerca}
+        refBotoCerca={refBotoCerca}
+        etiquetaCercaConversa={textXatV1225(idiomaConversa, 'cercaConversa.boto')}
         t={t}
         {...accionsDeLaContrapart}
         accioContingutCompartit={ambContingutCompartit && !fil?.perDefecte ? {
@@ -1654,6 +1741,20 @@ export default function Conversa({
           }
         } : null}
       />
+      {cercaConversaOberta && !modeSeleccio ? (
+        <BarraCercaConversa
+          id={idBarraCerca}
+          missatges={messages}
+          cercadorExtern={cercadorConversa}
+          onCanviaConsulta={onCanviaConsultaCerca}
+          resultatsExterns={resultatsCercaExterns}
+          carregantExtern={carregantCercaExterns}
+          errorExtern={errorCercaExterns || avisCercaSalt}
+          onVesAlMissatge={vesAlMissatge}
+          onTanca={tancaCercaConversa}
+          idioma={idiomaConversa}
+        />
+      ) : null}
       {referenciaPagina && !modeSeleccio ? (
         <BanerReferenciaPagina referencia={referenciaPagina} t={t} />
       ) : null}
@@ -2089,6 +2190,11 @@ export default function Conversa({
             } else if (desti && String(desti.id) === String(fil?.id) && textEnviar) {
               onSendMessage?.(fil, textEnviar);
             } else if (desti?.id != null) {
+              /* D-REENVIA, opció (a) (integració v1.2.25, Guàrdia #6 de MarIA; pendent de ratificar a la
+                 Bústia) · El reenviament sense el motor de sempre (crònica R32.7–9): el text arriba com a
+                 context de la conversa triada. XAT-B03 (Lot G6) el retirava per no posar el text a la URL;
+                 la retirada queda per a la decisió del Mestre, i amb el motor (onReenviaMissatge) mai no
+                 passa per ací. «Nou grup» sense onNouGrupReenvia continua retirat (XAT-B03). */
               const p = new URLSearchParams();
               if (textEnviar) p.set('context', textEnviar);
               navigate(`/xat/${encodeURIComponent(String(desti.id))}${p.toString() ? `?${p.toString()}` : ''}`);
@@ -2096,18 +2202,11 @@ export default function Conversa({
             setLotReenvia(null);
             if (modeSeleccio) surtDeSeleccio();
           }}
-          onNouGrup={(lotActual) => {
-            const textEnviar = String(lotActual?.text || '').trim();
+          onNouGrup={typeof onNouGrupReenvia === 'function' ? (lotActual) => {
             setLotReenvia(null);
             if (modeSeleccio) surtDeSeleccio();
-            if (typeof onNouGrupReenvia === 'function') {
-              onNouGrupReenvia(lotActual);
-              return;
-            }
-            const p = new URLSearchParams();
-            if (textEnviar) p.set('context', textEnviar);
-            navigate(`/xat${p.toString() ? `?${p.toString()}` : ''}`);
-          }}
+            onNouGrupReenvia(lotActual);
+          } : undefined}
           onDescarta={() => {
             setLotReenvia(null);
             obridorReenviaRef.current?.focus?.({ preventScroll: true });

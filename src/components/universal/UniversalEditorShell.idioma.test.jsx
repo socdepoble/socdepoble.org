@@ -128,7 +128,7 @@ describe('les reserves són el valencià del diccionari', () => {
     expect(Object.keys(AVISOS_ACCIONS_EDICIO)).toEqual(['comentar', 'compartir', 'connectar', 'traduir']);
     expect(Object.isFrozen(AVISOS_ACCIONS_EDICIO)).toBe(true);
     expect(ETIQUETA_EDICIO_AVANCADA).toBe('Edició avançada');
-    expect(AJUDA_IMATGE_PER_DEFECTE).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
+    expect(AJUDA_IMATGE_PER_DEFECTE).toBe('Tria una foto (JPG, PNG o WebP).');
     expect(AJUDA_IMATGE_PUJANT).toBe('Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.');
     expect(AJUDA_FORMA_LLIURE).toBe('La pàgina l’ensenya sencera; la miniatura del llistat i la targeta del Mur la retallen en quadrat.');
     expect(AJUDA_FORMA_CAPCALERA).toMatch(/^Recomanat: la miniatura del llistat i la targeta del Mur ensenyen/);
@@ -335,7 +335,7 @@ describe('sense traductor, el valencià de sempre; en valencià, el mateix DOM',
     fireEvent.click(imatgeCapcalera(container));
     expect(getByRole('button', { name: 'Enquadrar' }).textContent).toBe(' Enquadrar');
     expect(getByRole('button', { name: 'Enrere' })).toBeTruthy();
-    expect(container.querySelector('.hero-image .sdp-camp__ajuda').textContent).toBe("Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.");
+    expect(container.querySelector('.hero-image .sdp-camp__ajuda').textContent).toBe('Tria una foto (JPG, PNG o WebP).');
     await act(async () => { fireEvent.click(getByRole('button', { name: 'Esborrar' })); });
     expect(onToast).toHaveBeenCalledWith('Imatge esborrada', 'success');
   });

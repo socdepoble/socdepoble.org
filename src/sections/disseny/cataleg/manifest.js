@@ -14,7 +14,9 @@ export const CATALOG_CATEGORIES = [
   { id: 'inventari', label: 'Recursos', order: 70, icon: '📦' },
   { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' },
   /* Atles 2D (mateixa ordre, punt b; integrat el 22-11-2026) · les cinc pàgines d'estudi de l'Atles. */
-  { id: 'atles-2d', label: 'Atles 2D', order: 90, icon: '🗺️' }
+  { id: 'atles-2d', label: 'Atles 2D', order: 90, icon: '🗺️' },
+  /* IDEA-354 (Onada v1.2.25 · Lot G3) · Registre de canvis atòmic en 3 columnes dins /disseny. */
+  { id: 'registre-de-canvis', label: 'Registre de canvis', order: 100, icon: '📋' }
 ];
 
 /* Ordre del Mestre (261007) · «Substitueix el maó genèric (🧱) per emojis
@@ -89,6 +91,12 @@ export const ICONES_ESPECIMENS = Object.freeze({
   /* Atles 2D (ordre del Mestre del 21-11-2026; pla 261121_2335) · una pàgina per vista de la maqueta. */
   'atles-2d': Object.freeze({
     presentacio: '🧭', 'poble-virtual': '🏘️', 'xarxes-mon': '🌍', 'mapa-entitats': '📐', 'motor-estudis': '🔬'
+  }),
+  /* IDEA-354 (Onada v1.2.25 · Lot G3) · Registre de canvis atòmic (emojis RGI <= Unicode 13).
+     GEM-11 · v1-2-21 (Lot G9), l'Atles a tota l'amplada: el seu, com els germans. */
+  'registre-de-canvis': Object.freeze({
+    conjunt: '🗂️', 'v1-2-25': '✨', 'v1-2-24': '🏅', 'v1-2-23': '📍', 'v1-2-22': '🫒', 'v1-2-21': '🗺️', 'v1-2-20': '📡',
+    historic: '📚'
   })
 });
 
@@ -715,4 +723,33 @@ CATALOG_ITEMS.push(
   especimen('atles-2d', 'motor-estudis', '4. Motor d’estudis de mercat (Proposta funcional)', 'Fase 1 simulada, Fase 2 humana i maqueta mòbil', ['atles', 'proposta', 'mercat'],
     'Una proposta, amb les decisions del Mestre del 22-11-2026, sense cap línia al producte: la Fase 1 simulada i la Fase 2 de contrast humà real, el recorregut en quatre passos, els principis ètics, el fonament tècnic que ja tenim, les cinc decisions del Mestre i una maqueta mòbil amb un exemple inventat.',
     'motor estudis mercat proposta fase 1 fase 2 contrast huma sintetic principis etics maqueta mobil decisions mestre perfils simulats')
+);
+
+/* IDEA-354 (Onada v1.2.25 · Lot G3) · Registre de canvis atòmic en 3 columnes dins /disseny.
+   Cada versió és un espècimen lleuger amb detall diferit (+0 B al nucli WP). */
+CATALOG_ITEMS.push(
+  especimen('registre-de-canvis', 'conjunt', 'Vista de conjunt', 'Estat dels canals i últimes versions', ['versions', 'canals', 'registre'],
+    'Consulta en una sola pantalla l’estat en viu dels quatre canals oficials i les últimes entregues atòmiques amb blocs desplegables de millores i correccions.',
+    'registre canvis changelog versions conjunt canals oficials millores correccions'),
+  especimen('registre-de-canvis', 'v1-2-25', 'v1.2.25', '25 de novembre de 2026 · En preparació · onada v1.2.25 (Registre de canvis i teclat)', ['versions', 'v1.2.25'],
+    'Onada de treball en curs al taller de poble. La crònica definitiva i la llista tancada de novetats s’emplenaran en integrar tots els carrils i validar el conjunt abans de publicar.',
+    'v1.2.25 registre canvis idea354 idea355 teclat en preparacio'),
+  especimen('registre-de-canvis', 'v1-2-24', 'v1.2.24', '24 de novembre de 2026 · Reconeixements en 5 llengües, «Elimina per a tothom» i compartir fiable', ['versions', 'v1.2.24'],
+    'Obri Reconeixements i fonts d’inspiració en les 5 llengües, incorpora «Elimina per a tothom» als missatges propis del Xat i assegura resposta al botó Compartir.',
+    'v1.2.24 reconeixements elimina per a tothom compartir alergens gestoria'),
+  especimen('registre-de-canvis', 'v1-2-23', 'v1.2.23', '23 de novembre de 2026 · «Amaga el lloc», «Editar» des de la pàgina i menú del Xat simplificat', ['versions', 'v1.2.23'],
+    'Introdueix l’interruptor «Amaga el lloc» en 1 toc al Xat, Bloc de notes i Perfil, afig el botó «Editar» a les teues publicacions i simplifica el menú del Xat.',
+    'v1.2.23 amaga el lloc editar bloc de notes xat menu mode bancal'),
+  especimen('registre-de-canvis', 'v1-2-22', 'v1.2.22', '22 de novembre de 2026 · Un sol Mode Bancal, Xat obert i tres oliveres al Banc de Llavors', ['versions', 'v1.2.22'],
+    'Unifica Lletra Gran i Contrast Alt en un sol Mode Bancal, suma tres varietats d’olivera al Banc de Llavors i millora la barra negra i el calaix mòbil.',
+    'v1.2.22 mode bancal oliveres banc llavors xat foraster barra negra'),
+  especimen('registre-de-canvis', 'v1-2-21', 'v1.2.21', '22 de novembre de 2026 · Atles a tota l’amplada, accés al Xat en mòbils estrets i preu únic al Mercat', ['versions', 'v1.2.21'],
+    'Les cinc pàgines de l’Atles 2D es lligen de punta a punta, el Mode Bancal guanya contrast al sol i els productes mostren el mateix preu al Mur i al Mercat.',
+    'v1.2.21 atles 2d mode bancal xat bar preu mercat mur llavors'),
+  especimen('registre-de-canvis', 'v1-2-20', 'v1.2.20', '22 de novembre de 2026 · Lectura sense cobertura, fotos netes i Bloc de notes transparent', ['versions', 'v1.2.20'],
+    'Conserva durant 7 dies còpies de lectura de pàgines públiques obertes sense sessió i mostra clarament l’estat de cada text al Bloc de notes.',
+    'v1.2.20 offline lectura sense cobertura gps notes calendari mercat'),
+  especimen('registre-de-canvis', 'historic', 'Arxiu històric (2013 – anteriors)', 'Càrrega diferida sota demanda', ['versions', 'historic'],
+    'Accedix a la memòria completa d’entregues anteriors a la v1.2.20 sense carregar-la a l’arrencada.',
+    'arxiu historic versions 2013 anteriors memoria cronica')
 );

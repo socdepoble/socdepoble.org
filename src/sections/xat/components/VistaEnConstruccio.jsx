@@ -34,10 +34,23 @@
 import { useId } from 'react';
 import { Construction, Plus, Search } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
+import { Alerta, EstatBuit } from '../../../components/PedraSeca/index.js';
+import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
+import cssV1225 from '../../../css/diferit-xat-v1225.css?inline';
 import { TEXTOS_CONSTRUCCIO } from './vistaEnConstruccioModel.js';
+
+const adoptaEstilsV1225 = (el) => { adoptaFullDiferit(el, 'xat-v1225', cssV1225); };
 
 const CAP = Object.freeze([]);
 const noop = () => {};
+
+function IconaConstruccio() {
+  return (
+    <span className="sdp-xat-construccio__icona" aria-hidden="true">
+      <Construction size={24} aria-hidden="true" focusable="false" />
+    </span>
+  );
+}
 
 /**
  * La fila de títol d'una vista del rail: el títol, la icona i, a la dreta,
@@ -146,16 +159,17 @@ export default function VistaEnConstruccio({
         </div>
       ) : null}
 
-      <div className="sdp-workspace-column__body">
+      <div ref={adoptaEstilsV1225} className="sdp-workspace-column__body">
         <section className="sdp-xat-construccio" aria-labelledby={idTitol}>
-          <span className="sdp-xat-construccio__icona" aria-hidden="true">
-            <Construction size={32} aria-hidden="true" focusable="false" />
-          </span>
-          <h3 id={idTitol} className="sdp-xat-construccio__titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</h3>
-          {descripcio ? <p className="sdp-xat-construccio__text">{descripcio}</p> : null}
-          <p className="sdp-xat-construccio__avis">
-            {avis || t(...TEXTOS_CONSTRUCCIO.avis)}
-          </p>
+          <EstatBuit
+            icona={IconaConstruccio}
+            titol={<span id={idTitol} role="heading" aria-level={3} className="sdp-xat-construccio__titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</span>}
+          >
+            {descripcio ? <p className="sdp-xat-construccio__text">{descripcio}</p> : null}
+            <Alerta to="info" viva={false} className="sdp-xat-construccio__avis">
+              {avis || t(...TEXTOS_CONSTRUCCIO.avis)}
+            </Alerta>
+          </EstatBuit>
         </section>
       </div>
     </>

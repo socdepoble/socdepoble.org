@@ -9,6 +9,7 @@ import { COLUMNES, PUNTS_DE_TALL, columnesTancades, midaDeGraella, minimsDeGrael
    el nom traduït dels separadors (redimensionaColumna), si qui munta la
    closca el dona. */
 import { AppGridContext, TextosDeLaColumna } from './contextDeLaGraella.js';
+import { useNavegacioTeclatColumnes } from '../../hooks/useNavegacioTeclatColumnes.js';
 
 export { AppGridContext };
 
@@ -217,6 +218,8 @@ export default function AppGridShell({
     };
   });
   const pageRef = useRef(null);
+  /* IDEA-355 (Onada v1.2.25 · Lot G4) · Navegació universal per teclat (↑/↓/←/→) entre columnes obertes. */
+  const onTeclaColumnes = useNavegacioTeclatColumnes(pageRef);
 
   const widthsRef = useRef(columnWidths);
   const midaRef = useRef(mida);
@@ -573,7 +576,7 @@ export default function AppGridShell({
 
   return (
     <AppGridContext.Provider value={ctxValue}>
-      <div ref={pageRef} className={`app-grid-page ${className}`.trim()}>
+      <div ref={pageRef} className={`app-grid-page ${className}`.trim()} onKeyDown={onTeclaColumnes}>
 
         {children}
 

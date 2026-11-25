@@ -303,7 +303,7 @@ describe('A-gestoria-tpv-apps-1 · la insígnia «En proves · Beta oberta» a c
   const pindoles = (arrel) => [...arrel.querySelectorAll('.page-title-labels > li')];
   const ambInsignia = (arrel) => pindoles(arrel).filter((li) => li.textContent === TEXTOS_BETA_OBERTA.ca);
 
-  test.each(['tauler', 'bancs', 'impostos', 'full', 'escaner'])('closca · %s', async (modulActiu) => {
+  test.each(['tauler', 'contactes', 'burocracia', 'bancs', 'impostos', 'full', 'escaner'])('closca · %s', async (modulActiu) => {
     const { container } = closca({ modulActiu, entorn: NAVEGADOR_SENSE_SIGNATURA, magatzem: crearMagatzemMemoria() });
     await waitFor(() => expect(container.querySelector('header.page-title > h1')).toBeTruthy());
     const insignies = ambInsignia(container);
@@ -312,7 +312,7 @@ describe('A-gestoria-tpv-apps-1 · la insígnia «En proves · Beta oberta» a c
     expect(pindoles(container).map((li) => li.textContent)).toEqual(['GESTORIA', 'PANELL INTERN', TEXTOS_BETA_OBERTA.ca]);
   });
 
-  test.each(['contactes', 'burocracia', 'informes'])('closca · %s continua «en obres», sense la insígnia', async (modulActiu) => {
+  test.each(['informes'])('closca · %s continua «en obres», sense la insígnia', async (modulActiu) => {
     const { container } = closca({ modulActiu, entorn: NAVEGADOR_SENSE_SIGNATURA, magatzem: crearMagatzemMemoria() });
     await waitFor(() => expect(container.querySelector('header.page-title > h1')).toBeTruthy());
     expect(pindoles(container).map((li) => li.textContent)).toEqual(['GESTORIA', 'PANELL INTERN', 'En obres']);
