@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import {spawnSync} from 'node:child_process';
 import {fixture, REPO, writeDoc} from './helpers/documental.mjs';
 import {openTurn, deliverContext, bindPlan} from '../tooling/documental/turns.mjs';
 import {createDraft, draft} from '../tooling/wiki/document.mjs';
@@ -67,6 +68,43 @@ test('torn caducat, aliases físics i pending bloquegen mutacions però no check
  assert.equal(checkLocal(payload(root,good),root).code,2);
  const check=`node tooling/wiki/document.mjs check --file ${file}`;
  assert.equal(checkLocal(payload(root,check),root).code,0);
+});
+
+/* F-04 · `node tooling/gates/obrir_torn.mjs --help` obria un torn real (torn_3a485c99, actor agent-local). La CLI s'executa
+   de veres contra una arrel temporal (SDP_ARREL o --arrel, que l'eina admet), mai contra el repositori: cap bandera
+   desconeguda no obri torn, i el control amb banderes vàlides demostra que la mateixa arrel sí que en rep un. */
+test('F-04 · obrir_torn: --help, -h i tota bandera desconeguda ixen amb 2 i l’ús a stderr, sense obrir cap torn ni escriure res',t=>{
+ const root=setup(t);
+ fs.writeFileSync(path.join(root,'.agents/AGENTS.md'),'# Arrel de prova\n');
+ const turns=path.join(root,'.agents/runtime/turns');
+ const torns=()=>fs.existsSync(turns)?fs.readdirSync(turns).sort():[];
+ const fitxers=()=>fs.readdirSync(root,{recursive:true}).map(String).sort();
+ const cli=path.join(REPO,'tooling/gates/obrir_torn.mjs');
+ const corre=args=>spawnSync(process.execPath,[cli,...args],{cwd:root,encoding:'utf8',env:{...process.env,SDP_ARREL:root,SDP_AGENT:''}});
+ const eixida=path.join(root,'torn-f04.json');
+ const abans=torns(),arbre=fitxers();
+ for(const args of [['--help'],['-h'],['--help','--scope','documents'],['--scope','documents','-h'],['--arrel',root,'--help'],
+  ['--help=1'],['--'],['-x'],['--bandera-desconeguda'],['--actor','prova','--verbose'],['--help','--output',eixida]]) {
+  const r=corre(args),on=JSON.stringify(args);
+  assert.equal(r.status,2,`${on}: ${r.stderr}`);
+  assert.equal(r.stdout,'',on);
+  assert.match(r.stderr,/^obrir_torn: bandera desconeguda .+: no s'ha obert cap torn\.$/m,on);
+  assert.match(r.stderr,/^Ús: node tooling\/gates\/obrir_torn\.mjs \[--scope code\|documents\] \[--actor NOM\] \[--arrel DIR\] \[--output FITXER\] \[--json\]$/m,on);
+  assert.deepEqual(torns(),abans,`${on}: cap torn nou a .agents/runtime/turns`);
+  assert.deepEqual(fitxers(),arbre,`${on}: res escrit a l’arrel`);
+ }
+ assert.equal(fs.existsSync(eixida),false,'--output no s’escriu amb una bandera desconeguda');
+ // Control: les banderes vàlides es comporten com abans i la mateixa arrel rep exactament un torn.
+ const ok=corre(['--scope','documents','--actor','prova-f04','--json','--output',eixida]);
+ assert.equal(ok.status,0,ok.stderr);
+ const obert=JSON.parse(ok.stdout);
+ assert.equal(obert.valid,true);
+ assert.equal(obert.state,'opened');
+ assert.deepEqual(torns(),[...abans,`${obert.turn_id}.json`].sort());
+ const registre=JSON.parse(fs.readFileSync(path.join(turns,`${obert.turn_id}.json`),'utf8'));
+ assert.equal(registre.actor,'prova-f04');
+ assert.equal(registre.scope,'documents');
+ assert.deepEqual(JSON.parse(fs.readFileSync(eixida,'utf8')),{turn_id:obert.turn_id,actor:'prova-f04'});
 });
 
 test('separadors Unicode i controls no poden canviar l’executable vist pel shell',t=>{
