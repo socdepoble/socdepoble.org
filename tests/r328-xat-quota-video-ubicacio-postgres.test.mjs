@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { creaPlaMigracions } from '../tooling/node0/hidrata-postgres-node0.mjs';
 import { startLocalPostgres } from './fixtures/postgres-local.mjs';
+import { successorsQueRedefinixen } from './fixtures/successors-que-redefinixen.mjs';
 
 const FILE = '20261117193000_r32_8_xat_quota_250mb_video_60s_i_ubicacio.sql';
 const BASELINE = process.env.SDP_R328_SQL_BASELINE === '1';
@@ -47,12 +48,17 @@ test('R32.8 · quota 250 MB, vídeo 60 s i ubicació sobre PostgreSQL real amb c
   try {
     const plan = creaPlaMigracions();
     await db.query(plan.bootstrap);
-    const prior = plan.migrations.filter(m => m.file !== FILE);
+    // v1.2.25 · K-C1-SQL. Motiu: 20261125010000 (C1) redefinix public.xat_reserva_adjunt i
+    // public.xat_publica_adjunt sobre el cos de R32.8, i la seua guarda SDP-C1-DRIFT refusa el
+    // catàleg sense R32.8. Eixes successores (i les que en depenen) no entren al catàleg previ:
+    // s'apliquen després de R32.8, a l'última prova, dues vegades. La resta no canvia.
+    const successors = successorsQueRedefinixen(plan.migrations, [FILE]);
+    const prior = plan.migrations.filter(m => m.file !== FILE && !successors.includes(m));
     for (const migration of prior) {
       try { await db.query('begin'); await db.query(migration.body); await db.query('commit'); }
       catch (error) { await db.query('rollback'); throw new Error(`${migration.file}: ${error.message}`, { cause: error }); }
     }
-    t.diagnostic(`Catàleg anterior complet: ${prior.length} migracions; PostgreSQL ${(await db.query('show server_version')).rows[0].server_version}.`);
+    t.diagnostic(`Catàleg anterior complet: ${prior.length} migracions (totes menys R32.8 i ${successors.length} successores, aplicades al final); PostgreSQL ${(await db.query('show server_version')).rows[0].server_version}.`);
     const beforeFunctions = await functionSnapshot(db), beforeSecurity = await securitySnapshot(db);
     const originalLegacy = beforeFunctions.find(f => f.signature === 'xat_publica_adjunt(uuid,text,uuid)');
     const migration = BASELINE ? null : fs.readFileSync(new URL('../supabase/migrations/' + FILE, import.meta.url), 'utf8');
@@ -174,6 +180,18 @@ test('R32.8 · quota 250 MB, vídeo 60 s i ubicació sobre PostgreSQL real amb c
       await assert.rejects(publish(db, A, id(410), { lat: 0, lng: 0 }), /SDP-XAT-021/);
       await actor(db, A, 'select public.xat_prepara_descart($1)', [id(410)]);
       await assert.rejects(publish(db, A, id(410), { lat: 0, lng: 0 }), /SDP-XAT-006/);
+    });
+    await t.test('les successores que redefinixen RPC de R32.8 s’apliquen després, amb dades, i la reaplicació no canvia res', async () => {
+      assert.ok(successors.some(m => m.version === '20261125010000'), 'C1 redefinix RPC de R32.8 i va després');
+      const apply = async () => {
+        for (const migration of successors) {
+          try { await db.query('begin'); await db.query(migration.body); await db.query('commit'); }
+          catch (error) { await db.query('rollback'); throw new Error(`${migration.file}: ${error.message}`, { cause: error }); }
+        }
+      };
+      await apply(); const once = await functionSnapshot(db);
+      await apply(); assert.deepEqual(await functionSnapshot(db), once);
+      t.diagnostic(`Successores aplicades després de R32.8: ${successors.map(m => m.file).join(', ')}.`);
     });
   } finally { await cluster.close(); }
 });

@@ -60,8 +60,8 @@
       "id": "TELLADO-R3214-04",
       "categoria": "transport-delegat-frontissa",
       "fontRevisada": "src/data/adaptadors/noticies/client.js",
-      "sha256": "d16ea855f9798bab86be9060689bd1a6ad47721e0a43fdce0f4310167c732fcc",
-      "linia": 291,
+      "sha256": "e5fad143fb7bea3a3dbccd16d2576d99873ebf65ac133b440fc6670545fea7df",
+      "linia": 306,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "window.fetch",
       "embornal": "fetchImpl = (url, init) => globalThis.fetch(url, init),",
@@ -73,7 +73,8 @@
         "maxBytes: MAXIM_RESPOSTA"
       ],
       "limit": "La Frontissa imposa la política del recurs. apiOrigin és configuració runtime; no és un origen estàtic provat.",
-      "certificaDesti": false
+      "certificaDesti": false,
+      "revisio": "v1.2.25 · K-C1-MEDIA-TELLADO (Claude, corrector del bloc Codex; integració C1→C16) · C2 afig la font privada de l'observatori: un transport injectat per la plataforma (observatori.feed) que no passa per fetchImpl ni per esta Frontissa, i esta signatura no el cobrix ni el certifica. L'embornal i els 5 requisits hi són literalment (comprovat sobre el text sense comentaris); la porta hi observa un sol embornal, ara a la línia 306 (15 línies més avall). Cap embornal nou, capçalera, credencial ni redirecció nova."
     },
     {
       "id": "TELLADO-R3214-05",
@@ -196,7 +197,7 @@
       "id": "TELLADO-R3214-11",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "77f2410bccab31fb989a00bf5000a4296c45664c8e436d1e5d0f9e0fb4a87998",
+      "sha256": "df0c99b5a607c235c3294281126d76ce725ed8eb4268a651690e3076181a84a8",
       "linia": 147,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -212,13 +213,13 @@
       ],
       "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
       "certificaDesti": false,
-      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/packaging/tellado-media-review/review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova."
+      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/packaging/tellado-media-review/review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova. · v1.2.25 · K-C1-MEDIA-TELLADO (Claude, corrector del bloc Codex; integració C1→C16): els bytes revisats per R32.78 eren els de 77f2410b. Els d'ara afigen, de C1, la branca pròpia dels documents a publicaAdjuntXat (import i crida de validaDocumentXat) i el senyal «document» de la signatura a urlAdjuntXat; la branca de mitjans conserva literalment l'import i la crida de validaFitxerMedia de R32.15. Embornal i 7 requisits comprovats literalment sobre el text sense comentaris; la porta hi observa els dos mateixos embornals (línies 147 i 260). Cap embornal nou, capçalera, credencial ni redirecció nova. Revisió per relectura del diff, sense mutants nous."
     },
     {
       "id": "TELLADO-R3214-12",
       "categoria": "storage-privat",
       "fontRevisada": "src/data/supabase/xatMultimedia.js",
-      "sha256": "77f2410bccab31fb989a00bf5000a4296c45664c8e436d1e5d0f9e0fb4a87998",
+      "sha256": "df0c99b5a607c235c3294281126d76ce725ed8eb4268a651690e3076181a84a8",
       "linia": 260,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -234,7 +235,7 @@
       ],
       "limit": "Storage privat de la sessió amb JWT i redirect:error; R32.15 valida també els bytes abans de reservar/enviar. El catàleg no certifica URL runtime, RLS remota, bucket servit ni el transport Edge de federació.",
       "certificaDesti": false,
-      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/packaging/tellado-media-review/review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova."
+      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/packaging/tellado-media-review/review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova. · v1.2.25 · K-C1-MEDIA-TELLADO (Claude, corrector del bloc Codex; integració C1→C16): els bytes revisats per R32.78 eren els de 77f2410b. Els d'ara afigen, de C1, la branca pròpia dels documents a publicaAdjuntXat (import i crida de validaDocumentXat) i el senyal «document» de la signatura a urlAdjuntXat; la branca de mitjans conserva literalment l'import i la crida de validaFitxerMedia de R32.15. Embornal i 7 requisits comprovats literalment sobre el text sense comentaris; la porta hi observa els dos mateixos embornals (línies 147 i 260). Cap embornal nou, capçalera, credencial ni redirecció nova. Revisió per relectura del diff, sense mutants nous."
     },
     {
       "id": "TELLADO-R3214-13",

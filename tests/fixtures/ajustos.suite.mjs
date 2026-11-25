@@ -35,9 +35,18 @@ const SLOGANS = {
 };
 
 function php(input = {}) {
-  const result = spawnSync(PHP, ['-d', 'display_errors=stderr', '-d', 'log_errors=0', '-d', 'allow_url_fopen=0', '-d', 'disable_functions=fsockopen,pfsockopen,stream_socket_client,curl_exec,curl_multi_exec', '-r', PHP_AJUSTOS, '--', PLUGIN], {
-    input: JSON.stringify(input), encoding: 'utf8', timeout: 10000, maxBuffer: 4 * 1024 * 1024
-  });
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-ajustos-php-'));
+  const source = path.join(temporary, 'fixture.php');
+  let result;
+  try {
+    fs.writeFileSync(source, '<?php\n' + PHP_AJUSTOS, { flag: 'wx', mode: 0o600 });
+    result = spawnSync(PHP, ['-d', 'display_errors=stderr', '-d', 'log_errors=0', '-d', 'allow_url_fopen=0', '-d', 'disable_functions=fsockopen,pfsockopen,stream_socket_client,curl_exec,curl_multi_exec', source, PLUGIN], {
+      input: JSON.stringify(input), encoding: 'utf8', timeout: 10000, maxBuffer: 4 * 1024 * 1024
+    });
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+    assert.equal(fs.existsSync(temporary), false, 'temporary PHP fixture removed');
+  }
   assert.equal(result.status, 0, result.error?.message || result.stderr || result.stdout);
   assert.equal(result.stderr, '', 'cap avís PHP ocult');
   const data = JSON.parse(result.stdout);

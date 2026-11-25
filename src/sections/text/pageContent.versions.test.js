@@ -110,6 +110,15 @@ const NOVES_V1224 = new Set([
   '20261124033000_r3272_profiles_sense_enumeracio_i_execute_minim.sql',
   '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql'
 ]);
+/* v1.2.25 · Costura 2 (Claude, rebasada sobre C1→C16) · Les tres migracions de Codex de la v1.2.25 (C1, C2 i C16),
+   NO aplicades, són posteriors a totes les cròniques d'abans: tampoc no entren en els recomptes que estes fixen per a la
+   seua versió. posteriorsALaV1224 inclou NOVES_V1224, de manera que els recomptes 126 i 131 conserven el seu sentit. */
+const NOVES_V1225 = new Set([
+  '20261125010000_v1225_xat_cerca_fil_documents_i_purga_blobs.sql',
+  '20261125013000_v1225_calendari_agricola_subscripcions.sql',
+  '20261125020000_v1225_purga_lssi_abans_claim.sql'
+]);
+const posteriorsALaV1224 = (nom) => NOVES_V1224.has(nom) || NOVES_V1225.has(nom);
 
 const html = String(localitzaVersions('ca')?.html ?? '');
 const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
@@ -6815,7 +6824,7 @@ describe('Onada R32.41 · Crònica d’obertura en les cinc llengües: l’Atles
     expect(migracions.some((nom) => /r32_(?:3[5-9]|4[01])(?!\d)/i.test(nom))).toBe(false);
     /* v1.2.23 · costura Llei 0 de /versions · Les de Codex R32.44 (20261122230000_r3244_) i R32.46
        (20261123010000_r3246_) també són de versions següents: fora de R32.42 a R32.49, el catàleg continua en 126. */
-    expect(migracions.filter((nom) => !/_r3?2_?4[2-9]_/i.test(nom) && !NOVES_V1224.has(nom))).toHaveLength(126);
+    expect(migracions.filter((nom) => !/_r3?2_?4[2-9]_/i.test(nom) && !posteriorsALaV1224(nom))).toHaveLength(126);
   });
 
   /* v1.2.23 · costura Llei 0 de /versions · TROBALLA. La segona meitat del fet («es guarda la veu que ja s'havia
@@ -7143,7 +7152,7 @@ describe('Onades R32.42 i R32.43 · Crònica d’obertura en les cinc llengües:
       '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql',
       '20261122160300_r32_42_mur_visibilitat_publica.sql'
     ]);
-    expect(migracions.filter((nom) => !NOVES_V1224.has(nom))).toHaveLength(131); // v1.2.23 · R32.44 (130) i R32.46 (131) porten el catàleg a 131
+    expect(migracions.filter((nom) => !posteriorsALaV1224(nom))).toHaveLength(131); // v1.2.23 · R32.44 (130) i R32.46 (131) porten el catàleg a 131
   });
 });
 
@@ -7416,7 +7425,7 @@ describe('Onada v1.2.23 · Crònica d’obertura en les cinc llengües: el lloc 
       '20261122230000_r3244_edicio_propia_i_page_revisions.sql',
       '20261123010000_r3246_quota_owner_id.sql'
     ]);
-    expect(migracions.filter((nom) => !NOVES_V1224.has(nom))).toHaveLength(131);
+    expect(migracions.filter((nom) => !posteriorsALaV1224(nom))).toHaveLength(131);
     const readme = llegix('supabase/README.md');
     for (const [fila, nom] of [127, 128, 129, 130, 131].map((n, i) => [n, cinc[i]])) {
       const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
@@ -7750,5 +7759,20 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
     expect(llegix('src/config/politicaPrivacitat.js')).toContain("export const VERSIO_POLITICA_PRIVACITAT = '2.5';");
     expect(llegix('src/natiu/avisosPushNatius.js')).toContain("const pushNatiuConfigurat = () => import.meta.env.VITE_SDP_PUSH_NATIU === '1';");
     expect(E2EE_ACTIU_PER_DEFECTE).toBe(false);
+  });
+});
+
+/* v1.2.25 · Costura 2 (Claude, rebasada sobre C1→C16) · Les migracions posteriors a la 136 (la darrera de la v1.2.24)
+   han d'estar nomenades a NOVES_V1225, una a una: una migració nova que no hi és mouria en silenci els recomptes 126 i
+   131 de les cròniques d'abans. I cap de les de la v1.2.25 no és de les de la v1.2.24. */
+describe('v1.2.25 · Costura 2 · NOVES_V1225 nomena exactament les migracions posteriors a la 136', () => {
+  test('les posteriors a 20261124174000 són les de NOVES_V1225, i les de la v1.2.24 són de NOVES_V1224', () => {
+    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
+    const versio = (nom) => { const v = /^(\d{14}|\d{10})_/.exec(nom)?.[1] ?? ''; return v.length === 10 ? `20${v}00` : v; };
+    const posteriors = migracions.filter((nom) => versio(nom) > '20261124174000').sort();
+    expect(posteriors).toEqual([...NOVES_V1225].sort());
+    expect([...NOVES_V1225].filter((nom) => NOVES_V1224.has(nom))).toEqual([]);
+    expect([...NOVES_V1224].every((nom) => migracions.includes(nom))).toBe(true);
+    expect(migracions.filter((nom) => !posteriorsALaV1224(nom))).toHaveLength(131);
   });
 });

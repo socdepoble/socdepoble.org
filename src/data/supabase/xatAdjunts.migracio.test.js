@@ -17,6 +17,9 @@ import { expect, test } from 'vitest';
 import { MIME_XAT } from '../xatMultimedia.js';
 // Estos pins són del DDL històric de 2610220240, no de la quota vigent.
 const QUOTA_HISTORICA_BYTES = 20_000_000;
+// La migració 2610220240 només admetia mitjans. Els documents els incorpora
+// la migració additiva v1.2.25; no s'atribuïxen al bucket històric.
+const MIME_MITJANS_CLIENT = Object.keys(MIME_XAT).filter(mime => MIME_XAT[mime] !== 'document');
 
 /* vitest s'executa des de l'arrel del repositori (com qualitat.test.js). */
 const ARREL = process.cwd();
@@ -230,9 +233,9 @@ test('F10 · RLS activa, tot revocat a public, anon, authenticated i service_rol
   expect(grantsDeTaula).toEqual([GRANT_SERVEI]);
 });
 
-test('F12, F14 i R7 · la llista MIME és la del client més el QuickTime; el bucket la repetix; sostre per tipus a la reserva i quota', () => {
+test('F12, F14 i R7 · MIME històric de mitjans és la projecció del client més QuickTime; sostres i quota intactes', () => {
   const llista = [...(/mime text not null check \(mime in \(([^)]*)\)\)/.exec(CODI)?.[1] || '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
-  expect(new Set(llista)).toEqual(new Set([...Object.keys(MIME_XAT), 'video/quicktime']));
+  expect(new Set(llista)).toEqual(new Set([...MIME_MITJANS_CLIENT, 'video/quicktime']));
   const bucket = [...(/array\[([^\]]*)\]\)/.exec(CODI)?.[1] || '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
   expect(bucket).toEqual(llista);
   expect(CODI).toContain(`values ('xat_adjunts', 'xat_adjunts', false, ${QUOTA_HISTORICA_BYTES},`);
@@ -247,6 +250,22 @@ test('F12, F14 i R7 · la llista MIME és la del client més el QuickTime; el bu
   const reserva = cos('public', 'xat_reserva_adjunt');
   expect(reserva).toContain('if p_bytes > private.xat_maxim_adjunt(p_mime) then raise exception');
   expect(reserva).toContain(`if v_total + p_bytes > ${QUOTA_HISTORICA_BYTES} then raise exception 'sdp-xat-020:`);
+});
+
+test('els documents vigents són una ampliació posterior: el DDL i el bucket històrics no els admetien', () => {
+  const documents = Object.keys(MIME_XAT).filter(mime => MIME_XAT[mime] === 'document');
+  expect(documents.sort()).toEqual([
+    'application/pdf', 'text/plain', 'text/csv',
+    'application/vnd.oasis.opendocument.text',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ].sort());
+  expect(new Set(MIME_MITJANS_CLIENT)).toEqual(new Set([
+    'image/webp', 'image/jpeg', 'audio/mp4', 'audio/webm', 'audio/ogg',
+    'video/mp4', 'video/webm', 'video/quicktime'
+  ]));
+  for (const mime of documents) expect(CODI, mime).not.toContain(`'${mime}'`);
+  // El CASE històric deixa NULL els formats desconeguts i la reserva els refusa.
+  expect(cos('public', 'xat_reserva_adjunt')).toContain('private.xat_maxim_adjunt(p_mime) is null then');
 });
 
 test('F13 · sense peu, el missatge es desa amb text null: cap etiqueta en valencià al servidor', () => {

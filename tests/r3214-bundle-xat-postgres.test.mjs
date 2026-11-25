@@ -10,6 +10,7 @@ import {creaPlaMigracions} from '../tooling/node0/hidrata-postgres-node0.mjs';
 import {startLocalPostgres} from './fixtures/postgres-local.mjs';
 import {sources,generate} from '../tooling/migrations/genera-super-bundle-r32_14.mjs';
 import {projecta132PerFixture} from './fixtures/r3278-cataleg-parcial.mjs';
+import {successorsQueRedefinixen} from './fixtures/successors-que-redefinixen.mjs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const id=n=>`32140000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const TOWN=id(1),A=id(2),B=id(3),OUT=id(4),FIL=id(5);
@@ -29,6 +30,13 @@ test('R32.14 CLI is read-only, stdout is exact SQL and unsupported write modes f
 const pending=new Set(sources.filter(x=>x.includes('/migrations/')).map(x=>x.split('/').at(-1)));
 const FN_NAMES=[...new Set(sources.flatMap(file=>[...read(file).matchAll(/create (?:or replace )?function (public|private)\.([a-z0-9_]+)/gi)].map(m=>`${m[1]}.${m[2]}`)))];
 const TABLE_NAMES=[...new Set(sources.flatMap(file=>[...read(file).matchAll(/create table (?:if not exists )?(public|private)\.([a-z0-9_]+)/gi)].map(m=>`${m[1]}.${m[2]}`)))];
+// v1.2.25 · K-C1-SQL. Motiu: 20261125010000 (C1) redefinix public.xat_reserva_adjunt i
+// public.xat_publica_adjunt sobre els cossos que instal·la este bundle (R32.7 i R32.8), i la seua
+// guarda SDP-C1-DRIFT refusa, amb raó, el catàleg sense bundle. Eixes successores (i les que en
+// depenen, com 20261125020000) no entren al catàleg previ: s'apliquen després del bundle, a l'última
+// prova, dues vegades. La resta del catàleg previ i totes les guardes del bundle queden igual.
+const SUCCESSORS=successorsQueRedefinixen(creaPlaMigracions().migrations,[...pending],{funcions:FN_NAMES});
+const SUCCESSOR_VERSIONS=new Set(SUCCESSORS.map(m=>m.version));
 
 async function capture(db){
  const tables={};for(const name of TABLE_NAMES){const row=(await db.query(tableFingerprintSQL,[name])).rows[0];if(row)tables[name]=row.shape;}
@@ -45,7 +53,7 @@ const inbox=(db,who)=>actor(db,who,'select * from public.xat_fils_meus($1)',[TOW
 const hide=(db,who,n)=>actor(db,who,'select public.xat_elimina_per_a_mi($1,$2)',[FIL,id(n)]);
 async function bootstrap(db,exec,partial){
  const plan=creaPlaMigracions();await exec(plan.bootstrap);
- for(const m of plan.migrations.filter(m=>!pending.has(m.file))){try{
+ for(const m of plan.migrations.filter(m=>!pending.has(m.file)&&!SUCCESSOR_VERSIONS.has(m.version))){try{
   // This historical fixture deliberately omits the bundle's two tables.
   // Present tables retain every strict FK/body/CAS/index guard of the pinned 132.
   const sql=m.file==='20261123180000_r3252_indexs_suport_fk_verificats.sql'
@@ -142,6 +150,12 @@ async function suite(t,db,exec,cluster,partial){
   try{await assert.rejects(exec(sql),/SDP-R3214-DRIFT/);}finally{await exec('rollback');await db.query(ddl);}
   await db.query('alter table private.r3213_crdt_captures add column unexpected text');
   try{await assert.rejects(exec(sql),/SDP-R3214-DRIFT/);}finally{await exec('rollback');await db.query('alter table private.r3213_crdt_captures drop column unexpected');}
+ });
+ await t.test('successors that redefine bundle functions apply after it and reapply without change',async()=>{
+  assert.ok(SUCCESSOR_VERSIONS.has('20261125010000'),'C1 redefines bundle RPCs and must run after the bundle');
+  const apply=async()=>{for(const m of SUCCESSORS){try{await exec(m.sql);}catch(e){await exec('rollback');throw Error(m.file+': '+e.message,{cause:e});}}};
+  await apply();const once=await capture(db);await apply();assert.deepEqual(await capture(db),once);
+  t.diagnostic(JSON.stringify({successorsAfterBundle:SUCCESSORS.map(m=>m.file)}));
  });
  t.diagnostic(JSON.stringify({engine:cluster?'native PostgreSQL 18.6':'PGlite',scenario:partial?'partial + 7 fossils + R32.11 + R32.13 installed':'clean pending + R32.11 installed',bundleSHA256:createHash('sha256').update(sql).digest('hex')}));
 }

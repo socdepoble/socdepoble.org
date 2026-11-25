@@ -21,9 +21,12 @@ export const MISSATGE_QUOTA_XAT = 'Has arribat al límit d’espai dels adjunts 
 export const MIME_XAT = Object.freeze({
   'image/webp': 'imatge', 'image/jpeg': 'imatge',
   'video/mp4': 'video', 'video/webm': 'video', 'video/quicktime': 'video',
-  'audio/webm': 'veu', 'audio/mp4': 'veu', 'audio/ogg': 'veu'
+  'audio/webm': 'veu', 'audio/mp4': 'veu', 'audio/ogg': 'veu',
+  'application/pdf': 'document', 'text/csv': 'document', 'text/plain': 'document',
+  'application/vnd.oasis.opendocument.text': 'document',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'document'
 });
-export const MAXIM_ADJUNT_XAT = Object.freeze({ imatge: 2_000_000, veu: 3_000_000, video: 20_000_000 });
+export const MAXIM_ADJUNT_XAT = Object.freeze({ imatge: 2_000_000, veu: 3_000_000, video: 20_000_000, document: 10_000_000 });
 /* B2e · P1-12 (marató 261101_2143) · El que veu el servidor d'un adjunt
    xifrat: MIME opac i sostre del blob farcit (Padmé) al bucket. Viuen ací, al
    mòdul neutral, perquè el transport de Supabase (supabase/xatXifrat.js) no
@@ -54,6 +57,8 @@ export const ERRORS_ADJUNT_XAT = Object.freeze({
   servidor: 'El servidor no ha pogut atendre la petició. Torna-ho a provar d’ací a una estona.',
   'sense-confirmacio': 'El servidor no ha confirmat el missatge. Torna-ho a provar.',
   format: 'Tria una foto o un vídeo de fins a 60 segons.',
+  'document-format': 'Tria un document PDF, TXT, CSV, ODT o DOCX vàlid.',
+  'document-mida': 'El document ha de tindre com a màxim 10 MB.',
   'format-heic': 'Este navegador no pot preparar esta foto HEIC o HEIF. Prova-ho amb Safari o tria una foto JPEG o PNG.',
   durada: 'El vídeo ha de durar com a màxim 60 segons.',
   buit: 'Tria un fitxer que no estiga buit.',
@@ -127,8 +132,9 @@ export function normalitzaUbicacioXat(valor) {
 
 export function validaAdjuntXat({ fitxer, tipus, duradaMs, ubicacio, conservaUbicacio }) {
   if (!(fitxer instanceof Blob) || !fitxer.size || MIME_XAT[fitxer.type] !== tipus) throw errorAdjuntXat('format');
-  if (fitxer.size > MAXIM_ADJUNT_XAT[tipus]) throw errorAdjuntXat(tipus === 'video' ? 'video-mida' : 'SDP-XAT-020');
-  if (tipus !== 'imatge' && (!Number.isSafeInteger(duradaMs) || duradaMs <= 0 || (tipus === 'video' && duradaMs > MAX_VIDEO_MS))) {
+  if (fitxer.size > MAXIM_ADJUNT_XAT[tipus]) throw errorAdjuntXat(tipus === 'document' ? 'document-mida' : tipus === 'video' ? 'video-mida' : 'SDP-XAT-020');
+  if (tipus === 'document' && (duradaMs != null || ubicacio != null)) throw errorAdjuntXat('document-format');
+  if (['veu', 'video'].includes(tipus) && (!Number.isSafeInteger(duradaMs) || duradaMs <= 0 || (tipus === 'video' && duradaMs > MAX_VIDEO_MS))) {
     throw errorAdjuntXat('durada');
   }
   const lloc = normalitzaUbicacioXat(ubicacio);

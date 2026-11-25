@@ -1,0 +1,231 @@
+{
+  "schema": "sdp.node0.filtre-aprenentatge.v1",
+  "versio": "1.2.0",
+  "data_creacio": "2026-11-24T21:14:00+01:00",
+  "onada_desti": "v1.2.25",
+  "autoria": "Assemblea de les Escoles del Node 0 (Mac mini M4 · 192.168.0.20:11434) sota direcció de la IAIA MarIA i el Mestre Javi Llinares",
+  "principi_rector": "Tota lliçó humana del Mestre i tota incidència d'auditoria es converteix en una porta determinista i semàntica que el Node 0 executa com a filtre previ abans que la IAIA MarIA aprove o integre cap Kit CAS. Cap regla depèn d'IA per al seu mode estricte (--sense-ia, IDEA-347/IDEA-349).",
+  "pipeline_execucio": {
+    "fase_1_determinista_local": {
+      "comanda": "node tooling/gates/filtre-aprenentatge-node0.mjs --arrel <cami_kit_o_repo> --sense-ia",
+      "temps_maxim_ms": 8000,
+      "bloquejant": true,
+      "descripcio": "Comprovació AST, CSS i DOM estàtica de totes les regles FN0-001..FN0-012 amb cost 0 € i 0 dependència de xarxa.",
+      "pressupostos_ms": {
+        "scan_fred_ms": 8000,
+        "cache_sha256_ms": 450
+      },
+      "criteri_temps": "<= sobre durada real; cache només amb totes les fonts validades per SHA-256 i cap miss"
+    },
+    "fase_2_gauntlet_semantic_node0": {
+      "endpoint": "http://192.168.0.20:11434/api/generate",
+      "mode_crida": "sequencial_1_en_1_stream_true",
+      "opcions_ollama": {
+        "keep_alive": "5m",
+        "num_ctx": 4096,
+        "num_predict": 480,
+        "temperature": 0.2,
+        "timeout_ms": 115000
+      },
+      "escoles_filtre": [
+        {
+          "model": "iaia-maria:latest",
+          "focus": "Empatia rural, claredat per a gent major i regla d'entrar i operar a l'acte (IDEA-348)"
+        },
+        {
+          "model": "qwen2.5-coder:14b",
+          "focus": "Ortogonalitat de fitxers CAS, absència de cicles Tarjan SCC i sostre pesDelNucli WP"
+        },
+        {
+          "model": "deepseek-r1:14b",
+          "focus": "Salfumant radical: fugues RLS/Storage, blobs orfes, curses asíncrones i falses promeses (Llei 0)"
+        },
+        {
+          "model": "gemma3:12b",
+          "focus": "WCAG AAA, ritme vertical 16/32 px, widgets <Alerta>/<EstatBuit> i dianes tàctils >= 48x48 px"
+        },
+        {
+          "model": "mistral-nemo:12b",
+          "focus": "Valencià normatiu d'el Mas, paritat real 5 llengües (ca/es/en/eu/gl) i 6-8 negretes per paràgraf"
+        },
+        {
+          "model": "phi4:14b",
+          "focus": "Verificació formal de contractes, degradació offline --sense-ia i horitzó de 100 anys (IDEA-349)"
+        }
+      ]
+    }
+  },
+  "regles_preventives": [
+    {
+      "id": "FN0-001",
+      "codi": "ENLLACOS_EXTERNS_PESTANYA_NOVA",
+      "origen": "IDEA-343",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/**/*.jsx",
+        "src/utils/sanitize.js",
+        "src/utils/parseMarkdown.js"
+      ],
+      "descripcio": "Tot enllaç extern (http:// o https:// fora de l'origen propi) ha d'obrir-se obligatòriament en pestanya nova amb target=\"_blank\" i rel=\"noopener noreferrer\" perquè cap veí isca de Sóc de Poble per accident.",
+      "criteri_determinista": "En sanitizeHtml(), esEnllacExtern(href) força target=\"_blank\" i rel=\"noopener noreferrer\". En AST JSX, cap element <a href={...}> amb URL externa o dinàmica no validada com a ruta interna pot ometre target=\"_blank\" i rel amb noopener noreferrer (excepte atribut download, mailto: o tel:).",
+      "accio_si_falla": "Rebutjar el Kit CAS i indicar el fitxer:línia exacte de l'etiqueta <a> sense protecció."
+    },
+    {
+      "id": "FN0-002",
+      "codi": "JERARQUIA_EDITORIAL_H3_H6_I_NEGRETES_HUMANES",
+      "origen": "IDEA-344 + IDEA-319",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/sections/**/*.jsx",
+        "src/apps/**/*.jsx",
+        "src/utils/parseMarkdown.js",
+        "_wiki_de_poble/**/*.md"
+      ],
+      "descripcio": "El cos de tota UniversalPage o PaginaApp comença en <h3> alineat a l'inici i segueix H3 -> H4 -> H5 -> H6 sense salts. Es prohibeix class=\"h2\" fals sobre <h3> i tot <h2> dins del cos que no vaja seguit immediatament d'entradilla (.lead) + <h3>. La prosa editorial llarga incorpora 6-8 negretes útils per paràgraf en caixa natural d'oració (zero majúscules cridaneres en H3/H4).",
+      "criteri_determinista": "0 ocurrències de <h3 className=\"h2\">; 0 salts H3 -> H5; 0 <h2> en cos sense germà immediat .lead; encapçalaments H3/H4 sense ALL_CAPS (> 3 paraules en majúscula); densitat recomanada >= 5 <strong> en paràgrafs editorials de > 320 caràcters.",
+      "accio_si_falla": "Bloquejar en violacions d'encapçalament (H2/salts/ALL_CAPS) i enviar a la cua de redacció del Node 0 els paràgrafs plans sense negretes d'escaneig."
+    },
+    {
+      "id": "FN0-003",
+      "codi": "ENTRAR_I_OPERAR_A_LACTE_ZERO_TAP_INICIAL",
+      "origen": "IDEA-348 + DOL-51",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/apps/**/*.jsx",
+        "src/sections/taxonomia/**/*.jsx",
+        "src/sections/gestoria/**/*.jsx"
+      ],
+      "descripcio": "En jocs, eines interactives i micro-apps, el primer element visible en obrir la ruta ha de ser l'eina viva llesta per usar. Les explicacions editorials llargues, història de l'eina o avisos extensos van a sota del taulell o en desplegable compacte, mai empenyent l'eina fora del primer pantallazo (above-the-fold a 1440x900 i 390x844).",
+      "criteri_determinista": "Màxim 1 banda compacta d'estat/avís (< 96 px d'alt) abans del contenidor interactiu principal d'una app o joc; prohibit redirigir forçosament a subrutes /avis de pantalla completa quan es pot mostrar confirmació contextual integrada; en /app/bar amb torn obert, accés directe operatiu.",
+      "accio_si_falla": "Rebutjar el disseny per fricció d'entrada i exigir reubicació de la prosa explicativa davall del component operatiu."
+    },
+    {
+      "id": "FN0-004",
+      "codi": "RITME_VERTICAL_HARMONIC_16_32_PX",
+      "origen": "IDEA-351",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/css/**/*.css",
+        "src/sections/**/*.jsx",
+        "src/apps/**/*.jsx"
+      ],
+      "descripcio": "Relació harmònica 1:2 a tota la prosa del sistema: --sdp-mb-p: 16px, --sdp-mb-ul: 16px, --sdp-mt-h3: 32px, --sdp-mt-h4: 28px, --sdp-mb-h4: 12px i text-wrap: pretty en <p>. Prohibit que p:last-child + section + h3:first-child deixe 0 px de separació abans d'un <h3>.",
+      "criteri_determinista": "Cap full diferit pot sobreescriure margin-top d'h3 a 0 després d'un bloc de text o section precedent; verificació geomètrica CDP: gap vertical entre el bottom d'un <p>/<ul>/<div> de prosa i el top del següent <h3> >= 28 px.",
+      "accio_si_falla": "Bloquejar la regla CSS regressiva i restaurar els tokens canònics --sdp-mb-p i --sdp-mt-h3."
+    },
+    {
+      "id": "FN0-005",
+      "codi": "HARMONIA_MARCA_I_WIDGETS_ALERTA_ESTANDARDITZATS",
+      "origen": "IDEA-352",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/sections/**/*.jsx",
+        "src/apps/**/*.jsx",
+        "src/components/**/*.jsx"
+      ],
+      "descripcio": "1) Totes les seccions troncals de feed i pàgina d'entitat mantenen showLogos: true (harmonia musical entre barra superior i marca editorial). 2) Es prohibeix pintar avisos, errors o estats buits amb <h3>+<p> o <div>+<p> crus: s'han d'usar exclusivament els widgets canònics de Pedra Seca (<Alerta to=\"avis|info|error|exit\"> i <EstatBuit>).",
+      "criteri_determinista": "0 ocurrències de showLogos={false} en Mur/Mercat/Pobles/Calendari; 0 contenidors amb classes d'avís/buit/construcció que pinten <h2|h3|h4>+<p> manual fora d'Alerta.jsx i estats.jsx (incloent la migració pendent de VistaEnConstruccio.jsx, VistaMultimedia.jsx, FullAjustos.jsx i CalendariAgricolaLlavorsView.jsx).",
+      "accio_si_falla": "Substituir el bloc HTML manual per <Alerta> o <EstatBuit> amb el rol ARIA corresponent."
+    },
+    {
+      "id": "FN0-006",
+      "codi": "HONESTEDAT_LLEI_0_ZERO_CONTROLS_FANTASMA_I_PORTA_OBERTA",
+      "origen": "Llei 0 + BLOC A/B",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/apps/**",
+        "src/sections/xat/**"
+      ],
+      "descripcio": "Cap botó visible pot fer veure que executa una acció si no està connectat, i a la inversa: quan el backend/port ja té l'RPC verificada (com xat_accions_missatges per a Destacats o el nucli pur de Burocràcia), la vista no pot quedar oblidada en 'En construcció'. Tota bandera de manifest (interruptors) ha de coincidir amb l'estat real del proveïdor.",
+      "criteri_determinista": "Paritat 1:1 entre manifest.interruptors (actiuPerDefecte booleà explícit) i el proveïdor d'estat; 0 vistes registrades en VISTES_EN_CONSTRUCCIO quan la capacitat homònima ja està activa a backendPort.js; 0 entrades duplicades enObres a MODULS_GESTORIA quan AppGestoria.jsx ja en serveix la ruta.",
+      "accio_si_falla": "Connectar la vista real al port existent o declarar explícitament el motiu honest amb <EstatBuit>/<Alerta>."
+    },
+    {
+      "id": "FN0-007",
+      "codi": "PARITAT_OMNICANAL_IPADOS_SAFARI_CAPACITOR_I_WEB",
+      "origen": "IDEA-346 + BLOC A.9 Multimèdia",
+      "severitat": "HIGH",
+      "ambit": [
+        "src/sections/multimedia/**",
+        "src/apps/**",
+        "src/natiu/**"
+      ],
+      "descripcio": "Cap funcionalitat principal d'una eina pot dependre en exclusiva d'APIs restringides a Chromium d'escriptori (com window.showDirectoryPicker o window.showSaveFilePicker) sense oferir fallback funcional complet per a iPadOS/iOS Safari, App Store nativa i Firefox.",
+      "criteri_determinista": "Tota crida a showDirectoryPicker / showOpenFilePicker / showSaveFilePicker ha d'anar acompanyada al mateix mòdul o adaptador d'un camí operatiu basat en <input type=\"file\"> + OPFS / Blob download / navigator.share.",
+      "accio_si_falla": "Exigir l'adaptador de compatibilitat WebKit/iPadOS abans de certificar l'aplicació al 100%."
+    },
+    {
+      "id": "FN0-008",
+      "codi": "VOCABULARI_SAGRAT_DEL_MAS_I_PARITAT_5_LLENGUES",
+      "origen": "Llei Vocabulari Natural + R32.15",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/**",
+        "_wiki_de_poble/**",
+        "tooling/**"
+      ],
+      "descripcio": "Ús exclusiu del valencià normatiu natural del poble («el Mas», «el Mas de poble», «el Mas electrònic», «la IAIA», «Assaig a la Plaça»), prohibint castellanismes/marques alienes i adjectius grandiloqüents vetats, i garantint paritat completa de claus en les 5 llengües oficials (ca, es, en, eu, gl).",
+      "criteri_determinista": "0 aparicions dels termes vetats per porta:vocabulari; 100% de simetria de claus en cada objecte TEXTOS_* / i18n* per a ['ca', 'es', 'en', 'eu', 'gl']; zero atributs aria-label/title/placeholder monolingües hardcoded en JSX.",
+      "accio_si_falla": "Bloquejar immediatament el commit o Kit CAS fins corregir el terme i completar les 5 llengües."
+    },
+    {
+      "id": "FN0-009",
+      "codi": "SOSTRE_PES_DEL_NUCLI_WP_I_ZERO_ORFES_LLEI08",
+      "origen": "R32.48 + R32.88 + LLEI08",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/**"
+      ],
+      "descripcio": "Tota vista o motor nou de les Micro-Apps i del Xat ha d'entrar per càrrega diferida (lazyRoute / lazyRouteRenovable / fullDiferit) mantenint pesDelNucli < 1.589.500 B, i cap fitxer de producció pot integrar-se a src/ sense consumidor viu (LLEI08 = 0 orfes, Tarjan SCC = 0 cicles).",
+      "criteri_determinista": "pesDelNucli <= 1589500 bytes; 0 fitxers no referenciats a l'arbre d'imports de producció; 0 nous cicles d'imports circulars.",
+      "accio_si_falla": "Moure el mòdul nou darrere de lazyRoute() o retenir-lo en Kit CAS fins connectar-ne el consumidor UI."
+    },
+    {
+      "id": "FN0-010",
+      "codi": "INTEGRITAT_SENSE_RASTRE_SQL_STORAGE_I_AUTONOMIA_100_ANYS",
+      "origen": "IDEA-342 + IDEA-347 + IDEA-349",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "supabase/migrations/*.sql",
+        "tooling/**",
+        "scripts/**"
+      ],
+      "descripcio": "1) Tota funció SECURITY DEFINER porta SET search_path = '', índex en cada clau forana i neteja integral sense deixar brossa ni trencar proves LSSI (quan s'elimina un missatge amb adjunt per a tothom, el blob de storage.objects queda marcat per a purga física segura). 2) Tot script o flux té mode 100% determinista sense IA (--sense-ia) perquè el Mas electrònic siga habitable d'ací a 100 anys.",
+      "criteri_determinista": "0 funcions SECURITY DEFINER sense search_path=''; 0 claus foranes sense índex; preservació d'evidència moderation_state != 'visible' (R32.87); existència de camí determinista quan Ollama o núvols d'IA no responen.",
+      "accio_si_falla": "Bloquejar la migració o script fins acreditar seguretat SQL en PGlite i fallback sense IA."
+    },
+    {
+      "id": "FN0-011",
+      "codi": "ZERO_FRICCIO_HOOKS_INLINE_EN_AGENTS_AUTONOMS",
+      "origen": "IDEA-347 (INC-02)",
+      "severitat": "HIGH",
+      "ambit": [
+        "execucio_agents"
+      ],
+      "descripcio": "Cap subagent ni script del Node 0 pot invocar intèrprets inline amb flags -(e|c|p) (node -e, python3 -c, sh -c) ni rm/mv sobre rutes relatives del repositori que disparen botons de confirmació humana quan el Mestre descansa.",
+      "criteri_determinista": "100% d'execucions d'inspecció i verificació via fitxers .mjs/.py explícits dins de /tmp/ o de la carpeta satèl·lit _investigacio_ia_de_poble/.",
+      "accio_si_falla": " Bloquejar la comanda inline abans d'executar-la i reescriure-la com a script traçable."
+    },
+    {
+      "id": "FN0-012",
+      "codi": "TITOLS_FLUIDS_AL_COSTAT_DE_FLOTANTS",
+      "origen": "IDEA-353 · Annex del filtre MD i auditoria Node 0 261125_0321",
+      "severitat": "BLOCKER",
+      "ambit": [
+        "src/css/**/*.css",
+        "src/sections/**/*.jsx"
+      ],
+      "descripcio": "Els títols s’adapten a l’espai lliure al costat d’imatges i targetes flotants. Cap h1..h6 porta clear both/left/right.",
+      "criteri_determinista": "0 declaracions clear: both|left|right en selectors h1..h6; validar geometria amb titolsAlCostatDeFlotants.capes.test.js i navegador.",
+      "accio_si_falla": "Retindre el kit i identificar fitxer:línia de la declaració regressiva."
+    }
+  ],
+  "font_original": "261124_node0_assemblea_apps_xat_i_filtre_aprenentatge/01_FILTRE_APRENENTATGE_NODE0_PER_A_MARIA.json",
+  "limit_executable": "L’anella estàtica només acredita els predicats implementats. El resultat global és INCOMPLET fins completar SQL, build WP, LLEI_08, navegador i dispositiu. No admet rebuts externs com a substitut de les proves.",
+  "baseline_historic": {
+    "total": 234,
+    "origen_cache_sha256": "649d27e81492c2562b31769e05514d54c57fc36bfaf2757923801a24a44da840",
+    "aprovacio": "Pla §6 · MarIA 2026-11-25 04:37 CET",
+    "criteri": "0 regressions noves; totes les troballes històriques i actuals queden visibles. validRegressions no implica validEstatics ni valid global."
+  }
+}

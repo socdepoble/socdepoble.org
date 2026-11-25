@@ -21,6 +21,15 @@ test('R32.46 · Storage, quota i purga amb catàleg complet efímer',async t=>{
  try{
   await sembraStorageR3246(pg);const c=await catalogueR3246(pg);
   await t.test('M01 · migració real idempotent i metadades de funció conservades',async()=>{
+   // v1.2.25 · K-C1-SQL. Motiu: 20261125010000 (C1) redefinix després private.xat_neteja_adjunts
+   // amb la protecció LSSI (cos guardat per hash), de manera que R32.46 ja no n'és l'últim escriptor
+   // en el catàleg complet. La prova de R32.46 no s'afluixa: corre sencera, amb el mateix hash
+   // f512f5ec…, sobre el catàleg fins a 20261123010000. Al catàleg complet es comprova a banda que
+   // C1 conserva l'expressió owner_id de R32.46. Abans, la fallada d'esta prova deixava instal·lat el
+   // cos antic i O02, O03 i Q04 fallaven en cascada.
+   const complet=pg,r3246=await creaBaseR3246({throughVersion:'20261123010000'});
+   let correctedR3246;
+   try{correctedR3246=await (async pg=>{
    const metadata=async()=>(await pg.query("select oid,proowner,proacl::text as acl,proconfig,prosecdef,provolatile,pg_get_function_identity_arguments(oid) as args,pg_get_function_result(oid) as result from pg_proc where oid='private.xat_neteja_adjunts(integer)'::regprocedure")).rows[0];
    const definition=async()=>(await pg.query("select pg_get_functiondef('private.xat_neteja_adjunts(integer)'::regprocedure) as sql")).rows[0].sql;
    const final=await definition(),beforeMetadata=await metadata();
@@ -38,6 +47,11 @@ test('R32.46 · Storage, quota i purga amb catàleg complet efímer',async t=>{
    await pg.exec('rollback');assert.equal(await definition(),divergent);await pg.exec(final);
    migrationVerification={file:migrationUrl.pathname,sha256:sha(migration),legacyDefinitionSha256:sha(legacy),finalDefinitionSha256:sha(final),applications:2,metadataPreserved:true,divergenceRejected:true};
    record('M01',['private.xat_neteja_adjunts']);
+   return corrected;
+   })(r3246);}finally{await r3246.close();}
+   const finalComplet=(await complet.query("select pg_get_functiondef('private.xat_neteja_adjunts(integer)'::regprocedure) as sql")).rows[0].sql;
+   assert.equal(finalComplet.split(correctedR3246).length,2,'El catàleg complet conserva l’atribució owner_id de R32.46.');
+   migrationVerification.catalogueThroughVersion='20261123010000';
   });
   await t.test('S01 · tots els buckets reals, límits i ACL sense DDL de client',async()=>{
    assert.deepEqual(c.buckets.map(b=>b.id),['mitjans','mitjans_privats','xat_adjunts']);

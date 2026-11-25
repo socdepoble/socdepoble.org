@@ -26,6 +26,19 @@ function socdepoble_enxufe_proves_salut( $proves ) {
 		'label' => __( 'Sóc de Poble package', 'socdepoble' ),
 		'test'  => 'socdepoble_enxufe_prova_paquet',
 	);
+	$manifest = socdepoble_enxufe_manifest_local();
+	if ( is_array( $manifest ) && 'trossos' === ( $manifest['formatDelPaquet']['format'] ?? null ) ) {
+		$proves['direct']['socdepoble_enxufe_trossos_http'] = array(
+			'label' => __( 'Sóc de Poble module delivery', 'socdepoble' ),
+			'test'  => 'socdepoble_enxufe_prova_trossos_http',
+		'skip_cron' => true,
+		);
+	}
+	$proves['direct']['socdepoble_enxufe_upgrade_http'] = array(
+		'label' => __( 'Public upgrade directory observation', 'socdepoble' ),
+		'test'  => 'socdepoble_enxufe_prova_upgrade_http',
+		'skip_cron' => true,
+	);
 	if ( function_exists( 'socdepoble_enxufe_prova_canal' ) ) {
 		$proves['direct']['socdepoble_enxufe_canal'] = array(
 			'label' => __( 'Sóc de Poble update channel', 'socdepoble' ),
@@ -43,6 +56,157 @@ function socdepoble_enxufe_proves_salut( $proves ) {
 	return $proves;
 }
 add_filter( 'site_status_tests', 'socdepoble_enxufe_proves_salut' );
+
+/** Origen estricte de l'amfitrió. Cap credencial, consulta, fragment ni URL arbitrària. */
+function socdepoble_enxufe_url_salut_local( $url ) {
+	if ( ! is_string( $url ) || strlen( $url ) > 2048 || preg_match( '/[\x00-\x20\x7f\\\\]/', $url ) ) {
+		return false;
+	}
+	$cami = wp_parse_url( $url );
+	$lloc = wp_parse_url( site_url( '/' ) );
+	if ( ! is_array( $cami ) || ! is_array( $lloc ) || ! isset( $cami['scheme'], $cami['host'], $lloc['scheme'], $lloc['host'] )
+		|| ! in_array( $cami['scheme'], array( 'http', 'https' ), true )
+		|| $cami['scheme'] !== $lloc['scheme'] || strtolower( $cami['host'] ) !== strtolower( $lloc['host'] )
+		|| isset( $cami['user'] ) || isset( $cami['pass'] ) || isset( $cami['query'] ) || isset( $cami['fragment'] ) ) {
+		return false;
+	}
+	$port_cami = $cami['port'] ?? ( 'https' === $cami['scheme'] ? 443 : 80 );
+	$port_lloc = $lloc['port'] ?? ( 'https' === $lloc['scheme'] ? 443 : 80 );
+	return $port_cami === $port_lloc;
+}
+
+/** Location limitada al mateix directori de mòduls i origen. Mai seguix un CDN o login. */
+function socdepoble_enxufe_redirect_tros_local( $location, $url, $prefix ) {
+	if ( ! is_string( $location ) || '' === $location || strlen( $location ) > 2048 || preg_match( '/[\x00-\x20\x7f\\\\]/', $location ) ) {
+		return null;
+	}
+	$original = wp_parse_url( $url );
+	if ( 0 === strpos( $location, '//' ) ) {
+		$location = $original['scheme'] . ':' . $location;
+	} elseif ( 0 === strpos( $location, '/' ) ) {
+		$location = $original['scheme'] . '://' . $original['host'] . ( isset( $original['port'] ) ? ':' . $original['port'] : '' ) . $location;
+	} elseif ( preg_match( '/^[A-Za-z0-9_-]+\.js$/D', $location ) ) {
+		$location = substr( $url, 0, strrpos( $url, '/' ) + 1 ) . $location;
+	}
+	if ( ! socdepoble_enxufe_url_salut_local( $location ) ) {
+		return null;
+	}
+	$path = wp_parse_url( $location, PHP_URL_PATH );
+	if ( ! is_string( $path ) || 0 !== strpos( $path, $prefix ) || ! preg_match( '/^[A-Za-z0-9_-]+\.js$/D', substr( $path, strlen( $prefix ) ) ) ) {
+		return null;
+	}
+	return $location;
+}
+
+/**
+ * Lectura HTTP exclusivament des de Salut del lloc; com a molt dos HEAD.
+ * No modifica servidor, redireccions, fitxers, opcions ni transients.
+ * No envia cookies, autorització ni secrets, i no retorna cos/Location/errors crus.
+ *
+ * @param string $tipus Només 'tros' o 'upgrade'; no accepta una URL del caller.
+ * @return array Observació local: estat, motiu, salts i codi HTTP (sense contingut).
+ */
+function socdepoble_enxufe_diagnostic_http_local( $tipus ) {
+	$desconegut = array( 'estat' => 'unknown', 'motiu' => 'unavailable', 'salts' => 0, 'http' => null );
+	if ( ! current_user_can( 'manage_options' ) || ! function_exists( 'wp_safe_remote_head' ) || ! in_array( $tipus, array( 'tros', 'upgrade' ), true ) ) {
+		return $desconegut;
+	}
+	$prefix = null;
+	if ( 'tros' === $tipus ) {
+		$manifest = socdepoble_enxufe_manifest_local();
+		$modul = $manifest['formatDelPaquet']['modul'] ?? null;
+		if ( ! is_string( $modul ) || ! preg_match( '#^trossos/[A-Za-z0-9_-]+\.js$#D', $modul ) ) {
+			$desconegut['motiu'] = 'module_unavailable';
+			return $desconegut;
+		}
+		$url = plugins_url( dirname( SOCDEPOBLE_ENXUFE_BUNDLE ) . '/' . $modul, SOCDEPOBLE_ENXUFE_FITXER );
+	} else {
+		$url = content_url( 'upgrade/' );
+	}
+	if ( ! socdepoble_enxufe_url_salut_local( $url ) ) {
+		$desconegut['motiu'] = 'non_local_url';
+		return $desconegut;
+	}
+	if ( 'tros' === $tipus ) {
+		$prefix = dirname( wp_parse_url( $url, PHP_URL_PATH ) ) . '/';
+	}
+	for ( $salt = 0; $salt <= 1; $salt++ ) {
+		$r = wp_safe_remote_head( $url, array(
+			'timeout' => 3, 'redirection' => 0, 'limit_response_size' => 1024,
+			'reject_unsafe_urls' => true, 'sslverify' => true, 'cookies' => array(),
+			'headers' => array( 'Accept' => 'tros' === $tipus ? 'application/javascript, text/javascript' : '*/*' ),
+		) );
+		$desconegut['salts'] = $salt;
+		if ( is_wp_error( $r ) ) {
+			$desconegut['motiu'] = 'request_failed';
+			return $desconegut;
+		}
+		$codi = (int) wp_remote_retrieve_response_code( $r );
+		$desconegut['http'] = $codi;
+		if ( 'upgrade' === $tipus ) {
+			if ( in_array( $codi, array( 401, 403, 404, 410 ), true ) ) {
+				return array( 'estat' => 'ok', 'motiu' => 'not_public_observed', 'salts' => 0, 'http' => $codi );
+			}
+			if ( $codi >= 200 && $codi < 300 ) {
+				return array( 'estat' => 'recommended', 'motiu' => 'public_response', 'salts' => 0, 'http' => $codi );
+			}
+			$desconegut['motiu'] = 'upgrade_unconfirmed';
+			return $desconegut;
+		}
+		if ( in_array( $codi, array( 301, 302, 303, 307, 308 ), true ) ) {
+			if ( 1 === $salt ) {
+				return array( 'estat' => 'recommended', 'motiu' => 'redirect_chain', 'salts' => 2, 'http' => $codi );
+			}
+			$destinacio = socdepoble_enxufe_redirect_tros_local( wp_remote_retrieve_header( $r, 'location' ), $url, $prefix );
+			if ( null === $destinacio ) {
+				$desconegut['motiu'] = 'redirect_not_local';
+				return $desconegut;
+			}
+			$url = $destinacio;
+			continue;
+		}
+		$mime = wp_remote_retrieve_header( $r, 'content-type' );
+		// El transport pot refusar estes capçaleres; la diagnosi tampoc les dona per bones.
+		$mime = is_string( $mime ) && ! preg_match( '/[\x00-\x08\x0A-\x1F\x7F]/', $mime )
+			? strtolower( trim( explode( ';', $mime, 2 )[0], " \t" ) ) : '';
+		if ( 200 === $codi && in_array( $mime, array( 'application/ecmascript', 'application/javascript', 'application/x-ecmascript', 'application/x-javascript', 'text/ecmascript', 'text/javascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2', 'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript', 'text/x-ecmascript', 'text/x-javascript' ), true ) ) {
+			return array( 'estat' => 'ok', 'motiu' => 'module_served', 'salts' => $salt, 'http' => $codi );
+		}
+		$desconegut['motiu'] = 200 === $codi ? 'module_mime_unconfirmed' : 'module_http_unconfirmed';
+		return $desconegut;
+	}
+	return $desconegut;
+}
+
+/** Cap prova HTTP no substituïx integritat del paquet ni una prova al navegador. */
+function socdepoble_enxufe_prova_trossos_http() {
+	$r = socdepoble_enxufe_diagnostic_http_local( 'tros' );
+	if ( 'ok' === $r['estat'] ) {
+		return socdepoble_enxufe_resultat_salut( 'socdepoble_enxufe_trossos_http', 'good',
+			__( 'The Sóc de Poble entry module is served with at most one redirect', 'socdepoble' ),
+			__( 'A public HEAD request to the local entry module returned JavaScript with zero or one redirect. This observation does not certify all chunks, their contents, or browser execution.', 'socdepoble' ) );
+	}
+	return socdepoble_enxufe_resultat_salut( 'socdepoble_enxufe_trossos_http', 'recommended',
+		__( 'Check delivery of the Sóc de Poble entry module', 'socdepoble' ),
+		'redirect_chain' === $r['motiu']
+			? __( 'The local entry module requires more than one redirect. Ask the host to review its redirect chain; this check does not change server rules.', 'socdepoble' )
+			: __( 'Delivery of the local entry module could not be confirmed. The request may be blocked, redirected outside the local plugin directory, missing, or returning a different content type. No remote content or raw error is shown.', 'socdepoble' ) );
+}
+
+/** Resposta pública no significa automàticament directori llistable o vulnerabilitat. */
+function socdepoble_enxufe_prova_upgrade_http() {
+	$r = socdepoble_enxufe_diagnostic_http_local( 'upgrade' );
+	if ( 'ok' === $r['estat'] ) {
+		return socdepoble_enxufe_resultat_salut( 'socdepoble_enxufe_upgrade_http', 'good',
+			__( 'No public upgrade directory access was observed', 'socdepoble' ),
+			__( 'The local upgrade directory returned an access-denied or not-found status to a public HEAD request. This does not certify every temporary file or the host security configuration.', 'socdepoble' ) );
+	}
+	return socdepoble_enxufe_resultat_salut( 'socdepoble_enxufe_upgrade_http', 'recommended',
+		__( 'Review public access to the upgrade directory', 'socdepoble' ),
+		'public_response' === $r['motiu']
+			? __( 'The local upgrade directory returns a successful public HTTP response. Ask the host to review directory listing and temporary files. A successful response alone does not prove a vulnerability. Sóc de Poble does not change server rules.', 'socdepoble' )
+			: __( 'Public access to the local upgrade directory could not be determined. No redirect was followed and no file was read. Review this with the host; this result is not a security clearance.', 'socdepoble' ) );
+}
 
 /**
  * Resultat de Salut amb la forma que espera WordPress.

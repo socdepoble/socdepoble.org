@@ -67,7 +67,11 @@ test('T1 (WP < 6.9 / < 7.2): no-op net sense fatals, fallback a Apertium i refú
   assert.equal(res.desa_codi, 'socdepoble_enxufe_secret_no_disponible');
   assert.equal(res.options_writes, 0, 'mai no pot escriure claus en text pla a wp_options');
   assert.equal(res.abilities_n, 0, 'en WP < 6.9 no registra cap ability ni peta');
-  assert.deepEqual(res.salut_proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet'], 'sense 7.2 ni WP_SECRETS_KEY, cap prova de secrets a Salut');
+  // v1.2.25 · C4B (K-C4B-PROVES) · Motiu del canvi de la llista: salut.php registra sempre l'observació HTTP
+  // del directori d'actualitzacions (socdepoble_enxufe_upgrade_http, skip_cron, només manage_options).
+  // No és una prova de secrets; l'assert continua exigint que, sense l'API ni WP_SECRETS_KEY, no hi haja
+  // socdepoble_enxufe_secrets. La de trossos_http no hi entra perquè el manifest del runner no és «trossos».
+  assert.deepEqual(res.salut_proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_upgrade_http'], 'sense 7.2 ni WP_SECRETS_KEY, cap prova de secrets a Salut');
 });
 
 test('T1 (WP 7.2 Secrets API + Abilities MCP): precedència 1..4, rotació trencada a prova de bombes i permisos MCP estrictes', { skip: !PHP_BIN && 'PHP CLI no disponible' }, () => {
@@ -348,7 +352,8 @@ test('R26.2 · Salut: cada causa amb el seu text (abans de la 7.2, valor invàli
   assert.equal(res.crides_sense_api, 0, 'sense l\'API disponible, Salut no crida wp_get_secret');
 
   const antic = executaCasPhp('wp_antic_amb_clau');
-  assert.deepEqual(antic.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets']);
+  // v1.2.25 · C4B (K-C4B-PROVES) · upgrade_http entra entre el paquet i els secrets (motiu a T1).
+  assert.deepEqual(antic.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_upgrade_http', 'socdepoble_enxufe_secrets']);
   assert.equal(antic.salut.status, 'good');
   // v1.2.18 · Gauntlet R2 (L3R2-01) · sense l'API, el text no la promet per a cap versió.
   // v1.2.19 · fusió · R32.29 (lot 02) hi esperava «The optional WordPress secrets API is not available»;
@@ -367,6 +372,9 @@ function salutSenseApi({ ambClau }) {
     'function __( $t, $d = null ) { return $t; } function esc_html__( $t, $d = null ) { return $t; } function esc_html( $t ) { return $t; }',
     "function esc_url( $u ) { return $u; } function admin_url( $p = '' ) { return '/wp-admin/' . $p; } function add_filter( ...$a ) {}",
     'function is_wp_version_compatible( $r ) { return true; }',
+    // v1.2.25 · C4B (K-C4B-PROVES) · salut.php consulta el manifest local per decidir si registra trossos_http.
+    // L'arnés només carrega salut.php: sense manifest (null) el format no és «trossos» i trossos_http no es registra.
+    'function socdepoble_enxufe_manifest_local() { return null; }',
     'require $argv[1];',
     '$r = socdepoble_enxufe_prova_secrets_wp72();',
     "echo json_encode( array( 'te_wp_get_secret' => function_exists( 'wp_get_secret' ), 'proves' => array_keys( socdepoble_enxufe_proves_salut( array( 'direct' => array() ) )['direct'] ), 'status' => $r['status'], 'label' => $r['label'] ), JSON_UNESCAPED_UNICODE );"
@@ -378,9 +386,10 @@ test('v1.2.18 · Gauntlet R2 (L3R2-01) · Salut: la prova de secrets es registra
   const sense = salutSenseApi({ ambClau: false });
   assert.equal(sense.te_wp_get_secret, false);
   // v1.2.19 · fusió · R32.29 (lot 02) registra sempre la prova d'entorn (autoload i memòria cau) davant del paquet.
-  assert.deepEqual(sense.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet'], 'un 7.2 sense l\'API ni WP_SECRETS_KEY no rep cap prova de secrets');
+  // v1.2.25 · C4B (K-C4B-PROVES) · upgrade_http és l'observació HTTP de Salut, no de secrets (motiu a T1).
+  assert.deepEqual(sense.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_upgrade_http'], 'un 7.2 sense l\'API ni WP_SECRETS_KEY no rep cap prova de secrets');
   const ambClau = salutSenseApi({ ambClau: true });
-  assert.deepEqual(ambClau.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_secrets'], 'WP_SECRETS_KEY sí que la registra');
+  assert.deepEqual(ambClau.proves, ['socdepoble_enxufe_entorn', 'socdepoble_enxufe_paquet', 'socdepoble_enxufe_upgrade_http', 'socdepoble_enxufe_secrets'], 'WP_SECRETS_KEY sí que la registra');
   assert.deepEqual({ status: ambClau.status, label: ambClau.label }, { status: 'good', label: 'This WordPress does not have the secrets API' });
   assert.doesNotMatch(nomesCodiPhp(llig('includes/salut.php')), /\bis_wp_version_compatible\s*\(|\$wp_version\b|get_bloginfo\(\s*'version'/, 'salut.php no inferix l\'API per la versió');
 });

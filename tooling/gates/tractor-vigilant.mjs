@@ -73,6 +73,8 @@ const EXEMPT_HOST = new Map([
   ['datacite.org','esquema DataCite; identificador'],['schemas.openxmlformats.org','espais de noms OOXML dins dels .xlsx'],
   ['schemas.google.com','espai de noms Atom de Blogger; identificador'],['webfinger.net','rel de WebFinger; identificador'],
   ['nodeinfo.diaspora.software','esquema NodeInfo; identificador'],['docs.oasis-open.org','espai de noms OASIS; identificador'],
+  // CR-02 (Gauntlet de la integració v1.2.25) · src/data/xat/documents.js (C1) el compara amb el de l'.odt; no el baixa.
+  ['openoffice.org','espai de noms de script d’OpenOffice.org 1.x dins dels .odt; identificador'],
 ]);
 // RFC 6761: dominis reservats que no resolen mai a Internet (bases de new URL i proves).
 const TLD_RESERVAT = /\.(?:invalid|test|example|localhost)$/;

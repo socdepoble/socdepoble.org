@@ -315,7 +315,17 @@ export async function publicaAdjuntXat(filId, entrada, { onProgres, ...config } 
   const { id, fitxer, tipus, duradaMs, respostaA = null, conservaUbicacio } = entrada;
   const ubicacio = normalitzaUbicacioXat(entrada.ubicacio);
   const text = String(entrada.text ?? '').trim() || null;
-  {
+  /* v1.2.25 · C1 (K-C1-MEDIA-TELLADO) · El document té la seua branca; la de mitjans conserva literalment
+     l'import i la crida de R32.15 que vigilen /versions i el catàleg Tellado (TELLADO-R3214-11 i -12). */
+  if (tipus === 'document') {
+    const { validaDocumentXat } = await import('../xat/documents.js');
+    try { await validaDocumentXat(fitxer, { signal: config.signal }); }
+    catch (cause) {
+      if (cause?.name === 'AbortError') throw cause;
+      throw errorAdjuntXat('document-format', { cause });
+    }
+    comprova();
+  } else {
     const { validaFitxerMedia } = await import('../../utils/validadorContenidorsMedia.js');
     try { await validaFitxerMedia(fitxer, { signal: config.signal }); }
     catch (cause) {
@@ -434,13 +444,15 @@ export async function urlAdjuntXat(id, config = {}, { renova = false, descarrega
   const { comprova, clau } = capturaOperacio(config);
   if (!UUID.test(id)) throw errorAdjuntXat('no-disponible');
   const desat = propietariSignatures === clau ? signatures.get(id) : null;
-  if (!renova && desat?.url && desat.caducaAl - Date.now() > MARGE_SIGNATURA_MS) return ambDescarrega(desat.url, descarrega);
+  if (!renova && desat?.url && desat.caducaAl - Date.now() > MARGE_SIGNATURA_MS) return ambDescarrega(desat.url, desat.document ? descarrega || true : descarrega);
   let ruta = desat?.ruta;
+  let document = desat?.document === true;
   if (!ruta) {
     const fila = primera(await crida('xat_llegix_adjunt', { p_id: id }, config));
     comprova();
     if (fila?.ruta !== id) throw errorAdjuntXat('no-disponible');
     ruta = fila.ruta;
+    document = fila.tipus === 'document';
   }
   const inici = Date.now();
   let data;
@@ -456,8 +468,8 @@ export async function urlAdjuntXat(id, config = {}, { renova = false, descarrega
   const esperat = `/object/sign/${BUCKET}/${ruta}?`;
   if (!data?.signedURL?.startsWith(esperat)) throw errorAdjuntXat('obrir');
   const url = `${getResolvedConfig(config).supabaseUrl}/storage/v1${data.signedURL}`;
-  recordaSignatura(clau, id, { ruta, url, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
-  return ambDescarrega(url, descarrega);
+  recordaSignatura(clau, id, { ruta, url, document, caducaAl: inici + SEGONS_SIGNATURA * 1000 });
+  return ambDescarrega(url, document ? descarrega || true : descarrega);
 }
 
 /* E1.2 (pla 261029_1305) · Les peces del transport que la branca xifrada

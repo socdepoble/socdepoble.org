@@ -7,7 +7,7 @@ test('R32.8 separa la quota total, l’entrada original i el vídeo preparat', (
   expect(multimedia.QUOTA_XAT_BYTES).toBe(250_000_000);
   expect(multimedia.MAX_VIDEO_ENTRADA_BYTES).toBe(150_000_000);
   expect(multimedia.MAX_VIDEO_MS).toBe(60_000);
-  expect(multimedia.MAXIM_ADJUNT_XAT).toEqual({ imatge: 2_000_000, veu: 3_000_000, video: 20_000_000 });
+  expect(multimedia.MAXIM_ADJUNT_XAT).toEqual({ imatge: 2_000_000, veu: 3_000_000, video: 20_000_000, document: 10_000_000 });
   expect(multimedia.MAXIM_BLOB_ADJUNT).toBe(20_000_000);
   expect(multimedia.MISSATGE_QUOTA_XAT).not.toMatch(/diners|pagar|servidor/i);
 });

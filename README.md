@@ -126,6 +126,8 @@ select distinct proname from pg_proc p
 
 Si PostgREST respon que no troba una taula o una funció (`PGRST202` o `PGRST205`), el client mostra «L’esquema del xat no està aplicat: cal executar la migració 2609270200_xat_f0_fonament.sql.» (`src/data/supabase/xat.js`).
 
+**Avisos push del xat (v1.2.25):** la preparació local de la prova de fum (Web Push, APNs i FCM) i el contracte del rebut privat del canari són a [`tooling/push/prova-fum-readme.md`](tooling/push/prova-fum-readme.md). L'eina no envia cap avís ni activa cap bandera, i un rebut coherent continua sent evidència aportada per l'operador, no una entrega verificada.
+
 ### Sessió al navegador
 
 La sessió s'escriu i s'esborra **només des de `src/data/identitat.js`** (`desaSessio` i `esborraSessio`).

@@ -1,0 +1,9 @@
+/* Fixture del filtre FN0 (C6 · desplaçament real de línies): un títol h3 sense separació inicial.
+   Cap full de producció la carrega; la prova la llig com a text. */
+.fitxa-prova {
+  padding: 1rem;
+}
+
+section + h3 {
+  margin-top: 0;
+}

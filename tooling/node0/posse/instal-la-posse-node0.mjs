@@ -11,7 +11,7 @@ import {creaPostgres} from '../postgres-node0.mjs';
 const schema=fs.readFileSync(new URL('./posse-ledger.sql',import.meta.url),'utf8');
 // Single pin source shared with direct SQL installation; never accept just a count.
 const migrationPins=schema.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)?.[1];
-const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125|126|129|131|135|136),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
+const migrationPairs=[...(migrationPins??'').matchAll(/\((76|77|78|79|80|81|85|86|114|116|119|120|121|123|124|125|126|129|131|135|136|139),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>[count,hash]);
 // Two reviewed85 compositions exist (R54 and R15-A3). Preserve exact pair
 // identity instead of silently overwriting one hash in a count-keyed object.
 const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${count}:${hash}`));
@@ -40,7 +40,9 @@ const expectedMigrationLedgers=new Set(migrationPairs.map(([count,hash])=>`${cou
 // (IDEA-339) i 20261124033000 (C12/R32.72), totes NO aplicades; vint-i-un parells i vint recomptes. Cap 132, 133 ni 134 intermedi.
 // v1.2.24 · R32.87 · conserva el 135 i afig el complet 136 amb 20261124174000 (blindatges P0 de Gemini Neon, NO aplicada);
 // vint-i-dos parells i vint-i-un recomptes.
-if(migrationPairs.length!==22||expectedMigrationLedgers.size!==22||new Set(migrationPairs.map(([count])=>count)).size!==21)throw Error('posse_migration_pins_missing');
+// v1.2.25 · Costura 1 · conserva el 136 i afig el complet 139 amb 20261125010000 (C1), 20261125013000 (C2) i
+// 20261125020000 (C16), NO aplicades; vint-i-tres parells i vint-i-dos recomptes. Cap 137 ni 138 intermedi.
+if(migrationPairs.length!==23||expectedMigrationLedgers.size!==23||new Set(migrationPairs.map(([count])=>count)).size!==22)throw Error('posse_migration_pins_missing');
 const FUNCTION_NAMES=['source_current','source_for_bridge','remote_current','assert_current','assert_history','rpc','credential_proof'];
 const expectedFunctionHashes=Object.fromEntries(FUNCTION_NAMES.map(name=>{
   const start=schema.indexOf(`CREATE OR REPLACE FUNCTION node0_posse.${name}(`),body=schema.indexOf('AS $f$',start),end=schema.indexOf('$f$;',body+6);

@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REBUT_PRODUCCIO_R3214 } from '../tooling/gates/verifica-rebut-produccio-r3214.mjs';
-import { avaluaMatriu, PROVES_MATRIU } from '../tooling/gates/avalua-matriu-d01-d15.mjs';
+import { avaluaMatriu, PROVES_MATRIU, ETIQUETES_DIMENSIONS, evidenciaQuatreColumnes } from '../tooling/gates/avalua-matriu-d01-d15.mjs';
 
 function fixture(t) {
   const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'sdp-r3215-matriu-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
@@ -75,4 +75,24 @@ test('missing/symlink sources are not measured, supplied output cannot pardon a 
 test('remote blockers remain unverified even if every local probe passes; failures are not hidden in evidence',t=>{
   const root=fixture(t),r=avaluaMatriu(root,{executa:args=>args.includes('tooling/gates/tractor-rls.mjs')?{status:1,stdout:'failure'}:good(args)});
   for(const id of ['D04','D05']) {const d=r.dimensions.find(x=>x.id===id);assert.equal(d.estatCodiLocal,'regressio_detectada');assert.ok(d.evidenciesVerificades.every(x=>x.id!=='rls'));assert.ok(d.bloquejosExternsLlei0.every(x=>x.estat==='no_verificat'));}
+});
+test('four evidence columns keep local success separate from consumers, devices and unmeasured probes',t=>{
+  const root=fixture(t),r=avaluaMatriu(root,{executa:good});
+  assert.equal(Object.keys(ETIQUETES_DIMENSIONS).length,15);
+  for(const d of r.dimensions) {
+    assert.equal(d.etiqueta,ETIQUETES_DIMENSIONS[d.id]);
+    assert.deepEqual(Object.keys(d.evidencia),['implementat','consumidorConnectat','provaLocal','serveiODispositiuObservat']);
+    assert.equal(d.evidencia.implementat.estat,'parcialment_verificat');
+    assert.equal(d.evidencia.consumidorConnectat.estat,'no_verificat');
+    assert.equal(d.evidencia.serveiODispositiuObservat.estat,'no_observat');
+    assert.equal(d.evidencia.serveiODispositiuObservat.connexioDirecta,false);
+    assert.equal(d.notaCodiLocal,null);
+  }
+  const noMesurat=evidenciaQuatreColumnes([{id:'x',estat:'no_mesurada',exit:null}]);
+  assert.equal(noMesurat.implementat.estat,'no_acreditat');
+  assert.equal(noMesurat.provaLocal.estat,'no_mesurat');
+  assert.equal(evidenciaQuatreColumnes([]).provaLocal.estat,'no_mesurat');
+  const fallida=evidenciaQuatreColumnes([{id:'x',estat:'fallida',exit:1},{id:'y',estat:'verificada',exit:0}]);
+  assert.equal(fallida.provaLocal.estat,'regressio_detectada');
+  assert.deepEqual(fallida.provaLocal.proves.map(p=>p.estat),['fallida','verificada']);
 });

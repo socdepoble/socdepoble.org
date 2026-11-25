@@ -324,7 +324,15 @@
     "tests/tractor-promesa-sintaxi.test.mjs",
     "tests/tractor-rls-search-path-local.test.mjs",
     "tests/verificadors-externs-cadena.test.mjs",
-    "tests/mutacio-durable-historic.test.mjs"
+    "tests/mutacio-durable-historic.test.mjs",
+    "tests/v1225-xat-documents-cerca-pglite.test.mjs",
+    "tests/v1225-calendari-agricola-pglite.test.mjs",
+    "tests/filtre-aprenentatge-node0.test.mjs",
+    "tests/v1225-sql-reconciliacio-pglite.test.mjs",
+    "tests/v1225-push-smoke.test.mjs",
+    "tests/enxufe-salut-http-v1225.test.mjs",
+    "tests/fn009-wp-build.test.mjs",
+    "tests/v1225-purga-lssi-claim-pglite.test.mjs"
   ],
   "files": [
     {
@@ -2867,6 +2875,46 @@
       "path": "tests/mutacio-durable-historic.test.mjs",
       "suite": "primary",
       "reason": "R32.90: evidència terminal històrica estricta, journal i negatives de mutació durable."
+    },
+    {
+      "path": "tests/v1225-xat-documents-cerca-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/v1225-calendari-agricola-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/filtre-aprenentatge-node0.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/v1225-sql-reconciliacio-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/v1225-push-smoke.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/enxufe-salut-http-v1225.test.mjs",
+      "suite": "primary",
+      "reason": "Onada v1.2.25: regressió funcional local del Carril 2; cap certificat de producció o dispositiu."
+    },
+    {
+      "path": "tests/fn009-wp-build.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.25 C10: regressió portable del protocol de la porta lenta FN0-009; cap build real ni certificat de producció en les unitàries."
+    },
+    {
+      "path": "tests/v1225-purga-lssi-claim-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.25 C1-05: reclamació LSSI de les dues cues, rebuts i guardes de la migració successora en PGlite local; sense prova de Storage HTTP."
     }
   ]
 }

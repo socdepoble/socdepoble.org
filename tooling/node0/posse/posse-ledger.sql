@@ -57,6 +57,10 @@ DO $guard$ BEGIN
 -- (c279b24d); el 7e3d0a4b i el 3a3fb97f d'abans deixen de valer.
 -- v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · conserva el 135 i afig el complet exacte 136 amb 20261124174000,
 -- NO aplicada. Cap altre intermedi.
+-- v1.2.25 · C1, C2 i C16 de Codex · conserva el 136 i afig el complet exacte 139 amb 20261125010000, 20261125013000 i
+-- 20261125020000, NO aplicades. Cap 137 ni 138 intermedi. Pin PROVISIONAL (D-PIN-POSSE): calculat sobre els bytes finals
+-- de K-C1-SQL, K-C16-RLS i SV-01 (el cos de private.xat_adjunt_protegit_lssi i la seua guarda a C1 i a C16); un canvi de
+-- bytes d'esmena (CDX-05 a CDX-13, C2-02…) obliga a recalcular el 139.
 -- POSSE_MIGRATION_PINS_BEGIN
 (76,'091d1e11b6e773c531cb88a5f79d1d932f96d19bc50fca837cbdd1dea30b0260'),
 (77,'9b021cd927914be1ab8223a976a4b2518a96a0d85f068999aeebd174969dc94e'),
@@ -80,7 +84,8 @@ DO $guard$ BEGIN
 (129,'04b61ce71c4579476fa4f550c0d38b788f159fc05ae01eeae96c60cc312e246a'),
 (131,'c279b24d3b3b9330fdf0cf4726a95593c2c172dab0d37f11b52b14955f347cbe'),
 (135,'39e372b6115858251c34e1093012b9281a9c0be2e5dc41184d878ef0aad9d14b'),
-(136,'28ebf52fee2073de63f15cb203a68deb6b0f0b87e59db34f3dca09f99475d2c3')
+(136,'28ebf52fee2073de63f15cb203a68deb6b0f0b87e59db34f3dca09f99475d2c3'),
+(139,'319f92aa32c1b9f0db18c097d377b8bf44a6ebcd347dd425369d1b43635ab80f')
 -- POSSE_MIGRATION_PINS_END
  ) expected(migrations,sha256)
  CROSS JOIN(SELECT count(*) migrations,encode(pg_catalog.sha256(convert_to(coalesce(string_agg(version||E'\t'||file||E'\t'||sha256,E'\n' ORDER BY version COLLATE "C"),''),'UTF8')),'hex') sha256 FROM node0.schema_migrations) actual

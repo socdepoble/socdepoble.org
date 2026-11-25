@@ -42,9 +42,9 @@ export default {
   dadesPersonals: 'salut',
   avisBeta: 'general',
   interruptors: [
-    { id: 'agitacio', titol: { ca: 'Agitació i conducta', es: 'Agitación y conducta', en: 'Agitation and behaviour', eu: 'Agitazioa eta jokabidea', gl: 'Axitación e conduta' } },
-    { id: 'medicacio', titol: { ca: 'Medicació', es: 'Medicación', en: 'Medication', eu: 'Medikazioa', gl: 'Medicación' } },
-    { id: 'deposicions', titol: { ca: 'Deposicions', es: 'Deposiciones', en: 'Bowel movements', eu: 'Kaka-egiteak', gl: 'Deposicións' } }
+    { id: 'agitacio', actiuPerDefecte: true, titol: { ca: 'Agitació i conducta', es: 'Agitación y conducta', en: 'Agitation and behaviour', eu: 'Agitazioa eta jokabidea', gl: 'Axitación e conduta' } },
+    { id: 'medicacio', actiuPerDefecte: true, titol: { ca: 'Medicació', es: 'Medicación', en: 'Medication', eu: 'Medikazioa', gl: 'Medicación' } },
+    { id: 'deposicions', actiuPerDefecte: true, titol: { ca: 'Deposicions', es: 'Deposiciones', en: 'Bowel movements', eu: 'Kaka-egiteak', gl: 'Deposicións' } }
   ],
   carrega: import.meta.env.VITE_SDP_APP_SALUT !== '0' ? () => import('./AppSalut.jsx') : null
 };

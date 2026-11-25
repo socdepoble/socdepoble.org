@@ -482,8 +482,27 @@ describe('un sol motor .sdpbackup', () => {
   it('el motor no importa Capacitor ni res de src/natiu/ (frontera nativa)', () => {
     const font = readFileSync(new URL('../copiaSeguretatPortatil.js', import.meta.url), 'utf8');
     const especificadors = [...font.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1] ?? m[2]);
-    expect(especificadors.sort()).toEqual(['../../utils/normalitzaUnicodeSegura.js', '../xatMultimedia.js', '../xifratXatCripto.js']);
+    expect(especificadors.sort()).toEqual(['../../utils/normalitzaUnicodeSegura.js', '../xatMultimedia.js', '../xifratXatCripto.js', './documents.js']);
     expect(especificadors.some((e) => new RegExp(['capa', 'citor'].join(''), 'i').test(e) || e.includes('natiu'))).toBe(false);
+    // El validador documental afig ZIP/PDF purs: la frontera també abraça
+    // les dependències transitives, sense executar cap mòdul per inspeccionar-lo.
+    const pendents = [new URL('../copiaSeguretatPortatil.js', import.meta.url)], vistos = new Set();
+    while (pendents.length) {
+      const modul = pendents.pop();
+      if (vistos.has(modul.href)) continue;
+      vistos.add(modul.href);
+      expect(vistos.size).toBeLessThan(64);
+      const text = readFileSync(modul, 'utf8');
+      for (const m of text.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]/g)) {
+        const spec = m[1] ?? m[2];
+        expect(spec.startsWith('.')).toBe(true);
+        const dependencia = new URL(spec, modul);
+        expect(dependencia.pathname.includes('/natiu/')).toBe(false);
+        expect(new RegExp(['capa', 'citor'].join(''), 'i').test(spec)).toBe(false);
+        pendents.push(dependencia);
+      }
+    }
+    expect(vistos.has(new URL('../documents.js', import.meta.url).href)).toBe(true);
   });
 
   it('QR: una oferta datada 24 hores en el futur no s’accepta (pendent latent del motor del kit)', async () => {

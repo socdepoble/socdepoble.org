@@ -1,0 +1,2121 @@
+{
+  "schema": "sdp.node0.filtre.baseline.v1",
+  "versio": "1.0.0",
+  "total": 234,
+  "aprovacio": "Pla v1.2.25 §6 · MarIA 2026-11-25 04:37 CET",
+  "origen": {
+    "cacheSha256": "649d27e81492c2562b31769e05514d54c57fc36bfaf2757923801a24a44da840",
+    "motorSha256": "a06d8ee3a58076208cd86efc53f0f97799c1ad41f0a5de9e6389fb3cf2d6e0c9",
+    "contextSha256": "33e732531d852eb528da25320188af9276475c6433407adcf47f647dda296bb5",
+    "reglesSha256": "ab63938ad7715681a6ac52b71d5ffb85a7401142c0958db4d5dbc8851fbfd80e"
+  },
+  "criteri": "Deute històric íntegre. Multiconjunt per regla, fitxer, codi, detall i hash del constructe; la línia es conserva però no eximix ni crea regressió per si sola.",
+  "troballes": [
+    {
+      "id": "FN0-002",
+      "fitxer": "src/app/RouteErrorBoundary.jsx",
+      "linia": 93,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "475d10e29a2706e9d15d661bfdcff2995f8164c9b9f387ed1c67bc8c88de347d",
+      "font_sha256": "543a55792f02fa9d50fbe40acf3aa945a32641ce13b6cffd5047aac300315910"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/app/RouteErrorBoundary.jsx",
+      "linia": 92,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "574939c975553a6013e3883a09790f97505ceed09f9fac66c0352644bd1199b8",
+      "font_sha256": "543a55792f02fa9d50fbe40acf3aa945a32641ce13b6cffd5047aac300315910"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/app/contexts/RouterContext.jsx",
+      "linia": 254,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "0856fab9f16bb521ac12c13828cc03001fd9237f1ebe9939506e9e8054602ce2",
+      "font_sha256": "a71ec8813e3565530c94d3f6fc3f7888691a51fe8f38485a6cc93d6daf8f34e4"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/app/guards/RequireAuth.jsx",
+      "linia": 21,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "940762e3d9ea0a92892d46d16e3dac31e175e4c17aa3b9ccb445b99dfb675bdc",
+      "font_sha256": "1465052f4de995751e5d36a13f54f8b28a914305267d3e161a85e4c772e56e39"
+    },
+    {
+      "id": "FN0-003",
+      "fitxer": "src/apps/genealogia/AppGenealogia.jsx",
+      "linia": 40,
+      "codi": "REDIRECCIO_AVIS",
+      "detall": "Redirecció de l’app cap a una pantalla d’avís; revisar entrada contextual",
+      "ancla_sha256": "d3c9bd1a8d1639b974a5772649fe3a8790d6ab43a856c57cf4dde2ef02807b66",
+      "font_sha256": "09937bb134153f15de8fd3a0e9959d10fc284126c7e2a72a4f251c826cd0870f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/apps/plataforma/BarraApp.jsx",
+      "linia": 55,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "570cacf4a39235b889be6f284e56585d11dd9c069ecf6ddfd052e9eb997bcf05",
+      "font_sha256": "4a5e8c80995376d3125a16b701be8bfa5d3dcefd638a6293b7a126b014f168b7"
+    },
+    {
+      "id": "FN0-003",
+      "fitxer": "src/apps/salut/AppSalut.jsx",
+      "linia": 41,
+      "codi": "REDIRECCIO_AVIS",
+      "detall": "Redirecció de l’app cap a una pantalla d’avís; revisar entrada contextual",
+      "ancla_sha256": "d3c9bd1a8d1639b974a5772649fe3a8790d6ab43a856c57cf4dde2ef02807b66",
+      "font_sha256": "e31148faaf8034808b4453d5f0704ce11ee742c71c5e579b37dc0a58dc02278c"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/ErrorBoundary.jsx",
+      "linia": 28,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "685624507701263b9348cacc6794a72456085553dccb5c94c84379e447fbd013",
+      "font_sha256": "6de70a0f1ef306cb19e009825b4c6f2d6035f4082b82cd2adc7075c2ecfbef14"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/PedraSeca/organismes/BarraResum.jsx",
+      "linia": 50,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "cf41e035fe36bddd6852f4e0716efd8d39fad15dbe61a826fbd4996bf8d6be58",
+      "font_sha256": "fa11f1cb766fe4dfd1bdc9eac772620a41b5cc195933d3fa9580881a3262ff0f"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/PedraSeca/organismes/Dialeg.jsx",
+      "linia": 241,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "2381f41f3c93e8e8fe66b86707f80f8b3256c9c152cc26cd5dd855be043eed4c",
+      "font_sha256": "3aea49cb22c1e42a2aa73a5961ecee21627160711c9524a0c82efd8edd682806"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/PedraSeca/organismes/TargetesColleccions.jsx",
+      "linia": 50,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "4e62b5573d6df532691145f224c3c8fa40fe62b007f1d98bfd61a23674537695",
+      "font_sha256": "37416ec3803f18fa8c26a2507f38386fb10e56b373793e3197d4c7767aae90ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/components/PedraSeca/organismes/TeclatNumeric.jsx",
+      "linia": 88,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "8a4a0145f9d055619c9ad868593055e072555e1cc587d70c18b41eeffc4cc6af",
+      "font_sha256": "253d1bc43d5ddcf775bcb452ed9c93e437eddc1e19f67e490fe1313de99a3282"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/components/PedraSeca/organismes/TeclatNumeric.jsx",
+      "linia": 90,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5967f635a72002d92363990001451cc185bd0a6562664511a0f90d156702197b",
+      "font_sha256": "253d1bc43d5ddcf775bcb452ed9c93e437eddc1e19f67e490fe1313de99a3282"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/PedraSeca/organismes/UniversalCard.jsx",
+      "linia": 316,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "faa7acc32d4393e724807b0ea054c24f62ea7c29e3d78c83fe756205a80d9c7e",
+      "font_sha256": "50fc6f098f152f9f360890ab4efdf05b7162e8135b7aef5dbe6d68b7728b15cc"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/components/PedraSeca/organismes/navegacio.jsx",
+      "linia": 14,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "0721ae78b06776de9bb392a4e9633a3d5e7502ac07aa1f4ce6c8ac0780f4b68b",
+      "font_sha256": "28fcc63589538837e9d8b4ce1bbe2d2003ec3a0a92503a4ed884577b05f603c5"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/components/PedraSeca/organismes/navegacio.jsx",
+      "linia": 45,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "22b6f3efc1ab2caf83ffc8cbbc967377bafc4627213e2936ca9b2aa0ffa61fa3",
+      "font_sha256": "28fcc63589538837e9d8b4ce1bbe2d2003ec3a0a92503a4ed884577b05f603c5"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/patrimoni/JocDonParlesCard.jsx",
+      "linia": 107,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "6a2a939d2a50ff3c4243ffcd26f5bed293703d21b885acfb636a2070f558268f",
+      "font_sha256": "3db514cb8ced46d59f8ae2d647faf9897438fd50fcda9d52d58160cbd2afa53b"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/universal/PageFrame.jsx",
+      "linia": 455,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "555c00f6e3428eae839b7f394ec69fdf72c6cf2f14b4710bd6dd711c2976eeef",
+      "font_sha256": "33a550b1fb01d643a04e31a1d43d2a20b00f029bb44a51a5b7edc59f6061208b"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/PageFrame.jsx",
+      "linia": 1293,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "7cb5082f7562cb2849a23e6f307e0c5f542738636a7ba7c42cb39dc606b0c10f",
+      "font_sha256": "33a550b1fb01d643a04e31a1d43d2a20b00f029bb44a51a5b7edc59f6061208b"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/PageFrame.jsx",
+      "linia": 1295,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "821ead5940fe3ee468ed357701760d6dbadd52881bc80f8116c79d563205b966",
+      "font_sha256": "33a550b1fb01d643a04e31a1d43d2a20b00f029bb44a51a5b7edc59f6061208b"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/PageFrame.jsx",
+      "linia": 1327,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "86e0c8feaad2975562b8b3ab73d02d399c6c811b6c21300e5ae51ebfbb353f3f",
+      "font_sha256": "33a550b1fb01d643a04e31a1d43d2a20b00f029bb44a51a5b7edc59f6061208b"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/PanellVisibilitatEnLinia.jsx",
+      "linia": 546,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "89e08692011bdc4143de3770f873611a5334007e6923d4fd24be9ec4516b04f8",
+      "font_sha256": "bc0dc88059d36631798b719c13dcbfe18ebc339ee707954b87ee269fcf84dd01"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/universal/classificacio/PaginaEmojis.jsx",
+      "linia": 107,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "43d289356afbf7c68da20c17ae991725927772374ef804dde6be3b164f513956",
+      "font_sha256": "5808d6fbf0eaf63999c0b925cb01dd5dfe68387d6b15c862810ef16afbd66de7"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/drets/CopyrightPage.jsx",
+      "linia": 245,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "25184384943426f091155518155cb6db1fca218ece284c7d7ca490a3357ce397",
+      "font_sha256": "2d51ebb27b967d45bf0f113e2b4033747e8981627a4eac2febeca325e20776d8"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/drets/CopyrightPage.jsx",
+      "linia": 254,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "6e291a9eb328d9963866cf4000280ec47a7f39d62cf6a3f9ad889132507dabd4",
+      "font_sha256": "2d51ebb27b967d45bf0f113e2b4033747e8981627a4eac2febeca325e20776d8"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/richText/extensions/targetes/CosAmbTargetes.jsx",
+      "linia": 77,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "be4210d81fd6b6a85386a51e2951088b9cca23ec92ab1483766d24fc0b3abaf7",
+      "font_sha256": "cb23908f1b0ec712c2f76b592824f4e71915429ea8d29730695c0fec29350662"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/components/universal/traduccio/TraduccioPagina.jsx",
+      "linia": 95,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "4f0a1cbfbd8d768de4a9c43071cd9f4c65a810da288cfb2d06ae01093488db91",
+      "font_sha256": "573720f8582b1c65bb7f01e8bea9cf83c7d22e7ff65521b36965f00485dc8601"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/universal/workspace/SlotErrorBoundary.jsx",
+      "linia": 66,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "df39451f5a91cb59452181b781387c8bd70c5621d18a8cfce7357c16f11d1803",
+      "font_sha256": "ecced3cac1cd9051c55fcd85aa359d50fafbc59144d5ba4ef7a88b3acebc5005"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/components/universal/workspace/SlotErrorBoundary.jsx",
+      "linia": 65,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "971626a73288f208f00f5a5313a7ccb54612441ae026e80809d2022ab8a4e6c1",
+      "font_sha256": "ecced3cac1cd9051c55fcd85aa359d50fafbc59144d5ba4ef7a88b3acebc5005"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/components/universal/workspace/UniversalWorkspace.jsx",
+      "linia": 577,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "688812f1df18fd4bd2ef7c0ce3b83ebda1ba53400afc38e87bfdcd0a61db7f86",
+      "font_sha256": "af54b3285838b148b5612c29c90204487579845a0dbbc7e6d9893e88e48ac83c"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/base.css",
+      "linia": 68,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "5c1ccbec3023a22ff304ba5544d86f01c64c73d0219a919b484de4d04aae0d1f",
+      "font_sha256": "d48e4a2dfee13e61487f44ebd2e755af9265cc66da7a09790a29dec1261d6d1f"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/base.css",
+      "linia": 229,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "bc49e2232a15b1188b8940bd2376465de12df3639d3edd421095f12473dc6e04",
+      "font_sha256": "d48e4a2dfee13e61487f44ebd2e755af9265cc66da7a09790a29dec1261d6d1f"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/base.css",
+      "linia": 235,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "ef471db21b57c9e24f7c7c0930a59615fedb045741d65173f0d202d76f637612",
+      "font_sha256": "d48e4a2dfee13e61487f44ebd2e755af9265cc66da7a09790a29dec1261d6d1f"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-admin-taxonomia.css",
+      "linia": 19,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "9a500653b52a13bfcfa4cfba0daa39fc8412a34b076f39caee7f27dfeab34040",
+      "font_sha256": "3263cbe58911a51d6a3f5ff45904373665e04de2d6c46c57fccab40122a619df"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-admin-taxonomia.css",
+      "linia": 51,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "7fffb6ae2923c7c240311689090a87255a8cd381db559c6da958070a793fac96",
+      "font_sha256": "3263cbe58911a51d6a3f5ff45904373665e04de2d6c46c57fccab40122a619df"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-admin-taxonomia.css",
+      "linia": 81,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "21b071e7634a96b27b00f5f6ff8d23834b86a9dc8cd1975a4f827c8f5fbf8f98",
+      "font_sha256": "3263cbe58911a51d6a3f5ff45904373665e04de2d6c46c57fccab40122a619df"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-atles-2d.css",
+      "linia": 41,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "3fec1d4b7abce9e35ff2995c7427154917df1381b52f92fe284fb014bf32d79f",
+      "font_sha256": "3cb5d05b7c4bb08ca9f662e3fca18d028eed704a15b125ece25be7d3b635b367"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-avisador.css",
+      "linia": 75,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "7130356d721e42553cc09a225555276383806df0722a71e1d9baff586b765417",
+      "font_sha256": "320d956b4b68c5ae5d3cbae95f9ee8c5892dd8932c7aedb593ec7c293d57bdc7"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-gestoria.css",
+      "linia": 13,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "e125d26a13cb4622cd724dad9b6599d9bb7b1de2226aef33f0ce12e43978c816",
+      "font_sha256": "fd6e8ef11da8afcc17e6aed473a64d37d31c1b7f518aa5cf0a2e2b9ddc494d24"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/diferit-herbari-fitxa.css",
+      "linia": 63,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "09ff84189a8c0e1a4427c13c4cc3a460a4559f0297ca5940e3601ff674cdc3c1",
+      "font_sha256": "2bc908e07243e056deb7ec724b49811fe5fbb4de1dd85f764004e9180f970856"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/modules.css",
+      "linia": 1296,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "a3aa27f335fec3ef6b757277c12f882855162a93d477f2355410e34308a13779",
+      "font_sha256": "650f9269f63b62ef2cb5257bc5c4792d97d80ff54ba07002e0806d933b1fa340"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/modules.css",
+      "linia": 7078,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "df137fc0b3e677e0e281da46c16453085c94861c5dd9005ce4149173b44c961d",
+      "font_sha256": "650f9269f63b62ef2cb5257bc5c4792d97d80ff54ba07002e0806d933b1fa340"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/modules.css",
+      "linia": 7527,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "40647919676a35a25131b01f3fc4724504d0db63c08c0e41f00e9e125ef0e8c0",
+      "font_sha256": "650f9269f63b62ef2cb5257bc5c4792d97d80ff54ba07002e0806d933b1fa340"
+    },
+    {
+      "id": "FN0-012",
+      "fitxer": "src/css/modules.css",
+      "linia": 10118,
+      "codi": "TITOL_CLEAR",
+      "detall": "clear desplaça el títol davall de la flotant",
+      "ancla_sha256": "b8af86947650782ead424a607ee0d27b851911cd4492343feb1973447adfa73b",
+      "font_sha256": "650f9269f63b62ef2cb5257bc5c4792d97d80ff54ba07002e0806d933b1fa340"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/modules.css",
+      "linia": 10827,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "602f6dce8f911362d0c19bf4271684e20412ec7ea4626169d5af1fe8c3fe92e0",
+      "font_sha256": "650f9269f63b62ef2cb5257bc5c4792d97d80ff54ba07002e0806d933b1fa340"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/taulers.css",
+      "linia": 30,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "d1a374ed0cb0f57faf60f65a845870e20cbd4f71a25d3e68c85276cc057fbc9e",
+      "font_sha256": "dce6282fccfbdcc98d9b29df642b902227922818b52f210a080b445e913b47d2"
+    },
+    {
+      "id": "FN0-004",
+      "fitxer": "src/css/wiki.css",
+      "linia": 3,
+      "codi": "H3_MARGE_ZERO",
+      "detall": "Regla amb separació inicial zero; comprovar el context i la cascada",
+      "ancla_sha256": "db3622e350064d5c2f95227289486ebaf424209276da8e6c23a08d64ed3f8036",
+      "font_sha256": "531bbc17edc6aae7e1baaab73e5f41f5d71302a3e260e10a4f89c04e3fb3ac20"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/data/patrimoni/laminesBotaniquesNode0.js",
+      "linia": 7,
+      "codi": "LEX-04",
+      "detall": "Lèxic prohibit pel mapa editorial canònic",
+      "ancla_sha256": "4b39c37ceea792756b58749f5fd5c5fd44f33e97c1da7c7dcd660fe30d3af56f",
+      "font_sha256": "a770e000234dd8dcb9f5ea303906696a78db88e3aedc094e689c04e65bb12fa0"
+    },
+    {
+      "id": "FN0-007",
+      "fitxer": "src/data/xat/copiaSeguretatPortatil.js",
+      "linia": 1762,
+      "codi": "PICKER_SENSE_ADAPTADOR",
+      "detall": "showSaveFilePicker sense import resolt de fontArxiusOpfs ni input+magatzem local; retindre certificació Safari",
+      "ancla_sha256": "88fedf4e12d3d07c7ba446975f741f432cdbdb429578e1b2255a8b5667aebc76",
+      "font_sha256": "8a0cd0acee554e0a4e7178a8158e05a8ada70086fdd79c312a585d3146f86780"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/natiu/CalActualitzar.jsx",
+      "linia": 30,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "8a738103d523fcae908b97599c6779bac13210ad6ed50bc62e4055ea3eef6b45",
+      "font_sha256": "67f99e4877d425922b83af0c5b3157b1112086d30aca3e65589c5c6b69ac8ad3"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/natiu/CalActualitzar.jsx",
+      "linia": 29,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "318a32bcbb58d20126bf6d133e1606623567a16be9986831069a9fb8fc0c4b56",
+      "font_sha256": "67f99e4877d425922b83af0c5b3157b1112086d30aca3e65589c5c6b69ac8ad3"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/pages/AvisadorPage.jsx",
+      "linia": 220,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "4a27fb15b79210e7e2bfc1fda56f8b2915af443cfd3de91014060a2e46d9cbad",
+      "font_sha256": "fc3825500b1a8893783bb02e6f585e1e4cea6bd14c53fe993e956d8297bba6c8"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/pages/AvisadorPage.jsx",
+      "linia": 245,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "ffe25ada9dadf6a515910f9847aac188539bf37fa1c6feedbf53b63946f69f59",
+      "font_sha256": "fc3825500b1a8893783bb02e6f585e1e4cea6bd14c53fe993e956d8297bba6c8"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/pages/AvisadorPage.jsx",
+      "linia": 354,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "6a6f75eb2f5d36902a640edee7d13204f2cccf7d426f9e04e164d64debcf9f89",
+      "font_sha256": "fc3825500b1a8893783bb02e6f585e1e4cea6bd14c53fe993e956d8297bba6c8"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/admin/AdminSection.jsx",
+      "linia": 326,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "0aa7d7631ac82427ca01a62f12b67c2b6b715a36f3cd84dcfdbeb509869d0164",
+      "font_sha256": "9f289b902641c8e0810619918b6d1f5f8e9d794b8b2b7113d43f11e855708036"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/admin/AdminSection.jsx",
+      "linia": 377,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "9b9a00afb539205bf30e844b84de7a392bad51ed4dabe128571c472dc3c0cba3",
+      "font_sha256": "9f289b902641c8e0810619918b6d1f5f8e9d794b8b2b7113d43f11e855708036"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/control/FitxaSnippet.jsx",
+      "linia": 120,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "306eb4de2ea4b2335502092eec2dc68a3737782080e1afd42b576378941fa706",
+      "font_sha256": "370c526d5e7afe5bcbe664695359f6b6c4a791f95e4ce91114e692fd7f0af963"
+    },
+    {
+      "id": "FN0-007",
+      "fitxer": "src/sections/control/ModeRural.jsx",
+      "linia": 228,
+      "codi": "PICKER_SENSE_ADAPTADOR",
+      "detall": "showDirectoryPicker sense import resolt de fontArxiusOpfs ni input+magatzem local; retindre certificació Safari",
+      "ancla_sha256": "8155bd612af1c1ba8569fe58d7d12834dc72d0b0c8af763baa08fb39381b5ffc",
+      "font_sha256": "14366aba3e63888cadc5f6c8acac3724fb4e2ab998467b43b592fc26cdd9537c"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/detail/GuiaCanalsActualitzacio.jsx",
+      "linia": 91,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "b713c8e1b54aa3fbbae24238c445d1ab6da9d9b564f52739f2cecf05dc0cf84a",
+      "font_sha256": "3a5b445c3c6391d938737fb2e94f1289506a5eb00bf1924ec4e70813281d261f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/detail/detailSectionMeta.jsx",
+      "linia": 835,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "0ebc7eadb0c865205e30cb595be692c67de73820558a93abb52aac6bf512c6bd",
+      "font_sha256": "4913cceb1e9c918fd00314a54a937d6daa557b9e350f1f9f64f422fccf722355"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/dispositius/DevicesSection.jsx",
+      "linia": 62,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "527d5b1b64c281ee58aac8c4c497cadd6c70ff02ec08b07758398e80623e2dd2",
+      "font_sha256": "56562c8d00a9d149d5244ca091f95373fae0e4360af4fa19a90178d003530bfd"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/sections/disseny/cataleg/AssignacioEmoji.jsx",
+      "linia": 224,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "d39c0277a7e230477081f81107b35526fb33e67e7ebb725825f9a8239c19033b",
+      "font_sha256": "08b7bc924fc967a9942b03fd024535e12be17c392f987df825ec8e3488c86b03"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/AssignacioEmoji.jsx",
+      "linia": 247,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c23c658b49c37411215477ae100823b07b1073ddc7e9b71a773a3be0ad78a369",
+      "font_sha256": "08b7bc924fc967a9942b03fd024535e12be17c392f987df825ec8e3488c86b03"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAcordio.jsx",
+      "linia": 11,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "66efd0d943a64d63f2915961ae3cf9d74fe30c5285a79cfe772709b3d204d0e0",
+      "font_sha256": "0394655ff844adf6fa64f986725e94fc1dab492235464632c0f778c3f728d628"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAcordio.jsx",
+      "linia": 12,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b0269ccfdd6bdd93d0acab371931724d282a49964eac08bc76afc784535a017e",
+      "font_sha256": "0394655ff844adf6fa64f986725e94fc1dab492235464632c0f778c3f728d628"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAfegitRapid.jsx",
+      "linia": 30,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5b7448832b84ae52b23e736addea82b7f92a7769840d484119cd4fa791fb25fc",
+      "font_sha256": "0c27ea3c8f9a796efee125832f668c1b8f6501b67a42382cd9d68a92e8537449"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dMotorEstudis.jsx",
+      "linia": 151,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5ad360b5faffc802675e4abc9e2fed403ec1128677266836453de9bbde68f22b",
+      "font_sha256": "b59c9f220d6eef6ff68febaaeff83295df813ad94da78155d1182d46391e7903"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dPobleVirtual.jsx",
+      "linia": 112,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "2bfd46a3a402a00a6dba866dd42a3c47233d16df5bb3dececa812d0799d10d9f",
+      "font_sha256": "822a78642daa605b91fba1cb6613c951e89b06b162a4f2a60ce4043c8dc2ccec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dPobleVirtual.jsx",
+      "linia": 207,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "1a0679c0078085310b1e2cc6a792e5a0ae3571a852ba95cc60965f707b33634b",
+      "font_sha256": "822a78642daa605b91fba1cb6613c951e89b06b162a4f2a60ce4043c8dc2ccec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dPresentacio.jsx",
+      "linia": 69,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "ae36cdc4fa25e5b81aec4d31c32a2d677496e4b38a04b20253b4ad83c858594f",
+      "font_sha256": "979c5787e70003b8a27508914fd15d2529b526587034577ee8ddbf47251cb850"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dPresentacio.jsx",
+      "linia": 87,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c2e02263f8b862901df570c616c1124b4ad30556bf5aff964acc294a425be737",
+      "font_sha256": "979c5787e70003b8a27508914fd15d2529b526587034577ee8ddbf47251cb850"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenAtles2dXarxesMon.jsx",
+      "linia": 188,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "03a320e71304b68910865f6237c95287b0b5a5e2fc7fa261e159905c26fd3d24",
+      "font_sha256": "f1c9f056aa45f78daa3da5dd554a5cba240b662bcb6d64f4d20ffb38a003c8b1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenBarraEines.jsx",
+      "linia": 97,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "741776d5f67c599bb9fb9f2d1a58e406f45763972cafdf7403502a4ee814eee9",
+      "font_sha256": "3a25e00566274d7412b24427b2ed9fab4bce83d3d24215b1a296bbb996345d05"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCalendari.jsx",
+      "linia": 121,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "6236ec0b562e3568388f902a0bdd7b80d4261505456f3e2ec4b1a43e56901b0d",
+      "font_sha256": "3323e0961cb0a1701ebb40342b7fe9dacbe4df598b184b54015ee87f94fbbadf"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCamp.jsx",
+      "linia": 20,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c62c6cd8cdbf4242c47e44c224b87acb02f913b1022d4c0f0ba8016a1b581a31",
+      "font_sha256": "0e2bd2964da6f6e4ac54e3a3b40eb4245977662de76125ce5df4f98be182d9b7"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCamp.jsx",
+      "linia": 23,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "cfcfdcd900feae045ef18d5e84825ff6ad56d38341d06486557fe1a40efd3736",
+      "font_sha256": "0e2bd2964da6f6e4ac54e3a3b40eb4245977662de76125ce5df4f98be182d9b7"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCercaFiltres.jsx",
+      "linia": 53,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "314e93a601871510a0ef6d7b6b3f5ef6c73dffb3b76048135abff0c51cff80ad",
+      "font_sha256": "e83f1c25ef0dea59a3ca774e10add7ab2600fd15cd4578b4581c6b5435709084"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCercaFiltres.jsx",
+      "linia": 54,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "38a6cd706de728ba368c36861ca8f198d4f1a6a531d3bd059d08299204923c8f",
+      "font_sha256": "e83f1c25ef0dea59a3ca774e10add7ab2600fd15cd4578b4581c6b5435709084"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenCercaFiltres.jsx",
+      "linia": 89,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "d15d46f07509d6b3a2c50db816a36fc5510210d805d42719202002fb0aa33945",
+      "font_sha256": "e83f1c25ef0dea59a3ca774e10add7ab2600fd15cd4578b4581c6b5435709084"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenComposicio.jsx",
+      "linia": 48,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "438bd4c223f79884560d699fea3eae1a35a77753e36297d224e86376e3fc3728",
+      "font_sha256": "7ddb44605f29d2d40cf8e393e2d87ffbe860225dfe2d8e13bba5b354474ab69c"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenContracte.jsx",
+      "linia": 93,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "1c5c56b913646b2fe52f61d7916708ddcdc275a0ee6d07582bff4e1f57f98317",
+      "font_sha256": "c7116f35de06369e89bd7be6b4595115da6a505dd24090f4269129c89d29bbe9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 560,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "246fbe2fb9fa0a0c97574dd12093084b0b8866189ffb847ba3209a712871e29f",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 561,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "9bc3c56bbf70c50fd12b50f1396d04608903ceed7f63d1e932ec4e9dc58b9b33",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 562,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "292c2929b8e95809a57a32aa451067b307314a162c266688e4d5a026369efa29",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 563,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "4fc24944fb7c792c33235c6f6f0516277911e4b96fe8ad5a0a5c04a3a3965f5f",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 564,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "1f3162eff6b6dee6fecb3900e485e75fa57f2cc64b2d3fdda3a852561f66f45a",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 565,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "ffa1e5fc7fc0ecc057a5358961b8a70d23d4fd7e7d495f85396b51d23c9db1b3",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 566,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "2a671ecd3236f1aad8d2a7012360469b30952c0600e881177ac763063834e4e7",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 567,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "360d294aa404390d605a710699a9a07d94d4b794f0be93547f22ae2b53098e76",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx",
+      "linia": 568,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "faa49df21b63f916d01a172b884a1f69667f781e0a59d91c05b5cdcf9d7935a8",
+      "font_sha256": "88659456327706a9f5b8939d41daac8842733998afb01ab99399b0d0b901ced1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenEmojisXL.jsx",
+      "linia": 91,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "cd5ae5eee25288912ce8d62b8157002509747776fd68c596202daaa2651bc23d",
+      "font_sha256": "7cb8de28ab094a74dd23b00fa418e61983c106c55b87bbe71ff135b4fa24406d"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx",
+      "linia": 249,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5d69f0d409720ef9039b18bc8d036ea14bc30d45c7d215e4424339f42afd3c2f",
+      "font_sha256": "55ca054250375022b478a0e500e264399afac0d99c8ef20eaa1602327912d982"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx",
+      "linia": 275,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "8e6dd2d6613fec0a00b756f1ad5ecb2bc85836e3adedb59bb5dc0439d5f83663",
+      "font_sha256": "55ca054250375022b478a0e500e264399afac0d99c8ef20eaa1602327912d982"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx",
+      "linia": 301,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "8558be69230fa8fa0ff38144ab37c8ae69eeac7790665f523954a61acf2ce119",
+      "font_sha256": "55ca054250375022b478a0e500e264399afac0d99c8ef20eaa1602327912d982"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx",
+      "linia": 347,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b8a3647aca70e36b30bf5640d187624820a99159552295c30e2016ca04c48254",
+      "font_sha256": "55ca054250375022b478a0e500e264399afac0d99c8ef20eaa1602327912d982"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIconesAlergens.jsx",
+      "linia": 51,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "da9d7a43fb409d77285045203b0ea51e4e06a94be1dd4498e51dc23a38332615",
+      "font_sha256": "c4bb31d618ad2ecdecd9566a648df6c116da7fee6c5816d01cb81aaec76a0a13"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIconesAlergens.jsx",
+      "linia": 60,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c0e91e626dcca14cc887c41387db3d3d10ab7a5e717b3524df45a11cc5520b97",
+      "font_sha256": "c4bb31d618ad2ecdecd9566a648df6c116da7fee6c5816d01cb81aaec76a0a13"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIdentitat.jsx",
+      "linia": 63,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c7d76db0b68f141211b74f09bbefd0db4e6d43474ec2e99f42206bf0459f189f",
+      "font_sha256": "f2826c8d100fa01ee23d1e71a540bf869813577ef00ee4811fbe50f1a45cbd54"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIndicador.jsx",
+      "linia": 28,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "0dc124cf9021a540b40d998b880cd54145f7bb71766a2d30142ca9a816a19eaa",
+      "font_sha256": "a4d0092221a5a9fae531bf730bc129e133e6229627d1a4b4fc003e6f0c9d828a"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIndicador.jsx",
+      "linia": 29,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "77a8956e725752b95ddb82ad55d4a7f725846faa9c1151057c566b7fb6e8d67a",
+      "font_sha256": "a4d0092221a5a9fae531bf730bc129e133e6229627d1a4b4fc003e6f0c9d828a"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenIndicador.jsx",
+      "linia": 30,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b53c370bee14504455f07828e58d2db397a3da3e45461e4e37236cd5f3911100",
+      "font_sha256": "a4d0092221a5a9fae531bf730bc129e133e6229627d1a4b4fc003e6f0c9d828a"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx",
+      "linia": 14,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b0f44a48befd7a0b09d24ac177fc6f88cb21b009bdb4c014df528d5e82380860",
+      "font_sha256": "74ac91563340f73039b03fcc837ae01ffacef524dfb000fd22b9f9652923b262"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx",
+      "linia": 26,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "85f74238132e8ff32595fcedd656c84925467055ef9ff023cc2331867dc708d2",
+      "font_sha256": "74ac91563340f73039b03fcc837ae01ffacef524dfb000fd22b9f9652923b262"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx",
+      "linia": 41,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "30c8474bc2b1446b89a1d0970a056f5e318fdfea5c4e9b8d27c0b14121d9ca45",
+      "font_sha256": "74ac91563340f73039b03fcc837ae01ffacef524dfb000fd22b9f9652923b262"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx",
+      "linia": 55,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "46fbd0cc7cc699413a12244aed75268e5275fa12730735a0d9ec43fd3b5e6e4a",
+      "font_sha256": "74ac91563340f73039b03fcc837ae01ffacef524dfb000fd22b9f9652923b262"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx",
+      "linia": 113,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "ab98be33e8e0dc74d5713ca5aed2fca4ce8b5f982de1c716a2a99317caf7ba8b",
+      "font_sha256": "e6ffb9f5f5df2f822c452b4e1fbdf544e77471fd7b81cb672578b7a21130026f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx",
+      "linia": 125,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "af8383d29d57dc513efd7d610643cde6ee1b1794fd1251149b4741de05d054ee",
+      "font_sha256": "e6ffb9f5f5df2f822c452b4e1fbdf544e77471fd7b81cb672578b7a21130026f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenRajola.jsx",
+      "linia": 43,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "f4fe5d6c8208ae5620da07ce0fe4eeeb13e03844f25d7bbb384c584b8111b5b8",
+      "font_sha256": "ac7233bc1b3298879d1f70ae5ed3585b408723eb6427dd66b5ac0d78fab1a9a1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenRajola.jsx",
+      "linia": 52,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "1f925dd16ba0e72c18f1335ac3b88e922ac231acfea0b2ae032a91b9cea63562",
+      "font_sha256": "ac7233bc1b3298879d1f70ae5ed3585b408723eb6427dd66b5ac0d78fab1a9a1"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenRespiracioBotons.jsx",
+      "linia": 19,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "577b21b524c19ae3b20a917a33f05c0424e3eae2563e589dd2bcaeec6c27dbd2",
+      "font_sha256": "b2f98b63d431429349743d54212e3fbc56957a5792539e393aa0cc99eaade4d6"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenRespiracioBotons.jsx",
+      "linia": 24,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "0d5d79243a8f2c41004f7b9597b43cf8399dc433f75281542be8650b56637432",
+      "font_sha256": "b2f98b63d431429349743d54212e3fbc56957a5792539e393aa0cc99eaade4d6"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenRespiracioBotons.jsx",
+      "linia": 25,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "fa158779a936d14c519d5af927cbbba28ff8b9c3b4b040ba43bda4f9bbd022df",
+      "font_sha256": "b2f98b63d431429349743d54212e3fbc56957a5792539e393aa0cc99eaade4d6"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenShell.jsx",
+      "linia": 139,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "59a15e6ed9b51bed411a8d374e4a8837b6bd693d905a508c9029c31ece4b2af7",
+      "font_sha256": "6020389ee3b1e69611b5a854147552d3896a835502ab3dc9fe81710e41155050"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenTasquesFitxers.jsx",
+      "linia": 52,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "fdc5b6d90037092044e5d14de20712548f426fbef7e0e46c60cce28f5d8e35b5",
+      "font_sha256": "5248af4a15cbeeae618f042752a44dfb097076a9e2316c3738e0fb00859f861b"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenTasquesFitxers.jsx",
+      "linia": 63,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5fabef4da1061b0492135dde80502bca8777a3e45c59b0530ddd8c049f12c9db",
+      "font_sha256": "5248af4a15cbeeae618f042752a44dfb097076a9e2316c3738e0fb00859f861b"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 176,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "d38e8b2e19dbda9b52c38fb0042674294e7e5eecad67c4dc5a36e248baf06843",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 199,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "698a37436b6c6032e62ea49096b4a7753b72734a6235dba96cff24687ee80c7c",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 210,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "51fb9a9cdbbbea5a18a3be93029207a5df48834d1fadb74882d11397de8f6209",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 221,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "3a5a3abd2d7674ef724ef4c06b6cd9cac5db8c7154787255b592f2f4a60e5af7",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 234,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "cc6d2712f28d15c04880c9e972231bb83f41d649a42ef3fc8644c19d2ef4e39f",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 249,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "938bd555c36eb3f3aae053364658e1d9d21df55c58fa3c04cbb8bb0a6fb5750f",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 282,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "f7dbe738169d936cac6fd3c1f8e5236aa24d97646844fddc2f2f6fa9107e5edf",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 320,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "1c1eb40e848484c5ed1450cf73b04d95d12469730db0ccf51601f3dae58b38c1",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 323,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "10ce18f718e60738a24f7192a06bcbaf92e8ad99d770c5630193ecf92431d89a",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 342,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "10c14a2557798648c156c264e1a5bc2e5d87bc73bf1e5c5ef9c1cb31b5eb3f92",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 349,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "15163065354abd0906bbe3e172c7cd4762c9f6017c5ff476c3cc8bb644b9606b",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 360,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "7900f974e4f4cc94b31b65736c0f2a251db9e165413712b9b2a01c1e35c0d3c0",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 382,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "c0f272ed736b58b12436239bed7a696d6fb6945d6ac27d3038f0cadbea3ceeba",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx",
+      "linia": 414,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "6874155c80f2e718fb0f19fe0f430a4ef49447a78025b8a76fdd10f3eef3cdeb",
+      "font_sha256": "49dcbc96f8f2d7befc1deb62a2d2fc294b250bad56f7232659a42b87943b28b4"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalTPV.jsx",
+      "linia": 163,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "246b3bf7241f3e672ed7900be8c4e51acf368a202e8e75660dba8729f5826017",
+      "font_sha256": "5de2e58ef7b8ffc73caccabe63a6895d815b6ddbc8038632d5241f9f2c2c5731"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUniversalTPV.jsx",
+      "linia": 311,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "9234bcb7be974d0a7bc7562a89e2e955d1f58a26cb9d93c0fef052ecc9b16c11",
+      "font_sha256": "5de2e58ef7b8ffc73caccabe63a6895d815b6ddbc8038632d5241f9f2c2c5731"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUtilitats.jsx",
+      "linia": 58,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "d85ba387921ca1c64e859a6f12380fdf2143de7ecdecec66913039f0c17a6150",
+      "font_sha256": "94f0db4b080e7797862d4e95a3339d4612cddae15377b6d0887d37d2e8180a42"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUtilitats.jsx",
+      "linia": 61,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "d94599409f9760bef3c8e81a5b5a04ca92c1a9595b54d0a65e2a219b82ed0eaa",
+      "font_sha256": "94f0db4b080e7797862d4e95a3339d4612cddae15377b6d0887d37d2e8180a42"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenUtilitats.jsx",
+      "linia": 62,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal placeholder pendent de diccionari de cinc llengües",
+      "ancla_sha256": "5c4bc1c72a9ea4521a9b7fcf1865e1d8f1bf8d4d8c34de94d7e9e5f80445c825",
+      "font_sha256": "94f0db4b080e7797862d4e95a3339d4612cddae15377b6d0887d37d2e8180a42"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 181,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "2a96c5a03a0148c49078a4bba88ae8aa0dc88c747f4785d076a094cbea1cb5a4",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 212,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "85890b88d75cd56326eb0e20b65c85cc94abc902fb59edb5e819b9bc98fdba49",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 383,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "a278a35fc7dd37345923badfa86d37c3d1e92c2a7ef2ff911b1852c6f6439e91",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 386,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "902991e892b03fb4f2cfc0a450a1451eb461a2d07a1083cac15584ddf10eac60",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 527,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "496804df907ebbae19966b6dc1df9ad33b84fe5e0a220323f63023afb4cd229c",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 535,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "085a8cc39317e9770e7fb16649b2fcded7ac405cce580f22533e3e0d0f81547f",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 605,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "86ff829a7db64beccf63c8e3bed00fa5b80d4503c6582b5ec7a8620d398b28bd",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 606,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "8f5ca60d4e875e487f06afb9aeef36a7d0458259e799a78d4c74db05c8357850",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 611,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "e9200513f91190e335af8f5d709f148eada9265a4adc9668e08124ab0dcbba05",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 615,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "114badfd0cb0e68cbeac550760d27c580f91d4a3692affd6b05bcf052ea21757",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 697,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "58a75887db1e35453e23304cbe86d2dfdd07c9293037e02638927841d44e4899",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 710,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b6f2958c67bbf6bc54b59e2c10ed8d68b2edf2be527bfb09bc9fe8f24470f760",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      "linia": 714,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "24d0d6d4d37a52b2d45783d99445fa40b099f1577a05efd459a70d95739f9088",
+      "font_sha256": "d882e9b16720f61cace951fd1758ff69f942593fb69d00b0326d1915a19f22b9"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatLlista.jsx",
+      "linia": 218,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "70dcbb62b49793314e448dcb2e49d32e4bf8061b7ed48e1eb28ea909e96efdbb",
+      "font_sha256": "c85c17ace0a42a6d41a48b89af3e6ff4d4b566c00eb68d980a7e18472bf588ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatLlista.jsx",
+      "linia": 226,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "fdde008e19d5480b610c09180caed3687ee36545b0717b9af339c29a009875a1",
+      "font_sha256": "c85c17ace0a42a6d41a48b89af3e6ff4d4b566c00eb68d980a7e18472bf588ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatLlista.jsx",
+      "linia": 231,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "e70f3e87fc911e45df5b68a61b4bcf76b9c4062fdfebe4c1c2c7d50d5d759455",
+      "font_sha256": "c85c17ace0a42a6d41a48b89af3e6ff4d4b566c00eb68d980a7e18472bf588ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatLlista.jsx",
+      "linia": 240,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "a55d62cf06da1bcb1fcb73be23e8326ffa8f8da0c7f52c836bab1bf1995b4f79",
+      "font_sha256": "c85c17ace0a42a6d41a48b89af3e6ff4d4b566c00eb68d980a7e18472bf588ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatLlista.jsx",
+      "linia": 249,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "9f3f628a21a494144705bbe03e7bbf1a67991a939f528ab0ec734481a82f3713",
+      "font_sha256": "c85c17ace0a42a6d41a48b89af3e6ff4d4b566c00eb68d980a7e18472bf588ec"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/disseny/cataleg/detalls/EspecimenXatNovaConversa.jsx",
+      "linia": 82,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "b6a773bab889b9d4c62de04777e48b9fe4543ee8cba28ee75aaf235a0c3d6554",
+      "font_sha256": "79d51124bfe0967f214b5914f4b415ce9f27cd541577fa1f5cf1aa9a6179c53e"
+    },
+    {
+      "id": "FN0-007",
+      "fitxer": "src/sections/gestoria/font/fontNavegador.js",
+      "linia": 106,
+      "codi": "PICKER_SENSE_ADAPTADOR",
+      "detall": "showDirectoryPicker sense import resolt de fontArxiusOpfs ni input+magatzem local; retindre certificació Safari",
+      "ancla_sha256": "c891cb12645fb02b0fba3a39f18a11ded1e3ea1c49a86325be09a1b8b09f9e26",
+      "font_sha256": "cfee5c7b5441ff327121cc956fa1c87b1fd08321b51ac89f7a2ca1aafae32527"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/gestoria/nucli/dates.js",
+      "linia": 19,
+      "codi": "LLENGUA_ABSENT",
+      "detall": "Mapa multilingüe sense eu, gl",
+      "ancla_sha256": "2911ee290078538376d45416b4b861970bc843a674becf75ddb56e559bc34569",
+      "font_sha256": "a30f192e78df080a9b214a0b3b413322c6de226f2626d7cb51b2df921a7b6515"
+    },
+    {
+      "id": "FN0-007",
+      "fitxer": "src/sections/multimedia/motorMultimediaLocal.js",
+      "linia": 675,
+      "codi": "PICKER_SENSE_ADAPTADOR",
+      "detall": "showDirectoryPicker sense import resolt de fontArxiusOpfs ni input+magatzem local; retindre certificació Safari",
+      "ancla_sha256": "f946a163fef8b5a3f0342f281b509e79b947d1737e91df3fd7785d16495d0ca8",
+      "font_sha256": "269c2e4e5b93478806ddc9e3c5c237012de78a0af046ed43d124b3b427d2e047"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/notes/ImportacioPaginaWpNotes.jsx",
+      "linia": 86,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "4ddcf26b67be7c403e39eec3ca2870fa79cf640c17349a574d838132ce02b569",
+      "font_sha256": "707a2b2e742b4872dc3614fe900336764a95b75c73a1740337d07601e08c6a2c"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/patrimoni/FitxaArbreMonumental.jsx",
+      "linia": 257,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "3e8914ef8fecbe2a62927d2733012eb03ed88b8cbba603b095d926b2a138869c",
+      "font_sha256": "d8cb05ae1822ce203234b62d2cadf10d082224b96943823fb80ab821a1a198ee"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/pobles/CreditsDeViquipedia.jsx",
+      "linia": 32,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "e4043721d6bf28bf83e47345028808b30b14c5576f87308c0ed3bed5957a99e0",
+      "font_sha256": "c0c254646a9ff74a1d3c2e80321c2e73f42ad1c250d16f4138f273dddedf4c74"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/pobles/DetallPoble.jsx",
+      "linia": 89,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "14ff37244d06f1786410850ebd5c12929a376b36f9d59264a0bc868ee6717283",
+      "font_sha256": "660903eb9f9d09b479afda7efe10148780c54df5709837aaf8efea25faeec590"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/pobles/DetallPoble.jsx",
+      "linia": 89,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "94127793622ace2bdbe659832942ca223fd09e1bb1310ac533757daa325d2f82",
+      "font_sha256": "660903eb9f9d09b479afda7efe10148780c54df5709837aaf8efea25faeec590"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/profile/ConnexionsPubliques.jsx",
+      "linia": 94,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "31aea1bcf3c5fc644dac9851059cb72f7e63734444b0da254acaed502973d159",
+      "font_sha256": "a6b0eb82ef7419ba0be4be0c83066f923094edb0677d71d918781de08c50d9b7"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/profile/ConnexionsPubliques.jsx",
+      "linia": 172,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "31aea1bcf3c5fc644dac9851059cb72f7e63734444b0da254acaed502973d159",
+      "font_sha256": "a6b0eb82ef7419ba0be4be0c83066f923094edb0677d71d918781de08c50d9b7"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/profile/DetallEspai.jsx",
+      "linia": 235,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "12aafe4cc0d22be42fe3fd350bc6836bddf580dbc05c46279e15dcb32277d11f",
+      "font_sha256": "10af4caed97b66f7c8bf9a0be7ce51bbb92a80b08e802b8009d326573afe756f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/profile/DetallEspai.jsx",
+      "linia": 265,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "92a2145ba3927735cc592bd27e0b06844b5731987c7f9e8271155168ca72a46c",
+      "font_sha256": "10af4caed97b66f7c8bf9a0be7ce51bbb92a80b08e802b8009d326573afe756f"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/profile/DetallMultimedia.jsx",
+      "linia": 1001,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal title pendent de diccionari de cinc llengües",
+      "ancla_sha256": "d19452a11d7027d178773433b9a4c4ae80a33004f5f594e1a8182c1117bfa584",
+      "font_sha256": "cf0b1768744967f21d51044cb21f9d8226d8db9f148c623adcb174dbdc7107c8"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/profile/PerfilPublicSection.jsx",
+      "linia": 927,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "dbd638da3e0ab43bb829294d4b549ae277711d3e23131c4d8c70325105807ede",
+      "font_sha256": "168f352417be61a7309cc490f1503003e4e35ad08844f1c6c2cf2b8eded460c4"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/profile/PublicacionsDeLaFitxa.jsx",
+      "linia": 117,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "f08661af1dee2be9ffbab1ef3bc50f0630e3397afbcb1320d6914754362d7d42",
+      "font_sha256": "f556a454190e55792310ee72f1edd43270df483f0ce7af72e54fe5273546a564"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/profile/Seguidors.jsx",
+      "linia": 145,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "f112f1af18d457c452d80dbbdcae11f13ad6e3fc309720e68e04d9926ca30772",
+      "font_sha256": "609401c186e30db1dc38c1b8207d4068238f5d3396979a914504b30a4c0bdf47"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/taxonomia/i18nJocCadaCosa.js",
+      "linia": 6,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "6269cf70af5437cf4556a6acaf864ec60283fb7df236e8a14ef95ab5e43a2e1c",
+      "font_sha256": "3effd569e6b6c0b49e7a00b7ee43a51a4a7233060a26dab646caf1817d598d3e"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/text/AparadorFediversity.jsx",
+      "linia": 51,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "e2cb2b1091d911c0f6620ae58fd23ea66a17b5f7010d4f621193aae3df5f9878",
+      "font_sha256": "0fd8e7c86865a507d88825f4dacc2a3c082810c1e1ed68e9af7f175008d30d57"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/text/CroniquesFites261104.jsx",
+      "linia": 100,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "def3fbb24eb7d42daf3b5229db30794b602ae8fb6c0172fe003c3ad6e6b1690a",
+      "font_sha256": "f4f10bd9ce86786f3b53fdf05f78ff32eafc10333be737380e190e49d0796074"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/text/pageContent.patrimoniR9.js",
+      "linia": 17,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "3ab7f508a13e097d93a429843d8bf7dafe8450b59fdd656af6588a60d3affeff",
+      "font_sha256": "fa32dc885754c1d8dc4c2fefed615a6cb5c9cb123acfa94d6faa03bf2206f194"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/text/pageContent.patrimoniR9.js",
+      "linia": 57,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "fde7985e7f42d56c208dab10c622430b199293c97478f032e41e678340a5cdd3",
+      "font_sha256": "fa32dc885754c1d8dc4c2fefed615a6cb5c9cb123acfa94d6faa03bf2206f194"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/text/pageContent.patrimoniR9.js",
+      "linia": 111,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "3bc0deaaa35f2913d4c7fca31ae33456d3847379b8a5ab092c96e3f1146b1c3c",
+      "font_sha256": "fa32dc885754c1d8dc4c2fefed615a6cb5c9cb123acfa94d6faa03bf2206f194"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/text/pageContent.r10.js",
+      "linia": 82,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "74f158e7a233a05d7be30656c836d535afa1d5d7d515587f51ef43456126a272",
+      "font_sha256": "81625f5de7a4e69269e4df165a947e3af80801f0573384065c542da797cbd5e0"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/tractors/PanellSentinelles.jsx",
+      "linia": 138,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "812daf547e6d25c589e7f7ce9c8c875c35f17231848045a9109debb662b6f06d",
+      "font_sha256": "7ac787d7d7e27127f1a4637dc1139248cdb6402c3b7b49939f58782493b98208"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/tractors/PanellSentinelles.jsx",
+      "linia": 236,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "9ff7ced6dcd0c5f9ec46a93fc0c61d173b4d293bd4f1b83adbcccee3254fc7a1",
+      "font_sha256": "7ac787d7d7e27127f1a4637dc1139248cdb6402c3b7b49939f58782493b98208"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/tractors/PanellTractors.jsx",
+      "linia": 327,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "e6a3d847cbc54312d1ca97fe4c59f14c6de4c0432528c7c12c21c3f6fa3423e5",
+      "font_sha256": "c26b1095621d01808aa1c0a84b531eca9cd0fe8fd352d05ae5d1712c6c8942b5"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/tractors/PanellTractors.jsx",
+      "linia": 401,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "86edcb63360d0785bc060f63edc9d869232e7118d2258dea6b7c760319b035f8",
+      "font_sha256": "c26b1095621d01808aa1c0a84b531eca9cd0fe8fd352d05ae5d1712c6c8942b5"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "linia": 395,
+      "codi": "ATRIBUT_MONOLINGUE",
+      "detall": "Atribut literal aria-label pendent de diccionari de cinc llengües",
+      "ancla_sha256": "bebd4e684d2c7620c56a3023e72315d1ddb63db7f97f0eb6d667dd734233b6dd",
+      "font_sha256": "d74e7d1f3f761c6a2525d4372425001a6bb53ff76721796c70a260505b8b48ef"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/sections/xat/XatControlSection.jsx",
+      "linia": 261,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "5be2b03ab1967b256f9345881684c3cf71c79dc31cf62fab337c644edb021918",
+      "font_sha256": "aae437062acbe5f73595eafb0c3e2945f213aa8637f791de5d92911f4ec80a3a"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/sections/xat/components/AcollidaForasterXat.jsx",
+      "linia": 67,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "3013e6c89223007e04ead503faf089e9ab41238f07c6ccfa17f00d2a275d5a94",
+      "font_sha256": "f9a68631d65078ab766e8002548cff339902d99a882f7ef073b8c7ef9a886cbe"
+    },
+    {
+      "id": "FN0-001",
+      "fitxer": "src/sections/xat/components/BotoInformaDUnError.jsx",
+      "linia": 43,
+      "codi": "ENLLAC_NO_PROTEGIT",
+      "detall": "Destinació externa o calculada sense target/rel literals protegits (o amb spread que els pot substituir)",
+      "ancla_sha256": "061d44018c182bb2399d7a9fa776e450f2f21c0a23d256056caf6de5a673d135",
+      "font_sha256": "958caffc0d92719400bca38ec5234b855312df8ba02d9c9a4135d2fcb64e28bc"
+    },
+    {
+      "id": "FN0-002",
+      "fitxer": "src/sections/xat/components/FullAjustos.jsx",
+      "linia": 491,
+      "codi": "H2_SENSE_ENTRADETA",
+      "detall": "h2 sense germans immediats .lead i h3",
+      "ancla_sha256": "19d66fe91d264773c9d3092c19bdfba80a11969d7b448908fe3256daa08c130e",
+      "font_sha256": "f2674fff6ae4567356828efdfd9c2c9f1ab83fdd422df2e2f399a1e03529573a"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/xat/components/FullAjustos.jsx",
+      "linia": 720,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "d7f6d3661e7e5b959873972e6ca302913e73be4f7afdb581e600a3f0eacefc63",
+      "font_sha256": "f2674fff6ae4567356828efdfd9c2c9f1ab83fdd422df2e2f399a1e03529573a"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/xat/components/VistaEnConstruccio.jsx",
+      "linia": 150,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "a4979fe3feccd18f3ee2ad15c2a95bd46130779235759d8ab3befbd0a666da07",
+      "font_sha256": "7daad7c2499799d2b895a63d4244cab5b279e98dfa1ee9faaa48396ccf7ae67a"
+    },
+    {
+      "id": "FN0-005",
+      "fitxer": "src/sections/xat/components/VistaMultimedia.jsx",
+      "linia": 200,
+      "codi": "AVIS_HTML_CRU",
+      "detall": "Contenidor d’avís o buit amb encapçalament i paràgraf manuals",
+      "ancla_sha256": "610c9776e609744d93aadbcc47674bb65a7b72f6319b15d7c0f58e2f4de0b4d2",
+      "font_sha256": "b64eb1a7d5f19ab95a318d534bdbbab87a6d45adb5682f5525c558baadb4729f"
+    },
+    {
+      "id": "FN0-006",
+      "fitxer": "src/sections/xat/components/vistaEnConstruccioModel.js",
+      "linia": 7,
+      "codi": "DESTACATS_TANCATS",
+      "detall": "Destacats continua en construcció amb el port d’accions declarat",
+      "ancla_sha256": "0edf307bd064bca0077ad28737695fd0b6cc24b357a12bf25cc019f5d54ce718",
+      "font_sha256": "76930fe95745f8a1387a2f7f2026d4dd2051211055aa88e3fd66f344707f8dfc"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2609261200_publicacions_autoria.sql",
+      "linia": 47,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "6048ebecdcef94e69d7bfe342daaf1260e756e00d85ff2cbc34e44d32cda50d3",
+      "font_sha256": "51c6668101e5b1120a24a4aff5d1090549151ade2b4c5665bdfc93772de98cc9"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 173,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "56b6524e6db99134704e36e855e61e75de48e42c84eb6b85bef2c1ff24ebf3ce",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 183,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "d4a6f515e3e95d30bdba2cd56f5b22b46235f7b4da2ff829d32defe4240c5730",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 194,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "732147d5225156b725a2b5a2f1a03eb9b886aab63e1e7c8027a0991e7b5e49a0",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 296,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "f80ad54be8ede6ce7060a2edcf0f446529e78d60204daecbb2515a2f7faa6aa8",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 305,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "50506222b4790fad0c0052d908c616c3a40be7471f8e7b35cc03697a7a8779e6",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 319,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "39cfef7e9e4c4438e4847fa0a4291d959271723f3600198c0c408853c8879e6f",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 328,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "d6030c8e135f74cd8502712b90969f530208f9df710be74a58f9b7716455953a",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 342,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "675bb056aea07ef909fb95b41ea35259770d9674c9495b3fd18ff04011220faf",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 378,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "3ada322077f3091c489568a3e1fb545dfcee3bbcedff5df1db575fca5546bf03",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 413,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "d5fefd6d9e9e87a32beabcf2ef1fab2bffe986841d900c498cea0f11a09470a7",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 425,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "d3c641ba89fdea2f5e4b33a627a2d017bbf931039caa1ad0ffcb59feb572676e",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 434,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "52630bfdcfefc1dc8090e935ba6f38ecc3987a7d964adee7f10226437ddafc76",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 447,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "ed833fa636642eb4e09a159f9ab4faaebb18a3165e875132bef961360009936f",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 460,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "e75a6c1e2c6c814cee6b377c31b0621fb25efa557b6348c53267581ec4256caf",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 496,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "b993b9e693a9ae4cbe7e330d916e77cb56ff0c97e0a4e8913a4a470d697e6ef9",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 582,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "43228944734e2aca390070cf2de96f223d3fda9e79cef2be05cfc9fe37bd0804",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 626,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "295ce52bd2b8af284b9bb1cb5f53cd12409a89147886a7d4ddca0b5d1344eea4",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 651,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "d58a691a690f59ec69999fe9fe96211a3f45e1fd14c2d97e7034ec32483104f5",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 673,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "5479c60f35d47d3251de738bb0b6bf81da3d128c5e25197e6533a249421848cd",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 693,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "9682175abb3c0b4a5a40159722a4527befda408fd1c49f6c198209480a2aa1fd",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 736,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "8b0d6760b64cc51de94e041c5a5f76f34fe220e232039c6d8b5cc829297b0654",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 750,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "7fe5559de0db6d9fda62481f92d7e17b7f49e7925d91cabfcfe78cc8b9a89159",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 764,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "38cd18032eb77dec9965178ae2503837bc2413cf6758d8558284e3e377109a7e",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 849,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "7b9bdd30d6783c7d0fba11bebc57a7eaa3c2342bbfef4a2360977b6884603400",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 930,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "c3de79fa52105b5530bd277483871ec521f23b841431ddc7837b6e7db9a75792",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2610311800_e2ee_fases_1b_1c_rpcs_i_adjunts.sql",
+      "linia": 999,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "7e29cd405264abc51759849a64919ad3431665447426213b10505ecf766c2eb9",
+      "font_sha256": "bdfb4bca6565333450a9e5466779f8d56d8407a2563ff2b89fc7e39a26230668"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611110110_revisions_patrimoni_viu.sql",
+      "linia": 64,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "b4fa9ea58cab6d095470d49109b440ec86b6b609f390fcecbebfbfe77a53f90b",
+      "font_sha256": "df7215f25a4f98e5357f9300dcf313de5d49cd7ad58aa70df45df48c7ae47cbe"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 103,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "91e315fb130f39e17e0143388c003f1ac724718a026b3331cd5a59e3f9eadf67",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 181,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "3b8feef6fd6f818caf1a5fac3a46d2dd9f01e9ceed056bfc222e1fa17d858e68",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 208,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "170d6197232ddee9ddc255b90a24a286d9f7aafe05e596cbe8aaa3a16fcc8d54",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 242,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "92f07652482cabe1bf5fcd53d84f4eb66f559600368ab420793b572dd88a0600",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 258,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "bc4247224a3660734478700603a799c24cb9a9439672d3c1dffe9385735ff8a3",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121430_mur_foraster_projeccio_publica_opcio_a.sql",
+      "linia": 301,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "2100952551032e32914d77c2ab4811db39280b974961d6cb2e86e5e722e889ee",
+      "font_sha256": "41a56b2467205746ebdfbd100e1020d8b094a3f4957a985d7dace3c8d1570512"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "supabase/migrations/2611121630_xat_propi.sql",
+      "linia": 208,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "c3de79fa52105b5530bd277483871ec521f23b841431ddc7837b6e7db9a75792",
+      "font_sha256": "d714656b575964133b4a3b4dd5b4165c7f159774db8df482c0580b5c474cdc48"
+    },
+    {
+      "id": "FN0-011",
+      "fitxer": "tooling/brain/observatori-rss-mestres.mjs",
+      "linia": 1415,
+      "codi": "OLLAMA_NO_STREAM",
+      "detall": "Crida Ollama sense stream true literal",
+      "ancla_sha256": "35076b2ed89ab4cb9288238e7435e37521e08826de85684eff5123a4176836ca",
+      "font_sha256": "83ffc4852c535210dc1f7bd0dc48786364a48ff9787d331119244345ec100d89"
+    },
+    {
+      "id": "FN0-008",
+      "fitxer": "tooling/gates/tractor-coherencia-editorial-viva.mjs",
+      "linia": 50,
+      "codi": "CLAUS_ASIMETRIQUES",
+      "detall": "Els mapes literals de les cinc llengües tenen claus diferents",
+      "ancla_sha256": "ffe9a714445bea615d949ebf6cf297e9c38987d73e6ad9092c63307c1a578518",
+      "font_sha256": "b221230b68e1373f4a75721ba8d6878d204c304c9a596527fb9200b948cf19fd"
+    },
+    {
+      "id": "FN0-011",
+      "fitxer": "tooling/maquinaria/convertir_a_webp.mjs",
+      "linia": 524,
+      "codi": "INTERPRET_INLINE",
+      "detall": "Intèrpret inline en una crida de procés",
+      "ancla_sha256": "d4a5639150d03cb92ee4cd315ef1ea9d2d167dcf17c3c1b56116aa0073102a95",
+      "font_sha256": "482816bb4818b322e2711b310379c968794f37224d891364dbb76aaaadbb4432"
+    },
+    {
+      "id": "FN0-011",
+      "fitxer": "tooling/media/optimitzar_webp.mjs",
+      "linia": 393,
+      "codi": "INTERPRET_INLINE",
+      "detall": "Intèrpret inline en una crida de procés",
+      "ancla_sha256": "1736cf9c966fd37eef401a60cadd7abdea5ceb94d9fb24102eecb5075530856e",
+      "font_sha256": "7c76e349f50034ae6ebf5ce752f07b650571f3370121c17654347e3c1c2a01ea"
+    },
+    {
+      "id": "FN0-011",
+      "fitxer": "tooling/node0/hermes-whatsapp-iaia-bridge.mjs",
+      "linia": 207,
+      "codi": "OLLAMA_NO_STREAM",
+      "detall": "Crida Ollama sense stream true literal",
+      "ancla_sha256": "df24b671227826fb122f0328b0e8c29d2649d81bee178cc400b79550a1236ebe",
+      "font_sha256": "44e43cdae8d074c89ca1b46d7c5895578766989f9a4292cfc5047e66954948f0"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "tooling/node0/posse/posse-ledger.sql",
+      "linia": 273,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "636929a1003f32f74b4137dca85a4298af4feb803779dd6b17d77f3d18194a63",
+      "font_sha256": "a6c269ee3358e220ee9743880359a006d5ab514367b563fba069529d8628b600"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "tooling/node0/posse/posse-ledger.sql",
+      "linia": 286,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "c546522d4b2edafeb5b22a6c09ba11cf1a1f5b2ff02df82bb34852b0cf8e6530",
+      "font_sha256": "a6c269ee3358e220ee9743880359a006d5ab514367b563fba069529d8628b600"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "tooling/node0/posse/posse-ledger.sql",
+      "linia": 345,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "5acc548331c2c502ab6463e065052e5b6f7d7c7aee3f939031e4eeff41a8af90",
+      "font_sha256": "a6c269ee3358e220ee9743880359a006d5ab514367b563fba069529d8628b600"
+    },
+    {
+      "id": "FN0-010",
+      "fitxer": "tooling/node0/posse/posse-ledger.sql",
+      "linia": 530,
+      "codi": "DEFINER_SEARCH_PATH",
+      "detall": "SECURITY DEFINER sense SET search_path buit explícit a les opcions",
+      "ancla_sha256": "eb89a68dc989ad470b006abee9de96afeafe0ce16ffe3a4a1111cf251d64859c",
+      "font_sha256": "a6c269ee3358e220ee9743880359a006d5ab514367b563fba069529d8628b600"
+    },
+    {
+      "id": "FN0-011",
+      "fitxer": "tooling/seo/tria-imatge-seo.mjs",
+      "linia": 82,
+      "codi": "INTERPRET_INLINE",
+      "detall": "Intèrpret inline en una crida de procés",
+      "ancla_sha256": "b111846f7b46a880af7e1dc8fef6e24f04fe2b0cb49566798d75375b40d7fa62",
+      "font_sha256": "e2603e81f40eeaaa5407e34b58b6bafc744511771f6e48e627d0033670841ea6"
+    }
+  ]
+}

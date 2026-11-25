@@ -117,6 +117,15 @@ test('VIG-05: comentaris, hosts locals amb port comodí, dominis reservats, espa
  write('src/b.js',"const w='http://www.wikidata.org/wiki/Special:Search';\n");
  assert.deepEqual(regla(analitzaVigilant(root),'VIG-05').evidencia,[{fitxer:'src/b.js'}]);
 });
+/* CR-02 (Gauntlet de la integració v1.2.25) · L'espai de noms de script d'OpenOffice.org 1.x que src/data/xat/documents.js (C1)
+   compara dins dels .odt és un identificador i no fa soroll; un altre host del mateix domini (www.) continua sent una URL real. */
+test('VIG-05: l’espai de noms de script d’OpenOffice.org 1.x és un identificador; www.openoffice.org no',t=>{
+ const {root,write}=fixture(t);
+ write('src/data/xat/documents.js',"const NS_SCRIPT = new Set(['urn:oasis:names:tc:opendocument:xmlns:script:1.0', 'http://openoffice.org/2000/script']);\n");
+ assert.equal(regla(analitzaVigilant(root),'VIG-05').estat,'ok');
+ write('src/b.js',"const d='http://www.openoffice.org/download/';\n");
+ const r=analitzaVigilant(root);assert.equal(regla(r,'VIG-05').estat,'falla');assert.deepEqual(regla(r,'VIG-05').evidencia,[{fitxer:'src/b.js'}]);
+});
 const inventariDe=(write,fitxers)=>{write('dist/sdp-inventari.json',JSON.stringify({fitxers:Object.entries(fitxers).map(([cami,text])=>({cami,sha256:createHash('sha256').update(text).digest('hex')}))}));};
 test('VIG-04: un orfe anterior a l\'inventari és build ranci i només informa, amb una sola evidència resumida',t=>{
  const {root,write}=fixture(t);write('dist/a.txt','abc');write('dist/trossos/vell.js','vell');inventariDe(write,{'a.txt':'abc'});

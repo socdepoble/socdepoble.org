@@ -316,6 +316,10 @@ const BIBLIOTEQUES_A4 = new Map([
   ['tooling/gates/lib/radiografia-snapshot.mjs', {consumer: 'tooling/gates/verifica-radiografia-supabase-viu.mjs', exports: ['readSnapshot', 'compareSnapshots', 'projectSnapshot', 'sha256']}],
   ['tooling/gates/fixtures/zero-ia.vitest.config.mjs', {consumer: 'tooling/gates/tractor-zero-dependencia-ia.test.mjs', role: 'config'}],
   ['tooling/gates/fixtures/zero-ia-outage.mjs', {consumer: 'tooling/gates/tractor-zero-dependencia-ia.test.mjs', role: 'preload'}],
+  // v1.2.25 · K-ARREL-PROMESA · C4/C14: la reconciliació 132/135 no té CLI; la consumix la prova PGlite que la valida.
+  ['tooling/gates/lib/v1225-reconciliacio132135.mjs', {consumer: 'tests/v1225-sql-reconciliacio-pglite.test.mjs', exports: ['contracteSonda132', 'avaluaSonda132135', 'preparaReconciliacio132135']}],
+  // v1.2.25 · K-ARREL-PROMESA · C10: la biblioteca del rebut FN-009; el productor lent és el seu consumidor CLI.
+  ['tooling/gates/lib/fn009-wp-build.mjs', {consumer: 'tooling/gates/compila-fn009-wp.mjs', exports: ['createContext', 'captureSnapshot', 'validateReceipt', 'invalidResult', 'exitCode']}],
 ]);
 function exportsDeclarats(ast) {
   const names = new Set();

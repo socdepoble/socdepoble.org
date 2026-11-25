@@ -140,6 +140,21 @@ const MAXIM_COS_404 = 4096;
 const SENSE_SERVEI = Object.freeze({ disponible: false, personals: false });
 const SENSE_PERSONALS = Object.freeze({ disponible: true, personals: false });
 
+/** @typedef {{autoritzat: () => boolean, feed: (opcions: {signal?: AbortSignal}) => Promise<{font: string, xml: string, obtingut: string|null, obsoleta: boolean}>}} FontObservatoriPrivada
+ * Transport separat injectat per la plataforma, amb autorització comprovada al servidor.
+ * Mai s'envia l'observatori pel GET anònim de fonts públiques.
+ */
+export const CATEGORIA_OBSERVATORI_NOTICIES = Object.freeze({ id: 'observatori', nom: 'Observatori I+D · Mestres', ordre: 9999, icona: null });
+export const FONT_OBSERVATORI_NOTICIES = Object.freeze({
+  id: 'observatori-mestres', nom: 'Observatori I+D · Mestres', categoriaId: 'observatori',
+  descripcio: 'Les troballes de l’observatori de mestres, amb el veredicte del sedàs. Només per a administradors.', lloc: null
+});
+
+function observatoriAutoritzat(font) {
+  try { return typeof font?.feed === 'function' && typeof font?.autoritzat === 'function' && font.autoritzat() === true; }
+  catch { return false; }
+}
+
 /** Un error del servei de notícies: `motiu` és un de MOTIUS_NOTICIES; `codi`, el de la Frontissa. */
 export class ErrorNoticies extends Error {
   constructor(motiu, causa = null) {
@@ -292,7 +307,8 @@ export function creaServeiNoticies({
   enLinia = () => globalThis.navigator?.onLine !== false,
   ara = () => Date.now(),
   categories = CATEGORIES_TERRITORIALS,
-  fonts = FONTS_TERRITORIALS
+  fonts = FONTS_TERRITORIALS,
+  observatori = null
 } = {}) {
   if (typeof cami !== 'string' || !PATRO_CAMI.test(cami)) throw new ErrorDades('INVALID_RESOURCE');
   let origen;
@@ -352,8 +368,8 @@ export function creaServeiNoticies({
   });
   const coneguts = new Set(fonts.map((font) => font.id));
   const delLector = Object.freeze({
-    categories: Object.freeze(categories.map((categoria) => Object.freeze({ ...categoria }))),
-    fonts: fontsPerAlLector(fonts)
+    categories: Object.freeze(categories.filter((c) => c.id !== 'observatori').map((categoria) => Object.freeze({ ...categoria }))),
+    fonts: fontsPerAlLector(fonts.filter((f) => f.id !== FONT_OBSERVATORI_NOTICIES.id))
   });
 
   /* La pregunta de l'estat: { estat, motiu, definitiva, fora }. No es rebutja mai. Definitiva,
@@ -434,6 +450,10 @@ export function creaServeiNoticies({
 
   return Object.freeze({
     async fonts() {
+      if (observatoriAutoritzat(observatori)) return Object.freeze({
+        categories: Object.freeze([...delLector.categories.filter((c) => c.id !== 'observatori'), CATEGORIA_OBSERVATORI_NOTICIES]),
+        fonts: Object.freeze([...delLector.fonts.filter((f) => f.id !== 'observatori-mestres'), FONT_OBSERVATORI_NOTICIES])
+      });
       return delLector;
     },
 
@@ -442,6 +462,21 @@ export function creaServeiNoticies({
     },
 
     async feed(id, { signal } = {}) {
+      if (id === FONT_OBSERVATORI_NOTICIES.id) {
+        if (!observatoriAutoritzat(observatori)) throw new ErrorNoticies('font');
+        if (signal?.aborted) throw new ErrorDades('CANCELLED');
+        try {
+          const cru = await observatori.feed({ signal });
+          if (signal?.aborted) throw new ErrorDades('CANCELLED');
+          const dto = decodificaFeed(cru);
+          if (dto.font !== id || !observatoriAutoritzat(observatori)) throw new ErrorNoticies('servidor');
+          return dto;
+        } catch (cause) {
+          if (signal?.aborted) throw new ErrorDades('CANCELLED');
+          if (cause instanceof ErrorDades && cause.code === 'CANCELLED') throw cause;
+          throw new ErrorNoticies(motiuDe(cause), cause);
+        }
+      }
       /* Un id que el catàleg no porta no ix mai del navegador. */
       if (typeof id !== 'string' || !coneguts.has(id)) throw new ErrorNoticies('font');
       await servei(signal);

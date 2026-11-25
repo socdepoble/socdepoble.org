@@ -119,6 +119,7 @@
  *   Espill, ni obrir WebRTC: només en dona les peces verificades.
  */
 import { normalitzaUnicodeAmbLimit } from '../../utils/normalitzaUnicodeSegura.js';
+import { validaBytesDocumentXat } from './documents.js';
 import { MAXIM_ADJUNT_XAT, MAXIM_BLOB_ADJUNT, MIME_XAT, MIME_XIFRAT } from '../xatMultimedia.js';
 import {
   BYTES_ETIQUETA,
@@ -704,6 +705,9 @@ async function verificaAdjunt(cripto, adj, idsMissatges) {
     if (!esMidaBlobXifrat(bytes.length)) {
       throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'adjunt-blob', `El blob xifrat no té una mida de blob E2EE (${adj.id}).`);
     }
+  } else if (MIME_XAT[adj.mime] === 'document') {
+    try { validaBytesDocumentXat(bytes, adj.mime); }
+    catch { throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'adjunt-contingut', 'Document amb contingut no admés.'); }
   } else {
     if (esArxiuNiat(bytes)) {
       throw creaErrorTipificat(CODI_COPIA_CORRUPTA, 'arxiu-niat', `Arxiu comprimit o còpia niada dins d’un adjunt (${adj.id}).`);

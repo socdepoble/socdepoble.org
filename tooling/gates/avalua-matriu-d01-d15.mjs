@@ -39,6 +39,24 @@ const DIMENSIONS = [
   ['D11',['media-porta']],['D12',['contrast']],['D13',['offline']],
   ['D14',['consola']],['D15',['redireccions','arrel']]
 ];
+/** Etiquetes de sonda adoptades per MarIA al Pla v1.2.25, 04:37 CET. */
+export const ETIQUETES_DIMENSIONS = Object.freeze({
+  D01:'Doctrina i contractes',D02:'Vocabulari i composició',D03:'Llengües',
+  D04:'Guardes de seguretat locals',D05:'Integritat SQL i privadesa',
+  D06:'Economia d’arrencada',D07:'Federació i enxufabilitat',D08:'Xat',
+  D09:'Persistència',D10:'Convivència social i moderació',D11:'Integritat de mèdia',
+  D12:'Accessibilitat',D13:'Resiliència sense IA',D14:'Governança i automatismes',D15:'Arrencada i lliurament'
+});
+export function evidenciaQuatreColumnes(selected) {
+  const verificades=selected.filter(p=>p.estat==='verificada');
+  const estatLocal=selected.some(p=>p.estat==='fallida')?'regressio_detectada':!selected.length||selected.some(p=>p.estat==='no_mesurada')?'no_mesurat':'senyals_parcials_verificats';
+  return {
+    implementat:{estat:verificades.length?'parcialment_verificat':'no_acreditat',abast:'Només els predicats locals executats; cap cobertura total de la dimensió.',fonts:verificades.filter(p=>p.font).map(p=>p.font)},
+    consumidorConnectat:{estat:'no_verificat',abast:'Les sondes locals no acrediten el consumidor viu ni les costures completes.'},
+    provaLocal:{estat:estatLocal,proves:selected.map(p=>({id:p.id,estat:p.estat,exit:p.exit}))},
+    serveiODispositiuObservat:{estat:'no_observat',connexioDirecta:false,abast:'Els rebuts històrics es mostren separats; no hi ha connexió al servei o dispositiu en esta execució.'}
+  };
+}
 const EXTERNS = Object.freeze([
   {id:'apple-testflight',dimensions:['D06','D15'],motiu:'Credencials SDP_ASC_* i verificació TestFlight amb dispositiu. No llegides ni comprovades.'},
   {id:'google-play',dimensions:['D06','D15'],motiu:'Service Account Google Play i prova del lliurament real. No llegits ni comprovats.'},
@@ -109,7 +127,7 @@ export function avaluaMatriu(root, { ara = Date.now(), executa = (args,opts)=>sp
   }
   const dimensions=DIMENSIONS.map(([id,ids])=>{
     const selected=ids.map(k=>proves.find(p=>p.id===k));
-    return {id,evidenciesVerificades:selected.filter(p=>p.estat==='verificada'),
+    return {id,etiqueta:ETIQUETES_DIMENSIONS[id],evidencia:evidenciaQuatreColumnes(selected),evidenciesVerificades:selected.filter(p=>p.estat==='verificada'),
       estatCodiLocal:selected.some(p=>p.estat==='fallida')?'regressio_detectada':selected.some(p=>p.estat==='no_mesurada')?'no_mesurat':'senyals_parcials_verificats',
       notaCodiLocal:null,
       attestacionsProduccio:['D04','D05','D08','D10'].includes(id)?[{wave:'R32.15',estat:rebutsProduccioR3215.estat,integritatVerificada:rebutsProduccioR3215.valid,connexioDirectaProduccio:false}]:[],

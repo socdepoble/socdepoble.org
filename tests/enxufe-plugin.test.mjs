@@ -143,6 +143,8 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
   /* Identificadors entre cometes: o són funcions (callbacks) o són noms
      declarats ací (opcions, seccions, proves, codis d'error, nonces, filtres). */
   const NO_FUNCIONS = new Set([
+    'socdepoble_enxufe_trossos_http', 'socdepoble_enxufe_upgrade_http', // ids de les observacions HTTP de Salut
+
     'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
     'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
     'socdepoble_enxufe_seo',                                                                 // filtre públic (Onada 11, 261010, tasca 7): OpenGraph de la ruta
@@ -413,6 +415,8 @@ test('un sol text domain i traducció valenciana completa de tots els textos PHP
 // Secrets: @since 7.2 de la BETA retirada en r65538; mai s'inferix disponibilitat per versió.
 // Cada ús es manté darrere function_exists també en WP 7.2 RC1/final sense l'API.
 const FUNCIONS_WP = {
+  site_url: '3.0', content_url: '2.6', wp_safe_remote_head: '3.6', wp_remote_retrieve_header: '2.7',
+
   wp_set_option_autoload: '6.4', wp_autoload_values_to_autoload: '6.6', wp_using_ext_object_cache: '2.5',
   __: '2.1', add_action: '1.2', add_filter: '0.71', add_options_page: '1.5', add_query_arg: '1.5',
   add_settings_field: '2.7', add_settings_section: '2.7', add_shortcode: '2.5', admin_url: '2.6',
@@ -519,6 +523,8 @@ const TAULA_WP = [
 
 // El que crida el plugin i és de PHP, no de WordPress (comprovat amb get_defined_functions de PHP 8.4).
 const PHP_INTERN = new Set([
+  'strrpos',
+
   'is_callable', 'extension_loaded', 'opcache_get_status',
   'array_diff', 'array_filter', 'array_key_exists', 'array_keys', 'array_map', 'array_merge', 'array_slice', 'array_unique', 'array_unshift',
   'array_values', 'array_search', 'basename', 'class_exists', 'clearstatcache', 'constant', 'count', 'define', 'defined', 'dirname', 'explode',

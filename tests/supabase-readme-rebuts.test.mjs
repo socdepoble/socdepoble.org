@@ -89,6 +89,13 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   const FILA_V1224 = [134, '20261124030000', '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql'];
   // v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · fila 136, fora del rebut històric.
   const FILA_R3287 = [136, '20261124174000', '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql'];
+  // v1.2.25 · Costura 1 (Claude) · C1, C2 i C16 de Codex afigen les files 137, 138 i 139, NO aplicades: fora del rebut
+  // històric, nomenades una a una perquè cap migració nova entre a l'històric sense revisar-la.
+  const FILES_V1225 = [
+    [137, '20261125010000', '20261125010000_v1225_xat_cerca_fil_documents_i_purga_blobs.sql'],
+    [138, '20261125013000', '20261125013000_v1225_calendari_agricola_subscripcions.sql'],
+    [139, '20261125020000', '20261125020000_v1225_purga_lssi_abans_claim.sql']
+  ];
   // v1.2.24 · F-03 · Rebut 261125_0039: la nit del 24 al 25-11-2026, amb els bytes de 840c31d33, s'apliquen a Producció
   // la 133, la 134 i la 136; les guardes de la 132 i la 135 les refusen sense canvis, i continuen NO aplicades.
   const APLICADES_V1224 = [PROPOSTES_C1_C12[1], FILA_V1224, FILA_R3287];
@@ -96,7 +103,7 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
     [...PROPOSTES_C1_C12[0], /ERROR 55000 `r3252_fk_constraint_drift`.{0,20}87 de 88 FK casen.{0,10} falta `public\.app_content_historial`, que crea `2610101900`, NO aplicada per decisió del Mestre/],
     [...PROPOSTES_C1_C12[2], /ERROR 55000 `r3272_hygiene_function_drift`.{0,20}3 de 4 funcions casen; `private\.trigger_rate_limit_xat\(\)` té el cos de 2609080200\/R22\.0 i la migració espera el de R22\.3, `20261114000200`, NO aplicada per decisió del Mestre/]
   ];
-  const historic = taula.filter(f => !['20261119143000', '20261121090000', FILA_V1224[1], FILA_R3287[1], ...R3242.map(([, versio]) => versio), ...KITS_RECONCILIATS.map(([, versio]) => versio), ...PROPOSTES_C1_C12.map(([, versio]) => versio)].includes(f.versio));
+  const historic = taula.filter(f => !['20261119143000', '20261121090000', FILA_V1224[1], FILA_R3287[1], ...FILES_V1225.map(([, versio]) => versio), ...R3242.map(([, versio]) => versio), ...KITS_RECONCILIATS.map(([, versio]) => versio), ...PROPOSTES_C1_C12.map(([, versio]) => versio)].includes(f.versio));
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
     'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
@@ -120,7 +127,28 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
     assert.match(fila(versio).estat, /^Aplicada a producció la nit del 23 al 24-11-2026 .*12d34bc46.*REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES\.json/, versio);
   }
   assert.deepEqual(taula.filter(f => f.ordre >= 132).map(({ ordre, versio, fitxer }) => [ordre, versio, fitxer]),
-    [...PROPOSTES_C1_C12.slice(0, 2), FILA_V1224, PROPOSTES_C1_C12[2], FILA_R3287], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
+    [...PROPOSTES_C1_C12.slice(0, 2), FILA_V1224, PROPOSTES_C1_C12[2], FILA_R3287, ...FILES_V1225], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
+  // v1.2.25 · Costura 1 · Cada fila nova diu «NO aplicada a Producció», la seua vinyeta també i dona una lectura de verificació.
+  for (const [ordre, versio, fitxer] of FILES_V1225) {
+    assert.equal(fila(versio).ordre, ordre, versio);
+    assert.equal(fila(versio).fitxer, fitxer, versio);
+    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
+    assert.match(fila(versio).estat, /^NO aplicada a Producció; v1\.2\.25 · C(?:1|2|16) de Codex, Kit CAS provat només en (?:PGlite|local \(PGlite i PostgreSQL 18\.6\)), després de 13[678]/, versio);
+    assert.doesNotMatch(fila(versio).estat, /^Aplicada|rebut/i, versio);
+    assert.match(vinyeta(versio), /\*\*NO aplicada a Producció\*\*/, versio);
+    assert.match(vinyeta(versio), /Verificació posterior \(lectura\): `select [^`]+;`/, versio);
+  }
+  // Les dependències que la vinyeta declara són fitxers reals del catàleg.
+  for (const [, versio] of FILES_V1225) {
+    for (const dep of vinyeta(versio).matchAll(/`(\d{10}|\d{14})`/g)) assert.ok(taula.some((f) => f.versio === dep[1]), `${versio} cita ${dep[1]}, sense fila`);
+  }
+  assert.match(vinyeta('20261125010000'), /SDP-C1-DRIFT/);
+  assert.match(vinyeta('20261125020000'), /SDP-PURGA-LSSI-DRIFT/);
+  assert.match(vinyeta('20261125020000'), /private\.xat_adjunt_protegit_lssi\(private\.xat_id_de_ruta\(c\.nom\)\)/);
+  assert.match(vinyeta('20261125020000'), /Límit declarat: una protecció apareguda després del claim/);
+  assert.match(vinyeta('20261125013000'), /private\.xat_participant_vigent\(uuid,uuid\)/);
+  assert.match(vinyeta('20261125013000'), /private\.es_participant\(uuid\)/);
+  assert.match(vinyeta('20261125013000'), /private\.is_town_member\(uuid\)/);
   for (const [ordre, versio, fitxer] of APLICADES_V1224) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
