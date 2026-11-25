@@ -18,7 +18,19 @@ const fila = (versio) => taula.find((f) => f.versio === versio);
 
 // Rebuts d'una lectura de la base (no narratives del manifest com el «70/70»).
 // Onada v1.2.13 · També la postverificació 10/10 del Super-Bundle R32.14 que el Mestre va executar a producció el 19-11-2026.
-const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE|REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES/;
+// v1.2.24 · F-03 · I el rebut de les sondes de la tanda 132 a 136 (nit del 24 al 25-11-2026).
+const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE|REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES|261125_0039_rebut_sql_produccio_132_136\.json/;
+// v1.2.24 · F-03 · L'estat de les files 133, 134 i 136 que el rebut 261125_0039 dona APLICADA amb les sondes en verd.
+const RE_APLICADA_V1224 = /^Aplicada a producció la nit del 24 al 25-11-2026 \(00:31–00:38 CET\) per l'integrador de la v1\.2\.24 \(Claude Opus 5\.5\), autoritzat pel Mestre, amb els bytes del commit 840c31d33 i SHA-256 comprovada a l'editor[,;] .*\(`261125_0039_rebut_sql_produccio_132_136\.json`\)$/;
+// El text sencer de la vinyeta «- `migrations/<versió>_…`» del README, en una sola línia.
+function vinyeta(versio) {
+  const linies = README.split('\n');
+  const i = linies.findIndex((l) => l.startsWith(`- \`migrations/${versio}_`));
+  if (i < 0) return null;
+  let j = i + 1;
+  while (j < linies.length && !/^(- |#)/.test(linies[j])) j += 1;
+  return linies.slice(i, j).join(' ').replace(/\s+/g, ' ');
+}
 // NO aplicades que el bolcat del 13-11-2026 confirma o contradiu: cada una ho cita.
 const NO_APLICADES_DEL_BOLCAT = [
   '2610061448', '2610061450', '2610081400', '2610081543', '2610101900', '2611110010',
@@ -55,7 +67,7 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   assert.equal(new Set(taula.map((f) => f.versio)).size, taula.length, 'cap versió duplicada');
   assert.deepEqual(taula.map((f) => f.fitxer).sort(), fitxers, 'cap migració absent ni fila fantasma, encara que el recompte coincidisca');
   // v1.2.24 · IDEA-339 (Claude 01c) afig 20261124030000: per ordre de versió és la fila 134, entre la 133 (R32.64)
-  // i la 135 (C12/R32.72); NO aplicada, i les 124 files històriques no canvien.
+  // i la 135 (C12/R32.72); les 124 files històriques no canvien.
   const R3242 = [
     [127, '20261122160000', '20261122160000_r3242_ajuntament_acreditacio_institucional.sql'],
     [128, '20261122160200', '20261122160200_r32_42_xat_ubicacio_dos_decimals.sql'],
@@ -67,17 +79,24 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
     [130, '20261122230000', '20261122230000_r3244_edicio_propia_i_page_revisions.sql'],
     [131, '20261123010000', '20261123010000_r3246_quota_owner_id.sql']
   ];
-  // C1..C12 afigen només estes tres propostes pendents: no entren al rebut històric.
-  const PENDENTS_C1_C12 = [
+  // C1..C12 afigen només estes tres propostes: no entren al rebut històric.
+  const PROPOSTES_C1_C12 = [
     [132, '20261123180000', '20261123180000_r3252_indexs_suport_fk_verificats.sql'],
     [133, '20261123233000', '20261123233000_r3264_xat_elimina_per_a_tothom_sense_caducitat.sql'],
     [135, '20261124033000', '20261124033000_r3272_profiles_sense_enumeracio_i_execute_minim.sql']
   ];
-  // v1.2.24 · IDEA-339 (Claude 01c) · Va per versió entre la 133 i la de C12: fila 134, NO aplicada i fora del rebut històric.
-  const PENDENT_V1224 = [134, '20261124030000', '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql'];
-  // v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · fila 136, NO aplicada i fora del rebut històric.
-  const PENDENT_R3287 = [136, '20261124174000', '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql'];
-  const historic = taula.filter(f => !['20261119143000', '20261121090000', PENDENT_V1224[1], PENDENT_R3287[1], ...R3242.map(([, versio]) => versio), ...KITS_RECONCILIATS.map(([, versio]) => versio), ...PENDENTS_C1_C12.map(([, versio]) => versio)].includes(f.versio));
+  // v1.2.24 · IDEA-339 (Claude 01c) · Va per versió entre la 133 i la de C12: fila 134, fora del rebut històric.
+  const FILA_V1224 = [134, '20261124030000', '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql'];
+  // v1.2.24 · R32.87 (blindatges P0 de Gemini Neon) · fila 136, fora del rebut històric.
+  const FILA_R3287 = [136, '20261124174000', '20261124174000_r3287_blindatge_xat_elimina_lssi_i_resol_reclamacio.sql'];
+  // v1.2.24 · F-03 · Rebut 261125_0039: la nit del 24 al 25-11-2026, amb els bytes de 840c31d33, s'apliquen a Producció
+  // la 133, la 134 i la 136; les guardes de la 132 i la 135 les refusen sense canvis, i continuen NO aplicades.
+  const APLICADES_V1224 = [PROPOSTES_C1_C12[1], FILA_V1224, FILA_R3287];
+  const REFUSADES_V1224 = [
+    [...PROPOSTES_C1_C12[0], /ERROR 55000 `r3252_fk_constraint_drift`.{0,20}87 de 88 FK casen.{0,10} falta `public\.app_content_historial`, que crea `2610101900`, NO aplicada per decisió del Mestre/],
+    [...PROPOSTES_C1_C12[2], /ERROR 55000 `r3272_hygiene_function_drift`.{0,20}3 de 4 funcions casen; `private\.trigger_rate_limit_xat\(\)` té el cos de 2609080200\/R22\.0 i la migració espera el de R22\.3, `20261114000200`, NO aplicada per decisió del Mestre/]
+  ];
+  const historic = taula.filter(f => !['20261119143000', '20261121090000', FILA_V1224[1], FILA_R3287[1], ...R3242.map(([, versio]) => versio), ...KITS_RECONCILIATS.map(([, versio]) => versio), ...PROPOSTES_C1_C12.map(([, versio]) => versio)].includes(f.versio));
   assert.equal(historic.length, 124);
   assert.equal(createHash('sha256').update(JSON.stringify(historic.map(({ ordre, versio, fitxer, estat }) => ({ ordre, versio, fitxer, estat })))).digest('hex'),
     'bdda6ff119c42476c82de334a9788b18f2e8d87660d913f5a90bf876f209e096');
@@ -86,8 +105,9 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   assert.equal(declarat.get('20261119143000'), 'declarada_aplicada');
   assert.equal(fila('20261124030000').ordre, 134);
   assert.equal(fila('20261124030000').fitxer, '20261124030000_v1224_integritat_xat_perfils_i_realtime.sql');
-  assert.equal(declarat.get('20261124030000'), 'declarada_no_aplicada');
-  assert.match(fila('20261124030000').estat, /NO aplicada/);
+  assert.equal(declarat.get('20261124030000'), 'declarada_aplicada');
+  assert.match(fila('20261124030000').estat, RE_APLICADA_V1224);
+  assert.match(fila('20261124030000').estat, /sonda prèvia del sublot 01c: 1 compte d'`auth\.users` sense `profiles`.*posterior en verd: 0 comptes sense `profiles` i els 2 disparadors diferits presents/);
   assert.equal(fila('20261121090000').ordre, 126);
   assert.equal(fila('20261121090000').fitxer, '20261121090000_r32_25_push_directes_i_bandols.sql');
   assert.equal(declarat.get('20261121090000'), 'declarada_no_aplicada');
@@ -100,12 +120,29 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
     assert.match(fila(versio).estat, /^Aplicada a producció la nit del 23 al 24-11-2026 .*12d34bc46.*REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES\.json/, versio);
   }
   assert.deepEqual(taula.filter(f => f.ordre >= 132).map(({ ordre, versio, fitxer }) => [ordre, versio, fitxer]),
-    [...PENDENTS_C1_C12.slice(0, 2), PENDENT_V1224, PENDENTS_C1_C12[2], PENDENT_R3287], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
-  for (const [ordre, versio, fitxer] of [...PENDENTS_C1_C12, PENDENT_R3287]) {
+    [...PROPOSTES_C1_C12.slice(0, 2), FILA_V1224, PROPOSTES_C1_C12[2], FILA_R3287], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
+  for (const [ordre, versio, fitxer] of APLICADES_V1224) {
+    assert.equal(fila(versio).ordre, ordre, versio);
+    assert.equal(fila(versio).fitxer, fitxer, versio);
+    assert.equal(declarat.get(versio), 'declarada_aplicada', versio);
+    assert.match(fila(versio).estat, RE_APLICADA_V1224, versio);
+    assert.doesNotMatch(fila(versio).estat, /NO aplicada/, versio);
+    assert.match(vinyeta(versio), /Estat vigent: aplicada a producció la nit del 24 al 25-11-2026 \(v1\.2\.24, bytes de 840c31d33, `261125_0039_rebut_sql_produccio_132_136\.json`\)/, versio);
+    assert.doesNotMatch(vinyeta(versio), /Estat vigent: NO aplicada/, versio);
+  }
+  assert.match(fila('20261123233000').estat, /sonda posterior en verd: RPC `xat_elimina_per_a_tothom\(uuid,uuid\)` present, EXECUTE per a authenticated i no per a anon, i índex de la cua push/);
+  assert.match(fila('20261124174000').estat, /encara que la 135, que la precedix, no s'hi va aplicar perquè la seua guarda la va refusar; verificació posterior en verd: les quatre columnes `r3287_\*` a `true` i cap EXECUTE anon de la RPC del xat/);
+  for (const [ordre, versio, fitxer, guarda] of REFUSADES_V1224) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
     assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
     assert.match(fila(versio).estat, /^NO aplicada a Producció;/, versio);
+    assert.match(fila(versio).estat, /; la nit del 24 al 25-11-2026 \(00:31–00:38 CET\), amb els bytes del commit 840c31d33, la seua guarda la va refusar sense canvis \(/, versio);
+    assert.match(fila(versio).estat, guarda, versio);
+    assert.match(fila(versio).estat, /; `261125_0039_rebut_sql_produccio_132_136\.json`\)$/, versio);
+    assert.match(vinyeta(versio), /Estat vigent: NO aplicada\. La nit del 24 al 25-11-2026 \(00:31–00:38 CET\), amb els bytes del commit 840c31d33, la seua guarda la va refusar sense canvis: /, versio);
+    assert.match(vinyeta(versio), guarda, versio);
+    assert.match(vinyeta(versio), /261125_0039_rebut_sql_produccio_132_136\.json/, versio);
   }
   assert.deepEqual(informe.errors, []);
   assert.deepEqual(informe.avisos.filter((a) => a.codi === 'A-ESTAT-NO-RECONEGUT'), []);
@@ -178,6 +215,6 @@ test('tota vinyeta d’una fila declarada aplicada que encara diu «NO aplicada�
     while (j < linies.length && !/^(- |#)/.test(linies[j])) j += 1;
     const text = linies.slice(i, j).join(' ').replace(/\s+/g, ' ');
     if (!/NO aplicada|no acreditat/.test(text)) continue;
-    assert.match(text, /Estat vigent: aplicada a producció (?:segons el bolcat del 13-11-2026|el 19-11-2026|la nit del 23 al 24-11-2026 \(T2 de la v1\.2\.23)/, `vinyeta de ${f.versio}`);
+    assert.match(text, /Estat vigent: aplicada a producció (?:segons el bolcat del 13-11-2026|el 19-11-2026|la nit del 23 al 24-11-2026 \(T2 de la v1\.2\.23|la nit del 24 al 25-11-2026 \(v1\.2\.24, bytes de 840c31d33, `261125_0039_rebut_sql_produccio_132_136\.json`\))/, `vinyeta de ${f.versio}`);
   }
 });

@@ -100,7 +100,9 @@ import { ATLES } from '../disseny/cataleg/dades/atles2dDades.js';
 
 /* v1.2.24 · IDEA-339 · Les migracions posteriors a les cròniques d'abans no entren en els recomptes que estes
    cròniques fixen per a la seua versió: la 132 (R32.52), la 133 (R32.64), la 134 (01c, 20261124030000) i la 135
-   (C12/R32.72) i la 136 (R32.87, blindatges P0 de Gemini Neon), totes NO aplicades. */
+   (C12/R32.72) i la 136 (R32.87, blindatges P0 de Gemini Neon), totes NO aplicades quan es van escriure. v1.2.24 · F-03 ·
+   Segons el rebut 261125_0039, la 133, la 134 i la 136 s'aplicaren a Producció la nit del 24 al 25-11-2026; la 132 i
+   la 135, refusades per les seues guardes, continuen NO aplicades. */
 const NOVES_V1224 = new Set([
   '20261123180000_r3252_indexs_suport_fk_verificats.sql',
   '20261123233000_r3264_xat_elimina_per_a_tothom_sense_caducitat.sql',
@@ -7678,7 +7680,7 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
     }
   });
 
-  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1224) declara els cinc canvis preparats i pendents d’aplicar', () => {
+  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1224) declara els cinc canvis preparats i, quan s’escriu, pendents d’aplicar; el README porta l’estat vigent (133, 134 i 136 aplicades; 132 i 135 refusades)', () => {
     const PENDENTS_SERVIDOR = {
       ca: ['cinc canvis preparats', 'servidor de Sóc de Poble', 'encara no s’han aplicat', 'sense fingir res'],
       es: ['cinco cambios preparados', 'servidor de Sóc de Poble', 'todavía no se han aplicado', 'sin fingir nada'],
@@ -7696,9 +7698,21 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
     if (presentsV1224.length > 0) {
       expect(presentsV1224).toHaveLength(5);
       const readme = llegix('supabase/README.md');
-      for (const fila of [132, 133, 134, 135, 136]) {
+      /* v1.2.24 · F-03 · La crònica conta el moment en què s'escriu; el README porta l'estat vigent. Segons el rebut
+         261125_0039, la nit del 24 al 25-11-2026 s'aplicaren la 133, la 134 i la 136 amb els bytes de 840c31d33, i les
+         guardes de la 132 i la 135 les refusaren sense canvis. */
+      for (const fila of [132, 135]) {
         const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
-        expect(linia, String(fila)).toContain('NO aplicada');
+        expect(linia, String(fila)).toContain('| NO aplicada a Producció;');
+        expect(linia, String(fila)).toContain('la seua guarda la va refusar sense canvis');
+        expect(linia, String(fila)).toContain('`261125_0039_rebut_sql_produccio_132_136.json`');
+      }
+      for (const fila of [133, 134, 136]) {
+        const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
+        expect(linia, String(fila)).toContain('| Aplicada a producció la nit del 24 al 25-11-2026 (00:31–00:38 CET)');
+        expect(linia, String(fila)).toContain('commit 840c31d33');
+        expect(linia, String(fila)).toContain('`261125_0039_rebut_sql_produccio_132_136.json`');
+        expect(linia, String(fila)).not.toContain('NO aplicada');
       }
     }
   });
