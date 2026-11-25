@@ -30,6 +30,9 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
   servidor: 'section.xat.adjunts.error.servidor',
   'sense-confirmacio': 'section.xat.adjunts.error.senseConfirmacio',
   format: 'section.xat.adjunts.error.format',
+  /* v1.2.25 · Costura 3a (Claude) · Els dos codis de documents de C1 (ERRORS_ADJUNT_XAT), als cinc diccionaris. */
+  'document-format': 'section.xat.adjunts.error.documentFormat',
+  'document-mida': 'section.xat.adjunts.error.documentMida',
   'format-heic': 'section.xat.adjunts.error.formatHeic',
   durada: 'section.xat.adjunts.error.durada',
   buit: 'section.xat.adjunts.error.buit',
@@ -62,10 +65,11 @@ export const CLAUS_ERROR_ADJUNT = Object.freeze({
 });
 
 /* Onada v1.2.25 (Lot G6 · Costura C1+G1) · Codis d'error de documents en 5 llengües
-   sense alterar la paritat exacta de CLAUS_ERROR_ADJUNT amb ERRORS_ADJUNT_XAT. */
+   sense alterar la paritat exacta de CLAUS_ERROR_ADJUNT amb ERRORS_ADJUNT_XAT.
+   v1.2.25 · Costura 3a (Claude) · 'document-format' i 'document-mida' ja són a CLAUS_ERROR_ADJUNT (i als cinc
+   diccionaris canònics). Ací només queda 'document-contingut', que llança la preparació local de G1
+   (preparaDocument) i no el motor de C1: no és a ERRORS_ADJUNT_XAT i no pot entrar al mapa sense trencar la paritat. */
 const ERRORS_DOCUMENTS_V1225 = Object.freeze({
-  'document-format': 'documents.errorFormat',
-  'document-mida': 'documents.errorMida',
   'document-contingut': 'documents.errorContingut',
 });
 

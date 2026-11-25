@@ -2790,6 +2790,8 @@ export default {
   'section.xat.adjunts.error.servidor': 'El servidor no ha pogut atendre la petició. Torna-ho a provar d’ací a una estona.',
   'section.xat.adjunts.error.senseConfirmacio': 'El servidor no ha confirmat el missatge. Torna-ho a provar.',
   'section.xat.adjunts.error.format': "Tria una foto o un vídeo de fins a 60 segons.",
+  'section.xat.adjunts.error.documentFormat': "Tria un document PDF, TXT, CSV, ODT o DOCX vàlid.",
+  'section.xat.adjunts.error.documentMida': "El document ha de tindre com a màxim 10 MB.",
   'section.xat.adjunts.error.durada': "El vídeo ha de durar com a màxim 60 segons.",
   'section.xat.adjunts.error.buit': 'Tria un fitxer que no estiga buit.',
   'section.xat.adjunts.error.duradaIllegible': 'No hem pogut llegir la durada del vídeo.',

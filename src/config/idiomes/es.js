@@ -2723,6 +2723,8 @@ export default {
   'section.xat.adjunts.error.servidor': 'El servidor no ha podido atender la petición. Vuelve a intentarlo dentro de un rato.',
   'section.xat.adjunts.error.senseConfirmacio': 'El servidor no ha confirmado el mensaje. Vuelve a intentarlo.',
   'section.xat.adjunts.error.format': "Elige una foto o un vídeo de hasta 60 segundos.",
+  'section.xat.adjunts.error.documentFormat': "Elige un documento PDF, TXT, CSV, ODT o DOCX válido.",
+  'section.xat.adjunts.error.documentMida': "El documento debe tener como máximo 10 MB.",
   'section.xat.adjunts.error.durada': "El vídeo debe durar como máximo 60 segundos.",
   'section.xat.adjunts.error.buit': 'Elige un archivo que no esté vacío.',
   'section.xat.adjunts.error.duradaIllegible': 'No hemos podido leer la duración del vídeo.',

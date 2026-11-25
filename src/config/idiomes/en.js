@@ -2724,6 +2724,8 @@ export default {
   'section.xat.adjunts.error.servidor': 'The server could not handle the request. Try again in a while.',
   'section.xat.adjunts.error.senseConfirmacio': 'The server did not confirm the message. Try again.',
   'section.xat.adjunts.error.format': "Choose a photo or a video up to 60 seconds long.",
+  'section.xat.adjunts.error.documentFormat': "Choose a valid PDF, TXT, CSV, ODT or DOCX document.",
+  'section.xat.adjunts.error.documentMida': "The document must be 10 MB or smaller.",
   'section.xat.adjunts.error.durada': "The video must be no longer than 60 seconds.",
   'section.xat.adjunts.error.buit': 'Choose a file that is not empty.',
   'section.xat.adjunts.error.duradaIllegible': 'We could not read the length of the video.',

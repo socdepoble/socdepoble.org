@@ -2739,6 +2739,8 @@ export default {
   'section.xat.adjunts.error.servidor': 'Zerbitzariak ezin izan du eskaera bete. Saiatu berriro geroxeago.',
   'section.xat.adjunts.error.senseConfirmacio': 'Zerbitzariak ez du mezua baieztatu. Saiatu berriro.',
   'section.xat.adjunts.error.format': "Aukeratu argazki bat edo gehienez 60 segundoko bideo bat.",
+  'section.xat.adjunts.error.documentFormat': "Aukeratu baliozko PDF, TXT, CSV, ODT edo DOCX dokumentu bat.",
+  'section.xat.adjunts.error.documentMida': "Dokumentuak gehienez 10 MB izan behar ditu.",
   'section.xat.adjunts.error.durada': "Bideoak gehienez 60 segundo iraun dezake.",
   'section.xat.adjunts.error.buit': 'Aukeratu hutsik ez dagoen fitxategi bat.',
   'section.xat.adjunts.error.duradaIllegible': 'Ezin izan dugu bideoaren iraupena irakurri.',
