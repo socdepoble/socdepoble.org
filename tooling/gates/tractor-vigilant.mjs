@@ -10,6 +10,8 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 // Un sol lexer i unes mateixes regles que la porta Tellado (R25.2-P01/P03, IDEA-266).
 import { avaluaPerimetreTellado, defectesPermisosWp, descodificaEntitatsHtml, faviconsRasterValids, mancancesManteniment503, netejaComentarisLineal, teGuardaAbspathAmbEixida, trobaSecretsWp } from './porta-perimetre-tellado.mjs';
+// PWA-03 (v1.2.25) · El mateix criteri de versió que el pressupost de pes (src/apps/plataforma/pesDelNucli.test.js).
+import { ARRELS_DE_BUILD, MANIFEST_ILLEGIBLE, MOTIU_BUILD_RANCI, estatDelBuild, versionsDeLArbre } from '../lib/versio-del-build.mjs';
 export const readOnly = true;
 // v1.2.19 · Gauntlet R1 (L2-02): textos i binaris tenen regla i pressupost propis.
 // Les dades comprimides contenen '<?=' per atzar (2^-24 per posició): 17 de 819 actius de public/.
@@ -192,14 +194,52 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const root=fs.realpathSync(arrel);if(!fs.statSync(root).isDirectory()) throw new TypeError('Arrel invàlida.');
   const comprovacions=[],enllacos=[];
   const anota=(id,severitat,estat,files=[],proposta='')=>comprovacions.push({id,capa:id.startsWith('VA')?'A':id.startsWith('VC')?'C':'B',origen_tellado:ORIGEN,estat,severitat,avis:NOU.has(id),evidencia:files.map(f=>typeof f==='string'?{fitxer:f}:f),proposta});
+  const MAX_LECTURA=8*1024*1024;
   const lligBuffer=rel=>{ const parts=rel.split('/');let cursor=root;
     for(const part of parts) {cursor=path.join(cursor,part);if(!fs.existsSync(cursor)||fs.lstatSync(cursor).isSymbolicLink()) return null;}
-    if(!fs.statSync(cursor).isFile() || fs.statSync(cursor).size>8*1024*1024) return null;
+    if(!fs.statSync(cursor).isFile() || fs.statSync(cursor).size>MAX_LECTURA) return null;
     return fs.readFileSync(cursor); };
   const llig=rel=>lligBuffer(rel)?.toString('utf8')??null;
   const netPhp=new Map();const net=p=>{if(!netPhp.has(p))netPhp.set(p,netejaComentarisLineal(llig(p)||'','.php'));return netPhp.get(p);};
   const exposats=['public','dist','dist-natiu','wordpress-plugin/dist','wordpress-plugin/builds/directori'];
   const presents=exposats.map(p=>fitxers(root,p,enllacos)).filter(Boolean), tots=presents.flat();
+  // PWA-03 (v1.2.25) · De quina versió és cada build. Només compten els manifests de l'arrel d'un build (ARRELS_DE_BUILD:
+  // sdp-release.json o, sense, la versio-viva.json que el build copia de public/); un de niat no fa ranci res (Gauntlet
+  // PWA03-V1) i un manifest il·legible és un build trencat, que es mesura (V5). El criteri és el del pressupost de pes
+  // (tooling/lib/versio-del-build.mjs). D'un build ranci NOMÉS queden fora de la llista d'SVG de VIG-07 (baix) els .svg
+  // que tenen bessó a public/: un fitxer al mateix camí relatiu, amb el nom exacte (els builds copien public/ a la seua
+  // arrel, amb el copyPublicDir de Vite o amb recursosPublicsDelPlugin de vite.standalone.config.js). Este bessó és la font
+  // d'on el build va copiar l'SVG en la seua versió, i el d'esta versió es mesura a public/ i al build fresc.
+  // El codi comprova el camí del bessó, component a component i amb el nom exacte (ni majúscules ni NFC/NFD, que APFS
+  // confon), no el contingut, perquè l'SVG d'una versió vella ja era diferent del d'ara. Per tant, un .svg modificat dins
+  // d'un build ranci en un camí que public/ també té, amb el mateix nom exacte, no es mesura (risc acceptat per l'àrbitre,
+  // PWA03DUR-S1). Un .svg sense bessó, injectat o de nom propi, es mesura com abans (PWA03DUR-A2/S1). Totes
+  // les altres comprovacions (VIG-01, VIG-02, VIG-03, VIG-04, VIG-05, VIG-06, VIG-08, VIG-12, VA1-VA3, VB10, secrets.php i
+  // el PHP de manteniment i WP 7.2 de VIG-07) lligen el disc sencer, com abans de PWA-03 (àrbitre de Carril 1,
+  // PWA03-V2/VF1). Un PHP, un .env, un secrets.php o un mapa de fonts exposats no depenen de la versió del build que els
+  // ha deixat: el servidor els servix igual. Per això, un build ranci no pot deixar cega cap comprovació de seguretat ni
+  // passar la porta d'1 a 0.
+  // PWA03VF-02 · Cap d'estes lectures no tomba l'informe. Un fitxer absent és null; un de present que no es pot llegir
+  // (EACCES, una carpeta o un enllaç al seu lloc, més de 8 MB) és MANIFEST_ILLEGIBLE. Un manifest així fa trencat el build,
+  // que es mesura sencer; un package.json o una capçalera del connector així no fan ranci cap build: sense una versió
+  // segura de l'arbre, es mesura tot.
+  const lligVersio=rel=>{try {const b=lligBuffer(rel);if(b!==null) return b.toString('utf8');} catch {/* il·legible */}
+    try {fs.lstatSync(path.join(root,rel));return MANIFEST_ILLEGIBLE;} catch {return null;}};
+  const paquet=lligVersio('package.json'),connector=lligVersio('wordpress-plugin/socdepoble-enxufe.php');
+  const arbre=versionsDeLArbre({paquet,connector}),arbreIllegible=paquet===MANIFEST_ILLEGIBLE||connector===MANIFEST_ILLEGIBLE;
+  const buildsRancis=arbreIllegible?[]:ARRELS_DE_BUILD.map(base=>({base,...estatDelBuild({release:lligVersio(`${base}/sdp-release.json`),viva:lligVersio(`${base}/versio-viva.json`)},arbre)}))
+    .filter(b=>b.estat==='ranci').map(b=>({fitxer:b.base,motiu:MOTIU_BUILD_RANCI,versioBuild:b.versio,versioViva:b.versioViva,versioArbre:arbre?.app??null}));
+  // PWA03VF-01 · El bessó ha de tindre el NOM EXACTE. APFS no distingix majúscules ni NFC de NFD: existsSync i lligBuffer
+  // hi trobarien public/assets/injectat.svg per a dist/assets/Injectat.svg. Es recorre public/ component a component amb
+  // readdirSync(dir).includes(part) (comparació exacta de la cadena), sense seguir enllaços (lstat); al final, un fitxer
+  // regular del límit de lligBuffer com a màxim. Si no hi és, o res no es pot llegir, no hi ha bessó i l'SVG es mesura.
+  // Els noms de cada carpeta es lligen una sola vegada per anàlisi (Set.has és la mateixa igualtat exacta de cadena):
+  // amb molts .svg en una carpeta, el cost no creix amb el producte (Gauntlet VF5-01).
+  const nomsDe=new Map(),noms=dir=>{if(!nomsDe.has(dir)) nomsDe.set(dir,new Set(fs.readdirSync(dir)));return nomsDe.get(dir);};
+  const bessoExacte=rel=>{try {let cursor=root;
+    for(const part of rel.split('/')) {if(!noms(cursor).has(part)) return false;cursor=path.join(cursor,part);if(fs.lstatSync(cursor).isSymbolicLink()) return false;}
+    const estat=fs.lstatSync(cursor);return estat.isFile()&&estat.size<=MAX_LECTURA;} catch {return false;}};
+  const copiaDePublic=p=>{const b=buildsRancis.find(r=>p.startsWith(`${r.fitxer}/`));return b!==undefined&&bessoExacte(`public/${p.slice(b.fitxer.length+1)}`);};
   for(const [id,filtra] of [['VIG-01',p=>SENSIBLE.test(p)],['VIG-02',p=>EXECUTABLE.test(p)||defectesFitxerEstatic(p).length>0]]) {
     const males=tots.filter(filtra);anota(id,'critica',males.length?'falla':presents.length?'ok':'no-mesurat',males,'Retirar la superfície del paquet en el carril autoritzat.');
   }
@@ -260,15 +300,25 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   const mantFitxers=[...php,...(['wp-content/maintenance.php','public/maintenance.php'].filter(p=>llig(p)!==null))].filter(p=>/(?:^|\/)(?:maintenance\.php|[^/]*manteniment[^/]*503[^/]*\.php)$/i.test(p));
   const mantMales=mantFitxers.filter(p=>mancancesManteniment503(net(p)).length>0);
   const wp72=php.flatMap(p=>defectesWp72(llig(p)||'').map(d=>({fitxer:p,...d})));
-  const svg=[...new Set([...tots,...(fitxers(root,'src',enllacos)||[]),...(fitxers(root,'wordpress-plugin',enllacos)||[])])].filter(p=>/\.svg$/i.test(p));
+  // PWA-03 · L'única entrada que deixa fora part d'un build ranci: els seus .svg amb bessó a public/, amb el nom exacte
+  // (dalt, per què). El PHP de manteniment, de WP 7.2 i d'SVG incrustat i el secrets.php d'esta mateixa comprovació es
+  // lligen sencers.
+  const svgDelDisc=[...new Set([...tots,...(fitxers(root,'src',enllacos)||[]),...(fitxers(root,'wordpress-plugin',enllacos)||[])])].filter(p=>/\.svg$/i.test(p));
+  // Un sol pas: cada .svg cau en una de les dues llistes encara que el disc canvie durant l'anàlisi (Gauntlet VFR4S-01).
+  const svgForaDeMesura=[], svg=[];for(const p of svgDelDisc) (copiaDePublic(p)?svgForaDeMesura:svg).push(p);
   const svgMals=svg.filter(p=>defectesSvgWp72(llig(p)||'',{fitxerSvg:true}));
   const svgIncrustats=php.filter(p=>defectesSvgWp72(net(p)));
   const secretsNoAutoritzats=[...new Set([...tots,...php])].filter(p=>path.posix.basename(p).toLowerCase()==='secrets.php');
   const wp72Mals=[...wp72,...[...new Set([...svgMals,...svgIncrustats])].map(fitxer=>({fitxer,regla:'svg-actiu'})),
     ...secretsNoAutoritzats.map(fitxer=>({fitxer,regla:'fitxer-secrets-no-autoritzat'}))];
-  anota('VIG-07','alta',mantMales.length||wp72Mals.length?'falla':mantFitxers.length||php.length||svg.length?'ok':'no-mesurat',
+  // Gauntlet PWA03-V2: si ha deixat SVG fora no pot dir ok. Falla si la part mesurada falla, i si no, no-mesurat
+  // (el patró de VIG-12 amb la cobertura parcial: «no-mesurat no és ok»). La proposta diu quants .svg no ha llegit,
+  // també quan falla: una fallada que només és un avís (el 503) no ha de semblar una mesura sencera (PWA03DUR-A2).
+  const fallaVig07=mantMales.length>0||wp72Mals.length>0, rebaixaVig07=svgForaDeMesura.length>0&&!fallaVig07;
+  anota('VIG-07','alta',fallaVig07?'falla':rebaixaVig07?'no-mesurat':mantFitxers.length||php.length||svg.length?'ok':'no-mesurat',
     [...mantMales,...wp72Mals],
-    'Manteniment: 503, Retry-After, no-store i robots. WP: APIs opcionals amb function_exists al mateix fitxer, cap clau literal ni hook obsolet; SVG sense script/onload/javascript/use. Comprovació lèxica, no prova de flux ni de sanejament integral.');
+    'Manteniment: 503, Retry-After, no-store i robots. WP: APIs opcionals amb function_exists al mateix fitxer, cap clau literal ni hook obsolet; SVG sense script/onload/javascript/use. Comprovació lèxica, no prova de flux ni de sanejament integral.'
+    +(svgForaDeMesura.length?` Sense mesurar: ${svgForaDeMesura.length} .svg de builds d’una altra versió amb bessó a public/ (VIG-RANCI).`:''));
   // El Mestre ha encarregat explícitament el bloqueig d'IDEA-306. El 503 preexistent continua sent avís.
   if(wp72Mals.length) comprovacions.at(-1).avis=false;
   const secretsPla=php.filter(p=>trobaSecretsWp(net(p)).length>0);
@@ -303,6 +353,7 @@ export function analitzaVigilant(arrel, { ara = new Date() } = {}) {
   anota('VIG-11','mitjana',catalegDinamic.pendents?'falla':catalegDinamic.observades?'informa':tellado.fitxersEscanejats?'ok':'no-mesurat',
     catalegDinamic.revisions.map(r=>({fitxer:r.fitxer,id:r.id,linia:r.linia})),
     `${catalegDinamic.cobertes}/${catalegDinamic.observades} signatures runtime catalogades; ${catalegDinamic.pendents} pendents. ${tellado.totalDesconeguts} destins/signatures continuen desconeguts a la porta; una revisió de comportament no resol la URL ni autoritza l'eixida.`);
+  if(buildsRancis.length) anota('VIG-RANCI','alta','no-mesurat',buildsRancis,'Un build d’una altra versió no és cap mesura de l’arbre, ni verda ni roja: només VIG-07 en deixa fora els .svg amb bessó al mateix camí de public/ (es comprova el camí amb el nom exacte, no el contingut); els .svg sense bessó es mesuren. La resta de comprovacions (noms sensibles, executables, PHP, secrets, mapes de fonts, inventari) el continuen llegint sencer: el que exposa no depén de la seua versió. Tornar a compilar (npm run build:web, npm run build:wp) per a mesurar el d’esta versió; build:wp no buida la carpeta.');
   if(enllacos.length) anota('VIG-SYMLINK','alta','no-mesurat',enllacos,'Els enllaços no es travessen; revisar-los en el paquet.');
   const recompte={ok:0,falla:0,'no-mesurat':0,informa:0,avisos:0,bloquejants:0};
   for(const c of comprovacions) {recompte[c.estat]++;if(c.estat==='falla') {if(c.avis) recompte.avisos++;else if(['critica','alta'].includes(c.severitat)) recompte.bloquejants++;}}

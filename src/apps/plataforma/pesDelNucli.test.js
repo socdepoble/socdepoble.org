@@ -23,12 +23,13 @@
    El títol diu de quan és el build que es mesura: el dist no es reconstruïx
    sol, i un build vell no diu res de l'arbre d'ara. Sense build (un clon net,
    la CI), les proves del dist se salten: vitest les compta com a saltades,
-   mai com a verdes. */
+   mai com a verdes. Amb un build d'una altra versió, també (PWA-03, baix). */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { bessonaDe, bessonesDe, esExtern, esHostLocal } from '../../config/politicaDeMitjans.js';
 import { fixaBaseRecursos, fixaPoliticaDeMitjans, resolveAsset } from '../../config/assetResolver.js';
+import { MANIFEST_ILLEGIBLE, MOTIU_BUILD_RANCI, estatDelBuild, versionsDeLArbre } from '../../../tooling/lib/versio-del-build.mjs';
 
 const ARREL = process.cwd();
 
@@ -49,8 +50,40 @@ const LIMIT_DEL_CARREGADOR = constant('LIMIT_DEL_CARREGADOR');
 const DIST = path.join(ARREL, 'wordpress-plugin/dist');
 const HI_HA_BUILD = existsSync(path.join(DIST, FITXER_INVENTARI)) && existsSync(path.join(DIST, FITXER_RELEASE));
 const llig = (fitxer) => JSON.parse(readFileSync(path.join(DIST, fitxer), 'utf8'));
-const RELEASE = HI_HA_BUILD ? llig(FITXER_RELEASE) : null;
+/* PWA-03 (v1.2.25) · Un build d'una altra versió no diu res de l'arbre d'ara: ni roig ni verd. El de la
+   1.2.0-dev (14-11-2026) hi donava 1.732.976 B d'arrencada i el CSS de la Gestoria, dos rojos falsos que
+   podien tapar una inflada real. El criteri és el de la Vigilant (tooling/lib/versio-del-build.mjs): un
+   build és d'este arbre si porta `${version}-dev`, la versió de package.json o la línia del connector amb la
+   versio-viva.json d'esta App (la línia a soles no data cap build). Un manifest llegible d'una altra versió o
+   sense versió salta el pressupost sencer, amb el motiu al títol de la suite saltada; el títol i l'avís
+   [pesDelNucli] de la consola es lligen amb --reporter=verbose o a l'informe JSON; l'eixida per defecte no els
+   garantix i pot donar només «7 skipped» (pesDelNucli.ranci.test.js). Un manifest il·legible no és cap build
+   vell, és un artefacte trencat: roig (Gauntlet PWA03-V5). */
+const textDe = (rel) => { try { return readFileSync(path.join(ARREL, rel), 'utf8'); } catch { return null; } };
+/* VF4-02 · Un manifest present que no es pot llegir (una carpeta al seu lloc, EACCES) no és absent: és trencat. Sense
+   versio-viva.json, el pressupost se saltava en silenci com a «build del cap». */
+const manifestDe = (rel) => textDe(rel) ?? (existsSync(path.join(ARREL, rel)) ? MANIFEST_ILLEGIBLE : null);
+const ARBRE = versionsDeLArbre({ paquet: textDe('package.json'), connector: textDe('wordpress-plugin/socdepoble-enxufe.php') });
+const BUILD = HI_HA_BUILD
+  ? estatDelBuild({ release: manifestDe(`wordpress-plugin/dist/${FITXER_RELEASE}`), viva: manifestDe('wordpress-plugin/dist/versio-viva.json') }, ARBRE)
+  : null;
+const MESURAT = BUILD?.estat === 'mesurat';
+const TRENCAT = BUILD?.estat === 'trencat';
+const RELEASE = MESURAT ? llig(FITXER_RELEASE) : null;
+const RANCI = BUILD?.estat === 'ranci'
+  ? `${MOTIU_BUILD_RANCI}: el dist és ${BUILD.versio ? `de la ${BUILD.versio}` : 'sense versió'}`
+    + `${BUILD.versioViva && BUILD.versioViva !== BUILD.versio ? ` (versio-viva.json de la ${BUILD.versioViva})` : ''}`
+    + ` i l’arbre, ${ARBRE ? `de la ${ARBRE.app}` : 'sense versió'}`
+  : null;
 if (!HI_HA_BUILD) console.warn('[pesDelNucli] No hi ha wordpress-plugin/dist: el pressupost de pes no s’ha mesurat.');
+if (RANCI) console.warn(`[pesDelNucli] ${RANCI}. Torna a compilar amb npm run build:wp.`);
+/* Gauntlet PWA03-V5 · Un sdp-release.json o una versio-viva.json que no són JSON, o que no es poden llegir (VF4-02),
+   no se salten: esta prova només existix llavors, i cau. */
+if (TRENCAT) {
+  test('els manifests de wordpress-plugin/dist (sdp-release.json i versio-viva.json) són JSON llegible', () => {
+    expect(BUILD.estat, 'artefacte trencat, no un build vell: torna a compilar amb npm run build:wp').not.toBe('trencat');
+  });
+}
 
 /* El sostre del tros d'entrada: el del build del 261008 a les 22:01
    (sdp-inventari.json, trossos/soc-de-poble-f0sDoqpe.js). No s'apuja
@@ -164,8 +197,8 @@ describe('les marques del codi de les apps són de veres (sense build)', () => {
   });
 });
 
-describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dist, build del ${RELEASE?.generat ?? 'cap'})`, () => {
-  const inventari = HI_HA_BUILD ? llig(FITXER_INVENTARI).fitxers : [];
+describe.skipIf(!MESURAT)(`pressupost de pes del nucli (wordpress-plugin/dist, ${RANCI ?? (TRENCAT ? 'manifest il·legible, artefacte trencat' : `build del ${RELEASE?.generat ?? 'cap'}`)})`, () => {
+  const inventari = MESURAT ? llig(FITXER_INVENTARI).fitxers : [];
   const midaDe = (cami) => inventari.find((fitxer) => fitxer.cami === cami)?.mida;
   const trossos = inventari.map((fitxer) => fitxer.cami).filter((cami) => PATRO_TROS.test(cami));
 
@@ -215,10 +248,10 @@ describe.skipIf(!HI_HA_BUILD)(`pressupost de pes del nucli (wordpress-plugin/dis
 
   /* Onada R17 · T2.1 · Els trossos que l'entrada importa de manera estàtica,
      del manifest de Vite (cap, en un dist d'abans de R17). */
-  const deVite = HI_HA_BUILD && existsSync(path.join(DIST, '.vite/manifest.json'))
+  const deVite = MESURAT && existsSync(path.join(DIST, '.vite/manifest.json'))
     ? JSON.parse(readFileSync(path.join(DIST, '.vite/manifest.json'), 'utf8')) : {};
   const registreDEntrada = Object.values(deVite).find((registre) => registre.isEntry && registre.file === RELEASE?.formatDelPaquet?.modul);
-  const deLArrencada = HI_HA_BUILD ? [RELEASE.formatDelPaquet.modul, ...(registreDEntrada?.imports ?? []).map((clau) => deVite[clau]?.file)] : [];
+  const deLArrencada = MESURAT ? [RELEASE.formatDelPaquet.modul, ...(registreDEntrada?.imports ?? []).map((clau) => deVite[clau]?.file)] : [];
 
   test(`l’arrencada estàtica (entrada i trossos que importa) no passa del sostre (${SOSTRE_DE_L_ARRENCADA_ESTATICA} B)`, () => {
     expect(registreDEntrada, 'el manifest de Vite nomena el tros d’entrada').toBeTruthy();
