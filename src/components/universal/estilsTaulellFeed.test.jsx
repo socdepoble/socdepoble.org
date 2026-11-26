@@ -39,6 +39,22 @@ describe('v1.2.17 · el full diferit del mode de taulell', () => {
     expect(propietats.filter((p) => /^(padding|border-radius|border-(start|end|top|bottom)-(start|end|left|right)-radius)/.test(p))).toEqual([]);
   });
 
+  /* v1.2.25 · VIS-R2-01 (Mestre, Pla 14:20, punt 3) · Davall de la capçalera, el Mur, el Mercat i el Calendari
+     deixen el mateix aire que /pobles: el marge inferior de header.page-title (layout.css, @layer legacy) és
+     var(--sdp-space-6), 24 px. La regla del taulell viu a @layer components i guanya, així que l'ha de repetir. */
+  test('VIS-R2-01 · la capçalera de taulell deixa davall el mateix marge que /pobles: var(--sdp-space-6), 24 px', () => {
+    const senseComentaris = (cami) => llegix(cami).replace(/\/\*[\s\S]*?\*\//g, '');
+    const [bloc] = [...senseComentaris('src/css/diferit-taulell-feed.css').matchAll(/\.sdp-universal-page-container--feed > header\.page-title \{([^}]*)\}/g)].map((m) => m[1]);
+    const margeTaulell = bloc.match(/margin-block-end:\s*([^;]+);/)?.[1].trim();
+    const pobles = senseComentaris('src/css/layout.css').match(/\nheader\.page-title \{([^}]*)\}/)?.[1] ?? '';
+    const margePobles = pobles.match(/(?:^|;)\s*margin:\s*([^;]+);/)?.[1].trim().split(/\s+/)[2];
+    expect(margePobles).toBe('var(--sdp-space-6)');
+    expect(margeTaulell).toBe(margePobles);
+    /* El valor el diu el token, a la font única (tokens.css): el nom ve del marge, no d'una declaració ací (T3). */
+    const token = margePobles.slice('var('.length, -1);
+    expect(llegix('src/css/tokens.css').match(new RegExp(`(?:^|[\\s;{])${token}\\s*:\\s*([^;]+);`))?.[1].trim()).toBe('24px');
+  });
+
   test('el Mur, el Mercat i el Calendari passen l’adoptador amb la seua config; PageFrame no importa cap full', () => {
     for (const cami of ['src/sections/mur/MurSection.jsx', 'src/sections/mercat/MercatSection.jsx', 'src/sections/calendari/CalendariSection.jsx']) {
       const font = llegix(cami);

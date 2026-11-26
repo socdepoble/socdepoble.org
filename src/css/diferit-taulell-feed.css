@@ -22,7 +22,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--sdp-space-3);
-    margin-block-end: var(--sdp-space-4);
+    margin-block-end: var(--sdp-space-6);
   }
   .sdp-universal-page-container--feed > header.page-title .page-title-logo {
     margin-block: 0 var(--sdp-space-1);
