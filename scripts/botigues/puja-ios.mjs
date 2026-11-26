@@ -61,6 +61,7 @@ import { arrelComprovada, preflight, projecteIos } from './preflight.mjs';
 
 import { problemaDeVersioClient } from './versio-client.mjs';
 import { clientAsc, ErrorAsc, preparaProduccio } from './app-store-connect.mjs';
+import { comprovaPrivacitatIpa } from './privacitat-sdk.mjs';
 
 const ADMESOS = Object.freeze({ versio: true, build: true, compila: false, confirma: true, canal: true, push: false, ajuda: false,
   'espera-valid': false, 'notes-fitxer': true, 'prepara-revisio': false, 'envia-revisio': false });
@@ -449,6 +450,11 @@ export async function main(argv, { env = process.env, asc = {} } = {}) {
     if (versioIpa !== versio || buildIpa !== build) {
       return plega(EIXIDA.VERIFICACIO, `l'app de l'IPA diu ${versioIpa} (${buildIpa}), no ${versio} (${build}): revisa que l'Info.plist llija MARKETING_VERSION i CURRENT_PROJECT_VERSION`);
     }
+    /* A02 / D1 (v1.2.26) · Cada parella Tipus|Finalitat dels manifests de privacitat dels SDK de l'IPA ha d'estar
+       coberta pel PrivacyInfo de l'App o per la revisió d'ASC de SDP_BUILDS_DIR (fora de Git: no canvia el binari). */
+    const privacitat = comprovaPrivacitatIpa({ app, arrel, carpetaBuilds: rutaDe(arrel, valors, 'SDP_BUILDS_DIR'), produccio });
+    if (privacitat.atura) return plega(EIXIDA.VERIFICACIO, privacitat.atura);
+    for (const linia of privacitat.linies) process.stdout.write(`${linia}\n`);
     if (!intacta()) return plega(EIXIDA.VERIFICACIO, 'la còpia de l\'IPA ha canviat mentre es verificava: no es puja res');
     process.stdout.write(`✓ IPA ${path.basename(ipa)}: segell, signatura íntegra de l'equip de SDP_APPLE_TEAM_ID i Info.plist ${versio} (${build}); sha256 ${empremta}\n`);
 

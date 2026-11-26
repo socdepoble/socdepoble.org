@@ -1,0 +1,22 @@
+{
+  "schema": "sdp.botigues.privacitat-sdk.v1",
+  "descripcio": "A02 / D1 (v1.2.26) · Parelles Tipus|Finalitat que declara el manifest de privacitat de cada SDK enllaçat a l'App d'iOS, observades en un arxiu real. La revisió humana de l'etiqueta App Privacy d'App Store Connect no va ací: el Mestre l'apunta a revisio-etiqueta-asc.json de SDP_BUILDS_DIR (fora de Git), amb la data AAAA-MM-DD, la versió, qui l'ha feta i les parelles revisades. Ho comproven scripts/botigues/preflight.mjs (abans de compilar) i scripts/botigues/puja-ios.mjs (sobre l'App de l'IPA, abans de pujar).",
+  "sdks": {
+    "GoogleSignIn": {
+      "paquet": "GoogleSignIn-iOS (dependència de @capgo/capacitor-social-login, producte GoogleSignIn)",
+      "observat": "Arxiu _builds_de_poble/ios/sdp-ios-1.2.24-29/App.xcarchive, GoogleSignIn_GoogleSignIn.bundle/PrivacyInfo.xcprivacy, plutil -convert json, 2026-11-26. El PrivacyInfo de l'App ja en declara 4 (Name, EmailAddress, CoarseLocation i UserID per a AppFunctionality).",
+      "parells": [
+        "CoarseLocation|AppFunctionality",
+        "DeviceID|Analytics",
+        "EmailAddress|AppFunctionality",
+        "Name|AppFunctionality",
+        "OtherDataTypes|Analytics",
+        "OtherDataTypes|AppFunctionality",
+        "OtherUsageData|Analytics",
+        "PhoneNumber|AppFunctionality",
+        "UserID|Analytics",
+        "UserID|AppFunctionality"
+      ]
+    }
+  }
+}

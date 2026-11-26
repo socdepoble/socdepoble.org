@@ -251,3 +251,16 @@ export async function durableMutation(root, input, {metadata = {}, prepare = asy
     if (current?.dev === lockStat.dev && current?.ino === lockStat.ino) { fs.unlinkSync(lock); syncDirectory(root, RUNTIME); }
   }
 }
+
+/* v1.2.26 · Lot C1-0b · El validador canònic de la traça, exposat només en lectura perquè
+   tooling/gates/reconcilia-segell-log.mjs no en dupliqui cap regla. Cap d'aquestes funcions escriu, i la traça
+   només es valida sencera (sense el paràmetre intern de la transacció en curs). */
+export const validaTracaAuditoria = (root) => validateAudit(root);
+export {
+  validRecord as validaRegistreAuditoria,
+  comparable as comparableAuditoria,
+  terminal as esTerminalAuditoria,
+  historical as esHistoricAuditoria,
+  interrupted as esInterrompudaAuditoria,
+  fileProjection as projeccioFitxersAuditoria
+};

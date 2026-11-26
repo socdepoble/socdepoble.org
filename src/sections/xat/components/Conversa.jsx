@@ -1319,10 +1319,9 @@ export default function Conversa({
     }
     const uid = msg.usuariId != null ? String(msg.usuariId) : '';
     if (!uid) return;
-    const resum = String(msg.text ?? '').trim().slice(0, 140);
-    const params = new URLSearchParams({ amb: uid });
-    if (resum) params.set('context', `> ${resum}\n`);
-    nav(`/xat?${params.toString()}`);
+    /* GCR-05 / SV-04 (v1.2.26, Lot C1-0a) · Sense motor només hi porta, com «Reenvia» (D-REENVIA):
+       el text del missatge mai no va a la URL (?context=), que queda a l'historial i a la barra d'adreces. */
+    nav(`/xat?${new URLSearchParams({ amb: uid }).toString()}`);
   }, []);
 
   const enviaPrivat = useCallback((msg) => {

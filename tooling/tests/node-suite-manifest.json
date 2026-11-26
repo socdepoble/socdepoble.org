@@ -332,7 +332,9 @@
     "tests/v1225-push-smoke.test.mjs",
     "tests/enxufe-salut-http-v1225.test.mjs",
     "tests/fn009-wp-build.test.mjs",
-    "tests/v1225-purga-lssi-claim-pglite.test.mjs"
+    "tests/v1225-purga-lssi-claim-pglite.test.mjs",
+    "tests/reconcilia-segell-log.test.mjs",
+    "tests/botigues-privacitat-sdk.v1226.test.mjs"
   ],
   "files": [
     {
@@ -2915,6 +2917,16 @@
       "path": "tests/v1225-purga-lssi-claim-pglite.test.mjs",
       "suite": "primary",
       "reason": "v1.2.25 C1-05: reclamació LSSI de les dues cues, rebuts i guardes de la migració successora en PGlite local; sense prova de Storage HTTP."
+    },
+    {
+      "path": "tests/reconcilia-segell-log.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C1-0b: reconciliació governada de la traça local del segell (quarantena, CAS, import verificat per HEAD) amb fixtures temporals; cap arbre real."
+    },
+    {
+      "path": "tests/botigues-privacitat-sdk.v1226.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C1-0c (A02/D1): guarda de privacitat dels SDK enllaçats (preflight i IPA) amb arrels sintètiques; cap arxiu ni ASC real."
     }
   ]
 }

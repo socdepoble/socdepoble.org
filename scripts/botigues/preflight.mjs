@@ -42,6 +42,7 @@ import {
 import { estatDeLesBotigues, liniesDeLEstat } from './estat.mjs';
 import { esquemaInvertitDeGoogleIos } from '../../src/config/publicCredentials.js';
 import { validaConfiguracio as validaAssociacioApps } from '../../tooling/vite/associacio-apps.mjs';
+import { liniesPrivacitatSdk, llegixRevisioAsc, privacitatSdkIos } from './privacitat-sdk.mjs';
 
 /** L'arrel on viu el script instal·lat: scripts/botigues/ → dos nivells amunt. */
 export const ARREL_DEL_SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -950,6 +951,15 @@ export function preflight({ arrel, plataformes, signa = false, env = process.env
       linies.push('Fortificació de seguretat (R26)');
       linies.push(...seguretat.linies);
       if (seguretat.mal.length) familia[EIXIDA.ARBRE] = true;
+    }
+    /* A02 / D1 (v1.2.26) · Els SDK que aporten manifest de privacitat propi han d'estar revisats a l'etiqueta d'ASC. */
+    const carpetaBuilds = entorn.codi === EIXIDA.BE && String(entorn.valors.SDP_BUILDS_DIR ?? '').trim() ? rutaDe(arrel, entorn.valors, 'SDP_BUILDS_DIR') : null;
+    const { revisio, problema: problemaRevisio } = llegixRevisioAsc(carpetaBuilds);
+    const privacitat = liniesPrivacitatSdk(privacitatSdkIos(arrel, { revisio }), { plataformes, produccio, problemaRevisio });
+    if (privacitat.linies.length) {
+      linies.push('Privacitat dels SDK enllaçats (A02)');
+      linies.push(...privacitat.linies);
+      if (privacitat.mal.length) familia[EIXIDA.ARBRE] = true;
     }
   }
   if (produccio) {
