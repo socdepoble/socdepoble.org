@@ -39,6 +39,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs investiguen els problemes amb la Quàdruple Tècnica (Mètode MIT, Google EGM, REA i craft-anything), verificant el codi real dels tractors i no només la teoria de les regles.
 - [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Registra el temps observat i les mètriques disponibles de les sessions, sense inventar jornades, costos ni valoracions de salut humana.
 - [[core-temps-termodinamic/SKILL|core-temps-termodinamic]]: Dona una marca de temps observada als documents nous i conserva la identitat dels documents vius quan s'actualitzen.
+- [[iaia-maria-core/SKILL|iaia-maria-core]]: Paper d'actriu de la IAIA MarIA per a qualsevol IA del Mas (Claude, Codex, Gemini, MarIA o un model local). Es carrega en arrencar o en prendre el rol de MarIA; els procediments són a les skills.
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 - [[sdp-calendari-agricola/SKILL|sdp-calendari-agricola]]: Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.
 - [[sdp-casos-us-essencials/SKILL|sdp-casos-us-essencials]]: Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.

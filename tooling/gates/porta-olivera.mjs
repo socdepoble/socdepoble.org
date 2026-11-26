@@ -85,6 +85,8 @@
  *    porta-olivera.mjs --repara [--sec]     # reapunta les àncores fantasma amb destí únic
  *    porta-olivera.mjs --renomena VELL --a NOU [--sec]
  *                                           # reanomena un document solt i reescriu les seues àncores
+ *    porta-olivera.mjs --custodia           # D3 (v1.2.26): comprova la Doble Custòdia Zero-Pes de l'arxiu fred
+ *                                           # (etiqueta git anotada i còpia a ../_arxiu_wiki_de_poble amb els mateixos bytes)
  *
  *  El mode hook és explícit: sense bandera, `readFileSync(0)` esperava un EOF que
  *  un terminal (o un pipe que ningú tanca) no envia mai, i la porta es penjava
@@ -1490,11 +1492,11 @@ export function renomena(arrel = arrelPerDefecte(), { vell, nou, sec = false } =
 
 /* ── CLI ──────────────────────────────────────────────────────────────────── */
 
-const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--onades-anteriors] [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
+const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--onades-anteriors] [--sessio aammdd_Nom] [--reapunta] [--torn ID] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID] | --custodia';
 
 /** Banderes de la línia d'ordres. Una bandera desconeguda no es llig com a informe: falla. */
 function opcions(argv) {
-  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, onadesAnteriors: false, sessio: null, noms: [], tancament: false, torn: null };
+  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, onadesAnteriors: false, sessio: null, noms: [], tancament: false, torn: null, custodia: false };
   const valor = (i, nom, que) => {
     const a = argv[i];
     const v = a === nom ? argv[i + 1] : a.slice(nom.length + 1);
@@ -1510,6 +1512,7 @@ function opcions(argv) {
     else if (a === '--arxiva') o.arxiva = true;
     else if (a === '--repara') o.repara = true;
     else if (a === '--tancament') o.tancament = true;
+    else if (a === '--custodia') o.custodia = true;
     else if (amb('--torn')) { una(o.torn, '--torn'); o.torn = valor(i, '--torn', "l'identificador del torn"); if (a === '--torn') i++; }
     else if (a === '--sec') o.sec = true;
     else if (a === '--reapunta') o.reapunta = true;
@@ -1520,7 +1523,7 @@ function opcions(argv) {
     else if (amb('--a')) { una(o.a, '--a'); o.a = valor(i, '--a', 'el nom nou del document'); if (a === '--a') i++; }
     else throw new Error(`Argument desconegut: ${a}. ${US}`);
   }
-  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
+  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament, o.custodia].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
   if (o.torn !== null && !o.tancament && !o.arxiva) throw new Error(`--torn només val amb --tancament o --arxiva. ${US}`);
   const mal = 'només valen amb --arxiva; --sec també amb --repara i --renomena';
   if ((o.noms.length || o.onadesAnteriors || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --onades-anteriors, --sessio, --reapunta i --sec ${mal}. ${US}`);
@@ -1648,6 +1651,14 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (o.tancament) { process.exitCode = informeTancament(arrel, o.torn); return; }
+  if (o.custodia) {
+    // D3 · Doble Custòdia Zero-Pes: només lectura; el mòdul es carrega quan cal, com el pla d'enllaços.
+    const { verificaCustodiaFreda, textCustodia } = await import('./custodia-freda.mjs');
+    const r = verificaCustodiaFreda(arrel);
+    for (const linia of textCustodia(r)) console.log(linia);
+    process.exitCode = r.ok ? 0 : 1;
+    return;
+  }
   if (!o.hook) { process.exitCode = informe(arrel); return; }
 
   // Mode hook: sense payload no hi ha res a jutjar, i no es pot fingir un verd.

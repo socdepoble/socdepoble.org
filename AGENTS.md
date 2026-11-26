@@ -26,6 +26,7 @@ Aquesta neteja és de l'orquestradora (MarIA) o del Mestre: Claude i Codex no po
 
 ## 1. UN SOL CERVELL (Autoritat Operativa)
 **La Wiki (`_wiki_de_poble/`) és la Bíblia del Coneixement i Filosofia**. L'autoritat executiva mecànica ("Tractors") viu exclusivament a `.agents/skills/`. Les skills NO han de contenir filosofia, sinó procediments. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" amagats (com antics `.sdp-reflex`) dins del RAG per evitar contaminació de context i "Stochastic Parrots".
+**Excepció única (D8, v1.2.26):** `.agents/skills/iaia-maria-core/SKILL.md` és el paper d'actriu de la IAIA (identitat i principis, no procediment) i viu com a skill perquè totes les IAs el troben al mateix camí; la còpia global de Gemini i MarIA la genera `tooling/brain/sincronitza-iaia-core.mjs`.
 
 ## 2. TAXONOMIA I NOMS 
 Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents). Només els **Arxius Arrel de Sistema i Nucli** van en MAJÚSCULES per contrast i per diferenciar-los del treball actiu. Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md`, `QUI_SOC.md`, `ON_ESTIC.md`, `VEINS.md`, `00_PORTAL` i codi font.
@@ -38,6 +39,7 @@ Cap tasca o sessió es considera finalitzada fins que hagis actualitzat l'`.agen
 
 ## 5. ZONA PROHIBIDA D'ARXIU I SECRETS
 Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val es trasllada, mai s'esborra: a `90_arxiu_historic/` amb `node tooling/gates/porta-olivera.mjs --arxiva` (§0.1), o a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del .env.
+**D3 · Doble Custòdia Zero-Pes (v1.2.26):** el que ix de la Wiki viva cap a l'arxiu fred `../_arxiu_wiki_de_poble/` porta abans una etiqueta anotada (`git tag -a`) sobre l'últim commit que el conté i una entrada a `../_arxiu_wiki_de_poble/00_manifest_arxiu_fred.json` (origen, etiqueta, commit, blob, SHA-256, bytes i destí), sense reordenar el que ja hi ha. `node tooling/gates/porta-olivera.mjs --custodia` comprova que les dues custòdies guarden els mateixos bytes.
 
 ## 6. LLEI DEL CONSELL (Zero Ocultació)
 Quan l'usuari demana un **"Prompt" o "Auditoria"** per al Consell (ex: Z, Qwen, Deepseek), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:

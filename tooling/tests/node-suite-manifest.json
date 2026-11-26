@@ -334,7 +334,9 @@
     "tests/fn009-wp-build.test.mjs",
     "tests/v1225-purga-lssi-claim-pglite.test.mjs",
     "tests/reconcilia-segell-log.test.mjs",
-    "tests/botigues-privacitat-sdk.v1226.test.mjs"
+    "tests/botigues-privacitat-sdk.v1226.test.mjs",
+    "tests/cervell-v1226-d3-d5-d7.test.mjs",
+    "tests/tractor-salut-wiki-i-skills.test.mjs"
   ],
   "files": [
     {
@@ -2927,6 +2929,16 @@
       "path": "tests/botigues-privacitat-sdk.v1226.test.mjs",
       "suite": "primary",
       "reason": "v1.2.26 C1-0c (A02/D1): guarda de privacitat dels SDK enllaçats (preflight i IPA) amb arrels sintètiques; cap arxiu ni ASC real."
+    },
+    {
+      "path": "tests/cervell-v1226-d3-d5-d7.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C1-1: Pacte de les 8 Decisions (D3 Doble Custòdia, D5/D8 còpia generada del paper i perfil 0600, D7 incubadora) amb carpetes temporals; cap ~/.gemini ni arxiu real."
+    },
+    {
+      "path": "tests/tractor-salut-wiki-i-skills.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C1-1 (D7, IDEA-361): motor de salut de la Wiki i les skills de Codex R4, només lectura, fixtures portables."
     }
   ]
 }

@@ -56,7 +56,7 @@ Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa f
 - [02_genotip](https://socdepoble.org/md/02-genotip.md): Establix les deu lleis cognitives que governen la IAIA MarIA i els agents del projecte.
 - [03_equip_ia](https://socdepoble.org/md/03-equip-ia.md): Descriu els rols de l'equip i remet al contracte original, al cens vigent i al perfil de la IAIA MarIA.
 - [03_inventari_skills](https://socdepoble.org/md/03-inventari-skills.md): Cens i semàfor de salut de les skills; com el calcula Emowe, què falla aplicat al nostre corpus i quins avisos adaptats necessita la Consola.
-- [03_llibre_d_or_memoria_episodica](https://socdepoble.org/md/03-llibre-d-or-memoria-episodica.md): Destil·lació qualitativa i contrastada de la memòria de Sóc de Poble
+- [03_llibre_d_or_memoria_episodica](https://socdepoble.org/md/03-llibre-d-or-memoria-episodica.md): Nucli etern del Llibre d'Or de Sóc de Poble, amb les lliçons vitals de la memòria del Mas en una línia cadascuna i amb la seua procedència
 - [04_contracte_de_dades](https://socdepoble.org/md/04-contracte-de-dades.md): El JSON que llegirà la Consola Termodinàmica, les fonts que el compilen i el camp contracte que necessiten les skills perquè el mapa no depenga de prosa.
 - [04_taula_potencia_models](https://socdepoble.org/md/04-taula-potencia-models.md): Taula de potència i recomanacions d'ús per a la família de models Claude i la resta de l'eixam IA.
 - [05_actors_i_salut](https://socdepoble.org/md/05-actors-i-salut.md): Els actors del Mas vistos amb la pestanya Actors d'Emowe, el principi de candats independents de l'arnés, la frontissa de contingut i les primeres mètriques de salut.
@@ -119,7 +119,7 @@ Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa f
 - [self_repair](https://socdepoble.org/md/self-repair.md): Reunix criteris consultius de reparació segura, contenció d'errors i degradació honesta davant fallades de xarxa, sense autoexecució.
 - [sgq_prompts](https://socdepoble.org/md/sgq-prompts.md): Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP), d'on ve el nom, què exigix a cada petorreta i on es resolen les plantilles.
 - [sistema_immunitari](https://socdepoble.org/md/sistema-immunitari.md): Manual operatiu de plaquetes.mjs v1.1: diagnostica ferides del graf (fantasmes, orfes) i només les cura amb aprovació per hash, lease del Reflex i escriptura verificada, sense esborrar res.
-- [sistema_nervios_skills_i_repositoris](https://socdepoble.org/md/sistema-nervios-skills-i-repositoris.md): Mapa didàctic del sistema nerviós de Sóc de Poble (44 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
+- [sistema_nervios_skills_i_repositoris](https://socdepoble.org/md/sistema-nervios-skills-i-repositoris.md): Mapa didàctic del sistema nerviós de Sóc de Poble (45 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
 - [skill](https://socdepoble.org/md/skill.md): Plantilla ISO per dissenyar skills amb gallets, abast, regles, proves i eixida verificable.
 - [soci_sollutia](https://socdepoble.org/md/soci-sollutia.md): Defineix el paper, els límits i el protocol de col·laboració amb el soci tecnològic Sollutia.
 - [successio_lazaro_execucio](https://socdepoble.org/md/successio-lazaro-execucio.md): Guia consultiva per diagnosticar i proposar la continuïtat del projecte sense concedir capacitat d'escriptura.

@@ -12,7 +12,7 @@ const FILES=['_wiki_de_poble/01_ser/00_bios.md','_wiki_de_poble/02_saber/00_full
 const read=rel=>fs.readFileSync(path.join(ROOT,rel),'utf8');
 function canonical(){const skills=inventari(ROOT),core=skills.filter(s=>s.core).length;return new Map([
  ['skills actives',skills.length],['marca core: true',core],['sense marca core: true',skills.length-core],
- ...['core-','sdp-','wiki-'].map(prefix=>['prefix '+prefix,skills.filter(s=>s.id.startsWith(prefix)).length])
+ ...['core-','sdp-','wiki-','iaia-'].map(prefix=>['prefix '+prefix,skills.filter(s=>s.id.startsWith(prefix)).length])
 ]);}
 function auditCensus(content){
  const values=canonical(),lines=content.split(/\r?\n/);let active=false;
@@ -27,8 +27,8 @@ function auditCensus(content){
 test('quatre documents preserven el contracte de frontmatter vigent',()=>{
  const schema=JSON.parse(read('tooling/wiki/schema.json'));for(const file of FILES)assert.deepEqual(validateSchema(parseDocument(read(file)).data,schema),[],file);
 });
-test('cens vigent compara sis mesures contra les skills reals, distingint marca i prefix',()=>{
- const r=auditCensus(read(CENS));assert.equal(r.status,'no-explicit-disagreements');assert.equal(r.coverage.catalog.comparedIds,6);assert.equal(r.coverage.catalog.activeClaims,6);
+test('cens vigent compara set mesures contra les skills reals, distingint marca i prefix',()=>{
+ const r=auditCensus(read(CENS));assert.equal(r.status,'no-explicit-disagreements');assert.equal(r.coverage.catalog.comparedIds,7);assert.equal(r.coverage.catalog.activeClaims,7);
  assert.notEqual(canonical().get('marca core: true'),canonical().get('prefix core-'));
 });
 test('confondre core:true amb core- genera desacord explícit localitzat',()=>{

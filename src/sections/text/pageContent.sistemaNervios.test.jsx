@@ -111,7 +111,7 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
 
   it('L0-02: cada motor atribuït a una família és un motor declarat a `motors:` per la skill que nomena, i la resta es diu procedimental', () => {
     const { motors, ambMotor, procedimentals, total } = classificacioReal();
-    expect(total).toBe(44);
+    expect(total).toBe(45);
     const md = fitxaWiki('sistema_nervios_skills_i_repositoris');
     const inici = md.indexOf('### 3.1');
     const blocs = md.slice(inici, md.indexOf('### 3.2')).split(/\n(?=#### )/).slice(1);
@@ -119,7 +119,7 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
       .map((b) => {
         const liniaInc = b.split('\n').find((l) => l.includes('**Incorporació real:**')) || '';
         return {
-          skills: [...b.matchAll(/`((?:core|sdp|wiki)-[a-z-]+)`/g)].map((m) => m[1]),
+          skills: [...b.matchAll(/`((?:core|sdp|wiki|iaia)-[a-z-]+)`/g)].map((m) => m[1]),
           incorporacio: liniaInc,
         };
       })
@@ -153,7 +153,7 @@ describe('Llei 0 · Wiki compilada, inventari de skills i README (Gauntlet v1.2.
   it('GOV-04: l’inventari de la Consola dona el cens de motors que torna fronteres-skills.mjs', () => {
     const { ambMotor, procedimentals } = classificacioReal();
     const md = fitxaWiki('03_inventari_skills');
-    expect(md).toContain(`De les 44 skills actives, ${ambMotor} declaren motors propis al camp \`motors:\``);
+    expect(md).toContain(`De les 45 skills actives, ${ambMotor} declaren motors propis al camp \`motors:\``);
     expect(md).toContain(`i ${procedimentals} són procedimentals o de governança cognitiva`);
     expect(md).toContain('`node tooling/brain/fronteres-skills.mjs`');
   });

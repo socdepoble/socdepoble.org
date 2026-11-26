@@ -100,25 +100,27 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
 
 La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista derivada. L'índex és una còpia regenerable i pot quedar ranci: el 24-09 ho estava.
 
-## Cens vigent (261117)
+## Cens vigent (261126)
 
 Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
 
-De les 44 skills actives, 22 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 22 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs`:
+De les 45 skills actives, 23 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 22 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs`:
 
 - 17-11-2026: «43 skills (23 procediment, 20 amb motor)»;
-- 24-11-2026, quan `core-llegibilitat-text` declara `tractor-maquetacio-canonica.mjs`: «44 skills (22 procediment, 22 amb motor)».
+- 24-11-2026, quan `core-llegibilitat-text` declara `tractor-maquetacio-canonica.mjs`: «44 skills (22 procediment, 22 amb motor)»;
+- 26-11-2026, quan entra `iaia-maria-core` (D8) amb `incubadora.mjs` i `sincronitza-iaia-core.mjs`: «45 skills (22 procediment, 23 amb motor)».
 
 El mapa divulgatiu per famílies i la distinció amb els repositoris externs estudiats es poden consultar a [[sistema_nervios_skills_i_repositoris]].
 
 | Mesura | Valor |
 | --- | --- |
-| skills actives | 44 |
-| marca core: true | 9 |
+| skills actives | 45 |
+| marca core: true | 10 |
 | sense marca core: true | 35 |
 | prefix core- | 28 |
 | prefix sdp- | 12 |
 | prefix wiki- | 4 |
+| prefix iaia- | 1 |
 
 Els recomptes de la secció del 24-09 són evidència històrica i es conserven amb la seua data; no són el cens vigent.
 

@@ -29,7 +29,7 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 
 ## Salut del sistema
 
-- [[sistema_nervios_skills_i_repositoris]] · mapa didàctic de les 44 skills neuronals, els tractors mecànics i els repositoris oberts estudiats o en reserva al Node 0.
+- [[sistema_nervios_skills_i_repositoris]] · mapa didàctic de les 45 skills neuronals, els tractors mecànics i els repositoris oberts estudiats o en reserva al Node 0.
 - [[sistema_immunitari]]
 - La cadena sencera de portes s'executa amb `npm run porta`; cada porta té el seu script propi (`npm run porta:frontmatter`, `npm run porta:cens`, `npm run porta:llaurador`…).
 

@@ -1,0 +1,24 @@
+{
+  "schema": "sdp.custodia-freda.lock.v1",
+  "descripcio": "D3 · Doble Custòdia Zero-Pes (v1.2.26). Ancoratge versionat de cada entrada de l'arxiu fred i de l'objecte de cada etiqueta anotada: si el manifest de fora de Git perd o canvia una entrada, o si algú refà una etiqueta, porta-olivera.mjs --custodia ix en roig. Només s'hi afig; una retirada necessita l'ordre del Mestre.",
+  "entrades": [
+    {
+      "id": "llibre-d-or-integre-261119",
+      "origen": "_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md",
+      "tag": "llibre-d-or-integre-261119",
+      "tagObject": "1d91152140e4ec6c174df99d56f276a190b1ac35",
+      "commit": "c71f3f163c7cd0b38bd1c3458138b5eb12e5a855",
+      "blob": "5577f8ccc9815ff8d17a5baf4465c03aebcb5ea9",
+      "sha256": "f1c1148eda0da577347fab6a0dc3bbd3d35ce06497834f0053f0799eee852cf9",
+      "bytes": 88587,
+      "desti": "04_ARXIU_Documents_Historics/261126_llibre_d_or_integre_c71f3f163.md"
+    }
+  ],
+  "etiquetes": [
+    {
+      "tag": "arxiu-fred-pre-poda-261126",
+      "tagObject": "9bfbe8a2a8a57e53f2c8f3ba01d45b33bb2fd610",
+      "commit": "0e624cd86800f2cbd7a821bef614bf928092b9fc"
+    }
+  ]
+}
