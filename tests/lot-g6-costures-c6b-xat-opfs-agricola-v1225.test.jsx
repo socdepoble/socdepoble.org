@@ -106,6 +106,76 @@ describe('Lot G6 · Costures C1+C6↔G1, C2+C6a↔G2, XAT-B01/B03 i ML-15', () =
     expect(onVesAlMissatge).toHaveBeenCalledWith('m-antic-1', { enfoca: false });
   });
 
+  /* v1.2.25 · Poliment P2 de l'auditoria de Codex (Guàrdia #7) · Costura C1+G1 (Codex C6b), el salt remot ajornat:
+     escriure al cercador salta amb enfoca: false; si el missatge no és a la llista, Conversa el demana
+     (onCarregaMissatgePerId) i el salt queda pendent. Quan arriba amb la cerca encara oberta, la barra mateixa hi
+     torna a saltar; si la persona ja l'ha tancada (i el focus és en un altre lloc), el salt pendent de Conversa el
+     centra i el ressalta, però no li roba el focus. Abans, el pendent oblidava l'enfoca: false i el focus anava al
+     missatge. Amb «Coincidència anterior» (enfoca: true), el missatge sí que rep el focus, també quan arriba
+     després. */
+  const saltRemotAjornat = async () => {
+    const antic = { id: 'm-antic-1', seq: 1, sender: 'other', author: 'Anna', text: 'La festa de l’any passat', estatEnviament: 'enviat' };
+    const recent = { id: 'm-50', seq: 50, sender: 'other', author: 'Anna', text: 'Bon dia', estatEnviament: 'enviat' };
+    const arribades = [];
+    const onCarregaMissatgePerId = vi.fn(() => new Promise((resol) => { arribades.push(resol); }));
+    const props = {
+      fil: { id: 'f1', tipus: 'grup', name: 'Plaça', potEscriure: true },
+      onSendMessage: vi.fn(), locale: 'ca-ES', t, resultatsCercaExterns: [{ id: 'm-antic-1' }], onCarregaMissatgePerId
+    };
+    const arbre = (messages) => (
+      <MemoryRouter>
+        <AppGridContext.Provider value={{ mida: 'ample' }}>
+          <Conversa {...props} messages={messages} />
+        </AppGridContext.Provider>
+      </MemoryRouter>
+    );
+    const vista = render(arbre([recent]));
+    const botoCerca = screen.getByRole('button', { name: 'Cerca en esta conversa' });
+    fireEvent.click(botoCerca);
+    const cercador = screen.getByRole('searchbox');
+    expect(document.activeElement).toBe(cercador);
+    fireEvent.change(cercador, { target: { value: 'festa' } });
+    await waitFor(() => expect(onCarregaMissatgePerId).toHaveBeenCalledTimes(1));
+    expect(onCarregaMissatgePerId).toHaveBeenLastCalledWith('f1', 'm-antic-1');
+    const tancaLaCerca = () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Tanca la cerca en la conversa' }));
+      expect(screen.queryByRole('searchbox')).toBeNull();
+      expect(document.activeElement).toBe(botoCerca);
+    };
+    const arriba = async () => {
+      vista.rerender(arbre([antic, recent]));
+      await act(async () => { arribades.at(-1)(true); });
+      return document.querySelector('li[data-missatge="m-antic-1"]');
+    };
+    return { cercador, botoCerca, tancaLaCerca, arriba, onCarregaMissatgePerId };
+  };
+
+  test('Cerca C1+G1 · el salt remot ajornat d’una cerca escrita no roba el focus quan el missatge arriba', async () => {
+    const { botoCerca, tancaLaCerca, arriba } = await saltRemotAjornat();
+    tancaLaCerca();
+    const node = await arriba();
+    expect(node).not.toBeNull();
+    expect(node.className).toContain('sdp-xat-item--ressaltat');
+    expect(document.activeElement).toBe(botoCerca);
+  });
+
+  test('Cerca C1+G1 · amb la cerca oberta, el missatge que arriba es ressalta i el focus es queda al cercador', async () => {
+    const { cercador, arriba } = await saltRemotAjornat();
+    const node = await arriba();
+    expect(node.className).toContain('sdp-xat-item--ressaltat');
+    expect(document.activeElement).toBe(cercador);
+  });
+
+  test('Cerca C1+G1 · el salt remot ajornat amb enfoca (Coincidència anterior) sí que porta el focus al missatge', async () => {
+    const { tancaLaCerca, arriba, onCarregaMissatgePerId } = await saltRemotAjornat();
+    fireEvent.click(screen.getByRole('button', { name: 'Coincidència anterior (més antiga)' }));
+    await waitFor(() => expect(onCarregaMissatgePerId).toHaveBeenCalledTimes(2));
+    tancaLaCerca();
+    const node = await arriba();
+    expect(node.className).toContain('sdp-xat-item--ressaltat');
+    expect(document.activeElement).toBe(node);
+  });
+
   /* K-G6-PENDENT (integració v1.2.25) · La bombolla rep onCancelaEnviament (XatContext.cancelaEnviament
      per XatSection i Conversa): el rètol «Cancel·la l’enviament» ara també crida la cancel·lació, i no
      onElimina (el diàleg d'eliminar). Abans la prova només mirava el rètol, i el clic obria el diàleg. */

@@ -1129,6 +1129,10 @@ export default function Conversa({
      (anterior als 50 carregats) i existeix `onCarregaMissatgePerId`, el demana
      asíncronament amb generació de cancel·lació i completa el salt en rebre'l. */
   const saltPendentIdRef = useRef(null);
+  /* v1.2.25 · Poliment P2 de l'auditoria de Codex (Guàrdia #7) · El salt remot ajornat conserva el seu `enfoca`:
+     el salt que fa la cerca mentre s'hi escriu (enfoca: false) no roba el focus del cercador quan el missatge
+     arriba després. */
+  const saltPendentEnfocaRef = useRef(true);
   const saltGenRef = useRef(0);
   const [avisCercaSalt, setAvisCercaSalt] = useState(null);
 
@@ -1154,6 +1158,7 @@ export default function Conversa({
     if (typeof onCarregaMissatgePerId !== 'function' || !fil?.id) return;
     const targetId = String(id);
     saltPendentIdRef.current = targetId;
+    saltPendentEnfocaRef.current = enfoca;
     Promise.resolve()
       .then(() => onCarregaMissatgePerId(fil.id, targetId))
       .then((trobat) => {
@@ -1180,7 +1185,7 @@ export default function Conversa({
   useEffect(() => {
     const pendent = saltPendentIdRef.current;
     if (!pendent) return;
-    if (centraNodeMissatge(pendent)) {
+    if (centraNodeMissatge(pendent, { enfoca: saltPendentEnfocaRef.current })) {
       saltPendentIdRef.current = null;
     }
   }, [messages, centraNodeMissatge]);

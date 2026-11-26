@@ -28,6 +28,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../host.js';
 import { XatProvider, useXat } from './XatContext.jsx';
 import { buidaEstatsPendents, hiHaEstatPendent } from '../../pwa/estatsPendents.js';
+import { esborraSessio } from '../../data/identitat.js';
 
 const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, actorKey: 'persona::A', pathname: '/xat', showToast: vi.fn(),
@@ -48,6 +49,19 @@ vi.mock('../../data/backendPort.js', () => mock);
 /* R22 · Si la sessió perduda sense eixir es pot recuperar (XatContext.bombollesSessio.test.jsx). */
 vi.mock('../../data/identitat.js', async (importOriginal) => ({ ...await importOriginal(), sessioRecuperable: () => mock.recuperable }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
+/* v1.2.25 · Poliment P2 de Codex (Guàrdia #7) · El diccionari de l'avís arriba per un import diferit, que en una
+   xarxa lenta tarda: amb `diccionari.porta` (una promesa), el text no arriba fins que la prova l'obri. Sense porta,
+   el mòdul de sempre. */
+const diccionari = vi.hoisted(() => ({ porta: null }));
+vi.mock('./i18nAccionsMissatgeXat.js', async (importOriginal) => {
+  const real = await importOriginal();
+  return {
+    ...real,
+    textAccioMissatgeXat: (...args) => (diccionari.porta
+      ? diccionari.porta.then(() => real.textAccioMissatgeXat(...args))
+      : real.textAccioMissatgeXat(...args))
+  };
+});
 
 const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
 /* L'RPC d'eliminació només accepta UUID (rebutEliminacioMissatge.js). */
@@ -88,6 +102,7 @@ const lecturesAmbXarxa = () => mock.loadMissatges.mockImplementation(lecturaDelS
 beforeEach(() => {
   vi.resetAllMocks();
   buidaEstatsPendents();
+  diccionari.porta = null;
   vigila = false;
   textPintat = false;
   servidor = [msg(1)];
@@ -308,6 +323,53 @@ describe('XAT-B01 · «Elimina per a tothom» sobre una bombolla pendent la canc
     vista.rerender(arbre());
     await assenta();
     expect(value.eliminacionsDesfetes).toEqual([]);
+  });
+
+  /* v1.2.25 · Poliment P2 de l'auditoria de Codex (Guàrdia #7) · L'àmbit i la generació es capturen abans de l'import
+     diferit del diccionari. Amb la porta tancada, la fallada definitiva ja s'ha vist (eliminacionsDesfetes) i l'avís
+     espera el text; si mentrestant la persona canvia (A → B) o la sessió canvia sense canviar d'àmbit, l'avís d'A no
+     es pinta. Abans només es mirava si el proveïdor s'havia desmuntat, i l'avís eixia igual. */
+  async function fallaDefinitivaAmbElDiccionariEnCami() {
+    const porta = deferred();
+    diccionari.porta = porta.promise;
+    mock.language = 'es';
+    const { transport, promesa, pendent, cos, vista } = await ambTransportEnVol();
+    mock.eliminaPerATothom.mockRejectedValue(Object.assign(new Error('SDP-XAT-500: no s’ha pogut eliminar'), { code: 'SDP-XAT-500' }));
+    await elimina(pendent.id);
+    await act(async () => { transport.resolve(ack(cos)); await promesa; });
+    await assenta();
+    await act(async () => { await vi.dynamicImportSettled(); });
+    await assenta();
+    expect(mock.eliminaPerATothom).toHaveBeenCalledTimes(1);
+    expect(value.eliminacionsDesfetes).toEqual([pendent.id]);
+    expect(mock.showToast).not.toHaveBeenCalled();
+    const obri = async () => { await act(async () => { porta.resolve(); }); await assenta(); };
+    return { obri, vista };
+  }
+
+  it('Poliment P2 · la mateixa persona: quan arriba el diccionari, l’avís es pinta una vegada, en la seua llengua', async () => {
+    const { obri } = await fallaDefinitivaAmbElDiccionariEnCami();
+    await obri();
+    expect(mock.showToast).toHaveBeenCalledTimes(1);
+    expect(mock.showToast).toHaveBeenCalledWith('No se ha podido eliminar el mensaje para todos.', 'error');
+  });
+
+  it('Poliment P2 · si la persona canvia (A → B) mentre arriba el diccionari, l’avís de l’eliminació d’A no es pinta', async () => {
+    const { obri, vista } = await fallaDefinitivaAmbElDiccionariEnCami();
+    mock.session = { currentUser: { id: 'B' }, generacio: 2 };
+    mock.actorKey = 'persona::B';
+    vista.rerender(arbre());
+    await assenta();
+    expect(value.eliminacionsDesfetes).toEqual([]);
+    await obri();
+    expect(mock.showToast).not.toHaveBeenCalled();
+  });
+
+  it('Poliment P2 · si la sessió canvia sense canviar d’àmbit (una altra generació) mentre arriba el diccionari, cap avís', async () => {
+    const { obri } = await fallaDefinitivaAmbElDiccionariEnCami();
+    act(() => { esborraSessio({ abast: 'pestanya' }); });
+    await obri();
+    expect(mock.showToast).not.toHaveBeenCalled();
   });
 
   it('si la lectura el porta ja esborrat (eliminat des d’un altre aparell), no es torna a eliminar ni hi ha cap avís', async () => {

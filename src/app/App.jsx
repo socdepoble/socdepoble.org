@@ -20,10 +20,11 @@ import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER, rotolDeLaSeccio } from '
 import { VERSIO_SISTEMA } from '../config/versio.js';
 import { RUTA_FITXA_IAIA, RUTES_CANONIQUES } from '../config/navigation.js';
 import { IAIA_ID } from '../data/identitatsSeed.js';
-import { getSectionLabels } from '../config/i18n';
+import { carregaDiccionari, createTranslator, getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { aterratgeDespresDEntrar, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
+import { CODI_ENTRADA } from '../data/errorsBackend.js';
 import {
   EVENT_ADRECA_DE_RECUPERACIO, EVENT_ENLLAC_DACCES_INSERVIBLE, anunciaEnllacDeRecuperacio, hiHaAdrecaDeRecuperacio,
   marcaRecuperacioPendent
@@ -195,6 +196,16 @@ const AMPLE_MAXIM_COMPACTE = 1023;
 const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
 const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
+
+/* v1.2.25 · Poliment P2 de l'auditoria de Codex (Guàrdia #7) · K-CAB-ENT0108 (COMMIT-5) a la tornada de Google per
+   redirecció: data/oauthRelay.js (errorDelProveidor) ja porta el codi de les altes tancades, del compte suspés i del
+   correu de Google sense confirmar, i la closca el pintava sempre en valencià (e.message). Ara, la clau
+   section.login.error.* en la llengua de la interfície, com missatgeDEntradaAmbGoogle a l'entrada. */
+const CLAUS_TORNADA_OAUTH = Object.freeze({
+  [CODI_ENTRADA.ALTES_TANCADES]: 'section.login.error.altesTancades',
+  [CODI_ENTRADA.COMPTE_SUSPES]: 'section.login.error.compteSuspes',
+  [CODI_ENTRADA.CORREU_GOOGLE_PENDENT]: 'section.login.error.confirmaCorreuGoogle'
+});
 
 /* Gauntlet 261029 (cicle 1, i18n-a11y; IDEA-57 L4a) · Els noms accessibles
    de la closca, en parells [clau, reserva]: la reserva és el literal de
@@ -631,11 +642,19 @@ function AppShell({ children, mobileNav }) {
       })
       .catch((e) => {
         if (!shellMuntat.current) return;
-        showToast(e.message, 'error');
+        /* Poliment P2 (Guàrdia #7) · Amb una de les tres claus, l'avís espera el diccionari de la llengua triada (en
+           arrencar per la tornada encara pot no haver arribat; carregaDiccionari no rebutja mai). La reserva és
+           el text valencià de l'error. */
+        const clau = Object.hasOwn(CLAUS_TORNADA_OAUTH, String(e?.code)) ? CLAUS_TORNADA_OAUTH[e.code] : null;
+        if (clau) {
+          carregaDiccionari(language).then(() => {
+            if (shellMuntat.current) showToast(createTranslator(language)(clau, e.message), 'error');
+          });
+        } else showToast(e.message, 'error');
         /* R · Un enllaç de recuperació que ja no val: a l'entrada, on se'n pot demanar un altre. */
         if (e?.recuperacio === true) navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
       });
-  }, [externalConfig, t, showToast, navigate, location.pathname]);
+  }, [externalConfig, t, showToast, navigate, location.pathname, language]);
   useEffect(() => {
     if (tornadaFeta.current || !modeRemot) return;
     tornadaFeta.current = true;

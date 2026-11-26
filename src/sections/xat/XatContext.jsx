@@ -3005,10 +3005,20 @@ export function XatProvider({ children, config }) {
     }
     tancaEliminacioTardana(id, entrada, true);
     setEliminacionsDesfetes((previs) => (previs.includes(id) ? previs : Object.freeze([...previs, id])));
+    /* v1.2.25 · Poliment P2 de l'auditoria de Codex (Guàrdia #7) · L'àmbit i la generació de la sessió es
+       capturen ABANS de l'import diferit del diccionari, que en una xarxa lenta pot tardar: si mentrestant la
+       persona canvia (A → B) o ix, l'avís de l'eliminació d'A ja no es pinta. */
+    const ambit = ambitActual.current;
+    const valida = capturaSessio();
+    const encaraAqui = () => {
+      if (desmuntat.current || ambitActual.current !== ambit) return false;
+      try { valida(); } catch { return false; }
+      return true;
+    };
     import('./i18nAccionsMissatgeXat.js')
       .then(({ textAccioMissatgeXat }) => textAccioMissatgeXat(avisRef.current.language, 'eliminaPerATothomError'),
         () => traductorRef.current('section.xat.accioError', "No s'ha pogut completar l'acció."))
-      .then((text) => { if (!desmuntat.current) avisRef.current.showToast(text, 'error'); });
+      .then((text) => { if (encaraAqui()) avisRef.current.showToast(text, 'error'); });
   }, [tancaEliminacioTardana, tocaTardanes]);
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
