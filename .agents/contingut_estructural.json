@@ -164,10 +164,10 @@
       "data": "2026-11-05"
     },
     "versions": {
-      "sha256": "4299cee222222f6000fab88562a0dd7bb51568b63c89002cbfc4ee677efb4377",
-      "html": 27172,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "sha256": "e517d875ce9c90c9fa98ef436c2f03bdda1f8ed9b848647e4efe76752e5a9252",
+      "html": 27204,
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2: actualització de SERVIDOR_V1224): el paràgraf del servidor de la crònica FITA_V1224 diu en cinc llengües que la 133, la 134 i la 136 s’aplicaren la nit del 24 al 25-11-2026 i que, amb elles, esborrar per a tothom buida el text al servidor; la 132 i la 135, refusades per les seues guardes sense canvis (supabase/README.md, rebut 261125_0039); pendent de lectura humana",
+      "data": "2026-11-25"
     },
     "wikidepoble": {
       "sha256": "c7892d0e58181409d5fa8338d5c9cf22c96467346ea77e52c54971558f08ab33",

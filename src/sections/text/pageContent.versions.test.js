@@ -7695,19 +7695,35 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
     }
   });
 
-  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1224) declara els cinc canvis preparats i, quan s’escriu, pendents d’aplicar; el README porta l’estat vigent (133, 134 i 136 aplicades; 132 i 135 refusades)', () => {
-    const PENDENTS_SERVIDOR = {
-      ca: ['cinc canvis preparats', 'servidor de Sóc de Poble', 'encara no s’han aplicat', 'sense fingir res'],
-      es: ['cinco cambios preparados', 'servidor de Sóc de Poble', 'todavía no se han aplicado', 'sin fingir nada'],
-      en: ['five changes prepared', 'Sóc de Poble server', 'have not yet been applied', 'without pretending otherwise'],
-      eu: ['bost aldaketa prest', 'Sóc de Pobleren zerbitzarirako', 'oraindik ez dira aplikatu', 'ezer itxuratu gabe'],
-      gl: ['cinco cambios preparados', 'servidor de Sóc de Poble', 'aínda non se aplicaron', 'sen finxir nada']
+  /* v1.2.25 · SERVIDOR_V1224 posat al dia: la crònica ja no diu que «esborrar per a tothom» espera el servidor. Les
+     xifres del paràgraf (tres aplicats, dos refusats) i la nit es lliguen a les files del README, i el fet (el servidor
+     buida el text) a la migració 133 que el fa. */
+  test('Llei 0 · el paràgraf del servidor (SERVIDOR_V1224) diu que tres dels cinc canvis s’aplicaren la nit del 24 al 25 de novembre i que, amb ells, esborrar per a tothom buida el text al servidor; el README porta el mateix estat (133, 134 i 136 aplicades; 132 i 135 refusades)', () => {
+    const ESTAT_SERVIDOR = {
+      ca: ['cinc canvis', 'servidor de Sóc de Poble', 'tres s’aplicaren', '24 al 25 de novembre', 'esborres per a tothom', 'el servidor també en buida el text', 'altres dos', 'sense canviar res'],
+      es: ['cinco cambios', 'servidor de Sóc de Poble', 'tres se aplicaron', '24 al 25 de noviembre', 'borras para todos', 'el servidor también vacía su texto', 'otros dos', 'sin cambiar nada'],
+      en: ['five changes', 'Sóc de Poble server', 'three were applied', '24 to 25 November', 'delete for everyone', 'the server also empties its text', 'other two', 'without changing anything'],
+      eu: ['Sóc de Pobleren zerbitzarirako', 'bost aldaketetatik', 'hiru aplikatu ziren', 'azaroaren 24tik 25erako', 'guztiontzat ezabatzen', 'zerbitzariak ere husten du haren testua', 'Beste biak', 'ezer aldatu gabe'],
+      gl: ['cinco cambios', 'servidor de Sóc de Poble', 'tres foron aplicados', '24 ao 25 de novembro', 'borras para todos', 'o servidor tamén baleira o seu texto', 'outros dous', 'sen cambiar nada']
     };
-    for (const [llengua, frases] of Object.entries(PENDENTS_SERVIDOR)) {
+    /* El que deia abans d'aplicar-les (b3026e72f): ja no és cert i no pot tornar. */
+    const JA_NO_CERT = {
+      ca: ['encara no s’han aplicat', 'es queda com estava', 'cinc canvis preparats'],
+      es: ['todavía no se han aplicado', 'se queda como estaba', 'cinco cambios preparados'],
+      en: ['have not yet been applied', 'stays as it was', 'five changes prepared'],
+      eu: ['oraindik ez dira aplikatu', 'zegoen bezala geratzen', 'bost aldaketa prest'],
+      gl: ['aínda non se aplicaron', 'queda como estaba', 'cinco cambios preparados']
+    };
+    expect(Object.keys(SERVIDOR_V1224)).toEqual(['ca', 'es', 'en', 'eu', 'gl']);
+    for (const [llengua, frases] of Object.entries(ESTAT_SERVIDOR)) {
       const pla = text(`<p>${SERVIDOR_V1224[llengua]}</p>`);
       for (const frase of frases) expect(pla, `${llengua} · ${frase}`).toContain(frase);
+      for (const frase of JA_NO_CERT[llengua]) expect(pla, `${llengua} · ${frase}`).not.toContain(frase);
       expect(FITA_V1224[llengua][3], llengua).toBe(SERVIDOR_V1224[llengua]);
     }
+    const m133 = llegix('supabase/migrations/20261123233000_r3264_xat_elimina_per_a_tothom_sense_caducitat.sql');
+    expect(m133).toContain("update public.xat_missatges set text=null,xifrat=null,metadades='{}'::jsonb,");
+    expect(m133).toContain('grant execute on function public.xat_elimina_per_a_tothom(uuid,uuid) to authenticated;');
     const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
     const presentsV1224 = migracions.filter((nom) => NOVES_V1224.has(nom));
     if (presentsV1224.length > 0) {
@@ -7722,6 +7738,10 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
         expect(linia, String(fila)).toContain('la seua guarda la va refusar sense canvis');
         expect(linia, String(fila)).toContain('`261125_0039_rebut_sql_produccio_132_136.json`');
       }
+      /* Tres aplicades i dues refusades, com diu el paràgraf, i cap altra fila de la v1.2.24 en cap altre estat. */
+      const aplicades = [132, 133, 134, 135, 136].filter((fila) => readme.split('\n')
+        .find((l) => l.startsWith(`| ${fila} | `))?.includes('| Aplicada a producció la nit del 24 al 25-11-2026 (00:31–00:38 CET)'));
+      expect(aplicades).toEqual([133, 134, 136]);
       for (const fila of [133, 134, 136]) {
         const linia = readme.split('\n').find((l) => l.startsWith(`| ${fila} | `));
         expect(linia, String(fila)).toContain('| Aplicada a producció la nit del 24 al 25-11-2026 (00:31–00:38 CET)');
