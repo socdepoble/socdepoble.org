@@ -39,9 +39,13 @@ test('el local conserva les capacitats declarades, les setze absències explíci
      els quatre mètodes entren a la llista en l'ordre del contracte i el kit hi afig quatre casos (243 → 247). */
   /* v1.2.25 · Costures 8 i 9 · xatCerca (67a): el local la declara i la rebutja amb 'sense-capacitat'; cap absència nova i
      tres casos més (250 → 253). */
-  expect(Object.keys(CAPACITATS)).toHaveLength(67);
+  /* v1.2.26 · C26-3 · taxonomiaPagines (68a): el local la declara (taxonomiaPaginesLocal.js), cap absència nova ni cap
+     mètode nou a la llista de baix, i dos casos més al kit (253 → 255). */
+  /* v1.2.26 · C26-1 #12 (IDEA-365, decisió D2 de l'integrador) · Un cas del nucli: appendSectionSubmissionNetworkOnly
+     rebutja categoriesSistema buida sense publicar (255 → 256). Cap capacitat ni absència nova. */
+  expect(Object.keys(CAPACITATS)).toHaveLength(68);
   expect(Object.values(CAPACITATS).flat().filter(m => typeof a[m] !== 'function')).toEqual(['prefixMitjansPublics','classificaCamiMitja','esReferenciaMitjaPrivada','normalitzaVerificacioRecuperacio','urlAutoritzacioGoogle','bescanviaCodiOAuth','confirmaCapturaCrdtRural','registraDenunciaDiligent','revisaDenunciaDiligent','llistaDenunciesDiligents','revocaPublicacioMur','drenaRevocacionsMur','encuaRevocacioNotaMur','adminResumSessionsDispositius','adminLlistaSessionsDispositius','estatCuradoriaCultural','llistaAportacionsCulturals','enviaAportacioCultural','revisaAportacioCultural','consultaIAIA','loadRitmeXat','actualitzaPresenciaXat','carregaAccionsMissatges','alternaReaccio','alternaDestacat','alternaFixat','eliminaPerAMi','eliminaPerATothom','desaPublicacioPropia','llistaRevisionsPagina','desaRevisioPagina','restauraRevisioPagina','importaMunicipiOpenData','confirmaCorreu','reenviaVerificacioCorreu','demanaRestablimentCorreu','restablixContrasenyaAmbCorreu','registraDenunciaPublica','adminSafataDenuncies','adminRevisaDenuncia']);
-  expect(CASOS).toHaveLength(253);
+  expect(CASOS).toHaveLength(256);
   for (const plataforma of ['ios', 'android', 'web', '', null, {}]) expect(await a.versioMinimaClient(plataforma, { dataMode: 'remote', supabaseUrl: 'https://fora.invalid' })).toBeNull();
 });
 

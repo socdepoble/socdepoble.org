@@ -77,7 +77,7 @@ export function resolveWikiEditorial(attributes, { root, file, rawFrontmatter } 
   const date = a.date ?? history.at(-1) ?? fallback;
   const editorial = { ...(a.image === undefined ? {} : { image: a.image }), ...(a.imageAlt === undefined ? {} : { imageAlt: a.imageAlt }),
     date, updated: a.updated ?? history[0] ?? date, ...(a.version === undefined ? {} : { version: a.version }),
-    revisions: a.revisions ?? history.length, mur: a.mur ?? false,
+    revisions: a.revisions ?? history.length, mur: a.mur ?? false, ...publicWikiFlags(a),
     origenEditorial: {
       date: a.date !== undefined ? 'frontmatter' : history.length ? 'git' : wikiDate(candidate) ? 'nom' : 'reserva',
       updated: a.updated !== undefined ? 'frontmatter' : history.length ? 'git' : a.date !== undefined ? 'frontmatter' : wikiDate(candidate) ? 'nom' : 'reserva',
@@ -96,6 +96,55 @@ export function publicMetadata(attributes = {}) {
   if (!attributes || typeof attributes !== 'object' || Array.isArray(attributes)) return false;
   if (Object.hasOwn(attributes, 'visibility') && attributes.visibility !== 'public') return false;
   return !['arxivat', 'quarantena'].includes(attributes.status);
+}
+
+/** D4 Opció B: la transparència de l'esborrany no el fa indexable.
+ * Els estats arxivat/quarantena i visibilitats desconegudes continuen tancats.
+ */
+export function publicWikiFlags(attributes = {}) {
+  return attributes.status === 'esborrany' ? { esborrany: true, noindex: true } : {};
+}
+
+/** IDEA-364 · l'excepció de skills no amplia publicWikiFile ni el corpus RAG.
+ * No normalitzem una ruta relativa abans de validar-la: «x/../» es rebutja.
+ */
+export function publicSkillFile(root, candidate) {
+  if (typeof candidate !== 'string' || /[\\\x00-\x1f\x7f]/.test(candidate)) return null;
+  if (candidate.split('/').some(part => part === '.' || part === '..')) return null;
+  let rel = candidate;
+  if (path.isAbsolute(candidate)) {
+    const logical = path.relative(path.resolve(root), candidate);
+    // macOS /tmp i /var tenen un prefix real /private: les dos formes de
+    // l'arrel confiada representen el mateix arbre, sense relaxar els fills.
+    try { rel = logical.startsWith('..') ? path.relative(fs.realpathSync(root), candidate) : logical; }
+    catch { return null; }
+  }
+  if (!/^\.agents\/skills\/[a-z0-9-]+\/SKILL\.md$/.test(rel)) return null;
+  const safe = confinedFile(root, path.resolve(root, rel));
+  if (!safe) return null;
+  // Un perfil 0600 roman privat encara que algú el situe davall de skills.
+  const stat = fs.statSync(safe);
+  return stat.nlink === 1 && (stat.mode & 0o044) !== 0 ? safe : null;
+}
+
+export function publicSkillFiles(root) {
+  const dir = path.join(root, '.agents', 'skills');
+  // confinedFile comprova també .agents i skills: cap pare simbòlic.
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory())
+      .map(e => publicSkillFile(root, `.agents/skills/${e.name}/SKILL.md`))
+      .filter(Boolean).sort();
+  } catch { return []; }
+}
+
+export function readPublicSkillFile(root, file) {
+  const safe = publicSkillFile(root, file);
+  if (!safe) return null;
+  const fd = fs.openSync(safe, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try {
+    if (fs.fstatSync(fd).nlink !== 1 || (fs.fstatSync(fd).mode & 0o044) === 0) return null;
+    return emmascaraCamins(fs.readFileSync(fd, 'utf8'));
+  } finally { fs.closeSync(fd); }
 }
 
 /** P0-CONSOLIDACIO-3-CATEDRES · Títol i slug d'un document públic de la Wiki.
@@ -193,7 +242,7 @@ const PRIVATE_ROUTES = new Set(['login', 'registre', 'perfil', 'control', 'conne
   'dispositius', 'traduccions', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats', 'gestoria', 'tractors']);
 export function publicSeoRoute(route, attributes = {}) {
   const [section] = tramsDeRuta(route);
-  return publicMetadata(attributes) && !PRIVATE_ROUTES.has(section) && pobleAllowsIndex(route, attributes);
+  return publicMetadata(attributes) && !publicWikiFlags(attributes).noindex && !PRIVATE_ROUTES.has(section) && pobleAllowsIndex(route, attributes);
 }
 
 /* v1.2.18 · Gauntlet R1 (L3-01) · Els trams del camí, cadascun descodificat

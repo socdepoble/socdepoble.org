@@ -19,7 +19,7 @@ import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
 import { ambDescartats } from './columnesOpcionals.js';
 import { hidrataPerfilPersonaPilot } from '../identitatsSeed.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
-import { FORMA_USERNAME, MINIM_USERNAME, errorDUsername, normalitzaUsername } from '../../sections/onboarding/onboardingModel.js';
+import { FORMA_USERNAME, MINIM_USERNAME, errorDUsername, normalitzaUsername, missatgeDEntrada } from '../../sections/onboarding/onboardingModel.js';
 
 let renovacioEnCurs = null;
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Exportat: el verify del
@@ -669,6 +669,11 @@ export async function comprovaServidor(config = {}) {
    l'error original viatja a `cause`. «Credencials invàlides» no distingix
    compte inexistent de contrasenya errònia: el servidor tampoc. */
 const MISSATGE_ENTRADA = Object.freeze({
+  /* v1.2.26 · #9 P2 (Gauntlet C26-3) · Les altes tancades i el compte suspés reutilitzen la frase d'onboardingModel.js
+     (MISSATGES_ENTRADA), la mateixa que porta l'entrada amb Google (oauthRelay.js) i, byte a byte, el valor valencià de
+     section.login.error.*: correu, testimoni natiu i relay diuen el mateix i envien al mateix interlocutor. */
+  [CODI_ENTRADA.ALTES_TANCADES]: missatgeDEntrada({ code: CODI_ENTRADA.ALTES_TANCADES }),
+  [CODI_ENTRADA.COMPTE_SUSPES]: missatgeDEntrada({ code: CODI_ENTRADA.COMPTE_SUSPES }),
   [CODI_ENTRADA.CREDENCIALS]: 'El correu o la contrasenya no són correctes.',
   [CODI_ENTRADA.CORREU_PENDENT]: 'Encara no has confirmat el correu. Obri l’enllaç que t’hem enviat i torna a entrar.',
   [CODI_ENTRADA.CONTRASENYA_FEBLE]: 'La contrasenya és massa feble. Tria’n una de més llarga i més difícil d’endevinar.',
@@ -702,6 +707,8 @@ function codiDeGoTrue(error) {
   }
   const cos = cosDeGoTrue(error);
   const codi = typeof cos?.error_code === 'string' ? cos.error_code : '';
+  if (codi === 'signup_disabled') return CODI_ENTRADA.ALTES_TANCADES;
+  if (codi === 'user_banned') return CODI_ENTRADA.COMPTE_SUSPES;
   if (status === 429 || LIMIT_GOTRUE.test(codi)) return CODI_ENTRADA.MASSA_INTENTS;
   if (status === 400 && codi === 'invalid_credentials') return CODI_ENTRADA.CREDENCIALS;
   if (status === 400 && codi === 'email_not_confirmed') return CODI_ENTRADA.CORREU_PENDENT;
@@ -712,7 +719,7 @@ function codiDeGoTrue(error) {
   if (codi === 'otp_expired') return CODI_ENTRADA.ENLLAC_CADUCAT;
   if (status === 422 && codi === 'same_password') return CODI_ENTRADA.MATEIXA_CONTRASENYA;
   /* Correcció de la revisió T1–T4 (260930) · Qualsevol altra resposta 4xx
-     (signup_disabled, validation_failed, el GoTrue antic sense error_code…):
+     (validation_failed, el GoTrue antic sense error_code…):
      una frase genèrica. El `msg` en anglés es queda a `cause`, mai a la vista. */
   if (Number.isInteger(status) && status >= 400 && status < 500) return CODI_ENTRADA.DESCONEGUT;
   return null;
@@ -885,7 +892,7 @@ function custodiaCodiApple(codi, config) {
 /* El vocabulari de token_oidc.go de GoTrue: 400 amb error «invalid …» (Bad ID
    token, invalid nonce) o validation_failed és un testimoni rebutjat; 400 amb
    provider_disabled, el proveïdor apagat al servidor. La resta, com l'entrada amb
-   contrasenya (429, xarxa, 5xx, signup_disabled → DESCONEGUT). */
+   contrasenya (429, xarxa, 5xx i codis d’altes tancades o compte suspés). */
 function traduixErrorDeToken(error) {
   if (!error || typeof error !== 'object' || error.name === 'AbortError') return error;
   const cos = error.status === 400 ? cosDeGoTrue(error) : null;

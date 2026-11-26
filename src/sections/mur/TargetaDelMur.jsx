@@ -53,6 +53,8 @@ import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { preuInicialDelProducte } from '../mercat/variacionsDeProducte.js';
+import { propsDeTargetaDeProducte } from '../mercat/targetaDeProducte.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia, fontVideoPropia } from '../../utils/sanitize.js';
 import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
@@ -68,8 +70,11 @@ import { CLASSE_DE_LA_TARGETA, DistintiuAlertaMunicipal } from './AlertaMunicipa
    element sense àmbit no rep res (Llei del Píxel). */
 import { ambitDe, esFitxaDAmbit, etiquetesDAmbit, resumDeFitxa, rutaDAmbit } from '../../utils/publicacioUniversal.js';
 import { localitzaCategoriesMares } from '../../data/taxonomia/taxonomiaCanonica.js';
+import { labelsSistema } from '../../data/taxonomia/taxonomiaPublicacio.js';
+import { localitzaPindolesDeSistema } from './pindolesDeSistema.js';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { ofereixTraduir, planTraduccioPublicacio, propia } from '../../components/universal/traduccio/planTraduccioPublicacio.js';
+import { textPlaSenseMarkdown } from '../../config/textPlaSenseMarkdown.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -98,8 +103,11 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
   const { t, language = 'ca' } = useUIActions();
   /* Cadena R11, Loop 3 (L2-09) · Les categories mares (P0-40) es lligen en la
      llengua de la interfície, com a les pàgines (localitzaPagina). En
-     valencià, o sense cap mare, l'element és el mateix objecte. */
-  const etiquetesLocals = localitzaCategoriesMares(original.labels, language);
+     valencià, o sense cap mare, l'element és el mateix objecte.
+     C26-2 #9 (IDEA-365, 21:40, regla 3; 21:58, punt 1) · I les píndoles de Categoria de Sistema d'un element
+     que les declara (categoriesSistema), amb labelsSistema: el text de la interfície i la ruta canònica, les
+     mateixes que la seua UniversalPage (elementDeSeccio.js). Ho hereta l'acte (EventCard). */
+  const etiquetesLocals = localitzaPindolesDeSistema(localitzaCategoriesMares(original.labels, language), original.categoriesSistema, language);
   const ambEtiquetes = etiquetesLocals === original.labels ? original : { ...original, labels: etiquetesLocals };
   /* R51 (P0-46 / IDEA-177; R51V-03) · Una publicació que porta translation_mode
      es pinta segons el pla del contracte (planTraduccioPublicacio.js): la
@@ -109,6 +117,10 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
   const plaTraduccio = planTraduccioPublicacio(ambEtiquetes, language);
   const item = plaTraduccio?.element ?? ambEtiquetes;
   const navigate = useNavigate();
+  /* C26-2 #1 (Gauntlet c13; IDEA-365, 21:58, punt 1) · Les fitxes de /pobles, per a l'última
+     pastilla d'un producte (la que porta a /pobles/<slug>): la mateixa font que la Card del Mercat
+     (TargetaDelMercat) i la UniversalPage (useElementDeSeccio). Fora del proveïdor, cap fitxa. */
+  const { towns } = useCoreContent();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
      de les seues publicacions torna a pintar-se i porta al seu perfil. */
   useEntitatDelProjecte();
@@ -198,8 +210,14 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      del sistema, amb la seua ruta, i no porten cap autor inventat.
      T63.2 · el mateix descriptor diu quin és el xat públic de Comentar
      (261007, la via «En públic»): el de la publicació, del producte o de la
-     pàgina del sistema, si en té. */
-  const objecte = item.isSystem
+     pàgina del sistema, si en té.
+     C26-2 #4 (Gauntlet c13; IDEA-367, 23:06, punt 3) · La card d'un llibre dels Catàlegs («Què dinem?»: type
+     'cataleg', fora de Sistema i signada per l'associació) també és una pàgina, la del seu lector
+     (/page/receptes/que-dinem): Connectar i Comentar porten eixa pàgina, no una publicació /mur/<id> que no
+     existix. mainHref no viatja mai en un payload (mapejadorSeccions.js el lleva): només el posa la llavor. */
+  const esPaginaDeCataleg = !item.isSystem && item.type === 'cataleg'
+    && esRutaInterna(item.mainHref) && item.mainHref.startsWith('/page/');
+  const objecte = item.isSystem || esPaginaDeCataleg
     ? objecteDePagina({ titol: item.title || item.name, ruta: item.mainHref, id: item.id })
     : objecteDe(item, seccio);
   /* Ordre del Mestre (261007) · Una targeta de sistema porta la seua acció
@@ -227,26 +245,20 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      Una persona (autorDe) sense cap avatar ja no hi cau: null i la silueta
      de sempre, la mateixa de la targeta del Mercat (targetaDeProducte.js),
      del lector del MAS i de la barra taronja del detall (elementDeSeccio.js).
-     Abans el quadrat verd signava al costat del seu nom. */
+     Abans el quadrat verd signava al costat del seu nom.
+     C26-2 #4 (P0-115, Llei d'Autoria de Dos Nivells) · Un llibre dels Catàlegs el signa la seua associació,
+     no Sóc de Poble: sense avatar propi, null i la silueta, mai el logotip al costat del nom de l'associació. */
   const signaPersona = autorDe(item)?.tipus === 'persona';
   const signatura = signaturaDeQuiSigna(item, {
     nom: item.author_name || item.seller || (item._murPublic ? "Autoria no publicada" : "Sóc de Poble"),
-    avatar: item.author_avatar || item.avatar_url || (signaPersona || item._murPublic ? null : DEFAULT_AUTHOR.avatarUrl)
+    avatar: item.author_avatar || item.avatar_url || (signaPersona || item._murPublic || esPaginaDeCataleg ? null : DEFAULT_AUTHOR.avatarUrl)
   });
-  /* P0-33 / IDEA-150 (Llei 1:1 UniversalPage ↔ UniversalCard, 261107) · La
-     targeta del Mur pinta la mateixa entradilla (entradilla || lead) i el
-     mateix subtítol (subtitle || post_subtitle) que la seua UniversalPage.
-     Abans llegia només item.lead i queia a item.description. */
-  const textEntradilla = item.entradilla || item.lead || item.description;
-  const cos = typeof textEntradilla === 'string'
-    ? <p className="sp-card-text">{textEntradilla}</p>
-    : textEntradilla;
-  /* El subtítol de reserva (post_subtitle) no repetix l'entradeta: una
-     publicació de /notes sense subtítol hi porta la mateixa descripció. */
-  const textNet = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
-  const subtitolDeReserva = textNet(item.post_subtitle) !== textNet(typeof textEntradilla === 'string' ? textEntradilla : '')
-    ? item.post_subtitle
-    : undefined;
+  /* P0-33 / IDEA-150 · IDEA-357 (v1.2.26) · Entradetes i subtítols nets de Markdown cru. */
+  const netMd = (v) => (typeof v === 'string' ? textPlaSenseMarkdown(v) : v);
+  const textEntradilla = netMd(item.entradilla || item.lead || item.description);
+  const cos = typeof textEntradilla === 'string' ? <p className="sp-card-text">{textEntradilla}</p> : textEntradilla;
+  const subReserva = textPlaSenseMarkdown(item.post_subtitle);
+  const subtitolDeReserva = subReserva && subReserva !== (typeof textEntradilla === 'string' ? textEntradilla : '') ? subReserva : undefined;
   /* T3.3 · Una alerta municipal porta el distintiu (text visible i icona
      redundant, sense regió viva) al capdamunt del cos, davall del títol i
      del subtítol (qui salta per encapçalaments el troba en arribar), la
@@ -264,20 +276,34 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
      Correcció L3-A6 · Darrere, les `labels` del payload si en porta; si no,
      les de reserva SENSE la primera (el type cru, 'vehicle', o «Mercat»:
      text sense t() i redundant amb l'etiqueta de l'àmbit), només les del
-     Mercat que afigen informació (variants, categoria, etiqueta). */
-  const etiquetesDeReserva = [
-    {
-      text: item.isSystem ? 'Sistema' : ((item.type === 'market' || item.type === 'product') ? 'Mercat' : (item.type || 'Publicació')),
-      className: (item.isSystem || item.type === 'market' || item.type === 'product') ? 'sdp-badge-system' : 'sdp-badge-category'
-    },
-    (item.type === 'market' || item.type === 'product') && item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
-    (item.type === 'market' || item.type === 'product') && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
-    (item.type === 'market' || item.type === 'product') && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
+     Mercat que afigen informació (variants, categoria, etiqueta).
+     C26-2 · IDEA-365 (21:40, regles 1 i 3; D3 de l'integrador) · Cap píndola amb un type intern: el type
+     cru d'una publicació («feed», «post») ja no es pinta com a categoria (/categoria/feed, «no trobada»). Una
+     publicació del Mur sense labels porta les seues Categories de Sistema (labelsSistema) o, si no en declara
+     cap, Mur, el destí de sèrie de la secció (Llibre Mestre, línia 3804; publicacioSistema.js); i el
+     recompte de variants no és taxonomia: text inert (`inerta`). La categoria i l'etiqueta del producte són
+     taxonomia i continuen clicables. */
+  const esProducte = item.type === 'market' || item.type === 'product';
+  const destinsDeReserva = Array.isArray(item.categoriesSistema) ? labelsSistema(item.categoriesSistema, language) : [];
+  const sistemaDeReserva = item.isSystem ? [{ text: 'Sistema', className: 'sdp-badge-system' }]
+    : esProducte ? [{ text: 'Mercat', className: 'sdp-badge-system' }]
+      : (destinsDeReserva.length ? destinsDeReserva : labelsSistema(['Mur'], language));
+  const etiquetesDelMercatDeReserva = [
+    esProducte && item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent', inerta: true } : null,
+    esProducte && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
+    esProducte && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
   ].filter(Boolean);
-  const etiquetesDeSempre = item.labels || etiquetesDeReserva;
+  const etiquetesDeSempre = item.labels || [...sistemaDeReserva, ...etiquetesDelMercatDeReserva];
+  /* C26-2 #1 (Gauntlet c13) · IDEA-365 (21:40, regla 1; 21:58, punts 1 i 2) · Un producte del
+     Mercat que també ix al Mur pinta ací EXACTAMENT les pastilles de la seua Card del Mercat i de
+     la seua UniversalPage (propsDeTargetaDeProducte): els destins de sistema davant (Mur + Mercat,
+     traduïts amb nomEstructural), la categoria i l'etiqueta humanes en la llengua de la
+     interfície, el recompte de variants i el poble. Abans, la reserva amb els slugs crus
+     («Mercat · 2 variants · roba · samarreta»), i amb C26-2 només «Mur · Mercat». Una fitxa
+     d'àmbit conserva el seu contracte (IDEA-61). */
   const etiquetes = fitxaDAmbit
-    ? [...etiquetesDAmbit(item, t), ...(Array.isArray(item.labels) ? item.labels : etiquetesDeReserva.slice(1))]
-    : etiquetesDeSempre;
+    ? [...etiquetesDAmbit(item, t), ...(Array.isArray(item.labels) ? item.labels : etiquetesDelMercatDeReserva)]
+    : seccio === 'mercat' ? propsDeTargetaDeProducte(item, t, { towns, idioma: language }).labels : etiquetesDeSempre;
   /* IDEA-61 · El resum de la fitxa («Oferisc places · La Torre → Alcoi …»)
      fa de subtítol quan n'hi ha; sense àmbit, el subtítol de sempre. */
   const resum = fitxaDAmbit ? resumDeFitxa(item, t) : '';
@@ -293,7 +319,7 @@ export function TargetaDelMur({ item: original, esdeveniment = null, alertaMunic
       /* T51 · l'emoticona que la nota porta al payload (icon); la
          targeta només la pinta si és un sol emoji. */
       emoticona={item.icon}
-      subtitle={resum || item.subtitle || subtitolDeReserva}
+      subtitle={resum || netMd(item.subtitle) || subtitolDeReserva}
       body={alerta || errorDeTraduccio ? (
         <>
           {alerta ? <DistintiuAlertaMunicipal tipus={alerta.clau} /> : null}

@@ -1,3 +1,4 @@
+import { llibreDeLaFont } from './catalegsMultipoble.js';
 /** IDEA-112 (Onada R9, carril C5) · Banc de llavors: consulta de tres catàlegs publicats i una font oficial d’oliveres.
  *
  * Les dades dels tres catàlegs hortícoles són literals de les fonts del disc (camí, SHA-256 i línies a cada fitxa). La
@@ -32,6 +33,8 @@ export const VERSIO_BANC_LLAVORS = '1.2.0';
 export const FONTS_BANC_LLAVORS = congela([
  {
   "id": "cataleg-valencia",
+  "web": "https://agroambient.gva.es/va/web/cief/cataleg-valencia-de-varietats-tradicionals",
+  "webVerificada": false,
   "titol": "Catàleg valencià de varietats tradicionals d’interés agrari",
   "autoria": "Pla de diversitat agrària valenciana",
   "ambit": "Terres valencianes",
@@ -68,6 +71,7 @@ export const FONTS_BANC_LLAVORS = congela([
  {
   "id": "avl-mallorca",
   "titol": "Catàleg de llavors 2020",
+  "any": 2020,
   "autoria": "Associació de Varietats Locals (AVL), de Mallorca",
   "ambit": "Mallorca",
   "document": "_cultura_de_poble/intercanvi_de_llavors_i_varietats_tradicionals/corpus_text/01_AVL_Cataleg_de_Llavors_2020.md",
@@ -99,6 +103,8 @@ export const FONTS_BANC_LLAVORS = congela([
  },
  {
   "id": "atles-catalunya",
+  "web": "https://fundaciomiquelagusti.cat/documentacio/primera-proposta-de-latles-de-les-varietats-horticoles-locals-catalanes/",
+  "webVerificada": false,
   "titol": "Atles de les varietats hortícoles locals catalanes · Catàleg de varietats locals d’interès agrari de Catalunya",
   "autoria": "Fundació Miquel Agustí",
   "ambit": "Catalunya",
@@ -133,6 +139,7 @@ export const FONTS_BANC_LLAVORS = congela([
   "titol": "Variedades de olivo cultivadas en la Comunidad Valenciana",
   "llenguaTitol": "es",
   "autoria": "Generalitat Valenciana · IVIA (Iniguez, Paz i Illa-Gómez, 2001)",
+  "any": 2001,
   "ambit": "Comunitat Valenciana · oliveres",
   "document": "https://redivia.gva.es/handle/20.500.11939/8499",
   "web": "https://redivia.gva.es/handle/20.500.11939/8499",
@@ -5879,3 +5886,6 @@ export function filtraEntrades(entrades, cerca = '') {
     return q.split(/\s+/).every((tros) => text.includes(tros));
   });
 }
+
+/** Presentació + 45/65/15/3 fitxes: 46/66/16/4 pàgines, sense alterar les transcripcions. */
+export const llibresDelBancDeLlavors=()=>FONTS_BANC_LLAVORS.map(font=>llibreDeLaFont(font,entradesDelCataleg(font.id)));

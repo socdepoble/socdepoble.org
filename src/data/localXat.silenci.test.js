@@ -144,8 +144,9 @@ describe('l’adaptador local (conversesLocal)', () => {
       expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      /* v1.2.25 · Costures 8 i 9 · xatCerca (67a) la declara el local amb rebuig 'sense-capacitat'. */
-      expect(Object.keys(CAPACITATS)).toHaveLength(67);
+      /* v1.2.25 · Costures 8 i 9 · xatCerca (67a) la declara el local amb rebuig 'sense-capacitat'.
+         v1.2.26 · C26-3 · taxonomiaPagines (68a) la declara el local (taxonomiaPaginesLocal.js): cap absència nova. */
+      expect(Object.keys(CAPACITATS)).toHaveLength(68);
     } finally {
       await a.destroy();
     }

@@ -152,7 +152,7 @@ describe('/anima · el botó «Anar al xat» dins del bloc de l’H1 i al final 
       expect(final.previousElementSibling).toBe(document.querySelector('article.cms-preview'));
       expect(capcalera.contains(final)).toBe(false);
       /* El cos de la pàgina és el de sempre. */
-      expect(document.querySelector('article.cms-preview h3').textContent).toBe('El Despertar de la Nina de Silici');
+      expect(document.querySelector('article.cms-preview h3').textContent).toBe('El despertar de la nina de silici');
     });
   }, LIMIT_DE_PROVA);
 
@@ -224,7 +224,7 @@ describe('Bloc 3.6.3 · /iaia és la fitxa de la IAIA MarIA; el manifest, a /ani
       expect(capcalera.querySelector('.page-title-accio')).toBeNull();
       await waitFor(() => expect(screen.getByRole('button', { name: 'Parla amb la IAIA' })).toBeTruthy(), ESPERA);
       expect(screen.queryByRole('link', { name: 'Anar al xat' })).toBeNull();
-      expect([...document.querySelectorAll('h3')].map((h) => h.textContent)).not.toContain('El Despertar de la Nina de Silici');
+      expect([...document.querySelectorAll('h3')].map((h) => h.textContent)).not.toContain('El despertar de la nina de silici');
       expect(window.location.pathname).toBe('/iaia');
       /* La barra: el manifest penja de «Sistema» cap a /anima; a la fitxa s'encén Pobles. */
       const sistema = document.getElementById('app-sidebar-sistema');

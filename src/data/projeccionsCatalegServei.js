@@ -112,7 +112,7 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
   /* Les versions que un registre confirmat i sense versió pot adoptar d'una
      lectura remota: només les d'una fila única que és exactament la projecció
      que es va confirmar. Pura: no toca el magatzem. Null si no n'adopta cap. */
-  function versionsAdoptables(net, items) {
+  function versionsAdoptables(net, items, normalitzaDestins) {
     let versions = null, confirmacions = null, incidencies = null;
     for (const audiencia of AUDIENCIES) {
       /* R32.15 · Una incidència de conflicte es tanca sola quan el servidor ja té
@@ -125,8 +125,12 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
       const font = destins.length ? net.font : { ...net.font, title: 'Publicació retirada', subtitle: '', lead: '' };
       if (remote?.ownerId !== scope.ownerId || remote.audiencia !== audiencia || remote.local || remote.pendent || !instant(item.updated_at)) continue;
       const id = net.ids[audiencia], sectionId = audiencia === 'publica' ? 'mur' : 'notes', createdAt = item.created_at;
+      const cru = payloadProjeccioCataleg({ font, destins, audiencia });
+      // C26-1: compara la mateixa projecció canònica que ha escrit el port.
+      // Els ACK legacy sense categoriesSistema continuen comparant-se íntegres.
+      const publicable = Object.hasOwn(item, 'categoriesSistema') ? normalitzaDestins(cru, sectionId) : cru;
       const payload = mapSectionSubmissionToItem({ id, sectionId, ownerUserId: scope.ownerId, createdAt,
-        payload: { ...payloadProjeccioCataleg({ font, destins, audiencia }), id, sectionId, ownerUserId: scope.ownerId, created_at: createdAt } });
+        payload: { ...publicable, id, sectionId, ownerUserId: scope.ownerId, created_at: createdAt } });
       const expected = audiencia === 'publica' ? elementDeMurMembre({ id, section_id: sectionId, owner_user_id: scope.ownerId,
         author_org_id: item.authorOrgId, title: font.title, payload, created_at: createdAt, updated_at: item.updated_at }, sectionId)
         : { ...elementDeFilaPublicada({ id, payload, titol: font.title, createdAt, updatedAt: item.updated_at,
@@ -157,12 +161,14 @@ export function creaServeiProjeccionsCataleg({ abast, magatzem, publica, comprov
     escriu();
     if (!Array.isArray(items)) throw errorProjeccioCataleg('resposta-invalida');
     if (versionada !== true || base.mode === 'lectora') return false;
+    const { categoriesSistemaPerPublicar } = await import('../utils/publicacioSistema.js');
+    comprova();
     let adoptada = false;
     for (const row of await llista()) {
-      if (!versionsAdoptables(row, items)) continue;
+      if (!versionsAdoptables(row, items, categoriesSistemaPerPublicar)) continue;
       await base.actualitza('projeccions', row.clau, current => {
         comprova(); if (!current) return undefined;
-        const net = registreNet(current), adopcio = versionsAdoptables(net, items);
+        const net = registreNet(current), adopcio = versionsAdoptables(net, items, categoriesSistemaPerPublicar);
         if (!adopcio) return undefined;
         adoptada = true; return registreNet({ ...net, ...adopcio });
       });

@@ -1,7 +1,7 @@
 {
   "schema": "socdepoble.wiki-baseline.v1",
   "documents": 504,
-  "bytes": 13691773,
+  "bytes": 13693321,
   "zones": {
     "00_index.md": 1,
     "01_ser": 10,
@@ -12,7 +12,7 @@
     "10_metriques": 2,
     "90_arxiu_historic": 259
   },
-  "treeSha256": "81ba4417a8b0c8f89fb10a392389e9eafdac0ed5b4433cf99067656df12d4c9f",
+  "treeSha256": "668604edcc9d483d1e08a309b44658d958ab6fcabf50aed97bca244dc93e44f7",
   "graphConfig": {
     "path": "_wiki_de_poble/.obsidian/graph.json",
     "contractSha256": "1350e18598101a2f6904368dfd5c30f37b11803b04639225ee94faffece95183"

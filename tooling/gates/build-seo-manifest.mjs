@@ -191,7 +191,11 @@ async function carregaWiki() {
       const editorial = wikiEditorial({ ...item.attributes, ...Object.fromEntries(['image', 'imageAlt', 'date', 'updated', 'version', 'revisions', 'mur'].filter(k => Object.hasOwn(item, k)).map(k => [k, item[k]])) });
       const meta = metadadesDeDocumentPublic(item);
       if (meta.imatge?.estat === 'bloquejada') throw new TypeError(`Imatge Wiki bloquejada: ${item.id}`);
-      result.push({ ruta: `wikidepoble/${encodeURIComponent(item.id)}`, title: meta.title, description: meta.description,
+      /* v1.2.26 · D4 Opció B · Un esborrany es llig a /wikidepoble, però no s'indexa: la mateixa
+         política (publicSeoRoute) i la marca del manifest decidixen index, mai un true fix. */
+      const ruta = `wikidepoble/${encodeURIComponent(item.id)}`;
+      result.push({ ruta, index: publicSeoRoute(ruta, item.attributes) && item.noindex !== true,
+        title: meta.title, description: meta.description,
         image: typeof meta.image === 'object' && meta.image ? meta.image.url : meta.image || IMATGE_DEFECTE,
         ...(meta.image?.alt ? { imageAlt: meta.image.alt } : {}),
         type: 'Article', lastmod: editorial.updated || editorial.date || WIKI_DATE_FALLBACK,
@@ -265,7 +269,8 @@ for (const d of detalls) {
 }
 
 const capitolsWiki = await carregaWiki();
-for (const { ruta, ...meta } of capitolsWiki) manifest.routes[ruta] = { status: 200, index: true, ...meta };
+// index ve de carregaWiki (D4 Opció B): forçar-lo ací tornaria indexables els esborranys.
+for (const { ruta, ...meta } of capitolsWiki) manifest.routes[ruta] = { status: 200, ...meta };
 
 /* ─────────────────────────────── Fail-closed ─────────────────────────────── */
 

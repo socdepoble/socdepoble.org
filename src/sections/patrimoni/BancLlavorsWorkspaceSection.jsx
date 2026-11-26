@@ -4,7 +4,9 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 import { usePublicadorsRegistrats } from '../../hooks/usePublicadorsRegistrats.js';
 import { useSEO } from '../../hooks/useSEO';
-import { FONTS_BANC_LLAVORS, entradesDelCataleg, textDeCercaDeLEntrada } from '../../data/patrimoni/bancLlavors.js';
+import { FONTS_BANC_LLAVORS, entradesDelCataleg, llibresDelBancDeLlavors, textDeCercaDeLEntrada } from '../../data/patrimoni/bancLlavors.js';
+import { presentacioDeLaFont } from '../../data/patrimoni/catalegsMultipoble.js';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { useLaminesBotaniquesNode0 } from './useLaminesBotaniquesNode0.js';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { useUIActions, useUIStateOpcional } from '../../app/contexts/UIContext';
@@ -123,8 +125,36 @@ function PaginaVarietatLlavorsAmbRouter({ item, onClose, children }) {
       showLogos={true}
       topBarData={{ showPin: false, ...dadesBarra }}
       onBack={onClose}
-      copyright={font.llicencia || COPYRIGHT_SDP}
+      /* C26-2 #14 · Una fitxa d'una font de tercers porta la llicència de la presentació de la seua font
+         (catalegsMultipoble.js · presentacioDeLaFont), mai la de Sóc de Poble. */
+      copyright={presentacioDeLaFont(font).llicencia}
     >
+      {children}
+    </UniversalPage>
+  );
+}
+
+function PaginaPresentacioLlibreLlavors({ item, tr, language, onClose, children }) {
+  const { presentacio, font } = item;
+  return (
+    <UniversalPage
+      chrome="full"
+      title={presentacio.title}
+      subtitle={presentacio.subtitle}
+      lead={presentacio.lead}
+      llenguaDelContingut="ca"
+      showLogos={true}
+      topBarData={{ showPin: false }}
+      onBack={onClose}
+      copyright={font?.llicencia || presentacio.llicencia || COPYRIGHT_SDP}
+      labels={[
+        { text: 'Catàlegs', className: 'sdp-badge-system', href: '/categoria/catalegs' },
+        { text: font?.ambit || presentacio.procedencia || 'Banc de llavors', className: 'sdp-badge-category' }
+      ]}
+    >
+      <div className="sdp-cataleg-workspace__fitxa">
+        {font ? <FitxaDeLaFont font={font} tr={tr} llengua={language} /> : null}
+      </div>
       {children}
     </UniversalPage>
   );
@@ -133,12 +163,14 @@ function PaginaVarietatLlavorsAmbRouter({ item, onClose, children }) {
 export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, children, llibreInicial, itemSlug = null, sincronitzaRuta = false }) {
   const baseId = useId();
   const search = useConsultaDelRouter();
+  const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
   const uiActions = useUIActions();
   const t = uiActions?.t;
   const language = useUIStateOpcional()?.language || uiActions?.language || 'ca';
   const txPat = textosPatrimoniA11y(language);
   const txBib = textosBibliotecaAgricola(language);
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
+  const llibresLlavors = useMemo(() => llibresDelBancDeLlavors(), []);
   const [llibreActiu, setLlibreActiu] = useState(() => (
     llibreInicial && LLIBRES_IDS.some((l) => l.id === llibreInicial)
       ? llibreInicial
@@ -173,19 +205,25 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
   };
 
   const cataleg = useLaminesBotaniquesNode0(llibreActiu === 'llavors');
-  const model = useMemo(() => ({
-    status: 'ready',
-    /* Onada R29 · R29-02-1b · Les entrades són estàtiques (la làmina del Node 0 només hi afig la imatge):
-       una ?fitxa= que no hi és mostra l'estat net de «no accessible», no un error amb Reintentar. */
-    itemsComplete: true,
-    canAutoSelect: () => false,
-    categories: FONTS_BANC_LLAVORS.map((font) => ({
-      id: font.id,
-      label: font.autoria,
-      count: entradesDelCataleg(font.id).length
-    })),
-    items: elementsDelBancDeLlavors(cataleg, txBib.laminaBotanicaNode0)
-  }), [cataleg, txBib.laminaBotanicaNode0]);
+  const model = useMemo(() => {
+    const fitxes = elementsDelBancDeLlavors(cataleg, txBib.laminaBotanicaNode0);
+    return {
+      status: 'ready',
+      /* Onada R29 · R29-02-1b · Les entrades són estàtiques (la làmina del Node 0 només hi afig la imatge):
+         una ?fitxa= que no hi és mostra l'estat net de «no accessible», no un error amb Reintentar. */
+      itemsComplete: true,
+      canAutoSelect: () => false,
+      llibres: llibresLlavors,
+      categories: llibresLlavors.map((llibre) => ({
+        id: llibre.id,
+        slugRuta: llibre.id,
+        /* IDEA-366 (22:23) · El nom curt del llibre a la columna (TITOLS_CURTS_DE_LLIBRE): el llarg es tallava. */
+        label: llibre.titolCurt,
+        count: entradesDelCataleg(llibre.id).length
+      })),
+      items: fitxes
+    };
+  }, [cataleg, txBib.laminaBotanicaNode0, llibresLlavors]);
 
   return (
     <div className="sdp-workspace-llibres">
@@ -232,9 +270,11 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
             ruta="/page/banc-de-llavors"
             itemSlug={itemSlug}
             sincronitzaRuta={sincronitzaRuta}
+            afegirCataleg={esSuperadmin}
+            permetreAfigCataleg
             model={model}
             labels={{ categories: txPat.catalegs, items: txPat.varietats, all: txPat.totsElsCatalegs }}
-            renderDetail={({ item, onClose, onTriaItem }) => {
+            renderDetail={({ item, selection, onClose, onTriaItem }) => {
               const entrada = item?.entrada;
               const pont = varietatPendent ? (
                 <PontSeleccioVarietat
@@ -267,6 +307,24 @@ export default function BancLlavorsWorkspaceSection({ page, accioPrincipal, chil
                     </section>
                     {children}
                   </PaginaVarietatLlavors>
+                );
+              }
+              const llibreSeleccionat = selection?.categoryId && selection.categoryId !== '__all__'
+                ? llibresLlavors.find((l) => l.id === selection.categoryId)
+                : null;
+              if (llibreSeleccionat?.presentacio) {
+                const fontDelLlibre = FONTS_BANC_LLAVORS.find((f) => f.id === llibreSeleccionat.id) || null;
+                return (
+                  <PaginaPresentacioLlibreLlavors
+                    key={llibreSeleccionat.presentacio.id}
+                    item={{ presentacio: llibreSeleccionat.presentacio, font: fontDelLlibre }}
+                    tr={tr}
+                    language={language}
+                    onClose={onClose}
+                  >
+                    {pont}
+                    {children}
+                  </PaginaPresentacioLlibreLlavors>
                 );
               }
               return (

@@ -337,7 +337,9 @@
     "tests/botigues-privacitat-sdk.v1226.test.mjs",
     "tests/cervell-v1226-d3-d5-d7.test.mjs",
     "tests/tractor-salut-wiki-i-skills.test.mjs",
-    "tests/cartograf-som-de-poble.v1226.test.mjs"
+    "tests/cartograf-som-de-poble.v1226.test.mjs",
+    "tests/v1226-taxonomia-pagines-pglite.test.mjs",
+    "tests/wiki-skills-publicacio-v1226.test.mjs"
   ],
   "files": [
     {
@@ -2494,7 +2496,7 @@
     {
       "path": "tooling/gates/__tests__/tellado-cataleg-r32_14.test.mjs",
       "suite": "primary",
-      "reason": "R32.14 all 36 dynamic signatures catalog obligations and hostile mutants."
+      "reason": "R32.14 all 39 dynamic signatures catalog obligations and hostile mutants."
     },
     {
       "path": "tests/r3215-lssi-repetida-postgres.test.mjs",
@@ -2945,6 +2947,16 @@
       "path": "tests/cartograf-som-de-poble.v1226.test.mjs",
       "suite": "primary",
       "reason": "v1.2.26 C1-2: cartògraf del contenidor dins de Git (--audit, --on-va, --inventari) sobre un contenidor sintètic temporal; cap lectura del contenidor real."
+    },
+    {
+      "path": "tests/v1226-taxonomia-pagines-pglite.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C26-3 (IDEA-375) · migració 140 en PGlite real: AAL2 en línia també amb el cos de Producció d'es_superadmin, frontera canònica del Mur, normalització com el client, bloqueig per pàgina, CAS i reaplicació; llig SDP_PGLITE_MODULE i entra al cens de deute PGlite; cap certificat de Producció."
+    },
+    {
+      "path": "tests/wiki-skills-publicacio-v1226.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C26-4 (D4 B) · projecció pública de la Wiki, de les skills i d'llms.txt, i policia de vocabulari, amb un arbre sintètic temporal; cap lectura ni escriptura de public/ real."
     }
   ]
 }

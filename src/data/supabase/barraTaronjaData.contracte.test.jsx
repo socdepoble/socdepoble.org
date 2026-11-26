@@ -73,7 +73,9 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({
 }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (capacitat) => estat.capacitats.has(capacitat),
-  loadPerfilPublic: async () => estat.perfil
+  loadPerfilPublic: async () => estat.perfil,
+  /* v1.2.26 (G26-2) · useTaxonomiaPaginaOverlay.js llig l'overlay editorial de la pàgina; ací cap. */
+  lligTaxonomiaPagina: vi.fn(async () => null)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 vi.mock('../../sections/mur/MurContext', () => ({ useMur: () => ({ status: 'ready', events: [], feedPosts: [], marketItems: [] }) }));

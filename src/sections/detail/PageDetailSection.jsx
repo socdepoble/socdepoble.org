@@ -21,6 +21,8 @@ import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRo
 import { usePublicadorsBarraRecurs } from '../../hooks/usePublicadorsBarraRecurs.js';
 import { CopublicacioDePaginaContext } from './CopublicacioDePaginaContext.js';
 import PeuEditorialIdioma, { etiquetaPeuEditorialIdioma } from '../../components/universal/PeuEditorialIdioma.jsx';
+import ControlEdicioTaxonomia from '../taxonomia/ControlEdicioTaxonomia.jsx';
+import { idPaginaValidTaxonomia } from '../taxonomia/useTaxonomiaPaginaOverlay.js';
 
 const PAGINA_PUBLICAR_MAPA = 'publicar_mapa';
 const PublicarMapaMapaShowcase = lazyRoute(() => import('./PublicarMapaShowcase.jsx').then((m) => ({ default: m.PublicarMapaMapaShowcase })));
@@ -81,10 +83,12 @@ function PaginaPatrimoniCopublicable({ Workspace, slug, itemSlug, page, accioPri
     if (resposta.recursTipus === 'pagina' && resposta.recursId === slug) publicacio.recarrega();
   }
   const context = itemSlug ? null : { pageKey: slug, publicadorsRegistrats: publicacio.publicadorsRegistrats };
+  const idPaginaTaxonomia = idPaginaValidTaxonomia(`page/${slug}`);
   return (
     <CopublicacioDePaginaContext.Provider value={context}>
       <Workspace page={page} itemSlug={itemSlug || null} accioPrincipal={accioPrincipal} sincronitzaRuta>
         {!itemSlug ? <ControlCopublicacioDeCataleg recursId={slug} enActualitzar={actualitzaBarra} /> : null}
+        {!itemSlug && idPaginaTaxonomia ? <ControlEdicioTaxonomia idPagina={idPaginaTaxonomia} categoriesSistemaInicials={['Catàlegs']} /> : null}
         {children}
       </Workspace>
     </CopublicacioDePaginaContext.Provider>
@@ -219,6 +223,8 @@ export default function PageDetailSection() {
   const { pages = [], pageCopy = {}, status } = useCoreContent();
   const instalacio = useInstalacioDeLaPagina(slug);
   const tOpcional = useUIActionsOpcional()?.t;
+  const sessio = useSessioOpcional();
+  const potEditarTaxonomia = sessio?.esSuperadmin === true && sessio?.nivell === 'aal2';
 
   const canonica = resolvePageSlugPath(slug);
   if (canonica) return itemSlug ? <NotFoundPage /> : <Navigate to={canonica} replace />;
@@ -273,6 +279,13 @@ export default function PageDetailSection() {
        passa com a funció del traductor: TextSection és qui té el `t`. A
        qualsevol altra pàgina, cap prop: les etiquetes de sempre. */
     const pastilla = slug === PAGINA_DE_LA_PASTILLA ? (t) => pastillaDeVersio(slug, t) : null;
+    const idPaginaTaxonomia = potEditarTaxonomia ? idPaginaValidTaxonomia(`page/${slug}`) : null;
+    const contingutFinal = idPaginaTaxonomia ? (
+      <>
+        {alFinal}
+        <ControlEdicioTaxonomia idPagina={idPaginaTaxonomia} categoriesSistemaInicials={['Sistema']} />
+      </>
+    ) : alFinal;
     const peuDescarregues = slug === 'descarregues'
       ? <BarreraDelTrosAccessori><Suspense fallback={null}><GuiaCanalsActualitzacio /></Suspense></BarreraDelTrosAccessori>
       : null;
@@ -290,7 +303,7 @@ export default function PageDetailSection() {
         etiquetaPeuDePagina={etiquetaPeuEditorialIdioma(tOpcional)}
         {...(pastilla ? { etiquetaFinal: pastilla } : null)}
       >
-        {alFinal}
+        {contingutFinal}
       </TextSection>
     );
   }

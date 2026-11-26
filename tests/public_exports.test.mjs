@@ -234,7 +234,7 @@ test('manifest, RAG i slugs: cap camí d’usuari, ni a les etiquetes ni als JSO
 test('CLI --check --strict accepta privat existent i rebutja desaparegut sense escriure outputs', (t) => {
   const { root, write } = fixture(t);
   const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/lib/markdown-prose.mjs', 'tooling/wiki/lib/publication-policy.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js',
+  for (const rel of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/wiki/lib/public-skills.mjs','tooling/lib/markdown-prose.mjs', 'tooling/wiki/lib/publication-policy.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js',
     'tooling/wiki/lib/frontmatter.mjs', 'tooling/lib/arrel.mjs', 'tooling/scripts/canonada.mjs']) {
     write(rel, fs.readFileSync(path.join(repo, rel), 'utf8'));
   }
@@ -250,6 +250,55 @@ test('CLI --check --strict accepta privat existent i rebutja desaparegut sense e
   assert.equal(invalid.status, 1, invalid.stderr);
   assert.match(invalid.stderr, /privat.*no existeix/);
   assert.equal(fs.existsSync(path.join(root, 'src/data/wikiManifest.js')), false);
+});
+
+/* v1.2.26 · D4 Opció B (Gauntlet C26-4 #1) · Un esborrany de la Wiki es llig a /wikidepoble, però ix SENSE
+   indexar als dos productors del head servit: seo-routes.json (tooling/gates/build-seo-manifest.mjs, el que
+   llig el connector WordPress) i el manifest social (tooling/seo/build-social-manifest.mjs, el prerender de
+   Firebase i social-edge.mjs). Abans, carregaWiki no portava cap index i el bucle de la Wiki el forçava a
+   true; el social prenia el valor per defecte d'add(). Val l'status esborrany dels atributs i també la
+   marca noindex del manifest; un document canònic continua indexable. */
+const manifestWiki = (items) => `export const wikiManifest = ${JSON.stringify({ categories: [], items }, null, 2)};\n`;
+const ITEMS_D4 = [
+  { id: 'revisio', title: 'revisio', tags: [], esborrany: true, noindex: true,
+    attributes: { type: 'document', status: 'esborrany', esborrany: true, noindex: true, description: 'Revisió oberta' }, content: '# Revisió oberta\n\nCos.' },
+  { id: 'marcat', title: 'marcat', tags: [], noindex: true, attributes: { type: 'document', description: 'Només la marca' }, content: '# Marcat\n\nCos.' },
+  { id: 'obert', title: 'obert', tags: [], attributes: { type: 'document', status: 'canonic', description: 'Document obert' }, content: '# Obert\n\nCos.' },
+];
+
+test('D4 Opció B · un esborrany de la Wiki ix amb index:false a seo-routes.json i al manifest social', async (t) => {
+  const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  // seo-routes.json: el productor real, en dry-run (stdout), sobre una arrel mínima (SDP_ARREL).
+  const seo = fixture(t);
+  seo.write('.agents/AGENTS.md', '# Arrel de prova\n');
+  seo.write('package.json', '{"type":"module"}');
+  seo.write('src/config/sections.js', `export const SECTIONS = [${Array.from({ length: 15 }, (_, i) => `{ id: 's${i}', path: '/s${i}', label: 'S${i}' }`).join(', ')}];\n`);
+  seo.write('src/data/wikiManifest.js', manifestWiki(ITEMS_D4));
+  // Regles Wiki de prova: la prova mira la decisió d'index del productor, no el títol del client.
+  seo.write('src/sections/wiki-de-poble/seoWiki.js', 'export const metadadesDeDocumentPublic = (item) => ({ title: item.title, description: item.attributes.description, image: null });\n');
+  seo.write('src/config/rutaSocial.js', "export const idDeDocumentWiki = (id) => (typeof id === 'string' && /^[a-z]+$/.test(id) ? id : null);\n");
+  const eixida = spawnSync(process.execPath, [path.join(repo, 'tooling/gates/build-seo-manifest.mjs')],
+    { cwd: seo.root, env: { ...process.env, SDP_ARREL: seo.root }, encoding: 'utf8' });
+  assert.equal(eixida.status, 0, eixida.stderr);
+  const { routes } = JSON.parse(eixida.stdout);
+  assert.deepEqual(['revisio', 'marcat', 'obert'].map((id) => routes[`wikidepoble/${id}`].index), [false, false, true]);
+  assert.equal(routes['wikidepoble/revisio'].status, 200, 'l’esborrany continua servit: només deixa d’indexar-se');
+
+  // Manifest social: el productor real (policyRoot = el repositori) sobre una arrel mínima.
+  const { buildSocialManifest } = await import('../tooling/seo/build-social-manifest.mjs');
+  const social = fixture(t);
+  social.write('package.json', '{"type":"module"}');
+  social.write('src/sections/text/pageContent.js', "export const PAGE_COPY={projecte:{title:'El Projecte',lead:'Una xarxa de pobles'},wikidepoble:{title:'Wiki',lead:'La base de coneixement',image:'/assets/wiki.png',imageAlt:'La portada de la Wiki'}};\n");
+  social.write('src/config/systemPages.js', "export const SYSTEM_PAGES=[{key:'projecte',href:'/projecte'},{key:'wikidepoble',href:'/wikidepoble'}];\n");
+  social.write('public/assets/system/ui/og-socdepoble-1200x630.png', 'fixture');
+  social.write('public/assets/wiki.png', 'fixture');
+  social.write('src/data/wikiManifest.js', manifestWiki(ITEMS_D4));
+  const { manifest } = await buildSocialManifest({ root: social.root, origin: 'https://socdepoble.org', policyRoot: repo });
+  const ruta = (id) => manifest.routes[`/wikidepoble?item=${id}`];
+  assert.deepEqual(['revisio', 'marcat', 'obert'].map((id) => ruta(id).index), [false, false, true]);
+  // index:false sempre porta compartible:true: social-edge.mjs hi emet el meta robots noindex, nofollow.
+  assert.equal(ruta('revisio').compartible, true);
+  assert.equal(ruta('obert').compartible, undefined);
 });
 
 

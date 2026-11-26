@@ -1680,6 +1680,7 @@ export default {
   'section.notes.carpeta.media': 'Multimedia',
   'section.notes.carpeta.events': 'Eventos',
   'section.notes.carpeta.mapa': 'Mapa',
+  'section.notes.carpeta.produccio': 'En producción',
   'section.notes.carpeta.notes': 'Otras notas',
   'section.notes.historic.mur.titol': 'Ya publicado en el Muro',
   'section.notes.historic.mur.buit': 'Con esta identidad todavía no hay nada publicado en el Muro.',
@@ -3324,10 +3325,12 @@ export default {
   'section.perfil.privacitat.confianca.cerimonia.accio.revisa': "Revisar verificación SAS de {nom}",
   'section.perfil.privacitat.confianca.cerimonia.accio.disputa': "Detener y declarar «No soy yo»",
   'section.perfil.privacitat.confianca.cerimonia.alertaDisputa': "Se ha declarado una disputa («No soy yo»): la ceremonia de recuperación ha quedado bloqueada.",
-  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
-  'editor.proposaCard.feta': "Card propuesta. Para deshacerla: «Deshaz la propuesta» o Cmd/Ctrl+Z.",
+  // IDEA-41 / IDEA-358 / IDEA-359 · Maquetadora Editorial no-destructiva i feedback d'enganxat.
+  'editor.proposaCard.feta': "Tarjeta maquetada sin tocar el cuerpo.",
   'editor.proposaCard.res': "No hay nada que proponer: los campos de la tarjeta ya están llenos o el cuerpo no empieza con texto.",
-  'editor.proposaCard.enRepos': "Pulsa «Editar» para proponer la Card.",
+  'editor.proposaCard.enRepos': "Pulsa «Editar» para maquetar la tarjeta.",
+  'editor.enganxat.alCos': "Pegado en el cuerpo: falta un título corto.",
+  'editor.enganxat.promouTitol': "Promueve a título",
   'editor.eines.enRepos': "En lectura: pulsa «Editar» para escribir y dar formato al texto.",
   /* T3.2-UI (261101) · La «Fitxa de memòria oral (OKF v0.2)» de «Proposa Card» (FitxaMemoriaOral.jsx). */
   'editor.memoriaOral.titol': "Ficha de memoria oral (OKF v0.2)",
@@ -3390,8 +3393,8 @@ export default {
   'editor.memoriaOral.massaEtiquetesLliures': "Ya hay {n} etiquetas libres: quita alguna antes de añadir más.",
   'editor.memoriaOral.afegida': "añadida en la revisión",
   'editor.memoriaOral.capPobleAlRelat': "La máquina no ha reconocido ninguno en el relato",
-  'section.notes.proposaCard': "Propón Card",
-  'section.notes.proposaCardDesfer': "Deshaz la propuesta",
+  'section.notes.proposaCard': "Maqueta la tarjeta",
+  'section.notes.proposaCardDesfer': "Deshaz la maquetación",
   // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
   'section.login.registre.ajudaPoble': "Si eres de más de uno, los demás se eligen en tu perfil.",
   'section.login.registre.ajudaUsuari': "Se crea con tu nombre y se ve con una @ delante si tu perfil es público. Si ya es de alguien, le añadiremos -2.",

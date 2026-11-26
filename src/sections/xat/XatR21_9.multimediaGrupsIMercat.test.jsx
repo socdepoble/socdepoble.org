@@ -372,7 +372,9 @@ describe('T2 · Mercat sense HTML cru, sense slugs/ids i pastilles Apple de 28px
     });
     const props = propsDeTargetaDeProducte(item, t);
     expect(props.body).toBe('Collita pròpia 1a extracció en fred.');
-    expect(props.labels.map((l) => l.text)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants']);
+    /* C26-2 (v1.2.26) · Canvi intencionat, IDEA-365 (21:40, regla 1): el producte també ix al Mur,
+       i porta Mur + Mercat davant. La resta de pastilles humanes, igual que abans. */
+    expect(props.labels.map((l) => l.text)).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants']);
     expect(item.category_slug).toBe('alimentacio');
   });
 
@@ -383,7 +385,10 @@ describe('T2 · Mercat sense HTML cru, sense slugs/ids i pastilles Apple de 28px
       title: 'Samarreta Sóc de Poble',
       description: '<h3>100% cotó</h3><p> Serigrafia artesanal. </p>'
     });
-    expect(detall.labels).toEqual([{ text: 'Mercat', className: 'sdp-badge-system' }]);
+    /* C26-2 (v1.2.26) · Canvi intencionat, IDEA-365 (21:40, regla 1; 21:58, punt 1): la pàgina del
+       producte porta les mateixes pastilles que la seua Card, Mur + Mercat enllaçats; cap item.id. */
+    expect(detall.labels).toEqual([{ text: 'Mur', className: 'sdp-badge-system', href: '/mur' }, { text: 'Mercat', className: 'sdp-badge-system', href: '/mercat' }]);
+    expect(detall.labels.map((l) => l.text)).not.toContain('prod-samarreta');
     expect(detall.subtitle).toBe('100% cotó Serigrafia artesanal.');
   });
 });

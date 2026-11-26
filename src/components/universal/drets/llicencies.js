@@ -49,7 +49,7 @@ export const LLICENCIES = Object.freeze([
   llicencia({
     id: 'cc-by-nc', codi: CODIS_CC['cc-by-nc'], nom: 'Reconeixement i no comercial', icona: 'cc',
     explicacio: 'Es pot copiar i adaptar citant-te, però ningú en pot fer un ús comercial sense el teu permís.',
-    exemple: 'Les fotos de la romeria: l’associació de veïns les usa; una agència de viatges, no.',
+    exemple: 'Les fotos de la romeria: l’associació de veïns les fa servir; una agència de viatges, no.',
     permisos: [PERMIS.citar, PERMIS.adaptar, PERMIS.senseComercial],
   }),
   llicencia({
@@ -60,19 +60,19 @@ export const LLICENCIES = Object.freeze([
   }),
   llicencia({
     id: 'cc-by-sa', codi: CODIS_CC['cc-by-sa'], nom: 'Reconeixement i compartir igual', icona: 'cc',
-    explicacio: 'Es pot copiar, adaptar i usar per a qualsevol cosa citant-te, i qui la millore ha de compartir el resultat amb esta mateixa llicència. És la de la Viquipèdia.',
+    explicacio: 'Es pot copiar, adaptar i fer servir per a qualsevol cosa citant-te, i qui la millore ha de compartir el resultat amb esta mateixa llicència. És la de la Viquipèdia.',
     exemple: 'La recepta de la coca de tomaca: qui l’enriquisca la torna al poble igual d’oberta.',
     permisos: [PERMIS.citar, PERMIS.adaptarIgual, PERMIS.comercial],
   }),
   llicencia({
     id: 'cc-by', codi: CODIS_CC['cc-by'], nom: 'Reconeixement', icona: 'cc',
-    explicacio: 'Qualsevol la pot copiar, adaptar i usar, també per a guanyar diners, sempre que diga que és teua.',
+    explicacio: 'Qualsevol la pot copiar, adaptar i fer servir, també per a guanyar diners, sempre que diga que és teua.',
     exemple: 'La història de la font vella: l’ajuntament la posa en un plafó i cita el teu nom.',
     permisos: [PERMIS.citar, PERMIS.adaptar, PERMIS.comercial],
   }),
   llicencia({
     id: 'cc0', codi: CODIS_CC.cc0, nom: 'Domini públic', icona: 'domini',
-    explicacio: 'Renuncies als teus drets en la mesura que la llei ho permet: qualsevol la pot usar per a qualsevol cosa, sense citar-te.',
+    explicacio: 'Renuncies als teus drets en la mesura que la llei ho permet: qualsevol la pot fer servir per a qualsevol cosa, sense citar-te.',
     exemple: 'El calendari de reg de la séquia: com més circule, millor.',
     permisos: [PERMIS.senseCitar, PERMIS.adaptar, PERMIS.comercial],
   }),

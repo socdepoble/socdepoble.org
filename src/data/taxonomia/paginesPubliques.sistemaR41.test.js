@@ -23,6 +23,8 @@ const TAGS_49=[
  "Coordinadora d'Estudis Eòlics del Comtat",'Desenvolupament Sostenible','Documentació','El Camí','El Carreró Centre Cultural i Tecnològic',"El Planet Centre Rural d'Experimentació",'El Rentonar','Esports','Rutes','Fadrins','Festes dels Pobles','Font Roja','Fotos','Gent que Fa Música','Gent Sostenible','Incendis','Llibres','Memfotisme','Noticies','Opinió','Patrimoni','Pla Eòlic','Plànols','Pou de neu','Projecte Sóc de Poble','Projectes','Propostes','Radar No','Rentonar Informa','Replantacions','Reunions','Sant Gregori','Serra dels Plans','Trobades','Vídeos','Pedra Seca','Herbari','Llavors','NGI Fediversity','Node 0'
 ];
 const TAG_TRANSLATIONS={
+ 'Disseny':['Diseño','Design','Diseinua','Deseño'],
+ 'Node 0':['Nodo 0','Node 0','0 nodoa','Nodo 0'],
  'Associacionisme':['Asociacionismo','Community associations','Elkartegintza','Asociacionismo'],
  'Activitats':['Actividades','Activities','Jarduerak','Actividades'],
  'Arbres Monumentals':['Árboles Monumentales','Monumental Trees','Zuhaitz Monumentalak','Árbores Monumentais'],
@@ -49,53 +51,88 @@ const TAG_TRANSLATIONS={
  'Vídeos':['Vídeos','Videos','Bideoak','Vídeos'],
  'Pedra Seca':['Piedra Seca','Dry Stone','Harri Lehorra','Pedra Seca'],
  'Herbari':['Herbario','Herbarium','Herbarioa','Herbario'],
- 'Llavors':['Semillas','Seeds','Haziak','Sementes']
+ 'Llavors':['Semillas','Seeds','Haziak','Sementes'],
+ // IDEA-369 (Llibre Mestre, línies 3913 i 3937) · #5 «Arbres» (abans Arbres Monumentals) i «Receptes», en plural.
+ 'Arbres':['Árboles','Trees','Zuhaitzak','Árbores'],
+ 'Receptes':['Recetas','Recipes','Errezetak','Receitas']
 };
+/* IDEA-369 · El vocabulari que pot eixir després del triatge 1–49 (Llibre Mestre, línies 3913-3939), literal i
+   independent de les taules de producció: les etiquetes comunes de la xarxa, les locals de llavor i les tres en pausa
+   (#1, #13 i #29). Fora: #30 Patrimoni, #34 Projecte Sóc de Poble, #48 NGI Fediversity i #33 Pou de neu (capa geogràfica). */
+const TAGS_TRIATGE=[
+ 'Activitats','Aplecs','Arbres','Bioconstrucció','Camí de Sant Jaume','Cartografia','Conferències','Desenvolupament Sostenible','Disseny','Documentació',
+ 'Esports','Festes','Herbari','Idees','Incendis','Llavors','Llibres','Macroplantes','Memfotisme','Música','Node 0','Pedra Seca','Premsa','Projectes',
+ 'Replantacions','Reunions','Rutes','Receptes',
+ 'Brull Viu','Cims per la llengua','El Carreró','El Planet','Fadrins','Pla Eòlic','Radar No','Sant Gregori','Zona 14',
+ 'Associacionisme','El Camí','Opinió'
+];
 const tagText=(tag,language)=>language==='ca'?tag:TAG_TRANSLATIONS[tag]?.[LANGUAGES.indexOf(language)-1]??tag;
 const categoryText=(id,language)=>CATEGORIES[id][LANGUAGES.indexOf(language)];
 
 // Literal editorial matrix: one mandatory tag anchor per page. It detects a
 // blanket category or an entry removed from both production tables.
-// Arbitratge R46 i P6: 33 claus públiques amb Receptes (R14) i La IAIA Sabuda (P0-64).
-// 25 es classifiquen; les 8 pàgines d'acció de DESTINS_CONTROL continuen sense etiquetes.
+// Arbitratge R46: 29 pàgines temàtiques amb Receptes (R14) i La IAIA Sabuda (P0-64); les 8 pàgines d'acció de
+// DESTINS_CONTROL porten Sistema + el seu destí (IDEA-365 deroga P6, Llibre Mestre línia 3821).
+// v1.2.26 · IDEA-369 (Llibre Mestre, línies 3913-3939) · L'àncora de cada pàgina ja és la del triatge 1–49.
 const PAGES=[
- ['projecte','tecnologia-lliure','Projecte Sóc de Poble'],
+ // #34 «Projecte Sóc de Poble» ix de les etiquetes (és @Sóc de Poble, línia 3924); #35 «Projectes» és global.
+ ['projecte','tecnologia-lliure','Projectes'],
  ['constitucio','comunitat-rural','Associacionisme'],
  ['legal','tecnologia-lliure','Documentació'],
- ['disseny','tecnologia-lliure','Pedra Seca'],
+ ['disseny','tecnologia-lliure','Disseny'],
  ['anima','tecnologia-lliure','Node 0'],
  ['notes','tecnologia-lliure','Documentació'],
  ['versions','tecnologia-lliure','Documentació'],
  ['roadmap','tecnologia-lliure','Projectes'],
  ['notes_shared','tecnologia-lliure','Documentació'],
  ['wikidepoble','patrimoni-cultura','Documentació'],
- ['fedivers','tecnologia-lliure','NGI Fediversity'],
+ // #48 «NGI Fediversity» és FORA (línia 3938); #49 «Node 0» es queda (línia 3939).
+ ['fedivers','tecnologia-lliure','Node 0'],
  ['consola','tecnologia-lliure','Node 0'],
  ['cervell','tecnologia-lliure','Node 0'],
  ['xat','comunitat-rural','Associacionisme'],
  ['drets-autor','patrimoni-cultura','Documentació'],
  // v1.2.24 · costura R32.75 · IDEA-340 · /page/reconeixements, «Reconeixements i fonts d'inspiració»: la Notícia #1 del Mur.
- ['reconeixements','tecnologia-lliure','Projecte Sóc de Poble'],
+ ['reconeixements','tecnologia-lliure','Documentació'],
  ['descarregues','tecnologia-lliure','Documentació'],
- ['fediversity','tecnologia-lliure','NGI Fediversity'],
+ ['fediversity','tecnologia-lliure','Documentació'],
  ['node-zero','tecnologia-lliure','Node 0'],
- ['anatomia-rural','natura-excursions','Pou de neu'],
+ // #45 «Pedra Seca» és del patrimoni rural (línia 3936); #33 «Pou de neu» passa a la capa geogràfica (línia 3923).
+ ['anatomia-rural','natura-excursions','Pedra Seca'],
  ['herbari','natura-excursions','Herbari'],
  ['banc-de-llavors','recursos-locals','Llavors'],
  ['rutes-de-poble','natura-excursions','Rutes'],
- ['arbres-monumentals','natura-excursions','Arbres Monumentals'],
+ ['arbres-monumentals','natura-excursions','Arbres'],
  // P0-64 · curadoria cultural; mateix vocabulari editorial de Documentació.
  ['la-iaia-sabuda','patrimoni-cultura','Documentació'],
- // Onada R14 · /page/receptes, el receptari «Què dinem?».
- ['receptes','patrimoni-cultura','Patrimoni'],
+ // Onada R14 · /page/receptes, la biblioteca dels receptaris; #30 «Patrimoni» és FORA (línia 3915) i «Receptes» la nomena (línia 3937).
+ ['receptes','patrimoni-cultura','Receptes'],
  ['dispositius','tecnologia-lliure','Documentació'],
  // IDEA-287 · /page/tot-el-que-pots-fer, la guia pas a pas de les eines.
  ['tot-el-que-pots-fer','comunitat-rural','Documentació'],
  // R32.86 · IDEA-348 · /cada-cosa-al-seu-lloc, el joc públic de les 600 publicacions.
- ['cada-cosa-al-seu-lloc','tecnologia-lliure','Patrimoni']
+ ['cada-cosa-al-seu-lloc','tecnologia-lliure','Documentació']
 ];
-// P6 · les huit pàgines d'acció (publicar i saber-ne més del Panell): cap etiqueta, en cap llengua.
+// IDEA-365 · les huit pàgines d'acció (publicar i saber-ne més del Panell): Sistema + el seu destí, en cada llengua.
 const ACTION_PAGES=['publicar_mur','publicar_mercat','publicar_calendari','publicar_mapa','vehicle_compartit','animalets','treball','habitatge'];
+const LIBRARIES=new Set(['herbari','banc-de-llavors','rutes-de-poble','arbres-monumentals','receptes']);
+const SYSTEM_NAMES={
+ Sistema:['Sistema','Sistema','System','Sistema','Sistema'],Mur:['Mur','Muro','Wall','Horma','Muro'],Catàlegs:['Catàlegs','Catálogos','Catalogues','Katalogoak','Catálogos'],
+ Mercat:['Mercat','Mercado','Market','Merkatua','Mercado'],Calendari:['Calendari','Calendario','Calendar','Egutegia','Calendario'],Mapa:['Mapa','Mapa','Map','Mapa','Mapa'],
+ Transport:['Transport','Transporte','Transport','Garraioa','Transporte'],Animalets:['Animalets','Animales','Pets','Animaliak','Animaliños'],Treball:['Treball','Trabajo','Work','Lana','Traballo'],Habitatge:['Habitatge','Vivienda','Housing','Etxebizitza','Vivenda'],
+ PDF:['PDF','PDF','PDF','PDF','PDF']
+};
+const ACTION_DESTINATIONS={publicar_mur:'Mur',publicar_mercat:'Mercat',publicar_calendari:'Calendari',publicar_mapa:'Mapa',vehicle_compartit:'Transport',animalets:'Animalets',treball:'Treball',habitatge:'Habitatge'};
+const systemText=(name,language)=>SYSTEM_NAMES[name][LANGUAGES.indexOf(language)];
+/* IDEA-365 (Llibre Mestre, línia 3804) · Totes les cards que es mostren al /mur porten Mur: les 16 pàgines del sistema
+   que el Mur barreja i /page/fediversity, Mur darrere de Sistema. Les biblioteques, Mur + Catàlegs i FORA Sistema
+   (línies 3840-3845). La resta de pàgines tècniques, que no són cap card del Mur, només Sistema (línia 3807). */
+const MUR_SYSTEM_PAGES=new Set(['projecte','wikidepoble','constitucio','roadmap','notes','disseny','consola','cervell','versions','legal','xat','drets-autor','reconeixements','descarregues','la-iaia-sabuda','cada-cosa-al-seu-lloc','fediversity']);
+const systemsExpected=(key,language)=>MUR_SYSTEM_PAGES.has(key)?['Sistema','Mur'].map(n=>systemText(n,language)):LIBRARIES.has(key)?['Mur','Catàlegs'].map(n=>systemText(n,language)):[SYSTEM[LANGUAGES.indexOf(language)]];
+// IDEA-367 (23:06, punt 3; línia 3877) · La card del llibre «Què dinem?»: Mur + Catàlegs + PDF, FORA Sistema, sense mare ni etiquetes.
+const queDinemLabels=language=>['Mur','Catàlegs','PDF'].map(n=>({text:systemText(n,language),className:'sdp-badge-system',...(language==='ca'?{}:{lang:language})}));
+const actionLabels=(key,language)=>['Sistema',ACTION_DESTINATIONS[key]].map(n=>({text:systemText(n,language),className:'sdp-badge-system',...(language==='ca'?{}:{lang:language})}));
+
 // Publicació vigent: 15 documents del sistema amb La IAIA Sabuda (P0-64) + 5 de patrimoni, amb el receptari «Què dinem?» (R16).
 // P0-51 / IDEA-182 conserva Anatomia rural fora de les targetes del Mur.
 // v1.2.24 · costura R32.75 · IDEA-340 · 16 documents del sistema amb Reconeixements i fonts d'inspiració: 21 en total.
@@ -105,20 +142,19 @@ const PUBLISHED_21=['projecte','wikidepoble','constitucio','roadmap','notes','di
 
 function assertClassification(labels,key,category,requiredTag,language){
  expect(Array.isArray(labels)).toBe(true);
- const system=SYSTEM[LANGUAGES.indexOf(language)];
- const systemLabels=labels.filter(label=>label.className==='sdp-badge-system'&&label.text===system);
+ const systemLabels=labels.filter(label=>label.className==='sdp-badge-system'&&!/^v\d/.test(label.text));
  const categories=labels.filter(label=>label.className==='sdp-badge-category');
  const tags=labels.filter(label=>label.className==='sdp-badge-tag');
- expect(systemLabels).toHaveLength(1);
+ expect(systemLabels.map(l=>l.text)).toEqual(systemsExpected(key,language));
  expect(categories.map(label=>label.text)).toEqual([categoryText(category,language)]);
  expect(tags.length).toBeGreaterThanOrEqual(1);
  expect(tags.map(label=>label.text)).toContain(tagText(requiredTag,language));
- const allowedTags=new Set(TAGS_49.map(tag=>tagText(tag,language)));
+ const allowedTags=new Set(TAGS_TRIATGE.map(tag=>tagText(tag,language)));
  for(const tag of tags)expect(allowedTags.has(tag.text),`${key}/${language}: invented tag ${tag.text}`).toBe(true);
  expect(new Set(tags.map(label=>label.text)).size).toBe(tags.length);
  for(const label of labels){
-  expect(label.text).not.toMatch(/^(?:mur|muro|wall|horma|general|productivitat|productivity|manual|xarxa|network)$/i);
-  if(label.className==='sdp-badge-system'&&label.text!==system){
+  if(label.className!=='sdp-badge-system')expect(label.text).not.toMatch(/^(?:mur|muro|wall|horma|general|productivitat|productivity|manual|xarxa|network)$/i);
+  if(label.className==='sdp-badge-system'&&!systemsExpected(key,language).includes(label.text)){
    expect(key).toBe('versions');expect(label.text).toMatch(/^v\d/);
   }else{
    expect(['sdp-badge-system','sdp-badge-category','sdp-badge-tag']).toContain(label.className);
@@ -143,21 +179,31 @@ const sentinels=()=>({
 
 describe('R41 independent public-page contract',()=>{
  // v1.2.24 · costura R32.75 · IDEA-340 · R32.75 porta /page/reconeixements: 28 classificades, 36 claus.
- it('R32.9 + IDEA-287 + IDEA-340 + IDEA-348: 37 public keys (29 classified + 8 action pages); the merged chapter has no fossil page entry',()=>{
+ // IDEA-367 (23:06, punt 3; línia 3877) · «Què dinem?» és la card del llibre al /mur, no cap pàgina de PAGE_COPY: 37 claus.
+ it('R32.9 + IDEA-287 + IDEA-340 + IDEA-348: 37 public keys (29 thematic pages + 8 destinations); the merged chapter has no fossil page entry and Què dinem? is no PAGE_COPY page',()=>{
   expect(PAGES).toHaveLength(29);expect(ACTION_PAGES).toHaveLength(8);
-  expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
+  expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');expect(PAGE_COPY).not.toHaveProperty('que-dinem');
   const keys=[...PAGES.map(([key])=>key),...ACTION_PAGES];expect(new Set(keys).size).toBe(37);
   expect(Object.keys(PAGE_COPY).sort()).toEqual(keys.sort());
-  expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);
+  expect(Object.keys(CATEGORIES)).toHaveLength(6);expect(new Set(TAGS_49).size).toBe(49);expect(new Set(TAGS_TRIATGE).size).toBe(TAGS_TRIATGE.length);
+  expect(MUR_SYSTEM_PAGES.size).toBe(17);
+ });
+ it.each(LANGUAGES)('IDEA-367 · %s: la card del llibre Què dinem? al Mur porta Mur, Catàlegs i PDF, fora Sistema, i obri el seu lector',language=>{
+  const card=targetesDeSistema(PAGE_COPY,{nativa:false,language}).find(item=>item.id==='que-dinem');
+  expect(card).toBeTruthy();
+  expect(card.title).toBe('Què dinem?');
+  expect(card.labels).toEqual(queDinemLabels(language));
+  expect(card.categoriesSistema).toEqual(['Mur','Catàlegs','PDF']);
+  expect(card.mainHref).toBe('/page/receptes/que-dinem');
  });
  describe.each(LANGUAGES)('%s literal 25-page matrix',language=>{
   it.each(PAGES)('%s has one System, its editorial mother and canonical tags',(key,category,tag)=>{
    const localized=localitzaPagina(PAGE_COPY[key],language);
    assertClassification(localized.labels,key,category,tag,language);
   });
-  it.each(ACTION_PAGES)('P6 · %s (action page) carries no label',key=>{
-   expect(localitzaPagina(PAGE_COPY[key],language).labels??[]).toEqual([]);
-   expect(etiquetesDePaginaPublica(key,[],language)).toEqual([]);
+  it.each(ACTION_PAGES)('IDEA-365 · %s carries Sistema and its exact destination',key=>{
+   expect(localitzaPagina(PAGE_COPY[key],language).labels).toEqual(actionLabels(key,language));
+   expect(etiquetesDePaginaPublica(key,[],language)).toEqual(actionLabels(key,language));
   });
  });
  it.each(LANGUAGES)('%s: empty/old/duplicate structural labels cannot suppress or duplicate System',language=>{
@@ -165,7 +211,7 @@ describe('R41 independent public-page contract',()=>{
   for(const input of inputs){
    const before=structuredClone(input);
    const result=etiquetesDePaginaPublica('projecte',input,language);
-   assertClassification(result,'projecte','tecnologia-lliure','Projecte Sóc de Poble',language);
+   assertClassification(result,'projecte','tecnologia-lliure','Projectes',language);
    expect(input).toEqual(before);
    expect(etiquetesDePaginaPublica('projecte',result,language)).toEqual(result);
   }
@@ -181,9 +227,10 @@ describe('R41 independent public-page contract',()=>{
   const fields=withoutLabels(structuredClone(copy));
   const actionBefore=structuredClone(Object.fromEntries(ACTION_PAGES.map(key=>[key,copy[key]])));
   aplicaClassificacioPaginesPubliques(copy);
-  expect(withoutLabels(copy)).toEqual(fields);
-  // P6 · la classificació no toca cap pàgina d'acció: ni hi afig etiquetes ni en reescriu cap camp.
-  for(const key of ACTION_PAGES)expect(copy[key]).toEqual(actionBefore[key]);
+  // IDEA-369 #33 (Llibre Mestre, línia 3923) · El Pou de neu ix de les etiquetes i entra com a paratge (capa geogràfica en text).
+  expect(withoutLabels(copy)).toEqual({...fields,'anatomia-rural':{...fields['anatomia-rural'],paratges:['Pou de neu']}});
+  // IDEA-365 deroga P6; només les labels canvien, sense tocar cos ni autoria.
+  for(const key of ACTION_PAGES){expect(withoutLabels(copy[key])).toEqual(withoutLabels(actionBefore[key]));expect(copy[key].labels).toEqual(actionLabels(key,'ca'));}
   for(const [key,category,tag] of PAGES)for(const language of LANGUAGES){
    const localized=localitzaPagina(copy[key],language);
    assertClassification(localized.labels,key,category,tag,language);
@@ -195,10 +242,10 @@ describe('R41 independent public-page contract',()=>{
   }
   const once=structuredClone(copy);aplicaClassificacioPaginesPubliques(copy);expect(copy).toEqual(once);
  });
- it('P6 · Animalets (action page) carries no label, even with an unrelated title and no old tags',()=>{
+ it('IDEA-365 · Animalets té el seu destí sense inferir-lo del títol',()=>{
   const copy={animalets:{...sentinels(),labels:[],translations:undefined,title:'A title containing technology words is irrelevant'}};
   aplicaClassificacioPaginesPubliques(copy);
-  for(const language of LANGUAGES)expect(localitzaPagina(copy.animalets,language).labels).toEqual([]);
+  for(const language of LANGUAGES)expect(localitzaPagina(copy.animalets,language).labels).toEqual(actionLabels('animalets',language));
  });
  it.each(LANGUAGES)('%s: a core API clone requires explicit public context and keeps the same body',language=>{
   const clone={...sentinels(),translations:undefined,labels:[{text:'Comunicació',className:'sdp-badge-system'},{text:'Eina',className:'sdp-badge-category'}]};
@@ -233,9 +280,11 @@ describe('R41 independent public-page contract',()=>{
   // PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta, ni al Mur
   // (targetesMur.js) ni al Panell de Control (ControlSection.jsx): només en té amb la bandera. En queden 19.
   // v1.2.24 · costura R32.75 · IDEA-340 · Amb Reconeixements i fonts d'inspiració, 20. R32.86 · Amb el joc, 21.
-  expect(cards.map(card=>card.id).sort()).toEqual(PUBLISHED_21.filter(key=>key!=='la-iaia-sabuda').sort());
-  expect(cards).toHaveLength(21);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('la-iaia-sabuda');
+  // v1.2.26 · IDEA-367 (línia 3877) · I la card del llibre «Què dinem?», que naix de la seua biblioteca: 22.
+  expect(cards.map(card=>card.id).sort()).toEqual([...PUBLISHED_21.filter(key=>key!=='la-iaia-sabuda'),'que-dinem'].sort());
+  expect(cards).toHaveLength(22);expect(cards.map(card=>card.id)).not.toContain('anatomia-rural');expect(cards.map(card=>card.id)).not.toContain('la-iaia-sabuda');
   for(const card of cards){
+   if(card.id==='que-dinem'){expect(card.labels).toEqual(queDinemLabels(language));continue;}
    const [,category,tag]=PAGES.find(([key])=>key===card.id);
    assertClassification(card.labels,card.id,category,tag,language);
   }

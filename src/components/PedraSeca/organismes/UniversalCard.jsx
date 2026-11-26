@@ -161,6 +161,7 @@ import { Link } from '../../../app/contexts/RouterContext';
 import { useUIState } from '../../../app/contexts/UIContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
+import { textPlaSenseMarkdown } from '../../../config/textPlaSenseMarkdown.js';
 import { esPrivat } from '../../../config/objecteConnectable.js';
 import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
 import {
@@ -193,6 +194,8 @@ import { tradueix, useTraductorOpcional } from '../hooks/useTraductorOpcional.js
 import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
 import { fontSegura } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
+import { rutaDePindola } from './rutaDePindola.js';
+import { BlocTerritoriTargeta } from './BlocTerritoriTargeta.jsx';
 import {
   etiquetaAutorTargeta,
   etiquetaCategoriaTargeta,
@@ -270,10 +273,12 @@ function CardHeader({ autor, autorHref, etiquetaAutor, centre, pin, dataHora, he
 
 export { SquareBadge, midaDelPreu } from './SquareBadge.jsx';
 
+/* v1.2.26 (FN0-001) · La ruta interna d'una píndola va sempre amb el Link del
+   router, que sense RouterProvider ja pinta l'<a> de sempre (RouterContext.jsx). */
 function Etiqueta({ label, idioma = 'ca' }) {
   const text = typeof label === 'string' ? label : label.text;
   const classe = typeof label === 'string' ? 'sdp-badge-tag' : label.className || 'sdp-badge-tag';
-  const href = typeof label === 'string' ? null : label.href;
+  const href = rutaDePindola(label);
   const segur = href && isSafeUrl(href) ? href : null;
   const nomAccessible = segur ? etiquetaCategoriaTargeta(text, idioma) : undefined;
   return (
@@ -381,7 +386,7 @@ function MitjaDeLaTargeta({ imatge, imageAlt, privada }) {
   );
 }
 
-function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false, formaMitja, posicioMitja, langTitle, langSubtitle, langBody }) {
+function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, territori = null, idioma = 'ca', copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false, formaMitja, posicioMitja, langTitle, langSubtitle, langBody }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
@@ -421,11 +426,14 @@ function CardBody({ imatge, imageAlt, video, calendarBadge, squareBadge, price, 
           <TitleTag className="sp-card-title" lang={langTitle || undefined}>{title}</TitleTag>
         ) : null}
         {subtitle && <h4 className="sp-card-subtitle" lang={langSubtitle || undefined}>{subtitle}</h4>}
+        {/* IDEA-357.2 (defensa en profunditat) · Un cos de text mai no pinta marques Markdown crues. Un
+            cos de text ja és text: llevaHtml: false, i «< 5 graus» es queda. */}
         {body && (typeof body === 'string'
-          ? <p className="sp-card-text" lang={langBody || undefined}>{body}</p>
+          ? <p className="sp-card-text" lang={langBody || undefined}>{textPlaSenseMarkdown(body, { llevaHtml: false })}</p>
           : <div className="sp-card-text" lang={langBody || undefined}>{body}</div>)}
         {(!accio || etiquetesAmbAccio) && etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
         {accio ? <div className="sp-card-accio">{accio}</div> : null}
+        {Array.isArray(territori) && territori.length > 0 ? <BlocTerritoriTargeta elements={territori} idioma={idioma} /> : null}
         {copyright && (
           <p className="sp-card-copyright">
             <EnllacDrets>{copyright}</EnllacDrets>
@@ -470,6 +478,7 @@ export function UniversalCard({
   videoUrl,
   price,
   labels = [],
+  territori = null,
   mainHref,
   onMainClick,
   /* T63.2 (doctrina del Mestre, 260928) · el descriptor tipat de l'element
@@ -719,9 +728,10 @@ export function UniversalCard({
   const [traduccioCard, setTraduccioCard] = useState(null);
   const vidaTraduccioRef = useRef({ peticio: 0, control: null });
 
-  const textCosCard = typeof body === 'string'
+  /* IDEA-357.2 · La traducció parteix del mateix text net que pinta la targeta. */
+  const textCosCard = textPlaSenseMarkdown(typeof body === 'string'
     ? body
-    : (typeof body?.props?.children === 'string' ? body.props.children : '');
+    : (typeof body?.props?.children === 'string' ? body.props.children : ''), { llevaHtml: false });
 
   const clauContingutCard = JSON.stringify([
     typeof title === 'string' ? title : '',
@@ -954,6 +964,8 @@ export function UniversalCard({
         subtitle={llevaPuntFinal(traduccioVigent?.subtitle ?? subtitle)}
         body={traduccioVigent?.body ?? body}
         etiquetes={etiquetes}
+        territori={!esPersona ? territori : null}
+        idioma={idiomaInterficie}
         copyright={drets}
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
         privada={imatgePrivada}

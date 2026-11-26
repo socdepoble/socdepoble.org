@@ -268,6 +268,7 @@ function TargetaDeDesti({ desti, t }) {
       date={contingut.date}
       dateTime={contingut.dateTime}
       mainHref={desti.saberMes}
+      labels={contingut.labels}
       hasFooter={true}
       copyright={COPYRIGHT_SDP}
       portes={portesDe(desti, t)}

@@ -116,14 +116,16 @@ describe('Onada 10 · les targetes de la Consola i del Cervell: etiquetes i cap 
     expect(etiquetes.map((etiqueta) => etiqueta.textContent)).toEqual(PAGE_COPY[clau].labels.map((etiqueta) => etiqueta.text));
     /* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · «utilitzar
        sempre Sistema + la nova categoria mare i etiqueta canònica»: la insígnia
-       Sistema és ara la de PAGE_COPY (una sola), no la píndola de reserva. */
-    expect(etiquetes).toHaveLength(4);
+       Sistema és ara la de PAGE_COPY (una sola), no la píndola de reserva.
+       v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · La targeta es mostra al /mur: Mur darrere de Sistema. */
+    expect(etiquetes).toHaveLength(5);
     expect(etiquetes[0].classList.contains('sdp-badge-system')).toBe(true);
-    expect(etiquetes[1].classList.contains('sdp-badge-category')).toBe(true);
-    expect(etiquetes[2].classList.contains('sdp-badge-tag')).toBe(true);
+    expect(etiquetes[1].classList.contains('sdp-badge-system')).toBe(true);
+    expect(etiquetes[2].classList.contains('sdp-badge-category')).toBe(true);
     expect(etiquetes[3].classList.contains('sdp-badge-tag')).toBe(true);
-    // Una sola insígnia de sistema, «Sistema», i cap botó gran.
-    expect([...article.querySelectorAll('.sdp-badge-system')].map((n) => n.textContent)).toEqual(['Sistema']);
+    expect(etiquetes[4].classList.contains('sdp-badge-tag')).toBe(true);
+    // Les Categories de Sistema, «Sistema» i «Mur», una sola vegada cadascuna, i cap botó gran.
+    expect([...article.querySelectorAll('.sdp-badge-system')].map((n) => n.textContent)).toEqual(['Sistema', 'Mur']);
     expect(article.querySelector('.sp-card-accio')).toBeNull();
     expect(article.querySelector('.sdp-boto--gran')).toBeNull();
     expect(screen.queryByRole('link', { name: verb })).toBeNull();
@@ -153,17 +155,19 @@ describe('Onada 10 · les targetes de la Consola i del Cervell: etiquetes i cap 
    Connectar i les etiquetes de Disseny. Eixa cobertura viu ara ací, on viu la
    targeta. Les etiquetes es lligen de PAGE_COPY (són un esborrany per al
    Mestre: ací no se'n copia cap text); el que es fixa és l'ordre de les
-   classes. L'ordre de les tres dins de la llista del Mur el vigila
+   classes. v1.2.26 · Només s'hi fixen els textos que ja són doctrina: «Sistema»
+   i «Mur» (IDEA-365) i «Disseny» a Disseny (IDEA-369 #45). L'ordre de les tres dins de la llista del Mur el vigila
    MurSection.datesDeProva.test.jsx. */
 describe('Onada 10 · les tres targetes que ixen del Panell viuen al Mur, senceres', () => {
   const pastilla = (article) => [...article.querySelectorAll('header.sp-card-header .btn-date-time span')].map((span) => span.textContent);
   const dia = (iso) => new Date(iso).toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
   test.each([
-    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema (o «Mur», a Disseny) + la mare + dues etiquetes canòniques.
-    ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
-    ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
-    ['disseny', 'Disseny Pedra Seca', '2026-09-10T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']]
+    // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la mare + dues etiquetes canòniques.
+    // v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · Mur darrere de Sistema a les tres, que es mostren al /mur.
+    ['consola', 'Consola Termodinàmica', '2026-09-08T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
+    ['cervell', 'El Cervell', '2026-09-09T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']],
+    ['disseny', 'Disseny Pedra Seca', '2026-09-10T00:00:00+02:00', ['sdp-badge-system', 'sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']]
   ])('%s: «%s», boina de Sóc de Poble, la data del Mestre, la il·lustració de la pàgina i les seues etiquetes', (clau, titol, data, classes) => {
     const copy = PAGE_COPY[clau];
     expect([copy.title, copy.date]).toEqual([titol, data]);
@@ -188,6 +192,13 @@ describe('Onada 10 · les tres targetes que ixen del Panell viuen al Mur, sencer
        el tenen a la seua pàgina. */
     const etiquetes = [...article.querySelectorAll('.sp-card-body ul.sp-card-labels > li')];
     expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(classes);
+    expect(copy.labels.slice(0, 2).map((etiqueta) => etiqueta.text)).toEqual(['Sistema', 'Mur']);
+    /* IDEA-369 #45 (Llibre Mestre, línia 3936) · El sistema de disseny porta l'etiqueta «Disseny»; «Pedra Seca» és del patrimoni rural. */
+    if (clau === 'disseny') {
+      const tags = copy.labels.filter((etiqueta) => etiqueta.className === 'sdp-badge-tag').map((etiqueta) => etiqueta.text);
+      expect(tags).toContain('Disseny');
+      expect(tags).not.toContain('Pedra Seca');
+    }
     expect(etiquetes.map((li) => [li.textContent, li.className]))
       .toEqual(copy.labels.map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`]));
     expect(article.querySelector('.sp-card-accio')).toBeNull();

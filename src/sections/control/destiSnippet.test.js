@@ -29,7 +29,10 @@ describe('ETIQUETES_DEL_SNIPPET', () => {
   test('una Categoria i una Etiqueta, congelades, amb les classes de les targetes de plugin', () => {
     expect(ETIQUETES_DEL_SNIPPET.map(({ text, className }) => [text, className]))
       .toEqual([['Eina', 'sdp-badge-category'], ['Extensió', 'sdp-badge-tag']]);
-    expect(ETIQUETES_DEL_SNIPPET.map((etiqueta) => Object.keys(etiqueta))).toEqual([['text', 'className'], ['text', 'className']]);
+    /* v1.2.26 · D3 (IDEA-365, línia 3825): són metadades del registre, sense enllaç. Des de G26-2 tota
+       píndola enllaça per rutaDePindola llevat de les inertes: cap href i `inerta: true`. */
+    expect(ETIQUETES_DEL_SNIPPET.map((etiqueta) => Object.keys(etiqueta))).toEqual([['text', 'className', 'inerta'], ['text', 'className', 'inerta']]);
+    expect(ETIQUETES_DEL_SNIPPET.every((etiqueta) => etiqueta.inerta === true)).toBe(true);
     expect(Object.isFrozen(ETIQUETES_DEL_SNIPPET)).toBe(true);
     expect(ETIQUETES_DEL_SNIPPET.every(Object.isFrozen)).toBe(true);
   });

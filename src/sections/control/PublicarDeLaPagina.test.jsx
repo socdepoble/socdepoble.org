@@ -81,10 +81,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('P6 · les sis pàgines de la doble acció', () => {
-  test('cap etiqueta, i el gran botó blau Publicar és l’últim, just després del text', () => {
+  /* v1.2.26 · IDEA-365 (Llibre Mestre, 21:37): «Derogació explícita de P6 (261003)». Les huit pàgines d'acció de
+     DESTINS_CONTROL ja no porten `labels: []`: porten Sistema i la seua categoria de publicació. */
+  const DESTI_DE_LA_PAGINA = Object.freeze({ publicar_mur: 'Mur', publicar_mercat: 'Mercat', publicar_calendari: 'Calendari', publicar_mapa: 'Mapa',
+    vehicle_compartit: 'Transport', animalets: 'Animalets', treball: 'Treball', habitatge: 'Habitatge' });
+  test('IDEA-365 · Sistema i el seu destí, i el gran botó blau Publicar és l’últim, just després del text', () => {
+    expect(DESTINS_CONTROL.map((desti) => desti.pagina).sort()).toEqual(Object.keys(DESTI_DE_LA_PAGINA).sort());
     for (const desti of DESTINS_CONTROL) {
       visita(desti.pagina);
-      expect([desti.pagina, estat.props.labels]).toEqual([desti.pagina, []]);
+      expect([desti.pagina, estat.props.labels.map((etiqueta) => [etiqueta.text, etiqueta.className])])
+        .toEqual([desti.pagina, [['Sistema', 'sdp-badge-system'], [DESTI_DE_LA_PAGINA[desti.pagina], 'sdp-badge-system']]]);
       const fills = [...pagina().children];
       expect(fills.map((fill) => fill.className), desti.pagina).toEqual(['cms-preview', 'sdp-pagina-accio']);
       expect(pagina().querySelectorAll('.sdp-boto')).toHaveLength(1);

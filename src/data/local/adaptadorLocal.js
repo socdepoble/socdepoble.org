@@ -1,3 +1,5 @@
+import { creaTaxonomiaPaginesLocal } from './taxonomiaPaginesLocal.js';
+import { capturaTaxonomiaPagina } from '../taxonomia/taxonomiaPagina.js';
 import { backendScope } from '../../config/backendConfig.js';
 import { NOTE_FOLDERS_SEED } from '../carpetesSeed.js';
 /**
@@ -366,7 +368,7 @@ export function creaAdaptadorLocal({
   const {llegixPatrimoniPortable: snapshotPatrimoni,...metodesPatrimoni}=patrimoni;
   const metodes = {};
   for (const part of [creaCompteLocal(e), creaAdminUsuarisLocal(e), creaContingutLocal(e), creaNotesLocal(e), creaConversesLocal(e),
-    creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, metodesPatrimoni, creaPortabilitatLocal(e,snapshotPatrimoni,snapshot=>creaAdaptadorLocal({mode:'local',tenantId:snapshot.tenantId,ara,dades:{entitats:[],persones:[]},negociRestaurat:snapshot})), creaRevisionsEditorialsWpLocal(usuari, ara),
+    creaTaxonomiaPaginesLocal(e), creaComunitatLocal(e), creaMitjansLocal(e), creaDadesObertesLocal(e), copublicacioLocal, metodesPatrimoni, creaPortabilitatLocal(e,snapshotPatrimoni,snapshot=>creaAdaptadorLocal({mode:'local',tenantId:snapshot.tenantId,ara,dades:{entitats:[],persones:[]},negociRestaurat:snapshot})), creaRevisionsEditorialsWpLocal(usuari, ara),
     consensIsoglosses.metodes]) {
     for (const [nom, fn] of Object.entries(part)) {
       if (Object.hasOwn(metodes, nom)) throw new Error(`[adaptadorLocal] ${nom} ve de dos mòduls.`);
@@ -405,7 +407,9 @@ export function creaAdaptadorLocal({
     try {
       if (tancat) throw errorTancat();
       abastCrida = SENSE_ABAST_EN_CRIDAR.has(nom) ? null : abast();
-      if (Object.hasOwn(CAPTURA_REVISIONS_PATRIMONI, nom)) {
+      if (nom === 'actualitzaTaxonomiaPagina') {
+        args = [entrades[0], capturaTaxonomiaPagina(entrades[0], entrades[1]), entrades[2]];
+      } else if (Object.hasOwn(CAPTURA_REVISIONS_PATRIMONI, nom)) {
         args = [CAPTURA_REVISIONS_PATRIMONI[nom](entrades[0]), entrades[1]];
       } else if (Object.hasOwn(CAPTURA_COPUBLICACIO, nom)) {
         args = [CAPTURA_COPUBLICACIO[nom](entrades[0]), entrades[1]];

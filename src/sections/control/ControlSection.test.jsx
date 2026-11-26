@@ -876,7 +876,8 @@ test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre a
     expect(targeta.lastElementChild.className, titol).toBe('sp-card-footer');
     expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label')), titol).toEqual(PEU_SENCER(titol));
     expect(targeta.querySelector('.sp-card-copyright__enllac').textContent, titol).toBe(COPYRIGHT_SDP);
-    expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
+    /* IDEA-365 (v1.2.26) · Les targetes de /control consumixen contingut.labels amb píndoles clicables. */
+    expect(targeta.querySelectorAll('.sp-card-labels a[href]').length, titol).toBeGreaterThanOrEqual(2);
     /* Títol, subtítol i entradilla visibles: els de la pàgina de la targeta. */
     expect(within(targeta).getByRole('heading', { level: 4, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
     expect(targeta.querySelector('h4.sp-card-subtitle').textContent, titol).toBe(sensePunt(pagina.subtitle));
@@ -984,7 +985,7 @@ test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text lit
     const targeta = targetesDeDalt()[posicio];
     expect(within(targeta).getByRole('heading', { level: 4, name: titol })).toBeTruthy();
     expect(targeta.querySelector('.sp-card-subtitle').textContent).toBe(subtitol);
-    expect(targeta.querySelector('.sp-card-labels')).toBeNull();
+    expect(targeta.querySelectorAll('.sp-card-labels a[href]').length).toBeGreaterThanOrEqual(2);
     expect(within(targeta).queryByText('EN OBRES')).toBeNull();
     const publicar = within(targeta).getByRole('link', { name: nomPublicar });
     expect(publicar.getAttribute('href'), titol).toBe(editor);
@@ -1004,7 +1005,7 @@ test('W4-04 · Mapa, Vehicle Compartit i Animalets: posicions 4, 5 i 6, text lit
     const targetaNova = targetesDeDalt()[posicio];
     expect(within(targetaNova).getByRole('link', { name: nomSaber }).getAttribute('href')).toBe(pagina);
   }
-  for (const targeta of targetesDeDalt().slice(0, 3)) expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
+  for (const targeta of targetesDeDalt().slice(0, 3)) expect(targeta.querySelectorAll('.sp-card-labels a[href]').length, titolDe(targeta)).toBeGreaterThanOrEqual(2);
   /* «Saber-ne més» del Mapa obri la seua pàgina. */
   fireEvent.click(screen.getByRole('link', { name: 'Saber-ne més sobre el Mapa' }));
   expect(ubicacio()).toBe('/page/publicar_mapa');
@@ -1254,6 +1255,8 @@ test('Onada 10 · M4 i R16-W1 · les huit targetes de baix (3 + 3 + 2) són can�
     expect(pastillaEsperada(font.data).length, titol).toBeGreaterThan(0);
     expect(pastillaDe(targeta), titol).toEqual(pastillaEsperada(font.data));
     expect(font.etiquetes.map(([, classe]) => classe), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    /* v1.2.26 · D3 (IDEA-365, línia 3825): la Categoria i l'Etiqueta del registre de plugins són
+       metadades del registre, no taxonomia: es pinten com a text, sense enllaç. */
     expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
     expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.pintades));
     expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
@@ -1277,7 +1280,7 @@ test('Onada 10 · M4 i R16-W1 · les huit targetes de baix (3 + 3 + 2) són can�
   pinta();
   expect(targetesDeDalt()).toHaveLength(DESTINS_CONTROL.length);
   for (const targeta of targetesDeDalt()) {
-    expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
+    expect(targeta.querySelectorAll('.sp-card-labels a[href]').length, titolDe(targeta)).toBeGreaterThanOrEqual(2);
     expect(targeta.querySelectorAll('.btn-date-time'), titolDe(targeta)).toHaveLength(1);
   }
 });
@@ -1359,6 +1362,8 @@ test('PRODUCCIO-02 · La IAIA Sabuda només és al Panell amb la curadoria cultu
        Etiqueta, en eixe ordre, i cap enllaç. Abans, tres etiquetes, dues amb enllaç (/control i /iaia). */
     expect(etiquetesDe(targeta)).toEqual([['IAIA', 'sp-card-label sdp-badge-category'], ['Cultura', 'sp-card-label sdp-badge-tag']]);
     expect(targeta.querySelectorAll('ul.sp-card-labels')).toHaveLength(1);
+    /* v1.2.26 · D3 (IDEA-365, línia 3825): «IAIA» no és cap categoria del catàleg; com les altres
+       targetes de baix, la Categoria i l'Etiqueta són text. */
     expect(targeta.querySelector('ul.sp-card-labels [href]')).toBeNull();
     expect(targeta.querySelector('ul.sp-card-labels a')).toBeNull();
     expect(targeta.querySelector('a[href="/control"], a[href="/iaia"]')).toBeNull();

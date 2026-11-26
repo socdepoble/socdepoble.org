@@ -146,20 +146,37 @@ function Pagina({ node, privat }) {
 /**
  * L'índex amb les fonts del tauler: `fonts` ({ dades, estatDades, mapa,
  * estatMapa }, com ConsolaSection · fontsDe), `govern` (useGovern),
- * `empaquetats` (useFontDev) i el rellotge de la pintada (`ara`). Cap
- * obligatòria: sense fonts, el nom de cada xifra i per què no hi ha dades.
+ * `empaquetats` (useFontDev), `editorial` (textos editables del CMS · IDEA-362)
+ * i el rellotge de la pintada (`ara`). Cap obligatòria: sense fonts, el nom de
+ * cada xifra i per què no hi ha dades.
  */
-export function IndexConsola({ fonts = {}, govern = null, empaquetats = null, locale = 'ca-ES', ara = Date.now() }) {
+export function IndexConsola({ fonts = {}, govern = null, empaquetats = null, editorial = null, locale = 'ca-ES', ara = Date.now() }) {
   const id = useId();
   const privat = useContext(PrivacitatConsola);
   const [arrel] = indexConsola(fonts.mapa ?? null, fonts.dades ?? null, locale, {
     estatMapa: fonts.estatMapa, estatDades: fonts.estatDades, govern, empaquetats, ara
   });
+  const titolIndex = editorial?.titol || arrel.titol;
+  const textIndex = editorial?.entradeta || arrel.text;
+  const paginesEditades = editorial?.pagines || null;
+  const fills = paginesEditades
+    ? arrel.fills.map((pagina) => {
+      const clau = pagina.id?.startsWith('pagina:') ? pagina.id.slice('pagina:'.length) : pagina.id;
+      const extra = Object.hasOwn(paginesEditades, clau) ? paginesEditades[clau] : null;
+      if (!extra) return pagina;
+      return {
+        ...pagina,
+        titol: typeof extra.title === 'string' && extra.title.trim() ? extra.title.trim() : pagina.titol,
+        subtitol: typeof extra.subtitle === 'string' && extra.subtitle.trim() ? extra.subtitle.trim() : pagina.subtitol,
+        text: typeof extra.lead === 'string' && extra.lead.trim() ? extra.lead.trim() : pagina.text
+      };
+    })
+    : arrel.fills;
   return (
     <section className="sdp-consola__index sdp-prose" aria-labelledby={id}>
-      <h3 id={id}>{arrel.titol}</h3>
-      <p className="lead">{arrel.text}</p>
-      {arrel.fills.map((pagina) => <Pagina key={pagina.id} node={pagina} privat={privat} />)}
+      <h3 id={id}>{titolIndex}</h3>
+      <p className="lead">{textIndex}</p>
+      {fills.map((pagina) => <Pagina key={pagina.id} node={pagina} privat={privat} />)}
     </section>
   );
 }

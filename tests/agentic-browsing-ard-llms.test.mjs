@@ -337,17 +337,36 @@ test('llms.txt queda exclòs del paquet WordPress/natiu i admés per l’inventa
 /* P0-CONSOLIDACIO-3-CATEDRES (Emowe/Tellado) · llms.txt enllaça la còpia Markdown
    pública de la Wiki (tooling/seo/genera-llms.mjs): cada enllaç /md/ és un fitxer
    de public/md, cada fitxer de public/md és a llms.txt i a slugIndex.json, i la
-   carpeta no viatja al connector WordPress ni a l'app nativa. */
-test('llms.txt i public/md: cap enllaç orfe, cap fitxer orfe, el mateix slug que slugIndex.json i fora dels paquets', () => {
+   carpeta no viatja al connector WordPress ni a l'app nativa.
+   v1.2.26 · public/md/skills (IDEA-364) és la subcarpeta de la projecció de skills, no cap document. I, amb D4
+   Opció B (D5), un esborrany de la Wiki es llig a /wikidepoble però no té còpia a /md: els documents de public/md
+   són EXACTAMENT els slugs indexables, els de slugIndex.json menys els esborranys de wikiManifest (cada esborrany
+   ha de casar amb una sola entrada de slugIndex.json, perquè la resta no siga mai una resta buida). */
+test('llms.txt i public/md: cap enllaç orfe, cap fitxer orfe, els slugs indexables de slugIndex.json i fora dels paquets', async () => {
   const txt = fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8');
   const enllacats = [...txt.matchAll(/\]\(https:\/\/socdepoble\.org\/md\/([^)]+)\)/g)].map((m) => m[1]).sort();
   const carpeta = path.join(ARREL, 'public/md');
   assert.equal(fs.lstatSync(carpeta).isDirectory(), true, 'public/md és una carpeta real');
-  const alDisc = fs.readdirSync(carpeta).filter((nom) => !nom.startsWith('.')).sort();
-  assert.ok(alDisc.length > 0, 'la Wiki pública té documents');
-  assert.deepEqual(enllacats, alDisc, 'cada enllaç /md/ de llms.txt és un fitxer de public/md i a l’inrevés');
-  const slugs = JSON.parse(fs.readFileSync(path.join(ARREL, 'public/slugIndex.json'), 'utf8')).map((d) => `${d.slug}.md`).sort();
-  assert.deepEqual(alDisc, slugs, 'public/md té un fitxer per cada document de slugIndex.json, ni més ni menys');
+  const entrades = fs.readdirSync(carpeta, { withFileTypes: true }).filter((e) => !e.name.startsWith('.'));
+  const carpetes = entrades.filter((e) => e.isDirectory()).map((e) => e.name);
+  assert.deepEqual(carpetes, ['skills'], 'l’única carpeta de public/md és la de les skills (IDEA-364)');
+  assert.equal(fs.lstatSync(path.join(carpeta, 'skills')).isSymbolicLink(), false, 'public/md/skills és una carpeta real');
+  const documents = entrades.filter((e) => e.isFile()).map((e) => e.name).sort();
+  assert.equal(documents.length + carpetes.length, entrades.length, 'a public/md només hi ha fitxers i la carpeta de skills');
+  assert.ok(documents.length > 0, 'la Wiki pública té documents');
+  assert.deepEqual(enllacats, documents, 'cada enllaç /md/ de llms.txt és un document de public/md i a l’inrevés');
+
+  const { wikiManifest } = await import('../src/data/wikiManifest.js');
+  const { idDeDocumentWiki } = await import('../src/config/rutaSocial.js');
+  const esborranys = new Set(wikiManifest.items.filter((i) => i.noindex === true || i.attributes?.status === 'esborrany').map((i) => i.id));
+  assert.ok(esborranys.size > 0, 'la Wiki té esborranys: la resta no pot ser buida per construcció');
+  // L'id del document a l'app, el mateix que genera-llms.mjs (idDelDocument): el nom del fitxer sense .md.
+  const idDe = (rel) => idDeDocumentWiki(path.posix.basename(rel) === 'SKILL.md' ? `${path.posix.basename(path.posix.dirname(rel))}_SKILL` : path.posix.basename(rel, '.md'));
+  const slugIndex = JSON.parse(fs.readFileSync(path.join(ARREL, 'public/slugIndex.json'), 'utf8'));
+  const deEsborrany = slugIndex.filter((d) => esborranys.has(idDe(d.path)));
+  assert.deepEqual(deEsborrany.map((d) => idDe(d.path)).sort(), [...esborranys].sort(), 'cada esborrany de wikiManifest casa amb una sola entrada de slugIndex.json');
+  const indexables = slugIndex.filter((d) => !esborranys.has(idDe(d.path))).map((d) => `${d.slug}.md`).sort();
+  assert.deepEqual(documents, indexables, 'public/md té un document per cada slug indexable de slugIndex.json, ni més ni menys');
   assert.match(txt, /\n## Wiki de Poble \(Markdown\)\n/);
   assert.equal(PROPIS_DEL_LLOC.arrel.includes('md'), true, 'public/md és propi del domini socdepoble.org');
 });

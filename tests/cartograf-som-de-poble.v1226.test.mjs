@@ -138,8 +138,8 @@ test('nomEstrany: codificat, espais als extrems, control i invisibles; la icona 
   assert.equal(nomEstrany('Som%20de%20Poble'), 'codificat per URL');
   assert.equal(nomEstrany(' carpeta'), 'espais als extrems');
   assert.equal(nomEstrany('a\u0007b'), 'caràcters de control');
-  assert.equal(nomEstrany('Som​de Poble'), 'caràcters invisibles');
-  assert.equal(nomEstrany('carpeta‮'), 'caràcters invisibles');
+  assert.equal(nomEstrany('Som\u200Bde Poble'), 'caràcters invisibles');
+  assert.equal(nomEstrany('carpeta\u202E'), 'caràcters invisibles');
   assert.equal(nomEstrany('Icon\r'), null);
   assert.equal(nomEstrany('_cultura_de_poble'), null);
 });

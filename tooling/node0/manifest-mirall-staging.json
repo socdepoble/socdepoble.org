@@ -3,7 +3,7 @@
   "files": [
     {
       "path": "src/components/universal/drets/llicencies.js",
-      "sha256": "1146776bdc76dc14cdb3181fac6f5f3dff8a6b91ecaf2d7be74bf4082d8dd125"
+      "sha256": "511b8503d894b37271b6a9f767d97d477622d086d8fda842753356517209750a"
     },
     {
       "path": "src/components/universal/workspace/seleccioUrl.js",
@@ -27,7 +27,7 @@
     },
     {
       "path": "src/data/contracte.js",
-      "sha256": "67bb9b972026150e83256cff4e3ff3d57f3ad0acbe6d5596429d2443be2bd36a"
+      "sha256": "61ca3fab3b962a6da5341b2f498ac4d90d75075a65de4f86df74e008c39ddd79"
     },
     {
       "path": "src/data/contracteAvisos.js",

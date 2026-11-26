@@ -47,7 +47,8 @@
  *                   i pàgina diuen el mateix (ordre del Mestre, 261001). El
  *                   criteri i l'evidència, a DATA_DE_L_ORDRE, més avall.
  *       etiquetes · una llista congelada d'objectes congelats { text,
- *                   className }; buida si el plugin no en porta. Sense
+ *                   className, inerta: true } (v1.2.26, D3 sobre IDEA-365:
+ *                   metadades del registre, mai enllaç); buida si el plugin no en porta. Sense
  *                   `href` (D3 del Panell: cap enllaç que no siga el perfil,
  *                   els drets o /plugin/<id>) i sense cap xifra.
  *     Les porten els set que tenen targeta de plugin al Panell: gestoria,
@@ -229,7 +230,11 @@ export const CLASSE_BETA_OBERTA = 'sdp-insignia-beta-oberta';
    del 261010, M4) · opcionals: sense, null i una llista buida (el plugin es
    pinta com sempre). La llista i cada etiqueta ixen congelades, i de cada
    etiqueta només passen `text` i `className`: cap `href` ni cap gestor pot
-   entrar al registre per ací.
+   entrar al registre per ací. v1.2.26 · D3 de l'integrador sobre IDEA-365
+   (Llibre Mestre, línia 3825) · Són metadades del registre, no taxonomia
+   publicada: ixen amb `inerta: true`, i rutaDePindola.js no els fabrica cap
+   enllaç (D3 del Panell: cap enllaç que no siga el perfil, els drets o
+   /plugin/<id>).
    extensioImatge · Gauntlet 261016 (Bloc 1, Llei del Quadrat) · opcional:
    l'extensió de la il·lustració, 'jpg' si no ve (la imatge de sempre). Només
    decidix la ruta de `imatge`: no és cap camp nou del plugin.
@@ -250,7 +255,7 @@ const plugin = ({
   espai,
   etiquetaObrir,
   data,
-  etiquetes: Object.freeze(etiquetes.map(({ text, className }) => Object.freeze({ text, className }))),
+  etiquetes: Object.freeze(etiquetes.map(({ text, className }) => Object.freeze({ text, className, inerta: true }))),
   estat: estat === ESTAT_PROVES ? ESTAT_PROVES : null
 });
 
@@ -424,9 +429,10 @@ export const TEXTOS_BETA_OBERTA = Object.freeze({
 });
 
 /* Una insígnia congelada per llengua, sense `href` (D3 del Panell), feta una
-   sola vegada: la mateixa referència a cada pintat. */
+   sola vegada: la mateixa referència a cada pintat. v1.2.26 · Una insígnia no
+   és taxonomia (D3 de l'integrador sobre IDEA-365, línia 3825): `inerta: true`. */
 const INSIGNIES_BETA_OBERTA = Object.freeze(Object.fromEntries(
-  Object.entries(TEXTOS_BETA_OBERTA).map(([llengua, text]) => [llengua, Object.freeze({ text, className: CLASSE_BETA_OBERTA })])
+  Object.entries(TEXTOS_BETA_OBERTA).map(([llengua, text]) => [llengua, Object.freeze({ text, className: CLASSE_BETA_OBERTA, inerta: true })])
 ));
 
 /* El codi curt d'una llengua de la interfície ('es-ES' → 'es'); sense textos per a ella, 'ca'. */

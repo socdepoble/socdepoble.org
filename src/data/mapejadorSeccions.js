@@ -1,3 +1,4 @@
+import { classificaProducte } from './taxonomia/destinsDeProducte.js';
 import { sanitizeHtml as sanitizeHtmlBase, netejaText as netejaTextBase, esFontImatgePropia } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
 import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
@@ -368,7 +369,7 @@ export function mapSectionSubmissionToItem(submission) {
     };
     /* IDEA-61 (T0, prompt 261102_1532) · La fitxa de mercat, neta o fora. */
     netejaAmbit(element, sectionId);
-    return element;
+    return classificaProducte(element);
   }
 
   if (sectionId === 'events') {
@@ -897,7 +898,7 @@ export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedA
   netejaPortada(dades);
   netejaAmbit(dades, typeof sectionId === 'string' ? sectionId : dades.sectionId);
   if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio).filter(Boolean);
-  return {
+  const item = {
     ...dades,
     id,
     created_at: createdAt,
@@ -909,6 +910,7 @@ export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedA
     author_org_id: authorOrgId ?? null,
     authorOrgId: authorOrgId ?? null
   };
+  return sectionId === 'mercat' ? classificaProducte(item) : item;
 }
 
 /* Auditoria Port Neutral 261025 (omissió del verificador) · Només es fusionen

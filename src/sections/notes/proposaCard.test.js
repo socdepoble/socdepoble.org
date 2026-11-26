@@ -1,10 +1,14 @@
-/* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H: determinista, sense IA) ·
-   El motor de «🎴 Proposa Card» amb notes sintètiques: títol, subtítol i
-   entradilla des de les primeres línies del cos, només en els camps buits, i
-   el cos sense exactament les línies pujades (cap paràgraf dues voltes). */
+/* IDEA-41 / IDEA-359 (v1.2.26 · Pedra Seca 2.0 · IAIA Maquetadora Editorial
+   100 % no-destructiva):
+     · Per defecte (conservaCos = true): proposa H1, H2 i Entradeta neta sense
+       negretes ni marques Markdown crues, PRESERVANT INTACTE AL 100 % EL COS
+       ORIGINAL (cos === html byte a byte — Esmena Sagrada de No-Destrucció),
+       fins i tot amb textos llargs enganxats «a saco» (> 120 caràcters).
+     · Amb { conservaCos: false } (repartiment d'enganxat sobre H1 buit):
+       lleva del cos exactament les línies pujades. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  MAX_ENTRADILLA, MAX_SUBTITOL, MAX_TITOL, MIDA_PREVISIO, MOTIUS, campBuit, hiHaPropostaDeCard, proposaCard
+  MAX_ENTRADILLA, MAX_SUBTITOL, MAX_TITOL, MAX_TITOL_DEDUIT, MIDA_PREVISIO, MOTIUS, campBuit, hiHaPropostaDeCard, proposaCard, proposaTitolCurt
 } from './proposaCard.js';
 import { LLAVOR_NOTA, LLAVOR_NOTA_ANTIGA } from './llavorNota.js';
 import * as motor from './proposaCard.js';
@@ -13,21 +17,150 @@ import * as germa from './memoriaOral.js';
 const nota = (content, camps = {}) => ({ title: '', subtitle: '', lead: '', content, ...camps });
 const resum = (r) => ({ motiu: r.motiu, camps: { ...r.camps }, cos: r.cos });
 
-describe('proposaCard · les tres passes', () => {
+describe('IDEA-359 · Esmena Sagrada de No-Destrucció (conservaCos = true per defecte)', () => {
+  test('títol, línia curta i primer paràgraf: proposa H1, H2 i entradilla i deixa el cos 100 % intacte', () => {
+    const html = '<p>La festa del poble</p><p>Tres dies de música i taules llargues.</p><p>Enguany la comissió ha triat el carrer Major.</p><p>La resta del text.</p>';
+    const r = proposaCard(nota(html));
+    expect(resum(r)).toEqual({
+      motiu: MOTIUS.proposta,
+      camps: { title: 'La festa del poble', subtitle: 'Tres dies de música i taules llargues', lead: 'Enguany la comissió ha triat el carrer Major.' },
+      cos: html
+    });
+    expect(r.cos).toBe(html);
+    expect(r.mogudes.map((m) => m.camp)).toEqual(['title', 'subtitle', 'lead']);
+    expect(Object.isFrozen(r) && Object.isFrozen(r.camps) && Object.isFrozen(r.mogudes)).toBe(true);
+  });
+
+  /* Gauntlet G26 (Lent 1 punt 11) · IDEA-359.2 (Llibre Mestre l. 3701) mana
+     Títol, Subtítol i Entradeta «en el format editorial de socdepoble»: el
+     títol deduït no es talla a mitja frase. Esta primera frase no porta cap
+     «,» ni «:» abans de MAX_TITOL_DEDUIT caràcters: cap títol (i, sense títol,
+     cap subtítol); l'entradeta neta, sí. El kit esperava un títol tallat. */
+  test('text enganxat «a saco» (> 120 chars) amb negretes Markdown: entradeta neta, cap títol tallat a mitja frase i ni un byte del cos tocat', () => {
+    const html = '<p>La **Fira de Tardor de la Torre** obri dissabte a les 10 hores a la plaça Major amb productes de proximitat, música en directe i parades d’artesania local per a totes les famílies. Hi participen més de trenta productores de la comarca amb `oli`, mel i ametles.</p><p>Diumenge hi haurà contacontes i visita guiada pel nucli antic.</p><img src="/foto.webp" alt="Plaça">';
+    const r = proposaCard(nota(html));
+    expect(r.motiu).toBe(MOTIUS.proposta);
+    expect(r.cos).toBe(html);
+    expect(r.camps.title).toBeUndefined();
+    expect(r.camps.subtitle).toBeUndefined();
+    expect(r.camps.lead).toBe('La Fira de Tardor de la Torre obri dissabte a les 10 hores a la plaça Major amb productes de proximitat, música en directe i parades d’artesania local per a totes les famílies. Hi participen més de trenta productores de la comarca amb oli, mel i ametles.');
+    expect(r.camps.lead.length).toBeLessThanOrEqual(MAX_ENTRADILLA);
+    for (const valor of Object.values(r.camps)) {
+      expect(valor).not.toContain('**');
+      expect(valor).not.toContain('`');
+    }
+  });
+
+  test('proposaTitolCurt extrau una proposta <= 120 caràcters neta de Markdown per al botó d’un clic', () => {
+    const llarg = `<p>**Primera frase** del text enganxat amb [enllaç](/pobles/la-torre). ${'Més text de prova '.repeat(12)}</p>`;
+    const titol = proposaTitolCurt(llarg);
+    expect(titol).toBe('Primera frase del text enganxat amb enllaç');
+    expect(titol.length).toBeLessThanOrEqual(MAX_TITOL);
+  });
+});
+
+/* Gauntlet G26 (Lent 1 punt 11 i Lent 2 punt 4) · IDEA-359.2 (Llibre Mestre
+   l. 3701): Títol, Subtítol i Entradeta, tres camps que diuen tres coses.
+   Esmena Sagrada (l. 3721): a cada cas, el cos torna idèntic, byte a byte. */
+describe('IDEA-359 · la maquetadora no repetix ni talla a mitja frase (Gauntlet G26)', () => {
+  const PARAULES_BUIDES = ['a', 'al', 'de', 'del', 'la', 'les', 'els', 'el', 'i', 'amb', 'per', 'en'];
+  const darreraParaula = (text) => text.split(' ').at(-1).replace(/[^\p{L}\p{N}]+/gu, '').toLocaleLowerCase('ca');
+  const maqueta = (html, camps) => {
+    const r = proposaCard(nota(html, camps));
+    expect(r.cos).toBe(html);
+    if (r.camps.title !== undefined && !camps?.title) {
+      expect(r.camps.title.length).toBeLessThanOrEqual(MAX_TITOL_DEDUIT);
+      expect(PARAULES_BUIDES).not.toContain(darreraParaula(r.camps.title));
+    }
+    return r;
+  };
+
+  test('la Fira de Tardor (cas del Gauntlet): cap títol que acabe «a la», ni el subtítol ni l’entradeta repetixen la mateixa frase', () => {
+    const frase = 'La Fira de Tardor de la Torre de les Maçanes obri dissabte a les deu del matí a la plaça Major amb productes de proximitat, música en directe i parades d’artesania.';
+    const r = maqueta(`<p>${frase}</p><p>Diumenge, contacontes.</p>`);
+    expect(resum(r)).toEqual({ motiu: MOTIUS.proposta, camps: { lead: frase }, cos: `<p>${frase}</p><p>Diumenge, contacontes.</p>` });
+  });
+
+  test('«Pa & oli»: el títol es talla en «:», el subtítol és una altra frase, l’entradeta no el repetix i tot s’escapa una sola volta', () => {
+    const html = '<p>Pa &amp; oli a la Torre: el forn del carrer Major torna a obrir dissabte amb coca de llanda i pa de llenya. '
+      + 'Les comandes es fan a la plaça, al costat de la font, fins divendres.</p><p>Segon paràgraf.</p>';
+    const r = maqueta(html);
+    expect(r.camps).toEqual({
+      lead: 'Pa &amp; oli a la Torre: el forn del carrer Major torna a obrir dissabte amb coca de llanda i pa de llenya.',
+      title: 'Pa &amp; oli a la Torre',
+      subtitle: 'Les comandes es fan a la plaça, al costat de la font, fins divendres'
+    });
+    for (const valor of Object.values(r.camps)) expect(valor).not.toMatch(/&amp;(?:amp|lt|gt|nbsp);/);
+    expect(r.mogudes.find((m) => m.camp === 'title').text).toBe('Pa & oli a la Torre');
+  });
+
+  test('el subtítol no és la frase del títol ni comença com ell: si la segona frase hi comença, el subtítol ix del paràgraf següent', () => {
+    const html = '<p>Pa &amp; oli a la Torre: el forn del carrer Major torna a obrir dissabte amb coca de llanda i pa de llenya. '
+      + 'Pa &amp; oli a la Torre també ven coques dolces els diumenges.</p><p>Les comandes, a la plaça.</p>';
+    const r = maqueta(html);
+    expect(r.camps.title).toBe('Pa &amp; oli a la Torre');
+    expect(r.camps.subtitle).toBe('Les comandes, a la plaça');
+  });
+
+  test('l’entradeta deduïda (primer paràgraf massa llarg per a entrar sencer) no porta la frase del subtítol', () => {
+    const farciment = 'Hi haurà parades de mel, oli, ametles i figues seques de tota la comarca durant tot el matí. '.repeat(5);
+    const html = `<p>Pa &amp; oli a la Torre: el forn del carrer Major torna a obrir dissabte amb coca de llanda i pa de llenya. Les comandes es fan a la plaça. ${farciment}</p>`;
+    expect(html.length).toBeGreaterThan(MAX_ENTRADILLA);
+    const r = maqueta(html);
+    expect(r.camps.subtitle).toBe('Les comandes es fan a la plaça');
+    expect(r.camps.lead).toBeTruthy();
+    expect(r.camps.lead).not.toContain('Les comandes es fan a la plaça');
+    /* Pendent del Mestre (pendents_mestre de P3; Gauntlet G26, Lent 2 punt 4): l'entradeta pot començar amb les paraules del títol deduït. */
+    expect(r.camps.lead.startsWith('Pa &amp; oli a la Torre: el forn')).toBe(true);
+  });
+
+  test('el títol deduït és la primera clàusula: «,», «:» o « · » seguits d’espai; mai «l·l», «10:30» ni una paraula buida al final', () => {
+    const cola = ' Hi haurà música, tallers i una gran paella per a tot el poble fins a la nit.';
+    const titol = (frase) => maqueta(`<p>${frase}${cola}</p>`).camps.title;
+    expect(titol('Vine a la Fira de Tardor, a la plaça Major i, després, al sopar de germanor de tot el poble amb música fins a la matinada.')).toBe('Vine a la Fira de Tardor');
+    expect(titol('Fira de Tardor · Torre de les Maçanes · dissabte a la plaça Major amb productes de proximitat i música en directe per a totes les famílies.')).toBe('Fira de Tardor');
+    expect(titol('Ahir, a la plaça Major, el poble de la Torre de les Maçanes va celebrar la festa de la tardor amb música i balls fins a la matinada.')).toBe('Ahir, a la plaça Major');
+    expect(titol('La col·lecció de figues seques de la iaia Rosa arriba a la Fira de Tardor de la Torre de les Maçanes aquest dissabte amb moltes més varietats.')).toBeUndefined();
+    expect(titol('Dissabte a les 10:30 obri la Fira de Tardor de la Torre de les Maçanes a la plaça Major amb productes de proximitat, música i tallers.')).toBeUndefined();
+    expect(titol('Enguany la Fira de Tardor de la Torre estrena una carpa nova a la plaça de, diuen els veïns, l’Ajuntament vell del poble i de la comarca.')).toBeUndefined();
+  });
+
+  test('una frase curta (de MAX_TITOL_DEDUIT caràcters com a molt) és el títol sencer, sense el punt final; l’entradeta no repetix cap de les dues frases', () => {
+    const html = '<p>La Torre estrena forn de llenya. Les primeres coques de llanda ixen dissabte a les set del matí i es venen a la plaça Major fins que s’acaben.</p>';
+    const r = maqueta(html);
+    expect(resum(r)).toEqual({
+      motiu: MOTIUS.proposta,
+      camps: {
+        title: 'La Torre estrena forn de llenya',
+        subtitle: 'Les primeres coques de llanda ixen dissabte a les set del matí i es venen a la plaça Major fins que s’acaben'
+      },
+      cos: html
+    });
+  });
+
+  test('cas «Títol curt» del Gauntlet: el títol i el subtítol directes no tornen a l’entradeta', () => {
+    const html = '<p>Títol curt</p><p>Un **paràgraf** amb [enllaç](/pobles/la-torre) i prou.</p>';
+    const r = maqueta(html);
+    expect(resum(r)).toEqual({ motiu: MOTIUS.proposta, camps: { title: 'Títol curt', subtitle: 'Un paràgraf amb enllaç i prou' }, cos: html });
+  });
+});
+
+describe('proposaCard · les tres passes (mode repartiment conservaCos = false)', () => {
+  const rep = (contingut) => proposaCard(contingut, { conservaCos: false });
+
   test('títol, línia curta i primer paràgraf: H1, H2 i entradilla, i el cos sense ells', () => {
-    const r = proposaCard(nota('<p>La festa del poble</p><p>Tres dies de música i taules llargues.</p><p>Enguany la comissió ha triat el carrer Major.</p><p>La resta del text.</p>'));
+    const r = rep(nota('<p>La festa del poble</p><p>Tres dies de música i taules llargues.</p><p>Enguany la comissió ha triat el carrer Major.</p><p>La resta del text.</p>'));
     expect(resum(r)).toEqual({
       motiu: MOTIUS.proposta,
       camps: { title: 'La festa del poble', subtitle: 'Tres dies de música i taules llargues', lead: 'Enguany la comissió ha triat el carrer Major.' },
       cos: '<p>La resta del text.</p>'
     });
     expect(r.mogudes.map((m) => m.camp)).toEqual(['title', 'subtitle', 'lead']);
-    expect(Object.isFrozen(r) && Object.isFrozen(r.camps) && Object.isFrozen(r.mogudes)).toBe(true);
   });
 
-  test('cap paràgraf no queda dues voltes: el que puja ja no és al cos, i la resta del cos és intacta', () => {
+  test('cap paràgraf no queda dues voltes en mode repartiment: la resta del cos és intacta', () => {
     const cos = '<p>Títol</p><p>Subtítol</p><p>Entradilla.</p><h3>Secció</h3><p>Un <strong>paràgraf</strong> amb <a href="https://exemple.cat">enllaç</a>.</p>';
-    const r = proposaCard(nota(cos));
+    const r = rep(nota(cos));
     expect(r.cos).toBe('<h3>Secció</h3><p>Un <strong>paràgraf</strong> amb <a href="https://exemple.cat">enllaç</a>.</p>');
     for (const { text } of r.mogudes) expect(r.cos).not.toContain(text);
   });
@@ -40,11 +173,10 @@ describe('proposaCard · les tres passes', () => {
   });
 
   test('només omple els camps buits: un títol ple no es toca i la primera línia passa al subtítol', () => {
-    const r = proposaCard(nota('<p>Una línia curta</p><p>El paràgraf de l’entradilla.</p>', { title: 'El meu títol' }));
+    const r = rep(nota('<p>Una línia curta</p><p>El paràgraf de l’entradilla.</p>', { title: 'El meu títol' }));
     expect(r.camps).toEqual({ subtitle: 'Una línia curta', lead: 'El paràgraf de l’entradilla.' });
     expect(r.cos).toBe('');
-    // Amb el subtítol ple, la primera línia va a l'entradilla.
-    expect(proposaCard(nota('<p>Una línia</p><p>Una altra</p>', { title: 'T', subtitle: 'S' })).camps).toEqual({ lead: 'Una línia' });
+    expect(rep(nota('<p>Una línia</p><p>Una altra</p>', { title: 'T', subtitle: 'S' })).camps).toEqual({ lead: 'Una línia' });
   });
 
   test('sense cap línia (cos buit, paràgrafs buits o només espais): res a proposar', () => {
@@ -56,91 +188,95 @@ describe('proposaCard · les tres passes', () => {
     expect(proposaCard(null).motiu).toBe(MOTIUS.buit);
   });
 
-  test('una sola línia: només el títol, i el cos queda buit', () => {
-    expect(resum(proposaCard(nota('<p>Una sola línia</p>')))).toEqual({ motiu: MOTIUS.proposta, camps: { title: 'Una sola línia' }, cos: '' });
+  /* Gauntlet G26 (Lent 2 punt 4) · IDEA-359.2 (Llibre Mestre l. 3701): la
+     línia que ha pujat al títol no torna a l'entradeta. El kit esperava la
+     mateixa línia al títol i a l'entradeta. */
+  test('una sola línia: només el títol (intacte per defecte; buit en mode repartiment)', () => {
+    expect(resum(proposaCard(nota('<p>Una sola línia</p>')))).toEqual({ motiu: MOTIUS.proposta, camps: { title: 'Una sola línia' }, cos: '<p>Una sola línia</p>' });
+    expect(resum(rep(nota('<p>Una sola línia</p>')))).toEqual({ motiu: MOTIUS.proposta, camps: { title: 'Una sola línia' }, cos: '' });
   });
 
-  test('una primera línia molt llarga no és cap títol ni subtítol: si cap, és l’entradilla; si no, res', () => {
+  test('una primera línia molt llarga en mode repartiment no és cap títol ni subtítol: si cap, és l’entradilla; si no, res', () => {
     const llarga = `Era una vesprada de juliol ${'i la plaça bullia de gent '.repeat(8)}`.trim();
     expect(llarga.length).toBeGreaterThan(MAX_SUBTITOL);
     expect(llarga.length).toBeLessThanOrEqual(MAX_ENTRADILLA);
-    const r = proposaCard(nota(`<p>${llarga}</p><p>Segon paràgraf</p>`));
+    const r = rep(nota(`<p>${llarga}</p><p>Segon paràgraf</p>`));
     expect(resum(r)).toEqual({ motiu: MOTIUS.proposta, camps: { lead: llarga }, cos: '<p>Segon paràgraf</p>' });
     const enorme = 'a'.repeat(MAX_ENTRADILLA + 1);
-    expect(resum(proposaCard(nota(`<p>${enorme}</p>`)))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: `<p>${enorme}</p>` });
+    expect(resum(rep(nota(`<p>${enorme}</p>`)))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: `<p>${enorme}</p>` });
   });
 
-  test('els límits són inclusius: MAX_TITOL entra al títol; un caràcter més, no', () => {
+  test('els límits són inclusius en mode repartiment: MAX_TITOL entra al títol; un caràcter més, no', () => {
     const just = 'x'.repeat(MAX_TITOL);
-    expect(proposaCard(nota(`<p>${just}</p>`)).camps.title).toBe(just);
-    expect(proposaCard(nota(`<p>${just}x</p>`)).camps.title).toBeUndefined();
+    expect(rep(nota(`<p>${just}</p>`)).camps.title).toBe(just);
+    expect(rep(nota(`<p>${just}x</p>`)).camps.title).toBeUndefined();
   });
 
-  test('sense títol no hi ha subtítol: el subtítol és «la línia curta següent» al títol', () => {
+  test('sense títol no hi ha subtítol en mode repartiment', () => {
     const titolLlarg = 't'.repeat(MAX_TITOL + 5);
-    const r = proposaCard(nota(`<p>${titolLlarg}</p><p>Curta</p>`));
+    const r = rep(nota(`<p>${titolLlarg}</p><p>Curta</p>`));
     expect(r.camps.subtitle).toBeUndefined();
     expect(r.camps.lead).toBe(titolLlarg);
   });
 });
 
 describe('proposaCard · títols en HTML i en Markdown', () => {
-  test('un títol HTML del cos (h1–h6) puja al títol i es lleva sencer', () => {
+  const rep = (contingut) => proposaCard(contingut, { conservaCos: false });
+
+  test('un títol HTML del cos (h1–h6) puja al títol', () => {
     for (const nivell of [1, 2, 3, 6]) {
-      const r = proposaCard(nota(`<h${nivell}>Mercat de <em>dissabte</em></h${nivell}><p>Paràgraf.</p>`, { subtitle: 'S' }));
+      const r = rep(nota(`<h${nivell}>Mercat de <em>dissabte</em></h${nivell}><p>Paràgraf.</p>`, { subtitle: 'S' }));
       expect(r.camps, `h${nivell}`).toEqual({ title: 'Mercat de dissabte', lead: 'Paràgraf.' });
       expect(r.cos).toBe('');
     }
-    // Amb el subtítol buit, la línia curta de darrere és el subtítol.
-    expect(proposaCard(nota('<h2>Mercat</h2><p>Cada dissabte.</p>')).camps).toEqual({ title: 'Mercat', subtitle: 'Cada dissabte' });
+    expect(rep(nota('<h2>Mercat</h2><p>Cada dissabte.</p>')).camps).toEqual({ title: 'Mercat', subtitle: 'Cada dissabte' });
   });
 
   test('un títol del cos també pot ser el subtítol, però mai l’entradilla', () => {
-    expect(proposaCard(nota('<h2>Títol</h2><h3>Subtítol</h3><p>Entradilla</p>')).camps)
+    expect(rep(nota('<h2>Títol</h2><h3>Subtítol</h3><p>Entradilla</p>')).camps)
       .toEqual({ title: 'Títol', subtitle: 'Subtítol', lead: 'Entradilla' });
-    // Amb el títol i el subtítol plens, un h3 a l'inici no és cap entradilla.
-    expect(proposaCard(nota('<h3>Secció</h3><p>Text</p>', { title: 'T', subtitle: 'S' })).motiu).toBe(MOTIUS.res);
+    expect(rep(nota('<h3>Secció</h3><p>Text</p>', { title: 'T', subtitle: 'S' })).motiu).toBe(MOTIUS.res);
   });
 
   test('Markdown: «# Títol» i «## Subtítol» perden la marca; un títol Markdown no és cap entradilla', () => {
-    expect(resum(proposaCard(nota('<p># El rebost</p><p>## Què hi ha hui ##</p><p>Tomaques i figues.</p><p>Més.</p>')))).toEqual({
+    expect(resum(rep(nota('<p># El rebost</p><p>## Què hi ha hui ##</p><p>Tomaques i figues.</p><p>Més.</p>')))).toEqual({
       motiu: MOTIUS.proposta,
       camps: { title: 'El rebost', subtitle: 'Què hi ha hui', lead: 'Tomaques i figues.' },
       cos: '<p>Més.</p>'
     });
-    expect(proposaCard(nota('<p>### Secció</p>', { title: 'T', subtitle: 'S' })).motiu).toBe(MOTIUS.res);
-    // Un coixinet sense espai no és cap títol: és text.
-    expect(proposaCard(nota('<p>#etiqueta</p>')).camps.title).toBe('#etiqueta');
+    expect(rep(nota('<p>### Secció</p>', { title: 'T', subtitle: 'S' })).motiu).toBe(MOTIUS.res);
+    expect(rep(nota('<p>#etiqueta</p>')).camps.title).toBe('#etiqueta');
   });
 
-  test('HTML escrit com a text (les etiquetes d’un títol enganxades com a lletres): la marca es lleva i el camp rep text escapat', () => {
-    const r = proposaCard(nota('<p>&lt;h1&gt;Fira &amp; mercat&lt;/h1&gt;</p><p>Entradilla</p>', { subtitle: 'S' }));
+  test('HTML escrit com a text: la marca es lleva i el camp rep text escapat', () => {
+    const r = rep(nota('<p>&lt;h1&gt;Fira &amp; mercat&lt;/h1&gt;</p><p>Entradilla</p>', { subtitle: 'S' }));
     expect(r.camps).toEqual({ title: 'Fira &amp; mercat', lead: 'Entradilla' });
     expect(r.mogudes[0]).toEqual({ camp: 'title', text: 'Fira & mercat' });
   });
 });
 
 describe('proposaCard · línies, marques i el que no és text', () => {
-  test('dins d’un paràgraf, cada salt de línia (<br>) separa una línia: es lleva només el que puja', () => {
-    const r = proposaCard(nota('<p>Títol<br>Subtítol curt<br>Primera frase de l’entradilla<br>i la segona.</p><p>Cos.</p>'));
+  const rep = (contingut) => proposaCard(contingut, { conservaCos: false });
+
+  test('dins d’un paràgraf, cada salt de línia (<br>) separa una línia', () => {
+    const r = rep(nota('<p>Títol<br>Subtítol curt<br>Primera frase de l’entradilla<br>i la segona.</p><p>Cos.</p>'));
     expect(r.camps).toEqual({ title: 'Títol', subtitle: 'Subtítol curt', lead: 'Primera frase de l’entradilla i la segona.' });
     expect(r.cos).toBe('<p>Cos.</p>');
-    // Amb el subtítol ple, el que resta del paràgraf es queda tal qual.
-    const parcial = proposaCard(nota('<p>Títol<br><br>Resta <strong>del</strong> paràgraf</p>', { subtitle: 'S', lead: 'E' }));
+    const parcial = rep(nota('<p>Títol<br><br>Resta <strong>del</strong> paràgraf</p>', { subtitle: 'S', lead: 'E' }));
     expect(parcial.camps).toEqual({ title: 'Títol' });
     expect(parcial.cos).toBe('<p>Resta <strong>del</strong> paràgraf</p>');
   });
 
-  test('les marques no pugen: el camp rep text pla escapat', () => {
-    const r = proposaCard(nota('<p><strong>Negreta</strong> &lt;i&gt; <a href="/x">enllaç</a></p>'));
-    expect(r.camps.title).toBe('Negreta &lt;i&gt; enllaç');
+  test('les marques HTML i Markdown no pugen: el camp rep text pla escapat', () => {
+    const r = rep(nota('<p><strong>Negreta</strong> &lt;i&gt; <a href="/x">enllaç</a> **cru**</p>'));
+    expect(r.camps.title).toBe('Negreta &lt;i&gt; enllaç cru');
   });
 
   test('punt final: el títol i el subtítol el perden; els punts suspensius i l’entradilla, no', () => {
-    expect(proposaCard(nota('<p>Títol.</p><p>Subtítol.</p><p>Entradilla.</p>')).camps)
+    expect(rep(nota('<p>Títol.</p><p>Subtítol.</p><p>Entradilla.</p>')).camps)
       .toEqual({ title: 'Títol', subtitle: 'Subtítol', lead: 'Entradilla.' });
-    expect(proposaCard(nota('<p>I ara què...</p>')).camps.title).toBe('I ara què...');
-    expect(proposaCard(nota('<p>Per què?</p>')).camps.title).toBe('Per què?');
+    expect(rep(nota('<p>I ara què...</p>')).camps.title).toBe('I ara què...');
+    expect(rep(nota('<p>Per què?</p>')).camps.title).toBe('Per què?');
   });
 
   test('el recorregut para en el primer bloc que no és text: imatges, llistes i targetes no es toquen mai', () => {
@@ -149,14 +285,13 @@ describe('proposaCard · línies, marques i el que no és text', () => {
     expect(resum(proposaCard(nota(`${imatge}<p>Text</p>`)))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: `${imatge}<p>Text</p>` });
     expect(proposaCard(nota(`${llista}<p>Text</p>`)).motiu).toBe(MOTIUS.res);
     expect(proposaCard(nota('<p><img src="/f.webp" alt="">Peu</p><p>Text</p>')).motiu).toBe(MOTIUS.res);
-    // Abans del bloc, sí; el bloc i el que ve darrere es queden en el seu ordre.
-    const r = proposaCard(nota(`<p>Títol</p>${llista}<p>Després</p>`));
+    const r = rep(nota(`<p>Títol</p>${llista}<p>Després</p>`));
     expect(r.camps).toEqual({ title: 'Títol' });
     expect(r.cos).toBe(`${llista}<p>Després</p>`);
   });
 
   test('els paràgrafs buits de l’inici es boten i es queden', () => {
-    const r = proposaCard(nota('<p></p><p>Títol</p><p></p><p>Entradilla llarga de prova.</p>', { subtitle: 'S' }));
+    const r = rep(nota('<p></p><p>Títol</p><p></p><p>Entradilla llarga de prova.</p>', { subtitle: 'S' }));
     expect(r.camps).toEqual({ title: 'Títol', lead: 'Entradilla llarga de prova.' });
     expect(r.cos).toBe('<p></p><p></p>');
   });
@@ -175,7 +310,7 @@ describe('proposaCard · previsió i camps buits', () => {
     const previsio = proposaCard(contingut, { previsio: true });
     expect(previsio.motiu).toBe(MOTIUS.proposta);
     expect(previsio.cos).toBeNull();
-    expect(proposaCard(contingut).cos).toBe('');
+    expect(proposaCard(contingut).cos).toBe('<p>Títol</p><p>Text</p>');
     expect(hiHaPropostaDeCard(contingut)).toBe(true);
   });
 
@@ -184,11 +319,10 @@ describe('proposaCard · previsió i camps buits', () => {
     const contingut = nota(`<p>Títol</p><p>Entradilla</p>${foto}<p>Final</p>`, { subtitle: 'S' });
     expect(proposaCard(contingut, { previsio: true }).camps).toEqual({ title: 'Títol', lead: 'Entradilla' });
     expect(proposaCard(contingut).camps).toEqual({ title: 'Títol', lead: 'Entradilla' });
-    expect(proposaCard(contingut).cos).toBe(`${foto}<p>Final</p>`);
-    // Un paràgraf tallat pel principi no compta: la previsió no s'inventa cap entradilla més curta.
+    expect(proposaCard(contingut).cos).toBe(contingut.content);
     const llarg = nota(`<p>Títol</p><p>${'paraula '.repeat(MIDA_PREVISIO / 4)}</p>`, { subtitle: 'S' });
-    expect(proposaCard(llarg, { previsio: true }).camps).toEqual({ title: 'Títol' });
-    expect(proposaCard(llarg).camps).toEqual({ title: 'Títol' });
+    expect(proposaCard(llarg, { previsio: true, conservaCos: false }).camps).toEqual({ title: 'Títol' });
+    expect(proposaCard(llarg, { conservaCos: false }).camps).toEqual({ title: 'Títol' });
   });
 
   test('campBuit: buit és sense cap text (null, cadena buida, <br>, &nbsp;)', () => {
@@ -197,47 +331,41 @@ describe('proposaCard · previsió i camps buits', () => {
   });
 });
 
-/* Revisió adversarial 261028 · Els defectes del motor que van trobar les dues
-   revisions, i les guardes de la previsió que cap prova no matava. */
 describe('proposaCard · revisió adversarial 261028', () => {
   afterEach(() => { vi.restoreAllMocks(); });
+  const rep = (contingut) => proposaCard(contingut, { conservaCos: false });
 
-  test('un títol ple que el cos repetix a la primera línia no passa al subtítol: es queda al cos i la proposta seguix', () => {
-    const r = proposaCard(nota('<h2>La festa del poble</h2><p>Tres dies de música</p><p>Enguany al carrer Major.</p>', { title: 'La festa del poble' }));
+  test('un títol ple que el cos repetix a la primera línia no passa al subtítol', () => {
+    const r = rep(nota('<h2>La festa del poble</h2><p>Tres dies de música</p><p>Enguany al carrer Major.</p>', { title: 'La festa del poble' }));
     expect(resum(r)).toEqual({
       motiu: MOTIUS.proposta,
       camps: { subtitle: 'Tres dies de música', lead: 'Enguany al carrer Major.' },
       cos: '<h2>La festa del poble</h2>'
     });
-    // Sense distingir majúscules, punt final, marca Markdown ni entitats.
-    expect(proposaCard(nota('<p># fira &amp; mercat.</p><p>Cada dissabte</p>', { title: 'Fira &amp; Mercat' })).camps).toEqual({ subtitle: 'Cada dissabte' });
-    // La línia repetida i la següent en el mateix paràgraf: llevar-la deixaria el cos sense ella, i no es proposa res.
+    expect(rep(nota('<p># fira &amp; mercat.</p><p>Cada dissabte</p>', { title: 'Fira &amp; Mercat' })).camps).toEqual({ subtitle: 'Cada dissabte' });
     const mateix = nota('<p>La festa<br>Tres dies</p><p>Resta</p>', { title: 'La festa' });
     expect(resum(proposaCard(mateix))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: mateix.content });
     expect(hiHaPropostaDeCard(mateix)).toBe(false);
-    // Un títol ple diferent: la primera línia continua sent el subtítol.
-    expect(proposaCard(nota('<h2>Un altre</h2><p>Text</p>', { title: 'La festa' })).camps).toEqual({ subtitle: 'Un altre', lead: 'Text' });
+    expect(rep(nota('<h2>Un altre</h2><p>Text</p>', { title: 'La festa' })).camps).toEqual({ subtitle: 'Un altre', lead: 'Text' });
   });
 
-  test('una línia que sense el punt final no diu res no és cap títol ni subtítol (i no es lleva per a deixar el camp buit)', () => {
-    const punt = proposaCard(nota('<p>.</p><p>Hola</p>'));
+  test('una línia que sense el punt final no diu res no és cap títol ni subtítol', () => {
+    const punt = rep(nota('<p>.</p><p>Hola</p>'));
     expect(punt.camps.title).toBeUndefined();
     expect(punt.mogudes.every((m) => m.text !== '')).toBe(true);
     for (const cos of ['<p># .</p><p>Hola</p>', '<p>&lt;h2&gt;&lt;/h2&gt;</p><p>Hola</p>', '<p>&lt;h2&gt;.&lt;/h2&gt;</p><p>Hola</p>']) {
-      expect(resum(proposaCard(nota(cos))), cos).toEqual({ motiu: MOTIUS.res, camps: {}, cos });
+      expect(resum(rep(nota(cos))), cos).toEqual({ motiu: MOTIUS.res, camps: {}, cos });
     }
-    // Amb el títol ple, el subtítol tampoc no es queda buit.
     const sub = nota('<p># .</p><p>Hola</p>', { title: 'T' });
-    expect(resum(proposaCard(sub))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: sub.content });
+    expect(resum(rep(sub))).toEqual({ motiu: MOTIUS.res, camps: {}, cos: sub.content });
   });
 
   test('HTML escrit com a text: només cauen els trossos amb forma d’etiqueta; un «<» solt és text i no es perd', () => {
-    const r = proposaCard(nota('<p><br>&lt;h6&gt;mercat &amp; &lt; — &lt; x #etiqueta &gt;&lt;/h6&gt;<br></p><p>Entradilla</p>', { subtitle: 'S' }));
+    const r = rep(nota('<p><br>&lt;h6&gt;mercat &amp; &lt; — &lt; x #etiqueta &gt;&lt;/h6&gt;<br></p><p>Entradilla</p>', { subtitle: 'S' }));
     expect(r.mogudes[0]).toEqual({ camp: 'title', text: 'mercat & < — < x #etiqueta >' });
     expect(r.camps).toEqual({ title: 'mercat &amp; &lt; — &lt; x #etiqueta &gt;', lead: 'Entradilla' });
     expect(r.cos).toBe('');
-    // Les etiquetes de dins, sí: «<em>» i «</em>» cauen i el text es queda.
-    expect(proposaCard(nota('<p>&lt;h1&gt;Fira &lt;em class="x"&gt;gran&lt;/em&gt;&lt;/h1&gt;</p>')).camps.title).toBe('Fira gran');
+    expect(rep(nota('<p>&lt;h1&gt;Fira &lt;em class="x"&gt;gran&lt;/em&gt;&lt;/h1&gt;</p>')).camps.title).toBe('Fira gran');
   });
 
   test('previsió: l’últim bloc d’un principi tallat no compta encara que siga curt (una foto en data: a mitges)', () => {
@@ -259,9 +387,6 @@ describe('proposaCard · revisió adversarial 261028', () => {
   });
 });
 
-/* T3.2 (marató 261101) · La fitxa de memòria oral viu a memoriaOral.js (amb
-   les seues proves, memoriaOral.test.js) i ix també per esta porta. La crida
-   de sempre no canvia: DocumentEditor i NotesEditor reben la mateixa forma. */
 describe('proposaCard · porta única del motor (T3.2, memòria oral)', () => {
   test('el reexport és el mateix mòdul germà, no una còpia', () => {
     for (const nom of ['estructuraMemoriaOral', 'marcaRevisioHumana', 'validaFitxaOkf', 'indexOkf', 'entradaLog', 'nivellDeConfianca', 'VOCABULARI_RURAL', 'MOTIUS_MEMORIA']) {
@@ -269,14 +394,15 @@ describe('proposaCard · porta única del motor (T3.2, memòria oral)', () => {
     }
   });
 
-  test('un relat oral passa per proposaCard amb la mateixa forma de sempre i la fitxa OKF no hi entra', () => {
-    const relat = nota('<p>Mon pare era llaurador a Tibi.</p><p>A l’estiu segàvem el blat amb la falç.</p><p>La iaia contava rondalles.</p>');
+  test('un relat oral passa per proposaCard preservant el cos intacte i la fitxa OKF no hi entra', () => {
+    const cosRelat = '<p>Mon pare era llaurador a Tibi.</p><p>A l’estiu segàvem el blat amb la falç.</p><p>La iaia contava rondalles.</p>';
+    const relat = nota(cosRelat);
     const r = proposaCard(relat);
     expect(Object.keys(r).sort()).toEqual(['camps', 'cos', 'mogudes', 'motiu']);
     expect(resum(r)).toEqual({
       motiu: MOTIUS.proposta,
       camps: { title: 'Mon pare era llaurador a Tibi', subtitle: 'A l’estiu segàvem el blat amb la falç', lead: 'La iaia contava rondalles.' },
-      cos: ''
+      cos: cosRelat
     });
     const fitxa = motor.estructuraMemoriaOral(relat);
     expect([fitxa.municipi?.id, fitxa.okf.frontmatter.type]).toEqual(['tibi', 'Memòria oral']);

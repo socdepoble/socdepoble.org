@@ -5,7 +5,7 @@
  *
  * No resol URL dinàmiques. La porta conserva TOTS els desconeguts i el seu
  * veredicte; estos comptadors separen «signatura catalogada» de «destí provat».
- * El cost és O(bytes): un SHA per font i un màxim fix de 38 regles (v1.2.24)/8 patrons,
+ * El cost és O(bytes): un SHA per font i un màxim fix de 39 regles (v1.2.26 · G26-3)/8 patrons,
  * tots indexOf literals. Sense regex, eval, xarxa, parser ni escriptures.
  */
 import { createHash } from 'node:crypto';

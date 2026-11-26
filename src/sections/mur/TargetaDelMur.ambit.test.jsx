@@ -26,6 +26,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
 
 import { TargetaDelMur } from './TargetaDelMur.jsx';
 import { MARKET_ITEMS } from '../mercat/marketContent.js';
+import { propsDeTargetaDeProducte } from '../mercat/targetaDeProducte.js';
 
 const CREAT = '2026-11-02T10:00:00.000Z';
 const fitxa = (ambit, id, estat, dades, extra = {}) => ({ id, type: ambit, title: `Fitxa ${id}`, subtitle: 'Subtítol propi', ambit, estat, dades, created_at: CREAT, ...extra });
@@ -152,13 +153,25 @@ describe('una fitxa d’àmbit', () => {
 });
 
 describe('Llei del Píxel: un element sense àmbit es pinta com abans', () => {
-  test('una publicació de sempre: cap insígnia, l’etiqueta de sempre (el seu type), /mur/<id> i el seu subtítol', () => {
+  /* C26-2 · Canvi intencionat, IDEA-365 (Llibre Mestre, línia 3804: «totes les cards que es mostren al /mur
+     porten la categoria Mur»; 21:40, regles 1 i 3) i D3 de l'integrador: cap píndola amb un type intern. Abans
+     el type cru («feed») es pintava com a categoria i portava a /categoria/feed, «no trobada». Una publicació
+     sense labels ni categoriesSistema porta Mur, el destí de sèrie de la secció (publicacioSistema.js). */
+  test('una publicació de sempre: cap insígnia, Mur (cap type cru), /mur/<id> i el seu subtítol', () => {
     const article = pinta(POST);
     expect(overlay(article)).toBe('/mur/p1');
-    expect(etiquetes(article)).toEqual(deSempre(POST));
-    expect(etiquetes(article)).toEqual([['feed', 'sdp-badge-category']]);
+    expect(etiquetes(article)).toEqual([['Mur', 'sdp-badge-system']]);
+    expect(article.querySelector('li.sp-card-label a').getAttribute('href')).toBe('/mur');
+    expect(article.textContent).not.toMatch(/\bfeed\b/);
     expect(article.querySelector('.sdp-insignia')).toBeNull();
     expect(subtitol(article)).toBe('Diumenge');
+  });
+
+  test('una publicació sense labels que declara les seues Categories de Sistema les porta, i un type cru mai', () => {
+    for (const type of ['feed', 'post', 'note', undefined]) {
+      expect([type, etiquetes(pinta({ ...POST, type, categoriesSistema: ['Mur', 'Calendari'] }))]).toEqual([type, [['Mur', 'sdp-badge-system'], ['Calendari', 'sdp-badge-system']]]);
+      cleanup();
+    }
   });
 
   test('el mateix HTML amb i sense les claus de l’àmbit a «mur»: la maquinària és inerta per al Mur de sempre', () => {
@@ -168,11 +181,18 @@ describe('Llei del Píxel: un element sense àmbit es pinta com abans', () => {
     expect(amb).toBe(sense);
   });
 
-  test('un producte de llegat (type product, sense ambit) i les seues etiquetes de sempre, a /mercat/<id>', () => {
+  /* C26-2 #1 (Gauntlet c13) · Canvi intencionat, IDEA-365 (21:40, regla 1; 21:58, punt 1): un producte
+     del Mercat que també ix al Mur porta Mur + Mercat davant i les MATEIXES pastilles que la seua Card
+     del Mercat i la seua UniversalPage (propsDeTargetaDeProducte). Es conserven la categoria, l'etiqueta
+     i el recompte de variants, ara en el text humà i l'ordre canònic R22 del Mercat (el recompte just
+     davant de la pastilla de /pobles). La resta de la Llei del Píxel (cap insígnia, la ruta de sempre)
+     es manté. */
+  test('un producte de llegat (type product, sense ambit): Mur + Mercat davant i les pastilles del Mercat, a /mercat/<id>', () => {
     const samarreta = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
     const article = pinta(samarreta);
     expect(overlay(article)).toBe('/mercat/samarreta-socdepoble');
-    expect(etiquetes(article)).toEqual(deSempre(samarreta));
+    expect(etiquetes(article)).toEqual(propsDeTargetaDeProducte(samarreta, (_, alternativa) => alternativa).labels.map((label) => [label.text, label.className]));
+    expect(etiquetes(article)).toEqual([['Mur', 'sdp-badge-system'], ['Mercat', 'sdp-badge-system'], ['Roba', 'sdp-badge-category'], ['Samarreta', 'sdp-badge-tag'], ['2 variants', 'sdp-badge-accent']]);
     expect(article.querySelector('.sdp-insignia')).toBeNull();
   });
 
@@ -187,14 +207,25 @@ describe('Llei del Píxel: un element sense àmbit es pinta com abans', () => {
      (capturat el 261102 amb la TZ de vitest, Europe/Madrid, vite.config.js):
      qualsevol píxel nou a la targeta de sempre mossega ací, no només la
      maquinària de l'àmbit. Si el Mestre ordena un redisseny de la targeta,
-     esta és la prova que s'actualitza amb ell. */
+     esta és la prova que s'actualitza amb ell.
+     G26-2 · Canvi intencionat, IDEA-365 (21:40, regla 3: «píndoles 100 % clicables arreu»): la píndola
+     de la publicació de sempre ja no és text inert. Només canvia eixe <li>; la resta del HTML continua
+     lletra a lletra.
+     C26-2 · Canvi intencionat, IDEA-365 (línia 3804; 21:40, regles 1 i 3) i D3: eixa píndola ja no és el type
+     cru («feed» → /categoria/feed, «no trobada»), sinó Mur, la Categoria de Sistema de la publicació, cap a /mur. */
   test('el HTML d’una publicació de sempre, lletra a lletra', () => {
     expect(render(<TargetaDelMur item={POST} />).container.innerHTML).toBe(HTML_DE_SEMPRE.publicacio);
   });
 
   /* v1.2.21 · L3-05 (ordre del Mestre, onada v1.2.21) · El preu del Mur passa pel formatador canònic de
      /mercat: «15.00€» es pinta «15,00 €» (espai irrompible). Per a la samarreta el tram del quadrat continua sent
-     «menuda»; un preu enter s'allarga («8 €» → «8,00 €») i pot baixar de tram, com a /mercat des de la v1.2.20. */
+     «menuda»; un preu enter s'allarga («8 €» → «8,00 €») i pot baixar de tram, com a /mercat des de la v1.2.20.
+     C26-2 #1 + G26-2 · Canvi intencionat, IDEA-365 (21:40, regles 1 i 3; 21:58, punt 1): la llista de
+     pastilles és la de la Card del Mercat (Mur + Mercat davant, «Roba», «Samarreta», «2 variants») i
+     cada píndola és clicable. Només canvia la <ul> de les pastilles; la resta, lletra a lletra.
+     C26-2 · Canvi intencionat, D3 de l'integrador (IDEA-365, 21:40, regla 3: la píndola obri la ruta de la seua
+     categoria o etiqueta): «2 variants» és un recompte, no taxonomia; torna a ser text inert, sense
+     /etiqueta/2-variants («no trobada»). «Roba» i «Samarreta» són taxonomia i continuen clicables. */
   test('el HTML del producte de llegat «samarreta-socdepoble», lletra a lletra', () => {
     const samarreta = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
     expect(render(<TargetaDelMur item={samarreta} />).container.innerHTML).toBe(HTML_DE_SEMPRE.samarreta);
@@ -207,8 +238,8 @@ const PEU = (titol) => `<footer class="sp-card-footer"><div class="sp-card-actio
    mateix text i el de l'autor amb el nom i el poble. Només canvia l'arbre d'accessibilitat, no el píxel. */
 const DRETS = '<p class="sp-card-copyright"><a href="/page/drets-autor" class="sp-card-copyright__enllac" aria-label="CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana">CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana</a></p>';
 const HTML_DE_SEMPRE = {
-  publicacio: '<article class="sp-card"><header class="sp-card-header"><span class="sp-card-author-block"><span class="sp-card-author"><img alt="" class="sp-card-avatar" src="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" width="48" height="48" referrerpolicy="no-referrer"><span class="sp-card-author-info"><span class="sp-card-author-name">Maria</span><span class="sp-card-author-location">La Torre de les Maçanes</span></span></span></span><div class="sp-card-meta"><button type="button" class="btn-date-time" aria-label="11:00 02/11/26 · Obri el calendari d’eixe mes" title="11:00 02/11/26 · Obri el calendari d’eixe mes"><span>11:00</span> <span>02/11/26</span></button></div></header><a href="/mur/p1" class="sp-card-link-overlay" aria-label="La fira"></a><div class="sp-card-body"><h3 class="sp-card-title">La fira</h3><h4 class="sp-card-subtitle">Diumenge</h4><div class="sp-card-text"><p class="sp-card-text">Entradeta</p></div><ul class="sp-card-labels" aria-label="Categories"><li class="sp-card-label sdp-badge-category">feed</li></ul>'
+  publicacio: '<article class="sp-card"><header class="sp-card-header"><span class="sp-card-author-block"><span class="sp-card-author"><img alt="" class="sp-card-avatar" src="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" width="48" height="48" referrerpolicy="no-referrer"><span class="sp-card-author-info"><span class="sp-card-author-name">Maria</span><span class="sp-card-author-location">La Torre de les Maçanes</span></span></span></span><div class="sp-card-meta"><button type="button" class="btn-date-time" aria-label="11:00 02/11/26 · Obri el calendari d’eixe mes" title="11:00 02/11/26 · Obri el calendari d’eixe mes"><span>11:00</span> <span>02/11/26</span></button></div></header><a href="/mur/p1" class="sp-card-link-overlay" aria-label="La fira"></a><div class="sp-card-body"><h3 class="sp-card-title">La fira</h3><h4 class="sp-card-subtitle">Diumenge</h4><div class="sp-card-text"><p class="sp-card-text">Entradeta</p></div><ul class="sp-card-labels" aria-label="Categories"><li class="sp-card-label sdp-badge-system"><a href="/mur" class="sp-card-label" aria-label="Mur">Mur</a></li></ul>'
     + `${DRETS}</div>${PEU('La fira')}</article>`,
-  samarreta: '<article class="sp-card"><header class="sp-card-header"><a href="/empresa/socdepoble" class="sp-card-author-link" aria-label="Sóc de Poble, La Torre de les Maçanes · Perfil públic"><span class="sp-card-author"><img alt="" class="sp-card-avatar" src="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" width="48" height="48" referrerpolicy="no-referrer"><span class="sp-card-author-info"><span class="sp-card-author-name">Sóc de Poble</span><span class="sp-card-author-location">La Torre de les Maçanes</span></span></span></a><div class="sp-card-meta"><button type="button" class="btn-date-time" aria-label="14:33 15/08/26 · Obri el calendari d’eixe mes" title="14:33 15/08/26 · Obri el calendari d’eixe mes"><span>14:33</span> <span>15/08/26</span></button></div></header><a href="/mercat/samarreta-socdepoble" class="sp-card-link-overlay" aria-label="Samarreta Sóc de Poble"></a><div class="sp-card-media-container"><img class="sp-card-media" src="/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png" alt="Samarreta Sóc de Poble" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div><div class="sp-card-body has-price has-calendar-badge has-aside"><div class="sp-card-calendar-badge" aria-label="Preu: 15,00&nbsp;€"><span class="sp-card-calendar-badge__dia" data-oversized="true" data-mida="menuda">15,00&nbsp;€</span></div><h3 class="sp-card-title">Samarreta Sóc de Poble</h3><h4 class="sp-card-subtitle">L\'edició definitiva amb el logotip complet</h4><div class="sp-card-text"><p class="sp-card-text">Mapa del tresor sobre cotó resistent. La imatge complementa el text, no el substituïx.</p></div><ul class="sp-card-labels" aria-label="Categories"><li class="sp-card-label sdp-badge-system">Mercat</li><li class="sp-card-label sdp-badge-accent">2 variants</li><li class="sp-card-label sdp-badge-category">roba</li><li class="sp-card-label sdp-badge-tag">samarreta</li></ul>'
+  samarreta: '<article class="sp-card"><header class="sp-card-header"><a href="/empresa/socdepoble" class="sp-card-author-link" aria-label="Sóc de Poble, La Torre de les Maçanes · Perfil públic"><span class="sp-card-author"><img alt="" class="sp-card-avatar" src="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" width="48" height="48" referrerpolicy="no-referrer"><span class="sp-card-author-info"><span class="sp-card-author-name">Sóc de Poble</span><span class="sp-card-author-location">La Torre de les Maçanes</span></span></span></a><div class="sp-card-meta"><button type="button" class="btn-date-time" aria-label="14:33 15/08/26 · Obri el calendari d’eixe mes" title="14:33 15/08/26 · Obri el calendari d’eixe mes"><span>14:33</span> <span>15/08/26</span></button></div></header><a href="/mercat/samarreta-socdepoble" class="sp-card-link-overlay" aria-label="Samarreta Sóc de Poble"></a><div class="sp-card-media-container"><img class="sp-card-media" src="/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png" alt="Samarreta Sóc de Poble" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div><div class="sp-card-body has-price has-calendar-badge has-aside"><div class="sp-card-calendar-badge" aria-label="Preu: 15,00&nbsp;€"><span class="sp-card-calendar-badge__dia" data-oversized="true" data-mida="menuda">15,00&nbsp;€</span></div><h3 class="sp-card-title">Samarreta Sóc de Poble</h3><h4 class="sp-card-subtitle">L\'edició definitiva amb el logotip complet</h4><div class="sp-card-text"><p class="sp-card-text">Mapa del tresor sobre cotó resistent. La imatge complementa el text, no el substituïx.</p></div><ul class="sp-card-labels" aria-label="Categories"><li class="sp-card-label sdp-badge-system"><a href="/mur" class="sp-card-label" aria-label="Mur">Mur</a></li><li class="sp-card-label sdp-badge-system"><a href="/mercat" class="sp-card-label" aria-label="Mercat">Mercat</a></li><li class="sp-card-label sdp-badge-category"><a href="/categoria/roba" class="sp-card-label" aria-label="Roba">Roba</a></li><li class="sp-card-label sdp-badge-tag"><a href="/etiqueta/samarreta" class="sp-card-label" aria-label="Samarreta">Samarreta</a></li><li class="sp-card-label sdp-badge-accent">2 variants</li></ul>'
     + `${DRETS}</div>${PEU('Samarreta Sóc de Poble')}</article>`
 };

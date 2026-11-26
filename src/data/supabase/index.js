@@ -187,3 +187,15 @@ export const llistaDenunciesDiligents = (input, config = {}) => delegaCapturat((
 
 /* R32.19 · Formes pures i transport del protocol darrere del port neutral. */
 export * from './protocolPublic.js';
+
+/* IDEA-375: implementació diferida, sense diccionaris al nucli WP.
+   v1.2.26 · #7 P2 (Gauntlet C26-3) · Com delegaCapturat: la sessió i una còpia de la configuració es capturen abans
+   de l'import(). Si la sessió canvia mentre es carrega el tros, la RPC no viatja amb la identitat nova. */
+async function delegaTaxonomia(nom, args, config = {}) {
+  const capturedConfig = { ...config }, check = capturaSessioProjeccions();
+  const port = await import('./taxonomiaPagines.js');
+  check();
+  return port[nom](...args, capturedConfig);
+}
+export const actualitzaTaxonomiaPagina = (idPagina, input, config) => delegaTaxonomia('actualitzaTaxonomiaPagina', [idPagina, input], config);
+export const lligTaxonomiaPagina = (idPagina, config) => delegaTaxonomia('lligTaxonomiaPagina', [idPagina], config);

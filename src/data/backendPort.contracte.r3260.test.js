@@ -204,6 +204,8 @@ const ABI = Object.freeze([
   "cercaMissatgesFil",
   "cercaMissatgesFilPaginada",
   "carregaMissatgeFilPerId",
+  "actualitzaTaxonomiaPagina",
+  "lligTaxonomiaPagina",
 ]);
 // Excepcions: 11 wrappers especials i els dos delegats PURE de portabilitat.
 const CUSTOM = Object.freeze({
@@ -289,9 +291,9 @@ async function checkForwarding(api, name) {
   }
 }
 
-test('ABI v1.2.25: 190 noms, 177 bindings i 13 excepcions, preservant els 187 noms de C10 en el mateix ordre', () => {
-  expect(ABI).toHaveLength(190); expect(GENERIC).toHaveLength(177);
-  expect(ABI.slice(187)).toEqual(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId']); expect(Object.keys(CUSTOM)).toHaveLength(13);
+test('ABI v1.2.26: 192 noms, 179 bindings i 13 excepcions, preservant els 187 noms de C10 en el mateix ordre', () => {
+  expect(ABI).toHaveLength(192); expect(GENERIC).toHaveLength(179);
+  expect(ABI.slice(187)).toEqual(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId', 'actualitzaTaxonomiaPagina', 'lligTaxonomiaPagina']); expect(Object.keys(CUSTOM)).toHaveLength(13);
   assertAbi(contract.CONTRACTE_BACKEND, mapperOf(parseSource(readSource())));
   expect(Object.keys(port).sort()).toEqual([...ABI, ...HELPERS].sort());
 });

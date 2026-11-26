@@ -333,6 +333,13 @@
                   tryFiles = "$uri $uri/index.html /index.html";
                   extraConfig = capcaleres (globals ++ senseCache);
                 };
+                # v1.2.26 · D5: un document de /md/ absent (un esborrany de la Wiki) és un 404,
+                # com a Firebase i a Vercel, no la closca de l'SPA amb un 200. Prefix simple
+                # (sense ^~): les regles de punt i de barra final continuen per davant.
+                "/md/" = {
+                  tryFiles = "$uri =404";
+                  extraConfig = capcaleres (globals ++ senseCache);
+                };
                 # Firebase no desplega cap fitxer amb punt («ignore: **/.*»).
                 "~ /\\." = {
                   priority = 500;
@@ -622,6 +629,8 @@
               assert codi("/mur") == "200"
               assert codi("/projecte/") == "301"
               assert codi("/assets/no-existix.js") == "404"
+              assert codi("/md/no-existix.md") == "404"
+              assert codi("/mdx") == "200"
               assert codi("/.htaccess") == "404"
               assert codi("/.well-known/security.txt") == "404"
               assert codi("/.well-known/webfinger") == "400"

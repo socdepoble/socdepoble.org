@@ -1,0 +1,114 @@
+/* diferit-taxonomia-v26.css — Estils diferits Pedra Seca 2.0 per a G26-2
+   (IDEA-367 Modal dual d'Afig Catàleg, IDEA-370 Pàgina Editorial, IDEA-375
+   Edició Directa). L'adopten amb la clau 'taxonomia-v26' (useFullDiferit) només
+   els consumidors diferits: PaginaEditorialEtiqueta, PanellEdicioTaxonomia i
+   ModalAfigCataleg. Tots tres es carreguen amb lazyRoute.
+   Lot C1-3 (D1 de l'integrador) · Les regles del bloc territorial de la targeta
+   (IDEA-360, .sp-card-territori*) han passat sense cap canvi a
+   diferit-territori-v26.css: BlocTerritoriTargeta (dins d'UniversalCard)
+   importava este full sencer, i cada targeta l'arrossegava. Cap regla d'ací no
+   toca el bloc territorial. */
+@layer components {
+  /* IDEA-370 · Bloc d'àlies i accés dedicat de PaginaEditorialEtiqueta */
+  .sdp-taxonomia-alies {
+    text-align: center;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    margin: 0 0 var(--sdp-space-4);
+  }
+
+  /* IDEA-367 · Modal dual «Afig Catàleg / Fitxa» */
+  .sdp-cataleg-afig {
+    display: grid;
+    gap: var(--sdp-space-4);
+  }
+
+  .sdp-cataleg-afig__camins {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-4);
+  }
+
+  @media (min-width: 680px) {
+    .sdp-cataleg-afig__camins {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .sdp-cataleg-afig__cami {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  /* FN0-004 (IDEA-351) · El full diferit no toca el marge superior de l'h3:
+     obri el camí i el posa a 0 la regla canònica h3:first-child de base.css.
+     Només lleva el marge inferior, que dins de la pila substituïx el gap. */
+  .sdp-cataleg-afig__cami h3 {
+    margin-block-end: 0;
+  }
+
+  .sdp-cataleg-afig__cami p {
+    margin: 0;
+  }
+
+  .sdp-cataleg-afig__fitxer {
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+
+  /* IDEA-375 · Panell inline d'Edició Directa de Taxonomia */
+  .sdp-taxonomia-editor {
+    display: grid;
+    gap: var(--sdp-space-4);
+    margin: var(--sdp-space-5) 0;
+    padding: var(--sdp-space-5);
+    background: var(--sdp-fons-targeta);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+  }
+
+  .sdp-taxonomia-editor__fieldset {
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    margin: 0;
+  }
+
+  .sdp-taxonomia-editor__fieldset legend {
+    font-weight: 700;
+    padding-inline: var(--sdp-space-2);
+  }
+
+  .sdp-taxonomia-editor__caselles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin-top: var(--sdp-space-2);
+  }
+
+  .sdp-taxonomia-editor__casella {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    cursor: pointer;
+  }
+
+  .sdp-taxonomia-editor__camps-geo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-3);
+  }
+
+  .sdp-taxonomia-editor__accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+  }
+}

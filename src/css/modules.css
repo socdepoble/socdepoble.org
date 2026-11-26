@@ -3849,7 +3849,18 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-xat-nova:hover { background: var(--sdp-accio-control); }
   }
   .sdp-xat-nova:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
-  .sdp-xat .sdp-xat-obri-rail { color: var(--sdp-crom-actiu-fons); }
+  /* P2-CDP-CONTRAST-XAT (v1.2.26, kit G26-4) · El títol clicable «Xats ▸»
+     pinta el text en --sdp-crom-text, el blanc: 16,10:1 sobre el Carbó 800
+     de --sdp-workspace-fila1-fons, la fila on viu. La icona va en
+     --sdp-crom-actiu-fons, el taronja del cànon: 5,91:1 sobre el mateix fons
+     (AA, no AAA). L'únic .sdp-xat-obri-rail (BotoObriRail, ClosCaXat.jsx)
+     també porta .sdp-xat-titol-seccio, i el text li ve de la regla d'eixa
+     classe: la regla de color pròpia era redundant i s'ha retirat (Lot C1-3).
+     El selector de la icona es queda perquè declara la classe, que és el
+     ganxo del focus de ClosCaXat (tractor-vocabulari, classe-forastera, i
+     Tractor Pedra Seca, LLEI_01_CLASSE_ORFENA). */
+  .sdp-xat .sdp-xat-obri-rail > svg,
+  .sdp-xat .sdp-xat-titol-seccio > svg { color: var(--sdp-crom-actiu-fons); }
   .sdp-xat .sdp-xat-titol-seccio {
     display: inline-flex;
     align-items: center;
@@ -3863,7 +3874,7 @@ details[open] summary.accordion-header svg:last-child {
     border: 0;
     border-radius: var(--sdp-radi-boto);
     background: transparent;
-    color: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-text);
     font: inherit;
     text-align: start;
     cursor: pointer;
@@ -7067,26 +7078,23 @@ details[open] summary.accordion-header svg:last-child {
    Comandament (.sdp-quadre) viu en full propi: src/css/taulers.css. */
 
 /* ═══ TELEMETRIA POCA-SOLTA · TAULER DE /legal (260924) ════════════════
-   TaulerTelemetria.jsx, davall del text legal. Mateixa columna de lectura
-   que la prosa (68ch, centrada com .cms-preview > *). Se separa per vora i
-   fons, sense ombra (Pedra Seca §5), i no té cap color propi: només tokens
-   semàntics. L'espai el dona el gap de la graella; per això els fills
-   directes perden el marge heretat. */
+   TaulerTelemetria.jsx. IDEA-373 (v1.2.26, kit G26-4) · A /legal, el tauler
+   viu dins d'article.cms-preview.sdp-amb-targetes, després del text i abans
+   del clearfix, en flux de bloc: sense graella ni gap, sense filet ni fons
+   propi, perquè l'H3 i els paràgrafs s'adapten al costat de la targeta
+   flotant de Reconeixements sense cap buit vertical. Els fills h3, h4, p i
+   ul porten els marges de base.css; la resta de fills directes (com
+   l'interruptor, els avisos, els estats buits o la llista d'intents),
+   --sdp-space-4 dalt i baix. Cap ombra (Pedra Seca §5) ni cap color propi: només tokens
+   semàntics. */
 @layer components {
   .sdp-telemetria {
-    display: grid;
-    gap: var(--sdp-space-4);
-    width: 100%;
+    display: block;
     margin-block-start: var(--sdp-space-8);
-    padding-block-start: var(--sdp-space-8);
-    border-block-start: 1px solid var(--sdp-vora);
   }
-  .sdp-telemetria > h3,
-  .sdp-telemetria > h4,
-  .sdp-telemetria > p { margin: 0; }
-  .sdp-telemetria > h3,
-  .sdp-telemetria > h4 { line-height: 1.2; }
-  .sdp-telemetria > h4 { margin-block-start: var(--sdp-space-4); }
+  .sdp-telemetria > :where(:not(h3, h4, p, ul)) {
+    margin-block: var(--sdp-space-4);
+  }
   /* Ordre del Mestre (31-10-2026) · Llei de llistes (tokens.css, base.css):
      sense grid ni gap; entre ítems, només el marge del li (--sdp-li-gap). */
   .sdp-telemetria__punts {
@@ -7511,8 +7519,9 @@ details[open] summary.accordion-header svg:last-child {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
-  /* R32.9 · Quadre Blanc Editorial Pedra Seca (max-width: 1280px = 80rem) amb
-     capçalera centrada i 2 columnes equilibrades en escriptori (>= 900px). */
+  /* IDEA-362 (v1.2.26 · Pedra Seca 2.0) · Quadre Blanc Editorial en columna
+     única fluida (max-width: 1280px = 80rem) amb capçalera centrada i flux
+     editorial H3/H4/H5 de part a part sense partir-se en 2 columnes paral·leles. */
   .sdp-consola__index {
     max-inline-size: 80rem;
     margin-inline: auto;
@@ -7541,14 +7550,6 @@ details[open] summary.accordion-header svg:last-child {
     padding-top: var(--sdp-space-4);
     border-top: 1px solid var(--sdp-vora);
     min-inline-size: 0;
-  }
-  @media (min-width: 900px) {
-    .sdp-consola__index {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: var(--sdp-space-8);
-      row-gap: var(--sdp-space-6);
-      align-items: start;
-    }
   }
   .sdp-edicio-avancada__mur {
     display: grid;

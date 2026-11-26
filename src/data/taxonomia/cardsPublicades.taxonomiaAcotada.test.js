@@ -26,11 +26,12 @@ const ETIQUETES_ANTIGUES_EXTIRPADES = [
   'Agenda',
   'Pedra en sec',
   'Formació agrària',
-  'Arbres',
-  'Árboles',
-  'Trees',
-  'Zuhaitzak',
-  'Árbores',
+  // v1.2.26 · IDEA-369 #5 (Llibre Mestre, línia 3913) · «Arbres» torna a ser l'etiqueta global; l'antiga és «Arbres Monumentals».
+  'Arbres Monumentals',
+  'Árboles Monumentales',
+  'Monumental Trees',
+  'Zuhaitz Monumentalak',
+  'Árbores Monumentais',
   'Noves tecnologies',
 ];
 
@@ -63,7 +64,7 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
     }
   });
 
-  test('2. Manifest de Poble elimina les etiquetes antigues i usa la categoria mare i etiquetes canòniques (Aplec pel Territori, Associacionisme)', () => {
+  test('2. Manifest de Poble elimina les etiquetes antigues i fa servir la categoria mare i etiquetes canòniques (Aplec pel Territori, Associacionisme)', () => {
     expect(MANIFEST_DE_POBLE_POST.category).toBe('⚖️ Defensa del Territori, Ecologia i Reivindicació');
     expect(MANIFEST_DE_POBLE_POST.tags).toEqual(['Aplec pel Territori', 'Associacionisme']);
     expect(MANIFEST_DE_POBLE_POST.labels).toEqual([
@@ -82,6 +83,7 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
     // Cadena R11, Loop 3 (L2-08) · «#Pedra Seca», com nomena P0-40 (Llibre, línia 439).
     expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.tags).toEqual(['Pedra Seca', 'Bioconstrucció', 'Patrimoni', 'Activitats']);
     expect(CURSOS_PEDRA_EN_SEC_2026_EVENT.labels.map((l) => l.text)).toEqual([
+      'Mur', 'Calendari', 'Vídeo',
       '🌾 Recursos Locals, Agricultura i Sobirania',
       'Pedra Seca',
       'Bioconstrucció',
@@ -92,10 +94,11 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
     const aplec = CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023');
     expect(aplec.category).toBe('⚖️ Defensa del Territori, Ecologia i Reivindicació');
     // Cadena R11, Loop 3 (L2-07 i L2-08) · les etiquetes de WP 16880 (Incendis, no Rutes) i la mare enllaça el dia de l'acte.
-    expect(aplec.tags).toEqual(['Aplec pel Territori', 'Incendis', 'Associacionisme']);
-    expect(aplec.labels[0]).toEqual({ text: aplec.category, className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2023-01-29' });
+    expect(aplec.tags).toEqual(['Aplec']);
+    expect(aplec.labels.filter(l=>l.className==='sdp-badge-system').map(l=>l.text)).toEqual(['Mur','Calendari']);
+    expect(aplec.labels.find(l=>l.className==='sdp-badge-category sp-card-label--enllac')).toEqual({ text: aplec.category, className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2023-01-29' });
     const wp16880 = ARTICLES_SIMULADOR_IA_425.find((a) => a.id === 16880);
-    expect(wp16880?.etiquetesNetes).toEqual(aplec.tags);
+    expect(wp16880?.etiquetesNetes).toEqual(['Aplec pel Territori','Incendis','Associacionisme']); // L’arxiu històric no es reescriu amb la nova card.
     const assoc = FACETA_4_ETIQUETES_SKOS.find((t) => t.id === 999);
     expect(assoc.count).toBe(ARTICLES_SIMULADOR_IA_425.filter((a) => a.etiquetesNetes.includes('Associacionisme')).length);
 
@@ -105,10 +108,11 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
     }
   });
 
-  test('4. Noves tecnologies aplicades a la cultura rural (Pou de Neu 3D) usa categoria mare i etiquetes SKOS canòniques', () => {
+  test('4. Noves tecnologies aplicades a la cultura rural (Pou de Neu 3D) fa servir categoria mare i etiquetes SKOS canòniques', () => {
     expect(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.category).toBe('🌿 Natura i Patrimoni');
     expect(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.tags).toEqual(['Patrimoni', 'Pou de neu', 'Pedra Seca']);
     expect(NOVES_TECNOLOGIES_CULTURA_RURAL_POST.labels.map((l) => l.text)).toEqual([
+      'Mur',
       '🌿 Natura i Patrimoni',
       'Patrimoni',
       'Pou de neu',
@@ -119,40 +123,42 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
     }
   });
 
-  test('5. Les 5 cards de patrimoni (anatomia-rural, herbari, banc-de-llavors, rutes-de-poble, arbres-monumentals) usen la categoria mare nova i Arbres Monumentals en les 5 llengües', () => {
+  /* v1.2.26 · IDEA-369 (Llibre Mestre, línies 3913-3937) · #5 «Arbres» substituïx «Arbres Monumentals»; #30 «Patrimoni»
+     ix per redundància amb la mare; #33 «Pou de neu» passa a la capa geogràfica (paratges) i #45 «Pedra Seca» queda
+     per al patrimoni rural. Les biblioteques porten Mur + Catàlegs (IDEA-365, línies 3840-3845). */
+  test('5. Les 5 cards de patrimoni (anatomia-rural, herbari, banc-de-llavors, rutes-de-poble, arbres-monumentals) fan servir la categoria mare nova i Arbres en les 5 llengües', () => {
     expect(PAGE_COPY['anatomia-rural'].labels.map((l) => l.text)).toEqual([
       'Sistema',
       '🌿 Natura i Patrimoni',
-      'Patrimoni',
-      'Pou de neu',
       'Pedra Seca',
     ]);
+    expect(PAGE_COPY['anatomia-rural'].paratges).toEqual(['Pou de neu']);
     expect(PAGE_COPY.herbari.labels.map((l) => l.text)).toEqual([
-      'Sistema',
+      'Mur', 'Catàlegs',
       '🌿 Natura i Patrimoni',
       'Herbari',
     ]);
     expect(PAGINES_PATRIMONI_R9['banc-de-llavors'].labels.map((l) => l.text)).toEqual([
-      'Sistema',
+      'Mur', 'Catàlegs',
       '🌾 Recursos Locals, Agricultura i Sobirania',
       'Llavors',
     ]);
     expect(PAGINES_PATRIMONI_R9['rutes-de-poble'].labels.map((l) => l.text)).toEqual([
-      'Sistema',
+      'Mur', 'Catàlegs',
       '🌿 Natura i Patrimoni',
       'Rutes',
     ]);
     expect(PAGINES_PATRIMONI_R9['arbres-monumentals'].labels.map((l) => l.text)).toEqual([
-      'Sistema',
+      'Mur', 'Catàlegs',
       '🌿 Natura i Patrimoni',
-      'Arbres Monumentals',
+      'Arbres',
     ]);
 
     const arbresTrad = PAGINES_PATRIMONI_R9['arbres-monumentals'].translations;
-    expect(arbresTrad.es.labels.map((l) => l.text)).toEqual(['Sistema', '🌿 Naturaleza y Patrimonio', 'Árboles Monumentales']);
-    expect(arbresTrad.en.labels.map((l) => l.text)).toEqual(['System', '🌿 Nature and Heritage', 'Monumental Trees']);
-    expect(arbresTrad.eu.labels.map((l) => l.text)).toEqual(['Sistema', '🌿 Natura eta Ondarea', 'Zuhaitz Monumentalak']);
-    expect(arbresTrad.gl.labels.map((l) => l.text)).toEqual(['Sistema', '🌿 Natureza e Patrimonio', 'Árbores Monumentais']);
+    expect(arbresTrad.es.labels.map((l) => l.text)).toEqual(['Muro', 'Catálogos', '🌿 Naturaleza y Patrimonio', 'Árboles']);
+    expect(arbresTrad.en.labels.map((l) => l.text)).toEqual(['Wall', 'Catalogues', '🌿 Nature and Heritage', 'Trees']);
+    expect(arbresTrad.eu.labels.map((l) => l.text)).toEqual(['Horma', 'Katalogoak', '🌿 Natura eta Ondarea', 'Zuhaitzak']);
+    expect(arbresTrad.gl.labels.map((l) => l.text)).toEqual(['Muro', 'Catálogos', '🌿 Natureza e Patrimonio', 'Árbores']);
 
     for (const slug of ['anatomia-rural', 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals']) {
       const pag = PAGE_COPY[slug];
@@ -160,7 +166,7 @@ describe('P0-40 / IDEA-167 (Kit R88) · Recategorització de totes les Cards pub
         ...pag.labels.map((l) => l.text),
         ...Object.values(pag.translations || {}).flatMap((tr) => (tr.labels || []).map((l) => l.text)),
       ];
-      for (const antiga of ['Arbres', 'Árboles', 'Trees', 'Zuhaitzak', 'Árbores', 'Pedra seca']) {
+      for (const antiga of ['Arbres Monumentals', 'Árboles Monumentales', 'Monumental Trees', 'Zuhaitz Monumentalak', 'Árbores Monumentais', 'Pedra seca']) {
         expect(textos, `${slug} no pot portar ${antiga}`).not.toContain(antiga);
       }
     }

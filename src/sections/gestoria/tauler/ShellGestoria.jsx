@@ -128,7 +128,7 @@ import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.js
 import ContenidorGestoria, { CONSULTA_TRACTORS } from '../ContenidorGestoria.jsx';
 import { PanellEscaner } from '../escaner/PanellEscaner.jsx';
 import { tg, tf, localitzaDadesTauler } from '../i18nGestoria.js';
-import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta, pindolesInertes } from '../insigniaBetaOberta.js';
 import { useEscaner } from '../escaner/useEscaner.js';
 import { facturesQueFalten } from '../nucli/facturesQueFalten.js';
 import { PlantillaGestoria } from '../PlantillaGestoria.jsx';
@@ -585,7 +585,7 @@ export default function ShellGestoria({
           <PaginaApp title={tg(idioma, actual.titol)} subtitle={tg(idioma, actual.subtitol)}
             lead={actual.id === 'tauler' ? (titular.configurat ? tf(idioma, 'salutacioTitular', titular.nom, salutacio) : salutacio) : actual.enObres ? tg(idioma, EN_OBRES) : undefined}
             author={titular} barActions={accionsBoina} rellotgeViu rellotge={rellotge}
-            labels={etiquetesPagina}
+            labels={pindolesInertes(etiquetesPagina)}
             refTitol={refTitol} {...barraPrivada(avisaAccio, idioma)}>
             {avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null}
             {contingut}

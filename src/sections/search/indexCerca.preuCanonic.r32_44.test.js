@@ -13,6 +13,8 @@ test.each([
   const producte = Object.freeze({ id: 'oli', title: 'Oli del poble', ...dades });
   const entrada = deProducte(producte);
   expect(entrada.meta[0]).toBe(preu);
-  expect(propsDeTargetaDeResultat(entrada).labels[0]).toBe(preu);
+  /* v1.2.26 · D3 de l'integrador sobre IDEA-365 (Llibre Mestre, línia 3825): el preu és metadada de la
+     fila, píndola inerta. Abans, la cadena sola; el text ha de ser exactament el mateix. */
+  expect(propsDeTargetaDeResultat(entrada).labels[0]).toEqual({ text: preu, inerta: true });
   expect(producte.price).toBe(dades.price);
 });

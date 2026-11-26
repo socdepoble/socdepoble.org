@@ -6,6 +6,7 @@ import {MAX_TEXT,validaTaxonomia,aplicaPersonalitzacio,categoriesBase,etiquetesB
 import {PAGE_COPY} from '../../sections/text/pageContent.js';
 import {localitzaPagina} from '../../sections/text/pageContent.r10.js';
 import {DESTINS_CONTROL} from '../../sections/control/destinsControl.js';
+import {ETIQUETES_COMUNES,ETIQUETES_LOCALS_SEED,TRIATGE_ETIQUETES_1_49} from './taxonomiaPublicacio.js';
 
 test('R34 · el catàleg tanca6 mares/49 noms amb49 registres SKOS actius diferents',()=>{
  expect(CATEGORIES_CANONIQUES.map(c=>c.id)).toEqual(['defensa-territori','recursos-locals','natura-excursions','patrimoni-cultura','comunitat-rural','tecnologia-lliure']);
@@ -51,8 +52,24 @@ test('R34 · un config antic migra alias coneguts sense tocar textos privats ni 
  expect(etiquetesBase({v:1,etiquetes:['Noves tecnologies','reivindicant','PROJECTE TIC']})).toEqual(NOMS_ETIQUETES_CANONIQUES_49);
 });
 
+const senseEtiquetaEnCapLlengua=(key,text)=>IDIOMES_TAXONOMIA.every(language=>!localitzaPagina(PAGE_COPY[key],language).labels.some(l=>l.text===nomEtiquetaCanonica(text,language)));
+const PENDENTS_DEL_TRIATGE=TRIATGE_ETIQUETES_1_49.filter(t=>t.tipus==='pendent').map(t=>t.original);
+const ACTIVES=[...ETIQUETES_COMUNES.map(e=>e.nom),...ETIQUETES_LOCALS_SEED.map(e=>e.nom),...PENDENTS_DEL_TRIATGE];
+test('C26-1 #5 · cap etiqueta de pàgina és retirada, entitat, pilar ni paratge del triatge 1–49',()=>{
+ const fora=new Map(TRIATGE_ETIQUETES_1_49.filter(t=>['retirada','entitat','pilar','geografia'].includes(t.tipus)).map(t=>[t.original,t.tipus]));
+ expect([...fora.keys()]).toEqual(expect.arrayContaining(['NGI Fediversity','Projecte Sóc de Poble','Patrimoni','Pou de neu']));
+ for(const [key,[,...tags]] of Object.entries(CLASSIFICACIO_PAGINES_PUBLIQUES))for(const tag of tags)expect([key,tag,fora.get(tag)??null]).toEqual([key,tag,null]);
+ // #5 · Arbres Monumentals ja és Arbres, i #46 · el receptari porta Receptes.
+ expect(CLASSIFICACIO_PAGINES_PUBLIQUES['arbres-monumentals']).toEqual(['natura-excursions','Arbres']);
+ expect(CLASSIFICACIO_PAGINES_PUBLIQUES.receptes).toEqual(['patrimoni-cultura','Receptes']);
+ // #33 · El Pou de neu és capa geogràfica (IDEA-360), no etiqueta.
+ expect(PAGE_COPY['anatomia-rural'].paratges).toEqual(['Pou de neu']);
+ expect(senseEtiquetaEnCapLlengua('anatomia-rural','Pou de neu')).toBe(true);
+ expect(PENDENTS_DEL_TRIATGE).toEqual(['Associacionisme','El Camí','Opinió']);
+});
+
 test('R32.9 + IDEA-287 + IDEA-340 · les 36 pàgines conserven labels canònics en 5 idiomes; sistema-nervios viu al llibre',()=>{
- expect(Object.keys(PAGE_COPY)).toHaveLength(37); // R32.86 · + «Cada cosa al seu lloc»
+ expect(Object.keys(PAGE_COPY)).toHaveLength(37); // R32.86 · + «Cada cosa al seu lloc». v1.2.26 · «Què dinem?» és card, no pàgina (C26-2 #4).
  expect(CLASSIFICACIO_PAGINES_PUBLIQUES['tot-el-que-pots-fer']).toEqual(['comunitat-rural','Documentació']);
  expect(PAGE_COPY).not.toHaveProperty('sistema-nervios');
  expect(CLASSIFICACIO_PAGINES_PUBLIQUES).not.toHaveProperty('sistema-nervios');
@@ -61,12 +78,16 @@ test('R32.9 + IDEA-287 + IDEA-340 · les 36 pàgines conserven labels canònics 
  // Arbitratge R46, Loop 3 (L2-04) · P6 (directriu 261003_2325 del Mestre): les 8 pàgines d'acció de DESTINS_CONTROL no porten cap etiqueta.
  const accio=DESTINS_CONTROL.map(d=>d.pagina);expect(accio).toHaveLength(8);
  expect(Object.keys(CLASSIFICACIO_PAGINES_PUBLIQUES).sort()).toEqual(Object.keys(PAGE_COPY).filter(key=>!accio.includes(key)).sort());
- for(const language of IDIOMES_TAXONOMIA)for(const key of accio)expect([key,language,localitzaPagina(PAGE_COPY[key],language).labels]).toEqual([key,language,[]]);
+ const destins=['Mur','Mercat','Calendari','Mapa','Transport','Animalets','Treball','Habitatge'];
+ for(const language of IDIOMES_TAXONOMIA)for(const [i,key] of accio.entries())expect(localitzaPagina(PAGE_COPY[key],language).labels.map(l=>l.text)).toEqual(['Sistema',destins[i]].map(n=>nomEstructural(n,language)));
  for(const language of IDIOMES_TAXONOMIA)for(const [key,page] of Object.entries(PAGE_COPY)){
   if(accio.includes(key))continue;
   const localized=localitzaPagina(page,language),row=CLASSIFICACIO_PAGINES_PUBLIQUES[key];
   expect(localized.labels.some(l=>l.className==='sdp-badge-category'&&l.text===nomCategoriaCanonica(row[0],language)),`${key}/${language}`).toBe(true);
-  for(const label of localized.labels.filter(l=>l.className==='sdp-badge-tag'))expect(NOMS_ETIQUETES_CANONIQUES_49.some(name=>nomEtiquetaCanonica(name,language)===label.text),`${key}/${language}/${label.text}`).toBe(true);
+  /* C26-1 #5 · IDEA-369 (triatge 1–49, 00:24–00:43) · Cada etiqueta és del vocabulari actiu: una comuna de la xarxa
+     (ETIQUETES_COMUNES, en la seua llengua) o una local; mai les 49 històriques. Els pendents del triatge (#1, #13, #29)
+     continuen en pausa fins a la decisió del Mestre. */
+  for(const label of localized.labels.filter(l=>l.className==='sdp-badge-tag'))expect(ACTIVES.some(name=>nomEtiquetaCanonica(name,language)===label.text),`${key}/${language}/${label.text}`).toBe(true);
  }
  for(const language of IDIOMES_TAXONOMIA){const labels=localitzaPagina(PAGE_COPY.notes_shared,language).labels.map(l=>l.text);expect(labels).not.toContain(nomEstructural('Mur',language));expect(labels).toContain(nomEstructural('Sistema',language));}
 });
@@ -77,9 +98,9 @@ test('R41 · fora de PAGE_COPY la localització no reclassifica pàgines ni inve
  const external={html:'source',labels:[{text:'Author supplied label',className:'sdp-badge-neutral'}]};expect(localitzaPagina(external,'en')).toBe(external);
 });
 
-test('Arbitratge R46, Loop 3 (L2-04) · P6: una pàgina d’acció és fora de la taula i conserva les seues etiquetes tal qual',()=>{
- const originals=[];expect(etiquetesDePaginaPublica('publicar_mur',originals)).toBe(originals);
- for(const language of IDIOMES_TAXONOMIA)expect(etiquetesDePaginaPublica('habitatge',[],language)).toEqual([]);
+test('IDEA-365 · P6 derogada: publicar i habitatge reben destins explícits',()=>{
+ expect(etiquetesDePaginaPublica('publicar_mur',[]).map(l=>l.text)).toEqual(['Sistema','Mur']);
+ for(const language of IDIOMES_TAXONOMIA)expect(etiquetesDePaginaPublica('habitatge',[],language).map(l=>l.text)).toEqual(['Sistema','Habitatge'].map(n=>nomEstructural(n,language)));
 });
 
 test('Cadena R11, Loop 3 (L2-09) · les mares del Mur i dels detalls, en la llengua de la interfície; el text lliure, tal qual',()=>{

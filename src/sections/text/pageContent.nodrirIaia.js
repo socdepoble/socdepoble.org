@@ -7,9 +7,11 @@ export const DATA_NODRIR_IAIA = '2026-11-09T14:40:43.030Z';
    (una cap a /control, la mateixa pàgina on es pinta) i només en valencià. La pàgina
    /page/la-iaia-sabuda no les usa: les seues són les de la taxonomia canònica
    (classificacioPaginesPubliques.js), que ja ix en cinc llengües. */
+/* v1.2.26 · D3 (IDEA-365, línia 3825): «IAIA» no és cap categoria del catàleg; són metadades de
+   la targeta i es pinten com a text (inerta, rutaDePindola.js). */
 const etiquetesDeLaTargeta = (categoria, etiqueta) => Object.freeze([
-  Object.freeze({ text: categoria, className: 'sdp-badge-category' }),
-  Object.freeze({ text: etiqueta, className: 'sdp-badge-tag' })
+  Object.freeze({ text: categoria, className: 'sdp-badge-category', inerta: true }),
+  Object.freeze({ text: etiqueta, className: 'sdp-badge-tag', inerta: true })
 ]);
 export const ETIQUETES_NODRIR_IAIA = Object.freeze({
   ca: etiquetesDeLaTargeta('IAIA', 'Cultura'),

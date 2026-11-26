@@ -13,6 +13,7 @@ import { useLlenguaDelContingut } from '../../components/universal/traduccio/lle
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useUIActions } from '../../app/contexts/UIContext';
 import { useSuperadminEstable } from '../../hooks/useSuperadminEstable.js';
 import { desaRevisioEditorial, revisioEditorial, subscriuRevisionsEditorials, versioRevisionsEditorials } from '../../data/revisionsEditorialsDelNavegador.js';
 import { useSEO } from '../../hooks/useSEO.js';
@@ -23,8 +24,10 @@ import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 import { esperaElRol, maquinariaALaVista } from './maquinaria.js';
-import { metadadesDeDocumentWiki, rutaDeCompartirDocumentWiki } from './seoWiki.js';
+import { esDocumentEsborrany, metadadesDeDocumentWiki, rutaDeCompartirDocumentWiki } from './seoWiki.js';
 import { tradueix, useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { textosWikiV26 } from './i18nWikiV26.js';
+import { CARPETA_SKILLS_ID, PREFIX_ID_SKILL, itemsICategoriesDeSkills, useSkillsPubliques } from './useSkillsPubliques.js';
 import {
   AVIS_EINA_LOCAL_SENSE_TRADUCCIO,
   CATEGORIA_INICIAL_WIKI,
@@ -79,6 +82,8 @@ const DocumentacioMaquinaria = lazyRoute(() => import('./DocumentacioMaquinaria.
    ConsolaIncrustada és una exportació amb nom. */
 const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx')
   .then((modul) => ({ default: modul.ConsolaIncrustada })));
+/* D4 Opció B (v1.2.26) · Lector complet diferit de skills públiques (/md/skills/<nom>.md): +0 B al nucli WP. */
+const LectorSkillWiki = lazyRoute(() => import('./LectorSkillWiki.jsx'));
 
 /* Revisió adversarial de l'Onada 7 · Si el tros de la Consola no arriba (una
    connexió rural que cau, o sense connexió i sense haver-la oberta abans),
@@ -236,8 +241,9 @@ function InterruptorWikiAlMur({ item }) {
   );
 }
 
-function WikiDetail({ item }) {
+function WikiDetail({ item, idioma = 'ca' }) {
   const { pageCopy } = useCoreContent();
+  const txWiki = textosWikiV26(idioma);
   /* Pla 261028_1526 (P1-61, Fase 2) · El <head> del document que es pinta
      (seoWiki.js): el d'un document públic del manifest, amb el canonical
      ?item=<id> (la clau de la ruta, useSEO), i el genèric sense indexar per a
@@ -255,6 +261,21 @@ function WikiDetail({ item }) {
   const compartirDocument = rutaDeCompartir
     ? () => compartix(seo.title, urlPerCompartir(rutaDeCompartir, router), showToast)
     : undefined;
+  if (item && typeof item.id === 'string' && item.id.startsWith(PREFIX_ID_SKILL) && item.skill) {
+    return (
+      <BarreraDeLaConsola
+        fallback={(
+          <Alerta to="error" titol={txWiki.wikidepobleSkillsErrorFitxa}>
+            {txWiki.wikidepobleSkillsSubtitol}
+          </Alerta>
+        )}
+      >
+        <Suspense fallback={<Carregant etiqueta={txWiki.wikidepobleSkillsCarregantFitxa} />}>
+          <LectorSkillWiki item={item} idioma={idioma} />
+        </Suspense>
+      </BarreraDeLaConsola>
+    );
+  }
   if (!item || item.id === '__intro') {
     const page = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki) || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
     const data = dataHoraDeBarra({ creat: page.date });
@@ -344,15 +365,16 @@ function WikiDetail({ item }) {
   }
 
   const data = dataDeDocumentWiki(item);
+  const esEsborrany = esDocumentEsborrany(item);
 
   const categoryLabels = (item.categoryIds || []).map(id => {
     const cat = wikiManifest.categories.find(c => c.id === id);
     return { text: cat ? cat.label : id, className: 'sdp-badge-category' };
   });
-  
+
   const tagLabels = (item.tags || []).map(tag => ({ text: tag, className: 'sdp-badge-tag' }));
-  
-  const labels = [...categoryLabels, ...tagLabels];
+
+  const labels = Array.isArray(item.labels) && item.labels.length > 0 ? item.labels : [...categoryLabels, ...tagLabels];
 
   const editorial = extreuEditorial(item.content);
 
@@ -372,6 +394,11 @@ function WikiDetail({ item }) {
       /* Cicle 4 (lang-ca-nomes-a-textsection) · El document, en valencià. */
       llenguaDelContingut="ca"
     >
+      {esEsborrany ? (
+        <Alerta to="avis" viva={false} titol={txWiki.wikidepobleEsborranyTitol}>
+          {txWiki.wikidepobleEsborranyCos}
+        </Alerta>
+      ) : null}
       {item.id !== '00_index' && (
 
         <QuadreDelDocument>
@@ -469,11 +496,22 @@ function WikiDetail({ item }) {
 /* La primera opció de l'arbre: la portada («Wiki de Poble»). */
 const CATEGORIA_INICIAL = CATEGORIA_INICIAL_WIKI;
 
+function useIdiomaWikiSegur() {
+  try {
+    return useUIActions()?.language || 'ca';
+  } catch {
+    return 'ca';
+  }
+}
+
 export default function WikiDePobleSection() {
   const t = useTraductorOpcional();
+  const idioma = useIdiomaWikiSegur();
+  const txWiki = textosWikiV26(idioma);
   const navigate = useNavigate();
   const location = useLocation();
   const { pageCopy } = useCoreContent();
+  const skillsPubliques = useSkillsPubliques();
   /* 261001 · La llista i el detall lligen el mateix copy (copyDePortada). */
   const portada = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki);
   const consola = copyDePortada(pageCopy, COVER_PAGE_KEYS.consola);
@@ -528,9 +566,20 @@ export default function WikiDePobleSection() {
       || (queryParams.get('categoria') === 'maquinaria_cat' && !IDS_DOCUMENTACIO.has(activeItemId))
   });
 
+  const esperaSkills = skillsPubliques.estat === 'loading' && (
+    (typeof activeItemId === 'string' && activeItemId.startsWith(PREFIX_ID_SKILL))
+    || queryParams.get('categoria') === CARPETA_SKILLS_ID
+    || String(queryParams.get('categoria') || '').startsWith(`${CARPETA_SKILLS_ID}/`)
+  );
+
+  const blocSkills = useMemo(
+    () => itemsICategoriesDeSkills(skillsPubliques.skills, txWiki),
+    [skillsPubliques.skills, txWiki]
+  );
+
   const model = useMemo(() => {
     return {
-      status: esperaLaSessio ? 'loading' : 'ready',
+      status: esperaLaSessio || esperaSkills ? 'loading' : 'ready',
       itemsComplete: true,
       workspaceKey: 'wikidepoble',
       /* Ordre del Mestre (pla 261007_0012, §0.7) · Cada entrada de l'arbre, el
@@ -548,7 +597,8 @@ export default function WikiDePobleSection() {
           parentId: c.parentId,
           label: c.label,
           icon: glifDeCarpetaWiki(c.id)
-        }))
+        })),
+        ...blocSkills.categories
       ],
       items: [
         {
@@ -596,15 +646,18 @@ export default function WikiDePobleSection() {
           categoryId: i.categoryId || null,
           categoryIds: i.categoryId ? [i.categoryId] : [],
           tags: i.tags,
+          ...(Array.isArray(i.labels) ? { labels: i.labels } : {}),
+          ...(esDocumentEsborrany(i) ? { esborrany: true, noindex: true } : {}),
           attributes: i.attributes || {},
           content: i.content,
           image: i.image || i.attributes?.image,
           imageAlt: i.imageAlt || i.attributes?.imageAlt || '',
           ...(i.revisions != null ? { revisions: i.revisions } : {})
-        }))
+        })),
+        ...blocSkills.items
       ]
     };
-  }, [portada, consola, ambMaquinaria, ambCarpetaMaquinaria, esperaLaSessio]);
+  }, [portada, consola, ambMaquinaria, ambCarpetaMaquinaria, esperaLaSessio, esperaSkills, blocSkills]);
 
   // T26.2 (ordre del Mestre, 260927 nit): en entrar sense res a la URL, la
   // primera opció de l'arbre («Wiki de Poble», la portada) va seleccionada,
@@ -663,7 +716,7 @@ export default function WikiDePobleSection() {
       }}
       icons={{ categories: Folder, items: FileText }}
       className="sdp-wiki-workspace"
-      renderDetail={({ item }) => <WikiDetail item={item} />}
+      renderDetail={({ item }) => <WikiDetail item={item} idioma={idioma} />}
     />
   );
 }

@@ -847,15 +847,15 @@ export const ATLES_OPERATIU = Object.freeze([
     id: 'atles:notes', titol: 'Bloc de Notes', ruta: '/notes', claus: ['notes', 'bloc', 'nota', 'escriure', 'apunts'],
     paragrafs: [
       "El Bloc de Notes és el teu estudi d'escriptura privat: hi pots escriure, esborrar i organitzar-te com vulgues sense que ningú ho veja.",
-      "Quan una nota està llesta, «Proposa Card» et prepara la targeta (títol, subtítol i entradilla) a partir del que ja has escrit."
+      "Quan una nota està llesta, «Maqueta la targeta» et prepara el títol, el subtítol i l'entradeta sense tocar ni una paraula del cos."
     ]
     /* [PAGE_COPY.notes, lead; proposaCard.js:1-12] */
   },
   {
-    id: 'atles:proposa_card', titol: 'Proposa Card', ruta: '/notes', claus: ['proposa', 'card', 'targeta'],
+    id: 'atles:proposa_card', titol: 'Maqueta la targeta', ruta: '/notes', claus: ['proposa', 'card', 'targeta', 'maqueta'],
     paragrafs: [
-      "«Proposa Card» és un botó del Bloc de Notes que puja als camps de la targeta el que ja tens escrit a l'inici de la nota: la primera línia o el primer títol, al títol; la línia curta següent, al subtítol; i el primer paràgraf, a l'entradilla.",
-      "Proposa Card només omple els camps buits i no fa servir cap intel·ligència artificial. Si no t'agrada, «Desfés la proposta» o Cmd/Ctrl+Z ho torna arrere."
+      "«Maqueta la targeta» (abans «Proposa Card») és una eina del Bloc de Notes (dins del botó del llapis, «Més eines»; en un telèfon, «Format del text») que proposa el títol, el subtítol i l'entradeta a partir del que ja tens escrit a l'inici de la nota i conserva intacte tot el cos original.",
+      "Només omple els camps buits i deixa el cos intacte. Si no t'agrada, «Desfés la maquetació» ho torna arrere amb un sol clic."
     ]
     /* [proposaCard.js:1-30; ca.js section.notes.proposaCard, section.notes.proposaCardDesfer] */
   },
@@ -995,7 +995,7 @@ export const ATLES_OPERATIU = Object.freeze([
     claus: ['bàndol', 'bàndols', 'comunicat', 'redactar bàndol'],
     paragrafs: [
       "Per a redactar un bàndol o comunicat municipal al Mur, comença amb un títol clar que diga què passa, el dia, l'hora i el lloc.",
-      "Pots preparar l'esborrany al Bloc de Notes amb Proposa Card i publicar-lo en nom del teu perfil o de la teua entitat."
+      "Pots preparar l'esborrany al Bloc de Notes amb «Maqueta la targeta» i publicar-lo en nom del teu perfil o de la teua entitat."
     ]
     /* [PAGE_COPY.publicar_mur (pageContent.js); proposaCard.js; PerfilContext.jsx] */
   }

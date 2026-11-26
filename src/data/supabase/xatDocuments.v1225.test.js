@@ -4,12 +4,15 @@ import { webcrypto } from 'node:crypto';
 import { publicaAdjuntXat, urlAdjuntXat } from './xatMultimedia.js';
 import { cercaMissatgesFilPaginada, carregaMissatgeFilPerId } from './xatCerca.js';
 const F = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', U = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
-const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), entrada: 1 }));
+const m = vi.hoisted(() => ({ rpc: vi.fn(), request: vi.fn(), entrada: 1, backend: true }));
 vi.mock('./runtime.js', () => ({ rpc: m.rpc, request: m.request, getResolvedConfig: () => ({ runtimeDataMode: 'remote', supabaseUrl: 'https://node.invalid', supabaseAnonKey: 'public' }) }));
+/* v1.2.26 · C26-3 · La guarda T2 d'xatCerca.js pregunta ara a identitat.js si el backend de la crida és el de la
+   sessió (esBackendDeSessio). El doble l'exporta, i `m.backend` permet provar també un canvi d'àmbit en vol. */
 vi.mock('../identitat.js', () => ({ usuariDeSessio: () => ({ id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' }), entradaSessio: () => m.entrada,
+  esBackendDeSessio: () => m.backend,
   jwtPerBackend: () => 'fixture', capturaSessio: () => { const entrada = m.entrada; return () => { if (entrada !== m.entrada) throw new DOMException('Canvi de sessió', 'AbortError'); }; } }));
 beforeEach(() => {
-  m.entrada = 1; vi.clearAllMocks(); vi.stubGlobal('crypto', webcrypto);
+  m.entrada = 1; m.backend = true; vi.clearAllMocks(); vi.stubGlobal('crypto', webcrypto);
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 200 })));
   m.rpc.mockImplementation(async (nom, params) => {
     if (nom === 'xat_reserva_adjunt') return { ruta: ID, pujat: false };
@@ -45,4 +48,7 @@ test('canvi de sessió i fila d’un altre fil no passen al consumidor', async (
   await expect(cercaMissatgesFilPaginada(F, 'cafe')).rejects.toMatchObject({ name: 'AbortError' });
   m.rpc.mockResolvedValueOnce([{ id: ID, fil_id: U, seq: 1 }]);
   await expect(carregaMissatgeFilPerId(F, ID)).rejects.toThrow(/invàlida/);
+  /* v1.2.26 · C26-3 · Un canvi de backend o de poble durant la RPC tampoc no lliura la fila. */
+  m.rpc.mockImplementationOnce(async () => { m.backend = false; return [{ id: ID, fil_id: F, seq: '1', cos: 'Café' }]; });
+  await expect(carregaMissatgeFilPerId(F, ID)).rejects.toMatchObject({ name: 'AbortError' });
 });

@@ -865,7 +865,9 @@ export const CAPACITATS = Object.freeze({
      amb un error de `code` 'sense-capacitat'; l'adaptador local fa el mateix sempre. Cap interfície no la consumix
      encara (les costures 15 i 16 la cablaran): la que ho faça ha de preguntar amb teCapacitat('xatCerca') i, amb
      'sense-capacitat', quedar-se amb la cerca dels missatges ja carregats. */
-  xatCerca: Object.freeze(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId'])
+  xatCerca: Object.freeze(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId']),
+  /* IDEA-375: CAS de taxonomia; autoritat editorial verificada al servidor. */
+  taxonomiaPagines: Object.freeze(['actualitzaTaxonomiaPagina', 'lligTaxonomiaPagina'])
 });
 
 /* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per

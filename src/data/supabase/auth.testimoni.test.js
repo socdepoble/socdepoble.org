@@ -243,7 +243,8 @@ describe('els errors del servidor, pel codi', () => {
     ['validation_failed', 400, { code: 400, error_code: 'validation_failed', msg: 'x' }, CODI_ENTRADA.TOKEN_REBUTJAT],
     ['el proveïdor apagat', 400, { code: 400, error_code: 'provider_disabled', msg: 'Unsupported provider' }, CODI_ENTRADA.PROVEIDOR_INACTIU],
     ['massa intents', 429, { error_code: 'over_request_rate_limit' }, CODI_ENTRADA.MASSA_INTENTS],
-    ['les altes tancades', 422, { error_code: 'signup_disabled' }, CODI_ENTRADA.DESCONEGUT],
+    ['el compte suspés', 403, { error_code: 'user_banned' }, CODI_ENTRADA.COMPTE_SUSPES],
+    ['les altes tancades', 422, { error_code: 'signup_disabled' }, CODI_ENTRADA.ALTES_TANCADES],
     ['el servidor caigut', 503, {}, CODI_ENTRADA.SERVIDOR_INABASTABLE]
   ])('%s → %s, amb la causa i sense desar res', async (_cas, status, cos, code) => {
     const crua = errorDeGoTrue(status, cos);

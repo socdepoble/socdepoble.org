@@ -1,7 +1,7 @@
 /* T3.2-UI (marató 261101) · DocumentEditor amb la clau opcional `memoriaOral`
    al costat de `proposaCard` (el Bloc: sections/notes/memoriaOralDelBloc.js),
    sobre el TipTap de veres i la fitxa de veres:
-     · sense la clau, «🎴 Proposa Card» fa el de sempre (cap diàleg);
+     · sense la clau, «Maqueta la targeta» fa el de sempre (cap diàleg);
      · amb la clau, el botó també s'encén quan la nota porta text encara que
        no hi haja res a pujar, i cada clic que no desfà obri la «Fitxa de
        memòria oral (OKF v0.2)» de la nota tal com l'ha escrita la persona,
@@ -46,7 +46,11 @@ const COS = '<p>La festa de Sella</p><p>Tres dies de música</p><p>Enguany la ba
 const DOC = Object.freeze({ id: 'd1', title: '', subtitle: '', lead: '', content: COS, formattedDate: '01/11/26', formattedTime: '03:00' });
 const PLENS = Object.freeze({ ...DOC, title: 'Les festes de Sella', subtitle: 'Records', lead: 'Una entradilla.' });
 const TITOL = 'Fitxa de memòria oral (OKF v0.2)';
-const FETA = 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.';
+/* Gauntlet G26 (Lent 1 punt 4 i Lent 2 punt 12) · La conducta ha canviat
+   per doctrina: Esmena Sagrada d'IDEA-359 (Llibre Mestre l. 3721, «El cos
+   resta 100 % intacte»). La maquetació no toca el cos ni deixa cap pas a
+   l'historial, i Cmd/Ctrl+Z ja no la desfà: l'avís ja no l'oferix. */
+const FETA = 'Targeta maquetada sense tocar el cos.';
 const RES = 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.';
 
 /* Un Bloc de mentira: updateLocal escriu al document, com NotesContext. */

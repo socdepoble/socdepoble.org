@@ -1466,6 +1466,13 @@ test('BUILD REAL · trossejat (per defecte): carregador clàssic menut, mòdul E
      (UniversalWorkspace.jsx inclòs) entrara al graf estàtic, el full tornaria a l'arrencada, i fins ara només ho
      veia el sostre global de pesDelNucli.test.js. */
   assert.ok(!viatjaALArrencada('src/css/diferit-admin-taxonomia.css'), 'el full dels panells d\'administració no viatja a l\'arrencada estàtica');
+  /* v1.2.26 · Lot C1-3 (D1) · El full de taxonomia de G26-2 i el del bloc territorial viatgen amb els seus consumidors
+     diferits (les tres peces de taxonomia i UniversalCard), mai a l'arrencada. I el netejador IDEA-357 viu a la seua
+     fulla: dins de contentHelpers.js el pagava l'arrencada perquè el tros d'entrada l'havia d'exportar (tercera ronda). */
+  assert.ok(!viatjaALArrencada('src/css/diferit-taxonomia-v26.css'), 'el full de taxonomia de G26-2 no viatja a l\'arrencada estàtica');
+  assert.ok(!viatjaALArrencada('src/css/diferit-territori-v26.css'), 'el full del bloc territorial viatja amb UniversalCard, no a l\'arrencada estàtica');
+  assert.ok(!viatjaALArrencada('src/config/textPlaSenseMarkdown.js'), 'el netejador IDEA-357 només el fan servir trossos diferits');
+  assert.ok(!viatjaALArrencada('src/config/llevaScriptsIEstils.js'), 'llevaScriptsIEstils només la fan servir trossos diferits (cercador, federació i IDEA-357)');
   assert.ok(!chunks.some((chunk) => chunk.moduleIds.map(relDe).includes('src/config/mapaBessonesPublic.js')),
     'el cens de bessones del web propi (main.jsx) no viatja al paquet: PedraSecaEmbed només instal·la el salvavides amb política de mitjans');
   const css = (chunk) => chunk.moduleIds.some((id) => id.includes(`${path.sep}src${path.sep}css${path.sep}index.css`));

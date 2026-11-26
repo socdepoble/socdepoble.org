@@ -63,8 +63,8 @@ export const DATA_DEL_SNIPPET = '2026-10-03';
    l'esborrany per al Mestre de l'Onada 10: la Categoria, la mateixa de les
    eines del registre; l'Etiqueta diu què és. */
 export const ETIQUETES_DEL_SNIPPET = Object.freeze([
-  Object.freeze({ text: 'Eina', className: 'sdp-badge-category' }),
-  Object.freeze({ text: 'Extensió', className: 'sdp-badge-tag' })
+  Object.freeze({ text: 'Eina', className: 'sdp-badge-category', inerta: true }),
+  Object.freeze({ text: 'Extensió', className: 'sdp-badge-tag', inerta: true })
 ]);
 
 const RUTA_CONTROL = '/control';

@@ -3,7 +3,7 @@
    obrin amb <!-- SDP:EIXIDA … -->), si no un títol propi, si no l'id
    humanitzat. Abans, 13 rutes /wikidepoble?item=<id> portaven l'id cru. */
 import { describe, expect, it } from 'vitest';
-import { DESCRIPCIO_WIKI, TITOL_WIKI, metadadesDeDocumentPublic, metadadesDeDocumentWiki, portadaSocialDeLaWiki, titolHumaDeId } from './seoWiki.js';
+import { DESCRIPCIO_WIKI, TITOL_WIKI, esDocumentEsborrany, metadadesDeDocumentPublic, metadadesDeDocumentWiki, portadaSocialDeLaWiki, titolHumaDeId } from './seoWiki.js';
 import { LIMIT_TITOL, textPla } from '../../config/metadadesSocials.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { copyDePortada } from './wikiDePobleModel.js';
@@ -81,7 +81,7 @@ describe('els documents reals de la Wiki (src/data/wikiManifest.js)', () => {
       const item = wikiManifest.items.find((candidat) => candidat.id === id);
       const propia = metadadesDeDocumentPublic(item);
       const ruta = metadadesDeDocumentWiki(item, `?item=${id}`, wikiManifest.items);
-      expect(ruta).toEqual({ ...propia, index: true });
+      expect(ruta).toEqual({ ...propia, index: !esDocumentEsborrany(item) });
       expect(propia.title).not.toBe(id);
       expect(propia.title).not.toMatch(/^<!--|SDP:EIXIDA/);
       expect(propia.description).not.toBe('');

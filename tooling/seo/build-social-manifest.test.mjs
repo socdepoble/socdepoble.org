@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI,LLISTES,normalizedKey,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
+import {createHash} from 'node:crypto';
+import {BASE_IMAGE,buildSocialManifest,FONTS_CONSOLA,FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI,LLISTES,normalizedKey,PAGINES_DE_TAXONOMIA,PAGINES_INFORMATIVES,plainText} from './build-social-manifest.mjs';
 import {sniffImage,camisServits} from './prerender-social.mjs';
 import {selectMetadata} from './social-edge.mjs';
 import {cobertura, indexablePrimerTram} from '../gates/tractor-cobertura-social.mjs';
@@ -171,6 +172,52 @@ test('SOCIAL_IMAGES és la font única; la imatge pròpia només ix si l’asset
   assert.deepEqual(present.manifest.routes[key].image,{url:origin+'/assets/system/ui/og-llibre-d-or-1200x630.png',
     alt:'El Llibre d’Or de Sóc de Poble: memòria contrastada dels pobles',width:1200,height:630,type:'image/png'});
   assert.notEqual(missing.evidence.hashSrc,present.evidence.hashSrc);assert.ok(selectMetadata(present.manifest,new URL(key,origin)));
+});
+/* v1.2.26 · Les fonts de pàgines que el build EXECUTA (TRANSFORMACIONS_DE_PAGINES i FONTS_DE_PAGINES) porten a
+   l'evidència els seus imports relatius, de manera recursiva i confinada a l'arrel; la guarda «Una font ha canviat
+   durant el build» també els cobrix, i una forma d'import que no es pot anotar és porta roja. */
+const TRANSFORMACIO='src/sections/text/pageContent.catalegsV1226.js';
+function ambTransformacio(put,cos='copy.projecte.lead=`${DRETS} ${rutaCataleg()}`;') {
+  put(TRANSFORMACIO,`import {DRETS} from './pageContent.dretsPatrimoni.js';\nimport {rutaCataleg} from '../../data/patrimoni/catalegsMultipoble.js';\nexport function aplicaBibliotequesV1226(copy){${cos}}\n`);
+  put('src/sections/text/pageContent.dretsPatrimoni.js','export const DRETS=\'Drets de la font\';\n');
+  put('src/data/patrimoni/catalegsMultipoble.js','import {RUTA} from \'./rutaBiblioteca.js\';\nexport const rutaCataleg=()=>RUTA;\n');
+  put('src/data/patrimoni/rutaBiblioteca.js','export const RUTA=\'/page/herbari\';\n');
+}
+test('v1.2.26 · els imports relatius d’una transformació executada entren a l’evidència, recursius i confinats a l’arrel',async t=>{
+  const {root,put}=fixture(t);ambTransformacio(put);
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot});
+  // La transformació s'ha executat amb tota la cadena d'imports…
+  assert.equal(manifest.routes['/projecte'].description,'Drets de la font /page/herbari');
+  // …i cada font de la cadena és a l'evidència amb el hash dels seus bytes.
+  for(const rel of [TRANSFORMACIO,'src/sections/text/pageContent.dretsPatrimoni.js','src/data/patrimoni/catalegsMultipoble.js','src/data/patrimoni/rutaBiblioteca.js'])
+    assert.equal(evidence.sources[rel],createHash('sha256').update(fs.readFileSync(path.join(root,rel))).digest('hex'),rel);
+});
+test('v1.2.26 · la guarda «Una font ha canviat durant el build» cobrix una dependència d’una transformació executada',async t=>{
+  const {root,put}=fixture(t);
+  // La transformació toca, mentre s'executa, una dependència de segon nivell (anotada abans d'executar-la).
+  ambTransformacio(put,'process.getBuiltinModule(\'node:fs\').appendFileSync(new URL(\'../../data/patrimoni/rutaBiblioteca.js\',import.meta.url),\'// canvi\\n\');');
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/Una font ha canviat durant el build/);
+});
+test('v1.2.26 · una dependència ja carregada per este procés amb uns altres bytes és porta roja (cache d’ESM)',async t=>{
+  const {root,put}=fixture(t);ambTransformacio(put);
+  const primer=await buildSocialManifest({root,origin,policyRoot});
+  assert.equal(primer.manifest.routes['/projecte'].description,'Drets de la font /page/herbari');
+  put('src/data/patrimoni/rutaBiblioteca.js','export const RUTA=\'/page/banc-de-llavors\';\n');
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/cache d’ESM\): src\/data\/patrimoni\/rutaBiblioteca\.js/);
+});
+test('v1.2.26 · una font executada que importa de fora, dinàmicament o fora de l’arrel és porta roja',async t=>{
+  for(const [nom,muta,motiu] of [
+    ['paquet',put=>put(TRANSFORMACIO,'import fs from \'node:fs\';\nexport function aplicaBibliotequesV1226(){return fs;}\n'),/Import no relatiu o sense extensió.*node:fs/],
+    ['sense extensió',put=>put(TRANSFORMACIO,'import {DRETS} from \'./pageContent.dretsPatrimoni\';\nexport function aplicaBibliotequesV1226(){return DRETS;}\n'),/Import no relatiu o sense extensió/],
+    ['dinàmic',put=>put(TRANSFORMACIO,'export function aplicaBibliotequesV1226(){return import(\'./pageContent.dretsPatrimoni.js\');}\n'),/Import dinàmic en una font executada/],
+    ['fora de l’arrel',put=>put(TRANSFORMACIO,'import {X} from \'../../../../fora.js\';\nexport function aplicaBibliotequesV1226(){return X;}\n'),/Import fora de l’arrel/],
+    ['reexportació',put=>put('src/data/patrimoni/catalegsMultipoble.js','export * from \'lodash\';\nexport const rutaCataleg=()=>\'/x\';\n'),/Import no relatiu o sense extensió.*lodash/],
+    ['enllaç simbòlic',(put,root)=>{fs.rmSync(path.join(root,'src/data/patrimoni/rutaBiblioteca.js'));fs.writeFileSync(path.join(root,'fora.js'),'export const RUTA=\'/x\';\n');
+      fs.symlinkSync(path.join(root,'fora.js'),path.join(root,'src/data/patrimoni/rutaBiblioteca.js'));},/Font absent o fora de frontera: src\/data\/patrimoni\/rutaBiblioteca\.js/]
+  ]) {
+    const {root,put}=fixture(t);ambTransformacio(put);muta(put,root);
+    await assert.rejects(buildSocialManifest({root,origin,policyRoot}),motiu,nom);
+  }
 });
 test('una primera imatge bloquejada (SVG) és porta roja, també sense estricte',async t=>{
   const {root,put}=fixture(t);
@@ -465,6 +512,12 @@ test('P0-SEO · arbre de veres sense snapshot: les identitats del paquet, /perfi
   // L'evidència: les fonts del Router, de les verticals, de la fitxa i de la llavor, i la classe de cada ruta.
   for(const font of [...FONTS_DEL_ROUTER,FONT_DE_VERTICALS,LLISTA_DEL_DIRECTORI[1]])assert.ok(evidence.sources[font],font);
   for(const font of ['src/config/metadadesDePerfil.js','src/sections/profile/perfilsDelPaquet.js','src/data/identitatsSeed.js','src/data/agentsSeed.js'])assert.ok(evidence.sources[font],font);
+  // v1.2.26 · La transformació de les biblioteques (IDEA-366) i els imports relatius que executa.
+  for(const font of [TRANSFORMACIO,'src/sections/text/pageContent.dretsPatrimoni.js','src/data/patrimoni/catalegsMultipoble.js'])assert.ok(evidence.sources[font],font);
+  // v1.2.26 · Les rutes de G26-2: el catàleg editorial de taxonomia i les comarques de la llavor, amb les seues fonts.
+  for(const {component,...fonts} of Object.values(PAGINES_DE_TAXONOMIA))for(const font of [component,...Object.values(fonts).filter(v=>typeof v==='string')])assert.ok(evidence.sources[font],font);
+  for(const ruta of ['/categoria/sistema','/categoria/mur','/etiqueta/festes','/comarca/el-comtat'])
+    assert.deepEqual([manifest.routes[ruta]?.index,manifest.routes[ruta]?.schema,manifest.routes[ruta]?.image.url],[true,'CollectionPage',origin+BASE_IMAGE],ruta);
   assert.deepEqual(Object.entries(evidence.origens).filter(([,classe])=>classe!=='editorial').sort(),[['/iaia','paquet'],['/javillinares','paquet'],['/rentonar','paquet'],['/socdepoble','paquet']]);
   assert.deepEqual(Object.keys(evidence.origens),Object.keys(manifest.routes));
   assert.deepEqual([evidence.perfils.conflictes,evidence.perfils.avisos],[[],[]]);
@@ -528,4 +581,46 @@ test('P0-SEO · un arbre sense App.jsx no genera cap ruta de perfil, cap vertica
   assert.equal(amb.manifest.aliases['/gent/olidelatorre'],undefined,'només les famílies que el Router d’este arbre accepta');
   put('src/app/App.jsx',`export default function App(){return <Routes>{rutes.map(r=><Route key={r} path={r} element={<X />} />)}</Routes>;}`);
   await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/El Router no es pot llegir amb seguretat/);
+});
+
+/* v1.2.26 (IDEA-370 i IDEA-360; les rutes de G26-2) · /categoria/:slug, /etiqueta/:slug i /comarca/:slug: el catàleg
+   editorial finit i les comarques dels pobles públics de la llavor, amb el head del client, només amb un Router que
+   munta els patrons. Un catàleg que no es resol com l'adreça que el publica és porta roja. */
+function ambTaxonomia(put) {
+  const {editorials,comarques}=PAGINES_DE_TAXONOMIA;
+  put(editorials.component,'// useSEO: «H1 · H2» i l’entradeta.\n');put(comarques.component,'// useSEO: «<comarca> · Xarxa de Pobles».\n');
+  put(editorials.dades,'export const PAGINES_EDITORIALS_TAXONOMIA=[{tipus:\'categoria\',slug:\'mur\',h1:\'Mur\',h2:\'La vida dels pobles\',entradeta:\'Notícies i converses.\'},'
+    +'{tipus:\'etiqueta\',slug:\'festes\',h1:\'Festes\',h2:\'Celebrem la vida\',entradeta:\'Festes populars.\'}];\n'
+    +'export function resolPaginaEditorialTaxonomia(ruta){return PAGINES_EDITORIALS_TAXONOMIA.find(p=>`/${p.tipus}/${p.slug}`===ruta)??null;}\n');
+  put(comarques.territori,'export const comarcaDelPoble=p=>(typeof p.comarca===\'string\'?p.comarca.toLowerCase().replace(/[^a-z0-9]+/g,\'-\'):null);\n');
+  put(comarques.dades,'import {comarcaDelPoble} from \'../../sections/pobles/territoriDelPoble.js\';\n'
+    +'export function resolComarcaPerSlug(slug,towns){const pobles=towns.filter(p=>comarcaDelPoble(p)===slug);return pobles.length?{slug,nom:pobles[0].comarca,pobles}:null;}\n');
+  put(comarques.textos,'export function textosTaxonomiaV26(){return {taxonomiaV26XarxaPobles:\'Xarxa de Pobles\',taxonomiaV26ComarcaEntradeta:\'Pobles de la comarca: {comarca}.\'};}\n');
+  put('src/sections/pobles/townsSeed.js','export const MOCK_TOWNS=[{id:\'orxeta\',title:\'Orxeta\',content:\'Orxeta.\',comarca:\'Marina Baixa\'},'
+    +'{id:\'privat\',title:\'NO_EXPORTAR_PRIVAT\',content:\'x\',comarca:\'Comarca Secreta\',visibility:\'private\'}];\n');
+}
+const APP_TAXONOMIA=`export default function App(){return <Routes><Route path="comarca/:slug" element={<PaginaComarca />} /><Route path="categoria/:slug" element={<PaginaEditorialEtiqueta tipusRuta="categoria" />} /><Route path="etiqueta/:slug" element={<PaginaEditorialEtiqueta tipusRuta="etiqueta" />} /><Route path="*" element={<NotFoundPage />} /></Routes>;}`;
+test('v1.2.26 · el catàleg editorial de taxonomia i les comarques de la llavor tenen OpenGraph propi, indexable i amb les seues fonts',async t=>{
+  const {root,put}=fixture(t);ambTaxonomia(put);
+  const deG26=manifest=>Object.keys(manifest.routes).filter(ruta=>/^\/(?:categoria|etiqueta|comarca)\//.test(ruta)).sort();
+  // Sense Router que munte els patrons, cap ruta (com les verticals).
+  assert.deepEqual(deG26((await buildSocialManifest({root,origin,policyRoot})).manifest),[]);
+  put('src/app/App.jsx',APP_TAXONOMIA);
+  const {manifest,evidence}=await buildSocialManifest({root,origin,policyRoot,estricte:true});
+  assert.deepEqual(deG26(manifest),['/categoria/mur','/comarca/marina-baixa','/etiqueta/festes']);
+  const generica=manifest.routes['/mur'].image;
+  assert.deepEqual(manifest.routes['/categoria/mur'],{title:'Mur · La vida dels pobles',description:'Notícies i converses.',image:generica,type:'website',
+    canonical:origin+'/categoria/mur',index:true,schema:'CollectionPage'});
+  assert.deepEqual([manifest.routes['/etiqueta/festes'].title,manifest.routes['/etiqueta/festes'].description],['Festes · Celebrem la vida','Festes populars.']);
+  assert.deepEqual([manifest.routes['/comarca/marina-baixa'].title,manifest.routes['/comarca/marina-baixa'].description,manifest.routes['/comarca/marina-baixa'].index],
+    ['Marina Baixa · Xarxa de Pobles','Pobles de la comarca: Marina Baixa.',true]);
+  // Un poble privat de la llavor no fa cap comarca pública.
+  assert.ok(!JSON.stringify(manifest).includes('NO_EXPORTAR')&&!manifest.routes['/comarca/comarca-secreta']);
+  for(const {component,...fonts} of Object.values(PAGINES_DE_TAXONOMIA))for(const font of [component,...Object.values(fonts).filter(v=>typeof v==='string')])assert.ok(evidence.sources[font],font);
+});
+test('v1.2.26 · un catàleg de taxonomia que no es resol com l’adreça que el publica és porta roja',async t=>{
+  const {root,put}=fixture(t);ambTaxonomia(put);put('src/app/App.jsx',APP_TAXONOMIA);
+  put(PAGINES_DE_TAXONOMIA.editorials.dades,'export const PAGINES_EDITORIALS_TAXONOMIA=[{tipus:\'etiqueta\',slug:\'festes\',h1:\'Festes\',h2:\'Celebrem\',entradeta:\'Festes.\'}];\n'
+    +'export function resolPaginaEditorialTaxonomia(){return {tipus:\'categoria\',slug:\'festes\',h1:\'Festes\',h2:\'Celebrem\',entradeta:\'Festes.\'};}\n');
+  await assert.rejects(buildSocialManifest({root,origin,policyRoot}),/Inventari de taxonomia trencat: \/etiqueta\/festes/);
 });

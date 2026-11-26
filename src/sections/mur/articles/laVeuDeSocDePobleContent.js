@@ -29,6 +29,10 @@
  *   · Paritat 1:1 en les 5 llengües (ca, es, en, eu, gl): 6 seccions H3 a totes.
  *   · Targeta incrustada canònica: `pagina:node-zero` flotant a la dreta (`360px`).
  */
+import { labelsSistema } from '../../../data/taxonomia/taxonomiaPublicacio.js';
+
+/* IDEA-365 (22:16, punt 1) · La Veu és Sistema + Mur. */
+const SISTEMA_I_MUR_VEU = Object.freeze(['Sistema', 'Mur']);
 
 export const LA_VEU_DE_SOC_DE_POBLE_ID = 'la-veu-de-soc-de-poble';
 export const LA_VEU_DE_SOC_DE_POBLE_RUTA = `/mur/${LA_VEU_DE_SOC_DE_POBLE_ID}`;
@@ -332,10 +336,15 @@ export const LA_VEU_DE_SOC_DE_POBLE_POST = Object.freeze({
   poble_id: 'la-torre-de-les-macanes',
   categoria_tematica_id: 'patrimoni-cultura',
   category: '🎭 Cultura, Música i Llengua',
-  tags: ['Patrimoni', 'Cims per la llengua', 'Node 0', 'Projecte Sóc de Poble'],
+  /* C26-2 #11 · Triatge 1–49 d'IDEA-369: #30 «Patrimoni» ix (redundant amb la mare) i #34 «Projecte Sóc de Poble»
+     és l'entitat @Sóc de Poble, que ja signa la boina taronja, no cap etiqueta.
+     C26-2 #9 (IDEA-365, regla 3 del 21:40) · Les pastilles de sistema es deriven de categoriesSistema amb
+     labelsSistema (taxonomiaPublicacio.js): text i ruta canònics, mai escrits a mà. */
+  tags: ['Cims per la llengua', 'Node 0'],
+  categoriesSistema: SISTEMA_I_MUR_VEU,
   labels: [
+    ...labelsSistema(SISTEMA_I_MUR_VEU, 'ca'),
     { text: '🎭 Cultura, Música i Llengua', className: 'sdp-badge-category' },
-    { text: 'Patrimoni', className: 'sdp-badge-tag' },
     { text: 'Cims per la llengua', className: 'sdp-badge-tag' },
     { text: 'Node 0', className: 'sdp-badge-tag' },
   ],

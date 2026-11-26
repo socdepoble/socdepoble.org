@@ -27,6 +27,10 @@
  *     comprovar-ne una; restaurar-la dins de l'app encara no es pot i els
  *     adjunts (fotos, àudios, vídeos) no hi van. Les 5 llengües ho diuen així.
  */
+import { labelsSistema } from '../../../data/taxonomia/taxonomiaPublicacio.js';
+
+/* IDEA-365 (22:16, punt 1) · El farcell digital és Sistema + Mur. */
+const SISTEMA_I_MUR_FARCELL = Object.freeze(['Sistema', 'Mur']);
 
 export const COPIES_SEGURETAT_SOC_DE_POBLE_ID = 'copies-de-seguretat-soc-de-poble';
 export const COPIES_SEGURETAT_SOC_DE_POBLE_RUTA = `/mur/${COPIES_SEGURETAT_SOC_DE_POBLE_ID}`;
@@ -264,10 +268,15 @@ export const COPIES_SEGURETAT_SOC_DE_POBLE_POST = Object.freeze({
   poble_id: 'la-torre-de-les-macanes',
   categoria_tematica_id: 'tecnologia-lliure',
   category: '💻 Tecnologia i Disseny',
-  tags: ['Projecte Sóc de Poble', 'Documentació', 'Node 0'],
+  /* C26-2 #11 · Triatge 1–49 d'IDEA-369: #34 «Projecte Sóc de Poble» és l'entitat @Sóc de Poble, que ja signa la
+     boina taronja, no cap etiqueta.
+     C26-2 #9 (IDEA-365, regla 3 del 21:40) · Les pastilles de sistema es deriven de categoriesSistema amb
+     labelsSistema (taxonomiaPublicacio.js): text i ruta canònics, mai escrits a mà. */
+  tags: ['Documentació', 'Node 0'],
+  categoriesSistema: SISTEMA_I_MUR_FARCELL,
   labels: [
+    ...labelsSistema(SISTEMA_I_MUR_FARCELL, 'ca'),
     { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
-    { text: 'Projecte Sóc de Poble', className: 'sdp-badge-tag' },
     { text: 'Documentació', className: 'sdp-badge-tag' },
     { text: 'Node 0', className: 'sdp-badge-tag' },
   ],

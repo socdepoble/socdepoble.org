@@ -2,58 +2,58 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anatomia-rural": {
-      "sha256": "56ce2ba01a8bfa11b879144660d20141ce981588a221498f21eab8d63a2be4cf",
+      "sha256": "26da81f4605c07f22973e27db423fce8ad8f99129599c9c8106d7d0d4f0b5793",
       "html": 2185,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-26"
     },
     "anima": {
-      "sha256": "7dc11cf633690aaa70387bb8a4131128a783c3b6f8fd3975aaa6bbe71edb1191",
+      "sha256": "11401627464b3296149a5166052d407bd2c75b462c380b18f532d70dfe84b6b4",
       "html": 14926,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "arbres-monumentals": {
-      "sha256": "de3ed82953ef4fb08c0defc35118a23f702ee172789166725628b435fc86c914",
+      "sha256": "7bbc79e72d6c9200b704745e6da02c740bb43bb64e9e7ec34c315cd98e9546ef",
       "html": 2589,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "banc-de-llavors": {
-      "sha256": "9feaa5e7a52405caebd403ac467f5dfd8d27f8e081561bd3d1d61c2eeb25f4a9",
+      "sha256": "9861e8cb2d5974de73e4f3b0f04e7787eeee197b6ed2ce675aa71f9b7b9b10a9",
       "html": 840,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.22), per ordre del Mestre Javi (prompt 261122_1835; 22-11-2026): subtítol, lead i cos del Banc de llavors en cinc llengües amb la quarta font del lot 02 de Codex R32.42 (3 varietats d'olivera de l'estudi de la Generalitat Valenciana), i el cos matisat pel Gauntlet R2 (M4-01 i revisió): de l'estudi d'oliveres no se'n transcriu res (les fitxes porten el nom de la varietat, l'espècie i la pàgina del PDF) i «Alfafarenca» és la sinonímia local d'«Alfafara». Pendent de lectura humana (Gauntlet R2, M3-04), 2026-11-22.",
-      "data": "2026-11-22"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "cada-cosa-al-seu-lloc": {
-      "sha256": "276d450b589def760e92227123f565c79a83f80a33399895b6c008bd9cfec98e",
+      "sha256": "6a6474139f10fc6367a0aa9d870b2b49cb5a557b0a659d9711ecc2ff60def6fb",
       "html": 1002,
-      "aprovat_per": "Mestre Javi (261124 18:00 vinyeta Nano Ibáñez/Berlanga R32.86)",
-      "data": "2026-11-24"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "cervell": {
-      "sha256": "ab8623d080dd0661bfd48b2bea64ef3cdaf52cb645aeac6c1952654897036a93",
+      "sha256": "0610b9bbb4464ef92f008d19ac2ac65c8fd8b7363992e1a1de79cabe2762908f",
       "html": 4179,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "consola": {
-      "sha256": "8d812a106624fc927d26d44a56ec2eebabc42d4b4fb9045fb9a770c9c2dbcd04",
+      "sha256": "2ebeb68d58e68c1ecc79e5de9bf4de96e954241a3e384903302d16ae4819487a",
       "html": 6483,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "constitucio": {
-      "sha256": "fb062e98d0f8837fb6a4630decad037e41d698cfd800acf5046987a7cee1538b",
+      "sha256": "78aae93f27e8df4c24d9f6713a96c73128a37776e6b4ffdcc32b2bad85a7d65c",
       "html": 9147,
-      "aprovat_per": "Mestre Javi (ordre al xat 19-11-2026: «Aprovades per ordre meua les 7 claus de la Frontissa de contingut», aprovació delegada a Claude v1.2.10)",
-      "data": "2026-11-19"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "descarregues": {
-      "sha256": "d5215f8c57678045ec23ff7fae1b5e10f3b06d3f5d74e6b90d4fea2549d820c8",
+      "sha256": "7f1b899e2627b05c694c468e96adcaefca31633405243125ed60ee6008230fb6",
       "html": 10055,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "dispositius": {
       "sha256": "411a021fc0ae529c4f7683642fda52fc8d10e9cfef29f1e64bffdfff6f8e937f",
@@ -62,124 +62,124 @@
       "data": "2026-11-14"
     },
     "disseny": {
-      "sha256": "84ea0959a38931c0e380f1bf2c063a87e73c455c6c66ace89aeb315eb851ad4a",
+      "sha256": "4bc105dd4160981b6587056a838a829ac5149c5a02c562d9ac302675c5d5993a",
       "html": 10415,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
-      "data": "2026-11-23"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "drets-autor": {
-      "sha256": "9020a79830c55c088b6fa867fc1bf7a5f56c91656c3fc28b3e12269902ce767c",
-      "html": 14511,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "sha256": "85fc8584081133ca665243796c6f2c76d75cdff8039526d1ef6e49d18714c4f4",
+      "html": 14525,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "fedivers": {
-      "sha256": "d863422f28ca5385ff6eaef2af0bfd4625c616f741b53010fb9d6089ae7af057",
+      "sha256": "e010d95e3bd191249a016e8917f5616aa2d8fad6c8487487c588aeca7c0f624e",
       "html": 21960,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 187 → 190 mètodes, 250 → 253 casos); pendent de lectura humana",
-      "data": "2026-11-25"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "fediversity": {
-      "sha256": "148e9e14d4ba72a0621cc16ac2890969b3dedeee8dd46c047c31ee8298401219",
+      "sha256": "dd9e19264931f6468690f716a914e23488aeaddb928bd7cea89a38bbfef08c79",
       "html": 67044,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 155 → 158 mètodes opcionals, 187 → 190 mètodes, 250 → 253 casos, 50 → 51 grups de l’adaptador local); pendent de lectura humana",
-      "data": "2026-11-25"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "habitatge": {
-      "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
+      "sha256": "e8e137761baa2ca489835db5685f33c614aec8c6ca755942f9c8c047dfa00392",
       "html": 2966,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "herbari": {
-      "sha256": "72d97776a0be179afc5cf2e4dbe3ddf6713bd43191a85703f8fe756077cc77aa",
+      "sha256": "1d54dca7582c76ee909bacc4c08c34950c9d06263258d0dc9c55c4c4559d6e82",
       "html": 486,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-26"
     },
     "la-iaia-sabuda": {
-      "sha256": "31c48b07f320daf55b38623eab0f08ef8ea666226e09ed6187e1d3bc128c57c9",
+      "sha256": "bda7f62a26c022b3036f82a3e5140407676e77741b9f93185da60e0acd3d0db4",
       "html": 409,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "legal": {
-      "sha256": "fe4aeffdf5cb85ca3064f2872f6a7e2f5c64c26c784326624a4e37645fc96e35",
+      "sha256": "2b921c8683f5c091d2197f61442cd85938da531e69547a97055b6245eb5050a0",
       "html": 59594,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "node-zero": {
-      "sha256": "8607889b0ebbdbc48c1608ccccbe8ae84225cb03a6846c910197069d74cbc848",
-      "html": 31800,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 187 → 190 mètodes, 250 → 253 casos); pendent de lectura humana",
-      "data": "2026-11-25"
+      "sha256": "f70e280f168a65a586fd5100586081e9a77e0267d144027464113f048df76706",
+      "html": 31799,
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "notes": {
-      "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",
+      "sha256": "a8e2da16ee65ed12d4ec2569e1ebe7028174dcf230f29799538b7c2679183fb3",
       "html": 0,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "projecte": {
-      "sha256": "cf65c368093fd6ae9873ce12f7cc816a7872b8c947bc5b9b4c086ff9fccd2339",
+      "sha256": "7276bee6bd2c461b828d010d5dc1133b971550f73e03123ae1be3e1b1b67222e",
       "html": 12710,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "publicar_mapa": {
-      "sha256": "e36f3439422a65b5d5ada30b468de1718e978383e5c4158fb1666b46b59c9f1c",
+      "sha256": "426fa85c2f89438e803d851a52ce0da0a85a9f5b5c6e76c7710b67ee164ba08c",
       "html": 1728,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.23, Carril 1), per ordre del Mestre Javi (prompt 261123_1439, 23-11-2026; delegació autònoma de MarIA): crònica FITA_V1223 de la v1.2.23 build 28 (huit kits, IDEA-331 «Amaga el lloc», IDEA-333 «Versions · v1.2.23», Mode Bancal AAA, WP 1.1.31) i textos de /disseny, Node 0, Fediversity i «Publicar al Mapa» contrastats amb el codi i corregits per dues rondes del Gauntlet; pendent de lectura humana",
-      "data": "2026-11-23"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "receptes": {
-      "sha256": "2acee564513d0f22332ac828b60602e85c20845550ae0c02c16d890ebe8b01b7",
+      "sha256": "6836e98d6f50a4432ae4b45504032d56abb8180c7e7d42785b77b84e78825957",
       "html": 2066,
-      "aprovat_per": "Mestre Javi (D3 261112 13:59: aprovar les claus de Frontissa de la cadena R18+R19+R20; integrat per Claude R21, revocable)",
-      "data": "2026-11-12"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "reconeixements": {
-      "sha256": "3281549ad7f68ea3effad653c79f33d0ec42e62bc7ec662c247355a4fe64680b",
+      "sha256": "59e6985b3c17f2e8373545258d70eb4c7e0de0c5a361968da0d06e76556a49a7",
       "html": 1663,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "roadmap": {
-      "sha256": "51309768529004965cf344af2f879949434b1929f78855a141f66ca057d404d0",
+      "sha256": "62dca95d7bf4ae256afdfe0d659b84ad187951d04a08d027c24315b70fdb98bf",
       "html": 30699,
-      "aprovat_per": "Mestre Javi (R24.2 261114 15:48: Endavant amb les 7 decisions)",
-      "data": "2026-11-14"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "rutes-de-poble": {
-      "sha256": "87367fd239f48bf072b6e19fc7e91d980a2a3e82a7575801c7b1a6df1e782a93",
+      "sha256": "b48dda9bdb997d4127e7cea870eaf41ee3f5f5868dcd0eeb5801f57296a8f756",
       "html": 712,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-26"
     },
     "treball": {
-      "sha256": "10a0c6144de190fc15fe24466e78cd224f6559075a8a61bca4d293ad8b12e737",
+      "sha256": "6e0413949056efa32fba7dd4cb367afbe4c8545e13a1ca916d41c78525275616",
       "html": 2066,
-      "aprovat_per": "Codex · ordre directa AH-22 del Mestre 05-11-2026",
-      "data": "2026-11-05"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "versions": {
-      "sha256": "e517d875ce9c90c9fa98ef436c2f03bdda1f8ed9b848647e4efe76752e5a9252",
+      "sha256": "c75fb1d02033290e3fa4c78b570ba1660df5e73dc70566ef1f3e0b176d26dae7",
       "html": 27204,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2: actualització de SERVIDOR_V1224): el paràgraf del servidor de la crònica FITA_V1224 diu en cinc llengües que la 133, la 134 i la 136 s’aplicaren la nit del 24 al 25-11-2026 i que, amb elles, esborrar per a tothom buida el text al servidor; la 132 i la 135, refusades per les seues guardes sense canvis (supabase/README.md, rebut 261125_0039); pendent de lectura humana",
-      "data": "2026-11-25"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "wikidepoble": {
-      "sha256": "c7892d0e58181409d5fa8338d5c9cf22c96467346ea77e52c54971558f08ab33",
+      "sha256": "a471629dc17eb9ff7850c27717dde9c14a3727975267ac1e777e9729a457c054",
       "html": 1916,
-      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.17), per l'encàrrec del Mestre Javi del 21-11-2026 (prompt 261121_1606; ordre de les 16:03, IDEA-313): crònica FITA_R32_26 de la v1.2.17 build 22 (Onades R32.25 i R32.26, WP 1.1.25) i capçalera amb el connector que serveix WordPress.org (1.1.24); portada de la Wiki amb la vinyeta de Gemini R32.26 (lot_03) i la seua variant social. Contrastat amb el codi i corregit per dues rondes de Gauntlet amb àrbitres escèptics; pendent de lectura humana",
-      "data": "2026-11-21"
+      "aprovat_per": "Mestre Javi",
+      "data": "2026-11-26"
     },
     "xat": {
-      "sha256": "820cc41446c09c7952becc0400fc1b1136e6fc3eccf4aa95527d032a90e8aab1",
+      "sha256": "ab86ec4f71a8ce888e9c5aa59b52ccab50b9c751db61aa4371cc92722eeb00a3",
       "html": 2363,
       "aprovat_per": "Mestre Javi",
-      "data": "2026-11-07"
+      "data": "2026-11-26"
     }
   }
 }

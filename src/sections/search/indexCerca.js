@@ -13,7 +13,8 @@
  * pel poble actiu i, després, per data i per ordre alfabètic.
  */
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
-import { llevaScriptsIEstils, normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
+import { normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
+import { llevaScriptsIEstils } from '../../config/llevaScriptsIEstils.js';
 import {
   getSectionItemPath, resolveItemPath, resolvePageSlugPath, RUTA_FITXA_IAIA, RUTES_CANONIQUES, rutaDePerfil
 } from '../../config/navigation.js';

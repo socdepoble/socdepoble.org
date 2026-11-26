@@ -92,7 +92,7 @@ test('la reescriptura de l’SPA, l’última i sense assets, fonts, /ap/, /open
 
 /* Gauntlet 261030, cicle 2 (federacio) · Firebase casa reescriptures i
    capçaleres amb globs de minimatch (el motor de superstatic) contra el camí
-   de la petició. path.matchesGlob de Node usa el mateix minimatch, però sense
+   de la petició. path.matchesGlob de Node fa servir el mateix minimatch, però sense
    negació: el «!» inicial s'inverteix ací, com fa minimatch. Els camins de
    les proves van en minúscules (a macOS, Node casa sense caixa). */
 const casaGlob = (glob, cami) => {
@@ -225,9 +225,11 @@ test('P1-23 · /ap/**: application/activity+json, CORS i Cache-Control curt, l�
   // G-D-01: la regla pròpia d'ActivityStreams és darrere de la de JSON.
   // R8-L2 (Onada R9, ordre del Mestre del 261106): les sumes .sha256, en text pla (prova pròpia, més avall).
   // P0-CONSOLIDACIO-3-CATEDRES: la còpia Markdown de la Wiki, en text/markdown (prova pròpia, més avall).
+  // v1.2.26 (IDEA-364): i la subcarpeta de skills, amb el seu índex JSON (la mateixa prova pròpia).
   expect(hosting.headers.filter((r) => r.headers.some((h) => h.key === 'Content-Type')).map((r) => r.source ?? 'regex:webfinger'))
     .toEqual(['/.well-known/host-meta', 'regex:webfinger', '/.well-known/nodeinfo', '/nodeinfo/2.1.json',
-      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/md/*.md', '/ap/**']);
+      '/opendata/*.jsonld', '/opendata/*.json', '/opendata/activitystreams.json', '**/*.sha256', '/md/*.md',
+      '/md/skills/*.md', '/md/skills/index.json', '/ap/**']);
   // Cap redirecció (Onada v1.2.16: ja no n'hi ha cap; les de l'APK s'han retirat) ni cap reescriptura casa amb /ap/:
   // ni els camins que el build publica ni els que no hi són (Firebase hi torna el seu 404).
   for (const cami of [
@@ -351,26 +353,108 @@ test('R8-L2 · cada .sha256 publicat ix com a text/plain; charset=utf-8, sense t
 /* P0-CONSOLIDACIO-3-CATEDRES (Emowe/Tellado) · public/md/<slug>.md, la còpia
    Markdown de la Wiki que enllaça llms.txt (tooling/seo/genera-llms.mjs), ix com
    a text/markdown en UTF-8 amb la CSP i les capçaleres globals, i un .md que no
-   hi és dona el 404 de Firebase, mai l'index.html de l'SPA amb 200. */
+   hi és dona el 404 de Firebase, mai l'index.html de l'SPA amb 200.
+   v1.2.26 (IDEA-364, C26-4) · La subcarpeta public/md/skills/ (tooling/wiki/lib/public-skills.mjs) és
+   part de la mateixa projecció: /md/skills/<nom>.md en text/markdown i /md/skills/index.json, el que
+   llig useSkillsPubliques.js, en JSON UTF-8. Es recorre la carpeta sencera: un directori no és cap camí
+   servit, i el glob «*» de Firebase no travessa la barra (/md/*.md no cobrix /md/skills/x.md). */
+const MD_PUBLIC = path.join(process.cwd(), 'public/md');
+function fitxersDeMd(dir = MD_PUBLIC, prefix = '/md') {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true }).filter((e) => !e.name.startsWith('.')).flatMap((e) => (
+    e.isDirectory() ? fitxersDeMd(path.join(dir, e.name), `${prefix}/${e.name}`) : [`${prefix}/${e.name}`]));
+}
 test('P0-CONSOLIDACIO-3-CATEDRES · /md/*.md: text/markdown; charset=utf-8, sense SPA, davant de /ap/**', () => {
-  const regles = hosting.headers.filter((r) => r.source === '/md/*.md');
-  expect(regles).toEqual([{ source: '/md/*.md', headers: [{ key: 'Content-Type', value: 'text/markdown; charset=utf-8' }] }]);
+  const regles = hosting.headers.filter((r) => /^\/md\//.test(r.source ?? ''));
+  expect(regles).toEqual([
+    { source: '/md/*.md', headers: [{ key: 'Content-Type', value: 'text/markdown; charset=utf-8' }] },
+    { source: '/md/skills/*.md', headers: [{ key: 'Content-Type', value: 'text/markdown; charset=utf-8' }] },
+    { source: '/md/skills/index.json', headers: [{ key: 'Content-Type', value: 'application/json; charset=utf-8' }] }
+  ]);
   const posicio = (font) => hosting.headers.findIndex((r) => r.source === font);
-  expect(posicio('/md/*.md')).toBeLessThan(posicio('/ap/**'));
+  for (const { source } of regles) expect(posicio(source), source).toBeLessThan(posicio('/ap/**'));
   const efectives = (cami) => Object.fromEntries(hosting.headers.filter((r) => casaRegla(r, cami)).flatMap((r) => r.headers.map((h) => [h.key, h.value])));
-  const publics = existsSync(path.join(process.cwd(), 'public/md')) ? readdirSync(path.join(process.cwd(), 'public/md')).map((f) => `/md/${f}`) : [];
+  const tipus = (cami) => (cami.endsWith('.json') ? 'application/json; charset=utf-8' : 'text/markdown; charset=utf-8');
+  const publics = fitxersDeMd();
   expect(publics.length).toBeGreaterThan(0);
-  for (const cami of [...publics, '/md/no-existix.md']) {
-    expect(efectives(cami)['Content-Type'], cami).toBe('text/markdown; charset=utf-8');
+  expect(publics).toContain('/md/skills/index.json');
+  for (const cami of [...publics, '/md/no-existix.md', '/md/skills/no-existix.md']) {
+    // La projecció només escriu Markdown i l'índex de skills: cap altre tipus de fitxer a /md.
+    expect(/^\/md\/(?:[^/]+\.md|skills\/[^/]+\.md|skills\/index\.json)$/.test(cami), cami).toBe(true);
+    expect(efectives(cami)['Content-Type'], cami).toBe(tipus(cami));
     expect(Object.keys(efectives(cami)), cami).toEqual(expect.arrayContaining(['Content-Security-Policy', ...Object.keys(CAPCALERES_GLOBALS)]));
     expect(reescritA(cami), cami).toBeUndefined();
   }
   // Les rutes de l'app que només comencen igual continuen a l'SPA, i cap altre camí no pren text/markdown.
-  for (const cami of ['/mdx', '/mur', '/llms.txt', '/opendata/llicencies.md']) {
+  for (const cami of ['/mdx', '/mur', '/llms.txt', '/opendata/llicencies.md', '/md/index.json', '/md/skills.json', '/md/skills/sub/x.md']) {
     expect(regles.some((r) => casaRegla(r, cami)), cami).toBe(false);
   }
   expect(reescritA('/mdx')).toBe('/index.html');
   expect(readFileSync(path.join(process.cwd(), 'src/app/App.jsx'), 'utf8')).not.toMatch(/path="\/?md(?:\/|")/);
+});
+
+/* v1.2.26 · D4 Opció B (C26-4, Gauntlet #2) · Un esborrany de la Wiki es llig a /wikidepoble amb el bàner i
+   el noindex, però no té còpia a /md. Consumidors reals de public/md (grep a src, tooling i wordpress-plugin):
+   l'llms.txt (que ja no enllaça cap esborrany), la porta de coherència editorial i les proves; el client pinta
+   wikiManifest i el connector WordPress i l'app nativa no porten public/md. Una línia «Robots: noindex»
+   dins del Markdown no és cap senyal HTTP: l'esborrany no té fitxer, i el que respon /md/<esborrany>.md depén
+   de l'amfitrió, sense cap X-Robots-Tag en cap dels cinc:
+     · Firebase (firebase.json): la reescriptura de l'SPA exclou /md/ (!/@(…|md)/**): el 404 de Firebase (esta prova);
+     · Vercel (vercel.json): els fitxers que existixen van davant de les reescriptures, i la de l'SPA exclou md/ des de
+       v1.2.26 (D5): el 404 de Vercel (prova següent). Abans, un /md/ absent rebia index.html amb un 200;
+     · Apache (public/.htaccess, que viatja a dist): la reescriptura de l'SPA exclou ^/md/ (D5): el 404 d'Apache;
+     · nginx de flake.nix: la location /md/ fa try_files $uri =404 (D5), i la prova de la VM ho assegura;
+     · public/_headers i public/_redirects (amfitrions de tipus Netlify): cap regla de /md/ i cap reescriptura
+       indiscriminada a index.html (opendata-fediversity.test.mjs); un fitxer absent rep la resposta per defecte de
+       l'amfitrió, que cap prova d'este repositori no fixa.
+   Les adreces que l'llms.txt anterior havia anunciat ixen de l'índex. */
+/* Integrador C1-3 (D5, verificador R2-5/R2-6, P1) · Apache i nginx tampoc no reescriuen un /md/ absent a la
+   closca: el text de la configuració ho fixa (la VM de flake.nix no s'executa en esta bateria). */
+test('D5 · Apache (public/.htaccess) i nginx (flake.nix) no reescriuen cap /md/ absent a index.html', () => {
+  const htaccess = readFileSync(path.join(process.cwd(), 'public/.htaccess'), 'utf8');
+  const iExclusio = htaccess.indexOf('RewriteCond %{REQUEST_URI} !^/md/');
+  expect(iExclusio).toBeGreaterThan(-1);
+  expect(htaccess.indexOf('RewriteRule . /index.html [L]')).toBeGreaterThan(iExclusio);
+  const flake = readFileSync(path.join(process.cwd(), 'flake.nix'), 'utf8');
+  expect(flake).toMatch(/"\/md\/" = \{\s*tryFiles = "\$uri =404";/);
+  expect(flake).toContain('assert codi("/md/no-existix.md") == "404"');
+  expect(flake).toContain('assert codi("/mdx") == "200"');
+});
+
+test('D4 Opció B · cap esborrany de la Wiki té còpia a /md, i cada /md/*.md és un document indexable de l’llms.txt', async () => {
+  const { wikiManifest } = await import('../data/wikiManifest.js');
+  const esborranys = wikiManifest.items.filter((i) => i.noindex === true || i.attributes?.status === 'esborrany').map((i) => i.id);
+  expect(esborranys.length).toBeGreaterThan(0);
+  const documents = readdirSync(MD_PUBLIC).filter((nom) => nom.endsWith('.md'));
+  const textos = documents.map((nom) => readFileSync(path.join(MD_PUBLIC, nom), 'utf8'));
+  for (const id of esborranys) {
+    expect(textos.some((text) => text.includes(`- Document a la Wiki de Poble: https://socdepoble.org/wikidepoble?item=${id}\n`)), id).toBe(false);
+  }
+  expect(textos.some((text) => /^- (?:Robots: noindex|Estat: esborrany)/m.test(text))).toBe(false);
+  const llms = readFileSync(path.join(process.cwd(), 'public/llms.txt'), 'utf8');
+  const enllacats = [...llms.matchAll(/\]\(https:\/\/socdepoble\.org\/md\/([^)/]+\.md)\)/g)].map((m) => m[1]).sort();
+  expect(documents.sort()).toEqual(enllacats);
+  for (const nom of documents) expect(reescritA(`/md/${nom}`), nom).toBeUndefined();
+});
+
+/* v1.2.26 · D5 · El mateix a Vercel: cap camí /md/… casa amb la reescriptura de l'SPA, ni un document publicat, ni
+   l'adreça que tindria cada esborrany de slugIndex.json, ni un .md absent, ni la subcarpeta de skills. Amb un sol
+   grup sense nom, el patró de path-to-regexp és la mateixa expressió ancorada (useSEO.test.jsx, Bloc 3.5.5). Les
+   rutes de l'app que només comencen igual continuen a l'SPA, com a Firebase. */
+test('D5 · Vercel: cap camí /md/… cau a la reescriptura de l’SPA; /mdx i /mur, sí', () => {
+  expect(vercel.rewrites).toHaveLength(1);
+  const [spa] = vercel.rewrites;
+  expect(spa.destination).toBe('/index.html');
+  const casaVercel = (cami) => new RegExp(`^${spa.source}$`).test(cami);
+  const slugIndex = JSON.parse(readFileSync(path.join(process.cwd(), 'public/slugIndex.json'), 'utf8'));
+  expect(slugIndex.length).toBeGreaterThan(fitxersDeMd().filter((cami) => /^\/md\/[^/]+\.md$/.test(cami)).length);
+  const camins = [...fitxersDeMd(), ...slugIndex.map(({ slug }) => `/md/${slug}.md`),
+    '/md/', '/md/no-existix.md', '/md/skills/', '/md/skills/no-existix.md', '/md/skills/sub/x.md', '/md/index.json'];
+  for (const cami of camins) {
+    expect(cami.startsWith('/md/'), cami).toBe(true);
+    expect(casaVercel(cami), cami).toBe(false);
+  }
+  for (const cami of ['/mdx', '/mur', '/md', '/mur/md/x.md', '/page/md']) expect(casaVercel(cami), cami).toBe(true);
 });
 
 /* P1-23 · WebFinger al lloc estàtic (ordre del Mestre del 30-10-2026:

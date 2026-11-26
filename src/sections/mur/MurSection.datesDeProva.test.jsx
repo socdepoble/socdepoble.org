@@ -27,6 +27,10 @@
  * cinquena, amb la seua data real del copy (09-11-2026, 00:23): el primer
  * `ara` fix (dilluns a les 03:00) ja hi és posterior.
  *
+ * v1.2.26 · IDEA-367 (Llibre Mestre, 23:06, punt 3) · La card del llibre «Què dinem?» també ix al /mur, amb la data de
+ * la seua biblioteca (Receptes): n'és la sisena. IDEA-365 (22:16, punt 3) · Les biblioteques són FORA Sistema: la clau
+ * d'empat R51 és `cataleg-<id>` (targetesMur.js), no `sistema-<id>`.
+ *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
  * les importants no es reordenen a la prova; només s'hi intercalen, per la
  * seua data, les cinc pàgines de patrimoni. Es comprova amb diversos `ara`
@@ -77,6 +81,8 @@ const MAQUINARIA = Object.freeze([
 /* P0-49 / IDEA-180 (261107) · Les pàgines de patrimoni que no són importants: porten la seua
    data real (PAGE_COPY). Els empats, per la clau R51 (vegeu més avall). R16b · i Receptes (la pàgina de l'Onada R14). */
 const PATRIMONI_AMB_DATA_REAL = Object.freeze(['herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes']);
+/* v1.2.26 · IDEA-367 (23:06, punt 3) · La card del llibre, amb la data de la seua biblioteca (targetesMur.js · mare). */
+const LLIBRES_AL_MUR = Object.freeze([{ id: 'que-dinem', titol: 'Què dinem?', mare: 'receptes' }]);
 const momentDe = (llavor, [coleccio, id]) => {
   const element = llavor[coleccio].find((e) => e.id === id);
   return Date.parse(coleccio === 'pages' ? element.date : element.created_at);
@@ -105,8 +111,11 @@ test.each([
   const ambData = (fila) => ({ titol: titolDe(llavor, fila), moment: momentDe(llavor, fila) });
   /* R51 (D-R51-2) · Dues pàgines amb el mateix instant s'ordenen per la clau `${type}-${id}`
      ascendent (targetesMur.js · perMomentDescendent): arbres > banc > rutes, no l'ordre d'arribada. */
-  const clauDe = (id) => `sistema-${id}`;
-  const patrimoni = PATRIMONI_AMB_DATA_REAL.map((id) => ({ ...ambData(['pages', id]), clau: clauDe(id) }))
+  const clauDe = (id) => `cataleg-${id}`;
+  const patrimoni = [
+    ...PATRIMONI_AMB_DATA_REAL.map((id) => ({ ...ambData(['pages', id]), clau: clauDe(id) })),
+    ...LLIBRES_AL_MUR.map(({ id, titol, mare }) => ({ titol, moment: momentDe(llavor, ['pages', mare]), clau: clauDe(id) }))
+  ]
     .sort((a, b) => b.moment - a.moment || (a.clau < b.clau ? -1 : a.clau > b.clau ? 1 : 0));
   const dalt = [];
   for (const important of IMPORTANTS_DEL_MUR.map(ambData)) {

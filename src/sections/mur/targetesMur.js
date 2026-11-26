@@ -16,7 +16,10 @@ import { publicationSortKey } from '../../utils/publicationDateControl.js';
 import { esAppNativa } from '../../config/origenPublic.js';
 import { esPaginaVisible, SYSTEM_PAGES } from '../../config/systemPages.js';
 import { paginaPerAppNativa } from '../text/perAppNativa.js';
-import { clauDePaginaPublica, etiquetesDePaginaPublica } from '../../data/taxonomia/classificacioPaginesPubliques.js';
+import { categoriesSistemaDePagina, clauDePaginaPublica, etiquetesDePaginaPublica } from '../../data/taxonomia/classificacioPaginesPubliques.js';
+import { targetaQueDinem } from '../text/pageContent.catalegsV1226.js';
+import { autorDe } from '../../config/navigation.js';
+import { esAliesDelProjecte } from '../notes/pertinencaDeLActor.js';
 
 /**
  * Les pàgines del sistema (SYSTEM_PAGES) que el Mur barreja amb les
@@ -32,8 +35,12 @@ import { clauDePaginaPublica, etiquetesDePaginaPublica } from '../../data/taxono
  */
 /* P0-51 · Anatomia rural ja no és cap targeta (la seua adreça porta a
    l'article per l'àlies de navigation.js); l'article del Pou de Neu és
-   l'única targeta amb eixa portada al Mur i al Calendari. */
-const PAGINES_PATRIMONI_MUR = Object.freeze([
+   l'única targeta amb eixa portada al Mur i al Calendari.
+   IDEA-367 (23:06, punt 3) i C26-2 #4 · «Què dinem?» és la card del llibre, no cap pàgina de PAGE_COPY: naix
+   de la seua biblioteca (`mare`, /page/receptes) amb l'autoria i la llicència del llibre (targetaQueDinem) i
+   obri el lector /page/receptes/que-dinem. */
+export const PAGINES_PATRIMONI_MUR = Object.freeze([
+  { key: 'que-dinem', mare: 'receptes', href: '/page/receptes/que-dinem', isAvis: false },
   { key: 'herbari', href: '/page/herbari', isAvis: false },
   { key: 'banc-de-llavors', href: '/page/banc-de-llavors', isAvis: false },
   { key: 'rutes-de-poble', href: '/page/rutes-de-poble', isAvis: false },
@@ -51,16 +58,29 @@ export function esTargetaDelMur(clau) {
   return !PAGINES_AMB_CURADORIA.includes(clau) || import.meta.env.VITE_SDP_CURADORIA_CULTURAL === '1';
 }
 
+/* IDEA-365 (Llibre Mestre, línia 3803) · Una card és del /mur només si porta la categoria Mur: llevar-la-hi la trau
+   de «Mostrar tot» (i del Calendari, que pinta les mateixes targetes) sense esborrar la pàgina.
+   IDEA-365 (22:16, punt 3) i C26-2 #5 · `type` i `categoriesSistema` es deriven de la categoria Sistema: les 5
+   biblioteques i «Què dinem?» (Mur + Catàlegs) són FORA Sistema i no entren a la pestanya «Sóc de Poble» del /mur
+   (esDeLaPestanyaSistema). `isSystem` continua dient de qui és la peça: una pàgina de Sóc de Poble, que signa
+   l'entitat al nivell 1 de la Llei d'Autoria de Dos Nivells (P0-115) i que el Bloc llig com a pàgina (PublicacioDetall,
+   publicacioEditable, masDeLUsuari); la card de «Què dinem?» la signa l'associació (nivell 2) i no és de Sóc de Poble. */
 export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa(), language = 'ca' } = {}) {
-  const paginesPatrimoni = PAGINES_PATRIMONI_MUR.filter((item) => Boolean(pageCopy?.[item.key]));
+  const paginesPatrimoni = PAGINES_PATRIMONI_MUR.filter((item) => Boolean(pageCopy?.[item.mare ?? item.key]));
   return [...SYSTEM_PAGES.filter((item) => esPaginaVisible(item.key, { nativa }) && esTargetaDelMur(item.key)), ...paginesPatrimoni].map((item) => {
+    const categoriesSistema = categoriesSistemaDePagina(item.key);
+    if (!categoriesSistema.includes('Mur')) return null;
+    const clauDelCopy = item.mare ?? item.key;
     // Només documents del namespace públic; cap marker d’un post orgànic dona accés.
-    if (pageCopy?.[item.key] && !clauDePaginaPublica(pageCopy[item.key], item.key)) return null;
-    const data = paginaPerAppNativa(pageCopy?.[item.key], { nativa });
+    if (pageCopy?.[clauDelCopy] && !clauDePaginaPublica(pageCopy[clauDelCopy], clauDelCopy)) return null;
+    const copy = paginaPerAppNativa(pageCopy?.[clauDelCopy], { nativa });
+    const data = item.mare ? targetaQueDinem(copy) : copy;
     if (!data) {
       quanFalta?.(item.key);
       return null;
     }
+    const deSistema = categoriesSistema.includes('Sistema');
+    const deSocDePoble = !item.mare;
     return {
       ...data,
       labels: etiquetesDePaginaPublica(item.key, data.labels, language),
@@ -71,12 +91,26 @@ export function targetesDeSistema(pageCopy, { quanFalta, nativa = esAppNativa(),
       date: undefined,
       created_at: data.date,
       id: item.key,
-      isSystem: true,
+      categoriesSistema,
+      isSystem: deSocDePoble,
       isAvis: item.isAvis,
       mainHref: item.href,
-      type: 'sistema'
+      type: deSistema ? 'sistema' : (categoriesSistema.includes('Catàlegs') ? 'cataleg' : 'pagina')
     };
   }).filter(Boolean);
+}
+
+/* IDEA-365 (21:35, punt 3) · La pestanya «Sóc de Poble» del /mur és la de la categoria Sistema. Una peça que declara
+   les seues Categories de Sistema hi entra només si porta Sistema (C26-2 #5: cap biblioteca, cap «Què dinem?») i si és
+   de Sóc de Poble: una pàgina del sistema, un capítol de la Wiki o una peça que signa l'entitat pilot. Posar-se
+   «Sistema» al payload no porta cap veí a la documentació tècnica (troballa C26-1 #3). La que no declara cap categoria
+   continua amb la regla de sempre: la signa Sóc de Poble o és una pàgina del sistema. */
+const SIGNA_SOC_DE_POBLE = (i) => i.author?.nom === 'Sóc de Poble' || i.author?.name === 'Sóc de Poble' || i.organization?.nom === 'Sóc de Poble' || i.organization?.name === 'Sóc de Poble' || i.autoria?.nom === 'Sóc de Poble';
+const ES_DE_SOC_DE_POBLE = (i) => i.isSystem === true || i._wikiMur === true || SIGNA_SOC_DE_POBLE(i) || esAliesDelProjecte(new Set([autorDe(i)?.id].filter(Boolean)));
+export function esDeLaPestanyaSistema(item) {
+  if (!item || typeof item !== 'object') return false;
+  if (Array.isArray(item.categoriesSistema)) return item.categoriesSistema.includes('Sistema') && ES_DE_SOC_DE_POBLE(item);
+  return SIGNA_SOC_DE_POBLE(item) || item.isSystem === true;
 }
 
 /* R51 (P0-49 / IDEA-180) · PostgREST envia fins a sis decimals de segon

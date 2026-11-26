@@ -236,7 +236,7 @@ test('T71 · una connexió a /ia es llig com /ia: títol, foto, autor i cos de l
   expect(container.querySelector('header.page-title h1').textContent).toBe("L'Ànima de la IAIA");
   expect(container.querySelector('.hero-image img').getAttribute('src'))
     .toBe('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp');
-  expect(container.querySelector('article.cms-preview h3').textContent).toBe('El Despertar de la Nina de Silici');
+  expect(container.querySelector('article.cms-preview h3').textContent).toBe('El despertar de la nina de silici');
   // L'autor de /ia (el de sèrie de la barra), mai el de l'URL ni el Foraster.
   expect(autorDeLaBarra(container)).toBe('Sóc de Poble');
   expect(container.textContent).not.toMatch(/Foraster|Títol de l’URL|Element connectat/);

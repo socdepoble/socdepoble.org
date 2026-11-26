@@ -1,0 +1,46 @@
+/* diferit-territori-v26.css — Bloc territorial de la targeta (IDEA-360, v1.2.26).
+   Lot C1-3 (D1 de l'integrador) · Les regles .sp-card-territori* venen de
+   diferit-taxonomia-v26.css (kit G26-2), sense cap canvi. El bloc es pinta dins
+   d'UniversalCard (BlocTerritoriTargeta.jsx): el seu ?inline viatja amb la
+   targeta, i per això este full només porta les regles del bloc. Així cada
+   targeta ja no arrossega el full sencer de taxonomia. L'adopta
+   BlocTerritoriTargeta amb la clau 'territori-v26' (la porta tractor-vocabulari
+   vol la clau igual al nom del full). La resta de diferit-taxonomia-v26.css es
+   queda per als consumidors diferits: PaginaEditorialEtiqueta,
+   PanellEdicioTaxonomia i ModalAfigCataleg. */
+@layer components {
+  /* IDEA-360 · Bloc geogràfic en text pla clicable centrat (mida paràgraf,
+     zero pastilles/píndoles), situat davall de les píndoles i damunt del copyright. */
+  .sp-card-territori {
+    position: relative;
+    z-index: 2;
+    margin: var(--sdp-space-3) 0 0;
+    text-align: center;
+    font-size: var(--sdp-text-cos);
+    line-height: 1.55;
+    color: var(--sdp-text-suau);
+  }
+
+  .sp-card-territori__enllac {
+    color: var(--sdp-accio-text);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .sp-card-territori__enllac:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+    border-radius: var(--sdp-radi-s);
+  }
+
+  .sp-card-territori__sep {
+    margin-inline: 0.35em;
+    color: var(--sdp-text-suau);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sp-card-territori__enllac:hover {
+      text-decoration: underline;
+    }
+  }
+}

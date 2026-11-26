@@ -28,7 +28,7 @@ import { dataDElement } from '../../components/universal/editorial.js';
    són a /calendari. */
 import { CalendariDelMur } from './CalendariDelMur.jsx';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
-import { clauDeLaTargeta, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
+import { clauDeLaTargeta, esDeLaPestanyaSistema, momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment, acteOcorreElDia, esActeDelCalendari } from './agendaMur.js';
 // T2 · L'estat d'error de les dades, compartit amb el Mercat.
 import { EstatErrorDades } from './EstatErrorDades.jsx';
@@ -118,6 +118,22 @@ const SENSE_CARREGA = async () => false;
 /* Onada 6 · Els paràmetres de la URL que escriu el calendari de la pestanya
    (useEstatCalendari), menys el ?date=, que és el filtre comú del Mur. */
 const PARAMS_DEL_CALENDARI = Object.freeze(['vista', 'setmana', 'mes', 'any']);
+/* IDEA-365 (v1.2.26) · Sincronització d'URL compartible per a les pestanyes del /mur (?filtre=<slug>). */
+const CLAU_FILTRE_MUR = 'filtre';
+const SLUG_DEL_FILTRE_MUR = Object.freeze({ all: null, sdp: 'sistema', mercat: 'mercat', events: 'esdeveniments', mapa: 'mapa' });
+const FILTRE_DEL_SLUG_MUR = Object.freeze({
+  sistema: { filterType: 'sdp', isMapOpen: false },
+  sdp: { filterType: 'sdp', isMapOpen: false },
+  mercat: { filterType: 'mercat', isMapOpen: false },
+  esdeveniments: { filterType: 'events', isMapOpen: false },
+  events: { filterType: 'events', isMapOpen: false },
+  calendari: { filterType: 'events', isMapOpen: false },
+  mapa: { filterType: 'all', isMapOpen: true }
+});
+const estatFiltreDeUrl = (params) => {
+  const brut = String(params?.get?.(CLAU_FILTRE_MUR) || '').trim().toLowerCase();
+  return Object.hasOwn(FILTRE_DEL_SLUG_MUR, brut) ? FILTRE_DEL_SLUG_MUR[brut] : { filterType: 'all', isMapOpen: false };
+};
 /* PS-10 (marató 261101_2143, B7f; default D-3 del Mestre) · La classe de la
    pàgina del Mur (PageFrame la posa a .sdp-universal-page-container): en
    mòbil, les píndoles del Mur en una fila que llisca i sense l'entradeta
@@ -158,9 +174,16 @@ export default function MurSection() {
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
   const revisioParam = searchParams.get('revisio');
+  const filtreUrlParam = searchParams.get(CLAU_FILTRE_MUR);
 
-  const [filterType, setFilterType] = useState('all');
-  const [isMapOpen, setIsMapOpen] = useState(false);
+  const inicialFiltre = estatFiltreDeUrl(searchParams);
+  const [filterType, setFilterType] = useState(inicialFiltre.filterType);
+  const [isMapOpen, setIsMapOpen] = useState(inicialFiltre.isMapOpen);
+  useEffect(() => {
+    const desDeUrl = estatFiltreDeUrl(searchParams);
+    setFilterType((actual) => (actual === desDeUrl.filterType ? actual : desDeUrl.filterType));
+    setIsMapOpen((actual) => (actual === desDeUrl.isMapOpen ? actual : desDeUrl.isMapOpen));
+  }, [filtreUrlParam]); // eslint-disable-line react-hooks/exhaustive-deps -- sincronitza només quan canvia ?filtre= a la URL
   const [filtreCasUsWp, setFiltreCasUsWp] = useState('tots');
   const [versioRevisioWp, setVersioRevisioWp] = useState(0);
   /* P0-31 / IDEA-121 · La bancada d'importació i revisió editorial viu a
@@ -276,7 +299,9 @@ export default function MurSection() {
     if (filterType === 'events') items = items.filter(esActeDelCalendari);
     if (filterType === 'sistema') items = items.filter(i => i.type === 'sistema');
     if (filterType === 'mercat') items = items.filter(i => i.type === 'market' || i.type === 'product');
-    if (filterType === 'sdp') items = items.filter(i => i.author?.nom === 'Sóc de Poble' || i.author?.name === 'Sóc de Poble' || i.organization?.nom === 'Sóc de Poble' || i.organization?.name === 'Sóc de Poble' || i.autoria?.nom === 'Sóc de Poble' || i.isSystem);
+    /* IDEA-365 (21:35, punt 3; 22:16, punt 3) · La pestanya «Sóc de Poble» és la de la categoria Sistema: cap
+       biblioteca ni «Què dinem?» (targetesMur.js · esDeLaPestanyaSistema). */
+    if (filterType === 'sdp') items = items.filter(esDeLaPestanyaSistema);
 
     if (dateFilter) {
       /* T51 · El filtre llig el MATEIX dia que pinta la pastilla (dateTime local
@@ -305,14 +330,6 @@ export default function MurSection() {
     () => perCategoria(allItems.filter(esActeDelCalendari), categoryFilter),
     [allItems, categoryFilter]
   );
-
-  /* Onada 6 · En eixir de la pestanya Calendari es lleven la vista i el
-     període que hi ha escrit el calendari; el ?date= es queda (el filtre de
-     sempre de la graella). */
-  const deixaElCalendari = () => {
-    if (filterType !== 'events' || !PARAMS_DEL_CALENDARI.some((clau) => searchParams.has(clau))) return;
-    setSearchParams(Object.fromEntries(PARAMS_DEL_CALENDARI.map((clau) => [clau, null])));
-  };
 
   const config = {
     title: t('section.mur.kicker', 'Mur'),
@@ -379,14 +396,28 @@ export default function MurSection() {
             etiqueta={txMur.filtresMurAria}
             valor={isMapOpen ? 'mapa' : filterType}
             onCanvi={(v) => {
-              if (v !== 'events') deixaElCalendari();
+              const netejaCalendari = v !== 'events' && filterType === 'events' && PARAMS_DEL_CALENDARI.some((clau) => searchParams.has(clau))
+                ? Object.fromEntries(PARAMS_DEL_CALENDARI.map((clau) => [clau, null]))
+                : {};
               if (v === 'mapa') {
-                setIsMapOpen((obert) => !obert);
+                const nouObert = !isMapOpen;
+                setIsMapOpen(nouObert);
                 setFilterType('all');
+                const canviFiltre = nouObert
+                  ? { [CLAU_FILTRE_MUR]: SLUG_DEL_FILTRE_MUR.mapa }
+                  : searchParams.has(CLAU_FILTRE_MUR) ? { [CLAU_FILTRE_MUR]: null } : {};
+                const canvis = { ...netejaCalendari, ...canviFiltre };
+                if (Object.keys(canvis).length > 0) setSearchParams(canvis);
                 return;
               }
               setFilterType(v);
               setIsMapOpen(false);
+              const slugNou = SLUG_DEL_FILTRE_MUR[v] ?? null;
+              const canviFiltre = slugNou
+                ? { [CLAU_FILTRE_MUR]: slugNou }
+                : searchParams.has(CLAU_FILTRE_MUR) ? { [CLAU_FILTRE_MUR]: null } : {};
+              const canvis = { ...netejaCalendari, ...canviFiltre };
+              if (Object.keys(canvis).length > 0) setSearchParams(canvis);
             }}
             /* Ordre del Mestre, 261118 · La pestanya es diu «Esdeveniments» per
                diferenciar-la del Calendari complet (/calendari): ací filtra només els actes. */

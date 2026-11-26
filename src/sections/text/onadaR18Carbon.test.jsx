@@ -44,10 +44,20 @@ describe('Onada R18 · Carril 3 (Gemini Carbon) · P0-97, P0-100 i P0-101', () =
       gl: 'Sóc de Poble, Portal de Pobos Conectados',
       eu: 'Sóc de Poble, Herri Konektatuen Ataria'
     };
+    /* v1.2.26 · IDEA-365 (Llibre Mestre, 22:16, punt 3) · «Neteja H2 (Card + Pàgina)»: es lleva
+       «· Sóc de Poble, Portal de Pobles Connectats» i queda el nom de la biblioteca, en les 5 llengües. */
+    const h2 = {
+      ca: 'Biblioteca Multipoble d’Arbres Singulars',
+      es: 'Biblioteca Multipueblo de Árboles Singulares',
+      en: 'Multi-Village Library of Singular Trees',
+      gl: 'Biblioteca Multipobo de Árbores Singulares',
+      eu: 'Zuhaitz Berezien Herri Anitzeko Liburutegia'
+    };
     for (const [lang, lema] of Object.entries(lemes)) {
       const p = localitzaPagina(PAGE_COPY['arbres-monumentals'], lang);
       expect(p.contentLanguage).toBe(lang);
-      expect(p.subtitle, lang).toContain(lema);
+      expect(p.subtitle, lang).toBe(h2[lang]);
+      expect(p.subtitle, lang).not.toContain(lema);
       expect(p.lead, lang).toContain(String(ARBRES_MONUMENTALS_2020.length));
       expect(p.lead, lang).toContain('2020');
       expect(p.lead, lang).toContain('El Rentonar');

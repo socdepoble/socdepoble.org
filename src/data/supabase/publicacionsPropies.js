@@ -40,7 +40,9 @@ export async function desaPublicacioPropia(input, config = {}) {
   sub.id = uuid(sub.id); sub.operationId = uuid(sub.operationId);
   if (sub.actor?.tipus === 'entitat') sub.actor.id = uuid(sub.actor.id);
   const authorOrg = sub.actor?.tipus === 'entitat' ? sub.actor.id : null;
-  const payload = mapSectionSubmissionToItem({ ...sub, ownerUserId: actor, createdAt: '', payload: sub.payload });
+  const { categoriesSistemaPerPublicar } = await import('../../utils/publicacioSistema.js');
+  check();
+  const payload = mapSectionSubmissionToItem({ ...sub, ownerUserId: actor, createdAt: '', payload: categoriesSistemaPerPublicar(sub.payload, sub.sectionId) });
   for (const k of ['created_at', 'updated_at', 'updatedAt', 'origen', 'seller', 'autor', 'source', 'srcDelPort']) delete payload[k];
   const title = typeof sub.title === 'string' ? sub.title : payload.title || '', description = typeof sub.description === 'string' ? sub.description : payload.description || payload.summary || '';
   check(); let receipt;

@@ -1,3 +1,6 @@
+import { SISTEMA_CATEGORIES_12, nomCategoriaSistema, nomEtiquetaComuna } from './taxonomiaPublicacio.js';
+export * from './taxonomiaPublicacio.js';
+export * from './folksonomiaCurada.js';
 /** Localització de la taxonomia, compartida amb les vistes que ja es carreguen de manera diferida. */
 import {CATEGORIES_CANONIQUES_BASE,NOMS_ETIQUETES_CANONIQUES_49} from './vocabulariCanonic.js';
 export {NOMS_CATEGORIES_CANONIQUES,NOMS_ETIQUETES_CANONIQUES_49,ETIQUETES_RETIRADES,normalitzaValorTaxonomia} from './vocabulariCanonic.js';
@@ -70,11 +73,11 @@ const traducco = Object.freeze({
  'Herbari':['Herbario','Herbarium','Herbarioa','Herbario'],
  'Llavors':['Semillas','Seeds','Haziak','Sementes']
 });
-const estructurals=Object.freeze({Sistema:['Sistema','System','Sistema','Sistema'],Mur:['Muro','Wall','Horma','Muro']});
+const estructurals=Object.freeze(Object.fromEntries(SISTEMA_CATEGORIES_12.map(c=>[c.nom,IDIOMES_TAXONOMIA.slice(1).map(lang=>c.labels[lang])])));
 const indexIdioma=idioma=>Math.max(0,IDIOMES_TAXONOMIA.indexOf(idioma));
 export function nomCategoriaCanonica(id,idioma='ca'){return CATEGORIES_CANONIQUES.find(c=>c.id===id)?.labels[IDIOMES_TAXONOMIA[indexIdioma(idioma)]]??null;}
-export function nomEtiquetaCanonica(name,idioma='ca'){const i=indexIdioma(idioma);return i===0?name:traducco[name]?.[i-1]??name;}
-export function nomEstructural(name,idioma='ca'){const i=indexIdioma(idioma);return i===0?name:estructurals[name]?.[i-1]??name;}
+export function nomEtiquetaCanonica(name,idioma='ca'){const i=indexIdioma(idioma);return nomEtiquetaComuna(name,'ca')===name?nomEtiquetaComuna(name,idioma):(i===0?name:traducco[name]?.[i-1]??name);}
+export function nomEstructural(name,idioma='ca'){const i=indexIdioma(idioma);return nomCategoriaSistema(name,idioma)??(i===0?name:estructurals[name]?.[i-1]??name);}
 
 
 /** Cadena R11, Loop 3 (L2-09) · Per a les targetes i els detalls del Mur, el Mercat i els actes (text

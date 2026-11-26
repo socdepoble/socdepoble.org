@@ -7,6 +7,9 @@
  *     readPublicWikiFile (frontera, O_NOFOLLOW i camins d'usuari emmascarats) i
  *     es descarta si el frontmatter és trencat o si publicMetadata el denega
  *     (visibility diferent de public, status arxivat o quarantena).
+ *   · v1.2.26 (D4 Opció B) · Un esborrany (status esborrany) es llig a /wikidepoble, però no ix a
+ *     public/md ni a llms.txt: es projecta només el que és indexable.
+ *   · Les skills públiques (IDEA-364) ixen a public/md/skills/ (tooling/wiki/lib/public-skills.mjs).
  *   · El slug i el títol són els de slugIndex.json (slugDeDocument).
  *   · De cada document només ix el títol, la descripció, les dates declarades al
  *     frontmatter, la llicència de sèrie, l'adreça del document a la Wiki i el
@@ -21,7 +24,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
-import { publicWikiFiles, readPublicWikiFile, publicMetadata, slugDeDocument, wikiEditorial } from '../wiki/lib/publication-policy.mjs';
+import { publicWikiFiles, readPublicWikiFile, publicMetadata, slugDeDocument, wikiEditorial, publicWikiFlags } from '../wiki/lib/publication-policy.mjs';
+import { projectaSkills, escriuSkills, diferenciesSkills, directoriPublicReal } from '../wiki/lib/public-skills.mjs';
 import { idDeDocumentWiki, RUTA_WIKI } from '../../src/config/rutaSocial.js';
 import { esMain } from '../lib/arrel.mjs';
 
@@ -122,16 +126,21 @@ export function projectaLlms({ root = process.cwd(), origin = ORIGEN_LLMS } = {}
     if (vistos.has(clau)) throw new TypeError(`Slug duplicat «${slug}»: ${vistos.get(clau)} i ${rel}`);
     vistos.set(clau, rel);
     const description = typeof meta.description === 'string' ? netaLinia(meta.description) : '';
-    docs.push({ slug, title, description, id: idDelDocument(file), ...datesDeclarades(meta, parsed.rawFrontmatter), body: parsed.body || '' });
+    docs.push({ slug, title, description, id: idDelDocument(file), ...publicWikiFlags(meta), ...datesDeclarades(meta, parsed.rawFrontmatter), body: parsed.body || '' });
   }
   docs.sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
 
-  const fitxers = new Map(docs.map((doc) => [doc.slug, textDelDocument(doc, origin)]));
-  const llista = docs.map((doc) => `- [${etiqueta(doc.title)}](${origin}/md/${doc.slug}.md)${doc.description ? `: ${doc.description}` : ''}`);
+  /* v1.2.26 · D4 Opció B (C26-4, Gauntlet #2) · Un esborrany es llig a /wikidepoble amb bàner i noindex,
+     però no té còpia a /md ni entra a llms.txt: cap consumidor no llig eixa còpia i un «Robots: noindex»
+     escrit al Markdown no és cap senyal HTTP. Sense fitxer, /md/<esborrany>.md és el 404 de l'amfitrió.
+     El slug de l'esborrany continua reservat (la comprovació de duplicats de dalt el compta). */
+  const publicables = docs.filter((doc) => !doc.noindex);
+  const fitxers = new Map(publicables.map((doc) => [doc.slug, textDelDocument(doc, origin)]));
+  const llista = publicables.map((doc) => `- [${etiqueta(doc.title)}](${origin}/md/${doc.slug}.md)${doc.description ? `: ${doc.description}` : ''}`);
   const llms = [...CAP_LLMS, '', '## Wiki de Poble (Markdown)', '',
     'Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa frontera de publicació que la Wiki: cap document de l\'escriptori, privat ni arxivat.',
     '', ...llista].join('\n') + '\n';
-  return { llms, fitxers };
+  return { llms, fitxers, skills: projectaSkills(root) };
 }
 
 function llegixSiEsFitxer(abs) {
@@ -151,12 +160,14 @@ export function diferenciesLlms(root, projeccio = projectaLlms({ root })) {
   /* Els noms amb punt inicial (.DS_Store del Finder) els governa .gitignore, no la projecció. */
   const alDisc = fs.existsSync(carpeta) ? fs.readdirSync(carpeta).filter((nom) => !nom.startsWith('.')) : [];
   for (const nom of alDisc) {
+    if (nom === 'skills') continue;
     const slug = nom.endsWith('.md') ? nom.slice(0, -3) : null;
     if (!slug || !projeccio.fitxers.has(slug)) diferencies.push(`${CARPETA_MD}/${nom} sobra: no és cap document públic`);
   }
   for (const [slug, text] of projeccio.fitxers) {
     if (llegixSiEsFitxer(path.join(carpeta, `${slug}.md`)) !== text) diferencies.push(`${CARPETA_MD}/${slug}.md falta o no és la projecció`);
   }
+  diferencies.push(...diferenciesSkills(root, projeccio.skills));
   return diferencies;
 }
 
@@ -167,6 +178,7 @@ function escriuSenseSeguirEnllacos(abs, text) {
 
 /** Escriu la projecció i esborra els .md de public/md que ja no hi són. */
 export function escriuLlms(root, projeccio = projectaLlms({ root })) {
+  directoriPublicReal(root, CARPETA_MD, true);
   const carpeta = path.join(root, CARPETA_MD);
   if (fs.existsSync(carpeta)) {
     if (!fs.lstatSync(carpeta).isDirectory()) throw new TypeError(`${CARPETA_MD} ha de ser una carpeta real, no un enllaç.`);
@@ -175,6 +187,7 @@ export function escriuLlms(root, projeccio = projectaLlms({ root })) {
     if (nom.endsWith('.md') && !projeccio.fitxers.has(nom.slice(0, -3)) && fs.lstatSync(path.join(carpeta, nom)).isFile()) fs.unlinkSync(path.join(carpeta, nom));
   }
   for (const [slug, text] of projeccio.fitxers) escriuSenseSeguirEnllacos(path.join(carpeta, `${slug}.md`), text);
+  escriuSkills(root, projeccio.skills);
   escriuSenseSeguirEnllacos(path.join(root, RUTA_LLMS), projeccio.llms);
   return { documents: projeccio.fitxers.size };
 }

@@ -115,7 +115,9 @@ const vista = () => ({ etiquetes: etiquetes(), grups: grups(), carpetes: carpete
 const VALENCIA = Object.freeze({
   etiquetes: { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' },
   grups: [null, 'CATEGORIES', 'ETIQUETES'],
-  carpetes: [['f-mur', 'Mur'], ['f-mercat', 'El meu mercat'], ['f-media', 'Multimèdia'], ['f-connectats', 'Safata d’Entrada'], ['f-tic', 'TIC']]
+  /* IDEA-358.1 (Llibre Mestre, l. 3691) · «En producció» és carpeta del sistema: sense f-notes al
+     servidor, carpetesDelBloc la posa al final. */
+  carpetes: [['f-mur', 'Mur'], ['f-mercat', 'El meu mercat'], ['f-media', 'Multimèdia'], ['f-connectats', 'Safata d’Entrada'], ['f-tic', 'TIC'], ['f-produccio', 'En producció']]
 });
 
 beforeEach(() => {
@@ -146,7 +148,8 @@ describe('la closca del Bloc', () => {
     expect(etiquetes()).toEqual({ categories: 'FOLDERS', items: 'NOTES', create: 'CREATE NOTE', search: 'Search notes', empty: 'There are no notes.' });
     expect(grups()).toEqual([null, 'CATEGORIES', 'TAGS']);
     /* Només el nom de la llavor es tradueix: el Mercat reanomenat, la Safata (nom propi) i la pròpia, tal qual. */
-    expect(carpetes()).toEqual([['f-mur', 'Wall'], ['f-mercat', 'El meu mercat'], ['f-media', 'Media'], ['f-connectats', 'Safata d’Entrada'], ['f-tic', 'TIC']]);
+    /* IDEA-358.1 (Llibre Mestre, l. 3691) · «En producció», de sèrie i traduïda, al final. */
+    expect(carpetes()).toEqual([['f-mur', 'Wall'], ['f-mercat', 'El meu mercat'], ['f-media', 'Media'], ['f-connectats', 'Safata d’Entrada'], ['f-tic', 'TIC'], ['f-produccio', 'In production']]);
     /* Les etiquetes de l'espai que el Bloc no passa (Carregant, Tot…) són les de l'espai, traduïdes allí. */
     expect(Object.keys(etiquetes()).sort()).toEqual(['categories', 'create', 'empty', 'items', 'search']);
   });

@@ -25,9 +25,10 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import { CODI_PERSONALITZACIO, MISSATGE_PERSONALITZACIO, errorDePersonalitzacio } from '../../data/errorsBackend.js';
 import { NOMS_ETIQUETES_CANONIQUES_49 } from '../../data/taxonomia/taxonomiaCanonica.js';
 
-/* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Les de sèrie de la Consola: Sistema + la mare + les etiquetes canòniques. */
+/* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Les de sèrie de la Consola: Sistema + la mare + les etiquetes canòniques.
+   v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · La Consola es mostra al /mur: Mur darrere de Sistema. */
 const TECNOLOGIA = '💻 Tecnologia i Disseny';
-const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-system' }, { text: TECNOLOGIA, className: 'sdp-badge-category' }, { text: 'Node 0', className: 'sdp-badge-tag' }, { text: 'Documentació', className: 'sdp-badge-tag' }];
+const ETIQUETES_CONSOLA = [{ text: 'Sistema', className: 'sdp-badge-system' }, { text: 'Mur', className: 'sdp-badge-system' }, { text: TECNOLOGIA, className: 'sdp-badge-category' }, { text: 'Node 0', className: 'sdp-badge-tag' }, { text: 'Documentació', className: 'sdp-badge-tag' }];
 const pageCopyDeSerie = () => Object.fromEntries(SYSTEM_PAGES.map(({ key }) => [key, { ...PAGE_COPY[key], id: key }]));
 const core = (extra = {}) => ({ status: 'ready', pageCopy: pageCopyDeSerie(), personalitzacio: null, refresh: m.refresh, ...extra });
 
@@ -86,9 +87,11 @@ test('pinta un bloc per pàgina de SYSTEM_PAGES amb les etiquetes actuals (text 
   const bloc = consola();
   expect(within(bloc).getByLabelText(`Text de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).value).toBe('Sistema');
   expect(within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-system');
-  expect(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe(TECNOLOGIA);
-  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-category');
-  /* La previsualització usa el mateix marcatge que la targeta. */
+  expect(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('Mur');
+  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 2 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-system');
+  expect(within(bloc).getByLabelText(`Text de l’etiqueta 3 de ${PAGE_COPY.consola.title}`).value).toBe(TECNOLOGIA);
+  expect(within(bloc).getByLabelText(`Classe de l’etiqueta 3 de ${PAGE_COPY.consola.title}`).value).toBe('sdp-badge-category');
+  /* La previsualització fa servir el mateix marcatge que la targeta. */
   const previsualitzacio = within(bloc).getByRole('list', { name: `Previsualització de les etiquetes de ${PAGE_COPY.consola.title}` });
   expect([...previsualitzacio.querySelectorAll('li')].map((li) => li.className)).toEqual(ETIQUETES_CONSOLA.map((l) => `sp-card-label ${l.className}`));
   /* El selector oferix el conjunt tancat, amb noms llegibles. */
@@ -132,7 +135,7 @@ test('editar text i classe, afegir i llevar etiquetes i afegir una categoria: el
   const titol = PAGE_COPY.consola.title;
   fireEvent.change(within(bloc).getByLabelText(`Text de l’etiqueta 1 de ${titol}`), { target: { value: ' Maquinària ' } });
   fireEvent.change(within(bloc).getByLabelText(`Classe de l’etiqueta 1 de ${titol}`), { target: { value: 'sdp-badge-system' } });
-  // P0-40 · la Consola porta ara 4 etiquetes de sèrie: es lleven les tres darrere de la primera.
+  // P0-40 i IDEA-365 · la Consola porta ara 5 etiquetes de sèrie: es lleven les quatre darrere de la primera.
   for (let i = 1; i < ETIQUETES_CONSOLA.length; i += 1) fireEvent.click(within(bloc).getByRole('button', { name: `Llevar l’etiqueta 2 de ${titol}` }));
   fireEvent.click(within(bloc).getByRole('button', { name: `Afegir una etiqueta a ${titol}` }));
   fireEvent.change(within(bloc).getByLabelText(`Text de l’etiqueta 2 de ${titol}`), { target: { value: 'IAIA' } });
@@ -166,8 +169,8 @@ test('una etiqueta sense text no es desa: l’error diu la pàgina i el port no 
   expect(m.desa).not.toHaveBeenCalled();
   const alerta = screen.getByRole('alert');
   expect(alerta.textContent).toContain('Hi ha errors a la taxonomia i no s’ha desat');
-  // P0-40: la nova és la cinquena de la Consola; R34 puja MAX_TEXT a 64 perquè hi càpien les 6 mares.
-  expect(alerta.textContent).toContain('L’etiqueta 5 de «consola» necessita un text d’1 a 64 caràcters.');
+  // P0-40 i IDEA-365 (Mur, línia 3804): la nova és la sisena de la Consola; R34 puja MAX_TEXT a 64 perquè hi càpien les 6 mares.
+  expect(alerta.textContent).toContain('L’etiqueta 6 de «consola» necessita un text d’1 a 64 caràcters.');
 });
 
 test('conflicte de versió: «Algú ha desat una versió nova: recarrega» i el botó torna a llegir el contingut core i reinicia l’esborrany', async () => {

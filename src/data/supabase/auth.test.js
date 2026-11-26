@@ -37,6 +37,8 @@ import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, urlDeTornadaAlta
 import { configuraBackendSessio } from '../identitat.js';
 import { CODI_ENTRADA } from '../errorsBackend.js';
 import { ErrorColumnaAbsent, classificaError } from '../autodesament/errors.js';
+import { missatgeDEntrada } from '../../sections/onboarding/onboardingModel.js';
+import ca from '../../config/idiomes/ca.js';
 
 test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
   entraAmbGoogle.mockClear();
@@ -205,6 +207,7 @@ test('credencials rebutjades: l’adaptador tradueix el 400 invalid_credentials 
 
 const cruGoTrue = (status, cos) => Object.assign(new Error(`Supabase ${status}: ${cos}`), { name: 'ErrorSupabase', status });
 const CASOS_GOTRUE = [
+  ['403 user_banned', () => cruGoTrue(403, '{"error_code":"user_banned"}'), CODI_ENTRADA.COMPTE_SUSPES, 403],
   ['400 email_not_confirmed', () => cruGoTrue(400, '{"code":400,"error_code":"email_not_confirmed","msg":"Email not confirmed"}'), CODI_ENTRADA.CORREU_PENDENT, 400],
   ['422 weak_password', () => cruGoTrue(422, '{"code":422,"error_code":"weak_password","msg":"Password should be at least 6 characters.","weak_password":{"reasons":["length"]}}'), CODI_ENTRADA.CONTRASENYA_FEBLE, 422],
   ['422 user_already_exists', () => cruGoTrue(422, '{"code":422,"error_code":"user_already_exists","msg":"User already registered"}'), CODI_ENTRADA.COMPTE_EXISTENT, 422],
@@ -216,7 +219,7 @@ const CASOS_GOTRUE = [
   ['xarxa (estat 0)', () => cruGoTrue(0, 'Error de xarxa'), CODI_ENTRADA.SERVIDOR_INABASTABLE, 0],
   ['temps esgotat', () => Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }), CODI_ENTRADA.SERVIDOR_INABASTABLE, undefined],
   /* Correcció de la revisió T1–T4 (260930) · Els 4xx sense codi neutral: DESCONEGUT. */
-  ['422 signup_disabled', () => cruGoTrue(422, '{"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}'), CODI_ENTRADA.DESCONEGUT, 422],
+  ['422 signup_disabled', () => cruGoTrue(422, '{"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}'), CODI_ENTRADA.ALTES_TANCADES, 422],
   ['422 validation_failed', () => cruGoTrue(422, '{"code":422,"error_code":"validation_failed","msg":"Unable to validate email address: invalid format"}'), CODI_ENTRADA.DESCONEGUT, 422],
   ['400 email_address_invalid', () => cruGoTrue(400, '{"code":400,"error_code":"email_address_invalid","msg":"Email address is invalid"}'), CODI_ENTRADA.DESCONEGUT, 400],
   ['400 GoTrue antic sense error_code', () => cruGoTrue(400, '{"error":"invalid_grant","error_description":"Invalid login credentials"}'), CODI_ENTRADA.DESCONEGUT, 400]
@@ -262,13 +265,30 @@ test('P1 · sense pàgina http(s) on tornar, l’alta continua sense redirect_to
 
 /* Correcció de la revisió T1–T4 (260930) · El `msg` de GoTrue, en anglés, no ix de
    l'adaptador: la frase és la genèrica en valencià i l'original viatja a `cause`. */
-test('T4 · un 422 signup_disabled es traduïx a DESCONEGUT amb la frase valenciana, sense l’anglés de GoTrue', async () => {
+test('T4 · un 422 signup_disabled es traduïx a ALTES_TANCADES amb la frase valenciana, sense l’anglés de GoTrue', async () => {
   const original = cruGoTrue(422, '{"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}');
   m.request.mockReset().mockRejectedValueOnce(original);
   const error = await registerWithPassword('synthetic@example.test', 'contrasenya', {}).catch((e) => e);
-  expect(error).toMatchObject({ code: CODI_ENTRADA.DESCONEGUT, status: 422, cause: original });
-  expect(error.message).toBe('No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.');
+  expect(error).toMatchObject({ code: CODI_ENTRADA.ALTES_TANCADES, status: 422, cause: original });
+  /* v1.2.26 · #9 P2 (Gauntlet C26-3) · La frase és la d'onboardingModel.js, no un text propi de l'adaptador. */
+  expect(error.message).toBe(missatgeDEntrada({ code: CODI_ENTRADA.ALTES_TANCADES }));
   expect(error.message).not.toMatch(/Signups|not allowed/);
+});
+
+/* v1.2.26 · #9 P2 (Gauntlet C26-3) · Prova d'igualtat: signup_disabled i user_banned diuen el mateix per correu i
+   contrasenya (auth.js), a la vista (onboardingModel.js) i a l'entrada amb Google (oauthRelay.js, que
+   oauthRelay.ent01.test.js fixa byte a byte al valor valencià de section.login.error.*). Una sola font de text. */
+test.each([
+  ['422 signup_disabled', 422, 'signup_disabled', CODI_ENTRADA.ALTES_TANCADES, 'section.login.error.altesTancades'],
+  ['403 user_banned', 403, 'user_banned', CODI_ENTRADA.COMPTE_SUSPES, 'section.login.error.compteSuspes']
+])('#9 · %s: la frase de l’adaptador és la de la vista i la del diccionari, sense el text de GoTrue', async (_cas, status, errorCode, code, clau) => {
+  const original = cruGoTrue(status, JSON.stringify({ code: status, error_code: errorCode, msg: 'Raw GoTrue text' }));
+  m.request.mockReset().mockRejectedValueOnce(original);
+  const error = await loginWithPassword('synthetic@example.test', 'contrasenya').catch((e) => e);
+  expect(error).toMatchObject({ code, status, cause: original });
+  expect(error.message).toBe(missatgeDEntrada(error));
+  expect(error.message).toBe(ca[clau]);
+  expect(error.message).not.toMatch(/Raw GoTrue/);
 });
 
 /* ───────── T2 i T4 · Capacitat 'salut': comprovaServidor mai rebutja ───────── */

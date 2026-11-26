@@ -32,7 +32,8 @@
  *    tancades: les accions apagades, el DOM de sempre (l'Històric, que no ho
  *    demana, no canvia cap píxel). Connectar del peu continua obrint la pàgina.
  * Les dades de la targeta (títol, xifra, etiquetes) les fa
- * nucli/targetesTauler.js; ací només es pinten.
+ * nucli/targetesTauler.js; ací només es pinten, i les etiquetes, inertes
+ * (v1.2.26 · pindolesInertes, a insigniaBetaOberta.js: cap píndola fa eixir de la Gestoria).
  */
 import { useState } from 'react';
 import { encapcalamentDeTargeta } from '../../../components/PedraSeca/index.js';
@@ -42,6 +43,7 @@ import {
 import { UniversalCard } from '../../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { tg, tf } from '../i18nGestoria.js';
 import { etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
+import { pindolesInertes } from '../insigniaBetaOberta.js';
 import { adoptaFullDiferit } from '../../../config/fullDiferit.js';
 import cssDiferitGestoria from '../../../css/diferit-gestoria.css?inline';
 const adoptaEstilsDiferits = (el) => { adoptaFullDiferit(el, 'gestoria', cssDiferitGestoria); };
@@ -173,7 +175,7 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
           {ambXifra ? null : <p ref={adoptaEstilsDiferits}>{targeta.senseXifra}</p>}
         </>
       )}
-      labels={targeta.etiquetes}
+      labels={pindolesInertes(targeta.etiquetes)}
       onMainClick={obri}
       hasFooter
       {...peuPrivat(ambAccionsPrivades === true ? onAvis : null, idioma)}

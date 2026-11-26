@@ -35,6 +35,16 @@ export function portadaSocialDeLaWiki(portada = PAGE_COPY[COVER_PAGE_KEYS.wiki],
   return { imatge, image };
 }
 
+/** Cert si un document o skill de la Wiki és un esborrany en revisió (IDEA-364 · noindex). */
+export function esDocumentEsborrany(document) {
+  if (!document || typeof document !== 'object') return false;
+  if (document.esborrany === true || document.noindex === true) return true;
+  const estat = typeof document.attributes?.status === 'string'
+    ? document.attributes.status.trim().toLowerCase()
+    : '';
+  return estat === 'esborrany';
+}
+
 /** Cert si els atributs d'un document el deixen publicar (publicMetadata). */
 export function atributsPublics(attributes) {
   if (attributes === undefined) return true;
@@ -102,13 +112,14 @@ export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES, .
   // Mateix selector segur que les pàgines: la portada explícita mana sobre
   // el mapa legacy. Una referència bloquejada no cau a una altra fotografia.
   const social = propia === undefined ? null : metadadesDePagina({ title: huma, image: propia, imageAlt: alt }, opcions);
+  const esborrany = esDocumentEsborrany(document);
   return {
     title: textPla(titol, LIMIT_TITOL),
     description: textPla(descripcio, LIMIT_DESCRIPCIO),
     image: social ? social.image : imatges && Object.hasOwn(imatges, document.id) ? imatges[document.id] : null,
     ...(social ? { imatge: social.imatge } : {}),
     ogType: 'article',
-    index: true
+    index: !esborrany
   };
 }
 
@@ -117,7 +128,10 @@ export function metadadesDeDocumentPublic(document, { imatges = SOCIAL_IMAGES, .
  * consulta de la ruta (`search`):
  *   · sense ?item=: la portada, «Wiki de Poble», indexable, amb la imatge de
  *     la portada (portadaSocialDeLaWiki; ordre del Mestre del 30-10-2026);
- *   · un sol ?item= igual a l'id de l'ítem i públic a `items`: les seues;
+ *   · un sol ?item= igual a l'id de l'ítem i públic a `items`: les seues
+ *     (amb `index: false` si és `esborrany: true` · IDEA-364);
+ *   · un sol ?item=skill:<nom> igual a l'id de l'ítem de skill pública (D4
+ *     Opció B): títol i descripció propis de la skill;
  *   · qualsevol altra cosa (desconegut, privat, repetit, una eina): «Wiki de
  *     Poble» sense indexar, i per tant sense canonical ni og:url.
  * `opcions`: { imatges } per als documents (SOCIAL_IMAGES), i { portada } més
@@ -133,6 +147,17 @@ export function metadadesDeDocumentWiki(item, search, items, opcions) {
   if (demanats.length === 0) {
     const { image } = portadaSocialDeLaWiki(opcions && Object.hasOwn(opcions, 'portada') ? opcions.portada : undefined, opcions);
     return { title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: true, ...(image ? { image } : null) };
+  }
+  if (demanats.length === 1 && demanats[0] === item?.id && typeof item?.id === 'string' && item.id.startsWith('skill:') && item.skill) {
+    const titolSkill = item.skill.title || item.title || item.skill.name;
+    const descSkill = item.skill.description || `Skill pública de Sóc de Poble: ${item.skill.name}.`;
+    return {
+      title: textPla(`${titolSkill} · ${TITOL_WIKI}`, LIMIT_TITOL),
+      description: textPla(descSkill, LIMIT_DESCRIPCIO),
+      image: null,
+      ogType: 'article',
+      index: !esDocumentEsborrany(item)
+    };
   }
   const document = demanats.length === 1 && demanats[0] === item?.id ? documentWikiPublic(item.id, items) : null;
   if (!document) return { title: TITOL_WIKI, description: DESCRIPCIO_WIKI, index: false };

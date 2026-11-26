@@ -175,8 +175,10 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
       heroImage: '/assets/nano_cards/drets_autor_comic.jpg',
       heroAlt: "Un foraster intentant copiar una recepta mentre la gent del poble se'l mira rient (Còmic)",
       // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + l'etiqueta canònica.
+      // v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · «Drets d’autor» es mostra al /mur: Mur darrere de Sistema.
       labels: [
         { text: 'Sistema', className: 'sdp-badge-system' },
+        { text: 'Mur', className: 'sdp-badge-system' },
         { text: '🎭 Cultura, Música i Llengua', className: 'sdp-badge-category' },
         { text: 'Documentació', className: 'sdp-badge-tag' }
       ],

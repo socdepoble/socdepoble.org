@@ -1687,6 +1687,7 @@ export default {
   'section.notes.carpeta.media': 'Multimedia',
   'section.notes.carpeta.events': 'Eventos',
   'section.notes.carpeta.mapa': 'Mapa',
+  'section.notes.carpeta.produccio': 'En produción',
   'section.notes.carpeta.notes': 'Outras notas',
   /* Esmena 2 (261007_1645) · Proposta a revisar per algú que les parle. */
   'section.notes.historic.mur.titol': 'Xa publicado no Muro',
@@ -3339,10 +3340,12 @@ export default {
   'section.perfil.privacitat.confianca.cerimonia.accio.revisa': "Revisar verificación SAS de {nom}",
   'section.perfil.privacitat.confianca.cerimonia.accio.disputa': "Deter e declarar «Non son eu»",
   'section.perfil.privacitat.confianca.cerimonia.alertaDisputa': "Declarouse unha disputa («Non son eu»): a cerimonia de recuperación quedou bloqueada.",
-  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
-  'editor.proposaCard.feta': "Card proposta. Para desfacela: «Desfai a proposta» ou Cmd/Ctrl+Z.",
+  // IDEA-41 / IDEA-358 / IDEA-359 · Maquetadora Editorial no-destructiva i feedback d'enganxat.
+  'editor.proposaCard.feta': "Tarxeta maquetada sen tocar o corpo.",
   'editor.proposaCard.res': "Non hai nada que propor: os campos da tarxeta xa están cheos ou o corpo non comeza con texto.",
-  'editor.proposaCard.enRepos': "Preme «Editar» para propor a Card.",
+  'editor.proposaCard.enRepos': "Preme «Editar» para maquetar a tarxeta.",
+  'editor.enganxat.alCos': "Pegado no corpo: falta un título curto.",
+  'editor.enganxat.promouTitol': "Promove a título",
   'editor.eines.enRepos': "En lectura: preme «Editar» para escribir e dar formato ao texto.",
   /* T3.2-UI (261101) · La «Fitxa de memòria oral (OKF v0.2)» de «Proposa Card» (FitxaMemoriaOral.jsx). */
   'editor.memoriaOral.titol': "Ficha de memoria oral (OKF v0.2)",
@@ -3405,8 +3408,8 @@ export default {
   'editor.memoriaOral.massaEtiquetesLliures': "Xa hai {n} etiquetas libres: quita algunha antes de engadir máis.",
   'editor.memoriaOral.afegida': "engadida na revisión",
   'editor.memoriaOral.capPobleAlRelat': "A máquina non recoñeceu ningunha vila no relato",
-  'section.notes.proposaCard': "Propón Card",
-  'section.notes.proposaCardDesfer': "Desfai a proposta",
+  'section.notes.proposaCard': "Maqueta a tarxeta",
+  'section.notes.proposaCardDesfer': "Desfai a maquetación",
   // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
   'section.login.registre.ajudaPoble': "Se es de máis dunha, as outras escóllense no teu perfil.",
   'section.login.registre.ajudaUsuari': "Faise co teu nome e vese cunha @ diante se o teu perfil é público. Se xa é de alguén, engadirémoslle -2.",

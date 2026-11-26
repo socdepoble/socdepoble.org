@@ -163,7 +163,8 @@ describe('Aparador verificable R20',()=>{
    expect([a.parentElement.getAttribute('lang'),a.getAttribute('hreflang')]).toEqual(llengua===language?[null,null]:[llengua,llengua]);
   }
   // L'herbari ja és traduït a les 5 llengües; l'anatomia continua només en valencià.
-  expect(localitzaPagina(PAGE_COPY.herbari,language).title).toBe(language==='ca'?'Herbari de La Torre':PAGE_COPY.herbari.translations[language].title);
+  // v1.2.26 · IDEA-366 (Llibre Mestre, 22:26) · /page/herbari és la Biblioteca Multipoble d'Herbaris: «Herbari», i l'Herbari de La Torre n'és el primer llibre.
+  expect(localitzaPagina(PAGE_COPY.herbari,language).title).toBe(language==='ca'?'Herbari':PAGE_COPY.herbari.translations[language].title);
   // L'herbari i les tres pàgines de C5 són traduïdes a les 5 llengües: cap lang de més.
   for(const i of [1,2,3,4])expect(enllacos[i].parentElement.getAttribute('lang')).toBeNull();
   expect(screen.getByRole('region',{name:APARADOR_R20_TEXTS[language].compiler})).toBeTruthy();

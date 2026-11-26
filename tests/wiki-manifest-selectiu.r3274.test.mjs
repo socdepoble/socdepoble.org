@@ -5,6 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as compiler from '../tooling/wiki/compile-wiki-to-app.mjs';
+import { CAPACITATS, CONTRACTE_BACKEND } from '../src/data/contracte.js';
+import { CASOS } from '../src/data/conformitat/kit.js';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = '_wiki_de_poble/02_saber/architecture/api_port_neutral_i_allotjament_model_b.md';
@@ -97,5 +99,7 @@ test('the actual Model B entry equals its one-item canonical production source',
   const { wikiManifest } = await import(pathToFileURL(path.join(repo, 'src/data/wikiManifest.js')).href);
   assert.deepEqual(wikiManifest.items.find(x => x.id === 'api_port_neutral_i_allotjament_model_b'), result.items[0]);
   const text = result.items[0].content.replaceAll('**', '');
-  for (const phrase of ['67 capacitats atòmiques opcionals', '190 mètodes en total', '253 casos sobre 190 mètodes']) assert.ok(text.includes(phrase), phrase);
+  // Els lots poden ampliar el port: es contrasta amb el contracte executable,
+  // mantenint l'equivalència exacta del cos i les revisions de la font.
+  for (const phrase of [`${Object.keys(CAPACITATS).length} capacitats atòmiques opcionals`, `${CONTRACTE_BACKEND.length} mètodes en total`, `${CASOS.length} casos sobre ${CONTRACTE_BACKEND.length} mètodes`]) assert.ok(text.includes(phrase), phrase);
 });

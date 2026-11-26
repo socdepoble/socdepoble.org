@@ -20,11 +20,20 @@ export function preparaCapitolsWiki(items, extreuEditorial) {
   }).map(item => {
     const a = item.attributes ?? {}, editorial = extreuEditorial(text(item.content));
     const href = `/wikidepoble?item=${encodeURIComponent(item.id)}`;
+    // Identitat canònica explícita; mai classifiquem una publicació pel títol.
+    const sistemaNervios = item.id === 'sistema_nervios_skills_i_repositoris';
     return Object.freeze({ id: `wiki:${item.id}`, _wikiMur: true, wikiId: item.id, type: 'post', sectionId: 'mur',
       title: editorial.titol || text(item.title), post_subtitle: text(item.subtitle), subtitle: text(item.subtitle),
       entradilla: editorial.entradilla || '', lead: editorial.entradilla || '', summary: text(item.subtitle),
       image_url: text(item.image ?? a.image), image: text(item.image ?? a.image), imageAlt: text(item.imageAlt ?? a.imageAlt),
       created_at: text(item.date ?? a.date), updated_at: text(item.updated ?? a.updated), publish_date: text(item.updated ?? a.updated),
+      ...(sistemaNervios ? {
+        categoriesSistema: Object.freeze(['Sistema', 'Mur']),
+        labels: Object.freeze([
+          Object.freeze({ text: 'Sistema', className: 'sdp-badge-system', href: '/categoria/sistema' }),
+          Object.freeze({ text: 'Mur', className: 'sdp-badge-system', href: '/mur' })
+        ])
+      } : {}),
       tags: Object.freeze((Array.isArray(item.tags) ? item.tags : []).filter(v => typeof v === 'string')),
       mainHref: href, href, content: text(item.content),
       ...capturaVisibilitatMur({ mostrarAlMur: typeof item.mur === 'boolean' ? item.mur : a.mur === true }) });

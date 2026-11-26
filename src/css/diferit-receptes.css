@@ -92,6 +92,14 @@
     color: var(--sdp-text-suau);
   }
 
+  /* IDEA-367 (v1.2.26) · Centrar el botó de descàrrega del PDF de «Què dinem?». */
+  .sdp-recepta__pdf-accio {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    margin-top: var(--sdp-space-4);
+  }
+
   @media (forced-colors: active) {
     .sdp-recepta__quadrats .sp-card-calendar-badge {
       border: 2px solid ButtonText;

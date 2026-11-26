@@ -1,7 +1,8 @@
 /** Independent private backend probes; only disposable PGlite, never native/prod accounts. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sqlText} from '../tooling/node0/postgres-node0.mjs';
+import {sqlJson,sqlText} from '../tooling/node0/postgres-node0.mjs';
+import {categoriesSistemaPerPublicar} from '../src/utils/publicacioSistema.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -37,6 +38,33 @@ test('private backend never forwards a storage error message/status as its own p
   const marker='private-fixture-row@example.invalid';
   const backend=creaBackendPrivatNodeZero({tenantId:tenant,db:{query:async()=>{throw Object.assign(new Error(marker),{status:503});}}});
   const result=await backend.handle('getProfile',{headers:{origin,cookie,'x-sdp-expected-actor':id},body:{}});assert.equal(result.status,503);assert.deepEqual(result.body,{error:'node0_private_operation_failed'});assert.equal(JSON.stringify(result).includes(marker),false);
+});
+/* IDEA-365 (regla 1 de les 21:40) · C26-1 #12 (Gauntlet c13) · El tercer escriptor aplica la mateixa regla, amb la
+   mateixa funció compartida (utils/publicacioSistema.js), que Supabase i el port local: cap peça pública sense
+   destí. La comparació es fa contra la funció, perquè el destí per defecte de cada secció el governa ella. */
+test('IDEA-365 · el Node 0 exigix com a mínim 1 Categoria de Sistema abans del SQL i normalitza el llegat',async()=>{
+  const compila=submission=>compilaOperacioNodeZero('appendSectionSubmissionNetworkOnly',{submission},tenant);
+  const base={id,sectionId:'mur',title:'Publicació de prova',payload:{title:'Publicació de prova'}};
+  assert.ok(compila(base).includes(sqlJson({title:'Publicació de prova',categoriesSistema:['Mur']})));
+  for(const [sectionId,payload] of[['mur',{title:'Mur'}],['mercat',{title:'Producte'}],['events',{title:'Acte'}],['multimedia',{title:'Foto'}],['mur',{title:'Cotxe',ambit:'vehicle'}]]){
+    const esperat=categoriesSistemaPerPublicar(payload,sectionId);
+    assert.ok(Array.isArray(esperat.categoriesSistema)&&esperat.categoriesSistema.length>0,sectionId);
+    assert.ok(compila({...base,sectionId,payload}).includes(sqlJson(esperat)),sectionId);
+  }
+  // Les notes privades no reben categories públiques; una llista explícita i vàlida es conserva.
+  assert.ok(compila({...base,sectionId:'notes'}).includes(sqlJson({title:'Publicació de prova'})));
+  assert.ok(compila({...base,payload:{title:'x',categoriesSistema:['Mur','Calendari']}}).includes(sqlJson({title:'x',categoriesSistema:['Mur','Calendari']})));
+  const refusada=e=>e.message==='invalid_system_categories'&&e.status===400;
+  for(const categoriesSistema of[[],['Inventada'],['mur'],[null],'Mur',Array(13).fill('Mur')])assert.throws(()=>compila({...base,payload:{title:'x',categoriesSistema}}),refusada,JSON.stringify(categoriesSistema));
+  // El camí atòmic de la nota també; una consulta no porta cap payload que validar.
+  const atomica={...base,noteId:randomUUID(),operationId:randomUUID(),expectedNoteRevision:1};
+  assert.throws(()=>compila({...atomica,payload:{categoriesSistema:[]}}),refusada);
+  assert.ok(compila({...atomica,payload:{title:'x'}}).includes(sqlJson({title:'x',categoriesSistema:['Mur']})));
+  assert.doesNotThrow(()=>compila({...atomica,consulta:true,payload:{categoriesSistema:[]}}));
+  // La resposta HTTP és un 400 local i no arriba mai a la base de dades.
+  let calls=0;const backend=creaBackendPrivatNodeZero({tenantId:tenant,db:{query:async()=>{calls++;assert.fail('no query');}}});
+  const refusat=await backend.handle('appendSectionSubmissionNetworkOnly',{headers:{origin,cookie,'x-sdp-expected-actor':id},body:{submission:{...base,payload:{categoriesSistema:[]}}}});
+  assert.deepEqual(refusat,{status:400,body:{error:'invalid_system_categories'}});assert.equal(calls,0);
 });
 
 const modulePath=process.env.SDP_PGLITE_MODULE;

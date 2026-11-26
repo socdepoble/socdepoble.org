@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { escriuGenerat } from '../scripts/canonada.mjs';
 import { PUBLIC_WIKI_DIRS, publicWikiFiles, publicWikiFile, readPublicWikiFile, publicMetadata, resolveWikiEditorial, confinedFile } from './lib/publication-policy.mjs';
+import { projectaSkills, escriuSkills, diferenciesSkills } from './lib/public-skills.mjs';
 export { PUBLIC_WIKI_DIRS };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -252,11 +253,13 @@ export const wikiManifest = ${JSON.stringify(manifest, null, 2)};
  */
 export function compila({ root = ROOT_PER_DEFECTE, write = true } = {}) {
   const { categories, items } = construeixManifest(root);
+  const skills = projectaSkills(root);
   const outFile = path.join(root, OUT_REL);
   const contingut = serialitza({ categories, items });
 
   if (!write) return { changed: false, items: items.length, categories: categories.length, outFile };
 
+  escriuSkills(root, skills);
   const changed = escriuGenerat(root, OUT_REL, contingut);
   return { changed, items: items.length, categories: categories.length, outFile };
 }
@@ -277,8 +280,13 @@ function main() {
     } else {
       console.log('✅ Totes les rutes de la Wiki estan ben enllaçades.');
     }
+    // Repositoris amb skills o una projecció anterior han de tindre també
+    // l'índex buit correcte si totes les fonts s'han retirat. Cap escriptura.
+    const skills = fs.existsSync(path.join(root, '.agents/skills')) || fs.existsSync(path.join(root, 'public/md/skills'))
+      ? diferenciesSkills(root) : [];
+    for (const difference of skills) console.error(`[skills] ${difference}`);
     // --check is observational: no mkdir or write, even on success.
-    process.exit(trencats.length ? 1 : 0);
+    process.exit(trencats.length || skills.length ? 1 : 0);
   }
 
   const r = compila({ root });

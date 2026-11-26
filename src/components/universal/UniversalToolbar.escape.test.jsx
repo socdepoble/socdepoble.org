@@ -6,10 +6,10 @@
        ja no porta el focus a la fitxa activa de la Columna 2. La tecla naix
        al botó Negreta i bombolleja pel detall, com a Chrome (abans la prova
        la disparava directament a la finestra, fora del detall, i no ho veia).
-     · G2-MO-02 (WCAG 2.4.3) · Proposa Card, l'última opció, obri una finestra
-       modal (la fitxa de memòria oral, un <dialog>). Un clic o un Escape de
-       dins de la finestra no són «fora»: les opcions continuen obertes i, en
-       tancar-se la fitxa, el focus torna a Proposa Card, visible, i no al
+     · G2-MO-02 (WCAG 2.4.3) · «Maqueta la targeta», l'última opció, obri una
+       finestra modal (la fitxa de memòria oral, un <dialog>). Un clic o un
+       Escape de dins de la finestra no són «fora»: les opcions continuen
+       obertes i, en tancar-se la fitxa, el focus hi torna, visible, i no al
        <body>. En l'encastat del WordPress la barra queda inert darrere de la
        capa modal (modalLocal.js), i tampoc no es plega. */
 import React, { useRef, useState } from 'react';
@@ -82,7 +82,7 @@ test('G2-N-01 · control: amb les opcions plegades, l’Escape des de «⋯» é
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Bloc de notes' }));
 });
 
-/* Proposa Card obri la fitxa en un Dialeg de Pedra Seca, com DocumentEditor
+/* «Maqueta la targeta» obri la fitxa en un Dialeg de Pedra Seca, com DocumentEditor
    (FitxaMemoriaOral). jsdom no té showModal: Dialeg posa l'atribut open. */
 function AmbFitxa() {
   const [obert, setObert] = useState(false);
@@ -96,11 +96,14 @@ function AmbFitxa() {
   );
 }
 
-test('G2-MO-02 · compacta: un clic o un Escape de dins de la fitxa no pleguen les opcions, i en tancar-la el focus torna a Proposa Card', () => {
+/* Gauntlet G26 (Lent 1 punt 6 i Lent 2 punt 10) · El nom ha canviat per
+   doctrina: IDEA-359.1 i .2 (Llibre Mestre l. 3700-3701, retirada de 🎴 i
+   «IAIA Maquetadora Editorial»). El focus continua tornant a la cel·la. */
+test('G2-MO-02 · compacta: un clic o un Escape de dins de la fitxa no pleguen les opcions, i en tancar-la el focus torna a «Maqueta la targeta»', () => {
   compacta();
   render(<AmbFitxa />);
   fireEvent.click(format());
-  const proposa = within(opcions()).getByRole('button', { name: 'Proposa Card' });
+  const proposa = within(opcions()).getByRole('button', { name: 'Maqueta la targeta' });
   proposa.focus();
   fireEvent.click(proposa);
   const dialeg = document.querySelector('dialog');

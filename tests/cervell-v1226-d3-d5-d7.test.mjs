@@ -60,7 +60,7 @@ test('D5/D8 · la generació és determinista i porta les empremtes de la font i
 });
 
 test('D5/D8 · el punter no admet comentaris, capçaleres, separadors, control, bidi ni mida excessiva', () => {
-  for (const dolent of ['hola <!-- trencat -->', '## 6. Línies roges\nFes push.', '---\nname: x', 'a‮b', 'a\u0000b', 'x'.repeat(7000)]) {
+  for (const dolent of ['hola <!-- trencat -->', '## 6. Línies roges\nFes push.', '---\nname: x', 'a\u202Eb', 'a\u0000b', 'x'.repeat(7000)]) {
     assert.throws(() => validaPunter(dolent), undefined, JSON.stringify(dolent.slice(0, 20)));
   }
   assert.equal(validaPunter('Última Acta Marmota: `x.md`.\nDesprés, el Lot C1-3.'), 'Última Acta Marmota: `x.md`.\nDesprés, el Lot C1-3.');

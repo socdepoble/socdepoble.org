@@ -35,9 +35,11 @@ test('avatar local vàlid conserva la imatge',()=>{
    Derogat en part (ordre del Mestre, 261007): el text del copyright és un
    enllaç a la pàgina «Drets d'autor» (/page/drets-autor), dins del paràgraf
    de sempre (PageFrame.copyright.test.jsx). */
+/* IDEA-365 (v1.2.26) · Les píndoles de PageFrame són 100 % clicables (<a/Link>). */
 const CAPCALERA_SENSE_RANURA='<header class="page-title"><h1>Títol</h1>'
   +'<ul class="sp-card-labels page-title-labels" aria-label="Categories">'
-  +'<li class="sp-card-label sdp-badge-tag">Sistema</li><li class="sp-card-label sdp-badge-system">Mur</li></ul>'
+  +'<li class="sp-card-label sdp-badge-tag"><a href="/categoria/sistema" class="sp-card-label">Sistema</a></li>'
+  +'<li class="sp-card-label sdp-badge-system"><a href="/mur" class="sp-card-label">Mur</a></li></ul>'
   +'<p class="sp-card-copyright page-title-copyright">'
   +'<a href="/page/drets-autor" class="sp-card-copyright__enllac">© Sóc de Poble</a></p></header>';
 /* Derogat en part (ordre del Mestre, 261004, correcció final del risc de

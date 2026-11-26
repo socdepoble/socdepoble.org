@@ -1,3 +1,6 @@
+import { categoriesSistemaDe, labelsSistema } from '../../data/taxonomia/taxonomiaPublicacio.js';
+import { propsDeTargetaDeProducte } from '../mercat/targetaDeProducte.js';
+import { localitzaPindolesDeSistema } from '../mur/pindolesDeSistema.js';
 /**
  * elementDeSeccio.js — T54 · L'element original d'una secció (Mur, Mercat,
  * agenda, Pobles, Multimèdia) resolt amb sectionId + itemId sobre les dades
@@ -33,6 +36,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMeta.jsx';
 import { autorDe, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
+import { textPlaSenseMarkdown } from '../../config/textPlaSenseMarkdown.js';
 import {
   COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, insigniaDeCalendari, rutaCalendariDeLaData
 } from '../../components/universal/editorial.js';
@@ -48,6 +52,12 @@ import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 import { CATEGORIES_CANONIQUES_BASE } from '../../data/taxonomia/vocabulariCanonic.js';
 /* P1-f (Onada R6 · Bloc 2) · El transformador (i el tesaurus de ~450 KB) arriba a demanda: mai al chunk comú. */
 import { trobaArticleImportatComAPublicacio, useEstatArticleImportat } from '../../utils/articlesImportatsMandros.js';
+
+/* Verificador de la tercera ronda (P4) · IDEA-357 «Targetes i Pàgines»: al Mur, el subtítol de la pàgina
+   passa pel mateix netejador que la Card (textPlaSenseMarkdown), mai Markdown cru. La font encara no és
+   la mateixa: la pàgina llig post_subtitle || subtitle || description, i la Card, resum || subtitle ||
+   post_subtitle (Llei 1:1 pendent del Mestre). */
+const subtitolNet = (subtitol) => (typeof subtitol === 'string' ? textPlaSenseMarkdown(subtitol) || undefined : subtitol);
 
 const CAP = Object.freeze([]);
 
@@ -226,7 +236,29 @@ function etiquetaSenseEnllac(etiqueta) {
   return resultat;
 }
 
-function etiquetesDelDetall(section, item) {
+function etiquetesDelDetall(section, item, idioma, t) {
+  if (section?.listPath === '/mercat') {
+    // La mateixa projecció que la Card: formats humans, variants i 5L.
+    return propsDeTargetaDeProducte(item, t, { idioma }).labels;
+  }
+  // Categories de sistema explícites i canòniques: la mateixa llista que
+  // la Card, inclosa la diana de data de la categoria temàtica dels actes.
+  // C26-2 #9 (IDEA-365, 21:40, regla 3; 21:58, punt 1) · Les píndoles de sistema, amb labelsSistema en la
+  // llengua de la interfície i la ruta canònica, la MATEIXA regla que TargetaDelMur (pindolesDeSistema.js).
+  if (Object.hasOwn(item, 'categoriesSistema') && Array.isArray(item.categoriesSistema)
+    && item.categoriesSistema.length > 0
+    && categoriesSistemaDe(item.categoriesSistema).length === new Set(item.categoriesSistema).size
+    && Array.isArray(item.labels) && item.labels.length > 0) return localitzaPindolesDeSistema(item.labels, item.categoriesSistema, idioma);
+  /* Integrador C1-3 (IDEA-365, línies 3804 i 3827) · Una publicació del Mur que declara les seues
+     Categories de Sistema i no porta labels (tota publicació nova: categoriesSistemaPerPublicar sempre
+     afig el camp) pinta a la pàgina les MATEIXES píndoles que la seua Card (TargetaDelMur, reserva
+     destinsDeReserva): labelsSistema en la llengua de la interfície, amb la ruta canònica. Abans, la
+     pàgina pintava «Publicació» en valencià cap a /categoria/publicacio, «no trobada». Sense
+     categoriesSistema, el detall de sempre (C2-05; pendent del Mestre). */
+  if (section?.listPath === '/mur' && Array.isArray(item.categoriesSistema) && item.categoriesSistema.length > 0
+    && categoriesSistemaDe(item.categoriesSistema).length === new Set(item.categoriesSistema).size
+    && !(Array.isArray(item.labels) && item.labels.length > 0)
+    && !item.isSystem && item.type !== 'market' && item.type !== 'product') return labelsSistema(item.categoriesSistema, idioma);
   const deLaSeccio = etiquetaDeLaSeccio(section, item);
   /* R12a (R49 · C2-05) · Només una mare canònica, com a propietat pròpia de
      l'element, dona pas a les etiquetes pròpies: un id inventat, 'constructor',
@@ -236,6 +268,8 @@ function etiquetesDelDetall(section, item) {
   const ambPropies = Array.isArray(item.labels) && item.labels.length > 0
     && (section?.listPath === RUTA_CALENDARI || mareCanonica);
   if (!ambPropies) return [deLaSeccio];
+  // Llegat sense categoriesSistema: la pastilla de secció conserva la
+  // data i substituïx qualsevol còpia pròpia amb el mateix nom.
   return [
     deLaSeccio,
     ...item.labels
@@ -251,8 +285,8 @@ function etiquetesDelDetall(section, item) {
    cauria al poble per defecte (clauDelPoble.js · esDeSistema) i la pastilla
    afirmaria un poble que no és el seu. Una pastilla que ja porta al mateix
    poble no es repetix. */
-function etiquetesAmbElPoble(section, item) {
-  const etiquetes = etiquetesDelDetall(section, item);
+function etiquetesAmbElPoble(section, item, idioma, t) {
+  const etiquetes = etiquetesDelDetall(section, item, idioma, t);
   const delPoble = typeof section?.getPoble === 'function' ? etiquetaDelPoble(section.getPoble(item)) : null;
   if (!delPoble) return etiquetes;
   return [...etiquetes.filter((l) => !(l && typeof l === 'object' && l.href === delPoble.href)), delPoble];
@@ -274,7 +308,7 @@ function insigniaDElement(section, item) {
 
 /** Les props de la UniversalPage d'un element: les de la pàgina de detall
  *  (ItemDetailSection), sense les accions ni chrome. L'autoria aporta el logotip. */
-export function paginaDElement(section, item) {
+export function paginaDElement(section, item, { idioma = section?.idioma ?? 'ca', t = section?.t } = {}) {
   const titol = section.getTitle(item);
   const rutaDAutoria = rutaDePerfilDAutor(item);
   const logoPropi = logoEntitatDElement(item);
@@ -325,12 +359,18 @@ export function paginaDElement(section, item) {
 
   return {
     title: titol,
-    subtitle: section.getSubtitle(item),
+    subtitle: section?.listPath === '/mur' ? subtitolNet(section.getSubtitle(item)) : section.getSubtitle(item),
     /* Revisió de l'Onada 5 · L'entradilla és la de l'element. Només un poble
        hi posa el seu text (content, el de la Viquipèdia) quan no en porta:
        el content d'una publicació, d'una nota o d'un acte és el cos HTML, que
-       ja es pinta davall. */
-    lead: esPoble ? (item.entradilla || item.content) : (item.entradilla || item.lead),
+       ja es pinta davall.
+       IDEA-357 (Llibre Mestre, línia 3677: «Entradetes de Targetes i Pàgines sense Negretes») i
+       P0-33/IDEA-150 (Llei 1:1) · L'entradeta és la mateixa que pinta la seua Card, en text pla net,
+       sense Markdown cru: la d'una publicació, la de la Card del Mur (TargetaDelMur · netMd, que lleva
+       una etiqueta HTML vàlida); la de la resta, la del cos de text de la UniversalCard, on el text ja
+       és text («Feta al <poble>» es queda, ConnectarSection D4). Sense entradeta, cap lead (Onada 5). */
+    lead: esPoble ? (item.entradilla || item.content)
+      : (textPlaSenseMarkdown(item.entradilla || item.lead, { llevaHtml: section?.listPath === '/mur' }) || undefined),
     heroImage: imatgePropiaDelDetall(section, section.getImage(item)),
     heroAlt: titol,
     /* Onada 5 (ordre del Mestre, 261008) · Un poble es classifica per la
@@ -342,7 +382,7 @@ export function paginaDElement(section, item) {
         { text: textNet(item.provincia), className: 'sdp-badge-category' },
         { text: textNet(item.comarca), className: 'sdp-badge-tag' }
       ].filter((label) => label.text)
-      : etiquetesAmbElPoble(section, item),
+      : etiquetesAmbElPoble(section, item, idioma, t),
     /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta.
        Onada 5 · El d'un poble és el de la Viquipèdia (CC BY-SA), el de la seua targeta. */
     copyright: item.copyright || (esPoble ? COPYRIGHT_VIQUIPEDIA : COPYRIGHT_SDP),
@@ -379,11 +419,12 @@ export function useElementDeSeccio(sectionId, itemId) {
   const { events, feedPosts, marketItems, status: estatMur } = useMur();
   const { towns, status: estatCore } = useCoreContent();
   const { mediaItems, status: estatMedia } = useMultimedia();
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   const font = FONT_DE_SECCIO.get(sectionId) || null;
-  const section = useMemo(() => (font
-    ? buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes: CAP, towns, t })[sectionId]
-    : null), [font, sectionId, events, feedPosts, marketItems, mediaItems, towns, t]);
+  const section = useMemo(() => {
+    const meta = font ? buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes: CAP, towns, t })[sectionId] : null;
+    return meta ? { ...meta, idioma: language, t } : null;
+  }, [font, sectionId, events, feedPosts, marketItems, mediaItems, towns, t, language]);
   const item = trobaElement(section, itemId);
   /* P1-f · Una clau d'article importat espera el transformador ('carregant') i es torna a pintar quan arriba. */
   const estatImportat = useEstatArticleImportat(!item && section?.listPath === '/mur' ? itemId : null);

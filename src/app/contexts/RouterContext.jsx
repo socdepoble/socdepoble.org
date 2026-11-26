@@ -230,25 +230,29 @@ function hrefDe(to, basename, currentPath) {
 
 /* PS-01 (B7) · `transicio` (booleà): el clic navega amb la fosa entre vistes.
    Es desestructura perquè no arribe a l'<a>. El MemoryRouter (l'incrustat)
-   l'ignora: no té fosa. */
+   l'ignora: no té fosa.
+   v1.2.26 (FN0-001) · Sense RouterProvider (una peça pintada soles, un
+   espècimen), l'<a> de sempre amb la ruta tal qual: cap preventDefault ni
+   navigate, i l'interceptor d'App.jsx el passa al router si n'hi ha. Abans
+   llançava, i UniversalCard i BlocTerritoriTargeta duien un <a> de reserva. */
 export function Link({ to, children, className, onClick, transicio = false, ...props }) {
-  const { navigate, basename, currentPath } = useRouter();
+  const router = useContext(RouterContext);
 
   const handleClick = (e) => {
     if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
       // Verificació creuada per no trencar links externs o ancoratges purs
-      if (typeof to === 'string' && (to.startsWith('http://') || to.startsWith('https://') || to.startsWith('mailto:'))) {
+      if (typeof to === 'string' && /^(?:https?:\/\/|mailto:)/.test(to)) {
         return; // Deixem que el navegador gestione links externs
       }
 
-      e.preventDefault();
+      if (router) e.preventDefault();
       if (onClick) onClick(e);
-      if (transicio === true) navigate(to, { transicio: true });
-      else navigate(to);
+      if (transicio === true) router?.navigate(to, { transicio: true });
+      else router?.navigate(to);
     }
   };
-  
-  const href = hrefDe(to, basename, currentPath);
+
+  const href = router ? hrefDe(to, router.basename, router.currentPath) : to;
   
   return (
     <a href={href} onClick={handleClick} className={className} {...props}>

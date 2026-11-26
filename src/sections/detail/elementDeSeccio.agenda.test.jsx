@@ -9,7 +9,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), language: 'ca' }));
 vi.mock('../../app/contexts/RouterContext', async () => {
   const { createElement: h } = await import('react');
   return {
@@ -21,17 +21,20 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ status: 'ready', feedPosts: [], events: [], marketItems: [] }) }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ status: 'ready', towns: [] }) }));
 vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ status: 'ready', mediaItems: [] }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, alternativa) => alternativa, language: mocks.language }) }));
 
 import { paginaDElement } from './elementDeSeccio.js';
 import { buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMurDetailSectionMeta } from './detailSectionMeta.jsx';
 import { EventCard } from '../../components/universal/EventCard.jsx';
 import { PageFrame } from '../../components/universal/PageFrame.jsx';
+import { rutaDePindola } from '../../components/PedraSeca/organismes/rutaDePindola.js';
+import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
 import { CALENDAR_EVENTS, CURSOS_PEDRA_EN_SEC_2026_EVENT } from '../mur/eventsSeed.js';
 import { MANIFEST_DE_POBLE_POST } from '../mur/feedSeed.js';
+import { IDIOMES_TAXONOMIA, localitzaCategoriesMares, nomEstructural } from '../../data/taxonomia/taxonomiaCanonica.js';
 
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); mocks.language = 'ca'; });
 
 const t = (_, alternativa) => alternativa;
 const ACTES = buildEventsDetailSectionMeta({ events: [], t });
@@ -125,21 +128,71 @@ test('P0-27 / IDEA-102 · un preu a PageFrame pinta el quadrat en la fila pròpi
 /* P0-40 (Kit R88; arbitratge R11, R88-C2-01) · L'Aplec i els Cursos ja no
    porten «Agenda» a la targeta: la categoria mare hi porta al dia de l'acte.
    La targeta i el detall continuen portant al mateix dia, i el detall no
-   repeteix l'enllaç (ja hi porta l'etiqueta de la secció). */
-test('l’Aplec i els Cursos, amb etiquetes pròpies, porten al seu dia a la targeta i al detall, amb un sol enllaç al detall', () => {
+   repeteix l'enllaç (ja hi porta l'etiqueta de la secció).
+   G26-2 · Canvi intencionat, IDEA-365 (21:40, regla 3: «píndoles 100 % clicables arreu»): les etiquetes
+   també són enllaços (/etiqueta/<slug>). Es comproven a part dels destins de sistema. */
+const APLEC_I_CURSOS = () => [
+  [CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023'), '2023-01-29', ['/etiqueta/aplec']],
+  [CURSOS_PEDRA_EN_SEC_2026_EVENT, '2026-10-23', ['/etiqueta/pedra-seca', '/etiqueta/bioconstruccio', '/etiqueta/patrimoni', '/etiqueta/activitats']]
+];
+test('l’Aplec i els Cursos conserven categories de sistema i una diana de data igual a Card i detall', () => {
   vi.stubEnv('TZ', 'Europe/Madrid');
-  const aplec = CALENDAR_EVENTS.find((e) => e.id === 'aplec-2023');
-  for (const [item, dia] of [[aplec, '2023-01-29'], [CURSOS_PEDRA_EN_SEC_2026_EVENT, '2026-10-23']]) {
+  for (const [item, dia, deLesEtiquetes] of APLEC_I_CURSOS()) {
     const arrel = document.createElement('div');
     act(() => { render(<EventCard item={item} esdeveniment={acteAEsdeveniment(item)} />, { container: arrel }); });
     const enllacos = [...arrel.querySelectorAll('.sp-card-labels a')].map((a) => a.getAttribute('href'));
-    expect(enllacos, item.id).toEqual([`/calendari?vista=mes&date=${dia}`]);
+    const dateLink = `/calendari?vista=mes&date=${dia}`;
+    expect(enllacos.filter(href => href === dateLink), item.id).toHaveLength(1);
+    const destins = item.categoriesSistema.map(nom => nom === 'Mur' ? '/mur' : nom === 'Calendari' ? '/calendari' : '/categoria/video');
+    expect(enllacos.filter(href => href !== dateLink && !href.startsWith('/etiqueta/')), item.id).toEqual(destins);
+    expect(enllacos.filter(href => href.startsWith('/etiqueta/')), item.id).toEqual(deLesEtiquetes);
+    expect(deLesEtiquetes, item.id).toEqual(item.tags.map((tag) => rutaDePindola({ text: tag, className: 'sdp-badge-tag' })));
     const etiquetes = paginaDElement(ACTES, item).labels;
-    expect(etiquetes[0], item.id).toEqual({ text: 'Agenda', className: 'sdp-badge-system sp-card-label--enllac', href: enllacos[0] });
-    expect(etiquetes.filter((l) => l.href), item.id).toHaveLength(1);
-    expect(etiquetes[1], item.id).toEqual({ text: item.category, className: 'sdp-badge-category' });
-    expect(etiquetes.slice(1).map((l) => l.text), item.id).toEqual(item.labels.map((l) => l.text));
+    expect(etiquetes, item.id).toEqual(item.labels);
+    expect(etiquetes.filter(l => l.href === dateLink), item.id).toHaveLength(1);
+    expect(etiquetes.filter(l => l.className === 'sdp-badge-system').map(l => l.text)).toEqual(item.categoriesSistema);
     cleanup();
+  }
+});
+
+/* C26-2 #9 (Gauntlet c13) · IDEA-365 (21:40, regla 3; 21:58, punt 1: paritat absoluta Card ↔ UniversalPage) ·
+   En les 5 llengües, la Card del Mur (TargetaDelMur → EventCard) i el detall (paginaDElement, amb les mares de
+   la interfície com ItemDetailSection) pinten les MATEIXES píndoles de l'Aplec i dels Cursos, i les de sistema
+   diuen la Categoria de Sistema en la llengua de la interfície i porten a la seua ruta canònica (abans, «Mur» i
+   «Calendari» en valencià a totes, i en basc «Bideoa» portava a /categoria/bideoa). */
+const RUTA_CANONICA = { Mur: '/mur', Calendari: '/calendari', 'Vídeo': '/categoria/video' };
+const pindolesDeLaCard = (container) => [...container.querySelectorAll('li.sp-card-label')].map((li) => [
+  li.textContent, li.className.replace(/^sp-card-label\s*/, ''), li.querySelector('a')?.getAttribute('href') ?? null
+]);
+test.each(IDIOMES_TAXONOMIA)('%s · l’Aplec i els Cursos: Card i detall iguals, amb les Categories de Sistema de la interfície', (idioma) => {
+  vi.stubEnv('TZ', 'Europe/Madrid');
+  mocks.language = idioma;
+  const actes = buildEventsDetailSectionMeta({ events: [], t });
+  for (const [item] of APLEC_I_CURSOS()) {
+    const card = pindolesDeLaCard(render(<TargetaDelMur item={item} esdeveniment={acteAEsdeveniment(item)} />).container);
+    cleanup();
+    const detall = localitzaCategoriesMares(paginaDElement(actes, item, { idioma, t }).labels, idioma)
+      .map((label) => [label.text, label.className, rutaDePindola(label)]);
+    expect([item.id, card]).toEqual([item.id, detall]);
+    const sistema = card.filter(([, classe]) => classe === 'sdp-badge-system');
+    expect([item.id, sistema]).toEqual([item.id, item.categoriesSistema.map((nom) => [nomEstructural(nom, idioma), 'sdp-badge-system', RUTA_CANONICA[nom]])]);
+    if (idioma === 'es') expect(sistema.map(([text]) => text).slice(0, 2)).toEqual(['Muro', 'Calendario']);
+  }
+});
+
+/* Integrador C1-3 (IDEA-365, línies 3804 i 3827; verificador R2-3/R2-4, P2) · Una publicació nova del Mur
+   declara les seues Categories de Sistema i no porta labels: Card i pàgina pinten les mateixes píndoles,
+   en la llengua de la interfície i cap a la ruta canònica, mai «Publicació» cap a /categoria/publicacio. */
+test.each(IDIOMES_TAXONOMIA)('%s · una publicació del Mur amb categoriesSistema i sense labels: Card i detall iguals', (idioma) => {
+  mocks.language = idioma;
+  const mur = buildMurDetailSectionMeta({ feedPosts: [], t });
+  for (const categoriesSistema of [['Mur'], ['Mur', 'Vídeo']]) {
+    const item = { id: `nova-${categoriesSistema.length}`, title: 'Publicació nova', type: 'post', categoriesSistema, created_at: '2026-11-20T10:00:00Z' };
+    const card = pindolesDeLaCard(render(<TargetaDelMur item={item} />).container);
+    cleanup();
+    const detall = paginaDElement(mur, item, { idioma, t }).labels.map((label) => [label.text, label.className, rutaDePindola(label)]);
+    expect([categoriesSistema, card]).toEqual([categoriesSistema, detall]);
+    expect([categoriesSistema, detall]).toEqual([categoriesSistema, categoriesSistema.map((nom) => [nomEstructural(nom, idioma), 'sdp-badge-system', RUTA_CANONICA[nom]])]);
   }
 });
 
@@ -162,6 +215,7 @@ test('fora del Calendari, les etiquetes pròpies només passen al detall amb cat
     { text: 'Publicació', className: 'sdp-badge-system' }
   ]);
   expect(paginaDElement(mercat, { id: 'mel', title: 'Mel', labels: ['Mel', 'Venda'] }).labels).toEqual([
-    { text: 'Mercat', className: 'sdp-badge-system' }
+    { text: 'Mur', className: 'sdp-badge-system', href: '/mur' },
+    { text: 'Mercat', className: 'sdp-badge-system', href: '/mercat' }
   ]);
 });

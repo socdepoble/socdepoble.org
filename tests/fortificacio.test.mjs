@@ -204,7 +204,7 @@ function wikiFixture(t,fitxers) {
   // Les dependències JS reals també viuen dins de la fixture ESM.
   fs.writeFileSync(path.join(root,'package.json'),'{"private":true,"type":"module"}\n');
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  for(const f of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/lib/markdown-prose.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/wiki/lib/publication-policy.mjs','tooling/scripts/canonada.mjs','tooling/lib/arrel.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js']) {
+  for(const f of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/wiki/lib/public-skills.mjs','tooling/lib/markdown-prose.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/wiki/lib/publication-policy.mjs','tooling/scripts/canonada.mjs','tooling/lib/arrel.mjs','src/config/contentHelpers.js','src/utils/normalitzaUnicodeSegura.js']) {
     fs.mkdirSync(path.dirname(path.join(root,f)),{recursive:true});
     fs.copyFileSync(path.join(REPO,f),path.join(root,f));
   }

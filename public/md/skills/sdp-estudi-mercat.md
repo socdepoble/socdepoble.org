@@ -1,0 +1,67 @@
+---
+type: skill
+status: canonic
+description: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
+tags:
+  - escriptori
+name: sdp-estudi-mercat
+triggers_on:
+  - estudi de mercat
+  - analitza la competència
+  - investiga un competidor
+contracte.llig:
+  - .agents/protocolledge.json
+  - _wiki_de_poble/01_ser/02_genotip.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+---
+# SKILL: Estudi de Mercat (Anàlisi de la Competència)
+
+Aquesta habilitat defineix el protocol estàndard i l'arquitectura mental que la IAIA MarIA ha de seguir quan se li sol·licita investigar un competidor, una app similar o realitzar un estudi de mercat general, especialment en l'àmbit de les xarxes socials rurals i el *govtech* per a pobles.
+
+## 1. Objectiu de l'Estudi
+L'objectiu no és només fer un llistat superficial, sinó realitzar una **auditoria forense externa** per entendre:
+- Com han construït la seua tecnologia.
+- Com capten els seus usuaris (màrqueting / *growth hacking*).
+- Què podem aprendre, adaptar o descartar per a **Sóc de Poble** mantenint sempre la nostra filosofia del *Trellat* i la *Pedra Seca*.
+
+## 2. Metodologia d'Investigació (El Protocol)
+
+Quan inicies un estudi de mercat, has d'executar els següents passos i incloure les següents seccions en el teu informe final:
+
+### A. Visió General i Posicionament
+- Nom, eslògan i empresa darrere del projecte.
+- Proposta de valor principal (Com es venen al món?).
+
+### B. Enginyeria Inversa i Stack Tecnològic
+- Utilitza eines com l'anàlisi del codi font web (HTML/JS) i les polítiques de privacitat per descobrir quines tecnologies empren.
+- Detalla només el que les fonts permeten acreditar: framework visible, proveïdors declarats, IA, pagaments i notificacions. Separa l'observació de la inferència i escriu «no verificat» quan el backend no siga observable. Una dependència al bundle o un text comercial no proven tota l'arquitectura.
+- Registra URL, data de consulta i versió si es coneix; prioritza fonts primàries per a afirmacions tècniques. No accedisques a comptes privats ni executes codi de tercers per completar una casella de l'estudi.
+
+### C. Estratègia de Màrqueting i Captació (Growth Hacking)
+- Com aconsegueixen clients? És un model *Top-Down* (venen als ajuntaments) o *Bottom-Up* (demanda ciutadana)?
+- Com incentiven la viralitat (convidar amics, referits)?
+- Quins models de monetització empren (usuaris premium, entitats de pagament, quotes institucionals)?
+
+### D. Matriu de Funcionalitats
+Fes un desglossament clar del que ofereix l'app a cada segment d'usuari:
+- **Veïnatge:** (taulells, agenda, mercat, transports compartits, etc.)
+- **Comerç local:** (directoris, webs compartibles, reserves)
+- **Institucions / Ajuntaments:** (bàndols, tràmits, incidències)
+
+### E. Destil·lació del Trellat (Accionables per Sóc de Poble)
+Aquesta és la part més important. Què significa tot açò per al nostre codi, el port neutral `src/data/backendPort.js` (Supabase) i la Frontissa de lectura amb Sollutia?
+1. Quines funcionalitats resolen necessitats reals i haurien de planificar-se per al nostre *backend*? (ex. Vehicle compartit).
+2. Quines pràctiques descartem totalment perquè xoquen amb la nostra ètica, rendiment o independència?
+3. Quins canvis de rumb hem de prendre en la nostra comunicació per diferenciar-nos?
+
+## Cobertura
+
+Esta és una investigació amb fonts i judici humà. Els tractors documentals validen el format del lliurable, no la correcció de les conclusions sobre un competidor. Reutilitza `core-tecniques-investigacio` per al contrast de fonts sense crear un segon protocol de recerca.
+
+## 3. Format de Sortida
+L'informe es redacta en valencià a l'Escriptori mitjançant el contracte documental vigent. Consulta `.agents/protocolledge.json` per obtindre ruta, plantilla i rebut. La carpeta `01_produccio` és zona humana; no és la destinació automàtica dels informes de l'agent.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

@@ -79,7 +79,7 @@ import { CATEGORIES, PROVEIDORS, TEXT_MOTIUS, categoriaDe, proveidorDe } from '.
 import { perRevisar } from '../despeses/nucli/serieHistorica.js';
 import { formatData, nomMes } from '../nucli/dates.js';
 import { tg, tf, tga, localitzaTargetaGestoria } from '../i18nGestoria.js';
-import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta, pindolesInertes } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { BlocTargetes, PaginaTargeta, Xifra } from '../tauler/Tauler.jsx';
 import { TRACTOR_HISTORIC } from '../tractors.js';
@@ -615,7 +615,7 @@ export function VistaHistoric({
   return (
     <PaginaApp title={tg(idioma, 'Històric i IA')} subtitle={tg(idioma, 'El banc des de l’any passat, la despesa en IA i les simulacions')}
       lead={tg(idioma, 'El panell del director financer: tots els extractes de l’1 de gener de l’any passat al final del trimestre passat, classificats en este ordinador.')}
-      author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={etiquetesLoc} refTitol={refTitol}
+      author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={pindolesInertes(etiquetesLoc)} refTitol={refTitol}
       showComment={false} showShare={false} showConnect={false}>
       <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}

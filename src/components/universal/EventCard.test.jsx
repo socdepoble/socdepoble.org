@@ -206,21 +206,21 @@ describe('Onada 6 · l’etiqueta «Agenda» porta al dia de l’acte', () => {
     expect(agenda().querySelector('a').getAttribute('href')).toBe('/calendari?vista=mes&date=2026-08-14');
   });
 
-  test('sense acte vàlid (cap dia real o cap model), l’etiqueta de sempre, sense enllaç', () => {
+  test('sense acte vàlid (cap dia real o cap model), l’etiqueta «Agenda» porta al Calendari general (IDEA-365, sense ?date=)', () => {
     vi.stubEnv('TZ', 'Europe/Madrid');
     pinta({ id: 'x', title: 'Ball', created_at: '2026-09-30T22:30:00+00:00' });
     expect(agenda().className).toBe('sp-card-label sdp-badge-category');
-    expect(agenda().querySelector('a')).toBeNull();
+    expect(agenda().querySelector('a')?.getAttribute('href')).toBe('/calendari');
     cleanup();
     arrel = document.createElement('div');
     act(() => { render(<EventCard item={{ id: 'f', title: 'Fira', date: '2026-11-14' }} />, { container: arrel }); });
-    expect(agenda().querySelector('a')).toBeNull();
+    expect(agenda().querySelector('a')?.getAttribute('href')).toBe('/calendari');
   });
 
-  test('un acte amb etiquetes pròpies les conserva tal qual', () => {
+  test('un acte amb etiquetes pròpies les conserva i les fa clicables cap a /etiqueta/ (IDEA-365)', () => {
     pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', labels: [{ text: 'Festa', className: 'sdp-badge-tag' }] });
-    expect([...arrel.querySelectorAll('.sp-card-labels li')].map((li) => [li.textContent, li.className, li.querySelector('a')])).toEqual([
-      ['Festa', 'sp-card-label sdp-badge-tag', null]
+    expect([...arrel.querySelectorAll('.sp-card-labels li')].map((li) => [li.textContent, li.className, li.querySelector('a')?.getAttribute('href')])).toEqual([
+      ['Festa', 'sp-card-label sdp-badge-tag', '/etiqueta/festa']
     ]);
   });
 

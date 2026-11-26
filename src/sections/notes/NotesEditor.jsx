@@ -11,7 +11,6 @@ import { ajudaPreferenciaMur, estatHonestNota, textosHonestedatDesat } from './h
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
-import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
@@ -33,7 +32,7 @@ import {
   textosExtern
 } from './visibilitatNota.js';
 import { llistaDePobles, slugDelPoble } from '../pobles/nomsDelPoble.js';
-import { nomDeCarpeta } from './carpetes.js';
+import { carpetesDelBloc, nomDeCarpeta } from './carpetes.js';
 import { carpetesCreades, creaCarpetaCreada, useCarpetesCreades } from '../../components/universal/classificacio/carpetesCreades.js';
 import { useCarpetesDelBlocVisibles } from '../../components/universal/classificacio/migracioCarpetesLocals.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
@@ -423,9 +422,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      abans de la reserva de sèrie, com carpetesDelBloc: la llista queda com abans de migrar. */
   const carpetesDelServidor = useCarpetesDelBlocVisibles(noteFolders, notes, scopeKey);
   const carpetes = useMemo(() => {
-    const llista = carpetesDelServidor?.length ? carpetesDelServidor : NOTE_FOLDERS_SEED;
+    /* v1.2.26 (IDEA-358.1, Lent 1 punt 10) · La mateixa reserva de sistema que la columna
+       (carpetesDelBloc): un compte que ja té carpetes al servidor sense «En producció» hi pot
+       moure la nota. Sense «Tot», i la Safata només si ja hi era (afigSafata: false). */
+    const llista = carpetesDelBloc(carpetesDelServidor, { afigSafata: false });
     /* P1-22 · El nom de sèrie en la llengua de l'app (nomDeCarpeta); l'id és el que es desa. */
-    const base = llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
+    const base = llista.map((f) => ({
       id: String(f.id), nom: nomDeCarpeta(f, t), parentId: f.parentId == null ? null : String(f.parentId)
     }));
     const extres = carpetesLocals.filter((extra) => !base.some((c) => c.id === extra.id))

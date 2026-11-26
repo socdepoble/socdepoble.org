@@ -20,6 +20,7 @@ import { BarraTaronja } from './barres/BarraTaronja.jsx';
 import { TEXTOS_BARRA, TEXTOS_INDEX } from './barres/textosBarres.js';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { SquareBadge } from '../PedraSeca/organismes/SquareBadge.jsx';
+import { rutaDePindola } from '../PedraSeca/organismes/rutaDePindola.js';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 import { LlenguaDelContingut } from './traduccio/llenguaDelContingut.js';
 import { useToast } from './NotificationContext.jsx';
@@ -539,7 +540,7 @@ export function nomDelBotoDeDrets(copyright, t = null) {
 }
 
 export function PageFrame({
-  title, subtitle, lead, labels = [], copyright, showLogos = false,
+  title, subtitle, lead, labels = [], territori = null, copyright, showLogos = false,
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
   /* v1.2.17 · El full diferit del mode de taulell (chrome="feed"): la funció que l'adopta arriba amb la
      config del Mur, del Mercat i del Calendari (estilsTaulellFeed.js), mai amb l'arrencada. */
@@ -1273,7 +1274,7 @@ export function PageFrame({
               {pageLabels.map((label, index) => {
                 const text = typeof label === 'string' ? label : label.text;
                 const className = typeof label === 'string' ? 'sdp-badge-tag' : label.className || 'sdp-badge-tag';
-                const href = typeof label === 'string' ? null : label.href;
+                const href = label?.onClick ? null : rutaDePindola(label);
                 const safeHref = href && isSafeUrl(href) ? href : null;
                 /* D-C (ordre del Mestre, 261004) · `sp-card-label--amb-accio`
                    marca l'etiqueta que porta botó: la CSS hi deixa de
@@ -1306,6 +1307,7 @@ export function PageFrame({
             </ul>
           )}
           {accioPrincipal && !accioPrincipalDalt ? <div className="page-title-accio">{accioPrincipal}</div> : null}
+          {territori}
           {/* Ordre del Mestre (261007) · En LECTURA el copyright, siga quin
               siga el text, és SEMPRE un enllaç a la pàgina «Drets d'autor»
               (RUTA_DRETS_AUTOR), amb el LinkComponent de les etiquetes: el

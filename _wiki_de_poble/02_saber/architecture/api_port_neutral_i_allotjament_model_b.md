@@ -50,13 +50,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 67 capacitats atòmiques opcionals (`CAPACITATS`)
+## 68 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**158 mètodes addicionals** i **190 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**160 mètodes addicionals** i **192 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 67 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 68 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -126,6 +126,7 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |
 | `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
 | `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |
+| `taxonomiaPagines` | `actualitzaTaxonomiaPagina`, `lligTaxonomiaPagina` |
 | `xatCerca` | `cercaMissatgesFil`, `cercaMissatgesFilPaginada`, `carregaMissatgeFilPerId` |
 
 ## Validació i conformitat
@@ -148,7 +149,7 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
-### Recompte local vigent (v1.2.25 · 2026-11-25) i verificació per correu (R6)
+### Recompte local vigent (v1.2.26 · 2026-11-26) i verificació per correu (R6)
 
 v1.2.25 (**costures 8 i 9**, 2026-11-25) afig `xatCerca`: **tres mètodes opcionals** per a cercar dins d'una conversa i llegir un **missatge antic per id** (C1, `src/data/supabase/xatCerca.js`), amb **tres casos de rebuig** sense servei remot. L'adaptador Supabase només l'anuncia amb `VITE_SDP_XAT_CERCA=1`, perquè la migració `20261125010000` **encara no és a Producció**; l'adaptador local la declara i la **rebutja sempre** amb `sense-capacitat`. **No acredita cap cerca remota desplegada.**
 
@@ -158,11 +159,13 @@ R32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccio
 
 R32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.
 
-El recompte actual és de **253 casos sobre 190 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+v1.2.26 (C26-1 #12, IDEA-365) afig un cas al nucli: `appendSectionSubmissionNetworkOnly` rebutja amb `SDP-TAXONOMIA-DESTI` una publicació amb `categoriesSistema` buida, sense publicar-la. No afig cap mètode ni capacitat. C26-3 hi havia sumat els dos casos de `taxonomiaPagines` (IDEA-375).
 
-L’adaptador local oferix **51 dels 67 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.
+El recompte actual és de **256 casos sobre 192 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 190 operacions en un servidor remot continua pendent.
+L’adaptador local oferix **52 dels 68 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.
+
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 192 operacions en un servidor remot continua pendent.
 
 R32.56 (C6) afig `copiaCompte` i `restauracioCompte`: **còpia del subconjunt de negoci implementat** —perfil, notes, carpetes, organitzacions i patrimoni— i restauració en **candidat inactiu en RAM**, restringit i lligat a l’actor. **No és una restauració completa ni durable del compte** ni una capacitat de restauració remota. R32.64 (C10) afig el sisé mètode d’`xatAccionsMissatge`, `eliminaPerATothom`, i un cas comú de rebuig. La RPC preparada **elimina sense caducitat**, requerix **autoritat del servidor i rebut confirmat**; esta operació no confirma localment davant absència SQL o denegació. Les proves locals **no acrediten desplegament remot**.
 
@@ -258,7 +261,7 @@ requerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un
 **no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot
 real i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.
 
-L'adaptador local oferix **50 dels 66 grups declarats**; `CAPACITATS_NO_DECLARADES`
+L'adaptador local oferix **52 dels 68 grups declarats**; `CAPACITATS_NO_DECLARADES`
 conté `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.
 L'administració multipoble està **denegada per defecte**: requerix el catàleg i
 la política `administracioLocal` injectats en construir la instància. La política
@@ -319,3 +322,7 @@ conformitat, **cobertura declarada** i la decisió documentada del projecte.
 ## R32.7 · Accions de missatge opcionals
 
 Els **cinc mètodes** d’`xatAccionsMissatge` tenen **cinc casos de rebuig** abans de transport. Les reaccions són **agregats sense UUID** d’altres persones. Les mutacions expressen l’**estat final desitjat** per resistir ACK perduts. La sessió i el fil es **verifiquen al backend**; el fallback local identificat només s’activa davant absència SQL estructurada, sense convertir 401, 403 o xarxa en èxit. El reenviament i la resposta privada s’orquestren al servei del xat, amb nous adjunts per destí i **sense exposar operadors** d’entitats. El kit preparat **no acredita desplegament remot**.
+
+### IDEA-375 · Taxonomia editable
+
+`taxonomiaPagines` és **opcional**. `actualitzaTaxonomiaPagina(idPagina, {categoriesSistema, categoriesTematiques, etiquetes, geografia, mencions, versio})` desa amb **CAS** (0 crea), serialitzat per pàgina, i `lligTaxonomiaPagina(idPagina)` torna la **versió vigent**. El servidor exigix el rol de plataforma `superadmin`, representació tècnica de l’administració editorial de Sóc de Poble, i el comprova amb `private.es_superadmin()` i amb l’**AAL2 en línia** a les dues RPC, perquè la migració 2610061448 no està aplicada a Producció; cap nom de perfil conferix autoritat. La lectura pública deriva la visibilitat de la font viva, i una entrada del Mur passa la **frontera canònica del Mur** (visibilitat, moderació, esborrat tou i revocació): les metadades de peces retirades, moderades o privades **no es projecten**. El servidor normalitza com el client i no desa cap fila que el client no puga projectar. El magatzem local **denega per defecte** i només accepta la política `administracioLocal` injectada. La migració 140 està preparada per a assaig i no acredita desplegament.

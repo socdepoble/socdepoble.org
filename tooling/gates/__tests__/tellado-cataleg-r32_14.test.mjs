@@ -12,9 +12,10 @@ const font = s => fs.readFileSync(path.join(ROOT, s.fontRevisada), 'utf8');
 const net = (text, s) => netejaComentarisLineal(text, path.extname(s.fontRevisada));
 const observacio = s => ({ tipus: s.tipus, regla: s.regla, linia: s.linia, fitxer: 'src/qualsevol_nom.js' });
 
-test('R32.14 · catàleg exacte de 38 signatures (35 de R32.14, la 37 de la v1.2.23, L2-01, la 38 de la v1.2.24 i la 39 del joc R32.86; la 32 es va retirar amb F4D/P08-04), IDs únics, límits i cap certificació de destí', () => {
-  assert.equal(CATALEG_TELLADO_R3214.length, 38);
-  assert.equal(new Set(CATALEG_TELLADO_R3214.map(s=>s.id)).size, 38);
+// v1.2.26 · G26-3 · La 40 cataloga el Lector diferit de skills (LectorSkillWiki.jsx): 38 → 39.
+test('R32.14 · catàleg exacte de 39 signatures (35 de R32.14, la 37 de la v1.2.23, L2-01, la 38 de la v1.2.24, la 39 del joc R32.86 i la 40 del Lector de skills G26-3; la 32 es va retirar amb F4D/P08-04), IDs únics, límits i cap certificació de destí', () => {
+  assert.equal(CATALEG_TELLADO_R3214.length, 39);
+  assert.equal(new Set(CATALEG_TELLADO_R3214.map(s=>s.id)).size, 39);
   assert.ok(CATALEG_TELLADO_R3214.every(s=>s.certificaDesti===false && s.limit.length>50));
 });
 for (const s of CATALEG_TELLADO_R3214) {
@@ -45,12 +46,13 @@ test('R32.14 · nom, línia, nom de variable i fragments de guarda no són una e
   }
 });
 
-test('R32.14 · repo: 38 catalogades, 0 pendents i 0 infraccions; els 35 desconeguts originals vius, la lectura de la foto d’identitat (v1.2.23), la Caixa d’Estat dels Canals (v1.2.24), la importació del joc (R32.86) i el veredicte es conserven', () => {
+// v1.2.26 · G26-3 · El Lector de skills afig un desconegut viu (39) que la 40 cataloga amb límit; cap pendent.
+test('R32.14 · repo: 39 catalogades, 0 pendents i 0 infraccions; els 35 desconeguts originals vius, la lectura de la foto d’identitat (v1.2.23), la Caixa d’Estat dels Canals (v1.2.24), la importació del joc (R32.86), el Lector de skills (G26-3) i el veredicte es conserven', () => {
   const r=avaluaPerimetreTellado(ROOT);
   assert.equal(r.totalInfraccions,0);
-  assert.equal(r.totalDesconeguts,38);
+  assert.equal(r.totalDesconeguts,39);
   assert.equal(r.veredicte,'desconegut');
-  assert.equal(r.catalegDinamic.cobertes,38);
+  assert.equal(r.catalegDinamic.cobertes,39);
   assert.equal(r.catalegDinamic.pendents,0);
   assert.equal(r.catalegDinamic.certificaZeroExfiltracio,false);
 });
@@ -70,8 +72,8 @@ test('R32.14 · nou sink extern no queda silenciat; conservació del desconegut 
 test('R32.14 · Vigilant exposa el catàleg amb estat informa, sense verd de destí', () => {
   const r=analitzaVigilant(ROOT), c=r.comprovacions.find(x=>x.id==='VIG-11');
   assert.equal(c.estat,'informa');assert.equal(c.avis,true);
-  assert.equal(r.catalegDinamic.cobertes,38);
-  assert.match(c.proposta,/38 destins\/signatures continuen desconeguts/);
+  assert.equal(r.catalegDinamic.cobertes,39);
+  assert.match(c.proposta,/39 destins\/signatures continuen desconeguts/);
 });
 
 test('R32.14 · cost lineal: font adversarial de 8 MiB, molts tokens repetits sense backtracking', () => {
@@ -99,6 +101,18 @@ test('R32.15 · recatàleg xat conserva totes les obligacions de xarxa i exigeix
     }
     assert.equal(s.certificaDesti, false);
   }
+});
+
+// v1.2.26 · G26-3 · La 40 no es pot afluixar: camí acotat, cap credencial, cap redirecció i les dues eixides sanejades.
+test('v1.2.26 · G26-3 · el Lector de skills exigix camí /md/skills/, credentials omit, redirect error i sanitizeHtml', () => {
+  const s = CATALEG_TELLADO_R3214.find(x => x.id === 'TELLADO-R3214-40');
+  assert.equal(s?.fontRevisada, 'src/sections/wiki-de-poble/LectorSkillWiki.jsx');
+  assert.equal(s.regla, 'window.fetch');
+  for (const obligacio of ['esUrlSkillSegura(skill.url)', "credentials: 'omit'", "redirect: 'error'", 'res.text()']) {
+    assert.ok(s.requisits.some(r => r.includes(obligacio)), obligacio);
+  }
+  assert.equal(s.requisits.filter(r => r.startsWith('__html: sanitizeHtml(')).length, 2);
+  assert.equal(s.certificaDesti, false);
 });
 
 test('R32.15 · anomenar un nou sink fetchAmbResolucioPublica no li atorga cobertura', t => {

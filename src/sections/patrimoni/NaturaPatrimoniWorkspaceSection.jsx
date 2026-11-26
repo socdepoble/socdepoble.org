@@ -127,7 +127,7 @@ export default function NaturaPatrimoniWorkspaceSection({
   const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
   const textos = useMemo(() => textosArbresWorkspace(ui?.language), [ui?.language]);
   const [parametres] = useSearchParams();
-  const llibreDemanat = parametres.get('llibre') || llibreInicial;
+  const llibreDemanat = parametres.get('cataleg') || parametres.get('llibre') || llibreInicial;
   const model = useMemo(() => modelLlibresArbres(llibres, textos), [llibres, textos]);
   const totalArbres = new Set(llibres.flatMap(llibre => llibre.exemplars.map(arbre =>
     JSON.stringify([llibre.fontDoctoral?.id || llibre.id, arbre.id])))).size;
@@ -147,7 +147,7 @@ export default function NaturaPatrimoniWorkspaceSection({
 
   return <CatalegWorkspace id="arbres-monumentals-r18" ruta="/page/arbres-monumentals" model={model}
     itemSlug={itemSlug} sincronitzaRuta={sincronitzaRuta}
-    destiPublicacio="arbres-monumentals" inclouDescendents afegirCataleg={esSuperadmin} navegacioLlibres={{ categoriaInicial, fitxaInicial: fitxa?.arbre ? fitxa.id : null,
+    destiPublicacio="arbres-monumentals" inclouDescendents afegirCataleg={esSuperadmin} permetreAfigCataleg navegacioLlibres={{ categoriaInicial, fitxaInicial: fitxa?.arbre ? fitxa.id : null,
       portadaInicial: llibre && !fitxa?.arbre ? `portada-${llibre.id}` : null }}
     labels={{ categories: textos.llibreria, items: textos.exemplars, all: `${textos.tots} (${totalArbres})`,
       search: textos.cerca, empty: textos.buit, noResults: textos.senseResultats }}

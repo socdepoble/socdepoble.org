@@ -283,20 +283,101 @@ describe('decisions 4 i 5', () => {
     expect(m.editor.getHTML()).toContain('Una llista amb pics');
   });
 
-  test('decisió 4 · diversos blocs sense cap línia apta per al títol: tot al cos i el títol buit', () => {
+  test('decisió 4 · diversos blocs sense cap línia apta per al títol: tot al cos, el títol buit i feedback clar amb acció d’un clic (IDEA-358)', () => {
     const llarg = `Un paràgraf molt llarg ${'que no cap en cap títol '.repeat(6)}de cap manera.`;
     expect(llarg.length).toBeGreaterThan(120);
-    munta();
+    const { getByRole, queryByRole } = munta();
     enganxaAlTitol({ text: `${llarg}\n\nSegon paràgraf.` });
     expect(camps()).toEqual({ title: '', subtitle: '', lead: '' });
     expect(camp('title').childNodes).toHaveLength(0);
     expect(m.editor.getHTML()).toBe(`<p>${llarg}</p><p>Segon paràgraf.</p>`);
+    // IDEA-358 · Feedback accessible i botó d'1 clic per promoure el títol sense tocar el cos.
+    const avis = getByRole('status');
+    expect(avis.textContent).toContain('Enganxat al cos: falta un títol curt.');
+    fireEvent.click(getByRole('button', { name: 'Promou a títol' }));
+    expect(m.doc.title.length).toBeGreaterThan(10);
+    expect(m.doc.title.length).toBeLessThanOrEqual(120);
+    expect(m.editor.getHTML()).toBe(`<p>${llarg}</p><p>Segon paràgraf.</p>`);
+    expect(queryByRole('button', { name: 'Promou a títol' })).toBeNull();
     cleanup();
     oblidaLlavorsConsumides();
     munta();
     enganxaAlTitol({ html: '<ul><li>pa</li><li>vi</li></ul><p>i oli</p>' });
     expect(camps()).toEqual({ title: '', subtitle: '', lead: '' });
     expect(m.editor.getHTML()).toBe('<ul><li><p>pa</p></li><li><p>vi</p></li></ul><p>i oli</p>');
+  });
+});
+
+/* Gauntlet G26 (Lent 1 punt 1 i Lent 2 punt 2) · «Promou a títol» (IDEA-358)
+   llig el text del cos amb les entitats desfetes i l'escapa una sola volta:
+   el títol desat no porta mai «&amp;amp;» ni «&amp;nbsp;», i un «<b>» escrit
+   com a text és text (cap element). El cos no es toca. */
+describe('IDEA-358 · «Promou a títol» escapa una sola volta', () => {
+  const DOBLE = /&amp;(?:amp|lt|gt|quot|nbsp|#\d+);/;
+  const cua = ' La comissió hi posarà taules llargues, música en directe i parades de productes de la terra per a tot el veïnat.';
+
+  test('«&», U+00A0 i «<b>» en text (porta-retalls HTML): el títol es desa escapat una volta i es veu tal qual', () => {
+    const { getByRole } = munta();
+    const html = `<p>Pa &amp; oli &lt;b&gt; de la Torre:&nbsp;la festa major torna a la plaça.${cua}</p><p>Segon paràgraf.</p>`;
+    enganxaAlTitol({ html });
+    const cos = m.editor.getHTML();
+    expect(cos).toContain('&nbsp;');
+    expect(cos).toContain('&amp;');
+    expect(cos).toContain('&lt;b&gt;');
+    expect(m.doc.title).toBe('');
+    // Com al navegador: prémer el botó trau el focus de l'H1 (A2: el camp enfocat no es repinta).
+    fireEvent.blur(camp('title'));
+    fireEvent.click(getByRole('button', { name: 'Promou a títol' }));
+    expect(m.doc.title).toBe('Pa &amp; oli &lt;b&gt; de la Torre: la festa major torna a la plaça');
+    expect(m.doc.title).not.toMatch(DOBLE);
+    expect(camp('title').textContent).toBe('Pa & oli <b> de la Torre: la festa major torna a la plaça');
+    expect(camp('title').querySelector('b')).toBeNull();
+    expect(m.editor.getHTML()).toBe(cos);
+  });
+
+  test('«&» i U+00A0 en text pla: «El Bar & Restaurant» i «Festa major» arriben nets al títol', () => {
+    // L'espai dur, per codi: escrit literal al font, no-irregular-whitespace el rebutja.
+    const DUR = String.fromCharCode(0xa0);
+    for (const [primera, esperat] of [
+      ['El Bar & Restaurant de la plaça obri hui amb un menú nou de temporada.', 'El Bar &amp; Restaurant de la plaça obri hui amb un menú nou de temporada'],
+      [`Festa${DUR}major de la Torre: dissabte, cercavila i sopar al carrer.`, 'Festa major de la Torre: dissabte, cercavila i sopar al carrer'],
+    ]) {
+      cleanup();
+      oblidaLlavorsConsumides();
+      const { getByRole } = munta();
+      enganxaAlTitol({ text: `${primera}${cua}\n\nSegon paràgraf.` });
+      expect(m.doc.title, primera).toBe('');
+      fireEvent.click(getByRole('button', { name: 'Promou a títol' }));
+      expect(m.doc.title, primera).toBe(esperat);
+      expect(m.doc.title, primera).not.toMatch(DOBLE);
+      expect(m.editor.getHTML(), primera).toBe(`<p>${primera.replace(/&/g, '&amp;').split(DUR).join('&nbsp;')}${cua}</p><p>Segon paràgraf.</p>`);
+    }
+  });
+});
+
+/* Gauntlet G26 (Lent 1 punt 1, segona meitat) · Tallat a 120 caràcters a frontera de paraula, el títol
+   promogut no acaba mai en una paraula buida («…per a», «…les»). */
+describe('IDEA-358 · «Promou a títol» no acaba en una paraula buida', () => {
+  test('el tall de 120 caràcters lleva les preposicions i els articles del final; el cos no es toca', () => {
+    for (const [primera, esperat] of [
+      ['Festa major de la Torre amb música i taules llargues de cinc mil persones al carrer Major, i després un sopar de germanor per a tothom.',
+        'Festa major de la Torre amb música i taules llargues de cinc mil persones al carrer Major, i després un sopar'],
+      ['Preu de 5 € per quilo de tomaques de la Torre a la plaça Major cada dissabte del mes de juliol fins que s’acaben les caixes de la collita.',
+        'Preu de 5 € per quilo de tomaques de la Torre a la plaça Major cada dissabte del mes de juliol fins que s’acaben'],
+      /* Verificador de la tercera ronda · una «I» o una «A» majúscules no són cap conjunció ni preposició. */
+      ['La jornada de portes obertes reunirà estudiants, famílies i professorat a l’aula magna de la Universitat Jaume I amb xerrades i tallers.',
+        'La jornada de portes obertes reunirà estudiants, famílies i professorat a l’aula magna de la Universitat Jaume I'],
+    ]) {
+      cleanup();
+      oblidaLlavorsConsumides();
+      const { getByRole } = munta();
+      enganxaAlTitol({ text: `${primera}\n\nSegon paràgraf.` });
+      expect(m.doc.title, primera).toBe('');
+      fireEvent.click(getByRole('button', { name: 'Promou a títol' }));
+      expect(m.doc.title, primera).toBe(esperat);
+      expect(m.doc.title, primera).not.toMatch(/\s(?:a|al|de|del|la|les|els|el|i|amb|per|pel|pels|en)$/);
+      expect(m.editor.getHTML(), primera).toBe(`<p>${primera}</p><p>Segon paràgraf.</p>`);
+    }
   });
 });
 

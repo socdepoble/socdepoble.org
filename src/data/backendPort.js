@@ -504,6 +504,9 @@ export const cercaMissatgesFil = metodesDelContracte[187];
 export const cercaMissatgesFilPaginada = metodesDelContracte[188];
 export const carregaMissatgeFilPerId = metodesDelContracte[189];
 
+export const actualitzaTaxonomiaPagina = metodesDelContracte[190];
+export const lligTaxonomiaPagina = metodesDelContracte[191];
+
 /* R32.13 optional capabilities; absence is explicit, never a synthetic ACK. */
 export const confirmaCapturaCrdtRural = metodesDelContracte[38];
 export const registraDenunciaDiligent = metodesDelContracte[39];

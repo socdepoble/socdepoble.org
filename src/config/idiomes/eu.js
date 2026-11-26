@@ -1692,6 +1692,7 @@ export default {
   'section.notes.carpeta.media': 'Multimedia',
   'section.notes.carpeta.events': 'Ekitaldiak',
   'section.notes.carpeta.mapa': 'Mapa',
+  'section.notes.carpeta.produccio': 'Produkzioan',
   'section.notes.carpeta.notes': 'Beste oharrak',
   /* Esmena 2 (261007_1645) · Proposta a revisar per algú que les parle. */
   'section.notes.historic.mur.titol': 'Dagoeneko Horman argitaratuta',
@@ -3341,10 +3342,12 @@ export default {
   'section.perfil.privacitat.confianca.cerimonia.accio.revisa': "Berrikusi {nom} kontaktuaren SAS egiaztapena",
   'section.perfil.privacitat.confianca.cerimonia.accio.disputa': "Gelditu eta adierazi «Ez naiz ni»",
   'section.perfil.privacitat.confianca.cerimonia.alertaDisputa': "Eztabaida bat («Ez naiz ni») adierazi da: berreskuratze-zeremonia blokeatuta geratu da.",
-  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
-  'editor.proposaCard.feta': "Txartela proposatuta. Desegiteko: «Desegin proposamena» edo Cmd/Ctrl+Z.",
+  // IDEA-41 / IDEA-358 / IDEA-359 · Maquetadora Editorial no-destructiva i feedback d'enganxat.
+  'editor.proposaCard.feta': "Txartela gorputza ukitu gabe maketatuta.",
   'editor.proposaCard.res': "Ez dago ezer proposatzeko: txartelaren eremuak beteta daude edo gorputza ez da testuarekin hasten.",
-  'editor.proposaCard.enRepos': "Sakatu «Editatu» txartela proposatzeko.",
+  'editor.proposaCard.enRepos': "Sakatu «Editatu» txartela maketatzeko.",
+  'editor.enganxat.alCos': "Gorputzean itsatsita: izenburu laburra falta da.",
+  'editor.enganxat.promouTitol': "Bihurtu izenburu",
   'editor.eines.enRepos': "Irakurtzeko moduan: sakatu «Editatu» testua idazteko eta formatua emateko.",
   /* T3.2-UI (261101) · La «Fitxa de memòria oral (OKF v0.2)» de «Proposa Card» (FitxaMemoriaOral.jsx). */
   'editor.memoriaOral.titol': "Ahozko memoriaren fitxa (OKF v0.2)",
@@ -3407,8 +3410,8 @@ export default {
   'editor.memoriaOral.massaEtiquetesLliures': "Dagoeneko {n} etiketa libre daude: kendu batzuk gehiago gehitu aurretik.",
   'editor.memoriaOral.afegida': "berrikusketan gehitua",
   'editor.memoriaOral.capPobleAlRelat': "Makinak ez du herririk antzeman kontakizunean",
-  'section.notes.proposaCard': "Proposatu txartela",
-  'section.notes.proposaCardDesfer': "Desegin proposamena",
+  'section.notes.proposaCard': "Maketatu txartela",
+  'section.notes.proposaCardDesfer': "Desegin maketazioa",
   // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
   'section.login.registre.ajudaPoble': "Bat baino gehiagotakoa bazara, besteak zure profilean aukeratzen dira.",
   'section.login.registre.ajudaUsuari': "Zure izenarekin sortzen da, eta @ bat aurrean duela ikusten da zure profila publikoa bada. Norbaitek badu jada, -2 gehituko diogu.",

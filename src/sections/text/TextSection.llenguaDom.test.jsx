@@ -96,12 +96,14 @@ test('«Legal i privacitat» (cos amb targetes) amb la interfície en anglés: e
   expect(langDe(container.querySelector('.peu-de-prova button'))).toBeNull();
 });
 
+/* v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · El Xat es mostra al /mur: la Categoria de Sistema Mur, en la llengua
+   de la interfície, darrere de Sistema. */
 test.each([
-  ['ca', ['Sistema', '🤝 Món Rural', 'Associacionisme']],
-  ['es', ['Sistema', '🤝 Mundo Rural', 'Asociacionismo']],
-  ['en', ['System', '🤝 Rural Communities', 'Community associations']],
-  ['eu', ['Sistema', '🤝 Landa Mundua', 'Elkartegintza']],
-  ['gl', ['Sistema', '🤝 Mundo Rural', 'Asociacionismo']]
+  ['ca', ['Sistema', 'Mur', '🤝 Món Rural', 'Associacionisme']],
+  ['es', ['Sistema', 'Muro', '🤝 Mundo Rural', 'Asociacionismo']],
+  ['en', ['System', 'Wall', '🤝 Rural Communities', 'Community associations']],
+  ['eu', ['Sistema', 'Horma', '🤝 Landa Mundua', 'Elkartegintza']],
+  ['gl', ['Sistema', 'Muro', '🤝 Mundo Rural', 'Asociacionismo']]
 ])('R41 · píndoles públiques en %s, cos valencià i cap traducció fictícia', (language, labels) => {
   estat.ui = { externalConfig: {}, language, llenguaDelText: language };
   // Com CoreContent/API: clon amb etiquetes antigues, sense identitat WeakMap.
@@ -110,7 +112,7 @@ test.each([
   const badges = [...container.querySelectorAll('header.page-title .page-title-labels > li')];
   expect(badges.map(li => li.textContent)).toEqual(labels);
   // PageFrame omet lang quan coincidix amb la llengua de la interfície.
-  expect(badges.map(li => li.getAttribute('lang'))).toEqual([null, null, null]);
+  expect(badges.map(li => li.getAttribute('lang'))).toEqual(labels.map(() => null));
   const body = container.querySelector('article.cms-preview');
   expect(body.innerHTML).toBe('<p>Cos valencià intacte.</p>');
   expect(langDe(body)).toBe(language === 'ca' ? null : 'ca');

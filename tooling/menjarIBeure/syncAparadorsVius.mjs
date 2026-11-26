@@ -4,7 +4,8 @@
  */
 import { createHash } from 'node:crypto';
 import { isIP } from 'node:net';
-import { llevaEtiquetes, llevaScriptsIEstils } from '../../src/config/contentHelpers.js';
+import { llevaEtiquetes } from '../../src/config/contentHelpers.js';
+import { llevaScriptsIEstils } from '../../src/config/llevaScriptsIEstils.js';
 
 export const SCHEMA_PLA_APARADORS = 'sdp.aparadors-sync.plan.v1';
 export const LIMITS_APARADORS = Object.freeze({ products: 2000, events: 4000, bytes: 4 * 1024 * 1024 });

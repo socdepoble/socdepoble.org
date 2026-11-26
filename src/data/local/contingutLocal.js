@@ -280,7 +280,11 @@ export function creaContingutLocal(e) {
       const sectionId = String(submission?.sectionId || '').trim();
       if (!SECCIONS.has(sectionId)) throw new Error('Secció no suportada per a connectar.');
       const id = String(submission?.id || e.nouId());
-      const basePayload = esObjectePla(submission?.payload) ? submission.payload : {};
+      // IDEA-365: abans de qualsevol escriptura, el destí és obligatori.
+      const comprovaDesti = e.abast();
+      const { categoriesSistemaPerPublicar } = await import('../../utils/publicacioSistema.js');
+      comprovaDesti();
+      const basePayload = categoriesSistemaPerPublicar(esObjectePla(submission?.payload) ? submission.payload : {}, sectionId);
       const actor = submission?.actor;
       if (actor?.tipus === 'entitat' && !actor.id) throw new Error('Falta l’entitat que signa la publicació.');
       const authorOrgId = actor?.tipus === 'entitat' ? String(actor.id) : null;

@@ -4,7 +4,7 @@
    (només les notes), per què no la resta, i la cerca. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { BrainCircuit, FileText, Folder, Inbox, Network, Newspaper, NotebookPen, Route, ShieldCheck, Wifi } from 'lucide-react';
+import { BrainCircuit, FileText, Folder, Inbox, Network, Newspaper, NotebookPen, Route, ShieldCheck, SquarePen, Wifi } from 'lucide-react';
 import { describe, expect, test, vi } from 'vitest';
 import { GLIF_CARPETA, GLIF_DOCUMENT } from '../../../components/universal/workspace/NavGlyph.jsx';
 import { SECTIONS } from '../../../config/sections.js';
@@ -42,13 +42,16 @@ describe('destinsDeCarpetesDelBloc', () => {
     const destins = destinsDeCarpetesDelBloc([
       { id: 'f-tot', name: 'Tot' }, { id: 'f-mur', name: 'Mur' }, { id: 7, name: 'Hort', parentId: 'f-mur' }
     ]);
-    /* Sense «Tot», i la Safata d’Entrada afegida (opcionsDeCarpetes). */
+    /* Sense «Tot», i la Safata d’Entrada i «En producció» afegides (opcionsDeCarpetes).
+       v1.2.26 · IDEA-358.1 (Llibre Mestre, l. 3691): «En producció» és carpeta del sistema de la
+       columna del Bloc (carpetesDelBloc) i l'Assignar llista les mateixes carpetes que la columna. */
     expect(destins.map((desti) => [desti.id, desti.titol, desti.previa])).toEqual([
       ['nota:carpeta:f-mur', 'Mur', 'Carpeta del Bloc'],
       ['nota:carpeta:7', 'Hort', 'Carpeta de Mur'],
-      ['nota:carpeta:f-connectats', NOM_CARPETA_CONNECTATS, 'Carpeta del Bloc']
+      ['nota:carpeta:f-connectats', NOM_CARPETA_CONNECTATS, 'Carpeta del Bloc'],
+      ['nota:carpeta:f-produccio', 'En producció', 'Carpeta del Bloc']
     ]);
-    expect(destins.map((desti) => desti.glif)).toEqual([Newspaper, Folder, Inbox]);
+    expect(destins.map((desti) => desti.glif)).toEqual([Newspaper, Folder, Inbox, SquarePen]);
     expect(destins.every((desti) => desti.escriu === 'carpeta-bloc' && desti.grup === 'notes' && !desti.nota)).toBe(true);
   });
 
@@ -266,7 +269,7 @@ describe('destinsDelSistema', () => {
       'sistema:descarregues': GLIF_DOCUMENT,
       /* 30-10-2026 · /page/fediversity tampoc no en té: el document. */
       'sistema:fediversity': GLIF_DOCUMENT,
-      /* R17.2B · La nota TLS de Dispositius usa la icona de la seua entrada de navegació. */
+      /* R17.2B · La nota TLS de Dispositius fa servir la icona de la seua entrada de navegació. */
       'sistema:dispositius': Wifi
     });
     /* Sense exclusions, les portades de la Wiki i de Disseny també hi són. */

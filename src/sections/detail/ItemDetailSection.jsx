@@ -11,6 +11,15 @@ import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
+import { BlocTerritoriTargeta } from '../../components/PedraSeca/organismes/BlocTerritoriTargeta.jsx';
+import ControlEdicioTaxonomia from '../taxonomia/ControlEdicioTaxonomia.jsx';
+import {
+  idPaginaValidTaxonomia,
+  projectaOverlayALabels,
+  projectaOverlayATerritori,
+  useEstatUITaxonomia,
+  useTaxonomiaPaginaOverlay
+} from '../taxonomia/useTaxonomiaPaginaOverlay.js';
 import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement, visorDelCosDElement } from './detailSectionMeta.jsx';
 import { QuadreAssistenciaEsdeveniment } from './QuadreAssistenciaEsdeveniment.jsx';
 /* T4 (pla 261024_1315, P1-06) · Les fotos del cos, al visor: el mateix mòdul
@@ -297,7 +306,7 @@ function DetallDElement() {
     );
   }
 
-  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} notes={notes} chrome="full" plaTraduccio={plaTraduccio} language={language} />;
+  return <PaginaDelDetall section={section} sectionId={sectionId} item={itemHidratat} pagina={pagina} notes={notes} towns={towns} chrome="full" plaTraduccio={plaTraduccio} language={language} />;
 }
 
 /* Pla 261027_0845 (Guarda Nocturna), P1-55 · La pàgina d'un element ja
@@ -306,9 +315,22 @@ function DetallDElement() {
    (VistaDelPoble, davall). És el mateix codi que vivia al final de
    DetallDElement, mogut sense canvis. `senseXat`: el cos sense el botó blau
    del xat (renderBody de Pobles) i la barra blava sense «Comentar». */
-function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, chrome, senseXat = false, plaTraduccio = null, language = 'ca' }) {
+function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, towns = [], chrome, senseXat = false, plaTraduccio = null, language = 'ca' }) {
   const { t } = useUIActions();
+  /* objectesDeContext.test · UIContext només el lligen els seus importadors canònics: l'estat d'UI
+     de la taxonomia ve del ganxo de la secció (useTaxonomiaPaginaOverlay.js). */
+  const externalConfig = useEstatUITaxonomia()?.externalConfig ?? null;
   const navigate = useNavigate();
+  const idPaginaTaxonomia = idPaginaValidTaxonomia(`${sectionId}/${String(item?.id ?? '')}`);
+  const overlayTaxonomia = useTaxonomiaPaginaOverlay(idPaginaTaxonomia, externalConfig);
+  const labelsEfectives = useMemo(
+    () => projectaOverlayALabels(overlayTaxonomia, pagina?.labels || [], language),
+    [overlayTaxonomia, pagina?.labels, language]
+  );
+  const elementsTerritori = useMemo(
+    () => (sectionId === 'pobles' ? [] : projectaOverlayATerritori(overlayTaxonomia, item, towns)),
+    [sectionId, overlayTaxonomia, item, towns]
+  );
   const edicio = useEdicioEnLloc({
     tipus: 'publicacio',
     sectionId,
@@ -398,6 +420,8 @@ function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, chrom
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       objecte={objecteXat}
       {...pagina}
+      labels={labelsEfectives}
+      territori={elementsTerritori.length > 0 ? <BlocTerritoriTargeta elements={elementsTerritori} idioma={language} /> : null}
       {...portadaAmbCarrusel}
       quadreInsignia={quadreInsignia}
       /* T4 (pla 261024_1315; Gemini G-02) · La portada és la candidata a LCP
@@ -443,6 +467,13 @@ function PaginaDelDetall({ section, sectionId, item, pagina, notes = null, chrom
           {section.renderBody(item, senseXat ? { detall: true, senseXat: true } : { detall: true })}
         </CosAmbVisor>
       </ProveidorSincronitzacioTargetes>
+      {chrome !== 'context' && !senseXat && idPaginaTaxonomia ? (
+        <ControlEdicioTaxonomia
+          idPagina={idPaginaTaxonomia}
+          categoriesSistemaInicials={Array.isArray(item?.categoriesSistema) && item.categoriesSistema.length ? item.categoriesSistema : ['Mur']}
+          etiquetesInicials={Array.isArray(item?.tags) ? item.tags : []}
+        />
+      ) : null}
       {potNotificarLssi ? (
         <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
           <Boto varietat="fantasma" icona={Flag} onClick={obriDenunciaLssi}>

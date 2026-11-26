@@ -495,8 +495,8 @@ export const wikiManifest = {
         "pla"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-26T04:32:52+01:00",
-      "revisions": 11,
+      "updated": "2026-11-26T05:11:50+01:00",
+      "revisions": 12,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -513,8 +513,8 @@ export const wikiManifest = {
         ],
         "reflex": "sdp:teoria",
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-26T04:32:52+01:00",
-        "revisions": 11,
+        "updated": "2026-11-26T05:11:50+01:00",
+        "revisions": 12,
         "mur": false,
         "origenEditorial": {
           "date": "git",
@@ -533,9 +533,11 @@ export const wikiManifest = {
         "maquina"
       ],
       "date": "2026-09-06T18:54:14+02:00",
-      "updated": "2026-11-26T04:32:52+01:00",
-      "revisions": 24,
+      "updated": "2026-11-26T05:11:50+01:00",
+      "revisions": 25,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -549,9 +551,11 @@ export const wikiManifest = {
           "maquina"
         ],
         "date": "2026-09-06T18:54:14+02:00",
-        "updated": "2026-11-26T04:32:52+01:00",
-        "revisions": 24,
+        "updated": "2026-11-26T05:11:50+01:00",
+        "revisions": 25,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -686,6 +690,8 @@ export const wikiManifest = {
       "updated": "2026-11-19T22:27:05+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -704,6 +710,8 @@ export const wikiManifest = {
         "updated": "2026-11-19T22:27:05+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -726,6 +734,8 @@ export const wikiManifest = {
       "updated": "2026-11-19T22:27:05+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -744,6 +754,8 @@ export const wikiManifest = {
         "updated": "2026-11-19T22:27:05+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -763,9 +775,11 @@ export const wikiManifest = {
         "tractors"
       ],
       "date": "2026-09-24T18:49:12+02:00",
-      "updated": "2026-11-26T04:32:52+01:00",
-      "revisions": 11,
+      "updated": "2026-11-26T05:11:50+01:00",
+      "revisions": 12,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -781,9 +795,11 @@ export const wikiManifest = {
           "tractors"
         ],
         "date": "2026-09-24T18:49:12+02:00",
-        "updated": "2026-11-26T04:32:52+01:00",
-        "revisions": 11,
+        "updated": "2026-11-26T05:11:50+01:00",
+        "revisions": 12,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -806,6 +822,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 6,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -824,6 +842,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 6,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -846,6 +866,8 @@ export const wikiManifest = {
       "updated": "2026-11-19T22:27:05+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -864,6 +886,8 @@ export const wikiManifest = {
         "updated": "2026-11-19T22:27:05+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -886,6 +910,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 15,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -904,6 +930,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 15,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -926,6 +954,8 @@ export const wikiManifest = {
       "updated": "2026-09-26T12:23:49+02:00",
       "revisions": 16,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -944,6 +974,8 @@ export const wikiManifest = {
         "updated": "2026-09-26T12:23:49+02:00",
         "revisions": 16,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -964,6 +996,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 8,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -980,6 +1014,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 8,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1000,6 +1036,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 18,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1016,6 +1054,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 18,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1073,6 +1113,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 3,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1090,6 +1132,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 3,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1111,6 +1155,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 2,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1128,6 +1174,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 2,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1149,6 +1197,8 @@ export const wikiManifest = {
       "updated": "2026-11-12T16:14:33+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1166,6 +1216,8 @@ export const wikiManifest = {
         "updated": "2026-11-12T16:14:33+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1187,6 +1239,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1204,6 +1258,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1222,6 +1278,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 3,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1235,6 +1293,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 3,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1253,6 +1313,8 @@ export const wikiManifest = {
       "updated": "2026-11-26T01:27:10+01:00",
       "revisions": 23,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1266,13 +1328,15 @@ export const wikiManifest = {
         "updated": "2026-11-26T01:27:10+01:00",
         "revisions": 23,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
           "revisions": "git"
         }
       },
-      "content": "# API del port neutral i allotjament Model B\n\n**Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Tall històric anterior del recompte**\ndes de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-19 (R32.13, ACK causal CRDT i denúncies diligents; l'anterior, el 2026-11-14, R24, consens del joc «D'on parles?»).\n\n**Actualització R32.19 (2026-11-20):** el cens vigent de les seccions següents incorpora `protocolPublic` i `transportOAuth`: sis mètodes opcionals i sis casos nous. Les cinc consultes de protocol són síncrones; el transport OAuth és separat. Els dos grups continuen absents en l'adaptador local. Esta actualització és d'inventari i no acredita activació ni verificació d'un servidor remot.\n**Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.\nLes **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;\nla **llista següent** enumera noms.\n\n## 32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)\n\nFont: `src/data/contracte.js`. Una implementació vàlida les oferix totes:\n\n- `loadCoreContent`\n- `loadMur`\n- `loadMultimedia`\n- `loadNotes`\n- `appendChatMessages`\n- `appendSectionSubmissionNetworkOnly`\n- `updateNote`\n- `loginWithMagicLink`\n- `registerWithPassword`\n- `loginWithPassword`\n- `loginWithGoogle`\n- `listMyOrganizations`\n- `createOrganization`\n- `updateOrganization`\n- `updateProfile`\n- `updateUserPassword`\n- `getProfile`\n- `recullTornadaOAuth`\n- `logout`\n- `getCurrentUser`\n- `getBackendConfigurat`\n- `getRuntimeDataMode`\n- `getDefaultUserId`\n- `createNote`\n- `loadFils`\n- `loadMissatges`\n- `enviaMissatge`\n- `marcaLlegit`\n- `creaFilDirecte`\n- `carregaMembres`\n- `subscribeToXat`\n- `unsubscribeFromXat`\n\n## 67 capacitats atòmiques opcionals (`CAPACITATS`)\n\n**158 mètodes addicionals** i **190 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**\namb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i\n`CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat\nestà disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**\nun camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 67 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.\n\n| Capacitat | Mètodes literals |\n| --- | --- |\n| `protocolPublic` | `prefixMitjansPublics`, `classificaCamiMitja`, `esReferenciaMitjaPrivada`, `normalitzaVerificacioRecuperacio`, `urlAutoritzacioGoogle` |\n| `transportOAuth` | `bescanviaCodiOAuth` |\n| `ackCrdtRural` | `confirmaCapturaCrdtRural` |\n| `denunciesDiligents` | `registraDenunciaDiligent`, `revisaDenunciaDiligent`, `llistaDenunciesDiligents` |\n| `revocacioPublicacions` | `revocaPublicacioMur`, `drenaRevocacionsMur`, `encuaRevocacioNotaMur` |\n| `copublicacio` | `lligPublicadorsRegistrats`, `traspassaPublicacio`, `reverteixTraspasPublicacio` |\n| `projeccionsCataleg` | `loadProjeccionsCataleg` |\n| `administracioSessions` | `adminResumSessionsDispositius`, `adminLlistaSessionsDispositius` |\n| `curadoriaCultural` | `estatCuradoriaCultural`, `llistaAportacionsCulturals`, `enviaAportacioCultural`, `revisaAportacioCultural` |\n| `iaia` | `consultaIAIA` |\n| `xatRitme` | `loadRitmeXat`, `actualitzaPresenciaXat` |\n| `xatAccionsMissatge` | `carregaAccionsMissatges`, `alternaReaccio`, `alternaDestacat`, `alternaFixat`, `eliminaPerAMi`, `eliminaPerATothom` |\n| `carpetesNotes` | `creaCarpetaNotes` |\n| `edicioEditorial` | `adminActualitzaPublicacioEditorial` |\n| `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |\n| `edicioPublicacionsPropies` | `desaPublicacioPropia` |\n| `revisionsPagines` | `llistaRevisionsPagina`, `desaRevisioPagina`, `restauraRevisioPagina` |\n| `revisionsPatrimoni` | `llistaRevisionsPatrimoni`, `desaRevisioPatrimoni`, `esborraRevisioPatrimoni` |\n| `sessioExterna` | `adoptaSessioExterna` |\n| `paginacioNotes` | `loadNotesPage` |\n| `copiaCompte` | `llegixCopiaCompte` |\n| `restauracioCompte` | `restauraCopiaCompte` |\n| `paginacioSeccions` | `loadSeccioPage` |\n| `admin` | `adminListUsers`, `adminListOrganizations` |\n| `administracioUsuaris` | `adminLlistaUsuarisRegistrats`, `adminAssignaMembreOrganitzacio`, `adminConnectaUsuari` |\n| `importacioPaquetMunicipal` | `importaMunicipiOpenData` |\n| `verificacioCorreu` | `confirmaCorreu`, `reenviaVerificacioCorreu` |\n| `recuperacioCorreu` | `demanaRestablimentCorreu`, `restablixContrasenyaAmbCorreu` |\n| `sessio` | `refrescaSessio`, `elMeuRol` |\n| `mitjans` | `uploadToStorage`, `getPublicUrl`, `resolveAsset`, `promoteToPublic` |\n| `mitjansPropis` | `llistaElsMeusMitjans`, `esborraElMeuMitja` |\n| `xatMultimedia` | `quotaXat`, `publicaAdjuntXat`, `urlAdjuntXat`, `descartaAdjuntXat` |\n| `clausXat` | `publicaIdentitatXat`, `laMevaIdentitatXat`, `desaFraseXat`, `clausDeXat`, `desaLlibretaXat`, `laMevaLlibretaXat`, `estatXifratXat`, `epoquesDelFilXat`, `sobresMeusXat`, `obriEpocaXat`, `enviaXifratXat`, `reembolcallaXat`, `demanaXifratXat` |\n| `xatMultimediaXifrat` | `publicaAdjuntXifratXat`, `bytesAdjuntXat` |\n| `agenda` | `loadActesAgenda` |\n| `compte` | `exportaLesMeuesDades`, `estatBaixa`, `demanaBaixa`, `cancelaBaixa` |\n| `consentiment` | `estatConsentiment`, `registraConsentiment`, `revocaConsentiment` |\n| `cicleNotes` | `mouNota`, `esborraNota` |\n| `directori` | `loadPerfilPublic` |\n| `directoriEntitats` | `listPublicOrganizations` |\n| `agents` | `listMyAgents`, `updateAgent` |\n| `reclamacions` | `reclamaOrganitzacio`, `lesMevesReclamacions` |\n| `contacteOrganitzacio` | `llegeixContacteOrganitzacio`, `desaContacteOrganitzacio` |\n| `xatDePagina` | `obriFilDePagina` |\n| `salut` | `comprovaServidor` |\n| `versioClient` | `versioMinimaClient` |\n| `recuperacioContrasenya` | `demanaRecuperacioContrasenya`, `definixContrasenyaNova` |\n| `entradaAmbToken` | `entraAmbTokenDeProveidor` |\n| `membresOrganitzacio` | `llistaMembresOrganitzacio`, `desaMembreOrganitzacio`, `llevaMembreOrganitzacio` |\n| `transferenciaPropietat` | `transfereixPropietatOrganitzacio` |\n| `segonFactor` | `llistaFactors`, `inscriuFactor`, `reptaFactor`, `verificaFactor`, `retiraFactor` |\n| `personalitzacio` | `adminDesaPersonalitzacio`, `adminHistorialPersonalitzacio` |\n| `administracioMultipoble` | `adminLlistaPobles`, `adminLligPersonalitzacio` |\n| `moderacio` | `denunciaContingut`, `llistaBloquejos`, `bloquejaAutor`, `desbloquejaAutor` |\n| `moderacioLssi` | `registraDenunciaPublica`, `adminSafataDenuncies`, `adminRevisaDenuncia` |\n| `normesConvivencia` | `estatNormes`, `acceptaNormes` |\n| `seguiments` | `segueix`, `deixaDeSeguir`, `estatSeguiment`, `elsMeusSeguiments`, `quiEmSegueix` |\n| `titularPublic` | `loadTitularPublic` |\n| `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |\n| `dadesObertes` | `llegixDadesObertes` |\n| `restauracioDadesObertes` | `restauraDadesObertes` |\n| `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |\n| `silenciXat` | `silenciaFil` |\n| `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |\n| `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |\n| `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |\n| `xatCerca` | `cercaMissatgesFil`, `cercaMissatgesFilPaginada`, `carregaMissatgeFilPerId` |\n\n## Validació i conformitat\n\n`src/data/backendPort.js` exporta `validaBackendImplementation`,\n`setBackendImplementation`, `getBackendImplementation` i `teCapacitat`.\nLa validació prepara els mètodes i només després substituïx el port, rebutja\ngetters i capacitats parcials. No és una prova funcional d'un servidor remot.\n\n`src/data/conformitat/kit.js` **exporta** `CASOS`, `contextDeConformitat`,\n`executaCas` i `metodesSenseCas`. **Els casos tornen** `ok`, `falla` o `omés`.\nEl tall FEDI-17 del 03-11-2026 té **172 casos sobre els 120 mètodes** i\n`metodesSenseCas()` torna una llista buida. Els 99 casos originals es conserven;\nles cinc passades han registrat una unió de **120 invocacions reals**. **Les omissions**\nper capacitat, dades o autorització continuen separades dels casos superats.\nLes proves són `src/data/conformitat/kit.test.js` i `qualitat.test.js`, amb corredors\nlocals i de Supabase seed/remot amb doble de transport explícit. Les sondes i\nels mutants independents detecten crides absents, DTO incorrectes i operacions\ninoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.\nEsta cobertura contractual local **no acredita 120 èxits de servidor remot**,\nni totes les branques possibles de cada mètode.\n\n### Recompte local vigent (v1.2.25 · 2026-11-25) i verificació per correu (R6)\n\nv1.2.25 (**costures 8 i 9**, 2026-11-25) afig `xatCerca`: **tres mètodes opcionals** per a cercar dins d'una conversa i llegir un **missatge antic per id** (C1, `src/data/supabase/xatCerca.js`), amb **tres casos de rebuig** sense servei remot. L'adaptador Supabase només l'anuncia amb `VITE_SDP_XAT_CERCA=1`, perquè la migració `20261125010000` **encara no és a Producció**; l'adaptador local la declara i la **rebutja sempre** amb `sense-capacitat`. **No acredita cap cerca remota desplegada.**\n\nR32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia pública i revisió humana, amb tres casos de rebuig previ; el grup no està disponible a l’adaptador local.\n\nR32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccions, destacats, fixats i esborrat per a mi, amb cinc casos de rebuig previ; el grup tampoc no està disponible a l’adaptador local.\n\nR32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.\n\nEl recompte actual és de **253 casos sobre 190 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.\n\nL’adaptador local oferix **51 dels 67 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.\n\nLes omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 190 operacions en un servidor remot continua pendent.\n\nR32.56 (C6) afig `copiaCompte` i `restauracioCompte`: **còpia del subconjunt de negoci implementat** —perfil, notes, carpetes, organitzacions i patrimoni— i restauració en **candidat inactiu en RAM**, restringit i lligat a l’actor. **No és una restauració completa ni durable del compte** ni una capacitat de restauració remota. R32.64 (C10) afig el sisé mètode d’`xatAccionsMissatge`, `eliminaPerATothom`, i un cas comú de rebuig. La RPC preparada **elimina sense caducitat**, requerix **autoritat del servidor i rebut confirmat**; esta operació no confirma localment davant absència SQL o denegació. Les proves locals **no acrediten desplegament remot**.\n\n### Consens del joc «D'on parles?» (R24)\n\nLa **capacitat opcional** `consensIsoglosses` (CODEX-R24-03) connecta la targeta del joc amb el port: `lligConsensIsoglossesPoble` llig el **resum agregat** de vots, sense cap identificador personal; `votaVariantIsoglossaPoble` desa **un vot per persona, pregunta i variant** (el repetit torna `nou: false`); `desaAportacioVeuPoble` desa una **variant escrita** pendent de moderació, amb el **consentiment explícit** `cc-by-sa-4.0-v1`. L'**autoria** surt de la **sessió** de l'adaptador; una clau d'autoria, de moderació o desconeguda és un `TypeError` **abans de cap efecte**. La validació i el mapatge viuen a `src/data/consensIsoglosses.js`.\n\nL'**adaptador Supabase** (`src/data/supabase/consensIsoglosses.js`) utilitza la RPC `resum_consens_isoglosses_poble` i les taules `joc_isoglosses_vots_consens` i `aportacions_veu_poble` de les migracions R23, **encara no aplicades**: només l'anuncia amb `VITE_SDP_CONSENS_ISOGLOSSES=1`. L'adaptador local la servix des del **magatzem en memòria** de la instància. El Node 0 **no la declara**. Els tres casos nous del kit comproven el **rebuig previ**; les proves funcionals dels adaptadors i `tests/r24-consens-isoglosses-postgres.test.mjs` cobrixen el mapatge, **sense acreditar aplicació remota**.\n\n### Co-publicació registrada (R19)\n\n`lligPublicadorsRegistrats` llig l’ordre, el publicador efectiu i la versió d’un recurs identificat pel seu tipus i id. La versió 0 indica la reserva editorial inicial. El catàleg local conserva la lectura de reserva i denega els traspassos administratius.\n\n`traspassaPublicacio` i `reverteixTraspasPublicacio` requerixen superadministració amb AAL2 en el node remot. La migració `2611111735` valida el padró, la versió i el tipus de recurs.\n\nEl client conserva l’UUID de l’operació durant els reintents. La reversió referencia el traspàs registrat i crea una operació pròpia. Els crèdits i la llicència provenen de la font editorial.\n\n### Campanyes de patrimoni viu (R17.2B)\n\n`llistaRevisionsPatrimoni` **llig les campanyes públiques** per tipus i peça, de la més recent a la més antiga. Admet `abansAny` i un `limit` de fins a 100. `desaRevisioPatrimoni` **crea una campanya** amb `versio: 0`. Les edicions i les baixes **requerixen l’`id` i la `versio` llegits**. Hi ha **una campanya per any, peça i poble**. Les mesures són un **mapa acotat** amb claus de text i valors primitius. La migració 2611110110 **manté privada l'autoria** i exigix **sessió i pertinença al poble** per editar, amb permís de curadoria o d’administració i **AAL2 per a edicions sobre autoria aliena**. Superadmin amb AAL2 té abast global.\n\nEl mode local **guarda les campanyes en memòria** i **permet editar a l'autor** de la campanya. A l'adaptador Supabase, el **mode `seed`** (el del connector de WordPress) **torna `no-disponible` en desar o esborrar**: **cap desament en memòria es presenta com a èxit**. En mode remot, **una migració absent** torna `no-disponible`, i una sessió que encara no ha acceptat les **normes de convivència** (`SDP-MOD-428`) torna `normes-pendents`.\n\n### Referències transversals de catàleg (R15.2)\n\n`projeccionsCataleg` només afig el lector paginat `loadProjeccionsCataleg`. Les escriptures reutilitzen `appendSectionSubmissionNetworkOnly`: una referència pública a `mur` i una privada a `notes`, amb UUID estables i les polítiques RLS existents. La font original no es trasllada.\n\nLa tria va primer a IndexedDB i només es confirma després dels ACK necessaris; sense el lector opcional es conserva pendent i no es publica.\n\nEls tres casos neutrals comproven entrada invàlida, pàgina pública i denegació privada sense sessió; les proves funcionals separades cobrixen persistència, revocació, permisos i curses. Açò no acredita execució en Supabase de producció.\n\n### Carpetes privades del Bloc de Notes (R12)\n\nLa **capacitat opcional** `carpetesNotes` oferix `creaCarpetaNotes({ nom }, config)`: **desa la carpeta privada** abans de poder assignar-li notes i retorna `{ id, nom, parentId }`. El servidor **deduïx propietari** de `auth.uid()` i **valida pertinença al tenant**; `loadNotes` carrega els noms reals de `note_folders` filtrats pel mateix propietari. La migració76 instal·la **RLS i la RPC**; el Node0 actual deixa esta **capacitat absent**. El nou cas neutral comprova el rebuig d'un nom buit abans de qualsevol escriptura; les proves funcionals de la migració acrediten permisos i persistència en un PostgreSQL descartable, **sense afirmar aplicació remota**.\n\n### Edició editorial de documents publicats (R12)\n\n`adminActualitzaPublicacioEditorial({ seccio, id, canvis, versio }, config)` modifica un **element existent** de `app_content`: `mur` → `feedPosts`, `events`, `mercat` → `marketItems` o `pagines` → `pages`. Retorna `{ item, versio }`; `_editorialClau` i `_editorialVersio` **provenen del backend**. La versió de tota la col·lecció es compara sota **bloqueig de fila**; un **desament antic** falla amb `conflicte-versio`. La **llista blanca** admet text, imatges i classificació editorial; l'autoria, el tenant, les rutes i els pobles originals **es conserven**. Les metadades del payload d'una publicació veïnal **no poden fabricar** esta font.\n\nLa migració **2611051930**, número **76** del catàleg candidat, requerix **superadmin amb AAL2** abans de consultar les dades. El local requerix una política `administracioLocal` **injectada explícitament**; cap rol declarat pel client la substituïx. La composició Node0 només anuncia la capacitat amb `SDP_NODE0_EDITORIAL=1` i la RPC instal·lada; les sessions Node0 actuals amb **AAL1** continuen denegades i **no s'eleven**. S'han provat permisos, CAS i preservació en PostgreSQL descartable; això **no acredita desplegament ni una sessió AAL2 de producció**.\n\nLes **pàgines de sistema** continuen llegint la **llavor vigent** fins al **primer desament explícit** amb `editorial_format: html-r6`, conservant els textos d'IDEA-92. Després **preval la pàgina desada**, inclòs un cos buit. Un canvi del text **invalida traduccions estàtiques** antigues. El backfill de Manifest/Aplec només substituïx **el resum o l'absència coneguts de R5** i **conserva edicions divergents**.\n\n### Revisions de llavor i exportació pròpia (R33)\n\nLa **capacitat opcional** `revisionsLlavor` afig `loadSeedRevisions({ seccio, ids }, config)` i `desaRevisioSeed({ seccio, id, camps, versio, fontVersio }, config)`. La consulta retorna **només revisions públiques vigents**. El CAS comprova la **revisió de la peça** i la **versió llegida de la font** d’`app_content`; **un canvi de font invalida** l’overlay anterior. La migració80 valida **autoria de servidor o superadmin amb AAL2**, sense DML directe del client. Local i Supabase tenen implementació i proves; el receptor privat Node0 **no anuncia el transport nou**.\n\nLa RPC única `exporta_les_meues_dades()` incorpora les **aportacions pròpies** sense copiar el cos de l’exportador canònic. `author_payload` separa els **camps aportats per qui edita** del cos públic fusionat amb edicions anteriors. L’exportació **exclou dades d’altres autors** i actors nuls, i la **resposta pendent es bloqueja** després d’un canvi de compte. Un servidor antic marca el recurs no disponible; **no equival a una exportació completa**. La migració del storage antic és **explícita, amb selecció i doble versió**; no buida ni publica automàticament revisions sense atribució. SQL80 està preparat i provat localment, **sense aplicació remota acreditada**.\n\n### Connexions i pertinença (FEDI-23)\n\nEl tall FEDI-23 de la **capacitat opcional** `connexionsPubliques` ampliava el contracte a **126 mètodes**, amb **178 casos** al kit i `metodesSenseCas()` buit. Els 172 casos previs es conserven en ordre; els **sis casos nous** comproven rebuig estructural abans d’efectes. Els camins positius, la privacitat, els permisos i les carreres es proven separadament amb els **adaptadors reals** locals, els wrappers remots i PostgreSQL. Esta combinació **no acredita** 126 èxits en un servidor remot.\n\nLa preferència `visibilitatConnexions` és **privada per defecte**. El perfil pot habilitar la **lectura pública** i ocultar vincles individuals. Una **excepció privada** a qualsevol extrem domina; els **perfils privats**, els bloquejos i el representant bloquejat d’una entitat no es projecten. La **consulta pública** és la mateixa per a visitants i propietàries. Les preferències amb vincles editables són una **lectura autoritzada** separada, també a empresa, entitat i poble. El poble es resol explícitament per **id o slug**, sense reservar al tenant actiu.\n\n`inclouPersonaEnEntitat({orgId,personaId,rol})` requerix **autoritat de l’entitat**; només qui ja podia **nomenar administradores** pot assignar `administrador`. `treballador` i `usuari` són **papers funcionals** separats dels permisos de propietat. `solicitaUnirSeAEntitat({orgId,rol})` només registra una **petició pendent**: no crea pertinença ni concedix cap permís. Les comprovacions de servidor utilitzen la **identitat autenticada** i els rols persistits. La **política injectada** del magatzem local només és autoritat local.\n\nLa Frontissa Sollutia conserva el seu límit GET i el mateix port neutral. La migració de connexions es prepara i assaja localment; la seua disponibilitat remota s’ha de comprovar separadament.\n### Administració multipoble (FEDI-04)\n\nLa capacitat nova és **opcional** i separada del **llistat públic de pobles**.\n`adminLlistaPobles(config)` crida `admin_llista_pobles` i torna només\n**`[{ id, slug, nom }]`** de `public.towns`. `adminLligPersonalitzacio(config)`\nexigix el **`tenantId` explícit** i crida `admin_llegix_personalitzacio` per a\neixe tenant: torna `taxonomia` i `estil`, amb payload i versió o null. **Les dues\nRPC** requerixen `private.es_superadmin()`, que exigix rol **superadmin** i JWT\n**`aal2`**; ser administrador a `town_memberships` no hi atorga accés.\n\nLes **facetes existents del Tauler** fan lectures, desats i historial amb la\n**config del poble triat**. **No canvien la sessió**, el tenant global ni el contingut\nglobal. La selecció torna a validar-se quan canvia la sessió i les **lectures\nvelles** **s'avorten i s'ignoren**. La **previsualització de l'estil** es limita a la\nfaceta. Les mutacions reutilitzen `adminDesaPersonalitzacio` i\n`adminHistorialPersonalitzacio`, amb la **mateixa autoritat de servidor**.\n\n**Límit de desplegament:** `2611031700_administracio_multipoble.sql` és additiva\ni la seua aplicació remota **no queda acreditada** per les proves locals.\nL'adaptador remot oferix el contracte al codi; la disponibilitat efectiva del\nservidor es comprova separadament. Els errors **no es convertixen en llistes\nbuides** ni en pobles de mostra. `tests/administracio-multipoble-postgres.test.mjs`\nha aplicat **74 migracions reals** a PostgreSQL17.5 WASM (PGlite0.3.16), en l'ordre\ncanònic de desplegament: **40/40 proves** i mutants d'autoritat/historial refutats,\nmés un mutant independent de filtre tenant. Auth/Storage/Realtime tenen\ninfraestructura de fixture; no és un desplegament ni una prova de GoTrue o PostgREST.\nEl registre de dependències és `supabase/migrations/README.md` i el catàleg\ncomplet, `supabase/README.md`; l'**ordre executable** és `supabase/ordre_desplegament.json`.\n\nEls dos mètodes tenen **quatre casos** al kit neutral: dos comproven el **rebuig**\n`abast-invalid` d'un tenant malformat **abans del transport**, i dos validen la\nforma de les **lectures autoritzades**. Els positius **s'ometen per defecte**:\nrequerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un\n`tenantAdministrat` explícit al context de prova. Eixa opció del corredor\n**no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot\nreal i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.\n\nL'adaptador local oferix **50 dels 66 grups declarats**; `CAPACITATS_NO_DECLARADES`\nconté `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.\nL'administració multipoble està **denegada per defecte**: requerix el catàleg i\nla política `administracioLocal` injectats en construir la instància. La política\nnomés autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.\nLectura, escriptura i historial administratius utilitzen el **tenant explícit**; dades,\nversions i historial se separen per tenant i clau. La lectura general continua\nen el poble propi. Les entrades i l'actor es capturen abans d'esperar, i canvis\nde sessió, avortament o destrucció **impedixen mutacions no iniciades**.\nEsta autoritat és **només del magatzem local**: no concedix permisos a Supabase\nni protegix davant scripts amb accés al mateix origen. El contracte de composició\ni els límits figuren a `src/data/local/README.md`.\n\n## Frontissa de lectura i sessió\n\n`src/data/adaptadors/sollutia/client.js`: `CONFIGURACIO` té `apiOrigin: null`,\n`allowedOrigins: []` i `resources: {}`. `ESCRIPTURES_PERMESES` és buit.\n`llig` no té recursos activats sense una captura versionada.\n\n`src/data/adaptadors/sollutia/creaFrontissa.js` **exporta** `creaFrontissa` i\n`ErrorDades`. **Valida HTTPS**, **origen admés**, **rutes, paràmetres i captures**;\nutilitza GET, credentials omit, redirect error i Accept application/json.\nCada recurs aporta `timeoutMs`, `maxBytes` i `decode`, que **valida el DTO**.\nEls **codis literals** inclouen `INVALID_ORIGIN`, `INVALID_RESOURCE`,\n`UNKNOWN_RESOURCE`, `INVALID_QUERY`, `CANCELLED`, `TIMEOUT`,\n`PAYLOAD_TOO_LARGE`, `INVALID_PAYLOAD`, `UNAUTHENTICATED`, `FORBIDDEN`\ni `UNAVAILABLE`. No són codis FRONTISSA_*.\n\nLa sessió externa és una capacitat separada; el seu issuer no és un origen\nde dades. Les dades del poble continuen darrere del port de Sóc de Poble.\n\n## Allotjament verificable\n\n- WordPress: `wordpress-plugin/socdepoble-enxufe.php` carrega\n  `dist/soc-de-poble.standalone.js` i `dist/sdp-release.json` relatius al plugin.\n  El codi curt `[socdepoble_app]` (`includes/marcatge.php`) i el bloc `socdepoble/app`\n  (`includes/bloc/block.json`) allotgen el component.\n  L'aprovació de l'slug `socdepoble` ja consta en Ronda 1; no prova una versió\n  publicada ni un nou desplegament d'este lot.\n- Web estàtica: `firebase.json` servix `dist` i declara Content-Security-Policy,\n  X-Content-Type-Options, Referrer-Policy i Permissions-Policy. No declara\n  HSTS ni X-Frame-Options; la política de marcs és dins de CSP. Les projeccions\n  de federació i el seu desplegament són una verificació separada.\n- Node municipal: `flake.nix` i `tooling/instalador/flake.nix` són peces diferents.\n  `tooling/instalador/inicia-node-germa.mjs` prepara fitxers locals. Les proves\n  Node no substituïxen executar Nix ni acrediten infraestructura desplegada.\n\nCal configurar **domini HTTPS**, **origen del backend**, **clau pública del navegador**\ni **municipi** abans de construir/servir la web. **Cap clau service_role o secret**\nentra al frontend. No es fixen costos, RAM, proveïdors alternatius ni recursos\nmínims **sense mesurar-los**. Qualsevol canvi de backend requerix adaptador,\nconformitat, **cobertura declarada** i la decisió documentada del projecte.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [ADR-2026-09-SOLLUTIA-MODEL-B](?item=ADR-2026-09-SOLLUTIA-MODEL-B)\n\n## R32.7 · Accions de missatge opcionals\n\nEls **cinc mètodes** d’`xatAccionsMissatge` tenen **cinc casos de rebuig** abans de transport. Les reaccions són **agregats sense UUID** d’altres persones. Les mutacions expressen l’**estat final desitjat** per resistir ACK perduts. La sessió i el fil es **verifiquen al backend**; el fallback local identificat només s’activa davant absència SQL estructurada, sense convertir 401, 403 o xarxa en èxit. El reenviament i la resposta privada s’orquestren al servei del xat, amb nous adjunts per destí i **sense exposar operadors** d’entitats. El kit preparat **no acredita desplegament remot**.\n"
+      "content": "# API del port neutral i allotjament Model B\n\n**Contrast inicial:** arbre de l'assalt 261101_1246, 2026-11-01. **Tall històric anterior del recompte**\ndes de `src/data/contracte.js` i `src/data/conformitat/kit.js` el 2026-11-19 (R32.13, ACK causal CRDT i denúncies diligents; l'anterior, el 2026-11-14, R24, consens del joc «D'on parles?»).\n\n**Actualització R32.19 (2026-11-20):** el cens vigent de les seccions següents incorpora `protocolPublic` i `transportOAuth`: sis mètodes opcionals i sis casos nous. Les cinc consultes de protocol són síncrones; el transport OAuth és separat. Els dos grups continuen absents en l'adaptador local. Esta actualització és d'inventari i no acredita activació ni verificació d'un servidor remot.\n**Esborrany. Inventari de codi**; **no acredita cap nou desplegament** ni l'aprovació d'una ADR.\nLes **signatures i DTO** són a `src/data/contracte.js` i a les **implementacions**;\nla **llista següent** enumera noms.\n\n## 32 operacions obligatòries del Nucli (`CONTRACTE_NUCLI`)\n\nFont: `src/data/contracte.js`. Una implementació vàlida les oferix totes:\n\n- `loadCoreContent`\n- `loadMur`\n- `loadMultimedia`\n- `loadNotes`\n- `appendChatMessages`\n- `appendSectionSubmissionNetworkOnly`\n- `updateNote`\n- `loginWithMagicLink`\n- `registerWithPassword`\n- `loginWithPassword`\n- `loginWithGoogle`\n- `listMyOrganizations`\n- `createOrganization`\n- `updateOrganization`\n- `updateProfile`\n- `updateUserPassword`\n- `getProfile`\n- `recullTornadaOAuth`\n- `logout`\n- `getCurrentUser`\n- `getBackendConfigurat`\n- `getRuntimeDataMode`\n- `getDefaultUserId`\n- `createNote`\n- `loadFils`\n- `loadMissatges`\n- `enviaMissatge`\n- `marcaLlegit`\n- `creaFilDirecte`\n- `carregaMembres`\n- `subscribeToXat`\n- `unsubscribeFromXat`\n\n## 68 capacitats atòmiques opcionals (`CAPACITATS`)\n\n**160 mètodes addicionals** i **192 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**\namb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i\n`CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat\nestà disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**\nun camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 68 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.\n\n| Capacitat | Mètodes literals |\n| --- | --- |\n| `protocolPublic` | `prefixMitjansPublics`, `classificaCamiMitja`, `esReferenciaMitjaPrivada`, `normalitzaVerificacioRecuperacio`, `urlAutoritzacioGoogle` |\n| `transportOAuth` | `bescanviaCodiOAuth` |\n| `ackCrdtRural` | `confirmaCapturaCrdtRural` |\n| `denunciesDiligents` | `registraDenunciaDiligent`, `revisaDenunciaDiligent`, `llistaDenunciesDiligents` |\n| `revocacioPublicacions` | `revocaPublicacioMur`, `drenaRevocacionsMur`, `encuaRevocacioNotaMur` |\n| `copublicacio` | `lligPublicadorsRegistrats`, `traspassaPublicacio`, `reverteixTraspasPublicacio` |\n| `projeccionsCataleg` | `loadProjeccionsCataleg` |\n| `administracioSessions` | `adminResumSessionsDispositius`, `adminLlistaSessionsDispositius` |\n| `curadoriaCultural` | `estatCuradoriaCultural`, `llistaAportacionsCulturals`, `enviaAportacioCultural`, `revisaAportacioCultural` |\n| `iaia` | `consultaIAIA` |\n| `xatRitme` | `loadRitmeXat`, `actualitzaPresenciaXat` |\n| `xatAccionsMissatge` | `carregaAccionsMissatges`, `alternaReaccio`, `alternaDestacat`, `alternaFixat`, `eliminaPerAMi`, `eliminaPerATothom` |\n| `carpetesNotes` | `creaCarpetaNotes` |\n| `edicioEditorial` | `adminActualitzaPublicacioEditorial` |\n| `revisionsLlavor` | `loadSeedRevisions`, `desaRevisioSeed` |\n| `edicioPublicacionsPropies` | `desaPublicacioPropia` |\n| `revisionsPagines` | `llistaRevisionsPagina`, `desaRevisioPagina`, `restauraRevisioPagina` |\n| `revisionsPatrimoni` | `llistaRevisionsPatrimoni`, `desaRevisioPatrimoni`, `esborraRevisioPatrimoni` |\n| `sessioExterna` | `adoptaSessioExterna` |\n| `paginacioNotes` | `loadNotesPage` |\n| `copiaCompte` | `llegixCopiaCompte` |\n| `restauracioCompte` | `restauraCopiaCompte` |\n| `paginacioSeccions` | `loadSeccioPage` |\n| `admin` | `adminListUsers`, `adminListOrganizations` |\n| `administracioUsuaris` | `adminLlistaUsuarisRegistrats`, `adminAssignaMembreOrganitzacio`, `adminConnectaUsuari` |\n| `importacioPaquetMunicipal` | `importaMunicipiOpenData` |\n| `verificacioCorreu` | `confirmaCorreu`, `reenviaVerificacioCorreu` |\n| `recuperacioCorreu` | `demanaRestablimentCorreu`, `restablixContrasenyaAmbCorreu` |\n| `sessio` | `refrescaSessio`, `elMeuRol` |\n| `mitjans` | `uploadToStorage`, `getPublicUrl`, `resolveAsset`, `promoteToPublic` |\n| `mitjansPropis` | `llistaElsMeusMitjans`, `esborraElMeuMitja` |\n| `xatMultimedia` | `quotaXat`, `publicaAdjuntXat`, `urlAdjuntXat`, `descartaAdjuntXat` |\n| `clausXat` | `publicaIdentitatXat`, `laMevaIdentitatXat`, `desaFraseXat`, `clausDeXat`, `desaLlibretaXat`, `laMevaLlibretaXat`, `estatXifratXat`, `epoquesDelFilXat`, `sobresMeusXat`, `obriEpocaXat`, `enviaXifratXat`, `reembolcallaXat`, `demanaXifratXat` |\n| `xatMultimediaXifrat` | `publicaAdjuntXifratXat`, `bytesAdjuntXat` |\n| `agenda` | `loadActesAgenda` |\n| `compte` | `exportaLesMeuesDades`, `estatBaixa`, `demanaBaixa`, `cancelaBaixa` |\n| `consentiment` | `estatConsentiment`, `registraConsentiment`, `revocaConsentiment` |\n| `cicleNotes` | `mouNota`, `esborraNota` |\n| `directori` | `loadPerfilPublic` |\n| `directoriEntitats` | `listPublicOrganizations` |\n| `agents` | `listMyAgents`, `updateAgent` |\n| `reclamacions` | `reclamaOrganitzacio`, `lesMevesReclamacions` |\n| `contacteOrganitzacio` | `llegeixContacteOrganitzacio`, `desaContacteOrganitzacio` |\n| `xatDePagina` | `obriFilDePagina` |\n| `salut` | `comprovaServidor` |\n| `versioClient` | `versioMinimaClient` |\n| `recuperacioContrasenya` | `demanaRecuperacioContrasenya`, `definixContrasenyaNova` |\n| `entradaAmbToken` | `entraAmbTokenDeProveidor` |\n| `membresOrganitzacio` | `llistaMembresOrganitzacio`, `desaMembreOrganitzacio`, `llevaMembreOrganitzacio` |\n| `transferenciaPropietat` | `transfereixPropietatOrganitzacio` |\n| `segonFactor` | `llistaFactors`, `inscriuFactor`, `reptaFactor`, `verificaFactor`, `retiraFactor` |\n| `personalitzacio` | `adminDesaPersonalitzacio`, `adminHistorialPersonalitzacio` |\n| `administracioMultipoble` | `adminLlistaPobles`, `adminLligPersonalitzacio` |\n| `moderacio` | `denunciaContingut`, `llistaBloquejos`, `bloquejaAutor`, `desbloquejaAutor` |\n| `moderacioLssi` | `registraDenunciaPublica`, `adminSafataDenuncies`, `adminRevisaDenuncia` |\n| `normesConvivencia` | `estatNormes`, `acceptaNormes` |\n| `seguiments` | `segueix`, `deixaDeSeguir`, `estatSeguiment`, `elsMeusSeguiments`, `quiEmSegueix` |\n| `titularPublic` | `loadTitularPublic` |\n| `consentimentTitular` | `estatTitularPublic`, `marcaTitularPublic` |\n| `dadesObertes` | `llegixDadesObertes` |\n| `restauracioDadesObertes` | `restauraDadesObertes` |\n| `avisosPush` | `desaDispositiuAvisos`, `retiraDispositiuAvisos` |\n| `silenciXat` | `silenciaFil` |\n| `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |\n| `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |\n| `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |\n| `taxonomiaPagines` | `actualitzaTaxonomiaPagina`, `lligTaxonomiaPagina` |\n| `xatCerca` | `cercaMissatgesFil`, `cercaMissatgesFilPaginada`, `carregaMissatgeFilPerId` |\n\n## Validació i conformitat\n\n`src/data/backendPort.js` exporta `validaBackendImplementation`,\n`setBackendImplementation`, `getBackendImplementation` i `teCapacitat`.\nLa validació prepara els mètodes i només després substituïx el port, rebutja\ngetters i capacitats parcials. No és una prova funcional d'un servidor remot.\n\n`src/data/conformitat/kit.js` **exporta** `CASOS`, `contextDeConformitat`,\n`executaCas` i `metodesSenseCas`. **Els casos tornen** `ok`, `falla` o `omés`.\nEl tall FEDI-17 del 03-11-2026 té **172 casos sobre els 120 mètodes** i\n`metodesSenseCas()` torna una llista buida. Els 99 casos originals es conserven;\nles cinc passades han registrat una unió de **120 invocacions reals**. **Les omissions**\nper capacitat, dades o autorització continuen separades dels casos superats.\nLes proves són `src/data/conformitat/kit.test.js` i `qualitat.test.js`, amb corredors\nlocals i de Supabase seed/remot amb doble de transport explícit. Les sondes i\nels mutants independents detecten crides absents, DTO incorrectes i operacions\ninoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformitat`.\nEsta cobertura contractual local **no acredita 120 èxits de servidor remot**,\nni totes les branques possibles de cada mètode.\n\n### Recompte local vigent (v1.2.26 · 2026-11-26) i verificació per correu (R6)\n\nv1.2.25 (**costures 8 i 9**, 2026-11-25) afig `xatCerca`: **tres mètodes opcionals** per a cercar dins d'una conversa i llegir un **missatge antic per id** (C1, `src/data/supabase/xatCerca.js`), amb **tres casos de rebuig** sense servei remot. L'adaptador Supabase només l'anuncia amb `VITE_SDP_XAT_CERCA=1`, perquè la migració `20261125010000` **encara no és a Producció**; l'adaptador local la declara i la **rebutja sempre** amb `sense-capacitat`. **No acredita cap cerca remota desplegada.**\n\nR32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia pública i revisió humana, amb tres casos de rebuig previ; el grup no està disponible a l’adaptador local.\n\nR32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccions, destacats, fixats i esborrat per a mi, amb cinc casos de rebuig previ; el grup tampoc no està disponible a l’adaptador local.\n\nR32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.\n\nv1.2.26 (C26-1 #12, IDEA-365) afig un cas al nucli: `appendSectionSubmissionNetworkOnly` rebutja amb `SDP-TAXONOMIA-DESTI` una publicació amb `categoriesSistema` buida, sense publicar-la. No afig cap mètode ni capacitat. C26-3 hi havia sumat els dos casos de `taxonomiaPagines` (IDEA-375).\n\nEl recompte actual és de **256 casos sobre 192 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.\n\nL’adaptador local oferix **52 dels 68 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.\n\nLes omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 192 operacions en un servidor remot continua pendent.\n\nR32.56 (C6) afig `copiaCompte` i `restauracioCompte`: **còpia del subconjunt de negoci implementat** —perfil, notes, carpetes, organitzacions i patrimoni— i restauració en **candidat inactiu en RAM**, restringit i lligat a l’actor. **No és una restauració completa ni durable del compte** ni una capacitat de restauració remota. R32.64 (C10) afig el sisé mètode d’`xatAccionsMissatge`, `eliminaPerATothom`, i un cas comú de rebuig. La RPC preparada **elimina sense caducitat**, requerix **autoritat del servidor i rebut confirmat**; esta operació no confirma localment davant absència SQL o denegació. Les proves locals **no acrediten desplegament remot**.\n\n### Consens del joc «D'on parles?» (R24)\n\nLa **capacitat opcional** `consensIsoglosses` (CODEX-R24-03) connecta la targeta del joc amb el port: `lligConsensIsoglossesPoble` llig el **resum agregat** de vots, sense cap identificador personal; `votaVariantIsoglossaPoble` desa **un vot per persona, pregunta i variant** (el repetit torna `nou: false`); `desaAportacioVeuPoble` desa una **variant escrita** pendent de moderació, amb el **consentiment explícit** `cc-by-sa-4.0-v1`. L'**autoria** surt de la **sessió** de l'adaptador; una clau d'autoria, de moderació o desconeguda és un `TypeError` **abans de cap efecte**. La validació i el mapatge viuen a `src/data/consensIsoglosses.js`.\n\nL'**adaptador Supabase** (`src/data/supabase/consensIsoglosses.js`) utilitza la RPC `resum_consens_isoglosses_poble` i les taules `joc_isoglosses_vots_consens` i `aportacions_veu_poble` de les migracions R23, **encara no aplicades**: només l'anuncia amb `VITE_SDP_CONSENS_ISOGLOSSES=1`. L'adaptador local la servix des del **magatzem en memòria** de la instància. El Node 0 **no la declara**. Els tres casos nous del kit comproven el **rebuig previ**; les proves funcionals dels adaptadors i `tests/r24-consens-isoglosses-postgres.test.mjs` cobrixen el mapatge, **sense acreditar aplicació remota**.\n\n### Co-publicació registrada (R19)\n\n`lligPublicadorsRegistrats` llig l’ordre, el publicador efectiu i la versió d’un recurs identificat pel seu tipus i id. La versió 0 indica la reserva editorial inicial. El catàleg local conserva la lectura de reserva i denega els traspassos administratius.\n\n`traspassaPublicacio` i `reverteixTraspasPublicacio` requerixen superadministració amb AAL2 en el node remot. La migració `2611111735` valida el padró, la versió i el tipus de recurs.\n\nEl client conserva l’UUID de l’operació durant els reintents. La reversió referencia el traspàs registrat i crea una operació pròpia. Els crèdits i la llicència provenen de la font editorial.\n\n### Campanyes de patrimoni viu (R17.2B)\n\n`llistaRevisionsPatrimoni` **llig les campanyes públiques** per tipus i peça, de la més recent a la més antiga. Admet `abansAny` i un `limit` de fins a 100. `desaRevisioPatrimoni` **crea una campanya** amb `versio: 0`. Les edicions i les baixes **requerixen l’`id` i la `versio` llegits**. Hi ha **una campanya per any, peça i poble**. Les mesures són un **mapa acotat** amb claus de text i valors primitius. La migració 2611110110 **manté privada l'autoria** i exigix **sessió i pertinença al poble** per editar, amb permís de curadoria o d’administració i **AAL2 per a edicions sobre autoria aliena**. Superadmin amb AAL2 té abast global.\n\nEl mode local **guarda les campanyes en memòria** i **permet editar a l'autor** de la campanya. A l'adaptador Supabase, el **mode `seed`** (el del connector de WordPress) **torna `no-disponible` en desar o esborrar**: **cap desament en memòria es presenta com a èxit**. En mode remot, **una migració absent** torna `no-disponible`, i una sessió que encara no ha acceptat les **normes de convivència** (`SDP-MOD-428`) torna `normes-pendents`.\n\n### Referències transversals de catàleg (R15.2)\n\n`projeccionsCataleg` només afig el lector paginat `loadProjeccionsCataleg`. Les escriptures reutilitzen `appendSectionSubmissionNetworkOnly`: una referència pública a `mur` i una privada a `notes`, amb UUID estables i les polítiques RLS existents. La font original no es trasllada.\n\nLa tria va primer a IndexedDB i només es confirma després dels ACK necessaris; sense el lector opcional es conserva pendent i no es publica.\n\nEls tres casos neutrals comproven entrada invàlida, pàgina pública i denegació privada sense sessió; les proves funcionals separades cobrixen persistència, revocació, permisos i curses. Açò no acredita execució en Supabase de producció.\n\n### Carpetes privades del Bloc de Notes (R12)\n\nLa **capacitat opcional** `carpetesNotes` oferix `creaCarpetaNotes({ nom }, config)`: **desa la carpeta privada** abans de poder assignar-li notes i retorna `{ id, nom, parentId }`. El servidor **deduïx propietari** de `auth.uid()` i **valida pertinença al tenant**; `loadNotes` carrega els noms reals de `note_folders` filtrats pel mateix propietari. La migració76 instal·la **RLS i la RPC**; el Node0 actual deixa esta **capacitat absent**. El nou cas neutral comprova el rebuig d'un nom buit abans de qualsevol escriptura; les proves funcionals de la migració acrediten permisos i persistència en un PostgreSQL descartable, **sense afirmar aplicació remota**.\n\n### Edició editorial de documents publicats (R12)\n\n`adminActualitzaPublicacioEditorial({ seccio, id, canvis, versio }, config)` modifica un **element existent** de `app_content`: `mur` → `feedPosts`, `events`, `mercat` → `marketItems` o `pagines` → `pages`. Retorna `{ item, versio }`; `_editorialClau` i `_editorialVersio` **provenen del backend**. La versió de tota la col·lecció es compara sota **bloqueig de fila**; un **desament antic** falla amb `conflicte-versio`. La **llista blanca** admet text, imatges i classificació editorial; l'autoria, el tenant, les rutes i els pobles originals **es conserven**. Les metadades del payload d'una publicació veïnal **no poden fabricar** esta font.\n\nLa migració **2611051930**, número **76** del catàleg candidat, requerix **superadmin amb AAL2** abans de consultar les dades. El local requerix una política `administracioLocal` **injectada explícitament**; cap rol declarat pel client la substituïx. La composició Node0 només anuncia la capacitat amb `SDP_NODE0_EDITORIAL=1` i la RPC instal·lada; les sessions Node0 actuals amb **AAL1** continuen denegades i **no s'eleven**. S'han provat permisos, CAS i preservació en PostgreSQL descartable; això **no acredita desplegament ni una sessió AAL2 de producció**.\n\nLes **pàgines de sistema** continuen llegint la **llavor vigent** fins al **primer desament explícit** amb `editorial_format: html-r6`, conservant els textos d'IDEA-92. Després **preval la pàgina desada**, inclòs un cos buit. Un canvi del text **invalida traduccions estàtiques** antigues. El backfill de Manifest/Aplec només substituïx **el resum o l'absència coneguts de R5** i **conserva edicions divergents**.\n\n### Revisions de llavor i exportació pròpia (R33)\n\nLa **capacitat opcional** `revisionsLlavor` afig `loadSeedRevisions({ seccio, ids }, config)` i `desaRevisioSeed({ seccio, id, camps, versio, fontVersio }, config)`. La consulta retorna **només revisions públiques vigents**. El CAS comprova la **revisió de la peça** i la **versió llegida de la font** d’`app_content`; **un canvi de font invalida** l’overlay anterior. La migració80 valida **autoria de servidor o superadmin amb AAL2**, sense DML directe del client. Local i Supabase tenen implementació i proves; el receptor privat Node0 **no anuncia el transport nou**.\n\nLa RPC única `exporta_les_meues_dades()` incorpora les **aportacions pròpies** sense copiar el cos de l’exportador canònic. `author_payload` separa els **camps aportats per qui edita** del cos públic fusionat amb edicions anteriors. L’exportació **exclou dades d’altres autors** i actors nuls, i la **resposta pendent es bloqueja** després d’un canvi de compte. Un servidor antic marca el recurs no disponible; **no equival a una exportació completa**. La migració del storage antic és **explícita, amb selecció i doble versió**; no buida ni publica automàticament revisions sense atribució. SQL80 està preparat i provat localment, **sense aplicació remota acreditada**.\n\n### Connexions i pertinença (FEDI-23)\n\nEl tall FEDI-23 de la **capacitat opcional** `connexionsPubliques` ampliava el contracte a **126 mètodes**, amb **178 casos** al kit i `metodesSenseCas()` buit. Els 172 casos previs es conserven en ordre; els **sis casos nous** comproven rebuig estructural abans d’efectes. Els camins positius, la privacitat, els permisos i les carreres es proven separadament amb els **adaptadors reals** locals, els wrappers remots i PostgreSQL. Esta combinació **no acredita** 126 èxits en un servidor remot.\n\nLa preferència `visibilitatConnexions` és **privada per defecte**. El perfil pot habilitar la **lectura pública** i ocultar vincles individuals. Una **excepció privada** a qualsevol extrem domina; els **perfils privats**, els bloquejos i el representant bloquejat d’una entitat no es projecten. La **consulta pública** és la mateixa per a visitants i propietàries. Les preferències amb vincles editables són una **lectura autoritzada** separada, també a empresa, entitat i poble. El poble es resol explícitament per **id o slug**, sense reservar al tenant actiu.\n\n`inclouPersonaEnEntitat({orgId,personaId,rol})` requerix **autoritat de l’entitat**; només qui ja podia **nomenar administradores** pot assignar `administrador`. `treballador` i `usuari` són **papers funcionals** separats dels permisos de propietat. `solicitaUnirSeAEntitat({orgId,rol})` només registra una **petició pendent**: no crea pertinença ni concedix cap permís. Les comprovacions de servidor utilitzen la **identitat autenticada** i els rols persistits. La **política injectada** del magatzem local només és autoritat local.\n\nLa Frontissa Sollutia conserva el seu límit GET i el mateix port neutral. La migració de connexions es prepara i assaja localment; la seua disponibilitat remota s’ha de comprovar separadament.\n### Administració multipoble (FEDI-04)\n\nLa capacitat nova és **opcional** i separada del **llistat públic de pobles**.\n`adminLlistaPobles(config)` crida `admin_llista_pobles` i torna només\n**`[{ id, slug, nom }]`** de `public.towns`. `adminLligPersonalitzacio(config)`\nexigix el **`tenantId` explícit** i crida `admin_llegix_personalitzacio` per a\neixe tenant: torna `taxonomia` i `estil`, amb payload i versió o null. **Les dues\nRPC** requerixen `private.es_superadmin()`, que exigix rol **superadmin** i JWT\n**`aal2`**; ser administrador a `town_memberships` no hi atorga accés.\n\nLes **facetes existents del Tauler** fan lectures, desats i historial amb la\n**config del poble triat**. **No canvien la sessió**, el tenant global ni el contingut\nglobal. La selecció torna a validar-se quan canvia la sessió i les **lectures\nvelles** **s'avorten i s'ignoren**. La **previsualització de l'estil** es limita a la\nfaceta. Les mutacions reutilitzen `adminDesaPersonalitzacio` i\n`adminHistorialPersonalitzacio`, amb la **mateixa autoritat de servidor**.\n\n**Límit de desplegament:** `2611031700_administracio_multipoble.sql` és additiva\ni la seua aplicació remota **no queda acreditada** per les proves locals.\nL'adaptador remot oferix el contracte al codi; la disponibilitat efectiva del\nservidor es comprova separadament. Els errors **no es convertixen en llistes\nbuides** ni en pobles de mostra. `tests/administracio-multipoble-postgres.test.mjs`\nha aplicat **74 migracions reals** a PostgreSQL17.5 WASM (PGlite0.3.16), en l'ordre\ncanònic de desplegament: **40/40 proves** i mutants d'autoritat/historial refutats,\nmés un mutant independent de filtre tenant. Auth/Storage/Realtime tenen\ninfraestructura de fixture; no és un desplegament ni una prova de GoTrue o PostgREST.\nEl registre de dependències és `supabase/migrations/README.md` i el catàleg\ncomplet, `supabase/README.md`; l'**ordre executable** és `supabase/ordre_desplegament.json`.\n\nEls dos mètodes tenen **quatre casos** al kit neutral: dos comproven el **rebuig**\n`abast-invalid` d'un tenant malformat **abans del transport**, i dos validen la\nforma de les **lectures autoritzades**. Els positius **s'ometen per defecte**:\nrequerixen `adminMultipobleAutoritzat: true` i, per a la lectura, un\n`tenantAdministrat` explícit al context de prova. Eixa opció del corredor\n**no atorga permisos** al servidor. Les proves passen també amb l'adaptador remot\nreal i un **doble de RPC**; **no acrediten una sessió privilegiada en PostgreSQL**.\n\nL'adaptador local oferix **52 dels 68 grups declarats**; `CAPACITATS_NO_DECLARADES`\nconté `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. `versioMinimaClient` torna honestament `null`, sense transport.\nL'administració multipoble està **denegada per defecte**: requerix el catàleg i\nla política `administracioLocal` injectats en construir la instància. La política\nnomés autoritza amb `true`, i **no deriva permisos** de rols o MFA del client.\nLectura, escriptura i historial administratius utilitzen el **tenant explícit**; dades,\nversions i historial se separen per tenant i clau. La lectura general continua\nen el poble propi. Les entrades i l'actor es capturen abans d'esperar, i canvis\nde sessió, avortament o destrucció **impedixen mutacions no iniciades**.\nEsta autoritat és **només del magatzem local**: no concedix permisos a Supabase\nni protegix davant scripts amb accés al mateix origen. El contracte de composició\ni els límits figuren a `src/data/local/README.md`.\n\n## Frontissa de lectura i sessió\n\n`src/data/adaptadors/sollutia/client.js`: `CONFIGURACIO` té `apiOrigin: null`,\n`allowedOrigins: []` i `resources: {}`. `ESCRIPTURES_PERMESES` és buit.\n`llig` no té recursos activats sense una captura versionada.\n\n`src/data/adaptadors/sollutia/creaFrontissa.js` **exporta** `creaFrontissa` i\n`ErrorDades`. **Valida HTTPS**, **origen admés**, **rutes, paràmetres i captures**;\nutilitza GET, credentials omit, redirect error i Accept application/json.\nCada recurs aporta `timeoutMs`, `maxBytes` i `decode`, que **valida el DTO**.\nEls **codis literals** inclouen `INVALID_ORIGIN`, `INVALID_RESOURCE`,\n`UNKNOWN_RESOURCE`, `INVALID_QUERY`, `CANCELLED`, `TIMEOUT`,\n`PAYLOAD_TOO_LARGE`, `INVALID_PAYLOAD`, `UNAUTHENTICATED`, `FORBIDDEN`\ni `UNAVAILABLE`. No són codis FRONTISSA_*.\n\nLa sessió externa és una capacitat separada; el seu issuer no és un origen\nde dades. Les dades del poble continuen darrere del port de Sóc de Poble.\n\n## Allotjament verificable\n\n- WordPress: `wordpress-plugin/socdepoble-enxufe.php` carrega\n  `dist/soc-de-poble.standalone.js` i `dist/sdp-release.json` relatius al plugin.\n  El codi curt `[socdepoble_app]` (`includes/marcatge.php`) i el bloc `socdepoble/app`\n  (`includes/bloc/block.json`) allotgen el component.\n  L'aprovació de l'slug `socdepoble` ja consta en Ronda 1; no prova una versió\n  publicada ni un nou desplegament d'este lot.\n- Web estàtica: `firebase.json` servix `dist` i declara Content-Security-Policy,\n  X-Content-Type-Options, Referrer-Policy i Permissions-Policy. No declara\n  HSTS ni X-Frame-Options; la política de marcs és dins de CSP. Les projeccions\n  de federació i el seu desplegament són una verificació separada.\n- Node municipal: `flake.nix` i `tooling/instalador/flake.nix` són peces diferents.\n  `tooling/instalador/inicia-node-germa.mjs` prepara fitxers locals. Les proves\n  Node no substituïxen executar Nix ni acrediten infraestructura desplegada.\n\nCal configurar **domini HTTPS**, **origen del backend**, **clau pública del navegador**\ni **municipi** abans de construir/servir la web. **Cap clau service_role o secret**\nentra al frontend. No es fixen costos, RAM, proveïdors alternatius ni recursos\nmínims **sense mesurar-los**. Qualsevol canvi de backend requerix adaptador,\nconformitat, **cobertura declarada** i la decisió documentada del projecte.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [ADR-2026-09-SOLLUTIA-MODEL-B](?item=ADR-2026-09-SOLLUTIA-MODEL-B)\n\n## R32.7 · Accions de missatge opcionals\n\nEls **cinc mètodes** d’`xatAccionsMissatge` tenen **cinc casos de rebuig** abans de transport. Les reaccions són **agregats sense UUID** d’altres persones. Les mutacions expressen l’**estat final desitjat** per resistir ACK perduts. La sessió i el fil es **verifiquen al backend**; el fallback local identificat només s’activa davant absència SQL estructurada, sense convertir 401, 403 o xarxa en èxit. El reenviament i la resposta privada s’orquestren al servei del xat, amb nous adjunts per destí i **sense exposar operadors** d’entitats. El kit preparat **no acredita desplegament remot**.\n\n### IDEA-375 · Taxonomia editable\n\n`taxonomiaPagines` és **opcional**. `actualitzaTaxonomiaPagina(idPagina, {categoriesSistema, categoriesTematiques, etiquetes, geografia, mencions, versio})` desa amb **CAS** (0 crea), serialitzat per pàgina, i `lligTaxonomiaPagina(idPagina)` torna la **versió vigent**. El servidor exigix el rol de plataforma `superadmin`, representació tècnica de l’administració editorial de Sóc de Poble, i el comprova amb `private.es_superadmin()` i amb l’**AAL2 en línia** a les dues RPC, perquè la migració 2610061448 no està aplicada a Producció; cap nom de perfil conferix autoritat. La lectura pública deriva la visibilitat de la font viva, i una entrada del Mur passa la **frontera canònica del Mur** (visibilitat, moderació, esborrat tou i revocació): les metadades de peces retirades, moderades o privades **no es projecten**. El servidor normalitza com el client i no desa cap fila que el client no puga projectar. El magatzem local **denega per defecte** i només accepta la política `administracioLocal` injectada. La migració 140 està preparada per a assaig i no acredita desplegament.\n"
     },
     {
       "id": "perfil_minim_allotjament_node_municipal",
@@ -1287,6 +1351,8 @@ export const wikiManifest = {
       "updated": "2026-11-19T22:27:05+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1304,6 +1370,8 @@ export const wikiManifest = {
         "updated": "2026-11-19T22:27:05+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1396,6 +1464,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 17,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1412,6 +1482,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 17,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1470,6 +1542,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 15,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1488,6 +1562,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 15,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1622,6 +1698,8 @@ export const wikiManifest = {
       "updated": "2026-09-26T12:23:49+02:00",
       "revisions": 14,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1640,6 +1718,8 @@ export const wikiManifest = {
         "updated": "2026-09-26T12:23:49+02:00",
         "revisions": 14,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1662,6 +1742,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 21,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1680,6 +1762,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 21,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1774,6 +1858,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 18,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -1790,6 +1876,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 18,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -1995,6 +2083,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 17,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -2012,6 +2102,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 17,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -2184,6 +2276,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 19,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -2202,6 +2296,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 19,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -2517,6 +2613,8 @@ export const wikiManifest = {
       "updated": "2026-11-19T22:27:05+01:00",
       "revisions": 6,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -2535,6 +2633,8 @@ export const wikiManifest = {
         "updated": "2026-11-19T22:27:05+01:00",
         "revisions": 6,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -2630,7 +2730,7 @@ export const wikiManifest = {
       "date": "2026-11-17T00:14:00+01:00",
       "updated": "2026-11-21T03:48:00+01:00",
       "version": "1.2.1",
-      "revisions": 6,
+      "revisions": 7,
       "mur": false,
       "origenEditorial": {
         "date": "frontmatter",
@@ -2652,14 +2752,14 @@ export const wikiManifest = {
           "skills",
           "tractors"
         ],
-        "revisions": 6,
+        "revisions": 7,
         "origenEditorial": {
           "date": "frontmatter",
           "updated": "frontmatter",
           "revisions": "git"
         }
       },
-      "content": "# El sistema nerviós: skills, tractors i repositoris oberts\n\nEste document explica, sense tecnicismes innecessaris, com s'organitza la **maquinària interna** que ajuda a construir i vigilar **Sóc de Poble**. Distinguix les **instruccions escrites** (`skills`), els **comprovadors automàtics** (`tractors`) i l'estat real de cada **repositori extern** estudiat o guardat al **Node 0**, amb maquetació fluida sense taules rígides perquè es puga llegir amb comoditat tant al mòbil com amb les columnes laterals obertes.\n\n## 1. Què és una skill i què és un tractor\n\nQuan construïm una eina per al poble, no n'hi ha prou amb tindre **bones intencions**: cal recordar les normes en cada pantalla i comprovar el resultat abans de publicar res. El nostre **sistema nerviós** dividix esta responsabilitat en dues peces complementàries.\n\n- **Les neurones (`Skills` a `.agents/skills/*/SKILL.md`):** són manuals d'ofici breus i verificables escrits en llenguatge humà. Quan un agent d'intel·ligència artificial ha de tocar el disseny, una migració de dades o un text públic, llig primer la **skill corresponent** per actuar amb el **context complet** del projecte.\n- **Els reflexos musculars (Tractors i Portes a `tooling/`):** són programes deterministes escrits en JavaScript (`.mjs`) que no tenen opinions ni cansament. Mesuren el **contrast de lectura al sol**, l'àrea tàctil mínima de `48 × 48 px`, els enllaços vius, el lèxic honest i el **pressupost de pes** del paquet web.\n- **Per què van sempre de la mà:** una regla escrita només en prosa es pot passar per alt quan un model acumula massa pàgines de conversa. Quan eixa mateixa regla té una **porta mecànica** associada, qualsevol oblit s'atura amb codi d'error (`exit 1`) abans d'arribar als veïns.\n\n## 2. Com treballem hui: govern humà i enginyeria assistida\n\nEn el desenvolupament quotidià de **Sóc de Poble** ja cap persona pica codi línia a línia amb el teclat, però **les persones governen totes les decisions**. L'arquitecte humà, **Javi Llinares**, fixa les **necessitats rurals**, l'accessibilitat per a la **gent gran**, el **disseny visual** i l'**aprovació final** de cada entrega.\n\nLa feina tècnica s'ordena des de **Google Antigravity IDE**, on la **IAIA MarIA** actua com a directora tècnica per repartir tasques sense trepitjar fitxers. Cada agent constructor (**Claude**, **ChatGPT Codex** i **Gemini**) treballa sobre una **còpia efímera aïllada** (`/tmp/`) i lliura paquets verificats amb empremta criptogràfica **SHA-256**.\n\nQuan una decisió d'arquitectura demana **contrast extern**, es convoca **El Consell** amb el **context íntegre** del projecte: Z.ai, Qwen, Deepseek, Dola, Kimi, Claude, Perplexity, Mistral Vibe, Grok, Gemini, Copilot i ChatGPT Codex. En paral·lel, el servidor local **Node 0** (`Mac mini` amb **xip Apple M4**) executa **8 escoles locals** d'Ollama com a **revisió addicional sense cost** per consulta.\n\n## 3. Mapa de procedència: pròpies, estudiades i en reserva al Node 0\n\nPer mantindre una **transparència verificable**, classifiquem **tota la maquinària** segons el seu **origen real**: què hem **escrit de cap a peus** a casa, quines **metodologies obertes** hem estudiat per destil·lar les nostres regles i quins **motors lliures** tenim descarregats al **Node 0** sense carregar ni un sol byte a la web.\n\n### 3.1 Maquinària 100 % pròpia de Sóc de Poble\n\nEl repositori manté **46 skills actives** dins de `.agents/skills/` (`24` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.\n\n#### Identitat, Consell i govern humà\nFixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la revisió humana. Agrupen `iaia-maria-core` (el paper d'actriu de la IAIA, D8), `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.\n- **Incorporació real:** **100 % propi** · Actiu amb `incubadora.mjs` i `sincronitza-iaia-core.mjs` (iaia-maria-core), `porta-olivera.mjs` (core-identitat), `guarda-nocturna.mjs` (core-direccio-autonoma) i `tracker_consum.mjs` (core-estrategia-ia); la resta, procedimentals.\n\n#### Prudència, context i memòria\nEviten **edicions a cegues**, conserven **lliçons apreses**, paren **bucles d'error** i **separen carrils** de treball entre MarIA, Claude, ChatGPT Codex i Gemini. Reunixen `core-comprensio-reflexiva`, `core-automillora`, `core-memoria-historica`, `core-context-panic`, `core-edicio-segura`, `core-restauracio-segellada` i `core-secretaria-auditoria`.\n- **Incorporació real:** **100 % propi** · Actiu amb `desenterrar.mjs` (core-restauracio-segellada); la resta, procedimentals.\n\n#### Higiene d'Escriptori i taxonomia\nMantenen l'**Escriptori ordenat**, retiren **fitxers temporals** i exigixen **noms i dates verificables** sota el control de MarIA i les portes de tancament. Inclouen `core-higiene-escriptori`, `core-neteja-brossa`, `core-taxonomia-estricta`, `core-temps-termodinamic`, `core-salfumant-radical` i `core-cartografia-contenidor-som-de-poble` (la llar única de cada contingut del contenidor «Som de Poble»).\n- **Incorporació real:** **100 % propi** · Actiu amb `porta-olivera.mjs` i `consum-acreditat.mjs` (core-higiene-escriptori), `neteja_brossa_arrel.mjs` (core-neteja-brossa), `porta-taxonomia.mjs` (core-taxonomia-estricta i core-temps-termodinamic), `document.mjs` (core-taxonomia-estricta) i `cartograf-som-de-poble.mjs` i `porta-olivera.mjs` (core-cartografia-contenidor-som-de-poble); core-salfumant-radical, procedimental.\n\n#### Qualitat editorial, seguretat i auditoria\nRegulen la **jerarquia de títols**, la **lectura escanejable**, la **seguretat de base de dades** i les rondes d'**auditoria creuada** per a tots els agents constructors i revisors. Són `core-llegibilitat-text`, `core-maquetacio-markdown`, `core-informes-pdf`, `core-seguretat-audit`, `core-sentinella-blindatge`, `core-tecniques-investigacio` i `core-gauntlet-loop`.\n- **Incorporació real:** **100 % propi** · Actiu amb `tractor-maquetacio-canonica.mjs` (core-llegibilitat-text i core-maquetacio-markdown), `tractor-frontmatter.mjs`, `tractor-registre.mjs` i `cataleg_skills.mjs` (core-maquetacio-markdown), `certifica-enllacos.mjs` (core-tecniques-investigacio) i `tractor-sentinella-blindatge.mjs` (core-sentinella-blindatge); la resta, procedimentals.\n\n#### Imatge i connectors d'allotjament\nCuiden l'**estil d'il·lustració pròxima** de còmic i empaqueten el **connector de WordPress** dins del **límit estricte de pes** per a MarIA, Gemini i l'administració del sistema. Comprenen `core-identitat-visual`, `core-calibratge-visual-nano`, `core-empaquetat-wp` i `sdp-vigilant-tellado`.\n- **Incorporació real:** **100 % propi** · Actiu amb `empaqueta.mjs` (core-empaquetat-wp) i `tractor-vigilant.mjs` (sdp-vigilant-tellado); la resta, procedimentals.\n\n#### Disseny Pedra Seca i casos d'ús rurals\nGovernen la **tipografia**, els **colors AAA**, les **graelles de columnes**, les **pàgines de lectura** i les eines pensades per al **món rural**, al servei de Claude, ChatGPT Codex, Gemini i el resultat visual per al veïnat. Són `sdp-pedra-seca`, `sdp-app-grid-shell`, `sdp-universal-page`, `sdp-universal-editor`, `sdp-casos-us-essencials` i `sdp-workflow`.\n- **Incorporació real:** **100 % propi** · Actiu amb `design_guard.mjs`, `tractor-cromatic.mjs`, `tractor-tokens.mjs` i `01_porta_pedra_seca_58px.mjs` (sdp-pedra-seca), `certifica-enllacos.mjs` (sdp-universal-page i sdp-workflow) i `fronteres-skills.mjs` i `kit-carril.mjs` (sdp-workflow); la resta, procedimentals.\n\n#### Aplicacions i patrimoni del poble\nDefinixen el **TPV per al bar i el rebost**, la **missatgeria familiar**, el **calendari de cultius** i les **cròniques** per als equips de construcció, veïns, comerços i associacions. Agrupen `sdp-clon-loiverse`, `sdp-clon-whatsapp`, `sdp-calendari-agricola`, `sdp-importacio-editorial` i `sdp-estudi-mercat`.\n- **Incorporació real:** **100 % propi** · Actiu amb `tria-imatge-seo.mjs` (sdp-importacio-editorial); la resta, procedimentals.\n\n#### Cicle documental de la Wiki\nRegulen la **creació de plans, actes i prompts** amb **plantilla canònica** i propaguen canvis a la documentació des de MarIA i la secretaria tècnica. Inclouen `wiki-documentacio-i-reflex`, `wiki-cicle-de-vida`, `wiki-propagar-veritat` i `wiki-busca-skills`.\n- **Incorporació real:** **100 % propi** · Actiu amb `document.mjs` i `porta-olivera.mjs` (wiki-documentacio-i-reflex), `obrir_torn.mjs` i `tancament.mjs` (wiki-cicle-de-vida), `wiki-forja-lint.mjs` (wiki-propagar-veritat) i `cataleg_skills.mjs` i `fronteres-skills.mjs` (wiki-busca-skills).\n\n#### Cadena de portes mecàniques (`tooling/gates/`, `tooling/wiki/` i `tooling/brain/`)\nReunix **més de seixanta comprovadors deterministes** de contrast, teclat, enllaços, censos, lèxic i integritat, escrits en **codi Node.js 100 % propi** sense dependències pesants i executats en local abans de cada entrega.\n\n### 3.2 Metodologies i repositoris externs estudiats i adaptats\n\nEstes fonts obertes ens han servit d'**escola metodològica**. No s'ha copiat **cap component alié** dins del navegador: hem estudiat com resolen els problemes i n'hem escrit la nostra **pròpia versió** adaptada a **Pedra Seca**.\n\n#### Mètode MIT d'Acumulació Semàntica i [Spec-Driven Development de GitHub](https://github.com/github/spec-kit)\nConsistix a **llegir les fonts vives**, fixar l'**especificació escrita** abans de tocar codi i validar amb **proves reals** en **MarIA, Claude, ChatGPT Codex i Gemini**. És una **metodologia adaptada** integrada a [sdp-workflow](/consola/explorador?peca=skill%3Asdp-workflow) i `core-comprensio-reflexiva`; el nom Mètode MIT és el del nostre **procediment intern**, no una acreditació acadèmica.\n\n#### [Google EGM · Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model)\nDescrit a l'[article de presentació de Google Open Source](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html), planteja contrastar un **context de disseny amb visió global** contra **revisions independents** sense biaix previ. A casa l'utilitzen l'orquestració i les **8 escoles locals** del Node 0 com a **arquitectura adaptada** (concretada en **huit preguntes de revisió**, que no són un nombre obligatori del model original) dins de [core-tecniques-investigacio](/consola/explorador?peca=skill%3Acore-tecniques-investigacio), sense **cap dependència externa** al paquet web.\n\n#### [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) (`MIT`)\nInspira les rúbriques de **neteja de prosa artificial** (`deslop`), la **revisió dels 6 estats visuals** i l'**auditoria de camins de clic** que apliquen Claude, ChatGPT Codex, Gemini i MarIA. Està **estudiat i destil·lat** amb **`0 %` de codi alié** dins de `src/` i **regles íntegrament pròpies**.\n\n#### Enginyeria Inversa d'Artefactes (`REA`) amb [rizin](https://github.com/rizinorg/rizin) i [frida](https://github.com/frida/frida)\nInspecciona el **paquet compilat real** (`dist/` i `.zip`) en l'auditoria tècnica pre-publicació per verificar quins **bytes i rutes s'entreguen de debò**. Actua com a **protocol d'auditoria** integrat a [core-gauntlet-loop](/consola/explorador?peca=skill%3Acore-gauntlet-loop) i `core-tecniques-investigacio`.\n\n#### [storytold/craft-anything](https://github.com/storytold/craft-anything) (`MIT OR Apache-2.0`)\nAporta el mètode per **destriar les peces essencials** d'un ofici abans de dissenyar **pantalles senzilles** per al veïnat en noves eines rurals. S'ha **estudiat i destil·lat** dins de `core-tecniques-investigacio`.\n\n#### [every-app/open-seo](https://github.com/every-app/open-seo) (`MIT`)\nServeix de guia de comprovació per a **títols, targetes compartides i adreces canòniques** sense rastrejadors comercials. Està **estudiat i reimplementat** amb **codi `100 %` propi** al generador `tooling/gates/build-seo-manifest.mjs`.\n\n#### Emowe · Semàfor d'inventari de skills\nPartix de la idea inicial de **mesurar la salut de cada skill** ([procedència documentada](?item=03_inventari_skills) i [Inventari de la Consola](https://socdepoble.org/consola/inventari)), **estudiada i corregida** amb regles pròpies per al nostre arbre documental dins de la Consola Termodinàmica i `tooling/brain/cataleg_skills.mjs`.\n\n#### [Vigilant de Fernando Tellado](https://wordpress.org/plugins/vigilante/) (WordPress)\nÉs el nostre referent de **diagnòstic no intrusiu** de capçaleres de seguretat i **convivència amb llocs WordPress municipals**. S'aplica com a **inspiració reimplementada** en mode només lectura —sense tocar mai el servidor amfitrió— a [sdp-vigilant-tellado](/consola/explorador?peca=skill%3Asdp-vigilant-tellado) i `tooling/gates/tractor-vigilant.mjs`.\n\n### 3.3 Biblioteques i motors lliures en reserva al Node 0 i peces descartades\n\nAl **servidor de Sóc de Poble**, el **[Node 0](https://socdepoble.org/page/node-zero)** (`Mac mini` amb **xip Apple M4**) estudiem i guardem eines de **programari lliure** amb cost **`0,00 €`** i pes **`0 B`** dins del nucli web. També documentem quines peces hem **descartat** per evitar duplicitats o llicències poc clares.\n\n#### [awesome-selfhosted/awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted) (`CC-BY-SA-3.0`)\nCatàleg de **`1.361` fitxes YAML** de programari lliure autoallotjable consultat per l'equip d'arquitectura i les **8 escoles locals** per triar eines sense lligams comercials. Es manté com a **biblioteca de consulta al Node 0**, amb **`0 B` al paquet web**.\n\n#### [calcom/cal.diy](https://github.com/calcom/cal.diy) (`MIT`)\nReferència d'**algorismes de torns i franges horàries** per a reservar espais municipals com el frontó o les sales comunes. Es conserva com a **referència algorísmica al Node 0** per als equips de desenvolupament, **sense desplegar el seu servidor**.\n\n#### [Flomp/wanderer](https://github.com/Flomp/wanderer) (`AGPL-3.0`)\nReferència d'esquema de **traces GPX, desnivells i fonts** per evolucionar el disseny de [Rutes de Poble](https://socdepoble.org/page/rutes-de-poble) per a veïns i excursionistes. Actua com a **referència de dades al Node 0** per construir la interfície pròpia en **Pedra Seca**.\n\n#### [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) (`AGPL-3.0`)\nTaller sonor natiu optimitzat per a **xip Apple M4**, destinat a produir **locucions i audiollibres culturals** per a l'escolta accessible de la gent major. Funciona com a **motor local de taller al Node 0**, **mai exposat a internet**.\n\n#### [OpenWhispr/openwhispr](https://github.com/OpenWhispr/openwhispr) (`MIT`)\nReferència oberta de **dictat de veu local** pensada per recollir **memòria oral i històries familiars** sense necessitat de teclat. Es troba **en estudi local al Node 0** dins la recerca d'accessibilitat, **encara no integrat a l'aplicació**.\n\n#### [CapSoftware/Cap](https://github.com/CapSoftware/Cap) (`AGPL-3.0`; crates `cap-camera*` i `scap-*` sota `MIT`)\nGravador lliure d'escriptori per preparar **vídeos curts d'ajuda visual** destinats a veïns i ajuntaments des de la direcció humana i la comunicació didàctica. S'utilitza com a **eina auxiliar d'escriptori**, **fora del codi de l'aplicació**.\n\n#### [AppFlowy-IO/AppFlowy](https://github.com/AppFlowy-IO/AppFlowy) (`AGPL-3.0`), [opf/openproject](https://github.com/opf/openproject) (`GPL-3.0`) i [chatwoot/chatwoot](https://github.com/chatwoot/chatwoot) (`MIT`, excepte la carpeta `enterprise/`, amb llicència pròpia)\nEstudiats puntualment com a referents de **taules, fites de subvencions i bústia d'atenció**, funcionalitats que ja cobrim amb eines pròpies. Estan **no desplegats** per **evitar servidors pesants duplicats**.\n\n#### [wide-trace/open-higgsfield](https://github.com/wide-trace/open-higgsfield) (`Sense llicència oberta verificada`)\nRepositori **sense llicència lliure acreditada** i dependent de serveis externs de pagament per clau privada. Queda **descartat i bloquejat** per a tots els agents i usuaris per **higiene legal `AGPL-3.0`**.\n\n## 4. Una sola pàgina viva i límits de les comprovacions\n\nEsta és la **pàgina canònica** del sistema nerviós. L’**adreça antiga** `/page/sistema-nervios` hi redirigix. Des de la **v1.2.16** el capítol **ja no es projecta al Mur** (`mur: false`): el Mur és del poble, no de la maquinària interna, i llevar-lo del Mur **no esborra el llibre**. La **[Consola Termodinàmica](https://socdepoble.org/consola)** mostra **dades i proves**, no certificats de comprensió ni una garantia d’accessibilitat universal. Les proves de codi cobrixen el seu abast; contrast, geometria tàctil i comportament en cada aparell es comproven també en **navegador**.\n\nLes **fonts originals** anteriors expliquen els mètodes i projectes citats. Les afirmacions sobre ús al Node 0 descriuen el **registre local** del projecte; un enllaç extern viu **no acredita** per si sol **instal·lació**, **execució** ni **adopció completa**. Les **llicències** d'este capítol corresponen a la lectura registrada el 17-11-2026; cal rellegir-les abans d’incorporar codi.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [00_index_maquina](?item=00_index_maquina)\n- [03_inventari_skills](?item=03_inventari_skills)\n- [sistema_immunitari](?item=sistema_immunitari)\n- [agents_equip_ia](?item=agents_equip_ia)\n- [02_genotip](?item=02_genotip)\n"
+      "content": "# El sistema nerviós: skills, tractors i repositoris oberts\n\nEste document explica, sense tecnicismes innecessaris, com s'organitza la maquinària interna que ajuda a construir i vigilar Sóc de Poble.\n\nDistinguix les instruccions escrites (skills), els comprovadors automàtics (Tractors) i l'estat real de cada repositori extern estudiat o guardat al Node 0, amb maquetació fluida sense taules rígides perquè es puga llegir amb comoditat tant al mòbil com amb les columnes laterals obertes.\n\n## 1. Què és una skill i què és un tractor\n\nQuan construïm una eina per al poble, no n'hi ha prou amb tindre **bones intencions**: cal recordar les normes en cada pantalla i comprovar el resultat abans de publicar res. El nostre **sistema nerviós** dividix esta responsabilitat en dues peces complementàries.\n\n- **Les neurones (`Skills` a `.agents/skills/*/SKILL.md`):** són manuals d'ofici breus i verificables escrits en llenguatge humà. Quan un agent d'intel·ligència artificial ha de tocar el disseny, una migració de dades o un text públic, llig primer la **skill corresponent** per actuar amb el **context complet** del projecte.\n- **Els reflexos musculars (Tractors i Portes a `tooling/`):** són programes deterministes escrits en JavaScript (`.mjs`) que no tenen opinions ni cansament. Mesuren el **contrast de lectura al sol**, l'àrea tàctil mínima de `48 × 48 px`, els enllaços vius, el lèxic honest i el **pressupost de pes** del paquet web.\n- **Per què van sempre de la mà:** una regla escrita només en prosa es pot passar per alt quan un model acumula massa pàgines de conversa. Quan eixa mateixa regla té una **porta mecànica** associada, qualsevol oblit s'atura amb codi d'error (`exit 1`) abans d'arribar als veïns.\n\n## 2. Com treballem hui: govern humà i enginyeria assistida\n\nEn el desenvolupament quotidià de **Sóc de Poble** ja cap persona pica codi línia a línia amb el teclat, però **les persones governen totes les decisions**. L'arquitecte humà, **Javi Llinares**, fixa les **necessitats rurals**, l'accessibilitat per a la **gent gran**, el **disseny visual** i l'**aprovació final** de cada entrega.\n\nLa feina tècnica s'ordena des de **Google Antigravity IDE**, on la **IAIA MarIA** actua com a directora tècnica per repartir tasques sense trepitjar fitxers. Cada agent constructor (**Claude**, **ChatGPT Codex** i **Gemini**) treballa sobre una **còpia efímera aïllada** (`/tmp/`) i lliura paquets verificats amb empremta criptogràfica **SHA-256**.\n\nQuan una decisió d'arquitectura demana **contrast extern**, es convoca **El Consell** amb el **context íntegre** del projecte: Z.ai, Qwen, Deepseek, Dola, Kimi, Claude, Perplexity, Mistral Vibe, Grok, Gemini, Copilot i ChatGPT Codex. En paral·lel, el servidor local **Node 0** (`Mac mini` amb **xip Apple M4**) executa **8 escoles locals** d'Ollama com a **revisió addicional sense cost** per consulta.\n\n## 3. Mapa de procedència: pròpies, estudiades i en reserva al Node 0\n\nPer mantindre una **transparència verificable**, classifiquem **tota la maquinària** segons el seu **origen real**: què hem **escrit de cap a peus** a casa, quines **metodologies obertes** hem estudiat per destil·lar les nostres regles i quins **motors lliures** tenim descarregats al **Node 0** sense carregar ni un sol byte a la web.\n\n### 3.1 Maquinària 100 % pròpia de Sóc de Poble\n\nEl repositori manté **46 skills actives** dins de `.agents/skills/` (`24` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.\n\n#### Identitat, Consell i govern humà\nFixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la **revisió humana**. Agrupen `iaia-maria-core` (el **paper d'actriu de la IAIA**, D8), `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.\n- **Incorporació real:** **100 % propi** · Actiu amb `incubadora.mjs` i `sincronitza-iaia-core.mjs` (iaia-maria-core), `porta-olivera.mjs` (core-identitat), `guarda-nocturna.mjs` (core-direccio-autonoma) i `tracker_consum.mjs` (core-estrategia-ia); la resta, procedimentals.\n\n#### Prudència, context i memòria\nEviten **edicions a cegues**, conserven **lliçons apreses**, paren **bucles d'error** i **separen carrils** de treball entre MarIA, Claude, ChatGPT Codex i Gemini. Reunixen `core-comprensio-reflexiva`, `core-automillora`, `core-memoria-historica`, `core-context-panic`, `core-edicio-segura`, `core-restauracio-segellada` i `core-secretaria-auditoria`.\n- **Incorporació real:** **100 % propi** · Actiu amb `desenterrar.mjs` (core-restauracio-segellada); la resta, procedimentals.\n\n#### Higiene d'Escriptori i taxonomia\nMantenen l'**Escriptori ordenat**, retiren **fitxers temporals** i exigixen **noms i dates verificables** sota el control de MarIA i les portes de tancament. Inclouen `core-higiene-escriptori`, `core-neteja-brossa`, `core-taxonomia-estricta`, `core-temps-termodinamic`, `core-salfumant-radical` i `core-cartografia-contenidor-som-de-poble` (la llar única de cada contingut del contenidor «Som de Poble»).\n- **Incorporació real:** **100 % propi** · Actiu amb `porta-olivera.mjs` i `consum-acreditat.mjs` (core-higiene-escriptori), `neteja_brossa_arrel.mjs` (core-neteja-brossa), `porta-taxonomia.mjs` (core-taxonomia-estricta i core-temps-termodinamic), `document.mjs` (core-taxonomia-estricta) i `cartograf-som-de-poble.mjs` i `porta-olivera.mjs` (core-cartografia-contenidor-som-de-poble); core-salfumant-radical, procedimental.\n\n#### Qualitat editorial, seguretat i auditoria\nRegulen la **jerarquia de títols**, la **lectura escanejable**, la **seguretat de base de dades** i les rondes d'**auditoria creuada** per a tots els agents constructors i revisors. Són `core-llegibilitat-text`, `core-maquetacio-markdown`, `core-informes-pdf`, `core-seguretat-audit`, `core-sentinella-blindatge`, `core-tecniques-investigacio` i `core-gauntlet-loop`.\n- **Incorporació real:** **100 % propi** · Actiu amb `tractor-maquetacio-canonica.mjs` (core-llegibilitat-text i core-maquetacio-markdown), `tractor-frontmatter.mjs`, `tractor-registre.mjs` i `cataleg_skills.mjs` (core-maquetacio-markdown), `certifica-enllacos.mjs` (core-tecniques-investigacio) i `tractor-sentinella-blindatge.mjs` (core-sentinella-blindatge); la resta, procedimentals.\n\n#### Imatge i connectors d'allotjament\nCuiden l'**estil d'il·lustració pròxima** de còmic i empaqueten el **connector de WordPress** dins del **límit estricte de pes** per a MarIA, Gemini i l'administració del sistema. Comprenen `core-identitat-visual`, `core-calibratge-visual-nano`, `core-empaquetat-wp` i `sdp-vigilant-tellado`.\n- **Incorporació real:** **100 % propi** · Actiu amb `empaqueta.mjs` (core-empaquetat-wp) i `tractor-vigilant.mjs` (sdp-vigilant-tellado); la resta, procedimentals.\n\n#### Disseny Pedra Seca i casos d'ús rurals\nGovernen la **tipografia**, els **colors AAA**, les **graelles de columnes**, les **pàgines de lectura** i les eines pensades per al **món rural**, al servei de Claude, ChatGPT Codex, Gemini i el resultat visual per al veïnat. Són `sdp-pedra-seca`, `sdp-app-grid-shell`, `sdp-universal-page`, `sdp-universal-editor`, `sdp-casos-us-essencials` i `sdp-workflow`.\n- **Incorporació real:** **100 % propi** · Actiu amb `design_guard.mjs`, `tractor-cromatic.mjs`, `tractor-tokens.mjs` i `01_porta_pedra_seca_58px.mjs` (sdp-pedra-seca), `certifica-enllacos.mjs` (sdp-universal-page i sdp-workflow) i `fronteres-skills.mjs` i `kit-carril.mjs` (sdp-workflow); la resta, procedimentals.\n\n#### Aplicacions i patrimoni del poble\nDefinixen el **TPV per al bar i el rebost**, la **missatgeria familiar**, el **calendari de cultius** i les **cròniques** per als equips de construcció, veïns, comerços i associacions. Agrupen `sdp-clon-loiverse`, `sdp-clon-whatsapp`, `sdp-calendari-agricola`, `sdp-importacio-editorial` i `sdp-estudi-mercat`.\n- **Incorporació real:** **100 % propi** · Actiu amb `tria-imatge-seo.mjs` (sdp-importacio-editorial); la resta, procedimentals.\n\n#### Cicle documental de la Wiki\nRegulen la **creació de plans, actes i prompts** amb **plantilla canònica** i propaguen canvis a la documentació des de MarIA i la secretaria tècnica. Inclouen `wiki-documentacio-i-reflex`, `wiki-cicle-de-vida`, `wiki-propagar-veritat` i `wiki-busca-skills`.\n- **Incorporació real:** **100 % propi** · Actiu amb `document.mjs` i `porta-olivera.mjs` (wiki-documentacio-i-reflex), `obrir_torn.mjs` i `tancament.mjs` (wiki-cicle-de-vida), `wiki-forja-lint.mjs` (wiki-propagar-veritat) i `cataleg_skills.mjs` i `fronteres-skills.mjs` (wiki-busca-skills).\n\n#### Cadena de portes mecàniques (`tooling/gates/`, `tooling/wiki/` i `tooling/brain/`)\nReunix **més de seixanta comprovadors deterministes** de contrast, teclat, enllaços, censos, lèxic i integritat, escrits en **codi Node.js 100 % propi** sense dependències pesants i executats en local abans de cada entrega.\n\n### 3.2 Metodologies i repositoris externs estudiats i adaptats\n\nEstes fonts obertes ens han servit d'**escola metodològica**. No s'ha copiat **cap component alié** dins del navegador: hem estudiat com resolen els problemes i n'hem escrit la nostra **pròpia versió** adaptada a **Pedra Seca**.\n\n#### Mètode MIT d'Acumulació Semàntica i [Spec-Driven Development de GitHub](https://github.com/github/spec-kit)\nConsistix a **llegir les fonts vives**, fixar l'**especificació escrita** abans de tocar codi i validar amb **proves reals** en **MarIA, Claude, ChatGPT Codex i Gemini**. És una **metodologia adaptada** integrada a [sdp-workflow](/consola/explorador?peca=skill%3Asdp-workflow) i `core-comprensio-reflexiva`; el nom Mètode MIT és el del nostre **procediment intern**, no una acreditació acadèmica.\n\n#### [Google EGM · Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model)\nDescrit a l'[article de presentació de Google Open Source](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html), planteja contrastar un **context de disseny amb visió global** contra **revisions independents** sense biaix previ. A casa l'utilitzen l'orquestració i les **8 escoles locals** del Node 0 com a **arquitectura adaptada** (concretada en **huit preguntes de revisió**, que no són un nombre obligatori del model original) dins de [core-tecniques-investigacio](/consola/explorador?peca=skill%3Acore-tecniques-investigacio), sense **cap dependència externa** al paquet web.\n\n#### [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) (`MIT`)\nInspira les rúbriques de **neteja de prosa artificial** (`deslop`), la **revisió dels 6 estats visuals** i l'**auditoria de camins de clic** que apliquen Claude, ChatGPT Codex, Gemini i MarIA. Està **estudiat i destil·lat** amb **`0 %` de codi alié** dins de `src/` i **regles íntegrament pròpies**.\n\n#### Enginyeria Inversa d'Artefactes (`REA`) amb [rizin](https://github.com/rizinorg/rizin) i [frida](https://github.com/frida/frida)\nInspecciona el **paquet compilat real** (`dist/` i `.zip`) en l'auditoria tècnica pre-publicació per verificar quins **bytes i rutes s'entreguen de debò**. Actua com a **protocol d'auditoria** integrat a [core-gauntlet-loop](/consola/explorador?peca=skill%3Acore-gauntlet-loop) i `core-tecniques-investigacio`.\n\n#### [storytold/craft-anything](https://github.com/storytold/craft-anything) (`MIT OR Apache-2.0`)\nAporta el mètode per **destriar les peces essencials** d'un ofici abans de dissenyar **pantalles senzilles** per al veïnat en noves eines rurals. S'ha **estudiat i destil·lat** dins de `core-tecniques-investigacio`.\n\n#### [every-app/open-seo](https://github.com/every-app/open-seo) (`MIT`)\nServeix de guia de comprovació per a **títols, targetes compartides i adreces canòniques** sense rastrejadors comercials. Està **estudiat i reimplementat** amb **codi `100 %` propi** al generador `tooling/gates/build-seo-manifest.mjs`.\n\n#### Emowe · Semàfor d'inventari de skills\nPartix de la idea inicial de **mesurar la salut de cada skill** ([procedència documentada](?item=03_inventari_skills) i [Inventari de la Consola](https://socdepoble.org/consola/inventari)), **estudiada i corregida** amb regles pròpies per al nostre arbre documental dins de la Consola Termodinàmica i `tooling/brain/cataleg_skills.mjs`.\n\n#### [Vigilant de Fernando Tellado](https://wordpress.org/plugins/vigilante/) (WordPress)\nÉs el nostre referent de **diagnòstic no intrusiu** de capçaleres de seguretat i **convivència amb llocs WordPress municipals**. S'aplica com a **inspiració reimplementada** en mode només lectura —sense tocar mai el servidor amfitrió— a [sdp-vigilant-tellado](/consola/explorador?peca=skill%3Asdp-vigilant-tellado) i `tooling/gates/tractor-vigilant.mjs`.\n\n### 3.3 Biblioteques i motors lliures en reserva al Node 0 i peces descartades\n\nAl **servidor de Sóc de Poble**, el **[Node 0](https://socdepoble.org/page/node-zero)** (`Mac mini` amb **xip Apple M4**) estudiem i guardem eines de **programari lliure** amb cost **`0,00 €`** i pes **`0 B`** dins del nucli web. També documentem quines peces hem **descartat** per evitar duplicitats o llicències poc clares.\n\n#### [awesome-selfhosted/awesome-selfhosted](https://github.com/awesome-selfhosted/awesome-selfhosted) (`CC-BY-SA-3.0`)\nCatàleg de **`1.361` fitxes YAML** de programari lliure autoallotjable consultat per l'equip d'arquitectura i les **8 escoles locals** per triar eines sense lligams comercials. Es manté com a **biblioteca de consulta al Node 0**, amb **`0 B` al paquet web**.\n\n#### [calcom/cal.diy](https://github.com/calcom/cal.diy) (`MIT`)\nReferència d'**algorismes de torns i franges horàries** per a reservar espais municipals com el frontó o les sales comunes. Es conserva com a **referència algorísmica al Node 0** per als equips de desenvolupament, **sense desplegar el seu servidor**.\n\n#### [Flomp/wanderer](https://github.com/Flomp/wanderer) (`AGPL-3.0`)\nReferència d'esquema de **traces GPX, desnivells i fonts** per evolucionar el disseny de [Rutes de Poble](https://socdepoble.org/page/rutes-de-poble) per a veïns i excursionistes. Actua com a **referència de dades al Node 0** per construir la interfície pròpia en **Pedra Seca**.\n\n#### [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) (`AGPL-3.0`)\nTaller sonor natiu optimitzat per a **xip Apple M4**, destinat a produir **locucions i audiollibres culturals** per a l'escolta accessible de la gent major. Funciona com a **motor local de taller al Node 0**, **mai exposat a internet**.\n\n#### [OpenWhispr/openwhispr](https://github.com/OpenWhispr/openwhispr) (`MIT`)\nReferència oberta de **dictat de veu local** pensada per recollir **memòria oral i històries familiars** sense necessitat de teclat. Es troba **en estudi local al Node 0** dins la recerca d'accessibilitat, **encara no integrat a l'aplicació**.\n\n#### [CapSoftware/Cap](https://github.com/CapSoftware/Cap) (`AGPL-3.0`; crates `cap-camera*` i `scap-*` sota `MIT`)\nGravador lliure d'escriptori per preparar **vídeos curts d'ajuda visual** destinats a veïns i ajuntaments des de la direcció humana i la comunicació didàctica. S'utilitza com a **eina auxiliar d'escriptori**, **fora del codi de l'aplicació**.\n\n#### [AppFlowy-IO/AppFlowy](https://github.com/AppFlowy-IO/AppFlowy) (`AGPL-3.0`), [opf/openproject](https://github.com/opf/openproject) (`GPL-3.0`) i [chatwoot/chatwoot](https://github.com/chatwoot/chatwoot) (`MIT`, excepte la carpeta `enterprise/`, amb llicència pròpia)\nEstudiats puntualment com a referents de **taules, fites de subvencions i bústia d'atenció**, funcionalitats que ja cobrim amb eines pròpies. Estan **no desplegats** per **evitar servidors pesants duplicats**.\n\n#### [wide-trace/open-higgsfield](https://github.com/wide-trace/open-higgsfield) (`Sense llicència oberta verificada`)\nRepositori **sense llicència lliure acreditada** i dependent de serveis externs de pagament per clau privada. Queda **descartat i bloquejat** per a tots els agents i usuaris per **higiene legal `AGPL-3.0`**.\n\n## 4. Una sola pàgina viva i límits de les comprovacions\n\nEsta és la **pàgina canònica** del sistema nerviós. L’**adreça antiga** `/page/sistema-nervios` hi redirigix. Des de la **v1.2.16** el capítol **ja no es projecta al Mur** (`mur: false`): el Mur és del poble, no de la maquinària interna, i llevar-lo del Mur **no esborra el llibre**. La **[Consola Termodinàmica](https://socdepoble.org/consola)** mostra **dades i proves**, no certificats de comprensió ni una garantia d’accessibilitat universal. Les proves de codi cobrixen el seu abast; contrast, geometria tàctil i comportament en cada aparell es comproven també en **navegador**.\n\nLes **fonts originals** anteriors expliquen els mètodes i projectes citats. Les afirmacions sobre ús al Node 0 descriuen el **registre local** del projecte; un enllaç extern viu **no acredita** per si sol **instal·lació**, **execució** ni **adopció completa**. Les **llicències** d'este capítol corresponen a la lectura registrada el 17-11-2026; cal rellegir-les abans d’incorporar codi.\n\n## Vincles\n\n- [00_index](?item=00_index)\n- [00_index_maquina](?item=00_index_maquina)\n- [03_inventari_skills](?item=03_inventari_skills)\n- [sistema_immunitari](?item=sistema_immunitari)\n- [agents_equip_ia](?item=agents_equip_ia)\n- [02_genotip](?item=02_genotip)\n"
     },
     {
       "id": "soci_sollutia",
@@ -2756,6 +2856,8 @@ export const wikiManifest = {
       "updated": "2026-11-14T18:20:29+01:00",
       "revisions": 5,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -2772,6 +2874,8 @@ export const wikiManifest = {
         "updated": "2026-11-14T18:20:29+01:00",
         "revisions": 5,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",
@@ -2792,6 +2896,8 @@ export const wikiManifest = {
       "updated": "2026-11-03T14:33:41+01:00",
       "revisions": 25,
       "mur": false,
+      "esborrany": true,
+      "noindex": true,
       "origenEditorial": {
         "date": "git",
         "updated": "git",
@@ -2808,6 +2914,8 @@ export const wikiManifest = {
         "updated": "2026-11-03T14:33:41+01:00",
         "revisions": 25,
         "mur": false,
+        "esborrany": true,
+        "noindex": true,
         "origenEditorial": {
           "date": "git",
           "updated": "git",

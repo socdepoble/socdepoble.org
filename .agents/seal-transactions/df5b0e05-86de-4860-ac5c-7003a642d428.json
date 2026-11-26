@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "anatomia-rural",
+  "actor": "Mestre Javi",
+  "reason": "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "anatomia-rural",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26"
+  ],
+  "id": "df5b0e05-86de-4860-ac5c-7003a642d428",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "47f158b3b267ad1721a9dcbe7aaf570dad8c4c35af9ab7cd1c67848b00ae4b97",
+      "after": "03f05ba019d8ef12b201352b22f6ec548ff1cd8818adfb1edcbbd96bc47ca6c6"
+    }
+  ],
+  "state": "accepted"
+}

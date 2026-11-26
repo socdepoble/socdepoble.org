@@ -476,7 +476,7 @@ test('Ordre del Mestre · el Bloc no força cap columna plegada (CARPETES oberta
 
 test('T7 (P5) · les carpetes conserven el parentId: plana, totes a l’arrel; niada, el pare', () => {
   render(<NotesSection />);
-  expect(mocks.model.navigationGroups[0].options.map((o) => [o.id, o.parentId])).toEqual([['f-mur', null], ['f-connectats', null]]);
+  expect(mocks.model.navigationGroups[0].options.map((o) => [o.id, o.parentId])).toEqual([['f-mur', null], ['f-connectats', null], ['f-produccio', null]]);
   cleanup();
   const original = mocks.noteFolders;
   mocks.noteFolders = [{ id: 'tic', name: 'TIC', parentId: null }, { id: 'foto', name: 'Foto', parentId: 'tic' }, { id: 7, name: 'Antigravity', parentId: 'foto' }];
@@ -484,9 +484,10 @@ test('T7 (P5) · les carpetes conserven el parentId: plana, totes a l’arrel; n
     render(<NotesSection />);
     const opcions = mocks.model.navigationGroups[0].options;
     expect(opcions.map((o) => [o.id, o.label, o.parentId])).toEqual([
-      ['tic', 'TIC', null], ['foto', 'Foto', 'tic'], ['7', 'Antigravity', 'foto'], ['f-connectats', 'Safata d’Entrada', null]
+      ['tic', 'TIC', null], ['foto', 'Foto', 'tic'], ['7', 'Antigravity', 'foto'],
+      ['f-connectats', 'Safata d’Entrada', null], ['f-produccio', 'En producció', null]
     ]);
-    expect(opcions.map((o) => o.order)).toEqual([0, 1, 2, 3]);
+    expect(opcions.map((o) => o.order)).toEqual([0, 1, 2, 3, 4]);
   } finally {
     mocks.noteFolders = original;
   }

@@ -86,6 +86,8 @@ const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
 const PluginPage = lazyRoute(() => import('../sections/plugins/PluginPage.jsx'));
 const JocCadaCosaAlSeuLlocPage = lazyRoute(() => import('../sections/taxonomia/JocCadaCosaAlSeuLlocPage.jsx'));
+const PaginaComarca = lazyRoute(() => import('../sections/pobles/PaginaComarca.jsx'));
+const PaginaEditorialEtiqueta = lazyRoute(() => import('../sections/taxonomia/PaginaEditorialEtiqueta.jsx'));
 const NotFoundPage = lazyRoute(() => import('../pages/NotFoundPage'));
 const EstilsModeSeniorActiu = lazyRoute(() => import('../components/universal/EstilsModeSeniorActiu.jsx'));
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
@@ -1388,6 +1390,9 @@ function ActorRoutes({ agents }) {
       {/* Gauntlet 261017 (M07) · Abans del comodí ':sectionId/:itemId'. */}
       <Route path="multimedia/:itemId/*" element={<RedireccioMultimedia />} />
       <Route path="pobles" element={<PoblesSection />} />
+      <Route path="comarca/:slug" element={<PaginaComarca />} />
+      <Route path="categoria/:slug" element={<PaginaEditorialEtiqueta tipusRuta="categoria" />} />
+      <Route path="etiqueta/:slug" element={<PaginaEditorialEtiqueta tipusRuta="etiqueta" />} />
       <Route path="poblacio" element={<PoblacioSection />} />
       <Route path="notes" element={<NotesSection />} />
       <Route path="dispositius" element={<DevicesSection />} />

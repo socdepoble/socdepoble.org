@@ -57,6 +57,11 @@ const estatDe = (article) => (ESTATS_ARTICLE.includes(article?.estat) ? article.
 /* La línia de davall del nom, com a les rajoles: l'especificació i el valor. */
 const liniaDeDavall = (article) => [article.secundari, article.valor].filter((text) => typeof text === 'string' && text !== '').join(' · ');
 const ambText = (text) => typeof text === 'string' && text.trim() !== '';
+/* v1.2.26 · D3 de l'integrador sobre IDEA-365 (Llibre Mestre, línia 3825) · L'estat («A la comanda»,
+   «Per comprar») i la insígnia (la quantitat) són text, no taxonomia: píndoles inertes, sense l'enllaç
+   que rutaDePindola.js posaria a una etiqueta. Els buits es lleven com feia la targeta. */
+const pindolesInertes = (valors) => valors.filter(Boolean)
+  .map((valor) => (typeof valor === 'string' ? { text: valor, inerta: true } : { ...valor, inerta: true }));
 /* Ordre del Mestre, 261004 (regressió de la Nevera) · El que la rajola deia al lector i
    l'element principal de la targeta (que només porta el nom) ja no deia: l'especificació
    (la línia de davall), el text d'estat i la insígnia, en l'ordre de la rajola. */
@@ -153,7 +158,7 @@ export function TargetesArticles({
         imageUrl={article.imatge || undefined}
         imatgePrivada
         squareBadge={!article.imatge && icona ? { type: 'custom', label: categoria?.nom || article.nom, content: icona } : null}
-        labels={[article.insignia, estat === 'normal' ? null : t[estat]]}
+        labels={pindolesInertes([article.insignia, estat === 'normal' ? null : t[estat]])}
         onMainClick={estat === 'desactivat' ? undefined : () => onTria?.(article)}
         premuda={commutable ? estat === 'en-colleccio' : undefined}
         idElement={article.id}
@@ -195,7 +200,7 @@ function FitxaArticle({ article, textos, accio, onTorna, refTitol, children }) {
       lead={entradetaDe(article)}
       author={{ nom: boina.nom, href: boina.href, avatar: boina.avatar, poble: boina.poble }}
       date={textDe(dataReal)}
-      labels={[article.insignia, estat === 'normal' ? null : textos[estat]].filter(ambText)}
+      labels={pindolesInertes([article.insignia, estat === 'normal' ? null : textos[estat]].filter(ambText))}
       heroImage={article.imatge || undefined}
       accioPrincipal={accio}
       onBack={onTorna}

@@ -71,6 +71,7 @@ import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.js
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/AprovacioEnLinia.jsx';
 import { tg, tf, localitzaOpcionsGestoria } from '../i18nGestoria.js';
+import { pindolesInertes } from '../insigniaBetaOberta.js';
 import { LLEGENDA_ESTIMACIO } from '../impostos/nucli/impostos.js';
 import { TRACTOR_TAULER } from '../tractors.js';
 import { BLOCS_TAULER, etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
@@ -453,7 +454,7 @@ export function PaginaTargeta({
      apagats: el DOM de sempre. */
   return (
     <PaginaApp title={targeta.titol} subtitle={targeta.subtitol} lead={targeta.entradeta}
-      author={titular} barActions={barActions} rellotgeViu={rellotgeViu === true} rellotge={rellotge} labels={targeta.etiquetes}
+      author={titular} barActions={barActions} rellotgeViu={rellotgeViu === true} rellotge={rellotge} labels={pindolesInertes(targeta.etiquetes)}
       onBack={onTorna} refTitol={refTitol} {...barraPrivada(onAvis, idioma)}>
       {avis}
       <section ref={adoptaEstilsDiferits} className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-xifra`}>

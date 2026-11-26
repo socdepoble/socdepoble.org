@@ -1708,6 +1708,7 @@ export default {
   'section.notes.carpeta.media': 'Multimèdia',
   'section.notes.carpeta.events': 'Esdeveniments',
   'section.notes.carpeta.mapa': 'Mapa',
+  'section.notes.carpeta.produccio': 'En producció',
   'section.notes.carpeta.notes': 'Altres notes',
   /* Esmena 2 del pla 261007_1645 (revisió adversarial del 261007) · «Ja
      publicat», l'històric de l'actor (usePublicacionsDeLActor.js,
@@ -3399,10 +3400,12 @@ export default {
   'section.perfil.privacitat.confianca.cerimonia.accio.revisa': "Revisar verificació SAS de {nom}",
   'section.perfil.privacitat.confianca.cerimonia.accio.disputa': "Aturar i declarar «No sóc jo»",
   'section.perfil.privacitat.confianca.cerimonia.alertaDisputa': "S’ha declarat una disputa («No sóc jo»): la cerimònia de recuperació ha quedat bloquejada.",
-  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
-  'editor.proposaCard.feta': "Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.",
+  // IDEA-41 / IDEA-358 / IDEA-359 · Maquetadora Editorial no-destructiva i feedback d'enganxat.
+  'editor.proposaCard.feta': "Targeta maquetada sense tocar el cos.",
   'editor.proposaCard.res': "No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.",
-  'editor.proposaCard.enRepos': "Prem «Editar» per a proposar la Card.",
+  'editor.proposaCard.enRepos': "Prem «Editar» per a maquetar la targeta.",
+  'editor.enganxat.alCos': "Enganxat al cos: falta un títol curt.",
+  'editor.enganxat.promouTitol': "Promou a títol",
   'editor.eines.enRepos': "En lectura: prem «Editar» per a escriure i donar format al text.",
   /* T3.2-UI (261101) · La «Fitxa de memòria oral (OKF v0.2)» de «Proposa Card» (FitxaMemoriaOral.jsx). */
   'editor.memoriaOral.titol': "Fitxa de memòria oral (OKF v0.2)",
@@ -3465,8 +3468,8 @@ export default {
   'editor.memoriaOral.massaEtiquetesLliures': "Ja hi ha {n} etiquetes lliures: lleva’n alguna abans d’afegir-ne més.",
   'editor.memoriaOral.afegida': "afegida en la revisió",
   'editor.memoriaOral.capPobleAlRelat': "La màquina no n’ha reconegut cap al relat",
-  'section.notes.proposaCard': "Proposa Card",
-  'section.notes.proposaCardDesfer': "Desfés la proposta",
+  'section.notes.proposaCard': "Maqueta la targeta",
+  'section.notes.proposaCardDesfer': "Desfés la maquetació",
   // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
   'section.login.registre.ajudaPoble': "Si n’ets de més d’un, els altres es trien al teu perfil.",
   'section.login.registre.ajudaUsuari': "Es fa amb el teu nom i es veu amb una @ davant si el teu perfil és públic. Si ja és d’algú, hi afegirem -2.",

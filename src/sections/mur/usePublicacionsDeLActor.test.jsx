@@ -224,6 +224,11 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
   /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1, La IAIA Sabuda no és cap targeta del Mur.
      R16b · «Què dinem?» (/page/receptes, la pàgina de l'Onada R14) és la cinquena de patrimoni (targetesMur.js). */
   const CLAUS = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes'].map((key) => `mur:${key}`);
+  /* v1.2.26 · IDEA-367 (Llibre Mestre, 23:06, punt 3) · El Mur també porta la card del llibre «Què dinem?», davant de
+     les biblioteques (targetesMur.js · PAGINES_PATRIMONI_MUR). La signa l'associació, no Sóc de Poble (P0-115): no és
+     del Mur de l'entitat (CLAUS). */
+  const TARGETES = [...SYSTEM_PAGES.map((pagina) => pagina.key).filter(esTargetaDelMur), 'que-dinem', 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes'];
+  const CATALEGS = new Set(['que-dinem', 'herbari', 'banc-de-llavors', 'rutes-de-poble', 'arbres-monumentals', 'receptes']);
 
   test('sense proveïdor: cap targeta, la mateixa constant congelada entre pintades, i cap espera', () => {
     const { result, rerender } = renderHook(() => usePaginesDelSistema());
@@ -248,11 +253,14 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     expect(SYSTEM_PAGES).toHaveLength(17); // R32.86 · + «Cada cosa al seu lloc»
     expect(CLAUS).toHaveLength(21);
     expect(CLAUS).not.toContain('mur:la-iaia-sabuda');
-    expect(result.current).toHaveLength(21);
+    expect(result.current).toHaveLength(22);
     expect(result.current.some((targeta) => targeta.id === 'anatomia-rural')).toBe(false);
     expect(PAGE_COPY['anatomia-rural']).toBeDefined(); // El document directe es conserva; la targeta no forma part de la projecció del Mur.
-    expect(result.current.map((targeta) => targeta.id)).toEqual(CLAUS.map((key) => key.slice(4)));
-    expect(result.current.every((targeta) => targeta.isSystem && targeta.type === 'sistema')).toBe(true);
+    expect(result.current.map((targeta) => targeta.id)).toEqual(TARGETES);
+    /* IDEA-365 (Llibre Mestre, 22:16, punt 3) · Les 5 biblioteques i «Què dinem?» són FORA Sistema: tipus 'cataleg'. */
+    for (const targeta of result.current) {
+      expect([targeta.id, targeta.type, targeta.isSystem]).toEqual([targeta.id, CATALEGS.has(targeta.id) ? 'cataleg' : 'sistema', targeta.id !== 'que-dinem']);
+    }
     // Les mateixes targetes que MurSection (targetesDeSistema), sense cap forma pròpia.
     expect(result.current).toEqual(targetesDeSistema(PAGE_COPY));
     const abans = result.current;
@@ -296,11 +304,12 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     mocks.ui = { externalConfig: {}, language: 'ca' };
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
     const before = result.current.find(card => card.id === 'xat');
-    expect(before.labels.map(label => label.text)).toEqual(['Sistema', '🤝 Món Rural', 'Associacionisme']);
+    /* IDEA-365 (Llibre Mestre, línia 3803) · Tota card del /mur porta la categoria Mur. */
+    expect(before.labels.map(label => label.text)).toEqual(['Sistema', 'Mur', '🤝 Món Rural', 'Associacionisme']);
     mocks.ui = { ...mocks.ui, language: 'en' };
     rerender();
     const after = result.current.find(card => card.id === 'xat');
-    expect(after.labels.map(label => label.text)).toEqual(['System', '🤝 Rural Communities', 'Community associations']);
+    expect(after.labels.map(label => label.text)).toEqual(['System', 'Wall', '🤝 Rural Communities', 'Community associations']);
     expect({ ...after, labels: [] }).toEqual({ ...before, labels: [] });
   });
 

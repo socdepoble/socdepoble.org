@@ -97,8 +97,8 @@ test('Onada 10 · ?category= filtra pel text de qualsevol etiqueta: «sistema» 
   mocks.params = new URLSearchParams({ category: 'sistema' });
   render(<MurSection />);
   /* De més nova a més vella. R41 (P0-40/IDEA-167, «Sistema» únic a totes les pàgines
-     classificades de PAGE_COPY): ara Disseny també porta «Sistema», i ja no «Mur».
-     Arbitratge R46, Loop 3. */
+     classificades de PAGE_COPY): ara Disseny també porta «Sistema». Arbitratge R46, Loop 3.
+     v1.2.26 · IDEA-365 (Llibre Mestre, línia 3803) · I les tres porten Mur: es mostren al /mur. */
   expect(titols()).toEqual(['Disseny Pedra Seca', 'El Cervell', 'Consola Termodinàmica']);
   cleanup();
 
@@ -111,9 +111,21 @@ test('Onada 10 · ?category= filtra pel text de qualsevol etiqueta: «sistema» 
   expect(titols()).toEqual(['El Cervell', 'Consola Termodinàmica']);
   cleanup();
 
-  mocks.params = new URLSearchParams({ category: 'Pedra Seca' });
+  /* v1.2.26 · IDEA-369 #45 (Llibre Mestre, 00:43) · «Pedra Seca» queda per al patrimoni i la bioconstrucció rural; el
+     sistema de disseny porta l'etiqueta Disseny. Conseqüència declarada: /mur?category=Pedra Seca ja no troba Disseny. */
+  mocks.params = new URLSearchParams({ category: 'Disseny' });
   render(<MurSection />);
   expect(titols()).toEqual(['Disseny Pedra Seca']);
+  cleanup();
+
+  mocks.params = new URLSearchParams({ category: 'Pedra Seca' });
+  render(<MurSection />);
+  expect(titols()).toEqual([]);
+  cleanup();
+
+  mocks.params = new URLSearchParams({ category: 'Mur' });
+  render(<MurSection />);
+  expect(titols()).toEqual(['Disseny Pedra Seca', 'El Cervell', 'Consola Termodinàmica']);
   cleanup();
 
   // Sense el paràmetre, les tres.

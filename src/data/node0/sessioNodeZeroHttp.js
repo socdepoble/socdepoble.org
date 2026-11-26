@@ -34,8 +34,12 @@ const ERRORS_SERVIDOR = new Set([
   'email_invalid','password_invalid','credentials_invalid','auth_busy','auth_rate_limited','remote_address_required',
   'auth_origin_rejected','auth_json_required','auth_body_invalid','email_delivery_unavailable','consent_required',
   'consent_version_invalid','tenant_invalid','verification_invalid','norms_acceptance_required','norms_version_invalid',
-  'auth_action_unavailable','auth_unavailable','actor_binding_required','session_actor_changed'
+  'auth_action_unavailable','auth_unavailable','actor_binding_required','session_actor_changed',
+  'invalid_system_categories'
 ]);
+/* IDEA-365 (regla 1 de les 21:40) · C26-1 #12 · El 400 del backend (backend-node0.mjs · categoriesSistemaPerPublicar)
+   és el mateix rebuig que donen el port local i Supabase (utils/publicacioSistema.js): el mateix codi i el mateix text. */
+const SENSE_DESTI = Object.freeze({ code:'SDP-TAXONOMIA-DESTI', message:'Cal almenys una Categoria de Sistema vàlida per publicar.' });
 const pla = v => v !== null && typeof v === 'object' && !Array.isArray(v) && [Object.prototype,null].includes(Object.getPrototypeOf(v));
 const LOCAL_ERROR = Symbol('node0-http-local-error');
 const error = (code, message, status) => Object.assign(new Error(message), { code, codi: code, [LOCAL_ERROR]:true, ...(status ? { status } : {}) });
@@ -107,9 +111,11 @@ async function jsonFitat(res, signal, url) {
     parts.push(decoder.decode());
     let result; try { result = JSON.parse(parts.join('')); } catch { throw invalid(); }
     if (!res.ok) {
-      const code = [401,403].includes(res.status) ? 'sense-permis' : [404,501].includes(res.status) ? 'sense-capacitat' : 'NODE0_HTTP';
-      const failure = error(code,'El Node 0 no ha pogut completar l’operació.',res.status);
-      if (pla(result) && ERRORS_SERVIDOR.has(result.error)) failure.serverCode = result.error;
+      const serverCode = pla(result) && ERRORS_SERVIDOR.has(result.error) ? result.error : null;
+      const senseDesti = serverCode === 'invalid_system_categories' && res.status === 400;
+      const code = senseDesti ? SENSE_DESTI.code : [401,403].includes(res.status) ? 'sense-permis' : [404,501].includes(res.status) ? 'sense-capacitat' : 'NODE0_HTTP';
+      const failure = error(code,senseDesti ? SENSE_DESTI.message : 'El Node 0 no ha pogut completar l’operació.',res.status);
+      if (serverCode) failure.serverCode = serverCode;
       throw failure;
     }
     return result;

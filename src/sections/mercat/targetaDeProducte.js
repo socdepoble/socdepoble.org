@@ -1,3 +1,6 @@
+import { destinsDeProducte } from '../../data/taxonomia/destinsDeProducte.js';
+import { labelsSistema } from '../../data/taxonomia/taxonomiaPublicacio.js';
+import { rutaDePindola } from '../../components/PedraSeca/organismes/rutaDePindola.js';
 /**
  * targetaDeProducte.js — les props de la UniversalCard d'un producte del
  * Mercat, una sola regla per a la llista (MercatSection) i per a la mostra
@@ -22,6 +25,15 @@ import { etiquetaDelPoble, pobleDeLElement } from '../pobles/etiquetaDelPoble.js
 
 /* Sense traductor, la reserva en valencià. */
 const senseTraduccio = (_clau, reserva) => reserva;
+
+/* C26-2 · IDEA-365 (21:40, regla 3) i D3 de l'integrador · La categoria i l'etiqueta d'un producte són
+   taxonomia i porten a la seua pàgina (la editorial o l'automàtica de /categoria/<slug> i /etiqueta/<slug>).
+   La ruta ix del slug intern (category_slug, tag), no del text traduït: «Food» o «Ropa» no portaven a
+   /categoria/alimentacio ni a /categoria/roba. Un slug que no en dona cap és text inert. */
+function pindolaDeTaxonomia(slug, text, className) {
+  const ruta = rutaDePindola({ text: slug, className });
+  return { text, className, ...(ruta ? { href: ruta } : { inerta: true }) };
+}
 
 /* R22 (Llibre Mestre, «4a Etiqueta Geogràfica Final») · `towns`, les fitxes
    de /pobles (useCoreContent): la pastilla del poble, la de més a la dreta,
@@ -84,12 +96,16 @@ export function propsDeTargetaDeProducte(item, t = senseTraduccio, { towns, idio
       ? { videoUrl: fontVideoPropia(resolRecursPropi(item.video_url)) }
       : null),
     labels: [
-      { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
-      item.category_slug ? { text: formataEtiquetaHumana(item.category_slug, idioma), className: 'sdp-badge-category' } : null,
-      item.tag ? { text: formataEtiquetaHumana(item.tag, idioma), className: 'sdp-badge-tag' } : null,
+      /* C26-2 #9 · Els destins (categoriesSistema) amb labelsSistema: el text de la interfície i la ruta
+         canònica de cada Categoria de Sistema (/mur, /mercat, /calendari, /categoria/<slug>), la mateixa regla
+         que la Card del Mur i la UniversalPage. Abans només Mur i Mercat portaven ruta. */
+      ...labelsSistema(destinsDeProducte(item), idioma),
+      item.category_slug ? pindolaDeTaxonomia(item.category_slug, formataEtiquetaHumana(item.category_slug, idioma), 'sdp-badge-category') : null,
+      item.tag ? pindolaDeTaxonomia(item.tag, formataEtiquetaHumana(item.tag, idioma), 'sdp-badge-tag') : null,
       /* R22 · Ordre canònic [Mercat] → [categoria curta] → [subfamília humana] → [poble]:
-         el recompte de variants no s'interposa; va just davant del poble. */
-      item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
+         el recompte de variants no s'interposa; va just davant del poble.
+         C26-2 (D3 de l'integrador) · El recompte no és taxonomia: text inert, sense /etiqueta/2-variants. */
+      item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent', inerta: true } : null,
       /* R22 · El poble, sempre l'últim: porta a /pobles/<slug>, no al perfil de qui ven (authorHref). */
       etiquetaDelPoble(pobleDeLElement(item, towns))
     ].filter(Boolean),

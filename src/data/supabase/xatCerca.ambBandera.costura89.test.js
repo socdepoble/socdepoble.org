@@ -15,7 +15,7 @@ afterEach(() => { port.destroy(); vi.unstubAllGlobals(); });
 
 test('el contracte declara xatCerca amb les tres firmes de C1, al final de l’ABI', () => {
   expect(CAPACITATS.xatCerca).toEqual(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId']);
-  expect(CONTRACTE_BACKEND.slice(-3)).toEqual(CAPACITATS.xatCerca);
+  expect(CONTRACTE_BACKEND.slice(187,190)).toEqual(CAPACITATS.xatCerca);
 });
 
 test('amb bandera, l’adaptador exporta les funcions reals i el port té la capacitat sencera', () => {

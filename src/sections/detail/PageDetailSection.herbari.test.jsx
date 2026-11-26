@@ -39,13 +39,14 @@ const visita = (ruta) => render(
 
 describe('/page/herbari', () => {
   test('la pàgina és al PAGE_COPY, amb un sol H1, i l’herbari va davall del text', async () => {
-    expect(PAGE_COPY.herbari.title).toBe('Herbari de La Torre');
+    expect(PAGE_COPY.herbari.title).toBe('Herbari');
+    expect(PAGE_COPY.herbari.llibres[0].title).toBe('Herbari de La Torre');
     expect(ESPECIES_HERBARI_LA_TORRE_117).toHaveLength(117);
-    expect(PAGE_COPY.herbari.subtitle).toContain('117');
+    expect(PAGE_COPY.herbari.subtitle).toBe('Biblioteca Multipoble d’Herbaris');
     visita('/page/herbari');
     await screen.findByRole('heading', { level: 1 }, { timeout: 5000 });
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Herbari de La Torre');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Herbari');
     await screen.findByRole('button', { name: 'Acacia robínia', exact: true });
     const workspace = document.querySelector('.sdp-workspace');
     expect(workspace).toBeTruthy();
@@ -82,7 +83,7 @@ describe('/page/herbari', () => {
       const cos = document.querySelector('.cms-preview');
       expect(cos.getAttribute('lang')).toBeNull();
       expect(cos.querySelector('h3').textContent).toBe(new DOMParser().parseFromString(traduccio.html, 'text/html').querySelector('h3').textContent);
-      for (const etiqueta of traduccio.labels) expect(screen.getByText(etiqueta.text)).toBeTruthy();
+      for (const etiqueta of traduccio.labels) expect(screen.getAllByText(etiqueta.text).some(node=>node.classList.contains('sp-card-label'))).toBe(true);
       await screen.findByRole('button', { name: 'Acacia robínia', exact: true });
       expect(document.getElementById('app-grid-main').contains(cos)).toBe(true);
       expect(document.querySelectorAll('#app-grid-list .sdp-gestor-fitxa')).toHaveLength(117);

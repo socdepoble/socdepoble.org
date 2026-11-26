@@ -62,7 +62,7 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
   expect(mocks.props.date).toBe('11/08/26');
   expect(mocks.props.time).toBe('02:00');
   const cos = container.querySelector('[data-pagina] > article.cms-preview');
-  expect(cos.querySelector('h3').textContent).toBe('El Despertar de la Nina de Silici');
+  expect(cos.querySelector('h3').textContent).toBe('El despertar de la nina de silici');
   /* Pla 261027_1154 (P1-61), Fase 1 · La pàgina porta imatge pròpia: el
      <head> la porta absoluta i https, no la targeta genèrica d'abans. La
      portada que es pinta (heroImage, dalt) no canvia. */
@@ -171,8 +171,10 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
     heroAlt: pagina.imageAlt,
     showLogos: true,
     // Cicle 3 (tc3-lang-ca-sobre-interficie-traduida): les de PAGE_COPY declaren el valencià.
+    // v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · El Xat es mostra al /mur: Mur darrere de Sistema.
     labels: [
       { text: 'Sistema', className: 'sdp-badge-system', lang: 'ca' },
+      { text: 'Mur', className: 'sdp-badge-system', lang: 'ca' },
       { text: '🤝 Món Rural', className: 'sdp-badge-category', lang: 'ca' },
       { text: 'Associacionisme', className: 'sdp-badge-tag', lang: 'ca' }
     ],

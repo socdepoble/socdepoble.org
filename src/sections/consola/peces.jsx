@@ -46,8 +46,17 @@ export function DestiVersions() {
 
 /* Una etiqueta amb `to` (el vocabulari d'Insignia: error, avis, info, exit,
    neutre) porta les classes d'Insignia dins de la targeta; la resta passa
-   tal qual, amb les classes del Panell de Control. */
-const aEtiqueta = (e) => (e?.to ? { text: e.text, className: `sdp-insignia sdp-insignia--${e.to}` } : e);
+   tal qual, amb les classes del Panell de Control.
+   IDEA-365 · D3 (v1.2.26) · Les etiquetes de la Consola diuen un estat (Cal
+   reparar, En ordre, Sense font, FALTA, SATURAT…), no cap taxonomia: són
+   text i no porten a cap /etiqueta/<estat> (inerta, rutaDePindola.js). Una
+   píndola taxonòmica, si mai en cal, la declara el productor amb `href`. */
+const aEtiqueta = (e) => {
+  if (!e) return e;
+  const etiqueta = typeof e !== 'object' ? { text: String(e) }
+    : e.to ? { text: e.text, className: `sdp-insignia sdp-insignia--${e.to}`, ...(typeof e.href === 'string' ? { href: e.href } : {}) } : e;
+  return typeof etiqueta.href === 'string' && etiqueta.href.trim() ? etiqueta : { ...etiqueta, inerta: true };
+};
 
 /* OBSOLETA · Ordre del Mestre, 261004 (xat: cap xifra solta). Derogat per
    l'ordre del Mestre del 261004 (xat: cap xifra solta): cap pàgina de la

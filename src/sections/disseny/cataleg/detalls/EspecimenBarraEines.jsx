@@ -72,7 +72,7 @@ export default function EspecimenBarraEines() {
           ['publishLabel', 'string | null', 'null', 'Una nota connectada no es publica: es compartix («Compartir»).'],
           ['publishPopup', "'dialog' | null", 'null', 'Publicar obri una finestra (SelectorVisibilitat): el botó ho anuncia amb aria-haspopup.'],
           ['onDelete / deleteDisabled', '() => void / boolean', '— / false', 'Sense onDelete no hi ha botó Borrar.'],
-          ['onProposaCard / proposaCardDisabled / proposaCardDesfer', '() => void / boolean / boolean', 'null / false / false', 'Sense onProposaCard no hi ha «Proposa Card»: en ample, el primer botó del grup de publicació; per davall de 500 px, l’última de les eines de «⋯». Amb proposaCardDesfer, el mateix botó desfà la proposta.'],
+          ['onProposaCard / proposaCardDisabled / proposaCardDesfer', '() => void / boolean / boolean', 'null / false / false', 'Sense onProposaCard no hi ha «Maqueta la targeta»: en ample, l’última eina de la segona fila («Més eines»); per davall de 500 px, l’última de les eines de «Format del text». Amb proposaCardDesfer, el mateix botó desfà la maquetació.'],
           ['onBack', '() => void', 'obri el llistat', 'La fletxa de tornar (només en estret); per defecte obri la columna del llistat d’AppGridShell.'],
           ['t', '(clau, text) => string', 'el text', 'Traducció dels noms dels botons.'],
         ]}
@@ -80,7 +80,7 @@ export default function EspecimenBarraEines() {
           'role="group" amb nom «Eines de l’editor»; el format és un altre grup amb nom propi («Opcions de format del text»), i la segona fila, un altre («Més eines»).',
           'El desplegable d’encapçalaments és un botó de menú (aria-haspopup="menu" i aria-expanded) que diu el nivell actiu («Encapçalament: H3» o, fora d’un encapçalament, «Encapçalament (H): Paràgraf», on el botó només mostra «H»). L’ordre i la puntuació del nom són de cada llengua (section.notes.format.nomNivell i nomParagraf), i sempre porten el text visible. Cada nivell és un menuitemradio amb aria-checked: les fletxes, Inici i Fi s’hi mouen, Enter o Espai trien i Escape tanca i torna al botó.',
           'Negreta, Cursiva, les dues llistes, Ratllat i Citació són commutadors: aria-pressed i nom accessible (aria-label), perquè només es veu la icona. El Divisor inserix una línia: no porta aria-pressed.',
-          '«⋯» porta aria-expanded i aria-controls. En ample, la segona fila és part de la barra i només la plega el mateix botó; per davall de 500 px, un clic fora tanca les eines, i Escape també, i torna el focus a «⋯» (l’Escape queda atés: el detall ja no el porta a la fitxa de la llista). Un clic o un Escape d’una finestra modal oberta damunt (la fitxa de Proposa Card) no les tanca: en tancar-se, el focus torna a Proposa Card.'
+          '«⋯» porta aria-expanded i aria-controls. En ample, la segona fila és part de la barra i només la plega el mateix botó; per davall de 500 px, un clic fora tanca les eines, i Escape també, i torna el focus a «⋯» (l’Escape queda atés: el detall ja no el porta a la fitxa de la llista). Un clic o un Escape d’una finestra modal oberta damunt (la fitxa de «Maqueta la targeta») no les tanca: en tancar-se, el focus torna a «Maqueta la targeta».'
         ]}
         fes={[
           'Passar-li l’estat i les accions des de l’adaptador del motor (UniversalRichTextToolbar).',

@@ -330,3 +330,7 @@ REGISTRE.push({ nom: 'BandaBetaMicroApp', fitxer: 'PedraSeca/molecules/BandaBeta
    línies en 5 llengües, una ✕ que la tanca i la recorda i un sol «Entrar».
    Espècimen: EspecimenAcollidaForasterXat (retroalimentacio/acollida-foraster-xat). */
 REGISTRE.push({ nom: 'AcollidaForasterXat', fitxer: 'sections/xat/components/AcollidaForasterXat.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* v1.2.26 (G26-2 · IDEA-360) · El bloc territorial en text pla de la targeta (demarcació, comarca,
+   pobles i paratges), davall de les píndoles i damunt del copyright d'UniversalCard. L'ha fet el
+   carril de Gemini i encara no té espècimen a detalls/: «extern» fins que el catàleg el sincronitze. */
+REGISTRE.push({ nom: 'BlocTerritoriTargeta', fitxer: 'PedraSeca/organismes/BlocTerritoriTargeta.jsx', pagina: 'fonaments', estat: 'extern' });

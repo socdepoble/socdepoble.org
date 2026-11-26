@@ -29,25 +29,32 @@ const dateLink='/calendari?vista=mes&date=2023-01-29';
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 afterEach(cleanup);
 
-test('C2-01 · Aplec conserva mare i tres SKOS; una diana real porta al 29 de gener en la card',()=>{
- expect(aplec.tags).toEqual(['Aplec pel Territori','Incendis','Associacionisme']);
- expect(aplec.tags).toEqual(ARTICLES_SIMULADOR_IA_425.find(row=>row.id===16880).etiquetesNetes);
+test('C26-2 · Aplec té Mur+Calendari i etiqueta Aplec; el corpus d’importació conserva els tres SKOS històrics',()=>{
+ expect(aplec.categoriesSistema).toEqual(['Mur','Calendari']);
+ expect(aplec.tags).toEqual(['Aplec']);
+ expect(ARTICLES_SIMULADOR_IA_425.find(row=>row.id===16880).etiquetesNetes).toEqual(['Aplec pel Territori','Incendis','Associacionisme']);
  const {container}=render(<EventCard item={aplec} esdeveniment={acteAEsdeveniment(aplec)}/>);
  const links=[...container.querySelectorAll('.sp-card-labels a')];
- expect(links.map(link=>link.getAttribute('href'))).toEqual([dateLink]);
- expect(links[0].textContent).toBe('⚖️ Defensa del Territori, Ecologia i Reivindicació');
- expect([...container.querySelectorAll('.sp-card-labels .sdp-badge-tag')].map(node=>node.textContent)).toEqual(['Aplec pel Territori','Incendis','Associacionisme']);
+ expect(links.filter(link=>link.getAttribute('href')===dateLink)).toHaveLength(1);
+ // G26-2 · Canvi intencionat, IDEA-365 (21:40, regla 3: «píndoles 100 % clicables arreu»): l'etiqueta
+ // «Aplec» ja no és text inert; porta a la seua pàgina editorial (/etiqueta/aplec), darrere dels destins.
+ expect(links.filter(link=>link.getAttribute('href')!==dateLink).map(link=>link.getAttribute('href'))).toEqual(['/mur','/calendari','/etiqueta/aplec']);
+ expect(links.find(link=>link.getAttribute('href')==='/etiqueta/aplec').textContent).toBe('Aplec');
+ expect(links.find(link=>link.getAttribute('href')===dateLink).textContent).toBe('⚖️ Defensa del Territori, Ecologia i Reivindicació');
+ expect([...container.querySelectorAll('.sp-card-labels .sdp-badge-tag')].map(node=>node.textContent)).toEqual(['Aplec']);
 });
 
-test('C2-01 · al detall queda una sola diana Agenda sense duplicar l’enllaç de la mare',()=>{
+test('C26-2 · detall de l’Aplec conserva classificació exacta de la Card i una diana de data',()=>{
  const page=paginaDElement(agenda,aplec);
- expect(page.labels.map(label=>label.text)).toEqual(['Agenda','⚖️ Defensa del Territori, Ecologia i Reivindicació','Aplec pel Territori','Incendis','Associacionisme']);
- expect(page.labels.filter(label=>label.href).map(label=>label.href)).toEqual([dateLink]);
+ expect(page.labels).toEqual(aplec.labels);
+ expect(page.labels.filter(label=>label.className==='sdp-badge-system').map(label=>label.text)).toEqual(['Mur','Calendari']);
+ expect(page.labels.filter(label=>label.href===dateLink)).toHaveLength(1);
+ expect(page.labels.filter(label=>label.href&&label.href!==dateLink).map(label=>label.href)).toEqual(['/mur','/calendari']);
  const {container}=render(<PageFrame {...page}><p>Cos de prova</p></PageFrame>);
  const links=[...container.querySelectorAll('header.page-title a')].filter(link=>link.getAttribute('href')===dateLink);
  expect(links).toHaveLength(1);
- expect(links[0].textContent).toBe('Agenda');
- expect(aplec.labels[0].href).toBe(dateLink);
+ expect(links[0].textContent).toBe(aplec.category);
+ expect(aplec.labels.find(label=>label.text===aplec.category).href).toBe(dateLink);
 });
 
 test('C2-02 · els49 comptadors actius descriuen el corpus canònic real de425 articles',()=>{
@@ -71,7 +78,9 @@ test('C2-04 · les10 arestes antigues Excursions resolen a Rutes i no hi ha dest
 
 test.each([[mur,'Publicació','7f0c'],[mercat,'Mercat','mel']])('C2-05 · el detall orgànic conserva la classificació estructural de la secció (%s)',(section,label,id)=>{
  const item=Object.freeze({id,title:'Original',content:'<p>Cos privat intacte</p>',labels:Object.freeze([{text:'Categoria inventada',className:'sdp-badge-category'},{text:'Etiqueta inventada',className:'sdp-badge-tag'}])});
- expect(paginaDElement(section,item).labels).toEqual([{text:label,className:'sdp-badge-system'}]);
+ expect(paginaDElement(section,item).labels).toEqual(section.listPath==='/mercat'
+  ? [{text:'Mur',className:'sdp-badge-system',href:'/mur'},{text:'Mercat',className:'sdp-badge-system',href:'/mercat'}]
+  : [{text:label,className:'sdp-badge-system'}]);
  expect(item.labels[0].text).toBe('Categoria inventada');
  expect(item.content).toBe('<p>Cos privat intacte</p>');
 });
@@ -122,6 +131,7 @@ test('preservació · els425 registres i les dades editorials/personals de l’A
  const R46=JSON.parse(JSON.stringify(ARTICLES_SIMULADOR_IA_425).replaceAll('💻 Tecnologia i Disseny','💻 Tecnologia Lliure, Dades Obertes i Disseny'));
  expect(hash(R46)).toBe('cbcb113b1de18f3522030d8022edfe938c401f76a1e9ba1a416b2e41259a454b');
  expect(hash(ARTICLES_SIMULADOR_IA_425)).toBe('d94404692f1f39610212c8f49fe841ef445185de8311ee1438b36d4bb1372470');
- const copy={...aplec};delete copy.labels;delete copy.tags;
+ expect(aplec.categoriesSistema).toEqual(['Mur','Calendari']);
+ const copy={...aplec};delete copy.labels;delete copy.tags;delete copy.categoriesSistema;
  expect(hash(copy)).toBe('3b0dc825093e4774313e91f6d7aa12f31bd6a389daa7bf1bd4f6ce1c0e6918a5');
 });

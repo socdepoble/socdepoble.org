@@ -48,7 +48,8 @@ const NOTES = [
   { id: 'n1', title: 'La nota', subtitle: 'Del hort', formattedDate: '07/10/26', icon: '' },
   { id: 'n2', title: 'Formatges', lead: 'Curats', icon: '🧀' }
 ];
-/* Dues carpetes del servidor (una dins de l'altra); el Bloc hi afig la Safata d’Entrada. */
+/* Dues carpetes del servidor (una dins de l'altra); el Bloc hi afig la Safata d’Entrada i,
+   des de v1.2.26 (IDEA-358.1, Llibre Mestre, l. 3691), «En producció». */
 const CARPETES = [{ id: 'f-mur', name: 'Mur', parentId: null }, { id: 'f-hort', name: 'Hort', parentId: 'f-mur' }];
 const CERCA = 'Cerca una nota, una pàgina o una carpeta';
 /* Les pàgines de Sóc de Poble que viuen al PAGE_COPY, sense les portades de la Wiki i de Disseny.
@@ -100,8 +101,8 @@ test('la llista agrupada: quatre grups i, en cada un, la portada, les carpetes i
   const { container } = await munta();
   expect([...container.querySelectorAll('.sdp-xat-seccio__titol')].map((h) => h.textContent))
     .toEqual(['Notes personals', 'Wiki de Poble', 'Disseny', 'Pàgines de Sóc de Poble']);
-  /* Notes: les carpetes del Bloc (amb la Safata d’Entrada) i després les notes. */
-  expect(files('Notes personals')).toEqual(['Mur', 'Hort', NOM_CARPETA_CONNECTATS, 'La nota', 'Formatges']);
+  /* Notes: les carpetes del Bloc (amb la Safata d’Entrada i «En producció», com la columna) i després les notes. */
+  expect(files('Notes personals')).toEqual(['Mur', 'Hort', NOM_CARPETA_CONNECTATS, 'En producció', 'La nota', 'Formatges']);
   /* Wiki: la portada, les carpetes (Maquinària de la IAIA i les del manifest),
      la Consola, les eines locals i els documents. */
   expect(files('Wiki de Poble')).toEqual([
@@ -157,10 +158,10 @@ test('les pàgines i les carpetes del codi es llisten amb honestedat: el grup ho
   expect(botons('Wiki de Poble').map(etiqueta)).toEqual(['Al codi', 'Icona fixa', 'Icona fixa', 'Al codi', 'Al codi', 'Al codi', 'Al codi']);
   expect(botons('Disseny').every((boto) => etiqueta(boto) === 'Al codi')).toBe(true);
   expect(botons('Pàgines de Sóc de Poble').every((boto) => etiqueta(boto) === 'Al codi')).toBe(true);
-  /* Notes: les carpetes, inertes amb «Icona fixa»; les notes, vives i sense etiqueta. */
+  /* Notes: les carpetes (també «En producció»), inertes amb «Icona fixa»; les notes, vives i sense etiqueta. */
   const notes = botons('Notes personals');
   expect(notes.map((boto) => [boto.getAttribute('aria-disabled'), etiqueta(boto)])).toEqual([
-    ['true', 'Icona fixa'], ['true', 'Icona fixa'], ['true', 'Icona fixa'], [null, null], [null, null]
+    ['true', 'Icona fixa'], ['true', 'Icona fixa'], ['true', 'Icona fixa'], ['true', 'Icona fixa'], [null, null], [null, null]
   ]);
   expect(within(grup('Notes personals')).queryByText(/dins del codi/)).toBeNull();
 });

@@ -174,7 +174,9 @@ export function ColumnaLlistaPerTemporada({ params }) {
               subtitle={subtitolDe(delCataleg, idioma)}
               body={article.secundari || entradetaDe(delCataleg, idioma)}
               squareBadge={{ type: 'custom', label: nomDelGrup.get(article.categoriaId) || article.nom, content: <QuadratDeTemporada grup={article.categoriaId} /> }}
-              labels={[textosMig[article.estat]]}
+              /* v1.2.26 · «Per comprar» és un estat, no taxonomia (D3 de l'integrador sobre IDEA-365,
+                 Llibre Mestre, línia 3825): píndola inerta, sense enllaç. */
+              labels={textosMig[article.estat] ? [{ text: textosMig[article.estat], inerta: true }] : []}
               onMainClick={() => accions.marcaComprat(llista.id, article.id)}
               premuda={article.estat === 'en-colleccio'}
               idElement={article.id}

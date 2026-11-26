@@ -66,7 +66,10 @@ export function propsDeTargetaDeResultat(entrada, { meta, nomActual, t } = {}) {
     /* Pla 261022_1955 (T2) · Sense foto que es puga pintar, la referència del
        bucket públic (un logo pujat): UniversalCard la demana al port. */
     avatarUrl: ambAvatar ? entrada.avatar.src || entrada.avatar.ref || undefined : undefined,
-    labels: ambAvatar ? [] : dades,
+    /* v1.2.26 · D3 de l'integrador sobre IDEA-365 (Llibre Mestre, línia 3825) · La meta de la fila
+       (comarca, habitants, preu, qui ven, dates) és metadada del registre, no una píndola taxonòmica: text
+       inert, com a la llista, sense l'enllaç que rutaDePindola.js posaria a /etiqueta/<slug>. */
+    labels: ambAvatar ? [] : dades.map((text) => ({ text, inerta: true })),
     /* data-element a l'enllaç de la targeta: «Mostra'n més» hi porta el focus. */
     idElement: entrada?.clau,
     hasFooter: false

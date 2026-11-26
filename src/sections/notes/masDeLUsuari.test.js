@@ -87,7 +87,10 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
      9c1e6e333 · Les catorze de SYSTEM_PAGES i, darrere, les cinc de
      patrimoni: dènou targetes. */
   test('les quinze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
-    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length - 1 + PATRIMONI_AL_MUR.length);
+    /* v1.2.26 · IDEA-367 (Llibre Mestre, 23:06, punt 3) · + la card del llibre «Què dinem?», que signa l'associació
+       (P0-115): és del Mur, però no del MAS de l'entitat pilot (AL_MUR no la porta). */
+    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length - 1 + PATRIMONI_AL_MUR.length + 1);
+    expect(SISTEMA.filter((item) => !item.isSystem).map((item) => item.id)).toEqual(['que-dinem']);
     expect(SYSTEM_PAGES).toHaveLength(17); // R32.86 · + «Cada cosa al seu lloc»
     expect(AL_MUR).toHaveLength(21);
     expect(AL_MUR.map(item => item.key)).not.toContain('la-iaia-sabuda');

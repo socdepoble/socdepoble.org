@@ -68,7 +68,9 @@ export default function TranslationsSection() {
      pàgines continua en obres i encara no traduïx. */
   const traductorDisponible = traduccioDePaginesDisponible(externalConfig?.traductorUrl);
 
-  const etiqueta = (text, className) => ({ text: text.toLocaleUpperCase(locale), className });
+  /* v1.2.26 · «Llengua pròpia» i «Actiu» són estats, no taxonomia (D3 de l'integrador sobre IDEA-365,
+     Llibre Mestre, línia 3825): inertes, sense l'enllaç que rutaDePindola.js posaria a una píndola. */
+  const etiqueta = (text, className) => ({ text: text.toLocaleUpperCase(locale), className, inerta: true });
   const activa = SUPPORTED_LANGUAGES.find((llengua) => llengua.code === language);
   const didactic = obteContingutDidacticTraduccions(language);
 

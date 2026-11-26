@@ -197,6 +197,12 @@ test('versions sobreviuen a reobertura i un registre d’abans de R32 només ado
   try {
     await service.prepara();
     const actual = remote();
+    // C26-1: derivar Mur al port no permet adoptar una edició real a Mercat.
+    const categoriesDivergents=structuredClone(actual);
+    categoriesDivergents.find(row=>row.sectionId==='mur').categoriesSistema=['Mercat'];
+    categoriesDivergents.find(row=>row.sectionId==='notes').content='Una altra edició';
+    await expect(service.adoptaVersionsRemotes(categoriesDivergents)).resolves.toBe(false);
+    expect((await service.llista())[0].versions).toEqual({privada:null,publica:null});
     const divergent = structuredClone(actual); divergent[0].content = 'Edició desconeguda';
     await expect(service.adoptaVersionsRemotes(divergent)).resolves.toBe(true);
     expect((await service.llista())[0].versions.privada).toBeNull();

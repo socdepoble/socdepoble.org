@@ -1,4 +1,4 @@
-import { ArrowLeft, Undo2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Undo2 } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, useLayoutEffect, useId, forwardRef, useCallback } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 import { PUNTS_DE_TALL } from '../layout/graella.js';
@@ -313,11 +313,11 @@ export default function UniversalToolbar({
   publishPopup = null,
   onDelete,
   deleteDisabled = false,
-  /* IDEA-41 (Mestre 261028, Bloc H) · «🎴 Proposa Card»: en ample, el primer
-     botó del grup de publicació; en compacte, l'últim de les opcions de
-     format. Només si l'editor el demana (onProposaCard). Apagat quan no hi ha
-     res a proposar; amb proposaCardDesfer, el mateix botó desfà la proposta.
-     La barra continua muda: només rep dades. */
+  /* IDEA-41 / IDEA-359.1 · «Maqueta la targeta»: en ample, l'última cel·la de
+     «Més eines»; en compacte, l'última de les opcions de format. Només si
+     l'editor el demana (onProposaCard). Apagat quan no hi ha res a proposar;
+     amb proposaCardDesfer, el mateix botó desfà la maquetació. La barra
+     continua muda: només rep dades. */
   onProposaCard = null,
   proposaCardDisabled = false,
   proposaCardDesfer = false,
@@ -355,7 +355,7 @@ export default function UniversalToolbar({
   const tancaAmpliadaITorna = useCallback(() => { setAmpliada(false); toggleRef.current?.focus(); }, []);
   /* En compacte les opcions floten damunt del document: un clic fora o
      Escape les tanquen (i Escape torna el focus a «⋯»), però no els d'una
-     finestra modal oberta damunt (la fitxa de Proposa Card). En ample la
+     finestra modal oberta damunt (la fitxa de «Maqueta la targeta»). En ample la
      segona fila és part de la barra: només la plega el mateix botó. */
   useTancaFora(compact && ampliada, containerRef, tancaAmpliada, tancaAmpliadaITorna);
   /* Gauntlet 261101 · X-C-notes (C-11, patró «disclosure» de l'APG, WCAG
@@ -472,11 +472,16 @@ export default function UniversalToolbar({
      files fins a 800-850px d'amplària i, en desfer, la canviava davall del
      punter; la cel·la fa sempre 48px. R2 (revisió final 261028) · En
      compacte, al grup de publicació, els 48px i el gap passaven la barra a
-     dues files als telèfons: va dins de les opcions de format, l'última. */
+     dues files als telèfons: va dins de les opcions de format, l'última.
+     IDEA-359.1 (v1.2.26, Llibre Mestre l. 3700: «Retirar la petita icona
+     🎴») · El glif és Sparkles (Undo2 en desfer) i la cel·la viu, en ample,
+     a l'última posició de «Més eines» i, en compacte, a l'última de «Format
+     del text»: el grup de publicació queda amb Borrar i Publicar. La mateixa
+     cel·la de sempre (Llei del Píxel): cap pastilla amb el text a la vista. */
   const etiquetaProposaCard = proposaCardDesfer
-    ? t('section.notes.proposaCardDesfer', 'Desfés la proposta')
-    : t('section.notes.proposaCard', 'Proposa Card');
-  const glifProposaCard = proposaCardDesfer ? <Undo2 {...iconProps} /> : <span aria-hidden="true">🎴</span>;
+    ? t('section.notes.proposaCardDesfer', 'Desfés la maquetació')
+    : t('section.notes.proposaCard', 'Maqueta la targeta');
+  const glifProposaCard = proposaCardDesfer ? <Undo2 {...iconProps} /> : <Sparkles {...iconProps} />;
   /* AH-02 · El motiu només acompanya el botó apagat. */
   const motiuProposaCard = proposaCardDisabled && typeof proposaCardMotiu === 'string' && proposaCardMotiu.trim() ? proposaCardMotiu : null;
   const botoProposaCard = typeof onProposaCard !== 'function' ? null : (
@@ -610,7 +615,6 @@ export default function UniversalToolbar({
         {compact ? null : botoAmplia}
 
         <div ref={grupPublicacioRef} className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
-          {compact ? null : botoProposaCard}
           {onDelete && (
             <BlocAction
               label={t('section.notes.delete', 'Borrar')}
@@ -635,6 +639,7 @@ export default function UniversalToolbar({
           aria-label={t('section.notes.format.mesEines', 'Més eines')} hidden={!ampliada}>
           {plegades.map(eina)}
           {EINES_SECUNDARIES.map(eina)}
+          {botoProposaCard}
         </div>
       )}
       {dialegEnllac ? (

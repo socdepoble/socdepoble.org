@@ -214,8 +214,11 @@ export function infraccionsH7(rutes) {
       /* O3-GEMINI-1 (261102) · Els .md de primer nivell de public/opendata/ són recursos
          del Data Package (llicencies.md, memoria.md), no documentació: el manifest els cita.
          P0-CONSOLIDACIO-3-CATEDRES · Els .md de primer nivell de public/md/ tampoc: són la
-         projecció pública de la Wiki que genera tooling/seo/genera-llms.mjs (/md/<slug>.md). */
-      case 'public': return /\.test\./.test(nom) || (/\.md$/i.test(nom) && !(segs.length === 3 && ['opendata', 'md'].includes(segs[1]))) || segs.includes('__fixtures__');
+         projecció pública de la Wiki que genera tooling/seo/genera-llms.mjs (/md/<slug>.md).
+         v1.2.26 (IDEA-364) · Ni els de public/md/skills/<nom>.md, la projecció de les skills públiques
+         (tooling/wiki/lib/public-skills.mjs), només a eixa profunditat: cap subcarpeta de skills/. */
+      case 'public': return /\.test\./.test(nom) || (/\.md$/i.test(nom) && !(segs.length === 3 && ['opendata', 'md'].includes(segs[1]))
+        && !(segs.length === 4 && segs[1] === 'md' && segs[2] === 'skills')) || segs.includes('__fixtures__');
       case 'src': return /\.test\.mjs$/.test(nom);
       case 'tooling': return /\.test\.jsx?$/.test(nom);
       case 'wordpress-plugin': return /\.test\./.test(nom);
@@ -333,7 +336,7 @@ test('H4 · wordpress-plugin/ només té les entrades del connector', () => {
 });
 
 /* La llista de l'adaptador sense passar per comprovaHigienePaquet(): ADAPTADOR.fitxers més el
-   recorregut propi de ADAPTADOR.carpetes (amb ocults). Només s'usa quan fitxersAdaptador() llança,
+   recorregut propi de ADAPTADOR.carpetes (amb ocults). Només es fa servir quan fitxersAdaptador() llança,
    perquè H5 puga imprimir la llista completa en el seu format (A4, àrbitre 261102). */
 function adaptadorSenseFiltre() {
   const rels = [...empaquetador.ADAPTADOR.fitxers];
@@ -452,9 +455,12 @@ test('la guarda mossega (sonda)', () => {
     'tooling/b.test.js', 'tooling/c.test.jsx', 'wordpress-plugin/d.test.php', 'src/ok.test.js', 'public/foto.jpg', 'tooling/ok.test.mjs',
     'public/opendata/llicencies.md', 'public/opendata/sub/notes.md', 'public/opendata/x.test.js', 'public/docs/opendata/notes.md',
     'public/md/00-index.md', 'public/md/sub/notes.md', 'public/md/x.test.js', 'public/docs/md/notes.md',
+    // v1.2.26 (IDEA-364) · public/md/skills/<nom>.md, admés només a la profunditat 4.
+    'public/md/skills/core-automillora.md', 'public/md/skills/sub/x.md', 'public/md/skills/x.test.js', 'public/docs/md/skills/x.md',
   ]), ['public/x.test.js', 'public/notes.md', 'public/__fixtures__/', 'public/__fixtures__/a.json', 'src/a.test.mjs', 'src/sections/android/x.test.mjs', 'tooling/b.test.js', 'tooling/c.test.jsx', 'wordpress-plugin/d.test.php',
     'public/opendata/sub/notes.md', 'public/opendata/x.test.js', 'public/docs/opendata/notes.md',
-    'public/md/sub/notes.md', 'public/md/x.test.js', 'public/docs/md/notes.md']);
+    'public/md/sub/notes.md', 'public/md/x.test.js', 'public/docs/md/notes.md',
+    'public/md/skills/sub/x.md', 'public/md/skills/x.test.js', 'public/docs/md/skills/x.md']);
   // A3: el recorregut salta per nom només node_modules i .git, i per ruta exacta les eixides de build.
   assert.equal(salta('src/sections/android', 'android', SALTATS_H7), false);
   assert.equal(salta('public/build', 'build', SALTATS_H7), false);

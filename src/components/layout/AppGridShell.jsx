@@ -530,6 +530,26 @@ export default function AppGridShell({
 
   /* Classes modificadores en lloc de :has() (Baseline 2022). */
   const leftTancada = tancada.left || senseEsquerra;
+  /* P2 CDP (Onada v1.2.26 · Lot G26-4) · Paritat de la propietat DOM `inert`
+     amb l'atribut `inert="true"` de les columnes plegades, per a jsdom (que no
+     té `inert` a HTMLElement.prototype) i per als motors que no la reflectixen.
+     Als navegadors que implementen inert, l'atribut ja fa la feina i la
+     propietat ja el reflectix: ací no canvia res. On no l'implementen (Firefox
+     anterior al 112, dins del baseline 2022), la propietat només és una
+     expando sense efecte. Fa servir els mateixos booleans que l'atribut i va
+     després de la guarda del focus. */
+  useLayoutEffect(() => {
+    const estats = [
+      [leftRef.current, leftTancada],
+      [middleRef.current, tancada.middle],
+      [railRef.current, railTancat],
+      [rightRef.current, tancada.right],
+    ];
+    for (const [node, tancat] of estats) {
+      if (!node || Boolean(node.inert) === Boolean(tancat)) continue;
+      node.inert = Boolean(tancat);
+    }
+  }, [leftTancada, tancada.middle, railTancat, tancada.right]);
   const contentMods = [
     'app-grid-content',
     senseEsquerra ? 'has-left-empty' : '',

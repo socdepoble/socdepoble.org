@@ -23,6 +23,10 @@
  *           el text de public/llms.txt i la llista de fitxers de public/md han de
  *           ser els de la projecció (P0-CONSOLIDACIO-3-CATEDRES). El cos de cada .md
  *           el comprova sencer «genera-llms.mjs --comprova», no esta porta.
+ *           v1.2.26 · La subcarpeta public/md/skills (IDEA-364) és part de la projecció, i la
+ *           policia de vocabulari (policia-vocabulari.mjs) hi passa en mode avís: avisosVocabulari,
+ *           mai una infracció. També llig els esborranys de la Wiki que /wikidepoble publica i
+ *           projectaLlms descarta per noindex, amb el camí de la Wiki (D4 Opció B).
  *   CEV-5 · Paritat estructural i rutes internes verificades en les 5 llengües
  *           (ca, es, en, eu, gl), sense marcadors {placeholder} oblidats ni hrefs trencats.
  *   CEV-6 · Propagació editorial per dominis (--changed f1,f2 o --git-diff [ref],
@@ -36,6 +40,15 @@ import { pathToFileURL } from 'node:url';
 import { PROJECT_DIR, WIKI_DIR } from '../wiki/lib/project_paths.mjs';
 import { esMain } from '../lib/arrel.mjs';
 import { projectaLlms, RUTA_LLMS, CARPETA_MD } from '../seo/genera-llms.mjs';
+import { SKILLS_OUT } from '../wiki/lib/public-skills.mjs';
+import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
+import { publicWikiFiles, readPublicWikiFile, publicMetadata, publicWikiFlags } from '../wiki/lib/publication-policy.mjs';
+import { policiaVocabulari } from './policia-vocabulari.mjs';
+
+/* v1.2.26 (IDEA-364) · public/md/skills, la subcarpeta de la projecció de skills. */
+const SUBCARPETA_SKILLS = path.posix.relative(CARPETA_MD, SKILLS_OUT);
+/* v1.2.26 (C26-4, Gauntlet #4) · Quants avisos de vocabulari es pinten en text; --json els porta tots. */
+const AVISOS_VOCABULARI_EN_TEXT = 12;
 
 const ESQUEMA_ESPERAT = 'sdp.coherencia-editorial-viva.v1';
 const MAPA_REL = '.agents/coherencia-editorial-mapa.json';
@@ -226,6 +239,25 @@ function llevaBlocsCodiMarkdown(md) {
   }).join('\n');
 }
 
+/**
+ * v1.2.26 (D4 Opció B) · Els documents de la Wiki que /wikidepoble publica com a esborrany (noindex): la mateixa
+ * frontera i el mateix filtre que projectaLlms (genera-llms.mjs), però els que esta descarta per noindex. Torna
+ * [[camí de la Wiki, text sencer]]: el text conserva el frontmatter, perquè la línia de cada avís siga la del fitxer.
+ */
+export function esborranysPublicsDeLaWiki(arrel) {
+  const eixida = [];
+  for (const file of publicWikiFiles(arrel, { extensions: ['.md'] })) {
+    const raw = readPublicWikiFile(arrel, file);
+    if (raw === null) continue;
+    const parsed = parseFrontmatter(raw);
+    if (parsed.malformed || parsed.errors.length) continue;
+    const meta = parsed.data || {};
+    if (!publicMetadata(meta) || !publicWikiFlags(meta).noindex) continue;
+    eixida.push([path.relative(arrel, file).split(path.sep).join('/'), raw]);
+  }
+  return eixida.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
 function rutaInternaValida(href, { rutesApp, pageCopy, arrel }) {
   const cami = href.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
   if (cami === '/') return true;
@@ -248,6 +280,7 @@ export async function avaluaCoherenciaEditorial({
 } = {}) {
   const infraccions = [];
   const avisosPropagacio = [];
+  const avisosVocabulari = [];
   const lleisVerdes = [];
   const R = (rel) => path.join(arrel, rel);
 
@@ -259,7 +292,7 @@ export async function avaluaCoherenciaEditorial({
   const mapaAbs = R(MAPA_REL);
   if (!fs.existsSync(mapaAbs)) {
     falla('CEV-1', MAPA_REL, 'Falta el mapa declaratiu .agents/coherencia-editorial-mapa.json');
-    return { valid: false, infraccions, avisosPropagacio, lleisVerdes };
+    return { valid: false, infraccions, avisosPropagacio, avisosVocabulari, lleisVerdes };
   }
 
   let mapa;
@@ -267,13 +300,13 @@ export async function avaluaCoherenciaEditorial({
     mapa = JSON.parse(fs.readFileSync(mapaAbs, 'utf8'));
   } catch (err) {
     falla('CEV-1', MAPA_REL, `JSON invàlid: ${err.message}`);
-    return { valid: false, infraccions, avisosPropagacio, lleisVerdes };
+    return { valid: false, infraccions, avisosPropagacio, avisosVocabulari, lleisVerdes };
   }
 
   // Un mapa incomplet no pot certificar res: ni llengües buides, ni lèxic buit, ni
   // dominis que vigilen camins inexistents. Fail-closed abans de les altres lleis.
   for (const { fitxer, detall } of validaMapaCoherencia(mapa, arrel)) falla('CEV-1', fitxer, detall);
-  if (infraccions.length > 0) return { valid: false, infraccions, avisosPropagacio, lleisVerdes };
+  if (infraccions.length > 0) return { valid: false, infraccions, avisosPropagacio, avisosVocabulari, lleisVerdes };
   lleisVerdes.push('CEV-1');
 
   // Importa mòduls vius del projecte des d'arrel
@@ -466,11 +499,32 @@ export async function avaluaCoherenciaEditorial({
     if (llmsAlDisc !== projeccio.llms) {
       falla('CEV-4', RUTA_LLMS, 'llms.txt editat a mà o desfasat: no és la projecció de publication-policy.mjs (npm run llms:build)');
     }
-    const esperats = [...projeccio.fitxers.keys()].map((slug) => `${slug}.md`).sort();
-    const sobren = mdAlDisc.filter((nom) => !esperats.includes(nom));
+    /* v1.2.26 (IDEA-364, C26-4) · La subcarpeta skills/ és part de la mateixa projecció: genera-llms.mjs
+       l'escriu sempre (també buida, amb el seu index.json) des de tooling/wiki/lib/public-skills.mjs. Ací
+       només es reconeix el directori; el seu contingut sencer el comprova «genera-llms.mjs --comprova»
+       (diferenciesSkills), com el cos de cada .md. Un fitxer que es diga «skills» no és la carpeta. */
+    const esperats = [...[...projeccio.fitxers.keys()].map((slug) => `${slug}.md`), SUBCARPETA_SKILLS].sort();
+    const esCarpeta = (nom) => { try { return fs.statSync(path.join(carpetaMd, nom)).isDirectory(); } catch { return false; } };
+    const sobren = mdAlDisc.filter((nom) => !esperats.includes(nom) || (nom === SUBCARPETA_SKILLS && !esCarpeta(nom)));
     const falten = esperats.filter((nom) => !mdAlDisc.includes(nom));
     if (sobren.length || falten.length) {
       falla('CEV-4', CARPETA_MD, `${CARPETA_MD} no és la projecció pública (sobren: ${sobren.join(', ') || 'cap'}; falten: ${falten.join(', ') || 'cap'}; npm run llms:build)`);
+    }
+    /* v1.2.26 (C26-4, Gauntlet #4) · La policia de vocabulari («de poble» en lloc de «del poble»,
+       «utilitza» en lloc de «usa»; core-identitat) passa en MODE AVÍS per la projecció pública que ix a
+       la web: els documents de public/md i les skills de public/md/skills. Mai fa caure cap llei ni
+       substituïx res: és revisió humana. */
+    const projectats = [
+      ...[...projeccio.fitxers].map(([slug, text]) => [`${CARPETA_MD}/${slug}.md`, text]),
+      ...[...(projeccio.skills?.fitxers ?? [])].map(([nom, text]) => [`${SKILLS_OUT}/${nom}.md`, text]),
+    ];
+    for (const [fitxer, text] of projectats) {
+      for (const avis of policiaVocabulari(text)) avisosVocabulari.push({ fitxer, ...avis });
+    }
+    /* v1.2.26 (D4 Opció B) · Els esborranys de la Wiki no tenen còpia a public/md, però /wikidepoble els continua
+       publicant (wikiManifest): la policia també els llig, en mode avís, amb el camí i la línia del fitxer de la Wiki. */
+    for (const [fitxer, text] of esborranysPublicsDeLaWiki(arrel)) {
+      for (const avis of policiaVocabulari(text)) avisosVocabulari.push({ fitxer, ...avis });
     }
   } catch (e) {
     falla('CEV-4', RUTA_LLMS, `La projecció de llms.txt no es pot calcular: ${e.message}`);
@@ -582,6 +636,7 @@ export async function avaluaCoherenciaEditorial({
     },
     lleisVerdes,
     avisosPropagacio,
+    avisosVocabulari,
     infraccions,
   };
 }
@@ -613,6 +668,15 @@ async function main() {
     for (const a of resultat.avisosPropagacio) {
       console.warn(`  ⚠️  [PROPAGACIÓ] ${a.detall}`);
     }
+  }
+  const vocabulari = resultat.avisosVocabulari ?? [];
+  if (vocabulari.length > 0) {
+    console.log('──────────────────────────────────────────────────────────────────────────');
+    console.warn(`  ⚠️  [VOCABULARI] ${vocabulari.length} avisos a la projecció pública (mode avís: no bloqueja; --json els porta tots)`);
+    for (const a of vocabulari.slice(0, AVISOS_VOCABULARI_EN_TEXT)) {
+      console.warn(`  ⚠️  [VOCABULARI] ${a.fitxer}:${a.linia} ${a.codi}: ${a.original} → ${a.proposta}`);
+    }
+    if (vocabulari.length > AVISOS_VOCABULARI_EN_TEXT) console.warn(`  ⚠️  [VOCABULARI] … i ${vocabulari.length - AVISOS_VOCABULARI_EN_TEXT} més`);
   }
   if (!resultat.valid) {
     console.error('──────────────────────────────────────────────────────────────────────────');

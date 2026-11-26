@@ -278,13 +278,15 @@ export default function AppGestoria() {
   const titular = sessio.titular ?? null;
   const entradaAlCompte = entradaAlTauler(sessio.rutaEntrada, rutaTauler);
   const autor = autorDelPont(titular, entradaAlCompte, idioma);
+  /* v1.2.26 · D3 (IDEA-365): cap píndola de la Gestoria no ix de la Gestoria (insigniaBetaOberta.js);
+     són text, com en HEAD, i no porten a /categoria/<títol>. */
   const etiquetesAprendre = [
-    { text: tx.insigniaGestoria, className: 'sdp-badge-system' },
-    { text: tx.aprendreTitol, className: 'sdp-badge-category' }
+    { text: tx.insigniaGestoria, className: 'sdp-badge-system', inerta: true },
+    { text: tx.aprendreTitol, className: 'sdp-badge-category', inerta: true }
   ];
   const etiquetesFacturacio = [
-    { text: tx.insigniaGestoria, className: 'sdp-badge-system' },
-    { text: tx.facturacioTitol, className: 'sdp-badge-category' }
+    { text: tx.insigniaGestoria, className: 'sdp-badge-system', inerta: true },
+    { text: tx.facturacioTitol, className: 'sdp-badge-category', inerta: true }
   ];
   const propIdioma = idioma && idioma !== 'ca' ? { idioma } : {};
 

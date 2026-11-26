@@ -3,6 +3,10 @@
  * pinta la pastilla del poble com a última etiqueta, amb un enllaç a
  * /pobles/<slug>, a partir de les fitxes de /pobles del proveïdor de contingut.
  * Dades sintètiques.
+ * C26-2 (v1.2.26) · Canvi intencionat, IDEA-365 (21:40, regla 1: «un producte del /mercat que
+ * també ix al /mur porta Mur + Mercat»): mentre el Mur mostre productes, la primera pastilla és
+ * «Mur», davant de «Mercat». El poble continua sent l'última. La mateixa llista pinta la Card del
+ * Mur i la UniversalPage (TargetaDelMur.paritatProducte.v1226.test.jsx).
  */
 import React from 'react';
 import { cleanup, render } from '@testing-library/react';
@@ -34,7 +38,7 @@ test('l’última etiqueta de la targeta és el poble, enllaçat a la seua pàgi
   mocks.towns = [{ id: 'la-torre-de-les-macanes', title: 'La Torre de les Maçanes', etiqueta_curta_poble: 'La Torre' }];
   const { container } = render(<TargetaDelMercat item={OLI} />);
   const etiquetes = [...container.querySelectorAll('li.sp-card-label')];
-  expect(etiquetes.map((li) => li.textContent)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', 'La Torre']);
+  expect(etiquetes.map((li) => li.textContent)).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra', 'La Torre']);
   const enllac = etiquetes.at(-1).querySelector('a');
   expect(enllac.getAttribute('href')).toBe('/pobles/la-torre-de-les-macanes');
   expect(enllac.textContent).toBe('La Torre');
@@ -42,5 +46,5 @@ test('l’última etiqueta de la targeta és el poble, enllaçat a la seua pàgi
 
 test('sense cap fitxa de poble, les etiquetes de sempre', () => {
   const { container } = render(<TargetaDelMercat item={OLI} />);
-  expect([...container.querySelectorAll('li.sp-card-label')].map((li) => li.textContent)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra']);
+  expect([...container.querySelectorAll('li.sp-card-label')].map((li) => li.textContent)).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra']);
 });

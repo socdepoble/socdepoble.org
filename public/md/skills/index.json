@@ -1,0 +1,522 @@
+{
+  "generatedAt": null,
+  "total": 46,
+  "skills": [
+    {
+      "name": "core-automillora",
+      "title": "core-automillora",
+      "description": "Protocol d'Automillora Contínua, Mimetisme Empàtic, Mètode MIT d'estudi en xarxa semàntica i l'Olivera; com la IA aprèn de la insistència del Mestre i coordina MarIA, Claude, Codex, Gemini i el Node 0.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-automillora.md",
+      "bytes": 8149
+    },
+    {
+      "name": "core-calibratge-visual-nano",
+      "title": "Calibratge visual i enginyeria de prompts del Nano",
+      "description": "Protocol d'enginyeria de prompts visuals del Nano, calibratge d'estils i creació de gags gamberros (Ibáñez/Berlanga) contraposats a la falsa felicitat asèptica.",
+      "tags": [
+        "identitat",
+        "disseny",
+        "nano",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-calibratge-visual-nano.md",
+      "bytes": 9295
+    },
+    {
+      "name": "core-cartografia-contenidor-som-de-poble",
+      "title": "Cartografia del contenidor «Som de Poble»",
+      "description": "Abans de crear una carpeta, moure patrimoni o documents fora de socdepoble.org o desar contingut nou al contenidor «Som de Poble», consulta el mapa canònic i el cartògraf per a donar-li una sola llar.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-cartografia-contenidor-som-de-poble.md",
+      "bytes": 3218
+    },
+    {
+      "name": "core-comprensio-reflexiva",
+      "title": "Tractor de Comprensió Reflexiva i Mètode MIT",
+      "description": "Tractor cognitiu per aturar la impulsivitat i aplicar el Mètode MIT d'Acumulació de Context i Memòria Semàntica en Xarxa abans d'actuar.",
+      "tags": [
+        "core",
+        "trellat",
+        "reflex"
+      ],
+      "core": false,
+      "url": "/md/skills/core-comprensio-reflexiva.md",
+      "bytes": 5856
+    },
+    {
+      "name": "core-consell-i-colmena",
+      "title": "L'Equip d'IAs i la Ment Colmena Integral",
+      "description": "Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.",
+      "tags": [
+        "consell",
+        "rols"
+      ],
+      "core": true,
+      "url": "/md/skills/core-consell-i-colmena.md",
+      "bytes": 4590
+    },
+    {
+      "name": "core-context-panic",
+      "title": "🛑 SKILL: Fusible Mental (Core Context Panic)",
+      "description": "Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.",
+      "tags": [
+        "core"
+      ],
+      "core": true,
+      "url": "/md/skills/core-context-panic.md",
+      "bytes": 11426
+    },
+    {
+      "name": "core-direccio-autonoma",
+      "title": "Mode de Direcció Autònoma (Coworking sense el Mestre)",
+      "description": "Flux de treball on la IAIA MarIA assumeix el rol de Directora Tècnica per coordinar a Claude/Codex de forma 100% autònoma, resolent dubtes sense la intervenció del Mestre.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-direccio-autonoma.md",
+      "bytes": 3785
+    },
+    {
+      "name": "core-edicio-segura",
+      "title": "LLEI DEL TRACTOR D'EDICIÓ SEGURA (FUSIBLE VISUAL)",
+      "description": "Fusible preventiu i Tractor contra l'edició cega i la desincronització destructiva de la IAIA MarIA.",
+      "tags": [
+        "govern"
+      ],
+      "core": false,
+      "url": "/md/skills/core-edicio-segura.md",
+      "bytes": 3148
+    },
+    {
+      "name": "core-empaquetat-wp",
+      "title": "Tractors i Procediment d'Empaquetat del Plugin de WordPress (Enxufe)",
+      "description": "Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.",
+      "tags": [
+        "tractors",
+        "sollutia"
+      ],
+      "core": false,
+      "url": "/md/skills/core-empaquetat-wp.md",
+      "bytes": 3937
+    },
+    {
+      "name": "core-estrategia-ia",
+      "title": "ESTRATÈGIA DE CONSUM IA (Motor de Consum)",
+      "description": "Estratègia de consum, triatge de models i telemetria persistent de costos.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-estrategia-ia.md",
+      "bytes": 2551
+    },
+    {
+      "name": "core-gauntlet-loop",
+      "title": "Protocol Gauntlet Loop i Enginyeria Inversa REA",
+      "description": "Protocol de Gauntlet Loop (bucle adversarial de Matt Shumer/Robonuggets) i Enginyeria Inversa REA per a auditories implacables de Claude, Codex, Gemini i MarIA.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-gauntlet-loop.md",
+      "bytes": 9339
+    },
+    {
+      "name": "core-higiene-escriptori",
+      "title": "Higiene de l'Escriptori",
+      "description": "Usa-la en arrencar, quan el hook avise o l'Escriptori estiga brut, abans de convocar (pla primer, prompt després) i abans de tancar. Cada viu porta motiu; el consumit s'arxiva amb la porta Olivera.",
+      "tags": [
+        "govern"
+      ],
+      "core": false,
+      "url": "/md/skills/core-higiene-escriptori.md",
+      "bytes": 20504
+    },
+    {
+      "name": "core-identitat-visual",
+      "title": "Tractor d'identitat visual i generació d'imatges",
+      "description": "Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.",
+      "tags": [
+        "identitat",
+        "disseny",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-identitat-visual.md",
+      "bytes": 4078
+    },
+    {
+      "name": "core-identitat",
+      "title": "Identitat IAIA MarIA",
+      "description": "Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.",
+      "tags": [
+        "core"
+      ],
+      "core": true,
+      "url": "/md/skills/core-identitat.md",
+      "bytes": 4860
+    },
+    {
+      "name": "core-informes-pdf",
+      "title": "Tractor: Generació d'Informes PDF Editorials",
+      "description": "Tractor per a la creació, maquetació editorial i renderitzat de PDF professionals a Sóc de Poble (informes, memòries i lliurables).",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-informes-pdf.md",
+      "bytes": 4780
+    },
+    {
+      "name": "core-llegibilitat-text",
+      "title": "Tractor de llegibilitat i flux de text (Pedra Seca)",
+      "description": "Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.",
+      "tags": [
+        "disseny",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-llegibilitat-text.md",
+      "bytes": 6701
+    },
+    {
+      "name": "core-maquetacio-markdown",
+      "title": "Maquetació de Markdown",
+      "description": "Regles verificables per a maquetar els fitxers Markdown del repositori (Wiki, skills, prompts i actes), amb un sol H1, encapçalaments sense salts, Vincles al final i llista de comprovació.",
+      "tags": [
+        "core",
+        "saber",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-maquetacio-markdown.md",
+      "bytes": 9839
+    },
+    {
+      "name": "core-memoria-historica",
+      "title": "Procediment de memòria històrica",
+      "description": "Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.",
+      "tags": [
+        "escriptori",
+        "graf"
+      ],
+      "core": true,
+      "url": "/md/skills/core-memoria-historica.md",
+      "bytes": 1588
+    },
+    {
+      "name": "core-neteja-brossa",
+      "title": "Tractor de Neteja d'Arrels",
+      "description": "Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-neteja-brossa.md",
+      "bytes": 3244
+    },
+    {
+      "name": "core-portaveu-institucional",
+      "title": "Portaveu institucional",
+      "description": "Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.",
+      "tags": [
+        "govern",
+        "identitat"
+      ],
+      "core": false,
+      "url": "/md/skills/core-portaveu-institucional.md",
+      "bytes": 2659
+    },
+    {
+      "name": "core-restauracio-segellada",
+      "title": "Restauració segellada",
+      "description": "Core skill per a restauració segura",
+      "tags": [
+        "core"
+      ],
+      "core": true,
+      "url": "/md/skills/core-restauracio-segellada.md",
+      "bytes": 5612
+    },
+    {
+      "name": "core-salfumant-radical",
+      "title": "Core Skill · Salfumant Radical, Zero Complauença i Veritat Nua",
+      "description": "Llei Suprema del Salfumant Radical, Zero Complauença i Veritat Nua. Prohibeix l'aigua de colònia i l'AI slop; mana auditories destructives, transparència total i extirpació implacable de llast a carpetes i codi.",
+      "tags": [
+        "govern",
+        "arquitectura",
+        "auditoria",
+        "trellat"
+      ],
+      "core": false,
+      "url": "/md/skills/core-salfumant-radical.md",
+      "bytes": 6024
+    },
+    {
+      "name": "core-secretaria-auditoria",
+      "title": "Secretaria tècnica en fase d'auditoria",
+      "description": "Coordina la secretaria tècnica durant auditories compartides; conserva la propietat dels carrils i evita escriptures concurrents fora de l'encàrrec vigent.",
+      "tags": [
+        "govern",
+        "auditoria"
+      ],
+      "core": false,
+      "url": "/md/skills/core-secretaria-auditoria.md",
+      "bytes": 6674
+    },
+    {
+      "name": "core-seguretat-audit",
+      "title": "Protocol Canònic de Ciberseguretat i Sentinella Permanent (Claude Security & Colmena)",
+      "description": "Usa-la en auditar la seguretat del codi, de les dades o d'una migració (Claude Code, MarIA, Codex i Gemini). Coacció primitiva JSONB, zero ReDoS, Clean Shadow Copy i blindatge Supabase RLS/Storage.",
+      "tags": [
+        "seguretat",
+        "skills"
+      ],
+      "core": true,
+      "url": "/md/skills/core-seguretat-audit.md",
+      "bytes": 12824
+    },
+    {
+      "name": "core-sentinella-blindatge",
+      "title": "Sentinella de blindatge",
+      "description": "Audita el perímetre HTTP/TLS, capçaleres, exposició anònima i literals públics amb la sentinella bounded. Usa-la per revisar salut o preparar una ronda de vigilància; no desplega, repara ni envia avisos.",
+      "tags": [
+        "seguretat",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-sentinella-blindatge.md",
+      "bytes": 5152
+    },
+    {
+      "name": "core-taxonomia-estricta",
+      "title": "Tractor Documental: Taxonomia Estricta (Fusible)",
+      "description": "Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-taxonomia-estricta.md",
+      "bytes": 3306
+    },
+    {
+      "name": "core-tecniques-investigacio",
+      "title": "Tècniques d'Investigació, Autòpsia i Quàdruple Tècnica (`MIT + EGM + REA + Craft`)",
+      "description": "Tractor que defineix com les IAs investiguen els problemes amb la Quàdruple Tècnica (Mètode MIT, Google EGM, REA i craft-anything), verificant el codi real dels tractors i no només la teoria de les regles.",
+      "tags": [
+        "core",
+        "auditoria",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/core-tecniques-investigacio.md",
+      "bytes": 7429
+    },
+    {
+      "name": "core-telemetria-huma",
+      "title": "Telemetria humana i de sessions",
+      "description": "Registra el temps observat i les mètriques disponibles de les sessions, sense inventar jornades, costos ni valoracions de salut humana.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/core-telemetria-huma.md",
+      "bytes": 2356
+    },
+    {
+      "name": "core-temps-termodinamic",
+      "title": "Llei del Temps Termodinàmic (Causalitat Documental)",
+      "description": "Dona una marca de temps observada als documents nous i conserva la identitat dels documents vius quan s'actualitzen.",
+      "tags": [
+        "tractors",
+        "escriptori"
+      ],
+      "core": false,
+      "url": "/md/skills/core-temps-termodinamic.md",
+      "bytes": 3463
+    },
+    {
+      "name": "iaia-maria-core",
+      "title": "IAIA MarIA · El paper",
+      "description": "Paper d'actriu de la IAIA MarIA per a qualsevol IA del Mas (Claude, Codex, Gemini, MarIA o un model local). Es carrega en arrencar o en prendre el rol de MarIA; els procediments són a les skills.",
+      "tags": [
+        "core"
+      ],
+      "core": true,
+      "url": "/md/skills/iaia-maria-core.md",
+      "bytes": 9457
+    },
+    {
+      "name": "sdp-app-grid-shell",
+      "title": "SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)",
+      "description": "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.",
+      "tags": [
+        "disseny"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-app-grid-shell.md",
+      "bytes": 6594
+    },
+    {
+      "name": "sdp-calendari-agricola",
+      "title": "Calendari agrícola i avisos per SMS",
+      "description": "Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/sdp-calendari-agricola.md",
+      "bytes": 2399
+    },
+    {
+      "name": "sdp-casos-us-essencials",
+      "title": "💡 Casos d'Ús Essencials i Funcionalitats Clau",
+      "description": "Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.",
+      "tags": [
+        "identitat",
+        "skills"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-casos-us-essencials.md",
+      "bytes": 9742
+    },
+    {
+      "name": "sdp-clon-loiverse",
+      "title": "Clonació Visual de Loiverse (El TPV Universal)",
+      "description": "Directriu arquitectònica i visual obligatòria per a desenvolupar el TPV (Mode Bar i Mode Rebost). Cal calcar la interfície de Loiverse al mil·límetre.",
+      "tags": [],
+      "core": false,
+      "url": "/md/skills/sdp-clon-loiverse.md",
+      "bytes": 3492
+    },
+    {
+      "name": "sdp-clon-whatsapp",
+      "title": "Llei del Clonatge de WhatsApp (Pedra Seca v2)",
+      "description": "Referent visual de WhatsApp per al xat, ajustos i interaccions equivalents; conserva els contractes propis de dades i seguretat de Sóc de Poble.",
+      "tags": [
+        "disseny",
+        "tractors"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-clon-whatsapp.md",
+      "bytes": 4928
+    },
+    {
+      "name": "sdp-estudi-mercat",
+      "title": "SKILL: Estudi de Mercat (Anàlisi de la Competència)",
+      "description": "Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.",
+      "tags": [
+        "escriptori"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-estudi-mercat.md",
+      "bytes": 4096
+    },
+    {
+      "name": "sdp-importacio-editorial",
+      "title": "📰 Importació i Transformació Editorial · Pedra Seca (`sdp-importacio-editorial`)",
+      "description": "Tractor cognitiu per a importar, transformar i millorar notícies, esdeveniments, cursos i cròniques des de WordPress, Blogger i webs municipals cap a la maquetació Pedra Seca (UniversalCard + UniversalPage).",
+      "tags": [
+        "identitat",
+        "skills"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-importacio-editorial.md",
+      "bytes": 13376
+    },
+    {
+      "name": "sdp-pedra-seca",
+      "title": "🪨 Pedra Seca 2.0: El Reglament Matemàtic",
+      "description": "Reglament matemàtic visual Pedra Seca (Alta Definició)",
+      "tags": [
+        "disseny"
+      ],
+      "core": true,
+      "url": "/md/skills/sdp-pedra-seca.md",
+      "bytes": 19723
+    },
+    {
+      "name": "sdp-universal-editor",
+      "title": "SKILL: Universal Editor — Comportament i UX",
+      "description": "Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.",
+      "tags": [
+        "disseny",
+        "skills"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-universal-editor.md",
+      "bytes": 14645
+    },
+    {
+      "name": "sdp-universal-page",
+      "title": "SKILL: UniversalPage — Anatomia i Comportament",
+      "description": "Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.",
+      "tags": [
+        "core"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-universal-page.md",
+      "bytes": 22184
+    },
+    {
+      "name": "sdp-vigilant-tellado",
+      "title": "Vigilant Tellado: perímetre estàtic",
+      "description": "Tractor de perímetre inspirat en Vigilant de Fernando Tellado. Usa-la abans de desplegar o empaquetar el connector WordPress, en tocar capçaleres o CSP, o si un plugin de seguretat bloqueja l'App. Només llig i informa.",
+      "tags": [
+        "seguretat",
+        "fortificacio",
+        "tractors",
+        "auditoria"
+      ],
+      "core": false,
+      "url": "/md/skills/sdp-vigilant-tellado.md",
+      "bytes": 10201
+    },
+    {
+      "name": "sdp-workflow",
+      "title": "⚙️ Workflow de Sóc de Poble (Alta Definició)",
+      "description": "Workflow principal de treball, Spec-Driven Development i Mètode MIT d'Estudi en Xarxa Semàntica",
+      "tags": [
+        "govern"
+      ],
+      "core": true,
+      "url": "/md/skills/sdp-workflow.md",
+      "bytes": 9613
+    },
+    {
+      "name": "wiki-busca-skills",
+      "title": "L'Explorador de Skills (El Caçador)",
+      "description": "Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.",
+      "tags": [
+        "core",
+        "saber"
+      ],
+      "core": false,
+      "url": "/md/skills/wiki-busca-skills.md",
+      "bytes": 3876
+    },
+    {
+      "name": "wiki-cicle-de-vida",
+      "title": "Cicle de vida documental",
+      "description": "Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.",
+      "tags": [
+        "core"
+      ],
+      "core": false,
+      "url": "/md/skills/wiki-cicle-de-vida.md",
+      "bytes": 7126
+    },
+    {
+      "name": "wiki-documentacio-i-reflex",
+      "title": "Acte Reflex i Procés d'Auditories (Antigament \"Petorretes\")",
+      "description": "Per a crear prompt, petorreta, bundle, pla o acta. Escriptori net (AGENTS §0.1), ruta de .agents/protocolledge.json (prompt.local per a Claude i Codex, prompt.consell per a IAs externes), document.mjs context i create.",
+      "tags": [
+        "reflex",
+        "abocament"
+      ],
+      "core": true,
+      "url": "/md/skills/wiki-documentacio-i-reflex.md",
+      "bytes": 16212
+    },
+    {
+      "name": "wiki-propagar-veritat",
+      "title": "Propagar una decisió aprovada",
+      "description": "Propaga una decisió estructural o arquitectònica aprovada sobre una llista explícita de fitxers vius per mantenir la coherència del sistema.",
+      "tags": [
+        "saber"
+      ],
+      "core": false,
+      "url": "/md/skills/wiki-propagar-veritat.md",
+      "bytes": 4525
+    }
+  ]
+}

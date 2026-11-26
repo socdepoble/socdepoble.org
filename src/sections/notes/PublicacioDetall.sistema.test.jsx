@@ -198,17 +198,21 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
     /* PRODUCCIO-02 (R15b) · Sense VITE_SDP_CURADORIA_CULTURAL=1 (producció), La IAIA Sabuda no és cap targeta:
        dènou. Amb la bandera, hi torna (vint) i es llig com les altres.
        v1.2.24 · costura R32.75 · Amb Reconeixements, vint sense la bandera i vint-i-una amb ella. */
-    expect(SISTEMA).toHaveLength(21);
+    /* v1.2.26 · IDEA-367 (Llibre Mestre, 23:06, punt 3) · El Mur porta també la card del llibre «Què dinem?» (22 i 23
+       amb la bandera). No és cap pàgina de Sóc de Poble (P0-115: la signa l'associació, isSystem fals) i el Bloc no la
+       llig com a pàgina del sistema: el recorregut és el de les pàgines de Sóc de Poble. */
+    expect(SISTEMA).toHaveLength(22);
     expect(SISTEMA.map(item => item.id)).not.toContain('la-iaia-sabuda');
+    expect(SISTEMA.filter(item => !item.isSystem).map(item => item.id)).toEqual(['que-dinem']);
     vi.stubEnv('VITE_SDP_CURADORIA_CULTURAL', '1');
     let ambCuradoria;
     try { ambCuradoria = targetesDeSistema(PAGE_COPY); } finally { vi.unstubAllEnvs(); }
-    expect(ambCuradoria).toHaveLength(22);
+    expect(ambCuradoria).toHaveLength(23);
     expect(ambCuradoria.map(item => item.id)).toContain('la-iaia-sabuda');
     expect(ambCuradoria.filter(item => item.id !== 'la-iaia-sabuda')).toEqual(SISTEMA);
-    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(22);
+    expect(new Set(ambCuradoria.map(item => item.id)).size).toBe(23);
     expect(ambCuradoria.map(item => item.id)).not.toContain('anatomia-rural');
-    for (const targeta of ambCuradoria) {
+    for (const targeta of ambCuradoria.filter(item => item.isSystem)) {
       const { container, unmount } = render(<PublicacioDetall item={publicacioComANota(targeta, 'mur')} />);
       const cos = container.querySelector('article.cms-preview');
       if (SENSE_COS.includes(targeta.id)) expect([targeta.id, cos]).toEqual([targeta.id, null]);

@@ -152,6 +152,18 @@
       "despres": "20261121090000",
       "motiu": "R32.25 amplia la cua lease-v2 sobre Mur, sessions i credencials; worker compatible abans.",
       "font": "README R32.25; precondicions de 20261121090000"
+    },
+    {
+      "abans": "20261125020000",
+      "despres": "20261126030500",
+      "motiu": "IDEA-375 és la migració 140, després del catàleg v1.2.25 complet; reutilitza private.es_superadmin i la frontera canònica del Mur de 2611121430 i 2611122200.",
+      "font": "README v1.2.26 IDEA-375"
+    },
+    {
+      "abans": "2610061448",
+      "despres": "20261126030500",
+      "motiu": "La 140 confia el rol a private.es_superadmin i exigix aal2 en línia a les dues RPC perquè 2610061448 no està aplicada a Producció; si s'aplica, va abans i l'autoritat queda doblement tancada.",
+      "font": "README v1.2.26 IDEA-375; capçalera de 20261126030500"
     }
   ],
   "portes": [

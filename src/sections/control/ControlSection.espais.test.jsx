@@ -214,6 +214,7 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap al seu perfil, 
     expect([...targeta.querySelectorAll('.sp-card-body > ul.sp-card-labels > li')].map((li) => [li.textContent, li.className]), titol)
       .toEqual(etiquetesAmbEstat(plugin, 'ca').map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`]));
     expect(targeta.querySelectorAll('ul.sp-card-labels'), titol).toHaveLength(1);
+    // v1.2.26 · D3 (IDEA-365, línia 3825): les etiquetes del registre de plugins són metadades, sense enllaç.
     expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
@@ -327,7 +328,8 @@ test('D3 · cap targeta dels espais porta a l’eina local, a /gestoria ni direc
   const hrefs = ESPAIS_PLUGINS.flatMap((espai) => [...seccioDe(espai.titol).querySelectorAll('[href]')].map((el) => el.getAttribute('href')));
   expect(hrefs.length).toBeGreaterThan(0);
   expect(hrefs.filter((href) => /wikidepoble|gestoria_|^\/gestoria$|^\/app\//.test(href))).toEqual([]);
-  /* Onada 8 (261009) · I el copyright, que porta a «Drets d'autor». */
+  /* Onada 8 (261009) · I el copyright, que porta a «Drets d'autor». v1.2.26 · D3 (IDEA-365, línia 3825):
+     les etiquetes del registre de plugins són metadades i no enllacen. */
   expect(hrefs.every((href) => href === RUTA_PERFIL_PROJECTE || href === RUTA_DRETS_AUTOR || /^\/plugin\/[a-z]+$/.test(href))).toBe(true);
 });
 

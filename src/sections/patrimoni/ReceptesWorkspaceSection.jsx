@@ -13,12 +13,25 @@ import { etiquetaDApartat } from './cercaReceptes.js';
 import { traductorPatrimoni } from './textosPatrimoni.js';
 import { COPYRIGHT_QUE_DINEM, PaginaDeRecepta } from './ReceptaDetailSection.jsx';
 import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import { etiquetesDePaginaPublica } from '../../data/taxonomia/classificacioPaginesPubliques.js';
 import cssReceptes from '../../css/diferit-receptes.css?inline';
 
 const adoptaEstilsReceptes = (node) => { if (node) adoptaFullDiferit(node, 'receptes', cssReceptes); };
 
 export const ID_LLIBRE_QUE_DINEM = 'que-dinem';
 export const PORTADA_LLIBRE_QUE_DINEM = '/assets/uploads/patrimoni/portada_que_dinem_muro.webp';
+
+/* C26-2 #4 (Gauntlet c13) · IDEA-365 (21:58, punt 1: paritat absoluta Card ↔ UniversalPage) i IDEA-367 (23:06,
+   punt 3: «Què dinem?» porta Mur + Catàlegs + PDF, FORA Sistema) · La portada del llibre porta les MATEIXES
+   Categories de Sistema que la seua card del /mur (targetesMur.js, la mateixa clau pública), en la llengua de
+   la interfície, i darrere el lloc i l'any de l'edició. Eixa darrera és una metadada del registre, no
+   taxonomia (D3 de l'integrador): text inert, sense /categoria/muro-el-comtat-2019. */
+export function etiquetesDeLaPortadaQueDinem(idioma = 'ca') {
+  return [
+    ...etiquetesDePaginaPublica(ID_LLIBRE_QUE_DINEM, [], idioma),
+    { text: `${OBRA_QUE_DINEM.lloc} · ${OBRA_QUE_DINEM.any}`, className: 'sdp-badge-category', inerta: true }
+  ];
+}
 
 /* Onada R15b (RV-06) · El text alternatiu de la làmina de cada targeta diu la pàgina on és impresa (la 79 → p. 89,
    la 115 → p. 127), en la llengua de la interfície: la mateixa regla que ReceptaDetailSection i ReceptesQueDinemSection
@@ -28,7 +41,7 @@ const targetaDeLamina = (recepta, tr) => {
   return { imageUrl: lamina?.src, imageAlt: lamina ? tr('patrimoni.receptes.altLamina', 'Làmina de la pàgina {n} del llibre', { n: lamina.pagina }) : '' };
 };
 
-function PortadaLlibreQueDinem({ tr, onTorna }) {
+function PortadaLlibreQueDinem({ tr, idioma, onTorna }) {
   const obra = OBRA_QUE_DINEM;
   const portadaSrc = resolRecursPropi(PORTADA_LLIBRE_QUE_DINEM);
   const { publicadorsRegistrats } = usePublicadorsBarraRecurs({
@@ -60,7 +73,7 @@ function PortadaLlibreQueDinem({ tr, onTorna }) {
       }}
       onBack={onTorna}
       copyright={COPYRIGHT_QUE_DINEM}
-      labels={[{ text: `${obra.lloc} · ${obra.any}`, className: 'sdp-badge-category' }]}
+      labels={etiquetesDeLaPortadaQueDinem(idioma)}
     >
       <div ref={adoptaEstilsReceptes} className="sdp-recepta">
         <p lang="ca">
@@ -73,7 +86,7 @@ function PortadaLlibreQueDinem({ tr, onTorna }) {
 }
 
 export default function ReceptesWorkspaceSection({ page, accioPrincipal, children, itemSlug = null, sincronitzaRuta = false }) {
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
   const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const model = useMemo(() => ({
@@ -123,6 +136,7 @@ export default function ReceptesWorkspaceSection({ page, accioPrincipal, childre
       model={model}
       inclouDescendents
       afegirCataleg={esSuperadmin}
+      permetreAfigCataleg
       itemSlug={itemSlug}
       sincronitzaRuta={sincronitzaRuta}
       labels={{ categories: 'Catàlegs', items: 'Receptes', all: `Totes les receptes (${RECEPTES_QUE_DINEM.length})` }}
@@ -132,7 +146,7 @@ export default function ReceptesWorkspaceSection({ page, accioPrincipal, childre
         }
         const esDinsDelLlibre = selection?.categoryId && selection.categoryId !== '__all__';
         if (esDinsDelLlibre) {
-          return <PortadaLlibreQueDinem tr={tr} onTorna={onClose} />;
+          return <PortadaLlibreQueDinem tr={tr} idioma={language} onTorna={onClose} />;
         }
         return (
           <TextSection page={page} pageKey="receptes" accioPrincipal={accioPrincipal}>

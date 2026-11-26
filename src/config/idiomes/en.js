@@ -1683,6 +1683,7 @@ export default {
   'section.notes.carpeta.media': 'Media',
   'section.notes.carpeta.events': 'Events',
   'section.notes.carpeta.mapa': 'Map',
+  'section.notes.carpeta.produccio': 'In production',
   'section.notes.carpeta.notes': 'Other notes',
   'section.notes.historic.mur.titol': 'Already published on the Wall',
   'section.notes.historic.mur.buit': 'Nothing has been published with this identity on the Wall yet.',
@@ -3325,10 +3326,12 @@ export default {
   'section.perfil.privacitat.confianca.cerimonia.accio.revisa': "Review SAS verification for {nom}",
   'section.perfil.privacitat.confianca.cerimonia.accio.disputa': "Stop and declare “Not me”",
   'section.perfil.privacitat.confianca.cerimonia.alertaDisputa': "A dispute (“Not me”) has been declared: the recovery ceremony is now blocked.",
-  // IDEA-41 (pla 261028_1526, Bloc H) · Proposa Card a les Notes, sense IA.
-  'editor.proposaCard.feta': "Card suggested. To undo it: “Undo the suggestion” or Cmd/Ctrl+Z.",
+  // IDEA-41 / IDEA-358 / IDEA-359 · Maquetadora Editorial no-destructiva i feedback d'enganxat.
+  'editor.proposaCard.feta': "Card formatted without touching the body.",
   'editor.proposaCard.res': "Nothing to suggest: the card fields are already filled in or the body does not start with text.",
-  'editor.proposaCard.enRepos': "Press “Edit” to suggest the Card.",
+  'editor.proposaCard.enRepos': "Press “Edit” to format the card.",
+  'editor.enganxat.alCos': "Pasted into the body: no short title found.",
+  'editor.enganxat.promouTitol': "Promote to title",
   'editor.eines.enRepos': "Reading mode: press “Edit” to write and format the text.",
   /* T3.2-UI (261101) · La «Fitxa de memòria oral (OKF v0.2)» de «Proposa Card» (FitxaMemoriaOral.jsx). */
   'editor.memoriaOral.titol': "Oral history record (OKF v0.2)",
@@ -3391,8 +3394,8 @@ export default {
   'editor.memoriaOral.massaEtiquetesLliures': "There are already {n} free tags: remove one before adding more.",
   'editor.memoriaOral.afegida': "added in the review",
   'editor.memoriaOral.capPobleAlRelat': "The machine did not recognise any in the story",
-  'section.notes.proposaCard': "Suggest Card",
-  'section.notes.proposaCardDesfer': "Undo the suggestion",
+  'section.notes.proposaCard': "Format card",
+  'section.notes.proposaCardDesfer': "Undo formatting",
   // P1-68 (pla 261028_1526, Bloc H) · L'@usuari i el poble a l'alta.
   'section.login.registre.ajudaPoble': "If you belong to more than one, choose the others in your profile.",
   'section.login.registre.ajudaUsuari': "It is made from your name and shows with an @ in front if your profile is public. If someone already has it, we will add -2.",

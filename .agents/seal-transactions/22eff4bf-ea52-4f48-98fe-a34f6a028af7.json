@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "arbres-monumentals",
+  "actor": "Mestre Javi",
+  "reason": "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "arbres-monumentals",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26"
+  ],
+  "id": "22eff4bf-ea52-4f48-98fe-a34f6a028af7",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "a91652d4485d9ce401e7add5c5aa69e67bf2d55e5889a692761ab07ce941fd26",
+      "after": "5b435c1b097ea6edb1087ca711a67ca81fd8445d088912f990ca0bf483e0fb0b"
+    }
+  ],
+  "state": "accepted"
+}

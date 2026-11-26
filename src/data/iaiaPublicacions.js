@@ -15,7 +15,7 @@ const DEMANA_GUIA = /\b(publicar|publique|publico|publicacio|publicacion|penjar|
    contingut (una «casa de la cultura» al Mur no és Habitatge). */
 const DESTI_EXPLICIT = /\b(?:al|per al|en el|del)\s+(mur|mercat|calendari)\b|\b(compartir cotxe)\b|\bseccio\s+(?:de\s+)?(treball|habitatge)\b/g;
 const ID_DEL_DESTI = Object.freeze({ mur: 'mur', mercat: 'mercat', calendari: 'calendari', 'compartir cotxe': 'vehicle', treball: 'treball', habitatge: 'habitatge' });
-const PAS_DEL_BLOC = 'Pots redactar primer al Bloc de Notes (/notes), revisar la targeta amb «Proposa Card» i triar on publicar-la. La publicació només ix quan tu la confirmes; jo no l’he publicada.';
+const PAS_DEL_BLOC = 'Pots redactar primer al Bloc de Notes (/notes), revisar la targeta amb «Maqueta la targeta» i triar on publicar-la. La publicació només ix quan tu la confirmes; jo no l’he publicada.';
 const passosDe = (guia) => `Per a ${guia.nom}, prepara: ${guia.camps}.\nObri ${guia.ruta} per a consultar la secció.`;
 
 export function ajudaDePublicacioIAIA(pregunta) {

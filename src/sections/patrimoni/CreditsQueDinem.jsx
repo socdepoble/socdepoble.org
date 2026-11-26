@@ -1,8 +1,14 @@
 import { useUIActions } from '../../app/contexts/UIContext';
+import { adoptaFullDiferit } from '../../config/fullDiferit.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { esAppNativa } from '../../config/origenPublic.js';
+import cssReceptes from '../../css/diferit-receptes.css?inline';
 import { DRETS_QUE_DINEM } from '../text/pageContent.dretsPatrimoni.js';
 import { OBRA_QUE_DINEM } from '../../data/patrimoni/queDinem.js';
+
+const adoptaEstilsCreditsReceptes = (node) => {
+  if (node) adoptaFullDiferit(node, 'receptes', cssReceptes);
+};
 
 /* Onada R14 · Els crèdits del receptari «Què dinem?» i l'enllaç al PDF sencer, els mateixos a /page/receptes i a
    cada /receptes/:slug. L'obra és de l'associació que la va editar (el PDF no nomena cap altra autoria); l'ISBN es
@@ -28,7 +34,7 @@ export default function CreditsQueDinem({ tr, nivell = 'h3' }) {
   const titol = tr('patrimoni.receptes.obra', 'L’obra i els seus drets');
   const mida = megabytes(obra.pdfBytes, llengua);
   return (
-    <section aria-label={titol}>
+    <section ref={adoptaEstilsCreditsReceptes} aria-label={titol}>
       <Titol>{titol}</Titol>
       <dl>
         <dt>{tr('patrimoni.receptes.edicio', 'Edició')}</dt>
@@ -46,7 +52,7 @@ export default function CreditsQueDinem({ tr, nivell = 'h3' }) {
       {esAppNativa()
         ? <p>{tr('patrimoni.receptes.pdfNatiu', 'Dins de l’app el llibre en PDF ({mida} MB) no es pot desar a les descàrregues: descarrega’l des de socdepoble.org.', { mida })}</p>
         : (
-          <p>
+          <p className="sdp-recepta__pdf-accio">
             <a className="sdp-boto sdp-boto--secundari" href={resolRecursPropi(obra.pdf)} download type="application/pdf">
               {tr('patrimoni.receptes.pdf', 'Descarrega el llibre sencer (PDF, {mida} MB)', { mida })}
             </a>

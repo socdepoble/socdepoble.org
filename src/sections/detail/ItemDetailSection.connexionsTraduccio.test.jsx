@@ -44,7 +44,9 @@ afterEach(cleanup);
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: cap => cap === 'connexionsPubliques',
   membresIEntitatsConnectadesDe: async () => mocks.visibilitat === 'publica' ? [{ tipus: 'persona', id: 'public-peer', nom: 'VeinaPublicaLMN', direccio: 'poble' }] : [],
-  preferenciesConnexions: async ({ tipus, id }) => ({ tipus, id, visibilitatConnexions: mocks.visibilitat, connexions: [{ tipus: 'persona', id: 'secret-peer', nom: 'VeinaPrivadaZQX', direccio: 'poble', visibilitatConnexions: 'privada' }] })
+  preferenciesConnexions: async ({ tipus, id }) => ({ tipus, id, visibilitatConnexions: mocks.visibilitat, connexions: [{ tipus: 'persona', id: 'secret-peer', nom: 'VeinaPrivadaZQX', direccio: 'poble', visibilitatConnexions: 'privada' }] }),
+  /* v1.2.26 (G26-2) · useTaxonomiaPaginaOverlay.js llig l'overlay editorial de la pàgina; ací cap. */
+  lligTaxonomiaPagina: vi.fn(async () => null)
 }));
 import { buidaSessioLliure, fixaTraductorLliure } from '../../data/traductorLliure.js';
 import { buidaCauTraduccions } from '../../components/PedraSeca/hooks/useTraduccioPagina.js';

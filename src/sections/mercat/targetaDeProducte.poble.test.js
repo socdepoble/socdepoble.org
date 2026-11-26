@@ -19,9 +19,9 @@ const OLI = {
 const textos = (props) => props.labels.map((l) => l.text);
 
 describe('propsDeTargetaDeProducte · la pastilla del poble', () => {
-  test('ordre canònic de quatre posicions, amb el nom curt al final i enllaçat a la pàgina del poble', () => {
+  test('ordre canònic amb Mur+Mercat, amb el nom curt al final i enllaçat a la pàgina del poble', () => {
     const props = propsDeTargetaDeProducte(OLI, undefined, { towns: [TORRE] });
-    expect(textos(props)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', 'La Torre']);
+    expect(textos(props)).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra', 'La Torre']);
     expect(props.labels.at(-1)).toEqual({ text: 'La Torre', href: '/pobles/la-torre-de-les-macanes', className: 'sdp-badge-tag sp-card-label--enllac' });
     expect(props.authorHref).toBeTruthy();
     expect(props.authorHref.startsWith('/pobles')).toBe(false);
@@ -39,15 +39,15 @@ describe('propsDeTargetaDeProducte · la pastilla del poble', () => {
     expect(props.labels.at(-1).href).toBe('/pobles/la-torre-de-les-macanes');
   });
 
-  test('amb variants, la categoria continua en la segona posició i el recompte va just davant del poble', () => {
+  test('amb variants, la categoria va després dels dos sistemes i el recompte va just davant del poble', () => {
     const variacions = [{ id: 'a' }, { id: 'b' }];
     const props = propsDeTargetaDeProducte({ ...OLI, variations: variacions }, undefined, { towns: [TORRE] });
-    expect(textos(props)).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants', 'La Torre']);
-    expect(textos(propsDeTargetaDeProducte({ ...OLI, variations: variacions }))).toEqual(['Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants']);
+    expect(textos(props)).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants', 'La Torre']);
+    expect(textos(propsDeTargetaDeProducte({ ...OLI, variations: variacions }))).toEqual(['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra', '2 variants']);
   });
 
   test('sense fitxes, sense fitxa que hi case o amb un slug que no és canònic: cap pastilla de poble i les altres intactes', () => {
-    const esperat = ['Mercat', 'Alimentació', 'Oli Verge Extra'];
+    const esperat = ['Mur', 'Mercat', 'Alimentació', 'Oli Verge Extra'];
     expect(textos(propsDeTargetaDeProducte(OLI))).toEqual(esperat);
     expect(textos(propsDeTargetaDeProducte(OLI, undefined, { towns: [] }))).toEqual(esperat);
     expect(textos(propsDeTargetaDeProducte(OLI, undefined, { towns: [{ id: 'penaguila', title: 'Penàguila' }] }))).toEqual(esperat);

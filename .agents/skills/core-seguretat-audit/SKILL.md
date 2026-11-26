@@ -69,7 +69,7 @@ En l'àmbit afectat per l'encàrrec, contrasta les lleis següents amb el codi i
 ### B. Llei d'Escàners Lineals $O(n)$ (Zero ReDoS — CWE-1333)
 
 - **Prohibició de Regex amb Backtracking sobre Entrades No Fiables:** Està prohibit executar expressions regulars amb quantificadors imbricats o classes negades obertes (com `/<[^>]*>/g`, `/<[a-z][\s\S]*>/i` o `/<img[^>]+src="([^">]+)"/`) sobre text d'usuari, HTML ric o respostes d'API abans de truncar-ne la longitud.
-- **Obligació d'Escàners Lineals:** Per a netejar etiquetes, detectar scripts o extreure atributs d'HTML (`src/config/contentHelpers.js` per a `llevaEtiquetes` i `llevaScriptsIEstils`, i `src/sections/profile/DetallMultimedia.jsx` per a `srcsDeLesImg`), s'han d'utilitzar exclusivament recorreguts lineals amb `indexOf` (`llevaEtiquetes`, `llevaScriptsIEstils`, `srcsDeLesImg`) que garantisquen temps $O(n)$ i no puguen bloquejar el fil principal del navegador.
+- **Obligació d'Escàners Lineals:** Per a netejar etiquetes, detectar scripts o extreure atributs d'HTML (`src/config/contentHelpers.js` per a `llevaEtiquetes`, `src/config/llevaScriptsIEstils.js` per a `llevaScriptsIEstils`, i `src/sections/profile/DetallMultimedia.jsx` per a `srcsDeLesImg`), s'han d'utilitzar exclusivament recorreguts lineals amb `indexOf` (`llevaEtiquetes`, `llevaScriptsIEstils`, `srcsDeLesImg`) que garantisquen temps $O(n)$ i no puguen bloquejar el fil principal del navegador.
 
 ### C. Llei de Purga d'Autoritat i Validació de Rutes `sdp-media://`
 

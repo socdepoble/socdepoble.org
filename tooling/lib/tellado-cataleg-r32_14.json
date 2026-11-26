@@ -1,6 +1,6 @@
 {
   "esquema": "sdp.tellado.cataleg-dinamic.v1",
-  "base": "898fb36ad + R32.13 adaptat S2 · v1.2.24 F5A: 13 represes revisades, la 32 retirada (F4D/P08-04: fitxerDeDataUrl ja no fa fetch(dataUrl), descodifica el base64 sense xarxa) i la 38 nova (QuadreEstatCanalsVersions)",
+  "base": "898fb36ad + R32.13 adaptat S2 · v1.2.24 F5A: 13 represes revisades, la 32 retirada (F4D/P08-04: fitxerDeDataUrl ja no fa fetch(dataUrl), descodifica el base64 sense xarxa) i la 38 nova (QuadreEstatCanalsVersions) · v1.2.26 R2-8: 07, 08 i 09 represes (auth.js, #9 P2 sense canvi de xarxa) i la 40 nova (LectorSkillWiki, G26-3)",
   "signatures": [
     {
       "id": "TELLADO-R3214-01",
@@ -120,7 +120,7 @@
       "id": "TELLADO-R3214-07",
       "categoria": "backend-autenticacio",
       "fontRevisada": "src/data/supabase/auth.js",
-      "sha256": "34ecd1fab43951c2f07828e992666fa42e785cf969d5f4e40dbbc57610b3386b",
+      "sha256": "2d6fcdc50ce3efadf62337195e3cdd52ae638c55c07758051c6b6462c84d51e0",
       "linia": 55,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -133,13 +133,13 @@
       ],
       "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
       "certificaDesti": false,
-      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/adversarial-final/tellado-auth-runtime-review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova."
+      "revisio": "v1.2.26 · R2-8 (Claude, segona ronda de correctors del Lot C1-3) · Represa sobre la revisió tècnica de Codex R32.78 (evidencies/lab/adversarial-final/tellado-auth-runtime-review.json) i la relectura F5A de la v1.2.24. Diff HEAD f0a2f9705 → arbre (#9 P2, Gauntlet C26-3): només afig ALTES_TANCADES i COMPTE_SUSPES a MISSATGE_ENTRADA i a codiDeGoTrue (signup_disabled, user_banned), importa missatgeDEntrada del mateix onboardingModel.js que ja s'importava (sense cicle ni efectes) i reescriu dos comentaris. Les tres crides fetch, les URL, les capçaleres (apikey, Authorization), redirect 'error' i el flux de comprovaServidor són byte a byte els mateixos: cap embornal, petició, credencial ni redirecció nova. Embornals a les línies 55, 654 i 1295 (la 09 era a la 1288: +7 línies del diff)."
     },
     {
       "id": "TELLADO-R3214-08",
       "categoria": "backend-autenticacio",
       "fontRevisada": "src/data/supabase/auth.js",
-      "sha256": "34ecd1fab43951c2f07828e992666fa42e785cf969d5f4e40dbbc57610b3386b",
+      "sha256": "2d6fcdc50ce3efadf62337195e3cdd52ae638c55c07758051c6b6462c84d51e0",
       "linia": 654,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
@@ -152,14 +152,14 @@
       ],
       "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
       "certificaDesti": false,
-      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/adversarial-final/tellado-auth-runtime-review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova."
+      "revisio": "v1.2.26 · R2-8 (Claude, segona ronda de correctors del Lot C1-3) · Represa sobre la revisió tècnica de Codex R32.78 (evidencies/lab/adversarial-final/tellado-auth-runtime-review.json) i la relectura F5A de la v1.2.24. Diff HEAD f0a2f9705 → arbre (#9 P2, Gauntlet C26-3): només afig ALTES_TANCADES i COMPTE_SUSPES a MISSATGE_ENTRADA i a codiDeGoTrue (signup_disabled, user_banned), importa missatgeDEntrada del mateix onboardingModel.js que ja s'importava (sense cicle ni efectes) i reescriu dos comentaris. Les tres crides fetch, les URL, les capçaleres (apikey, Authorization), redirect 'error' i el flux de comprovaServidor són byte a byte els mateixos: cap embornal, petició, credencial ni redirecció nova. Embornals a les línies 55, 654 i 1295 (la 09 era a la 1288: +7 línies del diff)."
     },
     {
       "id": "TELLADO-R3214-09",
       "categoria": "backend-autenticacio",
       "fontRevisada": "src/data/supabase/auth.js",
-      "sha256": "34ecd1fab43951c2f07828e992666fa42e785cf969d5f4e40dbbc57610b3386b",
-      "linia": 1288,
+      "sha256": "2d6fcdc50ce3efadf62337195e3cdd52ae638c55c07758051c6b6462c84d51e0",
+      "linia": 1295,
       "tipus": "DESTI_XARXA_DINAMIC",
       "regla": "fetch",
       "embornal": "const peticio = fetch(`${supabaseUrl}/auth/v1/logout?scope=${scope}`, {",
@@ -171,7 +171,7 @@
       ],
       "limit": "Endpoints GoTrue de configuració validada a runtime. Les dades autenticadores continuen anant al backend elegit; no es valida cap servidor remot.",
       "certificaDesti": false,
-      "revisio": "Revisió tècnica de Codex R32.78 (kit 261124_r32_78…, evidencies/lab/adversarial-final/tellado-auth-runtime-review.json: font, flux, obligacions i mutants negatius sobre exactament estos bytes) i relectura del diff HEAD 9622459d5 → candidat per Claude (F5A): cap embornal nou, cap capçalera, credencial ni redirecció nova."
+      "revisio": "v1.2.26 · R2-8 (Claude, segona ronda de correctors del Lot C1-3) · Represa sobre la revisió tècnica de Codex R32.78 (evidencies/lab/adversarial-final/tellado-auth-runtime-review.json) i la relectura F5A de la v1.2.24. Diff HEAD f0a2f9705 → arbre (#9 P2, Gauntlet C26-3): només afig ALTES_TANCADES i COMPTE_SUSPES a MISSATGE_ENTRADA i a codiDeGoTrue (signup_disabled, user_banned), importa missatgeDEntrada del mateix onboardingModel.js que ja s'importava (sense cicle ni efectes) i reescriu dos comentaris. Les tres crides fetch, les URL, les capçaleres (apikey, Authorization), redirect 'error' i el flux de comprovaServidor són byte a byte els mateixos: cap embornal, petició, credencial ni redirecció nova. Embornals a les línies 55, 654 i 1295 (la 09 era a la 1288: +7 línies del diff)."
     },
     {
       "id": "TELLADO-R3214-10",
@@ -730,6 +730,29 @@
       "limit": "Només la importació que la persona demana amb el botó, cap a les URL que candidatsFeedDeUrlWeb deriva d'urlSeguraExterna (jocCadaCosaModel.js); sense galetes ni referent i amb tall de 7 s. Esta regla no resol la URL ni executa el model.",
       "certificaDesti": false,
       "revisio": "v1.2.24 · F5C (Claude, integrador del Carril 1, Pla 261124_1323 v1.5.0 §6) · Signatura nova: el joc «Cada cosa al seu lloc» (R32.86, IDEA-348) importa un feed públic (WordPress, Blogger o RSS) que la persona escriu; R32.87 hi afig credentials 'omit' i referrerPolicy 'no-referrer'. Represa del commit v1.2.24 (24-11-2026): el sha canvia perquè la descàrrega local passa a l'enllaç despenjat (Pedra Seca LLEI_06); l'embornal de la línia 443 és idèntic."
+    },
+    {
+      "id": "TELLADO-R3214-40",
+      "categoria": "lectura-markdown-public-cami-acotat",
+      "fontRevisada": "src/sections/wiki-de-poble/LectorSkillWiki.jsx",
+      "sha256": "40bdddacfae725271b781c31d294354683a512cf02a306207df79aabf2c29926",
+      "linia": 53,
+      "tipus": "DESTI_XARXA_DINAMIC",
+      "regla": "window.fetch",
+      "embornal": "globalThis.fetch(resolveAsset(urlSegura), {",
+      "requisits": [
+        "import { esUrlSkillSegura } from './useSkillsPubliques.js';",
+        "const urlSegura = skill && esUrlSkillSegura(skill.url) ? skill.url : null;",
+        "if (!urlSegura || typeof globalThis.fetch !== 'function') {",
+        "credentials: 'omit'",
+        "redirect: 'error'",
+        "res && res.ok ? res.text() : Promise.reject(",
+        "__html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla)), { enllacosEditorials: true })",
+        "__html: sanitizeHtml(resolRecursosDeHtml(parseMarkdown(editorial.cos || cosNet, { entradilla: false })), { llistesNumerades: true, enllacosEditorials: true })"
+      ],
+      "limit": "Lectura GET, a demanda, del Markdown públic /md/skills/<nom>.md del contracte C26-4: esUrlSkillSegura (useSkillsPubliques.js) només admet un camí relatiu /md/skills/[a-z0-9._-]+.md sense '..', barres inverses ni espais, i resolveAsset el penja de la base del paquet (la de l'amfitrió en WordPress; la política de mitjans externs només toca assets/). Sense galetes ni credencials (credentials 'omit'), sense redirecció (redirect 'error'), sense cos i amb Accept com a única capçalera; la resposta es llig com a text i passa per sanitizeHtml abans d'entrar a l'arbre. No hi ha sostre de bytes ni temps límit propi (només l'abort en desmuntar). Esta regla no executa esUrlSkillSegura ni resolveAsset i no certifica el destí.",
+      "certificaDesti": false,
+      "revisio": "v1.2.26 · G26-3 (Claude, corrector R2-8 de la segona ronda del Lot C1-3) · Signatura nova: el Lector diferit de skills de la Wiki de Poble (D4 Opció B, Gemini G26-3), carregat amb lazyRoute des de WikiDePobleSection (fora del nucli WP), baixa el fitxer que tria la persona. Revisada al codi: camí acotat a /md/skills/ i revalidat al Lector, cap capçalera d'autenticació, cap dada privada ni cos de petició, cap xarxa fora de la base del paquet; R2-8 hi afig credentials 'omit' i redirect 'error' (firebase.json i vercel.json no redirigixen /md/). Obligacions cobertes a WikiDePobleV1226.test.jsx (opcions de la crida i cap petició per a una URL fora de /md/skills/)."
     }
   ]
 }

@@ -22,6 +22,10 @@ test('Persones, Entitats, Pobles, Mercat i els sis àmbits del Mur (IDEA-61 i AH
   for (const tipus of ['publicacions', 'agenda', 'multimedia', 'notes', 'converses', 'pagines']) expect(teVistaDeTargetes(tipus), tipus).toBe(false);
 });
 
+/* v1.2.26 · D3 de l'integrador sobre IDEA-365 (Llibre Mestre, línia 3825) · La meta de la fila va en
+   etiquetes inertes: text, sense enllaç (rutaDePindola.js respecta `inerta: true`). Abans: cadenes soltes. */
+const inertes = (...textos) => textos.map((text) => ({ text, inerta: true }));
+
 /* IDEA-61 (T0, prompt 261102_1532) · Una fitxa d'àmbit és una targeta com un
    producte: l'enllaç és el del seu àmbit i la meta de la fila va en etiquetes. */
 test('una fitxa de Compartir cotxe: l’enllaç /vehicle/<id>, la meta de la fila en etiquetes, sense boina ni foto', () => {
@@ -30,7 +34,7 @@ test('una fitxa de Compartir cotxe: l’enllaç /vehicle/<id>, la meta de la fil
     dades: { modalitat: 'oferisc_places', lloc_eixida: 'Benifallim', lloc_arribada: 'Alcoi', data_eixida: '2026-11-03' }
   }));
   expect([vehicle.title, vehicle.mainHref, vehicle.imageUrl, vehicle.avatarUrl, vehicle.labels, vehicle.idElement, vehicle.hasFooter])
-    .toEqual(['Cotxe a Alcoi', '/vehicle/v1', undefined, undefined, ['Pepa Fictícia'], 'vehicle:v1', false]);
+    .toEqual(['Cotxe a Alcoi', '/vehicle/v1', undefined, undefined, inertes('Pepa Fictícia'), 'vehicle:v1', false]);
 });
 
 /* Revisió adversarial · La boina és la del directori (boinaDelPoble): cara i
@@ -69,9 +73,9 @@ test('una persona del padró sense fitxa oberta: cap enllaç (ni a la targeta ni
 
 test('un poble i un producte: la imatge damunt i la meta en etiquetes, sense boina', () => {
   const poble = propsDeTargetaDeResultat(dePoble({ id: 'tibi', title: 'Tibi', comarca: "L'Alcoià", population: '1.700 hab', image_url: '/assets/tibi.jpg' }));
-  expect([poble.mainHref, poble.imageUrl, poble.labels, poble.author, poble.location]).toEqual(['/pobles/tibi', '/assets/tibi.jpg', ["L'Alcoià", '1.700 hab'], 'Autoria no indicada', 'Tibi']);
+  expect([poble.mainHref, poble.imageUrl, poble.labels, poble.author, poble.location]).toEqual(['/pobles/tibi', '/assets/tibi.jpg', inertes("L'Alcoià", '1.700 hab'), 'Autoria no indicada', 'Tibi']);
   const producte = propsDeTargetaDeResultat(deProducte({ id: 'mac', title: 'Mac Mini', price: '900 €', author_name: 'Javi Llinares', images: ['/assets/mac.jpg'] }));
-  expect([producte.mainHref, producte.imageUrl, producte.labels]).toEqual(['/mercat/mac', '/assets/mac.jpg', ['900,00 €', 'Javi Llinares']]);
+  expect([producte.mainHref, producte.imageUrl, producte.labels]).toEqual(['/mercat/mac', '/assets/mac.jpg', inertes('900,00 €', 'Javi Llinares')]);
 });
 
 test('la font editorial conserva dia sol i nom/poble reals, sense convertir el rànquing en una data inventada', () => {

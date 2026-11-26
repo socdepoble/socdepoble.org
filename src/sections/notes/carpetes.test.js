@@ -6,13 +6,13 @@
 import { createElement } from 'react';
 import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { Folder, Inbox } from 'lucide-react';
+import { Folder, Inbox, NotebookPen, SquarePen } from 'lucide-react';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { createTranslator } from '../../config/i18n.js';
 /* Sense els diccionaris carregats, createTranslator('en') tornaria el valencià i la prova passaria en buit. */
 import '../../../tests/helpers/diccionaris.js';
 import {
-  CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, NOMS_CARPETES_DE_SERIE, carpetesDelBloc, iconaDeCarpeta, nomDeCarpeta, opcionsDeCarpetes
+  CARPETA_CONNECTATS, CARPETA_EN_PRODUCCIO, NOM_CARPETA_CONNECTATS, NOMS_CARPETES_DE_SERIE, carpetesDelBloc, iconaDeCarpeta, nomDeCarpeta, opcionsDeCarpetes
 } from './carpetes.js';
 
 /* Només per a l'últim describe (la graella de Connectar): les funcions pures no en depenen.
@@ -47,21 +47,40 @@ test('la carpeta de les connexions es diu «Safata d’Entrada» i conserva l’
   expect(NOTE_FOLDERS_SEED.some((carpeta) => carpeta.name === 'Connectats')).toBe(false);
 });
 
-test('la icona de la safata és Inbox; una carpeta desconeguda, la de sèrie', () => {
+/* v1.2.26 (Gauntlet G26, Lent 1 punt 21) · «En producció» (IDEA-358.1, Llibre Mestre, l. 3691)
+   «no és […] Altres notes»: no porta la seua icona (NotebookPen), sinó SquarePen. */
+test('la icona de la safata és Inbox, la d’«En producció» és SquarePen (no la d’«Altres notes») i una desconeguda, la de sèrie', () => {
   expect(iconaDeCarpeta(CARPETA_CONNECTATS)).toBe(Inbox);
+  expect(iconaDeCarpeta(CARPETA_EN_PRODUCCIO)).toBe(SquarePen);
+  expect(iconaDeCarpeta('f-notes')).toBe(NotebookPen);
+  expect(iconaDeCarpeta(CARPETA_EN_PRODUCCIO)).not.toBe(iconaDeCarpeta('f-notes'));
   expect(iconaDeCarpeta('f-inventada')).toBe(Folder);
 });
 
-test('carpetesDelBloc: sense «Tot», i la safata sempre present, davant d’«Altres notes» o al final', () => {
+test('carpetesDelBloc: sense «Tot», i la safata i «En producció» sempre presents, davant d’«Altres notes» o al final', () => {
   const sencer = carpetesDelBloc([]);
   expect(sencer.some((carpeta) => carpeta.id === 'f-tot')).toBe(false);
   expect(sencer.find((carpeta) => carpeta.id === CARPETA_CONNECTATS).name).toBe(NOM_CARPETA_CONNECTATS);
+  expect(sencer.find((carpeta) => carpeta.id === CARPETA_EN_PRODUCCIO).name).toBe('En producció');
   const senseSafata = carpetesDelBloc([{ id: 'f-mur', name: 'Mur' }, { id: 'f-notes', name: 'Altres notes' }]);
-  expect(senseSafata.map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS, 'f-notes']);
-  expect(carpetesDelBloc([{ id: 'f-mur', name: 'Mur' }]).map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS]);
+  expect(senseSafata.map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS, CARPETA_EN_PRODUCCIO, 'f-notes']);
+  expect(carpetesDelBloc([{ id: 'f-mur', name: 'Mur' }]).map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS, CARPETA_EN_PRODUCCIO]);
   // Si el backend ja la porta, amb el seu nom, mana el del backend (l'id és el contracte).
-  const delBackend = carpetesDelBloc([{ id: CARPETA_CONNECTATS, name: 'Nom del servidor' }]);
-  expect(delBackend).toEqual([{ id: CARPETA_CONNECTATS, name: 'Nom del servidor' }]);
+  const delBackend = carpetesDelBloc([{ id: CARPETA_CONNECTATS, name: 'Nom del servidor' }, { id: CARPETA_EN_PRODUCCIO, name: 'Esborranys' }]);
+  expect(delBackend).toEqual([{ id: CARPETA_CONNECTATS, name: 'Nom del servidor' }, { id: CARPETA_EN_PRODUCCIO, name: 'Esborranys' }]);
+});
+
+/* v1.2.26 (Gauntlet G26, Lent 1 punt 10) · El selector de carpeta de l'editor: «En producció»
+   sí, i la Safata només si ja hi era (al servidor o a la llavor). */
+test('carpetesDelBloc amb afigSafata: false afig només «En producció»; «Tot» mai', () => {
+  const delServidor = [{ id: 'f-tot', name: 'Tot' }, { id: 'f-mur', name: 'Mur' }, { id: 'f-notes', name: 'Altres notes' }];
+  expect(carpetesDelBloc(delServidor, { afigSafata: false }).map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_EN_PRODUCCIO, 'f-notes']);
+  const ambSafata = [{ id: 'f-mur', name: 'Mur' }, { id: CARPETA_CONNECTATS, name: 'Safata d’Entrada' }];
+  expect(carpetesDelBloc(ambSafata, { afigSafata: false }).map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS, CARPETA_EN_PRODUCCIO]);
+  // Sense carpetes del servidor, la llavor sencera menys «Tot», com sempre.
+  expect(carpetesDelBloc([], { afigSafata: false })).toEqual(NOTE_FOLDERS_SEED.filter((carpeta) => carpeta.id !== 'f-tot'));
+  // Per defecte, la columna de sempre: la Safata també.
+  expect(carpetesDelBloc(delServidor).map((carpeta) => carpeta.id)).toEqual(['f-mur', CARPETA_CONNECTATS, CARPETA_EN_PRODUCCIO, 'f-notes']);
 });
 
 /* P1-22 (marató 261101_2143, B3-I18N §3.A) · El nom de les carpetes de sèrie
@@ -69,11 +88,20 @@ test('carpetesDelBloc: sense «Tot», i la safata sempre present, davant d’«A
    les dades que es desen no canvien mai. */
 const EN = createTranslator('en');
 
-test('la llavor és dada i no canvia: els ids i els noms de sempre (protecció de carpetesSeed.js)', () => {
+test('la llavor és dada i inclou «En producció» (f-produccio) entre Safata d’Entrada i Altres notes (IDEA-358)', () => {
   expect(NOTE_FOLDERS_SEED.map((carpeta) => [carpeta.id, carpeta.name])).toEqual([
     ['f-tot', 'Tot'], ['f-mur', 'Mur'], ['f-mercat', 'Mercat'], ['f-pobles', 'Pobles'], ['f-media', 'Multimèdia'],
-    ['f-events', 'Esdeveniments'], ['f-mapa', 'Mapa'], ['f-connectats', 'Safata d’Entrada'], ['f-notes', 'Altres notes']
+    ['f-events', 'Esdeveniments'], ['f-mapa', 'Mapa'], ['f-connectats', 'Safata d’Entrada'], ['f-produccio', 'En producció'], ['f-notes', 'Altres notes']
   ]);
+});
+
+test('IDEA-358 · «En producció» es traduïx en les 5 llengües (ca/es/en/eu/gl)', () => {
+  const carpeta = { id: CARPETA_EN_PRODUCCIO, name: 'En producció' };
+  expect(nomDeCarpeta(carpeta, createTranslator('ca'))).toBe('En producció');
+  expect(nomDeCarpeta(carpeta, createTranslator('es'))).toBe('En producción');
+  expect(nomDeCarpeta(carpeta, createTranslator('en'))).toBe('In production');
+  expect(nomDeCarpeta(carpeta, createTranslator('eu'))).toBe('Produkzioan');
+  expect(nomDeCarpeta(carpeta, createTranslator('gl'))).toBe('En produción');
 });
 
 test('nomDeCarpeta tradueix el nom de sèrie i deixa intactes el reanomenat, el d’una carpeta pròpia i la Safata (D-1)', () => {
@@ -104,14 +132,16 @@ test('opcionsDeCarpetes pinta traduït sense tocar l’entrada; carpetesDelBloc 
   const abans = JSON.stringify(entrada);
   expect(opcionsDeCarpetes(entrada, EN)).toEqual([
     { id: 'f-mur', nom: 'Wall', parentId: null }, { id: 'p1', nom: 'Receptes', parentId: 'f-mur' },
-    { id: CARPETA_CONNECTATS, nom: 'Safata d’Entrada', parentId: null }, { id: 'f-notes', nom: 'Les meues notes', parentId: null }
+    { id: CARPETA_CONNECTATS, nom: 'Safata d’Entrada', parentId: null },
+    { id: CARPETA_EN_PRODUCCIO, nom: 'In production', parentId: null },
+    { id: 'f-notes', nom: 'Les meues notes', parentId: null }
   ]);
   expect(JSON.stringify(entrada)).toBe(abans);
   const crues = carpetesDelBloc(entrada);
   expect(crues[0]).toBe(entrada[0]);
-  expect(crues.map((carpeta) => carpeta.name)).toEqual(['Mur', 'Receptes', 'Safata d’Entrada', 'Les meues notes']);
+  expect(crues.map((carpeta) => carpeta.name)).toEqual(['Mur', 'Receptes', 'Safata d’Entrada', 'En producció', 'Les meues notes']);
   // Sense traductor, les opcions de sempre.
-  expect(opcionsDeCarpetes(entrada).map((opcio) => opcio.nom)).toEqual(['Mur', 'Receptes', 'Safata d’Entrada', 'Les meues notes']);
+  expect(opcionsDeCarpetes(entrada).map((opcio) => opcio.nom)).toEqual(['Mur', 'Receptes', 'Safata d’Entrada', 'En producció', 'Les meues notes']);
 });
 
 /* ARB-M05-01 (C9, C10) · Connectar pinta el nom de sèrie traduït a la graella

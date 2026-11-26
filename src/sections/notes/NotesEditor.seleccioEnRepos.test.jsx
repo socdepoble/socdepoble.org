@@ -453,8 +453,14 @@ describe('AH-02 · el que s’obri en edició, com sempre', () => {
    flux de sempre.
    ui_fase2-02 · En repòs es pinta la lectura: cap H1, H2 ni p.lead buits;
    la nota sense títol porta un H1 llegible («Nota sense títol», com a text),
-   i el cos no es remunta en eixir del repòs. */
-const MOTIU_PROPOSA = 'Prem «Editar» per a proposar la Card.';
+   i el cos no es remunta en eixir del repòs.
+   v1.2.26 · La doctrina ha canviat la conducta, i l'oracle la seguix:
+     · IDEA-359.1 (Llibre Mestre, l. 3700): el botó ja no és «🎴 Proposa
+       Card»: és «Maqueta la targeta» i, en ample, viu a la fila «Més eines»,
+       que cal obrir per a trobar-lo;
+     · Esmena Sagrada d'IDEA-359 (Llibre Mestre, l. 3721): maquetar no
+       esborra ni muta cap paràgraf del cos, que resta 100 % intacte. */
+const MOTIU_PROPOSA = 'Prem «Editar» per a maquetar la targeta.';
 const MOTIU_EINES = 'En lectura: prem «Editar» per a escriure i donar format al text.';
 const NOTA_CARD = Object.freeze({
   id: 'n-ah02-card', title: '', subtitle: '', lead: '',
@@ -478,7 +484,7 @@ const buits = (container) => [...container.querySelectorAll('h1, h2, h3, h4, h5,
   .map((el) => el.outerHTML);
 
 describe('AH-02 · Gauntlet R21: en repòs, cap botó fantasma', () => {
-  test('ui_fase2-01 · «Proposa Card» és apagat amb el seu motiu, el clic no fa res, i després d’«Editar» proposa', async () => {
+  test('ui_fase2-01 · «Maqueta la targeta» és apagat amb el seu motiu, el clic no fa res, i després d’«Editar» maqueta sense tocar el cos', async () => {
     vi.useFakeTimers();
     const { vista } = munta(NOTA_CARD);
     // La nota té text: s'obri en repòs, i abans el motor ja hi veia una proposta.
@@ -493,7 +499,8 @@ describe('AH-02 · Gauntlet R21: en repòs, cap botó fantasma', () => {
     // La barra de veres: el botó apagat, amb el nom de sempre i el motiu com a
     // descripció; la barra (role=group) descriu el repòs per a les eines.
     const barra = await pintaBarra();
-    const boto = within(barra).getByRole('button', { name: 'Proposa Card', description: MOTIU_PROPOSA });
+    fireEvent.click(within(barra).getByRole('button', { name: 'Més eines' }));
+    const boto = within(barra).getByRole('button', { name: 'Maqueta la targeta', description: MOTIU_PROPOSA });
     expect(boto.disabled).toBe(true);
     expect(within(barra).getByRole('group', { name: "Eines de l'editor", description: MOTIU_EINES })).toBeTruthy();
     expect(within(barra).getByRole('button', { name: 'Negreta' }).disabled).toBe(true);
@@ -517,7 +524,8 @@ describe('AH-02 · Gauntlet R21: en repòs, cap botó fantasma', () => {
     expect(m.barra.motiuEnLectura).toBeUndefined();
     act(() => { m.barra.onProposaCard(); });
     expect(m.setLocal).toHaveBeenCalledWith(NOTA_CARD.id, 'title', expect.stringContaining('Títol curt'));
-    expect(m.editor.getHTML()).not.toBe(NOTA_CARD.content);
+    // Esmena Sagrada d'IDEA-359 (Llibre Mestre, l. 3721): el cos, IGUAL.
+    expect(m.editor.getHTML()).toBe(NOTA_CARD.content);
     vista.unmount();
   });
 

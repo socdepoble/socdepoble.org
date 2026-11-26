@@ -581,7 +581,9 @@ describe('registre de plugins', () => {
       const { etiquetes } = pluginPerId(id);
       expect([id, etiquetes.map((etiqueta) => etiqueta.className)]).toEqual([id, ['sdp-badge-category', 'sdp-badge-tag']]);
       for (const etiqueta of etiquetes) {
-        expect([id, Object.keys(etiqueta)]).toEqual([id, ['text', 'className']]);
+        /* v1.2.26 · D3 de l'integrador sobre IDEA-365 (Llibre Mestre, línia 3825): metadades del registre,
+           inertes; rutaDePindola.js no els posa cap enllaç. Abans: ['text', 'className']. */
+        expect([id, Object.keys(etiqueta), etiqueta.inerta]).toEqual([id, ['text', 'className', 'inerta'], true]);
         expect([id, typeof etiqueta.text === 'string' && etiqueta.text.trim() === etiqueta.text && etiqueta.text.length > 0]).toEqual([id, true]);
       }
     }
@@ -852,7 +854,8 @@ describe('registre de plugins', () => {
     for (const [idioma, llengua] of [['ca', 'ca'], ['es-ES', 'es'], ['EN', 'en'], ['gl', 'gl'], ['eu', 'eu'], ['fr', 'ca'], ['__proto__', 'ca'], [undefined, 'ca']]) {
       const pintades = etiquetesAmbEstat(enProves, idioma);
       expect([String(idioma), pintades.slice(0, 2)]).toEqual([String(idioma), [...salut.etiquetes]]);
-      expect([String(idioma), pintades[2]]).toEqual([String(idioma), { text: TEXTOS_BETA_OBERTA[llengua], className: CLASSE_BETA_OBERTA }]);
+      /* v1.2.26 · D3 sobre IDEA-365 (línia 3825): la insígnia no és taxonomia, inerta. */
+      expect([String(idioma), pintades[2]]).toEqual([String(idioma), { text: TEXTOS_BETA_OBERTA[llengua], className: CLASSE_BETA_OBERTA, inerta: true }]);
       expect([String(idioma), pintades.length, Object.isFrozen(pintades), Object.isFrozen(pintades[2]), Object.hasOwn(pintades[2], 'href')])
         .toEqual([String(idioma), 3, true, true, false]);
     }

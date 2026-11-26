@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "herbari",
+  "actor": "Mestre Javi",
+  "reason": "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "herbari",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26"
+  ],
+  "id": "740df57e-ea7f-4956-a087-5c248abd7b43",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "6dcf0ed3c9d295305395c545e0598d207e2f9cfdc377968425b3bdc1fc9ebd55",
+      "after": "851280089f6d3adf47098ca826932915ef9a1380cee6e5e67f5635c527e5591f"
+    }
+  ],
+  "state": "accepted"
+}

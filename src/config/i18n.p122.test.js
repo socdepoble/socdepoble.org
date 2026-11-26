@@ -899,7 +899,7 @@ describe('B3 · P1-22 · A · les carpetes de sèrie es tradueixen en pintar, am
   }));
 
   test('cada reserva és el nom de la llavor amb el mateix id, i la clau és als cinc diccionaris', () => {
-    expect(DE_SERIE.size).toBe(7);
+    expect(DE_SERIE.size).toBe(8);
     for (const [id, { clau, reserva }] of DE_SERIE) {
       expect([id, reserva]).toEqual([id, NOMS_LLAVOR.get(id)]);
       expect([id, clau, CA[clau]]).toEqual([id, clau, reserva]);

@@ -304,7 +304,10 @@ export const NOVES_TECNOLOGIES_CULTURA_RURAL_POST = {
   categoria_tematica_id: 'natura-excursions',
   category: '🌿 Natura i Patrimoni',
   tags: ['Patrimoni', 'Pou de neu', 'Pedra Seca'],
+  categoriesSistema: ["Mur"],
   labels: [
+    { text: 'Mur', className: 'sdp-badge-system' },
+
     { text: '🌿 Natura i Patrimoni', className: 'sdp-badge-category' },
     { text: 'Patrimoni', className: 'sdp-badge-tag' },
     { text: 'Pou de neu', className: 'sdp-badge-tag' },

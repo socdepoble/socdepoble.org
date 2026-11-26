@@ -8,9 +8,9 @@ tags:
 ---
 # Mapa canònic del contenidor «Som de Poble»
 
-El contenidor «Som de Poble» és la carpeta pare de `socdepoble.org`. No és un repositori: hi conviuen el repositori viu i els fons patrimonials, tècnics, legals i d'empaquetat. **Cada contingut hi té una sola llar canònica.** La regla: cap carpeta duplicada, cap còpia solta i cap enllaç simbòlic que al Finder semble una carpeta repetida. L'estat real el diu el cartògraf (per exemple, hui hi ha duplicats pesants sense justificar dins del laboratori).
+El contenidor «Som de Poble» és la **carpeta pare** de `socdepoble.org`. **No és un repositori**: hi conviuen el **repositori viu** i els **fons patrimonials, tècnics, legals i d'empaquetat**. **Cada contingut hi té una sola llar canònica.** La regla: cap carpeta duplicada, cap còpia solta i cap enllaç simbòlic que al Finder semble una carpeta repetida. L'estat real el diu el **cartògraf** (per exemple, hui hi ha **duplicats pesants** sense justificar dins del laboratori).
 
-Este mapa viu dins de Git des de la v1.2.26 (decisió del Mestre del 26-11-2026 a les 02:37 CET): un sol cervell versionat. Del mapa, fora de Git només queda un cartell de mig foli, `README.md`, a l'arrel del contenidor, que remet ací. El fitxer antic `00_MAPA_CANONIC_SOM_DE_POBLE.md` de l'arrel es conserva com a consulta, amb un punter al principi, fins que el Mestre decidisca retirar-lo.
+Este mapa viu **dins de Git** des de la v1.2.26 (**decisió del Mestre** del 26-11-2026 a les 02:37 CET): **un sol cervell versionat**. Del mapa, fora de Git només queda un **cartell de mig foli**, `README.md`, a l'arrel del contenidor, que remet ací. El **fitxer antic** `00_MAPA_CANONIC_SOM_DE_POBLE.md` de l'arrel es conserva **com a consulta**, amb un **punter** al principi, fins que el Mestre decidisca retirar-lo.
 
 ## 1. Com es comprova
 

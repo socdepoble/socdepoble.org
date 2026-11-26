@@ -12,7 +12,8 @@ import BotoDretsAutor from './CopyrightSelector.jsx';
 import { CopyrightPage } from './drets/CopyrightPage.jsx';
 import DocumentPrintPreview from './DocumentPrintPreview.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
-import { Boto, DateTimeControl, Dialeg } from '../PedraSeca/index.js';
+import { Alerta, Boto, DateTimeControl, Dialeg } from '../PedraSeca/index.js';
+import { textPlaSenseMarkdown } from '../../config/textPlaSenseMarkdown.js';
 import { dataHoraAra } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { contingutNoTraduible } from '../../data/traductor.js';
@@ -127,6 +128,10 @@ function campsQueTornen(actual, de, a) {
   for (const camp of Object.keys(a)) if (textDelCamp(actual?.[camp]) === textDelCamp(de[camp])) valors[camp] = a[camp];
   return valors;
 }
+/* Gauntlet G26 (Lent 1 punt 19) · Una maquetació que no ha tocat el cos és viva mentre algun camp
+   diu encara el que s'hi va pujar; si la persona els ha reescrit o buidat tots, «Desfés la
+   maquetació» caduca i el botó torna a «Maqueta la targeta». */
+const maquetacioViva = (feta, actual) => Object.keys(feta.camps).some((camp) => textDelCamp(actual?.[camp]) === textDelCamp(feta.camps[camp]));
 
 /**
  * Interfície Adapter requerida:
@@ -936,7 +941,12 @@ export function DocumentEditor({ adapter, onToast }) {
      camps de les d'abans (cap línia no queda al cos i al camp alhora). I
      «Desfés la proposta» posa el cos d'abans en un pas propi, no l'últim pas
      de l'historial: escriure i esborrar torna al mateix cos amb dos passos
-     damunt de la proposta. */
+     damunt de la proposta.
+     IDEA-359 (v1.2.26 · Esmena Sagrada, Llibre Mestre l. 3721) · Amb un motor
+     que torna el cos intacte (el del Bloc, per defecte), «Maqueta la targeta»
+     només escriu els camps (nomesCamps): cap pas a l'historial, Cmd/Ctrl+Z no
+     la desfà i «Desfés la maquetació» torna els camps que ningú no ha tocat.
+     Tot el que es diu ací dalt del cos val per als motors que el muten. */
   const ambProposta = typeof proposaCard === 'function' && Boolean(updateLocal);
   const proposaCardRef = useRef(proposaCard);
   proposaCardRef.current = proposaCard;
@@ -1038,6 +1048,11 @@ export function DocumentEditor({ adapter, onToast }) {
          «Desfés la proposta». */
       const desfent = Boolean(transaction && (isHistoryTransaction(transaction) || transaction.getMeta(META_DESFES_PROPOSTA)));
       for (const feta of propostesFetes.current) {
+        /* IDEA-359 (Esmena Sagrada, Llibre Mestre l. 3721) · Una maquetació
+           que no ha tocat el cos no seguix el cos: el seu «abans» i el seu
+           «després» són el mateix document, i desfer, refer o escriure i
+           esborrar hi tornarien. Només «Desfés la maquetació» la desfà. */
+        if (feta.nomesCamps) continue;
         if (feta.nomesDesfent && !desfent && !feta.desfeta) continue;
         if (!feta.desfeta && doc.eq(feta.docAbans)) {
           escriuCamps(feta.id, campsQueTornen(actual, feta.camps, feta.abans));
@@ -1054,15 +1069,66 @@ export function DocumentEditor({ adapter, onToast }) {
       editor.off('update', seguix);
     };
   }, [ambProposta, editor, escriuCamps]);
+  /* IDEA-358 (v1.2.26) · Quan un enganxat multi-bloc sobre H1 buit baixa tot
+     al cos (decisió 4: primera línia massa llarga o bloc no-text), mostrem un
+     avís discret amb acció d'1 clic per promoure la primera frase a H1 sense
+     tocar ni una lletra del cos. */
+  const [avisEnganxat, setAvisEnganxat] = useState(null);
+  const tancaAvisEnganxat = useCallback(() => setAvisEnganxat(null), []);
+  const escapaHtmlCamp = (valor) => String(valor ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  /* Gauntlet G26 (Lent 1 punt 1) · El cos és HTML de TipTap (& → &amp;,
+     U+00A0 → &nbsp;): primer el text amb les entitats desfetes
+     (extractPlainText, DOMParser inert) i després la neteja del Markdown,
+     sense llevar etiquetes (ja no n'hi ha: un «<b>» que hi queda és text de
+     la persona). promouTitolEnganxat l'escapa una sola volta. */
+  const proposaTitolDesDeCos = (htmlCos) => {
+    const net = textPlaSenseMarkdown(extractPlainText(htmlCos, Infinity), { llevaHtml: false });
+    if (!net) return '';
+    let fi = -1;
+    for (let idx = 0; idx < net.length; idx += 1) {
+      const ch = net[idx];
+      if ((ch === '.' || ch === '?' || ch === '!') && (idx + 1 === net.length || /\s/.test(net[idx + 1]))) {
+        fi = idx + 1;
+        break;
+      }
+    }
+    const base = fi > 0 ? net.slice(0, fi).trim() : net;
+    let tall = base;
+    if (tall.length > 120) {
+      const retall = tall.slice(0, 120);
+      const espai = retall.lastIndexOf(' ');
+      /* Gauntlet G26 (Lent 1 punt 1) · El títol no acaba en les preposicions, articles i conjuncions
+         penjats més corrents («…per a», «…les», «…de La»). Distingix majúscules i no talla pel guió:
+         «Jaume I», «vitamina A», «tasta-la» o «escriu-les» es queden (verificador de la tercera ronda). */
+      tall = (espai >= 60 ? retall.slice(0, espai) : retall).replace(/[,;:\s-]+$/, '')
+        .replace(/(?:[\s,;:]+(?:a|al|als|de|del|dels|des|la|les|els|el|i|amb|per|pel|pels|en|El|La|Els|Les))+[\s,;:-]*$/u, '').trim();
+    }
+    return tall.endsWith('.') && !tall.endsWith('..') ? tall.slice(0, -1).trimEnd() : tall;
+  };
+  const promouTitolEnganxat = useCallback(() => {
+    const actual = documentViu.current;
+    if (!actual || !avisEnganxat || avisEnganxat.docId !== actual.id || !avisEnganxat.titol) return;
+    const valor = escapaHtmlCamp(unaLinia(normalitzaText(avisEnganxat.titol)));
+    escriuCamps(actual.id, { title: valor });
+    setAvisEnganxat(null);
+  }, [avisEnganxat, escriuCamps]);
+
   const proposaOdesfes = useCallback(() => {
     const actual = documentViu.current;
     const motor = proposaCardRef.current;
     if (!actual || !editor || editor.isDestroyed || !editor.isEditable || typeof motor !== 'function') return;
     const feta = propostesFetes.current[propostesFetes.current.length - 1];
-    if (feta && !feta.desfeta && feta.id === actual.id && editor.state.doc.eq(feta.docDespres)) {
-      /* «Desfés la proposta»: el cos d'abans, en un pas propi tancat davant i
-         darrere (el de dalt de la pila pot ser un altre); seguix() hi torna
-         els camps i Cmd/Ctrl+Z la torna a aplicar. */
+    if (feta && !feta.desfeta && feta.id === actual.id && (feta.nomesCamps ? maquetacioViva(feta, actual) : editor.state.doc.eq(feta.docDespres))) {
+      if (feta.nomesCamps) {
+        /* IDEA-359 (no-destructiu) · La maquetació no va tocar el cos:
+           desfer-la només retorna els camps no editats a mà, sense mutar el cos. */
+        escriuCamps(feta.id, campsQueTornen(actual, feta.camps, feta.abans));
+        feta.desfeta = true;
+        repintaProposta();
+        return;
+      }
+      /* «Desfés la proposta» d'un repartiment: el cos d'abans, en un pas propi
+         tancat davant i darrere; seguix() hi torna els camps. */
       editor.chain()
         .command(({ tr }) => {
           closeHistory(tr);
@@ -1092,24 +1158,31 @@ export function DocumentEditor({ adapter, onToast }) {
       return;
     }
     const docAbans = editor.state.doc;
-    editor.chain()
-      .command(({ tr }) => { closeHistory(tr); return true; })
-      .setContent(proposta.cos, { emitUpdate: true })
-      .run();
-    editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
+    const cosIntacte = proposta.cos === notaEscrita.content;
+    if (!cosIntacte) {
+      editor.chain()
+        .command(({ tr }) => { closeHistory(tr); return true; })
+        .setContent(proposta.cos, { emitUpdate: true })
+        .run();
+      editor.chain().command(({ tr }) => { closeHistory(tr); return true; }).run();
+    }
     const camps = { ...proposta.camps };
     const abans = Object.fromEntries(Object.keys(camps).map((camp) => [camp, actual[camp] ?? '']));
     propostesFetes.current = [
       ...propostesFetes.current.filter((f) => f.id === actual.id),
-      { id: actual.id, docAbans, docDespres: editor.state.doc, camps, abans, desfeta: false }
+      { id: actual.id, docAbans, docDespres: editor.state.doc, camps, abans, desfeta: false, nomesCamps: cosIntacte }
     ];
     escriuCamps(actual.id, camps);
+    if (camps.title) setAvisEnganxat(null);
     /* T3.2 · La fitxa, de la nota tal com l'ha escrita la persona, abans de
        la proposta (G2-MO-01): els paràgrafs que la Card puja als camps no
        desapareixen del relat, i cap no es compta dues voltes. El diàleg porta
        el text de l'avís. */
     const ambFitxa = obreFitxaMemoria(actual.id, { ...notaEscrita }, true);
-    if (!ambFitxa) onToastRef.current?.(t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.'));
+    /* Verificador de la tercera ronda (P7, latent) · El text diu «sense tocar el cos» perquè l'únic motor, el del
+       Bloc, el conserva per defecte (IDEA-359, Esmena Sagrada). Si mai s'admet un motor que reescriga el cos
+       (cosIntacte fals), eixe camí no diu res fins que tinga una clau pròpia en les cinc llengües (Llei 0). */
+    if (!ambFitxa && cosIntacte) onToastRef.current?.(t('editor.proposaCard.feta', 'Targeta maquetada sense tocar el cos.'));
     repintaProposta();
   }, [editor, escriuCamps, obreFitxaMemoria, t]);
 
@@ -1181,7 +1254,7 @@ export function DocumentEditor({ adapter, onToast }) {
 
     let proposta = null;
     try {
-      proposta = motor({ title: '', subtitle: '', lead: '', content: normal });
+      proposta = motor({ title: '', subtitle: '', lead: '', content: normal }, { conservaCos: false });
     } catch {
       proposta = null;
     }
@@ -1226,6 +1299,11 @@ export function DocumentEditor({ adapter, onToast }) {
       }
       escriuCamps(actual.id, camps);
     }
+    if (titol) {
+      setAvisEnganxat(null);
+    } else {
+      setAvisEnganxat({ docId: actual.id, titol: proposaTitolDesDeCos(cos || normal) });
+    }
     repintaProposta();
     return { titol };
   }, [editor, escriuCamps, seedContent]);
@@ -1255,10 +1333,10 @@ export function DocumentEditor({ adapter, onToast }) {
   const visibilitatOberta = visibilitatDe != null && visibilitatDe === document.id;
   const etiquetaVisibilitat = `${esPublica ? textosVisibilitat.publica.etiqueta : textosVisibilitat.privada.etiqueta}: canviar la visibilitat`;
 
-  /* IDEA-41 · «Desfés la proposta» mentre el cos és el que va deixar la proposta. */
+  /* IDEA-41 / IDEA-359 · «Desfés la maquetació» mentre la proposta està activa. */
   const propostaViva = propostesFetes.current[propostesFetes.current.length - 1];
   const propostaDesfeible = Boolean(ambProposta && propostaViva && !propostaViva.desfeta && propostaViva.id === document.id
-    && editor && !editor.isDestroyed && editor.state.doc.eq(propostaViva.docDespres));
+    && editor && !editor.isDestroyed && (propostaViva.nomesCamps ? maquetacioViva(propostaViva, document) : editor.state.doc.eq(propostaViva.docDespres)));
 
   /* R16-T (P0-80 / IDEA-211, ordre del Mestre del 261109) · El botó diu
      l'estat del document: 'publicat' (verd) si és públic i el servidor ho té
@@ -1306,7 +1384,7 @@ export function DocumentEditor({ adapter, onToast }) {
         onProposaCard: proposaOdesfes,
         proposaCardDisabled: enRepos || (!propostaDesfeible && !hiHaProposta && !hiHaRelat),
         proposaCardDesfer: !enRepos && propostaDesfeible,
-        ...(enRepos ? { proposaCardMotiu: t('editor.proposaCard.enRepos', 'Prem «Editar» per a proposar la Card.') } : null)
+        ...(enRepos ? { proposaCardMotiu: t('editor.proposaCard.enRepos', 'Prem «Editar» per a maquetar la targeta.') } : null)
       } : null)}
       t={t}
     />
@@ -1427,6 +1505,21 @@ export function DocumentEditor({ adapter, onToast }) {
          cap prop nova a la closca. */
       {...(enRepos ? { enRepos: true, onEdita: editaDesDelRepos } : null)}
     >
+      {/* IDEA-358 · Feedback clar quan un text multi-bloc enganxat sobre H1 buit
+          baixa al cos (decisió 4), amb acció d'1 clic per promoure'n el títol. */}
+      {avisEnganxat && avisEnganxat.docId === document.id && !textDelCamp(document.title) ? (
+        <Alerta
+          to="info"
+          onTanca={tancaAvisEnganxat}
+          accions={avisEnganxat.titol ? (
+            <Boto varietat="secundari" onClick={promouTitolEnganxat}>
+              {t('editor.enganxat.promouTitol', 'Promou a títol')}
+            </Boto>
+          ) : null}
+        >
+          <p>{t('editor.enganxat.alCos', 'Enganxat al cos: falta un títol curt.')}</p>
+        </Alerta>
+      ) : null}
       {/* T7 · Els NodeViews de les targetes es munten com a portals dins del
           cos i llegixen este context (avisa i t). Sense targetes, el cos de sempre. */}
       {contextTargetes ? (
@@ -1483,7 +1576,7 @@ export function DocumentEditor({ adapter, onToast }) {
           cercaPoble={fitxaMemoria.cercaPoble}
           etiquetaNova={fitxaMemoria.etiquetaNova}
           descripcio={fitxaMemoria.card
-            ? t('editor.proposaCard.feta', 'Card proposada. Per a tornar-la arrere: «Desfés la proposta» o Cmd/Ctrl+Z.')
+            ? t('editor.proposaCard.feta', 'Targeta maquetada sense tocar el cos.')
             : t('editor.proposaCard.res', 'No hi ha res a proposar: els camps de la targeta ja són plens o el cos no comença amb text.')}
           t={t}
         />

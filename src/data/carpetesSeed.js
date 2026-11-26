@@ -22,5 +22,7 @@ export const NOTE_FOLDERS_SEED = [
      l'id no canvia: les notes locals i les remotes (folder_id) continuen
      sent vàlides. */
   { id: 'f-connectats', name: 'Safata d’Entrada', parentId: null },
+  /* IDEA-358 (v1.2.26) · Espai de treball per a esborranys en curs abans de publicar. */
+  { id: 'f-produccio', name: 'En producció', parentId: null },
   { id: 'f-notes', name: 'Altres notes', parentId: null }
 ];

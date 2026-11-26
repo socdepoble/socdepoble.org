@@ -1,10 +1,12 @@
-/* IDEA-41 (Llibre Mestre; Mestre 261028, Bloc H) · «🎴 Proposa Card» a la barra
-   d'eines, només si l'editor el demana: en ample, el primer botó del grup de
-   publicació; en compacte, l'últim del grup d'«Aa» (R2, revisió final 261028:
-   al grup de publicació passava la barra del Bloc a dues files als telèfons).
-   Ample o compacte, la cel·la de 48px (.sdp-bloc-icon) amb el glif i el nom
-   accessible: la pastilla amb el text passava la barra a dues files (revisió
-   adversarial 261028). Sense la prop, la barra de sempre. */
+/* IDEA-359 (v1.2.26 · Pedra Seca 2.0) · Retirada definitiva de la icona
+   fantasma 🎴 a UniversalToolbar.jsx. La Maquetadora Editorial no-destructiva
+   viu dins de «Més eines» (segona fila) en ample i dins de «Format del text»
+   en compacte, amb el glif Lucide Sparkles (o Undo2 en desfer): el grup de
+   publicació resta sempre net amb Borrar i Publicar.
+   IDEA-41 / revisió adversarial 261028 · Ample o compacte, és la cel·la de
+   48px (.sdp-bloc-icon) amb el glif i el nom accessible (aria-label i title):
+   la pastilla amb el text passava la barra a dues files. D3 de l'integrador
+   (Llei del Píxel): IDEA-359.1 (Llibre Mestre l. 3700) només retira 🎴. */
 import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, within } from '@testing-library/react';
@@ -19,16 +21,20 @@ const amplada = (px) => vi.stubGlobal('ResizeObserver', class {
 });
 const grupPublicacio = (container) => container.querySelector('.sdp-editor-tools__group--publicacio');
 const grupFormat = (container) => container.querySelector('.sdp-editor-tools__format-options');
-/* En compacte, les opcions de format viuen darrere de «⋯» (el lloc i el nom
-   de l'«Aa» d'abans, «Format del text»): s'obrin abans de buscar el botó. */
-const obriFormat = (container, mode) => {
-  if (mode === 'compacta') fireEvent.click(within(container).getByRole('button', { name: 'Format del text' }));
+const segonaFila = (container) => container.querySelector('.sdp-editor-tools__segona-fila');
+const obriMenu = (container, mode) => {
+  fireEvent.click(within(container).getByRole('button', { name: mode === 'compacta' ? 'Format del text' : 'Més eines' }));
 };
-const comprovaCella = (boto, proposa) => {
+const comprovaBoto = (boto, proposa, container) => {
+  expect(container.textContent).not.toContain('🎴');
   expect(boto.className).toBe('sdp-bloc-icon');
-  expect(boto.getAttribute('title')).toBe('Proposa Card');
-  expect(boto.querySelector('span[aria-hidden="true"]').textContent).toBe('🎴');
-  expect(boto.textContent).toBe('🎴');
+  expect(boto.getAttribute('aria-label')).toBe('Maqueta la targeta');
+  expect(boto.getAttribute('title')).toBe('Maqueta la targeta');
+  // Cap text a la vista: només el glif, amagat al lector (el nom és l'aria-label).
+  expect(boto.textContent).toBe('');
+  expect(boto.querySelector('svg.lucide-sparkles')).not.toBeNull();
+  expect(boto.querySelector('svg').getAttribute('width')).toBe('24');
+  expect(boto.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
   expect(boto.disabled).toBe(false);
   fireEvent.click(boto);
   expect(proposa).toHaveBeenCalledTimes(1);
@@ -40,52 +46,56 @@ test('sense onProposaCard, el grup de publicació és el de sempre: Borrar i Pub
   expect([...grupPublicacio(container).querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Borrar', 'Publicar']);
 });
 
-test('ampla: una cel·la .sdp-bloc-icon de 48px davant de Borrar i Publicar, amb el glif amagat al lector i el nom accessible', () => {
+test('ampla: el grup de publicació és sempre Borrar i Publicar; «Maqueta la targeta» (sense 🎴) viu dins de «Més eines»', () => {
   amplada(900);
   const proposa = vi.fn();
   const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={proposa} />);
-  const botons = [...grupPublicacio(container).querySelectorAll('button')];
-  const boto = within(container).getByRole('button', { name: 'Proposa Card' });
-  expect(boto).toBe(botons[0]);
-  expect(botons.slice(1).map((b) => b.textContent)).toEqual(['Borrar', 'Publicar']);
+  expect([...grupPublicacio(container).querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Borrar', 'Publicar']);
+  expect(container.textContent).not.toContain('🎴');
+  expect(segonaFila(container).hidden).toBe(true);
+  expect(within(container).queryByRole('button', { name: 'Maqueta la targeta' })).toBeNull();
+  obriMenu(container, 'ampla');
+  const boto = within(container).getByRole('button', { name: 'Maqueta la targeta' });
+  expect(segonaFila(container).contains(boto)).toBe(true);
+  expect(segonaFila(container).lastElementChild).toBe(boto);
+  expect(grupPublicacio(container).contains(boto)).toBe(false);
   expect(grupFormat(container).contains(boto)).toBe(false);
-  comprovaCella(boto, proposa);
+  comprovaBoto(boto, proposa, container);
 });
 
-/* IDEA-59 / P1-72 (punt 4) · En compacte les opcions porten també les eines
-   secundàries (ratllat, citació i divisor, darrere de les llistes): la cel·la
-   continua sent l'última, ara darrere del divisor. */
-test('compacta (R2): la cel·la va dins de «⋯», l’última, darrere del divisor, i el grup de publicació torna a ser Borrar i Publicar', () => {
+test('compacta: «Maqueta la targeta» (sense 🎴) viu dins de «Format del text», l’última darrere del divisor', () => {
   amplada(320);
   const proposa = vi.fn();
   const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={proposa} />);
   expect([...grupPublicacio(container).querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Borrar', 'Publicar']);
   expect(grupFormat(container).hidden).toBe(true);
-  expect(within(container).queryByRole('button', { name: 'Proposa Card' })).toBeNull();
-  obriFormat(container, 'compacta');
+  expect(within(container).queryByRole('button', { name: 'Maqueta la targeta' })).toBeNull();
+  obriMenu(container, 'compacta');
   const botons = [...grupFormat(container).querySelectorAll('button')];
-  const boto = within(container).getByRole('button', { name: 'Proposa Card' });
+  const boto = within(container).getByRole('button', { name: 'Maqueta la targeta' });
   expect(boto).toBe(botons.at(-1));
   expect(botons.at(-2).getAttribute('aria-label')).toBe('Divisor');
   expect(grupPublicacio(container).contains(boto)).toBe(false);
-  comprovaCella(boto, proposa);
+  comprovaBoto(boto, proposa, container);
 });
 
 for (const [mode, px] of [['ampla', 900], ['compacta', 320]]) {
-  test(`${mode}: apagat quan no hi ha res a proposar; amb proposaCardDesfer, «Desfés la proposta» amb la icona de desfer, la mateixa cel·la`, () => {
+  test(`${mode}: apagat quan no hi ha res a proposar; amb proposaCardDesfer, «Desfés la maquetació» amb la icona de desfer`, () => {
     amplada(px);
     const proposa = vi.fn();
     const { container, rerender } = render(<UniversalToolbar onProposaCard={proposa} proposaCardDisabled />);
-    obriFormat(container, mode);
-    const apagat = within(container).getByRole('button', { name: 'Proposa Card' });
+    obriMenu(container, mode);
+    const apagat = within(container).getByRole('button', { name: 'Maqueta la targeta' });
     expect(apagat.disabled).toBe(true);
     fireEvent.click(apagat);
     expect(proposa).not.toHaveBeenCalled();
     rerender(<UniversalToolbar onProposaCard={proposa} proposaCardDesfer />);
-    const desfer = within(container).getByRole('button', { name: 'Desfés la proposta' });
+    const desfer = within(container).getByRole('button', { name: 'Desfés la maquetació' });
     expect(desfer.disabled).toBe(false);
     expect(desfer.className).toBe('sdp-bloc-icon');
-    expect(desfer.getAttribute('title')).toBe('Desfés la proposta');
+    expect(desfer.textContent).toBe('');
+    expect(desfer.querySelector('svg.lucide-undo-2')).not.toBeNull();
+    expect(desfer.getAttribute('title')).toBe('Desfés la maquetació');
     expect(desfer.querySelector('svg').getAttribute('width')).toBe('24');
     expect(desfer.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
   });
@@ -95,27 +105,23 @@ test('les etiquetes passen per t (claus section.notes.proposaCard i section.note
   amplada(900);
   const t = (clau, text) => (clau.startsWith('section.notes.proposaCard') ? `[${clau}]` : text);
   const { container, rerender } = render(<UniversalToolbar onProposaCard={() => {}} t={t} />);
+  obriMenu(container, 'ampla');
   expect(within(container).getByRole('button', { name: '[section.notes.proposaCard]' })).toBeTruthy();
   rerender(<UniversalToolbar onProposaCard={() => {}} proposaCardDesfer t={t} />);
   expect(within(container).getByRole('button', { name: '[section.notes.proposaCardDesfer]' })).toBeTruthy();
 });
 
-/* AH-02 (Onada R21; Gauntlet R21, ui_fase2-01) · El document en repòs: el botó
-   apagat diu per què (proposaCardMotiu, al title: el nom continua sent
-   l'aria-label i el title en passa a ser la descripció), i la barra descriu el
-   repòs de les eines de format (motiuEnLectura, un text amagat). Sense les
-   props, el DOM de sempre. */
-const MOTIU = 'Prem «Editar» per a proposar la Card.';
+const MOTIU = 'Prem «Editar» per a maquetar la targeta.';
 const MOTIU_EINES = 'En lectura: prem «Editar» per a escriure i donar format al text.';
 for (const [mode, px] of [['ampla', 900], ['compacta', 320]]) {
   test(`${mode}: apagat en repòs, el motiu és la descripció accessible i el rètol del botó; el nom no canvia`, () => {
     amplada(px);
     const proposa = vi.fn();
     const { container } = render(<UniversalToolbar onProposaCard={proposa} proposaCardDisabled proposaCardMotiu={MOTIU} />);
-    obriFormat(container, mode);
-    const boto = within(container).getByRole('button', { name: 'Proposa Card', description: MOTIU });
+    obriMenu(container, mode);
+    const boto = within(container).getByRole('button', { name: 'Maqueta la targeta', description: MOTIU });
     expect(boto.disabled).toBe(true);
-    expect(boto.getAttribute('aria-label')).toBe('Proposa Card');
+    expect(boto.getAttribute('aria-label')).toBe('Maqueta la targeta');
     expect(boto.getAttribute('title')).toBe(MOTIU);
     fireEvent.click(boto);
     expect(proposa).not.toHaveBeenCalled();
@@ -125,9 +131,10 @@ for (const [mode, px] of [['ampla', 900], ['compacta', 320]]) {
 test('el motiu només acompanya el botó apagat: encés, el title de sempre', () => {
   amplada(900);
   const { container } = render(<UniversalToolbar onProposaCard={() => {}} proposaCardMotiu={MOTIU} />);
-  const boto = within(container).getByRole('button', { name: 'Proposa Card' });
+  obriMenu(container, 'ampla');
+  const boto = within(container).getByRole('button', { name: 'Maqueta la targeta' });
   expect(boto.disabled).toBe(false);
-  expect(boto.getAttribute('title')).toBe('Proposa Card');
+  expect(boto.getAttribute('title')).toBe('Maqueta la targeta');
 });
 
 test('motiuEnLectura descriu la barra amb un text amagat (cap píxel); sense, cap atribut ni node nou', () => {

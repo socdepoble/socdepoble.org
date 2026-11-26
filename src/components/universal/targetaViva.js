@@ -21,14 +21,15 @@
  *     només a la fitxa de la llista).
  */
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { textPlaSenseMarkdown } from '../../config/textPlaSenseMarkdown.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { dataHoraEdicio } from './barres/dataHoraBarra.js';
 
 const SENSE_ETIQUETES = Object.freeze([]);
 
-/** Text pla d'un camp de l'editor (HTML sanejat o text), sense retallar. */
-export const textPla = (valor) => extractPlainText(typeof valor === 'string' ? valor : '', Infinity);
+/** Text pla d'un camp de l'editor (HTML sanejat o text), sense retallar ni marques Markdown crues. */
+export const textPla = (valor) => textPlaSenseMarkdown(extractPlainText(typeof valor === 'string' ? valor : '', Infinity), { llevaHtml: false });
 
 /**
  * { time, date, dateTime } de la caputxa, amb la regla d'edició

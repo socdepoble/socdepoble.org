@@ -87,13 +87,13 @@ export const NOTES_SEED = [
       <p>L'editor està dissenyat perquè allò que veus a la pantalla siga <strong>exactament allò que llegiran</strong> les usuàries quan ho publiques. <strong>Sense sorpreses</strong>. La <strong>imatge de capçalera</strong> s'estén d'extrem a extrem, just per damunt de la teua <strong>targeta d'autoria</strong>. L'estructura de l'article sempre comença amb un gran <strong>Títol (H1)</strong>, un <strong>subtítol (H2)</strong> que acompanya la lectura, i una <strong>entradilla o resum</strong> que convida a entrar en matèria.</p>
       
       <h3>2. Les Eines de Text (la barra d'eines)</h3>
-      <p>Just davall de la <strong>barra d'autoria</strong> tens el desplegable <strong>«Edició avançada»</strong>, i davall de l'entradilla trobaràs la <strong>barra d'eines</strong> amb <strong>«🎴 Proposa Card»</strong>, pensada per a ser <strong>ràpida i intuïtiva</strong>:</p>
+      <p>Just davall de la <strong>barra d'autoria</strong> tens el desplegable <strong>«Edició avançada»</strong>, i davall de l'entradilla trobaràs la <strong>barra d'eines</strong> (amb <strong>«Maqueta la targeta»</strong> dins del <strong>botó del llapis, «Més eines»</strong>), pensada per a ser <strong>ràpida i intuïtiva</strong>:</p>
       <h4>Estructura</h4>
       <p>El <strong>desplegable d'encapçalaments</strong> (H3, H4, H5, H6 i H2) divideix el text en <strong>seccions</strong> i <strong>dona ritme</strong> a la lectura.</p>
       <h4>Llistes</h4>
       <p>Utilitza les <strong>llistes de punts</strong> o les <strong>numerades</strong> per a <strong>enumerar</strong> fets, receptes, materials o arguments.</p>
       <h4>Estil</h4>
-      <p>Tens la <strong>negreta</strong> per a donar <strong>èmfasi</strong> i la <strong>cursiva</strong> per a <strong>citacions o localismes</strong>. Al <strong>botó «⋯»</strong> hi ha més eines: el <strong>text ratllat</strong>, la citació i el <strong>divisor</strong>.</p>
+      <p>Tens la <strong>negreta</strong> per a donar <strong>èmfasi</strong> i la <strong>cursiva</strong> per a <strong>citacions o localismes</strong>. Al <strong>botó del llapis («Més eines»)</strong> hi ha més eines: el <strong>text ratllat</strong>, la citació i el <strong>divisor</strong>.</p>
       <h4>Enllaços i imatges</h4>
       <p>Un <strong>enllaç enganxat</strong> al text es queda com a enllaç, i <strong>escrivint «/»</strong> pots inserir una <strong>imatge, una targeta o un emoji</strong>.</p>
       

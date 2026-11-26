@@ -803,7 +803,8 @@ describe('IDEA-24 · els casos de la transferència de la propietat', () => {
 describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
   // Historic FEDI-17 cohort stays intact; the two additive C6 cases have
   // their own semantic refutations below and execute in the same real runner.
-  const nous = CASOS.filter(c => !c.titol.startsWith('C6:')).slice(99, 172);
+  // IDEA-365 (C26-1 #12) afig un cas propi dins del bloc de publicació; té les seues refutacions més avall.
+  const nous = CASOS.filter(c => !c.titol.startsWith('C6:') && !c.titol.startsWith('IDEA-365:')).slice(99, 172);
   const context = () => Object.assign(contextDeConformitat({
     config: Object.freeze({ dataMode: 'remote', tenantId: 'tenant-de-prova' }), escriptures: true,
     escenaris: { compteOperatiu: true, compteModeProva: true, compteSenseSessio: true, publicacioOperativa: true,
@@ -840,7 +841,7 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
     const valors = {
       appendChatMessages: [missatge('a', 1, 'Conformitat lot 1'), missatge('b', 2, 'Conformitat lot 2')],
       creaFilDirecte: 'directe', loadFils: [{ id: 'directe', tipus: 'directe', altres: [{ id: 'veina' }] }],
-      appendSectionSubmissionNetworkOnly: { id: ctx.idPublicacio, ownerUserId: 'persona', authorOrgId: null, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte', payload: {} },
+      appendSectionSubmissionNetworkOnly: { id: ctx.idPublicacio, ownerUserId: 'persona', authorOrgId: null, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte', payload: { categoriesSistema: ['Mur'] } },
       updateUserPassword: true, adoptaSessioExterna: false, refrescaSessio: false,
       loadActesAgenda: [{ id: 'acte', inici: instant, fi: null }], estatBaixa: baixa,
       registraConsentiment: acte('accepta'), revocaConsentiment: undefined, cancelaBaixa: baixa,
@@ -852,10 +853,10 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
 
   /* R32.5 · moderacioLssi hi afig una capacitat i tres mètodes opcionals. */
   /* v1.2.25 · Costures 8 i 9 · xatCerca hi afig la 67a capacitat i tres mètodes opcionals (155 → 158), amb un cas cada un. */
-  test('cens exacte del contracte, 32 obligatòries i 158 opcionals; cap nom sense cas', () => {
+  test('cens exacte del contracte, 32 obligatòries i 160 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(67);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(158);
+    expect(Object.keys(CAPACITATS)).toHaveLength(68);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(160);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });
@@ -1124,4 +1125,58 @@ test('C10 · eliminaPerATothom té cas neutral real i no accepta ACK amb input i
  expect(await executaCas(c,{eliminaPerATothom:async()=>{throw Object.assign(new Error('invalid'),{code:'XAT_ACCIO_INVALIDA'});}},ctx)).toMatchObject({estat:'ok'});
  for(const api of [async()=>({esborrat:true}),async()=>{throw new Error('sense codi');},async()=>{throw Object.assign(new Error('denied'),{status:403});}])expect(await executaCas(c,{eliminaPerATothom:api},ctx)).toMatchObject({estat:'falla'});
  expect(await executaCas(c,{},ctx)).toMatchObject({estat:'omés'});
+});
+
+/* IDEA-365 (regla 1 de les 21:40) · C26-1 #12 (Gauntlet c13) · Cap publicació sense Categoria de Sistema, als
+   tres escriptors. El llegat rep Mur (comprovat al cas històric de publicació) i un buidatge explícit es rebutja
+   sense publicar (cas nou, fora de la cohort FEDI-17). */
+describe('IDEA-365 · C26-1 #12 · el kit exigix com a mínim 1 Categoria de Sistema en publicar', () => {
+  const context = () => Object.assign(contextDeConformitat({ config: Object.freeze({ dataMode: 'remote' }), escriptures: true,
+    escenaris: { publicacioOperativa: true } }), { ownerUserId: 'persona' });
+  const nous = CASOS.filter(c => c.titol.startsWith('IDEA-365:'));
+  const llegat = CASOS.find(c => c.titol === 'appendSectionSubmissionNetworkOnly: conserva id, autora, secció i text publicat');
+  const senseDesti = () => Object.assign(new TypeError('Cal almenys una Categoria de Sistema vàlida per publicar.'), { codi: 'SDP-TAXONOMIA-DESTI' });
+
+  test('un sol cas nou, d’escriptura, al bloc de publicació i abans de la baixa i el logout del cicle', () => {
+    expect(nous.map(c => [c.metode, c.capacitat, c.espera, c.escriu, c.requerix])).toEqual([['appendSectionSubmissionNetworkOnly', null, 'rebutja', true, ['publicacioOperativa']]]);
+    expect(CASOS.indexOf(nous[0])).toBe(CASOS.indexOf(llegat) + 3);
+    expect(CASOS.indexOf(nous[0])).toBeLessThan(CASOS.findIndex(c => c.metode === 'demanaBaixa'));
+    expect(CASOS.indexOf(nous[0])).toBeLessThan(CASOS.findIndex(c => c.metode === 'logout'));
+  });
+
+  test('el rebuig porta [] explícit amb un id propi i només accepta SDP-TAXONOMIA-DESTI', async () => {
+    const [c] = nous;
+    const ctx = context();
+    expect(c.arguments(ctx)).toEqual([{ id: ctx.idPublicacioSenseDesti, sectionId: 'mur', title: 'No es publica', description: 'Sense destí',
+      payload: { categoriesSistema: [] }, actor: { tipus: 'persona', id: 'persona' } }, ctx.config]);
+    expect(ctx.idPublicacioSenseDesti).toMatch(/^[0-9a-f-]{36}$/);
+    expect(ctx.idPublicacioSenseDesti).not.toBe(ctx.idPublicacio);
+    for (const error of [senseDesti(), Object.assign(new Error('remot'), { code: 'SDP-TAXONOMIA-DESTI', status: 400 })]) {
+      expect(await executaCas(c, { [c.metode]: async () => { throw error; } }, context())).toMatchObject({ estat: 'ok', falles: [] });
+    }
+    for (const error of [new Error('genèric'), Object.assign(new Error('mode'), { code: 'mode-local' }), Object.assign(new Error('ruta desconeguda'), { code: 'HTTP_404', status: 404 }), new Error('Cal iniciar sessió per publicar.'), { codi: 'SDP-TAXONOMIA-DESTI' }]) {
+      expect(await executaCas(c, { [c.metode]: async () => { throw error; } }, context()), JSON.stringify(error?.code ?? error?.message ?? error)).toMatchObject({ estat: 'falla' });
+    }
+    // Un adaptador que repara el buidatge o el desa tal qual publica: cau.
+    for (const payload of [{ categoriesSistema: ['Mur'] }, { categoriesSistema: [] }]) {
+      expect(await executaCas(c, { [c.metode]: async (s) => ({ ...s, ownerUserId: 'persona', authorOrgId: null, payload }) }, context())).toMatchObject({ estat: 'falla' });
+    }
+    const senseOptIn = context(); senseOptIn.escriptures = false;
+    let crides = 0;
+    expect(await executaCas(c, { [c.metode]: async () => { crides++; throw senseDesti(); } }, senseOptIn)).toMatchObject({ estat: 'omés', motiu: 'escriptura no demanada' });
+    const senseSessio = context(); senseSessio.publicacioOperativa = false;
+    expect(await executaCas(c, { [c.metode]: async () => { crides++; throw senseDesti(); } }, senseSessio)).toMatchObject({ estat: 'omés' });
+    expect(crides).toBe(0);
+  });
+
+  test('el llegat sense camp només és conforme si l’escriptor hi posa Mur, i cap altra llista', async () => {
+    const ctx = context();
+    const bo = { id: ctx.idPublicacio, ownerUserId: 'persona', authorOrgId: null, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte' };
+    expect(llegat.arguments(ctx)[0]).not.toHaveProperty('payload');
+    expect(await executaCas(llegat, { [llegat.metode]: async () => ({ ...bo, payload: { categoriesSistema: ['Mur'] } }) }, ctx)).toMatchObject({ estat: 'ok', falles: [] });
+    for (const payload of [{}, { categoriesSistema: [] }, { categoriesSistema: ['Sistema'] }, { categoriesSistema: ['Mur', 'Sistema'] }, { categoriesSistema: 'Mur' }]) {
+      const resultat = await executaCas(llegat, { [llegat.metode]: async () => ({ ...bo, payload }) }, ctx);
+      expect(resultat, JSON.stringify(payload)).toMatchObject({ estat: 'falla', falles: ['IDEA-365: el llegat sense categoriesSistema havia de rebre la categoria Mur'] });
+    }
+  });
 });

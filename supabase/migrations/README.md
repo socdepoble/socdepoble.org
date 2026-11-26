@@ -220,6 +220,10 @@ La `20261116040000` és transaccional, conserva signatures/OID/propietari/ACL/RL
 
 El pin POSSE del catàleg complet passa de 114 a 116 (`34ddc81c…`), recalculat des dels bytes del catàleg real; el de 114 i els altres nou pins es conserven. Els perfils del kit R30/R31 amb les dues migracions rebutjades (116 `21a3cfc3…`, 117 i 118) no s’accepten.
 
+## v1.2.26 · Taxonomia editorial
+
+La migració 140, [20261126030500_v1226_taxonomia_pagines.sql](20261126030500_v1226_taxonomia_pagines.sql), va després de 139. L’autoritat és `private.es_superadmin()` amb `aal2` exigit en línia a les dues RPC, sense dependre de 2610061448, que no està aplicada a Producció. La lectura pública d’una entrada de `section_submissions` reutilitza la frontera canònica del Mur de 2611121430 i 2611122200: `visibility`, `moderation_state` i `deleted_at`, `private.mur_public_eligible` i `private.mur_publicacions_revocades`. L’escriptura normalitza com el client i serialitza per pàgina, sense bloquejar el poble. Assaig obligatori: `tests/v1226-taxonomia-pagines-pglite.test.mjs`. El POSSE conserva el pin de 139 i afig el complet exacte 140 (`135082b7…`). No aplicada a Producció.
+
 ## Vincles
 
 - [[00_index]]

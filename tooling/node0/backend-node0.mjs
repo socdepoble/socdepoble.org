@@ -3,6 +3,7 @@ import {capturaEdicioEditorial} from '../../src/data/editorialPublicada.js';
 import {capturaAdminUsuaris} from '../../src/data/adminUsuaris.js';
 import {validaLotDadesObertes} from '../../src/data/dadesObertesLot.js';
 import {llegeixPaquetOpenData} from '../../src/data/importaMunicipiOpenData.js';
+import {categoriesSistemaPerPublicar} from '../../src/utils/publicacioSistema.js';
 /** Fixed local RPC surface. Session validation and RLS claims share one transaction.
  * No arbitrary table, function, role, tenant or user identifier comes from HTTP.
  */
@@ -149,8 +150,11 @@ export function compilaOperacioNodeZero(action,body,tenantId,{xatRitmeReady=fals
     if(!['mur','mercat','events','multimedia','notes'].includes(section))fail('invalid_section');
     const source=submission.payload??{};
     if(!plain(source)||Buffer.byteLength(JSON.stringify(source))>128*1024)fail('invalid_submission_payload');
-    const payload=Object.fromEntries(Object.entries(source).filter(([key])=>!AUTHORITY_KEYS.has(key)));
+    let payload=Object.fromEntries(Object.entries(source).filter(([key])=>!AUTHORITY_KEYS.has(key)));
     if(payload.type==='sistema')delete payload.type;
+    // IDEA-365 (regla 1 de les 21:40) · C26-1 #12: la mateixa regla i la mateixa funció que els escriptors de Supabase
+    // i del port local. El llegat sense camp rep la categoria de la seua secció; una llista buida o inventada es refusa.
+    if(submission.consulta!==true){try{payload=categoriesSistemaPerPublicar(payload,section);}catch{fail('invalid_system_categories');}}
     if(Object.hasOwn(payload,'origen')){
       if(!plain(payload.origen))delete payload.origen;
       else payload.origen=Object.fromEntries(Object.entries(payload.origen).filter(([key])=>key!=='abast'));

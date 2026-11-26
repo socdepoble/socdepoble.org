@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
 import {coberturaDelRouter, rutesJutjables} from './cobertura-router.mjs';
 import {CLASSES_D_EXEMPCIO, EXEMPCIONS_SOCIALS} from './exempcions-socials.mjs';
 import {extrauRutes, FITXERS_AMB_ROUTES, patroARegex, rutaQueServix} from './rutes-del-router.mjs';
@@ -16,6 +17,7 @@ import {cobertura, FITXES_SINTETIQUES} from '../gates/tractor-cobertura-social.m
 const projectRoot = process.env.SDP_PROJECT_ROOT || process.cwd();
 const PORTA = path.join(projectRoot, 'tooling/gates/tractor-cobertura-social.mjs');
 const base = await cobertura({root: projectRoot});
+const {PAGINES_EDITORIALS_TAXONOMIA} = await import(pathToFileURL(path.join(projectRoot, 'src/data/taxonomia/taxonomiaPublicacio.js')).href);
 
 test('extractor sobre l’arbre de veres: cap ruta sense resoldre, les de path calculat, les apps, les redireccions i les seccions de detall', () => {
   const {router} = base;
@@ -59,6 +61,17 @@ test('la Porta sobre l’arbre de veres és verda, i diu les exemptes, les pende
     '/javillinares', '/socdepoble', '/rentonar', '/iaia', '/perfil', '/mapa', '/vehicle', '/animalets', '/treball', '/habitatge', '/esdeveniments', '/wiki', '/skills', '/ia', '/realitat']) {
     assert.ok(cobertes.has(ruta), ruta);
   }
+  /* v1.2.26 (rutes de G26-2) · Les pàgines editorials del catàleg finit de taxonomia (les 12 Categories de Sistema i les
+     etiquetes comunes de PAGINES_EDITORIALS_TAXONOMIA) i les comarques dels pobles de la llavor tenen OpenGraph propi:
+     cobertes, ni exemptes ni pendents. Cada pàgina del catàleg, una entrada indexable amb la seua adreça. */
+  const cobertaDe = Object.fromEntries(resultat.cobertes.map(c => [c.ruta, c.camins]));
+  assert.equal(cobertaDe['/categoria/:slug'], PAGINES_EDITORIALS_TAXONOMIA.filter(p => p.tipus === 'categoria').length);
+  assert.equal(cobertaDe['/categoria/:slug'], 12);
+  assert.equal(cobertaDe['/etiqueta/:slug'], PAGINES_EDITORIALS_TAXONOMIA.filter(p => p.tipus === 'etiqueta').length);
+  assert.ok(cobertaDe['/comarca/:slug'] >= 1, '/comarca/:slug: cap comarca de la llavor');
+  for (const {tipus, slug} of PAGINES_EDITORIALS_TAXONOMIA) {
+    assert.equal(base.manifest.routes[`/${tipus}/${slug}`]?.index, true, `/${tipus}/${slug}`);
+  }
   assert.deepEqual(resultat.pendents.map(e => e.ruta).sort(), ['/animalets/:itemId', '/calendari/:itemId', '/habitatge/:itemId', '/mapa/:itemId', '/page/:slug/:itemSlug',
     '/page/avisador', '/page/la-iaia-sabuda', '/page/node-zero', '/page/notes_shared', '/page/tot-el-que-pots-fer', '/receptes/:itemId', '/treball/:itemId', '/vehicle/:itemId']);
   for (const pendent of resultat.pendents) assert.ok(pendent.revisio, pendent.ruta);
@@ -101,6 +114,10 @@ test('S1 · una ruta nova sense cobertura ni exempció és roja; coberta i exemp
   roig(await aplica(d => { d.exempcions = d.exempcions.filter(e => e.ruta !== '/xat'); }), 'S1', /\/xat: ni OpenGraph/);
   // El productor desconnectat de veres: sense cap camí d'una família, la família és roja.
   roig(await aplica(d => { for (const cami of Object.keys(d.manifest.aliases)) if (cami.startsWith('/empresa/')) delete d.manifest.aliases[cami]; }), 'S1', /\/empresa\/:agentId: ni OpenGraph/);
+  // v1.2.26 · El productor de taxonomia i de comarques desconnectat: cada família de G26-2, roja.
+  for (const familia of ['categoria', 'etiqueta', 'comarca']) {
+    roig(await aplica(d => { for (const ruta of Object.keys(d.manifest.routes)) if (ruta.startsWith(`/${familia}/`)) delete d.manifest.routes[ruta]; }), 'S1', new RegExp(`/${familia}/:slug: ni OpenGraph`));
+  }
 });
 
 test('S2 · una exempció que ja no casa amb el Router, un motiu curt, una classe que el codi no confirma', async () => {

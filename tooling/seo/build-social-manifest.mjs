@@ -54,6 +54,9 @@
  *     /skills, /ia, /realitat) i els de PAGE_ROUTE_MAP que faltaven (/page/<clau>);
  *   · una publicació del Mur d'origen veïnal (snapshot amb origen:'veinal') entra SENSE
  *     indexar i amb la targeta genèrica.
+ * v1.2.26 · Les rutes de G26-2 (PAGINES_DE_TAXONOMIA): /categoria/<slug> i /etiqueta/<slug> del catàleg editorial
+ *   finit i /comarca/<slug> dels pobles públics de la llavor, amb el head del client. Cada font que el build executa
+ *   porta a l'evidència els seus imports relatius, recursius i confinats a l'arrel (fontExecutada).
  * Cada entrada pot portar `schema` (el @type del seu JSON-LD). evidence.origens diu de cada
  * ruta si és del 'paquet', 'editorial' o 'veinal': el prerender en fa la política de fallada.
  * Retorna {manifest,evidence}; evidence és un rebut LOCAL separat, no publicable.
@@ -130,6 +133,16 @@ export const FONTS_DE_PAGINES = Object.freeze([
   Object.freeze(['src/sections/text/pageContent.patrimoniR14.js', 'PAGINES_PATRIMONI_R14']),
 ]);
 
+/* v1.2.26 · IDEA-366 · Les transformacions que pageContent.js aplica a PAGE_COPY en execució i que el
+   literal no porta: [font, funció]. La mateixa funció i el mateix ordre que el client (darrere de les
+   pàgines afegides), perquè el head servit diga el mateix que el client (src/config/coberturaSocial.test.js).
+   Llista tancada: només mòduls de dades purs del repositori. */
+export const TRANSFORMACIONS_DE_PAGINES = Object.freeze([
+  Object.freeze(['src/sections/text/pageContent.catalegsV1226.js', 'aplicaBibliotequesV1226']),
+]);
+/* v1.2.26 · Els bytes de cada dependència d'una font executada que este procés ja ha importat (fontExecutada). */
+const DEPENDENCIES_CARREGADES = new Map();
+
 /* Ordre del Mestre (30-10-2026, prompt 2208, T1.1 i T2.1) · Les fonts JS de les
    rutes de la Consola: la regla (seoConsola.js) i les dades que llig. Totes
    entren a l'evidència; una font canviada a mig build és porta roja. */
@@ -163,6 +176,14 @@ export const FONT_DE_VERTICALS = 'src/sections/verticals/SeccioVertical.jsx';
 const COMPONENT_VERTICAL = 'SeccioVertical';
 /* Les fonts del Router (rutes-del-router.mjs) i de les fitxes, a l'evidència. */
 export const FONTS_DEL_ROUTER = Object.freeze(['src/app/App.jsx', 'src/apps/plataforma/RutaApps.jsx']);
+/* v1.2.26 (IDEA-370 i IDEA-360; rutes de G26-2) · Les pàgines de taxonomia i de comarca: [patró del Router, el
+   component que el pinta (a l'evidència: hi viu el useSEO), les dades executades que donen el head]. */
+export const PAGINES_DE_TAXONOMIA = Object.freeze({
+  editorials: Object.freeze({patrons: Object.freeze(['/categoria/:slug', '/etiqueta/:slug']), component: 'src/sections/taxonomia/PaginaEditorialEtiqueta.jsx',
+    dades: 'src/data/taxonomia/taxonomiaPublicacio.js'}),
+  comarques: Object.freeze({patrons: Object.freeze(['/comarca/:slug']), component: 'src/sections/pobles/PaginaComarca.jsx',
+    dades: 'src/data/taxonomia/taxonomiaGeografica.js', territori: 'src/sections/pobles/territoriDelPoble.js', textos: 'src/data/taxonomia/i18nTaxonomiaV26.js'})
+});
 /* Les publicacions del Mur són articles (og:type), com les remotes del snapshot. */
 const TIPUS_DE_LLAVOR = Object.freeze({ mur: 'article' });
 
@@ -267,6 +288,43 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     const api={get:name=>literal(bindings.get(name)),node:name=>bindings.get(name),literal};
     staticModules.set(rel,api);loading.delete(rel);return api;
   }
+  /* v1.2.26 · Una font de pàgines que el build EXECUTA (FONTS_DE_PAGINES i TRANSFORMACIONS_DE_PAGINES) porta a
+     l'evidència, ABANS d'executar-la, cada import relatiu que fa, de manera recursiva i confinada a l'arrel (cap
+     enllaç simbòlic: sourceFile): així la guarda «Una font ha canviat durant el build» també els cobrix. Són mòduls
+     de dades purs del repositori: un import no relatiu o sense extensió, un import dinàmic o un camí que ix de
+     l'arrel és porta roja, mai una font que no s'anota. */
+  const executades=new Map(),dependenciesComprovades=new Set();
+  function fontExecutada(rel,dependencia=false) {
+    const ja=executades.get(rel);
+    const file=ja??sourceFile(rel);executades.set(rel,file);
+    /* La font de dalt s'importa amb ?sha= (sempre fresca); les seues dependències, pel camí net, i la cache d'ESM
+       d'este procés no es buida: si ja n'ha carregat uns altres bytes, l'evidència diria uns bytes que no s'executen. */
+    if(dependencia&&!dependenciesComprovades.has(file)) {
+      dependenciesComprovades.add(file);
+      const previ=DEPENDENCIES_CARREGADES.get(file),actual=sourcePaths.get(file);
+      if(previ!==undefined&&previ!==actual)throw new Error(`Una dependència executada ha canviat des que este procés la va carregar (cache d’ESM): ${rel}; regenereu el manifest en un procés nou.`);
+      DEPENDENCIES_CARREGADES.set(file,actual);
+    }
+    if(ja)return file;
+    const program=parse(fs.readFileSync(file,'utf8'),{sourceType:'module'}).program;
+    const dinamics=[];
+    const recorre=n=>{
+      if(!n||typeof n!=='object')return;
+      if(Array.isArray(n)){for(const fill of n)recorre(fill);return;}
+      if(n.type==='ImportExpression'||(n.type==='CallExpression'&&n.callee?.type==='Import'))dinamics.push(n);
+      for(const [clau,fill] of Object.entries(n))if(!['loc','start','end','extra','leadingComments','trailingComments','innerComments'].includes(clau))recorre(fill);
+    };
+    recorre(program.body);
+    if(dinamics.length)throw new Error(`Import dinàmic en una font executada: ${rel}.`);
+    const especificadors=program.body.filter(n=>['ImportDeclaration','ExportNamedDeclaration','ExportAllDeclaration'].includes(n.type)&&n.source).map(n=>n.source.value);
+    for(const espec of especificadors) {
+      if(typeof espec!=='string'||!/^\.\.?\//.test(espec)||!/\.m?js$/.test(espec))throw new Error(`Import no relatiu o sense extensió en una font executada: ${rel} → ${espec}`);
+      const dep=path.posix.normalize(path.posix.join(path.posix.dirname(rel),espec));
+      if(dep==='..'||dep.startsWith('../')||path.posix.isAbsolute(dep))throw new Error(`Import fora de l’arrel en una font executada: ${rel} → ${espec}`);
+      fontExecutada(dep,true);
+    }
+    return file;
+  }
   for(const rel of POLITIQUES) {
     const file=confinedFile(policyRoot,path.join(policyRoot,rel));if(!file)throw new Error(`Mòdul de política absent: ${rel}`);record(file,fs.readFileSync(file),policyRoot);
   }
@@ -288,10 +346,17 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
      imports) i s'hi afigen amb la mateixa regla que el client. */
   for(const [rel,name] of FONTS_DE_PAGINES) {
     if(!hiEs(rel))continue;
-    const file=sourceFile(rel);
+    const file=fontExecutada(rel);
     const pagines=(await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`))[name];
     if(!pagines||typeof pagines!=='object'||Array.isArray(pagines))throw new Error(`Font de pàgines sense objecte: ${rel}#${name}`);
     Object.assign(PAGE_COPY,pagines);
+  }
+  for(const [rel,name] of TRANSFORMACIONS_DE_PAGINES) {
+    if(!hiEs(rel))continue;
+    const file=fontExecutada(rel);
+    const transforma=(await import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`))[name];
+    if(typeof transforma!=='function')throw new Error(`Transformació de pàgines absent: ${rel}#${name}`);
+    transforma(PAGE_COPY);
   }
   const SOCIAL_IMAGES=hiEs('src/config/socialImages.js')
     ? staticModule('src/config/socialImages.js').get('SOCIAL_IMAGES') : {};
@@ -547,6 +612,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     }
   }
   const deLlavor=new Map();
+  const poblesDeLlavor=[];
   for(const [section,rel,name] of LLAVORS) {
     if(!hiEs(rel))continue;
     const file=sourceFile(rel);
@@ -555,6 +621,7 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     // P0-60 · Una publicació sola (l'article del Mur) compta com una llista d'un element.
     const items=Array.isArray(valor)?valor:(valor&&typeof valor==='object'?[valor]:null);
     if(!items)throw new Error(`Llavor sense llista: ${rel}#${name}`);
+    if(section==='pobles')poblesDeLlavor.push(...items.filter(item=>item&&typeof item==='object'&&publicMetadata(item)));
     for(const item of items) {
       if(!item||typeof item!=='object'||!publicMetadata(item))continue;
       if(typeof item.id!=='string'||!ID_DETALL.test(item.id))throw new Error(`ID de llavor invàlid a ${rel}.`);
@@ -568,6 +635,52 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
       const key=normalizedKey(route,origin);deLlavor.set(key.toLowerCase(),key);
     }
   }
+  /* v1.2.26 (IDEA-370 i IDEA-360; les rutes de G26-2) · /categoria/:slug, /etiqueta/:slug i /comarca/:slug. Com les
+     verticals, només amb un Router que munta el patró exacte, i amb el head que registra el client (useSEO):
+       · el catàleg editorial FINIT (PAGINES_EDITORIALS_TAXONOMIA: les 12 Categories de Sistema i les etiquetes
+         comunes), resolt amb resolPaginaEditorialTaxonomia com PaginaEditorialEtiqueta: «H1 · H2», l'entradeta i la
+         targeta genèrica, indexable. Les edicions del CMS (personalitzacio, remota) no hi arriben, com cap dada
+         remota. Una pàgina automàtica (D3: una etiqueta fora del catàleg amb cards) depén del Mur i no es prerenderitza;
+       · les comarques dels pobles públics de la llavor, resoltes amb resolComarcaPerSlug com PaginaComarca:
+         «<comarca> · Xarxa de Pobles» i l'entradeta, en valencià; indexable si té pobles (si es resol, en té).
+     Les dades s'executen per fontExecutada: elles i els seus imports, a l'evidència. */
+  const muntada=patrons=>Boolean(router)&&patrons.every(patro=>router.rutes.some(r=>r.patro===patro));
+  const executa=async rel=>{const file=fontExecutada(rel);return import(`${pathToFileURL(file).href}?sha=${sha(fs.readFileSync(file))}`);};
+  {
+    const {patrons,component,dades}=PAGINES_DE_TAXONOMIA.editorials;
+    if(muntada(patrons)&&hiEs(component)&&hiEs(dades)) {
+      sourceFile(component);
+      const {PAGINES_EDITORIALS_TAXONOMIA:pagines,resolPaginaEditorialTaxonomia:resol}=await executa(dades);
+      if(!Array.isArray(pagines)||typeof resol!=='function')throw new Error(`Catàleg editorial de taxonomia invàlid: ${dades}.`);
+      for(const pagina of pagines) {
+        const route=`/${pagina?.tipus}/${pagina?.slug}`;
+        const editorial=resol(route);
+        if(!editorial||`/${editorial.tipus}/${editorial.slug}`!==route||!patrons.includes(`/${editorial.tipus}/:slug`))throw new Error(`Inventari de taxonomia trencat: ${route}.`);
+        if(!publicSeoRoute(route))continue;
+        add(route,{title:`${editorial.h1} · ${editorial.h2}`,description:editorial.entradeta,image:null,index:true,schema:'CollectionPage'});
+      }
+    }
+  }
+  {
+    const {patrons,component,dades,territori,textos}=PAGINES_DE_TAXONOMIA.comarques;
+    if(muntada(patrons)&&poblesDeLlavor.length&&[component,dades,territori,textos].every(hiEs)) {
+      sourceFile(component);
+      const [{resolComarcaPerSlug},{comarcaDelPoble},{textosTaxonomiaV26,entradetaDeComarca}]=await Promise.all([dades,territori,textos].map(executa));
+      const tx=typeof textosTaxonomiaV26==='function'?textosTaxonomiaV26('ca'):null;
+      if(typeof resolComarcaPerSlug!=='function'||typeof comarcaDelPoble!=='function'||typeof tx?.taxonomiaV26XarxaPobles!=='string'
+        ||typeof tx?.taxonomiaV26ComarcaEntradeta!=='string')throw new Error('Fonts de les pàgines de comarca invàlides.');
+      for(const slug of [...new Set(poblesDeLlavor.map(comarcaDelPoble).filter(Boolean))].sort()) {
+        const comarca=resolComarcaPerSlug(slug,poblesDeLlavor);
+        if(!comarca?.pobles?.length)continue;
+        const route=`/comarca/${encodeURIComponent(comarca.slug)}`;
+        if(!publicSeoRoute(route))continue;
+        // Integrador C1-3 · La mateixa entradeta que el client (entradetaDeComarca: «del Comtat», «de l'Alacantí»).
+        const description=typeof entradetaDeComarca==='function'?entradetaDeComarca(comarca.nom,'ca'):tx.taxonomiaV26ComarcaEntradeta.replace('{comarca}',()=>comarca.nom);
+        add(route,{title:`${comarca.nom} · ${tx.taxonomiaV26XarxaPobles}`,description,
+          image:null,index:true,schema:'CollectionPage'});
+      }
+    }
+  }
   const ids=new Set();
   for(const item of wikiItems) {
     const id=idDeDocumentWiki(item?.id);
@@ -576,8 +689,12 @@ export async function buildSocialManifest({root,origin,policyRoot=root,publicSna
     if(!atributsPublics(item.attributes))continue;
     // El mateix head que WikiDetail (seoWiki.js): H1, H2 o descripció, i la imatge de SOCIAL_IMAGES.
     const meta=metadadesDeDocumentPublic(item,{...imageOptions,imatges:SOCIAL_IMAGES});
-    if(meta.imatge)blocked(`/wikidepoble?${new URLSearchParams({item:id})}`,meta.imatge);
-    add(`/wikidepoble?${new URLSearchParams({item:id})}`,{title:meta.title,description:meta.description,image:meta.image,type:'article',own:true});
+    const route=`/wikidepoble?${new URLSearchParams({item:id})}`;
+    if(meta.imatge)blocked(route,meta.imatge);
+    /* v1.2.26 · D4 Opció B · L'esborrany es comparteix (OpenGraph) però no s'indexa: index:false porta
+       compartible:true i social-edge.mjs hi emet el meta robots noindex. La mateixa regla que seo-routes.json. */
+    add(route,{title:meta.title,description:meta.description,image:meta.image,type:'article',own:true,
+      index:publicSeoRoute(route,item.attributes)&&item.noindex!==true});
   }
   if(!Array.isArray(publicSnapshot)||publicSnapshot.length>100000)throw new Error('Snapshot públic invàlid.');
   if(Buffer.byteLength(JSON.stringify(publicSnapshot))>MAX_SNAPSHOT)throw new Error('Snapshot públic massa gran.');

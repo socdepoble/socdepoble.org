@@ -209,11 +209,13 @@ describe('anatomia (skill sdp-universal-page)', () => {
     expect(VARIANTS_SOCIALS[copy.image]).toBe('/assets/uploads/fediversity-hero-social-1200x630.jpg');
   });
 
-  test('etiquetes: Sistema, categoria mare i etiquetes canòniques, sense duplicats', () => {
+  /* v1.2.26 · IDEA-365 (Llibre Mestre, 22:16, punt 1) · La candidatura és Sistema + Mur. IDEA-369 #48 (00:43) · «NGI
+     Fediversity» és una etiqueta retirada («només 2 publicacions que ja s'enllacen entre si»): en queda Documentació. */
+  test('etiquetes: Sistema i Mur, categoria mare i etiquetes canòniques, sense duplicats', () => {
     expect(copy.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Mur', className: 'sdp-badge-system' },
       { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
-      { text: 'NGI Fediversity', className: 'sdp-badge-tag' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
   });
@@ -699,7 +701,8 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
       expect(absents).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       // v1.2.25 · Costures 8 i 9 · xatCerca la declara el local (rebuig 'sense-capacitat'): 50 → 51.
-      expect(oferides).toHaveLength(51);
+      // v1.2.26 · C26-3 · taxonomiaPagines la declara el local (taxonomiaPaginesLocal.js): 51 → 52. Cap absència nova.
+      expect(oferides).toHaveLength(52);
       expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(48);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');

@@ -35,6 +35,12 @@ import { encapcalamentDirectoriGent } from '../sections/pobles/subnavigacioPoble
 import { AMBITS_VERTICALS, TEXTOS_VERTICALS } from '../sections/verticals/SeccioVertical.jsx';
 import ca from './idiomes/ca.js';
 import { CAP_SOCIAL_BASE } from './imatgeSocial.js';
+import { readFileSync } from 'node:fs';
+import { PAGINES_EDITORIALS_TAXONOMIA, resolPaginaEditorialTaxonomia } from '../data/taxonomia/taxonomiaPublicacio.js';
+import { resolComarcaPerSlug } from '../data/taxonomia/taxonomiaGeografica.js';
+import { ambPreposicioDe, entradetaDeComarca, textosTaxonomiaV26 } from '../data/taxonomia/i18nTaxonomiaV26.js';
+import { comarcaDelPoble } from '../sections/pobles/territoriDelPoble.js';
+import { MOCK_TOWNS } from '../sections/pobles/townsSeed.js';
 
 const OPCIONS = Object.freeze({ origen: ORIGEN_SOCIAL_PER_DEFECTE, permesos: [] });
 const { manifest } = await buildSocialManifest({ root: process.cwd(), origin: ORIGEN_SOCIAL_PER_DEFECTE, estricte: true });
@@ -123,5 +129,65 @@ describe('client i prerender: el mateix head a les fitxes públiques, al directo
   test.each(AMBITS_VERTICALS.map((ambit) => [`/${ambit}`, ambit]))('%s · SeccioVertical (el kicker i el subtítol de TEXTOS_VERTICALS)', (ruta, ambit) => {
     expect(delManifest(manifest.routes[ruta])).toEqual({ title: tradueix(TEXTOS_VERTICALS[ambit].kicker), description: tradueix(TEXTOS_VERTICALS[ambit].subtitle), image: generica });
     expect(manifest.routes[ruta].index).toBe(true);
+  });
+});
+
+/* v1.2.26 (IDEA-370 i IDEA-360; les rutes de G26-2) · Les pàgines editorials del catàleg finit de taxonomia i les
+   comarques: el head que registra el client amb useSEO (PaginaEditorialEtiqueta i PaginaComarca), sense imatge pròpia,
+   indexable. El catàleg editorial, amb resolPaginaEditorialTaxonomia sense edicions del CMS; les comarques, amb
+   resolComarcaPerSlug sobre els pobles de la llavor (els del client sense remot) i els textos en valencià. */
+const PAGINES_EDITORIAL_I_COMARCA = Object.freeze({
+  editorial: readFileSync(new URL('../sections/taxonomia/PaginaEditorialEtiqueta.jsx', import.meta.url), 'utf8'),
+  comarca: readFileSync(new URL('../sections/pobles/PaginaComarca.jsx', import.meta.url), 'utf8')
+});
+const txCa = textosTaxonomiaV26('ca');
+const COMARQUES = [...new Set(MOCK_TOWNS.map(comarcaDelPoble).filter(Boolean))].sort().map((slug) => resolComarcaPerSlug(slug, MOCK_TOWNS)).filter((c) => c?.pobles.length);
+
+describe('client i prerender: el mateix head a les pàgines de taxonomia i de comarca', () => {
+  test('el client registra eixe head: «H1 · H2» i l’entradeta, i «<comarca> · Xarxa de Pobles» i l’entradeta de la comarca', () => {
+    // La forma del títol i de la descripció dins de la crida a useSEO (la condició que l'envolta pot créixer).
+    expect(PAGINES_EDITORIAL_I_COMARCA.editorial).toMatch(/useSEO\(\{\s*title:[^\n]*`\$\{editorial\.h1\} · \$\{editorial\.h2\}`[^\n]*\n\s*description:[^\n]*\beditorial\.entradeta\b/);
+    expect(PAGINES_EDITORIAL_I_COMARCA.comarca).toMatch(/useSEO\(\{\s*title:[^\n]*`\$\{comarca\.nom\} · \$\{tx\.taxonomiaV26XarxaPobles\}`[^\n]*\n\s*description: entradeta,/);
+    expect(PAGINES_EDITORIAL_I_COMARCA.comarca).toMatch(/entradetaDeComarca\(comarca\.nom, language\)/);
+  });
+
+  test.each(PAGINES_EDITORIALS_TAXONOMIA.map((p) => [`/${p.tipus}/${p.slug}`]))('%s · PaginaEditorialEtiqueta (resolPaginaEditorialTaxonomia)', (ruta) => {
+    const editorial = resolPaginaEditorialTaxonomia(ruta);
+    expect(delManifest(manifest.routes[ruta])).toEqual({ title: `${editorial.h1} · ${editorial.h2}`, description: editorial.entradeta, image: generica });
+    expect([manifest.routes[ruta].index, manifest.routes[ruta].canonical]).toEqual([true, `${ORIGEN_SOCIAL_PER_DEFECTE}${ruta}`]);
+  });
+
+  test('les 12 Categories de Sistema i cada etiqueta comuna del catàleg, ni una ruta més', () => {
+    expect(PAGINES_EDITORIALS_TAXONOMIA.filter((p) => p.tipus === 'categoria')).toHaveLength(12);
+    expect(Object.keys(manifest.routes).filter((ruta) => /^\/(?:categoria|etiqueta)\//.test(ruta)).sort())
+      .toEqual(PAGINES_EDITORIALS_TAXONOMIA.map((p) => `/${p.tipus}/${p.slug}`).sort());
+  });
+
+  test('cada comarca dels pobles de la llavor · PaginaComarca (resolComarcaPerSlug), ni una ruta més', () => {
+    expect(COMARQUES.length).toBeGreaterThan(0);
+    expect(Object.keys(manifest.routes).filter((ruta) => ruta.startsWith('/comarca/')).sort()).toEqual(COMARQUES.map((c) => `/comarca/${c.slug}`).sort());
+    for (const comarca of COMARQUES) {
+      const ruta = `/comarca/${comarca.slug}`;
+      expect(delManifest(manifest.routes[ruta]), ruta).toEqual({ title: `${comarca.nom} · ${txCa.taxonomiaV26XarxaPobles}`,
+        description: entradetaDeComarca(comarca.nom, 'ca'), image: generica });
+      expect(manifest.routes[ruta].index, ruta).toBe(true);
+    }
+  });
+
+  /* Integrador C1-3 (verificador R2-5/R2-6, P2) · El head que llegixen els rastrejadors parla en valencià
+     normatiu: «de» es contrau amb l'article de la comarca. */
+  test('l’entradeta de cada comarca contrau l’article: «del Comtat», «de l’Alacantí», mai «de El» ni «de L’»', () => {
+    for (const comarca of COMARQUES) {
+      const descripcio = manifest.routes[`/comarca/${comarca.slug}`].description;
+      expect([comarca.slug, /\bde (?:El|La|Els|Les|L['’])/.test(descripcio)]).toEqual([comarca.slug, false]);
+    }
+    expect(ambPreposicioDe('El Comtat')).toBe('del Comtat');
+    expect(ambPreposicioDe("L'Alacantí")).toBe("de l'Alacantí");
+    expect(ambPreposicioDe('La Marina Alta')).toBe('de la Marina Alta');
+    expect(ambPreposicioDe('Els Ports')).toBe('dels Ports');
+    expect(ambPreposicioDe('Les Valls')).toBe('de les Valls');
+    expect(ambPreposicioDe('Safor')).toBe('de Safor');
+    expect(entradetaDeComarca('El Comtat', 'ca')).toContain('vinculades a la comarca del Comtat dins');
+    expect(entradetaDeComarca('El Comtat', 'es')).toContain('de El Comtat');
   });
 });

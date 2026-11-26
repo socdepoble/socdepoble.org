@@ -1,11 +1,25 @@
-import { Fragment, useMemo } from 'react';
-import { Taula } from '../../components/PedraSeca/index.js';
+import { Fragment, Suspense, useMemo, useState } from 'react';
+import { Boto, Taula } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useNavigate } from '../../app/contexts/RouterContext.jsx';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { adoptaFullDiferit } from '../../config/fullDiferit.js';
+import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import cssRutesPoble from '../../css/diferit-rutes-poble.css?inline';
 import { RUTES_LA_TORRE } from '../../data/patrimoni/rutesDePoble.js';
+import { textosCatalegAfigV26 } from '../../components/universal/workspace/i18nCatalegAfigV26.js';
 import EmpremtaFont from './EmpremtaFont.jsx';
 import { traductorPatrimoni } from './textosPatrimoni.js';
+
+const ModalAfigCataleg = lazyRoute(() => import('../../components/universal/workspace/ModalAfigCataleg.jsx'));
+
+function useNavigateRutesSegur() {
+  try {
+    return useNavigate();
+  } catch {
+    return () => {};
+  }
+}
 
 const adoptaEstilsRutesPoble = (node) => {
   if (node) adoptaFullDiferit(node, 'rutes-poble', cssRutesPoble);
@@ -57,7 +71,12 @@ function Ruta({ ruta, tr }) {
 
 /** Cos viu de TextSection a /page/rutes-de-poble. */
 export default function RutesDePobleSection({ conjunt = RUTES_LA_TORRE }) {
-  const { t } = useUIActions();
+  const { t, language = 'ca' } = useUIActions();
+  const navega = useNavigateRutesSegur();
+  const esSuperadmin = useSessioOpcional()?.esSuperadmin === true;
+  const txAfig = textosCatalegAfigV26(language);
+  const [modalAfigObert, setModalAfigObert] = useState(false);
+  const [modalAfigMuntat, setModalAfigMuntat] = useState(false);
   const tr = useMemo(() => traductorPatrimoni(t), [t]);
   const font = conjunt.font ?? {};
   const rutes = conjunt.rutes ?? [];
@@ -137,6 +156,28 @@ export default function RutesDePobleSection({ conjunt = RUTES_LA_TORRE }) {
       {recursos.some((recurs) => recurs.establiments) && <p>{tr('patrimoni.rutes.establiments', 'La font de 2021 hi dona els establiments amb el seu telèfon: no es copien, perquè poden haver canviat.')}</p>}
       <h4>{tr('patrimoni.rutes.plantilla', 'Plantilla per a altres pobles')}</h4>
       <p>{tr('patrimoni.rutes.plantillaText', 'Cada poble pot omplir la mateixa forma de dades (eix, durada, distància, parades i fitxes de recurs) amb la seua font i la seua empremta. Ací només hi ha les dades d’este poble.')}</p>
+      <div className="sdp-alerta__accions sdp-alerta__accions--centrades">
+        <Boto
+          varietat="primari"
+          onClick={() => { setModalAfigMuntat(true); setModalAfigObert(true); }}
+        >
+          {txAfig.catalegAfigV26Boto}
+        </Boto>
+      </div>
+      {modalAfigMuntat ? (
+        <BarreraDelTrosAccessori>
+          <Suspense fallback={null}>
+            <ModalAfigCataleg
+              obert={modalAfigObert}
+              onTanca={() => setModalAfigObert(false)}
+              font="rutes-de-poble"
+              idioma={language}
+              onNavega={navega}
+              esSuperadmin={esSuperadmin}
+            />
+          </Suspense>
+        </BarreraDelTrosAccessori>
+      ) : null}
       <EmpremtaFont font={font} tr={tr} />
     </section>
   );

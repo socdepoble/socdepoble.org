@@ -2,7 +2,8 @@
  * Mai rep OAuth: l'eixida es delega a un transport autoritzat del servidor. */
 import { urlRemota } from './urlRemota.js';
 import { CONTEXT_AS, PUBLIC, htmlDeText, textPla } from '../activitypub.js';
-import { llevaEtiquetes, llevaScriptsIEstils } from '../../config/contentHelpers.js';
+import { llevaEtiquetes } from '../../config/contentHelpers.js';
+import { llevaScriptsIEstils } from '../../config/llevaScriptsIEstils.js';
 export const COMPTE_MASTODON = Object.freeze({ acct: 'depoble@mastodont.cat', origen: 'https://mastodont.cat', perfil: 'https://mastodont.cat/@depoble', actor: 'https://mastodont.cat/users/depoble', rss: 'https://mastodont.cat/@depoble.rss' });
 export const LIMITS_MASTODON = Object.freeze({ resposta: 1048576, html: 65536, text: 10000, elements: 40, terminiMs: 10000 });
 const segmentador=typeof Intl.Segmenter==='function'?new Intl.Segmenter('und',{granularity:'grapheme'}):null;

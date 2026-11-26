@@ -55,32 +55,38 @@ const controlsDeLaFila = (barra) => [
   ...publicacioDe(barra).querySelectorAll(':scope > button')
 ].map((boto) => boto.getAttribute('aria-label') || boto.textContent);
 const obriAa = (barra) => fireEvent.click(within(barra).getByRole('button', { name: 'Format del text' }));
+const obriMesEines = (barra) => fireEvent.click(within(barra).getByRole('button', { name: 'Més eines' }));
+const segonaDe = (barra) => barra.querySelector('.sdp-editor-tools__segona-fila');
 
-describe('R2 · UniversalToolbar amb Proposa Card als telèfons', () => {
+describe('R2 / IDEA-359 · UniversalToolbar amb «Maqueta la targeta» (sense 🎴) als telèfons i en ample', () => {
   for (const px of TELEFONS) {
-    test(`${px} px · compacta: la fila porta la tornada, «Aa», Borrar i Publicar; la cel·la de Proposa Card viu dins d’«Aa», l’última`, () => {
+    test(`${px} px · compacta: la fila porta la tornada, «⋯», Borrar i Publicar; «Maqueta la targeta» viu dins d’«⋯», l’última`, () => {
       expect(px).toBeLessThan(PUNTS_DE_TALL.eines);
       amplada(px);
       const proposa = vi.fn();
       const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={proposa} />);
       const barra = barraDe(container);
       expect(barra.dataset.compact).toBe('true');
+      expect(barra.textContent).not.toContain('🎴');
       expect(controlsDeLaFila(barra)).toEqual(['Tornar a la llista', 'Format del text', 'Borrar', 'Publicar']);
       const opcions = opcionsDe(barra);
       expect(opcions.hidden).toBe(true);
-      expect(within(barra).queryByRole('button', { name: 'Proposa Card' })).toBeNull();
-      expect(publicacioDe(barra).querySelector('[aria-label="Proposa Card"]')).toBeNull();
+      expect(within(barra).queryByRole('button', { name: 'Maqueta la targeta' })).toBeNull();
+      expect(publicacioDe(barra).querySelector('[aria-label="Maqueta la targeta"]')).toBeNull();
       obriAa(barra);
       expect(opcions.hidden).toBe(false);
       const aa = within(barra).getByRole('button', { name: 'Format del text' });
       expect(aa.getAttribute('aria-controls')).toBe(opcions.id);
-      const boto = within(barra).getByRole('button', { name: 'Proposa Card' });
+      const boto = within(barra).getByRole('button', { name: 'Maqueta la targeta' });
       expect(opcions.contains(boto)).toBe(true);
       expect(opcions.lastElementChild).toBe(boto);
       /* IDEA-59 / P1-72 (punt 4) · «⋯» ocupa el lloc i el nom de l'«Aa» («Format
          del text»), i les opcions porten també les eines secundàries: la cel·la
          continua sent l'última, ara darrere del divisor. */
       expect(boto.previousElementSibling.getAttribute('aria-label')).toBe('Divisor');
+      /* R2 · La cel·la de 48 px (.sdp-bloc-icon), no la pastilla amb el text,
+         que passava la barra a dues files (revisió adversarial 261028). D3 de
+         l'integrador (Llei del Píxel): IDEA-359.1 només retira 🎴. */
       expect(boto.className).toBe('sdp-bloc-icon');
       /* La fila no canvia en obrir el menú: el menú és absolut (CSS, baix). */
       expect(controlsDeLaFila(barra)).toEqual(['Tornar a la llista', 'Format del text', 'Borrar', 'Publicar']);
@@ -88,37 +94,40 @@ describe('R2 · UniversalToolbar amb Proposa Card als telèfons', () => {
       expect(proposa).toHaveBeenCalledTimes(1);
     });
 
-    test(`${px} px · «Desfés la proposta» (la mateixa cel·la) també viu dins d’«Aa»`, () => {
+    test(`${px} px · «Desfés la maquetació» també viu dins de «Format del text»`, () => {
       amplada(px);
       const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={() => {}} proposaCardDesfer />);
       const barra = barraDe(container);
       expect(controlsDeLaFila(barra)).toEqual(['Tornar a la llista', 'Format del text', 'Borrar', 'Publicar']);
       obriAa(barra);
-      const desfer = within(barra).getByRole('button', { name: 'Desfés la proposta' });
+      const desfer = within(barra).getByRole('button', { name: 'Desfés la maquetació' });
       expect(opcionsDe(barra).lastElementChild).toBe(desfer);
       expect(publicacioDe(barra).contains(desfer)).toBe(false);
     });
   }
 
-  test(`${AMPLE} px · ampla: la cel·la torna al grup de publicació, davant de Borrar i Publicar, i no és dins d’«Aa»`, () => {
+  test(`${AMPLE} px · ampla: el grup de publicació resta net (Borrar i Publicar) i «Maqueta la targeta» viu a «Més eines»`, () => {
     amplada(AMPLE);
     const { container } = render(<UniversalToolbar onPublish={() => {}} onDelete={() => {}} onProposaCard={() => {}} />);
     const barra = barraDe(container);
     expect(barra.dataset.compact).toBe('false');
+    expect(barra.textContent).not.toContain('🎴');
     expect(within(barra).queryByRole('button', { name: 'Format del text' })).toBeNull();
     expect(opcionsDe(barra).hidden).toBe(false);
-    const boto = within(barra).getByRole('button', { name: 'Proposa Card' });
-    expect(publicacioDe(barra).firstElementChild).toBe(boto);
-    expect(opcionsDe(barra).contains(boto)).toBe(false);
-    expect([...publicacioDe(barra).children].map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual(['Proposa Card', 'Borrar', 'Publicar']);
+    expect([...publicacioDe(barra).children].map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual(['Borrar', 'Publicar']);
+    obriMesEines(barra);
+    const boto = within(barra).getByRole('button', { name: 'Maqueta la targeta' });
+    expect(segonaDe(barra).lastElementChild).toBe(boto);
+    expect(publicacioDe(barra).contains(boto)).toBe(false);
+    expect(boto.className).toBe('sdp-bloc-icon');
   });
 });
 
 /* La barra del Bloc de Notes de veres: DocumentEditor amb el motor del Bloc
    (proposaCard), les eines davall de l'entradilla i el TipTap real, com la
    munta NotesEditor. A cada amplària de telèfon, la cel·la és dins d'«Aa»; en
-   ample, al grup de publicació. */
-describe('R2 · la barra de Notes (DocumentEditor + proposaCard) als telèfons', () => {
+   ample, a l'última posició de «Més eines» (IDEA-359.1). */
+describe('R2 / IDEA-359 · la barra de Notes (DocumentEditor + proposaCard) als telèfons i en ample', () => {
   const DOC = Object.freeze({ id: 'n1', title: '', subtitle: '', lead: '', content: '<p>La festa del poble</p><p>Tres dies de música.</p>', formattedDate: '01/01/26', formattedTime: '10:00' });
   const muntaNotes = () => render(<DocumentEditor adapter={{
     document: DOC, labels: [], seedContent: null, updateLocal: vi.fn(), saveRemote: vi.fn(), deleteDocument: vi.fn(),
@@ -126,27 +135,31 @@ describe('R2 · la barra de Notes (DocumentEditor + proposaCard) als telèfons',
   }} />);
 
   for (const px of TELEFONS) {
-    test(`${px} px · les eines ancorades de la nota porten Proposa Card dins d’«Aa», encés, i la fila sense ell`, () => {
+    test(`${px} px · les eines ancorades de la nota porten «Maqueta la targeta» dins de «Format del text», encés, i la fila neta`, () => {
       amplada(px);
       const { container } = muntaNotes();
       const barra = container.querySelector('.sdp-editor-eines > .sdp-editor-tools');
       expect(barra).not.toBeNull();
       expect(barra.dataset.compact).toBe('true');
       expect(controlsDeLaFila(barra)).toEqual(['Tornar a la llista', 'Format del text', 'Borrar', 'Publicar']);
-      expect(within(barra).queryByRole('button', { name: 'Proposa Card' })).toBeNull();
+      expect(within(barra).queryByRole('button', { name: 'Maqueta la targeta' })).toBeNull();
       obriAa(barra);
-      const boto = within(barra).getByRole('button', { name: 'Proposa Card' });
+      const boto = within(barra).getByRole('button', { name: 'Maqueta la targeta' });
       expect(opcionsDe(barra).lastElementChild).toBe(boto);
       expect(boto.disabled).toBe(false);
     });
   }
 
-  test(`${AMPLE} px · en ample, Proposa Card obri el grup de publicació de la nota`, () => {
+  test(`${AMPLE} px · en ample, el grup de publicació de la nota porta només Borrar i Publicar i la maquetadora viu a «Més eines»`, () => {
     amplada(AMPLE);
     const { container } = muntaNotes();
     const barra = container.querySelector('.sdp-editor-eines > .sdp-editor-tools');
     expect(barra.dataset.compact).toBe('false');
-    expect([...publicacioDe(barra).children].map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual(['Proposa Card', 'Borrar', 'Publicar']);
+    expect([...publicacioDe(barra).children].map((b) => b.getAttribute('aria-label') || b.textContent)).toEqual(['Borrar', 'Publicar']);
+    obriMesEines(barra);
+    const boto = within(barra).getByRole('button', { name: 'Maqueta la targeta' });
+    expect(segonaDe(barra).contains(boto)).toBe(true);
+    expect(boto.disabled).toBe(false);
   });
 });
 

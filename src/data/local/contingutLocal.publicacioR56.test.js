@@ -16,6 +16,8 @@ beforeEach(() => {
   api = creaContingutLocal({
     copia: structuredClone, coleccio: () => [], alTancar: () => {}, opcions: {},
     usuari: () => ({ id: actor }), nouId: () => ID, ara: () => new Date(now),
+    // Mateix contracte d'abast que l'adaptador: captura abans d'esperar.
+    abast: () => { const capturat=actor; return () => { if (actor!==capturat) throw new DOMException('La sessió ha canviat.','AbortError'); }; },
     configuracio: { tenantId: '33333333-3333-4333-8333-333333333333' },
     dadesObertes: { estat: { noticies: new Map(), agenda: new Map(), pobles: new Map() } },
     perfils: { listMyOrganizations: () => [] },
@@ -97,4 +99,11 @@ test.each(['vehicle', 'treball', 'habitatge', 'mercat'])('R56 · %s: una fila re
   expect(entrada.data).toBe(publicationSortKey(row));
   expect(facetesDeLEntrada(entrada, { ara: Date.parse(SEGON), desfasMinuts: 60 }))
     .toEqual(expect.arrayContaining([`tipus:${ambit}`, 'estat:complet', 'data:hui']));
+});
+
+test('C26-1 · canviar d’actor durant la càrrega diferida no publica amb l’actor anterior', async () => {
+  const pendent=publica();
+  actor='44444444-4444-4444-8444-444444444444';
+  await expect(pendent).rejects.toMatchObject({name:'AbortError'});
+  expect((await api.loadMur()).feedPosts).toEqual([]);
 });

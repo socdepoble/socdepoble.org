@@ -133,8 +133,8 @@ test('Onada 6 · la pestanya munta el calendari de /calendari: «Hui ‹ ›» i
   expect(peces()).toEqual(['Fira de tardor']);
   expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
   expect(document.querySelector('h4[role="status"]').textContent).toBe('1 publicació');
-  // Obrir la pestanya no escriu res a la URL.
-  expect(mocks.setSearchParams).not.toHaveBeenCalled();
+  // IDEA-365 (v1.2.26) · Obrir la pestanya sincronitza l'URL compartible (?filtre=esdeveniments).
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith({ filtre: 'esdeveniments' });
 });
 
 test('Onada 6 · clicar l’esdeveniment porta a la seua pàgina: un enllaç del router a /events/fira, fora del botó del dia', () => {
@@ -249,14 +249,18 @@ test('Onada 6 · en eixir de la pestanya es lleven la vista i el període; el ?d
   expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
   cleanup();
 
-  // Sense cap paràmetre del calendari, eixir no escriu res.
+  // IDEA-365 (v1.2.26) · Sense paràmetres del calendari, canviar de pestanya només sincronitza ?filtre= i no escriu vista/setmana/mes/any.
   mocks.setSearchParams.mockClear();
   mocks.params = new URLSearchParams('date=2026-11-14');
   render(<MurSection />);
   agenda();
   filtre('Mercat');
   filtre('Mapa');
-  expect(mocks.setSearchParams).not.toHaveBeenCalled();
+  expect(mocks.setSearchParams.mock.calls).toEqual([
+    [{ filtre: 'esdeveniments' }],
+    [{ filtre: 'mercat' }],
+    [{ filtre: 'mapa' }]
+  ]);
 });
 
 /* ── T5 (ordre del Mestre, 260930) · Les dades del Mur ───────────────────── */

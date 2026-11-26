@@ -59,7 +59,12 @@ describe('R54 proposed policy2.6 (0440 NOT applied), append-only; /legal keeps s
     // Expectativa actualitzada a propòsit: Llibre Mestre, Onada R23 (14-11-2026 01:18), «Canvi Global de Categoria a
     // 💻 Tecnologia i Disseny». És l'única diferència de la clau legal amb el registre: desfet eixe nom curt, l'empremta
     // torna a ser la registrada. La nova empremta l'aprova el Mestre a la Frontissa (frontissa-contingut.mjs --aprova).
-    const legalAmbElNomDeHEAD = JSON.stringify(PAGE_COPY.legal).replaceAll('💻 Tecnologia i Disseny', '💻 Tecnologia Lliure, Dades Obertes i Disseny');
+    // v1.2.26 · D4 (IDEA-365, línia 3804): /legal es mostra al /mur i porta la píndola de sistema «Mur»
+    // (SISTEMES_DE_PAGINA.legal = SISTEMA_I_MUR). No és text legal: desfeta també eixa píndola, l'empremta
+    // torna a ser la registrada. La nova l'aprova el Mestre a la Frontissa.
+    const legalSenseMur = { ...PAGE_COPY.legal, labels: PAGE_COPY.legal.labels.filter((l) => !(l.text === 'Mur' && l.className === 'sdp-badge-system')) };
+    expect(PAGE_COPY.legal.labels.length - legalSenseMur.labels.length).toBe(1);
+    const legalAmbElNomDeHEAD = JSON.stringify(legalSenseMur).replaceAll('💻 Tecnologia i Disseny', '💻 Tecnologia Lliure, Dades Obertes i Disseny');
     expect(sha(legalAmbElNomDeHEAD)).toBe('0a08fd743c2b4139e322cdd457e489f5dab6003bfe53d93a5d424cb457495b94');
     expect(SERVIT).not.toMatch(/Versió 2\.6/);
     expect(SERVIT.replace(/<\/?strong>/g, '')).toContain('Versió 2.5 · En vigor des del 6 de novembre de 2026.');

@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "legal",
+  "actor": "Mestre Javi",
+  "reason": "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "legal",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "v1.2.26 Lot C1-3: Mur i Catàlegs (D4), píndoles de ruta, xifres del contracte i IDEA-374 dels kits G26"
+  ],
+  "id": "11cdd3fd-a1fe-4f1a-a9e2-447645689803",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "022705a4968da3cfa62881a971eb11d15b5e9c6358093bc19ea8d307b09878f6",
+      "after": "727a8c1764e5af763fb6e359b1f45051d4fc911082bb1b777e81e8f39e4a560f"
+    }
+  ],
+  "state": "accepted"
+}

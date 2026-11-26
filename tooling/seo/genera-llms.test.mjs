@@ -70,7 +70,7 @@ test('(d) --escriu i --comprova: 0 amb la projecció; 1 si llms.txt s’edita a 
   const root = creaArrel(t);
   assert.equal(cli(root, '--comprova').status, 1, 'sense escriure encara, el disc no és la projecció');
   assert.equal(cli(root, '--escriu').status, 0);
-  assert.deepEqual(fs.readdirSync(path.join(root, 'public/md')), ['document-obert.md']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'public/md')), ['document-obert.md', 'skills']);
   assert.equal(cli(root, '--comprova').status, 0);
   assert.deepEqual(diferenciesLlms(root), []);
 
@@ -83,7 +83,7 @@ test('(d) --escriu i --comprova: 0 amb la projecció; 1 si llms.txt s’edita a 
   fs.writeFileSync(path.join(root, 'public/md/document-privat-amagat.md'), 'Cos privat.\n');
   assert.equal(cli(root, '--comprova').status, 1);
   assert.equal(cli(root, '--escriu').status, 0);
-  assert.deepEqual(fs.readdirSync(path.join(root, 'public/md')), ['document-obert.md']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'public/md')), ['document-obert.md', 'skills']);
   assert.equal(cli(root, '--comprova').status, 0);
 });
 

@@ -118,7 +118,13 @@ const NOVES_V1225 = new Set([
   '20261125013000_v1225_calendari_agricola_subscripcions.sql',
   '20261125020000_v1225_purga_lssi_abans_claim.sql'
 ]);
-const posteriorsALaV1224 = (nom) => NOVES_V1224.has(nom) || NOVES_V1225.has(nom);
+/* v1.2.26 · Lot C1-3 · La 140 de Codex (C26-3, IDEA-375: taxonomia editable), NO aplicada, també és posterior a totes les
+   cròniques d'abans. Té la seua pròpia llista perquè la de la v1.2.25 continue nomenant exactament les tres d'aquella
+   versió; posteriorsALaV1224 les inclou totes, i els recomptes 126 i 131 conserven el seu sentit. */
+const NOVES_V1226 = new Set([
+  '20261126030500_v1226_taxonomia_pagines.sql'
+]);
+const posteriorsALaV1224 = (nom) => NOVES_V1224.has(nom) || NOVES_V1225.has(nom) || NOVES_V1226.has(nom);
 
 const html = String(localitzaVersions('ca')?.html ?? '');
 const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
@@ -1200,8 +1206,10 @@ describe('T8 · D-12 · capçalera estàtica i entrada de les Rondes 1, 2 i 3', 
     const publicada = capcalera[2];
     /* P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · La insígnia de versió es conserva i va primer, com
        abans (INSIGNIES_SISTEMA_RETIRADES no la nomena; cadena R11, Loop 3, L2-03), després Sistema, i fora
-       «Registre de canvis»: la mare i l'etiqueta canònica. */
-    expect(labels.map((l) => l.text)).toEqual([`v${versioCapcaleraEsperada} · WP v${publicada}`, 'Sistema', '💻 Tecnologia i Disseny', 'Documentació']);
+       «Registre de canvis»: la mare i l'etiqueta canònica.
+       v1.2.26 · IDEA-365 (Llibre Mestre, l. 3804; decisió D4 de l'integrador) · /versions es mostra al /mur: porta Mur
+       darrere de Sistema. */
+    expect(labels.map((l) => l.text)).toEqual([`v${versioCapcaleraEsperada} · WP v${publicada}`, 'Sistema', 'Mur', '💻 Tecnologia i Disseny', 'Documentació']);
     for (const t of [subtitle, ...labels.map((l) => l.text)]) expect(t).not.toMatch(/build|\b\d{6}\b/i);
     /* v1.2.24 · R32.85 · Es llig del cos de la crònica de la v1.2.24 (FITA_V1224). */
     const darreraPublicada = text(fitaV1224Bloc).match(/publicat actualment a WordPress\.org és la (\d+\.\d+\.\d+)/)?.[1];
@@ -7791,14 +7799,31 @@ describe('Onada v1.2.24 · Crònica d’obertura en les cinc llengües: reconeix
 /* v1.2.25 · Costura 2 (Claude, rebasada sobre C1→C16) · Les migracions posteriors a la 136 (la darrera de la v1.2.24)
    han d'estar nomenades a NOVES_V1225, una a una: una migració nova que no hi és mouria en silenci els recomptes 126 i
    131 de les cròniques d'abans. I cap de les de la v1.2.25 no és de les de la v1.2.24. */
+/* v1.2.26 · Lot C1-3 · El tall de la v1.2.25 és la 139 (20261125020000): les de després són d'una altra versió i les
+   nomena NOVES_V1226, de manera que esta prova continua fixant exactament les tres de la v1.2.25. */
+const versioDeMigracio = (nom) => { const v = /^(\d{14}|\d{10})_/.exec(nom)?.[1] ?? ''; return v.length === 10 ? `20${v}00` : v; };
+const migracionsSql = () => readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
 describe('v1.2.25 · Costura 2 · NOVES_V1225 nomena exactament les migracions posteriors a la 136', () => {
-  test('les posteriors a 20261124174000 són les de NOVES_V1225, i les de la v1.2.24 són de NOVES_V1224', () => {
-    const migracions = readdirSync(resolve(process.cwd(), 'supabase/migrations')).filter((nom) => nom.endsWith('.sql'));
-    const versio = (nom) => { const v = /^(\d{14}|\d{10})_/.exec(nom)?.[1] ?? ''; return v.length === 10 ? `20${v}00` : v; };
-    const posteriors = migracions.filter((nom) => versio(nom) > '20261124174000').sort();
+  test('les posteriors a 20261124174000, fins a la 139, són les de NOVES_V1225, i les de la v1.2.24 són de NOVES_V1224', () => {
+    const migracions = migracionsSql();
+    const posteriors = migracions.filter((nom) => versioDeMigracio(nom) > '20261124174000' && versioDeMigracio(nom) <= '20261125020000').sort();
     expect(posteriors).toEqual([...NOVES_V1225].sort());
     expect([...NOVES_V1225].filter((nom) => NOVES_V1224.has(nom))).toEqual([]);
     expect([...NOVES_V1224].every((nom) => migracions.includes(nom))).toBe(true);
     expect(migracions.filter((nom) => !posteriorsALaV1224(nom))).toHaveLength(131);
+  });
+});
+
+/* v1.2.26 · Lot C1-3 · Les migracions posteriors a la 139 (la darrera de la v1.2.25) han d'estar nomenades a NOVES_V1226,
+   una a una: una migració nova que no hi és mouria en silenci els recomptes 126 i 131 de les cròniques d'abans. */
+describe('v1.2.26 · Lot C1-3 · NOVES_V1226 nomena exactament les migracions posteriors a la 139', () => {
+  test('les posteriors a 20261125020000 són les de NOVES_V1226, sense cap de les llistes d’abans, i el catàleg en suma 140', () => {
+    const migracions = migracionsSql();
+    const posteriors = migracions.filter((nom) => versioDeMigracio(nom) > '20261125020000').sort();
+    expect(posteriors).toEqual([...NOVES_V1226].sort());
+    expect([...NOVES_V1226].filter((nom) => NOVES_V1224.has(nom) || NOVES_V1225.has(nom))).toEqual([]);
+    expect(migracions.filter((nom) => !posteriorsALaV1224(nom))).toHaveLength(131);
+    expect(migracions).toHaveLength(131 + NOVES_V1224.size + NOVES_V1225.size + NOVES_V1226.size);
+    expect(migracions).toHaveLength(140);
   });
 });

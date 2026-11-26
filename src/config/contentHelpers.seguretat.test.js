@@ -1,12 +1,13 @@
 /**
  * Auditoria de seguretat 261019 (R1, R2 i R4) · stripMarkdownImages,
- * llevaScriptsIEstils i llevaEtiquetes (contentHelpers.js) tornen exactament
+ * llevaScriptsIEstils (llevaScriptsIEstils.js) i llevaEtiquetes (contentHelpers.js) tornen exactament
  * el mateix que les expressions d'abans, i en temps lineal: un cos amb molts
  * '![', '<script' o '<' i cap tancament ja no congela /cerca, el Mur ni
  * Multimèdia.
  */
 import { describe, expect, test } from 'vitest';
-import { llevaEtiquetes, llevaScriptsIEstils, stripMarkdownImages, toFeedSummary, toMediaDescription } from './contentHelpers.js';
+import { llevaEtiquetes, stripMarkdownImages, toFeedSummary, toMediaDescription } from './contentHelpers.js';
+import { llevaScriptsIEstils } from './llevaScriptsIEstils.js';
 
 /* Les expressions d'abans, només com a oracle de la prova. */
 const imatgesDAbans = (value) => String(value || '').replace(/!\[[^\]]*\]\([^)]+\)/g, '');

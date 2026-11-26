@@ -15,7 +15,9 @@ tags:
 ---
 # El sistema nerviós: skills, tractors i repositoris oberts
 
-Este document explica, sense tecnicismes innecessaris, com s'organitza la **maquinària interna** que ajuda a construir i vigilar **Sóc de Poble**. Distinguix les **instruccions escrites** (`skills`), els **comprovadors automàtics** (`tractors`) i l'estat real de cada **repositori extern** estudiat o guardat al **Node 0**, amb maquetació fluida sense taules rígides perquè es puga llegir amb comoditat tant al mòbil com amb les columnes laterals obertes.
+Este document explica, sense tecnicismes innecessaris, com s'organitza la maquinària interna que ajuda a construir i vigilar Sóc de Poble.
+
+Distinguix les instruccions escrites (skills), els comprovadors automàtics (Tractors) i l'estat real de cada repositori extern estudiat o guardat al Node 0, amb maquetació fluida sense taules rígides perquè es puga llegir amb comoditat tant al mòbil com amb les columnes laterals obertes.
 
 ## 1. Què és una skill i què és un tractor
 
@@ -42,7 +44,7 @@ Per mantindre una **transparència verificable**, classifiquem **tota la maquin�
 El repositori manté **46 skills actives** dins de `.agents/skills/` (`24` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.
 
 #### Identitat, Consell i govern humà
-Fixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la revisió humana. Agrupen `iaia-maria-core` (el paper d'actriu de la IAIA, D8), `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.
+Fixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la **revisió humana**. Agrupen `iaia-maria-core` (el **paper d'actriu de la IAIA**, D8), `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.
 - **Incorporació real:** **100 % propi** · Actiu amb `incubadora.mjs` i `sincronitza-iaia-core.mjs` (iaia-maria-core), `porta-olivera.mjs` (core-identitat), `guarda-nocturna.mjs` (core-direccio-autonoma) i `tracker_consum.mjs` (core-estrategia-ia); la resta, procedimentals.
 
 #### Prudència, context i memòria

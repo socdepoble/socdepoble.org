@@ -19,14 +19,16 @@
  * W4-08 (261004) · El cens actual: les sis de 2245 i Treball i Habitatge, que
  * MarIA hi ha afegit a les posicions 7 i 8 (els seus textos i la seua data
  * són els de pageContent.js, 261004 01:10). Mapa, Vehicle Compartit i
- * Animalets porten ara la vinyeta del seu plugin; cap targeta usa la icona.
+ * Animalets porten ara la vinyeta del seu plugin; cap targeta fa servir la icona.
  * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T8): cada
  * targeta porta la capçalera de la seua pàgina; Vehicle Compartit i
  * Animalets, la Nano de la pàgina, no la vinyeta.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { SISTEMA_CATEGORIES_12, labelsSistema } from '../../data/taxonomia/taxonomiaPublicacio.js';
+import { rutaDePindola } from '../../components/PedraSeca/organismes/rutaDePindola.js';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
 import { RUTA_PERFIL_PROJECTE, resolvePageSlugPath } from '../../config/navigation.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
@@ -434,7 +436,7 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     expect(contingutDe({ pagina: 'constructor' })).toBeNull();
   });
 
-  /* W4-08 · Totes les targetes porten il·lustració. Cap targeta usa la icona
+  /* W4-08 · Totes les targetes porten il·lustració. Cap targeta fa servir la icona
      de la insígnia lateral.
      Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T8,
      «imatges fantasma»): DIVERGENCIES_DE_PORTADA (['vehicle', 'animalets'])
@@ -527,7 +529,7 @@ describe('destinsControl · les pàgines de les targetes (PAGE_COPY)', () => {
       expect([desti.id, [...sanejat.querySelectorAll('h5')].map((h) => h.textContent)]).toEqual([desti.id, titols]);
       expect([desti.id, [...sanejat.querySelectorAll('strong')].map((s) => s.textContent)]).toEqual([desti.id, negretes]);
       expect([desti.id, sanejat.querySelectorAll('p').length]).toEqual([desti.id, PARAGRAFS(desti.id)]);
-      /* Cap altre nivell de títol: la pàgina usa H5, com el document. */
+      /* Cap altre nivell de títol: la pàgina fa servir H5, com el document. */
       expect([desti.id, sanejat.querySelectorAll('h1, h2, h3, h4, h6').length]).toEqual([desti.id, desti.id === 'mapa' ? 1 : 0]);
     }
   });
@@ -535,12 +537,13 @@ describe('destinsControl · les pàgines de les targetes (PAGE_COPY)', () => {
   /* P6 (directriu 2325, confirmació 4) · Pàgines d'acció: cap etiqueta. Un
      `labels: []` explícit, perquè propsDePaginaDeText no hi pose les de sèrie
      (la clau en majúscules i «Pàgina»). */
-  test('cap clau té ruta canònica (PageDetailSection les pinta); totes porten data i cap etiqueta', () => {
+  test('cap clau té ruta canònica (PageDetailSection les pinta); totes conserven data i Sistema + destí (P6 derogada)', () => {
     for (const desti of DESTINS_CONTROL) {
       const pagina = PAGE_COPY[desti.pagina];
       expect(resolvePageSlugPath(desti.pagina), desti.pagina).toBeNull();
       expect(pagina.date, desti.pagina).toBe(dataDe(desti.id)[2]);
-      expect([desti.pagina, pagina.labels]).toEqual([desti.pagina, []]);
+      const noms={mur:'Mur',mercat:'Mercat',calendari:'Calendari',mapa:'Mapa',vehicle:'Transport',animalets:'Animalets',treball:'Treball',habitatge:'Habitatge'};
+      expect(pagina.labels.filter(l=>l.className==='sdp-badge-system').map(l=>l.text)).toEqual(['Sistema',noms[desti.id]]);
     }
   });
 
@@ -656,5 +659,65 @@ describe('destinsControl · claus i18n', () => {
         expect([clau, fontI18n.includes(`'${clau}':`)]).toEqual([clau, false]);
       }
     }
+  });
+});
+
+/* C26-1 #8 (Gauntlet c13, lent c26-1) · IDEA-365 (21:58, punt 1): paritat absoluta Card ↔ UniversalPage. Les
+   píndoles de cada porta són les del motor (labelsSistema: text, classe i ruta), i la categoria de cada porta és
+   la mateixa que posa publicacioSistema.js · DESTINS en publicar des d'eixa porta. Només es llig publicacioSistema.js.
+   v1.2.26 · R2-2 (D1) · Llibre Mestre, IDEA-365 (21:37, punts 6 i 7; línies 3816-3817 i 3820): Transport i
+   Animalets porten a /categoria/<slug>, no a la seua secció. Deroga l'expectativa «href === seccio» de C26-1 #8. */
+describe('destinsControl · C26-1 #8 · paritat de les portes amb el motor de taxonomia', () => {
+  test('les píndoles de cada porta són les de labelsSistema i porten a la mateixa ruta', () => {
+    for (const desti of DESTINS_CONTROL) {
+      expect(desti.categoriesSistema[0], desti.id).toBe('Sistema');
+      expect(desti.labels.map(l => ({ ...l })), desti.id).toEqual(labelsSistema(desti.categoriesSistema));
+      expect(desti.categoriesSistema.every(nom => SISTEMA_CATEGORIES_12.some(c => c.nom === nom)), desti.id).toBe(true);
+    }
+  });
+
+  /* v1.2.26 · R2-2 (D1) · La targeta i la UniversalPage pinten les mateixes píndoles amb la mateixa funció
+     (rutaDePindola: UniversalCard.jsx · Etiqueta i PageFrame.jsx). Si una pàgina no té una píndola de la card, o
+     al revés, la prova ho diu amb el nom de la porta i de la píndola. */
+  test('D1 · cada píndola de la card porta on porta la mateixa píndola de PAGE_COPY[desti.pagina] (rutaDePindola)', () => {
+    for (const desti of DESTINS_CONTROL) {
+      const deLaPagina = PAGE_COPY[desti.pagina]?.labels ?? [];
+      const deLaCard = contingutDe(desti)?.labels ?? [];
+      expect(deLaCard.length, `${desti.id}: la card no porta cap píndola`).toBeGreaterThan(0);
+      for (const label of deLaCard) {
+        const igual = deLaPagina.find(l => l?.text === label.text && l?.className === label.className);
+        expect(igual, `${desti.id}: /page/${desti.pagina} no té la píndola «${label.text}» (${label.className}) de la card`).toBeDefined();
+        expect(rutaDePindola(label), `${desti.id} · «${label.text}»: la card i la pàgina porten a llocs diferents`).toBe(rutaDePindola(igual));
+      }
+      for (const label of deLaPagina) {
+        expect(deLaCard.some(l => l.text === label?.text && l.className === label?.className),
+          `${desti.id}: la card no té la píndola «${label?.text}» de /page/${desti.pagina}`).toBe(true);
+      }
+    }
+  });
+
+  test('D1 · Transport i Animalets porten a la pàgina automàtica de categoria; la secció queda per a Publicar i Saber-ne més', () => {
+    const pindola = (id, text) => perId[id].labels.find(l => l.text === text)?.href;
+    expect(pindola('vehicle', 'Transport')).toBe('/categoria/transport');
+    expect(pindola('animalets', 'Animalets')).toBe('/categoria/animalets');
+    expect(Object.fromEntries(DESTINS_CONTROL.map(d => [d.id, d.labels.map(l => l.href)]))).toEqual({
+      mur: ['/categoria/sistema', '/mur'], mercat: ['/categoria/sistema', '/mercat'], calendari: ['/categoria/sistema', '/calendari'],
+      mapa: ['/categoria/sistema', '/mapa'], vehicle: ['/categoria/sistema', '/categoria/transport'],
+      animalets: ['/categoria/sistema', '/categoria/animalets'], treball: ['/categoria/sistema', '/treball'],
+      habitatge: ['/categoria/sistema', '/habitatge']
+    });
+    for (const [id, seccio, pagina] of [['vehicle', '/vehicle', 'vehicle_compartit'], ['animalets', '/animalets', 'animalets']]) {
+      expect(perId[id].seccio, id).toBe(seccio);
+      expect(perId[id].labels.some(l => l.href === seccio), id).toBe(false);
+      expect(portesDe(perId[id], (_clau, reserva) => reserva).map(p => p.desti), id).toEqual([`/notes?ambit=${id}`, `/page/${pagina}`]);
+    }
+  });
+
+  test('la categoria de cada porta és la de publicacioSistema.js · DESTINS per al mateix àmbit', () => {
+    const font = readFileSync(resolve(process.cwd(), 'src/utils/publicacioSistema.js'), 'utf8');
+    const taula = font.match(/const DESTINS = \{([^}]+)\}/);
+    expect(taula).not.toBeNull();
+    const destins = Object.fromEntries([...taula[1].matchAll(/(\w+):\s*'([^']+)'/g)].map(m => [m[1], m[2]]));
+    expect(Object.fromEntries(DESTINS_CONTROL.map(d => [d.id, d.categoriesSistema[1]]))).toEqual(destins);
   });
 });

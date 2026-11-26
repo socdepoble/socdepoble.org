@@ -168,13 +168,20 @@ export function FitxaDeLaFont({ font, tr, llengua = 'ca' }) {
           <th scope="row">{tr('patrimoni.llavors.ambit', 'Àmbit')}</th>
           <td lang="ca">{font.ambit}</td>
         </tr>
+        {/* C26-2 #13 (Gauntlet c13) · Una web que encara no ha comprovat cap persona (webVerificada: false,
+            la mateixa regla que catalegsMultipoble.js) no es pinta com a enllaç: l'adreça, com a text, sense
+            «s’obri en una finestra nova». Les verificades, com sempre (Llei del Píxel). */}
         {font.web ? (
           <tr>
             <th scope="row">{etiquetaWeb}</th>
-            <td>
-              <a href={font.web} target="_blank" rel="noopener noreferrer">{font.web.replace(/^https:\/\//, '')}</a>{' '}
-              {tr('patrimoni.font.finestraNova', '(s’obri en una finestra nova)')}
-            </td>
+            {font.webVerificada === false ? (
+              <td>{font.web.replace(/^https:\/\//, '')}</td>
+            ) : (
+              <td>
+                <a href={font.web} target="_blank" rel="noopener noreferrer">{font.web.replace(/^https:\/\//, '')}</a>{' '}
+                {tr('patrimoni.font.finestraNova', '(s’obri en una finestra nova)')}
+              </td>
+            )}
           </tr>
         ) : null}
       </TaulaDadesPedraSeca>

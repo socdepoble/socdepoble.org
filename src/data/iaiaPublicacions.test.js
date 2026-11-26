@@ -58,7 +58,8 @@ describe('guia i esborranys locals de la IAIA', () => {
   it('redacta una plantilla amb buits explícits, sense inventar preus, dates o dades del poble', () => {
     const text = ajudaDePublicacioIAIA('Redacta un anunci per a vendre al mercat');
     expect(text).toContain('Completa els camps entre claudàtors');
-    expect(text).toContain('[Producte]'); expect(text).toContain('Proposa Card');
+    /* IDEA-359.1 (Llibre Mestre, l. 3700) · El botó del Bloc ja no és «Proposa Card»: és «Maqueta la targeta». */
+    expect(text).toContain('[Producte]'); expect(text).toContain('Maqueta la targeta'); expect(text).not.toContain('Proposa Card');
   });
   it('incorpora les dades explícites de la persona sense inventar camps', () => {
     const text = ajudaDePublicacioIAIA("Ajuda'm a redactar un anunci: venc una bicicleta roja per 60 euros a la Torre.");

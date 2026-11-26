@@ -122,7 +122,9 @@ describe.each(PAGINES)('Onada 10 · /page/%s', (clau, verb, desti) => {
     visita(clau);
     const etiquetes = PAGE_COPY[clau].labels;
     // P0-40/IDEA-167 (ordre directa del Mestre, 261107 05:23) · Sistema + la categoria mare + les etiquetes canòniques.
-    expect(etiquetes.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
+    // v1.2.26 · IDEA-365 (Llibre Mestre, línia 3804) · La pàgina es mostra al /mur: Mur darrere de Sistema.
+    expect(etiquetes.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
+    expect(etiquetes.slice(0, 2).map((etiqueta) => etiqueta.text)).toEqual(['Sistema', 'Mur']);
     for (const etiqueta of etiquetes) {
       const pindola = [...capcalera().querySelectorAll(`.${etiqueta.className}`)].find((node) => node.textContent === etiqueta.text);
       expect([clau, etiqueta.text, Boolean(pindola)]).toEqual([clau, etiqueta.text, true]);

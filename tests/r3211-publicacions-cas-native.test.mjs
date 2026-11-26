@@ -88,11 +88,15 @@ test('R32.11 CAS general · native PostgreSQL independent sessions and transacti
     // propostes NO aplicades: esta prova del CAS R32.11 continua fixant el catàleg 136 aplicat (fins a 20261124174000)
     // i no les instal·la. El trinquet no s'afluixa: el catàleg real ha de ser exactament el 136 més eixes tres, i
     // qualsevol migració nova sense nomenar torna a fer caure la prova.
+    // v1.2.26 · C26-3 · 20261126030500 (taxonomia de pàgines, IDEA-375) tampoc no és aplicada: el catàleg real és el 136
+    // més eixes quatre, i el trinquet continua igual de tancat.
     const NOVES_V1225 = ['20261125010000', '20261125013000', '20261125020000'];
+    const NOVES_V1226 = ['20261126030500'];
+    const NOVES = [...NOVES_V1225, ...NOVES_V1226];
     const plaReal = creaPlaMigracions(), hydration = await preparaHidratacio();
-    assert.equal(plaReal.migrations.length, 136 + NOVES_V1225.length, 'cataleg139_incomplet');
-    for (const version of NOVES_V1225) assert.ok(plaReal.migrations.some(row => row.version === version), `cataleg_v1225_absent:${version}`);
-    const plan = { ...plaReal, migrations: plaReal.migrations.filter(row => !NOVES_V1225.includes(row.version)) };
+    assert.equal(plaReal.migrations.length, 136 + NOVES.length, 'cataleg140_incomplet');
+    for (const version of NOVES) assert.ok(plaReal.migrations.some(row => row.version === version), `cataleg_noves_absent:${version}`);
+    const plan = { ...plaReal, migrations: plaReal.migrations.filter(row => !NOVES.includes(row.version)) };
     // v1.2.22 · R32.42 afig tres fonts NO aplicades (20261122160000, 20261122160200 i 20261122160300): 129 en total.
     // v1.2.23 · L4-10 i M3-01 (ordre del Mestre 261123) · R32.44 (20261122230000) i R32.46 (20261123010000), també NO
     // aplicades, porten el catàleg a 131; es compten amb les tres R32.42 i les 126 d'abans no canvien.

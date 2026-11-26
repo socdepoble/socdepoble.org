@@ -298,3 +298,77 @@ test('CEV-4 · llms.txt editat a mà o un .md que no és cap document públic po
   assert.deepEqual(infraccionsLlms(resSobrer).map((row) => row.fitxer), ['public/md']);
   assert.match(infraccionsLlms(resSobrer)[0].detall, /sobren: document-privat\.md/);
 });
+
+/* v1.2.26 (IDEA-364, C26-4) · La subcarpeta public/md/skills és part de la projecció pública que escriu
+   genera-llms.mjs (public-skills.mjs): la porta la reconeix com a carpeta i el seu contingut el comprova
+   «genera-llms.mjs --comprova». Un fitxer que es diga «skills», o l'absència de la carpeta, la posen roja. */
+test('CEV-4 · public/md/skills és part de la projecció: carpeta reconeguda, fitxer «skills» o absència en roig', async (t) => {
+  const unMd = fs.readdirSync(path.join(ARREL, 'public/md')).find((nom) => nom.endsWith('.md'));
+  const arrel = () => ambWikiReal(creaArrelMutada(t, { [`public/md/${unMd}`]: fs.readFileSync(path.join(ARREL, 'public/md', unMd), 'utf8') }));
+  const control = arrel();
+  assert.equal(fs.statSync(path.join(control, 'public/md/skills')).isDirectory(), true);
+  assert.deepEqual(infraccionsLlms(await avaluaCoherenciaEditorial({ arrel: control })), []);
+
+  const fitxer = arrel();
+  fs.unlinkSync(path.join(fitxer, 'public/md/skills'));
+  fs.writeFileSync(path.join(fitxer, 'public/md/skills'), 'no és cap carpeta\n');
+  const resFitxer = infraccionsLlms(await avaluaCoherenciaEditorial({ arrel: fitxer }));
+  assert.deepEqual(resFitxer.map((row) => row.fitxer), ['public/md']);
+  assert.match(resFitxer[0].detall, /sobren: skills; falten: cap;/);
+
+  const absent = arrel();
+  fs.unlinkSync(path.join(absent, 'public/md/skills'));
+  const resAbsent = infraccionsLlms(await avaluaCoherenciaEditorial({ arrel: absent }));
+  assert.match(resAbsent[0]?.detall ?? '', /sobren: cap; falten: skills;/);
+});
+
+/* v1.2.26 (C26-4, Gauntlet #4) · La policia de vocabulari passa per la projecció pública en MODE AVÍS:
+   el que avisa ix a avisosVocabulari (fitxer de public/md, línia, codi i proposta) i mai a infraccions. */
+test('CEV-4 · la policia de vocabulari avisa sobre la projecció pública i no fa caure cap llei', async (t) => {
+  const arrel = ambWikiReal(creaArrelMutada(t, { 'public/llms.txt': fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8') }));
+  const control = await avaluaCoherenciaEditorial({ arrel });
+  assert.ok(Array.isArray(control.avisosVocabulari));
+  fs.writeFileSync(path.join(arrel, '_wiki_de_poble/02_saber/prova_vocabulari_v1226.md'),
+    '---\ntype: document\nstatus: canonic\ntitle: Prova de vocabulari\n---\n# Prova de vocabulari\n\nLa IA del poble usa models.\n');
+  const res = await avaluaCoherenciaEditorial({ arrel });
+  const nous = res.avisosVocabulari.filter((avis) => !control.avisosVocabulari.some((c) => c.fitxer === avis.fitxer && c.linia === avis.linia && c.codi === avis.codi));
+  assert.deepEqual(nous.map((avis) => avis.codi), ['VOC-DE-POBLE', 'VOC-UTILITZA']);
+  for (const avis of nous) {
+    assert.match(avis.fitxer, /^public\/md\/[^/]+\.md$/);
+    assert.equal(avis.severitat, 'avis');
+    assert.ok(avis.linia > 1 && avis.proposta);
+  }
+  // El document nou desquadra la projecció del disc (CEV-4), però cap infracció ve de la policia.
+  assert.equal(res.infraccions.some((row) => /\bVOC-(?:DE-POBLE|UTILITZA)\b/.test(`${row.llei} ${row.detall}`)), false);
+  assert.equal(res.infraccions.some((row) => /«(?:IA del poble|usa)»/.test(row.detall)), false);
+});
+
+/* v1.2.26 (D4 Opció B) · Un esborrany de la Wiki no té còpia a public/md (projectaLlms el descarta per noindex), però
+   /wikidepoble el continua publicant: la policia de vocabulari també el llig, en mode avís, i l'avís porta el camí i
+   la línia del fitxer de la Wiki, no cap camí de public/md. */
+test('CEV-4 · la policia de vocabulari també llig els esborranys de la Wiki, amb el camí i la línia de la Wiki', async (t) => {
+  const arrel = ambWikiReal(creaArrelMutada(t, { 'public/llms.txt': fs.readFileSync(path.join(ARREL, 'public/llms.txt'), 'utf8') }));
+  const control = await avaluaCoherenciaEditorial({ arrel });
+  // L'esborrany viu: «la filosofia del poble» a la línia 26 del fitxer (amb el frontmatter comptat).
+  const antigravity = control.avisosVocabulari.filter((avis) => avis.fitxer === '_wiki_de_poble/02_saber/antigravity.md');
+  assert.ok(antigravity.some((avis) => avis.linia === 26 && avis.codi === 'VOC-DE-POBLE' && /filosofia\s+del\s+poble/i.test(avis.original)),
+    JSON.stringify(antigravity));
+  assert.equal(fs.existsSync(path.join(arrel, 'public/md/antigravity.md')), false, 'l’esborrany no té còpia a public/md');
+
+  const rel = '_wiki_de_poble/02_saber/prova_esborrany_vocabulari_v1226.md';
+  fs.writeFileSync(path.join(arrel, rel),
+    '---\ntype: document\nstatus: esborrany\ntitle: Prova d’esborrany\n---\n# Prova d’esborrany\n\nSense la filosofia del poble, res no té sentit.\n');
+  const res = await avaluaCoherenciaEditorial({ arrel });
+  const nous = res.avisosVocabulari.filter((avis) => !control.avisosVocabulari.some((c) => c.fitxer === avis.fitxer && c.linia === avis.linia && c.codi === avis.codi));
+  assert.deepEqual(nous.map(({ fitxer, linia, codi, severitat }) => ({ fitxer, linia, codi, severitat })),
+    [{ fitxer: rel, linia: 8, codi: 'VOC-DE-POBLE', severitat: 'avis' }]);
+  assert.match(nous[0].original, /^filosofia del poble$/i);
+  // Un esborrany no desquadra la projecció (no té fitxer a public/md) i la policia no fa caure cap llei.
+  assert.deepEqual(infraccionsLlms(res), []);
+  assert.equal(res.infraccions.some((row) => row.fitxer === rel || /filosofia del poble/i.test(row.detall)), false);
+  // Un document indexable amb el mateix text avisa des de public/md, no des de la Wiki: cada document, un sol camí.
+  fs.writeFileSync(path.join(arrel, rel), fs.readFileSync(path.join(arrel, rel), 'utf8').replace('status: esborrany', 'status: canonic'));
+  const indexable = await avaluaCoherenciaEditorial({ arrel });
+  assert.equal(indexable.avisosVocabulari.some((avis) => avis.fitxer === rel), false);
+  assert.ok(indexable.avisosVocabulari.some((avis) => /^public\/md\/[^/]+\.md$/.test(avis.fitxer) && /filosofia del poble/i.test(avis.original)));
+});

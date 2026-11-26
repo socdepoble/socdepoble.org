@@ -192,7 +192,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|fonts/|ap/|opendata/|nodeinfo/|[.]well-known/|favicon[.]|manifest[.]webmanifest|apple-touch-icon[.]|icona-app-).*)",
+      "source": "/((?!assets/|fonts/|ap/|opendata/|nodeinfo/|[.]well-known/|md/|favicon[.]|manifest[.]webmanifest|apple-touch-icon[.]|icona-app-).*)",
       "destination": "/index.html"
     }
   ]

@@ -1,3 +1,4 @@
+import { classificaProducte } from '../../data/taxonomia/destinsDeProducte.js';
 import { buildSearchText, firstMediaSource } from '../../config/contentHelpers.js';
 import { MOCK_MARKET_ITEMS } from './marketSeed.js';
 import { autoriaSeed } from '../../data/identitatsSeed.js';
@@ -26,7 +27,7 @@ export const MARKET_ITEMS = MOCK_MARKET_ITEMS.map((item) => {
   const autoria = autoriaSeed(item);
 
   return {
-    ...item,
+    ...classificaProducte(item),
     ...(autoria ? { author_name: autoria.nom, author_avatar: autoria.avatar } : {}),
     sectionId: 'mercat',
     imageSrc,

@@ -298,10 +298,13 @@ export async function preparaClientPrivatNodeZero({publicAdapter,transport,habil
     if(own(input,'noteId')&&(!UUID.test(input.noteId??'')||!UUID.test(input.operationId??'')||!Number.isSafeInteger(input.expectedNoteRevision)||input.expectedNoteRevision<1))throw invalid();
     const id=input.id??globalThis.crypto.randomUUID();
     if(!plain(input.payload??{})||new TextEncoder().encode(JSON.stringify(input.payload??{})).byteLength>128*1024)throw fail('NODE0_PUBLICACIO_MASSA_GRAN');
-    const mapper=await mappers();current(captured.ticket);
+    // IDEA-365 (regla 1 de les 21:40) · C26-1 #12: la mateixa frontera que Supabase i el port local (content.js,
+    // contingutLocal.js), abans de la xarxa. Una consulta no publica i no porta destins que validar.
+    const [mapper,{categoriesSistemaPerPublicar}]=await Promise.all([mappers(),import('../../utils/publicacioSistema.js')]);current(captured.ticket);
+    const base=input.consulta===true?input.payload??{}:categoriesSistemaPerPublicar(input.payload??{},input.sectionId);
     // Existing neutral mapper + real DOMPurify. This is not an HTML escaper or
     // substitute sanitizer; server-authoritative fields are removed separately.
-    const normalized=mapper.mapSectionSubmissionToItem({...input,id,payload:input.payload??{}});
+    const normalized=mapper.mapSectionSubmissionToItem({...input,id,payload:base});
     const payload=Object.fromEntries(Object.entries(normalized).filter(([key])=>!authorityKeys.has(key)));
     const wire={id,sectionId:input.sectionId,payload};for(const field of ['title','description','actor','noteId','expectedNoteRevision','operationId','consulta'])if(own(input,field))wire[field]=input[field];
     let saved;try{saved=await rpc('appendSectionSubmissionNetworkOnly',{submission:wire},options,true);}catch(error){error.requestId=id;throw error;}

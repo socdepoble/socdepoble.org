@@ -259,8 +259,10 @@ async function publicaCasGeneral(input, config) {
   if (actor !== undefined && (!actor || !['persona', 'entitat'].includes(actor.tipus)
     || actor.tipus === 'entitat' && !UUID.test(actor.id ?? ''))) throw new TypeError('Autoria CAS invàlida.');
   const authorOrgId = actor?.tipus === 'entitat' ? actor.id : null;
+  const { categoriesSistemaPerPublicar } = await import('../../utils/publicacioSistema.js');
+  check();
   const payload = mapSectionSubmissionToItem({ ...sub, ownerUserId, createdAt: '',
-    payload: { ...sub.payload, id: sub.id, ownerUserId, sectionId: sub.sectionId } });
+    payload: { ...categoriesSistemaPerPublicar(sub.payload, sub.sectionId), id: sub.id, ownerUserId, sectionId: sub.sectionId } });
   // La data de creació la fixa el servidor: cap data generada en un reintent
   // pot canviar el hash d'una operació que ja s'ha confirmat.
   for (const key of ['created_at', 'updated_at', 'updatedAt', 'origen', 'copyright', 'seller', 'autor', 'source', 'srcDelPort']) delete payload[key];
@@ -319,7 +321,9 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
   const id = String(submission?.id || generateUUID()); const createdAt = submission?.createdAt || new Date().toISOString();
   if (submission.consulta !== true) await comprovaPublicacioNoRetirada(id, config);
   sessionGuard();
-  const basePayload = submission?.payload && typeof submission.payload === 'object' ? submission.payload : {};
+  const { categoriesSistemaPerPublicar } = await import('../../utils/publicacioSistema.js');
+  sessionGuard();
+  const basePayload = submission.consulta === true ? {} : categoriesSistemaPerPublicar(submission?.payload, sectionId);
   const payload = mapSectionSubmissionToItem({ ...submission, id, ownerUserId, sectionId, createdAt,
     payload: { ...basePayload, id, ownerUserId, sectionId, created_at: basePayload.created_at || createdAt } });
   /* I2 · Qui signa. Una entitat sense id no es degrada a persona: signar amb un

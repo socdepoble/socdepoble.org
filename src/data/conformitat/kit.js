@@ -112,6 +112,12 @@ const rebuigAmbCodi = (esperat) => (error) => [
   ...rebuigAmbCode(error),
   ...(error?.code === undefined || error.code === esperat ? [] : [`el code havia de ser ${esperat} i és ${JSON.stringify(error.code)}`])
 ];
+/* IDEA-365 (regla 1 de les 21:40) · C26-1 #12 · El rebuig de la frontera d'escriptura (utils/publicacioSistema.js)
+   porta `codi`; un adaptador remot el pot portar a `code`. Cap altre error val: un 404 o un error genèric no
+   demostren que la regla s'ha aplicat abans d'escriure. */
+const CODI_SENSE_DESTI = 'SDP-TAXONOMIA-DESTI';
+const rebuigSenseDesti = (error) => (error instanceof Error && (error.codi === CODI_SENSE_DESTI || error.code === CODI_SENSE_DESTI)
+  ? [] : [`havia de rebutjar amb ${CODI_SENSE_DESTI} abans de publicar: ${tipusDe(error)} ${JSON.stringify(error?.codi ?? error?.code ?? null)}`]);
 const CODIS_SENSE_SEGON_FACTOR = ['cal-segon-factor', 'sense-sessio'];
 const rebuigSenseSegonFactor = (error) => [
   ...rebuigAmbCode(error),
@@ -262,7 +268,11 @@ function casosFedi17() {
       arguments: ctx => [{ id: ctx.idPublicacio, sectionId: 'mur', title: 'Publicació de conformitat', description: 'Text del contracte', actor: { tipus: 'persona', id: ctx.ownerUserId } }, ctx.config],
       comprova: (v, ctx) => !esObjecte(v) ? ['la publicació no és un objecte'] : [
         ...(v.id === ctx.idPublicacio && v.ownerUserId === ctx.ownerUserId && v.sectionId === 'mur' && v.authorOrgId === null ? [] : ['identitat o autoria de la publicació alterada']),
-        ...(v.title === 'Publicació de conformitat' && v.description === 'Text del contracte' && esObjecte(v.payload) ? [] : ['contingut publicat alterat'])
+        ...(v.title === 'Publicació de conformitat' && v.description === 'Text del contracte' && esObjecte(v.payload) ? [] : ['contingut publicat alterat']),
+        /* IDEA-365 (regla 1) · C26-1 #12 · Esta publicació és del llegat (sense categoriesSistema): l'escriptor
+           li posa el destí real de la secció, Mur, i cap altre. */
+        ...(Array.isArray(v.payload?.categoriesSistema) && v.payload.categoriesSistema.length === 1 && v.payload.categoriesSistema[0] === 'Mur'
+          ? [] : ['IDEA-365: el llegat sense categoriesSistema havia de rebre la categoria Mur'])
       ] }),
     cas({ metode: 'appendSectionSubmissionNetworkOnly', espera: 'rebutja', requerix: ['compteModeProva'],
       titol: 'appendSectionSubmissionNetworkOnly: mode seed remot rebutja mode-local sense publicar',
@@ -270,6 +280,14 @@ function casosFedi17() {
     cas({ metode: 'appendSectionSubmissionNetworkOnly', espera: 'rebutja', requerix: ['compteSenseSessio'],
       titol: 'appendSectionSubmissionNetworkOnly: sense sessió local no publica',
       arguments: ctx => [{ sectionId: 'mur' }, ctx.config], comprova: senseSessio }),
+    /* IDEA-365 (regla 1 de les 21:40) · C26-1 #12 · Zero peces sense destí: un buidatge explícit no es repara ni
+       es publica. És d'escriptura (escriu) perquè un adaptador que no la complix publicaria; porta un id propi
+       perquè eixa publicació no trepitge la del cas anterior. Fora de la cohort històrica FEDI-17 (kit.test.js). */
+    cas({ metode: 'appendSectionSubmissionNetworkOnly', espera: 'rebutja', escriu: true, requerix: ['publicacioOperativa'],
+      titol: 'IDEA-365: appendSectionSubmissionNetworkOnly rebutja categoriesSistema buida sense publicar',
+      arguments: ctx => [{ id: ctx.idPublicacioSenseDesti, sectionId: 'mur', title: 'No es publica', description: 'Sense destí',
+        payload: { categoriesSistema: [] }, actor: { tipus: 'persona', id: ctx.ownerUserId } }, ctx.config],
+      comprova: rebuigSenseDesti }),
     cas({ metode: 'loginWithMagicLink', espera: 'rebutja',
       titol: 'loginWithMagicLink: servei desactivat o mode-local, mai èxit de sessió',
       arguments: ctx => ['conformitat@poble.invalid', { ...ctx.config, dataMode: 'seed' }],
@@ -1402,6 +1420,9 @@ export const CASOS = Object.freeze([
     comprova: rebuigAmbCodi('sense-capacitat')
   })),
 
+  cas({ metode: 'actualitzaTaxonomiaPagina', capacitat: 'taxonomiaPagines', espera: 'rebutja', titol: 'IDEA-375: sense categoria de sistema no arriba al transport', arguments: ctx => ['legal', { categoriesSistema: [] }, ctx.config], comprova: rebuigTipusR15 }),
+  cas({ metode: 'lligTaxonomiaPagina', capacitat: 'taxonomiaPagines', espera: 'rebutja', titol: 'IDEA-375: refusa un identificador de pàgina hostil', arguments: ctx => ['../privat', ctx.config], comprova: rebuigTipusR15 }),
+
   /* R32.19 · Formes pures del proveïdor, substituïbles darrere del port.
      Arestes de tipus neutrals: no fixen els camins de cap proveïdor. */
   cas({ metode: 'prefixMitjansPublics', capacitat: 'protocolPublic', sincron: true, titol: 'R32.19: el prefix públic és un text síncron', arguments: () => ['https://public.example'], comprova: v => typeof v === 'string' && v.startsWith('https://') ? [] : ['cal un prefix públic https'] }),
@@ -1422,7 +1443,7 @@ export function contextDeConformitat({ config = {}, escriptures = false, adminMu
     config, escriptures, adminMultipobleAutoritzat: adminMultipobleAutoritzat === true, tenantAdministrat,
     ...Object.fromEntries(['compteOperatiu', 'compteModeProva', 'compteSenseSessio', 'publicacioOperativa', 'credencialsDeProva', 'contrasenyaLocal', 'transportXifrat', 'iaiaOperativa', 'xatRitmeOperatiu', 'sessionsAdminOperatiu', 'sessionsSensePermis', 'curadoriaOperativa', 'curadoriaSensePermis', 'projeccionsOperatives', 'projeccionsSenseSessio'].map(k => [k, escenaris[k] === true])),
     destinatariDirecte: typeof escenaris.destinatariDirecte === 'string' && escenaris.destinatariDirecte.trim() ? escenaris.destinatariDirecte : null,
-    idPublicacio: globalThis.crypto.randomUUID(), idXifrat: globalThis.crypto.randomUUID(),
+    idPublicacio: globalThis.crypto.randomUUID(), idPublicacioSenseDesti: globalThis.crypto.randomUUID(), idXifrat: globalThis.crypto.randomUUID(),
     ownerUserId: null, filId: null, filEscrivible: null, subscripcio: null, subscrit: false, avisos: [],
     notaId: null, seqEnviat: null, orgPublica: null, aportacioCulturalId: null,
     /* Un id per passada: la idempotència es prova amb el MATEIX id dues voltes.

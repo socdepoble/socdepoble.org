@@ -9,6 +9,7 @@ import {
   Alerta, Boto, Carregant, EstatBuit, Interruptor, MollaPa
 } from '../../components/PedraSeca';
 import { useSEO } from '../../hooks/useSEO';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { Link, Navigate, useParams } from '../../app/contexts/RouterContext';
 import { carregaConsola, dataLocal } from './consolaContent.js';
@@ -17,8 +18,11 @@ import { ambInstantania } from './fontsConsola.js';
 import {
   RUTA_CONSOLA, avisosDeVigilancia, copyConsola, desaPrivacitat,
   estatsPagina, etiquetesPagina, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
-  paginaConsola, paginesConsola, problemesPagina, resumPagina, segmentPagina, signaturaPagina
+  paginaConsola, problemesPagina, resumPagina, segmentPagina, signaturaPagina
 } from './consolaPagines.js';
+import {
+  resolCopyConsolaEditorial, resolIndexEditorialConsola, resolPaginaConsolaEditorial, resolPaginesConsolaEditorial
+} from './copyConsolaEditorial.js';
 import { DestiVersions, Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './peces.jsx';
 import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
 import { panellPols, segmentPols } from './polsConsola.js';
@@ -285,15 +289,17 @@ const fontsDe = (consola, mapa) => ({
  * prop. Derogat: «la Consola incrustada de la Wiki conserva els seus píxels»
  * (sense la prop).
  */
-export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alertaFora = false, ara = Date.now() }) {
+export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alertaFora = false, ara = Date.now(), pageCopy = null }) {
   const fonts = fontsDe(consola, mapa);
   const idioma = useIdiomaConsola();
   const [vistes] = useState(llegixVistes);
+  const pagines = resolPaginesConsolaEditorial(pageCopy);
+  const dataCopy = resolCopyConsolaEditorial(pageCopy).date;
   return (
     <>
       {alertaFora ? null : <AlertaVigilancia mapa={mapa.mapa} />}
       <nav className="sdp-card-grid sdp-consola__graella" onKeyDown={gestionaTeclaGraella} aria-label={tca(idioma, 'paginesConsola')} ref={cimRef}>
-        {paginesConsola().map((p) => {
+        {pagines.map((p) => {
           const delMapa = p.id !== 'pols';
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
@@ -301,7 +307,7 @@ export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, alert
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
               estats={estatsPagina(p.id, fonts, ara)}
               problemes={problemesPagina(p.id, fonts)}
-              creat={dataDelCopy()}
+              creat={dataCopy}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
               etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)}
               headingLevel="h4" />
@@ -348,14 +354,14 @@ function AvisInstantania({ consola, mapa, govern, locale }) {
  * Ordre del Mestre del 30-10-2026 (B1) · Les quatre targetes del Govern també
  * porten la seua portada amb `ambImatges` (SeccioGovern).
  */
-function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = false, locale = 'ca-ES' }) {
+function TaulerAmbGovern({ consola, mapa, govern, ara, cimRef, ambImatges = false, locale = 'ca-ES', pageCopy = null }) {
   return (
     <>
       <AvisInstantania consola={consola} mapa={mapa} govern={govern} locale={locale} />
       <AlertaVigilancia mapa={mapa.mapa} />
       <SeccioGovern govern={govern} ara={ara} ambImatges={ambImatges} />
       <h3>{TITOL_SALA_MAQUINES}</h3>
-      <ConsolaTauler consola={consola} mapa={mapa} cimRef={cimRef} ambImatges={ambImatges} alertaFora ara={ara} />
+      <ConsolaTauler consola={consola} mapa={mapa} cimRef={cimRef} ambImatges={ambImatges} alertaFora ara={ara} pageCopy={pageCopy} />
     </>
   );
 }
@@ -522,10 +528,12 @@ export default function ConsolaSection() {
   const deTaxonomia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && esRutaBrainTaxonomia(comodi);
   const deBotigues = comodi === 'botigues' || comodi === 'botigues/';
   const sensePropia = slugXifra === null && idPanell === null && idGovern === null && !deEmpaquetats && !deTaxonomia && !deBotigues;
+  const { pageCopy } = useCoreContent();
   const id = sensePropia ? segmentPagina(comodi) : '';
-  const pagina = sensePropia && id ? paginaConsola(id) : null;
+  const pagina = sensePropia && id ? resolPaginaConsolaEditorial(id, pageCopy) : null;
   const paginaDeGovern = idGovern === null ? null : paginaGovern(idGovern);
-  const copy = copyConsola();
+  const copy = resolCopyConsolaEditorial(pageCopy);
+  const editorialIndex = resolIndexEditorialConsola(pageCopy);
   const consola = useConsola();
   const mapa = useMapa();
   const govern = useGovern();
@@ -646,9 +654,9 @@ export default function ConsolaSection() {
         topBarData={dataDelTauler(consola.dades?.generat, mapa.mapa?.generat, govern.matriu?.at, govern.servidor?.generat, empaquetats.valor?.generat)}
         traduccio={false} llenguaDelContingut="ca">
         <PrivacitatConsola.Provider value={privat}>
-          <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} />
+          <TaulerAmbGovern consola={consola} mapa={mapa} govern={govern} ara={ara} cimRef={cim} ambImatges locale={locale} pageCopy={pageCopy} />
           <SeccioCanalsEmpaquetatsTaxonomia empaquetats={empaquetats} />
-          <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} locale={locale} ara={ara} />
+          <IndexConsola fonts={fontsDe(consola, mapa)} govern={govern} empaquetats={empaquetats} editorial={editorialIndex} locale={locale} ara={ara} />
           <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>
       </UniversalPage>

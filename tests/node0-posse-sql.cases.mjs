@@ -56,6 +56,8 @@ const POST_R32_42=CATALEG.filter(m=>comparaVersions(m.version,'20261122160300')>
 const POST_R32_46=CATALEG.filter(m=>comparaVersions(m.version,'20261123010000')>0).map(m=>m.version);
 // v1.2.25 · Costura 1 · el 136 conserva els seus bytes; C1 (20261125010000), C2 (20261125013000) i C16 (20261125020000), NO aplicades, en queden fora.
 const POST_R32_87=CATALEG.filter(m=>comparaVersions(m.version,'20261124174000')>0).map(m=>m.version);
+// v1.2.26 · C26-3 · el 139 conserva els seus bytes; 20261126030500 (taxonomia de pàgines, IDEA-375, NO aplicada) en queda fora.
+const POST_V1225=CATALEG.filter(m=>comparaVersions(m.version,'20261125020000')>0).map(m=>m.version);
 const POST_A03=CATALEG.filter(m=>comparaVersions(m.version,'20261118230000')>0).map(m=>m.version);
 const POST_R32_8=CATALEG.filter(m=>comparaVersions(m.version,'20261117193000')>0).map(m=>m.version);
 const POST_R32_4=['20261117140000',...CATALEG.filter(m=>comparaVersions(m.version,'20261117150000')>0).map(m=>m.version)];
@@ -100,7 +102,9 @@ const PERFILS=[
  {migracions:136,exclou:POST_R32_87,fonts:[]},
  // v1.2.25 · complet139 amb C1 (xat: documents, cerca i purga), C2 (subscripcions agrícoles) i C16 (purga LSSI abans del
  // claim), NO aplicades. Cap 137 ni 138.
- {migracions:139,exclou:[],fonts:[]},
+ {migracions:139,exclou:POST_V1225,fonts:[]},
+ // v1.2.26 · C26-3 · complet140 amb la taxonomia de pàgines (20261126030500, IDEA-375, NO aplicada).
+ {migracions:140,exclou:[],fonts:[]},
 ];
 const catalogues=PERFILS.map(({exclou,fonts})=>aplicaFontsHistoriques(CATALEG.filter(m=>!exclou.includes(m.version)),fonts));
 const PINS=[...sqlPosse.match(/-- POSSE_MIGRATION_PINS_BEGIN\n([\s\S]*?)\n-- POSSE_MIGRATION_PINS_END/)[1].matchAll(/\((\d+),'([a-f0-9]{64})'\)/g)].map(([,count,hash])=>`${count}:${hash}`);
@@ -125,7 +129,8 @@ test('POSSE accepts exact source ledgers derived from the complete migration cat
  // R78/F4I · 21: el 131 queda històric i s'afig únicament el complet 135.
  // v1.2.24 · R32.87 · 22: el 135 queda històric i s'afig el complet 136.
  // v1.2.25 · 23: el 136 queda històric i s'afig el complet 139 (C1, C2 i C16).
- assert.equal(PINS.length,23);
+ // v1.2.26 · 24: el 139 queda històric i s'afig el complet 140 (20261126030500).
+ assert.equal(PINS.length,24);
  assert.deepEqual(catalogues.map(rows=>`${rows.length}:${ledgerHash(rows)}`).sort(),[...PINS].sort());
  for(const rows of catalogues){let calls=0;assert.equal(await verificaEsquemaPosseNodeZero({db:{async query(sql,options){calls++;assert.equal(sql,'SELECT node0_posse.readiness();');assert.equal(options.privateValues,true);return ready(rows);}}}),true);assert.equal(calls,1);}
 });
@@ -174,12 +179,13 @@ test('R39 POSSE hashes use the PostgreSQL core without a pgcrypto schema assumpt
  assert.doesNotMatch(sqlPosse,/\b(?:public\.)?digest\(/);
  assert.equal([...sqlPosse.matchAll(/pg_catalog\.sha256\(convert_to\(/g)].length,8);
 });
-test('POSSE PostgreSQL installs all twenty-three exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
+test('POSSE PostgreSQL installs all twenty-four exact pinned profiles and rejects incomplete, unknown or drifted ledgers',{skip:!process.env.SDP_PGLITE_MODULE&&'Set SDP_PGLITE_MODULE for actual PostgreSQL SQL proof'},async t=>{
  // v1.2.22 · 19: el 126 de la v1.2.17 passa a històric i s'afig el complet 129 de R32.42.
  // v1.2.23 · 20: el 129 passa a perfil fix i s'afig el complet 131.
  // R78/F4I · 21: es conserva el 131 i s'afig el complet actual 135.
  // v1.2.25 · 23: es conserva el 136 i s'afig el complet actual 139 (C1, C2 i C16).
- assert.equal(PERFILS.length,23,'vint-i-tres perfils fixats: 76..81, els dos 85, 86, el 114 d’R30, el 116 d’R31, el 119 d’R32.2, el 120 d’R32.4, el 121 de la v1.2.7, el 123 de la v1.2.8, el 124 d’A-03, el 125, el 126, el 129, el 131, el 135, el 136 i el complet actual 139');
+ // v1.2.26 · 24: es conserva el 139 i s'afig el complet actual 140 (20261126030500).
+ assert.equal(PERFILS.length,24,'vint-i-quatre perfils fixats: 76..81, els dos 85, 86, el 114 d’R30, el 116 d’R31, el 119 d’R32.2, el 120 d’R32.4, el 121 de la v1.2.7, el 123 de la v1.2.8, el 124 d’A-03, el 125, el 126, el 129, el 131, el 135, el 136, el 139 i el complet actual 140');
  for(const [index,{exclou,fonts}] of PERFILS.entries()){
   const f=await creaFixturePosse({exclou,fonts});
   try{

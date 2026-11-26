@@ -70,7 +70,7 @@ import { AccioAprovacio, RevocaAprovacio, onSAprova } from '../../tractors/Aprov
 import { cofreDeLaGestoria, persistenciaDelCofre } from '../cofre/cofre.js';
 import PortaCofre from '../cofre/PortaCofre.jsx';
 import { tg, tf, tga } from '../i18nGestoria.js';
-import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta } from '../insigniaBetaOberta.js';
+import { ETIQUETA_BETA_OBERTA, etiquetaBetaOberta, pindolesInertes } from '../insigniaBetaOberta.js';
 import { formatImport } from '../nucli/diners.js';
 import { TRACTOR_IDENTITAT } from '../tractors.js';
 import { MOTIUS } from './nucli/filtreDocuments.js';
@@ -954,7 +954,7 @@ export function VistaFinestreta({
   return (
     <PaginaApp title={tg(idioma, 'Identitat i Finestreta')} subtitle={tg(idioma, 'La teua fitxa legal, privada, i els tràmits preparats per a copiar')}
       lead={tg(idioma, 'Els teus papers d’identitat, llegits en este ordinador: confirmes cada dada, es desa xifrada al cofre i la Finestreta te-la prepara per a copiar-la als tràmits. No signa ni presenta res.')}
-      author={autor} barActions={boina} labels={etiquetesLoc} rellotgeViu rellotge={rellotge}
+      author={autor} barActions={boina} labels={pindolesInertes(etiquetesLoc)} rellotgeViu rellotge={rellotge}
       showComment={false} showShare={false} showConnect={false}>
       <p ref={adoptaEstilsDiferits} role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}

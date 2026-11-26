@@ -296,7 +296,7 @@ export default function EspecimenUniversalCard() {
             </>
           )}
           squareBadge={ambSemafor(insigniaEmojiXL('Calendari de processos · Cal reparar', '⚙️'), 'error')}
-          labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error' }]}
+          labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error', inerta: true }]}
           mainHref="/consola/calendari"
           hasFooter onConnect={() => navega('/consola/calendari')}
         />

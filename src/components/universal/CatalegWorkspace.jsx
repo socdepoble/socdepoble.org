@@ -19,6 +19,9 @@ import { BarreraDelTrosAccessori, lazyRoute } from '../../apps/plataforma/lazyRo
 
 /* Gauntlet v1.2.13 · lazyRoute i la barrera del tros accessori: si el tros no carrega, el catàleg continua. */
 const PanellIncidenciesPublicacioCas = lazyRoute(() => import('./workspace/PanellIncidenciesPublicacioCas.jsx'));
+/* IDEA-367 (v1.2.26) · Modal dual «Afig Catàleg / Fitxa» en diferit (+0 B nucli WP). */
+const ModalAfigCataleg = lazyRoute(() => import('./workspace/ModalAfigCataleg.jsx'));
+import { textosCatalegAfigV26 } from './workspace/i18nCatalegAfigV26.js';
 import { BotoModeracio } from '../PedraSeca/organismes/Moderacio.jsx';
 import { filtraElementsBloquejats } from '../../config/moderacio.js';
 import { useTextCanonicCataleg } from '../../hooks/useTextCanonicCataleg.js';
@@ -118,9 +121,12 @@ function categoriaConteElement(categoryId, item, categories, inclouDescendents) 
 }
 
 /** One catalogue shell; the domain retains its data, actions and inline page. */
-export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false, navegacioLlibres = null, inclouDescendents = false, afegirCataleg = false, itemSlug = null, sincronitzaRuta = false, avisLlista = null }) {
+export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta, privateItems = false, font = null, destiPublicacio = null, permetreEdicioDestins = false, navegacioLlibres = null, inclouDescendents = false, afegirCataleg = false, permetreAfigCataleg = false, itemSlug = null, sincronitzaRuta = false, avisLlista = null }) {
   const ui = useUIActionsOpcional();
   const textos = textosCatalegWorkspace(ui?.language);
+  const textosAfig = textosCatalegAfigV26(ui?.language);
+  const [modalAfigObert, setModalAfigObert] = useState(false);
+  const [modalAfigMuntat, setModalAfigMuntat] = useState(false);
   /* USA-05 · La vista persistix per superfície (vistaCataleg.js). */
   const [vista, setVistaViva] = useState(() => vistaDesada(id));
   const setVista = useCallback(nova => { setVistaViva(nova); desaVista(id, nova); }, [id]);
@@ -151,10 +157,14 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
     () => resolSeleccioDeSlug(itemSlug, modelAmbProjeccions.categories, modelAmbProjeccions.items),
     [itemSlug, modelAmbProjeccions.categories, modelAmbProjeccions.items]
   );
+  const catalegQuery = searchParams.get('cataleg');
   const fitxaQuery = navegacioLlibres && Object.hasOwn(navegacioLlibres, 'fitxaInicial')
     ? navegacioLlibres.fitxaInicial : searchParams.get('fitxa');
   const fitxaEnllacada = resolucioSlug ? resolucioSlug.itemId : fitxaQuery;
-  const categoriaInicial = resolucioSlug ? resolucioSlug.categoryId : (navegacioLlibres?.categoriaInicial ?? '__all__');
+  const categoriaCatalegQuery = catalegQuery && modelAmbProjeccions.categories.some(c => c.id === catalegQuery || c.slugRuta === catalegQuery)
+    ? modelAmbProjeccions.categories.find(c => c.id === catalegQuery || c.slugRuta === catalegQuery).id
+    : null;
+  const categoriaInicial = resolucioSlug ? resolucioSlug.categoryId : (navegacioLlibres?.categoriaInicial ?? categoriaCatalegQuery ?? '__all__');
   const [selection, setSelection] = useState({ categoryId: categoriaInicial, itemId: fitxaEnllacada });
   /* USA-01, USA-03 · Què ha de fer el detall després del pintat següent:
      obrir una fitxa (desplaçar-la a la vista i, si l'origen és un gest o un
@@ -219,11 +229,29 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
     const neta = new URLSearchParams(searchParams);
     neta.delete('fitxa');
     neta.delete('llibre');
+    /* C26-2 #6 · Cap ?cataleg= orfe darrere del camí: una sola URL per llibre i per fitxa. */
+    neta.delete('cataleg');
     const qs = neta.toString();
     const destiComplet = qs ? `${cami}?${qs}` : cami;
     const actualComplet = `${location?.pathname || ''}${location?.search || ''}`;
     if (destiComplet !== actualComplet) navega(destiComplet);
   }, [sincronitzaRuta, ruta, modelAmbProjeccions.items, modelAmbProjeccions.categories, searchParams, location?.pathname, location?.search, navega]);
+
+  /* C26-2 #6 (IDEA-366, «uniformitat total») · ?cataleg=<llibre>[&fitxa=<id>] només és una entrada de compatibilitat:
+     amb la ruta sincronitzada, redirigix (replace) al camí únic que servix este workspace, /<biblioteca>/<llibre> o
+     /<biblioteca>/<slug de la fitxa>. Un ?cataleg= que no és cap llibre del model no es toca. */
+  useEffect(() => {
+    if (!sincronitzaRuta || !ruta || !catalegQuery || itemSlug) return;
+    const llibre = modelAmbProjeccions.categories.find(c => c.id === categoriaCatalegQuery);
+    if (!llibre) return;
+    const idFitxa = searchParams.get('fitxa');
+    const fitxa = idFitxa ? modelAmbProjeccions.items.find(x => String(x.id) === idFitxa && x.categoryIds?.includes(llibre.id)) : null;
+    const segment = fitxa ? (fitxa.slugRuta || String(fitxa.id)) : (llibre.slugRuta || llibre.id);
+    const neta = new URLSearchParams(searchParams);
+    for (const clau of ['cataleg', 'fitxa', 'llibre']) neta.delete(clau);
+    const qs = neta.toString();
+    navega(`${ruta}/${encodeURIComponent(segment)}${qs ? `?${qs}` : ''}`, { replace: true });
+  }, [sincronitzaRuta, ruta, catalegQuery, categoriaCatalegQuery, itemSlug, modelAmbProjeccions.categories, modelAmbProjeccions.items, searchParams, navega]);
 
   const teclaDeRecorregut = useRef(false);
   useEffect(() => {
@@ -279,6 +307,11 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
   /* R21.7 · «+ Afegir catàleg» només per a superadministració. El nucli dels mòduls no veu mai la sessió
      (Model B, fronteres.test.js): és la secció amfitriona qui passa afegirCataleg={true} només si ho és. */
   const mostraAdminImportacio = afegirCataleg === true;
+  const mostraAfigDual = permetreAfigCataleg === true;
+  const obriModalAfig = () => {
+    setModalAfigMuntat(true);
+    setModalAfigObert(true);
+  };
   const panellIncidencies = incidenciesDelCataleg.length > 0 ? (
     <BarreraDelTrosAccessori><Suspense fallback={null}>
       <PanellIncidenciesPublicacioCas
@@ -308,8 +341,8 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
       { id: 'gran', etiqueta: textos.gran, pressed: vista === 'gran', icona: Rows3, onAcciona: () => setVista('gran'), className: 'sdp-cataleg-workspace__commutador' },
       { id: 'rajola', etiqueta: textos.rajola, pressed: vista === 'rajola', icona: LayoutGrid, onAcciona: () => setVista('rajola'), className: 'sdp-cataleg-workspace__commutador' }
     ]}
-    peuNavegacio={(mostraPrincipal || mostraAdminImportacio) ? <PeuCataleg textos={textos} mostraPrincipal={mostraPrincipal}
-      mostraAdminImportacio={mostraAdminImportacio} onHome={tornaAInici} navega={navega} /> : null}
+    peuNavegacio={(mostraPrincipal || mostraAdminImportacio || mostraAfigDual) ? <PeuCataleg textos={textos} textosAfig={textosAfig} mostraPrincipal={mostraPrincipal}
+      mostraAdminImportacio={mostraAdminImportacio} mostraAfigDual={mostraAfigDual} onObriModalAfig={obriModalAfig} onHome={tornaAInici} navega={navega} /> : null}
     avisLlista={avisLlista}
     renderItem={({ item, active, onSelect }) => {
       if (vista === 'canonica') return <DefaultItemCard item={{ ...item, image: item.imageUrl || item.image, icon: item.glyph || item.icon }}
@@ -370,6 +403,20 @@ export default function CatalegWorkspace({ id, model, labels, renderDetail, ruta
           error={files.some(row => row.pendent) && publicacio.error?.desatLocal === true ? publicacio.error : null} persistent={publicacio.persistent} language={ui?.language}
           estat={files.length ? files.some(row => row.pendent) ? 'pendent' : 'confirmat' : null} /> : null}
         {gestor}
+        {mostraAfigDual && modalAfigMuntat ? (
+          <BarreraDelTrosAccessori>
+            <Suspense fallback={null}>
+              <ModalAfigCataleg
+                obert={modalAfigObert}
+                onTanca={() => setModalAfigObert(false)}
+                font={font || id}
+                idioma={ui?.language || 'ca'}
+                onNavega={navega}
+                esSuperadmin={mostraAdminImportacio}
+              />
+            </Suspense>
+          </BarreraDelTrosAccessori>
+        ) : null}
       </>;
     }} />;
 
@@ -459,10 +506,15 @@ function GestorDeLaFitxa({ peticio, atesa }) {
   return <span ref={ancora} hidden data-ancora-cataleg="" />;
 }
 
-function PeuCataleg({ textos, mostraPrincipal, mostraAdminImportacio, navega, onHome }) {
+function PeuCataleg({ textos, textosAfig, mostraPrincipal, mostraAdminImportacio, mostraAfigDual, onObriModalAfig, navega, onHome }) {
   const { tancaPanells } = useAppGrid();
   return <div className="sdp-cataleg-workspace__destins">
     {mostraPrincipal ? <Boto varietat="secundari" onClick={() => { onHome(); tancaPanells(); }}>{textos.principal}</Boto> : null}
-    {mostraAdminImportacio ? <Boto varietat="secundari" onClick={() => { navega('/el-meu-perfil?vista=admin-importacio'); tancaPanells(); }}>{textos.afegirCataleg}</Boto> : null}
+    {mostraAfigDual ? (
+      <Boto varietat="primari" onClick={() => { onObriModalAfig(); tancaPanells(); }}>{textosAfig.catalegAfigV26Boto}</Boto>
+    ) : null}
+    {mostraAdminImportacio ? (
+      <Boto varietat="secundari" onClick={() => { navega('/el-meu-perfil?vista=admin-importacio'); tancaPanells(); }}>{textos.afegirCataleg}</Boto>
+    ) : null}
   </div>;
 }

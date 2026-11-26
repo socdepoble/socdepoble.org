@@ -164,22 +164,28 @@ describe('Onada 10 · el botó de la targeta, el del final de la pàgina i les e
      únic, sense «Mur») ho aplica també a Disseny. Arbitratge R46, Loop 3. */
   test('PAGE_COPY: la Consola i el Cervell porten Categoria i Etiqueta; Disseny, les seues dos i una tercera', () => {
     const TECNOLOGIA = '💻 Tecnologia i Disseny';
+    /* v1.2.26 · IDEA-365 (Llibre Mestre, línia 3803; regla 1 del 21:40) · Tota card que es mostra al /mur porta la
+       categoria Mur, i la seua UniversalPage també (paritat, 21:58, punt 1). IDEA-369 #45 (00:43) · Per al sistema de
+       disseny, l'etiqueta és Disseny: Pedra Seca queda per al patrimoni rural. */
     expect(PAGE_COPY.consola.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Mur', className: 'sdp-badge-system' },
       { text: TECNOLOGIA, className: 'sdp-badge-category' },
       { text: 'Node 0', className: 'sdp-badge-tag' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     expect(PAGE_COPY.cervell.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Mur', className: 'sdp-badge-system' },
       { text: TECNOLOGIA, className: 'sdp-badge-category' },
       { text: 'Node 0', className: 'sdp-badge-tag' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     expect(PAGE_COPY.disseny.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Mur', className: 'sdp-badge-system' },
       { text: TECNOLOGIA, className: 'sdp-badge-category' },
-      { text: 'Pedra Seca', className: 'sdp-badge-tag' },
+      { text: 'Disseny', className: 'sdp-badge-tag' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
     for (const clau of ['consola', 'cervell']) {
@@ -246,8 +252,10 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
     expect(copy.imageAlt).toContain('robotets i cervellets amb potetes');
     expect(copy.imageAlt).not.toMatch(/xips/i);
     // P0-40/IDEA-167 (ordre del Mestre, 261107 05:23) · fora «Descàrregues»: categoria mare i etiqueta canònica.
+    // v1.2.26 · IDEA-365 (Llibre Mestre, línia 3803) · i Mur: la seua card es mostra al /mur.
     expect(copy.labels).toEqual([
       { text: 'Sistema', className: 'sdp-badge-system' },
+      { text: 'Mur', className: 'sdp-badge-system' },
       { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
       { text: 'Documentació', className: 'sdp-badge-tag' }
     ]);
@@ -281,10 +289,12 @@ describe('261026_2126 · Descàrregues i Aplicacions', () => {
       });
       expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
       expect(copy.imageAlt).toContain('GRÀCIES MESTRES');
+      /* v1.2.26 · IDEA-365 (Llibre Mestre, línia 3803) · Mur, perquè la card es mostra al /mur. IDEA-369 #34 (00:36) ·
+         «Projecte Sóc de Poble» ix de les etiquetes: és l'entitat @Sóc de Poble, que ja signa la boina taronja. */
       expect(copy.labels).toEqual([
         { text: 'Sistema', className: 'sdp-badge-system' },
+        { text: 'Mur', className: 'sdp-badge-system' },
         { text: '💻 Tecnologia i Disseny', className: 'sdp-badge-category' },
-        { text: 'Projecte Sóc de Poble', className: 'sdp-badge-tag' },
         { text: 'Documentació', className: 'sdp-badge-tag' }
       ]);
     });
@@ -447,8 +457,10 @@ describe('30-10-2026 · Candidatura Europea NLnet · NGI Fediversity', () => {
     expect(existsSync(path.join(process.cwd(), 'public', copy.image))).toBe(true);
     expect(copy.imageAlt.trim().length).toBeGreaterThan(20);
     // P0-40/IDEA-167 (ordre del Mestre, 261107 05:23) · fora «Candidatura europea»: Sistema, la mare i dues etiquetes canòniques.
-    expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag', 'sdp-badge-tag']);
-    expect(copy.labels.map((etiqueta) => etiqueta.text)).toEqual(['Sistema', '💻 Tecnologia i Disseny', 'NGI Fediversity', 'Documentació']);
+    /* v1.2.26 · IDEA-365 (Llibre Mestre, 22:16, punt 1) · la candidatura és Sistema + Mur. IDEA-369 #48 (00:43) · «NGI
+       Fediversity» és una etiqueta retirada: en queda Documentació. */
+    expect(copy.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-system', 'sdp-badge-system', 'sdp-badge-category', 'sdp-badge-tag']);
+    expect(copy.labels.map((etiqueta) => etiqueta.text)).toEqual(['Sistema', 'Mur', '💻 Tecnologia i Disseny', 'Documentació']);
   });
 });
 

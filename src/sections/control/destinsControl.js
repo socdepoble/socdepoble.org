@@ -74,7 +74,9 @@
  */
 import { getSectionListPath, rutaDAutoria } from '../../config/navigation.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { rutaDePindola } from '../../components/PedraSeca/organismes/rutaDePindola.js';
 import { ENTITAT_PILOT_ID, entitatSeed } from '../../data/identitatsSeed.js';
+import { categoriesSistemaDePagina } from '../../data/taxonomia/classificacioPaginesPubliques.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 
 /** Les claus i els textos comuns de les portes i de la graella. */
@@ -110,6 +112,18 @@ export const rutaDePagina = (clau) => `/page/${encodeURIComponent(clau)}`;
 /** IDEA-61 (T0, prompt 261102_1532) · L'editor del Bloc amb l'àmbit fixat (mercat, vehicle, treball, habitatge). */
 export const rutaDePublicarAmbit = (ambit) => `/notes?ambit=${ambit}`;
 
+/* IDEA-365 deroga P6 (21:37) · Les Categories de Sistema de cada porta són les de la seua pàgina
+   (classificacioPaginesPubliques.js · SISTEMES_DE_PAGINA), la mateixa taula que posa les píndoles a PAGE_COPY.
+   v1.2.26 · R2-2 (D1) · IDEA-365 (21:58, punt 1: paritat absoluta Card ↔ UniversalPage) · Les píndoles de la
+   targeta són les de PAGE_COPY[pagina], amb la ruta que els dona rutaDePindola, la funció de PageFrame: Transport
+   i Animalets porten a /categoria/<slug> (Llibre Mestre, línies 3816-3817 i 3820), mai a la `seccio`, que queda
+   per a les portes Publicar i Saber-ne més. Una píndola inerta continua inerta (sense href inventat). */
+const pindolesDePagina = (pagina) => Object.freeze((Object.hasOwn(PAGE_COPY, pagina) && Array.isArray(PAGE_COPY[pagina].labels) ? PAGE_COPY[pagina].labels : [])
+  .map((label) => {
+    const href = rutaDePindola(label);
+    return Object.freeze({ ...(typeof label === 'string' ? { text: label } : label), ...(href ? { href } : {}) });
+  }));
+
 /* T8 (261004) · Cap `imatge` a la taula: la de la targeta és la de la seua
    pàgina (contingutDe). */
 const desti = ({ id, pagina, icona = null, publicar = null, seccio = null, nomPublicar, nomSaber }) => Object.freeze({
@@ -119,6 +133,9 @@ const desti = ({ id, pagina, icona = null, publicar = null, seccio = null, nomPu
   publicar,
   saberMes: rutaDePagina(pagina),
   seccio,
+  // IDEA-365 deroga P6: dades compartides amb les cards i la UniversalPage (una sola font, PAGE_COPY).
+  categoriesSistema: Object.freeze([...categoriesSistemaDePagina(pagina)]),
+  labels: pindolesDePagina(pagina),
   noms: Object.freeze({
     publicar: Object.freeze([`section.control.${id}.publicar`, nomPublicar]),
     saberMes: Object.freeze([`section.control.${id}.saberMes`, nomSaber])
@@ -232,6 +249,8 @@ export function contingutDe(destiControl) {
     titol: pagina.title,
     subtitol: pagina.subtitle,
     entradilla: pagina.lead,
+    labels: destiControl.labels,
+    categoriesSistema: destiControl.categoriesSistema,
     imatge: pagina.image || null,
     imatgeAlt: pagina.imageAlt || '',
     ...dataHoraDeBarra({ creat: pagina.date })

@@ -17,7 +17,7 @@ const etiquetes = (categoria, tag) => [
 const RECEPTES = {
   ca: {
     title: 'Receptes',
-    subtitle: 'Biblioteca Multipoble de Receptaris Tradicionals · Sóc de Poble, Portal de Pobles Connectats',
+    subtitle: 'Biblioteca Multipoble de Receptaris Tradicionals',
     imageAlt: 'Il·lustració didàctica de còmic d’estil Ibáñez d’una cuina valenciana de pedra seca amb receptes de poble',
     lead: 'Sóc de Poble obri esta biblioteca gastronòmica perquè cada poble, associació o família hi puga publicar el seu receptari tradicional amb la seua autoria. El primer llibre, com a exemple, és «Què dinem?», editat a Muro (El Comtat) el 2019 per l’Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»: cada recepta amb els ingredients i l’elaboració i, quan en té, la làmina del llibre i el vídeo del canal de l’associació.',
     labels: etiquetes('🎭 Cultura, Música i Llengua', 'Patrimoni'),
@@ -25,7 +25,7 @@ const RECEPTES = {
   },
   es: {
     title: 'Recetas',
-    subtitle: 'Biblioteca Multipueblo de Recetarios Tradicionales · Sóc de Poble, Portal de Pobles Connectats',
+    subtitle: 'Biblioteca Multipueblo de Recetarios Tradicionales',
     imageAlt: 'Ilustración didáctica de cómic de estilo Ibáñez de una cocina valenciana de piedra seca con recetas de pueblo',
     lead: 'Sóc de Poble abre esta biblioteca gastronómica para que cada pueblo, asociación o familia pueda publicar su recetario tradicional con su propia autoría. El primer libro, como ejemplo, es «Què dinem?», editado en Muro (El Comtat) en 2019 por la Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»: cada receta con los ingredientes y la elaboración y, cuando los tiene, la lámina del libro y el vídeo del canal de la asociación.',
     labels: etiquetes('🎭 Cultura, Música y Lengua', 'Patrimonio'),
@@ -33,7 +33,7 @@ const RECEPTES = {
   },
   en: {
     title: 'Recipes',
-    subtitle: 'Multi-Village Library of Traditional Cookbooks · Sóc de Poble, Connected Villages Portal',
+    subtitle: 'Multi-Village Library of Traditional Cookbooks',
     imageAlt: 'Ibáñez-style educational comic illustration of a Valencian dry-stone kitchen with village recipes',
     lead: 'Sóc de Poble opens this culinary library so that every village, association or family can publish its traditional cookbook under its own authorship. The first book, as an example, is «Què dinem?», published in Muro (El Comtat) in 2019 by the Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»: each recipe with the ingredients and the method and, when it has them, the plate from the book and the video from the association’s channel.',
     labels: etiquetes('🎭 Culture, Music and Language', 'Heritage'),
@@ -41,7 +41,7 @@ const RECEPTES = {
   },
   eu: {
     title: 'Errezetak',
-    subtitle: 'Errezeta-liburu Tradizionalen Herri Anitzeko Liburutegia · Sóc de Poble, Herri Konektatuen Ataria',
+    subtitle: 'Errezeta-liburu Tradizionalen Herri Anitzeko Liburutegia',
     imageAlt: 'Ibáñez estiloko komiki didaktikoko ilustrazioa, harri lehorreko sukalde valentziarra herriko errezetekin',
     lead: 'Sóc de Poble-k sukaldaritza-liburutegi hau irekitzen du herri, elkarte edo familia bakoitzak bere errezeta-liburu tradizionala bere egiletzarekin argitara dezan. Lehen liburua, adibide gisa, «Què dinem?» da, Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta» elkarteak Muron (El Comtat) 2019an argitaratua: errezeta bakoitza osagaiekin eta prestaketarekin eta, baldin baditu, liburuko irudiarekin eta elkartearen kanaleko bideoarekin.',
     labels: etiquetes('🎭 Kultura, Musika eta Hizkuntza', 'Ondarea'),
@@ -49,7 +49,7 @@ const RECEPTES = {
   },
   gl: {
     title: 'Receitas',
-    subtitle: 'Biblioteca Multipobo de Receitarios Tradicionais · Sóc de Poble, Portal de Pobos Conectados',
+    subtitle: 'Biblioteca Multipobo de Receitarios Tradicionais',
     imageAlt: 'Ilustración didáctica de cómic de estilo Ibáñez dunha cociña valenciana de pedra seca con receitas de vila',
     lead: 'Sóc de Poble abre esta biblioteca gastronómica para que cada pobo, asociación ou familia poida publicar o seu receitario tradicional coa súa propia autoría. O primeiro libro, como exemplo, é «Què dinem?», editado en Muro (El Comtat) en 2019 pola Associació Gastronòmica i Cultural «Fins rebentar com Sangonereta»: cada receita cos ingredientes e a elaboración e, cando os ten, a lámina do libro e o vídeo da canle da asociación.',
     labels: etiquetes('🎭 Cultura, Música e Lingua', 'Patrimonio'),

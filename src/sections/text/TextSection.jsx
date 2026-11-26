@@ -95,8 +95,13 @@ export function CosDeLaPagina({ html, children = null }) {
   return children ? <>{article}{children}</> : article;
 }
 
-/* `children`: peces vives que van davall del text (el Tauler de Telemetria a
-   /legal). El text continua sent HTML sanejat; els fills són React i no
+/* `children`: peces vives de la pàgina, davall del text. IDEA-373 (v1.2.26,
+   kit G26-4) · A /legal, quan el cos porta targetes (MARCA_GRUP), van dins de
+   CosDeLaPagina (integraFillsAlCos): el Tauler de Telemetria es pinta dins
+   d'article.cms-preview.sdp-amb-targetes, després del text i abans del
+   clearfix, en flux de bloc al costat de la targeta flotant. A la resta de
+   pàgines, i a /legal sense targetes, van al final de la pàgina, fora de
+   l'article, com sempre. El text continua sent HTML sanejat; els fills són React i no
    passen per dangerouslySetInnerHTML. Les imatges pròpies del text
    (src="/assets/…") es resolen en pintar-lo, amb la base de l'amfitrió.
    T8 (ordre del Mestre, 261004, prompt 261004_0515 §6) · `accioPrincipal`:
@@ -203,6 +208,10 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
      llengua. Les de reserva (la clau i «Pàgina», amb t) i la pastilla final
      (etiquetaFinal, amb t) són de la interfície: tal qual. */
   const etiquetes = Array.isArray(page.labels) ? propsDeText.labels.map(label => typeof label === 'string' ? { text:label, lang:contentLanguage } : { ...label, lang:label?.lang||contentLanguage }) : propsDeText.labels;
+  /* IDEA-373 (Onada v1.2.26 · Lot G26-4) · A /legal, els fills editorials (TaulerTelemetria) entren
+     dins de CosDeLaPagina (.sdp-amb-targetes, abans del clearfix ::after) perquè l'H3 i els paràgrafs
+     s'adapten al costat de la targeta flotant de Reconeixements sense deixar cap buit vertical. */
+  const integraFillsAlCos = !amagaCos && pageKey === 'legal' && String(projeccioLecturaLegal(page.html) || '').includes(MARCA_GRUP);
   return (
     <UniversalPage
       {...propsDeText}
@@ -241,6 +250,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       {!amagaCos && (
         <CosDeLaPagina html={page.html}>
           {pageKey==='reconeixements'?<BarreraDelTrosAccessori><Suspense fallback={null}><CreditsReconeixementsComplet language={language}/></Suspense></BarreraDelTrosAccessori>:null}
+          {integraFillsAlCos ? children : null}
         </CosDeLaPagina>
       )}
       {pageKey === 'versions' && !amagaCos ? (
@@ -252,7 +262,7 @@ export default function TextSection({ page: original, pageKey, accioPrincipal = 
       ) : null}
       {pageKey==='fedivers'&&<BarreraDelTrosAccessori><Suspense fallback={null}><AparadorFediversity language={language}/></Suspense></BarreraDelTrosAccessori>}
       {pageKey==='node-zero'&&<BarreraDelTrosAccessori><Suspense fallback={null}><section className="cms-preview" data-testid="node-zero-consola-incrustada-section"><ConsolaIncrustada/></section></Suspense></BarreraDelTrosAccessori>}
-      {children}
+      {integraFillsAlCos ? null : children}
     </UniversalPage>
   );
 }

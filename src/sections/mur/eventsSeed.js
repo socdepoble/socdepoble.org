@@ -1,5 +1,11 @@
 // Dades de calendari recuperades de la versió original.
 import { APLEC_2023_HTML, APLEC_VIDEO } from './articles/aplec2023Content.js';
+import { labelsSistema } from '../../data/taxonomia/taxonomiaPublicacio.js';
+
+/* C26-2 #9 (IDEA-365, regla 3 del 21:40) · Les pastilles de sistema es deriven de categoriesSistema amb
+   labelsSistema (taxonomiaPublicacio.js): text i ruta canònics (/mur, /calendari, /categoria/<slug>), mai escrits a mà. */
+const SISTEMA_APLEC = Object.freeze(['Mur', 'Calendari']);
+const SISTEMA_CURSOS = Object.freeze(['Mur', 'Calendari', 'Vídeo']);
 
 export const CALENDAR_EVENTS = [{
   date: '2023-01-29',
@@ -56,12 +62,12 @@ export const CALENDAR_EVENTS = [{
      «sender» no hi ixen cap vegada) i «Associacionisme», de qui l'organitza. */
   categoria_tematica_id: 'defensa-territori',
   category: '⚖️ Defensa del Territori, Ecologia i Reivindicació',
-  tags: ['Aplec pel Territori', 'Incendis', 'Associacionisme'],
+  categoriesSistema: SISTEMA_APLEC,
+  tags: ['Aplec'],
   labels: [
+    ...labelsSistema(SISTEMA_APLEC, 'ca'),
     { text: '⚖️ Defensa del Territori, Ecologia i Reivindicació', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2023-01-29' },
-    { text: 'Aplec pel Territori', className: 'sdp-badge-tag' },
-    { text: 'Incendis', className: 'sdp-badge-tag' },
-    { text: 'Associacionisme', className: 'sdp-badge-tag' }
+    { text: 'Aplec', className: 'sdp-badge-tag' }
   ],
   portada_sencera: true
 }];
@@ -101,8 +107,10 @@ export const CURSOS_PEDRA_EN_SEC_2026_EVENT = Object.freeze({
      per als Cursos: el text diu «pedra en sec» 12 vegades. */
   categoria_tematica_id: 'recursos-locals',
   category: '🌾 Recursos Locals, Agricultura i Sobirania',
+  categoriesSistema: SISTEMA_CURSOS,
   tags: ['Pedra Seca', 'Bioconstrucció', 'Patrimoni', 'Activitats'],
   labels: [
+    ...labelsSistema(SISTEMA_CURSOS, 'ca'),
     { text: '🌾 Recursos Locals, Agricultura i Sobirania', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-10-23' },
     { text: 'Pedra Seca', className: 'sdp-badge-tag' },
     { text: 'Bioconstrucció', className: 'sdp-badge-tag' },

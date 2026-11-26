@@ -126,7 +126,10 @@ describe('IDEA-324a · Carpeta Sistema, edició de pàgines de PAGE_COPY i histo
       expect(esRevisioEditorial(item)).toBe(true);
     }
     // El Mur públic conserva les 20 targetes canòniques (19 + /page/reconeixements afegida en R32.61).
-    expect(targetesDeSistema(PAGE_COPY, { nativa: false })).toHaveLength(21);
+    // v1.2.26 · IDEA-367 (Llibre Mestre, 23:06, punt 3) · + la card del llibre «Què dinem?», que no és cap pàgina de PAGE_COPY.
+    const delMur = targetesDeSistema(PAGE_COPY, { nativa: false });
+    expect(delMur).toHaveLength(22);
+    expect(delMur.filter((targeta) => !Object.hasOwn(PAGE_COPY, targeta.id)).map((targeta) => targeta.id)).toEqual(['que-dinem']);
   });
 
   test('editar una pàgina de Sistema a PublicacioEditable actualitza en viu TextSection, preserva widgets i permet Desfer amb 1 clic', async () => {

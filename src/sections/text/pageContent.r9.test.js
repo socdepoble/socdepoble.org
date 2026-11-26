@@ -359,14 +359,18 @@ describe('Onada R9 · /page/herbari en les 5 llengües', () => {
     expect(new Set(ESPECIES_HERBARI_LA_TORRE_117.map((e) => e.font.document))).toEqual(new Set(['Herbari de La Torre de les Maçanes']));
   });
 
+  const BIBLIOTECA_HERBARIS = { ca: 'Biblioteca Multipoble d’Herbaris', es: 'Biblioteca Multipueblo de Herbarios', en: 'Multi-village Herbarium Library', eu: 'Herrietako Herbarioen Liburutegia', gl: 'Biblioteca Multipobo de Herbarios' };
   test.each(LLENGUES)('%s · mateixa anatomia que el valencià, la xifra i els topònims, i les frases de consum del visor', (llengua) => {
     const p = pagina('herbari', llengua);
     expect(p.contentLanguage ?? 'ca').toBe(llengua);
     if (llengua !== 'ca') expect(p.title).not.toBe(PAGE_COPY.herbari.title);
-    expect(p.subtitle).toContain('117');
-    expect(p.subtitle).toContain('La Torre de les Maçanes');
+    /* v1.2.26 · IDEA-366 (Llibre Mestre, 22:26) · /page/herbari és la Biblioteca Multipoble d'Herbaris: el subtítol
+       és el nom de la biblioteca, i la xifra i el topònim del primer llibre (l'Herbari de La Torre) passen a l'entradeta. */
+    expect(p.subtitle).toBe(BIBLIOTECA_HERBARIS[llengua]);
     expect(p.subtitle).not.toContain('La Canaleta');
+    expect(p.lead).toContain('117');
     expect(p.lead).toContain('La Torre de les Maçanes');
+    expect(p.lead).not.toContain('La Canaleta');
     const body = doc(p.html).body;
     expect([...body.children].map((n) => n.tagName)).toEqual(['H3', 'P', 'P']);
     expect(body.querySelector('h3').textContent).toContain('La Torre');
@@ -497,7 +501,7 @@ describe('Gauntlet R9 · G1-01, G1-06 i G3-N02 · el balanç diu què falta de v
       'A migración 2611061520 está pendente de aplicar.', // MV5
       'Les RPC de la 2611031700 queden per aplicar.',
       'La 2610311800 està pendent.',
-      // P0-05/P2-10: la 2610282100 ja no consta «Aplicada» (falta el CHECK de comarca); l'exemple usa una aplicada.
+      // P0-05/P2-10: la 2610282100 ja no consta «Aplicada» (falta el CHECK de comarca); l'exemple fa servir una aplicada.
       'NO-DISPONIBLE: 2610250100 pendent.'
     ]) expect(negacionsAplicades(frase), frase).toHaveLength(1);
     for (const frase of [
@@ -727,12 +731,18 @@ describe('Gauntlet R9 · G1-09 · gallec i anglés de les pàgines de patrimoni'
     }
     expect(textDe('rutes-de-poble', 'gl')).toContain('Os 6 itinerarios de La Torre de les Maçanes');
     expect(textDe('arbres-monumentals', 'gl')).toContain(`as ${ARBRES_MONUMENTALS_2020.length} árbores e conxuntos arbóreos da inspección de 2007, revisada en 2020`);
-    expect(textDe('arbres-monumentals', 'gl')).toContain('Sóc de Poble, Portal de Pobos Conectados');
+    /* v1.2.26 · IDEA-365 (Llibre Mestre, 22:16, punt 3) · Neteja H2: el subtítol és el nom de la biblioteca, sense el
+       lema; el lema gallec continua al cos de la pàgina d'entrada. */
+    expect(pagina('arbres-monumentals', 'gl').subtitle).toBe('Biblioteca Multipobo de Árbores Singulares');
+    expect(textDe('arbres-monumentals', 'gl')).toContain('Portal de Pobos Conectados');
     for (const clau of ['banc-de-llavors', 'arbres-monumentals']) {
       expect(textDe(clau, 'gl'), clau).toContain('as plantas do termo');
       expect(textDe(clau, 'gl'), clau).toContain('Herbario de La Torre');
     }
-    expect(pagina('herbari', 'gl').title).toContain('de La Torre');
+    // v1.2.26 · IDEA-366 (22:26) · el títol és la biblioteca («Herbario»); el primer llibre, «Herbario de La Torre», a l'entradeta.
+    expect(pagina('herbari', 'gl').title).toBe('Herbario');
+    expect(pagina('herbari', 'gl').lead).toContain('Herbario de La Torre');
+    expect(pagina('herbari', 'gl').lead).toContain('de La Torre de les Maçanes');
   });
   test('anglés: sense «municipal» repetit davant de l’Ordenança', () => {
     const text = textDe('arbres-monumentals', 'en');
