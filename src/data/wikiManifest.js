@@ -1249,8 +1249,8 @@ export const wikiManifest = {
       "categoryId": "folder:02_saber/architecture",
       "tags": [],
       "date": "2026-11-01T00:52:20+01:00",
-      "updated": "2026-11-24T21:58:30+01:00",
-      "revisions": 22,
+      "updated": "2026-11-26T01:27:10+01:00",
+      "revisions": 23,
       "mur": false,
       "origenEditorial": {
         "date": "git",
@@ -1262,8 +1262,8 @@ export const wikiManifest = {
         "status": "esborrany",
         "description": "Inventari verificable del port i requisits d'allotjament Model B",
         "date": "2026-11-01T00:52:20+01:00",
-        "updated": "2026-11-24T21:58:30+01:00",
-        "revisions": 22,
+        "updated": "2026-11-26T01:27:10+01:00",
+        "revisions": 23,
         "mur": false,
         "origenEditorial": {
           "date": "git",

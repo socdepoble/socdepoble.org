@@ -22,7 +22,7 @@ export const PRESSUPOSTOS_MS = Object.freeze({ scan_fred_ms: 8000, cache_sha256_
 export const RUTA_CACHE = 'tooling/gates/filtre-aprenentatge-node0.cache.json';
 export const RUTA_BASELINE = 'tooling/gates/filtre-aprenentatge-node0.baseline.json';
 export const TOTAL_BASELINE = 234;
-const CACHE_SHA256 = '43a299a0dd70cba3752f5f36de568d38ad97e4cf6785d3221fed25a930b3fa66';
+const CACHE_SHA256 = '590f2b866812bade44b552ea42308f9c89fc3522c643ffbd519bbac82665d3e5';
 const BASELINE_SHA256 = '5b48d8197ff5952db024384af910e0a52ca6e668ab11757abedbc51b33ee4e08';
 const hash = text => createHash('sha256').update(text).digest('hex');
 const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
