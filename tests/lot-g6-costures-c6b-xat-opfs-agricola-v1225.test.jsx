@@ -154,6 +154,54 @@ describe('Lot G6 · Costures C1+C6↔G1, C2+C6a↔G2, XAT-B01/B03 i ML-15', () =
     expect(within(dialeg).queryByRole('button', { name: 'Nou grup' })).toBeNull();
   });
 
+  /* D-REENVIA, opció (b) (integració v1.2.25, Guàrdia #7 de MarIA, Pla 261125_0321 §6) · XAT-B03 tancat:
+     sense el motor (cap onReenviaMissatge), triar una altra conversa al diàleg «Reenvia a…» hi porta i prou.
+     Cap ruta no porta el text del missatge (ni ?context= ni cap altre paràmetre), i «Nou grup» no s'oferix.
+     Al fil actual, el text s'envia com abans (onSendMessage). Amb l'opció (a), la ruta duia ?context=. */
+  const reenviaSenseMotor = () => {
+    const rutes = [];
+    const onSendMessage = vi.fn();
+    const fil = { id: 'f1', tipus: 'grup', name: 'Plaça', potEscriure: true };
+    const altre = { id: 'f 2', tipus: 'grup', name: 'Comissió de festes', potEscriure: true };
+    render(
+      <MemoryRouter rutaInicial="/xat/f1" onCanvi={(ruta) => rutes.push(ruta)}>
+        <AppGridContext.Provider value={{ mida: 'ample' }}>
+          <Conversa
+            fil={fil}
+            canals={[fil, altre]}
+            messages={[{ id: 'm1', seq: 1, sender: 'other', author: 'Anna', text: 'Text privat secret', estatEnviament: 'enviat' }]}
+            onSendMessage={onSendMessage}
+            locale="ca-ES"
+            t={t}
+          />
+        </AppGridContext.Provider>
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Reenvia' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Reenvia a…' });
+    expect(within(dialeg).queryByRole('button', { name: 'Nou grup' })).toBeNull();
+    return { rutes, onSendMessage, dialeg };
+  };
+
+  test('XAT-B03 · D-REENVIA (b) · sense motor, reenviar a una altra conversa no posa el text a la URL', () => {
+    const { rutes, onSendMessage, dialeg } = reenviaSenseMotor();
+    expect(rutes).toEqual(['/xat/f1']);
+    fireEvent.click(within(dialeg).getByRole('button', { name: /Comissió de festes/ }));
+    expect(rutes).toEqual(['/xat/f1', '/xat/f%202']);
+    expect(decodeURIComponent(rutes.join('\n'))).not.toMatch(/context|Text privat secret|\?/);
+    expect(onSendMessage).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: 'Reenvia a…' })).toBeNull();
+  });
+
+  test('XAT-B03 · D-REENVIA (b) · sense motor, al fil actual el text s’envia i no es navega', () => {
+    const { rutes, onSendMessage, dialeg } = reenviaSenseMotor();
+    fireEvent.click(within(dialeg).getByRole('button', { name: /Plaça/ }));
+    expect(onSendMessage).toHaveBeenCalledTimes(1);
+    expect(onSendMessage.mock.calls[0][0]).toMatchObject({ id: 'f1' });
+    expect(onSendMessage.mock.calls[0][1]).toBe('Text privat secret');
+    expect(rutes).toEqual(['/xat/f1']);
+  });
+
   test('C2+C6a+G2 · Multimèdia respecta façana amb font.handle===null, potEscriure:false i volum.oblida()', async () => {
     const oblidaVolum = vi.fn();
     const importaFitxers = vi.fn().mockResolvedValue({ importats: ['foto.jpg'], tipus: 'opfs' });

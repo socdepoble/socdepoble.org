@@ -4274,7 +4274,13 @@ describe('Onades R32.7, R32.8 i R32.9 · Crònica d’obertura en les cinc lleng
     // Reenviar sense el motor (XatSection no hi passa onReenviaMissatge): el text, al fil actual o com a context de la conversa triada.
     expect(conversa).toContain('filsPerReenviar = null, onReenviaMissatge = null, onNouGrupReenvia = null,');
     expect(seccioXat).toMatch(/onReenviaMissatge=\{potAccionsMissatge && typeof /);
-    expect(conversa).toContain("if (textEnviar) p.set('context', textEnviar);");
+    /* v1.2.25 · D-REENVIA, opció (b) (Guàrdia #7 de MarIA, Pla 261125_0321 §6) · REAPUNTADA al comportament
+       segur: el text sense motor ja no viatja a la URL. Al fil actual s'envia (onSendMessage) i a una altra
+       conversa només s'hi va, sense ?context= (XAT-B03, Lots G6 i G9). La crònica de la v1.2.8 parla del seu dia
+       i no es toca; la conducta la fixa tests/lot-g6-costures-c6b-xat-opfs-agricola-v1225.test.jsx. */
+    expect(conversa).toContain('onSendMessage?.(fil, textEnviar);');
+    expect(conversa).toContain('navigate(`/xat/${encodeURIComponent(String(desti.id))}`);');
+    expect(conversa).not.toContain("p.set('context', textEnviar)");
     // El motor, el port i la capacitat opcional, preparats: l'absència de l'SQL es reconeix i no es fabrica cap confirmació.
     expect(llegix('src/data/contracte.js')).toContain("'carregaAccionsMissatges', 'alternaReaccio', 'alternaDestacat', 'alternaFixat', 'eliminaPerAMi'");
     expect(llegix('src/data/supabase/xatAccions.js')).toContain("code: 'XAT_ACCIONS_SQL_ABSENT'");

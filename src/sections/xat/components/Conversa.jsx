@@ -2190,14 +2190,12 @@ export default function Conversa({
             } else if (desti && String(desti.id) === String(fil?.id) && textEnviar) {
               onSendMessage?.(fil, textEnviar);
             } else if (desti?.id != null) {
-              /* D-REENVIA, opció (a) (integració v1.2.25, Guàrdia #6 de MarIA; pendent de ratificar a la
-                 Bústia) · El reenviament sense el motor de sempre (crònica R32.7–9): el text arriba com a
-                 context de la conversa triada. XAT-B03 (Lot G6) el retirava per no posar el text a la URL;
-                 la retirada queda per a la decisió del Mestre, i amb el motor (onReenviaMissatge) mai no
-                 passa per ací. «Nou grup» sense onNouGrupReenvia continua retirat (XAT-B03). */
-              const p = new URLSearchParams();
-              if (textEnviar) p.set('context', textEnviar);
-              navigate(`/xat/${encodeURIComponent(String(desti.id))}${p.toString() ? `?${p.toString()}` : ''}`);
+              /* D-REENVIA, opció (b) (integració v1.2.25, Guàrdia #7 de MarIA, Pla 261125_0321 §6) ·
+                 XAT-B03 (Lots G6 i G9) continua tancat: sense el motor (onReenviaMissatge), triar una altra
+                 conversa només hi porta. El text del missatge mai no va a la URL (?context=), que queda a
+                 l'historial i a la barra d'adreces. La crònica de la v1.2.8 (R32.7–9) parla del seu dia.
+                 «Nou grup» sense onNouGrupReenvia no s'oferix (XAT-B03). */
+              navigate(`/xat/${encodeURIComponent(String(desti.id))}`);
             }
             setLotReenvia(null);
             if (modeSeleccio) surtDeSeleccio();
