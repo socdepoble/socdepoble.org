@@ -1,4 +1,4 @@
-import { SISTEMA_CATEGORIES_12, nomCategoriaSistema, nomEtiquetaComuna } from './taxonomiaPublicacio.js';
+import { SISTEMA_CATEGORIES_12, nomCategoriaSistema, nomEtiquetaComuna, slugTaxonomia } from './taxonomiaPublicacio.js';
 export * from './taxonomiaPublicacio.js';
 export * from './folksonomiaCurada.js';
 /** Localització de la taxonomia, compartida amb les vistes que ja es carreguen de manera diferida. */
@@ -83,7 +83,10 @@ export function nomEstructural(name,idioma='ca'){const i=indexIdioma(idioma);ret
 /** Cadena R11, Loop 3 (L2-09) · Per a les targetes i els detalls del Mur, el Mercat i els actes (text
  * d'altri): només les 6 categories mares, que porten emoji i no xoquen amb cap text lliure, passen a la
  * llengua de la interfície. Una etiqueta lliure («Muro», «Planos») es queda tal qual (L2-17). Sense canvis,
- * el mateix array. */
+ * el mateix array.
+ * v1.2.26 · Opció A (escèptic final del Gauntlet) · Una mare traduïda porta a la pàgina de la classificació que l'element
+ * porta de veres (el text cru, el que llig PaginaEditorialEtiqueta), no a /categoria/<text traduït>, que no existix:
+ * conserva l'href que ja tinga (també href:false). */
 const CATEGORIES_ANTIGUES_EQUIVALENTS=Object.freeze({
  '💻 Tecnologia Lliure, Dades Obertes i Disseny':'tecnologia-lliure',
  '💻 Tecnología Libre, Datos Abiertos y Diseño':'tecnologia-lliure',
@@ -99,7 +102,7 @@ export function localitzaCategoriesMares(labels,idioma='ca'){
   const cat=CATEGORIES_CANONIQUES.find(c=>Object.values(c.labels).includes(label.text));
   const idCategoria=cat?.id??(Object.hasOwn(CATEGORIES_ANTIGUES_EQUIVALENTS,label.text)?CATEGORIES_ANTIGUES_EQUIVALENTS[label.text]:null);
   const text=idCategoria?nomCategoriaCanonica(idCategoria,idioma):null;
-  if(!text||text===label.text)return label;changed=true;return {...label,text};
+  if(!text||text===label.text)return label;changed=true;return {...label,text,href:label.href??`/categoria/${slugTaxonomia(label.text)}`};
  });
  return changed?result:labels;
 }

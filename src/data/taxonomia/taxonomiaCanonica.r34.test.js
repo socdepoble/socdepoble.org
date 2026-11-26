@@ -1,5 +1,5 @@
 import {expect,test} from 'vitest';
-import {CATEGORIES_CANONIQUES,IDIOMES_TAXONOMIA,NOMS_ETIQUETES_CANONIQUES_49,localitzaCategoriesMares,nomCategoriaCanonica,nomEtiquetaCanonica,nomEstructural} from './taxonomiaCanonica.js';
+import {CATEGORIES_CANONIQUES,IDIOMES_TAXONOMIA,NOMS_ETIQUETES_CANONIQUES_49,localitzaCategoriesMares,nomCategoriaCanonica,nomEtiquetaCanonica,nomEstructural,slugTaxonomia} from './taxonomiaCanonica.js';
 import {CLASSIFICACIO_PAGINES_PUBLIQUES,etiquetesDePaginaPublica} from './classificacioPaginesPubliques.js';
 import {FACETA_4_ETIQUETES_SKOS,ARTICLES_SIMULADOR_IA_425,CLAU_STORAGE_TAXONOMIA_ADMIN,llegeixEstatTaxonomiaAdmin,desaEstatTaxonomiaAdmin} from './tesaurusDoctoralSocDePoble.js';
 import {MAX_TEXT,validaTaxonomia,aplicaPersonalitzacio,categoriesBase,etiquetesBase} from '../personalitzacio.js';
@@ -114,5 +114,14 @@ test('Cadena R11, Loop 3 (L2-09) · les mares del Mur i dels detalls, en la llen
   expect(localitzaCategoriesMares(result,'ca')[0].text).toBe(labels[0].text);
  }
  const lliures=[{text:'Muro',className:'sdp-badge-system'}];expect(localitzaCategoriesMares(lliures,'en')).toBe(lliures);
+ // v1.2.26 · Opció A · Sense href, la mare traduïda porta a la pàgina del text cru que l'element porta (el que troba
+ // PaginaEditorialEtiqueta), no a /categoria/<text traduït>; en valencià, la píndola de sempre.
+ const crua=[{text:nomCategoriaCanonica('defensa-territori'),className:'sdp-badge-category'}];
+ expect(localitzaCategoriesMares(crua,'ca')).toBe(crua);
+ for(const language of IDIOMES_TAXONOMIA.slice(1)){
+  const [mare]=localitzaCategoriesMares(crua,language);
+  expect(mare.text).toBe(nomCategoriaCanonica('defensa-territori',language));
+  expect(mare.href).toBe(`/categoria/${slugTaxonomia(crua[0].text)}`);
+ }
  expect(localitzaCategoriesMares(undefined,'en')).toBeUndefined();
 });

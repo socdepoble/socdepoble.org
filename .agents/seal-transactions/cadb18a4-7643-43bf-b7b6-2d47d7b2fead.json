@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "versions",
+  "actor": "Mestre Javi",
+  "reason": "Salt v1.2.26 i crònica de /versions en 5 llengües (Deploy Opció A)",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "versions",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "Salt v1.2.26 i crònica de /versions en 5 llengües (Deploy Opció A)"
+  ],
+  "id": "cadb18a4-7643-43bf-b7b6-2d47d7b2fead",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "63deb3625bf3ae6c42ecafd050fe6a26275c80283b408f60581e91d783e0a075",
+      "after": "8e0bcff3e2e57d79b8d1de28c6c7bebd92cb6b1a348c4ef0af5428fb1f5c36e0"
+    }
+  ],
+  "state": "accepted"
+}

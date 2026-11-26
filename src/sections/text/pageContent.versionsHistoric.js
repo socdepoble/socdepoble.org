@@ -718,6 +718,90 @@ const fitaR32_15 = (language) => {
    (CEV-5) només reconeix rutes literals. «L'Assaig a la Plaça» és el nom canònic de l'estudi que ho va demanar. Llei 32:
    «el servidor de Sóc de Poble». */
 const ENLLAC_XAT_R32_28 = '/xat';
+/* v1.2.26 · Opció A (T2) · Rotació IDEA-332: amb la crònica de la v1.2.26 al capdamunt, la de l'Onada R32.34 passa del
+   Nivell 1 (pageContent.r10.js) a este arxiu històric, byte a byte i davant de la R32.33. */
+/* Onada v1.2.20 (22-11-2026, matinada; Marató Nocturna, pla 261121_2335) · La crònica de la versió 1.2.20 (build 25) del
+   repositori: el kit de Codex R32.34 (lots 01 a 04, amb els dos owner_kit de metadades) i la costura del preu del
+   propietari de /disseny. Cada fet té el seu consumidor a l'arbre, i la prova (pageContent.versions.test.js, describe
+   «Onada R32.34») el llig:
+   · llegir sense cobertura (lot 03, DOL-32): src/pwa/lecturesPubliques.js i lecturaPublicaOffline.js (només text públic
+     conegut, com a molt 50 files per font) i public/sw.js (la «Còpia de lectura» que diu «Esta còpia es va guardar el…»,
+     CADUCITAT_LECTURA_MS de set dies, sense cap sessió privada, mitjà ni reserva general de l'aplicació);
+   · les fotos del Xat sense la posició (lot 01, DOL-55): src/data/xatMultimedia.js i src/data/supabase/xatMultimedia.js
+     (els bytes ixen sense l'EXIF de GPS i la ubicació compartida va amb dos decimals, com a la previsualització). Només
+     des d'esta versió: el servidor encara accepta més decimals dels clients antics (Gauntlet R1, L1-03), i la crònica no
+     parla dels vídeos, que encara poden portar el GPS en una pista de metadades (L1-02 i L1-05);
+   · el Bloc de notes que diu on és cada text (lot 02, DOL-54): src/sections/notes/honestedatDesat.js (els estats «Còpia
+     local», «Esborrany privat desat al servidor» i «Hi ha una versió publicada»), GlobalSaveManager.js i NotesEditor.jsx
+     (l'autodesat no publica: la versió pública només canvia en confirmar);
+   · les repeticions del Calendari (lot 03, DOL-33): src/utils/esdeveniment.js (UNTIL en UTC des d'Europe/Madrid, també
+     de matinada i en els canvis d'hora);
+   · els preus de la llista del Mercat (lot 03, DOL-40): src/sections/mercat/preuMercat.js (formataPreuMercat, el mateix
+     format en les cinc llengües) des de targetaDeProducte.js. La variant i el detall queden per a R32.36: la crònica
+     només parla de la llista;
+   · no parla de les pestanyes obertes durant una actualització (lot 04: src/pwa/recuperacioChunkDeploy.js i src/host.js,
+     retiratSenseSonda; Gauntlet R1, L4-01): no té cap canvi visible, i la retenció dels trossos dels builds anteriors és
+     del desplegament, no del codi (Gauntlet R2, L3R2-03).
+   La lectura sense cobertura només és a la web i sense sessió (motiuPerNoRegistrar a les apps natives; Gauntlet R2,
+   L3R2-02), i les fotos porten el lloc aproximat si la persona el comparteix (L3R2-01).
+   Llei 0 (què NO diu i per què): la 1.2.20 no consta a cap botiga quan s'escriu (el build 25 naix en este worktree); el
+   connector publicat a WordPress.org és la 1.1.27 (SVN r3816052) i la 1.1.28 del repositori no s'ha publicat. No
+   s'aplica cap canvi al servidor; la migració de R32.25 continua sense aplicar, els avisos del xat a les apps continuen
+   apagats i la política és la 2.5. No parla del kit R32.35b de Gemini (no està llest), ni de les metadades del Node 0 i
+   de Tellado: no tenen pantalla. */
+export const FITA_R32_34 = {
+ ca: ['22 de novembre de 2026, matinada · Onada R32.34 · Lectura sense cobertura, fotos sense la posició amagada i notes que diuen on és cada text',
+  'L’Onada R32.34 de <strong>Sóc de Poble</strong> cuida la <strong>privacitat</strong> i la <strong>confiança</strong>. Les <strong>fotos</strong> del Xat ja no porten amagada la posició exacta dins del fitxer, el Bloc de notes diu on és cada text, i algunes <strong>pàgines públiques</strong> es poden llegir <strong>sense cobertura</strong>.',
+  'Les aplicacions passen a la <strong>versió 1.2.20 (build 25)</strong> al <strong>repositori</strong> i, quan s’escriu esta crònica, la versió encara <strong>no consta a cap botiga</strong>. El <strong>connector de WordPress</strong> publicat a WordPress.org és la <strong>1.1.27</strong>; la 1.1.28 del repositori <strong>encara no s’ha publicat</strong>.',
+  'Quan s’escriu esta crònica, la versió <strong>no canvia res</strong> al <strong>servidor de Sóc de Poble</strong>. Els <strong>avisos del xat</strong> a les aplicacions del mòbil encara <strong>no estan encesos</strong>, la <strong>política de privacitat</strong> continua en la <strong>versió 2.5</strong>, i encendre els avisos depén d’una <strong>decisió del Mestre</strong>.',
+  ['Novetat · Llegir sense cobertura', 'A la web, si es perd la <strong>cobertura</strong>, algunes <strong>pàgines públiques</strong> que s’havien obert sense iniciar sessió es poden tornar a llegir durant <strong>set dies</strong>, com una <strong>còpia de lectura</strong> que diu el <strong>dia que es va guardar</strong>. Res <strong>privat</strong> no es guarda.'],
+  ['Millora · Les fotos del Xat, sense la posició amagada', 'Les <strong>fotos</strong> que s’envien pel Xat ja no porten amagada la <strong>posició exacta</strong> on es van fer: ixen <strong>sense les dades de GPS</strong>. I si algú <strong>comparteix la ubicació</strong> des d’esta versió, va amb <strong>dos decimals</strong>, la mateixa precisió que mostra la <strong>previsualització</strong>.'],
+  ['Millora · El Bloc de notes diu on és cada text', `Al ${enllacIntern(ENLLAC_NOTES, 'Bloc de notes')}, res no es <strong>publica</strong> sense que algú ho <strong>confirme</strong>, i l’editor diu si el text és una <strong>còpia local</strong>, un <strong>esborrany privat</strong> desat al servidor o una <strong>versió publicada</strong>.`],
+  ['Correcció · Les repeticions del Calendari', 'Les activitats que es <strong>repetixen</strong> al <strong>Calendari</strong> acaben el <strong>dia que toca</strong>, també quan l’última cau de <strong>matinada</strong> o en un canvi d’hora.'],
+  ['Correcció · Els preus de la llista del Mercat', 'A la <strong>llista</strong> del <strong>Mercat</strong>, els <strong>preus</strong> ixen amb <strong>coma decimal</strong>, com «4,95 €», en les cinc llengües.']],
+ es: ['22 de noviembre de 2026, madrugada · Oleada R32.34 · Lectura sin cobertura, fotos sin la posición escondida y notas que dicen dónde está cada texto',
+  'La Oleada R32.34 de <strong>Sóc de Poble</strong> cuida la <strong>privacidad</strong> y la <strong>confianza</strong>. Las <strong>fotos</strong> del Chat ya no llevan escondida la posición exacta dentro del archivo, el Bloc de notas dice dónde está cada texto, y algunas <strong>páginas públicas</strong> se pueden leer <strong>sin cobertura</strong>.',
+  'Las aplicaciones pasan a la <strong>versión 1.2.20 (build 25)</strong> en el <strong>repositorio</strong> y, cuando se escribe esta crónica, la versión todavía <strong>no consta en ninguna tienda</strong>. El <strong>conector de WordPress</strong> publicado en WordPress.org es la <strong>1.1.27</strong>; la 1.1.28 del repositorio <strong>todavía no se ha publicado</strong>.',
+  'Cuando se escribe esta crónica, la versión <strong>no cambia nada</strong> en el <strong>servidor de Sóc de Poble</strong>. Los <strong>avisos del chat</strong> en las aplicaciones del móvil todavía <strong>no están encendidos</strong>, la <strong>política de privacidad</strong> sigue en la <strong>versión 2.5</strong>, y encender los avisos depende de una <strong>decisión del Mestre</strong>.',
+  ['Novedad · Leer sin cobertura', 'En la web, si se pierde la <strong>cobertura</strong>, algunas <strong>páginas públicas</strong> que se habían abierto sin iniciar sesión se pueden volver a leer durante <strong>siete días</strong>, como una <strong>copia de lectura</strong> que dice el <strong>día en que se guardó</strong>. No se guarda nada <strong>privado</strong>.'],
+  ['Mejora · Las fotos del Chat, sin la posición escondida', 'Las <strong>fotos</strong> que se envían por el Chat ya no llevan escondida la <strong>posición exacta</strong> donde se hicieron: salen <strong>sin los datos de GPS</strong>. Y si alguien <strong>comparte la ubicación</strong> desde esta versión, va con <strong>dos decimales</strong>, la misma precisión que muestra la <strong>vista previa</strong>.'],
+  ['Mejora · El Bloc de notas dice dónde está cada texto', `En el ${enllacIntern(ENLLAC_NOTES, 'Bloc de notas')}, no se <strong>publica</strong> nada sin que alguien lo <strong>confirme</strong>, y el editor dice si el texto es una <strong>copia local</strong>, un <strong>borrador privado</strong> guardado en el servidor o una <strong>versión publicada</strong>.`],
+  ['Corrección · Las repeticiones del Calendario', 'Las actividades que se <strong>repiten</strong> en el <strong>Calendario</strong> <strong>terminan</strong> el <strong>día que toca</strong>, también cuando la última cae de <strong>madrugada</strong> o en un cambio de hora.'],
+  ['Corrección · Los precios de la lista del Mercado', 'En la <strong>lista</strong> del <strong>Mercado</strong>, los <strong>precios</strong> salen con <strong>coma decimal</strong>, como «4,95 €», en los cinco idiomas.']],
+ en: ['22 November 2026, early morning · Wave R32.34 · Reading without coverage, photos without the hidden position and notes that say where each text is',
+  'Wave R32.34 of <strong>Sóc de Poble</strong> looks after <strong>privacy</strong> and <strong>trust</strong>. <strong>Photos</strong> in the Chat no longer hide the exact position inside the file, the Notebook says where each text is, and some <strong>public pages</strong> can be read <strong>without coverage</strong>.',
+  'The applications move to <strong>version 1.2.20 (build 25)</strong> in the <strong>repository</strong> and, at the time of writing, the version is <strong>not listed in any store</strong>. The <strong>WordPress connector</strong> published on WordPress.org is <strong>1.1.27</strong>; 1.1.28 in the repository <strong>has not been published yet</strong>.',
+  'At the time of writing, the version <strong>changes nothing</strong> on the <strong>Sóc de Poble server</strong>. <strong>Chat notifications</strong> in the mobile apps are still <strong>not switched on</strong>, the <strong>privacy policy</strong> stays at <strong>version 2.5</strong>, and switching notifications on depends on <strong>the Mestre’s decision</strong>.',
+  ['New · Reading without coverage', 'On the website, if <strong>coverage</strong> drops, some <strong>public pages</strong> opened without signing in can be read again for <strong>seven days</strong>, as a <strong>reading copy</strong> that says the <strong>day it was saved</strong>. Nothing <strong>private</strong> is stored.'],
+  ['Improvement · Chat photos, without the hidden position', '<strong>Photos</strong> sent through the Chat no longer hide the <strong>exact position</strong> where they were taken: they go out <strong>without the GPS data</strong>. And if someone <strong>shares their location</strong> from this version, it goes with <strong>two decimals</strong>, the same precision the <strong>preview</strong> shows.'],
+  ['Improvement · The Notebook says where each text is', `In the ${enllacIntern(ENLLAC_NOTES, 'Notebook')}, nothing is <strong>published</strong> unless someone <strong>confirms</strong> it, and the editor says whether the text is a <strong>local copy</strong>, a <strong>private draft</strong> saved on the server or a <strong>published version</strong>.`],
+  ['Fix · Repeating events in the Calendar', 'Events that <strong>repeat</strong> in the <strong>Calendar</strong> <strong>end</strong> on the <strong>right day</strong>, also when the last one falls in the <strong>small hours</strong> or on a clock change.'],
+  ['Fix · Prices in the Market list', 'In the <strong>Market</strong> <strong>list</strong>, <strong>prices</strong> come out with a <strong>decimal comma</strong>, such as «4,95 €», in all five languages.']],
+ eu: ['2026ko azaroaren 22a, goizaldea · R32.34 olatua · Estaldurarik gabe irakurtzea, posizio ezkuturik gabeko argazkiak eta testu bakoitza non dagoen esaten duten oharrak',
+  '<strong>Sóc de Poble</strong>ren R32.34 olatuak <strong>pribatutasuna</strong> eta <strong>konfiantza</strong> zaintzen ditu. Txateko <strong>argazkiek</strong> ez dute gehiago posizio zehatza fitxategiaren barruan ezkutatuta eramaten, Koadernoak testu bakoitza non dagoen esaten du, eta <strong>orri publiko</strong> batzuk <strong>estaldurarik gabe</strong> irakur daitezke.',
+  'Aplikazioak <strong>1.2.20 bertsiora (25. builda)</strong> igarotzen dira <strong>biltegian</strong>, eta kronika hau idazten den unean bertsio hori <strong>ez dago inongo dendatan</strong> oraindik. WordPress.org-en argitaratutako <strong>WordPress konektorea</strong> <strong>1.1.27</strong> da; biltegiko 1.1.28 <strong>ez da oraindik argitaratu</strong>.',
+  'Kronika hau idazten den unean, bertsio honek <strong>ez du ezer aldatzen</strong> <strong>Sóc de Pobleren zerbitzarian</strong>. Mugikorreko aplikazioetako <strong>txateko abisuak</strong> oraindik <strong>ez daude piztuta</strong>, <strong>pribatutasun-politika</strong> <strong>2.5 bertsioan</strong> dago oraindik, eta abisuak piztea <strong>Mestreren erabakiaren</strong> menpe dago.',
+  ['Berritasuna · Estaldurarik gabe irakurtzea', 'Webgunean, <strong>estaldura</strong> galtzen bada, saioa hasi gabe irekitako <strong>orri publiko</strong> batzuk berriro irakur daitezke <strong>zazpi egunez</strong>, gorde zen <strong>eguna</strong> esaten duen <strong>irakurketa-kopia</strong> gisa. Ez da ezer <strong>pribaturik</strong> gordetzen.'],
+  ['Hobekuntza · Txateko argazkiak, posizio ezkuturik gabe', 'Txatetik bidaltzen diren <strong>argazkiek</strong> ez dute gehiago ezkutuan eramaten atera ziren <strong>posizio zehatza</strong>: <strong>GPS daturik gabe</strong> ateratzen dira. Eta norbaitek bertsio honetatik <strong>kokapena partekatzen</strong> badu, <strong>bi hamartarrekin</strong> doa, <strong>aurrebistak</strong> erakusten duen zehaztasun berarekin.'],
+  ['Hobekuntza · Koadernoak testu bakoitza non dagoen esaten du', `${enllacIntern(ENLLAC_NOTES, 'Koadernoan')}, ez da ezer <strong>argitaratzen</strong> norbaitek <strong>berretsi</strong> arte, eta editoreak esaten du testua <strong>tokiko kopia</strong> den, zerbitzarian gordetako <strong>zirriborro pribatua</strong> den edo <strong>argitaratutako bertsioa</strong> den.`],
+  ['Zuzenketa · Egutegiko errepikapenak', '<strong>Egutegian</strong> <strong>errepikatzen</strong> diren jarduerak <strong>dagokien egunean</strong> amaitzen dira, baita azkena <strong>goizaldean</strong> edo ordu-aldaketan egokitzen denean ere.'],
+  ['Zuzenketa · Merkatuko zerrendako prezioak', '<strong>Merkatuko zerrendan</strong>, <strong>prezioak</strong> <strong>koma hamartarrarekin</strong> ateratzen dira, «4,95 €» bezala, bost hizkuntzetan.']],
+ gl: ['22 de novembro de 2026, madrugada · Onda R32.34 · Lectura sen cobertura, fotos sen a posición agochada e notas que din onde está cada texto',
+  'A Onda R32.34 de <strong>Sóc de Poble</strong> coida a <strong>privacidade</strong> e a <strong>confianza</strong>. As <strong>fotos</strong> do Chat xa non levan agochada a posición exacta dentro do ficheiro, o Caderno de notas di onde está cada texto, e algunhas <strong>páxinas públicas</strong> pódense ler <strong>sen cobertura</strong>.',
+  'As aplicacións pasan á <strong>versión 1.2.20 (build 25)</strong> no <strong>repositorio</strong> e, cando se escribe esta crónica, a versión aínda <strong>non consta en ningunha tenda</strong>. O <strong>conector de WordPress</strong> publicado en WordPress.org é a <strong>1.1.27</strong>; a 1.1.28 do repositorio <strong>aínda non se publicou</strong>.',
+  'Cando se escribe esta crónica, a versión <strong>non cambia nada</strong> no <strong>servidor de Sóc de Poble</strong>. Os <strong>avisos do chat</strong> nas aplicacións do móbil aínda <strong>non están acesos</strong>, a <strong>política de privacidade</strong> segue na <strong>versión 2.5</strong>, e acender os avisos depende dunha <strong>decisión do Mestre</strong>.',
+  ['Novidade · Ler sen cobertura', 'Na web, se se perde a <strong>cobertura</strong>, algunhas <strong>páxinas públicas</strong> que se abriran sen iniciar sesión pódense volver ler durante <strong>sete días</strong>, como unha <strong>copia de lectura</strong> que di o <strong>día en que se gardou</strong>. Non se garda nada <strong>privado</strong>.'],
+  ['Mellora · As fotos do Chat, sen a posición agochada', 'As <strong>fotos</strong> que se envían polo Chat xa non levan agochada a <strong>posición exacta</strong> onde se fixeron: saen <strong>sen os datos de GPS</strong>. E se alguén <strong>comparte a localización</strong> desde esta versión, vai con <strong>dous decimais</strong>, a mesma precisión que amosa a <strong>vista previa</strong>.'],
+  ['Mellora · O Caderno de notas di onde está cada texto', `No ${enllacIntern(ENLLAC_NOTES, 'Caderno de notas')}, non se <strong>publica</strong> nada sen que alguén o <strong>confirme</strong>, e o editor di se o texto é unha <strong>copia local</strong>, un <strong>borrador privado</strong> gardado no servidor ou unha <strong>versión publicada</strong>.`],
+  ['Corrección · As repeticións do Calendario', 'As actividades que se <strong>repiten</strong> no <strong>Calendario</strong> rematan o <strong>día que toca</strong>, tamén cando a última cae de <strong>madrugada</strong> ou nun cambio de hora.'],
+  ['Corrección · Os prezos da lista do Mercado', 'Na <strong>lista</strong> do <strong>Mercado</strong>, os <strong>prezos</strong> saen con <strong>coma decimal</strong>, como «4,95 €», nos cinco idiomas.']]
+};
+
+const fitaR32_34 = (language) => {
+ const [titol, obertura, abast, migracio, ...apartats] = FITA_R32_34[language];
+ return `${section('h3', titol, obertura, abast, migracio)}\n      ${apartats.map(([t, c]) => subSection(t, c)).join('\n      ')}\n\n      `;
+};
+
 /* Onada v1.2.19 (21-11-2026, nit; ordre del Mestre de les 18:53, prompt 261121_1855, T3) · La crònica de la versió 1.2.19
    (build 24) del repositori, amb el que ha aterrat al worktree d'integració r26-fusio: Codex R32.29 (lots 01 i 02), el
    lot 01 de Codex R32.31, Gemini R32.30b, R32.32 i R32.33, la correcció L2R2-03 de Claude i les correccions de les dues
@@ -2491,7 +2575,7 @@ export const CRONICA_FUNDACIONAL_VERSIONS_HTML = "\n      <h3>3 de novembre de 2
 const LLENGUES_VERSIONS = new Set(['ca', 'es', 'en', 'eu', 'gl']);
 
 /**
- * Retorna l'HTML històric complet de /versions (des de R32.33 fins a la crònica
+ * Retorna l'HTML històric complet de /versions (des de R32.34 fins a la crònica
  * fundacional 2013–2026) en la llengua indicada ('ca', 'es', 'en', 'eu', 'gl').
  */
 export function obteHtmlHistoricVersions(language = 'ca') {
@@ -2499,7 +2583,7 @@ export function obteHtmlHistoricVersions(language = 'ca') {
   const lang = LLENGUES_VERSIONS.has(codi) ? codi : 'ca';
   const d = DOSSIER_VERSIONS_R10[lang];
   const entry = section('h3', `${d.date} · ${d.version}`, d.prod, d.db, d.bridge, d.kit, d.todo);
-  const fitesAnteriors = `${fitaR32_33(lang)}${fitaR32_28(lang)}${fitaR32_26(lang)}${fitaR32_24(lang)}${fitaR32_20(lang)}${fitaR32_18(lang)}${fitaR32_17(lang)}${fitaR32_15(lang)}${fitaR32_14(lang)}${fitaR32_13(lang)}${fitaR32_12(lang)}${fitaR32_8(lang)}${fitaR32_5(lang)}${fitaR32_4(lang)}${fitaR32_3(lang)}${fitaR32(lang)}${fitaR30(lang)}${fitaR29(lang)}${fitaR28(lang)}${fitaR26(lang)}${fitaR24(lang)}${fitaR23(lang)}${fitaR21C5(lang)}${fitaR21(lang)}${fitaR20(lang)}${fitaR19(lang)}${fitaR18(lang)}${fitaR16(lang)}${fitaR15(lang)}${fitaR13R14(lang)}${fitaAppStore(lang)}`;
+  const fitesAnteriors = `${fitaR32_34(lang)}${fitaR32_33(lang)}${fitaR32_28(lang)}${fitaR32_26(lang)}${fitaR32_24(lang)}${fitaR32_20(lang)}${fitaR32_18(lang)}${fitaR32_17(lang)}${fitaR32_15(lang)}${fitaR32_14(lang)}${fitaR32_13(lang)}${fitaR32_12(lang)}${fitaR32_8(lang)}${fitaR32_5(lang)}${fitaR32_4(lang)}${fitaR32_3(lang)}${fitaR32(lang)}${fitaR30(lang)}${fitaR29(lang)}${fitaR28(lang)}${fitaR26(lang)}${fitaR24(lang)}${fitaR23(lang)}${fitaR21C5(lang)}${fitaR21(lang)}${fitaR20(lang)}${fitaR19(lang)}${fitaR18(lang)}${fitaR16(lang)}${fitaR15(lang)}${fitaR13R14(lang)}${fitaAppStore(lang)}`;
   const fundacional = lang === 'ca'
     ? `\n      ${CRONICA_FUNDACIONAL_VERSIONS_HTML}`
     : `<div lang="ca">${CRONICA_FUNDACIONAL_VERSIONS_HTML}</div>`;

@@ -32,7 +32,7 @@ export const TEXTOS_REGISTRE_CANVIS = Object.freeze({
     tornarConjunt: 'Vista de conjunt',
     versioAnterior: 'Versió anterior',
     versioSeguent: 'Versió següent',
-    arxiuHistoricIntro: 'L’arxiu històric complet (des del 2013 fins a les versions anteriors a la v1.2.20) es carrega només quan el demanes, per a mantindre l’aplicació lleugera.',
+    arxiuHistoricIntro: 'L’arxiu històric complet (des del 2013 fins a la v1.2.20) es carrega només quan el demanes, per a mantindre l’aplicació lleugera.',
     abastTitol: 'Estat i abast d’esta entrega',
     peuVersioAria: (v) => `Registre de canvis · v${v}`,
     peuVersioTitle: (v) => `Registre de canvis · v${v}`
@@ -51,7 +51,7 @@ export const TEXTOS_REGISTRE_CANVIS = Object.freeze({
     tornarConjunt: 'Vista general',
     versioAnterior: 'Versión anterior',
     versioSeguent: 'Versión siguiente',
-    arxiuHistoricIntro: 'El archivo histórico completo (desde 2013 hasta las versiones anteriores a la v1.2.20) se carga solo cuando lo pides, para mantener la aplicación ligera.',
+    arxiuHistoricIntro: 'El archivo histórico completo (desde 2013 hasta la v1.2.20) se carga solo cuando lo pides, para mantener la aplicación ligera.',
     abastTitol: 'Estado y alcance de esta entrega',
     peuVersioAria: (v) => `Registro de cambios · v${v}`,
     peuVersioTitle: (v) => `Registro de cambios · v${v}`
@@ -70,7 +70,7 @@ export const TEXTOS_REGISTRE_CANVIS = Object.freeze({
     tornarConjunt: 'Overview',
     versioAnterior: 'Previous release',
     versioSeguent: 'Next release',
-    arxiuHistoricIntro: 'The full historical archive (from 2013 up to releases prior to v1.2.20) loads on demand only, keeping the app lightweight.',
+    arxiuHistoricIntro: 'The full historical archive (from 2013 up to v1.2.20) loads on demand only, keeping the app lightweight.',
     abastTitol: 'Status and scope of this release',
     peuVersioAria: (v) => `Changelog · v${v}`,
     peuVersioTitle: (v) => `Changelog · v${v}`
@@ -89,7 +89,7 @@ export const TEXTOS_REGISTRE_CANVIS = Object.freeze({
     tornarConjunt: 'Ikuspegi orokorra',
     versioAnterior: 'Aurreko bertsioa',
     versioSeguent: 'Hurrengo bertsioa',
-    arxiuHistoricIntro: 'Artxibo historiko osoa (2013tik v1.2.20 aurreko bertsioetara) eskatzen duzunean bakarrik kargatzen da, aplikazioa arin mantentzeko.',
+    arxiuHistoricIntro: 'Artxibo historiko osoa (2013tik v1.2.20ra arte) eskatzen duzunean bakarrik kargatzen da, aplikazioa arin mantentzeko.',
     abastTitol: 'Entrega honen egoera eta irismena',
     peuVersioAria: (v) => `Aldaketen erregistroa · v${v}`,
     peuVersioTitle: (v) => `Aldaketen erregistroa · v${v}`
@@ -108,7 +108,7 @@ export const TEXTOS_REGISTRE_CANVIS = Object.freeze({
     tornarConjunt: 'Vista de conxunto',
     versioAnterior: 'Versión anterior',
     versioSeguent: 'Versión seguinte',
-    arxiuHistoricIntro: 'O arquivo histórico completo (desde 2013 ata as versións anteriores á v1.2.20) cárgase só cando o pides, para manter a aplicación lixeira.',
+    arxiuHistoricIntro: 'O arquivo histórico completo (desde 2013 ata a v1.2.20) cárgase só cando o pides, para manter a aplicación lixeira.',
     abastTitol: 'Estado e alcance desta entrega',
     peuVersioAria: (v) => `Rexistro de cambios · v${v}`,
     peuVersioTitle: (v) => `Rexistro de cambios · v${v}`
@@ -128,51 +128,46 @@ export const VERSIONS_REGISTRE = Object.freeze([
       gl: '25 de novembro de 2026'
     }),
     titol: Object.freeze({
-      ca: 'En preparació · onada v1.2.25 (Registre de canvis a /disseny i navegació per teclat)',
-      es: 'En preparación · oleada v1.2.25 (Registro de cambios en /disseny y navegación por teclado)',
-      en: 'In preparation · wave v1.2.25 (Changelog in /disseny and keyboard navigation)',
-      eu: 'Prestatzen · v1.2.25 olatua (Aldaketen erregistroa /disseny atalean eta teklatu-nabigazioa)',
-      gl: 'En preparación · onda v1.2.25 (Rexistro de cambios en /disseny e navegación por teclado)'
+      ca: 'Integrada en la v1.2.26 · onada v1.2.25 (Registre de canvis a /disseny i navegació per teclat)',
+      es: 'Integrada en la v1.2.26 · oleada v1.2.25 (Registro de cambios en /disseny y navegación por teclado)',
+      en: 'Integrated into v1.2.26 · wave v1.2.25 (Changelog in /disseny and keyboard navigation)',
+      eu: 'v1.2.26an integratua · v1.2.25 olatua (Aldaketen erregistroa /disseny atalean eta teklatu-nabigazioa)',
+      gl: 'Integrada na v1.2.26 · onda v1.2.25 (Rexistro de cambios en /disseny e navegación por teclado)'
     }),
     resum: Object.freeze({
-      ca: 'Onada de treball en curs al taller de poble. La crònica definitiva i la llista tancada de novetats s’emplenaran en integrar tots els carrils i validar el conjunt abans de publicar.',
-      es: 'Oleada de trabajo en curso en el taller de pueblo. La crónica definitiva y la lista cerrada de novedades se completarán al integrar todos los carriles y validar el conjunto antes de publicar.',
-      en: 'Work-in-progress wave in the village workshop. The final release chronicle and closed changelog will be published once all lanes are integrated and verified.',
-      eu: 'Herriko tailerrean abian dagoen olatua. Behin betiko kronika eta berrikuntzen zerrenda itxia bide guztiak integratu eta egiaztatutakoan osatuko dira.',
-      gl: 'Onda de traballo en curso no obradoiro de vila. A crónica definitiva e a lista pechada de novidades completaranse ao integrar todos os carrís e validar o conxunto antes de publicar.'
+      ca: 'Esta onada no es va publicar a soles: arriba a la web i al connector amb la v1.2.26 (26 de novembre de 2026), i la crònica completa és la de la v1.2.26 a /versions.',
+      es: 'Esta oleada no se publicó sola: llega a la web y al conector con la v1.2.26 (26 de noviembre de 2026), y la crónica completa es la de la v1.2.26 en /versions.',
+      en: 'This wave was not released on its own: it reaches the website and the plugin with v1.2.26 (26 November 2026), and the full chronicle is the v1.2.26 one in /versions.',
+      eu: 'Olatu hau ez zen bakarrik argitaratu: v1.2.26rekin iristen da webera eta konektorera (2026ko azaroaren 26a), eta kronika osoa /versions orriko v1.2.26koa da.',
+      gl: 'Esta onda non se publicou soa: chega á web e ao conector coa v1.2.26 (26 de novembro de 2026), e a crónica completa é a da v1.2.26 en /versions.'
     }),
     abast: Object.freeze({
-      ca: 'Entrega en curs al taller de poble (encara no publicada ni verificada en producció). El contingut final dependrà de la integració completa dels carrils i de l’aprovació del Mestre.',
-      es: 'Entrega en curso en el taller de pueblo (todavía no publicada ni verificada en producción). El contenido final dependerá de la integración completa de los carriles y de la aprobación del Mestre.',
-      en: 'Work-in-progress release in the village workshop (not yet published or verified in production). Final scope depends on full lane integration and the Mestre’s approval.',
-      eu: 'Herriko tailerrean abian dagoen entrega (oraindik ez dago argitaratuta ezta ekoizpenean egiaztatuta ere). Azken irismena bideen integrazio osoaren eta Mestreren onarpenaren menpe dago.',
-      gl: 'Entrega en curso no obradoiro de vila (aínda non publicada nin verificada en produción). O contido final dependerá da integración completa dos carrís e da aprobación do Mestre.'
+      ca: 'No publicada a soles: integrada en la v1.2.26 (web 1.2.26; connector 1.1.33 al repositori i 1.1.32 a WordPress.org). Les aplicacions de les botigues continuen en la 1.2.24 (build 29).',
+      es: 'No publicada sola: integrada en la v1.2.26 (web 1.2.26; conector 1.1.33 en el repositorio y 1.1.32 en WordPress.org). Las aplicaciones de las tiendas siguen en la 1.2.24 (build 29).',
+      en: 'Not released on its own: integrated into v1.2.26 (website 1.2.26; plugin 1.1.33 in the repository and 1.1.32 on WordPress.org). The store apps stay on 1.2.24 (build 29).',
+      eu: 'Ez zen bakarrik argitaratu: v1.2.26an integratua (weba 1.2.26; konektorea 1.1.33 biltegian eta 1.1.32 WordPress.org-en). Denden aplikazioak 1.2.24an jarraitzen dute (29. builda).',
+      gl: 'Non publicada soa: integrada na v1.2.26 (web 1.2.26; conector 1.1.33 no repositorio e 1.1.32 en WordPress.org). As aplicacións das tendas seguen na 1.2.24 (build 29).'
     }),
     millores: Object.freeze({
       ca: [
         'Disseny (IDEA-354): Registre de canvis atòmic en tres columnes amb blocs desplegables accessibles i versió clicable al peu del menú lateral.',
-        'Teclat (IDEA-355): navegació fluida amb fletxes entre columnes i elements respectant els editors de text i els formularis.',
-        'La resta de peces de l’onada (Xat, micro-apps i servidor) s’anotaran ací quan estiguen integrades i verificades.'
+        'Teclat (IDEA-355): navegació fluida amb fletxes entre columnes i elements respectant els editors de text i els formularis.'
       ],
       es: [
         'Diseño (IDEA-354): Registro de cambios atómico en tres columnas con bloques desplegables accesibles y versión clicable al pie del menú lateral.',
-        'Teclado (IDEA-355): navegación fluida con flechas entre columnas y elementos respetando los editores de texto y formularios.',
-        'El resto de piezas de la oleada (Chat, micro-apps y servidor) se anotarán aquí cuando estén integradas y verificadas.'
+        'Teclado (IDEA-355): navegación fluida con flechas entre columnas y elementos respetando los editores de texto y formularios.'
       ],
       en: [
         'Design (IDEA-354): atomic 3-column Changelog with accessible collapsible sections and clickable version footer in the sidebar.',
-        'Keyboard (IDEA-355): smooth arrow-key navigation across columns and items while keeping text editors and forms intact.',
-        'Remaining wave items (Chat, micro-apps and backend) will be listed here once integrated and verified.'
+        'Keyboard (IDEA-355): smooth arrow-key navigation across columns and items while keeping text editors and forms intact.'
       ],
       eu: [
         'Diseinua (IDEA-354): 3 zutabeko aldaketen erregistro atomikoa bloke tolesgarri irisgarriekin eta alboko menuaren oinean klik egiteko bertsioarekin.',
-        'Teklatua (IDEA-355): zutabeen eta elementuen arteko gezi-nabigazio arina testu-editoreak eta formularioak errespetatuz.',
-        'Olatuko gainerako piezak (Txata, mikro-appak eta zerbitzaria) integratu eta egiaztatutakoan jasoko dira hemen.'
+        'Teklatua (IDEA-355): zutabeen eta elementuen arteko gezi-nabigazio arina testu-editoreak eta formularioak errespetatuz.'
       ],
       gl: [
         'Deseño (IDEA-354): Rexistro de cambios atómico en tres columnas con bloques despregables accesibles e versión clicable ao pé do menú lateral.',
-        'Teclado (IDEA-355): navegación fluída con frechas entre columnas e elementos respectando os editores de texto e formularios.',
-        'O resto de pezas da onda (Chat, micro-apps e servidor) anotaranse aquí cando estean integradas e verificadas.'
+        'Teclado (IDEA-355): navegación fluída con frechas entre columnas e elementos respectando os editores de texto e formularios.'
       ]
     }),
     correccions: Object.freeze({

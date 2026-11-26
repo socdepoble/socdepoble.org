@@ -35,6 +35,9 @@ import ModalAfigCataleg from '../../components/universal/workspace/ModalAfigCata
 import CreditsQueDinem from '../patrimoni/CreditsQueDinem.jsx';
 import ControlEdicioTaxonomia from './ControlEdicioTaxonomia.jsx';
 import { resetOverlaysTaxonomiaPerTests } from './useTaxonomiaPaginaOverlay.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { resolveAsset } from '../../config/assetResolver.js';
+import { fontImatgePropia } from '../../utils/sanitize.js';
 
 const mockLligTaxonomiaPagina = vi.fn();
 const mockActualitzaTaxonomiaPagina = vi.fn();
@@ -105,7 +108,7 @@ const POSTS_FIXTURE = [
   }
 ];
 
-function embolcall(ui, { path = '/', params = {}, sessio = null } = {}) {
+function embolcall(ui, { path = '/', params = {}, sessio = null, feedPosts = POSTS_FIXTURE } = {}) {
   const estatSessio = sessio ?? { esSuperadmin: false, nivell: 'anonim' };
   const uiState = { language: 'ca', externalConfig: null };
   const uiActions = { language: 'ca', t: (_clau, reserva) => reserva ?? _clau, resolveAsset: (v) => v };
@@ -114,7 +117,7 @@ function embolcall(ui, { path = '/', params = {}, sessio = null } = {}) {
       <UIActionsContext.Provider value={uiActions}>
         <SessionContext.Provider value={estatSessio}>
           <CoreContentContext.Provider value={{ towns: TOWNS_FIXTURE, personalitzacio: null }}>
-            <MurContext.Provider value={{ feedPosts: POSTS_FIXTURE, events: [], marketItems: [] }}>
+            <MurContext.Provider value={{ feedPosts, events: [], marketItems: [] }}>
               <MemoryRouter rutaInicial={path}>
                 <RouteParamsContext.Provider value={params}>
                   {ui}
@@ -324,6 +327,102 @@ describe('G26-2 · IDEA-370 PaginaEditorialEtiqueta', () => {
     render(embolcall(<PaginaEditorialEtiqueta tipusRuta="categoria" />, { path: '/categoria/catalegs', params: { slug: 'catalegs' } }));
     expect(screen.getByRole('heading', { level: 1, name: 'Catàlegs' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 4, name: 'Trilogia de les comarques' })).toBeTruthy();
+  });
+
+  /* IDEA-379 (v1.2.26 · pegat pre-deploy) · La boina de les cards de /categoria/mon-rural:
+     una pàgina del sistema i una publicació sense nom propi les signa Sóc de Poble, amb el
+     seu avatar oficial i La Torre de les Maçanes; mai la silueta ni «Poble no indicat». */
+  it('IDEA-379 · /categoria/mon-rural pinta la boina canònica de Sóc de Poble a les pàgines de sistema', () => {
+    const feedPosts = [
+      {
+        id: 'calendari-agricola',
+        isSystem: true,
+        type: 'sistema',
+        title: 'Calendari Agrícola',
+        mainHref: '/page/calendari-agricola',
+        created_at: '2026-11-20',
+        labels: [
+          { text: 'Sistema', className: 'sdp-badge-system' },
+          { text: 'Món rural', className: 'sdp-badge-category' }
+        ]
+      },
+      {
+        id: 'cronica-rural',
+        slug: 'cronica-rural',
+        type: 'post',
+        title: 'Crònica del món rural',
+        labels: [{ text: 'Món rural', className: 'sdp-badge-category' }]
+      }
+    ];
+    const { container } = render(embolcall(<PaginaEditorialEtiqueta tipusRuta="categoria" />, {
+      path: '/categoria/mon-rural', params: { slug: 'mon-rural' }, feedPosts
+    }));
+    /* Només la graella de publicacions: la boina de la pàgina (UniversalPage) és a banda. */
+    const graella = container.querySelector('section[aria-labelledby="editorial-taxonomia-publicacions"]');
+    expect(graella).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Calendari Agrícola' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 4, name: 'Crònica del món rural' })).toBeTruthy();
+    const avatars = [...graella.querySelectorAll('.sp-card-author .sp-card-avatar')];
+    expect(avatars).toHaveLength(2);
+    const avatarCanonic = fontImatgePropia(resolveAsset(DEFAULT_AUTHOR.avatarUrl));
+    expect(avatarCanonic).toBeTruthy();
+    for (const avatar of avatars) {
+      expect(avatar.tagName).toBe('IMG');
+      expect(avatar.getAttribute('src')).toBe(avatarCanonic);
+      expect(avatar.classList.contains('sp-card-avatar--fallback')).toBe(false);
+    }
+    const noms = [...graella.querySelectorAll('.sp-card-author-name')].map((n) => n.textContent);
+    expect(noms).toEqual([DEFAULT_AUTHOR.name, DEFAULT_AUTHOR.name]);
+    const pobles = [...graella.querySelectorAll('.sp-card-author-location')].map((n) => n.textContent);
+    expect(pobles).toEqual([DEFAULT_AUTHOR.location, DEFAULT_AUTHOR.location]);
+    expect(DEFAULT_AUTHOR.location).toBe('La Torre de les Maçanes');
+    expect(container.textContent).not.toContain('Poble no indicat');
+  });
+
+  /* Segon Gauntlet (wf_6142983e-2ac) · La boina d'un acte és la mateixa que la de la seua Card del Mur (EventCard.jsx:
+     author_location, location, population i La Torre de les Maçanes): un acte de Sóc de Poble sense lloc porta La Torre. */
+  it('IDEA-379 · un acte de Sóc de Poble sense lloc porta la boina del Mur: el seu avatar i La Torre de les Maçanes', () => {
+    const feedPosts = [
+      {
+        id: 'jornada-rural',
+        type: 'event',
+        title: 'Jornada del món rural',
+        author_name: 'Sóc de Poble',
+        date: '2026-12-05',
+        labels: [{ text: 'Món rural', className: 'sdp-badge-category' }]
+      }
+    ];
+    const { container } = render(embolcall(<PaginaEditorialEtiqueta tipusRuta="categoria" />, {
+      path: '/categoria/mon-rural', params: { slug: 'mon-rural' }, feedPosts
+    }));
+    const graella = container.querySelector('section[aria-labelledby="editorial-taxonomia-publicacions"]');
+    expect(graella.querySelector('.sp-card-author-name')?.textContent).toBe(DEFAULT_AUTHOR.name);
+    expect(graella.querySelector('.sp-card-author-location')?.textContent).toBe(DEFAULT_AUTHOR.location);
+    expect(graella.querySelector('img.sp-card-avatar')?.getAttribute('src')).toBe(fontImatgePropia(resolveAsset(DEFAULT_AUTHOR.avatarUrl)));
+  });
+
+  it('IDEA-379 · una persona sense avatar conserva la silueta i el seu poble (mai el logotip de Sóc de Poble)', () => {
+    const feedPosts = [
+      {
+        id: 'nota-veina',
+        slug: 'nota-veina',
+        type: 'post',
+        title: 'Nota de la veïna',
+        author_name: 'Maria Veïna',
+        author_id: 'persona-veina',
+        author_location: 'Xixona',
+        labels: [{ text: 'Món rural', className: 'sdp-badge-category' }]
+      }
+    ];
+    const { container } = render(embolcall(<PaginaEditorialEtiqueta tipusRuta="categoria" />, {
+      path: '/categoria/mon-rural', params: { slug: 'mon-rural' }, feedPosts
+    }));
+    const graella = container.querySelector('section[aria-labelledby="editorial-taxonomia-publicacions"]');
+    expect(graella.querySelector('.sp-card-author-name')?.textContent).toBe('Maria Veïna');
+    expect(graella.querySelector('.sp-card-author-location')?.textContent).toBe('Xixona');
+    expect(graella.querySelector('.sp-card-avatar--fallback')).toBeTruthy();
+    const avatarCanonic = fontImatgePropia(resolveAsset(DEFAULT_AUTHOR.avatarUrl));
+    expect(graella.querySelector(`img.sp-card-avatar[src="${avatarCanonic}"]`)).toBeNull();
   });
 });
 

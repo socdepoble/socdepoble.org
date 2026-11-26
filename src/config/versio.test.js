@@ -72,8 +72,11 @@ describe('la versió canònica', () => {
        Onada v1.2.21 (pla 261122_1502; 22-11-2026, vesprada): versió unificada 1.2.21 amb el build 26 (VERSIO_CLIENT_NATIU 26).
        Onada v1.2.22 (prompt 261122_1835; 22-11-2026, nit): versió unificada 1.2.22 amb el build 27 (VERSIO_CLIENT_NATIU 27).
        Onada v1.2.23 (prompt 261123_1439; 23-11-2026, vesprada): versió unificada 1.2.23 amb el build 28 (VERSIO_CLIENT_NATIU 28).
-       Onada v1.2.24 (prompt i pla 261124_1323; 24-11-2026, vesprada): versió unificada 1.2.24 amb el build 29 (VERSIO_CLIENT_NATIU 29). */
-    expect(versioCanonica()).toBe('v1.2.24');
+       Onada v1.2.24 (prompt i pla 261124_1323; 24-11-2026, vesprada): versió unificada 1.2.24 amb el build 29 (VERSIO_CLIENT_NATIU 29).
+       v1.2.26 · Opció A (prompt 261126_1748; decisió del Mestre al xat, 26-11-2026: «Precedent R16»): versió unificada 1.2.26 amb el
+       build 29 sense canviar (VERSIO_CLIENT_NATIU 29). Com a l'Onada R16, Android i iOS només declaren la versió nova: no es compila
+       ni es puja res, i les botigues continuen servint la 1.2.24 (build 29) fins a la pròxima pujada. */
+    expect(versioCanonica()).toBe('v1.2.26');
   });
 
   test('la forma: «vX.Y.Z» o «vX.Y.Z (build aammdd)»; un segell que no és aammdd no s’hi posa', () => {

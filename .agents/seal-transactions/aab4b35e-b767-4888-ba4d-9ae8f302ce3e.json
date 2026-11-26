@@ -1,0 +1,25 @@
+{
+  "kind": "frontissa-human",
+  "action": "aprova",
+  "key": "versions",
+  "actor": "Mestre Javi",
+  "reason": "Salt v1.2.26 i crònica v2 verificada per Gauntlet (Deploy Opció A)",
+  "acceptaRetall": false,
+  "invocation": [
+    "--aprova",
+    "versions",
+    "--per",
+    "Mestre Javi",
+    "--motiu",
+    "Salt v1.2.26 i crònica v2 verificada per Gauntlet (Deploy Opció A)"
+  ],
+  "id": "aab4b35e-b767-4888-ba4d-9ae8f302ce3e",
+  "files": [
+    {
+      "path": ".agents/contingut_estructural.json",
+      "before": "8e0bcff3e2e57d79b8d1de28c6c7bebd92cb6b1a348c4ef0af5428fb1f5c36e0",
+      "after": "84987c7e8108c8e8d29a0c478dae76907700ad9da4e8ec2279e648185d5da764"
+    }
+  ],
+  "state": "accepted"
+}

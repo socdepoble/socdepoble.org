@@ -160,12 +160,12 @@ export const PAGE_COPY = {
   "versions": {
     "date": "2026-08-26T06:53:13+02:00",
     "title": "Versions del Sistema",
-    "subtitle": "Versió actual: v1.2.24 · Connector WordPress v1.1.31 a WordPress.org",
+    "subtitle": "Versió actual: v1.2.26 · Connector WordPress v1.1.32 a WordPress.org",
     "lead": "Registre viu d'actualitzacions de Sóc de Poble. Ací pots consultar de forma clara què s'ha afegit, què s'ha millorat i què s'ha corregit en cada entrega, seguit de la crònica fundacional del projecte.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
     "labels": [
-      { "text": "v1.2.24 · WP v1.1.31", "className": "sdp-badge-system" },
+      { "text": "v1.2.26 · WP v1.1.32", "className": "sdp-badge-system" },
       { "text": "Registre de canvis", "className": "sdp-badge-category" },
       { "text": "Sistema", "className": "sdp-badge-tag" }
     ],

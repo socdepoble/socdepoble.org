@@ -230,7 +230,9 @@ describe('Onada R9 i R11 · balanç del 7 de novembre (producció R1–R10)', ()
     // Onada v1.2.22 · I la crònica de les Onades R32.42 i R32.43 obri /versions, davant de la R32.41.
     // v1.2.23 · C (ordre del Mestre 261123) · I la crònica de la v1.2.23 obri /versions, davant de les R32.42 i R32.43.
     // v1.2.24 · R32.85 · I la crònica de la v1.2.24 obri /versions, davant de la v1.2.23.
-    expect([...versions.querySelectorAll('h3')].slice(0, 36).map((h3) => h3.textContent)).toEqual([
+    // v1.2.26 · Opció A · I la crònica de la v1.2.26 obri /versions, davant de la v1.2.24 (una més: 37).
+    expect([...versions.querySelectorAll('h3')].slice(0, 37).map((h3) => h3.textContent)).toEqual([
+      '26 de novembre de 2026 · Pàgines de categoria i d’etiqueta per a les publicacions, amb el seu territori, i el Bloc de notes ordenat',
       '24 de novembre de 2026 · Reconeixements en cinc llengües, «Elimina per a tothom» al Xat i compartir que sempre respon',
       '23 de novembre de 2026 · El lloc de les fotos a la vista, «Editar» des de la pàgina i la versió al menú',
       '22 de novembre de 2026, nit · Onades R32.42 i R32.43 · Un Xat obert a tots els pobles, un logotip que es veu i un sol Mode Bancal',

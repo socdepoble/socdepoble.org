@@ -309,7 +309,10 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
      darrere, íntegra. */
   /* v1.2.24 · F5A (pla 261124_1323) · La 1.1.32 obri ara el registre (el visor de la 1.2.24), i la 1.1.31 continua
      darrere, íntegra. */
-  assert.ok(changelog.startsWith('<h4>1.1.32</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.24 de Sóc de Poble'), 'v1.2.24: la 1.1.32 obri el registre');
+  /* v1.2.26 · Opció A (prompt 261126_1748, T2) · La 1.1.33 obri ara el registre (el visor de la 1.2.26), i la 1.1.32 continua
+     darrere, íntegra. */
+  assert.ok(changelog.startsWith('<h4>1.1.33</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.26 de Sóc de Poble'), 'v1.2.26: la 1.1.33 obri el registre');
+  assert.ok(changelog.includes('</ul><h4>1.1.32</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.24 de Sóc de Poble'), 'v1.2.26: la 1.1.32 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.31</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.23 de Sóc de Poble'), 'v1.2.24: la 1.1.31 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.30</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.22 de Sóc de Poble'), 'v1.2.23: la 1.1.30 es queda al registre');
   assert.ok(changelog.includes('</ul><h4>1.1.29</h4><ul><li><strong>Visor al dia:</strong> el paquet porta el visor compilat amb el codi de la versió 1.2.21 de Sóc de Poble'), 'v1.2.22: la 1.1.29 es queda al registre');

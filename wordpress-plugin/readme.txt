@@ -4,7 +4,7 @@ Tags: community, village, social network, embed, municipal
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.32
+Stable tag: 1.1.33
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -188,6 +188,10 @@ Si no queda cap altra còpia activa del connector, `uninstall.php` esborra els a
 
 == Changelog ==
 
+= 1.1.33 =
+* **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.26 de Sóc de Poble, la que explica la seua pàgina «Versions»: les categories i etiquetes de les publicacions tenen la seua pàgina, a eixes pàgines les targetes que tenen territori el porten en text clicable i les que signa Sóc de Poble porten el seu avatar i el mateix poble que al Mur.
+* **Lectura i Bloc de notes:** les entradetes es lligen netes, sense marques d'escriptura, el Bloc de notes té la carpeta «En producció», el botó que maqueta la targeta no toca el cos del text, i la pàgina legal i l'Índex de la Consola es lligen de dalt a baix.
+
 = 1.1.32 =
 * **Visor al dia:** el paquet porta el visor compilat amb el codi de la versió 1.2.24 de Sóc de Poble, la que explica la seua pàgina «Versions»: la pàgina de Reconeixements, on el Mas agraïx en cinc llengües a qui l'inspira, encapçala el Mur, i al Xat «Elimina per a tothom» esborra els teus missatges sense límit d'hora.
 * **Mòbil i tauleta:** la benvinguda ja no parla de proves, el botó «Compartir» sempre respon (copia l'adreça o te la mostra), els enllaços de fora s'obrin en una pestanya nova, les imatges dels enllaços compartits pesen molt menys i les pàgines del projecte es lligen amb paraules planes.
@@ -286,6 +290,9 @@ Cinc idiomes integrats als ajustos, pestanyes accessibles, lletra de 17px i guia
 * **Codi font i construcció documentats:** Instruccions reproduïbles pas a pas per generar el paquet `dist/` des del repositori públic.
 
 == Upgrade Notice ==
+
+= 1.1.33 =
+Visor al dia amb la versió 1.2.26 de Sóc de Poble: pàgines per a les categories i etiquetes de les publicacions, el territori de les seues targetes en text clicable, la carpeta «En producció» al Bloc de notes i entradetes netes.
 
 = 1.1.32 =
 Visor al dia amb la versió 1.2.24 de Sóc de Poble: la pàgina de Reconeixements, «Elimina per a tothom» sense límit d'hora al Xat, compartir que sempre respon i una benvinguda sense rètol de proves.

@@ -35,6 +35,48 @@ import ControlEdicioTaxonomia from './ControlEdicioTaxonomia.jsx';
 import { projectaOverlayALabels, useEstatUITaxonomia, useTaxonomiaPaginaOverlay } from './useTaxonomiaPaginaOverlay.js';
 import { formataEtiquetaHumana } from '../mercat/etiquetesMercat.js';
 import { targetesDeSistema } from '../mur/targetesMur.js';
+import { rutaDeLaBoinaDelMur } from '../mur/TargetaDelMur.jsx';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { autorDe } from '../../config/navigation.js';
+import { resolveAsset } from '../../config/assetResolver.js';
+import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
+import { fontImatgePropia } from '../../utils/sanitize.js';
+import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
+
+/* IDEA-379 (v1.2.26 · pegat pre-deploy) · La boina de cada card amb les mateixes
+   regles i peces que la del Mur (TargetaDelMur.jsx): qui signa, amb el resolutor
+   únic (signaturaDeQuiSigna); la ruta de la boina (rutaDeLaBoinaDelMur); i l'avatar
+   amb la regla de la imatge pròpia i del bucket públic. Una pàgina del sistema o una
+   publicació sense nom propi la signa Sóc de Poble: el seu avatar oficial i el seu
+   poble (DEFAULT_AUTHOR), mai la silueta ni «Poble no indicat». Una persona sense
+   avatar, la silueta (Gauntlet 261017, ID1); un llibre dels Catàlegs el signa la
+   seua associació (C26-2 #4).
+   El poble, amb la mateixa cadena que la superfície del Mur per a cada tipus (segon Gauntlet, wf_6142983e-2ac: abans
+   esta pàgina i el Mur podien dir dos pobles diferents de la mateixa card): un acte, la d'EventCard.jsx (author_location,
+   location, population i La Torre de les Maçanes); qualsevol altra publicació, la de TargetaDelMur.jsx (author_location,
+   population i La Torre de les Maçanes, o el marcador honest per al Mur públic). La regla única del poble de qui signa
+   per a totes les superfícies és la IDEA-380 (v1.2.27). */
+function boinaDeLaCard(item) {
+  const signaPersona = autorDe(item)?.tipus === 'persona';
+  const esPaginaDeCataleg = !item.isSystem && item.type === 'cataleg'
+    && typeof item.mainHref === 'string' && item.mainHref.startsWith('/page/');
+  const signatura = signaturaDeQuiSigna(item, {
+    nom: item.author_name || item.seller || (item._murPublic ? 'Autoria no publicada' : DEFAULT_AUTHOR.name),
+    avatar: item.author_avatar || item.avatar_url
+      || (signaPersona || item._murPublic || esPaginaDeCataleg ? null : DEFAULT_AUTHOR.avatarUrl)
+  });
+  const avatarUrl = esMitjaOpac(signatura.avatar)
+    ? fotoDelBucketPublic(signatura.avatar)
+    : fontImatgePropia(resolveAsset(signatura.avatar));
+  return {
+    author: signatura.nom,
+    authorHref: rutaDeLaBoinaDelMur(item),
+    avatarUrl: avatarUrl || undefined,
+    location: item.type === 'event'
+      ? (item.author_location || item.location || item.population || DEFAULT_AUTHOR.location)
+      : (item.author_location || item.population || (item._murPublic ? undefined : DEFAULT_AUTHOR.location))
+  };
+}
 
 function textDeEtiqueta(etiqueta) {
   return typeof etiqueta === 'string' ? etiqueta : etiqueta?.text || '';
@@ -220,7 +262,9 @@ export default function PaginaEditorialEtiqueta({ tipusRuta = null }) {
                 /* LU02 · La capçalera de lectura completa, de la font editorial
                    compartida (encapcalamentDeTargeta, que llig la data amb
                    dataDElement): sense dada, el marcador honest «no indicat»,
-                   mai una data inventada. */
+                   mai una data inventada. IDEA-379 · Qui signa, el seu
+                   avatar, la ruta i el poble, amb les regles del Mur. */
+                const boina = boinaDeLaCard(item);
                 return (
                   <UniversalCard
                     key={`${seccio}-${item.id}`}
@@ -234,9 +278,11 @@ export default function PaginaEditorialEtiqueta({ tipusRuta = null }) {
                     labels={Array.isArray(item.labels) ? item.labels : []}
                     territori={elementsTerritorialsDe(item, towns)}
                     copyright={item.copyright || COPYRIGHT_SDP}
+                    authorHref={boina.authorHref}
+                    avatarUrl={boina.avatarUrl}
                     {...encapcalamentDeTargeta(item, {
-                      author: item.author_name || 'Sóc de Poble',
-                      location: item.town_name || item.location,
+                      author: boina.author,
+                      location: boina.location,
                       idioma: language
                     })}
                   />
