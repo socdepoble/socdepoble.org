@@ -31,3 +31,13 @@ test('la visibilitat del Mur només s’activa amb una declaració de desplegame
   }
   assert.equal(defineDeLesBanderes({ VITE_SDP_MUR_VISIBILITAT: '1' })['import.meta.env.VITE_SDP_MUR_VISIBILITAT'], '"1"');
 });
+
+/* v1.2.25 · Costures 8 i 9 · La cerca dins d'una conversa (capacitat xatCerca) depén de 20261125010000, NO aplicada:
+   la bandera es plega a literal en compilar i, apagada, Rollup deixa fora src/data/supabase/xatCerca.js. */
+test('la cerca dins de la conversa només s’activa amb una declaració de desplegament exacta', () => {
+  assert.ok(BANDERES_DE_CAPACITAT.includes('VITE_SDP_XAT_CERCA'));
+  for (const valor of [undefined, '', 'true', ' 1', 'yes', '0']) {
+    assert.equal(defineDeLesBanderes({ VITE_SDP_XAT_CERCA: valor })['import.meta.env.VITE_SDP_XAT_CERCA'], '""');
+  }
+  assert.equal(defineDeLesBanderes({ VITE_SDP_XAT_CERCA: '1' })['import.meta.env.VITE_SDP_XAT_CERCA'], '"1"');
+});

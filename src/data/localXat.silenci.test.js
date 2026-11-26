@@ -144,7 +144,8 @@ describe('l’adaptador local (conversesLocal)', () => {
       expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
       const absents = Object.keys(CAPACITATS).filter(cap => CAPACITATS[cap].every(metode => typeof a[metode] !== 'function'));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
-      expect(Object.keys(CAPACITATS)).toHaveLength(66);
+      /* v1.2.25 · Costures 8 i 9 · xatCerca (67a) la declara el local amb rebuig 'sense-capacitat'. */
+      expect(Object.keys(CAPACITATS)).toHaveLength(67);
     } finally {
       await a.destroy();
     }

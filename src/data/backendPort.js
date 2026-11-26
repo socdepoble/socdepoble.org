@@ -497,6 +497,13 @@ export const lligConsensIsoglossesPoble = metodesDelContracte[184];
 export const votaVariantIsoglossaPoble = metodesDelContracte[185];
 export const desaAportacioVeuPoble = metodesDelContracte[186];
 
+/* v1.2.25 · Costures 8 i 9 · La cerca dins d'una conversa (capacitat 'xatCerca', C1). No és nucli i cap pantalla
+   no la consumix encara (les costures 15 i 16 la cablaran): la que ho faça ha de preguntar abans amb teCapacitat i,
+   sense ella o amb 'sense-capacitat', cercar només en els missatges carregats. */
+export const cercaMissatgesFil = metodesDelContracte[187];
+export const cercaMissatgesFilPaginada = metodesDelContracte[188];
+export const carregaMissatgeFilPerId = metodesDelContracte[189];
+
 /* R32.13 optional capabilities; absence is explicit, never a synthetic ACK. */
 export const confirmaCapturaCrdtRural = metodesDelContracte[38];
 export const registraDenunciaDiligent = metodesDelContracte[39];

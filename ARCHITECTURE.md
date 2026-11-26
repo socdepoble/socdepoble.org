@@ -43,7 +43,7 @@ Cap component visual (`src/components/`, `src/sections/`, `src/pages/` ni `src/a
 El mòdul `src/data/contracte.js` declara de forma explícita:
 
 - **Operacions obligatòries del nucli (`CONTRACTE_NUCLI`):** **32 mètodes** indispensables perquè l'aplicació arrenque.
-- **Capacitats opcionals (`CAPACITATS`):** **66 capacitats** agrupades per domini funcional, amb **155 mètodes** opcionals; sumats als 32 del nucli, `CONTRACTE_BACKEND` reunix **187 mètodes totals**.
+- **Capacitats opcionals (`CAPACITATS`):** **67 capacitats** agrupades per domini funcional, amb **158 mètodes** opcionals; sumats als 32 del nucli, `CONTRACTE_BACKEND` reunix **190 mètodes totals**.
 - **Atomicitat i segellat:** en iniciar l'aplicació, `backendPort.js` valida que l'adaptador actiu implemente les 32 operacions de nucli i que cada capacitat opcional declarada estiga implementada al 100 % (cap capacitat parcial s'admet), congelant l'adaptador en memòria amb `freezeImplementation`.
 
 ### 2.2 Adaptadors verificats i kit de conformitat

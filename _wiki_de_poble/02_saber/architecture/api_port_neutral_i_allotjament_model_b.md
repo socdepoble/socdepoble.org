@@ -50,13 +50,13 @@ Font: `src/data/contracte.js`. Una implementació vàlida les oferix totes:
 - `subscribeToXat`
 - `unsubscribeFromXat`
 
-## 66 capacitats atòmiques opcionals (`CAPACITATS`)
+## 67 capacitats atòmiques opcionals (`CAPACITATS`)
 
-**155 mètodes addicionals** i **187 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
+**158 mètodes addicionals** i **190 mètodes en total** en `CONTRACTE_BACKEND`. **Recompte obtingut**
 amb `Object.keys(CAPACITATS).length`, `CONTRACTE_NUCLI.length` i
 `CONTRACTE_BACKEND.length` del **mòdul executable**, no per recompte manual. Una capacitat
 està disponible només si el port disposa de **tots els seus mètodes**. **No hi ha**
-un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 66 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
+un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. Les 67 són **grups declarats al contracte**. La disponibilitat es verifica per adaptador.
 
 | Capacitat | Mètodes literals |
 | --- | --- |
@@ -126,6 +126,7 @@ un camp `capacitats` **obligatori** a l'adaptador ni `capacitatsDisponibles()`. 
 | `connexionsPubliques` | `preferenciesConnexions`, `desaVisibilitatConnexions`, `connexionsPubliquesDe`, `membresIEntitatsConnectadesDe`, `inclouPersonaEnEntitat`, `solicitaUnirSeAEntitat` |
 | `revisionsEditorialsWp` | `llistaRevisionsEditorialsWp`, `desaRevisioEditorialWp` |
 | `consensIsoglosses` | `lligConsensIsoglossesPoble`, `votaVariantIsoglossaPoble`, `desaAportacioVeuPoble` |
+| `xatCerca` | `cercaMissatgesFil`, `cercaMissatgesFilPaginada`, `carregaMissatgeFilPerId` |
 
 ## Validació i conformitat
 
@@ -147,7 +148,9 @@ inoperants. No hi ha les API `verificaContracteBackend` o `executaKitDeConformit
 Esta cobertura contractual local **no acredita 120 èxits de servidor remot**,
 ni totes les branques possibles de cada mètode.
 
-### Recompte local vigent (R32.64 · 2026-11-24) i verificació per correu (R6)
+### Recompte local vigent (v1.2.25 · 2026-11-25) i verificació per correu (R6)
+
+v1.2.25 (**costures 8 i 9**, 2026-11-25) afig `xatCerca`: **tres mètodes opcionals** per a cercar dins d'una conversa i llegir un **missatge antic per id** (C1, `src/data/supabase/xatCerca.js`), amb **tres casos de rebuig** sense servei remot. L'adaptador Supabase només l'anuncia amb `VITE_SDP_XAT_CERCA=1`, perquè la migració `20261125010000` **encara no és a Producció**; l'adaptador local la declara i la **rebutja sempre** amb `sense-capacitat`. **No acredita cap cerca remota desplegada.**
 
 R32.5 (2026-11-17) afig `moderacioLssi`: tres mètodes opcionals de denúncia pública i revisió humana, amb tres casos de rebuig previ; el grup no està disponible a l’adaptador local.
 
@@ -155,11 +158,11 @@ R32.7 (2026-11-17) afig `xatAccionsMissatge`: cinc mètodes opcionals de reaccio
 
 R32.13 (2026-11-19) afig `ackCrdtRural` i `denunciesDiligents`: quatre mètodes opcionals i quatre casos comuns de rebuig primitiu abans del transport. Els dos grups són absents en local; les proves de captura durable i moderació sobre PostgreSQL són locals i no acrediten activació remota.
 
-El recompte actual és de **250 casos sobre 187 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
+El recompte actual és de **253 casos sobre 190 mètodes** i `metodesSenseCas()` buit. Les dues **capacitats opcionals** `verificacioCorreu` i `recuperacioCorreu` afigen **quatre mètodes** i **quatre casos de rebuig** d’entrada malformada al **tall històric** de **178 casos**. Els dos grups `administracioUsuaris` i `importacioPaquetMunicipal` afigen quatre mètodes i quatre casos de rebuig al tall R6 de 184 casos sobre 132 mètodes. Un cas catalogat és cobertura del nom i del seu escenari; **no acredita un èxit funcional ni un servei de correu desplegat**. Els resultats `ok`, `falla` i `omés` continuen separats.
 
-L’adaptador local oferix **50 dels 66 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.
+L’adaptador local oferix **51 dels 67 grups declarats**. `CAPACITATS_NO_DECLARADES` conté exactament `protocolPublic`, `transportOAuth`, `ackCrdtRural`, `denunciesDiligents`, `revocacioPublicacions`, `administracioSessions`, `curadoriaCultural`, `iaia`, `xatRitme`, `xatAccionsMissatge`, `edicioPublicacionsPropies`, `revisionsPagines`, `importacioPaquetMunicipal`, `verificacioCorreu`, `recuperacioCorreu` i `moderacioLssi`. El kit omet **els 48 casos** d’estos grups per **capacitat absent**.
 
-Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 187 operacions en un servidor remot continua pendent.
+Les omissions per dades o autorització dels altres casos continuen sent **explícites**. L’assaig certifica el contracte local. La verificació de les 190 operacions en un servidor remot continua pendent.
 
 R32.56 (C6) afig `copiaCompte` i `restauracioCompte`: **còpia del subconjunt de negoci implementat** —perfil, notes, carpetes, organitzacions i patrimoni— i restauració en **candidat inactiu en RAM**, restringit i lligat a l’actor. **No és una restauració completa ni durable del compte** ni una capacitat de restauració remota. R32.64 (C10) afig el sisé mètode d’`xatAccionsMissatge`, `eliminaPerATothom`, i un cas comú de rebuig. La RPC preparada **elimina sense caducitat**, requerix **autoritat del servidor i rebut confirmat**; esta operació no confirma localment davant absència SQL o denegació. Les proves locals **no acrediten desplegament remot**.
 

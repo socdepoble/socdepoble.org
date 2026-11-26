@@ -1390,6 +1390,17 @@ export const CASOS = Object.freeze([
   cas({ metode: 'alternaFixat', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: alternaFixat rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
   cas({ metode: 'eliminaPerAMi', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'R32.7: eliminaPerAMi rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
   cas({ metode: 'eliminaPerATothom', capacitat: 'xatAccionsMissatge', espera: 'rebutja', titol: 'C10: eliminaPerATothom rebutja una acció sense identificadors', arguments: ctx => [{}, ctx.config], comprova: rebuigAmbCodi('XAT_ACCIO_INVALIDA') }),
+  /* v1.2.25 · Costures 8 i 9 · Sense servei remot (mode 'seed'), la cerca de C1 rebutja amb 'sense-capacitat' i mai
+     simula resultats; les entrades són vàlides (UUID i consulta no buida) perquè el rebuig siga el de la capacitat. */
+  ...['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId'].map((metode) => cas({
+    metode, capacitat: 'xatCerca', espera: 'rebutja',
+    titol: `v1.2.25: ${metode} sense servei remot rebutja amb sense-capacitat, mai simula una cerca del servidor`,
+    arguments: (ctx) => {
+      const config = { ...ctx.config, dataMode: 'seed' };
+      return metode === 'carregaMissatgeFilPerId' ? [ctx.idPublicacio, ctx.idMissatge, config] : [ctx.idPublicacio, 'conformitat', config];
+    },
+    comprova: rebuigAmbCodi('sense-capacitat')
+  })),
 
   /* R32.19 · Formes pures del proveïdor, substituïbles darrere del port.
      Arestes de tipus neutrals: no fixen els camins de cap proveïdor. */

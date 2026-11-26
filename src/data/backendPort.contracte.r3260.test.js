@@ -10,6 +10,7 @@ import { estatPort } from './backendPortEstat.js';
 // Golden independent de l'ABI anterior al refactor, preimatge SHA-256
 // 52843897386db625939b7e124436254faaeef24538cbc0f79ace008ad183327a.
 // C10 afegix eliminaPerATothom sense llevar cap dels 186 noms anteriors.
+// v1.2.25 · Costures 8 i 9 (Claude) · xatCerca afig tres noms al final (187, 188 i 189) sense moure cap índex.
 // No es genera des del contracte viu durant la prova: un nom nou o un canvi
 // d'ordre han d'obligar a revisar explícitament els bindings del port.
 const ABI = Object.freeze([
@@ -200,6 +201,9 @@ const ABI = Object.freeze([
   "lligConsensIsoglossesPoble",
   "votaVariantIsoglossaPoble",
   "desaAportacioVeuPoble",
+  "cercaMissatgesFil",
+  "cercaMissatgesFilPaginada",
+  "carregaMissatgeFilPerId",
 ]);
 // Excepcions: 11 wrappers especials i els dos delegats PURE de portabilitat.
 const CUSTOM = Object.freeze({
@@ -285,8 +289,9 @@ async function checkForwarding(api, name) {
   }
 }
 
-test('ABI C10: 187 noms, 174 bindings i 13 excepcions, preservant els 186 noms anteriors', () => {
-  expect(ABI).toHaveLength(187); expect(GENERIC).toHaveLength(174); expect(Object.keys(CUSTOM)).toHaveLength(13);
+test('ABI v1.2.25: 190 noms, 177 bindings i 13 excepcions, preservant els 187 noms de C10 en el mateix ordre', () => {
+  expect(ABI).toHaveLength(190); expect(GENERIC).toHaveLength(177);
+  expect(ABI.slice(187)).toEqual(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId']); expect(Object.keys(CUSTOM)).toHaveLength(13);
   assertAbi(contract.CONTRACTE_BACKEND, mapperOf(parseSource(readSource())));
   expect(Object.keys(port).sort()).toEqual([...ABI, ...HELPERS].sort());
 });

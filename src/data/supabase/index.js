@@ -39,6 +39,15 @@ import { consultaIAIA as consultaIAIAAmbServidor } from './iaia.js';
 export const loadRitmeXat = import.meta.env.VITE_SDP_XAT_RITME === '1' ? loadRitmeXatAmbServidor : undefined;
 export const actualitzaPresenciaXat = import.meta.env.VITE_SDP_XAT_RITME === '1' ? actualitzaPresenciaXatAmbServidor : undefined;
 export const consultaIAIA = import.meta.env.VITE_SDP_IAIA_SERVIDOR === '1' ? consultaIAIAAmbServidor : undefined;
+/* v1.2.25 · Costures 8 i 9 · Capacitat 'xatCerca' (C1): les RPC xat_cerca_missatges_fil_v2 i xat_missatge_fil_per_id
+   són de la migració 20261125010000, que la producció encara NO té. Com curadoriaCultural, l'adaptador només les
+   anuncia amb VITE_SDP_XAT_CERCA=1, que s'encén després d'aplicar-la; apagada, les tres valen undefined (el port les
+   tracta com a absents: teCapacitat fals, cap petició ni cap 404) i Rollup deixa fora xatCerca.js. Sempre les tres. */
+import * as xatCercaAmbServidor from './xatCerca.js';
+const ambXatCerca = import.meta.env.VITE_SDP_XAT_CERCA === '1';
+export const cercaMissatgesFil = ambXatCerca ? xatCercaAmbServidor.cercaMissatgesFil : undefined;
+export const cercaMissatgesFilPaginada = ambXatCerca ? xatCercaAmbServidor.cercaMissatgesFilPaginada : undefined;
+export const carregaMissatgeFilPerId = ambXatCerca ? xatCercaAmbServidor.carregaMissatgeFilPerId : undefined;
 /* E1.2 (pla 261029_1305) · Explícit: transportAdjunts és intern de la branca xifrada, no del port. */
 export { quotaXat, publicaAdjuntXat, urlAdjuntXat, descartaAdjuntXat } from './xatMultimedia.js';
 export * from './storage.js';

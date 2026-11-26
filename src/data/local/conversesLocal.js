@@ -32,6 +32,9 @@ import { CAPACITATS, DURADES_SILENCI } from '../contracte.js';
 const senseAdjunts = () => errorAdjuntXat('sense-capacitat');
 /* El mateix rebuig que supabase/xatXifrat.js quan la fase E2EE no hi és: mai cap clau ni cap sobre inventats. */
 const senseE2ee = () => Object.assign(errorAdjuntXat('sense-capacitat'), { codi: 'sense-capacitat-e2ee' });
+/* v1.2.25 · Costures 8 i 9 · Contracte (xatCerca): sense servidor, la cerca dins d'una conversa i la lectura d'un
+   missatge antic per id rebutgen amb 'sense-capacitat'; mai una cerca local disfressada de resultat del servidor. */
+const senseCercaRemota = () => Object.assign(new Error('Este node no té la cerca del servidor dins de les converses.'), { code: 'sense-capacitat', codi: 'sense-capacitat' });
 const cursorInvalid = () => Object.assign(new Error('Cursor de lectura invàlid.'), { code: 'CURSOR_INVALID', retriable: false });
 const rebuigs = (noms, error) => Object.fromEntries(noms.map((nom) => [nom, async () => { throw error(); }]));
 /* B8C-2 · El code del contracte de 'avisosPush' sense servidor (el mateix que supabase/dispositiusAvisos.js en llavor). */
@@ -118,6 +121,7 @@ export function creaConversesLocal(e) {
 
     ...rebuigs(CAPACITATS.xatMultimedia, senseAdjunts),
     ...rebuigs([...CAPACITATS.clausXat, ...CAPACITATS.xatMultimediaXifrat], senseE2ee),
-    ...rebuigs(CAPACITATS.avisosPush, senseServidorDePush)
+    ...rebuigs(CAPACITATS.avisosPush, senseServidorDePush),
+    ...rebuigs(CAPACITATS.xatCerca, senseCercaRemota)
   };
 }

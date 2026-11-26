@@ -82,7 +82,8 @@ describe('opcions de la factoria', () => {
     /* v1.2.23 · costura R32.44 · El contracte passa de 62 a 64 capacitats: edicioPublicacionsPropies
        (desaPublicacioPropia) i revisionsPagines (historial privat de pàgines) només tenen camí de servidor,
        i el node local les deixa a posta entre les absències, a continuació de xatAccionsMissatge. */
-    expect(Object.keys(CAPACITATS)).toHaveLength(66);
+    /* v1.2.25 · Costures 8 i 9 · xatCerca (67a) la declara el local amb rebuig 'sense-capacitat': no és cap absència. */
+    expect(Object.keys(CAPACITATS)).toHaveLength(67);
     expect(CAPACITATS_NO_DECLARADES).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
     expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
     const deContracte = CONTRACTE_BACKEND.filter((m) => !absents.some((cap) => CAPACITATS[cap].includes(m)));

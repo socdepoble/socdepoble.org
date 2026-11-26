@@ -97,5 +97,5 @@ test('the actual Model B entry equals its one-item canonical production source',
   const { wikiManifest } = await import(pathToFileURL(path.join(repo, 'src/data/wikiManifest.js')).href);
   assert.deepEqual(wikiManifest.items.find(x => x.id === 'api_port_neutral_i_allotjament_model_b'), result.items[0]);
   const text = result.items[0].content.replaceAll('**', '');
-  for (const phrase of ['66 capacitats atòmiques opcionals', '187 mètodes en total', '250 casos sobre 187 mètodes']) assert.ok(text.includes(phrase), phrase);
+  for (const phrase of ['67 capacitats atòmiques opcionals', '190 mètodes en total', '253 casos sobre 190 mètodes']) assert.ok(text.includes(phrase), phrase);
 });

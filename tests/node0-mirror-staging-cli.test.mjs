@@ -24,8 +24,9 @@ test('canonical source manifest pins all current files and contains no hidden LA
   // R78: reviewed C6/C10 optional backup/delete declarations; all38 actual source-byte checks stay strict.
   // v1.2.24 · pujada de versió (Pla 261124_1323, F5A) · VERSIO_CLIENT_NATIU 28 → 29 i el seu comentari, sense cap camí ni secret nou: el pin passa a a91a52….
   // v1.2.24 · R32.86 (IDEA-348) · systemPages.js afig la pàgina del joc «Cada cosa al seu lloc» (cap camí ni secret nou): el seu pin del manifest passa d'ad32c6… a 008711….
+  // v1.2.25 · Costures 8 i 9 (Claude) · contracte.js afig la capacitat opcional xatCerca (tres noms i el seu comentari; cap camí ni secret nou): el pin passa d'a91a52… a 67bb9b… (amb el comentari de CLA-06: ordre del més nou al més antic i `seguent` = cursor del més antic).
   for(const [source,pin] of Object.entries({
-    'src/data/contracte.js':'a91a5286f58650e1dee8fea25687f825858995f32c80beef3822cfbe400f4567',
+    'src/data/contracte.js':'67bb9b972026150e83256cff4e3ff3d57f3ad0acbe6d5596429d2443be2bd36a',
     'src/data/contracteAvisos.js':'9d8ee9cc8af5f3cb811ecfa345828ee165375972f3a70f83a8617371301cf5b2',
     'src/data/contracteConnexions.js':'547b1f339dbedc867ba1d0989f3d0b6407b7bd1901d72d017c0c06a5eb82cc17',
     'src/data/contracteOrganitzacions.js':'c6ac84378a30ab0bb9a8771839f2fb5c305764e6e9bd743835653524000b8c3e',

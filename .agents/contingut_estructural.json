@@ -74,16 +74,16 @@
       "data": "2026-11-14"
     },
     "fedivers": {
-      "sha256": "e40d4788b44a3d7a75c68496c038ec6133e831ac55276ca515d42bc74c3f6440",
+      "sha256": "d863422f28ca5385ff6eaef2af0bfd4625c616f741b53010fb9d6089ae7af057",
       "html": 21960,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 187 → 190 mètodes, 250 → 253 casos); pendent de lectura humana",
+      "data": "2026-11-25"
     },
     "fediversity": {
-      "sha256": "d1f2a5d5d9419ff56f852d8c24f5563119429611eea78821e67ea42568f6e601",
+      "sha256": "148e9e14d4ba72a0621cc16ac2890969b3dedeee8dd46c047c31ee8298401219",
       "html": 67044,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 155 → 158 mètodes opcionals, 187 → 190 mètodes, 250 → 253 casos, 50 → 51 grups de l’adaptador local); pendent de lectura humana",
+      "data": "2026-11-25"
     },
     "habitatge": {
       "sha256": "bf9ee48a8ca1eca44eb3e22a053bcc7626b72bd3321b9bf624e690cb3c97463a",
@@ -110,10 +110,10 @@
       "data": "2026-11-14"
     },
     "node-zero": {
-      "sha256": "24091eda2e02166af8bd40365ff4ca8e2b0baa0a9ed61eb44e7dd5e4c9a49a13",
+      "sha256": "8607889b0ebbdbc48c1608ccccbe8ae84225cb03a6846c910197069d74cbc848",
       "html": 31800,
-      "aprovat_per": "Claude Opus 5.5 per delegació explícita del Mestre Javi Llinares (xat 24-11-2026)",
-      "data": "2026-11-24"
+      "aprovat_per": "Claude Opus 5.5 (integrador de la v1.2.25, Carril 1), per autorització explícita del Mestre Javi Llinares (Pla 261125_0321 §6, 14:20, punt 2, D-FRONTISSA-V06): costures 8 i 9, port de la cerca del xat (xatCerca); només canvien les xifres del cens del port en cinc llengües (66 → 67 capacitats, 187 → 190 mètodes, 250 → 253 casos); pendent de lectura humana",
+      "data": "2026-11-25"
     },
     "notes": {
       "sha256": "f5448bef8eb9e26cdb0c2d664e6401bea35ce45da5c90468ab9d96f96de534c5",

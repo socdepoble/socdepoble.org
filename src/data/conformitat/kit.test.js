@@ -851,10 +851,11 @@ describe('FEDI-17 · 120 operacions i refutacions semàntiques', () => {
   }
 
   /* R32.5 · moderacioLssi hi afig una capacitat i tres mètodes opcionals. */
-  test('cens exacte del contracte, 32 obligatòries i 155 opcionals; cap nom sense cas', () => {
+  /* v1.2.25 · Costures 8 i 9 · xatCerca hi afig la 67a capacitat i tres mètodes opcionals (155 → 158), amb un cas cada un. */
+  test('cens exacte del contracte, 32 obligatòries i 158 opcionals; cap nom sense cas', () => {
     expect(CONTRACTE_NUCLI).toHaveLength(32);
-    expect(Object.keys(CAPACITATS)).toHaveLength(66);
-    expect(Object.values(CAPACITATS).flat()).toHaveLength(155);
+    expect(Object.keys(CAPACITATS)).toHaveLength(67);
+    expect(Object.values(CAPACITATS).flat()).toHaveLength(158);
     expect(new Set(CASOS.map(c => c.metode))).toEqual(new Set([...CONTRACTE_NUCLI, ...Object.values(CAPACITATS).flat()]));
     expect(metodesSenseCas()).toEqual([]);
   });

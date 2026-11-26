@@ -698,7 +698,8 @@ describe('honestedat: cada afirmació ancorada al codi', () => {
       const absents=Object.keys(CAPACITATS).filter(nom=>!oferides.includes(nom));
       expect(absents).toEqual(CAPACITATS_NO_DECLARADES);
       expect(absents).toEqual(['protocolPublic','transportOAuth','ackCrdtRural','denunciesDiligents','revocacioPublicacions','administracioSessions','curadoriaCultural','iaia','xatRitme','xatAccionsMissatge','edicioPublicacionsPropies','revisionsPagines','importacioPaquetMunicipal','verificacioCorreu','recuperacioCorreu','moderacioLssi']);
-      expect(oferides).toHaveLength(50);
+      // v1.2.25 · Costures 8 i 9 · xatCerca la declara el local (rebuig 'sense-capacitat'): 50 → 51.
+      expect(oferides).toHaveLength(51);
       expect(CASOS.filter(c=>absents.includes(c.capacitat))).toHaveLength(48);
       expect(fet).toContain('l’adaptador local ofereix '+oferides.length+' d’estos '+capacitats+' grups');
       expect(fet).toContain(absents.join(' i ')+' continuen absents');

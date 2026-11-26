@@ -845,7 +845,27 @@ export const CAPACITATS = Object.freeze({
      L'adaptador Supabase la llig dels objectes SQL R23 (RPC resum_consens_isoglosses_poble,
      taules joc_isoglosses_vots_consens i aportacions_veu_poble) i només l'anuncia amb
      VITE_SDP_CONSENS_ISOGLOSSES=1; l'adaptador local, del seu magatzem en memòria. */
-  consensIsoglosses: Object.freeze(['lligConsensIsoglossesPoble', 'votaVariantIsoglossaPoble', 'desaAportacioVeuPoble'])
+  consensIsoglosses: Object.freeze(['lligConsensIsoglossesPoble', 'votaVariantIsoglossaPoble', 'desaAportacioVeuPoble']),
+  /* v1.2.25 · Costures 8 i 9 (Claude) · La cerca dins d'una conversa del Xat i la lectura d'un missatge antic per id
+     (C1 de Codex, src/data/supabase/xatCerca.js). Opcional i completa; va al final perquè els índexs de l'ABI no es
+     moguen (backendPort.contracte.r3260.test.js). Formes (config sempre l'últim):
+       cercaMissatgesFil(filId, consulta, { limit = 50 (1..100), abansDe = null | { creatAl, seq }, signal, ...config })
+         → Promise<Missatge[]> del més nou al més antic, en l'ordre del servidor (creat_al i seq descendents;
+         xatCerca.js no reordena), i només els anteriors al cursor `abansDe` quan n'hi ha. `consulta`: text no buit
+         de com a molt 256 caràcters, literal (cap comodí) i plegat d'accents al servidor. `abansDe.creatAl` és la
+         cadena de PostgREST tal qual (microsegons), mai passada per Date.toISOString; `abansDe.seq` és un enter ≥ 1
+         (cursor compost).
+       cercaMissatgesFilPaginada(filId, consulta, config) → Promise<{ missatges: Missatge[], seguent: { creatAl, seq } | null }>:
+         `seguent` és el cursor del missatge més antic de la pàgina (l'últim), i null quan la pàgina no s'ha omplit.
+       carregaMissatgeFilPerId(filId, id, config) → Promise<Missatge | null>: null si no existix o ja no és visible.
+     Missatge: { id, filId, seq, text, tipus, usuariId, autorNom, creatAl, respostaA, metadades, esborratAl: null }.
+     El servidor (20261125010000, NO aplicada) revalida membre vigent, finestra de seq, bloquejos en els dos
+     sentits, amagats, esborrats i caducats, i només torna missatges en clar: mai un xifrat. Un filId o un id que no
+     són UUID rebutgen amb TypeError abans del transport. Fora de runtimeDataMode 'remote' o sense sessió, rebutja
+     amb un error de `code` 'sense-capacitat'; l'adaptador local fa el mateix sempre. Cap interfície no la consumix
+     encara (les costures 15 i 16 la cablaran): la que ho faça ha de preguntar amb teCapacitat('xatCerca') i, amb
+     'sense-capacitat', quedar-se amb la cerca dels missatges ja carregats. */
+  xatCerca: Object.freeze(['cercaMissatgesFil', 'cercaMissatgesFilPaginada', 'carregaMissatgeFilPerId'])
 });
 
 /* Pla 261022_1955 (T1) · El sostre de listPublicOrganizations: una sola font per

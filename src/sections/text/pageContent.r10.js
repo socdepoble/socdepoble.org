@@ -1011,8 +1011,9 @@ const INVENTARI_CONTRACTE = Object.freeze({
   capacitats: Object.keys(CAPACITATS).length,
   opcionals: CONTRACTE_BACKEND.length - CONTRACTE_NUCLI.length,
   total: CONTRACTE_BACKEND.length,
-  /* R32.13 · Quatre casos de rebuig previ per a ACK CRDT i denúncies diligents; sense activació remota. */
-  casos: 250,
+  /* R32.13 · Quatre casos de rebuig previ per a ACK CRDT i denúncies diligents; sense activació remota.
+     v1.2.25 · Costures 8 i 9 · Tres casos més, els de xatCerca (rebuig 'sense-capacitat' sense servei remot): 253. */
+  casos: 253,
   oferides: Object.keys(CAPACITATS).length - CAPACITATS_ABSENTS_LOCALS.length,
   casosAbsents: 48,
   absents: CAPACITATS_ABSENTS_LOCALS
