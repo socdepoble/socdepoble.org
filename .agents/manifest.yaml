@@ -8,6 +8,7 @@ consell: consell.json
 skills:
   - skills/core-automillora/SKILL.md
   - skills/core-calibratge-visual-nano/SKILL.md
+  - skills/core-cartografia-contenidor-som-de-poble/SKILL.md
   - skills/core-comprensio-reflexiva/SKILL.md
   - skills/core-consell-i-colmena/SKILL.md
   - skills/core-context-panic/SKILL.md

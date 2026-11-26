@@ -570,15 +570,17 @@ test('F2: a la prosa i a les capçaleres un # no amaga el motor; un comentari # 
 
 /* v1.2.24 · costura R32.75 · core-llegibilitat-text declara ara `motors: tooling/gates/tractor-maquetacio-canonica.mjs`:
    el cens passa de 21/23 (R32.7) a 22/22, i la prova nomena la skill nova perquè el recompte no quadre per casualitat.
-   v1.2.26 · Lot C1-1 (D8) · entra `iaia-maria-core` amb `motors: incubadora.mjs i sincronitza-iaia-core.mjs`: 23/22. */
-test('arbre real (C): cens v1.2.26 de 23 skills procediment_amb_motor i 22 procediment (argv Node complet) sense scripts buits', () => {
+   v1.2.26 · Lot C1-1 (D8) · entra `iaia-maria-core` amb `motors: incubadora.mjs i sincronitza-iaia-core.mjs`: 23/22.
+   v1.2.26 · Lot C1-2 · entra `core-cartografia-contenidor-som-de-poble` amb `cartograf-som-de-poble.mjs`: 24/22. */
+test('arbre real (C): cens v1.2.26 de 24 skills procediment_amb_motor i 22 procediment (argv Node complet) sense scripts buits', () => {
   const arrel = arrelSegura();
   const r = auditaSkills(arrel);
   const ambMotor = r.skills.filter((s) => s.classe === 'procediment_amb_motor').map((s) => s.id);
   const cognitives = r.skills.filter((s) => s.classe === 'procediment').map((s) => s.id);
-  assert.equal(ambMotor.length, 23);
+  assert.equal(ambMotor.length, 24);
   assert.equal(cognitives.length, 22);
   assert.ok(ambMotor.includes('iaia-maria-core'));
+  assert.ok(ambMotor.includes('core-cartografia-contenidor-som-de-poble'));
   assert.ok(ambMotor.includes('wiki-propagar-veritat'));
   assert.ok(ambMotor.includes('core-sentinella-blindatge'));
   assert.deepEqual(r.skills.find((s) => s.id === 'core-llegibilitat-text').motors, ['tooling/gates/tractor-maquetacio-canonica.mjs']);

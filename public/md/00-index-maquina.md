@@ -22,6 +22,7 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 - [[02_saber/architecture/ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA|ADR-2026-14-SERVEI-LLIURE-TRADUCCIO-SOBIRA]] · Servei lliure de traducció sobirana (`P2-13`, esborrany): proposta pendent d'aprovació i desplegament; contractes i límits observats del client, amb proveïdors i privacitat diferenciats.
 - [[02_saber/architecture/api_port_neutral_i_allotjament_model_b|api_port_neutral_i_allotjament_model_b]] · inventari del port neutral (esborrany): les 32 operacions del nucli i els 41 grups de capacitats opcionals declarats a `src/data/contracte.js`, la Frontissa de lectura i els requisits d'allotjament verificables del Model B.
 - [[02_saber/architecture/perfil_minim_allotjament_node_municipal|perfil_minim_allotjament_node_municipal]] · perfil mínim d'allotjament d'un node municipal (esborrany): mides mesurades de `dist/` i de la release, Supabase, Storage i funcions, preus oficials citats i tres escenaris de cost mensual.
+- [[02_saber/architecture/mapa_canonic_contenidor_som_de_poble|mapa_canonic_contenidor_som_de_poble]] · mapa del contenidor «Som de Poble» (v1.2.26, document privat que no es publica a /wikidepoble): una sola llar per a cada contingut, dins i fora de Git, i el cartògraf amb `--inventari` en temps real.
 - [[00_arquitectura_tecnica_unificada]]
 
 ## Estàndards del codi
@@ -31,7 +32,7 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 
 ## Salut del sistema
 
-- [[sistema_nervios_skills_i_repositoris]] · mapa didàctic de les 45 skills neuronals, els tractors mecànics i els repositoris oberts estudiats o en reserva al Node 0.
+- [[sistema_nervios_skills_i_repositoris]] · mapa didàctic de les 46 skills neuronals, els tractors mecànics i els repositoris oberts estudiats o en reserva al Node 0.
 - [[sistema_immunitari]]
 - La cadena sencera de portes s'executa amb `npm run porta`; cada porta té el seu script propi (`npm run porta:frontmatter`, `npm run porta:cens`, `npm run porta:llaurador`…).
 

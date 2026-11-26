@@ -119,7 +119,7 @@ Còpia en Markdown dels documents públics de la Wiki de Poble, amb la mateixa f
 - [self_repair](https://socdepoble.org/md/self-repair.md): Reunix criteris consultius de reparació segura, contenció d'errors i degradació honesta davant fallades de xarxa, sense autoexecució.
 - [sgq_prompts](https://socdepoble.org/md/sgq-prompts.md): Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP), d'on ve el nom, què exigix a cada petorreta i on es resolen les plantilles.
 - [sistema_immunitari](https://socdepoble.org/md/sistema-immunitari.md): Manual operatiu de plaquetes.mjs v1.1: diagnostica ferides del graf (fantasmes, orfes) i només les cura amb aprovació per hash, lease del Reflex i escriptura verificada, sense esborrar res.
-- [sistema_nervios_skills_i_repositoris](https://socdepoble.org/md/sistema-nervios-skills-i-repositoris.md): Mapa didàctic del sistema nerviós de Sóc de Poble (45 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
+- [sistema_nervios_skills_i_repositoris](https://socdepoble.org/md/sistema-nervios-skills-i-repositoris.md): Mapa didàctic del sistema nerviós de Sóc de Poble (46 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
 - [skill](https://socdepoble.org/md/skill.md): Plantilla ISO per dissenyar skills amb gallets, abast, regles, proves i eixida verificable.
 - [soci_sollutia](https://socdepoble.org/md/soci-sollutia.md): Defineix el paper, els límits i el protocol de col·laboració amb el soci tecnològic Sollutia.
 - [successio_lazaro_execucio](https://socdepoble.org/md/successio-lazaro-execucio.md): Guia consultiva per diagnosticar i proposar la continuïtat del projecte sense concedir capacitat d'escriptura.

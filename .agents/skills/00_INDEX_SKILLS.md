@@ -13,6 +13,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 
 - [[core-automillora/SKILL|core-automillora]]: Protocol d'Automillora Contínua, Mimetisme Empàtic, Mètode MIT d'estudi en xarxa semàntica i l'Olivera; com la IA aprèn de la insistència del Mestre i coordina MarIA, Claude, Codex, Gemini i el Node 0.
 - [[core-calibratge-visual-nano/SKILL|core-calibratge-visual-nano]]: Protocol d'enginyeria de prompts visuals del Nano, calibratge d'estils i creació de gags gamberros (Ibáñez/Berlanga) contraposats a la falsa felicitat asèptica.
+- [[core-cartografia-contenidor-som-de-poble/SKILL|core-cartografia-contenidor-som-de-poble]]: Abans de crear una carpeta, moure patrimoni o documents fora de socdepoble.org o desar contingut nou al contenidor «Som de Poble», consulta el mapa canònic i el cartògraf per a donar-li una sola llar.
 - [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat i aplicar el Mètode MIT d'Acumulació de Context i Memòria Semàntica en Xarxa abans d'actuar.
 - [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]: Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.

@@ -1,7 +1,7 @@
 ---
 type: document
 status: canonic
-description: Mapa didàctic del sistema nerviós de Sóc de Poble (45 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
+description: Mapa didàctic del sistema nerviós de Sóc de Poble (46 skills neuronals, tractors mecànics i repositoris oberts estudiats o en reserva al Node 0).
 image: /assets/ui/plugins/sistema_nervios_vinyeta.jpg
 imageAlt: Una iaia governa una màquina de fusta amb manòmetres i campanes a la plaça, amb dos robotets, un veí i una cabra, en estil Bruguera.
 date: '2026-11-17T00:14:00+01:00'
@@ -39,7 +39,7 @@ Per mantindre una **transparència verificable**, classifiquem **tota la maquin�
 
 ### 3.1 Maquinària 100 % pròpia de Sóc de Poble
 
-El repositori manté **45 skills actives** dins de `.agents/skills/` (`23` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.
+El repositori manté **46 skills actives** dins de `.agents/skills/` (`24` connectades a motors propis declarats al camp `motors:` del seu frontmatter i `22` procedimentals; ho reproduïx `node tooling/brain/fronteres-skills.mjs`), acompanyades de les portes de `tooling/gates/`, l'utillatge documental de `tooling/wiki/` i els índexs de `tooling/brain/`.
 
 #### Identitat, Consell i govern humà
 Fixen la **veu de poble**, els **rols d'agents**, el **control de despesa** i el respecte a la **decisió humana** per a MarIA, Claude, ChatGPT Codex, Gemini i la revisió humana. Agrupen `iaia-maria-core` (el paper d'actriu de la IAIA, D8), `core-identitat`, `core-consell-i-colmena`, `core-direccio-autonoma`, `core-estrategia-ia`, `core-telemetria-huma` i `core-portaveu-institucional`.
@@ -50,8 +50,8 @@ Eviten **edicions a cegues**, conserven **lliçons apreses**, paren **bucles d'e
 - **Incorporació real:** **100 % propi** · Actiu amb `desenterrar.mjs` (core-restauracio-segellada); la resta, procedimentals.
 
 #### Higiene d'Escriptori i taxonomia
-Mantenen l'**Escriptori ordenat**, retiren **fitxers temporals** i exigixen **noms i dates verificables** sota el control de MarIA i les portes de tancament. Inclouen `core-higiene-escriptori`, `core-neteja-brossa`, `core-taxonomia-estricta`, `core-temps-termodinamic` i `core-salfumant-radical`.
-- **Incorporació real:** **100 % propi** · Actiu amb `porta-olivera.mjs` i `consum-acreditat.mjs` (core-higiene-escriptori), `neteja_brossa_arrel.mjs` (core-neteja-brossa), `porta-taxonomia.mjs` (core-taxonomia-estricta i core-temps-termodinamic) i `document.mjs` (core-taxonomia-estricta); core-salfumant-radical, procedimental.
+Mantenen l'**Escriptori ordenat**, retiren **fitxers temporals** i exigixen **noms i dates verificables** sota el control de MarIA i les portes de tancament. Inclouen `core-higiene-escriptori`, `core-neteja-brossa`, `core-taxonomia-estricta`, `core-temps-termodinamic`, `core-salfumant-radical` i `core-cartografia-contenidor-som-de-poble` (la llar única de cada contingut del contenidor «Som de Poble»).
+- **Incorporació real:** **100 % propi** · Actiu amb `porta-olivera.mjs` i `consum-acreditat.mjs` (core-higiene-escriptori), `neteja_brossa_arrel.mjs` (core-neteja-brossa), `porta-taxonomia.mjs` (core-taxonomia-estricta i core-temps-termodinamic), `document.mjs` (core-taxonomia-estricta) i `cartograf-som-de-poble.mjs` i `porta-olivera.mjs` (core-cartografia-contenidor-som-de-poble); core-salfumant-radical, procedimental.
 
 #### Qualitat editorial, seguretat i auditoria
 Regulen la **jerarquia de títols**, la **lectura escanejable**, la **seguretat de base de dades** i les rondes d'**auditoria creuada** per a tots els agents constructors i revisors. Són `core-llegibilitat-text`, `core-maquetacio-markdown`, `core-informes-pdf`, `core-seguretat-audit`, `core-sentinella-blindatge`, `core-tecniques-investigacio` i `core-gauntlet-loop`.

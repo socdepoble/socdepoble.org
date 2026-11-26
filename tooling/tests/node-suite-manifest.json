@@ -336,7 +336,8 @@
     "tests/reconcilia-segell-log.test.mjs",
     "tests/botigues-privacitat-sdk.v1226.test.mjs",
     "tests/cervell-v1226-d3-d5-d7.test.mjs",
-    "tests/tractor-salut-wiki-i-skills.test.mjs"
+    "tests/tractor-salut-wiki-i-skills.test.mjs",
+    "tests/cartograf-som-de-poble.v1226.test.mjs"
   ],
   "files": [
     {
@@ -2939,6 +2940,11 @@
       "path": "tests/tractor-salut-wiki-i-skills.test.mjs",
       "suite": "primary",
       "reason": "v1.2.26 C1-1 (D7, IDEA-361): motor de salut de la Wiki i les skills de Codex R4, només lectura, fixtures portables."
+    },
+    {
+      "path": "tests/cartograf-som-de-poble.v1226.test.mjs",
+      "suite": "primary",
+      "reason": "v1.2.26 C1-2: cartògraf del contenidor dins de Git (--audit, --on-va, --inventari) sobre un contenidor sintètic temporal; cap lectura del contenidor real."
     }
   ]
 }

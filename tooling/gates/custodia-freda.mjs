@@ -33,7 +33,9 @@ const SHA1 = /^[a-f0-9]{40}$/;
 const TAG = /^[a-z0-9][a-z0-9._-]{2,80}$/;
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const git = (arrel, args, opcions = {}) => execFileSync('git', ['-C', arrel, ...args], { maxBuffer: 256 * 1024 * 1024, ...opcions });
+// Sense GIT_DIR ni companyes heretades: la custòdia es comprova sempre al repositori que se li diu.
+const ENV_NET = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^GIT_(DIR|COMMON_DIR|WORK_TREE|INDEX_FILE)$/.test(k)));
+const git = (arrel, args, opcions = {}) => execFileSync('git', ['-C', arrel, ...args], { maxBuffer: 256 * 1024 * 1024, env: ENV_NET(), stdio: ['ignore', 'pipe', 'pipe'], ...opcions });
 
 /** L'arxiu fred per defecte és a `<contenidor>/_arxiu_wiki_de_poble` (també des d'un worktree enllaçat). */
 export function arxiuPerDefecte(arrelRepo) {

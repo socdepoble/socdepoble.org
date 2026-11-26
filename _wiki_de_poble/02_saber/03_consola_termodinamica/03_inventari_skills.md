@@ -104,20 +104,21 @@ La Consola ha de comptar el cens **des del disc** i comparar-lo amb cada llista 
 
 Font executiva: les carpetes de `.agents/skills/`. `tooling/brain/cataleg_skills.mjs --check` comprova el catàleg; el segell i els miralls tenen comprovacions pròpies. El prefix d’un nom no equival a la marca `core: true` del frontmatter.
 
-De les 45 skills actives, 23 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 22 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs`:
+De les 46 skills actives, 24 declaren motors propis al camp `motors:` del frontmatter (scripts de `tooling/`, `tests/` o `wordpress-plugin/eines/`) i 22 són procedimentals o de governança cognitiva. Ho reproduïx `node tooling/brain/fronteres-skills.mjs`:
 
 - 17-11-2026: «43 skills (23 procediment, 20 amb motor)»;
 - 24-11-2026, quan `core-llegibilitat-text` declara `tractor-maquetacio-canonica.mjs`: «44 skills (22 procediment, 22 amb motor)»;
-- 26-11-2026, quan entra `iaia-maria-core` (D8) amb `incubadora.mjs` i `sincronitza-iaia-core.mjs`: «45 skills (22 procediment, 23 amb motor)».
+- 26-11-2026, quan entra `iaia-maria-core` (D8) amb `incubadora.mjs` i `sincronitza-iaia-core.mjs`: «45 skills (22 procediment, 23 amb motor)»;
+- 26-11-2026, quan entra `core-cartografia-contenidor-som-de-poble` (C1-2) amb `cartograf-som-de-poble.mjs` i `porta-olivera.mjs`: «46 skills (22 procediment, 24 amb motor)».
 
 El mapa divulgatiu per famílies i la distinció amb els repositoris externs estudiats es poden consultar a [[sistema_nervios_skills_i_repositoris]].
 
 | Mesura | Valor |
 | --- | --- |
-| skills actives | 45 |
+| skills actives | 46 |
 | marca core: true | 10 |
-| sense marca core: true | 35 |
-| prefix core- | 28 |
+| sense marca core: true | 36 |
+| prefix core- | 29 |
 | prefix sdp- | 12 |
 | prefix wiki- | 4 |
 | prefix iaia- | 1 |

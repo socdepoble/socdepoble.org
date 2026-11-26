@@ -14,7 +14,7 @@
  *           Android build.gradle ↔ iOS project.pbxproj ↔ VERSIO_CLIENT_NATIU ↔
  *           píndola i subtítol de /versions en les 5 llengües).
  *   CEV-3 · Veracitat de censos entre codi, web i Wiki (12 membres del Consell,
- *           43 skills a .agents/skills, 8 escoles del Node 0 en 5 llengües ancorades
+ *           el recompte real de skills de .agents/skills, 8 escoles del Node 0 en 5 llengües ancorades
  *           al substantiu de cada llengua, en xifra o en lletra, React major real i
  *           vigència ADR-2026-10 a 00_arquitectura_tecnica_unificada.md).
  *   CEV-4 · Zero lèxic prohibit (Llei 0) en PAGE_COPY (5 llengües), articles vius,
