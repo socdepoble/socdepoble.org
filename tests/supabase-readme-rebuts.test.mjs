@@ -19,8 +19,11 @@ const fila = (versio) => taula.find((f) => f.versio === versio);
 // Rebuts d'una lectura de la base (no narratives del manifest com el «70/70»).
 // Onada v1.2.13 · També la postverificació 10/10 del Super-Bundle R32.14 que el Mestre va executar a producció el 19-11-2026.
 // v1.2.24 · F-03 · I el rebut de les sondes de la tanda 132 a 136 (nit del 24 al 25-11-2026).
-const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE|REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES|261125_0039_rebut_sql_produccio_132_136\.json/;
+// v1.2.26 · Opció A (T3) · I el de la tanda 137 a 140 (26-11-2026, 19:43–19:45 CET).
+const RE_REBUT = /bolcat del 13-11-2026|T2 del 13-11-2026|13-11-2026 al T2|certificat 261117_0155|captura 2611\d{2}_\d{4}|lectura REST del 6-11|REBUT_SUPABASE_PRODUCCIO_R32_14_10_DE_10_TRUE|REBUT_SUPABASE_PRODUCCIO_V1223_T2_SONDES_VERDES|261125_0039_rebut_sql_produccio_132_136\.json|261126_1845_rebut_sql_produccio_137_140\.json/;
 // v1.2.24 · F-03 · L'estat de les files 133, 134 i 136 que el rebut 261125_0039 dona APLICADA amb les sondes en verd.
+// v1.2.26 · Opció A (T3) · L'estat de les files 137 a 140, aplicades amb els bytes de c7688f5fb i les sondes en verd.
+const RE_APLICADA_V1226 = /^Aplicada a producció el 26-11-2026 \(19:43–19:45 CET\) per l'integrador de la v1\.2\.26 \(Claude Opus 5\.5\), autoritzat pel Mestre, amb els bytes del commit c7688f5fb i SHA-256 comprovada a l'editor; .*posterior en verd.*\(`261126_1845_rebut_sql_produccio_137_140\.json`\)$/;
 const RE_APLICADA_V1224 = /^Aplicada a producció la nit del 24 al 25-11-2026 \(00:31–00:38 CET\) per l'integrador de la v1\.2\.24 \(Claude Opus 5\.5\), autoritzat pel Mestre, amb els bytes del commit 840c31d33 i SHA-256 comprovada a l'editor[,;] .*\(`261125_0039_rebut_sql_produccio_132_136\.json`\)$/;
 // El text sencer de la vinyeta «- `migrations/<versió>_…`» del README, en una sola línia.
 function vinyeta(versio) {
@@ -133,14 +136,16 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   }
   assert.deepEqual(taula.filter(f => f.ordre >= 132).map(({ ordre, versio, fitxer }) => [ordre, versio, fitxer]),
     [...PROPOSTES_C1_C12.slice(0, 2), FILA_V1224, PROPOSTES_C1_C12[2], FILA_R3287, ...FILES_V1225, ...FILES_V1226], 'cap proposta nova es pot absorbir automàticament dins de l’històric');
-  // v1.2.25 · Costura 1 · Cada fila nova diu «NO aplicada a Producció», la seua vinyeta també i dona una lectura de verificació.
+  // v1.2.25 · Costura 1 · Cada fila nova dona una lectura de verificació.
+  // v1.2.26 · Opció A (T3) · Aplicades a Producció el 26-11-2026 amb el rebut 261126_1845: la fila i la vinyeta ho diuen.
   for (const [ordre, versio, fitxer] of FILES_V1225) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
-    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
-    assert.match(fila(versio).estat, /^NO aplicada a Producció; v1\.2\.25 · C(?:1|2|16) de Codex, Kit CAS provat només en (?:PGlite|local \(PGlite i PostgreSQL 18\.6\)), després de 13[678]/, versio);
-    assert.doesNotMatch(fila(versio).estat, /^Aplicada|rebut/i, versio);
-    assert.match(vinyeta(versio), /\*\*NO aplicada a Producció\*\*/, versio);
+    assert.equal(declarat.get(versio), 'declarada_aplicada', versio);
+    assert.match(fila(versio).estat, RE_APLICADA_V1226, versio);
+    assert.doesNotMatch(fila(versio).estat, /NO aplicada/, versio);
+    assert.match(vinyeta(versio), /\*\*aplicada a Producció\*\* el 26-11-2026 \(19:43–19:45 CET; v1\.2\.26, bytes de c7688f5fb, `261126_1845_rebut_sql_produccio_137_140\.json`\)/, versio);
+    assert.doesNotMatch(vinyeta(versio), /NO aplicada a Producció/, versio);
     assert.match(vinyeta(versio), /Verificació posterior \(lectura\): `select [^`]+;`/, versio);
   }
   // Les dependències que la vinyeta declara són fitxers reals del catàleg.
@@ -158,9 +163,10 @@ test('la taula canònica es llig sencera i cada estat és reconegut', () => {
   for (const [ordre, versio, fitxer] of FILES_V1226) {
     assert.equal(fila(versio).ordre, ordre, versio);
     assert.equal(fila(versio).fitxer, fitxer, versio);
-    assert.equal(declarat.get(versio), 'declarada_no_aplicada', versio);
-    assert.match(fila(versio).estat, /^NO aplicada a Producció; v1\.2\.26 · C26-3 de Codex, Kit CAS provat només en PGlite, després de 139$/, versio);
-    assert.match(vinyeta(versio), /\*\*NO aplicada a Producció\*\*/, versio);
+    assert.equal(declarat.get(versio), 'declarada_aplicada', versio);
+    assert.match(fila(versio).estat, RE_APLICADA_V1226, versio);
+    assert.match(fila(versio).estat, /AAL2 en línia/, versio);
+    assert.match(vinyeta(versio), /\*\*aplicada a Producció\*\* el 26-11-2026 \(19:43–19:45 CET; v1\.2\.26, bytes de c7688f5fb, `261126_1845_rebut_sql_produccio_137_140\.json`\)/, versio);
     assert.match(vinyeta(versio), /Verificació posterior \(lectura\): `select [^`]+;`/, versio);
     for (const dep of vinyeta(versio).matchAll(/`(\d{10}|\d{14})`/g)) assert.ok(taula.some((f) => f.versio === dep[1]), `${versio} cita ${dep[1]}, sense fila`);
   }
