@@ -18,7 +18,7 @@ triggers_on:
   - csp de producció
   - integritat del paquet
   - plugin de seguretat de l'amfitrió
-version: 1.1.0
+version: 1.2.0
 contracte.llig:
   - wordpress-plugin/
   - index.html
@@ -39,6 +39,7 @@ contracte.escriu:
   - _wiki_de_poble/04_escriptori
 motors:
   - tooling/gates/tractor-vigilant.mjs
+  - tests/enxufe-salut-http-v1225.test.mjs
 ---
 # Vigilant Tellado: perímetre estàtic
 
@@ -96,6 +97,23 @@ Les sis proves de `tests/tractor-vigilant.test.mjs` contrasten lectura, patrons,
 Per a una release, contrasta també el paquet amb la porta d'empaquetat i la CSP amb les proves del build. Els permisos de servidor/RLS, l'autenticació, les capçaleres HTTP efectives, la compatibilitat d'un amfitrió i la retenció de dades necessiten evidència pròpia; si no s'han mesurat, deixa'ls pendents. Una comprovació viva és una operació separada dins de l'abast i origen autoritzats.
 
 Els correctors van en còpia aïllada amb reproductor i preimatges, pel circuit de `core-seguretat-audit`. La diagnosi no retira actius, no activa proteccions, no llig credencials per connectar-se a Supabase ni imprimeix valors de secrets. Les coincidències de fitxers sensibles s'informen pel nom.
+
+## Observacions HTTP de Salut del lloc (C4b · v1.2.25)
+
+`wordpress-plugin/includes/salut.php` incorpora dos tests de **Salut del lloc** per a qui té `manage_options`. No s'executen en carregar el connector ni en servir la web pública. Són una comprovació viva separada del tractor estàtic: no sumes els seus resultats a VIG-01..VC2 ni descrigues `tractor-vigilant --json` com una prova HTTP.
+
+- **Mòdul d'entrada de `dist/trossos/`:** selecciona exclusivament el camí del manifest local validat i fa un `HEAD` sense credencials. Admet **0–1 redireccions** del mateix origen i directori del connector; una segona resposta de redirecció s'informa sense seguir-la. Exigix `200` i MIME de JavaScript; una closca HTML amb `200` no és una passada. Esta sonda d'un mòdul no acredita tots els trossos, integritat de bytes ni execució al navegador: contrasta també l'inventari, els hashes i les rutes reals.
+- **Directori d'actualitzacions:** consulta amb `HEAD` només `content_url('upgrade/')`, sense seguir redireccions. `401/403/404/410` acredita únicament que no s'ha observat accés públic a eixa URL; un `2xx` recomana revisar índex de directori i fitxers temporals amb l'amfitrió. Un `2xx` pot ser una pàgina índex buida i no prova per si sol una vulnerabilitat. Xarxa, MIME desconegut, `405`, `5xx`, CDN extern o login donen estat no confirmat, mai verd.
+
+Cada petició fa servir `wp_safe_remote_head`, TLS verificat, zero cookies o capçaleres d'autorització, redirecció automàtica `0`, temps `3 s` i resposta acotada a `1 KiB`; com a màxim dos HEAD per al mòdul i un per al directori. No s'imprimixen cossos, `Location` ni errors crus. No canvia `.htaccess`, Nginx, opcions, transients, permisos ni contingut. Les traduccions dels nous missatges administratius s'integren amb el catàleg del connector al carril de publicació.
+
+Proves reproduïbles: `node --test tests/enxufe-salut-http-v1225.test.mjs`. Descobrix PHP ja instal·lat (`PHP_BIN`, PATH o WordPress Studio) i executa l'arnés `tests/fixtures/enxufe-salut-http-v1225.php` amb transport WordPress simulat: cap petició real. PHP absent es declara com a runtime pendent, sense instal·lació automàtica. Estes proves no certifiquen un WordPress allotjat.
+
+### `/random/` de WordPress 7.2: observació i decisió de l'amfitrió
+
+La [nota tècnica oficial del 5 de novembre de 2026](https://make.wordpress.org/core/2026/11/05/your-content-is-going-to-get-more-random/) i la [guia de WordPress 7.2](https://make.wordpress.org/core/2026/11/20/wordpress-7-2-field-guide/) descriuen `/random/` com una **redirecció `302` al servidor** cap a contingut publicat seleccionat a l'atzar. No renderitza una pàgina pròpia; la base de la URL es pot configurar als enllaços permanents, i els tipus de contingut poden declarar `randomable`. La presència de regles rewrite no prova que l'host servisca eixa ruta; cal contrastar versió/capacitat i una petició explícita autoritzada.
+
+No és un error del connector ni una vulnerabilitat per defecte. Esta skill no la desactiva, no afegix una regla de servidor ni visita articles aleatoris durant Salut. Si l'amfitrió decidix desactivar eixa funció, el mecanisme documentat és el filtre `wp_enable_random_content_redirect`, dins del seu carril de configuració autoritzat; no s'activa cap corrector en este lot. Una redirecció `302` a una entrada ja existent tampoc acredita per si sola contingut SEO duplicat. Fonts consultades el **25/11/2026**; tornar a verificar-les abans d'aplicar canvis a una versió futura.
 
 ## Vincles
 

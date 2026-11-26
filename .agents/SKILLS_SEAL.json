@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-11-24T20:21:06.449Z",
-  "hash": "bcfe1dfade8ab342ed8011fb1e4f1c2952fcc9ad008ce6b57735cf9a484f7972",
+  "timestamp": "2026-11-26T00:39:01.248Z",
+  "hash": "ea630e6be2a2de8ff52b2ec3c84dbbc4514714ae635ff3c46f18eba8d1c9b9c6",
   "filesCount": 45,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "a7a458a04613e2d5096b432b0381ec984276fde2ee05a97e9baabe320dcfdc0a",
@@ -42,12 +42,12 @@
     ".agents/skills/sdp-pedra-seca/SKILL.md": "9677128f859bfc0d801da1541e51af9e2d2b88eeacadfefd1515085a55d2ea9f",
     ".agents/skills/sdp-universal-editor/SKILL.md": "3dae8d96a06039b8c96c2dc9d2e7e3a787e277608867b8856b37e10694d7d436",
     ".agents/skills/sdp-universal-page/SKILL.md": "a03e4dc4409d7560fa7895d2bcf37375eed072123ce95c56ebfc6c88ea420429",
-    ".agents/skills/sdp-vigilant-tellado/SKILL.md": "5cec8d8bb691da3aa1bca8976fe8a006fbf4681b46d3dd9d7d2ea94f97dd3ec9",
+    ".agents/skills/sdp-vigilant-tellado/SKILL.md": "e8aaec4f8d92716c40e187e799a6b07354cd81dfb7d374fe0216b5b8daba7ab9",
     ".agents/skills/sdp-workflow/SKILL.md": "5f6f89ec291d468bb3ea7bb1ba29d0859726684e364ac70dd7630a43e0256a21",
     ".agents/skills/wiki-busca-skills/SKILL.md": "febab0f0c38b97a7c887e8fd6121d7344f49884f969e00ea7fe487badff0c983",
     ".agents/skills/wiki-cicle-de-vida/SKILL.md": "38c1302666d3f1dcde42bb78c0a5b43046caf95ad721ab22c827456cc0af2178",
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d394e96ea749330bc5472e5a84e3420c1986f5894752807e68c60d84d8eff42e",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "983c3e56a5e450934b4f804385f25a2ef28431fe39a726257d890fb38a943ca3"
   },
-  "transaction": "53eab774-a775-487e-8ee9-0476f26284c5"
+  "transaction": "8ba94cdc-4953-4e8f-ae4a-a3520b03e0d3"
 }
